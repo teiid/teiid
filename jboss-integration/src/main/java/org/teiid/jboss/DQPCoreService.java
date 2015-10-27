@@ -24,15 +24,12 @@ package org.teiid.jboss;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 
 import javax.resource.spi.XATerminator;
 import javax.resource.spi.work.WorkManager;
 import javax.transaction.TransactionManager;
 
 import org.jboss.msc.service.Service;
-import org.jboss.msc.service.ServiceController;
-import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
@@ -49,6 +46,7 @@ import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.internal.process.TransactionServerImpl;
+import org.teiid.dqp.service.SessionService;
 import org.teiid.dqp.service.TransactionService;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -97,21 +95,11 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 			@Override
 			public void removed(String name, int version, CompositeVDB vdb) {
 				// terminate all the previous sessions
-		        List<ServiceName> services = context.getController().getServiceContainer().getServiceNames();
-		        for (ServiceName service:services) {
-		        	if (TeiidServiceNames.TRANSPORT_BASE.isParentOf(service)) {
-		        		ServiceController<?> transport = context.getController().getServiceContainer().getService(service);
-		        		if (transport != null) {
-		        			TransportService t = TransportService.class.cast(transport.getValue());					
-		        			Collection<SessionMetadata> sessions = t.getActiveSessions();
-							for (SessionMetadata session:sessions) {
-								if (name.equalsIgnoreCase(session.getVDBName()) && version == session.getVDBVersion()){
-									t.terminateSession(session.getSessionId());
-								}
-							}
-		        		}
-		        	}
-		        }
+				SessionService sessionService = (SessionService) context.getController().getServiceContainer().getService(TeiidServiceNames.SESSION).getValue();
+    			Collection<SessionMetadata> sessions = sessionService.getSessionsLoggedInToVDB(name, version);
+				for (SessionMetadata session:sessions) {
+					sessionService.terminateSession(session.getSessionId(), null);
+				}
 			        
 				// dump the caches. 
 		        if (getResultSetCacheInjector().getValue() != null) {

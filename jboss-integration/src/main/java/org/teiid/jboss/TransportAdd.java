@@ -21,34 +21,8 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
-import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_TYPE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.PG_MAX_LOB_SIZE_ALLOWED_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.SSL_AUTH_MODE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_KETSTORE_ALIAS_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_KETSTORE_KEY_PASSWORD_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_KETSTORE_NAME_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_KETSTORE_PASSWORD_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_KETSTORE_TYPE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_KEY_MANAGEMENT_ALG_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_MODE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_SSL_PROTOCOL_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_TRUSTSTORE_NAME_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.TRANSPORT_IN_BUFFER_SIZE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.TRANSPORT_PROTOCOL_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.TRANSPORT_SOCKET_BINDING_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.asInt;
-import static org.teiid.jboss.TeiidConstants.asLong;
-import static org.teiid.jboss.TeiidConstants.asString;
-import static org.teiid.jboss.TeiidConstants.isDefined;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.teiid.jboss.TeiidConstants.*;
 
 import java.util.List;
 
@@ -73,6 +47,7 @@ import org.jboss.msc.service.ServiceTarget;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPCore;
+import org.teiid.dqp.service.SessionService;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.net.socket.AuthenticationType;
@@ -90,12 +65,6 @@ class TransportAdd extends AbstractAddStepHandler {
 		TeiidConstants.TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE,
 		TeiidConstants.TRANSPORT_IN_BUFFER_SIZE_ATTRIBUTE,
 		TeiidConstants.TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE,
-		
-		TeiidConstants.AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE,
-		TeiidConstants.AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE,
-		TeiidConstants.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE,
-		TeiidConstants.AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE,
-		TeiidConstants.AUTHENTICATION_TYPE_ATTRIBUTE,
 		
 		TeiidConstants.PG_MAX_LOB_SIZE_ALLOWED_ELEMENT,
 		
@@ -141,34 +110,7 @@ class TransportAdd extends AbstractAddStepHandler {
 			transport.setEmbedded(true);
 			LogManager.logDetail(LogConstants.CTX_SECURITY, IntegrationPlugin.Util.getString("socket_binding_not_defined",  transportName)); //$NON-NLS-1$
 		}
-    	
-		String securityDomain = null;
-   		if (isDefined(AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE, operation, context)) {
-    		securityDomain = asString(AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE, operation, context);
-    		transport.setAuthenticationDomain(securityDomain);
-    	}  
-   		
-   		if (isDefined(AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE, operation, context)) {
-   			transport.setSessionMaxLimit(asLong(AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE, operation, context));
-   		}
-    	
-   		if (isDefined(AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE, operation, context)) {
-   			transport.setSessionExpirationTimeLimit(asLong(AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE, operation, context));
-   		}
-   		
-   		if (isDefined(AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE, operation, context)) {
-   				LogManager.logWarning(LogConstants.CTX_SECURITY, IntegrationPlugin.Util.getString("security_not_correct",  transportName)); //$NON-NLS-1$
-    			transport.setAuthenticationType(AuthenticationType.GSS);
-    			transport.setAuthenticationDomain(asString(AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE, operation, context));
-   		}   		
-   		
-   		if (isDefined(AUTHENTICATION_TYPE_ATTRIBUTE, operation, context)) {
-   			transport.setAuthenticationType(AuthenticationType.valueOf(asString(AUTHENTICATION_TYPE_ATTRIBUTE, operation, context)));
-   		}
-   		else {
-   			transport.setAuthenticationType(AuthenticationType.USERPASSWORD);
-   		}
-   		
+    	   		
    		if (isDefined(PG_MAX_LOB_SIZE_ALLOWED_ELEMENT, operation, context)) {
    			transport.setMaxODBCLobSizeAllowed(asInt(PG_MAX_LOB_SIZE_ALLOWED_ELEMENT, operation, context));
    		}
@@ -180,6 +122,7 @@ class TransportAdd extends AbstractAddStepHandler {
     	transportBuilder.addDependency(TeiidServiceNames.BUFFER_MGR, BufferManager.class, transport.getBufferManagerInjector());
     	transportBuilder.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class, transport.getVdbRepositoryInjector());
     	transportBuilder.addDependency(TeiidServiceNames.ENGINE, DQPCore.class, transport.getDqpInjector());
+    	transportBuilder.addDependency(TeiidServiceNames.SESSION, SessionService.class, transport.getSessionServiceInjector());
         
         transportBuilder.setInitialMode(ServiceController.Mode.ACTIVE);
         newControllers.add(transportBuilder.install());

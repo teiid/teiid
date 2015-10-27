@@ -39,6 +39,12 @@ public interface ClientServiceRegistry {
 	
 	SecurityHelper getSecurityHelper();
 	
+	/**
+	 * Provides the authentication type for pre-8.7 JDBC clients.
+	 * 
+	 * @return
+	 */
+	@Deprecated()
 	AuthenticationType getAuthenticationType();
 	
 	void waitForFinished(String vdbName, int vdbVersion, int timeOutMillis) throws ConnectionException;

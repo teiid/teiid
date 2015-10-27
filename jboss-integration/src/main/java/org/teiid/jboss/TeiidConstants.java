@@ -394,19 +394,19 @@ public class TeiidConstants {
         .setDefaultValue(new ModelNode(0))
         .build();   
 
-	@Deprecated
-    public static SimpleAttributeDefinition AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE.getModelName(), ModelType.STRING)
-        .setXmlName(Element.AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE.getXMLName())
-        .setAllowNull(true)
-        .setAllowExpression(false)
-        .build();   
-	
 	public static SimpleAttributeDefinition AUTHENTICATION_TYPE_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.AUTHENTICATION_TYPE_ATTRIBUTE.getModelName(), ModelType.STRING)
         .setXmlName(Element.AUTHENTICATION_TYPE_ATTRIBUTE.getXMLName())
         .setAllowNull(true)
         .setAllowExpression(false)
         .setDefaultValue(new ModelNode(AuthenticationType.USERPASSWORD.name()))
         .build();	
+	
+	public static SimpleAttributeDefinition AUTHENTICATION_TRUST_ALL_LOCAL = new SimpleAttributeDefinitionBuilder(Element.AUTHENTICATION_TRUST_ALL_LOCAL.getModelName(), ModelType.BOOLEAN)
+    	.setXmlName(Element.AUTHENTICATION_TRUST_ALL_LOCAL.getXMLName())
+    	.setAllowNull(true)
+    	.setAllowExpression(false)
+    	.setDefaultValue(new ModelNode(true))
+    	.build();	
 	
 	//PG_ELEMENT("pg"), //$NON-NLS-1$
 	public static SimpleAttributeDefinition PG_MAX_LOB_SIZE_ALLOWED_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.PG_MAX_LOB_SIZE_ALLOWED_ELEMENT.getModelName(), ModelType.INT)

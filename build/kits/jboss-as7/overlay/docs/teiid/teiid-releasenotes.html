@@ -25,24 +25,7 @@
 </UL>
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <ul>
-<<<<<<< HEAD
     <li>TEIID-3601 <b>Large row counts</b> internal tables and source queries are no longer limited to max integer rows.  However update counts, count aggregate values, user result sets, etc. are still limited to max integer.
-=======
-    <li>TEIID-3411 <b>LDAP modeling</b> can now better account for associations defined by multivalued attributes.
-    <li>TEIID-3323 <b>Vertica translator</b> added.
-    <li>TEIID-3515 TEIID-3530 <b>Dependent join enhancements</b> in hints and pushdown planning.
-    <li>TEIID-2883 <b>Actian Vector in Hadoop</b> Translator added</li>
-    <li>TEIID-3595 TEIID-3594 <b>Logging Enhancements</b> for command and audit logging</li>
-    <li>TEIID-3546 <b>IS DISTINCT FROM</b> syntax support added for use in procedures.</li>
-    <li>TEIID-3521 <b>Swagger Support</b> for auto-generated REST web services</li>
-    <li>TEIID-3652 <b>Additional OUTER JOIN planning</b> to allow more flexibility in join ordering</li>
-    <li>TEIID-3668/TEIID-3618 <b>OAuth Support</b>  with JWT Bearer Access Token and Salesforce SSO using OAuth2 (RefreshToken, JWT)</li>
-    <li>TEIID-3712 <b>Date/Time Keyword Literal</b> support was added in the parser.</li>
-    <li>TEIID-3722 <b>Option to not widen comparisons to string</b> was added via the system property org.teiid.widenComparisonToString</li>
-    <li>TEIID-3327 <b>OSIsoft PI translator</b> added for use with the PI JDBC driver.</li>
-    <li>TEIID-3727 <b>Salesforce Translator</b> added a translator and resource-adapter based on Salesforce Partner API 34</li>
-    <li>TEIID-3370 <b>OData4 Translator</b> added new translator to read/write from any compliant OData V4 source</li>
->>>>>>> 5ba37fd0e3e7f5cede164f9619da6e08297e74f6
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -61,10 +44,8 @@
 
 <h4>from 8.x</h4>
 <ul>
-   <li>TEIID-2754 view are reported as VIEW table type in the metadata.  Use the connection property reportAsViews=false to restore the old behavior.</li>
    <li>TEIID-3601 changed the rowCount field on CommandLogMessages from Integer to Long.</li>
    <li>TEIID-3752 the admin assignToModel method was removed</li>
-   <li>TEIID-3753 org.teiid.widenComparisonToString now defaults to false.</li>
 </ul>
 
 <h4>from 8.11</h4>
@@ -175,6 +156,13 @@ specified and isSourceRequired should return false (see setSourceRequired).  If 
 <h2><a name="Configuration">Configuration Issues</a></h2>
 
 See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on configuration and installation.
+
+<h4>from 8.x</h4>
+<ul>
+   <li>TEIID-2754 view are reported as VIEW table type in the metadata.  Use the connection property reportAsViews=false to restore the old behavior.</li>
+   <li>TEIID-3753 org.teiid.widenComparisonToString now defaults to false.</li>
+   <li>TEIID-3669 there is now a single session service.  Common configuration properties need to be consolidated.  With TEIID-3790 this also means that you may want to change the default of trust-all-local to false to restrict local pass-through connections.</li>
+</ul>
 
 <h4>from 8.11</h4>
 <ul>

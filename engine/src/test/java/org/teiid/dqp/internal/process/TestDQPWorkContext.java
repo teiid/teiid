@@ -79,14 +79,23 @@ public class TestDQPWorkContext {
 	
 	@Test public void testAnyAuthenticated() {
 		DQPWorkContext message = new DQPWorkContext();
-		message.setSession(Mockito.mock(SessionMetadata.class));
+		SessionMetadata mock = Mockito.mock(SessionMetadata.class);
+		message.setSession(mock);
 		VDBMetaData vdb = new VDBMetaData();
 		DataPolicyMetadata dpm = new DataPolicyMetadata();
 		dpm.setAnyAuthenticated(true);
 		vdb.addDataPolicy(dpm);
-		Mockito.stub(message.getSession().getVdb()).toReturn(vdb);
+		Mockito.stub(mock.getVdb()).toReturn(vdb);
 		
+		//unauthenticated
 		Map<String, DataPolicy> map = message.getAllowedDataPolicies();
+		assertEquals(0, map.size());
+		
+		//authenticated
+		message = new DQPWorkContext();
+		Mockito.stub(mock.getSubject()).toReturn(new Subject());
+		message.setSession(mock);
+		map = message.getAllowedDataPolicies();
 		assertEquals(1, map.size());
 	}
 	

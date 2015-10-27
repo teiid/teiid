@@ -356,16 +356,13 @@
             <async-thread-pool>teiid-async</async-thread-pool>
             <resultset-cache infinispan-container="teiid" name="resultset"/>
             <preparedplan-cache infinispan-container="teiid" name="preparedplan"/>
-            
+
+            <authentication security-domain="teiid-security"/>
+                        
             <transport name="embedded"/>
-            <transport name="odata">
-                <authentication security-domain="teiid-security"/>
-            </transport>
-            <transport name="jdbc" protocol="teiid" socket-binding="teiid-jdbc">
-                <authentication security-domain="teiid-security"/>
-            </transport>
+            <transport name="odata"/>
+            <transport name="jdbc" protocol="teiid" socket-binding="teiid-jdbc"/>
             <transport name="odbc" protocol="pg" socket-binding="teiid-odbc">
-                <authentication security-domain="teiid-security"/>
                 <ssl mode="disabled"/>
             </transport>
             <policy-decider-module>org.jboss.teiid</policy-decider-module>        

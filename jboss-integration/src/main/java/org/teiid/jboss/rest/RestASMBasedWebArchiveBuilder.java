@@ -80,14 +80,9 @@ public class RestASMBasedWebArchiveBuilder {
 		props.setProperty("${vdb-version}", String.valueOf(vdb.getVersion()));
 		props.setProperty("${api-page-title}", vdb.getName() + "_" + vdb.getVersion() + " API");
 		
-		boolean passthroughAuth = false;
 		String securityType = vdb.getPropertyValue(ResteasyEnabler.REST_NAMESPACE+"security-type");
 		String securityDomain = vdb.getPropertyValue(ResteasyEnabler.REST_NAMESPACE+"security-domain");
 		String securityRole = vdb.getPropertyValue(ResteasyEnabler.REST_NAMESPACE+"security-role");
-		String passthoughAuthStr = vdb.getPropertyValue(ResteasyEnabler.REST_NAMESPACE+"passthrough-auth");
-		if (passthoughAuthStr != null) {
-			passthroughAuth = Boolean.parseBoolean(passthoughAuthStr);
-		}
 		
 		props.setProperty("${security-role}", ((securityRole == null)?"rest":securityRole));
 		props.setProperty("${security-domain}", ((securityDomain == null)?"teiid-security":securityDomain));
@@ -114,7 +109,7 @@ public class RestASMBasedWebArchiveBuilder {
 		ArrayList<String> applicationViews = new ArrayList<String>();
 		for (ModelMetaData model:vdb.getModelMetaDatas().values()) {
 			Schema schema = metadataStore.getSchema(model.getName());
-			byte[] viewContents = getViewClass(vdb.getName(), vdb.getVersion(), model.getName(), schema, passthroughAuth);
+			byte[] viewContents = getViewClass(vdb.getName(), vdb.getVersion(), model.getName(), schema, true);
 			if (viewContents != null) {
 				writeEntry("WEB-INF/classes/org/teiid/jboss/rest/"+model.getName()+".class", out, viewContents);
 				applicationViews.add(schema.getName());

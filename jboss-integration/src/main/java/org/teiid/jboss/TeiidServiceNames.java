@@ -28,6 +28,7 @@ import org.teiid.deployers.VDBStatusChecker;
 
 public class TeiidServiceNames {
 	public static ServiceName ENGINE = ServiceName.JBOSS.append("teiid", "query-engine"); //$NON-NLS-1$ //$NON-NLS-2$
+	public static ServiceName SESSION = ServiceName.JBOSS.append("teiid", "session"); //$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName TRANSLATOR_REPO = ServiceName.JBOSS.append("teiid", "translator-repository");//$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName VDB_REPO = ServiceName.JBOSS.append("teiid", "vdb-repository");//$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName TRANSLATOR_BASE = ServiceName.JBOSS.append("teiid", "translator");//$NON-NLS-1$ //$NON-NLS-2$

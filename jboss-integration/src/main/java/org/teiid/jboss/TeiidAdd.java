@@ -60,13 +60,8 @@ import org.jboss.dmr.ModelNode;
 import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoadException;
-import org.jboss.msc.service.ServiceBuilder;
+import org.jboss.msc.service.*;
 import org.jboss.msc.service.ServiceBuilder.DependencyType;
-import org.jboss.msc.service.ServiceContainer;
-import org.jboss.msc.service.ServiceController;
-import org.jboss.msc.service.ServiceName;
-import org.jboss.msc.service.ServiceTarget;
-import org.jboss.msc.service.ValueService;
 import org.jboss.msc.value.InjectedValue;
 import org.teiid.CommandContext;
 import org.teiid.PolicyDecider;
@@ -83,14 +78,17 @@ import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.DefaultAuthorizationValidator;
 import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.SessionAwareCache;
+import org.teiid.dqp.service.SessionService;
 import org.teiid.events.EventDistributorFactory;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.net.socket.AuthenticationType;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.replication.jgroups.JGroupsObjectReplicator;
 import org.teiid.runtime.MaterializationManager;
 import org.teiid.services.InternalEventDistributorFactory;
+import org.teiid.services.SessionServiceImpl;
 
 class TeiidAdd extends AbstractAddStepHandler {
 	
@@ -142,7 +140,13 @@ class TeiidAdd extends AbstractAddStepHandler {
 		TeiidConstants.RSC_NAME_ATTRIBUTE,
 		TeiidConstants.RSC_CONTAINER_NAME_ATTRIBUTE,
 		TeiidConstants.RSC_MAX_STALENESS_ATTRIBUTE,
-		TeiidConstants.RSC_ENABLE_ATTRIBUTE
+		TeiidConstants.RSC_ENABLE_ATTRIBUTE,
+		
+		// session
+		TeiidConstants.AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE,
+		TeiidConstants.AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE,
+		TeiidConstants.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE,
+		TeiidConstants.AUTHENTICATION_TYPE_ATTRIBUTE,
 	};
 	
 	@Override
@@ -464,6 +468,59 @@ class TeiidAdd extends AbstractAddStepHandler {
 			}
         	
         }, OperationContext.Stage.RUNTIME);
+
+        //install a session service
+        //TODO: may eventually couple this with DQPCore
+        final SessionServiceImpl sessionServiceImpl = new SessionServiceImpl();
+        
+        if (isDefined(AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE, operation, context)) {
+   			String securityDomain = asString(AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE, operation, context);
+   			sessionServiceImpl.setSecurityDomain(securityDomain);
+		}  
+   		
+   		if (isDefined(AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE, operation, context)) {
+   			sessionServiceImpl.setSessionMaxLimit(asLong(AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE, operation, context));
+   		}
+    	
+   		if (isDefined(AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE, operation, context)) {
+   			sessionServiceImpl.setSessionExpirationTimeLimit(asLong(AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE, operation, context));
+   		}
+   		
+   		if (isDefined(AUTHENTICATION_TYPE_ATTRIBUTE, operation, context)) {
+   			sessionServiceImpl.setAuthenticationType(AuthenticationType.valueOf(asString(AUTHENTICATION_TYPE_ATTRIBUTE, operation, context)));
+   		}
+   		else {
+   			sessionServiceImpl.setAuthenticationType(AuthenticationType.USERPASSWORD);
+   		}
+   		
+   		if (isDefined(AUTHENTICATION_TRUST_ALL_LOCAL, operation, context)) {
+   			boolean allowUnauthenticated = asBoolean(AUTHENTICATION_TRUST_ALL_LOCAL, operation, context);
+   			sessionServiceImpl.setTrustAllLocal(allowUnauthenticated);
+		}
+   		
+   		sessionServiceImpl.setDqp(engine.getValue());
+   		sessionServiceImpl.setVDBRepository(vdbRepository);
+   		sessionServiceImpl.setSecurityHelper(new JBossSecurityHelper());
+   		sessionServiceImpl.start();
+   		
+   		ServiceBuilder<SessionService> sessionServiceBuilder = target.addService(TeiidServiceNames.SESSION, new Service<SessionService>() {
+   			@Override
+   			public SessionService getValue() throws IllegalStateException,
+   					IllegalArgumentException {
+   				return sessionServiceImpl;
+   			}
+   			
+   			@Override
+   			public void stop(StopContext context) {
+   				sessionServiceImpl.stop();
+   			}
+
+			@Override
+			public void start(StartContext context) throws StartException {
+						
+			}
+   		});
+    	newControllers.add(sessionServiceBuilder.install());
 	}
 	
     static <T> T buildService(Class<T> type, String moduleName) throws OperationFailedException {

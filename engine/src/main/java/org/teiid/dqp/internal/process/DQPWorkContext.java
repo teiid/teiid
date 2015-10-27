@@ -310,7 +310,7 @@ public class DQPWorkContext implements Serializable {
 	}
     
 	private boolean matchesPrincipal(Set<String> userRoles, DataPolicy policy) {
-		if (policy.isAnyAuthenticated()) {
+		if (policy.isAnyAuthenticated() && this.getSubject() != null) {
 			return true;
 		}
 		return !Collections.disjoint(policy.getMappedRoleNames(), userRoles);

@@ -96,6 +96,17 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     		writeObjectReplicatorConfiguration(writer, node);
     		writer.writeEndElement();
     	}
+    	
+    	// authentication
+    	if (like(node, Element.AUTHENTICATION_ELEMENT)) {
+			writer.writeStartElement(Element.AUTHENTICATION_ELEMENT.getLocalName());
+			AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+			AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+			AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+			AUTHENTICATION_TYPE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+			AUTHENTICATION_TRUST_ALL_LOCAL.marshallAsAttribute(node, false, writer);
+			writer.writeEndElement();
+    	}
     	   	
     	if (has(node, Element.TRANSPORT_ELEMENT.getLocalName())) {
 	    	ArrayList<String> transports = new ArrayList<String>(node.get(Element.TRANSPORT_ELEMENT.getLocalName()).keys());
@@ -140,16 +151,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     	TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE.marshallAsAttribute(node, false, writer);
     	TRANSPORT_IN_BUFFER_SIZE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
     	TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
-    	
-    	// authentication
-    	if (like(node, Element.AUTHENTICATION_ELEMENT)) {
-			writer.writeStartElement(Element.AUTHENTICATION_ELEMENT.getLocalName());
-			AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE.marshallAsAttribute(node, false, writer);
-			AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE.marshallAsAttribute(node, false, writer);
-			AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE.marshallAsAttribute(node, false, writer);
-			AUTHENTICATION_TYPE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
-			writer.writeEndElement();
-    	}
     	
     	if (like(node, Element.PG_ELEMENT)) {
 			writer.writeStartElement(Element.PG_ELEMENT.getLocalName());
@@ -333,8 +334,10 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
                     	else {
                         	throw new XMLStreamException();
                     	}
-                        break;                            
-                            
+                        break;
+                    case AUTHENTICATION_ELEMENT:
+    					parseAuthentication(reader, bootServices);
+    					break;
                      default: 
                         throw ParseUtils.unexpectedElement(reader);
                     }
@@ -403,9 +406,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
         while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
             Element element = Element.forName(reader.getLocalName());
             switch (element) {
-				case AUTHENTICATION_ELEMENT:
-					parseAuthentication(reader, node);
-					break;
 				case PG_ELEMENT:
 					parsePg(reader, node);
 					break;					
@@ -429,9 +429,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     			
     			switch(element) {
     			case AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE:
-    				node.get(element.getModelName()).set(attrValue);
-    				break;
-    			case AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE:
     				node.get(element.getModelName()).set(attrValue);
     				break;
     			case AUTHENTICATION_TYPE_ATTRIBUTE:

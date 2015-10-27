@@ -93,6 +93,7 @@ public class SessionServiceImpl implements SessionService {
     private Map<String, SessionMetadata> sessionCache = new ConcurrentHashMap<String, SessionMetadata>();
     private Timer sessionMonitor = null;    
     private List<String> securityDomainNames;
+	private boolean trustAllLocal = true;
     
     public void setSecurityDomain(String domainName) {
     	if (domainName == null) {
@@ -186,9 +187,12 @@ public class SessionServiceImpl implements SessionService {
 	    		if (onlyAllowPassthrough || authType.equals(AuthenticationType.GSS)) {
 	        		subject = this.securityHelper.getSubjectInContext(securityDomain);
 	    	        if (subject == null) {
-	    	        	throw new LoginException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40087));
+	    	        	if ((!onlyAllowPassthrough || !trustAllLocal)) {
+	    	        		throw new LoginException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40087));
+	    	        	}
+	    	        } else {
+	    	        	userName = escapeName(getUserName(subject, baseUserName)) + AT + securityDomain;
 	    	        }
-	    	        userName = escapeName(getUserName(subject, baseUserName)) + AT + securityDomain;
 	    	        securityContext = this.securityHelper.getSecurityContext();
 	        	} else {
 	        		userName = escapeName(baseUserName) + AT + securityDomain;
@@ -318,8 +322,7 @@ public class SessionServiceImpl implements SessionService {
 	}
 
 	@Override
-	public Collection<SessionMetadata> getSessionsLoggedInToVDB(String VDBName, int vdbVersion)
-			throws SessionServiceException {
+	public Collection<SessionMetadata> getSessionsLoggedInToVDB(String VDBName, int vdbVersion) {
 		if (VDBName == null || vdbVersion <= 0) {
 			return Collections.emptyList();
 		}
@@ -566,5 +569,13 @@ public class SessionServiceImpl implements SessionService {
         }
         return userName;
     }
+    
+    public boolean isTrustAllLocal() {
+		return trustAllLocal;
+	}
+    
+    public void setTrustAllLocal(boolean trustAllLocal) {
+		this.trustAllLocal = trustAllLocal;
+	}
         
 }
