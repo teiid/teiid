@@ -59,11 +59,15 @@ public class TestPassthroughAuthentication {
 	public void test() throws Exception {
 		try {
 			server.deployVDB("not_there", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
+			server.getSessionService().setTrustAllLocal(false);
 			try {
 				server.createConnection("jdbc:teiid:not_there.1;passthroughAuthentication=true");
 				fail();
 			} catch (Exception e) {
 			}
+
+			server.getSessionService().setTrustAllLocal(true);
+			server.createConnection("jdbc:teiid:not_there.1;passthroughAuthentication=true");
 			
 			securityHelper.associateSecurityContext("testSC");
 			try {
