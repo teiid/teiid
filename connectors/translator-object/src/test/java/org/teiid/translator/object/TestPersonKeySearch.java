@@ -35,6 +35,7 @@ import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.language.Select;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.object.simpleMap.SimpleMapCacheExecutionFactory;
 import org.teiid.translator.object.testdata.person.PersonCacheSource;
 import org.teiid.translator.object.testdata.person.PersonSchemaVDBUtility;
 import org.teiid.translator.object.testdata.trades.VDBUtility;
@@ -195,7 +196,7 @@ public class TestPersonKeySearch {
 	}
 
 	protected ObjectExecution createExecution(Select command, int rowCount, int colCount) throws TranslatorException {
-		ObjectExecutionFactory translator = new ObjectExecutionFactory();
+		ObjectExecutionFactory translator = new SimpleMapCacheExecutionFactory();
 		//		ObjectExecutionFactory translator = new ObjectExecutionFactory() {
 //			@Override
 //			public List<Object> search(Select command, String cacheName,

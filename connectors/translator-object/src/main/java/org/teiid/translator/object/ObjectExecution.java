@@ -188,7 +188,7 @@ public class ObjectExecution implements ResultSetExecution {
 	private Iterator<Object> cacheResultsIt = null;
 	private ObjectExecutionFactory factory;
 	private ExecutionContext executionContext;
-	private ObjectSelectVisitor visitor;
+	private ObjectVisitor visitor;
 	private int depth = 0; // the bottom depth to go, not all depths may retrieve data/
 	private int colSize = 0;
 
@@ -200,7 +200,7 @@ public class ObjectExecution implements ResultSetExecution {
 		this.executionContext = executionContext;
 		this.scriptEngine = connection.getClassRegistry().getReadScriptEngine();
 		
-		visitor = createQueryVisitor();
+		visitor = this.createVisitor();
 		
 		visitor.visitNode(query);
 		
@@ -556,22 +556,28 @@ public class ObjectExecution implements ResultSetExecution {
 		this.sc = null;
 	
 		this.cacheResultsIt = null;
+		
+		this.visitor.cleanUp();
 		this.visitor = null;
 		
 	}
 
 	@Override
 	public void cancel()  {
+		this.objResultsItr = null;
+		
+		this.visitor.cleanUp();
+		this.visitor = null;
 	}
+	
+	protected ObjectVisitor createVisitor() {
+        return new ObjectVisitor();
+    }
+	
+	
 	
 	private CompiledScript getCompiledNode(String nodeName) throws ScriptException {
 		return scriptEngine.compile(ClassRegistry.OBJECT_NAME + "." + nodeName);
 	}
-	
-	protected ObjectSelectVisitor createQueryVisitor() {
-		return new ObjectSelectVisitor();
-	}
-	
-
 	
 }

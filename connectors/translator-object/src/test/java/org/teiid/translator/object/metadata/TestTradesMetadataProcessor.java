@@ -11,6 +11,7 @@ import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectExecutionFactory;
+import org.teiid.translator.object.simpleMap.SimpleMapCacheExecutionFactory;
 import org.teiid.translator.object.testdata.trades.TradesCacheSource;
 
 
@@ -21,7 +22,7 @@ public class TestTradesMetadataProcessor {
 	
 	@Before public void beforeEach() throws Exception{	
 		 
-		TRANSLATOR = new ObjectExecutionFactory();
+		TRANSLATOR = new SimpleMapCacheExecutionFactory();
 		TRANSLATOR.start();
     }
 

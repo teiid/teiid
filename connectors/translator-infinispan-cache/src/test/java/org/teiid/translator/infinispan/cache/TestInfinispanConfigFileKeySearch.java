@@ -43,7 +43,6 @@ public class TestInfinispanConfigFileKeySearch extends BasicSearchTest {
     private static InfinispanCacheExecutionFactory factory = null;
     
     private static ObjectConnection conn;
-		
 
 	@BeforeClass
     public static void beforeClass() throws Exception {  
