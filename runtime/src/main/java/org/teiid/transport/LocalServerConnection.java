@@ -197,6 +197,9 @@ public class LocalServerConnection implements ServerConnection {
 			if (workContext.getSubject() != null && currentUser != null && workContext.getSubject().equals(currentUser)) {
 				return true;
 			}
+			if (currentUser == null && workContext.getSubject() == null) {
+				return true; //unauthenticated
+			}
 		}
 		
 		return false;

@@ -161,7 +161,7 @@ See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on c
 <ul>
    <li>TEIID-2754 view are reported as VIEW table type in the metadata.  Use the connection property reportAsViews=false to restore the old behavior.</li>
    <li>TEIID-3753 org.teiid.widenComparisonToString now defaults to false.</li>
-   <li>TEIID-3669 there is now a single session service.  Common configuration properties need to be consolidated.  With TEIID-3790 this also means that you may want to change the default of trust-all-local to false to restrict local pass-through connections.</li>
+   <li>TEIID-3669 there is now a single session service.  Common configuration properties need to be consolidated.  With TEIID-3790 this also means that you may want to change the default of trust-all-local to false to restrict local pass-through connections.  Also the VDB REST passthrough-auth property is no longer used.</li>
 </ul>
 
 <h4>from 8.11</h4>
