@@ -38,6 +38,7 @@ import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionService;
@@ -2442,6 +2443,31 @@ public class TestProcedureProcessor {
         HardcodedDataManager hdm = new HardcodedDataManager(metadata);
         hdm.addData("EXEC f1()", Arrays.asList("a"));
         helpProcess(plan, cc, hdm, new List[] {Arrays.asList("a")});
+    }
+    
+    @Test public void testSomething() throws Exception {
+    	TransformationMetadata metadata = RealMetadataFactory.fromDDL("CREATE PROCEDURE p1(VARIADIC parameters integer) returns integer[] AS BEGIN "
+    			+ "return parameters; END;", "x", "y");
+    	StringBuilder sql = new StringBuilder("exec p1(0");
+    	int arraySize = 66000; //dependent upon the jre.  this is suffient to trigger the issue on oracle 1.8
+    	for (int i = 1; i < arraySize; i++) {
+    		sql.append(',').append(i);
+    	}
+    	sql.append(')');
+    	
+    	ProcessorPlan plan = helpGetPlan(sql.toString(), metadata);
+        CommandContext cc = TestProcessor.createCommandContext();
+        cc.setMetadata(metadata);
+        
+        Integer[] val = new Integer[arraySize];
+        for (int i = 0; i < val.length; i++) {
+        	val[i] = i;
+        }
+        
+        ArrayImpl expected = new ArrayImpl(val);
+        
+        HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+        helpProcess(plan, cc, hdm, new List[] {Arrays.asList(expected)});
     }
     
     private static final boolean DEBUG = false;
