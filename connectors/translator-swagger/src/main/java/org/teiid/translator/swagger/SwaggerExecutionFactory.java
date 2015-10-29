@@ -22,81 +22,54 @@
 
 package org.teiid.translator.swagger;
 
+import static org.teiid.translator.swagger.SwaggerPlugin.Util;
+
+import io.swagger.models.Swagger;
+import io.swagger.parser.SwaggerParser;
+
 import java.util.Collections;
 import java.util.List;
 
 import javax.resource.cci.ConnectionFactory;
-import javax.xml.ws.Service.Mode;
-import javax.xml.ws.http.HTTPBinding;
-import javax.xml.ws.soap.SOAPBinding;
 
-import org.teiid.core.BundleUtil;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.language.Call;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.WSConnection;
 
 @Translator(name="swagger", description="A translator for making swagger based data service call")
 public class SwaggerExecutionFactory extends ExecutionFactory<ConnectionFactory, WSConnection> {
+    
+    private Swagger swagger;
 
-	public enum Binding {
-		HTTP(HTTPBinding.HTTP_BINDING), 
-		SOAP11(SOAPBinding.SOAP11HTTP_BINDING),
-		SOAP12(SOAPBinding.SOAP12HTTP_BINDING);
+	public enum Action {
+		GET(Util.getString("http_get")), 
+		PUT(Util.getString("http_put")),
+		DELETE(Util.getString("http_delete")),
+		POST(Util.getString("http_post"));
 		
-		private String bindingId;
+		private String action;
 		
-		private Binding(String bindingId) {
-			this.bindingId = bindingId;
+		private Action(String action) {
+			this.action = action;
 		}
 		
-		public String getBindingId() {
-			return bindingId;
+		public String getAction() {
+			return action;
 		}
 	}
-		
-	private Mode defaultServiceMode = Mode.PAYLOAD;
-	private Binding defaultBinding = Binding.SOAP12;
-	private String xmlParamName;
 	
 	public SwaggerExecutionFactory() {
 		setSourceRequiredForMetadata(true);
 	}
 
-	@TranslatorProperty(description="Contols request/response message wrapping - set to MESSAGE for full control over SOAP messages.", display="Default Service Mode")
-	public Mode getDefaultServiceMode() {
-		return defaultServiceMode;
-	}
-	
-	public void setDefaultServiceMode(Mode mode) {
-		this.defaultServiceMode = mode;
-	}
-
-	@TranslatorProperty(description="Contols what SOAP or HTTP type of invocation will be used if none is specified.", display="Default Binding")
-	public Binding getDefaultBinding() {
-		return defaultBinding;
-	}
-	
-	public void setDefaultBinding(Binding defaultInvocationType) {
-		this.defaultBinding = defaultInvocationType;
-	}
-	
-	@TranslatorProperty(description="Used with the HTTP binding (typically with the GET method) to indicate that the request document should be part of the query string.", display="XML Param Name")
-	public String getXMLParamName() {
-		return xmlParamName;
-	}
-	
-	public void setXMLParamName(String xmlParamName) {
-		this.xmlParamName = xmlParamName;
-	}
-	
     @Override
     public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, WSConnection connection) throws TranslatorException {
     
@@ -111,17 +84,44 @@ public class SwaggerExecutionFactory extends ExecutionFactory<ConnectionFactory,
 	@Override
 	public void getMetadata(MetadataFactory metadataFactory, WSConnection conn) throws TranslatorException {
 		
-		if(conn != null && conn.getSwagger() != null) {
-		    SwaggerMetadataProcessor metadataProcessor = new SwaggerMetadataProcessor(conn.getSwagger());
-		    PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
-		    metadataProcessor.process(metadataFactory, conn);
-		}
+	    SwaggerMetadataProcessor metadataProcessor = (SwaggerMetadataProcessor) getMetadataProcessor();
+	    PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
+	    metadataProcessor.setExecutionfactory(this);
+        metadataProcessor.process(metadataFactory, conn);
 		
 	}
 	
 	@Override
+    public MetadataProcessor<WSConnection> getMetadataProcessor() {
+        return new SwaggerMetadataProcessor();
+    }
+
+    @Override
 	public boolean areLobsUsableAfterClose() {
 		return true;
 	}
+    
+    /**
+     * TODO-- if 'conn.getSwagger()' will get the location of Swagger json/yaml is a http address
+     *        need add logic to handle security authentication 
+     * @param conn
+     * @return
+     * @throws TranslatorException
+     */
+    protected Swagger getSchema(WSConnection conn) throws TranslatorException {
+        if(swagger == null) {
+            String location = conn.getSwagger();
+            swagger = new SwaggerParser().read(location);
+        }
+        return swagger;
+    }
+    
+    protected Action getHttpAction(String action) {
+        return Action.valueOf(action);
+    }
+    
+    protected String getAction(Action action) {
+        return action.getAction();
+    }
 
 }
