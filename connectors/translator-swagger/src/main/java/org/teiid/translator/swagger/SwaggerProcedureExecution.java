@@ -31,6 +31,7 @@ import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getHttpHost;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getBaseUrl;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.isPathParam;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.isEndPointParam;
+import static org.teiid.translator.swagger.SwaggerMetadataProcessor.isPayload;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -116,23 +117,22 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
     public void execute() throws TranslatorException {
         
         Action method = getHttpAction(this.procedure.getMetadataObject());
-        Object payload = null;
+        
         List<Argument> arguments = this.procedure.getArguments();
+        
+        Object payload = getPayload(arguments);
         
         String endpoint = buildEndPoint(method, getHttpHost(this.procedure.getMetadataObject()), getBaseUrl(this.procedure.getMetadataObject()),this.procedure.getProcedureName(),arguments);
         
-        if(method.equals(Action.POST)) {
-            payload = arguments.get(0).getArgumentValue().getValue();
-        }
         
         try {
             Dispatch<DataSource> dispatch = this.conn.createDispatch(HTTPBinding.HTTP_BINDING, endpoint, DataSource.class, Mode.MESSAGE);
 
             dispatch.getRequestContext().put(MessageContext.HTTP_REQUEST_METHOD, executionFactory.getAction(method));
             
-            if(payload == null && (method.equals(Action.POST) || method.equals(Action.PUT))){
-                throw new TranslatorException(SwaggerPlugin.Event.TEIID28003, SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28003, method));
-            }
+//            if(payload == null && (method.equals(Action.POST) || method.equals(Action.PUT))){
+//                throw new TranslatorException(SwaggerPlugin.Event.TEIID28003, SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28003, method));
+//            }
             
             Map<String, List<String>> httpHeaders = (Map<String, List<String>>)dispatch.getRequestContext().get(MessageContext.HTTP_REQUEST_HEADERS);
             if (customHeaders != null) {
@@ -174,6 +174,21 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
  
     }
     
+    @SuppressWarnings("unused")
+    private Object getPayload(List<Argument> arguments) {
+        
+        Object payload = null;
+        
+        for(Argument argument : arguments){
+            ProcedureParameter parameter = argument.getMetadataObject();
+            if(isPayload(parameter)){
+                payload = argument.getArgumentValue().getValue();
+                break;
+            }
+        }
+        return payload;
+    }
+
     static void parseHeader(Map<String, List<String>> httpHeaders, Clob headers) throws ParseException, TranslatorException, IOException, SQLException {
         SimpleContentHandler sch = new SimpleContentHandler();
         JSONParser parser = new JSONParser();
@@ -236,26 +251,24 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
         
         path += subPath;
         
-        if(method.equals(Action.GET) || method.equals(Action.DELETE)) { 
-            boolean first = true;
-            for(Argument argument : arguments){
-                ProcedureParameter parameter = argument.getMetadataObject();
-                if(isEndPointParam(parameter)) {
-                    continue;
+        boolean first = true;
+        for(Argument argument : arguments){
+            ProcedureParameter parameter = argument.getMetadataObject();
+            if(isEndPointParam(parameter)) {
+                continue;
+            }
+            boolean isPathParam = isPathParam(parameter); 
+            if(isPathParam){
+                if(!path.endsWith(pathSeparator)){
+                    path += pathSeparator;
                 }
-                boolean isPathParam = isPathParam(parameter); 
-                if(isPathParam){
-                    if(!path.endsWith(pathSeparator)){
-                        path += pathSeparator;
-                    }
-                    path += argument.getArgumentValue().getValue(); 
+                path += argument.getArgumentValue().getValue(); 
+            } else {
+                if(first) {
+                    path = path + getParamSeparatorFirst() + parameter.getName() + getParamSeparatorEqual() + argument.getArgumentValue().getValue(); 
+                    first = false;
                 } else {
-                    if(first) {
-                        path = path + getParamSeparatorFirst() + parameter.getName() + getParamSeparatorEqual() + argument.getArgumentValue().getValue(); 
-                        first = false;
-                    } else {
-                        path = path + getParamSeparator() + parameter.getName() + getParamSeparatorEqual() + argument.getArgumentValue().getValue(); 
-                    }
+                    path = path + getParamSeparator() + parameter.getName() + getParamSeparatorEqual() + argument.getArgumentValue().getValue(); 
                 }
             }
         }

@@ -226,7 +226,11 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
     }
     
     static boolean isEndPointParam(ProcedureParameter param){
-        return param.getName().equals("headers") || param.getName().equals("contentType"); //$NON-NLS-1$ //$NON-NLS-2$
+        return param.getName().equals("headers") || param.getName().equals("contentType") || param.getName().equals("body"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    }
+    
+    static boolean isPayload(ProcedureParameter param){
+        return param.getType().equals(Type.In) && param.getName().equals("body"); //$NON-NLS-1$
     }
     
 }

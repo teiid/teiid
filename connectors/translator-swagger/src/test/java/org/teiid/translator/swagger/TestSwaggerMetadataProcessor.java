@@ -78,9 +78,12 @@ public class TestSwaggerMetadataProcessor {
             procSet.add(p.getName());
         }
         
-        assertEquals(16, procSet.size());
+        assertEquals(23, procSet.size());
         
         assertTrue(procSet.contains("customer"));
+        assertTrue(procSet.contains("customer_add"));
+        assertTrue(procSet.contains("customer_addList"));
+        
         assertTrue(procSet.contains("customer_customerList"));
         assertTrue(procSet.contains("customer_getAll"));
         assertTrue(procSet.contains("customer_getByCity"));
@@ -88,14 +91,23 @@ public class TestSwaggerMetadataProcessor {
         assertTrue(procSet.contains("customer_getByNumCityCountry"));
         assertTrue(procSet.contains("customer_getByName"));
         assertTrue(procSet.contains("customer_getByNumber"));
+        
         assertTrue(procSet.contains("customer_status"));
-        assertTrue(procSet.contains("customer_update"));
+        
         assertTrue(procSet.contains("customer_delete"));
         assertTrue(procSet.contains("customer_deleteByNumber"));
         assertTrue(procSet.contains("customer_deleteByName"));
         assertTrue(procSet.contains("customer_deleteByCity"));
         assertTrue(procSet.contains("customer_deleteByCountry"));
         assertTrue(procSet.contains("customer_deleteByNumCityCountry"));
+        
+        assertTrue(procSet.contains("customer_update"));
+        assertTrue(procSet.contains("customer_updateByNumber"));
+        assertTrue(procSet.contains("customer_updateByName"));
+        assertTrue(procSet.contains("customer_updateByCity"));
+        assertTrue(procSet.contains("customer_updateByCountry"));
+        assertTrue(procSet.contains("customer_updateByNumCityCountry"));
+        
         
     }
     
@@ -128,22 +140,29 @@ public class TestSwaggerMetadataProcessor {
                 assertTrue(paramSet.contains("customernumber"));
                 assertTrue(paramSet.contains("city"));
                 assertTrue(paramSet.contains("country"));
-            }
-            
+            } 
             // QueryParameter and  PathParameter
-            if(p.getName().equals("customer_getByCity") && p.getName().equals("customer_getByCountry") && p.getName().equals("customer_getByNumCityCountry")){
+            else if(p.getName().equals("customer_getByCity") || p.getName().equals("customer_getByCountry") && p.getName().equals("customer_getByNumCityCountry")){
                 for(ProcedureParameter param : p.getParameters()) {
                     if(param.getType().equals(Type.In) && !param.getName().equals("headers")) {
                         assertFalse(isPathParam(param));
                     }
                 }
-            } else if(p.getName().equals("customer_getByNumber") && p.getName().equals("customer_getByName")) {
+            } else if(p.getName().equals("customer_getByNumber") || p.getName().equals("customer_getByName")) {
                 for(ProcedureParameter param : p.getParameters()) {
                     if(param.getType().equals(Type.In) && !param.getName().equals("headers")) {
                         assertTrue(isPathParam(param));
                     }
                 }
             }
+            
+            // Post parameter
+            else if(p.getName().equals("customer") || p.getName().equals("customer_add") || p.getName().equals("customer_addList")){
+                ProcedureParameter param = p.getParameters().get(1);
+                assertEquals("body", param.getName());
+                assertEquals(Type.In, param.getType());
+            }
+            
             
             List<ProcedureParameter> params = p.getParameters();
             
