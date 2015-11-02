@@ -32,6 +32,8 @@ import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getBaseUrl;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.isPathParam;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.isEndPointParam;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.isPayload;
+import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getProcuces;
+import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getConsumes;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,6 +46,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.activation.DataSource;
 import javax.xml.ws.Dispatch;
@@ -61,6 +64,7 @@ import org.teiid.json.simple.ParseException;
 import org.teiid.json.simple.SimpleContentHandler;
 import org.teiid.language.Argument;
 import org.teiid.language.Call;
+import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.DataNotAvailableException;
@@ -130,10 +134,6 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
 
             dispatch.getRequestContext().put(MessageContext.HTTP_REQUEST_METHOD, executionFactory.getAction(method));
             
-//            if(payload == null && (method.equals(Action.POST) || method.equals(Action.PUT))){
-//                throw new TranslatorException(SwaggerPlugin.Event.TEIID28003, SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28003, method));
-//            }
-            
             Map<String, List<String>> httpHeaders = (Map<String, List<String>>)dispatch.getRequestContext().get(MessageContext.HTTP_REQUEST_HEADERS);
             if (customHeaders != null) {
                 httpHeaders.putAll(customHeaders);
@@ -143,6 +143,8 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
             if(null != headers) {
                 parseHeader(httpHeaders, headers);
             }
+            
+            headersValidation(method, httpHeaders, procedure.getMetadataObject());
             
             DataSource ds = null;
             if (payload instanceof String) {
@@ -157,23 +159,60 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
 
             this.returnValue = dispatch.invoke(ds);
             
-            Map<String, Object> rc = dispatch.getResponseContext();
-            this.responseCode = (Integer)rc.get(WSConnection.STATUS_CODE);
-            if (this.useResponseContext) {
-                //it's presumed that the caller will handle the response codes
-                this.responseContext = rc;
-            } else {
-                if (this.responseCode >= 400) {
-                    String message = conn.getStatusMessage(this.responseCode);
-                    throw new TranslatorException(SwaggerPlugin.Event.TEIID28001, SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28001, this.responseCode, message));
-                }
-            }
+            responseContextValidation(httpHeaders.get("Accept"), dispatch.getResponseContext());            
         } catch (Exception e) {
             throw new TranslatorException(e);
         }
  
     }
-    
+
+    private void responseContextValidation(List<String> list, Map<String, Object> rc) throws TranslatorException {
+        
+        boolean valid = false ;
+        if(null != list) {
+            for(String type : list) {
+                if(returnValue.getContentType().equals(type)) {
+                    valid = true;
+                }
+            }
+            
+            if(!valid) {
+                throw new TranslatorException(SwaggerPlugin.Event.TEIID28006, SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28006, returnValue.getContentType(), list));
+            }
+        }
+        
+        this.responseCode = (Integer)rc.get(WSConnection.STATUS_CODE);
+        if (this.useResponseContext) {
+            //it's presumed that the caller will handle the response codes
+            this.responseContext = rc;
+        } else {
+            if (this.responseCode >= 400) {
+                String message = conn.getStatusMessage(this.responseCode);
+                throw new TranslatorException(SwaggerPlugin.Event.TEIID28001, SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28001, this.responseCode, message));
+            }
+        }
+    }
+
+    private void headersValidation(Action method, Map<String, List<String>> httpHeaders, Procedure procedure) throws TranslatorException {
+
+        Set<String> procudes = getProcuces(procedure);
+        if(httpHeaders.get("Accept") != null) { //$NON-NLS-1$
+            for(String contentType : httpHeaders.get("Accept")) { //$NON-NLS-1$
+                if(!procudes.contains(contentType)){
+                    throw new TranslatorException(SwaggerPlugin.Event.TEIID28004, SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28004, contentType, procudes));
+                }
+            }
+        }
+        
+        Set<String> consumes = getConsumes(procedure);
+        for(String contentType : httpHeaders.get("Content-Type")) { //$NON-NLS-1$
+            // CXF client POST invoke need 'Content-Type' in header
+            if(!consumes.contains(contentType) && method.equals(Action.POST)){
+                throw new TranslatorException(SwaggerPlugin.Event.TEIID28005, SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28005, contentType, consumes));
+            }
+        }
+    }
+
     @SuppressWarnings("unused")
     private Object getPayload(List<Argument> arguments) {
         
@@ -189,7 +228,7 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
         return payload;
     }
 
-    static void parseHeader(Map<String, List<String>> httpHeaders, Clob headers) throws ParseException, TranslatorException, IOException, SQLException {
+    private void parseHeader(Map<String, List<String>> httpHeaders, Clob headers) throws ParseException, TranslatorException, IOException, SQLException {
         SimpleContentHandler sch = new SimpleContentHandler();
         JSONParser parser = new JSONParser();
         Reader characterStream = headers.getCharacterStream();

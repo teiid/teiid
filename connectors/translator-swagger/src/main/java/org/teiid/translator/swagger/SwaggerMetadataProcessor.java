@@ -23,8 +23,10 @@ package org.teiid.translator.swagger;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.BaseColumn.NullType;
@@ -51,6 +53,9 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
     
     private static final String PATH_SEPARATOR = File.separator; 
     private static final String CATALOG_SEPARATOR = "_"; //$NON-NLS-1$
+    private static final String COMMA_SEPARATOR = ","; //$NON-NLS-1$
+    private static final String PROCEDURE_PRODUCES = "produces"; //$NON-NLS-1$
+    private static final String PROCEDURE_CONSUMES = "consumes"; //$NON-NLS-1$
     private static final String PARAMETER_SEPARATOR = "&"; //$NON-NLS-1$
     private static final String PARAMETER_SEPARATOR_FIRST = "?"; //$NON-NLS-1$
     private static final String PARAMETER_SEPARATOR_EQUAL = "="; //$NON-NLS-1$
@@ -73,7 +78,12 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
         Swagger swagger = getSchema(connection);
         baseUrl = swagger.getBasePath();
         if(swagger.getHost() != null && !swagger.getHost().equals("")) { //$NON-NLS-1$
-            httpHost = "http://" + swagger.getHost();//$NON-NLS-1$
+            //TODO-- use other scheme
+            String scheme = "http"; //$NON-NLS-1$
+            if(swagger.getSchemes().size() > 0) {
+                scheme = swagger.getSchemes().get(0).toValue();
+            }
+            httpHost = scheme + "://" + swagger.getHost();//$NON-NLS-1$
         }
         
         for(Entry<String, Path> entry : swagger.getPaths().entrySet()) {
@@ -89,12 +99,18 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
         }
         
         String procName = formProcName(key);
+        String produces = getProduces(path);
+        String consumes = getConsumes(path);
+        String annotation = getOperationSummary(path);
         Procedure procedure = mf.addProcedure(procName);
         procedure.setVirtual(false);
         procedure.setNameInSource(procName);
         procedure.setProperty(HTTP_ACTION, action);
         procedure.setProperty(BASE_URL, baseUrl);
         procedure.setProperty(HTTP_HOST, httpHost); 
+        procedure.setProperty(PROCEDURE_PRODUCES, produces);
+        procedure.setProperty(PROCEDURE_CONSUMES, consumes);
+        procedure.setAnnotation(annotation);
         
         mf.addProcedureParameter("result", TypeFacility.RUNTIME_NAMES.BLOB, Type.ReturnValue, procedure); //$NON-NLS-1$ 
         
@@ -129,6 +145,55 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
         param.setNullType(NullType.Nullable);
     }
     
+    private String getConsumes(Path path) {
+        
+        String consumes = "text/xml; charset=utf-8"; //$NON-NLS-1$
+        for(Operation  operation : path.getOperations()){
+            
+            if(operation.getConsumes() == null) 
+                continue;
+            
+            for(String consume : operation.getConsumes()){
+                consumes += COMMA_SEPARATOR;
+                consumes += consume;
+            }
+        }
+        return consumes;
+    }
+
+    private String getProduces(Path path) {
+        String produces = ""; //$NON-NLS-1$
+        boolean first = true;
+        for(Operation  operation : path.getOperations()){
+            
+            if(operation.getProduces() == null) 
+                continue;
+            
+            for(String produce : operation.getProduces()){
+                if(first) {
+                    produces += produce;
+                    first = false;
+                } else {
+                    produces += COMMA_SEPARATOR;
+                    produces += produce;
+                }
+            }
+        }
+        return produces;
+    }
+
+    private String getOperationSummary(Path path) {
+        String description = ""; //$NON-NLS-1$
+        for(Operation  operation : path.getOperations()) {
+            String tmpString = operation.getDescription();
+            if(tmpString == null || tmpString.equals("")) { //$NON-NLS-1$
+                tmpString = operation.getSummary();
+            }
+            description += tmpString;
+        }
+        return description;
+    }
+
     private Swagger getSchema(WSConnection conn) throws TranslatorException {
         if (this.ef != null) {
             return this.ef.getSchema(conn);
@@ -218,6 +283,30 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
     
     static String getBaseUrl(Procedure procedure) {
         return procedure.getProperty(BASE_URL, false);
+    }
+    
+    static Set<String> getProcuces(Procedure procedure) {
+        Set<String> produceSet = new HashSet<String>();
+        String produces = procedure.getProperty(PROCEDURE_PRODUCES, false);
+        String[] array = produces.split(COMMA_SEPARATOR);
+        for(String produce : array){
+            if(!produce.equals("")) {//$NON-NLS-1$
+                produceSet.add(produce);
+            }
+        }
+        return produceSet;
+    }
+    
+    static Set<String> getConsumes(Procedure procedure) {
+        Set<String> consumeSet = new HashSet<String>();
+        String consumes = procedure.getProperty(PROCEDURE_CONSUMES, false);
+        String[] array = consumes.split(COMMA_SEPARATOR);
+        for(String produce : array){
+            if(!produce.equals("")) {//$NON-NLS-1$
+                consumeSet.add(produce);
+            }
+        }
+        return consumeSet;
     }
     
     static boolean isPathParam(ProcedureParameter param){

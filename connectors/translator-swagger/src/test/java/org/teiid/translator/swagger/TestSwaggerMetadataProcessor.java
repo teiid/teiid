@@ -25,6 +25,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.isPathParam;
+import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getProcuces;
 
 import java.io.File;
 import java.util.HashSet;
@@ -182,6 +183,55 @@ public class TestSwaggerMetadataProcessor {
             assertEquals(Type.Out, param.getType());            
         }
     }
+    
+    @Test
+    public void testAnnotation() throws TranslatorException{
+
+        SwaggerExecutionFactory ef = new SwaggerExecutionFactory();
+        
+        Properties props = new Properties();
+
+        WSConnection mockConnection = Mockito.mock(WSConnection.class);
+        Mockito.stub(mockConnection.getSwagger()).toReturn("http://localhost:8080/swagger.json");
+        
+        MetadataFactory mf = new MetadataFactory("vdb", 1, "x", SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
+        ef.getMetadata(mf, mockConnection);
+        
+        for(Procedure p : mf.getSchema().getProcedures().values()){
+            if(p.getName().equals("customer")){
+                assertEquals("Add a Customer", p.getAnnotation());
+            } else if (p.getName().equals("customer_getByNumCityCountry")){
+                assertEquals("get customer by Number, City, Country as return xml/json", p.getAnnotation());
+            }
+        }
+    }
+    
+    @Test
+    public void testMediaTypes() throws TranslatorException{
+
+        SwaggerExecutionFactory ef = new SwaggerExecutionFactory();
+        
+        Properties props = new Properties();
+
+        WSConnection mockConnection = Mockito.mock(WSConnection.class);
+        Mockito.stub(mockConnection.getSwagger()).toReturn("http://localhost:8080/swagger.json");
+        
+        MetadataFactory mf = new MetadataFactory("vdb", 1, "x", SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
+        ef.getMetadata(mf, mockConnection);
+        
+        for(Procedure p : mf.getSchema().getProcedures().values()) {
+            Set<String> produceMediaTypes = getProcuces(p);
+            if(p.getName().equals("customer_customerList")){
+                assertTrue(produceMediaTypes.contains("application/xml"));
+                assertFalse(produceMediaTypes.contains("application/json"));
+            } else if (p.getName().equals("customer_getByNumCityCountry")) {
+                assertTrue(produceMediaTypes.contains("application/xml"));
+                assertTrue(produceMediaTypes.contains("application/json"));
+            }
+        }
+    }
+    
+    
     
     @SuppressWarnings("unchecked")
     @Test
