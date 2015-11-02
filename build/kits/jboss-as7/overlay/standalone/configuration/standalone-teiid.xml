@@ -359,7 +359,7 @@
 
             <authentication security-domain="teiid-security"/>
                         
-            <transport name="embedded"/>
+            <transport name="local"/>
             <transport name="odata"/>
             <transport name="jdbc" protocol="teiid" socket-binding="teiid-jdbc"/>
             <transport name="odbc" protocol="pg" socket-binding="teiid-odbc">

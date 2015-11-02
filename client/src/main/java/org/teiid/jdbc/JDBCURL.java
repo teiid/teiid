@@ -62,7 +62,7 @@ public class JDBCURL {
 	            ExecutionProperties.PROP_FETCH_SIZE,
 	            ExecutionProperties.PROP_XML_FORMAT,
 	            ExecutionProperties.PROP_XML_VALIDATION,
-	            EmbeddedProfile.USE_CALLING_THREAD,
+	            LocalProfile.USE_CALLING_THREAD,
 	            ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS,
 	            ExecutionProperties.JDBC4COLUMNNAMEANDLABELSEMANTICS}) {
 			result.put(key, key);
@@ -80,7 +80,7 @@ public class JDBCURL {
     	        BaseDataSource.VDB_VERSION,
     	        BaseDataSource.USER_NAME,
     	        BaseDataSource.PASSWORD,
-    	        EmbeddedProfile.WAIT_FOR_LOAD,
+    	        LocalProfile.WAIT_FOR_LOAD,
     	        TeiidURL.CONNECTION.AUTO_FAILOVER,
     	        TeiidURL.CONNECTION.DISCOVERY_STRATEGY,
     	        TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION,

@@ -33,7 +33,7 @@ public class TeiidServiceNames {
 	public static ServiceName VDB_REPO = ServiceName.JBOSS.append("teiid", "vdb-repository");//$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName TRANSLATOR_BASE = ServiceName.JBOSS.append("teiid", "translator");//$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName TRANSPORT_BASE = ServiceName.JBOSS.append("teiid", "transport");//$NON-NLS-1$ //$NON-NLS-2$
-	private static ServiceName EMBEDDED_TRANSPORT_BASE = ServiceName.JBOSS.append("teiid", "embedded", "transport");//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+	private static ServiceName LOCAL_TRANSPORT_BASE = ServiceName.JBOSS.append("teiid", "local", "transport");//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	public static ServiceName BUFFER_DIR = ServiceName.JBOSS.append("teiid", "buffer.dir");//$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName DATA_DIR = ServiceName.JBOSS.append("teiid", "data.dir");//$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName BUFFER_MGR = ServiceName.JBOSS.append("teiid", "buffer-mgr");//$NON-NLS-1$ //$NON-NLS-2$
@@ -88,8 +88,8 @@ public class TeiidServiceNames {
 		return ServiceName.of(TRANSPORT_BASE, name);
 	}
 	
-	public static ServiceName embeddedTransportServiceName(String name) {
-		return EMBEDDED_TRANSPORT_BASE.append(name);
+	public static ServiceName localTransportServiceName(String name) {
+		return LOCAL_TRANSPORT_BASE.append(name);
 	}	
 	
 	public static ServiceName dsListenerServiceName(String vdbName, int version, String name) throws InvalidServiceNameException {

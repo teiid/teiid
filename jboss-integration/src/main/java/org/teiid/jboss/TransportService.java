@@ -72,7 +72,7 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
 	private SocketListener socketListener;
 	private AuthenticationType authenticationType;
 	private int maxODBCLobSizeAllowed = 5*1024*1024; // 5 MB
-	private boolean embedded;
+	private boolean local;
 	private InetSocketAddress address = null;
 	private String transportName;
 	
@@ -140,7 +140,7 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
     		}
     		else if (socketConfig.getProtocol() == WireProtocol.pg) {
         		TeiidDriver driver = new TeiidDriver();
-        		driver.setEmbeddedProfile(new ConnectionProfile() {
+        		driver.setLocalProfile(new ConnectionProfile() {
 					@Override
 					public ConnectionImpl connect(String url, Properties info) throws TeiidSQLException {
 						try {
@@ -290,11 +290,11 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
 		this.maxODBCLobSizeAllowed = lobSize;
 	}
 
-	public void setEmbedded(boolean v) {
-		this.embedded = v;
+	public void setLocal(boolean v) {
+		this.local = v;
 	}
 	
-	public boolean isEmbedded() {
-		return this.embedded;
+	public boolean isLocal() {
+		return this.local;
 	}	
 }

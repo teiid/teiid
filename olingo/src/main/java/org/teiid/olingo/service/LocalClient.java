@@ -37,7 +37,7 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.jdbc.ConnectionImpl;
-import org.teiid.jdbc.EmbeddedProfile;
+import org.teiid.jdbc.LocalProfile;
 import org.teiid.jdbc.PreparedStatementImpl;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.logging.LogConstants;
@@ -107,11 +107,11 @@ public class LocalClient implements Client {
         if (props.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION) == null) {
             props.setProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "true"); //$NON-NLS-1$    
         }
-        if (props.getProperty(EmbeddedProfile.TRANSPORT_NAME) == null) {
-            props.setProperty(EmbeddedProfile.TRANSPORT_NAME, "odata");    
+        if (props.getProperty(LocalProfile.TRANSPORT_NAME) == null) {
+            props.setProperty(LocalProfile.TRANSPORT_NAME, "odata");    
         }        
-        if (props.getProperty(EmbeddedProfile.WAIT_FOR_LOAD) == null) {
-            props.setProperty(EmbeddedProfile.WAIT_FOR_LOAD, "0"); //$NON-NLS-1$
+        if (props.getProperty(LocalProfile.WAIT_FOR_LOAD) == null) {
+            props.setProperty(LocalProfile.WAIT_FOR_LOAD, "0"); //$NON-NLS-1$
         }        
         ConnectionImpl connection = driver.connect(sb.toString(), props);
         return connection;

@@ -70,7 +70,7 @@ import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.jdbc.CallableStatementImpl;
 import org.teiid.jdbc.ConnectionImpl;
-import org.teiid.jdbc.EmbeddedProfile;
+import org.teiid.jdbc.LocalProfile;
 import org.teiid.jdbc.PreparedStatementImpl;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.logging.LogConstants;
@@ -119,11 +119,11 @@ public class LocalClient implements Client {
 		if (this.initProperties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION) == null) {
 		    this.initProperties.put(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "true"); //$NON-NLS-1$    
 		}
-		if (this.initProperties.getProperty(EmbeddedProfile.TRANSPORT_NAME) == null) {
-		    this.initProperties.setProperty(EmbeddedProfile.TRANSPORT_NAME, "odata");    
+		if (this.initProperties.getProperty(LocalProfile.TRANSPORT_NAME) == null) {
+		    this.initProperties.setProperty(LocalProfile.TRANSPORT_NAME, "odata");    
 		}		 
-		if (this.initProperties.getProperty(EmbeddedProfile.WAIT_FOR_LOAD) == null) {
-		    this.initProperties.put(EmbeddedProfile.WAIT_FOR_LOAD, "0"); //$NON-NLS-1$
+		if (this.initProperties.getProperty(LocalProfile.WAIT_FOR_LOAD) == null) {
+		    this.initProperties.put(LocalProfile.WAIT_FOR_LOAD, "0"); //$NON-NLS-1$
 		}
 		this.connectionString = sb.toString();
 	}

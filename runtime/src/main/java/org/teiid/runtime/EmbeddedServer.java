@@ -88,7 +88,7 @@ import org.teiid.events.EventDistributor;
 import org.teiid.events.EventDistributorFactory;
 import org.teiid.jdbc.CallableStatementImpl;
 import org.teiid.jdbc.ConnectionImpl;
-import org.teiid.jdbc.EmbeddedProfile;
+import org.teiid.jdbc.LocalProfile;
 import org.teiid.jdbc.PreparedStatementImpl;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.jdbc.TeiidPreparedStatement;
@@ -137,7 +137,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		LogManager.setLogListener(new JBossLogger());
 	}
 
-	private EmbeddedProfile embeddedProfile = new EmbeddedProfile() {
+	private LocalProfile embeddedProfile = new LocalProfile() {
 		@Override
 		public ConnectionImpl connect(String url, Properties info)
 				throws TeiidSQLException {
@@ -453,7 +453,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	}
 
 	private void initDriver() {
-		driver.setEmbeddedProfile(embeddedProfile);
+		driver.setLocalProfile(embeddedProfile);
 	}
 	
 	private SocketListener startTransport(SocketConfiguration socketConfig, BufferManager bm, int maxODBCLobSize) {

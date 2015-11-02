@@ -50,7 +50,6 @@ import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.service.SessionService;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.net.socket.AuthenticationType;
 import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.LocalServerConnection;
 import org.teiid.transport.SSLConfiguration;
@@ -107,7 +106,7 @@ class TransportAdd extends AbstractAddStepHandler {
     		transport.setSocketConfig(buildSocketConfiguration(context, operation));
 		}
 		else {
-			transport.setEmbedded(true);
+			transport.setLocal(true);
 			LogManager.logDetail(LogConstants.CTX_SECURITY, IntegrationPlugin.Util.getString("socket_binding_not_defined",  transportName)); //$NON-NLS-1$
 		}
     	   		
@@ -128,9 +127,9 @@ class TransportAdd extends AbstractAddStepHandler {
         newControllers.add(transportBuilder.install());
         
         // register a JNDI name, this looks hard.
-        if (transport.isEmbedded() && !isEmbeddedRegistered(transportName)) {
+        if (transport.isLocal() && !isLocalRegistered(transportName)) {
 			final ReferenceFactoryService<ClientServiceRegistry> referenceFactoryService = new ReferenceFactoryService<ClientServiceRegistry>();
-			final ServiceName referenceFactoryServiceName = TeiidServiceNames.embeddedTransportServiceName(transportName).append("reference-factory"); //$NON-NLS-1$
+			final ServiceName referenceFactoryServiceName = TeiidServiceNames.localTransportServiceName(transportName).append("reference-factory"); //$NON-NLS-1$
 			final ServiceBuilder<?> referenceBuilder = target.addService(referenceFactoryServiceName,referenceFactoryService);
 			referenceBuilder.addDependency(TeiidServiceNames.transportServiceName(transportName), ClientServiceRegistry.class, referenceFactoryService.getInjector());
 			referenceBuilder.setInitialMode(ServiceController.Mode.ACTIVE);
@@ -147,7 +146,7 @@ class TransportAdd extends AbstractAddStepHandler {
         }
 	}
 	
-	protected boolean isEmbeddedRegistered(String transportName) {
+	protected boolean isLocalRegistered(String transportName) {
 		try {
 			InitialContext ic = new InitialContext();
 			ic.lookup(LocalServerConnection.jndiNameForRuntime(transportName));

@@ -46,7 +46,7 @@ import org.teiid.client.BatchSerializer;
 import org.teiid.client.security.SessionToken;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.dqp.message.RequestID;
-import org.teiid.jdbc.EmbeddedProfile;
+import org.teiid.jdbc.LocalProfile;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.query.metadata.SystemMetadata;
@@ -144,7 +144,7 @@ public class DQPWorkContext implements Serializable {
     private boolean admin;
     private MetadataFactory metadataFactory;
 
-	private transient EmbeddedProfile connectionProfile = new EmbeddedProfile();
+	private transient LocalProfile connectionProfile = new LocalProfile();
     
     public DQPWorkContext() {
 	}
@@ -359,11 +359,11 @@ public class DQPWorkContext implements Serializable {
 		return this.metadataFactory;
 	}
 
-	public void setConnectionProfile(EmbeddedProfile connectionProfile) {
+	public void setConnectionProfile(LocalProfile connectionProfile) {
 		this.connectionProfile = connectionProfile;
 	}
 	
-	public EmbeddedProfile getConnectionProfile() {
+	public LocalProfile getConnectionProfile() {
 		return connectionProfile;
 	}
 	

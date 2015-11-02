@@ -47,7 +47,7 @@ import org.teiid.core.util.PropertiesUtils;
 import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPWorkContext;
-import org.teiid.jdbc.EmbeddedProfile;
+import org.teiid.jdbc.LocalProfile;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.net.CommunicationException;
@@ -76,9 +76,9 @@ public class LocalServerConnection implements ServerConnection {
     
 	public LocalServerConnection(Properties connectionProperties, boolean useCallingThread) throws CommunicationException, ConnectionException{
 		this.connectionProperties = connectionProperties;
-		this.csr = getClientServiceRegistry(connectionProperties.getProperty(EmbeddedProfile.TRANSPORT_NAME, "embedded")); //$NON-NLS-1$
+		this.csr = getClientServiceRegistry(connectionProperties.getProperty(LocalProfile.TRANSPORT_NAME, "local")); //$NON-NLS-1$
 		
-		DQPWorkContext context = (DQPWorkContext)connectionProperties.get(EmbeddedProfile.DQP_WORK_CONTEXT);
+		DQPWorkContext context = (DQPWorkContext)connectionProperties.get(LocalProfile.DQP_WORK_CONTEXT);
 		if (context == null) {
 			String vdbVersion = connectionProperties.getProperty(TeiidURL.JDBC.VDB_VERSION);
 			String vdbName = connectionProperties.getProperty(TeiidURL.JDBC.VDB_NAME);
@@ -91,7 +91,7 @@ public class LocalServerConnection implements ServerConnection {
 			if (vdbVersion != null) {
 				int waitForLoad = PropertiesUtils.getIntProperty(connectionProperties, TeiidURL.CONNECTION.LOGIN_TIMEOUT, -1);
 				if (waitForLoad == -1) {
-					waitForLoad = PropertiesUtils.getIntProperty(connectionProperties, EmbeddedProfile.WAIT_FOR_LOAD, -1);
+					waitForLoad = PropertiesUtils.getIntProperty(connectionProperties, LocalProfile.WAIT_FOR_LOAD, -1);
 				} else {
 					waitForLoad *= 1000; //seconds to milliseconds
 				}

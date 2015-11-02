@@ -88,7 +88,6 @@ public class IntegrationPlugin {
     	TEIID50077,
     	TEIID50088,
     	TEIID50089, 
-    	TEIID50090, //Missing context
     	TEIID50091, // rest different # of param count
     	TEIID50092, // rest procedure execution
     	TEIID50093,
