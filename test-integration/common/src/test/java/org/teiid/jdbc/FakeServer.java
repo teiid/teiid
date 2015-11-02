@@ -63,6 +63,7 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.EmbeddedServer;
+import org.teiid.services.SessionServiceImpl;
 import org.teiid.translator.TranslatorException;
 import org.teiid.transport.ClientServiceRegistryImpl;
 
@@ -256,6 +257,10 @@ public class FakeServer extends EmbeddedServer {
 	
 	public void setThrowMetadataErrors(boolean throwMetadataErrors) {
 		this.throwMetadataErrors = throwMetadataErrors;
+	}
+
+	public SessionServiceImpl getSessionService() {
+		return this.sessionService;
 	}
 	
 }

@@ -25,6 +25,7 @@ package org.teiid.jdbc;
 import static org.junit.Assert.*;
 
 import java.lang.Thread.UncaughtExceptionHandler;
+import java.security.Principal;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -40,9 +41,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
+import javax.security.auth.Subject;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.teiid.client.security.InvalidSessionException;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
@@ -51,10 +55,11 @@ import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.jdbc.FakeServer.DeployVDBParameter;
 import org.teiid.language.Command;
 import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
+import org.teiid.security.SecurityHelper;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
@@ -127,7 +132,7 @@ public class TestLocalConnections {
 										lock.lock();
 										try {
 											sourceCounter.release();
-											if (!wait.await(2, TimeUnit.SECONDS)) {
+											if (!wait.await(5, TimeUnit.SECONDS)) {
 												throw new RuntimeException();
 											}
 										} catch (InterruptedException e) {
@@ -182,7 +187,8 @@ public class TestLocalConnections {
     	
     	Thread t = new Thread() {
     		
-    		public void run() {
+    		@Override
+			public void run() {
     			try {
 	    	    	Connection c = server.createConnection("jdbc:teiid:PartsSupplier");
 	    	    	
@@ -238,7 +244,8 @@ public class TestLocalConnections {
     	assertFalse(server.getDqp().getRequests().isEmpty());
 
     	Thread t = new Thread() {
-    		public void run() {
+    		@Override
+			public void run() {
     			try {
 					s.close();
 				} catch (SQLException e) {
@@ -267,6 +274,7 @@ public class TestLocalConnections {
 		final Connection c = server.createConnection("jdbc:teiid:PartsSupplier");
     	
 		Thread t = new Thread() {
+			@Override
 			public void run() {
 		    	Statement s;
 				try {
@@ -304,6 +312,7 @@ public class TestLocalConnections {
 		final Connection c = server.createConnection("jdbc:teiid:PartsSupplier");
     	
 		Thread t = new Thread() {
+			@Override
 			public void run() {
 		    	Statement s;
 				try {
@@ -354,6 +363,7 @@ public class TestLocalConnections {
 		final ResultsFuture<Void> future = new ResultsFuture<Void>();
 		
 		Thread t = new Thread() {
+			@Override
 			public void run() {
 				try {
 					server.createConnection("jdbc:teiid:not_there.1");
@@ -377,6 +387,89 @@ public class TestLocalConnections {
 			fail();
 		} catch (TeiidSQLException e) {
 			
+		}
+	}
+
+	static int calls;
+	static Object currentContext = new Object();
+	
+	@Test public void testPassThroughDifferentUsers() throws Throwable {
+		SecurityHelper securityHelper = new SecurityHelper() {
+			
+			@Override
+			public boolean sameSubject(String securityDomain, Object context,
+					Subject subject) {
+				return context == currentContext;
+			}
+			
+			@Override
+			public Subject getSubjectInContext(String securityDomain) {
+				return new Subject();
+			}
+			
+			@Override
+			public String getSecurityDomain(Object context) {
+				return "teiid-security";
+			}
+			
+			@Override
+			public Object getSecurityContext() {
+				calls++;
+				return currentContext;
+			}
+			
+			@Override
+			public Object createSecurityContext(String securityDomain, Principal p,
+					Object credentials, Subject subject) {
+				throw new UnsupportedOperationException();
+			}
+			
+			@Override
+			public void clearSecurityContext() {
+			}
+			
+			@Override
+			public Object associateSecurityContext(Object context) {
+				Object result = currentContext;
+				currentContext = context;
+				return result;
+			}
+		};
+		SecurityHelper current = server.getSessionService().getSecurityHelper();
+		server.getClientServiceRegistry().setSecurityHelper(securityHelper);
+		server.getSessionService().setSecurityHelper(securityHelper);
+		try {
+		
+			final Connection c = server.createConnection("jdbc:teiid:PartsSupplier;PassthroughAuthentication=true");
+			
+			Statement s = c.createStatement();
+			ResultSet rs = s.executeQuery("select session_id()");
+			Object o = currentContext;
+			currentContext = null;
+			s.cancel();
+			currentContext = o;
+			rs.next();
+			String id = rs.getString(1);
+			rs.close();
+			assertEquals(2, calls);
+			server.getSessionService().pingServer(id);
+			currentContext = new Object();
+			rs = s.executeQuery("select session_id()");
+			rs.next();
+			String id1 = rs.getString(1);
+			rs.close();
+			assertNotEquals(id, id1);
+			try {
+				server.getSessionService().pingServer(id);
+				//should have logged off
+				fail();
+			} catch (InvalidSessionException e) {
+				
+			}
+		
+		} finally {
+			server.getClientServiceRegistry().setSecurityHelper(current);
+			server.getSessionService().setSecurityHelper(current);
 		}
 	}
 	

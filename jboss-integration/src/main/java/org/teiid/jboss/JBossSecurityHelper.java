@@ -75,17 +75,16 @@ public class JBossSecurityHelper implements SecurityHelper, Serializable {
 		if (context == null) {
 			throw new TeiidRuntimeException(IntegrationPlugin.Event.TEIID50090, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50090));
 		}
-		SecurityContext previousContext = (SecurityContext)context;
-		Subject previousUser = previousContext.getSubjectInfo().getAuthenticatedSubject();
-		
-		SecurityContext currentContext = SecurityActions.getSecurityContext();
-		if (currentContext != null && currentContext.getSecurityDomain().equals(securityDomain)) {
-			Subject currentUser = currentContext.getSubjectInfo().getAuthenticatedSubject();
-			if (previousUser.equals(currentUser)) {
-				return true;
-			}
-		}
-		return false;
+		Object currentContext = SecurityActions.getSecurityContext();
+        
+        if (currentContext != null) {
+            Subject currentUser = this.getSubjectInContext(securityDomain);
+            if (subject != null && currentUser != null && subject.equals(currentUser)) {
+                return true;
+            }
+        }
+        
+        return false;
 	}
 
 	@Override

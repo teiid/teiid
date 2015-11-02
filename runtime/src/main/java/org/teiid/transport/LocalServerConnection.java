@@ -34,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
+import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
 import org.teiid.client.security.LogonException;
 import org.teiid.client.security.LogonResult;
@@ -61,6 +62,8 @@ public class LocalServerConnection implements ServerConnection {
     private DQPWorkContext workContext = new DQPWorkContext();
     private Properties connectionProperties;
     private boolean passthrough;
+    
+    private Method cancelMethod;
     
     public static String jndiNameForRuntime(String embeddedTransportName) {
     	return TEIID_RUNTIME_CONTEXT+"/"+embeddedTransportName; //$NON-NLS-1$
@@ -90,6 +93,14 @@ public class LocalServerConnection implements ServerConnection {
 		workContext.setSecurityContext(csr.getSecurityHelper().getSecurityContext());
 		authenticate();
 		passthrough = Boolean.valueOf(connectionProperties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "false")); //$NON-NLS-1$
+		
+		try {
+			cancelMethod = DQP.class.getMethod("cancelRequest", new Class[] {long.class}); //$NON-NLS-1$
+		} catch (SecurityException e) {
+			throw new TeiidRuntimeException(e);
+		} catch (NoSuchMethodException e) {
+			throw new TeiidRuntimeException(e);
+		}
 	}
 
 	protected ClientServiceRegistry getClientServiceRegistry(String transport) {
@@ -102,6 +113,13 @@ public class LocalServerConnection implements ServerConnection {
 	}
 	
 	public synchronized void authenticate() throws ConnectionException, CommunicationException {
+		Object previousSecurityContext = workContext.getSecurityHelper().associateSecurityContext(workContext.getSession().getSecurityContext());
+        try {
+                logoff(); 
+        } finally {
+                workContext.getSecurityHelper().associateSecurityContext(previousSecurityContext);
+        }
+        workContext.setSecurityContext(previousSecurityContext);
         try {
         	this.result = this.getService(ILogon.class).logon(this.connectionProperties);
         } catch (LogonException e) {
@@ -119,16 +137,21 @@ public class LocalServerConnection implements ServerConnection {
 	public <T> T getService(final Class<T> iface) {
 		return iface.cast(Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {iface}, new InvocationHandler() {
 
+			boolean logon = iface.equals(ILogon.class);
+			
 			public Object invoke(Object arg0, final Method arg1, final Object[] arg2) throws Throwable {
 				if (shutdown) {
 					throw ExceptionUtil.convertException(arg1, new TeiidComponentException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40074)));
 				}
 				try {
-					if (passthrough && !arg1.getDeclaringClass().equals(ILogon.class)) {
-						// check to make sure the current security context same as logged one
-						if (!csr.getSecurityHelper().sameSubject(workContext.getSession().getSecurityDomain(), workContext.getSession().getSecurityContext(), workContext.getSubject())) {
-							authenticate();
-						}
+					if (passthrough && !logon 
+							&& !arg1.equals(cancelMethod) // -- it's ok to use another thread to cancel
+							&& workContext.getSession().getSessionId() != null
+							//if configured without a security domain the context will be null
+							&& workContext.getSession().getSecurityDomain() != null
+							&& !csr.getSecurityHelper().sameSubject(workContext.getSession().getSecurityDomain(), workContext.getSession().getSecurityContext(), workContext.getSubject())) {
+						//TODO: this is an implicit changeUser - we may want to make this explicit, but that would require pools to explicitly use changeUser
+						authenticate();
 					}
 					
 					final T service = csr.getClientService(iface);
