@@ -134,5 +134,6 @@
     <module>sandbox</module>
 
     <module>translator-hbase</module>
+    <module>translator-swagger</module>
   </modules>
 </project>

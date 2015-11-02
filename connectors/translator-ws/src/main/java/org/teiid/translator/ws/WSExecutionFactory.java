@@ -122,6 +122,7 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
     	if (command.getProcedureName().equalsIgnoreCase(INVOKE_HTTP)) {
     		return new BinaryWSProcedureExecution(command, metadata, executionContext, this, connection);
     	}
+    	
     	if (command.getArguments().size() > 2 || command.getProcedureName().equalsIgnoreCase(INVOKE)) {
     		return new WSProcedureExecution(command, metadata, executionContext, this, connection);
     	}
