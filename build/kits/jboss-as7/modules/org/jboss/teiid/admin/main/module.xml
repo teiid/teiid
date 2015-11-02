@@ -9,9 +9,12 @@
     </resources>
 
     <dependencies>
-        <module name="org.jboss.teiid.common-core" />
-        <module name="org.jboss.teiid.client" />
         <module name="javax.api" />
+        <module name="org.jboss.dmr"/>
+        <module name="org.jboss.as.controller"/>
+        <module name="org.jboss.as.cli"/>
+        <module name="org.jboss.teiid.common-core" />
+        <module name="org.jboss.teiid.client" />        
     </dependencies>
 
 </module>

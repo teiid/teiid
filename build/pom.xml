@@ -128,9 +128,9 @@
                         <configuration>
                             <artifactItems>
                                 <artifactItem>
-                                    <groupId>org.jboss.as</groupId>
-                                    <artifactId>jboss-as-dist</artifactId>
-                                    <version>${version.org.jboss.as}</version>
+									<groupId>org.wildfly</groupId>
+									<artifactId>wildfly-dist</artifactId>
+                                    <version>${version.org.wildfly}</version>
                                     <type>zip</type>
                                     <outputDirectory>${project.build.directory}</outputDirectory>
                                 </artifactItem>

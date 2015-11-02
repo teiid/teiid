@@ -178,8 +178,8 @@ public class TestODataIntegration extends BaseResourceTest {
 		deployment.getRegistry().addPerRequestResource(MetadataResource.class);
 		deployment.getRegistry().addPerRequestResource(ServiceDocumentResource.class);
 		deployment.getProviderFactory().registerProvider(ODataBatchProvider.class);
-		deployment.getProviderFactory().addExceptionMapper(ODataExceptionMappingProvider.class);
-		deployment.getProviderFactory().addContextResolver(org.teiid.odata.MockProvider.class);		
+		deployment.getProviderFactory().registerProvider(ODataExceptionMappingProvider.class);
+		deployment.getProviderFactory().registerProvider(MockProvider.class);		
 		metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.ddl")),"northwind", "nw");		
 	}	
 	

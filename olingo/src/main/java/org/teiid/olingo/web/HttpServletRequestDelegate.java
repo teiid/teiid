@@ -42,6 +42,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpUpgradeHandler;
 import javax.servlet.http.Part;
 
 public class HttpServletRequestDelegate implements HttpServletRequest {
@@ -334,5 +335,21 @@ public class HttpServletRequestDelegate implements HttpServletRequest {
     @Override
     public void logout() throws ServletException {
         delegate.logout();
+    }
+
+    @Override
+    public long getContentLengthLong() {
+        return delegate.getContentLengthLong();
+    }
+
+    @Override
+    public String changeSessionId() {
+        return delegate.changeSessionId();
+    }
+
+    @Override
+    public <T extends HttpUpgradeHandler> T upgrade(Class<T> handlerClass)
+            throws IOException, ServletException {
+        return delegate.upgrade(handlerClass);
     }
 }

@@ -26,10 +26,9 @@
     </build>    
     
 	<dependencies>
-	  <dependency>
+	    <dependency>
 			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-common-core</artifactId>
-			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
@@ -40,7 +39,6 @@
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-admin</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
@@ -51,19 +49,18 @@
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-client</artifactId>
-			<scope>provided</scope>
 		</dependency>
         <dependency>
             <groupId>org.jboss</groupId>
-            <artifactId>jboss-dmr</artifactId>    
+            <artifactId>jboss-dmr</artifactId>
         </dependency>    
         <dependency>
-            <groupId>org.jboss.as</groupId>
-            <artifactId>jboss-as-cli</artifactId>
+            <groupId>org.wildfly.core</groupId>
+            <artifactId>wildfly-controller</artifactId>
         </dependency> 
         <dependency>
-            <groupId>org.jboss.as</groupId>
-            <artifactId>jboss-as-controller</artifactId>   
+            <groupId>org.wildfly.core</groupId>
+            <artifactId>wildfly-cli</artifactId>
         </dependency>
 	</dependencies>
 </project>

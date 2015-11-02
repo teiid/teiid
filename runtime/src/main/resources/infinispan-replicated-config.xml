@@ -1,35 +1,48 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<infinispan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="urn:infinispan:config:7.2 http://www.infinispan.org/schemas/infinispan-config-7.2.xsd"
+	xmlns="urn:infinispan:config:7.2">
 
-<infinispan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:infinispan:config:5.1 http://www.infinispan.org/schemas/infinispan-config-5.1.xsd" xmlns="urn:infinispan:config:5.1">
+	<!-- *************************** -->
+	<!-- System-wide global settings -->
+	<!-- *************************** -->
+	<jgroups>
+		<!-- Note that the JGroups transport uses sensible defaults if no configuration 
+			property is defined. See the JGroupsTransport javadocs for more flags. jgroups-udp.xml 
+			is the default stack bundled in the Infinispan core jar: integration and 
+			tuning are tested by Infinispan. -->
+		<stack-file name="default-jgroups-tcp" path="default-configs/default-jgroups-tcp.xml" />
+	</jgroups>
 
-    <global>
-        <transport clusterName="teiid-cluster" machineId="m1" rackId="r1" nodeName="Node-A">
-         <properties>
-            <property name="configurationFile" value="tcp-shared.xml"/>
-         </properties>        
-        </transport>
-    </global>
+	<cache-container name="teiid" default-cache="default"
+		statistics="false" shutdown-hook="DONT_REGISTER">
 
-    <namedCache name="resultset">
-        <transaction transactionMode="TRANSACTIONAL"/>
-        <eviction maxEntries="1024" strategy="LIRS" />
-        <expiration lifespan="7200000"/>
-        <clustering mode="local"/>
-    </namedCache>
-    
-    <namedCache name="resultset-repl">
-        <transaction transactionMode="TRANSACTIONAL"/>
-        <eviction maxEntries="1024" strategy="LIRS" />
-        <expiration lifespan="7200000"/>
-        <clustering mode="repl">
-            <sync/>
-        </clustering>
-    </namedCache>
-        
-    <namedCache name="preparedplan">
-        <eviction maxEntries="512" strategy="LIRS"/>
-        <expiration lifespan="28800"/>    
-        <clustering mode="local"/>
-    </namedCache>         
+		<transport stack="default-jgroups-tcp" cluster="teiid-cluster"
+			node-name="Node-A" machine="m1" rack="r1" />
 
+		<jmx duplicate-domains="true" />
+
+		<local-cache name="resultset">
+            <transaction mode="NON_XA" 
+                 transaction-manager-lookup="org.infinispan.transaction.lookup.JBossStandaloneJTAManagerLookup" 
+                 locking="PESSIMISTIC"/>
+			<eviction max-entries="1024" strategy="LIRS" />
+			<expiration lifespan="7200000" />
+		</local-cache>
+
+		<local-cache name="preparedplan">
+		    <transaction mode="NONE"/>
+			<eviction max-entries="512" strategy="LIRS" />
+			<expiration lifespan="28800" />
+		</local-cache>
+
+		<replicated-cache name="resultset-repl" mode="SYNC" remote-timeout="25000">
+            <transaction mode="NON_XA" 
+                 transaction-manager-lookup="org.infinispan.transaction.lookup.JBossStandaloneJTAManagerLookup" 
+                 locking="PESSIMISTIC"/>
+            <eviction max-entries="1024" strategy="LIRS" />
+            <expiration lifespan="7200000" />			
+			<state-transfer enabled="true" timeout="480000" await-initial-transfer="true" />			
+		</replicated-cache>
+	</cache-container>
 </infinispan>

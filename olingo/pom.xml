@@ -92,31 +92,26 @@
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-common-core</artifactId>
-            <scope>provided</scope>
         </dependency>
         
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-engine</artifactId>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-api</artifactId>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-client</artifactId>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-admin</artifactId>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -152,33 +147,40 @@
 		<dependency>
 		    <groupId>com.fasterxml.jackson.core</groupId>
 		    <artifactId>jackson-databind</artifactId>
-		</dependency> 
+		</dependency>
+		 
+	    <dependency>
+	      <groupId>org.jboss.spec.javax.transaction</groupId>
+	      <artifactId>jboss-transaction-api_1.2_spec</artifactId>
+	      <scope>test</scope>
+	    </dependency>        
+        
+	    <dependency>
+	        <groupId>org.jboss.spec.javax.resource</groupId>
+	        <artifactId>jboss-connector-api_1.7_spec</artifactId>
+	        <scope>test</scope>
+	    </dependency>        
         
         <!--  runtime dependencies -->
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
-            <scope>provided</scope>
         </dependency>        
         <dependency>
             <groupId>org.antlr</groupId>
             <artifactId>antlr4-runtime</artifactId>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.jboss.spec.javax.servlet</groupId>
-            <artifactId>jboss-servlet-api_3.0_spec</artifactId>
-            <scope>provided</scope>
+            <artifactId>jboss-servlet-api_3.1_spec</artifactId>
         </dependency>
         <dependency>
             <groupId>com.fasterxml</groupId>
             <artifactId>aalto-xml</artifactId>
-            <scope>runtime</scope>
         </dependency>
         <!-- Test dependencies -->
         <dependency>

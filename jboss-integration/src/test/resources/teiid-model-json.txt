@@ -1,6 +1,10 @@
 {"subsystem" : {"teiid" : {
     "allow-env-function" : true,
-    "async-thread-pool" : "teiid-async",
+    "thread-pool" : {
+        "name" : "default",
+        "max-threads" : 10,
+        "keepalive-time": {"time": 100, "unit": "milliseconds"}
+    },
     "buffer-service-connector-batch-size" : 2,
     "buffer-service-max-buffer-space" : 2,
     "buffer-service-max-file-size" : 2,

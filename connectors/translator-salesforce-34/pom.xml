@@ -40,12 +40,10 @@
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-api</artifactId>
-			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-common-core</artifactId>
-			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.force.api</groupId>
@@ -59,11 +57,10 @@
 			<groupId>org.jboss.teiid.connectors</groupId>
 			<artifactId>translator-salesforce</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>javax.resource</groupId>
-			<artifactId>connector-api</artifactId>
-			<scope>provided</scope>
-		</dependency>
+        <dependency>
+            <groupId>org.jboss.spec.javax.resource</groupId>
+            <artifactId>jboss-connector-api_1.7_spec</artifactId>
+        </dependency> 
 	</dependencies>
 
 	<build>

@@ -31,31 +31,26 @@
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-engine</artifactId>
-      <scope>provided</scope>
     </dependency>
     
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-api</artifactId>
-      <scope>provided</scope>
     </dependency>
                
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-client</artifactId>
-      <scope>provided</scope>
     </dependency>
     
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-admin</artifactId>
-      <scope>provided</scope>
     </dependency>    
     
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-runtime</artifactId>
-      <scope>provided</scope>
     </dependency>      
     
     <dependency>
@@ -68,40 +63,58 @@
     <dependency>
       <groupId>org.jboss.teiid.connectors</groupId>
       <artifactId>translator-odata</artifactId>
-      <scope>provided</scope>
     </dependency>
               
     <dependency>
         <groupId>org.jboss.resteasy</groupId>
         <artifactId>resteasy-jaxrs</artifactId>
-        <scope>provided</scope>
     </dependency>
     
     <dependency>
         <groupId>org.jboss.oreva</groupId>
         <artifactId>odata-core</artifactId>
-        <scope>provided</scope>
     </dependency>
-    
     
     <dependency>
         <groupId>commons-logging</groupId>
         <artifactId>commons-logging</artifactId>
-        <scope>provided</scope>
     </dependency>
     
     <dependency>
         <artifactId>common</artifactId>
         <groupId>org.jboss.oreva</groupId>
-        <scope>provided</scope>
     </dependency>
 
     <dependency>
         <groupId>org.jboss.spec.javax.servlet</groupId>
-        <artifactId>jboss-servlet-api_3.0_spec</artifactId>
-        <scope>provided</scope>
+        <artifactId>jboss-servlet-api_3.1_spec</artifactId>
     </dependency>
     
+    <dependency>
+        <groupId>org.jboss.spec.javax.ws.rs</groupId>
+        <artifactId>jboss-jaxrs-api_2.0_spec</artifactId>
+    </dependency>    
+    
+    <dependency>
+      <groupId>org.jboss.spec.javax.annotation</groupId>
+      <artifactId>jboss-annotations-api_1.2_spec</artifactId>
+    </dependency>
+          
+    <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpclient</artifactId>
+    </dependency>
+
+    <dependency>
+        <groupId>org.jboss.spec.javax.resource</groupId>
+        <artifactId>jboss-connector-api_1.7_spec</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.spec.javax.transaction</groupId>
+      <artifactId>jboss-transaction-api_1.2_spec</artifactId>
+    </dependency>                  
+
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-engine</artifactId>

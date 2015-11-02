@@ -27,9 +27,13 @@ import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.SimpleResourceDefinition;
 import org.jboss.as.controller.operations.common.GenericSubsystemDescribeHandler;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
+import org.jboss.as.threads.ThreadFactoryResolver;
+import org.jboss.as.threads.ThreadsServices;
+import org.jboss.as.threads.UnboundedQueueThreadPoolResourceDefinition;
 
 public class TeiidSubsytemResourceDefinition extends SimpleResourceDefinition {
 	protected static final PathElement PATH_SUBSYSTEM = PathElement.pathElement(SUBSYSTEM, TeiidExtension.TEIID_SUBSYSTEM);
+	private static final PathElement THREAD_POOL_PATH = PathElement.pathElement(Element.THREAD_POOL_ELEMENT.getLocalName(), TeiidConstants.TEIID_THREAD_POOL_NAME);
 	private boolean server;
 	
 	public TeiidSubsytemResourceDefinition(boolean server) {
@@ -93,7 +97,19 @@ public class TeiidSubsytemResourceDefinition extends SimpleResourceDefinition {
 
     @Override
     public void registerChildren(ManagementResourceRegistration resourceRegistration) {
+        resourceRegistration.registerSubModel(UnboundedQueueThreadPoolResourceDefinition.create(THREAD_POOL_PATH,
+                new TeiidThreadFactoryResolver(), TeiidServiceNames.THREAD_POOL_SERVICE, false));
     	resourceRegistration.registerSubModel(new TranslatorResourceDefinition());
     	resourceRegistration.registerSubModel(new TransportResourceDefinition());
     }
+    
+    static class TeiidThreadFactoryResolver extends ThreadFactoryResolver.SimpleResolver{
+        private TeiidThreadFactoryResolver() {
+            super(ThreadsServices.FACTORY);
+        }
+        @Override
+        protected String getThreadGroupName(String threadPoolName) {
+            return "Batch Thread";
+        }
+    }    
 }

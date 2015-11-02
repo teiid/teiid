@@ -26,6 +26,5 @@
         <module name="javax.ws.rs.api" services="export" export="true" slot="2.0"/>
         <module name="net.oauth.core"/>
         <module name="org.apache.httpcomponents"/>
-        <module name="org.apache.httpcomponents.async"/>
     </dependencies>
 </module>

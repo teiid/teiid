@@ -29,32 +29,22 @@
         <dependency>
           <groupId>org.jboss.teiid</groupId>
           <artifactId>teiid-common-core</artifactId>
-          <scope>provided</scope>
         </dependency>    
         <dependency>
           <groupId>org.jboss.teiid</groupId>
           <artifactId>teiid-api</artifactId>
-          <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>org.jboss.as</groupId>
-            <artifactId>jboss-as-security</artifactId>
-            <scope>provided</scope>        
-        </dependency>                  
         <dependency>
             <groupId>org.apache.cxf</groupId>
             <artifactId>cxf-rt-rs-security-oauth</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.cxf</groupId>
             <artifactId>cxf-rt-rs-security-oauth2</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.cxf</groupId>
             <artifactId>cxf-rt-rs-security-oauth2-saml</artifactId>
-            <scope>provided</scope>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.cxf</groupId>
@@ -64,13 +54,11 @@
         </dependency>
         <dependency>
             <groupId>org.apache.cxf</groupId>
-            <artifactId>cxf-api</artifactId>
-            <scope>provided</scope>
+            <artifactId>cxf-core</artifactId>
         </dependency>
 		<dependency>
 		    <groupId>org.picketbox</groupId>
 		    <artifactId>picketbox</artifactId>
-		    <scope>provided</scope>
 		</dependency>        
     </dependencies>
 </project>

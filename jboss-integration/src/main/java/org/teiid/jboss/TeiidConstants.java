@@ -48,8 +48,8 @@ public class TeiidConstants {
         .build();
 	
     // VM wide elements
-	public static SimpleAttributeDefinition ASYNC_THREAD_POOL_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.ASYNC_THREAD_POOL_ELEMENT.getModelName(), ModelType.STRING)
-        .setXmlName(Element.ASYNC_THREAD_POOL_ELEMENT.getXMLName())
+	public static SimpleAttributeDefinition THREAD_POOL_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.THREAD_POOL_ELEMENT.getModelName(), ModelType.STRING)
+        .setXmlName(Element.THREAD_POOL_ELEMENT.getXMLName())
         .setAllowNull(false)
         .setAllowExpression(false)
         .build();
@@ -555,5 +555,7 @@ public class TeiidConstants {
     public static Boolean asBoolean(final SimpleAttributeDefinition attr, ModelNode node, OperationContext context) throws OperationFailedException {
         ModelNode resolvedNode = attr.resolveModelAttribute(context, node);
         return resolvedNode.isDefined() ? resolvedNode.asBoolean() : null;
-    }        
+    }
+    
+    public static final String TEIID_THREAD_POOL_NAME = "teiid"; //$NON-NLS-1$
 }

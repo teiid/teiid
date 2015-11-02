@@ -14,52 +14,26 @@
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-runtime</artifactId>
-      <exclusions>
-        <exclusion>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-core</artifactId>
-        </exclusion>
-        <exclusion>
-            <groupId>org.jboss.marshalling</groupId>
-            <artifactId>jboss-marshalling-river</artifactId>
-        </exclusion>
-        <exclusion>
-            <groupId>org.jboss.marshalling</groupId>
-            <artifactId>jboss-marshalling</artifactId>
-        </exclusion>        
-        <exclusion>
-            <groupId>org.jgroups</groupId>
-            <artifactId>jgroups</artifactId>
-        </exclusion>
-        <exclusion>
-            <groupId>org.jboss.logging</groupId>
-            <artifactId>jboss-logging</artifactId>
-        </exclusion>        
-      </exclusions>
     </dependency>
     
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-api</artifactId>
-      <scope>provided</scope>
     </dependency>
                
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-client</artifactId>
-      <scope>provided</scope>
     </dependency>
     
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-admin</artifactId>
-      <scope>provided</scope>
     </dependency>    
     
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-jboss-admin</artifactId>
-      <scope>provided</scope>
     </dependency>  
         
     <dependency>
@@ -70,37 +44,21 @@
     <dependency>
         <groupId>org.jboss</groupId>
         <artifactId>jboss-dmr</artifactId>
-        <scope>provided</scope>
     </dependency>
     
     <dependency>
         <groupId>org.jboss</groupId>
         <artifactId>jboss-vfs</artifactId>
-        <scope>provided</scope>   
     </dependency>
     
     <dependency>
         <groupId>org.jboss.msc</groupId>
         <artifactId>jboss-msc</artifactId>
-        <scope>provided</scope>
     </dependency>
-    
-    <dependency>
-        <groupId>javax.transaction</groupId>
-        <artifactId>jta</artifactId>
-        <scope>provided</scope>
-    </dependency>
-
-    <dependency>
-        <groupId>org.jboss.as</groupId>
-        <artifactId>jboss-as-security</artifactId>
-        <scope>provided</scope>        
-    </dependency>    
     
     <dependency>
         <groupId>asm</groupId>
         <artifactId>asm</artifactId>
-        <scope>provided</scope>
     </dependency>
     
     <dependency>
@@ -109,6 +67,63 @@
         <scope>provided</scope>
     </dependency>
     
+    <dependency>
+        <groupId>org.wildfly</groupId>
+        <artifactId>wildfly-naming</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.wildfly</groupId>
+        <artifactId>wildfly-clustering-jgroups-api</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.wildfly</groupId>
+        <artifactId>wildfly-security</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.wildfly.core</groupId>
+        <artifactId>wildfly-controller</artifactId>
+    </dependency>    
+    <dependency>
+        <groupId>org.wildfly</groupId>
+        <artifactId>wildfly-connector</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.wildfly.core</groupId>
+        <artifactId>wildfly-threads</artifactId>
+    </dependency>
+    <dependency>
+	  <groupId>org.jboss.spec.javax.ws.rs</groupId>
+	  <artifactId>jboss-jaxrs-api_2.0_spec</artifactId>
+    </dependency>
+	<dependency>
+	    <groupId>org.jboss.ironjacamar</groupId>
+	    <artifactId>ironjacamar-common-api</artifactId>
+	</dependency>
+    <dependency>
+        <groupId>org.jboss.security</groupId>
+        <artifactId>jboss-negotiation-spnego</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.jboss.spec.javax.servlet</groupId>
+        <artifactId>jboss-servlet-api_3.1_spec</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.jboss.spec.javax.transaction</groupId>
+        <artifactId>jboss-transaction-api_1.2_spec</artifactId>
+    </dependency>    
+    <dependency>
+        <groupId>org.jboss.spec.javax.resource</groupId>
+        <artifactId>jboss-connector-api_1.7_spec</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.picketbox</groupId>
+      <artifactId>picketbox</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.wildfly.core</groupId>
+        <artifactId>wildfly-subsystem-test-framework</artifactId>
+        <scope>test</scope>
+    </dependency>    
     <dependency>
         <groupId>io.swagger</groupId>
 		<artifactId>swagger-jaxrs</artifactId>
@@ -156,30 +171,6 @@
 	    </exclusions>
     </dependency>                             
     
-    <!-- This dependency is to read the ra.xml file details -->
-    <dependency>
-        <groupId>org.jboss.as</groupId>
-        <artifactId>jboss-as-connector</artifactId>
-        <scope>provided</scope>        
-    </dependency>    
-    
-    <dependency>
-        <groupId>org.jboss.as</groupId>
-        <artifactId>jboss-as-server</artifactId>
-        <scope>provided</scope>
-    </dependency> 
-    
-    <dependency>
-        <groupId>org.jboss.as</groupId>
-        <artifactId>jboss-as-subsystem-test-framework</artifactId>
-        <scope>test</scope>
-    </dependency>
-    <dependency>
-        <groupId>org.jboss.as</groupId>
-        <artifactId>jboss-as-cli</artifactId>
-        <scope>test</scope>
-    </dependency> 
-       
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-common-core</artifactId>

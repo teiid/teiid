@@ -23,7 +23,7 @@ package org.teiid.jboss;
 
 import java.util.concurrent.Executor;
 
-import org.jboss.as.clustering.jgroups.ChannelFactory;
+import org.wildfly.clustering.jgroups.ChannelFactory;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;

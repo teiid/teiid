@@ -30,13 +30,13 @@
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-common-core</artifactId>
-      <scope>provided</scope>
     </dependency>    
 
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-common-core</artifactId>
       <type>test-jar</type>
+      <scope>test</scope>
     </dependency>    
         
     <dependency>
@@ -48,35 +48,33 @@
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-engine</artifactId>
       <type>test-jar</type>
+      <scope>test</scope>
     </dependency>
            
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-client</artifactId>
-      <scope>provided</scope>
     </dependency>
     
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-admin</artifactId>
-      <scope>provided</scope>
     </dependency>    
     
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-api</artifactId>
-      <scope>provided</scope>
     </dependency>
-        
-    <dependency>
-      <groupId>javax.resource</groupId>
-      <artifactId>connector-api</artifactId>
-      <scope>provided</scope>
-    </dependency>
+
     <dependency>
         <groupId>org.jboss</groupId>
         <artifactId>jboss-vfs</artifactId>
-        <scope>provided</scope>
+    </dependency>    
+
+    <dependency>
+        <!-- dependecy for jboss-vfs -->
+        <groupId>org.jboss.logging</groupId>
+        <artifactId>jboss-logging</artifactId>
     </dependency>    
   </dependencies>
   

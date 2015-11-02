@@ -12,10 +12,10 @@
     <packaging>bundle</packaging>
     <dependencies>
         <dependency>
-            <groupId>javax.resource</groupId>
-            <artifactId>connector-api</artifactId>
+            <groupId>org.jboss.spec.javax.resource</groupId>
+            <artifactId>jboss-connector-api_1.7_spec</artifactId>
             <scope>provided</scope>
-        </dependency>     
+        </dependency>    
         <dependency>
           <groupId>org.mongodb</groupId>
           <artifactId>mongo-java-driver</artifactId>

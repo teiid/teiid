@@ -1,54 +1,49 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <parent>
-    <artifactId>connectors</artifactId>
-    <groupId>org.jboss.teiid</groupId>
-        <version>8.13.0.Alpha1-SNAPSHOT</version>
-  </parent>
-  <modelVersion>4.0.0</modelVersion>
-  <artifactId>google-api</artifactId>
-  <groupId>org.jboss.teiid.connectors</groupId>
-  <name>Gogole API</name>
-  <description>The java API for connecting Google services</description>
-  <packaging>bundle</packaging>
-  
-  <dependencies>     
-        <dependency>
-            <groupId>javax.resource</groupId>
-            <artifactId>connector-api</artifactId>
-            <scope>provided</scope>
-        </dependency>  
-        <dependency>
-		  <groupId>com.google.guava</groupId>
-		  <artifactId>guava</artifactId>
-		  <scope>provided</scope>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<parent>
+		<artifactId>connectors</artifactId>
+		<groupId>org.jboss.teiid</groupId>
+		<version>8.13.0.Alpha1-SNAPSHOT</version>
+	</parent>
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>google-api</artifactId>
+	<groupId>org.jboss.teiid.connectors</groupId>
+	<name>Gogole API</name>
+	<description>The java API for connecting Google services</description>
+	<packaging>bundle</packaging>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.jboss.spec.javax.resource</groupId>
+			<artifactId>jboss-connector-api_1.7_spec</artifactId>
 		</dependency>
 		<dependency>
-		  <groupId>org.apache.httpcomponents</groupId>
-		  <artifactId>httpclient</artifactId>
-		  <scope>provided</scope>
-		</dependency>
-       <dependency>
-		  <groupId>org.jboss.teiid.connectors.google</groupId>
-		  <artifactId>gdata-spreadsheet</artifactId>
-		</dependency>
-       <dependency>
-		  <groupId>org.jboss.teiid.connectors.google</groupId>
-		  <artifactId>gdata-core</artifactId>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
 		</dependency>
 		<dependency>
-		  <groupId>org.jboss.teiid</groupId>
-		  <artifactId>teiid-common-core</artifactId>
-		  <scope>provided</scope>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
 		</dependency>
 		<dependency>
-		  <groupId>org.jboss.teiid</groupId>
-		  <artifactId>teiid-api</artifactId>
-		  <scope>provided</scope>
+			<groupId>org.jboss.teiid.connectors.google</groupId>
+			<artifactId>gdata-spreadsheet</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid.connectors.google</groupId>
+			<artifactId>gdata-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-common-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-api</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>commons-logging</groupId>
 			<artifactId>commons-logging</artifactId>
-			<scope>provided</scope>
 		</dependency>
-  </dependencies>
+	</dependencies>
 </project>

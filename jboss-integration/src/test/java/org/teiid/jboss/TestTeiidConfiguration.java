@@ -80,8 +80,8 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
     
     @Override
 	protected String readResource(final String name) throws IOException {
-    	String minimum = "<subsystem xmlns=\"urn:jboss:domain:teiid:1.0\"> \n" + 
-    			"   <async-thread-pool>teiid-async</async-thread-pool>\n" + 
+    	String minimum = "<subsystem xmlns=\"urn:jboss:domain:teiid:1.1\"> \n" + 
+    			"   <thread-pool><max-threads count=\"10\"/></thread-pool>\n" + 
     			"</subsystem>";
         
     	if (name.equals("minimum")) {
@@ -179,7 +179,7 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
         List<ModelNode> operations = super.parse(subsystemXml);
 
         ///Check that we have the expected number of operations
-        Assert.assertEquals(5, operations.size());
+        Assert.assertEquals(6, operations.size());
 
         //Check that each operation has the correct content
         ModelNode addSubsystem = operations.get(0);
@@ -205,18 +205,22 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
         Assert.assertEquals(SUCCESS, result.get(OUTCOME).asString());
         
         List<String> opNames = getList(result);
-		String[] ops = { "add","add-anyauthenticated-role","add-data-role","add-source","assign-datasource",
-				"cache-statistics","cache-types","cancel-request","change-vdb-connection-type",
-				"clear-cache","engine-statistics","execute-query","get-query-plan","get-schema", "get-translator","get-vdb",
-				"list-long-running-requests","list-requests","list-requests-per-session",
-				"list-requests-per-vdb","list-sessions","list-transactions","list-translators",
-				"list-vdbs","mark-datasource-available","read-attribute",
-				"read-children-names","read-children-resources","read-children-types",
-				"read-operation-description","read-operation-names","read-rar-description",
-				"read-resource","read-resource-description","read-translator-properties", "remove","remove-anyauthenticated-role",
-				"remove-data-role","remove-source","restart-vdb","terminate-session","terminate-transaction",
-				"undefine-attribute","update-source","workerpool-statistics","write-attribute"};
-		Assert.assertArrayEquals(ops, opNames.toArray(new String[opNames.size()]));
+		String[] ops = { "add", "add-anyauthenticated-role", "add-data-role", "add-source",
+		        "assign-datasource", "cache-statistics", "cache-types", "cancel-request",
+		        "change-vdb-connection-type", "clear-cache", "engine-statistics", "execute-query",
+		        "get-query-plan", "get-schema", "get-translator", "get-vdb", "list-add", "list-clear",
+		        "list-get", "list-long-running-requests", "list-remove", "list-requests", 
+		        "list-requests-per-session", "list-requests-per-vdb", "list-sessions", "list-transactions", 
+		        "list-translators", "list-vdbs", "map-clear", "map-get", "map-put", "map-remove", 
+		        "mark-datasource-available", "read-attribute", "read-attribute-group", 
+		        "read-attribute-group-names", "read-children-names", "read-children-resources", 
+		        "read-children-types", "read-operation-description", "read-operation-names", 
+		        "read-rar-description", "read-resource", "read-resource-description", 
+		        "read-translator-properties", "remove", "remove-anyauthenticated-role", 
+		        "remove-data-role", "remove-source", "restart-vdb", "terminate-session", 
+		        "terminate-transaction", "undefine-attribute", "update-source", "workerpool-statistics", 
+		        "write-attribute"};
+		Assert.assertArrayEquals(opNames.toString(), ops, opNames.toArray(new String[opNames.size()]));
     }
     
     @Test

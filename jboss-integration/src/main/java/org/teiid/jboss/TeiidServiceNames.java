@@ -21,6 +21,7 @@
  */
 package org.teiid.jboss;
 
+import org.jboss.as.threads.ThreadsServices;
 import org.jboss.msc.service.ServiceName;
 import org.teiid.core.BundleUtil;
 import org.teiid.core.TeiidException;
@@ -52,6 +53,7 @@ public class TeiidServiceNames {
 	public static ServiceName RESULTSET_CACHE_FACTORY = ServiceName.JBOSS.append("teiid", "infinispan-rs-cache-factory"); //$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName PREPAREDPLAN_CACHE_FACTORY = ServiceName.JBOSS.append("teiid", "infinispan-pp-cache-factory"); //$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName MATVIEW_SERVICE = ServiceName.JBOSS.append("teiid", "matview-service"); //$NON-NLS-1$ //$NON-NLS-2$
+	public static ServiceName THREAD_POOL_SERVICE = ThreadsServices.EXECUTOR.append("teiid-async");
 	
 	public static class InvalidServiceNameException extends TeiidException {
 
@@ -78,10 +80,6 @@ public class TeiidServiceNames {
 	public static ServiceName vdbSwitchServiceName(String vdbName, int version) {
 		return VDB_SWITCH_SVC_BASE.append(vdbName, String.valueOf(version)); 
 	}	
-	
-	public static ServiceName executorServiceName(String poolName) {
-		return ServiceName.JBOSS.append("thread", "executor", poolName); //$NON-NLS-1$ //$NON-NLS-2$
-	}
 	
 	public static ServiceName transportServiceName(String name) {
 		return ServiceName.of(TRANSPORT_BASE, name);

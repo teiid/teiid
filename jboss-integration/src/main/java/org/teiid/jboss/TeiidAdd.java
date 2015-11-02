@@ -43,7 +43,7 @@ import javax.resource.spi.work.WorkManager;
 import javax.transaction.TransactionManager;
 
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.jboss.as.clustering.jgroups.ChannelFactory;
+import org.wildfly.clustering.jgroups.ChannelFactory;
 import org.jboss.as.controller.*;
 import org.jboss.as.controller.registry.ImmutableManagementResourceRegistration;
 import org.jboss.as.controller.registry.Resource;
@@ -98,7 +98,6 @@ class TeiidAdd extends AbstractAddStepHandler {
 
 	static SimpleAttributeDefinition[] ATTRIBUTES = {
 		TeiidConstants.ALLOW_ENV_FUNCTION_ELEMENT,
-		TeiidConstants.ASYNC_THREAD_POOL_ELEMENT,
 		TeiidConstants.MAX_THREADS_ELEMENT,
 		TeiidConstants.MAX_ACTIVE_PLANS_ELEMENT,
 		TeiidConstants.USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT, 
@@ -189,8 +188,6 @@ class TeiidAdd extends AbstractAddStepHandler {
 		ServiceTarget target = context.getServiceTarget();
 		
 		final JBossLifeCycleListener shutdownListener = new JBossLifeCycleListener();
-		
-		final String asyncThreadPoolName = asString(ASYNC_THREAD_POOL_ELEMENT, operation, context);
 				
 		// translator repository
     	final TranslatorRepository translatorRepo = new TranslatorRepository();
@@ -232,7 +229,7 @@ class TeiidAdd extends AbstractAddStepHandler {
 			}
     	});
     	ServiceBuilder<VDBStatusChecker> statusBuilder = target.addService(TeiidServiceNames.VDB_STATUS_CHECKER, statusService);
-    	statusBuilder.addDependency(TeiidServiceNames.executorServiceName(asyncThreadPoolName), Executor.class,  statusChecker.executorInjector);
+    	statusBuilder.addDependency(TeiidServiceNames.THREAD_POOL_SERVICE, Executor.class,  statusChecker.executorInjector);
     	statusBuilder.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class,  statusChecker.vdbRepoInjector);
     	newControllers.add(statusBuilder.install());    	
     	
@@ -251,7 +248,7 @@ class TeiidAdd extends AbstractAddStepHandler {
     		JGroupsObjectReplicatorService replicatorService = new JGroupsObjectReplicatorService();
 			ServiceBuilder<JGroupsObjectReplicator> serviceBuilder = target.addService(TeiidServiceNames.OBJECT_REPLICATOR, replicatorService);
 			serviceBuilder.addDependency(ServiceName.JBOSS.append("jgroups", "stack", stack), ChannelFactory.class, replicatorService.channelFactoryInjector); //$NON-NLS-1$ //$NON-NLS-2$
-			serviceBuilder.addDependency(TeiidServiceNames.executorServiceName(asyncThreadPoolName), Executor.class,  replicatorService.executorInjector);
+			serviceBuilder.addDependency(TeiidServiceNames.THREAD_POOL_SERVICE, Executor.class,  replicatorService.executorInjector);
 			newControllers.add(serviceBuilder.install());
 			LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50003)); 
     	} else {
@@ -442,7 +439,7 @@ class TeiidAdd extends AbstractAddStepHandler {
 		MaterializationManagementService matviewService = new MaterializationManagementService(shutdownListener);
 		ServiceBuilder<MaterializationManager> matviewBuilder = target.addService(TeiidServiceNames.MATVIEW_SERVICE, matviewService);
 		matviewBuilder.addDependency(TeiidServiceNames.ENGINE, DQPCore.class,  matviewService.dqpInjector);
-		matviewBuilder.addDependency(TeiidServiceNames.executorServiceName(asyncThreadPoolName), Executor.class,  matviewService.executorInjector);
+		matviewBuilder.addDependency(TeiidServiceNames.THREAD_POOL_SERVICE, Executor.class,  matviewService.executorInjector);
 		matviewBuilder.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class, matviewService.vdbRepositoryInjector);
 		newControllers.add(matviewBuilder.install());
 		
@@ -455,7 +452,7 @@ class TeiidAdd extends AbstractAddStepHandler {
 				processorTarget.addDeploymentProcessor(TeiidExtension.TEIID_SUBSYSTEM, Phase.STRUCTURE, Phase.STRUCTURE_WAR_DEPLOYMENT_INIT|0x0001,new VDBStructureDeployer());
 				processorTarget.addDeploymentProcessor(TeiidExtension.TEIID_SUBSYSTEM, Phase.PARSE, Phase.PARSE_WEB_DEPLOYMENT|0x0001, new VDBParserDeployer());
 				processorTarget.addDeploymentProcessor(TeiidExtension.TEIID_SUBSYSTEM, Phase.DEPENDENCIES, Phase.DEPENDENCIES_WAR_MODULE|0x0001, new VDBDependencyDeployer());
-				processorTarget.addDeploymentProcessor(TeiidExtension.TEIID_SUBSYSTEM, Phase.INSTALL, Phase.INSTALL_WAR_DEPLOYMENT|0x1000, new VDBDeployer(translatorRepo, asyncThreadPoolName, vdbRepository, shutdownListener));
+				processorTarget.addDeploymentProcessor(TeiidExtension.TEIID_SUBSYSTEM, Phase.INSTALL, Phase.INSTALL_WAR_DEPLOYMENT|0x1000, new VDBDeployer(translatorRepo, vdbRepository, shutdownListener));
 				
 				// translator deployers
 				processorTarget.addDeploymentProcessor(TeiidExtension.TEIID_SUBSYSTEM, Phase.STRUCTURE, Phase.STRUCTURE_JDBC_DRIVER|0x0001,new TranslatorStructureDeployer());

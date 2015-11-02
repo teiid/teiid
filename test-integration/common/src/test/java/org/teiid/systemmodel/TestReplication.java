@@ -33,6 +33,7 @@ import java.util.HashMap;
 
 import org.junit.After;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -50,6 +51,7 @@ import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.translator.TranslatorException;
 
 @SuppressWarnings("nls")
+@Ignore
 public class TestReplication {
 	
     private static final String MATVIEWS = "matviews";
