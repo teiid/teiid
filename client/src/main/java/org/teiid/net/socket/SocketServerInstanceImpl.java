@@ -161,12 +161,28 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
             handshake.setVersion();
             
             byte[] serverPublicKey = handshake.getPublicKey();
+            byte[] serverPublicKeyLarge = handshake.getPublicKeyLarge();
             
             if (serverPublicKey != null) {
             	DhKeyGenerator keyGen = new DhKeyGenerator();
-            	byte[] publicKey = keyGen.createPublicKey();
-                this.cryptor = keyGen.getSymmetricCryptor(serverPublicKey, "08.03".compareTo(serverVersion) > 0, this.getClass().getClassLoader());  //$NON-NLS-1$
-                handshake.setPublicKey(publicKey);
+            	boolean large = false;
+            	if (serverPublicKeyLarge != null) {
+                	try {
+                		byte[] publicKey = keyGen.createPublicKey(true);
+                		handshake.setPublicKey(null);
+                		handshake.setPublicKeyLarge(publicKey);
+                		serverPublicKey = serverPublicKeyLarge;
+                		large = true;
+                	} catch (CryptoException e) {
+                		//not supported on this platform
+                	}
+            	}
+            	if (!large) {
+            		byte[] publicKey = keyGen.createPublicKey(false);
+            		handshake.setPublicKey(publicKey);
+            		handshake.setPublicKeyLarge(null);
+            	}
+                this.cryptor = keyGen.getSymmetricCryptor(serverPublicKey, "08.03".compareTo(serverVersion) > 0, this.getClass().getClassLoader(), large);  //$NON-NLS-1$
             } else {
                 this.cryptor = new NullCryptor();
             }

@@ -34,10 +34,10 @@ public class TestDhKeyGenerator {
 	public void testKeyGenerationDefault() throws CryptoException {
 		DhKeyGenerator keyGenServer = new DhKeyGenerator();
 		DhKeyGenerator keyGenClient = new DhKeyGenerator();
-		byte[] serverKey = keyGenServer.createPublicKey();
-		byte[] clientKey = keyGenClient.createPublicKey();
-		SymmetricCryptor serverCryptor = keyGenServer.getSymmetricCryptor(clientKey, false, TestDhKeyGenerator.class.getClassLoader());
-		SymmetricCryptor clientCryptor = keyGenClient.getSymmetricCryptor(serverKey, false, TestDhKeyGenerator.class.getClassLoader());
+		byte[] serverKey = keyGenServer.createPublicKey(true);
+		byte[] clientKey = keyGenClient.createPublicKey(true);
+		SymmetricCryptor serverCryptor = keyGenServer.getSymmetricCryptor(clientKey, false, TestDhKeyGenerator.class.getClassLoader(), true);
+		SymmetricCryptor clientCryptor = keyGenClient.getSymmetricCryptor(serverKey, false, TestDhKeyGenerator.class.getClassLoader(), true);
 		
 		String cleartext = "cleartext!"; //$NON-NLS-1$
 		

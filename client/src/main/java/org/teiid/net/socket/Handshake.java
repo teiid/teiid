@@ -42,6 +42,7 @@ public class Handshake implements Externalizable {
     
     private String version = ApplicationInfo.getInstance().getReleaseNumber();
     private byte[] publicKey;
+    private byte[] publicKeyLarge;
     private AuthenticationType authType = AuthenticationType.USERPASSWORD;
     
     public Handshake() {
@@ -104,6 +105,14 @@ public class Handshake implements Externalizable {
 		this.authType = authType;
 	}
     
+    public byte[] getPublicKeyLarge() {
+		return publicKeyLarge;
+	}
+    
+    public void setPublicKeyLarge(byte[] publicKeyLarge) {
+		this.publicKeyLarge = publicKeyLarge;
+	}
+    
     @Override
     public void readExternal(ObjectInput in) throws IOException,
     		ClassNotFoundException {
@@ -111,8 +120,13 @@ public class Handshake implements Externalizable {
     	publicKey = (byte[])in.readObject();
     	try {
     		authType = AuthenticationType.values()[in.readByte()];
+    		int byteLength = in.readInt();
+    		if (byteLength > -1) {
+	    		publicKeyLarge = new byte[byteLength];
+	    		in.readFully(publicKeyLarge);
+    		}
     	} catch (EOFException e) {
-    		
+    		publicKeyLarge = null;
     	}
     }
     
@@ -121,6 +135,12 @@ public class Handshake implements Externalizable {
     	out.writeObject(version);
     	out.writeObject(publicKey);
     	out.writeByte(authType.ordinal());
+    	if (publicKeyLarge == null) {
+        	out.writeInt(-1);
+    	} else {
+	    	out.writeInt(publicKeyLarge.length);
+	    	out.write(publicKeyLarge);
+    	}
     }
     
 }
