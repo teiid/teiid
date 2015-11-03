@@ -5037,7 +5037,7 @@ void procedureParameter(MetadataFactory factory, Procedure proc) :
 	ParsedDataType type = null;
 	ProcedureParameter.Type ppType = ProcedureParameter.Type.In;
 	ProcedureParameter param = null;
-	String defaultValue = null;
+	Expression defaultValue = null;
 	boolean notNull = false;
 	boolean vararg = false;
 }
@@ -5070,7 +5070,7 @@ void procedureParameter(MetadataFactory factory, Procedure proc) :
 			param.setVarArg(vararg);
 		}			
 	}
-	[<DEFAULT_KEYWORD> defaultValue = stringVal() {param.setDefaultValue(defaultValue);}]
+	[<DEFAULT_KEYWORD> defaultValue = expression(ParseInfo.DEFAULT_INSTANCE) {setDefault(param, defaultValue);}]
 	[optionsClause(param, factory)
 	   {
 	      setColumnOptions(param);
@@ -5345,7 +5345,7 @@ void createColumn(MetadataFactory factory, Table table) :
 	ParsedDataType type = null;
 	boolean autoIncrement = false;
 	boolean notNull = false;
-	String defalt = null;
+	Expression defaultValue = null;
 	Column column = null;
 	List<String> columnName = new ArrayList<String>();
 	boolean index = false;
@@ -5376,7 +5376,7 @@ void createColumn(MetadataFactory factory, Table table) :
        columnName.add(element);
      }
 	 ((<PRIMARY> <KEY> { pk = true; }) | ([<UNIQUE> { unique = true;  }] [<INDEX> { index = true; }]))
-	 [<DEFAULT_KEYWORD> defalt = stringVal() {column.setDefaultValue(defalt);}]
+	 [<DEFAULT_KEYWORD> defaultValue = expression(ParseInfo.DEFAULT_INSTANCE) {setDefault(column, defaultValue);}]
 	 [optionsClause(column, factory)
 	   {
 	      setColumnOptions(column);

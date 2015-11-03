@@ -496,7 +496,7 @@ public class ResolverUtil {
              throw new QueryResolverException(QueryPlugin.Event.TEIID30089, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30089, symbol.getOutputName()));
         }
         
-        if ("expression".equalsIgnoreCase(metadata.getExtensionProperty(mid,  BaseColumn.DEFAULT_HANDLING, false))) { //$NON-NLS-1$
+        if (BaseColumn.EXPRESSION_DEFAULT.equalsIgnoreCase(metadata.getExtensionProperty(mid,  BaseColumn.DEFAULT_HANDLING, false))) { 
         	Expression ex = null;
         	try {
         		ex = QueryParser.getQueryParser().parseExpression(defaultValue);

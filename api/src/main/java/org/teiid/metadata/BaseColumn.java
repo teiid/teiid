@@ -31,6 +31,7 @@ import org.teiid.translator.TypeFacility;
 public abstract class BaseColumn extends AbstractMetadataRecord {
 	
 	public static final String DEFAULT_HANDLING = AbstractMetadataRecord.RELATIONAL_URI + "default_handling"; //$NON-NLS-1$
+	public static final String EXPRESSION_DEFAULT = "expression"; //$NON-NLS-1$
 	
 	//the defaults are safe for odbc/jdbc metadata
     public static final int DEFAULT_PRECISION = Short.MAX_VALUE;

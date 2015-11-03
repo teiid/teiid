@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
@@ -47,6 +48,7 @@ import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.Statement;
+import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -914,5 +916,15 @@ public class SQLParserUtil {
 				this.length = length;
 			}			
 		}	
+	}
+	
+	public static void setDefault(BaseColumn column, Expression value) {
+		if ((value instanceof Constant) && value.getType() == DataTypeManager.DefaultDataClasses.STRING) {
+			column.setDefaultValue(((Constant)value).getValue().toString());
+		} else {
+			//it's an expression
+			column.setProperty(BaseColumn.DEFAULT_HANDLING, BaseColumn.EXPRESSION_DEFAULT);
+			column.setDefaultValue(value.toString());
+		}
 	}
 }
