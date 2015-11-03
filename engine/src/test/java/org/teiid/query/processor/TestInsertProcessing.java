@@ -568,6 +568,21 @@ public class TestInsertProcessing {
         helpProcess(plan, dataManager, new List<?>[] {Arrays.asList(1)}); 
     }
     
+    @Test public void testInsertDefaultResolvingExpression() throws Exception {
+        String sql = "insert into x (y) values ('1')"; //$NON-NLS-1$
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("" +
+        		"create foreign table t (y string, z string) options (updatable true); " +
+        		"create view x (y string, z string default 'a' || user()) options (updatable true) as select * from t; " +
+        		"create trigger on x instead of insert as for each row begin insert into t (y, z) values (new.y, new.z); end;", "vdb", "source");
+        Command command = helpParse(sql); 
+
+        ProcessorPlan plan = helpGetPlan(command, tm, TestOptimizer.getGenericFinder()); 
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        dataManager.addData("INSERT INTO t (y, z) VALUES ('1', 'auser')", new List<?>[] {Arrays.asList(1)});
+        helpProcess(plan, dataManager, new List<?>[] {Arrays.asList(1)}); 
+    }
+    
     @Test public void testInsertQueryExpressionLimitZero() {
         String sql = "Insert into pm1.g1 (e1) select * from (select uuid() from pm1.g2 limit 4) a limit 0"; //$NON-NLS-1$
 

@@ -75,6 +75,9 @@ public final class TriggerActionPlanner {
 		Map<ElementSymbol, Expression> params = new HashMap<ElementSymbol, Expression>();
 		
 		Map<ElementSymbol, Expression> mapping = QueryResolver.getVariableValues(userCommand, false, metadata);
+		for (Map.Entry<ElementSymbol, Expression> entry : mapping.entrySet()) {
+			entry.setValue(QueryRewriter.rewriteExpression(entry.getValue(), context, metadata));
+		}
 		if (userCommand instanceof Insert) {
 			Insert insert = (Insert)userCommand;
 			if (insert.getQueryExpression() != null) {
