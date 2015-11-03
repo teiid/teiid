@@ -34,7 +34,10 @@ import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
+import org.teiid.query.parser.SQLParserUtil;
 import org.teiid.query.parser.TestDDLParser;
+import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
@@ -43,10 +46,10 @@ public class TestDDLStringVisitor {
 	@Test
 	public void testForeignTable() throws Exception {
 		
-		String ddl = "CREATE FOREIGN TABLE G1 (\n" + 
+		String ddl = "SET NAMESPACE 'http://www.teiid.org/ext/relational/2012' AS teiid_rel;\n\nCREATE FOREIGN TABLE G1 (\n" + 
 				"	e1 integer,\n" + 
 				"	e2 string(10),\n" + 
-				"	e3 date NOT NULL,\n" + 
+				"	e3 date NOT NULL DEFAULT current_date() OPTIONS (\"teiid_rel:default_handling\" 'expression'),\n" + 
 				"	e4 bigdecimal(12,3),\n" + 
 				"	e5 integer AUTO_INCREMENT OPTIONS (UUID 'uuid', NAMEINSOURCE 'nis', SELECTABLE FALSE),\n" + 
 				"	e6 string DEFAULT 'hello',\n" +
@@ -68,6 +71,7 @@ public class TestDDLStringVisitor {
 		
 		Column e3 = mf.addColumn("e3","date", table);
 		e3.setNullType(NullType.No_Nulls);
+		SQLParserUtil.setDefault(e3, new Function("current_date", new Expression[0]));
 		
 		Column e4 = mf.addColumn("e4","decimal", table);
 		e4.setPrecision(12);

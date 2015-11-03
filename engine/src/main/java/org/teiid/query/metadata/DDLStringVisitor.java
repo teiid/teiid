@@ -380,7 +380,12 @@ public class DDLStringVisitor {
 
 	private void appendDefault(BaseColumn column) {
 		if (column.getDefaultValue() != null) {
-			append(SPACE).append(DEFAULT).append(SPACE).append(TICK).append(StringUtil.replaceAll(column.getDefaultValue(), TICK, TICK + TICK)).append(TICK);
+			append(SPACE).append(DEFAULT).append(SPACE);
+			if (BaseColumn.EXPRESSION_DEFAULT.equalsIgnoreCase(column.getProperty(BaseColumn.DEFAULT_HANDLING, false))) {
+				append(column.getDefaultValue());
+			} else {
+				append(TICK).append(StringUtil.replaceAll(column.getDefaultValue(), TICK, TICK + TICK)).append(TICK);
+			}
 		}
 	}
 
