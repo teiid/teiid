@@ -216,7 +216,7 @@ public interface CommandContext {
 	 * <br/>The returned connection is considered to be derived and is not allowed
 	 * to alter the transaction state or close the session.
 	 * <br/>Each call to this method will return a new connection.
-	 * <br/>Client side execution/connection properties are specfic to 
+	 * <br/>Client side execution/connection properties are specific to 
 	 * each connection instance 
 	 * @return a Connection to the current session
 	 * @throws TeiidSQLException 
