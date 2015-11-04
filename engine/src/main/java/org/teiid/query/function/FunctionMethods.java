@@ -1396,6 +1396,11 @@ public final class FunctionMethods {
         return context.getConnectionId();
     }
     
+    @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
+    public static Object server_id(CommandContext context) {
+        return context.getConnectionId();
+    }
+    
     // ================= Function - MODIFYTIMEZONE ========================
     
     public static Object modifyTimeZone(Timestamp value, String originalTimezoneString, String targetTimezoneString) {
