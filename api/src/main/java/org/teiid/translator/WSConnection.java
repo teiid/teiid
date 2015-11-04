@@ -50,6 +50,8 @@ public interface WSConnection extends Connection {
 	QName getServiceQName();
 	
 	QName getPortQName();
+	
+	String getSwagger();
 
 	public static class Util {
 		

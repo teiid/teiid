@@ -132,7 +132,7 @@
     <module>connector-infinispan-dsl</module>
     <module>translator-prestodb</module>
     <module>sandbox</module>
-
+    <module>translator-swagger</module>
     <module>translator-hbase</module>
   </modules>
 </project>
