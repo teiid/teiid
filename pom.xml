@@ -71,7 +71,7 @@
         <version.jta>1.1</version.jta>
 
         <!--version.org.jboss.jboss-common-core>2.2.17.GA-redhat-2</version.org.jboss.jboss-common-core-->
-        <!--version.org.jboss.as>7.4.0.Final-redhat-19</version.org.jboss.as-->
+        <version.org.jboss.as>7.4.3.Final-redhat-2</version.org.jboss.as>
   <!--      <version.org.jboss.jboss-dmr>1.2.0.Final-redhat-1</version.org.jboss.jboss-dmr>
         <version.org.jboss.msc.jboss-msc>1.1.5.Final</version.org.jboss.msc.jboss-msc>
    -->
