@@ -515,6 +515,38 @@ public class TestCriteriaEvaluator {
         helpTestCompareSubqueryCriteria(crit, null, values); 
     }    
     
+    @Test public void testCompareSubqueryCriteriaNull9() throws Exception {
+        SubqueryCompareCriteria crit = helpGetCompareSubqueryCriteria(SubqueryCompareCriteria.LT, SubqueryCompareCriteria.ALL);
+        ArrayList values = new ArrayList();
+        values.add(null);
+        values.add("b");
+        helpTestCompareSubqueryCriteria(crit, null, values); 
+    }   
+    
+    @Test public void testCompareSubqueryCriteriaNull10() throws Exception {
+        SubqueryCompareCriteria crit = helpGetCompareSubqueryCriteria(SubqueryCompareCriteria.LT, SubqueryCompareCriteria.ALL);
+        ArrayList values = new ArrayList();
+        values.add("b");
+        values.add(null);
+        helpTestCompareSubqueryCriteria(crit, null, values); 
+    }  
+    
+    @Test public void testCompareSubqueryCriteriaNull11() throws Exception {
+        SubqueryCompareCriteria crit = helpGetCompareSubqueryCriteria(SubqueryCompareCriteria.GT, SubqueryCompareCriteria.SOME);
+        ArrayList values = new ArrayList();
+        values.add(null);
+        values.add("b");
+        helpTestCompareSubqueryCriteria(crit, null, values); 
+    }   
+    
+    @Test public void testCompareSubqueryCriteriaNull12() throws Exception {
+        SubqueryCompareCriteria crit = helpGetCompareSubqueryCriteria(SubqueryCompareCriteria.GT, SubqueryCompareCriteria.SOME);
+        ArrayList values = new ArrayList();
+        values.add("b");
+        values.add(null);
+        helpTestCompareSubqueryCriteria(crit, null, values); 
+    }
+    
     /**
      * Big decimal comparisons should ignore precision.
      */
