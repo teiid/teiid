@@ -27,6 +27,7 @@ import static org.junit.Assert.assertFalse;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.isPathParam;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getProcuces;
 
+import java.io.File;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
@@ -41,6 +42,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.cdk.CommandBuilder;
+import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.internal.datamgr.RuntimeMetadataImpl;
 import org.teiid.language.Call;
 import org.teiid.metadata.MetadataFactory;
@@ -67,7 +69,7 @@ public class TestSwaggerMetadataProcessor {
         Properties props = new Properties();
 
         WSConnection mockConnection = Mockito.mock(WSConnection.class);
-        Mockito.stub(mockConnection.getSwagger()).toReturn("http://localhost:8080/swagger.json");
+        Mockito.stub(mockConnection.getSwagger()).toReturn(new File(UnitTestUtil.getTestDataPath()+"/swagger.json").getAbsolutePath());
         
         MetadataFactory mf = new MetadataFactory("vdb", 1, "x", SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
         ef.getMetadata(mf, mockConnection);
@@ -117,7 +119,7 @@ public class TestSwaggerMetadataProcessor {
         Properties props = new Properties();
 
         WSConnection mockConnection = Mockito.mock(WSConnection.class);
-        Mockito.stub(mockConnection.getSwagger()).toReturn("http://localhost:8080/swagger.json");
+        Mockito.stub(mockConnection.getSwagger()).toReturn(new File(UnitTestUtil.getTestDataPath()+"/swagger.json").getAbsolutePath());
         
         MetadataFactory mf = new MetadataFactory("vdb", 1, "x", SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
         ef.getMetadata(mf, mockConnection);
@@ -189,7 +191,7 @@ public class TestSwaggerMetadataProcessor {
         Properties props = new Properties();
 
         WSConnection mockConnection = Mockito.mock(WSConnection.class);
-        Mockito.stub(mockConnection.getSwagger()).toReturn("http://localhost:8080/swagger.json");
+        Mockito.stub(mockConnection.getSwagger()).toReturn(new File(UnitTestUtil.getTestDataPath()+"/swagger.json").getAbsolutePath());
         
         MetadataFactory mf = new MetadataFactory("vdb", 1, "x", SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
         ef.getMetadata(mf, mockConnection);
@@ -211,7 +213,7 @@ public class TestSwaggerMetadataProcessor {
         Properties props = new Properties();
 
         WSConnection mockConnection = Mockito.mock(WSConnection.class);
-        Mockito.stub(mockConnection.getSwagger()).toReturn("http://localhost:8080/swagger.json");
+        Mockito.stub(mockConnection.getSwagger()).toReturn(new File(UnitTestUtil.getTestDataPath()+"/swagger.json").getAbsolutePath());
         
         MetadataFactory mf = new MetadataFactory("vdb", 1, "x", SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
         ef.getMetadata(mf, mockConnection);
@@ -227,6 +229,8 @@ public class TestSwaggerMetadataProcessor {
             }
         }
     }
+    
+    
     
     @Ignore
     @SuppressWarnings("unchecked")
@@ -270,4 +274,6 @@ public class TestSwaggerMetadataProcessor {
         }
       
     }
+    
+    
 }
