@@ -340,14 +340,20 @@ public class ResolverVisitor extends LanguageVisitor {
 	    		Class<?> type = null;
 	    		for (int i = 0; i < array.getExpressions().size(); i++) {
 	    			Expression expr = array.getExpressions().get(i);
-	    			if (type == null) {
-	    				type = expr.getType();
-	    			} else if (type != expr.getType()) {
-	    				type = DataTypeManager.DefaultDataClasses.OBJECT;
+	    			Class<?> baseType = expr.getType();
+	    			while (baseType != null && baseType.isArray()) {
+	    				baseType = baseType.getComponentType();
+	    			}
+	    			if (baseType != DefaultDataClasses.NULL) {
+		    			if (type == null) {
+		    				type = expr.getType();
+		    			} else if (type != expr.getType()) {
+		    				type = DataTypeManager.DefaultDataClasses.OBJECT;
+		    			}
 	    			}
 	    		}
 	    		if (type == null) {
-	    			type = DataTypeManager.DefaultDataClasses.OBJECT;
+	    			type = DataTypeManager.DefaultDataClasses.NULL;
 	    		}
 	    		array.setComponentType(type);
 	    	}
