@@ -587,16 +587,16 @@ public class Evaluator {
             }
 
             if(value != null) {
-            	result = compare(criteria.getOperator(), leftValue, value);
+            	Boolean comp = compare(criteria.getOperator(), leftValue, value);
 
                 switch(criteria.getPredicateQuantifier()) {
                     case SubqueryCompareCriteria.ALL:
-                        if (Boolean.FALSE.equals(result)){
+                        if (Boolean.FALSE.equals(comp)){
                             return Boolean.FALSE;
                         }
                         break;
                     case SubqueryCompareCriteria.SOME:
-                        if (Boolean.TRUE.equals(result)){
+                        if (Boolean.TRUE.equals(comp)){
                             return Boolean.TRUE;
                         }
                         break;
@@ -605,7 +605,20 @@ public class Evaluator {
                 }
 
             } else { // value is null
-                result = null;
+            	switch(criteria.getPredicateQuantifier()) {
+                case SubqueryCompareCriteria.ALL:
+                    if (Boolean.TRUE.equals(result)){
+                        result = null;
+                    }
+                    break;
+                case SubqueryCompareCriteria.SOME:
+                    if (Boolean.FALSE.equals(result)){
+                        result = null;
+                    }
+                    break;
+                default:
+                     throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30326, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30326, criteria.getPredicateQuantifier()));
+            	}
             }
 
 
