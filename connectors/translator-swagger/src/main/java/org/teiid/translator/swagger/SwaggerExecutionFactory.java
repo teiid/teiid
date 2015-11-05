@@ -68,6 +68,12 @@ public class SwaggerExecutionFactory extends ExecutionFactory<ConnectionFactory,
 	
 	public SwaggerExecutionFactory() {
 		setSourceRequiredForMetadata(true);
+		
+		setSupportsOrderBy(false);
+		setSupportsSelectDistinct(false);
+		setSupportsInnerJoins(false);
+		setSupportsFullOuterJoins(false);
+		setSupportsOuterJoins(false);
 	}
 
     @Override

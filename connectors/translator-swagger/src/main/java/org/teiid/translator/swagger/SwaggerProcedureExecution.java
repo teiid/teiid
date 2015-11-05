@@ -22,11 +22,11 @@
 package org.teiid.translator.swagger;
 
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getPathSeparator;
-import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getCatalogSeparator;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getParamSeparator;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getParamSeparatorFirst;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getParamSeparatorEqual;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getHttpAction;
+import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getHttpPath;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getHttpHost;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getBaseUrl;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.isPathParam;
@@ -126,7 +126,11 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
         
         Object payload = getPayload(arguments);
         
-        String endpoint = buildEndPoint(method, getHttpHost(this.procedure.getMetadataObject()), getBaseUrl(this.procedure.getMetadataObject()),this.procedure.getProcedureName(),arguments);
+        String endpoint = buildEndPoint(method, 
+                getHttpHost(this.procedure.getMetadataObject()), 
+                getBaseUrl(this.procedure.getMetadataObject()),
+                getHttpPath(this.procedure.getMetadataObject()),
+                arguments);
         
         
         try {
@@ -213,7 +217,6 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
         }
     }
 
-    @SuppressWarnings("unused")
     private Object getPayload(List<Argument> arguments) {
         
         Object payload = null;
@@ -265,30 +268,20 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
     
     }
 
-    private String buildEndPoint(Action method, String httpHost, String baseUrl, String procedureName, List<Argument> arguments) {
+    private String buildEndPoint(Action method, String httpHost, String baseUrl, String apiPath, List<Argument> arguments) {
         
-        String path = null;
+        String path = httpHost;
         String pathSeparator = getPathSeparator(); 
-        String catalogSeparator = getCatalogSeparator(); 
         
-        if(httpHost.endsWith(pathSeparator)) {
-            httpHost = httpHost.substring(0, httpHost.length() -1);
-        }
-        
-        path = httpHost;
-        
-        if(!baseUrl.startsWith(pathSeparator)) {
-            baseUrl = pathSeparator + baseUrl;
-        }
+        path = trimSlash(path, pathSeparator);
         
         path += baseUrl;
         
-        String subPath = procedureName.replace(catalogSeparator, pathSeparator);
-        if(!path.endsWith(pathSeparator)) {
-            subPath = pathSeparator + subPath ;
-        }
+        path = trimSlash(path, pathSeparator);
         
-        path += subPath;
+        path += apiPath;
+        
+        path = trimSlash(path, pathSeparator);
         
         boolean first = true;
         for(Argument argument : arguments){
@@ -298,9 +291,7 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
             }
             boolean isPathParam = isPathParam(parameter); 
             if(isPathParam){
-                if(!path.endsWith(pathSeparator)){
-                    path += pathSeparator;
-                }
+                path += pathSeparator;
                 path += argument.getArgumentValue().getValue(); 
             } else {
                 if(first) {
@@ -313,6 +304,16 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
         }
                       
         return path;
+    }
+
+    private String trimSlash(String path, String pathSeparator) {
+        String value = "";
+        if(path.endsWith(pathSeparator)) {
+            value = path.substring(0, path.length() -1);
+        } else {
+            value = path;
+        }
+        return value;
     }
 
     @Override

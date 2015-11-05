@@ -22,9 +22,7 @@
 package org.teiid.translator.swagger;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -42,6 +40,7 @@ import org.teiid.translator.TypeFacility;
 import org.teiid.translator.WSConnection;
 import org.teiid.translator.swagger.SwaggerExecutionFactory.Action;
 
+import io.swagger.models.HttpMethod;
 import io.swagger.models.Operation;
 import io.swagger.models.Path;
 import io.swagger.models.Swagger;
@@ -52,7 +51,6 @@ import io.swagger.models.parameters.QueryParameter;
 public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>{
     
     private static final String PATH_SEPARATOR = File.separator; 
-    private static final String CATALOG_SEPARATOR = "_"; //$NON-NLS-1$
     private static final String COMMA_SEPARATOR = ","; //$NON-NLS-1$
     private static final String PROCEDURE_PRODUCES = "produces"; //$NON-NLS-1$
     private static final String PROCEDURE_CONSUMES = "consumes"; //$NON-NLS-1$
@@ -60,9 +58,13 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
     private static final String PARAMETER_SEPARATOR_FIRST = "?"; //$NON-NLS-1$
     private static final String PARAMETER_SEPARATOR_EQUAL = "="; //$NON-NLS-1$
     private static final String IS_PATH_PARAMETER = "isPathParam"; //$NON-NLS-1$
-    private static final String HTTP_ACTION = "httpAction"; //$NON-NLS-1$
     private static final String BASE_URL = "restBaseUrl"; //$NON-NLS-1$
     private static final String HTTP_HOST = "httpHost"; //$NON-NLS-1$
+    private static final String HTTP_ACTION = "httpAction"; //$NON-NLS-1$
+    private static final String HTTP_API_PATH = "restApiPath"; //$NON-NLS-1$
+    
+    private static final String TRUE_STRING = "true"; //$NON-NLS-1$
+    private static final String FALSE_STRING = "false"; //$NON-NLS-1$
     
     private SwaggerExecutionFactory ef;
     private String httpHost = "http://localhost:8080"; //$NON-NLS-1$
@@ -92,34 +94,49 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
     }
     
     private void addProcedure(MetadataFactory mf, String key, Path path) {
-
-        String action = getHttpAction(path);
-        if(null == action){
-            return ;
+        
+        for(Entry<HttpMethod, Operation> entry : path.getOperationMap().entrySet()){
+            
+            String action = entry.getKey().toString();
+            
+            Operation operation = entry.getValue();
+            String procName = operation.getOperationId();
+            String produces = getProduceTypes(operation);
+            String consumes = getConsumeTypes(operation);
+            String annotation = getOperationSummary(operation);
+            
+            Procedure procedure = mf.addProcedure(procName);
+            procedure.setVirtual(false);
+            procedure.setNameInSource(procName);
+            procedure.setProperty(HTTP_ACTION, action);
+            procedure.setProperty(HTTP_API_PATH, key);
+            procedure.setProperty(BASE_URL, baseUrl);
+            procedure.setProperty(HTTP_HOST, httpHost); 
+            procedure.setProperty(PROCEDURE_PRODUCES, produces);
+            procedure.setProperty(PROCEDURE_CONSUMES, consumes);
+            procedure.setAnnotation(annotation);
+            
+            mf.addProcedureParameter("result", TypeFacility.RUNTIME_NAMES.BLOB, Type.ReturnValue, procedure); //$NON-NLS-1$ 
+            
+            addProcedureParameter(mf, procedure, operation);
+            
+            ProcedureParameter param = mf.addProcedureParameter("headers", TypeFacility.RUNTIME_NAMES.CLOB, Type.In, procedure); //$NON-NLS-1$
+            param.setAnnotation("Headers to send"); //$NON-NLS-1$
+            param.setNullType(NullType.Nullable);
+            
+            param = mf.addProcedureParameter("contentType", TypeFacility.RUNTIME_NAMES.STRING, Type.Out, procedure); //$NON-NLS-1$
+            param.setAnnotation("return contentType"); //$NON-NLS-1$
+            param.setNullType(NullType.Nullable);            
         }
+
+    }
+    
+    private void addProcedureParameter(MetadataFactory mf, Procedure procedure, Operation operation) {
         
-        String procName = formProcName(key);
-        String produces = getProduces(path);
-        String consumes = getConsumes(path);
-        String annotation = getOperationSummary(path);
-        Procedure procedure = mf.addProcedure(procName);
-        procedure.setVirtual(false);
-        procedure.setNameInSource(procName);
-        procedure.setProperty(HTTP_ACTION, action);
-        procedure.setProperty(BASE_URL, baseUrl);
-        procedure.setProperty(HTTP_HOST, httpHost); 
-        procedure.setProperty(PROCEDURE_PRODUCES, produces);
-        procedure.setProperty(PROCEDURE_CONSUMES, consumes);
-        procedure.setAnnotation(annotation);
-        
-        mf.addProcedureParameter("result", TypeFacility.RUNTIME_NAMES.BLOB, Type.ReturnValue, procedure); //$NON-NLS-1$ 
-        
-        ProcedureParameter param = null;
-        
-        for(Parameter parameter : getApiParams(path)) {
+        for(Parameter parameter : operation.getParameters()) {
             String name = parameter.getName();
             String dataType = TypeFacility.RUNTIME_NAMES.STRING;
-            String isPathParam = "true"; //$NON-NLS-1$
+            String isPathParam = TRUE_STRING; //$NON-NLS-1$
             if(parameter instanceof PathParameter) {
                 PathParameter p  = (PathParameter) parameter;
                 String type = p.getType();
@@ -128,47 +145,29 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                 QueryParameter p  = (QueryParameter) parameter;
                 String type = p.getType();
                 dataType = DataTypeManager.getDataTypeName(TypeFacility.getDataTypeClass(type));
-                isPathParam = "false"; //$NON-NLS-1$
+                isPathParam = FALSE_STRING; //$NON-NLS-1$
             }
-            param = mf.addProcedureParameter(name, dataType, Type.In, procedure); 
+            ProcedureParameter param = mf.addProcedureParameter(name, dataType, Type.In, procedure); 
             param.setProperty(IS_PATH_PARAMETER, isPathParam); 
             param.setNullType(NullType.No_Nulls);
-            param.setDefaultValue("false"); //$NON-NLS-1$
+            param.setDefaultValue(FALSE_STRING); //$NON-NLS-1$
+            param.setAnnotation(parameter.getDescription());
         }
         
-        param = mf.addProcedureParameter("headers", TypeFacility.RUNTIME_NAMES.CLOB, Type.In, procedure); //$NON-NLS-1$
-        param.setAnnotation("Headers to send"); //$NON-NLS-1$
-        param.setNullType(NullType.Nullable);
-        
-        param = mf.addProcedureParameter("contentType", TypeFacility.RUNTIME_NAMES.STRING, Type.Out, procedure); //$NON-NLS-1$
-        param.setAnnotation("return contentType"); //$NON-NLS-1$
-        param.setNullType(NullType.Nullable);
-    }
-    
-    private String getConsumes(Path path) {
-        
-        String consumes = "text/xml; charset=utf-8"; //$NON-NLS-1$
-        for(Operation  operation : path.getOperations()){
-            
-            if(operation.getConsumes() == null) 
-                continue;
-            
-            for(String consume : operation.getConsumes()){
-                consumes += COMMA_SEPARATOR;
-                consumes += consume;
-            }
-        }
-        return consumes;
     }
 
-    private String getProduces(Path path) {
+    private String getOperationSummary(Operation operation) {
+        String description = operation.getDescription();
+        if(description == null || description.equals("")) { //$NON-NLS-1$
+            description = operation.getSummary();
+        }     
+        return description;
+    }
+
+    private String getProduceTypes(Operation operation) {
         String produces = ""; //$NON-NLS-1$
         boolean first = true;
-        for(Operation  operation : path.getOperations()){
-            
-            if(operation.getProduces() == null) 
-                continue;
-            
+        if(operation.getProduces() != null) {
             for(String produce : operation.getProduces()){
                 if(first) {
                     produces += produce;
@@ -182,66 +181,23 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
         return produces;
     }
 
-    private String getOperationSummary(Path path) {
-        String description = ""; //$NON-NLS-1$
-        for(Operation  operation : path.getOperations()) {
-            String tmpString = operation.getDescription();
-            if(tmpString == null || tmpString.equals("")) { //$NON-NLS-1$
-                tmpString = operation.getSummary();
+    private String getConsumeTypes(Operation operation) {
+        String consumes = "text/xml; charset=utf-8"; //$NON-NLS-1$
+        if(operation.getConsumes() != null){
+            for(String consume : operation.getConsumes()){
+                consumes += COMMA_SEPARATOR;
+                consumes += consume;
             }
-            description += tmpString;
         }
-        return description;
+        return consumes;
     }
+
 
     private Swagger getSchema(WSConnection conn) throws TranslatorException {
         if (this.ef != null) {
             return this.ef.getSchema(conn);
         }
         return null;
-    }
-
-    private String getHttpAction(Path path) {
-        if(path.getGet() != null) {
-            return "GET";
-        } else if (path.getPost() != null) {
-            return "POST";
-        } else if (path.getDelete() != null) {
-            return "DELETE";
-        } else if (path.getPut() != null) {
-            return "PUT";
-        }
-        return null;
-    }
-
-    private List<Parameter> getApiParams(Path path) {
-        
-        for(Operation operation : path.getOperations()) {
-            return operation.getParameters();
-        }  
-        
-        return new ArrayList<Parameter>();
-    }
-
-    private String formProcName(String path) {
-        
-        String paramParenthesis = "{" ; //$NON-NLS-1$
-        
-        int endIndex = path.length();
-        if(path.contains(paramParenthesis)) {
-            endIndex = path.indexOf(paramParenthesis);
-        }
-        path = path.substring(0, endIndex);
-        
-        if(path.startsWith(PATH_SEPARATOR)){
-            path = path.substring(1);
-        }
-        
-        if(path.endsWith(PATH_SEPARATOR)) {
-            path = path.substring(0, path.length() - 1);
-        }
-        
-        return path.replace(PATH_SEPARATOR, CATALOG_SEPARATOR);
     }
 
     @TranslatorProperty(display = "HttpHost", category = PropertyType.IMPORT, description = "Rest Service Server Http Host")
@@ -255,10 +211,6 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
     
     static String getPathSeparator(){
         return PATH_SEPARATOR;
-    }
-    
-    static String getCatalogSeparator(){
-        return CATALOG_SEPARATOR;
     }
     
     static String getParamSeparator(){
@@ -285,12 +237,21 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
         return procedure.getProperty(BASE_URL, false);
     }
     
+    static String getHttpPath(Procedure procedure) {
+        String path = procedure.getProperty(HTTP_API_PATH, false);
+        int endIndex = path.indexOf("{"); //$NON-NLS-1$
+        if(endIndex >= 0) {
+            path = path.substring(0, endIndex);  
+        }
+        return path ;
+    }
+    
     static Set<String> getProcuces(Procedure procedure) {
         Set<String> produceSet = new HashSet<String>();
         String produces = procedure.getProperty(PROCEDURE_PRODUCES, false);
         String[] array = produces.split(COMMA_SEPARATOR);
         for(String produce : array){
-            if(!produce.equals("")) {//$NON-NLS-1$
+            if(!produce.equals("")) { //$NON-NLS-1$
                 produceSet.add(produce);
             }
         }
@@ -302,7 +263,7 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
         String consumes = procedure.getProperty(PROCEDURE_CONSUMES, false);
         String[] array = consumes.split(COMMA_SEPARATOR);
         for(String produce : array){
-            if(!produce.equals("")) {//$NON-NLS-1$
+            if(!produce.equals("")) { //$NON-NLS-1$
                 consumeSet.add(produce);
             }
         }
