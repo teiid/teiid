@@ -41,6 +41,7 @@ import org.teiid.core.util.AccessibleBufferedInputStream;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.jdbc.JDBCPlugin;
 import org.teiid.net.CommunicationException;
+import org.teiid.net.HostInfo;
 import org.teiid.net.socket.SocketUtil.SSLSocketFactory;
 import org.teiid.netty.handler.codec.serialization.ObjectDecoderInputStream;
 import org.teiid.netty.handler.codec.serialization.ObjectEncoderOutputStream;
@@ -158,10 +159,9 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 	}
 
 	@Override
-	public ObjectChannel createObjectChannel(SocketAddress address, boolean ssl) throws IOException,
-			CommunicationException {
+	public ObjectChannel createObjectChannel(HostInfo info) throws CommunicationException, IOException {
 		final Socket socket;
-		if (ssl) {
+		if (info.isSsl()) {
 			if (this.sslSocketFactory == null) {
 				try {
 					sslSocketFactory = SocketUtil.getSSLSocketFactory(props);
@@ -169,9 +169,9 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 					 throw new CommunicationException(JDBCPlugin.Event.TEIID20027, e, e.getMessage());
 				}
 			}
-			socket = sslSocketFactory.getSocket();
+			socket = sslSocketFactory.getSocket(info.getHostName(), info.getPortNumber());
 		} else {
-			socket = new Socket();
+			socket = new Socket(info.getInetAddress(), info.getPortNumber());
 		}
 		if (receiveBufferSize > 0) {
 			socket.setReceiveBufferSize(receiveBufferSize);
@@ -180,7 +180,6 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 			socket.setSendBufferSize(sendBufferSize);
 		}
 	    socket.setTcpNoDelay(!conserveBandwidth); // enable Nagle's algorithm to conserve bandwidth
-	    socket.connect(address);
 	    socket.setSoTimeout(soTimeout);
 	    return new OioObjectChannel(socket, maxObjectSize);
 	}
