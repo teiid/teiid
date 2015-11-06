@@ -1335,7 +1335,7 @@ public class QueryRewriter {
      */
     private Criteria rewriteCriteria(SubqueryCompareCriteria criteria) throws TeiidComponentException, TeiidProcessingException{
     	
-    	if (criteria.getCommand().getProcessorPlan() == null) {
+    	if (criteria.getCommand() != null && criteria.getCommand().getProcessorPlan() == null) {
     		if ((criteria.getOperator() == CompareCriteria.EQ && criteria.getPredicateQuantifier() != SubqueryCompareCriteria.ALL)
     				|| (criteria.getOperator() == CompareCriteria.NE && criteria.getPredicateQuantifier() == SubqueryCompareCriteria.ALL)) {
     			SubquerySetCriteria result = new SubquerySetCriteria(criteria.getLeftExpression(), criteria.getCommand());
@@ -1384,7 +1384,7 @@ public class QueryRewriter {
 
         Expression leftExpr = rewriteExpressionDirect(criteria.getLeftExpression());
         
-        if (isNull(leftExpr)) {
+        if (isNull(leftExpr) && criteria.getCommand() != null) {
             addImplicitLimit(criteria, 1);
         }
         
@@ -1396,8 +1396,8 @@ public class QueryRewriter {
         
         rewriteSubqueryContainer(criteria, true);
         
-        if (!RelationalNodeUtil.shouldExecute(criteria.getCommand(), false, true)) {
-        	//TODO: this is not interpretted the same way in all databases
+        if (criteria.getCommand() != null && !RelationalNodeUtil.shouldExecute(criteria.getCommand(), false, true)) {
+        	//TODO: this is not interpreted the same way in all databases
         	//for example H2 treat both cases as false - however the spec and all major vendors support the following: 
         	if (criteria.getPredicateQuantifier()==SubqueryCompareCriteria.SOME) {
         		return FALSE_CRITERIA;

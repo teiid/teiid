@@ -326,7 +326,10 @@ public class SimpleQueryResolver implements CommandResolver {
         
         public void visit(SubqueryCompareCriteria obj) {
             visitNode(obj.getLeftExpression());
-            resolveSubQuery(obj, this.currentGroups);
+            if (obj.getCommand() != null) {
+            	resolveSubQuery(obj, this.currentGroups);
+            }
+            visitNode(obj.getArrayExpression());
             postVisitVisitor(obj);
         }
         

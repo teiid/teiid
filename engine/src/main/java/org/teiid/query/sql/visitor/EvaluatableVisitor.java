@@ -205,7 +205,9 @@ public class EvaluatableVisitor extends LanguageVisitor {
     }        
 
     public void visit(SubqueryCompareCriteria obj) {
-		evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
+    	if (obj.getCommand() != null) {
+    		evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
+    	}
     }
     
     @Override

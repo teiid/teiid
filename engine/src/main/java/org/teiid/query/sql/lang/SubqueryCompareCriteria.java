@@ -30,7 +30,6 @@ import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
 import org.teiid.query.sql.symbol.ContextReference;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.ScalarSubquery;
 
 
 /**
@@ -55,6 +54,10 @@ import org.teiid.query.sql.symbol.ScalarSubquery;
  * <li>price &gt;= ALL (Select ... FROM ... WHERE ... )</LI>
  * <LI>revenue &lt; (Select ... FROM ... WHERE ... )</LI>
  * </UL>
+ * 
+ * This can also represent a quantified comparison against array.  In which case the
+ * arrayExpression member will be set and command will not.
+ * 
  */
 public class SubqueryCompareCriteria extends AbstractCompareCriteria
 implements SubqueryContainer<QueryCommand>, ContextReference {
@@ -73,6 +76,7 @@ implements SubqueryContainer<QueryCommand>, ContextReference {
     private int predicateQuantifier = ALL;
 
     private QueryCommand command;
+    private Expression arrayExpression;
     private String id = "$scc/id" + ID.getAndIncrement(); //$NON-NLS-1$
     
     private SubqueryHint subqueryHint = new SubqueryHint();
@@ -182,7 +186,8 @@ implements SubqueryContainer<QueryCommand>, ContextReference {
                getPredicateQuantifier() == scc.getPredicateQuantifier() &&
                EquivalenceUtil.areEqual(getLeftExpression(), scc.getLeftExpression()) &&
                EquivalenceUtil.areEqual(getCommand(), scc.getCommand()) &&
-               EquivalenceUtil.areEqual(subqueryHint, scc.subqueryHint);
+               EquivalenceUtil.areEqual(subqueryHint, scc.subqueryHint) &&
+               EquivalenceUtil.areEqual(arrayExpression, scc.arrayExpression);
     }
 
     /**
@@ -207,16 +212,12 @@ implements SubqueryContainer<QueryCommand>, ContextReference {
         if (this.subqueryHint != null) {
         	copy.subqueryHint = this.subqueryHint.clone();
         }
+        if (this.arrayExpression != null) {
+        	copy.arrayExpression = (Expression) this.arrayExpression.clone();
+        }
         return copy;
     }
 
-    /** 
-     * @see org.teiid.query.sql.lang.AbstractCompareCriteria#getRightExpression()
-     */
-    public Expression getRightExpression() {
-        return new ScalarSubquery(getCommand());
-    }
-    
     @Override
     public void negate() {
     	super.negate();
@@ -233,6 +234,14 @@ implements SubqueryContainer<QueryCommand>, ContextReference {
     
     public void setSubqueryHint(SubqueryHint subqueryHint) {
 		this.subqueryHint = subqueryHint;
+	}
+    
+    public Expression getArrayExpression() {
+		return arrayExpression;
+	}
+    
+    public void setArrayExpression(Expression expression) {
+		this.arrayExpression = expression;
 	}
 
 }

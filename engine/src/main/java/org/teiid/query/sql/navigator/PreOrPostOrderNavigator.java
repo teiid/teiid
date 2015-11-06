@@ -378,6 +378,7 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
         if (deep) {
         	visitNode(obj.getCommand());
         }
+        visitNode(obj.getArrayExpression());
         postVisitVisitor(obj);
     }
     public void visit(SubqueryFromClause obj) {
