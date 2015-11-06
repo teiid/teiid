@@ -1856,7 +1856,11 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(quantifier);
         addSubqueryHint(obj.getSubqueryHint());
         append(" ("); //$NON-NLS-1$
-        visitNode(obj.getCommand());
+        if (obj.getCommand() != null) {
+        	visitNode(obj.getCommand());
+        } else {
+        	visitNode(obj.getArrayExpression());
+        }
         append(")"); //$NON-NLS-1$
     }
 

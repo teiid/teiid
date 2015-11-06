@@ -261,6 +261,9 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
      */
     public void visit(SubqueryCompareCriteria obj) {
         obj.setLeftExpression( replaceExpression(obj.getLeftExpression()) );
+        if (obj.getArrayExpression() != null) {
+        	obj.setArrayExpression(replaceExpression(obj.getArrayExpression()));
+        }
     }
     
     /**

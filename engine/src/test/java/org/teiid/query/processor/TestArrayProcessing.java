@@ -37,6 +37,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
@@ -201,6 +202,53 @@ public class TestArrayProcessing {
 		QueryResolver.resolveCommand(helpParse(sql), RealMetadataFactory.example1Cached());
 		command = helpResolve(sql, RealMetadataFactory.example1Cached());
 	    assertEquals(String[][].class, command.getProjectedSymbols().get(0).getType());
+	}
+	
+	@Test public void testQuantifiedCompareRewrite() throws Exception {
+		String sql = "select 'a' < ALL (('b','c'))"; //$NON-NLS-1$
+		QueryResolver.resolveCommand(helpParse(sql), RealMetadataFactory.example1Cached());
+		Command command = helpResolve(sql, RealMetadataFactory.example1Cached());
+		assertEquals("SELECT 'a' < ALL (('b', 'c'))", command.toString());
+	    command = QueryRewriter.rewrite(command, RealMetadataFactory.example1Cached(), null);
+	    assertEquals("SELECT TRUE", command.toString());
+	    
+	    sql = "select 'a' < ALL ((null,'c'))"; //$NON-NLS-1$
+	    QueryResolver.resolveCommand(helpParse(sql), RealMetadataFactory.example1Cached());
+		command = helpResolve(sql, RealMetadataFactory.example1Cached());
+	    command = QueryRewriter.rewrite(command, RealMetadataFactory.example1Cached(), null);
+	    assertEquals("SELECT UNKNOWN", command.toString());
+	}
+	
+	@Test(expected=QueryResolverException.class) public void testQuantifiedCompareResolving() throws Exception {
+		String sql = "select 'a' < ALL ('b')"; //$NON-NLS-1$
+		QueryResolver.resolveCommand(helpParse(sql), RealMetadataFactory.example1Cached());
+	}
+	
+	@Test(expected=QueryResolverException.class) public void testQuantifiedCompareResolving1() throws Exception {
+		String sql = "select 1 < ALL (('1', '2'))"; //$NON-NLS-1$
+		TransformationMetadata tm = RealMetadataFactory.example1Cached().getDesignTimeMetadata();
+		tm.setWidenComparisonToString(false);
+		QueryResolver.resolveCommand(helpParse(sql), tm);
+	}
+	
+	@Test public void testQuantifiedCompareResolving2() throws Exception {
+		String sql = "select '1' < ALL (cast(? as integer[]))"; //$NON-NLS-1$
+		TransformationMetadata tm = RealMetadataFactory.example1Cached().getDesignTimeMetadata();
+		tm.setWidenComparisonToString(false);
+		Command command = helpParse(sql);
+		QueryResolver.resolveCommand(command, tm);
+		command = QueryRewriter.rewrite(command, tm, null);
+		assertEquals("SELECT 1 < ALL (?)", command.toString());
+	}
+	
+	@Test public void testQuantifiedCompareProcessing() throws Exception {
+		String sql = "select e1 from pm1.g1 where e2 = some (('a', 'b'))"; //$NON-NLS-1$
+		Command command = helpParse(sql);
+		ProcessorPlan pp = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+	    HardcodedDataManager dataManager = new HardcodedDataManager();
+	    dataManager.addData("SELECT g_0.e2, g_0.e1 FROM pm1.g1 AS g_0", Arrays.asList("a", 1), Arrays.asList("c", 2));
+		TestProcessor.helpProcess(pp, dataManager, new List[] {Arrays.asList(1)});
+	    
 	}
 	
 	/**

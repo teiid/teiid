@@ -446,10 +446,16 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	@Override
 	public void sendCommandComplete(String sql, Integer count) {
 		startMessage('C');
+		String tag = getCompletionTag(sql, count);
+		writeString(tag);
+		sendMessage();
+	}
+
+	public static String getCompletionTag(String sql, Integer count) {
 		String tag;
 		if (StringUtil.startsWithIgnoreCase(sql, "BEGIN") || StringUtil.startsWithIgnoreCase(sql, "START TRANSACTION")) {
 			tag = "BEGIN";
-		} else if (sql.indexOf(' ') == -1) {
+		} else if (sql.indexOf(' ') == -1 || sql.equals("CLOSE CURSOR")) {
 			//should already be a completion tag
 			tag = sql.toUpperCase();
 			if (count != null) {
@@ -462,12 +468,11 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 			if (tag.equals("EXEC") || tag.equals("CALL")) {
 				tag = "SELECT"; 
 			}
-			if (count != null) {
+			if (count != null && !(tag.equalsIgnoreCase("ROLLBACK") || tag.equalsIgnoreCase("SAVEPOINT") || tag.equalsIgnoreCase("RELEASE"))) {
 				tag += " " + count;
 			}
 		}
-		writeString(tag);
-		sendMessage();
+		return tag;
 	}
 
 	private void sendDataRow(ResultSet rs, List<PgColInfo> cols, short[] resultColumnFormat) throws SQLException, IOException {

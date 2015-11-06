@@ -3168,7 +3168,7 @@ Expression booleanPrimary(ParseInfo info) :
 			LOOKAHEAD(2) ex=regexMatchCrit(info, ex) |
 			ex=setCrit(info, ex) |
 			ex=isNullCrit(info, ex) |
-			LOOKAHEAD(operator() (<ANY>|<SOME>|<ALL>) subquery(info)) ex=subqueryCompareCriteria(info, ex) |
+			LOOKAHEAD(operator() (<ANY>|<SOME>|<ALL>)) ex=subqueryCompareCriteria(info, ex) |
 			ex=compareCrit(info, ex)
 	     )]
 	    )
@@ -3270,6 +3270,7 @@ SubqueryCompareCriteria subqueryCompareCriteria(ParseInfo info, Expression expre
     Token operator = null;
     Token quantifier = null;
     ExistsCriteria.SubqueryHint hint = null;
+    Expression expr = null;
 }
 {
 	operator=operator()
@@ -3278,12 +3279,15 @@ SubqueryCompareCriteria subqueryCompareCriteria(ParseInfo info, Expression expre
 	  quantifier=<ALL>
 	)
 	{ hint = getSubqueryHint(getToken(1)); }
-	subquery = subquery(info)
+	( LOOKAHEAD(subquery(info)) subquery = subquery(info) | 
+      (<LPAREN> expr = expression(info) <RPAREN>)
+    )
 
 	{
 		subqueryCrit = new SubqueryCompareCriteria();
 	    subqueryCrit.setLeftExpression(expression);
 	    subqueryCrit.setCommand(subquery);
+	    subqueryCrit.setArrayExpression(expr);
     
 		// Set operator
 		subqueryCrit.setOperator(getOperator(operator.image));

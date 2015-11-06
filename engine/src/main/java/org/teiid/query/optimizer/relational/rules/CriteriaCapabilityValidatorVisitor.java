@@ -299,7 +299,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     }
     
     public void visit(CompareCriteria obj) {
-    	checkCompareCriteria(obj);
+    	checkCompareCriteria(obj, obj.getRightExpression());
         checkLiteralComparison(obj, Arrays.asList(obj.getRightExpression()));
     }
 
@@ -315,7 +315,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
 		}
 	}
     
-    public void checkCompareCriteria(AbstractCompareCriteria obj) {
+    public void checkCompareCriteria(AbstractCompareCriteria obj, Expression rightExpression) {
         boolean negated = false;
         // Check if operation is allowed
         Capability operatorCap = null;
@@ -359,7 +359,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         		support = SupportConstants.Element.SEARCHABLE_EQUALITY;
         	}
             checkElementsAreSearchable(obj.getLeftExpression(), support);                                
-            checkElementsAreSearchable(obj.getRightExpression(), support);
+            checkElementsAreSearchable(rightExpression, support);
         } catch(QueryMetadataException e) {
             handleException(new TeiidComponentException(e));
         } catch(TeiidComponentException e) {
@@ -564,6 +564,10 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
      * @see org.teiid.query.sql.LanguageVisitor#visit(org.teiid.query.sql.lang.SubqueryCompareCriteria)
      */
     public void visit(SubqueryCompareCriteria crit) {
+    	if (crit.getArrayExpression() != null) {
+    		markInvalid(crit, "Quantified compare with an array cannot yet be pushed down."); //$NON-NLS-1$
+            return;
+    	}
         // Check if quantification operator is allowed
         Capability capability = Capability.QUERY_SUBQUERIES_SCALAR;
         switch(crit.getPredicateQuantifier()) {
@@ -582,7 +586,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
             return;
         }
         
-        checkCompareCriteria(crit);
+        checkCompareCriteria(crit, crit.getCommand().getProjectedSymbols().get(0));
         
         // Check capabilities of the elements
         try {

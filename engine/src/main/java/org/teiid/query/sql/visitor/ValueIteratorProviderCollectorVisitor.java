@@ -96,7 +96,9 @@ public class ValueIteratorProviderCollectorVisitor extends LanguageVisitor {
      * @param obj Language object
      */
     public void visit(SubqueryCompareCriteria obj) {
-        this.valueIteratorProviders.add(obj);
+    	if (obj.getCommand() != null) {
+    		this.valueIteratorProviders.add(obj);
+    	}
     }
 
     /**
