@@ -22,7 +22,11 @@
 package org.teiid.translator.swagger;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -39,6 +43,7 @@ import org.teiid.translator.TranslatorProperty.PropertyType;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.WSConnection;
 import org.teiid.translator.swagger.SwaggerExecutionFactory.Action;
+import org.teiid.translator.swagger.SwaggerProcedureExecution.Pair;
 
 import io.swagger.models.HttpMethod;
 import io.swagger.models.Operation;
@@ -116,17 +121,14 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
             procedure.setProperty(PROCEDURE_CONSUMES, consumes);
             procedure.setAnnotation(annotation);
             
-            mf.addProcedureParameter("result", TypeFacility.RUNTIME_NAMES.BLOB, Type.ReturnValue, procedure); //$NON-NLS-1$ 
+            mf.addProcedureParameter("result", TypeFacility.RUNTIME_NAMES.OBJECT, Type.ReturnValue, procedure); //$NON-NLS-1$ 
             
             addProcedureParameter(mf, procedure, operation);
             
             ProcedureParameter param = mf.addProcedureParameter("headers", TypeFacility.RUNTIME_NAMES.CLOB, Type.In, procedure); //$NON-NLS-1$
             param.setAnnotation("Headers to send"); //$NON-NLS-1$
             param.setNullType(NullType.Nullable);
-            
-            param = mf.addProcedureParameter("contentType", TypeFacility.RUNTIME_NAMES.STRING, Type.Out, procedure); //$NON-NLS-1$
-            param.setAnnotation("return contentType"); //$NON-NLS-1$
-            param.setNullType(NullType.Nullable);            
+                      
         }
 
     }
@@ -150,7 +152,6 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
             ProcedureParameter param = mf.addProcedureParameter(name, dataType, Type.In, procedure); 
             param.setProperty(IS_PATH_PARAMETER, isPathParam); 
             param.setNullType(NullType.No_Nulls);
-            param.setDefaultValue(FALSE_STRING); //$NON-NLS-1$
             param.setAnnotation(parameter.getDescription());
         }
         
@@ -213,18 +214,6 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
         return PATH_SEPARATOR;
     }
     
-    static String getParamSeparator(){
-        return PARAMETER_SEPARATOR;
-    }
-    
-    static String getParamSeparatorFirst(){
-        return PARAMETER_SEPARATOR_FIRST;
-    }
-    
-    static String getParamSeparatorEqual(){
-        return PARAMETER_SEPARATOR_EQUAL;
-    }
-    
     static Action getHttpAction(Procedure procedure) {
         return Action.valueOf(procedure.getProperty(HTTP_ACTION, false));
     }
@@ -237,15 +226,42 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
         return procedure.getProperty(BASE_URL, false);
     }
     
-    static String getHttpPath(Procedure procedure) {
+    static String getHttpPath(Procedure procedure, List<Pair> pairs) {
         String path = procedure.getProperty(HTTP_API_PATH, false);
-        int endIndex = path.indexOf("{"); //$NON-NLS-1$
-        if(endIndex >= 0) {
-            path = path.substring(0, endIndex);  
+        List<Pair> queryParams = new ArrayList<Pair>(pairs.size());
+        for(Pair pair : pairs) {
+            if(pair.isIdPath()) {
+                String regex = "\\{" + pair.getName() + "\\}"; //$NON-NLS-1$ //$NON-NLS-2$
+                path = path.replaceAll(regex, pair.getValue());
+            } else {
+                queryParams.add(pair);
+            }
+        }
+        if(queryParams.size() > 0) {
+            StringBuilder b = new StringBuilder();
+            b.append(PARAMETER_SEPARATOR_FIRST);
+            for (Pair queryParam : queryParams){
+                if (!queryParam.getName().isEmpty()) {
+                    b.append(escapeString(queryParam.getName()));
+                    b.append(PARAMETER_SEPARATOR_EQUAL);
+                    b.append(escapeString(queryParam.getValue()));
+                    b.append(PARAMETER_SEPARATOR);
+                  }
+            }
+            String querystring = b.substring(0, b.length() - 1);
+            path += querystring ;
         }
         return path ;
     }
     
+    private static Object escapeString(String str) {
+        try {
+            return URLEncoder.encode(str, "utf8").replaceAll("\\+", "%20"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+          } catch (UnsupportedEncodingException e) {
+            return str;
+          }
+    }
+
     static Set<String> getProcuces(Procedure procedure) {
         Set<String> produceSet = new HashSet<String>();
         String produces = procedure.getProperty(PROCEDURE_PRODUCES, false);

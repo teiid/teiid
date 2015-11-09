@@ -172,14 +172,10 @@ public class TestSwaggerMetadataProcessor {
             assertEquals(Type.ReturnValue, param.getType());
             
             // headers parameter
-            param = params.get(params.size() - 2);
+            param = params.get(params.size() - 1);
             assertEquals("headers", param.getName());
             assertEquals(Type.In, param.getType());
-            
-            // contentType parameter
-            param = params.get(params.size() - 1);
-            assertEquals("contentType", param.getName());
-            assertEquals(Type.Out, param.getType());            
+                       
         }
     }
     

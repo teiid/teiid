@@ -22,9 +22,6 @@
 package org.teiid.translator.swagger;
 
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getPathSeparator;
-import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getParamSeparator;
-import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getParamSeparatorFirst;
-import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getParamSeparatorEqual;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getHttpAction;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getHttpPath;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getHttpHost;
@@ -38,10 +35,12 @@ import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getConsumes;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLXML;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -54,6 +53,7 @@ import javax.xml.ws.Service.Mode;
 import javax.xml.ws.handler.MessageContext;
 import javax.xml.ws.http.HTTPBinding;
 
+import org.apache.commons.io.IOUtils;
 import org.teiid.connector.DataPlugin;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
@@ -74,6 +74,12 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.WSConnection;
 import org.teiid.translator.swagger.SwaggerExecutionFactory.Action;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
+
 public class SwaggerProcedureExecution implements ProcedureExecution{
     
     public static final class StreamingBlob extends BlobImpl {
@@ -91,6 +97,66 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
             InputStream result = this.is;
             this.is = null;
             return result;
+        }
+    }
+    
+    static final class JsonDeserializer {
+                
+        private ObjectMapper mapper;
+        
+        public JsonDeserializer() {
+            mapper = new ObjectMapper();
+            mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+            mapper.enable(SerializationFeature.WRITE_ENUMS_USING_TO_STRING);
+            mapper.enable(DeserializationFeature.READ_ENUMS_USING_TO_STRING);
+            mapper.registerModule(new JodaModule());
+          }
+        
+        public Object asPrimitive(InputStream input) throws TranslatorException {
+            
+            try {
+                StringWriter output = new StringWriter();
+                IOUtils.copy(input, output);
+                return output.toString();
+            } catch (IOException e) {
+                throw new TranslatorException(SwaggerPlugin.Event.TEIID28007, SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28007, e.getMessage()));
+            }
+        }
+        
+        public String asCollection(InputStream input) throws TranslatorException {
+            try {
+                Map value = mapper.readValue(input, Map.class);
+                return this.mapper.writeValueAsString(value);
+            } catch (Exception e) {
+                throw new TranslatorException(SwaggerPlugin.Event.TEIID28007, SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28007, e.getMessage()));
+            }
+        }
+    }
+    
+    static final class Pair {
+        
+        private boolean idPath = false;
+        private String name;
+        private String value;
+        
+        public Pair(boolean idPath, String name, String value) {
+            this.idPath = idPath;
+            this.name = name;
+            this.value = value;
+        }
+        
+        public String getName() {
+            return name;
+        }
+        
+        public String getValue() {
+            return value;
+        }
+
+        public boolean isIdPath() {
+            return idPath;
         }
     }
     
@@ -126,12 +192,9 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
         
         Object payload = getPayload(arguments);
         
-        String endpoint = buildEndPoint(method, 
-                getHttpHost(this.procedure.getMetadataObject()), 
-                getBaseUrl(this.procedure.getMetadataObject()),
-                getHttpPath(this.procedure.getMetadataObject()),
-                arguments);
-        
+        Procedure procedure = this.procedure.getMetadataObject();
+                
+        String endpoint = buildEndPoint(getHttpHost(procedure), getBaseUrl(procedure), getHttpPath(procedure, getParamPair(arguments)));
         
         try {
             Dispatch<DataSource> dispatch = this.conn.createDispatch(HTTPBinding.HTTP_BINDING, endpoint, DataSource.class, Mode.MESSAGE);
@@ -143,12 +206,12 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
                 httpHeaders.putAll(customHeaders);
             }
             
-            Clob headers = (Clob)arguments.get(arguments.size() - 2).getArgumentValue().getValue();
+            Clob headers = (Clob)arguments.get(arguments.size() - 1).getArgumentValue().getValue();
             if(null != headers) {
                 parseHeader(httpHeaders, headers);
             }
             
-            headersValidation(method, httpHeaders, procedure.getMetadataObject());
+            headersValidation(method, httpHeaders, procedure);
             
             DataSource ds = null;
             if (payload instanceof String) {
@@ -169,6 +232,7 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
         }
  
     }
+
 
     private void responseContextValidation(List<String> list, Map<String, Object> rc) throws TranslatorException {
         
@@ -210,8 +274,8 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
         
         Set<String> consumes = getConsumes(procedure);
         for(String contentType : httpHeaders.get("Content-Type")) { //$NON-NLS-1$
-            // CXF client POST invoke need 'Content-Type' in header
-            if(!consumes.contains(contentType) && method.equals(Action.POST)){
+            // CXF client POST, PUT, DELETE invoke need 'Content-Type' in header
+            if(!consumes.contains(contentType) && (method.equals(Action.POST) /*|| method.equals(Action.PUT) || method.equals(Action.DELETE)*/)){
                 throw new TranslatorException(SwaggerPlugin.Event.TEIID28005, SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28005, contentType, consumes));
             }
         }
@@ -267,47 +331,40 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
         }
     
     }
-
-    private String buildEndPoint(Action method, String httpHost, String baseUrl, String apiPath, List<Argument> arguments) {
+    
+    private List<Pair> getParamPair(List<Argument> arguments) {
         
-        String path = httpHost;
-        String pathSeparator = getPathSeparator(); 
-        
-        path = trimSlash(path, pathSeparator);
-        
-        path += baseUrl;
-        
-        path = trimSlash(path, pathSeparator);
-        
-        path += apiPath;
-        
-        path = trimSlash(path, pathSeparator);
-        
-        boolean first = true;
+        List<Pair> paramList = new ArrayList<Pair>();
         for(Argument argument : arguments){
             ProcedureParameter parameter = argument.getMetadataObject();
             if(isEndPointParam(parameter)) {
                 continue;
             }
-            boolean isPathParam = isPathParam(parameter); 
-            if(isPathParam){
-                path += pathSeparator;
-                path += argument.getArgumentValue().getValue(); 
-            } else {
-                if(first) {
-                    path = path + getParamSeparatorFirst() + parameter.getName() + getParamSeparatorEqual() + argument.getArgumentValue().getValue(); 
-                    first = false;
-                } else {
-                    path = path + getParamSeparator() + parameter.getName() + getParamSeparatorEqual() + argument.getArgumentValue().getValue(); 
-                }
-            }
+            boolean isPathParam = isPathParam(parameter);
+            String name = parameter.getName();
+            String value = String.valueOf(argument.getArgumentValue().getValue());
+            Pair pair = new Pair(isPathParam, name, value);
+            paramList.add(pair);
         }
-                      
+        
+        return paramList;
+    }
+
+    private String buildEndPoint(String httpHost, String baseUrl, String apiPath) {
+        
+        String path = httpHost;
+        String pathSeparator = getPathSeparator(); 
+        path = trimSlash(path, pathSeparator);
+        path += baseUrl;
+        path = trimSlash(path, pathSeparator);
+        path += apiPath;
+        path = trimSlash(path, pathSeparator);
+                  
         return path;
     }
 
     private String trimSlash(String path, String pathSeparator) {
-        String value = "";
+        String value = ""; //$NON-NLS-1$
         if(path.endsWith(pathSeparator)) {
             value = path.substring(0, path.length() -1);
         } else {
@@ -333,13 +390,22 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
 
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
-        Object result = this.returnValue;
+        
+        JsonDeserializer parser = new JsonDeserializer();
+        Object result = null;
         try {
-            result = new BlobType(new StreamingBlob(this.returnValue.getInputStream()));
+            if(this.returnValue.getContentType().equals("application/json")){
+                result = parser.asCollection(this.returnValue.getInputStream());
+            } else if(this.returnValue.getContentType().equals("application/xml")) {
+                result = parser.asPrimitive(this.returnValue.getInputStream());
+            }
+            if(result == null) {
+                result = new BlobType(new StreamingBlob(this.returnValue.getInputStream()));
+            }
+            return Arrays.asList(result);
         } catch (IOException e) {
             throw new TranslatorException(e);
         }
-        return Arrays.asList(result, this.returnValue.getContentType());
     }
     
     public void setCustomHeaders(Map<String, List<String>> customHeaders) {
