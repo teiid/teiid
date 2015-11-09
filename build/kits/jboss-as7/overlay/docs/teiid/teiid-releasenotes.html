@@ -363,6 +363,8 @@ temporary table access.
 	    <li>TEIID-3774 is unlikely but can return inaccurate results. 
 	    <li>TEIID-3768 affects correlated subquery comparison using an aggregate of a char value and can return inaccurate results.
 	  </ul>   
+	</li>
+	<li>TEIID-3808 - The Informix driver handling of timezone information is inconsistent - even if the databaseTimezone translator property is set.  Consider ensuring that the Informix server and the application server are in the same timezone.  
 </ul>
 <h4>from 7.0</h4>
 <ul>
