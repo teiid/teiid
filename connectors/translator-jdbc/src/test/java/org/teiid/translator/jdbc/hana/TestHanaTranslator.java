@@ -121,7 +121,7 @@ public class TestHanaTranslator {
     }
     @Test public void testConversion8a() throws Exception {
         String input = "SELECT convert(convert(PART_WEIGHT, boolean), long) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT cast(cast(PARTS.PART_WEIGHT AS boolean) AS bigint) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT cast(cast(PARTS.PART_WEIGHT AS boolean) AS tinyint) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 

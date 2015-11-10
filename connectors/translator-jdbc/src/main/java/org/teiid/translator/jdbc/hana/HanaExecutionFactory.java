@@ -187,6 +187,13 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
         convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIMESTAMP, new ConvertModifier.FormatModifier("to_timestamp", DATETIME_FORMAT));  //$NON-NLS-1$ 
         
     	convertModifier.setWideningNumericImplicit(true);
+    	convertModifier.addSourceConversion(new FunctionModifier() {
+			@Override
+			public List<?> translate(Function function) {
+				((Literal)function.getParameters().get(1)).setValue(TINYINT_TYPE);
+				return null;
+			}
+		}, FunctionModifier.BOOLEAN);
     	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
     	
     	/*
