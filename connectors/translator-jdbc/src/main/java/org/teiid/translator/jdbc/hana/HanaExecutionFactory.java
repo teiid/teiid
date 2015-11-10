@@ -51,6 +51,8 @@ import org.teiid.translator.jdbc.Version;
 @Translator(name = "hana", description = "SAP HANA translator")
 public class HanaExecutionFactory extends JDBCExecutionFactory {
 	
+	private static final String TINYINT_TYPE = "tinyint"; //$NON-NLS-1$
+
 	public static final Version SPS8 = Version.getVersion("SPS8"); //$NON-NLS-1$
 	
 	private static final String TIME_FORMAT = "HH24:MI:SS"; //$NON-NLS-1$
@@ -153,7 +155,8 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
 		//TYPE CONVERION MODIFIERS////////////////////////////////
 		//////////////////////////////////////////////////////////
         ConvertModifier convertModifier = new ConvertModifier();
-        convertModifier.addTypeMapping("tinyint", FunctionModifier.BOOLEAN, FunctionModifier.BYTE); //$NON-NLS-1$
+        convertModifier.addTypeMapping("boolean", FunctionModifier.BOOLEAN); //$NON-NLS-1$
+        convertModifier.addTypeMapping(TINYINT_TYPE, FunctionModifier.BYTE);
         convertModifier.addTypeMapping("smallint", FunctionModifier.SHORT); //$NON-NLS-1$
         convertModifier.addTypeMapping("integer", FunctionModifier.INTEGER); //$NON-NLS-1$
         convertModifier.addTypeMapping("bigint", FunctionModifier.LONG, FunctionModifier.BIGINTEGER); //$NON-NLS-1$

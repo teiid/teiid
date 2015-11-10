@@ -24,7 +24,6 @@ package org.teiid.translator.jdbc.hana;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
 import org.teiid.translator.jdbc.Version;
@@ -114,7 +113,7 @@ public class TestHanaTranslator {
     }
     @Test public void testConversion8() throws Exception {
         String input = "SELECT convert(PART_WEIGHT, boolean) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT cast(PARTS.PART_WEIGHT AS tinyint) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT cast(PARTS.PART_WEIGHT AS boolean) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
@@ -122,7 +121,7 @@ public class TestHanaTranslator {
     }
     @Test public void testConversion8a() throws Exception {
         String input = "SELECT convert(convert(PART_WEIGHT, boolean), long) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT cast(cast(PARTS.PART_WEIGHT AS tinyint) AS bigint) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT cast(cast(PARTS.PART_WEIGHT AS boolean) AS bigint) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
