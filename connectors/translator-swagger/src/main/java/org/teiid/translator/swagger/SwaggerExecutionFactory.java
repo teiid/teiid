@@ -66,6 +66,23 @@ public class SwaggerExecutionFactory extends ExecutionFactory<ConnectionFactory,
 		}
 	}
 	
+	// this match to swagger models's SecuritySchemeDefinition implementation
+	public enum SecurityType {
+	    BASIC(Util.getString("security_type_basic")),
+	    OAUTH2(Util.getString("security_type_oauth2"));
+	    
+	    private String type;
+	    
+	    private SecurityType(String type) {
+	        this.type = type;
+	    }
+	    
+	    public String getType() {
+	        return type;
+	    }
+	    
+	}
+	
 	public SwaggerExecutionFactory() {
 		setSourceRequiredForMetadata(true);
 		
@@ -128,6 +145,10 @@ public class SwaggerExecutionFactory extends ExecutionFactory<ConnectionFactory,
     
     protected String getAction(Action action) {
         return action.getAction();
+    }
+    
+    protected SecurityType getSecurityType(String type) {
+        return SecurityType.valueOf(type);
     }
 
 }
