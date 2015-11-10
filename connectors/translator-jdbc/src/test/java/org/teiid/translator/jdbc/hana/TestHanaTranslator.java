@@ -779,4 +779,13 @@ public class TestHanaTranslator {
                 output);
     }
     
+    @Test public void testCountBoolean() throws Exception {
+        String input = "SELECT count(booleanvalue) FROM bqt1.smalla"; //$NON-NLS-1$
+        String output = "SELECT COUNT(SmallA.BooleanValue) FROM SmallA";  //$NON-NLS-1$
+
+        helpTestVisitor(getTestBQTVDB(),
+                input, 
+                output);
+    }
+    
 }

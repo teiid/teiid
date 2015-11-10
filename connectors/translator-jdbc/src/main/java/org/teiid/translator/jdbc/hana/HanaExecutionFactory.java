@@ -35,6 +35,7 @@ import org.teiid.language.Function;
 import org.teiid.language.LanguageObject;
 import org.teiid.language.Limit;
 import org.teiid.language.Literal;
+import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.MetadataProcessor;
@@ -414,7 +415,9 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
     	if (obj instanceof AggregateFunction) {
     		AggregateFunction agg = (AggregateFunction)obj;
-    		if (agg.getParameters().size() == 1 && TypeFacility.RUNTIME_TYPES.BOOLEAN.equals(agg.getParameters().get(0).getType())) {
+    		if (agg.getParameters().size() == 1 
+    				&& (agg.getName().equalsIgnoreCase(NonReserved.MIN) || agg.getName().equalsIgnoreCase(NonReserved.MAX)) 
+    				&& TypeFacility.RUNTIME_TYPES.BOOLEAN.equals(agg.getParameters().get(0).getType())) {
         		return Arrays.asList("cast(", agg.getName(), "(to_tinyint(", agg.getParameters().get(0), ")) as boolean)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             }
     	}
