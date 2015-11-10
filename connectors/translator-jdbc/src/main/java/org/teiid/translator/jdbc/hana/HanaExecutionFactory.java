@@ -29,8 +29,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.language.AggregateFunction;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
+import org.teiid.language.LanguageObject;
 import org.teiid.language.Limit;
 import org.teiid.language.Literal;
 import org.teiid.metadata.MetadataFactory;
@@ -396,6 +398,20 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
     		}
     		
     	};
+    }
+	
+	/**
+     * Hana doesn't provide min/max(boolean)
+     */
+    @Override
+    public List<?> translate(LanguageObject obj, ExecutionContext context) {
+    	if (obj instanceof AggregateFunction) {
+    		AggregateFunction agg = (AggregateFunction)obj;
+    		if (agg.getParameters().size() == 1 && TypeFacility.RUNTIME_TYPES.BOOLEAN.equals(agg.getParameters().get(0).getType())) {
+        		return Arrays.asList("cast(", agg.getName(), "(to_tinyint(", agg.getParameters().get(0), ")) as boolean)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            }
+    	}
+    	return super.translate(obj, context);
     }
 	
 }

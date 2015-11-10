@@ -770,4 +770,13 @@ public class TestHanaTranslator {
                 output);
     }
     
+    @Test public void testMaxBoolean() throws Exception {
+        String input = "SELECT max(booleanvalue) FROM bqt1.smalla"; //$NON-NLS-1$
+        String output = "SELECT cast(MAX(to_tinyint(SmallA.BooleanValue)) as boolean) FROM SmallA";  //$NON-NLS-1$
+
+        helpTestVisitor(getTestBQTVDB(),
+                input, 
+                output);
+    }
+    
 }
