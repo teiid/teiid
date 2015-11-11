@@ -53,6 +53,7 @@ import org.mockito.Mockito;
 import org.postgresql.Driver;
 import org.postgresql.core.v3.ExtendedQueryExectutorImpl;
 import org.teiid.common.buffer.BufferManagerFactory;
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
@@ -583,6 +584,15 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		s.executeQuery();
 		
 		assertEquals(1, odbcServer.server.getDqp().getRequests().size());
+	}
+	
+	@Test public void testSomething() throws Exception {
+		String sql = ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("exported-fk-query.txt"));
+		
+		Statement s = conn.createStatement();
+		s.execute(sql);
+		ResultSet rs = s.getResultSet();
+		assertTrue(rs.next());
 	}
 
 }
