@@ -1,0 +1,59 @@
+<!--This script builds a zip for Teiid Server Installation -->
+<assembly>
+
+	<id>wildfly-dist</id>
+
+	<formats>
+		<format>zip</format>
+	</formats>
+
+	<includeBaseDirectory>false</includeBaseDirectory>
+	<baseDirectory>modules</baseDirectory>
+
+	<fileSets>
+		<fileSet>
+			<directory>kits/wildfly/modules</directory>
+			<outputDirectory>${wildfly-module-root}</outputDirectory>
+			<filtered>true</filtered>
+			<includes>
+				<include>**/*</include>
+			</includes>
+		</fileSet>
+	</fileSets>
+
+	<dependencySets>
+	    <dependencySet>
+	      <outputDirectory>${wildfly-module-root}/org/apache/olingo/common/main</outputDirectory>
+	      <useTransitiveDependencies>false</useTransitiveDependencies>
+	      <includes>
+	        <include>org.apache.olingo:odata-commons-api</include>
+	        <include>org.apache.olingo:odata-commons-core</include>
+	      </includes>
+	      <useProjectArtifact>false</useProjectArtifact>
+	    </dependencySet>	
+		<dependencySet>
+			<outputDirectory>${wildfly-module-root}/org/apache/olingo/client/main</outputDirectory>
+			<useTransitiveDependencies>false</useTransitiveDependencies>
+			<includes>
+				<include>org.apache.olingo:odata-client-api</include>
+				<include>org.apache.olingo:odata-client-core</include>
+			</includes>
+		</dependencySet>
+
+		<dependencySet>
+			<outputDirectory>${wildfly-module-root}/org/jboss/teiid/translator/odata4/main</outputDirectory>
+			<useTransitiveDependencies>false</useTransitiveDependencies>
+			<includes>
+				<include>org.jboss.teiid.connectors:translator-odata4</include>
+			</includes>
+		</dependencySet>
+		<dependencySet>
+			<outputDirectory>${wildfly-module-root}/com/fasterxml/aalto-xml/main</outputDirectory>
+			<useTransitiveDependencies>false</useTransitiveDependencies>
+			<includes>
+				<include>com.fasterxml:aalto-xml</include>
+			</includes>
+			<useProjectArtifact>false</useProjectArtifact>
+		</dependencySet>
+	</dependencySets>
+</assembly>

@@ -2,29 +2,69 @@
   <parent>
     <artifactId>teiid-parent</artifactId>
     <groupId>org.jboss.teiid</groupId>
-        <version>8.13.0.Alpha1-SNAPSHOT</version>
+    <version>8.13.0.Alpha1-SNAPSHOT</version>
   </parent>
   
   <modelVersion>4.0.0</modelVersion>
   <artifactId>teiid-odata</artifactId>
   <name>teiid-odata</name>
   <description>Teiid OData Server module</description>
-  <packaging>war</packaging>
-  
-  
-  <build>
-  <plugins>
-  <plugin>
-     <groupId>org.apache.maven.plugins</groupId>
-     <artifactId>maven-war-plugin</artifactId>
-     <configuration>
-         <archive>
-             <manifestFile>src/main/webapp/META-INF/MANIFEST.MF</manifestFile>
-         </archive>
-     </configuration>
-  </plugin>
-  </plugins>
-  </build>
+  <packaging>bundle</packaging>
+    
+    <build>
+        <plugins>
+            <plugin>   
+              <groupId>org.apache.felix</groupId>
+              <artifactId>maven-bundle-plugin</artifactId>
+              <configuration>
+               <instructions>
+                <Import-Package>!org.jboss.*,*</Import-Package>
+               </instructions>
+              </configuration>
+            </plugin>      
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestFile>src/main/webapp/META-INF/MANIFEST.MF</manifestFile>
+                    </archive>
+                    <archiveClasses>true</archiveClasses>
+                    <packagingExcludes>WEB-INF/lib/*.jar</packagingExcludes>
+                    <primaryArtifact>false</primaryArtifact>
+                    <!-- Needed to use classifier to avoid conflicting with top level artifact-->
+                    <classifier>odata2</classifier>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>create-assemblies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>war</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptors>
+                        <!-- Assembly plugin does not allow multiple DependencySets see MASSEMBLY-577 thus needed to do here-->
+                        <descriptor>kits/wildfly-dist.xml</descriptor>
+                    </descriptors>
+                </configuration>
+                <executions>
+                  <execution>
+                    <id>create-assemblies</id>
+                    <phase>package</phase>
+                    <goals>
+                      <goal>single</goal>
+                    </goals>
+                  </execution>
+                </executions>
+            </plugin>              
+        </plugins>
+    </build>	
   
   <dependencies>
 

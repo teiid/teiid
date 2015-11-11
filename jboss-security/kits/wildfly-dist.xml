@@ -1,0 +1,35 @@
+<!--This script builds a zip for Teiid Server Installation -->
+<assembly>
+
+	<id>wildfly-dist</id>
+
+	<formats>
+		<format>zip</format>
+	</formats>
+
+	<includeBaseDirectory>false</includeBaseDirectory>
+	<baseDirectory>teiid-${project.version}</baseDirectory>
+
+	<fileSets>
+
+		<fileSet>
+			<directory>kits/wildfly/modules</directory>
+			<outputDirectory>${wildfly-module-root}</outputDirectory>
+			<filtered>true</filtered>
+			<includes>
+				<include>**/*</include>
+			</includes>
+		</fileSet>
+	</fileSets>
+
+	<!-- these have external dependent clients like connectors -->
+	<dependencySets>
+ 		<dependencySet>
+			<outputDirectory>${wildfly-module-root}/org/jboss/teiid/security/main</outputDirectory>
+			<includes>
+				<include>org.jboss.teiid:teiid-jboss-security</include>
+			</includes>
+			<useProjectArtifact>true</useProjectArtifact>
+		</dependencySet>
+	</dependencySets>
+</assembly>

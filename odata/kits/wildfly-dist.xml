@@ -1,0 +1,49 @@
+<assembly>
+  
+  <id>wildfly-dist</id>
+  
+  <formats>
+    <format>zip</format>
+  </formats>
+  
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <baseDirectory>modules</baseDirectory>
+
+  <fileSets>
+		<fileSet>
+			<directory>kits/wildfly/modules</directory>
+			<outputDirectory>${wildfly-module-root}</outputDirectory>
+			<filtered>true</filtered>
+			<includes>
+				<include>**/*</include>
+			</includes>
+		</fileSet>
+        <fileSet>
+            <directory>target</directory>
+            <outputDirectory>${wildfly-module-root}/org/jboss/teiid/main/deployments</outputDirectory>
+            <includes>
+                <include>**/*.war</include>
+            </includes>
+        </fileSet>
+  </fileSets>  
+  <dependencySets>
+    <dependencySet>
+      <outputDirectory>${wildfly-module-root}/org/jboss/oreva/main</outputDirectory>
+      <useTransitiveDependencies>false</useTransitiveDependencies>
+      <includes>
+        <include>org.jboss.oreva:odata-core</include>
+        <include>org.jboss.oreva:common</include>
+      </includes>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet>
+    <dependencySet>
+      <outputDirectory>${wildfly-module-root}/org/jboss/teiid/odata/main</outputDirectory>
+      <useTransitiveDependencies>false</useTransitiveDependencies>
+      <useProjectArtifact>true</useProjectArtifact>
+      <includes>
+        <include>org.jboss.teiid:teiid-odata</include>
+      </includes>
+      
+    </dependencySet> 
+  </dependencySets>  
+</assembly>

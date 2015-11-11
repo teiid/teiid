@@ -333,7 +333,7 @@ public class TeiidConstants {
 	//TRANSPORT_ELEMENT("transport",true, false, MeasurementUnit.NONE);
     public static SimpleAttributeDefinition TRANSPORT_PROTOCOL_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.TRANSPORT_PROTOCOL_ATTRIBUTE.getModelName(), ModelType.STRING)
         .setXmlName(Element.TRANSPORT_PROTOCOL_ATTRIBUTE.getXMLName())
-        .setAllowNull(false)
+        .setAllowNull(true)
         .setAllowExpression(false)
         .setDefaultValue(new ModelNode("teiid"))
         .build();   
@@ -557,5 +557,5 @@ public class TeiidConstants {
         return resolvedNode.isDefined() ? resolvedNode.asBoolean() : null;
     }
     
-    public static final String TEIID_THREAD_POOL_NAME = "teiid"; //$NON-NLS-1$
+    public static final String TEIID_THREAD_POOL_NAME = "teiid-async"; //$NON-NLS-1$
 }

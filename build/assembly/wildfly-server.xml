@@ -1,0 +1,23 @@
+<assembly>
+  
+  <id>wildfly-server</id>
+  
+  <formats>
+    <format>zip</format>
+  </formats>
+  
+  <includeBaseDirectory>true</includeBaseDirectory>
+  <baseDirectory>${dir.teiid}</baseDirectory>
+
+  <fileSets>
+    <fileSet>
+        <directory>${project.build.directory}/${dir.wildfly}</directory>
+        <outputDirectory>/</outputDirectory>      
+    </fileSet>
+    <fileSet>
+        <directory>${project.build.directory}/teiid-${project.version}-wildfly-dist</directory>
+        <outputDirectory>/</outputDirectory>
+    </fileSet>    
+  </fileSets>
+  
+</assembly>

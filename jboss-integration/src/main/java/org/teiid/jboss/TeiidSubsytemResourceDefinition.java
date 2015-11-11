@@ -37,7 +37,10 @@ public class TeiidSubsytemResourceDefinition extends SimpleResourceDefinition {
 	private boolean server;
 	
 	public TeiidSubsytemResourceDefinition(boolean server) {
-		super(PATH_SUBSYSTEM,TeiidExtension.getResourceDescriptionResolver(TeiidExtension.TEIID_SUBSYSTEM),TeiidAdd.INSTANCE, TeiidRemove.INSTANCE);
+        super(PATH_SUBSYSTEM,
+              TeiidExtension.getResourceDescriptionResolver(TeiidExtension.TEIID_SUBSYSTEM),
+              TeiidAdd.INSTANCE, 
+              TeiidRemove.INSTANCE);
 		this.server = server;
 	}
 
@@ -98,7 +101,7 @@ public class TeiidSubsytemResourceDefinition extends SimpleResourceDefinition {
     @Override
     public void registerChildren(ManagementResourceRegistration resourceRegistration) {
         resourceRegistration.registerSubModel(UnboundedQueueThreadPoolResourceDefinition.create(THREAD_POOL_PATH,
-                new TeiidThreadFactoryResolver(), TeiidServiceNames.THREAD_POOL_SERVICE, false));
+                new TeiidThreadFactoryResolver(), TeiidServiceNames.THREAD_POOL_BASE_SERVICE, false));
     	resourceRegistration.registerSubModel(new TranslatorResourceDefinition());
     	resourceRegistration.registerSubModel(new TransportResourceDefinition());
     }
@@ -109,7 +112,7 @@ public class TeiidSubsytemResourceDefinition extends SimpleResourceDefinition {
         }
         @Override
         protected String getThreadGroupName(String threadPoolName) {
-            return "Batch Thread";
+            return "Teiid Async Thread";
         }
     }    
 }

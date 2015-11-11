@@ -29,8 +29,8 @@
 	    <!-- <version.jaxen>1.1.6</version.jaxen> -->
 	    <version.commons-codec>1.9</version.commons-codec>
         <!-- <version.xom>1.2.10</version.xom> -->
-        <!-- <version.com.google.guava>18.0</version.com.google.guava> -->
-        
+        <version.com.google.guava>18.0</version.com.google.guava>
+        <version.dom4j>1.6.1</version.dom4j>
          
         <version.org.hibernate.search>5.2.0.Final</version.org.hibernate.search>
         <version.org.infinispan.6>7.2.3.Final</version.org.infinispan.6>  
@@ -48,10 +48,9 @@
         <version.org.mongodb.mongo-java-driver>2.13.1</version.org.mongodb.mongo-java-driver>
         <version.teiid.console>2.5.1</version.teiid.console>
         <version.net.sourceforge.saxon>9.5.1-6</version.net.sourceforge.saxon>
-<!--         <version.connector-api>1.5</version.connector-api> -->
         <version.jta>1.1</version.jta>
         <version.org.jboss.oreva>0.8.11-SNAPSHOT</version.org.jboss.oreva>
-        <jbossas-module-root>modules/system/layers/dv</jbossas-module-root>
+        <wildfly-module-root>modules/system/layers/dv</wildfly-module-root>
         <version.com.force.api>22.0.0</version.com.force.api>
         <version.com.force.api.34>34.0.0</version.com.force.api.34>
         <version.nux>1.6</version.nux>
@@ -441,7 +440,6 @@
 	        <dependency>
 	            <groupId>org.jboss.teiid.connectors</groupId>
 	            <artifactId>connector-salesforce</artifactId>
-	            <type>rar</type>
 	            <version>${project.version}</version>
 	        </dependency>        	
       		<dependency>
@@ -516,6 +514,11 @@
                 <artifactId>teiid-jboss-admin</artifactId>
                 <version>${project.version}</version>
             </dependency>
+	        <dependency>
+	            <groupId>org.jboss.teiid</groupId>
+	            <artifactId>teiid-jboss-security</artifactId>
+	            <version>${project.version}</version>
+	        </dependency>
 			<dependency>
 				<groupId>org.jboss.teiid</groupId>
 				<artifactId>teiid-adminshell</artifactId>
@@ -617,6 +620,7 @@
                <version>${project.version}</version>
                <classifier>lib</classifier>
            </dependency>
+
       <!-- External dependencies -->
 			<dependency>
 				<groupId>net.sf.retrotranslator</groupId>

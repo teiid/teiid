@@ -23,13 +23,16 @@ package org.teiid.jboss;
 
 import org.jboss.as.controller.AbstractRemoveStepHandler;
 import org.jboss.as.controller.OperationContext;
+import org.jboss.as.controller.OperationFailedException;
 import org.jboss.dmr.ModelNode;
 
 class TeiidRemove extends AbstractRemoveStepHandler {
 	public static TeiidRemove INSTANCE = new TeiidRemove();
-	
-	@Override
-    protected void performRuntime(OperationContext context, ModelNode operation, ModelNode model) {
+
+    @Override
+    protected void performRuntime(OperationContext context,
+            final ModelNode operation, final ModelNode model)
+            throws OperationFailedException {
 		
 		context.removeService(TeiidServiceNames.PREPAREDPLAN_CACHE_FACTORY);
 		context.removeService(TeiidServiceNames.RESULTSET_CACHE_FACTORY);

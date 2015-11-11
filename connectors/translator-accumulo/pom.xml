@@ -18,7 +18,6 @@
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-common-core</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
@@ -84,7 +83,7 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
                     <descriptors>
-                        <descriptor>kits/jboss-as7-dist.xml</descriptor>
+                        <descriptor>kits/wildfly-dist.xml</descriptor>
                         <descriptor>kits/embedded-dist.xml</descriptor>
                     </descriptors>
                 </configuration>

@@ -11,58 +11,49 @@
   <description>Teiid Build</description>
   
   <properties>
-      <!-- Directory name from upstream JBoss server dist. -->
-      <dir.jboss-orig>${jbossas-test-version}</dir.jboss-orig>
+      <!-- Directory name from upstream Wildfly server dist. -->
+      <dir.wildfly>wildfly-${version.org.wildfly}</dir.wildfly>
       <!-- Teiid server directory name. -->
-      <dir.server>teiid-${project.version}</dir.server>
+      <dir.teiid>teiid-${project.version}</dir.teiid>
   </properties>
   
     <dependencies>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-client-jdk15</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>net.sf.retrotranslator</groupId>
             <artifactId>retrotranslator-runtime</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>net.sf.retrotranslator</groupId>
             <artifactId>retrotranslator-transformer</artifactId>
-            <scope>provided</scope>
         </dependency>
     	<dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <scope>provided</scope>
         </dependency> 
        
 	<dependency>
 	    <groupId>org.jboss.narayana.jta</groupId>
 	    <artifactId>narayana-jta</artifactId>
-	    <scope>provided</scope>
 	</dependency> 
 	<dependency>
 	    <groupId>org.jboss.ironjacamar</groupId>
 	    <artifactId>ironjacamar-jdbc</artifactId>
-	    <scope>provided</scope>
 	</dependency>
 	<dependency>
 	    <groupId>org.jboss.ironjacamar</groupId>
 	    <artifactId>ironjacamar-core-api</artifactId>
-	    <scope>provided</scope>
 	</dependency>
 	<dependency>
 	    <groupId>org.jboss.ironjacamar</groupId>
 	    <artifactId>ironjacamar-core-impl</artifactId>
-	    <scope>provided</scope>
 	</dependency>
 
     </dependencies>   
@@ -134,15 +125,17 @@
                                     <type>zip</type>
                                     <outputDirectory>${project.build.directory}</outputDirectory>
                                 </artifactItem>
+                                <!-- 
                                 <artifactItem>
                                     <groupId>org.jboss.teiid.web-console</groupId>
                                     <artifactId>teiid-console-dist</artifactId>
                                     <version>${version.teiid.console}</version>
-                                    <classifier>jboss-as7</classifier>
+                                    <classifier>wildfly</classifier>
                                     <type>zip</type>
                                     <outputDirectory>${project.build.directory}/${dir.jboss-orig}</outputDirectory>
                                     <overWrite>true</overWrite>
                                 </artifactItem>
+                                 -->
                             </artifactItems>
                         </configuration>
                     </execution>
@@ -156,10 +149,10 @@
                         <descriptor>assembly/src.xml</descriptor>
                         <descriptor>assembly/client-jar.xml</descriptor>
                         <descriptor>assembly/console-jar.xml</descriptor>    
-                        <descriptor>assembly/jboss-as7/dist.xml</descriptor>
-                        <descriptor>assembly/adminshell/adminshell-dist.xml</descriptor>
+                        <descriptor>assembly/wildfly-dist.xml</descriptor>
+                        <descriptor>assembly/adminshell-dist.xml</descriptor>
                         <descriptor>assembly/embedded-dist.xml</descriptor>
-                        <descriptor>assembly/server.xml</descriptor>
+                        <descriptor>assembly/wildfly-server.xml</descriptor>
                         <descriptor>assembly/docker.xml</descriptor>            
                     </descriptors>
                 </configuration>
@@ -272,10 +265,10 @@
                                 <descriptor>assembly/src.xml</descriptor>
                                 <descriptor>assembly/client-jar.xml</descriptor>
                                 <descriptor>assembly/console-jar.xml</descriptor>
-                                <descriptor>assembly/jboss-as7/dist.xml</descriptor>
-                                <descriptor>assembly/adminshell/adminshell-dist.xml</descriptor>
+                                <descriptor>assembly/wildfly-dist.xml</descriptor>
+                                <descriptor>assembly/adminshell-dist.xml</descriptor>
                                 <descriptor>assembly/embedded-dist.xml</descriptor>
-                                <descriptor>assembly/server.xml</descriptor>
+                                <descriptor>assembly/wildfly-server.xml</descriptor>
                                 <descriptor>assembly/docker.xml</descriptor>
                             </descriptors>
                         </configuration>

@@ -33,7 +33,6 @@
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>connector-google-spreadsheet</artifactId>
   	    <version>${project.version}</version>
-            <scope>provided</scope>
         </dependency>
       -->
     </dependencies>
@@ -63,7 +62,7 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
                     <descriptors>
-                        <descriptor>kits/jboss-as7-dist.xml</descriptor>
+                        <descriptor>kits/wildfly-dist.xml</descriptor>
                         <descriptor>kits/embedded-dist.xml</descriptor>
                     </descriptors>
                 </configuration>

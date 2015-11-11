@@ -25,6 +25,7 @@ import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_
 
 import org.jboss.as.controller.AbstractRemoveStepHandler;
 import org.jboss.as.controller.OperationContext;
+import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.PathAddress;
 import org.jboss.as.naming.deployment.ContextNames;
 import org.jboss.dmr.ModelNode;
@@ -35,10 +36,11 @@ import org.teiid.transport.LocalServerConnection;
 
 class TransportRemove extends AbstractRemoveStepHandler {
 	public static TransportRemove INSTANCE = new TransportRemove();
-	
-	@Override
-    protected void performRuntime(OperationContext context, ModelNode operation, ModelNode model) {
 
+	@Override
+    protected void performRuntime(OperationContext context,
+            final ModelNode operation, final ModelNode model)
+            throws OperationFailedException {
         final ModelNode address = operation.require(OP_ADDR);
         final PathAddress pathAddress = PathAddress.pathAddress(address);
 

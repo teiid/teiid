@@ -73,6 +73,11 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
 		return subsystemXml;
 	} 
 	
+    @Override
+    protected String getSubsystemXsdPath() throws Exception {
+        return "schema/jboss-teiid.xsd";
+    }	
+	
     @Test
     public void testDescribeHandler() throws Exception {
     	standardSubsystemTest(null, true);

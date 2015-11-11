@@ -34,9 +34,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.URL;
 import java.util.Iterator;
-import java.util.List;
 import java.util.ServiceLoader;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 import javax.resource.spi.XATerminator;
 import javax.resource.spi.work.WorkManager;
@@ -145,7 +145,9 @@ class TeiidAdd extends AbstractAddStepHandler {
 	};
 	
 	@Override
-	protected void populateModel(final OperationContext context, final ModelNode operation, final Resource resource) throws  OperationFailedException {	
+    protected void populateModel(final OperationContext context,
+            final ModelNode operation, final Resource resource)
+            throws OperationFailedException {	
 		resource.getModel().setEmptyObject();
 		populate(operation, resource.getModel());
 		
@@ -166,8 +168,9 @@ class TeiidAdd extends AbstractAddStepHandler {
 	}
 	
 	@Override
-    protected void performRuntime(final OperationContext context, final ModelNode operation, final ModelNode model,
-            final ServiceVerificationHandler verificationHandler, final List<ServiceController<?>> newControllers) throws OperationFailedException {
+    protected void performRuntime(final OperationContext context,
+            final ModelNode operation, final ModelNode model)
+            throws OperationFailedException {
 		ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 		try {
 			try {
@@ -176,29 +179,30 @@ class TeiidAdd extends AbstractAddStepHandler {
 				//ignore..
 			}
 			Thread.currentThread().setContextClassLoader(classloader);
-			initilaizeTeiidEngine(context, operation, newControllers);
+			initilaizeTeiidEngine(context, operation);
 		} finally {
 			Thread.currentThread().setContextClassLoader(classloader);
 		}
 	}
 
 
-	private void initilaizeTeiidEngine(final OperationContext context, final ModelNode operation, final List<ServiceController<?>> newControllers)
-			throws OperationFailedException {
+    private void initilaizeTeiidEngine(final OperationContext context,
+            final ModelNode operation) throws OperationFailedException {
 		ServiceTarget target = context.getServiceTarget();
 		
 		final JBossLifeCycleListener shutdownListener = new JBossLifeCycleListener();
 				
 		// translator repository
     	final TranslatorRepository translatorRepo = new TranslatorRepository();
-    	ValueService<TranslatorRepository> translatorService = new ValueService<TranslatorRepository>(new org.jboss.msc.value.Value<TranslatorRepository>() {
+        ValueService<TranslatorRepository> translatorService = new ValueService<TranslatorRepository>(
+                new org.jboss.msc.value.Value<TranslatorRepository>() {
 			@Override
 			public TranslatorRepository getValue() throws IllegalStateException, IllegalArgumentException {
 				return translatorRepo;
 			}
     	});
-    	ServiceController<TranslatorRepository> service = target.addService(TeiidServiceNames.TRANSLATOR_REPO, translatorService).install();
-    	newControllers.add(service);
+        ServiceController<TranslatorRepository> service = target.addService(
+                TeiidServiceNames.TRANSLATOR_REPO, translatorService).install();
     	
     	// system function tree
 		SystemFunctionManager systemFunctionManager = new SystemFunctionManager();
@@ -218,7 +222,7 @@ class TeiidAdd extends AbstractAddStepHandler {
     	}
 
     	VDBRepositoryService vdbRepositoryService = new VDBRepositoryService(vdbRepository);
-    	newControllers.add(target.addService(TeiidServiceNames.VDB_REPO, vdbRepositoryService).install());
+    	target.addService(TeiidServiceNames.VDB_REPO, vdbRepositoryService).install();
 		
     	// VDB Status manager
     	final VDBStatusCheckerExecutorService statusChecker = new VDBStatusCheckerExecutorService();
@@ -229,15 +233,15 @@ class TeiidAdd extends AbstractAddStepHandler {
 			}
     	});
     	ServiceBuilder<VDBStatusChecker> statusBuilder = target.addService(TeiidServiceNames.VDB_STATUS_CHECKER, statusService);
-    	statusBuilder.addDependency(TeiidServiceNames.THREAD_POOL_SERVICE, Executor.class,  statusChecker.executorInjector);
+    	statusBuilder.addDependency(TeiidServiceNames.THREAD_POOL_SERVICE, ExecutorService.class,  statusChecker.executorInjector);
     	statusBuilder.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class,  statusChecker.vdbRepoInjector);
-    	newControllers.add(statusBuilder.install());    	
+    	statusBuilder.install();
     	
-    	newControllers.add(RelativePathService.addService(TeiidServiceNames.DATA_DIR, "teiid-data", "jboss.server.data.dir", target)); //$NON-NLS-1$ //$NON-NLS-2$
+    	RelativePathService.addService(TeiidServiceNames.DATA_DIR, "teiid-data", "jboss.server.data.dir", target); //$NON-NLS-1$ //$NON-NLS-2$
     	final ObjectsSerializerService serializer = new ObjectsSerializerService();
     	ServiceBuilder<ObjectSerializer> objectSerializerService = target.addService(TeiidServiceNames.OBJECT_SERIALIZER, serializer);
     	objectSerializerService.addDependency(TeiidServiceNames.DATA_DIR, String.class, serializer.getPathInjector());
-    	newControllers.add(objectSerializerService.install());
+    	objectSerializerService.install();
     	
     	// Object Replicator
     	boolean replicatorAvailable = false;
@@ -248,32 +252,32 @@ class TeiidAdd extends AbstractAddStepHandler {
     		JGroupsObjectReplicatorService replicatorService = new JGroupsObjectReplicatorService();
 			ServiceBuilder<JGroupsObjectReplicator> serviceBuilder = target.addService(TeiidServiceNames.OBJECT_REPLICATOR, replicatorService);
 			serviceBuilder.addDependency(ServiceName.JBOSS.append("jgroups", "stack", stack), ChannelFactory.class, replicatorService.channelFactoryInjector); //$NON-NLS-1$ //$NON-NLS-2$
-			serviceBuilder.addDependency(TeiidServiceNames.THREAD_POOL_SERVICE, Executor.class,  replicatorService.executorInjector);
-			newControllers.add(serviceBuilder.install());
+			serviceBuilder.addDependency(TeiidServiceNames.THREAD_POOL_SERVICE, ExecutorService.class,  replicatorService.executorInjector);
+			serviceBuilder.install();
 			LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50003)); 
     	} else {
 			LogManager.logDetail(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("distributed_cache_not_enabled")); //$NON-NLS-1$
     	}
 
     	// TODO: remove verbose service by moving the buffer service from runtime project
-    	newControllers.add(RelativePathService.addService(TeiidServiceNames.BUFFER_DIR, "teiid-buffer", "jboss.server.temp.dir", target)); //$NON-NLS-1$ //$NON-NLS-2$
+    	RelativePathService.addService(TeiidServiceNames.BUFFER_DIR, "teiid-buffer", "jboss.server.temp.dir", target); //$NON-NLS-1$ //$NON-NLS-2$
     	BufferManagerService bufferService = buildBufferManager(context, operation);
     	ServiceBuilder<BufferManager> bufferServiceBuilder = target.addService(TeiidServiceNames.BUFFER_MGR, bufferService);
     	bufferServiceBuilder.addDependency(TeiidServiceNames.BUFFER_DIR, String.class, bufferService.pathInjector);
-    	newControllers.add(bufferServiceBuilder.install());
+    	bufferServiceBuilder.install();
     	
     	TupleBufferCacheService tupleBufferService = new TupleBufferCacheService();
     	ServiceBuilder<TupleBufferCache> tupleBufferBuilder = target.addService(TeiidServiceNames.TUPLE_BUFFER, tupleBufferService);
     	tupleBufferBuilder.addDependency(TeiidServiceNames.BUFFER_MGR, BufferManager.class, tupleBufferService.bufferMgrInjector);
     	tupleBufferBuilder.addDependency(replicatorAvailable?DependencyType.REQUIRED:DependencyType.OPTIONAL, TeiidServiceNames.OBJECT_REPLICATOR, ObjectReplicator.class, tupleBufferService.replicatorInjector);
-    	newControllers.add(tupleBufferBuilder.install());
+    	tupleBufferBuilder.install();
     	
     	
     	EventDistributorFactoryService edfs = new EventDistributorFactoryService();
     	ServiceBuilder<InternalEventDistributorFactory> edfsServiceBuilder = target.addService(TeiidServiceNames.EVENT_DISTRIBUTOR_FACTORY, edfs);
     	edfsServiceBuilder.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class, edfs.vdbRepositoryInjector);
     	edfsServiceBuilder.addDependency(replicatorAvailable?DependencyType.REQUIRED:DependencyType.OPTIONAL, TeiidServiceNames.OBJECT_REPLICATOR, ObjectReplicator.class, edfs.objectReplicatorInjector);
-    	newControllers.add(edfsServiceBuilder.install());
+    	edfsServiceBuilder.install();
     	
     	PolicyDecider policyDecider = null;
     	if (isDefined(POLICY_DECIDER_MODULE_ELEMENT, operation, context)) {
@@ -296,7 +300,7 @@ class TeiidAdd extends AbstractAddStepHandler {
 				return authValidator;
 			}
     	});    	
-    	newControllers.add(target.addService(TeiidServiceNames.AUTHORIZATION_VALIDATOR, authValidatorService).install());
+    	target.addService(TeiidServiceNames.AUTHORIZATION_VALIDATOR, authValidatorService).install();
     	
     	final PreParser preParser;
     	if (isDefined(PREPARSER_MODULE_ELEMENT, operation, context)) {
@@ -317,7 +321,7 @@ class TeiidAdd extends AbstractAddStepHandler {
 				return preParser;
 			}
     	});    	
-    	newControllers.add(target.addService(TeiidServiceNames.PREPARSER, preParserService).install());
+    	target.addService(TeiidServiceNames.PREPARSER, preParserService).install();
     	
     	// resultset cache
     	boolean rsCache = true;
@@ -341,7 +345,7 @@ class TeiidAdd extends AbstractAddStepHandler {
 	    	
 	    	String ispnName = asString(RSC_CONTAINER_NAME_ATTRIBUTE, operation, context);
 	    	cacheFactoryBuilder.addDependency(ServiceName.JBOSS.append("infinispan", ispnName), EmbeddedCacheManager.class, cfs.cacheContainerInjector); //$NON-NLS-1$
-	    	newControllers.add(cacheFactoryBuilder.install());
+	    	cacheFactoryBuilder.install();
 	    	
 	    	int maxStaleness = 60;
 	    	if (isDefined(RSC_MAX_STALENESS_ATTRIBUTE, operation, context)) {
@@ -354,7 +358,7 @@ class TeiidAdd extends AbstractAddStepHandler {
 	    	resultsCacheBuilder.addDependency(TeiidServiceNames.RESULTSET_CACHE_FACTORY, CacheFactory.class, resultSetService.cacheFactoryInjector);
 	    	resultsCacheBuilder.addDependency(ServiceName.JBOSS.append("infinispan", ispnName, cacheName)); //$NON-NLS-1$
 	    	resultsCacheBuilder.addDependency(ServiceName.JBOSS.append("infinispan", ispnName, cacheName + SessionAwareCache.REPL)); //$NON-NLS-1$
-	    	newControllers.add(resultsCacheBuilder.install());
+	    	resultsCacheBuilder.install();
     	}
     	
     	// prepared-plan cache
@@ -378,13 +382,13 @@ class TeiidAdd extends AbstractAddStepHandler {
 	    	
 	    	String ispnName = asString(PPC_CONTAINER_NAME_ATTRIBUTE, operation, context);
     		cacheFactoryBuilder.addDependency(ServiceName.JBOSS.append("infinispan", ispnName), EmbeddedCacheManager.class, cfs.cacheContainerInjector); //$NON-NLS-1$
-    		newControllers.add(cacheFactoryBuilder.install());
+    		cacheFactoryBuilder.install();
 	    	
 	    	CacheService<PreparedPlan> preparedPlanService = new CacheService<PreparedPlan>(cacheName, SessionAwareCache.Type.PREPAREDPLAN, 0);
 	    	ServiceBuilder<SessionAwareCache<PreparedPlan>> preparedPlanCacheBuilder = target.addService(TeiidServiceNames.CACHE_PREPAREDPLAN, preparedPlanService);
 	    	preparedPlanCacheBuilder.addDependency(TeiidServiceNames.PREPAREDPLAN_CACHE_FACTORY, CacheFactory.class, preparedPlanService.cacheFactoryInjector);
 	    	preparedPlanCacheBuilder.addDependency(ServiceName.JBOSS.append("infinispan", ispnName, cacheName)); //$NON-NLS-1$
-	    	newControllers.add(preparedPlanCacheBuilder.install());
+	    	preparedPlanCacheBuilder.install();
     	}    	
     	
     	// Query Engine
@@ -409,7 +413,7 @@ class TeiidAdd extends AbstractAddStepHandler {
         
         engineBuilder.setInitialMode(ServiceController.Mode.ACTIVE);
         ServiceController<DQPCore> controller = engineBuilder.install(); 
-        newControllers.add(controller);
+        
         ServiceContainer container =  controller.getServiceContainer();
         container.addTerminateListener(shutdownListener);
         container.getService(Services.JBOSS_SERVER_CONTROLLER).addListener(shutdownListener);
@@ -430,8 +434,8 @@ class TeiidAdd extends AbstractAddStepHandler {
 		binderBuilder.addDependency(bindInfo.getParentContextServiceName(), ServiceBasedNamingStore.class, binderService.getNamingStoreInjector());        
 		binderBuilder.setInitialMode(ServiceController.Mode.ACTIVE);
 					
-		newControllers.add(referenceBuilder.install());
-		newControllers.add(binderBuilder.install());
+		referenceBuilder.install();
+		binderBuilder.install();
 		
 		LogManager.logDetail(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("event_distributor_bound", jndiName)); //$NON-NLS-1$
 
@@ -441,7 +445,7 @@ class TeiidAdd extends AbstractAddStepHandler {
 		matviewBuilder.addDependency(TeiidServiceNames.ENGINE, DQPCore.class,  matviewService.dqpInjector);
 		matviewBuilder.addDependency(TeiidServiceNames.THREAD_POOL_SERVICE, Executor.class,  matviewService.executorInjector);
 		matviewBuilder.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class, matviewService.vdbRepositoryInjector);
-		newControllers.add(matviewBuilder.install());
+		matviewBuilder.install();
 		
         // Register VDB deployer
         context.addStep(new AbstractDeploymentChainStep() {
@@ -478,7 +482,8 @@ class TeiidAdd extends AbstractAddStepHandler {
         	throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50089, type.getName(), moduleName));
         }
         final T instance = iter.next();
-		T proxy = (T) Proxy.newProxyInstance(instance.getClass().getClassLoader(), new Class[] { type }, new InvocationHandler() {
+		@SuppressWarnings("unchecked")
+        T proxy = (T) Proxy.newProxyInstance(instance.getClass().getClassLoader(), new Class[] { type }, new InvocationHandler() {
             @Override
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
                 ClassLoader originalCL = Thread.currentThread().getContextClassLoader();
@@ -581,11 +586,11 @@ class TeiidAdd extends AbstractAddStepHandler {
 	}    
 	
 	static class VDBStatusCheckerExecutorService extends VDBStatusChecker{
-		final InjectedValue<Executor> executorInjector = new InjectedValue<Executor>();
+		final InjectedValue<ExecutorService> executorInjector = new InjectedValue<ExecutorService>();
 		final InjectedValue<VDBRepository> vdbRepoInjector = new InjectedValue<VDBRepository>();
 		
 		@Override
-		public Executor getExecutor() {
+		public ExecutorService getExecutor() {
 			return this.executorInjector.getValue();
 		}    	
 		

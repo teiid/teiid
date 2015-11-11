@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.0" name="org.jboss.teiid.common-core">
+    <properties>
+        <property name="jboss.api" value="public"/>
+    </properties>
+    <resources>
+        <resource-root path="teiid-common-core-${project.version}.jar" />
+        <!-- Insert resources here -->
+    </resources>
+
+    <dependencies>
+    	<module name="javax.api"/>
+    	<module name="javax.activation.api"/>
+    </dependencies>
+</module>
