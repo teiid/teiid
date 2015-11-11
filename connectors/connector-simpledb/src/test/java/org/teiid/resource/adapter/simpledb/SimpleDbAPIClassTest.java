@@ -1,16 +1,15 @@
 package org.teiid.resource.adapter.simpledb;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -18,7 +17,10 @@ import org.mockito.MockitoAnnotations;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.simpledb.AmazonSimpleDBClient;
+import com.amazonaws.services.simpledb.model.Attribute;
+import com.amazonaws.services.simpledb.model.DomainMetadataRequest;
 import com.amazonaws.services.simpledb.model.DomainMetadataResult;
+import com.amazonaws.services.simpledb.model.Item;
 import com.amazonaws.services.simpledb.model.ListDomainsResult;
 import com.amazonaws.services.simpledb.model.SelectRequest;
 import com.amazonaws.services.simpledb.model.SelectResult;
@@ -54,20 +56,19 @@ public class SimpleDbAPIClassTest {
         assertEquals(resultList, simpleDbApi.getDomains());
     }
 
-    @Test @Ignore
-    public void getAttributeNamesEmptyStringTest() throws Exception {
+    @Test 
+    public void getAttributeNamesTest() throws Exception {
 
         DomainMetadataResult metadataResult = mock(DomainMetadataResult.class);
         SelectResult result = mock(SelectResult.class);
-        //		List itemsList = mock(ArrayList.class);
-        //		Iterator iterator = mock(Iterator.class);
-        //		Attribute
-        //		when(itemsList.iterator()).thenReturn(iterator);
-        when(metadataResult.getAttributeNameCount()).thenReturn(3);
+        ArrayList<Item> items = new ArrayList<Item>();
+        items.add(new Item("1", Arrays.asList(new Attribute("c", "d"), new Attribute("a", "b"))));
+        stub(result.getItems()).toReturn(items);
+        when(metadataResult.getAttributeNameCount()).thenReturn(2);
         when(client.select(any(SelectRequest.class))).thenReturn(result);
-        //		when(client.domainMetadata(any(DomainMetadataRequest.class))).thenReturn(metadataResult);
+        when(client.domainMetadata(any(DomainMetadataRequest.class))).thenReturn(metadataResult);
 
-        System.out.println(simpleDbApi.getAttributeNames(null));
+        assertEquals("c", simpleDbApi.getAttributeNames("x").iterator().next().getName());
     }
 
     private void replaceField(String fieldName, Object object, Object newFieldValue){
