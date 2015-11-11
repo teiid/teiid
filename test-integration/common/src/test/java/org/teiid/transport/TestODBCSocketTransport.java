@@ -56,6 +56,7 @@ import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.common.buffer.BufferManagerFactory;
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
@@ -578,5 +579,13 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		//would normally throw an exception, but is allowable over odbc
 		s.execute("select name, count(schemaname) from tables group by 1");
 	}
-
+	
+	@Test public void testSomething() throws Exception {
+		String sql = ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("exported-fk-query.txt"));
+		
+		Statement s = conn.createStatement();
+		s.execute(sql);
+		ResultSet rs = s.getResultSet();
+		assertTrue(rs.next());
+	}
 }

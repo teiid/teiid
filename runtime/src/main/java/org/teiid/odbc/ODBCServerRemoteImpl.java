@@ -122,26 +122,26 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			"\\s+from pg_catalog.pg_constraint cn," +  //$NON-NLS-1$
 			"\\s+pg_catalog.pg_class c," +  //$NON-NLS-1$
 			"\\s+pg_catalog.pg_namespace n" +  //$NON-NLS-1$
-			"\\s+where contype = 'f' " +  //$NON-NLS-1$
-			"\\s+and  conrelid = c.oid" +  //$NON-NLS-1$
-			"\\s+and  relname = (E?(?:'[^']*')+)" +  //$NON-NLS-1$
-			"\\s+and  n.oid = c.relnamespace" +  //$NON-NLS-1$
-			"\\s+and  n.nspname = (E?(?:'[^']*')+)" +  //$NON-NLS-1$
+			"\\s+where contype = 'f'" +  //$NON-NLS-1$
+			"\\s+and\\s+con(f?)relid = c.oid" +  //$NON-NLS-1$
+			"\\s+and\\s+relname = (E?(?:'[^']*')+)" +  //$NON-NLS-1$
+			"\\s+and\\s+n.oid = c.relnamespace" +  //$NON-NLS-1$
+			"\\s+and\\s+n.nspname = (E?(?:'[^']*')+)" +  //$NON-NLS-1$
 			"\\s+\\) ref" +  //$NON-NLS-1$
 			"\\s+inner join pg_catalog.pg_class c1" +  //$NON-NLS-1$
 			"\\s+on c1.oid = ref.conrelid\\)" +  //$NON-NLS-1$
 			"\\s+inner join pg_catalog.pg_namespace n1" +  //$NON-NLS-1$
-			"\\s+on  n1.oid = c1.relnamespace\\)" +  //$NON-NLS-1$
+			"\\s+on\\s+n1.oid = c1.relnamespace\\)" +  //$NON-NLS-1$
 			"\\s+inner join pg_catalog.pg_attribute a1" +  //$NON-NLS-1$
-			"\\s+on  a1.attrelid = c1.oid" +  //$NON-NLS-1$
-			"\\s+and  a1.attnum = conkey\\[i\\]\\)" +  //$NON-NLS-1$
+			"\\s+on\\s+a1.attrelid = c1.oid" +  //$NON-NLS-1$
+			"\\s+and\\s+a1.attnum = conkey\\[i\\]\\)" +  //$NON-NLS-1$
 			"\\s+inner join pg_catalog.pg_class c2" +  //$NON-NLS-1$
-			"\\s+on  c2.oid = ref.confrelid\\)" +  //$NON-NLS-1$
+			"\\s+on\\s+c2.oid = ref.confrelid\\)" +  //$NON-NLS-1$
 			"\\s+inner join pg_catalog.pg_namespace n2" +  //$NON-NLS-1$
-			"\\s+on  n2.oid = c2.relnamespace\\)" +  //$NON-NLS-1$
+			"\\s+on\\s+n2.oid = c2.relnamespace\\)" +  //$NON-NLS-1$
 			"\\s+inner join pg_catalog.pg_attribute a2" +  //$NON-NLS-1$
-			"\\s+on  a2.attrelid = c2.oid" +  //$NON-NLS-1$
-			"\\s+and  a2.attnum = confkey\\[i\\]\\)" +  //$NON-NLS-1$
+			"\\s+on\\s+a2.attrelid = c2.oid" +  //$NON-NLS-1$
+			"\\s+and\\s+a2.attnum = confkey\\[i\\]\\)" +  //$NON-NLS-1$
 			"\\s+left outer join pg_catalog.pg_constraint cn" +  //$NON-NLS-1$
 			"\\s+on cn.conrelid = ref.confrelid" +  //$NON-NLS-1$
 			"\\s+and cn.contype = 'p'\\)" +  //$NON-NLS-1$
@@ -658,9 +658,15 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 				return "SELECT NULL, NULL, NULL, NULL, NULL FROM (SELECT 1) as X WHERE 0=1"; //$NON-NLS-1$
 			}
 			else if ((m = fkPattern.matcher(modified)).matches()){
-				return "SELECT PKTABLE_CAT, PKTABLE_SCHEM, PKTABLE_NAME, PKCOLUMN_NAME, FKTABLE_CAT, FKTABLE_SCHEM, "+//$NON-NLS-1$
-							"FKTABLE_NAME, FKCOLUMN_NAME, KEY_SEQ, UPDATE_RULE, DELETE_RULE, FK_NAME, PK_NAME, DEFERRABILITY "+//$NON-NLS-1$
-							"FROM SYS.ReferenceKeyColumns WHERE PKTABLE_NAME LIKE "+m.group(14)+" and PKTABLE_SCHEM LIKE "+m.group(15);//$NON-NLS-1$ //$NON-NLS-2$ 
+				String baseQuery = "SELECT PKTABLE_CAT, PKTABLE_SCHEM, PKTABLE_NAME, PKCOLUMN_NAME, FKTABLE_CAT, FKTABLE_SCHEM, "+//$NON-NLS-1$
+						"FKTABLE_NAME, FKCOLUMN_NAME, KEY_SEQ, UPDATE_RULE, DELETE_RULE, FK_NAME, PK_NAME, DEFERRABILITY "+//$NON-NLS-1$
+						"FROM SYS.ReferenceKeyColumns WHERE  "; //$NON-NLS-1$
+				if ("f".equals(m.group(14))) { //$NON-NLS-1$
+					//exported keys
+					return baseQuery + "PKTABLE_NAME = " + m.group(15)+" and PKTABLE_SCHEM = "+m.group(16);//$NON-NLS-1$ //$NON-NLS-2$
+				}
+				//imported keys
+				return baseQuery + "FKTABLE_NAME = " + m.group(15)+" and FKTABLE_SCHEM = "+m.group(16);//$NON-NLS-1$ //$NON-NLS-2$
 			}
 			else if (modified.equalsIgnoreCase("select version()")) { //$NON-NLS-1$
 				return "SELECT 'Teiid "+ApplicationInfo.getInstance().getReleaseNumber()+"'"; //$NON-NLS-1$ //$NON-NLS-2$
