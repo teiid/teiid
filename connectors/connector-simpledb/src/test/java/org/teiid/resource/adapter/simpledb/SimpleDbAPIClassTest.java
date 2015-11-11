@@ -22,6 +22,7 @@ import com.amazonaws.services.simpledb.model.DomainMetadataRequest;
 import com.amazonaws.services.simpledb.model.DomainMetadataResult;
 import com.amazonaws.services.simpledb.model.Item;
 import com.amazonaws.services.simpledb.model.ListDomainsResult;
+import com.amazonaws.services.simpledb.model.ReplaceableAttribute;
 import com.amazonaws.services.simpledb.model.SelectRequest;
 import com.amazonaws.services.simpledb.model.SelectResult;
 
@@ -69,6 +70,13 @@ public class SimpleDbAPIClassTest {
         when(client.domainMetadata(any(DomainMetadataRequest.class))).thenReturn(metadataResult);
 
         assertEquals("c", simpleDbApi.getAttributeNames("x").iterator().next().getName());
+    }
+    
+    @Test 
+    public void testAddNullAttribute() throws Exception {
+    	ArrayList<ReplaceableAttribute> attributes = new ArrayList<ReplaceableAttribute>();
+    	simpleDbApi.addAttribute("x", null, attributes);
+    	assertNull(attributes.get(0).getValue());
     }
 
     private void replaceField(String fieldName, Object object, Object newFieldValue){

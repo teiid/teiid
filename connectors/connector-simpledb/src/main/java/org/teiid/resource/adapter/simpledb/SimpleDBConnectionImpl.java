@@ -257,8 +257,8 @@ public class SimpleDBConnectionImpl extends BasicConnection implements SimpleDBC
         }
     }
     
-    private void addAttribute(String name, Object value, List<ReplaceableAttribute> attributes) {
-        if (value.getClass().isArray()) { 
+    void addAttribute(String name, Object value, List<ReplaceableAttribute> attributes) {
+        if (value != null && value.getClass().isArray()) { 
             String[] values = (String[])value;
             for (int i = 0; i < values.length; i++) {
                 addAttribute(name, values[i], attributes);
