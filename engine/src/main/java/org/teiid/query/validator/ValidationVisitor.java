@@ -1208,7 +1208,14 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     		validateDerivedColumnNames(obj, tl.getExpressions());
     	}
     	for (DerivedColumn dc : tl.getExpressions()) {
-			validateXMLContentTypes(dc.getExpression(), obj);
+    		Expression expression = dc.getExpression();
+    		if (expression.getType() == DataTypeManager.DefaultDataClasses.OBJECT
+    				|| expression.getType() == null
+    				|| expression.getType().isArray()
+    				|| expression.getType() == DataTypeManager.DefaultDataClasses.VARBINARY
+    				|| expression.getType() == DataTypeManager.DefaultDataClasses.BLOB) {
+    			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_content_type", expression), obj); //$NON-NLS-1$
+    		}
 		}
     	validateTextOptions(obj, tl.getDelimiter(), tl.getQuote(), '\n');
     	if (tl.getEncoding() != null) {
@@ -1294,7 +1301,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     }
     
     public void validateXMLContentTypes(Expression expression, LanguageObject parent) {
-		if (expression.getType() == DataTypeManager.DefaultDataClasses.OBJECT || expression.getType() == DataTypeManager.DefaultDataClasses.BLOB) {
+		if (expression.getType() == DataTypeManager.DefaultDataClasses.OBJECT || expression.getType() == null || expression.getType().isArray()) {
 			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xml_content_type", expression), parent); //$NON-NLS-1$
 		}
     }

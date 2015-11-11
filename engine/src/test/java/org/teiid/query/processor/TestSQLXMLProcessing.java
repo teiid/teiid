@@ -47,6 +47,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.QueryParserException;
+import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.TeiidProcessingException;
@@ -141,6 +142,32 @@ public class TestSQLXMLProcessing {
         List<?>[] expected = new List<?>[] {
         		Arrays.asList("<x><e2>1</e2><val>1</val></x>"), //note e1 is not present, because it's null
         		Arrays.asList("<x><e1>a</e1><e2>0</e2><val>1</val></x>"),
+        };    
+    
+        process(sql, expected);
+    }
+    
+    @Test(expected=QueryValidatorException.class) public void testXmlForestWithArray() throws Exception {
+        String sql = "SELECT xmlforest((1,2) as val)"; //$NON-NLS-1$
+        
+        process(sql, null);
+    }
+    
+    @Test public void testXmlForestWithBinary() throws Exception {
+        String sql = "SELECT xmlforest(X'AB' as val)"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList("<val>qw==</val>"),
+        };    
+    
+        process(sql, expected);
+    }
+    
+    @Test public void testXmlForestWithBlob() throws Exception {
+        String sql = "SELECT xmlforest(cast(X'AB' as blob) as val)"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList("<val>qw==</val>"),
         };    
     
         process(sql, expected);
