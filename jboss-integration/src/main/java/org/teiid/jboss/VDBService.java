@@ -30,6 +30,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.xml.stream.XMLStreamException;
@@ -83,7 +84,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 	private RuntimeVDB runtimeVDB;
 	protected final InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
 	protected final InjectedValue<TranslatorRepository> translatorRepositoryInjector = new InjectedValue<TranslatorRepository>();
-	protected final InjectedValue<Executor> executorInjector = new InjectedValue<Executor>();
+	protected final InjectedValue<ExecutorService> executorInjector = new InjectedValue<ExecutorService>();
 	protected final InjectedValue<ObjectSerializer> serializerInjector = new InjectedValue<ObjectSerializer>();
 	protected final InjectedValue<BufferManager> bufferManagerInjector = new InjectedValue<BufferManager>();
 	protected final InjectedValue<ObjectReplicator> objectReplicatorInjector = new InjectedValue<ObjectReplicator>();

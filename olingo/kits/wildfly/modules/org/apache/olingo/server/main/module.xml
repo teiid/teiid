@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.0" name="org.apache.olingo.server">
+    <properties>
+        <property name="jboss.api" value="private"/>
+    </properties>
+    
+    <resources>
+        <resource-root path="odata-server-api-${version.org.apache.olingo}.jar" />
+        <resource-root path="odata-server-core-${version.org.apache.olingo}.jar" />
+        <resource-root path="odata-server-core-ext-${version.org.apache.olingo}.jar" />
+    </resources>
+
+    <dependencies>
+        <module name="javax.api"/>
+        <module name="javax.servlet.api"/>
+        <module name="javax.xml.stream.api"/>
+        <module name="org.apache.httpcomponents"/>
+        <module name="com.fasterxml.jackson.core.jackson-core"/>
+        <module name="com.fasterxml.jackson.core.jackson-databind"/>
+        <module name="com.fasterxml.jackson.core.jackson-annotations"/>
+        <module name="org.slf4j"/>
+        <module name="org.codehaus.woodstox"/>
+        <module name="org.apache.commons.codec"/>
+        <module name="org.apache.commons.lang" slot="3.3.2"/>
+        <module name="org.antlr" slot="4.5"/>
+        <module name="org.apache.olingo.common"/>
+    </dependencies>
+
+</module>

@@ -1,0 +1,75 @@
+<assembly>
+  
+  <id>wildfly-dist</id>
+  
+  <formats>
+    <format>zip</format>
+  </formats>
+  
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <baseDirectory>modules</baseDirectory>
+
+  <fileSets>
+		<fileSet>
+			<directory>kits/wildfly/modules</directory>
+			<outputDirectory>${wildfly-module-root}</outputDirectory>
+			<filtered>true</filtered>
+			<includes>
+				<include>**/*</include>
+			</includes>
+		</fileSet>
+        <fileSet>
+            <directory>target</directory>
+            <outputDirectory>${wildfly-module-root}/org/jboss/teiid/main/deployments</outputDirectory>
+            <includes>
+                <include>**/*.war</include>
+            </includes>
+        </fileSet>
+  </fileSets>  
+  <dependencySets>
+    <dependencySet>
+      <outputDirectory>${wildfly-module-root}/org/jboss/teiid/olingo/main</outputDirectory>
+      <useTransitiveDependencies>false</useTransitiveDependencies>
+      <includes>
+        <include>org.jboss.teiid:teiid-olingo</include>
+      </includes>
+      <useProjectArtifact>true</useProjectArtifact>
+    </dependencySet>      
+    <dependencySet>
+      <outputDirectory>${wildfly-module-root}/org/apache/olingo/common/main</outputDirectory>
+      <useTransitiveDependencies>false</useTransitiveDependencies>
+      <includes>
+        <include>org.apache.olingo:odata-commons-api</include>
+        <include>org.apache.olingo:odata-commons-core</include>
+      </includes>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet>
+    <dependencySet>
+      <outputDirectory>${wildfly-module-root}/org/apache/olingo/server/main</outputDirectory>
+      <useTransitiveDependencies>false</useTransitiveDependencies>
+      <includes>
+        <include>org.apache.olingo:odata-server-api</include>
+        <include>org.apache.olingo:odata-server-core</include>
+        <include>org.apache.olingo:odata-server-core-ext</include>
+      </includes>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet>    
+    <dependencySet>
+      <outputDirectory>${wildfly-module-root}/org/antlr/4.5</outputDirectory>
+      <useTransitiveDependencies>false</useTransitiveDependencies>
+      <includes>
+        <include>org.antlr:antlr4-runtime</include>
+      </includes>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet>
+    <dependencySet>
+      <outputDirectory>${wildfly-module-root}/org/apache/commons/lang/3.3.2</outputDirectory>
+      <useTransitiveDependencies>false</useTransitiveDependencies>
+      <includes>
+        <include>org.apache.commons:commons-lang3</include>
+      </includes>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet> 
+  </dependencySets>  
+  
+</assembly>

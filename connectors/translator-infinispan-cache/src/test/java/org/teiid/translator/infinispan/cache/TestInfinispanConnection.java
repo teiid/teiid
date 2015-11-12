@@ -70,7 +70,7 @@ public class TestInfinispanConnection  {
 		property("tradeDate", ElementType.FIELD).field().analyze(Analyze.NO);
 
 		Properties properties = new Properties();
-		properties.put(org.hibernate.search.Environment.MODEL_MAPPING, mapping);
+		properties.put(org.hibernate.search.cfg.Environment.MODEL_MAPPING, mapping);
 		properties.put("lucene_version", "LUCENE_CURRENT");		
 		properties.put("hibernate.search.default.directory_provider", "ram");
 		

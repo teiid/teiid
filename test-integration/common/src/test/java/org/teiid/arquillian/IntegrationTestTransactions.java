@@ -46,7 +46,7 @@ public class IntegrationTestTransactions extends AbstractMMQueryTestCase {
 	
 	@Before
 	public void setup() throws Exception {
-		admin = AdminFactory.getInstance().createAdmin("localhost", 9999,	"admin", "admin".toCharArray());
+		admin = AdminFactory.getInstance().createAdmin("localhost", AdminUtil.MANAGEMENT_PORT,	"admin", "admin".toCharArray());
 	}
 	
 	@After

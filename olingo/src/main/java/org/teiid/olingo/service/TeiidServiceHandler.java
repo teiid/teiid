@@ -284,15 +284,17 @@ public class TeiidServiceHandler implements ServiceHandler {
     String buildNextToken(final String queryPath, String nextToken)
             throws URISyntaxException, MalformedURLException {
         StringBuilder sb = new StringBuilder();
-        String[] pairs = queryPath.split("&");
-        for (String pair : pairs) {
-            int idx = pair.indexOf("=");
-            String key = pair.substring(0, idx);
-            if (!key.equals("$skiptoken")) {
-                if (sb.length()>0) {
-                    sb.append("&");
+        if (queryPath != null) {
+            String[] pairs = queryPath.split("&");
+            for (String pair : pairs) {
+                int idx = pair.indexOf("=");
+                String key = pair.substring(0, idx);
+                if (!key.equals("$skiptoken")) {
+                    if (sb.length()>0) {
+                        sb.append("&");
+                    }
+                    sb.append(pair);
                 }
-                sb.append(pair);
             }
         }
         if (sb.length() > 0) {

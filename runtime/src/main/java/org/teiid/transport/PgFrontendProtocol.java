@@ -32,12 +32,14 @@ import java.lang.reflect.Proxy;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Properties;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.handler.codec.frame.FrameDecoder;
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.ByteToMessageDecoder;
+
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
@@ -50,7 +52,7 @@ import org.teiid.runtime.RuntimePlugin;
  * Some parts of this code is taken from H2's implementation of ODBC
  */
 @SuppressWarnings("nls")
-public class PgFrontendProtocol extends FrameDecoder {
+public class PgFrontendProtocol extends ByteToMessageDecoder {
 
 	private static final int LO_CREAT =	957;
 	private static final int LO_OPEN = 952;
@@ -94,17 +96,17 @@ public class PgFrontendProtocol extends FrameDecoder {
 	}
 	
 	@Override
-	protected Object decode(ChannelHandlerContext ctx, Channel channel, ChannelBuffer buffer) throws Exception {
+	protected void decode(ChannelHandlerContext ctx, ByteBuf buffer, List<Object> out) throws Exception {
 		
         if (this.initialized && this.messageType == null) {
 	        if (buffer.readableBytes() < 1 ) {
-	            return null;
+	            return ;
 	        }
 	
 	        this.messageType = buffer.readByte();
 	        if (this.messageType < 0 ) {
 	        	this.odbcProxy.terminate();
-	        	return message;
+	        	out.add(this.message);
 	        }
         }
         
@@ -114,7 +116,7 @@ public class PgFrontendProtocol extends FrameDecoder {
         
         if (this.dataLength == null) {
 	        if (buffer.readableBytes() < 4) {
-	            return null;
+	            return ;
 	        }
 	                
 	        this.dataLength = buffer.readInt();
@@ -127,15 +129,19 @@ public class PgFrontendProtocol extends FrameDecoder {
         }
 
         if (buffer.readableBytes() < this.dataLength - 4) {
-            return null;
+            return;
         }
 
         byte[] data = createByteArray(this.dataLength - 4);
         buffer.readBytes(data);
-		createRequestMessage(this.messageType, new NullTerminatedStringDataInputStream(data, new DataInputStream(new ByteArrayInputStream(data, 0, this.dataLength-4)), this.pgBackendProtocol.getEncoding()), channel);
+        createRequestMessage(
+                this.messageType,
+                new NullTerminatedStringDataInputStream(data,
+                        new DataInputStream(new ByteArrayInputStream(data, 0,this.dataLength - 4)), 
+                        this.pgBackendProtocol.getEncoding()), ctx.channel());
 		this.dataLength = null;
 		this.messageType = null;
-		return message;
+		out.add(this.message);
 	}
 
 	private Object createRequestMessage(byte messageType, NullTerminatedStringDataInputStream data, Channel channel) throws IOException{
@@ -198,7 +204,7 @@ public class PgFrontendProtocol extends FrameDecoder {
         	return message;
         }
         
-        if (this.pgBackendProtocol.secureData() && channel.getPipeline().get(org.teiid.transport.PgBackendProtocol.SSL_HANDLER_KEY) == null) {
+        if (this.pgBackendProtocol.secureData() && channel.pipeline().get(org.teiid.transport.PgBackendProtocol.SSL_HANDLER_KEY) == null) {
         	this.odbcProxy.unsupportedOperation(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40123));
         	return message;
         }
@@ -225,7 +231,7 @@ public class PgFrontendProtocol extends FrameDecoder {
 	}
 	
 	private Object buildLogin(NullTerminatedStringDataInputStream data, Channel channel) {
-        this.odbcProxy.logon(this.databaseName, this.user, data, channel.getRemoteAddress());
+        this.odbcProxy.logon(this.databaseName, this.user, data, channel.remoteAddress());
         return message;
 	}	
 

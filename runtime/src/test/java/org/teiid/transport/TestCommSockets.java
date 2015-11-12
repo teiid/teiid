@@ -22,7 +22,11 @@
  */
 package org.teiid.transport;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.Serializable;
@@ -310,7 +314,7 @@ public class TestCommSockets {
 		assertEquals(2, this.service.getActiveSessionsCount());
 		conn.selectServerInstance(false);
 		assertEquals(2, this.service.getActiveSessionsCount());
-		assertTrue(conn.isOpen(1000));
+		assertTrue(conn.isOpen(10000));
 		stats = listener.getStats();
 		assertEquals(8, stats.objectsRead); // (ping (pool test), assert identityx2, ping (isOpen))x2
 		assertEquals(2, stats.sockets);

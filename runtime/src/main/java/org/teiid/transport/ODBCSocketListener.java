@@ -21,10 +21,10 @@
  */
 package org.teiid.transport;
 
+import io.netty.channel.ChannelPipeline;
+
 import java.net.InetSocketAddress;
 
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.DefaultChannelPipeline;
 import org.teiid.common.buffer.StorageManager;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.jdbc.TeiidDriver;
@@ -53,20 +53,13 @@ public class ODBCSocketListener extends SocketListener {
 		this.maxBufferSize = maxBufferSize;
 	}
 
-	@Override
-	protected SSLAwareChannelHandler createChannelPipelineFactory(final SSLConfiguration config, final StorageManager storageManager) {
-		return new SSLAwareChannelHandler(this, config, Thread.currentThread().getContextClassLoader(), storageManager) {
-			@Override
-			public ChannelPipeline getPipeline() throws Exception {
-				ChannelPipeline pipeline = new DefaultChannelPipeline();
-				PgBackendProtocol pgBackendProtocol = new PgBackendProtocol(maxLobSize, maxBufferSize, config, requireSecure);
-			    pipeline.addLast("odbcFrontendProtocol", new PgFrontendProtocol(pgBackendProtocol, 1 << 20)); //$NON-NLS-1$
-			    pipeline.addLast("odbcBackendProtocol", pgBackendProtocol); //$NON-NLS-1$
-			    pipeline.addLast("handler", this); //$NON-NLS-1$
-			    return pipeline;
-			}			
-		};
-	}
+    protected void configureChannelPipeline(ChannelPipeline pipeline,
+            SSLConfiguration config, StorageManager storageManager) throws Exception {
+        PgBackendProtocol pgBackendProtocol = new PgBackendProtocol(maxLobSize, maxBufferSize, config, requireSecure);
+        pipeline.addLast("odbcFrontendProtocol", new PgFrontendProtocol(pgBackendProtocol, 1 << 20)); //$NON-NLS-1$
+        pipeline.addLast("odbcBackendProtocol", pgBackendProtocol); //$NON-NLS-1$
+        pipeline.addLast("handler", this.channelHandler); //$NON-NLS-1$                
+    }	
 	
 	@Override
 	public ChannelListener createChannelListener(ObjectChannel channel) {

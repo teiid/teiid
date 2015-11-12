@@ -47,7 +47,7 @@ public class IntegrationTestVDBReuse extends AbstractMMQueryTestCase {
 	
 	@Before
 	public void setup() throws Exception {
-		admin = AdminFactory.getInstance().createAdmin("localhost", 9999,	"admin", "admin".toCharArray());
+		admin = AdminFactory.getInstance().createAdmin("localhost", 9990,	"admin", "admin".toCharArray());
 	}
 	
 	@After

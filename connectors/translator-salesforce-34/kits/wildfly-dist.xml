@@ -1,0 +1,52 @@
+<!--This script builds a zip for Teiid Server Installation -->
+<assembly>
+  
+ <id>wildfly-dist</id> 
+  
+  <formats>
+    <format>zip</format>
+  </formats>
+  
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <baseDirectory>modules</baseDirectory>
+
+ <fileSets>
+     <fileSet>
+        <directory>${project.build.directory}/kits/wildfly/modules</directory>
+        <outputDirectory>${wildfly-module-root}</outputDirectory>     
+        <filtered>true</filtered> 
+        <includes>
+          <include>**/*</include>
+        </includes>   
+    </fileSet>    
+ 
+    <fileSet>
+        <directory>kits/wildfly/modules</directory>
+        <outputDirectory>${wildfly-module-root}</outputDirectory>     
+        <filtered>true</filtered> 
+        <includes>
+          <include>**/*</include>
+        </includes>   
+    </fileSet>    
+  </fileSets>
+  
+  <dependencySets>
+    <dependencySet>
+          <outputDirectory>${wildfly-module-root}/com/force/api/34</outputDirectory>
+          <useTransitiveDependencies>false</useTransitiveDependencies>
+          <includes>
+              <include>com.force.api:force-wsc</include>
+              <include>com.force.api:force-partner-api</include>
+          </includes>
+    </dependencySet>  
+    <dependencySet>
+          <outputDirectory>${wildfly-module-root}/org/jboss/teiid/translator/salesforce/34</outputDirectory>
+          <useTransitiveDependencies>false</useTransitiveDependencies>
+          <includes>
+              <include>org.jboss.teiid.connectors:translator-salesforce</include>
+              <include>org.jboss.teiid.connectors:translator-salesforce-34</include>
+          </includes>
+    </dependencySet>    
+  </dependencySets>
+  
+</assembly>

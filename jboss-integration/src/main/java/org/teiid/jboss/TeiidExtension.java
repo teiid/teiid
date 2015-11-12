@@ -23,6 +23,7 @@ package org.teiid.jboss;
 
 import org.jboss.as.controller.Extension;
 import org.jboss.as.controller.ExtensionContext;
+import org.jboss.as.controller.ModelVersion;
 import org.jboss.as.controller.SubsystemRegistration;
 import org.jboss.as.controller.descriptions.ResourceDescriptionResolver;
 import org.jboss.as.controller.descriptions.StandardResourceDescriptionResolver;
@@ -33,17 +34,17 @@ import org.teiid.runtime.JBossLogger;
 public class TeiidExtension implements Extension {
 		
 	public static final String TEIID_SUBSYSTEM = "teiid"; //$NON-NLS-1$
-	public static final int MAJOR_VERSION = 1;
-	public static final int MINOR_VERSION = 0;
-	
+	public static ModelVersion TEIID_VERSION = ModelVersion.create(1, 1);
 	
     public static ResourceDescriptionResolver getResourceDescriptionResolver(final String keyPrefix) {
-        return new StandardResourceDescriptionResolver(keyPrefix, IntegrationPlugin.BUNDLE_NAME, TeiidExtension.class.getClassLoader(), true, false);
+        return new StandardResourceDescriptionResolver(keyPrefix,
+                IntegrationPlugin.BUNDLE_NAME,
+                TeiidExtension.class.getClassLoader(), true, false);
     }
     
 	@Override
 	public void initialize(ExtensionContext context) {
-		final SubsystemRegistration subsystem = context.registerSubsystem(TEIID_SUBSYSTEM, MAJOR_VERSION, MINOR_VERSION);
+		final SubsystemRegistration subsystem = context.registerSubsystem(TEIID_SUBSYSTEM, TEIID_VERSION);
 		
 		LogManager.setLogListener(new JBossLogger());
 		
@@ -55,6 +56,6 @@ public class TeiidExtension implements Extension {
 
 	@Override
 	public void initializeParsers(ExtensionParsingContext context) {
-		context.setSubsystemXmlMapping(TEIID_SUBSYSTEM, Namespace.TEIID_1_0.getUri(), TeiidSubsystemParser.INSTANCE);
+		context.setSubsystemXmlMapping(TEIID_SUBSYSTEM, Namespace.CURRENT.getUri(), TeiidSubsystemParser.INSTANCE);
 	}
 }

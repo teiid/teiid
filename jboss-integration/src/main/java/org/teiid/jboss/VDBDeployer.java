@@ -26,7 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import javax.script.ScriptEngineManager;
@@ -40,10 +40,18 @@ import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.modules.ModuleClassLoader;
-import org.jboss.msc.service.*;
+import org.jboss.msc.service.AbstractServiceListener;
+import org.jboss.msc.service.Service;
+import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceBuilder.DependencyType;
+import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.service.ServiceController.State;
+import org.jboss.msc.service.ServiceName;
+import org.jboss.msc.service.ServiceTarget;
+import org.jboss.msc.service.StartContext;
+import org.jboss.msc.service.StartException;
+import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 import org.jboss.vfs.VirtualFile;
 import org.teiid.adminapi.Model;
@@ -72,13 +80,12 @@ import org.teiid.vdb.runtime.VDBKey;
 class VDBDeployer implements DeploymentUnitProcessor {
 	private static final String JAVA_CONTEXT = "java:/"; //$NON-NLS-1$			
 	private TranslatorRepository translatorRepository;
-	private String asyncThreadPoolName;
 	private VDBRepository vdbRepository;
 	JBossLifeCycleListener shutdownListener;
 	
-	public VDBDeployer (TranslatorRepository translatorRepo, String poolName, VDBRepository vdbRepo, JBossLifeCycleListener shutdownListener) {
+    public VDBDeployer(TranslatorRepository translatorRepo,
+            VDBRepository vdbRepo, JBossLifeCycleListener shutdownListener) {
 		this.translatorRepository = translatorRepo;
-		this.asyncThreadPoolName = poolName;
 		this.vdbRepository = vdbRepo;
 		this.shutdownListener = shutdownListener;
 	}
@@ -180,7 +187,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		ServiceName vdbSwitchServiceName = TeiidServiceNames.vdbSwitchServiceName(deployment.getName(), deployment.getVersion());
 		vdbService.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class,  vdb.vdbRepositoryInjector);
 		vdbService.addDependency(TeiidServiceNames.TRANSLATOR_REPO, TranslatorRepository.class,  vdb.translatorRepositoryInjector);
-		vdbService.addDependency(TeiidServiceNames.executorServiceName(this.asyncThreadPoolName), Executor.class,  vdb.executorInjector);
+		vdbService.addDependency(TeiidServiceNames.THREAD_POOL_SERVICE, ExecutorService.class,  vdb.executorInjector);
 		vdbService.addDependency(TeiidServiceNames.OBJECT_SERIALIZER, ObjectSerializer.class, vdb.serializerInjector);
 		vdbService.addDependency(TeiidServiceNames.BUFFER_MGR, BufferManager.class, vdb.bufferManagerInjector);
 		vdbService.addDependency(TeiidServiceNames.VDB_STATUS_CHECKER, VDBStatusChecker.class, vdb.vdbStatusCheckInjector);

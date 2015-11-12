@@ -24,7 +24,6 @@ package org.teiid.olingo;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.sql.Time;
-import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -33,8 +32,10 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.TimeZone;
 
+import javax.servlet.ReadListener;
 import javax.servlet.ServletInputStream;
 import javax.servlet.ServletOutputStream;
+import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -50,7 +51,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.odata.api.Client;
 import org.teiid.odata.api.CountResponse;
@@ -182,6 +182,13 @@ public class TestODataSQLBuilder {
             @Override
             public void write(int b) throws IOException {
                 sb.append((char)b);
+            }
+            @Override
+            public boolean isReady() {
+                return true;
+            }
+            @Override
+            public void setWriteListener(WriteListener writeListener) {
             }
         };
         HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
@@ -717,6 +724,17 @@ public class TestODataSQLBuilder {
         @Override
         public int read() throws IOException {
             return this.stream.read();
+        }
+        @Override
+        public boolean isFinished() {
+            return false;
+        }
+        @Override
+        public boolean isReady() {
+            return true;
+        }
+        @Override
+        public void setReadListener(ReadListener readListener) {
         }
     }
             

@@ -21,9 +21,8 @@
  */
 package org.teiid.jboss;
 
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
-import org.jboss.as.clustering.jgroups.ChannelFactory;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
@@ -31,11 +30,12 @@ import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 import org.jgroups.Channel;
 import org.teiid.replication.jgroups.JGroupsObjectReplicator;
+import org.wildfly.clustering.jgroups.ChannelFactory;
 
 class JGroupsObjectReplicatorService implements Service<JGroupsObjectReplicator> {
 
 	public final InjectedValue<ChannelFactory> channelFactoryInjector = new InjectedValue<ChannelFactory>();
-	final InjectedValue<Executor> executorInjector = new InjectedValue<Executor>();
+	final InjectedValue<ExecutorService> executorInjector = new InjectedValue<ExecutorService>();
 	private JGroupsObjectReplicator replicator; 
 	
 	

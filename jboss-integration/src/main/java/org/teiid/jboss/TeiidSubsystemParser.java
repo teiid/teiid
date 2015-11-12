@@ -23,6 +23,8 @@ package org.teiid.jboss;
 
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
 import static org.jboss.as.controller.parsing.ParseUtils.*;
+import static org.jboss.as.threads.CommonAttributes.TIME;
+import static org.jboss.as.threads.CommonAttributes.UNIT;
 import static org.teiid.jboss.TeiidConstants.*;
 
 import java.util.ArrayList;
@@ -34,7 +36,11 @@ import javax.xml.stream.XMLStreamException;
 
 import org.jboss.as.controller.parsing.ParseUtils;
 import org.jboss.as.controller.persistence.SubsystemMarshallingContext;
+import org.jboss.as.threads.Attribute;
+import org.jboss.as.threads.PoolAttributeDefinitions;
+import org.jboss.as.threads.ThreadsParser;
 import org.jboss.dmr.ModelNode;
+import org.jboss.dmr.Property;
 import org.jboss.staxmapper.XMLElementReader;
 import org.jboss.staxmapper.XMLElementWriter;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
@@ -42,6 +48,7 @@ import org.jboss.staxmapper.XMLExtendedStreamWriter;
 
 class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<ModelNode>>, XMLElementWriter<SubsystemMarshallingContext> {
 	public static TeiidSubsystemParser INSTANCE = new TeiidSubsystemParser();
+	private final ThreadsParser threadsParser = ThreadsParser.getInstance();
 	
     @Override
     public void writeContent(final XMLExtendedStreamWriter writer, final SubsystemMarshallingContext context) throws XMLStreamException {
@@ -52,7 +59,14 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
         }
         
         ALLOW_ENV_FUNCTION_ELEMENT.marshallAsElement(node, false, writer);
-        ASYNC_THREAD_POOL_ELEMENT.marshallAsElement(node, false, writer);
+        
+        if (has(node, Element.THREAD_POOL_ELEMENT.getLocalName())) {
+            ModelNode threadPool = node.get(Element.THREAD_POOL_ELEMENT.getLocalName());
+            if (has(threadPool, TEIID_THREAD_POOL_NAME)) {
+                threadPool = threadPool.get(TEIID_THREAD_POOL_NAME);
+            }
+            threadsParser.writeUnboundedQueueThreadPool(writer, new Property(TEIID_THREAD_POOL_NAME, threadPool), Element.THREAD_POOL_ELEMENT.getLocalName(), false);
+        }        
         
     	if (like(node, Element.BUFFER_SERVICE_ELEMENT)){
     		writer.writeStartElement(Element.BUFFER_SERVICE_ELEMENT.getLocalName());
@@ -119,6 +133,21 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 	    	}        
     	}
         writer.writeEndElement(); // End of subsystem element
+    }
+    
+    private void writeTime(final XMLExtendedStreamWriter writer, final ModelNode node, org.jboss.as.threads.Element element)
+            throws XMLStreamException {
+        if (node.hasDefined(element.getLocalName())) {
+            writer.writeStartElement(element.getLocalName());
+            ModelNode keepalive = node.get(element.getLocalName());
+            if (keepalive.hasDefined(TIME)) {
+                writer.writeAttribute(Attribute.TIME.getLocalName(), keepalive.get(TIME).asString());
+            }
+            if (keepalive.hasDefined(UNIT)) {
+                writer.writeAttribute(Attribute.UNIT.getLocalName(), keepalive.get(UNIT).asString().toLowerCase());
+            }
+            writer.writeEndElement();
+        }
     }
     
     private void writeObjectReplicatorConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
@@ -247,7 +276,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
         // elements
         while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
             switch (Namespace.forUri(reader.getNamespaceURI())) {
-                case TEIID_1_0: {
+                case TEIID_1_1: {
                     Element element = Element.forName(reader.getLocalName());
                     switch (element) {
     				case ALLOW_ENV_FUNCTION_ELEMENT:
@@ -277,8 +306,10 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     					bootServices.get(reader.getLocalName()).set(Integer.parseInt(reader.getElementText()));
     					break;
 
-    				case ASYNC_THREAD_POOL_ELEMENT:
-    					bootServices.get(reader.getLocalName()).set(reader.getElementText());
+    				case THREAD_POOL_ELEMENT:
+                        threadsParser.parseUnboundedQueueThreadPool(reader, Namespace.CURRENT.getUri(),
+                                org.jboss.as.threads.Namespace.THREADS_1_1, address, list,
+                                Element.THREAD_POOL_ELEMENT.getLocalName(), TeiidConstants.TEIID_THREAD_POOL_NAME);
     					break;
     					
   					// complex types

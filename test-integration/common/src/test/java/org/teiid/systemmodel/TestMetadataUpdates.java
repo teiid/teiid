@@ -73,7 +73,10 @@ public class TestMetadataUpdates {
 	}
 	
     @After public void tearDown() throws SQLException {
-    	connection.close();
+        if (connection != null) {
+            connection.close();
+            connection = null;
+        }
     }
 
 	private static DefaultMetadataRepository getMetadataRepo() {
