@@ -34,6 +34,7 @@
             <useTransitiveDependencies>false</useTransitiveDependencies>
             <includes>
                 <include>org.apache.cxf:cxf-rt-frontend-jaxrs</include>
+                <include>org.apache.cxf:cxf-rt-rs-client</include>
                 <include>org.apache.cxf:cxf-rt-transports-http-hc</include>
                 <include>org.apache.cxf:cxf-rt-rs-security-oauth</include>
                 <include>org.apache.cxf:cxf-rt-rs-security-oauth2</include>

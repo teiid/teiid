@@ -108,32 +108,13 @@
                                 <configuration>
                                     <artifactItems>
                                         <artifactItem>
-                                            <groupId>org.wildfly</groupId>
-                                            <artifactId>wildfly-dist</artifactId>                                        
-                                            <version>${version.org.wildfly}</version>
-                                            <type>zip</type>
-                                            <overWrite>false</overWrite>
-                                            <outputDirectory>${project.build.directory}</outputDirectory>
-                                        </artifactItem>
-                                    </artifactItems>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>unpack2</id>
-                                <phase>process-test-classes</phase>
-                                <goals>
-                                    <goal>unpack</goal>
-                                </goals>
-                                <configuration>
-                                    <artifactItems>
-                                        <artifactItem>
                                             <groupId>org.jboss.teiid</groupId>
                                             <artifactId>teiid</artifactId>
                                             <version>${project.version}</version>
-                                            <classifier>jboss-dist</classifier>
+                                            <classifier>wildfly-server</classifier>
                                             <type>zip</type>
                                             <overWrite>false</overWrite>
-                                            <outputDirectory>${project.build.directory}/wildfly-${version.org.wildfly}</outputDirectory>
+                                            <outputDirectory>${project.build.directory}</outputDirectory>
                                         </artifactItem>
                                     </artifactItems>
                                 </configuration>
@@ -151,7 +132,7 @@
                                     <goal>copy-resources</goal>
                                 </goals>
                                 <configuration>
-                                    <outputDirectory>${project.build.directory}/wildfly-${version.org.wildfly}/standalone/configuration</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/teiid-${project.version}/standalone/configuration</outputDirectory>
                                     <resources>
                                         <resource>
                                             <directory>src/test/resources/arquillian/credentials</directory>
@@ -176,7 +157,7 @@
                                 </goals>
                                 <configuration>
                                     <systemPropertyVariables>
-                                        <jbossHome>${project.build.directory}/wildfly-${version.org.wildfly}</jbossHome>
+                                        <jbossHome>${project.build.directory}/teiid-${project.version}</jbossHome>
                                         <serverConfig>standalone-teiid.xml</serverConfig>
                                     </systemPropertyVariables>
                                     <includes>

@@ -15,28 +15,30 @@
           
     <fileSet>
         <directory>target/kits/wildfly/overlay</directory>
-        <outputDirectory>/</outputDirectory>      
+        <outputDirectory>/</outputDirectory>
+        <filtered>true</filtered>      
         <includes>
           <include>**/*.sh</include>
         </includes>   
         <fileMode>755</fileMode>  
     </fileSet> 
-          
+    <fileSet>
+        <directory>target/kits/wildfly/overlay</directory>
+        <outputDirectory>/</outputDirectory>
+        <filtered>true</filtered>        
+        <includes>
+          <include>**/*.properties</include>
+        </includes>      
+    </fileSet>            
     <fileSet>
         <directory>target/kits/wildfly/overlay</directory>
         <outputDirectory>/</outputDirectory>      
         <excludes>
           <exclude>**/*.sh</exclude>
+          <exclude>**/*.properties</exclude>
         </excludes>      
     </fileSet>
     
-    <fileSet>
-        <directory>target/kits/wildfly/overlay</directory>
-        <outputDirectory>/</outputDirectory>      
-        <excludes>
-          <exclude>**/*.properties</exclude>
-        </excludes>      
-    </fileSet>  
   </fileSets>
   
   <!--  these have external dependent clients like connectors-->

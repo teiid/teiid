@@ -22,8 +22,9 @@
 package org.teiid.olingo.web;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
 
-public class ContextAwareHttpSerlvetRequest extends HttpServletRequestDelegate {
+public class ContextAwareHttpSerlvetRequest extends HttpServletRequestWrapper {
     private String contextPath;
 
     public ContextAwareHttpSerlvetRequest(HttpServletRequest delegate) {

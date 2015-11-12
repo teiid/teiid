@@ -13,11 +13,13 @@
     </resources>
     
     <dependencies>
-        <module name="com.fasterxml.jackson" />
+        <module name="com.fasterxml.jackson.core.jackson-core" />
+        <module name="com.fasterxml.jackson.core.jackson-databind"/>
+        <module name="com.fasterxml.jackson.core.jackson-annotations" />       
         <module name="com.fasterxml.jackson.dataformat.yaml" />
         <module name="com.fasterxml.jackson.dataformat.xml" />
         <module name="com.fasterxml.jackson.datatype" />
-        <module name="com.fasterxml.jackson.jaxrs" />
+        <module name="com.fasterxml.jackson.jaxrs.jackson-jaxrs-json-provider" />
         <module name="com.google.guava" />  
         <module name="org.apache.commons.lang" slot="3.3.2"/>
         <module name="org.reflections" /> 

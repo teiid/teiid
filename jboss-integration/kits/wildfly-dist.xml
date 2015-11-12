@@ -64,22 +64,11 @@
 			<useTransitiveDependencies>false</useTransitiveDependencies>
 		</dependencySet>
 	
-<!-- 		<dependencySet>
+ 		<dependencySet>
 			<outputDirectory>${wildfly-module-root}/org/jboss/teiid/security/main</outputDirectory>
 			<includes>
 				<include>org.jboss.teiid:teiid-jboss-security</include>
 			</includes>
-			<useProjectArtifact>false</useProjectArtifact>
-		</dependencySet>
- -->
-		<dependencySet>
-			<useTransitiveDependencies>true</useTransitiveDependencies>
-			<includes>
-				<include>com.fasterxml.jackson.core:jackson-databind</include>
-				<include>com.fasterxml.jackson.core:jackson-annotations</include>
-				<include>com.fasterxml.jackson.core:jackson-core</include>
-			</includes>
-			<outputDirectory>${wildfly-module-root}/com/fasterxml/jackson/main</outputDirectory>
 			<useProjectArtifact>false</useProjectArtifact>
 		</dependencySet>
 		<dependencySet>
@@ -138,7 +127,6 @@
 		<dependencySet>
 			<includes>
 				<include>com.fasterxml.jackson.dataformat:jackson-dataformat-xml</include>
-				<include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations</include>
 			</includes>
 			<outputDirectory>${wildfly-module-root}/com/fasterxml/jackson/dataformat/xml/main</outputDirectory>
 			<useProjectArtifact>false</useProjectArtifact>
@@ -148,14 +136,6 @@
 				<include>com.fasterxml.jackson.datatype:jackson-datatype-joda</include>
 			</includes>
 			<outputDirectory>${wildfly-module-root}/com/fasterxml/jackson/datatype/main</outputDirectory>
-			<useProjectArtifact>false</useProjectArtifact>
-		</dependencySet>
-		<dependencySet>
-			<includes>
-				<include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider</include>
-				<include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base</include>
-			</includes>
-			<outputDirectory>${wildfly-module-root}/com/fasterxml/jackson/jaxrs/main</outputDirectory>
 			<useProjectArtifact>false</useProjectArtifact>
 		</dependencySet>
 		<dependencySet>

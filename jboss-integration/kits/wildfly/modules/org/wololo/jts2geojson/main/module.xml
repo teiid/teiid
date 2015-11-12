@@ -8,6 +8,8 @@
     </resources>
     <dependencies>
         <module name="com.vividsolutions.jts" />
-        <module name="com.fasterxml.jackson" />
+        <module name="com.fasterxml.jackson.core.jackson-core"/>
+        <module name="com.fasterxml.jackson.core.jackson-databind"/>
+        <module name="com.fasterxml.jackson.core.jackson-annotations"/>
     </dependencies>
 </module>

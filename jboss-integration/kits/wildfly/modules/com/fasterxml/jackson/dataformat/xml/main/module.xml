@@ -5,13 +5,12 @@
     </properties>
     <resources>
         <resource-root path="jackson-dataformat-xml-${version.com.fasterxml.jackson.swagger}.jar" />
-        <resource-root path="jackson-module-jaxb-annotations-${version.com.fasterxml.jackson.swagger}.jar" />
     </resources>
     
     <dependencies>
         <module name="javax.api"/>
         <module name="javax.xml.stream.api"/>
-    	<module name="com.fasterxml.jackson" />
+    	<module name="com.fasterxml.jackson.jaxrs.jackson-jaxrs-json-provider" />
     	<module name="org.codehaus.woodstox" />
     </dependencies>
 </module>
