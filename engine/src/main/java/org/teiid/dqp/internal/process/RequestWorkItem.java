@@ -461,6 +461,10 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 			}
 			this.processor.getContext().setTimeSliceEnd(System.currentTimeMillis() + this.processorTimeslice);
 			sendResultsIfNeeded(null);
+			if (resultsReceiver == null && cursorRequestExpected()) {
+				//if we proceed we'll possibly violate the precondition of sendResultsIfNeeded, so wait until results are asked for
+				return; 
+			}
 			try {
 				CommandContext.pushThreadLocalContext(this.processor.getContext());
 				this.resultsBuffer = collector.collectTuples();
@@ -833,7 +837,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		boolean result = true;
 		synchronized (this) {
 			if (this.resultsReceiver == null) {
-				if (this.transactionState != TransactionState.ACTIVE && (requestMsg.getRequestOptions().isContinuous() || (useCallingThread && isForwardOnly()))) {
+				if (cursorRequestExpected()) {
 					if (batch != null) {
 						throw new AssertionError("batch has no handler"); //$NON-NLS-1$
 					}
@@ -902,7 +906,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	    			boolean last = false;
 	    			if (endRow == batch.getEndRow()) {
 	    				last = batch.getTerminationFlag();
-	    			} else if (fromBuffer && isForwardOnly()) {
+	    			} else if (isForwardOnly()) {
 	        			savedBatch = batch;
 	    			}
 	                List<List<?>> memoryRows = batch.getTuples();
@@ -987,6 +991,10 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		setAnalysisRecords(response);
         receiver.receiveResults(response);
         return result;
+	}
+
+	private boolean cursorRequestExpected() {
+		return this.transactionState != TransactionState.ACTIVE && (requestMsg.getRequestOptions().isContinuous() || (useCallingThread && isForwardOnly()));
 	}
 
 	private void setWarnings(ResultsMessage response) {
