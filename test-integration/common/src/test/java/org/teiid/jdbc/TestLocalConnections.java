@@ -531,4 +531,14 @@ public class TestLocalConnections {
 			server.getSessionService().setSecurityHelper(current);
 		}
 	}	
+	
+	@Test public void testFetchSize() throws Exception {
+		Connection c = server.createConnection("jdbc:teiid:PartsSupplier;FetchSize=10;");
+		Statement s = c.createStatement();
+		//a query that spans multiple batches and has a larger batch size than the fetch size
+		ResultSet rs = s.executeQuery("select * from tables t, tables t1");
+		while (rs.next()) {
+			
+		}
+	}
 }
