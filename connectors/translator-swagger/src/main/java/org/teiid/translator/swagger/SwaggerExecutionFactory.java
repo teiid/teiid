@@ -50,6 +50,7 @@ public class SwaggerExecutionFactory extends ExecutionFactory<ConnectionFactory,
     private Swagger swagger;
 
 	public enum Action {
+	    
 		GET(Util.getString("http_get")), 
 		PUT(Util.getString("http_put")),
 		DELETE(Util.getString("http_delete")),
@@ -68,19 +69,37 @@ public class SwaggerExecutionFactory extends ExecutionFactory<ConnectionFactory,
 	
 	// this match to swagger models's SecuritySchemeDefinition implementation
 	public enum SecurityType {
+	    
+	    NO(Util.getString("security_type_null")),
 	    BASIC(Util.getString("security_type_basic")),
 	    OAUTH2(Util.getString("security_type_oauth2"));
 	    
 	    private String type;
 	    
-	    private SecurityType(String type) {
+	    SecurityType(String type) {
 	        this.type = type;
 	    }
 	    
 	    public String getType() {
 	        return type;
 	    }
+	}
+	
+	public enum ResultsType {
 	    
+	    REF(Util.getString("json_return_type_ref")),
+	    ARRAY(Util.getString("json_return_type_array")),
+	    COMPLEX(Util.getString("json_return_type_complex"));
+	    
+	    private String type;
+	    
+	    ResultsType(String type) {
+	        this.type = type;
+	    }
+	    
+	    public String getType() {
+            return type;
+        }
 	}
 	
 	public SwaggerExecutionFactory() {
@@ -145,10 +164,6 @@ public class SwaggerExecutionFactory extends ExecutionFactory<ConnectionFactory,
     
     protected String getAction(Action action) {
         return action.getAction();
-    }
-    
-    protected SecurityType getSecurityType(String type) {
-        return SecurityType.valueOf(type);
     }
 
 }

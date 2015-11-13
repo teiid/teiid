@@ -24,6 +24,7 @@ package org.teiid.translator.swagger;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getPathSeparator;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getHttpAction;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getSecurityType;
+import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getReturnType;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getHttpPath;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getHttpHost;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getBaseUrl;
@@ -65,6 +66,8 @@ import org.teiid.json.simple.ParseException;
 import org.teiid.json.simple.SimpleContentHandler;
 import org.teiid.language.Argument;
 import org.teiid.language.Call;
+import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.RuntimeMetadata;
@@ -74,6 +77,7 @@ import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.WSConnection;
 import org.teiid.translator.swagger.SwaggerExecutionFactory.Action;
+import org.teiid.translator.swagger.SwaggerExecutionFactory.ResultsType;
 import org.teiid.translator.swagger.SwaggerExecutionFactory.SecurityType;
 
 public class SwaggerProcedureExecution implements ProcedureExecution{
@@ -97,9 +101,10 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
     }
     
     static interface Deserializer {
-        String toXmlString(InputStream input) throws TranslatorException;
-        String toJsonString(InputStream input) throws TranslatorException;
+        <T> T deserialize(InputStream input, Class<T> returnType)throws TranslatorException;
         Object deserialize(InputStream input) throws TranslatorException;
+        String toXmlString(InputStream input) throws TranslatorException;
+        String toJsonString(InputStream input) throws TranslatorException;  
     }
     
     static interface Authentication {
@@ -176,12 +181,16 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
     ExecutionContext context;
     private Call procedure;
     private DataSource returnValue;
+    private Object result = null;
+    private JsonResponse jsonResponse;
     private WSConnection conn;
     SwaggerExecutionFactory executionFactory;
     Map<String, List<String>> customHeaders;
     Map<String, Object> responseContext = Collections.emptyMap();
     int responseCode = 200;
     private boolean useResponseContext;
+    
+    private Class<?>[] expectedColumnTypes;
     
     JsonDeserializer parser = new JsonDeserializer();
 
@@ -191,6 +200,7 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
         this.procedure = procedure;
         this.executionFactory = executionFactory;
         this.conn = conn;
+        this.expectedColumnTypes = procedure.getResultSetColumnTypes();
     }
     
     public void setUseResponseContext(boolean useResponseContext) {
@@ -242,13 +252,46 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
 
             this.returnValue = dispatch.invoke(ds);
             
-            responseContextValidation(httpHeaders.get("Accept"), dispatch.getResponseContext()); //$NON-NLS-1$             
+            responseContextValidation(httpHeaders.get("Accept"), dispatch.getResponseContext()); //$NON-NLS-1$  
+            
+            handleReturnValue(procedure, returnValue);
         } catch (Exception e) {
-            throw new TranslatorException(e);
+            throw new TranslatorException(SwaggerPlugin.Event.TEIID28010, SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28010, e));
         }
  
     }
 
+
+    private void handleReturnValue(Procedure procedure, DataSource returnValue) throws TranslatorException {
+        
+        try {
+            if (procedure.getResultSet() != null) {
+                ResultsType resultsType = getReturnType(procedure);
+                this.jsonResponse = new JsonResponse(this.returnValue.getInputStream(), resultsType, new DocumentNode());
+            } else if (getReturnParameter(procedure) != null) {
+                if(this.returnValue.getContentType().equals("application/json")){ //$NON-NLS-1$
+                    result = parser.toJsonString(this.returnValue.getInputStream());
+                } else if(this.returnValue.getContentType().equals("application/xml")) { //$NON-NLS-1$
+                    result = parser.toXmlString(this.returnValue.getInputStream());
+                }
+                if(result == null) {
+                    result = new BlobType(new StreamingBlob(this.returnValue.getInputStream()));
+                }
+            }
+        } catch (IOException e) {
+            throw new TranslatorException(e);
+        }
+        
+    }
+
+    private Object getReturnParameter(Procedure procedure) {
+        for (ProcedureParameter pp : procedure.getParameters()){
+            if (pp.getType() == ProcedureParameter.Type.ReturnValue) {
+                return pp;
+            }
+        } 
+        return null;
+    }
 
     private void applyAuthParams(Procedure procedure, Map<String, List<String>> httpHeaders) throws TranslatorException {
         Authentication auth = null;
@@ -308,12 +351,21 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
 
     private void headersValidation(Action method, Map<String, List<String>> httpHeaders, Procedure procedure) throws TranslatorException {
 
-        Set<String> procudes = getProcuces(procedure);
-        if(httpHeaders.get("Accept") != null) { //$NON-NLS-1$
-            for(String contentType : httpHeaders.get("Accept")) { //$NON-NLS-1$
-                if(!procudes.contains(contentType)){
-                    throw new TranslatorException(SwaggerPlugin.Event.TEIID28004, SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28004, contentType, procudes));
+        String key = "Accept"; //$NON-NLS-1$
+        String jsonType = "application/json"; //$NON-NLS-1$
+        Set<String> produces = getProcuces(procedure);
+        if(httpHeaders.get(key) != null) { 
+            for(String contentType : httpHeaders.get(key)) { 
+                if(!produces.contains(contentType)){
+                    throw new TranslatorException(SwaggerPlugin.Event.TEIID28004, SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28004, contentType, produces));
                 }
+            }
+        } else {
+            // if no Accept define in headers, force return json for deserializing
+            if(produces.contains(jsonType)) {
+                List<String> list = new ArrayList<String>(1);
+                list.add(jsonType);
+                httpHeaders.put(key, list);
             }
         }
         
@@ -420,8 +472,40 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
 
     @Override
     public List<?> next() throws TranslatorException, DataNotAvailableException {
+        
+        Procedure procedure = this.procedure.getMetadataObject();
+        if(jsonResponse != null) {
+            Map<String, Object> row = this.jsonResponse.getNext();
+            if (row != null) {
+                return buildRow(procedure.getResultSet(), procedure.getResultSet().getColumns(), this.expectedColumnTypes, row);
+            }
+        }
         return null;
     }
+
+    @SuppressWarnings("unchecked")
+    <T extends AbstractMetadataRecord> List<?> buildRow(T record, List<Column> columns,
+            Class<?>[] expectedType, Map<String, Object> values) throws TranslatorException {
+        List<Object> results = new ArrayList<Object>();
+        for (int i = 0; i < columns.size(); i++) {
+            Column column = columns.get(i);
+            T columnParent = (T)column.getParent();            
+            String colName = column.getName();
+            if (!columnParent.equals(record)) {
+                colName = getName(columnParent)+"/"+column.getName();
+            }
+            Object value = SwaggerTypeManager.convertTeiidRuntimeType(values.get(colName), expectedType[i]);                    
+            results.add(value);
+        }
+        return results;
+    }
+    
+    private String getName(AbstractMetadataRecord table) {
+        if (table.getNameInSource() != null) {
+            return table.getNameInSource();
+        }
+        return table.getName();
+    } 
 
     @Override
     public void close() {
@@ -435,22 +519,7 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
 
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
-        
-        
-        Object result = null;
-        try {
-            if(this.returnValue.getContentType().equals("application/json")){ //$NON-NLS-1$
-                result = parser.toJsonString(this.returnValue.getInputStream());
-            } else if(this.returnValue.getContentType().equals("application/xml")) { //$NON-NLS-1$
-                result = parser.toXmlString(this.returnValue.getInputStream());
-            }
-            if(result == null) {
-                result = new BlobType(new StreamingBlob(this.returnValue.getInputStream()));
-            }
-            return Arrays.asList(result);
-        } catch (IOException e) {
-            throw new TranslatorException(e);
-        }
+        return Arrays.asList(result);   
     }
     
     public void setCustomHeaders(Map<String, List<String>> customHeaders) {

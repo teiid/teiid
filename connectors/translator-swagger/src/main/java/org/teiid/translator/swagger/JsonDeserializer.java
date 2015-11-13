@@ -52,6 +52,7 @@ public class JsonDeserializer implements Deserializer {
         jsonFactory = new JsonFactory(mapper);
       }
     
+    @Override
     public Object deserialize(InputStream input) throws TranslatorException {
         try {
             JsonParser parser = jsonFactory.createParser(input);
@@ -61,6 +62,7 @@ public class JsonDeserializer implements Deserializer {
         } 
     }
     
+    @Override
     public String toXmlString(InputStream input) throws TranslatorException {
         
         try {
@@ -72,10 +74,20 @@ public class JsonDeserializer implements Deserializer {
         }
     }
     
+    @Override
     public String toJsonString(InputStream input) throws TranslatorException {
         try {
             Object value = mapper.readValue(input, Object.class);
             return this.mapper.writeValueAsString(value);
+        } catch (Exception e) {
+            throw new TranslatorException(SwaggerPlugin.Event.TEIID28007, SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28007, e.getMessage()));
+        }
+    }
+
+    @Override
+    public <T> T deserialize(InputStream input, Class<T> returnType)throws TranslatorException {
+        try {
+            return mapper.readValue(input, returnType);
         } catch (Exception e) {
             throw new TranslatorException(SwaggerPlugin.Event.TEIID28007, SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28007, e.getMessage()));
         }
