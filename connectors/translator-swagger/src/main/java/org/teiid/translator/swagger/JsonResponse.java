@@ -25,23 +25,19 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.document.JsonDocument;
 import org.teiid.translator.swagger.SwaggerExecutionFactory.ResultsType;
 
 public class JsonResponse {
     
     private Iterator<JsonDocument> results;
     private ResultsType resultsType;
-    private DocumentNode rootNode;
     
-    public JsonResponse(InputStream payload, ResultsType resultsType, DocumentNode rootNode) throws TranslatorException {
+    public JsonResponse(InputStream payload, ResultsType resultsType) throws TranslatorException {
         this.resultsType = resultsType;
-        this.rootNode = rootNode;
         this.results = parsePayload(payload);
     }
 
@@ -52,13 +48,13 @@ public class JsonResponse {
             JsonDeserializer parser = new JsonDeserializer();
             if(resultsType.equals(ResultsType.REF)){
                 Map<String, Object> results = parser.deserialize(payload, Map.class);
-                JsonDocument document = JsonDocument.createDocument(null, null, results);
+                JsonDocument document = JsonDocument.createDocument(null, results);
                 return Arrays.asList(document).iterator();
             } else if(resultsType.equals(ResultsType.ARRAY)){
                 List<Map<String, Object>> results = parser.deserialize(payload, List.class);
                 List<JsonDocument> list = new ArrayList<JsonDocument>();
                 for(Map<String, Object> result : results){
-                    JsonDocument document = JsonDocument.createDocument(null, null, result);
+                    JsonDocument document = JsonDocument.createDocument(null, result);
                     list.add(document);
                 }
                 return list.iterator();

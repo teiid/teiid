@@ -193,10 +193,6 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
             Response resp = respMap.get("200");
             
             if(isRef(resp)){
-                // TODO-- remove 
-                if(procName.equals("testModelFacade") || procName.equals("size")) {
-                    System.out.println(key);
-                }
                 Model model = getReferenceModel(resp.getSchema());
                 String returnType = resp.getSchema().getType();
                 if(null != model){
@@ -204,18 +200,8 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                     for(Entry<String, Property> column : wrapper.getProperties().entrySet()){
                         String name = column.getKey();
                         Property prop = column.getValue();
-                        if(name.equals("successmap") || name.equals("successlist") || name.equals("successset")){
-                            System.out.println(name);
-                        }
                         String type = SwaggerTypeManager.teiidType(prop.getType(), prop.getFormat());
                         mf.addProcedureResultSetColumn(name, type, procedure);
-                    }
-                    //TODO-- for in below need be remove
-                    for(Entry<String, Property> column : model.getProperties().entrySet()) {
-//                        String name = column.getKey();
-//                        Property prop = column.getValue();
-//                        String type = SwaggerTypeManager.teiidType(prop.getType(), prop.getFormat());
-//                        mf.addProcedureResultSetColumn(name, type, procedure);
                     }
                     procedure.setProperty(PROCEDURE_RETURN, returnType);
                 }

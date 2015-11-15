@@ -267,7 +267,7 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
         try {
             if (procedure.getResultSet() != null) {
                 ResultsType resultsType = getReturnType(procedure);
-                this.jsonResponse = new JsonResponse(this.returnValue.getInputStream(), resultsType, new DocumentNode());
+                this.jsonResponse = new JsonResponse(this.returnValue.getInputStream(), resultsType);
             } else if (getReturnParameter(procedure) != null) {
                 if(this.returnValue.getContentType().equals("application/json")){ //$NON-NLS-1$
                     result = parser.toJsonString(this.returnValue.getInputStream());

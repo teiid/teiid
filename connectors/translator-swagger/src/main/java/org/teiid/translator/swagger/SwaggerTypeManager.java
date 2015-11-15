@@ -97,8 +97,8 @@ public class SwaggerTypeManager {
         swaggerTypes.put(PASSWORD, DataTypeManager.DefaultDataTypes.STRING);
         swaggerTypes.put(PASSWORD_, DataTypeManager.DefaultDataTypes.STRING);
         
-        swaggerTypes.put(BLOB, DataTypeManager.DefaultDataTypes.BLOB);
-        swaggerTypes.put(BLOB_, DataTypeManager.DefaultDataTypes.BLOB);
+        swaggerTypes.put(BLOB, DataTypeManager.DefaultDataTypes.OBJECT);
+        swaggerTypes.put(BLOB_, DataTypeManager.DefaultDataTypes.OBJECT);
         
     }
     

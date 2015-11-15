@@ -28,8 +28,10 @@ import static org.teiid.translator.swagger.SwaggerMetadataProcessor.isPathParam;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getProcuces;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -45,6 +47,7 @@ import org.teiid.cdk.CommandBuilder;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.internal.datamgr.RuntimeMetadataImpl;
 import org.teiid.language.Call;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
@@ -79,7 +82,7 @@ public class TestSwaggerMetadataProcessor {
             procSet.add(p.getName());
         }
         
-        assertEquals(23, procSet.size());
+        assertEquals(27, procSet.size());
         
         assertTrue(procSet.contains("addCustomer"));
         assertTrue(procSet.contains("addOneCustomer"));
@@ -107,9 +110,7 @@ public class TestSwaggerMetadataProcessor {
         assertTrue(procSet.contains("updateCustomerByName"));
         assertTrue(procSet.contains("updateCustomerByNumber"));
         assertTrue(procSet.contains("updateCustomerByNumCityCountry"));
-        
-        
-    }
+    } 
     
     @Test
     public void testSwaggerMetadataParams() throws TranslatorException {
@@ -167,12 +168,14 @@ public class TestSwaggerMetadataProcessor {
             List<ProcedureParameter> params = p.getParameters();
             
             // result parameter
-            ProcedureParameter param = params.get(0);
-            assertEquals("result", param.getName());
-            assertEquals(Type.ReturnValue, param.getType());
-            
+            if(p.getResultSet() == null) {
+                ProcedureParameter param = params.get(0);
+                assertEquals("result", param.getName());
+                assertEquals(Type.ReturnValue, param.getType());
+            }
+           
             // headers parameter
-            param = params.get(params.size() - 1);
+            ProcedureParameter param = params.get(params.size() - 1);
             assertEquals("headers", param.getName());
             assertEquals(Type.In, param.getType());
                        
@@ -226,7 +229,65 @@ public class TestSwaggerMetadataProcessor {
         }
     }
     
-    
+    @Test
+    public void testReturnTableColumns() throws TranslatorException{
+        
+        SwaggerExecutionFactory ef = new SwaggerExecutionFactory();
+        
+        Properties props = new Properties();
+
+        WSConnection mockConnection = Mockito.mock(WSConnection.class);
+        Mockito.stub(mockConnection.getSwagger()).toReturn(new File(UnitTestUtil.getTestDataPath()+"/swagger.json").getAbsolutePath());
+        
+        MetadataFactory mf = new MetadataFactory("vdb", 1, "x", SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
+        ef.getMetadata(mf, mockConnection);
+        
+        for(Procedure p : mf.getSchema().getProcedures().values()) {
+            if(p.getName().equals("testModelFacade")) {
+                List<Column> columns = p.getResultSet().getColumns();
+                Map<String, Class<?>> map = new HashMap<String, Class<?>>();
+                for (int i = 0; i < columns.size(); i++) {
+                    Column column = columns.get(i);
+                    String colName = column.getName();
+                    Class<?> type = column.getJavaType();
+                    map.put(colName, type);
+                }
+                
+                assertEquals(34, map.size());
+                
+                assertTrue(map.keySet().contains("customer/customernumber"));
+                assertTrue(map.keySet().contains("customer/customername"));
+                assertTrue(map.keySet().contains("customer/city"));
+                assertTrue(map.keySet().contains("customerStatus/size"));
+                assertTrue(map.keySet().contains("customerStatus/heap/maxMemory"));
+                assertTrue(map.keySet().contains("customerStatus/heap/allocatedMemory"));
+                assertTrue(map.keySet().contains("customerStatus/heap/freeMemory"));
+                assertTrue(map.keySet().contains("types/a"));
+                assertTrue(map.keySet().contains("types/b"));
+                assertTrue(map.keySet().contains("types/c"));
+                assertTrue(map.keySet().contains("success/success"));
+                assertTrue(map.keySet().contains("successlist"));
+                assertTrue(map.keySet().contains("successset"));
+                
+                assertEquals(java.lang.String.class, map.get("customer/customernumber"));
+                assertEquals(java.lang.String.class, map.get("customer/customername"));
+                assertEquals(java.lang.String.class, map.get("customer/city"));
+                assertEquals(java.lang.Integer.class, map.get("customerStatus/size"));
+                assertEquals(java.lang.Long.class, map.get("customerStatus/heap/maxMemory"));
+                assertEquals(java.lang.Long.class, map.get("customerStatus/heap/allocatedMemory"));
+                assertEquals(java.lang.Long.class, map.get("customerStatus/heap/freeMemory"));
+                assertEquals(java.lang.Byte.class, map.get("types/a"));
+                assertEquals(java.lang.Float.class, map.get("types/e"));
+                assertEquals(java.lang.Double.class, map.get("types/f"));
+                assertEquals(java.lang.Boolean.class, map.get("types/g"));
+                assertEquals(java.lang.Object.class, map.get("successlist"));
+                assertEquals(java.lang.Object.class, map.get("successset"));
+                assertEquals(java.sql.Time.class, map.get("types/l"));
+  
+            }
+        }
+ 
+    }
     
     @Ignore
     @SuppressWarnings("unchecked")
