@@ -103,6 +103,7 @@ public abstract class AbstractUpdateExecution implements UpdateExecution {
 		} else if (visitor.hasCriteria()) {
 			try {
 				String query = visitor.getQuery();
+				context.logCommand(query);
 				QueryResult results = getConnection().query(query, context.getBatchSize(), Boolean.FALSE);
 				if (results != null && results.getSize() > 0) {
 					ArrayList<String> idList = new ArrayList<String>(results.getRecords().length);

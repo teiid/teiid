@@ -503,6 +503,7 @@ public class TestWithClauseProcessing {
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
         caps.setFunctionSupport(SourceSystemFunctions.CONCAT, true);
         caps.setCapabilitySupport(Capability.SUBQUERY_COMMON_TABLE_EXPRESSIONS, true);
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
        
 	    String sql = "SELECT (with b (x) as (select e1 from pm1.g1) select b.x || c.x from b,b b1), x from (with a (x, b, c) as (select e1, e2, e3 from pm1.g1) select * from a limit 1) as c"; //$NON-NLS-1$

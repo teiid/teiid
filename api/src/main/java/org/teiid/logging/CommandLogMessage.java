@@ -25,6 +25,7 @@ package org.teiid.logging;
 import java.sql.Timestamp;
 
 import org.teiid.client.plan.PlanNode;
+import org.teiid.core.util.StringUtil;
 import org.teiid.translator.ExecutionContext;
 
 /**
@@ -37,6 +38,7 @@ public class CommandLogMessage {
 		PLAN,
 		END,
 		CANCEL,
+		SOURCE,
 		ERROR
 	}
 	
@@ -64,6 +66,7 @@ public class CommandLogMessage {
     private ExecutionContext executionContext;
     private PlanNode plan;
     
+    private Object[] sourceCommand;
     private Long cpuTime;
         
     public CommandLogMessage(long timestamp,
@@ -154,7 +157,9 @@ public class CommandLogMessage {
     	if (event == Event.NEW) {
     		return "\tSTART DATA SRC COMMAND:\tstartTime=" + new Timestamp(timestamp) + "\trequestID=" + requestID + "\tsourceCommandID="+ sourceCommandID + "\texecutionID="+ executionContext.getExecutionCountIdentifier() + "\ttxID=" + transactionID + "\tmodelName="+ modelName + "\ttranslatorName=" + translatorName + "\tsessionID=" + sessionID + "\tprincipal=" + principal + "\tsql=" + sql;  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$//$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$
     	}
-		return "\t"+ event +" SRC COMMAND:\tendTime=" + new Timestamp(timestamp) + "\trequestID=" + requestID + "\tsourceCommandID="+ sourceCommandID + "\texecutionID="+ executionContext.getExecutionCountIdentifier() + "\ttxID=" + transactionID + "\tmodelName="+ modelName + "\ttranslatorName=" + translatorName + "\tsessionID=" + sessionID + "\tprincipal=" + principal + "\tfinalRowCount=" + rowCount + ((cpuTime!=null)?"\tcpuTime(ns)=" + cpuTime:"");  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$//$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$ //$NON-NLS-12$ //$NON-NLS-13$
+		return "\t"+ event +" SRC COMMAND:\tendTime=" + new Timestamp(timestamp) + "\trequestID=" + requestID + "\tsourceCommandID="+ sourceCommandID + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+				"\texecutionID="+ executionContext.getExecutionCountIdentifier() + "\ttxID=" + transactionID + "\tmodelName="+ modelName + "\ttranslatorName=" + translatorName +  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+				"\tsessionID=" + sessionID + "\tprincipal=" + principal + ((sourceCommand != null)?"\tsourceCommand=" + StringUtil.toString(sourceCommand, " "):"") + ((rowCount != null)?"\tfinalRowCount=" + rowCount:"") + ((cpuTime!=null)?"\tcpuTime(ns)=" + cpuTime:"");  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$//$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$
   	}
 
 	public long getTimestamp() {
@@ -243,5 +248,18 @@ public class CommandLogMessage {
 	 */
 	public Long getCpuTime() {
 		return cpuTime;
+	}
+	
+	public void setSourceCommand(Object[] sourceCommand) {
+		this.sourceCommand = sourceCommand;
+	}
+
+	/**
+	 * The source command issued.  It's up to each source as to what the representation is.
+	 * Only set for the {@link Event#SOURCE}
+	 * @param sourceCommand
+	 */
+	public Object[] getSourceCommand() {
+		return sourceCommand;
 	}
 }

@@ -2919,6 +2919,16 @@ public class TestResolver {
         helpResolveException(sql, "TEIID31135 Could not create foreign temporary table, since schema vm1 is not physical."); //$NON-NLS-1$ 
     }
     
+    @Test public void testAvgVarchar() {
+    	String sql = "SELECT e1 FROM pm1.g1 GROUP BY e1 HAVING avg(e1) = '1'";
+    	helpResolve(sql);
+    }
+    
+    @Test public void testAvgVarchar1() {
+    	String sql = "SELECT e1 FROM pm1.g1 GROUP BY e1 HAVING avg(e1) between 1 and 2";
+    	helpResolve(sql);
+    }
+    
     @Test public void testInvalidDateLiteral() {
     	helpTestWidenToString("select * from bqt1.smalla where timestampvalue > 'a'");
     }

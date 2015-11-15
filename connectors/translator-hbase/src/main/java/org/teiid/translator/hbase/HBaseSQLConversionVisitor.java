@@ -27,15 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.teiid.language.ColumnReference;
-import org.teiid.language.DerivedColumn;
-import org.teiid.language.Expression;
-import org.teiid.language.ExpressionValueSource;
-import org.teiid.language.Insert;
-import org.teiid.language.Select;
-import org.teiid.language.SetClause;
-import org.teiid.language.TableReference;
-import org.teiid.language.Update;
+import org.teiid.language.*;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.KeyRecord;
 
@@ -52,6 +44,12 @@ public class HBaseSQLConversionVisitor extends org.teiid.translator.jdbc.SQLConv
     @Override
     protected String getInsertKeyword() {
     	return "UPSERT"; //$NON-NLS-1$
+    }
+    
+    @Override
+    public void visit(Like obj) {
+    	obj.setEscapeCharacter(null); //not supported - capabilities ensure only \ is pushed
+    	super.visit(obj);
     }
     
     @Override

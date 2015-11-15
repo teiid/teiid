@@ -233,13 +233,9 @@ public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     public JDBCMetdataProcessor getMetadataProcessor(){
-    	if (useDatabaseMetaData) {
-    		JDBCMetdataProcessor processor = new JDBCMetdataProcessor();
-    		processor.setImportKeys(false);
-    		processor.setQuoteString("`"); //$NON-NLS-1$
-    		return processor;
-    	}
-        return new HiveMetadataProcessor();
+        HiveMetadataProcessor result = new HiveMetadataProcessor();
+        result.setUseDatabaseMetaData(this.useDatabaseMetaData);
+        return result;
     }
 
     @Override

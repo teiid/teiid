@@ -518,12 +518,17 @@ public class RelationalPlanner {
 		if (node != null && node.getType() == NodeConstants.Types.JOIN) {
 			localGroupSymbols = getGroupSymbols(node);
 		}
-		for (SubqueryContainer<?> container : subqueryContainers) {
+		for (SubqueryContainer container : subqueryContainers) {
 			if (container.getCommand().getProcessorPlan() != null) {
 				continue;
 			}
 		    //a clone is needed here because the command could get modified during planning
 		    Command subCommand = (Command)container.getCommand().clone(); 
+		    List<SubqueryContainer<?>> containers = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(container.getCommand());
+		    List<SubqueryContainer<?>> cloneContainers = null;
+		    if (!containers.isEmpty()) {
+		    	cloneContainers = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(subCommand);
+		    }
 			Set<PlanningStackEntry> entries = null;
 			PlanningStackEntry stackEntry = null;
 			if (isStackEntry) {
@@ -550,6 +555,16 @@ public class RelationalPlanner {
 			    }
 			    container.getCommand().setProcessorPlan(procPlan);
 			    setCorrelatedReferences(container, correlatedReferences);
+			    //ensure plans are set on the original nested subqueries
+			    if (!containers.isEmpty()) {
+			    	for (int i = 0; i < containers.size(); i++) {
+			    		Command c = containers.get(i).getCommand();
+			    		Command clone = cloneContainers.get(i).getCommand();
+			    		c.setCorrelatedReferences(clone.getCorrelatedReferences());
+			    		c.setProcessorPlan(clone.getProcessorPlan());
+			    	}
+			    }
+			    
 			    //update the correlated references to the appropriate grouping symbols
 			    if (node != null && node.getType() != NodeConstants.Types.JOIN && node.getType() != NodeConstants.Types.GROUP  && !correlatedReferences.isEmpty()) {
 			    	PlanNode grouping = NodeEditor.findNodePreOrder(node, NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE | NodeConstants.Types.JOIN);

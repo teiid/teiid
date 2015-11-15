@@ -878,6 +878,24 @@ public class TestOracleTranslator {
                 EMPTY_CONTEXT, null, output);        
     }
     
+    @Test public void testOffsetWithNoLimit() throws Exception {
+        String input = "select intkey, stringkey from bqt1.smalla order by intkey offset 100 rows"; //$NON-NLS-1$
+        String output = "SELECT * FROM (SELECT SmallA.IntKey, SmallA.StringKey FROM SmallA ORDER BY SmallA.IntKey) WHERE ROWNUM > 100"; //$NON-NLS-1$
+               
+        helpTestVisitor(RealMetadataFactory.exampleBQTCached(),
+                input, 
+                EMPTY_CONTEXT, null, output);        
+    }
+    
+    @Test public void testLimitOffsetOverflow() throws Exception {
+        String input = "select intkey, stringkey from bqt1.smalla order by intkey limit 2000000000, 2000000000"; //$NON-NLS-1$
+        String output = "SELECT * FROM (SELECT VIEW_FOR_LIMIT.*, ROWNUM ROWNUM_ FROM (SELECT SmallA.IntKey, SmallA.StringKey FROM SmallA ORDER BY SmallA.IntKey) VIEW_FOR_LIMIT WHERE ROWNUM <= 4000000000) WHERE ROWNUM_ > 2000000000"; //$NON-NLS-1$
+               
+        helpTestVisitor(RealMetadataFactory.exampleBQTCached(),
+                input, 
+                EMPTY_CONTEXT, null, output);        
+    }
+    
     @Test public void testExceptAsMinus() throws Exception {
         String input = "select intkey, intnum from bqt1.smalla except select intnum, intkey from bqt1.smallb"; //$NON-NLS-1$
         String output = "SELECT SmallA.IntKey, SmallA.IntNum FROM SmallA MINUS SELECT SmallB.IntNum, SmallB.IntKey FROM SmallB"; //$NON-NLS-1$

@@ -520,7 +520,7 @@ public class TestFunctionPushdown {
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
-        
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, true);
         ProcessorPlan plan = helpPlan("select x.c, case when e1 = 1 then 1 else 0 end, (select e1 from pm1.g1 where pm1.g1.e1 = pm1.g2.e1) from pm1.g2, (select max(e1) as c from pm1.g2) x where x.c = pm1.g2.e1", metadata, null, new DefaultCapabilitiesFinder(caps), 
                 new String[] {"SELECT v_0.c_0, g_0.e1, (SELECT g_2.e1 FROM pm1.g1 AS g_2 WHERE g_2.e1 = g_0.e1) FROM pm1.g2 AS g_0, (SELECT MAX(g_1.e1) AS c_0 FROM pm1.g2 AS g_1) AS v_0 WHERE v_0.c_0 = g_0.e1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         HardcodedDataManager dm = new HardcodedDataManager(metadata);

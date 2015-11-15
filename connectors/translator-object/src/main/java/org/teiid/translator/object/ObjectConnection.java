@@ -133,13 +133,5 @@ public interface ObjectConnection {
 	 */
 	public Collection<Object> getAll() throws TranslatorException;
 
-	/**
-	 * Call to obtain all the first number of objects based on limit
-	 * @param limit is the number of objects to return 
-	 * @return List of the objects to return
-	 * @throws TranslatorException 
-	 */
-	public Collection<Object> getFirst(int limit) throws TranslatorException;
-
 	
 }

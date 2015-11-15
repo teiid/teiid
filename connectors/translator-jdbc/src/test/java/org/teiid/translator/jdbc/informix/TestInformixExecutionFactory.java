@@ -1,3 +1,4 @@
+package org.teiid.translator.jdbc.informix;
 /*
  * JBoss, Home of Professional Open Source.
  * See the COPYRIGHT.txt file distributed with this work for information
@@ -19,45 +20,27 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.translator.infinispan.cache;
 
-import org.teiid.language.Delete;
-import org.teiid.language.Insert;
-import org.teiid.language.Update;
-import org.teiid.translator.object.ObjectSelectVisitor;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.jdbc.TranslationHelper;
 
-public class SearchByInfinispanVisitor extends ObjectSelectVisitor {
+public class TestInformixExecutionFactory {
 	
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.teiid.language.visitor.HierarchyVisitor#visit(org.teiid.language.Insert)
-	 */
-	@Override
-	public void visit(Insert obj) {
-		super.visit(obj);
-	}
+    private static InformixExecutionFactory TRANSLATOR; 
 
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.teiid.language.visitor.HierarchyVisitor#visit(org.teiid.language.Delete)
-	 */
-	@Override
-	public void visit(Delete obj) {
-		this.condition = obj.getWhere();
-		super.visit(obj);
+    @BeforeClass
+    public static void setUp() throws TranslatorException {
+        TRANSLATOR = new InformixExecutionFactory();        
+        TRANSLATOR.start();
+    }
+	
+    @Test public void testCast() throws Exception {
+		String input = "SELECT cast(INTKEY as string) FROM BQT1.SmallA"; //$NON-NLS-1$       
+        String output = "SELECT cast(SmallA.IntKey AS varchar(255)) FROM SmallA";  //$NON-NLS-1$
+        
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
 	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.teiid.language.visitor.HierarchyVisitor#visit(org.teiid.language.Update)
-	 */
-	@Override
-	public void visit(Update obj) {
-		this.condition = obj.getWhere();
-		super.visit(obj);
-	}
+	
 }

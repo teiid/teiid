@@ -6,7 +6,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 import org.junit.Before;
@@ -18,7 +17,7 @@ import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.language.Command;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.object.testdata.person.PhoneType;
+import org.teiid.translator.object.simpleMap.SimpleMapCacheExecutionFactory;
 import org.teiid.translator.object.testdata.trades.Leg;
 import org.teiid.translator.object.testdata.trades.Trade;
 import org.teiid.translator.object.testdata.trades.TradesCacheSource;
@@ -212,7 +211,7 @@ public class TestObjectUpdateExecution {
 	
 	protected ObjectUpdateExecution createExecution(Command command, final List<Object> results)
 			throws TranslatorException {
-		TRANSLATOR = new ObjectExecutionFactory();
+		TRANSLATOR = new SimpleMapCacheExecutionFactory();
 
 		TRANSLATOR.start();
 

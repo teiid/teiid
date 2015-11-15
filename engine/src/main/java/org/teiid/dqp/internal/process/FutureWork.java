@@ -40,6 +40,7 @@ public final class FutureWork<T> extends FutureTask<T> implements PrioritizedRun
 	private DQPWorkContext workContext = DQPWorkContext.getWorkContext();
 	private List<CompletionListener<T>> completionListeners = new LinkedList<CompletionListener<T>>();
 	private String parentName;
+	private String requestId;
 
 	public FutureWork(final Callable<T> processor, int priority) {
 		super(processor);
@@ -52,10 +53,19 @@ public final class FutureWork<T> extends FutureTask<T> implements PrioritizedRun
 		this.priority = priority;
 	}
 	
+	public void setRequestId(String requestId) {
+		this.requestId = requestId;
+	}
+	
 	@Override
 	public void run() {
 		LogManager.logDetail(LogConstants.CTX_DQP, "Running task for parent thread", parentName); //$NON-NLS-1$
-		super.run();
+		LogManager.putMdc(RequestWorkItem.REQUEST_KEY, requestId);
+		try {
+			super.run();
+		} finally {
+			LogManager.removeMdc(RequestWorkItem.REQUEST_KEY);
+		}
 	}
 	
 	@Override

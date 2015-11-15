@@ -30,7 +30,6 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.SocketTimeoutException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -92,7 +91,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
     }
     
     public synchronized void connect(ObjectChannelFactory channelFactory) throws CommunicationException, IOException {
-        this.socketChannel = channelFactory.createObjectChannel(new InetSocketAddress(info.getInetAddress(), info.getPortNumber()), info.isSsl());
+        this.socketChannel = channelFactory.createObjectChannel(info);
         try {
         	doHandshake();
         } catch (CommunicationException e) {

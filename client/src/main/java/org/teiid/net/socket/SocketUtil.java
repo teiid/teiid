@@ -101,8 +101,8 @@ public class SocketUtil {
 			this.isAnon = isAnon;
 		}
 
-		public synchronized Socket getSocket() throws IOException {
-    		SSLSocket result = (SSLSocket)factory.createSocket();
+		public synchronized Socket getSocket(String host, int port) throws IOException {
+    		SSLSocket result = (SSLSocket)factory.createSocket(host, port);
     		result.setUseClientMode(true);
     		if (isAnon && !addCipherSuite(result, ANON_CIPHER_SUITE) && !warned) {
     			warned = true;

@@ -38,8 +38,13 @@ import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.Select;
+import org.teiid.query.sql.lang.SubqueryContainer;
+import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.MultipleElementSymbol;
+import org.teiid.query.sql.symbol.Reference;
+import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
+import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 
 
 /**
@@ -81,6 +86,19 @@ public class CommandBuilder {
             	command = (Command)command.clone();
                 command.acceptVisitor(new AliasGenerator(supportsGroupAlias));
             }
+            //the language bridge doesn't expect References
+            for (SubqueryContainer<?> container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(command)) {
+        			ExpressionMappingVisitor visitor = new ExpressionMappingVisitor(null) {
+        				@Override
+        				public Expression replaceExpression(Expression element) {
+        					if (element instanceof Reference) {
+        						return ((Reference)element).getExpression();
+        					}
+        					return element;
+        				}
+        			};
+        			DeepPostOrderNavigator.doVisit(command, visitor);
+    		}
 			return languageBridgeFactory.translate(command);
         } catch (TeiidException e) {
             throw new TeiidRuntimeException(e);

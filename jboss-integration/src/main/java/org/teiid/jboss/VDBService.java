@@ -466,6 +466,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		}
 		prop = model.getPropertyValue("cache-metadata"); //$NON-NLS-1$
 		if (prop != null) {
+			LogManager.logDetail(LogConstants.CTX_RUNTIME, model, "using metadata caching value", prop); //$NON-NLS-1$
 			cache = Boolean.valueOf(prop);	
 		}
 				

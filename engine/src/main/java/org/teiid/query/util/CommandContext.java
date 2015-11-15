@@ -30,10 +30,11 @@ import java.sql.Clob;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
 
@@ -194,6 +195,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		private TempTableStore sessionTempTableStore;
 		
 		private Set<InputStreamFactory> created = Collections.newSetFromMap(new WeakHashMap<InputStreamFactory, Boolean>());
+
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -207,7 +209,9 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     private TupleSourceCache tupleSourceCache;
     private VDBState vdbState = new VDBState();
     private Determinism[] determinismLevel = new Determinism[] {Determinism.DETERMINISTIC};
-
+    private AtomicBoolean cancelled = new AtomicBoolean();
+    private AtomicBoolean parentCancelled;
+    
     /**
      * Construct a new context.
      */
@@ -292,7 +296,12 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     	clone.setNonBlocking(this.nonBlocking);
     	clone.tupleSourceCache = this.tupleSourceCache;
     	clone.vdbState = this.vdbState;
-    	clone.determinismLevel = this.determinismLevel; 
+    	clone.determinismLevel = this.determinismLevel;
+    	if (this.parentCancelled != null) {
+    		clone.parentCancelled = this.parentCancelled;
+    	} else {
+    		clone.parentCancelled = this.cancelled;
+    	}
     	return clone;
     }
     
@@ -1115,6 +1124,25 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 
 	public void disableAutoCleanLobs() {
 		this.globalState.created = null;
+	}
+
+	public void requestCancelled() {
+		this.cancelled.set(true);
+	}
+	
+	/**
+	 * Check if this context or the parent has been cancelled.
+	 * If the parent has been, then we'll propagate.
+	 * @return
+	 */
+	public boolean isCancelled() {
+		if (this.cancelled.get()) {
+			return true;
+		}
+		if (this.parentCancelled != null && this.parentCancelled.get()) {
+			return true;
+		}
+		return false;
 	}
 	
 }

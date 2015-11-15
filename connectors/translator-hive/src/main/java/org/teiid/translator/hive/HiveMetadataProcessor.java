@@ -31,13 +31,22 @@ import java.util.List;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
-import org.teiid.translator.*;
+import org.teiid.translator.MetadataProcessor;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TranslatorProperty.PropertyType;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.JDBCMetdataProcessor;
 
 public class HiveMetadataProcessor extends JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 
 	private boolean trimColumnNames;
+	private boolean useDatabaseMetaData;
+	
+	public HiveMetadataProcessor() {
+		setImportKeys(false);
+		setQuoteString("`"); //$NON-NLS-1$
+	}
 
     @Override
 	public void process(MetadataFactory metadataFactory, Connection conn)	throws TranslatorException {
@@ -51,6 +60,10 @@ public class HiveMetadataProcessor extends JDBCMetdataProcessor implements Metad
     @Override
     public void getConnectorMetadata(Connection conn, MetadataFactory metadataFactory)
             throws SQLException {
+    	if (useDatabaseMetaData) {
+    		super.getConnectorMetadata(conn, metadataFactory);
+    		return;
+    	}
         List<String> tables = getTables(conn);
         for (String table:tables) {
             if (shouldExclude(table)) {
@@ -147,4 +160,14 @@ public class HiveMetadataProcessor extends JDBCMetdataProcessor implements Metad
     public boolean isTrimColumnNames() {
         return trimColumnNames;
     }	
+	
+	@TranslatorProperty(display="Use DatabaseMetaData", category=PropertyType.IMPORT, description= "Use DatabaseMetaData (typical JDBC logic) for importing")
+    public boolean isUseDatabaseMetaData() {
+		return useDatabaseMetaData;
+	}
+    
+    public void setUseDatabaseMetaData(boolean useDatabaseMetaData) {
+		this.useDatabaseMetaData = useDatabaseMetaData;
+	}
+    
 }

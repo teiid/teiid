@@ -1,4 +1,6 @@
 /*
+
+
  * JBoss, Home of Professional Open Source.
  * See the COPYRIGHT.txt file distributed with this work for information
  * regarding copyright ownership.  Some portions may be licensed
@@ -99,7 +101,7 @@ public class ObjectUpdateExecution implements UpdateExecution {
 //			}
 //		}
 		
-		ObjectUpdateVisitor visitor = createQueryVisitor();
+		ObjectVisitor visitor = this.createVisitor();
 		visitor.visitNode(command);
 		
 		// throw the 1st exeception in the list
@@ -124,7 +126,7 @@ public class ObjectUpdateExecution implements UpdateExecution {
 		return new int[] { updateCnt };
 	}
 
-	private void handleInsert(Insert insert, ObjectUpdateVisitor visitor) throws TranslatorException {
+	private void handleInsert(Insert insert, ObjectVisitor visitor) throws TranslatorException {
 		
 		ClassRegistry classRegistry = connection.getClassRegistry();
 		// get the class to instantiate instance
@@ -209,7 +211,7 @@ public class ObjectUpdateExecution implements UpdateExecution {
 
 	}
 
-	private void handleInsertChildObject(ObjectUpdateVisitor visitor, Object newEntity, Map<String, Method> writeMethods) throws TranslatorException {
+	private void handleInsertChildObject(ObjectVisitor visitor, Object newEntity, Map<String, Method> writeMethods) throws TranslatorException {
 
 		ForeignKey fk = visitor.getForeignKey();
 
@@ -292,7 +294,7 @@ public class ObjectUpdateExecution implements UpdateExecution {
 	}
 
 	// Private method to actually do a delete operation. 
-	private void handleDelete(Delete delete, ObjectSelectVisitor visitor) throws TranslatorException {
+	private void handleDelete(Delete delete, ObjectVisitor visitor) throws TranslatorException {
 
 		Column keyCol = null;
 		
@@ -408,7 +410,7 @@ public class ObjectUpdateExecution implements UpdateExecution {
 	}
 
 	// Private method to actually do an update operation. 
-	private void handleUpdate(Update update, ObjectSelectVisitor visitor) throws TranslatorException {
+	private void handleUpdate(Update update, ObjectVisitor visitor) throws TranslatorException {
 		ClassRegistry classRegistry  = connection.getClassRegistry();
 		NamedTable rootTable = visitor.getTable();
 		
@@ -578,8 +580,8 @@ public class ObjectUpdateExecution implements UpdateExecution {
 
 	}
 	
-	protected ObjectUpdateVisitor createQueryVisitor() {
-		return new ObjectUpdateVisitor();
-	}
+	protected ObjectVisitor createVisitor() {
+        return new ObjectVisitor();
+    }
 	
 }

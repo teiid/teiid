@@ -71,13 +71,6 @@ public interface InfinispanCacheWrapper<K,V> {
 	 */
 	public Collection<Object> getAll();
 
-	/**
-	 * Call to obtain all the objects from the cache
-	 * @param limit to the number objects to return
-	 * @return List of all the objects in the cache
-	 */
-
-	public Collection<Object> getFirst(int limit);
 
 	public void cleanUp();
 

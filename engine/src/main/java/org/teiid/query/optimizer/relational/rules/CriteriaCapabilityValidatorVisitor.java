@@ -54,6 +54,7 @@ import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor.EvaluationLevel;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
+import org.teiid.query.util.CommandContext;
 import org.teiid.translator.ExecutionFactory.Format;
 import org.teiid.translator.SourceSystemFunctions;
 
@@ -75,6 +76,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     private TeiidComponentException exception;
     private boolean valid = true;
     private boolean isJoin;
+	private boolean isSelectClause;
 
     /**
      * @param iterator
@@ -225,6 +227,28 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         } catch(TeiidComponentException e) {
             handleException(e);            
         }
+    }
+    
+    @Override
+    public void visit(OrderBy obj) {
+    	String collation = null;
+		try {
+			collation = (String) CapabilitiesUtil.getProperty(Capability.COLLATION_LOCALE, modelID, metadata, capFinder);
+		} catch(QueryMetadataException e) {
+            handleException(new TeiidComponentException(e));
+        } catch(TeiidComponentException e) {
+            handleException(e);            
+        }
+		CommandContext commandContext = CommandContext.getThreadLocalContext();
+		if (collation != null && commandContext != null && commandContext.getOptions().isRequireTeiidCollation() && !collation.equals(DataTypeManager.COLLATION_LOCALE)) {
+	        for (OrderByItem symbol : obj.getOrderByItems()) {
+	            if (symbol.getSymbol().getType() == DataTypeManager.DefaultDataClasses.STRING) {
+	    	    	//we require the collation to match
+	        		markInvalid(obj, "source is not using the same collation as Teiid"); //$NON-NLS-1$
+	            	break;
+	            }
+	        }
+		}
     }
     
     public void visit(CaseExpression obj) {
@@ -400,6 +424,14 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
             return;
         }
         
+        Character required = (Character) caps.getSourceProperty(Capability.REQUIRED_LIKE_ESCAPE);
+        if (required != null
+        		&& obj.getEscapeChar() != MatchCriteria.NULL_ESCAPE_CHAR
+            		&& !required.equals(obj.getEscapeChar())) {
+            markInvalid(obj, "Escape " + obj.getEscapeChar() + " is not supported by source. Escape " + required + " is required"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            return;
+        }
+        
         //check NOT
         if(obj.isNegated() && ! this.caps.supportsCapability(Capability.CRITERIA_NOT)) {
         	markInvalid(obj, "Negation is not supported by source"); //$NON-NLS-1$
@@ -521,7 +553,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     @Override
     public void visit(ScalarSubquery obj) {
     	try {    
-            if(!this.caps.supportsCapability(Capability.QUERY_SUBQUERIES_SCALAR) 
+    		if(!this.caps.supportsCapability(Capability.QUERY_SUBQUERIES_SCALAR) 
             		|| validateSubqueryPushdown(obj, modelID, metadata, capFinder, analysisRecord) == null) {
             	if (obj.getCommand().getCorrelatedReferences() == null && !FunctionCollectorVisitor.isNonDeterministic(obj.getCommand())) {
             		obj.setShouldEvaluate(true);
@@ -529,6 +561,8 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
             		markInvalid(obj.getCommand(), !this.caps.supportsCapability(Capability.QUERY_SUBQUERIES_SCALAR)?
             				"Correlated ScalarSubquery is not supported":"Subquery cannot be pushed down"); //$NON-NLS-1$ //$NON-NLS-2$
             	}
+            } else if (this.isSelectClause && !this.caps.supportsCapability(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION)) {
+        		markInvalid(obj.getCommand(), "Correlated ScalarSubquery projection is not supported"); //$NON-NLS-1$
             }
         } catch(QueryMetadataException e) {
             handleException(new TeiidComponentException(e));
@@ -742,10 +776,10 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     }
 
     public static boolean canPushLanguageObject(LanguageObject obj, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord) throws QueryMetadataException, TeiidComponentException {
-    	return canPushLanguageObject(obj, modelID, metadata, capFinder, analysisRecord, false);
+    	return canPushLanguageObject(obj, modelID, metadata, capFinder, analysisRecord, false, false);
     }
     
-    public static boolean canPushLanguageObject(LanguageObject obj, Object modelID, final QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, boolean isJoin) throws QueryMetadataException, TeiidComponentException {
+    public static boolean canPushLanguageObject(LanguageObject obj, Object modelID, final QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, boolean isJoin, boolean isSelectClause) throws QueryMetadataException, TeiidComponentException {
         if(obj == null) {
             return true;
         }
@@ -765,6 +799,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         CriteriaCapabilityValidatorVisitor visitor = new CriteriaCapabilityValidatorVisitor(modelID, metadata, capFinder, caps);
         visitor.analysisRecord = analysisRecord;
         visitor.isJoin = isJoin;
+        visitor.isSelectClause = isSelectClause;
         //we use an array to represent multiple comparision attributes,
         //but we don't want that to inhibit pushdown as we'll account for that later
         //in criteria processing

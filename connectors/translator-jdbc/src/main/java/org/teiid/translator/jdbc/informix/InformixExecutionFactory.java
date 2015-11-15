@@ -27,20 +27,42 @@ package org.teiid.translator.jdbc.informix;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.jdbc.ConvertModifier;
+import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 
 
 @Translator(name="informix", description="A translator for Informix Database")
 public class InformixExecutionFactory extends JDBCExecutionFactory {
 
+	private ConvertModifier convertModifier;
+
 	@Override
 	public void start() throws TranslatorException {
 		super.start();
-    	registerFunctionModifier(SourceSystemFunctions.CONVERT, new ConvertModifier());
+		
+        convertModifier = new ConvertModifier();
+        convertModifier.addTypeMapping("boolean", FunctionModifier.BOOLEAN); //$NON-NLS-1$
+        convertModifier.addTypeMapping("smallint", FunctionModifier.BYTE, FunctionModifier.SHORT); //$NON-NLS-1$
+        convertModifier.addTypeMapping("integer", FunctionModifier.INTEGER); //$NON-NLS-1$
+        convertModifier.addTypeMapping("int8", FunctionModifier.LONG); //$NON-NLS-1$
+        convertModifier.addTypeMapping("decimal(32,0)", FunctionModifier.BIGINTEGER); //$NON-NLS-1$
+        convertModifier.addTypeMapping("decimal", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
+        convertModifier.addTypeMapping("smallfloat", FunctionModifier.FLOAT); //$NON-NLS-1$
+        convertModifier.addTypeMapping("float", FunctionModifier.DOUBLE); //$NON-NLS-1$
+        convertModifier.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("datetime", FunctionModifier.TIME, FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("varchar(255)", FunctionModifier.STRING); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("varchar(1)", FunctionModifier.CHAR); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("byte", FunctionModifier.VARBINARY); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("blob", FunctionModifier.BLOB); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("clob", FunctionModifier.CLOB); //$NON-NLS-1$
+
+    	convertModifier.setWideningNumericImplicit(true);
+    	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
     }
 
 	@Override
@@ -51,4 +73,20 @@ public class InformixExecutionFactory extends JDBCExecutionFactory {
         supportedFunctons.add("CONVERT"); //$NON-NLS-1$
         return supportedFunctons;
     }
+	
+	@Override
+	public boolean supportsConvert(int fromType, int toType) {
+		if (!super.supportsConvert(fromType, toType)) {
+    		return false;
+    	}
+    	if (convertModifier.hasTypeMapping(toType)) {
+    		return true;
+    	}
+    	return false;
+	}
+	
+	@Override
+	public boolean hasTimeType() {
+		return false;
+	}
 }

@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -342,8 +343,25 @@ public final class RuleMergeCriteria implements OptimizerRule {
             	joinCriteria.add(new CompareCriteria((Expression)plannedResult.rightExpressions.get(i), CompareCriteria.EQ, (Expression)plannedResult.leftExpressions.get(i)));
             }
             semiJoin.setProperty(NodeConstants.Info.JOIN_CRITERIA, joinCriteria);
+            //nested subqueries are possibly being promoted, so they need their references updated
+            List<SymbolMap> refMaps = semiJoin.getAllReferences();
+            SymbolMap parentRefs = plannedResult.query.getCorrelatedReferences();
+            for (SymbolMap refs : refMaps) {
+            	for (Map.Entry<ElementSymbol, Expression> ref : refs.asUpdatableMap().entrySet()) {
+    	            Expression expr = ref.getValue();
+    	            if (expr instanceof ElementSymbol) {
+	    	            Expression convertedExpr = parentRefs.getMappedExpression((ElementSymbol)expr);
+	    	            if (convertedExpr != null) {
+	    	            	ref.setValue(convertedExpr);
+	    	            }
+    	            }
+    	            semiJoin.getGroups().addAll(GroupsUsedByElementsVisitor.getGroups(ref.getValue()));
+    	        }
+            }
             semiJoin.setProperty(NodeConstants.Info.LEFT_EXPRESSIONS, plannedResult.leftExpressions);
+            semiJoin.getGroups().addAll(GroupsUsedByElementsVisitor.getGroups(plannedResult.leftExpressions));
             semiJoin.setProperty(NodeConstants.Info.RIGHT_EXPRESSIONS, plannedResult.rightExpressions);
+            semiJoin.getGroups().addAll(GroupsUsedByElementsVisitor.getGroups(plannedResult.rightExpressions));
             semiJoin.setProperty(NodeConstants.Info.SORT_RIGHT, SortOption.ALREADY_SORTED);
             semiJoin.setProperty(NodeConstants.Info.OUTPUT_COLS, root.getProperty(NodeConstants.Info.OUTPUT_COLS));
             

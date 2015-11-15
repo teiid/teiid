@@ -23,16 +23,14 @@
 package org.teiid.net.socket;
 
 import java.io.IOException;
-import java.net.SocketAddress;
 
 import org.teiid.net.CommunicationException;
-
+import org.teiid.net.HostInfo;
 
 public interface ObjectChannelFactory {
 
-	ObjectChannel createObjectChannel(SocketAddress address, boolean ssl) throws IOException,
-			CommunicationException;
-	
 	int getSoTimeout();
+
+	ObjectChannel createObjectChannel(HostInfo info) throws CommunicationException, IOException;
 	
 }

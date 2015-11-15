@@ -70,7 +70,7 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
 	public void execute() throws TranslatorException {
 		String URI = this.visitor.buildURL();
 		Schema schema = visitor.getProcedure().getParent();
-		EdmDataServices edm = new TeiidEdmMetadata(schema.getName(), ODataEntitySchemaBuilder.buildMetadata( schema));
+		EdmDataServices edm = new TeiidEdmMetadata(schema.getName(), ODataEntitySchemaBuilder.buildMetadata(schema));
 		if (this.visitor.hasCollectionReturn()) {
 			if (this.visitor.isReturnComplexType()) {
 				// complex return

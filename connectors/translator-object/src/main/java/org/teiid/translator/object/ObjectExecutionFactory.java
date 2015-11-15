@@ -34,11 +34,9 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.ResultSetExecution;
-import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.object.metadata.JavaBeanMetadataProcessor;
-import org.teiid.translator.object.simpleMap.SearchByKey;
 
 
 /**
@@ -48,12 +46,11 @@ import org.teiid.translator.object.simpleMap.SearchByKey;
  * @author vhalbert
  * 
  */
-@Translator(name = "map-cache", description = "Translator for managing a cache of Objects")
-public class ObjectExecutionFactory extends
+public abstract class ObjectExecutionFactory extends
 		ExecutionFactory<ConnectionFactory, ObjectConnection> {
 
 	public static final int MAX_SET_SIZE = 10000;
-	private SearchType searchType=new SearchByKey();
+	private SearchType searchType=null;
 	
 	public ObjectExecutionFactory() {
 		setSourceRequiredForMetadata(false);
@@ -66,6 +63,17 @@ public class ObjectExecutionFactory extends
 		setSupportsFullOuterJoins(false);
 		setSupportsOuterJoins(false);
 		
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.ExecutionFactory#start()
+	 */
+	@Override
+	public void start() throws TranslatorException {
+		if (searchType == null) throw new TranslatorException("Programming Error: Search Type was not set");
+		super.start();
 	}
 
 	@Override
@@ -81,7 +89,6 @@ public class ObjectExecutionFactory extends
 			ObjectConnection connection) throws TranslatorException {
     	return new ObjectUpdateExecution(command, connection, executionContext, this);
 	}
-    
 
 	@Override
     public boolean supportsCompareCriteriaEquals() {
@@ -111,7 +118,7 @@ public class ObjectExecutionFactory extends
 	    return new JavaBeanMetadataProcessor();
 	}
 	
-	public List<Object> search(ObjectSelectVisitor visitor, ObjectConnection connection, ExecutionContext executionContext)
+	public List<Object> search(ObjectVisitor visitor, ObjectConnection connection, ExecutionContext executionContext)
 			throws TranslatorException {
 		return searchType.performSearch(visitor,connection);
 	}
@@ -139,5 +146,7 @@ public class ObjectExecutionFactory extends
 	public boolean supportsRowLimit() {
 		return true;
 	}
+
+
 
 }
