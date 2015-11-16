@@ -23,15 +23,21 @@
 package org.teiid.translator.swagger;
 
 import static org.teiid.translator.swagger.SwaggerPlugin.Util;
-
 import io.swagger.models.Swagger;
 import io.swagger.parser.SwaggerParser;
 
+import java.lang.reflect.Array;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import javax.resource.cci.ConnectionFactory;
 
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.Transform;
+import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.language.Call;
 import org.teiid.metadata.MetadataFactory;
@@ -164,6 +170,56 @@ public class SwaggerExecutionFactory extends ExecutionFactory<ConnectionFactory,
     
     protected String getAction(Action action) {
         return action.getAction();
+    }
+    
+    protected Object convertTeiidRuntimeType(Object value, Class<?> expectedType) throws TranslatorException {
+        
+        if (value == null) {
+            return null;
+        }
+        
+        if (expectedType.isAssignableFrom(value.getClass())) {
+            return value;
+        } else {
+            
+            if (expectedType.isAssignableFrom(java.sql.Time.class) && value instanceof Long) {
+                return new java.sql.Time((Long)value);
+            } else if (expectedType.isAssignableFrom(java.sql.Time.class) && value instanceof String) {
+                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss"); //$NON-NLS-1$
+                Date date = null;
+                try {
+                    date = format.parse((String)value);
+                } catch (ParseException e) {
+                    throw new TranslatorException(e);
+                }
+                return new java.sql.Time(date.getTime());
+            } else if (expectedType.isAssignableFrom(java.sql.Date.class) && value instanceof Long) {
+                return new java.sql.Date((Long)value);
+            } else if (expectedType.isAssignableFrom(java.sql.Timestamp.class) && value instanceof Long) {
+                return new java.sql.Timestamp((Long)value);
+            } else if (expectedType.isAssignableFrom(java.util.Date.class) && value instanceof Long) {
+                return new java.util.Date((Long)value);
+            } else if (expectedType.isArray() && value instanceof List) {
+                List<?> values = (List<?>)value;
+                Class<?> expectedArrayComponentType = expectedType.getComponentType();
+                Object array = Array.newInstance(expectedArrayComponentType, values.size());                
+                for (int i = 0; i < values.size(); i++) {
+                    Object arrayItem = convertTeiidRuntimeType(values.get(i), expectedArrayComponentType);
+                    Array.set(array, i, arrayItem);
+                }               
+                return array;
+            }
+
+            Transform transform = DataTypeManager.getTransform(value.getClass(), expectedType);
+            if (transform != null) {
+                try {
+                    value = transform.transform(value, expectedType);
+                } catch (TransformationException e) {
+                    throw new TranslatorException(e);
+                }
+            }
+        }
+        return value;
     }
 
 }

@@ -207,6 +207,7 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
         this.useResponseContext = useResponseContext;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void execute() throws TranslatorException {
         
@@ -333,7 +334,13 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
             }
             
             if(!valid) {
-                throw new TranslatorException(SwaggerPlugin.Event.TEIID28006, SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28006, returnValue.getContentType(), list));
+                Object respValue;
+                try {
+                    respValue = this.parser.toXmlString(this.returnValue.getInputStream());
+                } catch (IOException e) {
+                    throw new TranslatorException(e);
+                }
+                throw new TranslatorException(SwaggerPlugin.Event.TEIID28006, SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28006, returnValue.getContentType(), list, respValue));
             }
         }
         
@@ -362,7 +369,7 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
             }
         } else {
             // if no Accept define in headers, force return json for deserializing
-            if(produces.contains(jsonType)) {
+            if(produces.contains(jsonType) && method.equals(Action.GET)) {
                 List<String> list = new ArrayList<String>(1);
                 list.add(jsonType);
                 httpHeaders.put(key, list);
@@ -392,6 +399,7 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
         return payload;
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private void parseHeader(Map<String, List<String>> httpHeaders, Clob headers) throws ParseException, TranslatorException, IOException, SQLException {
         SimpleContentHandler sch = new SimpleContentHandler();
         JSONParser parser = new JSONParser();
@@ -494,7 +502,7 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
             if (!columnParent.equals(record)) {
                 colName = getName(columnParent)+"/"+column.getName();
             }
-            Object value = SwaggerTypeManager.convertTeiidRuntimeType(values.get(colName), expectedType[i]);                    
+            Object value = this.executionFactory.convertTeiidRuntimeType(values.get(colName), expectedType[i]);                    
             results.add(value);
         }
         return results;

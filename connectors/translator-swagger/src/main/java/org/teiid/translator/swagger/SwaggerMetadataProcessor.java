@@ -55,7 +55,6 @@ import io.swagger.models.Operation;
 import io.swagger.models.Path;
 import io.swagger.models.Response;
 import io.swagger.models.Swagger;
-import io.swagger.models.Tag;
 import io.swagger.models.auth.SecuritySchemeDefinition;
 import io.swagger.models.parameters.Parameter;
 import io.swagger.models.parameters.PathParameter;
@@ -127,7 +126,6 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
     private String baseUrl = "/"; //$NON-NLS-1$
     private Map<String, SecuritySchemeDefinition> securityDefinitions;
     private Map<String, Model> definitions;
-    private List<Tag> tags;
     
     protected void setExecutionfactory(SwaggerExecutionFactory ef) {
         this.ef = ef;
@@ -139,7 +137,6 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
         Swagger swagger = getSchema(connection);
         baseUrl = swagger.getBasePath();
         if(swagger.getHost() != null && !swagger.getHost().equals("")) { //$NON-NLS-1$
-            //TODO-- use other scheme
             String scheme = "http"; //$NON-NLS-1$
             if(swagger.getSchemes().size() > 0) {
                 scheme = swagger.getSchemes().get(0).toValue();
@@ -149,7 +146,7 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
         
         this.securityDefinitions = swagger.getSecurityDefinitions();
         this.definitions = swagger.getDefinitions();
-        this.tags = swagger.getTags();
+//        this.tags = swagger.getTags();
         
         for(Entry<String, Path> entry : swagger.getPaths().entrySet()) {
             addProcedure(mf, entry.getKey(), entry.getValue());

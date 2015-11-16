@@ -23,14 +23,8 @@ package org.teiid.translator.swagger;
 
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.typeFormat;
 
-import java.lang.reflect.Array;
 import java.util.HashMap;
-import java.util.List;
-
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.Transform;
-import org.teiid.core.types.TransformationException;
-import org.teiid.translator.TranslatorException;
 
 public class SwaggerTypeManager {
     
@@ -68,8 +62,8 @@ public class SwaggerTypeManager {
     private static final String PASSWORD_ = typeFormat("string", "password");
     
     // this no swagger definition
-    private static final String BLOB = typeFormat("array", "");
-    private static final String BLOB_ = typeFormat("object", "");
+    private static final String OBJECT = typeFormat("array", "");
+//    private static final String OBJECT_ = typeFormat("object", "");
     
     private static HashMap<String, String> swaggerTypes = new HashMap<String, String>();    
     
@@ -97,8 +91,8 @@ public class SwaggerTypeManager {
         swaggerTypes.put(PASSWORD, DataTypeManager.DefaultDataTypes.STRING);
         swaggerTypes.put(PASSWORD_, DataTypeManager.DefaultDataTypes.STRING);
         
-        swaggerTypes.put(BLOB, DataTypeManager.DefaultDataTypes.OBJECT);
-        swaggerTypes.put(BLOB_, DataTypeManager.DefaultDataTypes.OBJECT);
+        swaggerTypes.put(OBJECT, DataTypeManager.DefaultDataTypes.OBJECT);
+//        swaggerTypes.put(OBJECT_, DataTypeManager.DefaultDataTypes.OBJECT);
         
     }
     
@@ -120,42 +114,5 @@ public class SwaggerTypeManager {
         }
         return returnType;
     }
-
-    public static Object convertTeiidRuntimeType(Object value, Class<?> expectedType) throws TranslatorException {
-        if (value == null) {
-            return null;
-        }
-        
-        if (expectedType.isArray() && value instanceof List) {
-            List<?> values = (List<?>)value;
-            Class<?> expectedArrayComponentType = expectedType.getComponentType();
-            Object array = Array.newInstance(expectedArrayComponentType, values.size());                
-            for (int i = 0; i < values.size(); i++) {
-                Object arrayItem = convertTeiidRuntimeType(values.get(i), expectedArrayComponentType);
-                Array.set(array, i, arrayItem);
-            }               
-            return array;
-        }
-        
-        if (expectedType.isAssignableFrom(value.getClass())) {
-            return value;
-        } else {
-            
-            if (value instanceof String) {
-                return (String)value;
-            }
-
-            Transform transform = DataTypeManager.getTransform(value.getClass(), expectedType);
-            if (transform != null) {
-                try {
-                    value = transform.transform(value, expectedType);
-                } catch (TransformationException e) {
-                    throw new TranslatorException(e);
-                }
-            }
-        }
-        return value;
-    }
     
-
 }
