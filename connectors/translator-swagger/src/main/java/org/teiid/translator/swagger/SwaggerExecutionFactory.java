@@ -27,6 +27,8 @@ import io.swagger.models.Swagger;
 import io.swagger.parser.SwaggerParser;
 
 import java.lang.reflect.Array;
+import java.sql.Timestamp;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
@@ -40,6 +42,8 @@ import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.language.Call;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
@@ -164,23 +168,14 @@ public class SwaggerExecutionFactory extends ExecutionFactory<ConnectionFactory,
             return value;
         } else {
             
-            if (expectedType.isAssignableFrom(java.sql.Time.class) && value instanceof Long) {
-                return new java.sql.Time((Long)value);
-            } else if (expectedType.isAssignableFrom(java.sql.Time.class) && value instanceof String) {
-                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss"); //$NON-NLS-1$
-                Date date = null;
-                try {
-                    date = format.parse((String)value);
-                } catch (ParseException e) {
-                    throw new TranslatorException(e);
-                }
-                return new java.sql.Time(date.getTime());
-            } else if (expectedType.isAssignableFrom(java.sql.Date.class) && value instanceof Long) {
-                return new java.sql.Date((Long)value);
-            } else if (expectedType.isAssignableFrom(java.sql.Timestamp.class) && value instanceof Long) {
-                return new java.sql.Timestamp((Long)value);
+            if(expectedType.isAssignableFrom(Timestamp.class) && value instanceof Long) {
+                return new Timestamp((Long)value);
+            } else if (expectedType.isAssignableFrom(java.sql.Timestamp.class) && value instanceof String){
+                return formTimestamp((String)value);
             } else if (expectedType.isAssignableFrom(java.util.Date.class) && value instanceof Long) {
                 return new java.util.Date((Long)value);
+            }  else if (expectedType.isAssignableFrom(java.util.Date.class) && value instanceof String) {
+                return formDate((String)value);
             } else if (expectedType.isArray() && value instanceof List) {
                 List<?> values = (List<?>)value;
                 Class<?> expectedArrayComponentType = expectedType.getComponentType();
@@ -202,6 +197,33 @@ public class SwaggerExecutionFactory extends ExecutionFactory<ConnectionFactory,
             }
         }
         return value;
+    }
+
+    private Object formDate(String value) {
+        String [] patterns = new String[]{"yyyy-MM-dd", "HH:mm:ss", "yyyy-MM-dd HH:mm:ss.SSS"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        for(String pattern : patterns){
+            try {
+                DateFormat formatter = new SimpleDateFormat(pattern);
+                return formatter.parse(value);
+            } catch (ParseException e) {
+                LogManager.logDetail(LogConstants.CTX_TRANSPORT, SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28012, pattern, e.getMessage()));
+            }
+        }
+        return null;
+    }
+
+    private Timestamp formTimestamp(String value) {
+        String [] patterns = new String[]{"yyyy-MM-dd", "HH:mm:ss", "yyyy-MM-dd HH:mm:ss.SSS"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        for(String pattern : patterns){
+            try {
+                DateFormat formatter = new SimpleDateFormat(pattern);
+                Date date = formatter.parse(value);
+                return new Timestamp(date.getTime());
+            } catch (ParseException e) {
+                LogManager.logDetail(LogConstants.CTX_TRANSPORT, SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28011, pattern, e.getMessage()));
+            }
+        }
+        return null;
     }
 
 }

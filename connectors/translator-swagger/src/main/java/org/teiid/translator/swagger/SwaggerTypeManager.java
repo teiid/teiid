@@ -86,8 +86,8 @@ public class SwaggerTypeManager {
         swaggerTypes.put(BOOLEAN_, DataTypeManager.DefaultDataTypes.BOOLEAN);
         swaggerTypes.put(DATE, DataTypeManager.DefaultDataTypes.DATE);
         swaggerTypes.put(DATE_, DataTypeManager.DefaultDataTypes.DATE);
-        swaggerTypes.put(DATETIME, DataTypeManager.DefaultDataTypes.TIME);
-        swaggerTypes.put(DATETIME_, DataTypeManager.DefaultDataTypes.TIME);
+        swaggerTypes.put(DATETIME, DataTypeManager.DefaultDataTypes.TIMESTAMP);
+        swaggerTypes.put(DATETIME_, DataTypeManager.DefaultDataTypes.TIMESTAMP);
         swaggerTypes.put(PASSWORD, DataTypeManager.DefaultDataTypes.STRING);
         swaggerTypes.put(PASSWORD_, DataTypeManager.DefaultDataTypes.STRING);
         

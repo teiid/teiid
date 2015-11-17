@@ -182,10 +182,6 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
             Map<String, Response> respMap = operation.getResponses();
             Response resp = respMap.get("200");
             
-            if(procName.equals("testTimeTypes")) {
-                System.out.println(key);
-            }
-            
             if(isRef(resp)){
                 Model model = getReferenceModel(resp.getSchema());
                 String returnType = resp.getSchema().getType();

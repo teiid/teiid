@@ -23,6 +23,10 @@ public class SwaggerPlugin {
         TEIID28008,
         TEIID28009,
         TEIID28010,
+        TEIID28011,
+        TEIID28012,
+        TEIID28013,
+        TEIID28014,
     }   
 
 }

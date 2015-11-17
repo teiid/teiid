@@ -26,7 +26,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.isPathParam;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getProcuces;
-import io.swagger.models.properties.DateTimeProperty;
 
 import java.io.File;
 import java.util.HashMap;
@@ -83,7 +82,7 @@ public class TestSwaggerMetadataProcessor {
             procSet.add(p.getName());
         }
         
-        assertEquals(27, procSet.size());
+        assertEquals(28, procSet.size());
         
         assertTrue(procSet.contains("addCustomer"));
         assertTrue(procSet.contains("addOneCustomer"));
@@ -283,14 +282,34 @@ public class TestSwaggerMetadataProcessor {
                 assertEquals(java.lang.Boolean.class, map.get("types/g"));
                 assertEquals(java.lang.Object.class, map.get("successlist"));
                 assertEquals(java.lang.Object.class, map.get("successset"));
-                assertEquals(java.sql.Time.class, map.get("types/l"));
+                assertEquals(java.sql.Timestamp.class, map.get("types/l"));
             }
         }
     }
     
     @Test
-    public void testDateTime(){
-        DateTimeProperty dateTime = new DateTimeProperty();
+    public void testDateTime() throws TranslatorException{
+        
+        SwaggerExecutionFactory ef = new SwaggerExecutionFactory();
+        
+        Properties props = new Properties();
+
+        WSConnection mockConnection = Mockito.mock(WSConnection.class);
+        Mockito.stub(mockConnection.getSwagger()).toReturn(new File(UnitTestUtil.getTestDataPath()+"/swagger.json").getAbsolutePath());
+        
+        MetadataFactory mf = new MetadataFactory("vdb", 1, "x", SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
+        ef.getMetadata(mf, mockConnection);
+        
+        for(Procedure p : mf.getSchema().getProcedures().values()) {
+            if(p.getName().equals("testTimeTypes")) {
+                List<Column> columns = p.getResultSet().getColumns();
+                for (int i = 0; i < columns.size(); i++){
+                    Column column = columns.get(i);
+                    Class<?> type = column.getJavaType();
+                    assertEquals(java.sql.Timestamp.class, type);
+                }
+            }
+        }
     }
     
     @Ignore
@@ -335,6 +354,5 @@ public class TestSwaggerMetadataProcessor {
         }
       
     }
-    
     
 }
