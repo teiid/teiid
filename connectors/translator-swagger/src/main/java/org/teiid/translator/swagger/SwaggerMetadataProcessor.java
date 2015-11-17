@@ -46,7 +46,6 @@ import org.teiid.translator.TypeFacility;
 import org.teiid.translator.WSConnection;
 import org.teiid.translator.swagger.SwaggerExecutionFactory.Action;
 import org.teiid.translator.swagger.SwaggerExecutionFactory.ResultsType;
-import org.teiid.translator.swagger.SwaggerExecutionFactory.SecurityType;
 import org.teiid.translator.swagger.SwaggerProcedureExecution.Pair;
 
 import io.swagger.models.HttpMethod;
@@ -55,7 +54,6 @@ import io.swagger.models.Operation;
 import io.swagger.models.Path;
 import io.swagger.models.Response;
 import io.swagger.models.Swagger;
-import io.swagger.models.auth.SecuritySchemeDefinition;
 import io.swagger.models.parameters.Parameter;
 import io.swagger.models.parameters.PathParameter;
 import io.swagger.models.parameters.QueryParameter;
@@ -107,7 +105,6 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
     private static final String COMMA_SEPARATOR = ","; //$NON-NLS-1$
     private static final String PROCEDURE_PRODUCES = "produces"; //$NON-NLS-1$
     private static final String PROCEDURE_CONSUMES = "consumes"; //$NON-NLS-1$
-    private static final String PROCEDURE_SECURITY = "security"; //$NON-NLS-1$
     private static final String PROCEDURE_RETURN = "returnType"; //$NON-NLS-1$
     private static final String PARAMETER_SEPARATOR = "&"; //$NON-NLS-1$
     private static final String PARAMETER_SEPARATOR_FIRST = "?"; //$NON-NLS-1$
@@ -124,7 +121,7 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
     private SwaggerExecutionFactory ef;
     private String httpHost = "http://localhost:8080"; //$NON-NLS-1$
     private String baseUrl = "/"; //$NON-NLS-1$
-    private Map<String, SecuritySchemeDefinition> securityDefinitions;
+//    private Map<String, SecuritySchemeDefinition> securityDefinitions;
     private Map<String, Model> definitions;
     
     protected void setExecutionfactory(SwaggerExecutionFactory ef) {
@@ -144,7 +141,7 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
             httpHost = scheme + "://" + swagger.getHost();//$NON-NLS-1$
         }
         
-        this.securityDefinitions = swagger.getSecurityDefinitions();
+//        this.securityDefinitions = swagger.getSecurityDefinitions();
         this.definitions = swagger.getDefinitions();
 //        this.tags = swagger.getTags();
         
@@ -164,7 +161,6 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
             String produces = getProduceTypes(operation);
             String consumes = getConsumeTypes(operation);
             String annotation = getOperationSummary(operation);
-            String securityType = getSecurityType(operation);
             
             Procedure procedure = mf.addProcedure(procName);
             procedure.setVirtual(false);
@@ -175,9 +171,6 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
             procedure.setProperty(HTTP_HOST, httpHost); 
             procedure.setProperty(PROCEDURE_PRODUCES, produces);
             procedure.setProperty(PROCEDURE_CONSUMES, consumes);
-            if(null != securityType) {
-                procedure.setProperty(PROCEDURE_SECURITY, securityType);
-            }
             procedure.setAnnotation(annotation);
             
             addProcedureParameter(mf, procedure, operation);
@@ -188,6 +181,10 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
             
             Map<String, Response> respMap = operation.getResponses();
             Response resp = respMap.get("200");
+            
+            if(procName.equals("testTimeTypes")) {
+                System.out.println(key);
+            }
             
             if(isRef(resp)){
                 Model model = getReferenceModel(resp.getSchema());
@@ -210,13 +207,13 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
     }
 
     private Model getReferenceModel(Property schema) {
-        if(schema.getType().equals("ref")) {
+        if(schema.getType().equals("ref")) { //$NON-NLS-1$
             RefProperty ref = (RefProperty) schema;
             return definitions.get(ref.getSimpleRef());
-        } else if(schema.getType().equals("array")) {
+        } else if(schema.getType().equals("array")) { //$NON-NLS-1$
             ArrayProperty arrSchema = (ArrayProperty) schema;
             Property subSchema = arrSchema.getItems();
-            if(subSchema.getType().equals("ref")){
+            if(subSchema.getType().equals("ref")){ //$NON-NLS-1$
                 RefProperty ref = (RefProperty) subSchema;
                 return definitions.get(ref.getSimpleRef());
             }
@@ -229,28 +226,17 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
         if(resp != null) {
             Property schema = resp.getSchema();
             String type = schema.getType();
-            if(type.equals("ref")) {
+            if(type.equals("ref")) { //$NON-NLS-1$
                 return true ;
-            } else if(type.equals("array")) {
+            } else if(type.equals("array")) { //$NON-NLS-1$
                 ArrayProperty arrProp = (ArrayProperty) schema;
                 Property subSchema = arrProp.getItems();
-                if(subSchema.getType().equals("ref")){
+                if(subSchema.getType().equals("ref")){ //$NON-NLS-1$
                     return true;
                 }
             }
         }
         return false;
-    }
-
-    private String getSecurityType(Operation operation) {
-        String type = null;
-        if(null != operation.getSecurity()){
-            Map<String, List<String>> map = operation.getSecurity().get(0);
-            String key = map.keySet().iterator().next();
-            SecuritySchemeDefinition def = securityDefinitions.get(key);
-            type = def.getType();
-        }
-        return type;
     }
 
     private void addProcedureParameter(MetadataFactory mf, Procedure procedure, Operation operation) {
@@ -340,17 +326,6 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
     
     static Action getHttpAction(Procedure procedure) {
         return Action.valueOf(procedure.getProperty(HTTP_ACTION, false));
-    }
-    
-    static SecurityType getSecurityType(Procedure procedure){
-        String type = procedure.getProperty(PROCEDURE_SECURITY, false);
-        if(type != null && type.equals(SecurityType.BASIC.getType())) {
-            return SecurityType.BASIC;
-        } else if(type != null && type.equals(SecurityType.OAUTH2.getType())){
-            return SecurityType.OAUTH2;
-        } else {
-            return SecurityType.NO;
-        }
     }
     
     static ResultsType getReturnType(Procedure procedure) {

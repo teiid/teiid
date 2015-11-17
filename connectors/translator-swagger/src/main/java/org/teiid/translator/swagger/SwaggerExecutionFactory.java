@@ -73,24 +73,6 @@ public class SwaggerExecutionFactory extends ExecutionFactory<ConnectionFactory,
 		}
 	}
 	
-	// this match to swagger models's SecuritySchemeDefinition implementation
-	public enum SecurityType {
-	    
-	    NO(Util.getString("security_type_null")),
-	    BASIC(Util.getString("security_type_basic")),
-	    OAUTH2(Util.getString("security_type_oauth2"));
-	    
-	    private String type;
-	    
-	    SecurityType(String type) {
-	        this.type = type;
-	    }
-	    
-	    public String getType() {
-	        return type;
-	    }
-	}
-	
 	public enum ResultsType {
 	    
 	    REF(Util.getString("json_return_type_ref")),

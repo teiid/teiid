@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.isPathParam;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getProcuces;
+import io.swagger.models.properties.DateTimeProperty;
 
 import java.io.File;
 import java.util.HashMap;
@@ -283,10 +284,13 @@ public class TestSwaggerMetadataProcessor {
                 assertEquals(java.lang.Object.class, map.get("successlist"));
                 assertEquals(java.lang.Object.class, map.get("successset"));
                 assertEquals(java.sql.Time.class, map.get("types/l"));
-  
             }
         }
- 
+    }
+    
+    @Test
+    public void testDateTime(){
+        DateTimeProperty dateTime = new DateTimeProperty();
     }
     
     @Ignore

@@ -23,7 +23,6 @@ package org.teiid.translator.swagger;
 
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getPathSeparator;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getHttpAction;
-import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getSecurityType;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getReturnType;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getHttpPath;
 import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getHttpHost;
@@ -37,7 +36,6 @@ import static org.teiid.translator.swagger.SwaggerMetadataProcessor.getConsumes;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
-import java.io.UnsupportedEncodingException;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.SQLException;
@@ -50,7 +48,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.activation.DataSource;
-import javax.xml.bind.DatatypeConverter;
 import javax.xml.ws.Dispatch;
 import javax.xml.ws.Service.Mode;
 import javax.xml.ws.handler.MessageContext;
@@ -78,7 +75,6 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.WSConnection;
 import org.teiid.translator.swagger.SwaggerExecutionFactory.Action;
 import org.teiid.translator.swagger.SwaggerExecutionFactory.ResultsType;
-import org.teiid.translator.swagger.SwaggerExecutionFactory.SecurityType;
 
 public class SwaggerProcedureExecution implements ProcedureExecution{
     
@@ -105,51 +101,6 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
         Object deserialize(InputStream input) throws TranslatorException;
         String toXmlString(InputStream input) throws TranslatorException;
         String toJsonString(InputStream input) throws TranslatorException;  
-    }
-    
-    static interface Authentication {
-        void applyToParams(Map<String, List<String>> headerParams);
-    }
-    
-    static class HttpBasicAuth implements Authentication {
-        
-        private String username;
-        private String password;
-
-        public HttpBasicAuth(String username, String password) {
-            this.username = username;
-            this.password = password;
-        }
-
-        @Override
-        public void applyToParams(Map<String, List<String>> headerParams) {
-            String str = (username == null ? "" : username) + ":" + (password == null ? "" : password); //$NON-NLS-1$ //$NON-NLS-2$
-            try {
-                List<String> list = new ArrayList<String>(1);
-                list.add("Basic " + DatatypeConverter.printBase64Binary(str.getBytes("UTF-8"))); //$NON-NLS-1$ //$NON-NLS-2$
-                headerParams.put("Authorization", list); //$NON-NLS-1$ 
-            } catch (UnsupportedEncodingException e) {
-              throw new RuntimeException(e);
-            }
-        }   
-    }
-    
-    static class OAuth2 implements Authentication {
-        
-        private String accessToken;
-
-        public OAuth2(String accessToken) {
-            this.accessToken = accessToken;
-        }
-
-        @Override
-        public void applyToParams(Map<String, List<String>> headerParams) {
-            if (accessToken != null) {
-                List<String> list = new ArrayList<String>(1);
-                list.add("Bearer " + accessToken);
-                headerParams.put("Authorization", list);
-            }
-        }
     }
     
     static final class Pair {
@@ -235,9 +186,7 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
             if(null != headers) {
                 parseHeader(httpHeaders, headers);
             }
-            
-            applyAuthParams(procedure, httpHeaders);
-            
+                        
             headersValidation(method, httpHeaders, procedure);
             
             DataSource ds = null;
@@ -292,35 +241,6 @@ public class SwaggerProcedureExecution implements ProcedureExecution{
             }
         } 
         return null;
-    }
-
-    private void applyAuthParams(Procedure procedure, Map<String, List<String>> httpHeaders) throws TranslatorException {
-        Authentication auth = null;
-        SecurityType type = getSecurityType(procedure);
-        if(type.equals(SecurityType.BASIC)) {
-            String username = null;
-            String password = null;
-            try { 
-                username = httpHeaders.get("username").get(0); //$NON-NLS-1$
-                password = httpHeaders.get("password").get(0); //$NON-NLS-1$
-            } catch (Exception e) {
-                throw new TranslatorException(SwaggerPlugin.Event.TEIID28008, SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28008));
-            }
-            auth = new HttpBasicAuth(username, password);
-        } else if (type.equals(SecurityType.OAUTH2)) {
-            String accessToken = null;
-            try {
-                accessToken = httpHeaders.get("accessToken").get(0); //$NON-NLS-1$
-            } catch (Exception e) {
-                throw new TranslatorException(SwaggerPlugin.Event.TEIID28009, SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28009));
-            }
-            auth = new OAuth2(accessToken);
-        }
-        
-        if(null != auth) {
-            auth.applyToParams(httpHeaders);
-        }
-        
     }
 
     private void responseContextValidation(List<String> list, Map<String, Object> rc) throws TranslatorException {
