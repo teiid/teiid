@@ -283,30 +283,6 @@ public class SessionServiceImpl implements SessionService {
 	}
 
 	@Override
-	public LoginContext createLoginContext(final String securityDomain, final String user, final String password) throws LoginException{
-		CallbackHandler handler = new CallbackHandler() {
-			@Override
-			public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
-				for (int i = 0; i < callbacks.length; i++) {
-					if (callbacks[i] instanceof NameCallback) {
-						NameCallback nc = (NameCallback)callbacks[i];
-						nc.setName(user);
-					} else if (callbacks[i] instanceof PasswordCallback) {
-						PasswordCallback pc = (PasswordCallback)callbacks[i];
-						if (password != null) {
-							pc.setPassword(password.toCharArray());
-						}
-					} else {
-						throw new UnsupportedCallbackException(callbacks[i], "Unrecognized Callback"); //$NON-NLS-1$
-					}
-				}
-			}
-		}; 		
-		
-		return new LoginContext(securityDomain, handler);
-	}
-	
-	@Override
 	public Collection<SessionMetadata> getActiveSessions() {
 		return new ArrayList<SessionMetadata>(this.sessionCache.values());
 	}

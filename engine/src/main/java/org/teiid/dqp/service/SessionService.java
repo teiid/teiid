@@ -119,8 +119,6 @@ public interface SessionService {
     
 	void setDqp(DQPCore dqp);
 	
-	LoginContext createLoginContext(String securityDomain, String user, String password) throws LoginException;
-
 	AuthenticationType getAuthenticationType(String vdbName, String version, String user) throws LogonException;
 	
 	SecurityHelper getSecurityHelper();
