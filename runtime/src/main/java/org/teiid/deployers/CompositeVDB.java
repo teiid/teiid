@@ -72,6 +72,7 @@ public class CompositeVDB {
 	private VDBMetaData mergedVDB;
 	private VDBMetaData originalVDB;
 	private Collection<Future<?>> tasks = Collections.synchronizedSet(new HashSet<Future<?>>());
+	private VDBKey vdbKey;
 	
 	public CompositeVDB(VDBMetaData vdb, MetadataStore metadataStore, LinkedHashMap<String, VDBResources.Resource> visibilityMap, UDFMetaData udf, FunctionTree systemFunctions, ConnectorManagerRepository cmr, VDBRepository vdbRepository, MetadataStore... additionalStores) throws VirtualDatabaseException {
 		this.vdb = vdb;
@@ -83,6 +84,7 @@ public class CompositeVDB {
 		this.additionalStores = additionalStores;
 		this.mergedVDB = vdb;
 		this.originalVDB = vdb;
+		this.vdbKey = new VDBKey(originalVDB.getName(), originalVDB.getVersion());
 		buildCompositeState(vdbRepository);
 	}
 	
@@ -143,14 +145,19 @@ public class CompositeVDB {
 		newMergedVDB.setImportedModels(new TreeSet<String>(String.CASE_INSENSITIVE_ORDER));
 		int i = 1;
 		for (VDBImport vdbImport : vdb.getVDBImports()) {
-			CompositeVDB importedVDB = vdbRepository.getCompositeVDB(new VDBKey(vdbImport.getName(), vdbImport.getVersion()));
+			VDBKey key = new VDBKey(vdbImport.getName(), vdbImport.getVersion());
+			if (key.isSemantic() && (!key.isFullySpecified() || key.isAtMost() || key.getVersion() != 1)) {
+				//TODO: could allow partial versions
+				throw new VirtualDatabaseException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40144, vdbKey, key));
+			}
+			CompositeVDB importedVDB = vdbRepository.getCompositeVDB(key);
 			if (importedVDB == null) {
 				throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40083, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40083, vdb.getName(), vdb.getVersion(), vdbImport.getName(), vdbImport.getVersion()));
 			}
 			VDBMetaData childVDB = importedVDB.getVDB();
 			newMergedVDB.getVisibilityOverrides().putAll(childVDB.getVisibilityOverrides());
 			toSearch[i++] = childVDB.getAttachment(ClassLoader.class);
-			this.children.put(new VDBKey(childVDB.getName(), childVDB.getVersion()), importedVDB);
+			this.children.put(importedVDB.getVDBKey(), importedVDB);
 			
 			if (vdbImport.isImportDataPolicies()) {
 				for (DataPolicy dp : importedVDB.getVDB().getDataPolicies()) {
@@ -178,7 +185,7 @@ public class CompositeVDB {
 			}
 			ConnectorManagerRepository childCmr = childVDB.getAttachment(ConnectorManagerRepository.class);
 			if (childCmr == null) {
-				throw new AssertionError("childVdb had not connector manager repository"); //$NON-NLS-1$
+				throw new AssertionError("childVdb does not have a connector manager repository"); //$NON-NLS-1$
 			}
 			if (!this.cmr.isShared()) {
 				for (Map.Entry<String, ConnectorManager> entry : childCmr.getConnectorManagers().entrySet()) {
@@ -310,6 +317,10 @@ public class CompositeVDB {
 
 	public void addTask(Future<?> future) {
 		tasks.add(future);
+	}
+
+	public VDBKey getVDBKey() {
+		return this.vdbKey;
 	}
 	
 }

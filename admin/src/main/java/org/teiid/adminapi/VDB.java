@@ -74,7 +74,7 @@ public interface VDB extends AdminObject, DomainAware {
     public ConnectionType getConnectionType();
 
     /**
-     * @return the VDB version
+     * @return the VDB version.  Will be 1 if a semantic version is being used.
      */
     public int getVersion();
     
@@ -126,4 +126,10 @@ public interface VDB extends AdminObject, DomainAware {
      * @return
      */
 	boolean isVisible(String modelName);
+	
+	/**
+	 * @return the name of the vdb.  If this vdb is using semantic versioning, that version will be included in the name.
+	 */
+	@Override
+	public String getName();
 }

@@ -126,8 +126,12 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
 
             int versionIdx = vdbName.indexOf('.');
             if (versionIdx != -1) {
-                version = Integer.parseInt(vdbName.substring(versionIdx + 1));
-                vdbName = vdbName.substring(0, versionIdx);
+            	try {
+	                version = Integer.parseInt(vdbName.substring(versionIdx + 1));
+	                vdbName = vdbName.substring(0, versionIdx);
+            	} catch (NumberFormatException e) {
+            		//semantic version
+            	}
             }
 
             vdbName = vdbName.trim();
@@ -139,8 +143,8 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
             contextAwareRequest.setContextPath(contextPath);
             httpRequest = contextAwareRequest;
         } else {
-            if (this.initProperties.getProperty("vdb-name") == null || 
-                    this.initProperties.getProperty("vdb-version") == null) { //$NON-NLS-1$ //$NON-NLS-2$
+            if (this.initProperties.getProperty("vdb-name") == null ||  //$NON-NLS-1$
+                    this.initProperties.getProperty("vdb-version") == null) { //$NON-NLS-1$ 
                 throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16018));
             }
             vdbName = this.initProperties.getProperty("vdb-name"); //$NON-NLS-1$
@@ -156,6 +160,9 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
         }
         
         key = new VDBKey(vdbName, version);
+        if (key.isSemantic() && (!key.isFullySpecified() || key.isAtMost())) {
+        	throw new AssertionError();
+        }
         
         SoftReference<OlingoBridge> ref = this.contextMap.get(key);
         OlingoBridge context = null;
@@ -218,13 +225,13 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
 
     @Override
     public void removed(String name, int version, CompositeVDB vdb) {
-        this.contextMap.remove(new VDBKey(name, version));
+        this.contextMap.remove(vdb.getVDBKey());
     }
 
     @Override
     public void finishedDeployment(String name, int version, CompositeVDB vdb,
             boolean reloading) {
-        this.contextMap.remove(new VDBKey(name, version));
+        this.contextMap.remove(vdb.getVDBKey());
     }
 
     @Override

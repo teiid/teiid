@@ -21,8 +21,7 @@
  */
 package org.teiid.olingo;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -345,7 +344,7 @@ public class TestODataIntegration {
     public void testFunctionReturningResultSet() throws Exception {
         ContentResponse response = http.GET(baseURL + "/loopy/vm1/procResultSet(x='foo',y=1)");
         assertEquals(200, response.getStatus());
-        assertEquals("{\"@odata.context\":\"$metadata#Collection(Loopy.1.VM1.procResultSet_RSParam)\",\"value\":[{\"x\":\"foo\",\"y\":1}]}", 
+        assertEquals("{\"@odata.context\":\"$metadata#Collection(Loopy.VM1.procResultSet_RSParam)\",\"value\":[{\"x\":\"foo\",\"y\":1}]}", 
                 response.getContentAsString());        
     }
     
@@ -1065,7 +1064,7 @@ public class TestODataIntegration {
 
         ContentResponse response =  http.GET(baseURL + "/northwind/m/x()?$format=json");
         assertEquals(200, response.getStatus());
-        assertEquals("{\"@odata.context\":\"$metadata#Collection(northwind.1.m.x_RSParam)\",\"value\":[{\"y\":\"x\"},{\"y\":\"y\"}]}", response.getContentAsString());
+        assertEquals("{\"@odata.context\":\"$metadata#Collection(northwind.m.x_RSParam)\",\"value\":[{\"y\":\"x\"},{\"y\":\"y\"}]}", response.getContentAsString());
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");

@@ -1353,6 +1353,10 @@ public final class FunctionMethods {
     }
     
     public static Object current_database(CommandContext context) {
+    	if (context.getVdb() != null) {
+    		//vdb can be null in unit tests
+    		return context.getVdb().getBaseName();
+    	}
     	return context.getVdbName();
     }
 

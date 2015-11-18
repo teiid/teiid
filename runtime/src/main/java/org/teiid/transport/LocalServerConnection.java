@@ -55,6 +55,7 @@ import org.teiid.net.ConnectionException;
 import org.teiid.net.ServerConnection;
 import org.teiid.net.TeiidURL;
 import org.teiid.runtime.RuntimePlugin;
+import org.teiid.vdb.runtime.VDBKey;
 
 
 public class LocalServerConnection implements ServerConnection {
@@ -82,13 +83,22 @@ public class LocalServerConnection implements ServerConnection {
 		if (context == null) {
 			String vdbVersion = connectionProperties.getProperty(TeiidURL.JDBC.VDB_VERSION);
 			String vdbName = connectionProperties.getProperty(TeiidURL.JDBC.VDB_NAME);
+			Integer version = null;
 			int firstIndex = vdbName.indexOf('.');
-			int lastIndex = vdbName.lastIndexOf('.');
-			if (firstIndex != -1 && firstIndex == lastIndex) {
+			if (vdbVersion == null && firstIndex != -1) {
 				vdbVersion = vdbName.substring(firstIndex+1);
-				vdbName = vdbName.substring(0, firstIndex);
+				try {
+					version = Integer.valueOf(vdbVersion);
+					vdbName = vdbName.substring(0, firstIndex);
+				} catch (NumberFormatException e) {
+					VDBKey key = new VDBKey(vdbName, 0);
+					if (key.isSemantic() && !key.isAtMost()) {
+						//semantic version
+						version = 1;
+					}
+				}
 			}
-			if (vdbVersion != null) {
+			if (version != null) {
 				int waitForLoad = PropertiesUtils.getIntProperty(connectionProperties, TeiidURL.CONNECTION.LOGIN_TIMEOUT, -1);
 				if (waitForLoad == -1) {
 					waitForLoad = PropertiesUtils.getIntProperty(connectionProperties, LocalProfile.WAIT_FOR_LOAD, -1);
@@ -96,7 +106,7 @@ public class LocalServerConnection implements ServerConnection {
 					waitForLoad *= 1000; //seconds to milliseconds
 				}
 				if (waitForLoad != 0) {
-					this.csr.waitForFinished(vdbName, Integer.valueOf(vdbVersion), waitForLoad);
+					this.csr.waitForFinished(vdbName, version, waitForLoad);
 				}
 			}
 			

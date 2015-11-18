@@ -36,8 +36,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.odata4j.core.OCollection.Builder;
 import org.odata4j.core.OCollection;
+import org.odata4j.core.OCollection.Builder;
 import org.odata4j.core.OCollections;
 import org.odata4j.core.OObject;
 import org.odata4j.core.OProperties;
@@ -110,14 +110,18 @@ public class LocalClient implements Client {
 	private TeiidDriver driver = TeiidDriver.getInstance();
 	private String invalidCharacterReplacement;
 
-	public LocalClient(String vdbName, int vdbVersion, Properties props) {
+	public LocalClient(String vdbName, Integer vdbVersion, Properties props) {
 		this.vdbName = vdbName;
 		this.vdbVersion = vdbVersion;
 		this.batchSize = PropertiesUtils.getIntProperty(props, BATCH_SIZE, BufferManagerImpl.DEFAULT_PROCESSOR_BATCH_SIZE);
 		this.cacheTime = PropertiesUtils.getLongProperty(props, SKIPTOKEN_TIME, 300000L);
 		this.invalidCharacterReplacement = props.getProperty(INVALID_CHARACTER_REPLACEMENT);
 		StringBuilder sb = new StringBuilder();
-		sb.append("jdbc:teiid:").append(this.vdbName).append(".").append(this.vdbVersion).append(";"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		sb.append("jdbc:teiid:").append(this.vdbName); //$NON-NLS-1$
+		if (vdbVersion != null) {
+			sb.append(".").append(this.vdbVersion); //$NON-NLS-1$
+		}
+		sb.append(";"); //$NON-NLS-1$ 
 		this.initProperties = props;
 		if (this.initProperties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION) == null) {
 		    this.initProperties.put(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "true"); //$NON-NLS-1$    

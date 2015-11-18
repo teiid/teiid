@@ -252,14 +252,18 @@ public class SessionServiceImpl implements SessionService {
 		
 		// handle the situation when the version is part of the vdb name.
 		
-		int firstIndex = vdbName.indexOf('.');
-		int lastIndex = vdbName.lastIndexOf('.');
-		if (firstIndex != -1) {
-			if (firstIndex != lastIndex || vdbVersion != null) {
-				 throw new SessionServiceException(RuntimePlugin.Event.TEIID40044, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40044, vdbName, vdbVersion));
+		if (vdbVersion == null) {
+			int firstIndex = vdbName.indexOf('.');
+			if (firstIndex > 0) {
+				vdbVersion = vdbName.substring(firstIndex+1);
+				try {
+					Integer.parseInt(vdbVersion);
+					vdbName = vdbName.substring(0, firstIndex);
+				} catch (NumberFormatException e) {
+					//not a revision
+					vdbVersion = null;
+				}
 			}
-			vdbVersion = vdbName.substring(firstIndex+1);
-			vdbName = vdbName.substring(0, firstIndex);
 		}
 		
 		try {
