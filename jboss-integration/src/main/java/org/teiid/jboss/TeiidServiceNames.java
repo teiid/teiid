@@ -53,8 +53,7 @@ public class TeiidServiceNames {
 	public static ServiceName RESULTSET_CACHE_FACTORY = ServiceName.JBOSS.append("teiid", "infinispan-rs-cache-factory"); //$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName PREPAREDPLAN_CACHE_FACTORY = ServiceName.JBOSS.append("teiid", "infinispan-pp-cache-factory"); //$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName MATVIEW_SERVICE = ServiceName.JBOSS.append("teiid", "matview-service"); //$NON-NLS-1$ //$NON-NLS-2$
-	public static ServiceName THREAD_POOL_BASE_SERVICE = ThreadsServices.EXECUTOR.append("teiid");
-	public static ServiceName THREAD_POOL_SERVICE = THREAD_POOL_BASE_SERVICE.append(TeiidConstants.TEIID_THREAD_POOL_NAME);
+	public static ServiceName THREAD_POOL_SERVICE = ServiceName.JBOSS.append("teiid","teiid-async-threads");
 	
 	public static class InvalidServiceNameException extends TeiidException {
 

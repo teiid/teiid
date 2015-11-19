@@ -143,7 +143,6 @@
                     <descriptors>
                         <descriptor>assembly/src.xml</descriptor>
                         <descriptor>assembly/client-jar.xml</descriptor>
-                        <descriptor>assembly/console-jar.xml</descriptor>    
                         <descriptor>assembly/wildfly-dist.xml</descriptor>
                         <descriptor>assembly/adminshell-dist.xml</descriptor>
                         <descriptor>assembly/embedded-dist.xml</descriptor>
@@ -259,7 +258,6 @@
                             <descriptors>
                                 <descriptor>assembly/src.xml</descriptor>
                                 <descriptor>assembly/client-jar.xml</descriptor>
-                                <descriptor>assembly/console-jar.xml</descriptor>
                                 <descriptor>assembly/wildfly-dist.xml</descriptor>
                                 <descriptor>assembly/adminshell-dist.xml</descriptor>
                                 <descriptor>assembly/embedded-dist.xml</descriptor>

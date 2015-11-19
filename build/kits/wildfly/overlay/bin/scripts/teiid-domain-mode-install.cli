@@ -34,9 +34,8 @@ connect
 /profile=ha/subsystem=security/security-domain=teiid-security:add(cache-type=default)
 /profile=ha/subsystem=security/security-domain=teiid-security/authentication=classic:add()
 /profile=ha/subsystem=security/security-domain=teiid-security/authentication=classic/login-module=RealmDirect:add(code=RealmDirect, flag=sufficient, module-options=[("password-stacking"=>"useFirstPass")]) 
-/profile=ha/subsystem=threads/unbounded-queue-thread-pool=teiid-async:add(max-threads=4)
 
-/profile=ha/subsystem=teiid:add(async-thread-pool=teiid-async, distributed-cache-jgroups-stack=udp, resultset-cache-infinispan-container=teiid-cache, preparedplan-cache-infinispan-container=teiid-cache, policy-decider-module=org.jboss.teiid)
+/profile=ha/subsystem=teiid:add(distributed-cache-jgroups-stack=udp, resultset-cache-infinispan-container=teiid-cache, preparedplan-cache-infinispan-container=teiid-cache, policy-decider-module=org.jboss.teiid)
 /profile=ha/subsystem=teiid/transport=embedded:add()
 /profile=ha/subsystem=teiid/transport=odata:add(authentication-security-domain=teiid-security)
 /profile=ha/subsystem=teiid/transport=jdbc:add(protocol=teiid, socket-binding=teiid-jdbc, authentication-security-domain=teiid-security)
@@ -99,7 +98,8 @@ connect
 /profile=ha/subsystem=resource-adapters/resource-adapter=google:add(module=org.jboss.teiid.resource-adapter.google)
 /profile=ha/subsystem=resource-adapters/resource-adapter=ldap:add(module=org.jboss.teiid.resource-adapter.ldap)
 /profile=ha/subsystem=resource-adapters/resource-adapter=salesforce:add(module=org.jboss.teiid.resource-adapter.salesforce)
-/profile=ha/subsystem=resource-adapters/resource-adapter=salesforce-34:add(module=org.jboss.teiid.resource-adapter.salesforce, slot="34")
+# slot does not work- add manually
+#/profile=ha/subsystem=resource-adapters/resource-adapter=salesforce-34:add(module=org.jboss.teiid.resource-adapter.salesforce, slot="34")
 /profile=ha/subsystem=resource-adapters/resource-adapter=webservice:add(module=org.jboss.teiid.resource-adapter.webservice)
 /profile=ha/subsystem=resource-adapters/resource-adapter=mongodb:add(module=org.jboss.teiid.resource-adapter.mongodb)
 /profile=ha/subsystem=resource-adapters/resource-adapter=cassandra:add(module=org.jboss.teiid.resource-adapter.cassandra)

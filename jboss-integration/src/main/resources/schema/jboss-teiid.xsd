@@ -38,7 +38,23 @@
                 </xs:annotation>
             </xs:element>            
 
-		    <xs:element name="thread-pool" type="unbounded-queue-thread-pool"/>            
+		    <xs:element name="async-thread-pool" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>Asynchronous thread pool used by Teiid</xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+					<xs:attribute name="max-thread-count" type="xs:int">
+						<xs:annotation>
+							<xs:documentation>Maximum number threads in the pool</xs:documentation>
+						</xs:annotation>
+					</xs:attribute>
+                    <xs:attribute name="keepalive-time" type="xs:int">
+                        <xs:annotation>
+                            <xs:documentation>Keep alive time for idle threads in milli-seconds</xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute> 					
+                </xs:complexType>
+		    </xs:element>            
               
             <xs:element name="buffer-service" maxOccurs="1" minOccurs="1">
                 <xs:annotation>
@@ -273,67 +289,6 @@
         </xs:sequence>
     </xs:complexType>
 
-    <xs:complexType name="unbounded-queue-thread-pool">
-        <xs:annotation>
-            <xs:documentation>
-            <![CDATA[
-                A thread pool executor with an unbounded queue.  Such a thread pool has a core size and a queue with no
-                upper bound.  When a task is submitted, if the number of running threads is less than the core size,
-                a new thread is created.  Otherwise, the task is placed in queue.  If too many tasks are allowed to be
-                submitted to this type of executor, an out of memory condition may occur.
-
-                The "name" attribute is the bean name of the created executor.
-
-                The "max-threads" attribute must be used to specify the thread pool size.  The nested
-                "keepalive-time" element may used to specify the amount of time that pool threads should
-                be kept running when idle; if not specified, threads will run until the executor is shut down.
-                The "thread-factory" element specifies the bean name of a specific thread factory to use to create worker
-                threads.
-            ]]>
-            </xs:documentation>
-        </xs:annotation>
-        <xs:all>
-            <xs:element name="max-threads" type="countType"/>
-            <xs:element name="keepalive-time" type="time" minOccurs="0"/>
-        </xs:all>
-    </xs:complexType>
-    
-    <xs:complexType name="countType">
-        <xs:annotation>
-            <xs:documentation>
-            <![CDATA[
-                A size designation.
-            ]]>
-            </xs:documentation>
-        </xs:annotation>
-        <xs:attribute name="count" type="xs:int" use="required"/>
-    </xs:complexType>
-    
-    <xs:complexType name="time">
-        <xs:annotation>
-            <xs:documentation>
-                An amount of time.  Comprised of a time value and a unit value.
-            </xs:documentation>
-        </xs:annotation>
-        <xs:attribute name="time" type="xs:long" use="required"/>
-        <xs:attribute name="unit" type="time-unit-name" use="required"/>
-    </xs:complexType>
-
-    <xs:simpleType name="time-unit-name">
-        <xs:annotation>
-            <xs:documentation>
-                The name of a unit of time.
-            </xs:documentation>
-        </xs:annotation>
-        <xs:restriction base="xs:token">
-            <xs:enumeration value="seconds"/>
-            <xs:enumeration value="minutes"/>
-            <xs:enumeration value="milliseconds"/>
-            <xs:enumeration value="nanoseconds"/>
-            <xs:enumeration value="hours"/>
-            <xs:enumeration value="days"/>
-        </xs:restriction>
-    </xs:simpleType>    
     <xs:complexType name="transport-type">
         <xs:sequence>
             <xs:element name="authentication" minOccurs="0" maxOccurs="1">

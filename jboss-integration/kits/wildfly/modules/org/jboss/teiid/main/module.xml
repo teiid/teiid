@@ -31,8 +31,7 @@
         <module name="org.picketbox"/>
         <module name="org.jboss.as.network"/>
         <module name="org.jboss.as.security"/>
-        <module name="org.jboss.as.server"/>
-        <module name="org.jboss.as.threads"/>
+        <module name="org.jboss.as.server"/>        
         <module name="org.jboss.as.naming"/>
         <module name="org.jboss.security.negotiation"/> <!-- SPNEGO -->
         <module name="javax.xml.bind.api"/>
