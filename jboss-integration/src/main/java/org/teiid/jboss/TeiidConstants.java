@@ -48,12 +48,18 @@ public class TeiidConstants {
         .build();
 	
     // VM wide elements
-	public static SimpleAttributeDefinition THREAD_POOL_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.THREAD_POOL_ELEMENT.getModelName(), ModelType.STRING)
-        .setXmlName(Element.THREAD_POOL_ELEMENT.getXMLName())
-        .setAllowNull(false)
+	public static SimpleAttributeDefinition ASYNC_THREAD_POOL_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.ASYNC_THREAD_POOL_ELEMENT.getModelName(), ModelType.STRING)
+        .setXmlName(Element.ASYNC_THREAD_POOL_ELEMENT.getXMLName())
+        .setAllowNull(true)
         .setAllowExpression(false)
         .build();
-	
+
+    public static SimpleAttributeDefinition THREAD_COUNT_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.THREAD_COUNT_ATTRIBUTE.getModelName(), ModelType.INT)
+        .setXmlName(Element.THREAD_COUNT_ATTRIBUTE.getXMLName())
+        .setAllowNull(true)
+        .setAllowExpression(false)
+        .build();
+    
     public static SimpleAttributeDefinition ALLOW_ENV_FUNCTION_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.ALLOW_ENV_FUNCTION_ELEMENT.getModelName(), ModelType.BOOLEAN)
         .setXmlName(Element.ALLOW_ENV_FUNCTION_ELEMENT.getXMLName())
         .setAllowNull(true)
@@ -556,6 +562,4 @@ public class TeiidConstants {
         ModelNode resolvedNode = attr.resolveModelAttribute(context, node);
         return resolvedNode.isDefined() ? resolvedNode.asBoolean() : null;
     }
-    
-    public static final String TEIID_THREAD_POOL_NAME = "teiid-async"; //$NON-NLS-1$
 }

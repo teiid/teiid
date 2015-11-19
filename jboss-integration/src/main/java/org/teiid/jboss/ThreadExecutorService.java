@@ -21,41 +21,35 @@
  */
 package org.teiid.jboss;
 
-import java.util.concurrent.Executor;
-
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
-import org.jboss.msc.value.InjectedValue;
-import org.jgroups.Channel;
-import org.teiid.replication.jgroups.JGroupsObjectReplicator;
-import org.wildfly.clustering.jgroups.ChannelFactory;
+import org.teiid.dqp.internal.process.TeiidExecutor;
+import org.teiid.dqp.internal.process.ThreadReuseExecutor;
 
-class JGroupsObjectReplicatorService implements Service<JGroupsObjectReplicator> {
+public class ThreadExecutorService implements Service<TeiidExecutor> {
 
-	public final InjectedValue<ChannelFactory> channelFactoryInjector = new InjectedValue<ChannelFactory>();
-	final InjectedValue<Executor> executorInjector = new InjectedValue<Executor>();
-	private JGroupsObjectReplicator replicator; 
-	
-	
-	@Override
-	public void start(StartContext context) throws StartException {
-		this.replicator = new JGroupsObjectReplicator(new org.teiid.replication.jgroups.ChannelFactory() {
-			@Override
-			public Channel createChannel(String id) throws Exception {
-				return channelFactoryInjector.getValue().createChannel(id);
-			}
-		}, executorInjector.getValue());
-	}
+    private int threadCount;
+    private ThreadReuseExecutor threadExecutor;
+    
+    public ThreadExecutorService(int threadCount) {
+        this.threadCount = threadCount;
+    }
+    
+    @Override
+    public TeiidExecutor getValue() throws IllegalStateException,
+            IllegalArgumentException {
+        return this.threadExecutor;
+    }
 
-	@Override
-	public void stop(StopContext context) {
-	}
+    @Override
+    public void start(StartContext context) throws StartException {
+        this.threadExecutor = new ThreadReuseExecutor("async-teiid-threads", this.threadCount);
+    }
 
-	@Override
-	public JGroupsObjectReplicator getValue() throws IllegalStateException,IllegalArgumentException {
-		return replicator;
-	}
-	
+    @Override
+    public void stop(StopContext context) {
+        this.threadExecutor.shutdown();
+    }
 }

@@ -85,8 +85,7 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
     
     @Override
 	protected String readResource(final String name) throws IOException {
-    	String minimum = "<subsystem xmlns=\"urn:jboss:domain:teiid:1.1\"> \n" + 
-    			"   <thread-pool><max-threads count=\"10\"/></thread-pool>\n" + 
+    	String minimum = "<subsystem xmlns=\"urn:jboss:domain:teiid:1.1\"> \n" +     			 
     			"</subsystem>";
         
     	if (name.equals("minimum")) {
@@ -184,7 +183,7 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
         List<ModelNode> operations = super.parse(subsystemXml);
 
         ///Check that we have the expected number of operations
-        Assert.assertEquals(6, operations.size());
+        Assert.assertEquals(5, operations.size());
 
         //Check that each operation has the correct content
         ModelNode addSubsystem = operations.get(0);

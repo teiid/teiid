@@ -26,7 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import javax.script.ScriptEngineManager;
@@ -187,7 +187,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		ServiceName vdbSwitchServiceName = TeiidServiceNames.vdbSwitchServiceName(deployment.getName(), deployment.getVersion());
 		vdbService.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class,  vdb.vdbRepositoryInjector);
 		vdbService.addDependency(TeiidServiceNames.TRANSLATOR_REPO, TranslatorRepository.class,  vdb.translatorRepositoryInjector);
-		vdbService.addDependency(TeiidServiceNames.THREAD_POOL_SERVICE, ExecutorService.class,  vdb.executorInjector);
+		vdbService.addDependency(TeiidServiceNames.THREAD_POOL_SERVICE, Executor.class,  vdb.executorInjector);
 		vdbService.addDependency(TeiidServiceNames.OBJECT_SERIALIZER, ObjectSerializer.class, vdb.serializerInjector);
 		vdbService.addDependency(TeiidServiceNames.BUFFER_MGR, BufferManager.class, vdb.bufferManagerInjector);
 		vdbService.addDependency(TeiidServiceNames.VDB_STATUS_CHECKER, VDBStatusChecker.class, vdb.vdbStatusCheckInjector);

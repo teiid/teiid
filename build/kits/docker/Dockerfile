@@ -16,7 +16,7 @@ ENV JBOSS_HOME $WORKING_DIR/$JBOSS_EAP
 
 USER root
 
-COPY teiid-${project.version}-server.zip $WORKING_DIR/teiid.zip
+COPY teiid-${project.version}-wildfly-server.zip $WORKING_DIR/teiid.zip
 
 RUN cd $WORKING_DIR && unzip -q teiid.zip && rm teiid.zip && chown -R jboss:jboss ${JBOSS_HOME}/ #\
 

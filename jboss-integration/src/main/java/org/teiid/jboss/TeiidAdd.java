@@ -22,8 +22,58 @@
 
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
-import static org.teiid.jboss.TeiidConstants.*;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.CONTENT;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEPLOYMENT;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ENABLED;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.PERSISTENT;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.URL;
+import static org.teiid.jboss.TeiidConstants.ALLOW_ENV_FUNCTION_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.ASYNC_THREAD_POOL_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.AUTHORIZATION_VALIDATOR_MODULE_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.DATA_ROLES_REQUIRED_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.DC_STACK_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.DETECTING_CHANGE_EVENTS_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.ENCRYPT_FILES_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.INLINE_LOBS;
+import static org.teiid.jboss.TeiidConstants.LOB_CHUNK_SIZE_IN_KB_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.MAX_ACTIVE_PLANS_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.MAX_BUFFER_SPACE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.MAX_FILE_SIZE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.MAX_OPEN_FILES_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.MAX_PROCESSING_KB_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.MAX_RESERVED_KB_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.MAX_ROWS_FETCH_SIZE_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.MAX_SOURCE_ROWS_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.MAX_THREADS_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.MEMORY_BUFFER_OFFHEAP_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.MEMORY_BUFFER_SPACE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.POLICY_DECIDER_MODULE_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.PPC_CONTAINER_NAME_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.PPC_ENABLE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.PPC_NAME_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.PREPARSER_MODULE_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.PROCESSOR_BATCH_SIZE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.QUERY_THRESHOLD_IN_SECS_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.QUERY_TIMEOUT;
+import static org.teiid.jboss.TeiidConstants.RSC_CONTAINER_NAME_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.RSC_ENABLE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.RSC_MAX_STALENESS_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.RSC_NAME_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.THREAD_COUNT_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.TIME_SLICE_IN_MILLI_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.USE_DISK_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.WORKMANAGER;
+import static org.teiid.jboss.TeiidConstants.asBoolean;
+import static org.teiid.jboss.TeiidConstants.asInt;
+import static org.teiid.jboss.TeiidConstants.asLong;
+import static org.teiid.jboss.TeiidConstants.asString;
+import static org.teiid.jboss.TeiidConstants.isDefined;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -36,15 +86,21 @@ import java.net.URL;
 import java.util.Iterator;
 import java.util.ServiceLoader;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 
 import javax.resource.spi.XATerminator;
 import javax.resource.spi.work.WorkManager;
 import javax.transaction.TransactionManager;
 
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.wildfly.clustering.jgroups.ChannelFactory;
-import org.jboss.as.controller.*;
+import org.jboss.as.controller.AbstractAddStepHandler;
+import org.jboss.as.controller.ControlledProcessStateService;
+import org.jboss.as.controller.OperationContext;
+import org.jboss.as.controller.OperationFailedException;
+import org.jboss.as.controller.OperationStepHandler;
+import org.jboss.as.controller.PathAddress;
+import org.jboss.as.controller.PathElement;
+import org.jboss.as.controller.ProcessType;
+import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.as.controller.registry.ImmutableManagementResourceRegistration;
 import org.jboss.as.controller.registry.Resource;
 import org.jboss.as.controller.services.path.RelativePathService;
@@ -56,6 +112,8 @@ import org.jboss.as.server.AbstractDeploymentChainStep;
 import org.jboss.as.server.DeploymentProcessorTarget;
 import org.jboss.as.server.Services;
 import org.jboss.as.server.deployment.Phase;
+import org.jboss.as.threads.ThreadFactoryResolver;
+import org.jboss.as.threads.ThreadsServices;
 import org.jboss.dmr.ModelNode;
 import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
@@ -91,6 +149,7 @@ import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.replication.jgroups.JGroupsObjectReplicator;
 import org.teiid.runtime.MaterializationManager;
 import org.teiid.services.InternalEventDistributorFactory;
+import org.wildfly.clustering.jgroups.ChannelFactory;
 
 class TeiidAdd extends AbstractAddStepHandler {
 	
@@ -98,6 +157,8 @@ class TeiidAdd extends AbstractAddStepHandler {
 
 	static SimpleAttributeDefinition[] ATTRIBUTES = {
 		TeiidConstants.ALLOW_ENV_FUNCTION_ELEMENT,
+		TeiidConstants.ASYNC_THREAD_POOL_ELEMENT,
+		TeiidConstants.THREAD_COUNT_ATTRIBUTE,
 		TeiidConstants.MAX_THREADS_ELEMENT,
 		TeiidConstants.MAX_ACTIVE_PLANS_ELEMENT,
 		TeiidConstants.USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT, 
@@ -191,7 +252,16 @@ class TeiidAdd extends AbstractAddStepHandler {
 		ServiceTarget target = context.getServiceTarget();
 		
 		final JBossLifeCycleListener shutdownListener = new JBossLifeCycleListener();
-				
+
+		// async thread-pool
+		int maxThreads = 10;
+        if (isDefined(ASYNC_THREAD_POOL_ELEMENT, operation, context)) {
+            if(asInt(THREAD_COUNT_ATTRIBUTE, operation, context) != null) {
+                maxThreads = asInt(THREAD_COUNT_ATTRIBUTE, operation, context);
+            }
+        }
+        buildThreadService(maxThreads, target);
+		
 		// translator repository
     	final TranslatorRepository translatorRepo = new TranslatorRepository();
         ValueService<TranslatorRepository> translatorService = new ValueService<TranslatorRepository>(
@@ -233,7 +303,7 @@ class TeiidAdd extends AbstractAddStepHandler {
 			}
     	});
     	ServiceBuilder<VDBStatusChecker> statusBuilder = target.addService(TeiidServiceNames.VDB_STATUS_CHECKER, statusService);
-    	statusBuilder.addDependency(TeiidServiceNames.THREAD_POOL_SERVICE, ExecutorService.class,  statusChecker.executorInjector);
+    	statusBuilder.addDependency(TeiidServiceNames.THREAD_POOL_SERVICE, Executor.class,  statusChecker.executorInjector);
     	statusBuilder.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class,  statusChecker.vdbRepoInjector);
     	statusBuilder.install();
     	
@@ -252,7 +322,7 @@ class TeiidAdd extends AbstractAddStepHandler {
     		JGroupsObjectReplicatorService replicatorService = new JGroupsObjectReplicatorService();
 			ServiceBuilder<JGroupsObjectReplicator> serviceBuilder = target.addService(TeiidServiceNames.OBJECT_REPLICATOR, replicatorService);
 			serviceBuilder.addDependency(ServiceName.JBOSS.append("jgroups", "stack", stack), ChannelFactory.class, replicatorService.channelFactoryInjector); //$NON-NLS-1$ //$NON-NLS-2$
-			serviceBuilder.addDependency(TeiidServiceNames.THREAD_POOL_SERVICE, ExecutorService.class,  replicatorService.executorInjector);
+			serviceBuilder.addDependency(TeiidServiceNames.THREAD_POOL_SERVICE, Executor.class,  replicatorService.executorInjector);
 			serviceBuilder.install();
 			LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50003)); 
     	} else {
@@ -452,8 +522,8 @@ class TeiidAdd extends AbstractAddStepHandler {
 			@Override
 			public void execute(DeploymentProcessorTarget processorTarget) {
 				// vdb deployers
-				processorTarget.addDeploymentProcessor(TeiidExtension.TEIID_SUBSYSTEM, Phase.STRUCTURE, Phase.STRUCTURE_WAR_DEPLOYMENT_INIT,new DynamicVDBRootMountDeployer());
-				processorTarget.addDeploymentProcessor(TeiidExtension.TEIID_SUBSYSTEM, Phase.STRUCTURE, Phase.STRUCTURE_WAR_DEPLOYMENT_INIT|0x0001,new VDBStructureDeployer());
+				processorTarget.addDeploymentProcessor(TeiidExtension.TEIID_SUBSYSTEM, Phase.STRUCTURE, Phase.STRUCTURE_WAR_DEPLOYMENT_INIT|0xFF75,new DynamicVDBRootMountDeployer());
+				processorTarget.addDeploymentProcessor(TeiidExtension.TEIID_SUBSYSTEM, Phase.STRUCTURE, Phase.STRUCTURE_WAR_DEPLOYMENT_INIT|0xFF76,new VDBStructureDeployer());
 				processorTarget.addDeploymentProcessor(TeiidExtension.TEIID_SUBSYSTEM, Phase.PARSE, Phase.PARSE_WEB_DEPLOYMENT|0x0001, new VDBParserDeployer());
 				processorTarget.addDeploymentProcessor(TeiidExtension.TEIID_SUBSYSTEM, Phase.DEPENDENCIES, Phase.DEPENDENCIES_WAR_MODULE|0x0001, new VDBDependencyDeployer());
 				processorTarget.addDeploymentProcessor(TeiidExtension.TEIID_SUBSYSTEM, Phase.INSTALL, Phase.INSTALL_WAR_DEPLOYMENT|0x1000, new VDBDeployer(translatorRepo, vdbRepository, shutdownListener));
@@ -467,6 +537,22 @@ class TeiidAdd extends AbstractAddStepHandler {
         }, OperationContext.Stage.RUNTIME);
 	}
 	
+    private void buildThreadService(int maxThreads, ServiceTarget target) {
+        ThreadExecutorService service = new ThreadExecutorService(maxThreads);
+        final ServiceBuilder<?> serviceBuilder = target.addService(TeiidServiceNames.THREAD_POOL_SERVICE, service);
+        serviceBuilder.install();
+    }
+
+    static class TeiidThreadFactoryResolver extends ThreadFactoryResolver.SimpleResolver{
+        private TeiidThreadFactoryResolver() {
+            super(ThreadsServices.FACTORY);
+        }
+        @Override
+        protected String getThreadGroupName(String threadPoolName) {
+            return "Teiid Async Thread";
+        }
+    }
+    
     static <T> T buildService(Class<T> type, String moduleName) throws OperationFailedException {
         final ModuleIdentifier moduleId;
         final Module module;
@@ -586,11 +672,11 @@ class TeiidAdd extends AbstractAddStepHandler {
 	}    
 	
 	static class VDBStatusCheckerExecutorService extends VDBStatusChecker{
-		final InjectedValue<ExecutorService> executorInjector = new InjectedValue<ExecutorService>();
+		final InjectedValue<Executor> executorInjector = new InjectedValue<Executor>();
 		final InjectedValue<VDBRepository> vdbRepoInjector = new InjectedValue<VDBRepository>();
 		
 		@Override
-		public ExecutorService getExecutor() {
+		public Executor getExecutor() {
 			return this.executorInjector.getValue();
 		}    	
 		

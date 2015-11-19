@@ -410,10 +410,6 @@
             </security-domains>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:teiid:1.1">            
-            <thread-pool>
-                <max-threads count="10"/>
-                <keepalive-time time="30" unit="seconds"/>
-            </thread-pool>
             <resultset-cache infinispan-container="teiid" name="resultset"/>
             <preparedplan-cache infinispan-container="teiid" name="preparedplan"/>
             
