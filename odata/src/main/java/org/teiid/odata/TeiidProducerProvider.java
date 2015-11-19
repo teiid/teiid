@@ -98,8 +98,8 @@ public class TeiidProducerProvider implements ContextResolver<ODataProducer>, VD
 		}
 		
 		VDBKey key = new VDBKey(vdbName, version==null?1:version);
-		if (key.isSemantic() && !key.isFullySpecified()) {
-			throw new AssertionError();
+		if (key.isSemantic() && (!key.isFullySpecified() || key.isAtMost() || key.getVersion() != 1)) {
+			throw new TeiidRuntimeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16021, key));
 		}
 		SoftReference<LocalClient> ref = this.clientMap.get(key);
 		LocalClient client = null;

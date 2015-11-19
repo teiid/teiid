@@ -115,7 +115,7 @@ public class TestODataIntegration {
         context.addServlet(new ServletHolder(new ODataServlet()), "/*");
         context.addFilter(new FilterHolder(new ODataFilter() {
             @Override
-            public Client buildClient(String vdbName, int version, Properties props) {
+            public Client buildClient(String vdbName, Integer version, Properties props) {
                 if (localClient != null) {
                     return localClient;
                 }
@@ -435,7 +435,7 @@ public class TestODataIntegration {
         }
     }    
     
-    private LocalClient getClient(final TeiidDriver driver, final String vdb, final int version, final Properties properties) {
+    private LocalClient getClient(final TeiidDriver driver, final String vdb, final Integer version, final Properties properties) {
         return new LocalClient(vdb, 1, properties) {
             ConnectionImpl conn;
             

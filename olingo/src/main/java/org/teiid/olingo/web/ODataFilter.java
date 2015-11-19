@@ -95,7 +95,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
 
         VDBKey key = null;
         String vdbName = null;
-        int version = 1;
+        Integer version = null;
         String modelName = null;
 
         String uri = ((HttpServletRequest) request).getRequestURL().toString();
@@ -148,7 +148,10 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
                 throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16018));
             }
             vdbName = this.initProperties.getProperty("vdb-name"); //$NON-NLS-1$
-            version = Integer.parseInt(this.initProperties.getProperty("vdb-version")); //$NON-NLS-1$
+            String versionString = this.initProperties.getProperty("vdb-version"); //$NON-NLS-1$
+            if (versionString != null) {
+            	version = Integer.parseInt(versionString); 
+            }
             int modelIdx = uri.indexOf('/', uri.indexOf('/'));
             if (modelIdx == -1) {
                 modelName = uri.substring(uri.indexOf('/') + 1).trim();
@@ -159,9 +162,9 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
             modelName = uri.substring(uri.indexOf('/'), uri.indexOf('/', uri.indexOf('/')));
         }
         
-        key = new VDBKey(vdbName, version);
-        if (key.isSemantic() && (!key.isFullySpecified() || key.isAtMost())) {
-        	throw new AssertionError();
+        key = new VDBKey(vdbName, version==null?1:version);
+        if (key.isSemantic() && (!key.isFullySpecified() || key.isAtMost() || key.getVersion() != 1)) {
+        	throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16044, key));
         }
         
         SoftReference<OlingoBridge> ref = this.contextMap.get(key);
@@ -214,7 +217,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
         }
     }
     
-    public Client buildClient(String vdbName, int version, Properties props) {
+    public Client buildClient(String vdbName, Integer version, Properties props) {
         return new LocalClient(vdbName, version, props);        
     }
         

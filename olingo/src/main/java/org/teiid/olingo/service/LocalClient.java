@@ -67,11 +67,11 @@ public class LocalClient implements Client {
 
     private volatile VDBMetaData vdb;
     private final String vdbName;
-    private final int vdbVersion;
+    private final Integer vdbVersion;
     private ConnectionImpl connection;
     private Properties properties;
 
-    public LocalClient(String vdbName, int vdbVersion, Properties properties) {
+    public LocalClient(String vdbName, Integer vdbVersion, Properties properties) {
         this.vdbName = vdbName;
         this.vdbVersion = vdbVersion;
         this.properties = properties;
@@ -100,9 +100,13 @@ public class LocalClient implements Client {
         return this.connection;
     }
     
-    public static ConnectionImpl buildConnection(TeiidDriver driver, String vdbName, int version, Properties props) throws SQLException {
+    public static ConnectionImpl buildConnection(TeiidDriver driver, String vdbName, Integer version, Properties props) throws SQLException {
         StringBuilder sb = new StringBuilder();
-        sb.append("jdbc:teiid:").append(vdbName).append(".").append(version).append(";"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        sb.append("jdbc:teiid:").append(vdbName).append("."); //$NON-NLS-1$ //$NON-NLS-2$
+        if (version != null) {
+        	sb.append(version); 
+        }
+        sb.append(";"); //$NON-NLS-1$ 
         
         if (props.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION) == null) {
             props.setProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "true"); //$NON-NLS-1$    

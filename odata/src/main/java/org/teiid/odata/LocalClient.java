@@ -101,7 +101,7 @@ public class LocalClient implements Client {
 	
 	private volatile VDBMetaData vdb;
 	private String vdbName;
-	private int vdbVersion;
+	private Integer vdbVersion;
 	private int batchSize;
 	private long cacheTime;
 	private String connectionString;
