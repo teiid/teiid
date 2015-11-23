@@ -24,7 +24,6 @@ package org.teiid.olingo;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.sql.Time;
-import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -46,7 +45,9 @@ import org.apache.olingo.server.api.ServiceMetadata;
 import org.apache.olingo.server.api.edmx.EdmxReference;
 import org.apache.olingo.server.core.OData4Impl;
 import org.apache.olingo.server.core.SchemaBasedEdmProvider;
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -890,5 +891,14 @@ public class TestODataSQLBuilder {
     public void testSelectStarWithNonSelectableColumn3() throws Exception {
         helpTest("/odata4/vdb/PM1/G5?$filter=e1 eq 1",
                 "SELECT g0.e2, g0.e3 FROM PM1.G5 AS g0 WHERE g0.e1 = 1 ORDER BY g0.e2");        
-    }     
+    }   
+    
+    @BeforeClass public static void oneTimeSetup() {
+    	TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT"));
+    }
+    
+    @AfterClass public static void oneTimeTearDown() {
+    	TimestampWithTimezone.resetCalendar(null);
+    }
+    
 }
