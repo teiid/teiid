@@ -31,6 +31,7 @@ import java.io.StreamCorruptedException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.teiid.core.util.ObjectInputStreamWithClassloader;
 import org.teiid.jdbc.JDBCPlugin;
 
 /**
@@ -97,17 +98,12 @@ public class CompactObjectInputStream extends ObjectInputStream {
     @Override
     protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
         String name = desc.getName();
-        
-        //deny the resolving of classes that can cause security issues when deserialized
-        if (name.endsWith("functors.InvokerTransformer") //$NON-NLS-1$
-        		|| name.endsWith("functors.InstantiateTransformer") //$NON-NLS-1$
-        		|| name.equals("org.​apache.​commons.​collections.​Transformer") //$NON-NLS-1$
-        		|| name.equals("org.codehaus.groovy.runtime.ConvertedClosure") //$NON-NLS-1$
-        		|| name.equals("org.codehaus.groovy.runtime.MethodClosure") //$NON-NLS-1$
-        		|| name.equals("org.springframework.beans.factory.ObjectFactory") //$NON-NLS-1$
-        		|| name.endsWith(".​trax.​TemplatesImpl")) { //$NON-NLS-1$
+
+        try {
+        	ObjectInputStreamWithClassloader.checkClass(name);
+        } catch (ClassNotFoundException e) {
         	Logger.getLogger("org.teiid").log(Level.SEVERE, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20037, name)); //$NON-NLS-1$
-        	throw new ClassNotFoundException(name);
+        	throw e;
         }
         
         try {
@@ -116,4 +112,5 @@ public class CompactObjectInputStream extends ObjectInputStream {
             return super.resolveClass(desc);
         }
     }
+	
 }

@@ -42,9 +42,23 @@ public final class ObjectInputStreamWithClassloader extends
 			throws IOException, ClassNotFoundException {
 		//see java bug id 6434149
 		try {
+			checkClass(desc.getName());
 			return Class.forName(desc.getName(), false, cl);
 		} catch (ClassNotFoundException e) {
 			return super.resolveClass(desc);
 		}
+	}
+	
+	public static void checkClass(String name) throws ClassNotFoundException {
+		//deny the resolving of classes that can cause security issues when deserialized
+        if (name.endsWith("functors.InvokerTransformer") //$NON-NLS-1$
+        		|| name.endsWith("functors.InstantiateTransformer") //$NON-NLS-1$
+        		|| name.equals("org.​apache.​commons.​collections.​Transformer") //$NON-NLS-1$
+        		|| name.equals("org.codehaus.groovy.runtime.ConvertedClosure") //$NON-NLS-1$
+        		|| name.equals("org.codehaus.groovy.runtime.MethodClosure") //$NON-NLS-1$
+        		|| name.equals("org.springframework.beans.factory.ObjectFactory") //$NON-NLS-1$
+        		|| name.endsWith(".​trax.​TemplatesImpl")) { //$NON-NLS-1$
+        	throw new ClassNotFoundException(name);
+        }
 	}
 }
