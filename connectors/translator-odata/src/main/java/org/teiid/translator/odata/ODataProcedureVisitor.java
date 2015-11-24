@@ -36,6 +36,7 @@ import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.WSConnection;
 
 public class ODataProcedureVisitor extends HierarchyVisitor {
 	protected ODataExecutionFactory executionFactory;
@@ -69,15 +70,18 @@ public class ODataProcedureVisitor extends HierarchyVisitor {
         if (params != null && params.size() != 0) {
         	this.buffer.append("?"); //$NON-NLS-1$
             Argument param = null;
+            StringBuilder temp = new StringBuilder();
             for (int i = 0; i < params.size(); i++) {
                 param = params.get(i);
                 if (param.getDirection() == Direction.IN || param.getDirection() == Direction.INOUT) {
                     if (i != 0) {
                         this.buffer.append("&"); //$NON-NLS-1$
                     }
-                    this.buffer.append(param.getMetadataObject().getName());
+                    this.buffer.append(WSConnection.Util.httpURLEncode(param.getMetadataObject().getName()));
                     this.buffer.append(Tokens.EQ);
-                    this.executionFactory.convertToODataInput(param.getArgumentValue(), this.buffer);
+                    this.executionFactory.convertToODataInput(param.getArgumentValue(), temp);
+                    this.buffer.append(WSConnection.Util.httpURLEncode(temp.toString()));
+                    temp.setLength(0);
                 }
             }
         }
