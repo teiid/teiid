@@ -101,7 +101,7 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		assertTrue("sample_1.war not found", AdminUtil.waitForDeployment(admin, "sample_1.war", 5));
 		
 		// get based call
-		String response = httpCall("http://localhost:8080/sample_1/view/g1/123?p2=test", "GET", null);
+		String response = httpCall("http://localhost:8080/sample_1/View/g1/123?p2=test", "GET", null);
 		String expected = "<rows p1=\"123\" p2=\"test\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>";
 		assertEquals("response did not match expected", expected, response);
 
@@ -109,16 +109,16 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		
 		//try the same thing through a vdb
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:sample-ws@mm://localhost:31000;user=user;password=user", null);
-		execute("select to_chars(x.result, 'UTF-8') from (call invokeHttp(action=>'GET',endpoint=>'sample_1/view/g1/123?p2=test')) as x");
+		execute("select to_chars(x.result, 'UTF-8') from (call invokeHttp(action=>'GET',endpoint=>'sample_1/View/g1/123?p2=test')) as x");
 		this.internalResultSet.next();
 		assertEquals(expected, this.internalResultSet.getString(1));
 
 		//test a large doc
-		response = httpCall("http://localhost:8080/sample_1/view/largedoc", "GET", null);
+		response = httpCall("http://localhost:8080/sample_1/View/largedoc", "GET", null);
 		assertEquals(327801, response.length());
 		
 		//test streaming xmltable
-		execute("select * from xmltable('/rows/row/e1' passing xmlparse(document (select result from (call invokeHttp(action=>'GET',endpoint=>'sample_1/view/g1/123?p2=test')) as d))) as x");
+		execute("select * from xmltable('/rows/row/e1' passing xmlparse(document (select result from (call invokeHttp(action=>'GET',endpoint=>'sample_1/View/g1/123?p2=test')) as d))) as x");
 		this.internalResultSet.next();
 		assertEquals("<e1>ABCDEFGHIJ</e1>", this.internalResultSet.getString(1));
 		
@@ -141,18 +141,18 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
         String params = URLEncoder.encode("p1", "UTF-8") + "=" + URLEncoder.encode("456", "UTF-8");
         
         // post based call with default
-        String response = httpCall("http://localhost:8080/sample_1/view/g1simplepost", "POST", params);
+        String response = httpCall("http://localhost:8080/sample_1/View/g1simplepost", "POST", params);
         assertEquals("response did not match expected", "<rows p1=\"456\" p2=\"1\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
 
         // post based call
         params += "&" + URLEncoder.encode("p2", "UTF-8") + "=" + URLEncoder.encode("2", "UTF-8");
         params += "&" + URLEncoder.encode("p3", "UTF-8") + "=" + URLEncoder.encode("string value", "UTF-8");
-        response = httpCall("http://localhost:8080/sample_1/view/g1simplepost", "POST", params);
+        response = httpCall("http://localhost:8080/sample_1/View/g1simplepost", "POST", params);
         assertEquals("response did not match expected", "<rows p1=\"456\" p2=\"2\" p3=\"string value\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
         
         // ad-hoc procedure
         params = URLEncoder.encode("sql", "UTF-8") + "=" + URLEncoder.encode("SELECT XMLELEMENT(NAME \"rows\", XMLAGG(XMLELEMENT(NAME \"row\", XMLFOREST(e1, e2)))) AS xml_out FROM Txns.G1", "UTF-8");
-        response = httpCall("http://localhost:8080/sample_1/view/query", "POST", params);
+        response = httpCall("http://localhost:8080/sample_1/View/query", "POST", params);
         assertEquals("response did not match expected", "<rows><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
         admin.undeploy("sample-vdb.xml");
         Thread.sleep(2000);
@@ -177,7 +177,7 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		
 		
 		// post based call with default
-		String response = httpMultipartPost(entity, "http://localhost:8080/sample_1/view/g1post");
+		String response = httpMultipartPost(entity, "http://localhost:8080/sample_1/View/g1post");
 		assertEquals("response did not match expected", "<rows p1=\"456\" p2=\"1\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
 
 		// post based call
@@ -187,12 +187,12 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
                 .addTextBody("p3", "string value")
                 .addBinaryBody("p4", "<root><p4>bar</p4></root>".getBytes("UTF-8"), ContentType.create("application/xml", "UTF-8"), "foo.xml")
                 .build();		
-		response = httpMultipartPost(entity, "http://localhost:8080/sample_1/view/g1post");
+		response = httpMultipartPost(entity, "http://localhost:8080/sample_1/View/g1post");
 		assertEquals("response did not match expected", "<rows p1=\"456\" p2=\"2\" p3=\"string value\" p4=\"bar\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
 		
 		// ad-hoc procedure
 		params = URLEncoder.encode("sql", "UTF-8") + "=" + URLEncoder.encode("SELECT XMLELEMENT(NAME \"rows\", XMLAGG(XMLELEMENT(NAME \"row\", XMLFOREST(e1, e2)))) AS xml_out FROM Txns.G1", "UTF-8");
-		response = httpCall("http://localhost:8080/sample_1/view/query", "POST", params);
+		response = httpCall("http://localhost:8080/sample_1/View/query", "POST", params);
 		assertEquals("response did not match expected", "<rows><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
 		admin.undeploy("sample-vdb.xml");
 		Thread.sleep(2000);
