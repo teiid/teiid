@@ -209,8 +209,13 @@ public class TestODataSQLVistor {
     
     @Test
     public void testProcedureExec() throws Exception {
-    	helpFunctionExecute("Exec TopCustomers('newyork')", "TopCustomers?city='newyork'");
-    }    
+    	helpFunctionExecute("Exec TopCustomers('newyork')", "TopCustomers?city=%27newyork%27");
+    }  
+    
+    @Test
+    public void testProcedureExecEncoded() throws Exception {
+    	helpFunctionExecute("Exec CommonCustomers('new york', 'los angeles')", "CommonCustomers?city1=%27new%20york%27&city2=%27los%20angeles%27");
+    }  
     
     private void helpUpdateExecute(String query, String expected, String expectedMethod, boolean checkPayload) throws Exception {
     	Command cmd = this.utility.parseCommand(query);
