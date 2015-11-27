@@ -135,5 +135,6 @@
 
     <module>translator-hbase</module>
     <module>translator-couchbase</module>
+    <module>connector-couchbase</module>
   </modules>
 </project>

@@ -1,0 +1,14 @@
+ #  copy and paste the following into the <resource-adapters> section of the server configuration
+ #  replacing your values for the properties to configure the cache
+ 
+                <resource-adapter id="couchbaseDS">
+                    <module slot="main" id="org.jboss.teiid.resource-adapter.couchbase"/>
+                    <transaction-support>NoTransaction</transaction-support>
+                    <connection-definitions>
+                        <connection-definition class-name="org.teiid.resource.adapter.couchbase.couchbaseManagedConnectionFactory" jndi-name="java:/couchbaseDS" enabled="true" use-java-context="true" pool-name="couchbaseDS">
+                            <!--config-property name="propertyName">
+                                propertyValue
+                            </config-property-->
+                        </connection-definition>
+                    </connection-definitions>
+                </resource-adapter> 
