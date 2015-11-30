@@ -24,6 +24,7 @@ package org.teiid.translator.hive;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
@@ -269,6 +270,22 @@ public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
     		return results.getTime(parameterIndex);
     	}
     	return super.retrieveValue(results, parameterIndex, expectedType);
+    }
+    
+    @Override
+    public void bindValue(PreparedStatement stmt, Object param,
+    		Class<?> paramType, int i) throws SQLException {
+    	// Calendar based setX not supported by Hive
+    	if (paramType.equals(Timestamp.class)) {
+    		stmt.setTimestamp(i, (Timestamp) param);
+    	}
+    	if (paramType.equals(Date.class)) {
+    		stmt.setDate(i, (Date) param);
+    	}
+    	if (paramType.equals(Time.class)) {
+    		stmt.setTime(i, (Time) param);
+    	}
+    	super.bindValue(stmt, param, paramType, i);
     }
     
     protected FunctionMethod addAggregatePushDownFunction(String qualifier, String name, String returnType, String...paramTypes) {
