@@ -23,6 +23,8 @@
 package org.teiid.runtime;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,6 +32,7 @@ import javax.resource.spi.work.WorkManager;
 import javax.transaction.TransactionManager;
 
 import org.infinispan.manager.DefaultCacheManager;
+import org.infinispan.transaction.lookup.TransactionManagerLookup;
 import org.teiid.cache.CacheFactory;
 import org.teiid.cache.infinispan.InfinispanCacheFactory;
 import org.teiid.core.TeiidRuntimeException;
@@ -55,7 +58,7 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	private CacheFactory cacheFactory;
 	private int maxResultSetCacheStaleness = 60;
 	private String infinispanConfigFile = "infinispan-config.xml"; //$NON-NLS-1$
-	private String jgroupsConfigFile;
+	private String jgroupsConfigFile; // from infinispan-core
 	private List<SocketConfiguration> transports;
 	private int maxODBCLobSizeAllowed = 5*1024*1024; // 5 MB
 	private int maxAsyncThreads = DEFAULT_MAX_ASYNC_WORKERS;
@@ -72,8 +75,9 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	private int maxStorageObjectSize ;
 	private boolean memoryBufferOffHeap = false;
 	private int memoryBufferSpace ;
+	private String nodeName;
 	
-	private DefaultCacheManager manager;
+    private DefaultCacheManager cacheManager;
 	
 	public EmbeddedConfiguration() {
 		processorBatchSize = -1;
@@ -175,17 +179,29 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	public CacheFactory getCacheFactory() {
 		if (this.cacheFactory == null) {
 			try {
-				manager = new DefaultCacheManager(this.infinispanConfigFile, true);
-				for(String cacheName:manager.getCacheNames()) {
-					manager.startCache(cacheName);
+				cacheManager = new DefaultCacheManager(this.infinispanConfigFile, true);				
+				for(String cacheName:cacheManager.getCacheNames()) {
+	                if (getTransactionManager() != null) {
+	                    setCacheTransactionManger(cacheName);
+	                }				    
+					cacheManager.startCache(cacheName);
 				}
-				this.cacheFactory = new InfinispanCacheFactory(manager, this.getClass().getClassLoader());
+				this.cacheFactory = new InfinispanCacheFactory(cacheManager, this.getClass().getClassLoader());
 			} catch (IOException e) {
 				throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40100, e);
 			}
 		}
 		return this.cacheFactory;
 	}
+
+    private void setCacheTransactionManger(String cacheName) {
+        cacheManager.getCacheConfiguration(cacheName).transaction().transactionManagerLookup(new TransactionManagerLookup() {
+            @Override
+            public TransactionManager getTransactionManager() throws Exception {
+                return EmbeddedConfiguration.this.getTransactionManager();
+            }
+        });
+    }
 	
 	public void setCacheFactory(CacheFactory cacheFactory) {
 		this.cacheFactory = cacheFactory;
@@ -204,8 +220,8 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	}	
 	
 	protected void stop() {
-		if (manager != null) {
-			manager.stop();
+		if (cacheManager != null) {
+			cacheManager.stop();
 		}
 	}
 	
@@ -323,4 +339,20 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	public void setMemoryBufferSpace(int memoryBufferSpace) {
 		this.memoryBufferSpace = memoryBufferSpace;
 	}
+	
+    public String getNodeName() {
+        if (this.nodeName == null) {
+            this.nodeName = System.getProperty("jboss.node.name");
+        }
+        try {
+            return (this.nodeName != null)?this.nodeName:InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            return "localhost";
+        } 
+    }
+
+    public void setNodeName(String nodeName) {
+        System.setProperty("jboss.node.name", nodeName);
+        this.nodeName = nodeName;
+    }	
 }

@@ -127,12 +127,12 @@ public class FakeServer extends EmbeddedServer {
 	}
 	
 	@Override
-	protected BufferService getBufferService() {
+	protected BufferService getBufferService(String nodeName) {
 		if (!realBufferManager) {
 			return new FakeBufferService(false);
 		}
 		bufferService.setDiskDirectory(UnitTestUtil.getTestScratchPath());
-		return super.getBufferService();
+		return super.getBufferService(nodeName);
 	}
 	
 	public DQPCore getDqp() {

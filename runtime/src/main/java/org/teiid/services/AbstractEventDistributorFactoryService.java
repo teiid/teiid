@@ -37,6 +37,7 @@ public abstract class AbstractEventDistributorFactoryService implements Internal
 	
 	private EventDistributor replicatableEventDistributor;
 	private EventDistributor eventDistributorProxy;
+	private String nodeName;
 	
 	public InternalEventDistributorFactory getValue() throws IllegalStateException, IllegalArgumentException {
 		return this;
@@ -44,6 +45,10 @@ public abstract class AbstractEventDistributorFactoryService implements Internal
 	
 	protected abstract VDBRepository getVdbRepository();
 	protected abstract ObjectReplicator getObjectReplicator();
+	
+	public AbstractEventDistributorFactoryService(String nodeName) {
+	    this.nodeName = nodeName;
+	}
 
 	public void start() {
 		final EventDistributor ed = new EventDistributorImpl() {
@@ -57,7 +62,7 @@ public abstract class AbstractEventDistributorFactoryService implements Internal
 		// this instance is by use of teiid internally; only invokes the remote instances
 		if (objectReplicator != null) {
 			try {
-				this.replicatableEventDistributor = objectReplicator.replicate("$TEIID_ED$", EventDistributor.class, ed, 0); //$NON-NLS-1$
+				this.replicatableEventDistributor = objectReplicator.replicate(nodeName, "$TEIID_ED$", EventDistributor.class, ed, 0); //$NON-NLS-1$
 			} catch (Exception e) {
 				LogManager.logError(LogConstants.CTX_RUNTIME, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40088, this));
 			}

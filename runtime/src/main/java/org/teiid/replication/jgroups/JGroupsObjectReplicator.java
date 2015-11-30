@@ -504,9 +504,9 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 	}
 	
 	@Override
-	public <T, S> T replicate(String mux_id,
+	public <T, S> T replicate(String nodeName, String mux_id,
 			Class<T> iface, final S object, long startTimeout) throws Exception {
-		Channel channel = channelFactory.createChannel(mux_id);
+		Channel channel = channelFactory.createChannel(nodeName+"-"+mux_id);
 		
 		// To keep the order of methods same at all the nodes.
 		TreeMap<String, Method> methods = new TreeMap<String, Method>();

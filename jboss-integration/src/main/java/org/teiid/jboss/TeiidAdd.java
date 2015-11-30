@@ -82,7 +82,9 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.net.InetAddress;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.ServiceLoader;
 import java.util.concurrent.Executor;
@@ -150,6 +152,7 @@ import org.teiid.replication.jgroups.JGroupsObjectReplicator;
 import org.teiid.runtime.MaterializationManager;
 import org.teiid.services.InternalEventDistributorFactory;
 import org.wildfly.clustering.jgroups.ChannelFactory;
+import org.wildfly.clustering.jgroups.spi.service.ChannelServiceName;
 
 class TeiidAdd extends AbstractAddStepHandler {
 	
@@ -246,6 +249,14 @@ class TeiidAdd extends AbstractAddStepHandler {
 		}
 	}
 
+    public String getNodeName() {
+        String nodeName = System.getProperty("jboss.node.name");
+        try {
+            return (nodeName != null)?nodeName:InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            return "localhost";
+        } 
+    }	
 
     private void initilaizeTeiidEngine(final OperationContext context,
             final ModelNode operation) throws OperationFailedException {
@@ -253,6 +264,8 @@ class TeiidAdd extends AbstractAddStepHandler {
 		
 		final JBossLifeCycleListener shutdownListener = new JBossLifeCycleListener();
 
+		final String nodeName = getNodeName();
+		
 		// async thread-pool
 		int maxThreads = 10;
         if (isDefined(ASYNC_THREAD_POOL_ELEMENT, operation, context)) {
@@ -321,7 +334,7 @@ class TeiidAdd extends AbstractAddStepHandler {
     		replicatorAvailable = true;
     		JGroupsObjectReplicatorService replicatorService = new JGroupsObjectReplicatorService();
 			ServiceBuilder<JGroupsObjectReplicator> serviceBuilder = target.addService(TeiidServiceNames.OBJECT_REPLICATOR, replicatorService);
-			serviceBuilder.addDependency(ServiceName.JBOSS.append("jgroups", "stack", stack), ChannelFactory.class, replicatorService.channelFactoryInjector); //$NON-NLS-1$ //$NON-NLS-2$
+			serviceBuilder.addDependency(ChannelServiceName.FACTORY.getServiceName(stack), ChannelFactory.class, replicatorService.channelFactoryInjector); //$NON-NLS-1$ //$NON-NLS-2$
 			serviceBuilder.addDependency(TeiidServiceNames.THREAD_POOL_SERVICE, Executor.class,  replicatorService.executorInjector);
 			serviceBuilder.install();
 			LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50003)); 
@@ -336,14 +349,14 @@ class TeiidAdd extends AbstractAddStepHandler {
     	bufferServiceBuilder.addDependency(TeiidServiceNames.BUFFER_DIR, String.class, bufferService.pathInjector);
     	bufferServiceBuilder.install();
     	
-    	TupleBufferCacheService tupleBufferService = new TupleBufferCacheService();
+    	TupleBufferCacheService tupleBufferService = new TupleBufferCacheService(nodeName);
     	ServiceBuilder<TupleBufferCache> tupleBufferBuilder = target.addService(TeiidServiceNames.TUPLE_BUFFER, tupleBufferService);
     	tupleBufferBuilder.addDependency(TeiidServiceNames.BUFFER_MGR, BufferManager.class, tupleBufferService.bufferMgrInjector);
     	tupleBufferBuilder.addDependency(replicatorAvailable?DependencyType.REQUIRED:DependencyType.OPTIONAL, TeiidServiceNames.OBJECT_REPLICATOR, ObjectReplicator.class, tupleBufferService.replicatorInjector);
     	tupleBufferBuilder.install();
     	
     	
-    	EventDistributorFactoryService edfs = new EventDistributorFactoryService();
+    	EventDistributorFactoryService edfs = new EventDistributorFactoryService(nodeName);
     	ServiceBuilder<InternalEventDistributorFactory> edfsServiceBuilder = target.addService(TeiidServiceNames.EVENT_DISTRIBUTOR_FACTORY, edfs);
     	edfsServiceBuilder.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class, edfs.vdbRepositoryInjector);
     	edfsServiceBuilder.addDependency(replicatorAvailable?DependencyType.REQUIRED:DependencyType.OPTIONAL, TeiidServiceNames.OBJECT_REPLICATOR, ObjectReplicator.class, edfs.objectReplicatorInjector);
@@ -526,7 +539,7 @@ class TeiidAdd extends AbstractAddStepHandler {
 				processorTarget.addDeploymentProcessor(TeiidExtension.TEIID_SUBSYSTEM, Phase.STRUCTURE, Phase.STRUCTURE_WAR_DEPLOYMENT_INIT|0xFF76,new VDBStructureDeployer());
 				processorTarget.addDeploymentProcessor(TeiidExtension.TEIID_SUBSYSTEM, Phase.PARSE, Phase.PARSE_WEB_DEPLOYMENT|0x0001, new VDBParserDeployer());
 				processorTarget.addDeploymentProcessor(TeiidExtension.TEIID_SUBSYSTEM, Phase.DEPENDENCIES, Phase.DEPENDENCIES_WAR_MODULE|0x0001, new VDBDependencyDeployer());
-				processorTarget.addDeploymentProcessor(TeiidExtension.TEIID_SUBSYSTEM, Phase.INSTALL, Phase.INSTALL_WAR_DEPLOYMENT|0x1000, new VDBDeployer(translatorRepo, vdbRepository, shutdownListener));
+				processorTarget.addDeploymentProcessor(TeiidExtension.TEIID_SUBSYSTEM, Phase.INSTALL, Phase.INSTALL_WAR_DEPLOYMENT|0x1000, new VDBDeployer(nodeName, translatorRepo, vdbRepository, shutdownListener));
 				
 				// translator deployers
 				processorTarget.addDeploymentProcessor(TeiidExtension.TEIID_SUBSYSTEM, Phase.STRUCTURE, Phase.STRUCTURE_JDBC_DRIVER|0x0001,new TranslatorStructureDeployer());
