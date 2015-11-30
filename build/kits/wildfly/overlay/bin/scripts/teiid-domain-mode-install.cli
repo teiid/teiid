@@ -12,8 +12,11 @@ connect
 /profile=ha/subsystem=logging/logger=org.teiid.COMMAND_LOG:add
 /profile=ha/subsystem=logging/logger=org.teiid.COMMAND_LOG:write-attribute(name="level", value="WARN")
 
+:restart-servers(blocking=true)
+
+/profile=ha/subsystem=jgroups/channel=teiid-cluster:add(stack=udp)
 /profile=ha/subsystem=infinispan/cache-container=teiid-cache:add(default-cache=resultset)
-/profile=ha/subsystem=infinispan/cache-container=teiid-cache/transport=TRANSPORT:add(lock-timeout=60000)
+/profile=ha/subsystem=infinispan/cache-container=teiid-cache/transport=TRANSPORT:add(lock-timeout=60000, channel=teiid-cluster)
 /profile=ha/subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl:add(mode=SYNC, batching=true)
 /profile=ha/subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl/locking=LOCKING:add(isolation=READ_COMMITTED)
 /profile=ha/subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl/expiration=EXPIRATION:add(lifespan=7200000)
@@ -35,7 +38,9 @@ connect
 /profile=ha/subsystem=security/security-domain=teiid-security/authentication=classic:add()
 /profile=ha/subsystem=security/security-domain=teiid-security/authentication=classic/login-module=RealmDirect:add(code=RealmDirect, flag=sufficient, module-options=[("password-stacking"=>"useFirstPass")]) 
 
-/profile=ha/subsystem=teiid:add(distributed-cache-jgroups-stack=udp, resultset-cache-infinispan-container=teiid-cache, preparedplan-cache-infinispan-container=teiid-cache, policy-decider-module=org.jboss.teiid)
+:restart-servers(blocking=true)
+
+/profile=ha/subsystem=teiid:add(distributed-cache-jgroups-stack=teiid-cluster, resultset-cache-infinispan-container=teiid-cache, preparedplan-cache-infinispan-container=teiid-cache, policy-decider-module=org.jboss.teiid)
 /profile=ha/subsystem=teiid/transport=embedded:add()
 /profile=ha/subsystem=teiid/transport=odata:add(authentication-security-domain=teiid-security)
 /profile=ha/subsystem=teiid/transport=jdbc:add(protocol=teiid, socket-binding=teiid-jdbc, authentication-security-domain=teiid-security)
@@ -108,4 +113,4 @@ connect
 /profile=ha/subsystem=resource-adapters/resource-adapter=solr:add(module=org.jboss.teiid.resource-adapter.solr)
 
 
-/host=master:reload(restart-servers=true)  
+:restart-servers(blocking=true)  

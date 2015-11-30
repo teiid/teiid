@@ -63,14 +63,6 @@
 			<unpack>false</unpack>
 			<useTransitiveDependencies>false</useTransitiveDependencies>
 		</dependencySet>
-	
- 		<dependencySet>
-			<outputDirectory>${wildfly-module-root}/org/jboss/teiid/security/main</outputDirectory>
-			<includes>
-				<include>org.jboss.teiid:teiid-jboss-security</include>
-			</includes>
-			<useProjectArtifact>false</useProjectArtifact>
-		</dependencySet>
 		<dependencySet>
 			<includes>
 				<include>net.sf.saxon:Saxon-HE</include>

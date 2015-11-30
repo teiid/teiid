@@ -11,7 +11,10 @@
 			property is defined. See the JGroupsTransport javadocs for more flags. jgroups-udp.xml 
 			is the default stack bundled in the Infinispan core jar: integration and 
 			tuning are tested by Infinispan. -->
+		<!-- 	
 		<stack-file name="default-jgroups-tcp" path="default-configs/default-jgroups-tcp.xml" />
+		 -->
+		<stack-file name="default-jgroups-tcp" path="tcp-shared.xml" />
 	</jgroups>
 
 	<cache-container name="teiid" default-cache="default"

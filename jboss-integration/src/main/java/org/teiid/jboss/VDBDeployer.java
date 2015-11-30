@@ -82,9 +82,11 @@ class VDBDeployer implements DeploymentUnitProcessor {
 	private TranslatorRepository translatorRepository;
 	private VDBRepository vdbRepository;
 	JBossLifeCycleListener shutdownListener;
+	private String nodeName;
 	
-    public VDBDeployer(TranslatorRepository translatorRepo,
+    public VDBDeployer(String nodeName, TranslatorRepository translatorRepo,            
             VDBRepository vdbRepo, JBossLifeCycleListener shutdownListener) {
+        this.nodeName = nodeName;
 		this.translatorRepository = translatorRepo;
 		this.vdbRepository = vdbRepo;
 		this.shutdownListener = shutdownListener;
@@ -159,7 +161,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		
 		this.vdbRepository.addPendingDeployment(deployment);
 		// build a VDB service
-		final VDBService vdb = new VDBService(deployment, resources, shutdownListener);
+		final VDBService vdb = new VDBService(this.nodeName, deployment, resources, shutdownListener);
 		vdb.addMetadataRepository("index", new IndexMetadataRepository()); //$NON-NLS-1$
 		
 		final ServiceBuilder<RuntimeVDB> vdbService = context.getServiceTarget().addService(TeiidServiceNames.vdbServiceName(deployment.getName(), deployment.getVersion()), vdb);

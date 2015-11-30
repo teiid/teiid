@@ -105,8 +105,10 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 	private VDBLifeCycleListener restEasyListener;
 	private VDBResources vdbResources;
 	private ContainerLifeCycleListener shutdownListener;
+	private String nodeName;
 	
-	public VDBService(VDBMetaData metadata, VDBResources vdbResources, ContainerLifeCycleListener shutdownListener) {
+	public VDBService(String nodeName, VDBMetaData metadata, VDBResources vdbResources, ContainerLifeCycleListener shutdownListener) {
+	    this.nodeName = nodeName;
 		this.vdb = metadata;
 		this.vdbResources = vdbResources;
 		this.shutdownListener = shutdownListener;
@@ -158,7 +160,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 				VDBMetaData vdbInstance = cvdb.getVDB();
 				if (vdbInstance.getStatus().equals(Status.ACTIVE)) {
 					// add object replication to temp/matview tables
-					GlobalTableStore gts = CompositeGlobalTableStore.createInstance(cvdb, getBuffermanager(), objectReplicatorInjector.getValue());
+					GlobalTableStore gts = CompositeGlobalTableStore.createInstance(nodeName, cvdb, getBuffermanager(), objectReplicatorInjector.getValue());
 
 					vdbInstance.addAttchment(GlobalTableStore.class, gts);
 					vdbService.install();

@@ -48,13 +48,13 @@ import org.teiid.runtime.RuntimePlugin;
 
 public class CompositeGlobalTableStore implements GlobalTableStore {
 
-	public static GlobalTableStore createInstance(CompositeVDB vdb, BufferManager bufferManager, ObjectReplicator replicator) {
+	public static GlobalTableStore createInstance(String nodeName, CompositeVDB vdb, BufferManager bufferManager, ObjectReplicator replicator) {
 		VDBMetaData vdbMetadata = vdb.getVDB();
 		QueryMetadataInterface metadata = vdbMetadata.getAttachment(TransformationMetadata.class);
 		GlobalTableStore gts = new GlobalTableStoreImpl(bufferManager, vdbMetadata, metadata);
 		if (replicator != null) {
 			try {
-				gts = replicator.replicate(vdbMetadata.getFullName(), GlobalTableStore.class, gts, 300000);
+				gts = replicator.replicate(nodeName, vdbMetadata.getFullName(), GlobalTableStore.class, gts, 300000);
 			} catch (Exception e) {
 				LogManager.logError(LogConstants.CTX_RUNTIME, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40088, gts));
 			}
