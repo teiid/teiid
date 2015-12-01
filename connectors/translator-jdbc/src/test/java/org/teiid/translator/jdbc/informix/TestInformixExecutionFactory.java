@@ -1,3 +1,4 @@
+package org.teiid.translator.jdbc.informix;
 /*
  * JBoss, Home of Professional Open Source.
  * See the COPYRIGHT.txt file distributed with this work for information
@@ -20,17 +21,26 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.net.socket;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.jdbc.TranslationHelper;
 
-import java.io.IOException;
+public class TestInformixExecutionFactory {
+	
+    private static InformixExecutionFactory TRANSLATOR; 
 
-import org.teiid.net.CommunicationException;
-import org.teiid.net.HostInfo;
-
-public interface ObjectChannelFactory {
-
-	int getSoTimeout();
-
-	ObjectChannel createObjectChannel(HostInfo info) throws CommunicationException, IOException;
+    @BeforeClass
+    public static void setUp() throws TranslatorException {
+        TRANSLATOR = new InformixExecutionFactory();        
+        TRANSLATOR.start();
+    }
+	
+    @Test public void testCast() throws Exception {
+		String input = "SELECT cast(INTKEY as string) FROM BQT1.SmallA"; //$NON-NLS-1$       
+        String output = "SELECT cast(SmallA.IntKey AS varchar(255)) FROM SmallA";  //$NON-NLS-1$
+        
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+	}
 	
 }

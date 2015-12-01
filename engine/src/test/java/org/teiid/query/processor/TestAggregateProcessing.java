@@ -39,6 +39,8 @@ import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.BinaryType;
+import org.teiid.core.types.ClobImpl;
+import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.AggregateAttributes;
 import org.teiid.metadata.FunctionMethod;
@@ -59,6 +61,7 @@ import org.teiid.query.resolver.TestResolver;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
+import org.teiid.query.util.Options;
 import org.teiid.query.validator.TestValidator;
 import org.teiid.translator.SourceSystemFunctions;
 
@@ -1191,6 +1194,52 @@ public class TestAggregateProcessing {
 		HardcodedDataManager hdm = new HardcodedDataManager();
 		ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata);
 		TestProcessor.helpProcess(plan, TestProcessor.createCommandContext(), hdm, null);
+	}
+	
+	@Test() public void testAggregateOrderByPushdown() throws Exception {
+		String sql = "SELECT string_agg(e1, ' ' order by e1) FROM pm1.g1"; //$NON-NLS-1$
+
+		TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+		HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+		
+		hdm.addData("SELECT STRING_AGG(g_0.e1, ' ' ORDER BY g_0.e1) FROM g1 AS g_0", Arrays.asList('a'));
+		
+		BasicSourceCapabilities bsc = TestAggregatePushdown.getAggregateCapabilities();
+		bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_STRING, true);
+		
+		ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder(bsc));
+		TestProcessor.helpProcess(plan, TestProcessor.createCommandContext(), hdm, new List[] {Arrays.asList('a')});
+		
+        bsc.setSourceProperty(Capability.COLLATION_LOCALE, "foo");
+
+        CommandContext cc = new CommandContext();
+        cc.setOptions(new Options().requireTeiidCollation(true));
+        CommandContext.pushThreadLocalContext(cc);
+        try {
+			plan = TestProcessor.helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
+			TestOptimizer.checkAtomicQueries(new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0"}, plan);
+        } finally {
+        	CommandContext.popThreadLocalContext();
+        }
+	}
+	
+	@Test() public void testDistinctOrdering() throws Exception {
+		String sql = "select string_agg(DISTINCT col1, ',' ORDER BY col2 DESC) as distinctOrderByDesc from (select 'a' as col1, 1 as col2 union all select 'b', 2) as x";
+		
+		TestValidator.helpValidate(sql, new String[] {"string_agg(DISTINCT col1, ',' ORDER BY col2 DESC)"}, RealMetadataFactory.example1Cached());
+	}
+	
+	@Test() public void testStringAggOrdering() throws Exception {
+		String sql = "select string_agg(col1, ',' ORDER BY col1 DESC) as orderByDesc,"
+				+ " string_agg(col1, ',' ORDER BY col1 ASC) as orderByAsc, "
+				+ " string_agg(DISTINCT col1, ',' ORDER BY col1 DESC) as distinctOrderByDesc, "
+				+ "	string_agg(DISTINCT col1, ',' ORDER BY col1 ASC) as distinctOrderByAsc from (select 'a' as col1 union all select 'b' union all select 'b' union all select 'c') as x";
+		
+		TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+		HardcodedDataManager hdm = new HardcodedDataManager();
+		ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata);
+		
+		TestProcessor.helpProcess(plan, TestProcessor.createCommandContext(), hdm, new List<?>[] { Arrays.asList(new ClobType(new ClobImpl("c,b,b,a")), new ClobType(new ClobImpl("a,b,b,c")), new ClobType(new ClobImpl("c,b,a")), new ClobType(new ClobImpl("a,b,c")))});
 	}
 
 }

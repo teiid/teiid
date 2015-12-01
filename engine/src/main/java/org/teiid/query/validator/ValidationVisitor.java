@@ -23,15 +23,7 @@
 package org.teiid.query.validator;
 
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 import javax.script.Compilable;
 import javax.script.ScriptEngine;
@@ -1168,10 +1160,10 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         Expression[] aggExps = obj.getArgs();
         
         for (Expression expression : aggExps) {
-            validateNoNestedAggs(expression);
+            validateNoNestedAggs(expression, obj.isWindowed());
 		}
-        validateNoNestedAggs(obj.getOrderBy());
-        validateNoNestedAggs(obj.getCondition());
+        validateNoNestedAggs(obj.getOrderBy(), false);
+        validateNoNestedAggs(obj.getCondition(), false);
         
         // Verify data type of aggregate expression
         Type aggregateFunction = obj.getAggregateFunction();
@@ -1184,6 +1176,8 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         		handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.non_boolean", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
         	} else if (aggregateFunction == Type.JSONARRAY_AGG) {
 				validateJSONValue(obj, aggExps[0]);
+        	} else if (obj.getType() == null) {
+        		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.aggregate_type", obj), obj); //$NON-NLS-1$
         	}
         }
         if((obj.isDistinct() || aggregateFunction == Type.MIN || aggregateFunction == Type.MAX) && DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(aggExps[0].getType()))) {
@@ -1197,6 +1191,15 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         		handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.invalid_distinct", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
         	}
         }
+    	if (obj.isDistinct() && obj.getOrderBy() != null) {
+    		HashSet<Expression> args = new HashSet<Expression>(Arrays.asList(obj.getArgs()));
+    		for (OrderByItem item : obj.getOrderBy().getOrderByItems()) {
+    			if (!args.contains(item.getSymbol())) {
+    				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.distinct_orderby_agg", obj), obj); //$NON-NLS-1$
+    				break;
+    			}
+    		}
+    	}
     	if (obj.getAggregateFunction() != Type.TEXTAGG) {
     		return;
     	}
@@ -1205,7 +1208,14 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     		validateDerivedColumnNames(obj, tl.getExpressions());
     	}
     	for (DerivedColumn dc : tl.getExpressions()) {
-			validateXMLContentTypes(dc.getExpression(), obj);
+    		Expression expression = dc.getExpression();
+    		if (expression.getType() == DataTypeManager.DefaultDataClasses.OBJECT
+    				|| expression.getType() == null
+    				|| expression.getType().isArray()
+    				|| expression.getType() == DataTypeManager.DefaultDataClasses.VARBINARY
+    				|| expression.getType() == DataTypeManager.DefaultDataClasses.BLOB) {
+    			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.text_content_type", expression), obj); //$NON-NLS-1$
+    		}
 		}
     	validateTextOptions(obj, tl.getDelimiter(), tl.getQuote(), '\n');
     	if (tl.getEncoding() != null) {
@@ -1234,11 +1244,11 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 		}
 	}
     
-	private void validateNoNestedAggs(LanguageObject aggExp) {
+	private void validateNoNestedAggs(LanguageObject aggExp, boolean windowOnly) {
 		// Check for any nested aggregates (which are not allowed)
         if(aggExp != null) {
         	HashSet<Expression> nestedAggs = new LinkedHashSet<Expression>();
-            AggregateSymbolCollectorVisitor.getAggregates(aggExp, nestedAggs, null, null, nestedAggs, null);
+            AggregateSymbolCollectorVisitor.getAggregates(aggExp, windowOnly?null:nestedAggs, null, null, nestedAggs, null);
             if(!nestedAggs.isEmpty()) {
                 handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0039", nestedAggs), nestedAggs); //$NON-NLS-1$
             }
@@ -1291,7 +1301,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     }
     
     public void validateXMLContentTypes(Expression expression, LanguageObject parent) {
-		if (expression.getType() == DataTypeManager.DefaultDataClasses.OBJECT || expression.getType() == DataTypeManager.DefaultDataClasses.BLOB) {
+		if (expression.getType() == DataTypeManager.DefaultDataClasses.OBJECT || expression.getType() == null || expression.getType().isArray()) {
 			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.xml_content_type", expression), parent); //$NON-NLS-1$
 		}
     }

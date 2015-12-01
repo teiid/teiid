@@ -21,9 +21,7 @@
  */
 package org.teiid.translator.odata4;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -31,7 +29,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.StringReader;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.List;
@@ -45,7 +42,6 @@ import javax.xml.ws.http.HTTPBinding;
 
 import org.apache.olingo.commons.api.edm.provider.CsdlComplexType;
 import org.apache.olingo.commons.api.edm.provider.CsdlReturnType;
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -59,7 +55,6 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.ResultSetExecution;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.WSConnection;
 
 @SuppressWarnings({"nls", "unused"})
@@ -130,9 +125,15 @@ public class TestODataQueryExecution {
 		assertEquals(expectedURL, URLDecoder.decode(endpoint.getValue(), "utf-8"));
 		return execution;
 	}
+    
+    private ProcedureExecution helpProcedureExecute(MetadataFactory mf, String query,
+            final String resultJson, String expectedURL, int responseCode) 
+            		throws Exception {
+    	return helpProcedureExecute(mf, query, resultJson, expectedURL, responseCode, true);
+    }
 
     private ProcedureExecution helpProcedureExecute(MetadataFactory mf, String query,
-            final String resultJson, String expectedURL, int responseCode)
+            final String resultJson, String expectedURL, int responseCode, boolean decode)
             throws Exception {
 
         ODataExecutionFactory translator = new ODataExecutionFactory();
@@ -188,7 +189,7 @@ public class TestODataQueryExecution {
         Mockito.verify(connection).createDispatch(binding.capture(),
                 endpoint.capture(), Mockito.eq(DataSource.class),
                 Mockito.eq(Mode.MESSAGE));
-        assertEquals(expectedURL, URLDecoder.decode(endpoint.getValue(), "utf-8"));
+        assertEquals(expectedURL, decode?URLDecoder.decode(endpoint.getValue(), "utf-8"):endpoint.getValue());
         return execution;
     }    
     
@@ -499,6 +500,23 @@ public class TestODataQueryExecution {
         MetadataFactory mf = TestODataMetadataProcessor.functionMetadata("invoke", returnType, null);
 
         ProcedureExecution excution = helpProcedureExecute(mf, query, response, expectedURL, 200);
+        
+        assertArrayEquals(new Object[] {"returnX"}, 
+                excution.getOutputParameterValues().toArray(new Object[1]));
+    }
+    
+    @Test
+    public void testFunctionReturnsPrimitiveEncoded() throws Exception {
+        String query = "exec invoke(1, 'foo bar')";
+        String expectedURL = "invoke?e1=1&e2=%27foo%20bar%27";
+        String response = "{\"value\":\"returnX\"}";
+        
+        CsdlReturnType returnType = new CsdlReturnType();
+        returnType.setType("Edm.String");
+        
+        MetadataFactory mf = TestODataMetadataProcessor.functionMetadata("invoke", returnType, null);
+
+        ProcedureExecution excution = helpProcedureExecute(mf, query, response, expectedURL, 200, false);
         
         assertArrayEquals(new Object[] {"returnX"}, 
                 excution.getOutputParameterValues().toArray(new Object[1]));

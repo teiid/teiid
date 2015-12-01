@@ -487,6 +487,7 @@ public class TestInsertProcessing {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
         caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, true);
         DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(caps); 
         
         TestOptimizer.helpPlan(sql, metadata, new String[] {"INSERT INTO Test_Insert (status) SELECT CASE WHEN (v_0.c_0 = '0') AND (v_0.c_1 > 0) THEN '4' ELSE v_0.c_0 END FROM (SELECT g_0.a AS c_0, (SELECT COUNT(*) FROM y.test_a AS g_1) AS c_1 FROM y.test_a AS g_0) AS v_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING);
@@ -565,6 +566,21 @@ public class TestInsertProcessing {
         
         HardcodedDataManager dataManager = new HardcodedDataManager(tm);
         dataManager.addData("INSERT INTO t (y, z) VALUES ('1', 'a')", new List<?>[] {Arrays.asList(1)});
+        helpProcess(plan, dataManager, new List<?>[] {Arrays.asList(1)}); 
+    }
+    
+    @Test public void testInsertDefaultResolvingExpression() throws Exception {
+        String sql = "insert into x (y) values ('1')"; //$NON-NLS-1$
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("" +
+        		"create foreign table t (y string, z string) options (updatable true); " +
+        		"create view x (y string, z string default '''a'' || user()' options (\"teiid_rel:default_handling\" 'expression')) options (updatable true) as select * from t; " +
+        		"create trigger on x instead of insert as for each row begin insert into t (y, z) values (new.y, new.z); end;", "vdb", "source");
+        Command command = helpParse(sql); 
+
+        ProcessorPlan plan = helpGetPlan(command, tm, TestOptimizer.getGenericFinder()); 
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        dataManager.addData("INSERT INTO t (y, z) VALUES ('1', 'auser')", new List<?>[] {Arrays.asList(1)});
         helpProcess(plan, dataManager, new List<?>[] {Arrays.asList(1)}); 
     }
     

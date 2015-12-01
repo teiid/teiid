@@ -98,6 +98,8 @@ import org.teiid.query.util.Options;
  */
 public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunnable {
 	
+	public static final String REQUEST_KEY = "teiid-request"; //$NON-NLS-1$
+	
 	//TODO: this could be configurable
 	private static final int OUTPUT_BUFFER_MAX_BATCHES = 8;
 	private static final int CLIENT_FETCH_MAX_BATCHES = 3;
@@ -266,6 +268,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	public void run() {
 		hasThread = true;
 		timer.start();
+		LogManager.putMdc(REQUEST_KEY, requestID.toString());
 		try {
 			while (!isDoneProcessing()) {
 				super.run();
@@ -293,6 +296,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 			}
 		} finally {
 			timer.stop();
+			LogManager.removeMdc(REQUEST_KEY);
 			hasThread = false;
 		}
 	}
@@ -457,6 +461,10 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 			}
 			this.processor.getContext().setTimeSliceEnd(System.currentTimeMillis() + this.processorTimeslice);
 			sendResultsIfNeeded(null);
+			if (resultsReceiver == null && cursorRequestExpected()) {
+				//if we proceed we'll possibly violate the precondition of sendResultsIfNeeded, so wait until results are asked for
+				return; 
+			}
 			try {
 				CommandContext.pushThreadLocalContext(this.processor.getContext());
 				this.resultsBuffer = collector.collectTuples();
@@ -829,7 +837,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		boolean result = true;
 		synchronized (this) {
 			if (this.resultsReceiver == null) {
-				if (this.transactionState != TransactionState.ACTIVE && (requestMsg.getRequestOptions().isContinuous() || (useCallingThread && isForwardOnly()))) {
+				if (cursorRequestExpected()) {
 					if (batch != null) {
 						throw new AssertionError("batch has no handler"); //$NON-NLS-1$
 					}
@@ -898,7 +906,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	    			boolean last = false;
 	    			if (endRow == batch.getEndRow()) {
 	    				last = batch.getTerminationFlag();
-	    			} else if (fromBuffer && isForwardOnly()) {
+	    			} else if (isForwardOnly()) {
 	        			savedBatch = batch;
 	    			}
 	                List<List<?>> memoryRows = batch.getTuples();
@@ -983,6 +991,10 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		setAnalysisRecords(response);
         receiver.receiveResults(response);
         return result;
+	}
+
+	private boolean cursorRequestExpected() {
+		return this.transactionState != TransactionState.ACTIVE && (requestMsg.getRequestOptions().isContinuous() || (useCallingThread && isForwardOnly()));
 	}
 
 	private void setWarnings(ResultsMessage response) {
@@ -1283,12 +1295,14 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	
 	<T> FutureWork<T> addHighPriorityWork(Callable<T> callable) {
 		FutureWork<T> work = new FutureWork<T>(callable, PrioritizedRunnable.NO_WAIT_PRIORITY);
+		work.setRequestId(this.requestID.toString());
 		dqpCore.addWork(work);
 		return work;
 	}
 	
     <T> FutureWork<T> addWork(Callable<T> callable, CompletionListener<T> listener, int priority) {
     	FutureWork<T> work = new FutureWork<T>(callable, priority);
+    	work.setRequestId(this.requestID.toString());
     	WorkWrapper<T> wl = new WorkWrapper<T>(work);
     	work.addCompletionListener(wl);
     	work.addCompletionListener(listener);

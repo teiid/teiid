@@ -28,14 +28,16 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.language.Command;
-import org.teiid.language.LanguageObject;
-import org.teiid.language.Literal;
-import org.teiid.language.QueryExpression;
+import org.teiid.core.util.Assertion;
+import org.teiid.language.*;
+import org.teiid.language.Comparison.Operator;
+import org.teiid.language.SubqueryComparison.Quantifier;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
@@ -188,6 +190,12 @@ public class HBaseExecutionFactory extends JDBCExecutionFactory {
      */
     @Override
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
+    	if (obj instanceof SubqueryIn) {
+    		SubqueryIn in = (SubqueryIn)obj;
+    		return Arrays.asList(new SubqueryComparison(in.getLeftExpression(), 
+    				in.isNegated()?Operator.NE:Operator.EQ, 
+    						in.isNegated()?Quantifier.ALL:Quantifier.SOME, in.getSubquery()));
+    	}
     	if (!(obj instanceof Literal)) {
     		return super.translate(obj, context);
     	}
@@ -262,6 +270,47 @@ public class HBaseExecutionFactory extends JDBCExecutionFactory {
     	//same issue with foreign keys
     	processor.setImportForeignKeys(false);
     	return processor;
+    }
+    
+    @Override
+    public Character getRequiredLikeEscape() {
+    	return '\\';
+    }
+    
+    @Override
+    public List<?> translateCommand(Command command, ExecutionContext context) {
+    	if (command instanceof SetQuery) {
+    		SetQuery set = (SetQuery)command;
+    		if (!set.isAll()) {
+    			//distinct is not supported, convert to an inline view and add distinct
+    			Select s = new Select();
+    			s.setDistinct(true);
+    			s.setDerivedColumns(new ArrayList<DerivedColumn>());
+    			s.setOrderBy(set.getOrderBy());
+    			for (DerivedColumn dc : set.getProjectedQuery().getDerivedColumns()) {
+    				Assertion.assertTrue(dc.getAlias() != null); //it's expected that the columns will be aliases
+    				ColumnReference cr = new ColumnReference(null, dc.getAlias(), null, dc.getExpression().getType());
+    				s.getDerivedColumns().add(new DerivedColumn(null, cr));
+    			}
+    			set.setOrderBy(null);
+    			s.setLimit(set.getLimit());
+    			set.setLimit(null);
+    			set.setAll(true);
+    			s.setFrom(Arrays.asList((TableReference)new DerivedTable(set, "x"))); //$NON-NLS-1$
+    			return Arrays.asList(s);
+    		}
+    	}
+    	return super.translateCommand(command, context);
+    }
+    
+    @Override
+    public boolean supportsRowLimit() {
+    	return true;
+    }
+    
+    @Override
+    public boolean supportsScalarSubqueryProjection() {
+    	return false; //not supported in the select clause
     }
     
 }

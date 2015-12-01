@@ -125,3 +125,4 @@ CREATE FOREIGN TABLE NoPKTable (
 
 CREATE FOREIGN PROCEDURE getUnit() RETURNS varchar(10);
 CREATE FOREIGN PROCEDURE getCustomers(OUT p1 boolean, p2 timestamp, INOUT p3 decimal) RETURNS integer;
+CREATE FOREIGN PROCEDURE getSuppliers(IN p3 integer) RETURNS TABLE (SupplierID integer, CompanyName varchar(40));

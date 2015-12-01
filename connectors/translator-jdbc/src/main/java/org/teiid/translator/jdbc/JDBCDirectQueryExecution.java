@@ -59,7 +59,8 @@ public class JDBCDirectQueryExecution extends JDBCQueryExecution implements Proc
     	String sourceSQL = (String) this.arguments.get(0).getArgumentValue().getValue();
     	List<Argument> parameters = this.arguments.subList(1, this.arguments.size());
     			
-        LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Source sql", sourceSQL); //$NON-NLS-1$
+        LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Source-specific command: ", sourceSQL); //$NON-NLS-1$
+        context.logCommand(sourceSQL);
         int paramCount = parameters.size();
         
         try {

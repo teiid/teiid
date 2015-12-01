@@ -178,6 +178,20 @@ public class TestArrayProcessing {
 	    assertTrue(c.getValue() instanceof ArrayImpl);
 	}
 	
+	@Test public void testArrayResolvingNull() throws Exception {
+		String sql = "select (null, 'a')"; //$NON-NLS-1$
+        
+		QueryResolver.resolveCommand(helpParse(sql), RealMetadataFactory.example1Cached());
+		Command command = helpResolve(sql, RealMetadataFactory.example1Cached());
+	    assertEquals(String[].class, command.getProjectedSymbols().get(0).getType());
+	    
+		sql = "select ((null,), ('a',))"; //$NON-NLS-1$
+        
+		QueryResolver.resolveCommand(helpParse(sql), RealMetadataFactory.example1Cached());
+		command = helpResolve(sql, RealMetadataFactory.example1Cached());
+	    assertEquals(String[][].class, command.getProjectedSymbols().get(0).getType());
+	}
+	
 	/**
 	 * TODO
  	@Test public void testArrayLobs() {

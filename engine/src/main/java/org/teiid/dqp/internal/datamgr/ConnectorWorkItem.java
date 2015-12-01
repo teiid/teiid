@@ -135,8 +135,8 @@ public class ConnectorWorkItem implements ConnectorWork {
         this.securityContext = new ExecutionContextImpl(message.getCommandContext(),                                                                      
                 requestMsg.getConnectorName(),
                 Integer.toString(requestID.getNodeID()),
-                Integer.toString(requestID.getExecutionId())
-                );
+                Integer.toString(requestID.getExecutionId()),
+                this);
         SourceHint hint = message.getCommand().getSourceHint();
         if (hint != null) {
 	        this.securityContext.setGeneralHints(hint.getGeneralHints());
@@ -691,5 +691,9 @@ public class ConnectorWorkItem implements ConnectorWork {
             return false;
         return true;
     }
+
+	public void logCommand(Object... command) {
+		this.manager.logSRCCommand(this.requestMsg, securityContext, Event.SOURCE, null, null, command);
+	}
 
 }

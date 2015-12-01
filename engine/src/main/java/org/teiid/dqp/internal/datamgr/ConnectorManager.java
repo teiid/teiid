@@ -256,12 +256,16 @@ public class ConnectorManager  {
     		workItem.cancel();
 		}
     }
+    
+    void logSRCCommand(AtomicRequestMessage qr, ExecutionContext context, Event cmdStatus, Integer finalRowCnt, Long cpuTime) {
+    	logSRCCommand(qr, context, cmdStatus, finalRowCnt, cpuTime, null);
+    }
 
     /**
      * Add begin point to transaction monitoring table.
      * @param qr Request that contains the MetaMatrix command information in the transaction.
      */
-    void logSRCCommand(AtomicRequestMessage qr, ExecutionContext context, Event cmdStatus, Integer finalRowCnt, Long cpuTime) {
+    void logSRCCommand(AtomicRequestMessage qr, ExecutionContext context, Event cmdStatus, Integer finalRowCnt, Long cpuTime, Object[] command) {
     	if (!LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.DETAIL)) {
     		return;
     	}
@@ -287,6 +291,9 @@ public class ConnectorManager  {
         } 
         else {
             message = new CommandLogMessage(System.currentTimeMillis(), qr.getRequestID().toString(), sid.getNodeID(), transactionID, modelName, translatorName, qr.getWorkContext().getSessionId(), principal, finalRowCnt, cmdStatus, context, cpuTime);
+            if (cmdStatus == Event.SOURCE) {
+            	message.setSourceCommand(command);
+            }
         }      
         LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_COMMANDLOGGING, message);
     }
@@ -339,5 +346,5 @@ public class ConnectorManager  {
     public List<String> getId() {
 		return id;
 	}
-    
+
 }

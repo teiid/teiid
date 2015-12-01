@@ -54,6 +54,7 @@ import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
+import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.JDBCMetdataProcessor;
@@ -93,6 +94,7 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 				return Arrays.asList("DATEPART(ISO_WEEK, ", function.getParameters().get(0), ")"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		});
+		registerFunctionModifier(SourceSystemFunctions.LOCATE, new AliasModifier("CHARINDEX")); //$NON-NLS-1$
 	}
 
 	@Override
@@ -187,7 +189,7 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
         supportedFunctions.add("LCASE"); //$NON-NLS-1$
         supportedFunctions.add("LEFT"); //$NON-NLS-1$
         supportedFunctions.add("LENGTH"); //$NON-NLS-1$
-        //supportedFunctons.add("LOCATE"); //$NON-NLS-1$
+        supportedFunctions.add(SourceSystemFunctions.LOCATE);
         supportedFunctions.add("LOWER"); //$NON-NLS-1$
         //supportedFunctons.add("LPAD"); //$NON-NLS-1$
         supportedFunctions.add("LTRIM"); //$NON-NLS-1$
@@ -272,7 +274,7 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     }
     
     /**
-     * Overriden to allow for year based versions
+     * Overridden to allow for year based versions
      */
     @Override
     public void setDatabaseVersion(String version) {

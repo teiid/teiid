@@ -227,4 +227,10 @@ public interface ExecutionContext {
      * @return the {@link RuntimeMetadata}
      */
     RuntimeMetadata getRuntimeMetadata();
+    
+    /**
+     * Log the source command to the command log
+     * @param command
+     */
+    void logCommand(Object... command);
 }
