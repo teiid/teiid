@@ -618,7 +618,6 @@
                <groupId>org.jboss.teiid.connectors</groupId>
                <artifactId>connector-file</artifactId>
                <version>${project.version}</version>
-               <classifier>lib</classifier>
            </dependency>
 
       <!-- External dependencies -->
