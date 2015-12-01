@@ -224,7 +224,7 @@ public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
 
     @Override
     public String translateLiteralTimestamp(Timestamp timestampValue) {
-        return '\'' + formatDateValue(timestampValue) + '\'';
+        return "cast('" + formatDateValue(timestampValue) + "' as timestamp)"; //$NON-NLS-1$ //$NON-NLS-2$
     }
 
 

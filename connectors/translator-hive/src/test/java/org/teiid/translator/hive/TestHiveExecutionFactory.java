@@ -109,7 +109,7 @@ public class TestHiveExecutionFactory {
     
     @Test public void testTimeLiterals() throws Exception {
         String input = "SELECT {ts '1999-01-01 11:11:11'}, {d '2000-02-02'}, {t '00:00:00'} FROM BQT1.SMALLA A"; 
-        String output = "SELECT '1999-01-01 11:11:11.0', '2000-02-02', '1970-01-01 00:00:00.0' FROM SmallA A"; 
+        String output = "SELECT cast('1999-01-01 11:11:11.0' as timestamp), '2000-02-02', cast('1970-01-01 00:00:00.0' as timestamp) FROM SmallA A"; 
         helpTestVisitor(bqt, input, output);
     }
     
