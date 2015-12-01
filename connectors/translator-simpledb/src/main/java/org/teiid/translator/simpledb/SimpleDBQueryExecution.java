@@ -21,7 +21,12 @@
  */
 package org.teiid.translator.simpledb;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.teiid.language.Select;
 import org.teiid.metadata.RuntimeMetadata;
@@ -103,7 +108,7 @@ public class SimpleDBQueryExecution implements ResultSetExecution {
         Map<String, List<String>> valueMap = createAttributeMap(item.getAttributes());
         List row = new ArrayList();
         for (int i = 0; i < visitor.getProjectedColumns().size(); i++) {
-            String columnName = SimpleDBMetadataProcessor.getName(this.visitor.getProjectedColumns().get(i));
+            String columnName = visitor.getProjectedColumns().get(i);
             if (SimpleDBMetadataProcessor.isItemName(columnName)) {
                 row.add(SimpleDBDataTypeManager.convertFromSimpleDBType(Arrays.asList(item.getName()), expectedColumnTypes[i]));
                 continue;
