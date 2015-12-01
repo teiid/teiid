@@ -127,6 +127,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 	@Override
 	public void execute() throws TranslatorException {
 		try {
+			//redundant with command log
 			LogManager.logDetail(LogConstants.CTX_CONNECTOR, getLogPreamble(), "Incoming Query:", query); //$NON-NLS-1$
 			List<TableReference> from = ((Select)query).getFrom();
 			if(from.get(0) instanceof Join) {
@@ -136,11 +137,14 @@ public class QueryExecutionImpl implements ResultSetExecution {
 			}
 			visitor.visitNode(query);
 			if(visitor.canRetrieve()) {
+				context.logCommand("Using retrieve: ", visitor.getRetrieveFieldList(), visitor.getTableName(), visitor.getIdInCriteria()); //$NON-NLS-1$
 				results = connection.retrieve(visitor.getRetrieveFieldList(),
 						visitor.getTableName(), visitor.getIdInCriteria());
 			} else {
 				String finalQuery = visitor.getQuery().trim();
+				//redundant
 				LogManager.logDetail(LogConstants.CTX_CONNECTOR,  getLogPreamble(), "Executing Query:", finalQuery); //$NON-NLS-1$
+				context.logCommand(finalQuery);
 				results = connection.query(finalQuery, this.context.getBatchSize(), visitor.getQueryAll());
 			}
 		} catch (ResourceException e) {

@@ -69,12 +69,14 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor.EvaluationLevel;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
+import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
 import org.teiid.query.util.CommandContext;
 
 
@@ -674,6 +676,16 @@ public class PlanToProcessConverter {
 		    		visitor.setAliasMapping(context.getAliasMapping());
 		    	}
 		    }
+			List<Reference> references = ReferenceCollectorVisitor.getReferences(command);
+			if (!references.isEmpty()) {
+				Set<String> correleatedGroups = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+				for (Reference ref : references) {
+					if (ref.isCorrelated() && ref.getExpression().getGroupSymbol() != null) {
+						correleatedGroups.add(ref.getExpression().getGroupSymbol().getName());
+					}
+				}
+				visitor.setCorrelationGroups(correleatedGroups);
+			}
 			command.acceptVisitor(visitor);
 		} catch (QueryMetadataException err) {
 		     throw new TeiidComponentException(QueryPlugin.Event.TEIID30249, err);

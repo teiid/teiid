@@ -447,6 +447,10 @@ public class TestTextTable {
         helpProcess(plan, hdm, expected);    	
     }
     
+    @Test public void testTextAggBinary() throws Exception {
+    	TestValidator.helpValidate("select textagg(X'ab') from pm1.g1", new String[] {"TEXTAGG(FOR X'AB')"}, RealMetadataFactory.example1Cached());
+    }
+    
     @Test public void testTextAggOrderByUnrelated() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();

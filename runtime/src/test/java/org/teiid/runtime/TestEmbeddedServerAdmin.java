@@ -48,7 +48,6 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.resource.adapter.file.FileManagedConnectionFactory;
 import org.teiid.translator.file.FileExecutionFactory;
 
 @SuppressWarnings("nls")
@@ -66,10 +65,6 @@ public class TestEmbeddedServerAdmin {
 		FileExecutionFactory executionFactory = new FileExecutionFactory();
 		executionFactory.start();
 		server.addTranslator("file", executionFactory);
-		
-		FileManagedConnectionFactory managedconnectionFactory = new FileManagedConnectionFactory();
-		managedconnectionFactory.setParentDirectory("src/test/resources");
-		server.addConnectionFactory("java:/test-file", managedconnectionFactory.createConnectionFactory());
 		
 		server.deployVDB(new FileInputStream(new File("src/test/resources/adminapi-test-vdb.xml")));
 //		admin = server.getAdmin();

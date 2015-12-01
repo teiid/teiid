@@ -97,8 +97,8 @@ public class TestSocketServerInstanceImpl {
 		}
 		
 		@Override
-		public ObjectChannel createObjectChannel(SocketAddress address,
-				boolean ssl) throws IOException, CommunicationException {
+		public ObjectChannel createObjectChannel(HostInfo info)
+				throws CommunicationException, IOException {
 			return this;
 		}
 		

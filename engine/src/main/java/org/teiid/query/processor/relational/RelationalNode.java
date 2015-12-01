@@ -41,6 +41,7 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.Assertion;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.processor.BatchCollector.BatchProducer;
 import org.teiid.query.processor.ProcessorDataManager;
@@ -267,24 +268,25 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
      * @since 4.2
      */
     public final TupleBatch nextBatch() throws BlockedException,  TeiidComponentException, TeiidProcessingException {
-        boolean recordStats = this.getProcessingState().context != null && this.getProcessingState().context.getCollectNodeStatistics();
-        
+    	CommandContext context = this.getContext();
+		if (context != null && context.isCancelled()) {
+        	throw new TeiidProcessingException(QueryPlugin.Event.TEIID30160, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30160, getContext().getRequestId()));
+        }
+        boolean recordStats = context != null && context.getCollectNodeStatistics();
         try {
             while (true) {
             	//start timer for this batch
-                if(recordStats && this.getProcessingState().context.getCollectNodeStatistics()) {
+                if(recordStats) {
                     this.getProcessingState().nodeStatistics.startBatchTimer();
                 }
                 TupleBatch batch = nextBatchDirect();
                 if (recordStats) {
-                    if(this.getProcessingState().context.getCollectNodeStatistics()) {
-                        // stop timer for this batch (normal)
-                        this.getProcessingState().nodeStatistics.stopBatchTimer();
-                        this.getProcessingState().nodeStatistics.collectCumulativeNodeStats(batch, RelationalNodeStatistics.BATCHCOMPLETE_STOP);
-                        if (batch.getTerminationFlag()) {
-                            this.getProcessingState().nodeStatistics.collectNodeStats(this.getChildren());
-                            //this.nodeStatistics.dumpProperties(this.getClassName());
-                        }
+                    // stop timer for this batch (normal)
+                    this.getProcessingState().nodeStatistics.stopBatchTimer();
+                    this.getProcessingState().nodeStatistics.collectCumulativeNodeStats(batch, RelationalNodeStatistics.BATCHCOMPLETE_STOP);
+                    if (batch.getTerminationFlag()) {
+                        this.getProcessingState().nodeStatistics.collectNodeStats(this.getChildren());
+                        //this.nodeStatistics.dumpProperties(this.getClassName());
                     }
                     this.recordBatch(batch);
                     recordStats = false;
@@ -300,7 +302,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
                 }
             }
         } catch (BlockedException e) {
-            if(recordStats && this.getProcessingState().context.getCollectNodeStatistics()) {
+            if(recordStats) {
                 // stop timer for this batch (BlockedException)
                 this.getProcessingState().nodeStatistics.stopBatchTimer();
                 this.getProcessingState().nodeStatistics.collectCumulativeNodeStats(null, RelationalNodeStatistics.BLOCKEDEXCEPTION_STOP);
@@ -308,7 +310,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
             }
             throw e;
         } finally {
-            if(recordStats &&  this.getProcessingState().context.getCollectNodeStatistics()) {
+            if(recordStats) {
                 this.getProcessingState().nodeStatistics.stopBatchTimer();
             }
         }

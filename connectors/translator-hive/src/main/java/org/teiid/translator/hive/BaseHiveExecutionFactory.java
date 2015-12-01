@@ -21,7 +21,10 @@
  */
 package org.teiid.translator.hive;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
+import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
@@ -233,22 +236,56 @@ public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     public JDBCMetdataProcessor getMetadataProcessor(){
-    	if (useDatabaseMetaData) {
-    		JDBCMetdataProcessor processor = new JDBCMetdataProcessor();
-    		processor.setImportKeys(false);
-    		processor.setQuoteString("`"); //$NON-NLS-1$
-    		return processor;
-    	}
-        return new HiveMetadataProcessor();
+        HiveMetadataProcessor result = new HiveMetadataProcessor();
+        result.setUseDatabaseMetaData(this.useDatabaseMetaData);
+        return result;
     }
 
     @Override
     public Object retrieveValue(ResultSet results, int columnIndex, Class<?> expectedType) throws SQLException {
+		// Calendar based getX not supported by Hive
     	if (expectedType.equals(Timestamp.class)) {
-    		// Calendar based getTimestamp not supported by Hive
     		return results.getTimestamp(columnIndex);
     	}
+    	if (expectedType.equals(Date.class)) {
+    		return results.getDate(columnIndex);
+    	}
+    	if (expectedType.equals(Time.class)) {
+    		return results.getTime(columnIndex);
+    	}
     	return super.retrieveValue(results, columnIndex, expectedType);
+    }
+    
+    @Override
+    public Object retrieveValue(CallableStatement results, int parameterIndex,
+    		Class<?> expectedType) throws SQLException {
+		// Calendar based getX not supported by Hive
+    	if (expectedType.equals(Timestamp.class)) {
+    		return results.getTimestamp(parameterIndex);
+    	}
+    	if (expectedType.equals(Date.class)) {
+    		return results.getDate(parameterIndex);
+    	}
+    	if (expectedType.equals(Time.class)) {
+    		return results.getTime(parameterIndex);
+    	}
+    	return super.retrieveValue(results, parameterIndex, expectedType);
+    }
+    
+    @Override
+    public void bindValue(PreparedStatement stmt, Object param,
+    		Class<?> paramType, int i) throws SQLException {
+    	// Calendar based setX not supported by Hive
+    	if (paramType.equals(Timestamp.class)) {
+    		stmt.setTimestamp(i, (Timestamp) param);
+    	}
+    	if (paramType.equals(Date.class)) {
+    		stmt.setDate(i, (Date) param);
+    	}
+    	if (paramType.equals(Time.class)) {
+    		stmt.setTime(i, (Time) param);
+    	}
+    	super.bindValue(stmt, param, paramType, i);
     }
     
     protected FunctionMethod addAggregatePushDownFunction(String qualifier, String name, String returnType, String...paramTypes) {

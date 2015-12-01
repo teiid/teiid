@@ -1396,6 +1396,11 @@ public final class FunctionMethods {
         return context.getConnectionId();
     }
     
+    @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
+    public static Object node_id() {
+        return System.getProperty("jboss.node.name"); //$NON-NLS-1$
+    }
+    
     // ================= Function - MODIFYTIMEZONE ========================
     
     public static Object modifyTimeZone(Timestamp value, String originalTimezoneString, String targetTimezoneString) {

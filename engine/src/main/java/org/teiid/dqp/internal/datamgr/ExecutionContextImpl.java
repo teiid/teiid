@@ -67,6 +67,7 @@ public class ExecutionContextImpl implements ExecutionContext {
 	private CommandContext commandContext;
 	private CacheDirective cacheDirective;
 	private RuntimeMetadata runtimeMetadata;
+	private ConnectorWorkItem workItem;
 	
 	public ExecutionContextImpl(String vdbName, int vdbVersion,  Serializable executionPayload, 
             String originalConnectionID, String connectorName, long requestId, String partId, String execCount) {
@@ -81,11 +82,12 @@ public class ExecutionContextImpl implements ExecutionContext {
         this.executeCount = execCount;
 	}
     
-    public ExecutionContextImpl(CommandContext commandContext, String connectorName, String partId, String execCount) {
+    public ExecutionContextImpl(CommandContext commandContext, String connectorName, String partId, String execCount, ConnectorWorkItem workItem) {
         this.connectorName = connectorName;
         this.partID = partId;        
         this.executeCount = execCount;
         this.commandContext = commandContext;
+        this.workItem = workItem;
     }
     
     @Override
@@ -296,6 +298,13 @@ public class ExecutionContextImpl implements ExecutionContext {
 	@Override
 	public RuntimeMetadata getRuntimeMetadata() {
 		return this.runtimeMetadata;
+	}
+	
+	@Override
+	public void logCommand(Object... command) {
+		if (this.workItem != null) {
+			this.workItem.logCommand(command);
+		}
 	}
 
 }

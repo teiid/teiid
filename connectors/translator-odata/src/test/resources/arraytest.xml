@@ -10,7 +10,7 @@
 					<PropertyRef Name="e1" />
 				</Key>
 				<Property Name="e1" Type="Edm.Int32" Nullable="true" />
-				<Property Name="e3" Type="List(Edm.Int32)" Nullable="true" />
+				<Property Name="e3" Type="Collection(Edm.Int32)" Nullable="true" />
 			</EntityType>
 			<ComplexType Name="ARRAYITERATE_RSParam">
 				<Property Name="col" Type="Edm.Binary" Nullable="true" />
@@ -18,7 +18,7 @@
 			<EntityContainer Name="PM1" m:IsDefaultEntityContainer="true">
 				<EntitySet Name="G2" EntityType="PM1.G2" />
 				<FunctionImport Name="ARRAYITERATE"	ReturnType="Collection(PM1.ARRAYITERATE_RSParam)" m:HttpMethod="GET">
-					<Parameter Name="val" Type="List(Edm.Binary)" Mode="In" Nullable="true" />
+					<Parameter Name="val" Type="Collection(Edm.Binary)" Mode="In" Nullable="true" />
 				</FunctionImport>
 			</EntityContainer>
 		</Schema>

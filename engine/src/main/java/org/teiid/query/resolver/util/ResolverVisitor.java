@@ -340,14 +340,20 @@ public class ResolverVisitor extends LanguageVisitor {
 	    		Class<?> type = null;
 	    		for (int i = 0; i < array.getExpressions().size(); i++) {
 	    			Expression expr = array.getExpressions().get(i);
-	    			if (type == null) {
-	    				type = expr.getType();
-	    			} else if (type != expr.getType()) {
-	    				type = DataTypeManager.DefaultDataClasses.OBJECT;
+	    			Class<?> baseType = expr.getType();
+	    			while (baseType != null && baseType.isArray()) {
+	    				baseType = baseType.getComponentType();
+	    			}
+	    			if (baseType != DefaultDataClasses.NULL) {
+		    			if (type == null) {
+		    				type = expr.getType();
+		    			} else if (type != expr.getType()) {
+		    				type = DataTypeManager.DefaultDataClasses.OBJECT;
+		    			}
 	    			}
 	    		}
 	    		if (type == null) {
-	    			type = DataTypeManager.DefaultDataClasses.OBJECT;
+	    			type = DataTypeManager.DefaultDataClasses.NULL;
 	    		}
 	    		array.setComponentType(type);
 	    	}
@@ -666,7 +672,7 @@ public class ResolverVisitor extends LanguageVisitor {
 			ResolverUtil.ResolvedLookup lookup = ResolverUtil.resolveLookup(function, metadata);
 			fd = library.copyFunctionChangeReturnType(fd, lookup.getReturnElement().getType());
 	    } else if (fd.isSystemFunction(FunctionLibrary.ARRAY_GET)) {
-	    	if (args[0].getType().isArray()) {
+	    	if (args[0].getType() != null && args[0].getType().isArray()) {
 				fd = library.copyFunctionChangeReturnType(fd, args[0].getType().getComponentType());
 	    	} else {
 	    		if (function.getType() != null) {
@@ -772,7 +778,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	    setDesiredType(upper, exp.getType(), criteria);
 	    // invariants: none of the types is null
 	    
-	    if (exp.getType().equals(lower.getType()) && exp.getType().equals(upper.getType())) {
+	    if (exp.getType() == lower.getType() && exp.getType() == upper.getType()) {
 	        return;
 	    }
 	    
@@ -793,38 +799,46 @@ public class ResolverVisitor extends LanguageVisitor {
 	    
 	    boolean exprChar = isCharacter(exp, true);
 	    
-	    if ((exp.getType() != DataTypeManager.DefaultDataClasses.NULL && !exprChar) || metadata.widenComparisonToString()) {
+	    if (exp.getType() != DataTypeManager.DefaultDataClasses.NULL) {
 	    	boolean success = true;
             // try to apply cast
         	// Apply cast and replace current value
-            try {
-            	criteria.setLowerExpression(ResolverUtil.convertExpression(lower, lowerTypeName, expTypeName, metadata) );
-            	lower = criteria.getLowerExpression();
-            	lowerTypeName = DataTypeManager.getDataTypeName(lower.getType());
-            } catch (QueryResolverException e) {
-            	if (lower instanceof Constant && isCharacter(lower, true) && !metadata.widenComparisonToString()) {
-	            	throw e;
+	    	if (!exprChar || metadata.widenComparisonToString() || isCharacter(lower, true)) { 
+	            try {
+	            	criteria.setLowerExpression(ResolverUtil.convertExpression(lower, lowerTypeName, expTypeName, metadata) );
+	            	lower = criteria.getLowerExpression();
+	            	lowerTypeName = DataTypeManager.getDataTypeName(lower.getType());
+	            } catch (QueryResolverException e) {
+	            	if (lower instanceof Constant && isCharacter(lower, true) && !metadata.widenComparisonToString()) {
+		            	throw e;
+		            }
+	            	if (type == null) {
+	            		type = lower.getType();
+	            	}
+	            	success = false;
 	            }
-            	if (type == null) {
-            		type = lower.getType();
-            	}
-            	success = false;
-            }
+	    	} else {
+	    		success = false;
+	    	}
             // try to apply cast
         	// Apply cast and replace current value
-            try {
-            	criteria.setUpperExpression(ResolverUtil.convertExpression(upper, upperTypeName, expTypeName, metadata) );
-            	upper = criteria.getUpperExpression();
-            	upperTypeName = DataTypeManager.getDataTypeName(upper.getType());
-            } catch (QueryResolverException e) {
-            	if (lower instanceof Constant && isCharacter(lower, true) && !metadata.widenComparisonToString()) {
-	            	throw e;
+	    	if (!exprChar || metadata.widenComparisonToString() || isCharacter(upper, true)) {
+	            try {
+	            	criteria.setUpperExpression(ResolverUtil.convertExpression(upper, upperTypeName, expTypeName, metadata) );
+	            	upper = criteria.getUpperExpression();
+	            	upperTypeName = DataTypeManager.getDataTypeName(upper.getType());
+	            } catch (QueryResolverException e) {
+	            	if (lower instanceof Constant && isCharacter(lower, true) && !metadata.widenComparisonToString()) {
+		            	throw e;
+		            }
+	            	if (type == null) {
+	            		type = upper.getType();
+	            	}
+	            	success = false;
 	            }
-            	if (type == null) {
-            		type = upper.getType();
-            	}
-            	success = false;
-            }
+	    	} else {
+	    		success = false;
+	    	}
             if (success) {
             	return;
             }
@@ -846,13 +860,13 @@ public class ResolverVisitor extends LanguageVisitor {
         	throw new QueryResolverException(QueryPlugin.Event.TEIID31172, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31172, criteria));
         }
         
-        if(!lower.getType().equals(type)) {
+        if(lower.getType() != type) {
         	if (!metadata.widenComparisonToString() && exprChar ^ isCharacter(lower, true)) {
         		throw new QueryResolverException(QueryPlugin.Event.TEIID31172, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31172, criteria));
         	}
         	criteria.setLowerExpression(ResolverUtil.convertExpression(lower, lowerTypeName, typeName, metadata));
         }
-        if(!upper.getType().equals(type)) {
+        if(upper.getType() != type) {
         	if (!metadata.widenComparisonToString() && exprChar ^ isCharacter(lower, true)) {
         		throw new QueryResolverException(QueryPlugin.Event.TEIID31172, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31172, criteria));
         	}
@@ -871,7 +885,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	    setDesiredType(leftExpression, rightExpression.getType(), ccrit);
 	    setDesiredType(rightExpression, leftExpression.getType(), ccrit);
 	
-		if(leftExpression.getType().equals(rightExpression.getType()) ) {
+		if(leftExpression.getType() == rightExpression.getType()) {
 			return;
 		}
 	
@@ -1022,26 +1036,30 @@ public class ResolverVisitor extends LanguageVisitor {
 	    
 	    String exprTypeName = DataTypeManager.getDataTypeName(exprType);
 	    
+	    boolean attemptConvert = !isCharacter(exprType, true) || metadata.widenComparisonToString();
+	    
 	    List<Expression> newVals = new ArrayList<Expression>(scrit.getValues().size());
-	    if ((scrit.getExpression().getType() != DataTypeManager.DefaultDataClasses.NULL && !isCharacter(exprType, true)) || metadata.widenComparisonToString()) {
+	    if (scrit.getExpression().getType() != DataTypeManager.DefaultDataClasses.NULL) {
 		    valIter = scrit.getValues().iterator();
 		    while(valIter.hasNext()) {
 		        Expression value = (Expression) valIter.next();
 		        setDesiredType(value, exprType, scrit);
-		        if(! value.getType().equals(exprType)) {
+		        if(value.getType() != exprType) {
 		            String valTypeName = DataTypeManager.getDataTypeName(value.getType());
 		            // try to apply cast
 		        	// Apply cast and replace current value
-		            try {
-		            	newVals.add(ResolverUtil.convertExpression(value, valTypeName, exprTypeName, metadata) );
-		            } catch (QueryResolverException e) {
-		            	if (value instanceof Constant && isCharacter(value, true) && !metadata.widenComparisonToString()) {
-			            	throw e;
+		            if (attemptConvert || isCharacter(value.getType(), true)) {
+			            try {
+			            	newVals.add(ResolverUtil.convertExpression(value, valTypeName, exprTypeName, metadata) );
+			            } catch (QueryResolverException e) {
+			            	if (value instanceof Constant && isCharacter(value, true) && !metadata.widenComparisonToString()) {
+				            	throw e;
+				            }
+			            	if (type == null) {
+			            		type = value.getType();
+			            	}
+			                break;
 			            }
-		            	if (type == null) {
-		            		type = value.getType();
-		            	}
-		                break;
 		            }
 		        } else {
 		            newVals.add(value);
@@ -1076,7 +1094,7 @@ public class ResolverVisitor extends LanguageVisitor {
             Expression value = (Expression) valIter.next();
             if(value.getType() == null) {
                  throw new QueryResolverException(QueryPlugin.Event.TEIID30075, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30075, value));
-            } else if(! value.getType().equals(type)) {
+            } else if(value.getType() != type) {
             	if (!metadata.widenComparisonToString() && exprChar ^ isCharacter(value, true)) {
             		throw new QueryResolverException(QueryPlugin.Event.TEIID31172, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31172, scrit));
             	}

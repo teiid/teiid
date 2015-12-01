@@ -3,7 +3,7 @@
 
 	<description>The adminapi test VDB</description>
 	
-	<model name="TestModel" type="VIRTUAL">
+	<model name="TestModel">
         <property name="supports-multi-source-bindings" value="true"/>
         <source name="text-connector" translator-name="file" connection-jndi-name="java:/test-file"/>
         <metadata type="DDL">

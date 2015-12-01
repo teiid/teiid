@@ -25,6 +25,9 @@ package org.teiid.query.optimizer;
 import static org.junit.Assert.*;
 import static org.teiid.query.optimizer.TestOptimizer.*;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.Test;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
@@ -726,8 +729,14 @@ public class TestSubqueryPushdown {
         
         ProcessorPlan plan = helpPlan("select pm1.g1.e1, convert((select max(vm1.g1.e1) from vm1.g1), integer) + 1 from pm1.g1", metadata,  //$NON-NLS-1$
                                       null, capFinder,
-            new String[] { "SELECT g_0.e1, (convert((SELECT MAX(g_1.e1) FROM pm1.g1 AS g_1), integer) + 1) FROM pm1.g1 AS g_0" }, SHOULD_SUCCEED); //$NON-NLS-1$
-        checkNodeTypes(plan, FULL_PUSHDOWN); 
+            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, SHOULD_SUCCEED); //$NON-NLS-1$
+        
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, true);
+        
+        plan = helpPlan("select pm1.g1.e1, convert((select max(vm1.g1.e1) from vm1.g1), integer) + 1 from pm1.g1", metadata,  //$NON-NLS-1$
+                null, capFinder,
+		new String[] { "SELECT g_0.e1, (convert((SELECT MAX(g_1.e1) FROM pm1.g1 AS g_1), integer) + 1) FROM pm1.g1 AS g_0" }, SHOULD_SUCCEED); //$NON-NLS-1$
+		checkNodeTypes(plan, FULL_PUSHDOWN);
     }
     
     @Test public void testScalarSubquery2() {
@@ -1249,7 +1258,7 @@ public class TestSubqueryPushdown {
     	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
     	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
     	bsc.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
-
+    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, true);
     	ProcessorPlan plan = TestOptimizer.helpPlan("select intkey, (select avg(intkey) from bqt1.smallb where intkey = smalla.intkey) from bqt1.smalla group by intkey", //$NON-NLS-1$
                                       RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(bsc),
                                       new String[] {"SELECT g_0.IntKey, (SELECT AVG(g_1.IntKey) FROM BQT1.SmallB AS g_1 WHERE g_1.IntKey = g_0.IntKey) FROM BQT1.SmallA AS g_0 GROUP BY g_0.IntKey"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
@@ -1418,6 +1427,38 @@ public class TestSubqueryPushdown {
         
         TestOptimizer.checkNodeTypes(plan, FULL_PUSHDOWN);
     }
+
+    @Test public void testNestedSubquerySemiJoin() throws Exception {
+        String sql = "SELECT intkey FROM BQT1.SmallA AS A WHERE INTKEY IN /*+ mj */ (SELECT CONVERT(STRINGKEY, INTEGER) FROM BQT1.SMALLA AS A WHERE STRINGKEY IN (SELECT CONVERT(INTKEY, STRING) FROM BQT1.SMALLA AS B WHERE A.INTNUM = B.INTNUM))";
+
+    	BasicSourceCapabilities bsc = getTypicalCapabilities();
+
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, 
+                RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(bsc),
+                new String[] {
+                    "SELECT g_0.IntKey AS c_0, g_0.IntNum AS c_1 FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey IN (<dependent values>) ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT g_0.StringKey FROM BQT1.SmallA AS g_0", Arrays.asList("1"), Arrays.asList("2"));
+        hdm.addData("SELECT g_0.IntKey AS c_0, g_0.IntNum AS c_1 FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey IN (1, 2) ORDER BY c_0", Arrays.asList(1, 2));
+        hdm.addData("SELECT g_0.IntKey FROM BQT1.SmallA AS g_0 WHERE g_0.IntNum = 2", Arrays.asList(1));
+        
+        TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(1)} );
+        
+    }
     
+    @Test public void testAliasConflict() throws Exception {
+    	String sql = "select * from ( SELECT ( SELECT x.e1 FROM pm1.g1 AS x WHERE x.e2 = g_0.e2 ) AS c_2 FROM pm1.g2 AS g_0 ) AS v_0";
+    	
+    	BasicSourceCapabilities bsc = getTypicalCapabilities();
+    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, true);
+        TestOptimizer.helpPlan(sql, //$NON-NLS-1$
+                                      RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(bsc),
+                                      new String[] {
+                                          "SELECT (SELECT g_1.e1 FROM pm1.g1 AS g_1 WHERE g_1.e2 = g_0.e2) FROM pm1.g2 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    }
+    	
 
 }

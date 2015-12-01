@@ -44,6 +44,7 @@ public class AggregateFunction extends Function {
     private String aggName;
     private boolean isDistinct;
     private Expression condition;
+    private OrderBy orderBy;
     
     public AggregateFunction(String aggName, boolean isDistinct, List<? extends Expression> params, Class<?> type) {
     	super(aggName, params, type);
@@ -117,6 +118,14 @@ public class AggregateFunction extends Function {
     
     public void setCondition(Expression condition) {
 		this.condition = condition;
+	}
+    
+    public OrderBy getOrderBy() {
+		return orderBy;
+	}
+
+	public void setOrderBy(OrderBy orderBy) {
+		this.orderBy = orderBy;
 	}
 
 }

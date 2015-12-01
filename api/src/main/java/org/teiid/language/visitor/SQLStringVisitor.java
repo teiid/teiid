@@ -151,6 +151,10 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         } else {
         	append(obj.getParameters());
         }
+        if (obj.getOrderBy() != null) {
+        	buffer.append(Tokens.SPACE);
+        	append(obj.getOrderBy());
+        }
         buffer.append(Tokens.RPAREN);
         if (obj.getCondition() != null) {
         	buffer.append(Tokens.SPACE);

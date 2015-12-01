@@ -31,8 +31,8 @@ import org.apache.olingo.client.core.serialization.JsonDeserializer;
 import org.apache.olingo.commons.api.data.Property;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.teiid.language.Argument;
-import org.teiid.language.Call;
 import org.teiid.language.Argument.Direction;
+import org.teiid.language.Call;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
@@ -85,11 +85,11 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
                     if (i != 0) {
                         sb.append("&"); //$NON-NLS-1$
                     }
-                    sb.append(param.getMetadataObject().getName());
+                    sb.append(WSConnection.Util.httpURLEncode(param.getMetadataObject().getName()));
                     sb.append(Tokens.EQ);
-                    sb.append(ODataTypeManager.convertToODataInput(param.getArgumentValue(), 
+                    sb.append(WSConnection.Util.httpURLEncode(ODataTypeManager.convertToODataInput(param.getArgumentValue(), 
                             ODataTypeManager.odataType(param.getType()).getFullQualifiedName()
-                            .getFullQualifiedNameAsString()));
+                            .getFullQualifiedNameAsString())));
                 }
             }
         }

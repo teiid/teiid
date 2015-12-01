@@ -2919,6 +2919,16 @@ public class TestResolver {
         helpResolveException(sql, "TEIID31135 Could not create foreign temporary table, since schema vm1 is not physical."); //$NON-NLS-1$ 
     }
     
+    @Test public void testAvgVarchar() {
+    	String sql = "SELECT e1 FROM pm1.g1 GROUP BY e1 HAVING avg(e1) = '1'";
+    	helpResolve(sql);
+    }
+    
+    @Test public void testAvgVarchar1() {
+    	String sql = "SELECT e1 FROM pm1.g1 GROUP BY e1 HAVING avg(e1) between 1 and 2";
+    	helpResolve(sql);
+    }
+    
     @Test public void testInvalidDateLiteral() {
     	helpTestWidenToString("select * from bqt1.smalla where timestampvalue > 'a'");
     }
@@ -2968,6 +2978,30 @@ public class TestResolver {
     	Criteria crit = helpResolveCriteria("bqt1.smalla.timestampvalue = '2000-01-01'");
     	assertTrue(((CompareCriteria)crit).getRightExpression().getType() == DataTypeManager.DefaultDataClasses.TIMESTAMP); 
     	assertEquals("bqt1.smalla.timestampvalue = {ts'2000-01-01 00:00:00.0'}", crit.toString());
+    }
+    
+    @Test public void testCharInString() {
+    	TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
+    	tm.setWidenComparisonToString(false);
+    	helpResolve("select * from bqt1.smalla where bqt1.smalla.charValue in ('a', 'b')", tm);
+    }
+    
+    @Test public void testStringInChar() {
+    	TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
+    	tm.setWidenComparisonToString(false);
+    	helpResolve("select * from bqt1.smalla where 'a' in (bqt1.smalla.charValue, cast('a' as char))", tm);
+    }
+    
+    @Test public void testCharBetweenString() {
+    	TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
+    	tm.setWidenComparisonToString(false);
+    	helpResolve("select * from bqt1.smalla where bqt1.smalla.charValue between 'a' and 'b'", tm);
+    }
+    
+    @Test public void testCharCompareString() {
+    	TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
+    	tm.setWidenComparisonToString(false);
+    	helpResolve("select * from bqt1.smalla where bqt1.smalla.charValue = 'a'", tm);
     }
     
     private void helpTestWidenToString(String sql) {

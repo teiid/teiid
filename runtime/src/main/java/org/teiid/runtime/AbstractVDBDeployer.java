@@ -193,6 +193,17 @@ public abstract class AbstractVDBDeployer {
 			getVDBRepository().finishDeployment(vdb.getName(), vdb.getVersion(), reloading);
 			return;
 		}
+		
+		String prop = vdb.getPropertyValue("cache-metadata"); //$NON-NLS-1$
+		if (prop != null) {
+			LogManager.logDetail(LogConstants.CTX_RUNTIME, "using VDB metadata caching value", prop); //$NON-NLS-1$
+		} else if (vdb.isXmlDeployment()) {
+			prop = vdb.getPropertyValue("UseConnectorMetadata"); //$NON-NLS-1$ 
+			if (prop != null) {
+				LogManager.logDetail(LogConstants.CTX_RUNTIME, "using VDB metadata caching value", prop, "Note that UseConnectorMetadata is deprecated.  Use cache-metadata instead."); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+		}
+		
 		for (ModelMetaData model: vdb.getModelMetaDatas().values()) {
 			MetadataRepository metadataRepository = model.getAttachment(MetadataRepository.class);
 			if (model.getModelType() == Model.Type.PHYSICAL || model.getModelType() == Model.Type.VIRTUAL) {

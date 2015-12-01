@@ -1456,5 +1456,10 @@ public class TestFunctionLibrary {
 	@Test() public void testTokenize() throws Exception {
 		helpInvokeMethod("tokenize", new Object[] {"bxaxxc", 'x'}, new ArrayImpl("b", "axc")); //$NON-NLS-1$
 	}
+	
+	@Test() public void testNodeId() throws Exception {
+		System.setProperty("jboss.node.name", "x");
+		helpInvokeMethod("node_id", new Object[] {}, "x"); //$NON-NLS-1$
+	}
 
 }

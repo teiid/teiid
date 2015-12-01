@@ -158,6 +158,30 @@ public class TestSQLConversionVisitor {
         helpTest(sql, expected);
     }
     
+    @Test
+    public void testLikeEscape() throws TranslatorException {
+        String sql = "SELECT city FROM Customer where name like '\\_%' escape '\\'";
+        String expected = "SELECT \"Customer\".\"city\" FROM \"Customer\" WHERE \"Customer\".\"name\" LIKE '\\_%'";
+        helpTest(sql, expected);
+    }
+    
+    @Test
+    public void testUnion() throws TranslatorException {
+        String sql = "SELECT city as c1 FROM Customer union SELECT name FROM Customer";
+        String expected = "SELECT DISTINCT c1 FROM (SELECT \"Customer\".\"city\" AS c1 FROM \"Customer\" UNION ALL SELECT \"Customer\".\"name\" FROM \"Customer\") AS x";
+        helpTest(sql, expected);
+    }
+    
+    @Test
+    public void testCorrelatedIn() throws TranslatorException {
+        String sql = "SELECT city as c1 FROM Customer where name in (select name from customer cu where cu.city = customer.city)";
+        String expected = "SELECT \"Customer\".\"city\" AS c1 FROM \"Customer\" WHERE \"Customer\".\"name\" = SOME (SELECT cu.\"name\" FROM \"Customer\" AS cu WHERE cu.\"city\" = \"Customer\".\"city\")";
+        helpTest(sql, expected);
+        sql = "SELECT city as c1 FROM Customer where name not in (select name from customer cu where cu.city = customer.city)";
+        expected = "SELECT \"Customer\".\"city\" AS c1 FROM \"Customer\" WHERE \"Customer\".\"name\" <> ALL (SELECT cu.\"name\" FROM \"Customer\" AS cu WHERE cu.\"city\" = \"Customer\".\"city\")";
+        helpTest(sql, expected);
+    }
+    
     private static TranslationUtility translationUtility = new TranslationUtility(TestHBaseUtil.queryMetadataInterface());
     
     private void helpTest(String sql, String expected) throws TranslatorException  {
@@ -168,7 +192,7 @@ public class TestSQLConversionVisitor {
         ef.start();
         
         SQLConversionVisitor vistor = ef.getSQLConversionVisitor();
-        vistor.visitNode(command);
+        vistor.append(command);
                 
         assertEquals(expected, vistor.toString());
         

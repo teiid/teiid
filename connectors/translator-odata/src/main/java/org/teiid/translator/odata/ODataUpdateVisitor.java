@@ -24,8 +24,17 @@ package org.teiid.translator.odata;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.odata4j.core.OCollection;
+import org.odata4j.core.OCollections;
+import org.odata4j.core.OObject;
 import org.odata4j.core.OProperties;
 import org.odata4j.core.OProperty;
+import org.odata4j.core.OSimpleObjects;
+import org.odata4j.edm.EdmCollectionType;
+import org.odata4j.edm.EdmProperty.CollectionKind;
+import org.odata4j.edm.EdmSimpleType;
+import org.odata4j.edm.EdmType;
+import org.teiid.language.Array;
 import org.teiid.language.Delete;
 import org.teiid.language.Expression;
 import org.teiid.language.ExpressionValueSource;
@@ -61,7 +70,7 @@ public class ODataUpdateVisitor extends ODataSQLVisitor {
 		for (int i = 0; i < elementCount; i++) {
 			Column column = obj.getColumns().get(i).getMetadataObject();
 			List<Expression> values = ((ExpressionValueSource)obj.getValueSource()).getValues();
-			OProperty<?> property = OProperties.simple(column.getName(), ((Literal)values.get(i)).getValue());
+			OProperty<?> property = readProperty(column, values.get(i));
 			props.add(property);
 		}
 		this.payload = props;	
@@ -91,11 +100,31 @@ public class ODataUpdateVisitor extends ODataSQLVisitor {
 		int elementCount = obj.getChanges().size();
 		for (int i = 0; i < elementCount; i++) {
 			Column column = obj.getChanges().get(i).getSymbol().getMetadataObject();
-			Literal value = (Literal)obj.getChanges().get(i).getValue();
-			OProperty<?> property = OProperties.simple(column.getName(), value.getValue());
+			OProperty<?> property = readProperty(column, obj.getChanges().get(i).getValue());
 			props.add(property);
 		}
 		this.payload = props;
+	}
+	
+	private OProperty<?> readProperty(Column column, Object value) {
+        if (value instanceof Array) {
+            EdmType componentType = ODataTypeManager.odataType(column.getRuntimeType());
+            if (componentType instanceof EdmCollectionType) {
+                componentType = ((EdmCollectionType)componentType).getItemType();
+            }
+            OCollection.Builder<OObject> b = OCollections.newBuilder(componentType);
+            List<Expression> values = ((Array)value).getExpressions();
+            for (int i = 0; i < values.size(); i++) {
+                Literal literal = (Literal)values.get(i);
+                b.add(OSimpleObjects.create((EdmSimpleType<?>)componentType, literal.getValue()));
+            }
+            return OProperties.collection(column.getName(),
+                    new EdmCollectionType(CollectionKind.Collection,
+                            componentType), b.build());
+        } else {
+            Literal literal = (Literal)value;
+            return OProperties.simple(column.getName(), literal.getValue());
+        }
 	}
 
 	@Override

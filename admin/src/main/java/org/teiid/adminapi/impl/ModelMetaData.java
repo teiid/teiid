@@ -92,7 +92,8 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 
 	@Override
     public boolean isSupportsMultiSourceBindings() {
-		return this.sources.size() > 1 || Boolean.parseBoolean(getPropertyValue(SUPPORTS_MULTI_SOURCE_BINDINGS_KEY)) || Boolean.parseBoolean(getPropertyValue(SUPPORTS_MULTI_SOURCE_BINDINGS_KEY_OLD));
+		return this.isSource() && 
+				(this.sources.size() > 1 || Boolean.parseBoolean(getPropertyValue(SUPPORTS_MULTI_SOURCE_BINDINGS_KEY)) || Boolean.parseBoolean(getPropertyValue(SUPPORTS_MULTI_SOURCE_BINDINGS_KEY_OLD)));
     }    
 	
     public void setSupportsMultiSourceBindings(boolean supports) {
