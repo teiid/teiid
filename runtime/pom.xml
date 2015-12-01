@@ -69,14 +69,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-<<<<<<< HEAD
         <groupId>org.jboss.teiid.connectors</groupId>
         <artifactId>translator-file</artifactId>
         <scope>test</scope>
     </dependency>
     <dependency>
-=======
->>>>>>> 8.12.x
         <groupId>io.netty</groupId>
         <artifactId>netty-all</artifactId>
     </dependency>

@@ -53,6 +53,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.odata.api.Client;
 import org.teiid.odata.api.CountResponse;
