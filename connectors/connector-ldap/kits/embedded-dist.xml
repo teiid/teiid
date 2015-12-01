@@ -21,7 +21,7 @@
     </fileSets>
     <files>
         <file>
-            <source>${project.build.directory}/${project.artifactId}-${project.version}-lib.jar</source>
+            <source>${project.build.directory}/${project.artifactId}-${project.version}.jar</source>
             <outputDirectory>optional/ldap</outputDirectory>
         </file>
     </files>

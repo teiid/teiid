@@ -27,7 +27,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.SecurityContext;
 
 import org.jboss.resteasy.core.SynchronousDispatcher;
@@ -39,11 +39,11 @@ import org.jboss.resteasy.plugins.server.servlet.HttpResponseFactory;
 import org.jboss.resteasy.plugins.server.servlet.ServletContainerDispatcher;
 import org.jboss.resteasy.plugins.server.servlet.ServletSecurityContext;
 import org.jboss.resteasy.plugins.server.servlet.ServletUtil;
-import org.jboss.resteasy.specimpl.UriInfoImpl;
+import org.jboss.resteasy.specimpl.ResteasyHttpHeaders;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.HttpResponse;
-import org.jboss.resteasy.spi.NotFoundException;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.spi.ResteasyUriInfo;
 
 public class ODataServletContainerDispatcher extends ServletContainerDispatcher {
 	private final static Logger logger = Logger.getLogger(ServletContainerDispatcher.class);
@@ -78,7 +78,9 @@ public class ODataServletContainerDispatcher extends ServletContainerDispatcher 
 	 * This code is copy taken from resteasy project as is, with a minor modification.
 	 * @see org.jboss.resteasy.plugins.server.servlet.ServletContainerDispatcher#service(java.lang.String, javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse, boolean)
 	 */
-	public void service(String httpMethod, HttpServletRequest request, HttpServletResponse response, boolean handleNotFound) throws IOException, NotFoundException {
+    public void service(String httpMethod, HttpServletRequest request,
+            HttpServletResponse response, boolean handleNotFound)
+            throws IOException, NotFoundException {
 		try {
 			// logger.info("***PATH: " + request.getRequestURL());
 			// classloader/deployment aware RestasyProviderFactory. Used to have
@@ -88,8 +90,8 @@ public class ODataServletContainerDispatcher extends ServletContainerDispatcher 
 			if (defaultInstance instanceof ThreadLocalResteasyProviderFactory) {
 				ThreadLocalResteasyProviderFactory.push(providerFactory);
 			}
-			HttpHeaders headers = null;
-			UriInfoImpl uriInfo = null;
+			ResteasyHttpHeaders headers = null;
+			ResteasyUriInfo uriInfo = null;
 			try {
 				String proxyURI = this.proxyBaseURI.get(); 
 				if (proxyURI != null) {

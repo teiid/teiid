@@ -25,6 +25,7 @@ import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_
 
 import org.jboss.as.controller.AbstractRemoveStepHandler;
 import org.jboss.as.controller.OperationContext;
+import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.PathAddress;
 import org.jboss.dmr.ModelNode;
 import org.jboss.msc.service.ServiceController;
@@ -34,8 +35,10 @@ import org.jboss.msc.service.ServiceRegistry;
 class TranslatorRemove extends AbstractRemoveStepHandler {
 	public static TranslatorRemove INSTANCE = new TranslatorRemove();
 	
-	@Override
-    protected void performRuntime(OperationContext context, ModelNode operation, ModelNode model) {
+    @Override
+    protected void performRuntime(OperationContext context,
+            final ModelNode operation, final ModelNode model)
+            throws OperationFailedException {
 				
         final ModelNode address = operation.require(OP_ADDR);
         final PathAddress pathAddress = PathAddress.pathAddress(address);

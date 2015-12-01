@@ -33,9 +33,13 @@ import org.teiid.services.InternalEventDistributorFactory;
 
 public class EventDistributorFactoryService extends AbstractEventDistributorFactoryService implements Service<InternalEventDistributorFactory> {
 	
-	InjectedValue<ObjectReplicator> objectReplicatorInjector = new InjectedValue<ObjectReplicator>();
+    InjectedValue<ObjectReplicator> objectReplicatorInjector = new InjectedValue<ObjectReplicator>();
 	InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
-		
+	
+    public EventDistributorFactoryService(String nodeName) {
+        super(nodeName);
+    }
+    
 	@Override
 	public void start(StartContext context) throws StartException {
 		start();

@@ -56,7 +56,16 @@ import org.teiid.adminapi.impl.VDBMetadataParser;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidException;
-import org.teiid.deployers.*;
+import org.teiid.deployers.CompositeGlobalTableStore;
+import org.teiid.deployers.CompositeVDB;
+import org.teiid.deployers.ContainerLifeCycleListener;
+import org.teiid.deployers.RuntimeVDB;
+import org.teiid.deployers.TranslatorUtil;
+import org.teiid.deployers.UDFMetaData;
+import org.teiid.deployers.VDBLifeCycleListener;
+import org.teiid.deployers.VDBRepository;
+import org.teiid.deployers.VDBStatusChecker;
+import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
@@ -96,8 +105,10 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 	private VDBLifeCycleListener restEasyListener;
 	private VDBResources vdbResources;
 	private ContainerLifeCycleListener shutdownListener;
+	private String nodeName;
 	
-	public VDBService(VDBMetaData metadata, VDBResources vdbResources, ContainerLifeCycleListener shutdownListener) {
+	public VDBService(String nodeName, VDBMetaData metadata, VDBResources vdbResources, ContainerLifeCycleListener shutdownListener) {
+	    this.nodeName = nodeName;
 		this.vdb = metadata;
 		this.vdbResources = vdbResources;
 		this.shutdownListener = shutdownListener;
@@ -149,7 +160,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 				VDBMetaData vdbInstance = cvdb.getVDB();
 				if (vdbInstance.getStatus().equals(Status.ACTIVE)) {
 					// add object replication to temp/matview tables
-					GlobalTableStore gts = CompositeGlobalTableStore.createInstance(cvdb, getBuffermanager(), objectReplicatorInjector.getValue());
+					GlobalTableStore gts = CompositeGlobalTableStore.createInstance(nodeName, cvdb, getBuffermanager(), objectReplicatorInjector.getValue());
 
 					vdbInstance.addAttchment(GlobalTableStore.class, gts);
 					vdbService.install();
@@ -466,6 +477,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		}
 		prop = model.getPropertyValue("cache-metadata"); //$NON-NLS-1$
 		if (prop != null) {
+			LogManager.logDetail(LogConstants.CTX_RUNTIME, model, "using metadata caching value", prop); //$NON-NLS-1$
 			cache = Boolean.valueOf(prop);	
 		}
 				

@@ -22,7 +22,11 @@
 
 package org.teiid.transport;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -40,15 +44,12 @@ import java.sql.Types;
 import java.util.Arrays;
 import java.util.Properties;
 
-import org.jboss.netty.channel.ChannelEvent;
-import org.jboss.netty.channel.ChannelHandlerContext;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.common.buffer.BufferManagerFactory;
-import org.teiid.common.buffer.StorageManager;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.BlobImpl;
@@ -102,23 +103,22 @@ public class TestJDBCSocketTransport {
 		
 		jdbcTransport = new SocketListener(addr, config, server.getClientServiceRegistry(), BufferManagerFactory.getStandaloneBufferManager()) {
 			@Override
-			protected SSLAwareChannelHandler createChannelPipelineFactory(
-					SSLConfiguration config, StorageManager storageManager) {
-				SSLAwareChannelHandler result = new SSLAwareChannelHandler(this, config, Thread.currentThread().getContextClassLoader(), storageManager) {
-					@Override
-					public void handleDownstream(ChannelHandlerContext ctx,
-							ChannelEvent e) throws Exception {
-						if (delay > 0) {
-							Thread.sleep(delay);
-						}
-						super.handleDownstream(ctx, e);
-					}
-				};
-				result.setMaxMessageSize(MAX_MESSAGE);
-				result.setMaxLobSize(MAX_LOB);
-				return result;
-			}
+			protected SSLAwareChannelHandler createChannelHandler() {
+			    SSLAwareChannelHandler result = new SSLAwareChannelHandler(this) {
+                    public void messageReceived(io.netty.channel.ChannelHandlerContext ctx,
+                            Object msg) throws Exception {
+                        if (delay > 0) {
+                            Thread.sleep(delay);
+                        }
+                        super.messageReceived(ctx, msg);
+                    }
+			    };
+                return result;			    
+		    }
 		};
+		jdbcTransport.setMaxMessageSize(MAX_MESSAGE);
+		jdbcTransport.setMaxLobSize(MAX_LOB);
+
 	}
 	
 	@AfterClass public static void oneTimeTearDown() throws Exception {

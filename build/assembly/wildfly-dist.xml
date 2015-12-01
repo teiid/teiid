@@ -1,0 +1,114 @@
+<!--This script builds a zip for Teiid Server Installation -->
+<assembly>
+  
+  <id>wildfly-dist</id>
+  
+  <formats>
+    <format>zip</format>
+    <format>dir</format>
+  </formats>
+  
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <baseDirectory>teiid-${project.version}</baseDirectory>
+
+  <fileSets>
+          
+    <fileSet>
+        <directory>target/kits/wildfly/overlay</directory>
+        <outputDirectory>/</outputDirectory>
+        <filtered>true</filtered>      
+        <includes>
+          <include>**/*.sh</include>
+        </includes>   
+        <fileMode>755</fileMode>  
+    </fileSet> 
+    <fileSet>
+        <directory>target/kits/wildfly/overlay</directory>
+        <outputDirectory>/</outputDirectory>
+        <filtered>true</filtered>        
+        <includes>
+          <include>**/*.properties</include>
+        </includes>      
+    </fileSet>            
+    <fileSet>
+        <directory>target/kits/wildfly/overlay</directory>
+        <outputDirectory>/</outputDirectory>      
+        <excludes>
+          <exclude>**/*.sh</exclude>
+          <exclude>**/*.properties</exclude>
+        </excludes>      
+    </fileSet>
+    
+  </fileSets>
+  
+  <!--  these have external dependent clients like connectors-->
+  <moduleSets>
+            
+    <moduleSet>
+      <useAllReactorProjects>true</useAllReactorProjects>
+      <includes>
+      	<include>org.jboss.teiid:teiid-hibernate-dialect</include>   
+      </includes>
+      <binaries>
+		<includeDependencies>false</includeDependencies>
+		<unpack>false</unpack>
+        <outputDirectory>${wildfly-module-root}/org/jboss/teiid/client/main</outputDirectory>
+      </binaries>
+    </moduleSet>
+        
+    <moduleSet>
+        <useAllReactorProjects>true</useAllReactorProjects>
+        <includes>
+            <include>org.jboss.teiid:teiid-jboss-integration</include>
+            <include>org.jboss.teiid:teiid-odata</include>
+            <include>org.jboss.teiid:teiid-olingo</include>
+            <include>org.jboss.teiid:teiid-jboss-security</include>
+        </includes>
+        <binaries> 
+          <includeDependencies>false</includeDependencies>
+          <unpack>true</unpack>
+          <outputDirectory>.</outputDirectory>
+          <attachmentClassifier>wildfly-dist</attachmentClassifier>
+        </binaries>
+    </moduleSet> 
+  
+     
+    <!-- ******************************************************** 
+        These are built in resource-adapters  
+        *********************************************************-->
+    <moduleSet>
+        <useAllReactorProjects>true</useAllReactorProjects>
+        <includes>
+            <include>org.jboss.teiid.connectors:connector-*</include>
+        </includes>
+        <binaries> 
+          <includeDependencies>false</includeDependencies>
+          <unpack>true</unpack>
+          <outputDirectory>.</outputDirectory>
+          <attachmentClassifier>wildfly-dist</attachmentClassifier>
+        </binaries>
+      
+    </moduleSet>
+    
+    
+    <!-- **************************************************************************
+                        These are built in translators  
+         **************************************************************************-->
+    <moduleSet>
+        <useAllReactorProjects>true</useAllReactorProjects>
+        
+        <includes>
+            <include>org.jboss.teiid.connectors:translator-*</include>
+        </includes>
+                
+        <binaries> 
+          <includeDependencies>false</includeDependencies>
+          <unpack>true</unpack>
+          <outputDirectory>.</outputDirectory>
+          <attachmentClassifier>wildfly-dist</attachmentClassifier>
+        </binaries>
+      
+    </moduleSet>
+        
+    </moduleSets>  
+</assembly>

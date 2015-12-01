@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.0" name="com.fasterxml.jackson.dataformat.xml">
+    <properties>
+        <property name="jboss.api" value="private"/>
+    </properties>
+    <resources>
+        <resource-root path="jackson-dataformat-xml-${version.com.fasterxml.jackson.swagger}.jar" />
+    </resources>
+    
+    <dependencies>
+        <module name="javax.api"/>
+        <module name="javax.xml.stream.api"/>
+    	<module name="com.fasterxml.jackson.jaxrs.jackson-jaxrs-json-provider" />
+    	<module name="org.codehaus.woodstox" />
+    </dependencies>
+</module>

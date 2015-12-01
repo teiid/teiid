@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -70,7 +71,6 @@ import org.apache.cxf.ws.security.wss4j.WSS4JOutInterceptor;
 import org.ietf.jgss.GSSCredential;
 import org.teiid.OAuthCredential;
 import org.teiid.core.util.ArgCheck;
-import org.teiid.core.util.Base64;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
@@ -154,6 +154,8 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 		public DataSource invoke(DataSource msg) {
 			try {
 				final URL url = new URL(this.endpoint);
+				url.toURI(); //ensure this is a valid uri
+				
 				final String httpMethod = (String)this.requestContext.get(MessageContext.HTTP_REQUEST_METHOD);
 
                 // see to use patch
@@ -207,6 +209,8 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 				String contentType = contentTypes != null ? (String)contentTypes.get(0):"application/octet-stream"; //$NON-NLS-1$
 				return new HttpDataSource(url, (InputStream)response.getEntity(), contentType);
 			} catch (IOException e) {
+				throw new WebServiceException(e);
+			} catch (URISyntaxException e) {
 				throw new WebServiceException(e);
 			}
 		}
@@ -305,7 +309,7 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 						defaultFragment = parts[1];
 					}
 				}
-				if (endpoint.startsWith("?") || endpoint.startsWith("/")) { //$NON-NLS-1$ //$NON-NLS-2$
+				if (endpoint.startsWith("?") || endpoint.startsWith("/") || defaultEndpoint.endsWith("/")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 					endpoint = defaultEndpoint + endpoint;
 				} else {
 					endpoint = defaultEndpoint + "/" + endpoint; //$NON-NLS-1$

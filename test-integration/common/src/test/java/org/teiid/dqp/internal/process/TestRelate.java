@@ -51,8 +51,6 @@ public class TestRelate {
 	private static FakeServer server;
     
     @BeforeClass public static void oneTimeSetUp() throws Exception {
-    	//DQPConfiguration config = new DQPConfiguration();
-    	//config.setUserRequestSourceConcurrency(1);
     	server = new FakeServer(true);
     	JdbcDataSource h2ds = new JdbcDataSource();
     	System.out.println(UnitTestUtil.getTestDataFile("relate/test.zip").getAbsolutePath());

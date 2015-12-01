@@ -92,6 +92,7 @@ import org.teiid.json.simple.ParseException;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.CharsetUtils;
+import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.function.TeiidFunction;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.query.sql.symbol.XMLSerialize;
@@ -707,6 +708,23 @@ public class XMLSystemFunctions {
 						return;
 					}
 				}
+				r = clob.getCharacterStream();
+				convertReader(writer, eventWriter, r, Type.TEXT, null);
+			} else if (object instanceof BlobType) {
+				BlobType blob = (BlobType)object;
+				StorageMode storageMode = InputStreamFactory.getStorageMode(blob);
+				ClobType clob = FunctionMethods.toChars(blob, CharsetUtils.BASE64_NAME, true);
+				if ((storageMode == StorageMode.PERSISTENT || storageMode == StorageMode.OTHER) && writer instanceof ExtendedWriter) {
+					ExtendedWriter ew = (ExtendedWriter)writer;
+					if (ew.include(clob)) {
+						return;
+					}
+				}
+				r = clob.getCharacterStream();
+				convertReader(writer, eventWriter, r, Type.TEXT, null);
+			} else if (object instanceof BinaryType) {
+				BinaryType binary = (BinaryType)object;
+				ClobType clob = FunctionMethods.toChars(new BlobType(binary.getBytesDirect()), CharsetUtils.BASE64_NAME, true);
 				r = clob.getCharacterStream();
 				convertReader(writer, eventWriter, r, Type.TEXT, null);
 			} else {

@@ -110,6 +110,11 @@ public class TestODataSQLVistor {
     @Test
     public void testAddFilter() throws Exception {
     	helpExecute("select UnitPrice from Order_Details where OrderID = 1 and (Quantity+2) > OrderID", "Order_Details?$filter=OrderID eq 1 and (cast(Quantity,'integer') add 2) gt OrderID&$select=UnitPrice");
+    }
+    
+    @Test
+    public void testEndsWithFilter() throws Exception {
+    	helpExecute("select CompanyName from Customers where endswith('k', CustomerID)", "Customers?$filter=endswith(CustomerID,'k') eq true&$select=CompanyName");
     } 
     
     @Test
@@ -204,8 +209,13 @@ public class TestODataSQLVistor {
     
     @Test
     public void testProcedureExec() throws Exception {
-    	helpFunctionExecute("Exec TopCustomers('newyork')", "TopCustomers?city='newyork'");
-    }    
+    	helpFunctionExecute("Exec TopCustomers('newyork')", "TopCustomers?city=%27newyork%27");
+    }  
+    
+    @Test
+    public void testProcedureExecEncoded() throws Exception {
+    	helpFunctionExecute("Exec CommonCustomers('new york', 'los angeles')", "CommonCustomers?city1=%27new%20york%27&city2=%27los%20angeles%27");
+    }  
     
     private void helpUpdateExecute(String query, String expected, String expectedMethod, boolean checkPayload) throws Exception {
     	Command cmd = this.utility.parseCommand(query);

@@ -872,4 +872,9 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         return null;
     }
     
+    @Override
+    public boolean useStreamsForLobs() {
+    	return true; //lob bindings require a transaction
+    }
+    
 }

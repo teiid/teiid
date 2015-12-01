@@ -20,7 +20,34 @@
  * 02110-1301 USA.
  */package org.teiid.transport;
 
-import static org.teiid.odbc.PGUtil.*;
+import static org.teiid.odbc.PGUtil.PG_TYPE_BOOL;
+import static org.teiid.odbc.PGUtil.PG_TYPE_BPCHAR;
+import static org.teiid.odbc.PGUtil.PG_TYPE_BYTEA;
+import static org.teiid.odbc.PGUtil.PG_TYPE_CHARARRAY;
+import static org.teiid.odbc.PGUtil.PG_TYPE_DATE;
+import static org.teiid.odbc.PGUtil.PG_TYPE_FLOAT4;
+import static org.teiid.odbc.PGUtil.PG_TYPE_FLOAT8;
+import static org.teiid.odbc.PGUtil.PG_TYPE_INT2;
+import static org.teiid.odbc.PGUtil.PG_TYPE_INT2VECTOR;
+import static org.teiid.odbc.PGUtil.PG_TYPE_INT4;
+import static org.teiid.odbc.PGUtil.PG_TYPE_INT8;
+import static org.teiid.odbc.PGUtil.PG_TYPE_NUMERIC;
+import static org.teiid.odbc.PGUtil.PG_TYPE_OIDARRAY;
+import static org.teiid.odbc.PGUtil.PG_TYPE_OIDVECTOR;
+import static org.teiid.odbc.PGUtil.PG_TYPE_TEXT;
+import static org.teiid.odbc.PGUtil.PG_TYPE_TEXTARRAY;
+import static org.teiid.odbc.PGUtil.PG_TYPE_TIME;
+import static org.teiid.odbc.PGUtil.PG_TYPE_TIMESTAMP_NO_TMZONE;
+import static org.teiid.odbc.PGUtil.PG_TYPE_VARCHAR;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufOutputStream;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelOutboundHandlerAdapter;
+import io.netty.channel.ChannelPromise;
+import io.netty.handler.ssl.SslHandler;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -40,17 +67,6 @@ import java.util.Properties;
 
 import javax.net.ssl.SSLEngine;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBufferOutputStream;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.channel.ChannelDownstreamHandler;
-import org.jboss.netty.channel.ChannelEvent;
-import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.ChannelFutureListener;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.Channels;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.handler.ssl.SslHandler;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.util.ObjectConverterUtil;
@@ -72,7 +88,7 @@ import org.teiid.transport.pg.PGbytea;
  * Some parts of this code is taken from H2's implementation of ODBC
  */
 @SuppressWarnings("nls")
-public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRemote {
+public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements ODBCClientRemote {
 
 	public static final String SSL_HANDLER_KEY = "sslHandler";
 
@@ -88,8 +104,8 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		public void operationComplete(ChannelFuture future) throws Exception {
 			if (future.isSuccess()) {
 				SslHandler handler = new SslHandler(engine);
-				future.getChannel().getPipeline().addFirst(SSL_HANDLER_KEY, handler);
-				handler.handshake();
+				future.channel().pipeline().addFirst(SSL_HANDLER_KEY, handler);
+				handler.handshakeFuture().sync();
 			}
 		}
 	}
@@ -185,7 +201,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	public static final String DEFAULT_ENCODING = "UTF8";
 	public static final String CLIENT_ENCODING = "client_encoding";
 
-    private ChannelBuffer dataOut;
+    private ByteBuf dataOut;
 	private OutputStreamWriter writer;
 
     private Properties props;    
@@ -193,7 +209,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
     private String clientEncoding = DEFAULT_ENCODING;
     private ReflectionHelper clientProxy = new ReflectionHelper(ODBCClientRemote.class);
     private ChannelHandlerContext ctx;
-    private MessageEvent message;
+    private Object message;
     private int maxLobSize = (2*1024*1024); // 2 MB
 	private final int maxBufferSize;
 	private boolean requireSecure;
@@ -210,20 +226,10 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
     }
     
 	@Override
-	public void handleDownstream(ChannelHandlerContext ctx, ChannelEvent evt) throws Exception {
-        if (!(evt instanceof MessageEvent)) {
-            ctx.sendDownstream(evt);
-            return;
-        }
-
-        MessageEvent me = (MessageEvent) evt;
-		if (!(me.getMessage() instanceof ServiceInvocationStruct)) {
-			ctx.sendDownstream(evt);
-            return;
-		}
+	public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
 		this.ctx = ctx;
-		this.message = me;
-		ServiceInvocationStruct serviceStruct = (ServiceInvocationStruct)me.getMessage();
+		this.message = msg;
+		ServiceInvocationStruct serviceStruct = (ServiceInvocationStruct)msg;
 
 		try {
 			Method m = this.clientProxy.findBestMethodOnTarget(serviceStruct.methodName, serviceStruct.args);
@@ -383,14 +389,14 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	public void terminated() {
 		trace("channel being terminated");
 		// no need to send any reply; this is showing as malformed packet.
-		this.ctx.getChannel().close();
+		this.ctx.channel().close();
 	}
 	
 	@Override
 	public void flush() {
 		this.dataOut = null;
 		this.writer = null;
-		Channels.write(this.ctx.getChannel(), null);
+		this.ctx.writeAndFlush(null);
 	}
 
 	@Override
@@ -400,7 +406,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	
 	private void terminate(Throwable t) {
 		trace("channel being terminated - ", t.getMessage());
-		this.ctx.getChannel().close();
+		this.ctx.channel().close();
 	}
 
 	private void sendEmptyQueryResponse() {
@@ -579,7 +585,8 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		} catch (GeneralSecurityException e) {
 			LogManager.logError(LogConstants.CTX_ODBC, e, RuntimePlugin.Util.gs(requireSecure?RuntimePlugin.Event.TEIID40122:RuntimePlugin.Event.TEIID40016));
 		}
-		ChannelBuffer buffer = ctx.getChannel().getConfig().getBufferFactory().getBuffer(1);
+		ByteBuf buffer = Unpooled.buffer(1);
+		ChannelPromise promise = this.ctx.newPromise();
 		if (engine == null) {
 			if (requireSecure) {
 				sendErrorResponse(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40124));
@@ -587,10 +594,10 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 			}
 			buffer.writeByte('N');
 		} else {
-			this.message.getFuture().addListener(new SSLEnabler(engine));
+			promise.addListener(new SSLEnabler(engine));
 			buffer.writeByte('S');
 		}
-		Channels.write(this.ctx, this.message.getFuture(), buffer, this.message.getRemoteAddress());
+		this.ctx.writeAndFlush(buffer, promise);
 	}
 	
 	private void sendErrorResponse(Throwable t) {
@@ -794,13 +801,13 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		}
 		this.dataOut.writeByte((byte)newMessageType);
 		int nextByte = this.dataOut.writerIndex() + 4;
-		this.dataOut.ensureWritableBytes(nextByte);
+		this.dataOut.ensureWritable(nextByte);
 		this.dataOut.writerIndex(nextByte);
 	}
 
 	private void initBuffer(int estimatedLength) {
-		this.dataOut = ChannelBuffers.dynamicBuffer(estimatedLength);
-		ChannelBufferOutputStream cbos = new ChannelBufferOutputStream(this.dataOut);
+		this.dataOut = Unpooled.buffer(estimatedLength);
+		ByteBufOutputStream cbos = new ByteBufOutputStream(this.dataOut);
 		this.writer = new OutputStreamWriter(cbos, this.encoding);
 	}
 
@@ -811,10 +818,10 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	}
 	
 	private void sendContents() {
-		ChannelBuffer cb = this.dataOut;
+		ByteBuf cb = this.dataOut;
 		this.dataOut = null;
 		this.writer = null;
-		Channels.write(this.ctx, this.message.getFuture(), cb, this.message.getRemoteAddress());
+		this.ctx.writeAndFlush(cb);		
 	}
 
 	private static void trace(String... msg) {

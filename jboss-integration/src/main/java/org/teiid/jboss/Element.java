@@ -32,6 +32,8 @@ enum Element {
 
     // VM wide elements
     ASYNC_THREAD_POOL_ELEMENT("async-thread-pool", "async-thread-pool"),
+    THREAD_COUNT_ATTRIBUTE("max-thread-count", "async-thread-pool-max-thread-count"),
+    
     ALLOW_ENV_FUNCTION_ELEMENT("allow-env-function", "allow-env-function"),
             	
 	MAX_THREADS_ELEMENT("max-threads", "max-threads"),

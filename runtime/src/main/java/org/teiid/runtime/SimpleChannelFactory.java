@@ -47,6 +47,7 @@ final class SimpleChannelFactory implements ChannelFactory, ChannelListener {
     @Override
     public Channel createChannel(String id) throws Exception {
         JChannel channel = new JChannel(this.getClass().getClassLoader().getResource(this.embeddedConfiguration.getJgroupsConfigFile()));
+        channel.setName(id);
         channels.put(channel, id);
         channel.addChannelListener(this);
         return channel;

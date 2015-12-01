@@ -1299,5 +1299,21 @@ public class TestLimit {
         });
         
     }
+    
+    @Test public void testPushSortOverAliases() throws Exception {
+		String sql = "select column_a, column_b from (select sum(column_a) over (partition by key_column) as column_a, key_column from a ) a left outer join ( "
+				+ " select sum(column_b) over (partition by key_column) as column_b, key_column from b) b on a.key_column = b.key_column order by column_a desc limit 10";
+		
+		
+		TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table a (column_a integer, key_column string primary key);"
+				+ " create foreign table b (column_b integer, key_column string primary key);", "x", "y");
+		
+		ProcessorPlan plan = TestOptimizer.helpPlan(sql, tm, new String[] {"SELECT g_0.key_column, g_0.column_b FROM y.b AS g_0", "SELECT g_0.key_column, g_0.column_a FROM y.a AS g_0"}, TestOptimizer.getGenericFinder(false), ComparisonMode.EXACT_COMMAND_STRING);
+			   	
+		HardcodedDataManager hdm = new HardcodedDataManager();
+		hdm.addData("SELECT g_0.key_column, g_0.column_a FROM y.a AS g_0", Arrays.asList("a", 1));
+		hdm.addData("SELECT g_0.key_column, g_0.column_b FROM y.b AS g_0", Arrays.asList("a", 1));
+		TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(1l, 1l)});
+	}
 
 }

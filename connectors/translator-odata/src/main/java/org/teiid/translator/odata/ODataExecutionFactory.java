@@ -21,9 +21,15 @@
  */
 package org.teiid.translator.odata;
 
-import static org.teiid.language.SQLConstants.Reserved.NULL;
+import static org.teiid.language.SQLConstants.Reserved.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
+import java.util.TreeMap;
 
 import javax.resource.cci.ConnectionFactory;
 
@@ -31,12 +37,17 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDateTime;
 import org.joda.time.LocalTime;
+import org.odata4j.core.OCollection;
+import org.odata4j.core.OSimpleObject;
 import org.odata4j.core.UnsignedByte;
 import org.odata4j.internal.InternalUtil;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
-import org.teiid.language.*;
+import org.teiid.language.Call;
+import org.teiid.language.Command;
+import org.teiid.language.Literal;
+import org.teiid.language.QueryExpression;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.MetadataFactory;
@@ -326,6 +337,19 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
     	}
 		if (value instanceof UnsignedByte) {
 			return Short.valueOf(((UnsignedByte)value).shortValue());
+		}
+		
+		if(expectedType.isArray() && value instanceof OCollection<?>) {
+		    ArrayList<Object> result = new ArrayList<Object>();
+		    OCollection<?> arrayValues = (OCollection<?>)value;
+		    Iterator<?> it = arrayValues.iterator();
+		    while(it.hasNext()) {
+		        OSimpleObject<?> item = (OSimpleObject<?>)it.next();
+		        result.add(retrieveValue(item.getValue(),expectedType.getComponentType()));
+		    }
+		    Object target = java.lang.reflect.Array.newInstance(expectedType.getComponentType(), result.size());
+		    System.arraycopy(result.toArray(), 0, target, 0, result.size());
+		    value = target;
 		}
 		return value;
 	}

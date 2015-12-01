@@ -56,57 +56,46 @@
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-api</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-common-core</artifactId>
-            <scope>provided</scope>
         </dependency> 
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-engine</artifactId>
-            <scope>provided</scope>
         </dependency>            
         <dependency>
-            <groupId>javax.resource</groupId>
-            <artifactId>connector-api</artifactId>
-            <scope>provided</scope>
+            <groupId>org.jboss.spec.javax.resource</groupId>
+            <artifactId>jboss-connector-api_1.7_spec</artifactId>
         </dependency>
         <dependency>
              <groupId>org.infinispan.protostream</groupId>
              <artifactId>protostream</artifactId>
-              <scope>provided</scope>
         </dependency>   
         <dependency>
             <groupId>com.squareup</groupId>
             <artifactId>protoparser</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-commons</artifactId>
-            <scope>provided</scope>
         </dependency>               
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-query</artifactId>
-            <scope>provided</scope>
         </dependency>   
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-query-dsl</artifactId>
-            <scope>provided</scope>
         </dependency>                                                   
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-client-hotrod</artifactId>
-            <scope>provided</scope>
         </dependency>  
         <dependency>
            <groupId>org.jboss.modules</groupId>
            <artifactId>jboss-modules</artifactId>
-           <scope>provided</scope>
         </dependency>                    
     </dependencies>
 
@@ -135,7 +124,7 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
                     <descriptors>
-                        <descriptor>kits/jboss-as7-dist.xml</descriptor>
+                        <descriptor>kits/wildfly-dist.xml</descriptor>
                         <descriptor>kits/embedded-dist.xml</descriptor>
                     </descriptors>
                 </configuration>

@@ -21,8 +21,8 @@
   -->
 
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" 
-        targetNamespace="urn:jboss:domain:teiid:1.0" 
-        xmlns="urn:jboss:domain:teiid:1.0" 
+        targetNamespace="urn:jboss:domain:teiid:1.1" 
+        xmlns="urn:jboss:domain:teiid:1.1" 
         elementFormDefault="qualified" 
         attributeFormDefault="unqualified" 
         version="1.0">
@@ -38,11 +38,23 @@
                 </xs:annotation>
             </xs:element>            
 
-            <xs:element name="async-thread-pool" type="xs:string" minOccurs="0" maxOccurs="1">
+		    <xs:element name="async-thread-pool" minOccurs="0" maxOccurs="1">
                 <xs:annotation>
-                    <xs:documentation>Thread group to use for Async Processing</xs:documentation>
+                    <xs:documentation>Asynchronous thread pool used by Teiid</xs:documentation>
                 </xs:annotation>
-            </xs:element>      
+                <xs:complexType>
+					<xs:attribute name="max-thread-count" type="xs:int">
+						<xs:annotation>
+							<xs:documentation>Maximum number threads in the pool</xs:documentation>
+						</xs:annotation>
+					</xs:attribute>
+                    <xs:attribute name="keepalive-time" type="xs:int">
+                        <xs:annotation>
+                            <xs:documentation>Keep alive time for idle threads in milli-seconds</xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute> 					
+                </xs:complexType>
+		    </xs:element>            
               
             <xs:element name="buffer-service" maxOccurs="1" minOccurs="1">
                 <xs:annotation>

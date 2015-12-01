@@ -20,7 +20,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.cxf</groupId>
-            <artifactId>cxf-bundle</artifactId>
+            <artifactId>cxf-rt-rs-client</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.cxf</groupId>
@@ -42,11 +42,6 @@
         <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.arquillian.junit</groupId>
-            <artifactId>arquillian-junit-container</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -72,23 +67,31 @@
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpcore</artifactId>
             <scope>test</scope>
-        </dependency>        
+        </dependency>
+            <dependency>
+                <groupId>org.jboss.arquillian.junit</groupId>
+                <artifactId>arquillian-junit-container</artifactId>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.arquillian.testenricher</groupId>
+                <artifactId>arquillian-testenricher-initialcontext</artifactId>
+            </dependency>
+            <dependency>
+                <groupId>org.wildfly.arquillian</groupId>
+                <artifactId>wildfly-arquillian-container-managed</artifactId>
+            </dependency>
+    
+            <dependency>
+                <groupId>org.wildfly.arquillian</groupId>
+                <artifactId>wildfly-arquillian-protocol-jmx</artifactId>
+                <scope>test</scope>
+            </dependency>
+          
     </dependencies>
     <profiles>
     <profile>
         <id>arquillian-tests</id>
-        <dependencies>
-            <dependency>
-                <groupId>org.jboss.spec</groupId>
-                <artifactId>jboss-javaee-6.0</artifactId>
-                <type>pom</type>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.jboss.as</groupId>
-                <artifactId>jboss-as-arquillian-container-managed</artifactId>
-            </dependency>
-        </dependencies>
             <build>
                 <plugins>
                     <plugin>
@@ -105,32 +108,13 @@
                                 <configuration>
                                     <artifactItems>
                                         <artifactItem>
-                                            <groupId>org.jboss.as</groupId>
-                                            <artifactId>jboss-as-dist</artifactId>
-                                            <version>${version.org.jboss.as}</version>
-                                            <type>zip</type>
-                                            <overWrite>false</overWrite>
-                                            <outputDirectory>${project.build.directory}</outputDirectory>
-                                        </artifactItem>
-                                    </artifactItems>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>unpack2</id>
-                                <phase>process-test-classes</phase>
-                                <goals>
-                                    <goal>unpack</goal>
-                                </goals>
-                                <configuration>
-                                    <artifactItems>
-                                        <artifactItem>
                                             <groupId>org.jboss.teiid</groupId>
                                             <artifactId>teiid</artifactId>
                                             <version>${project.version}</version>
-                                            <classifier>jboss-dist</classifier>
+                                            <classifier>wildfly-server</classifier>
                                             <type>zip</type>
                                             <overWrite>false</overWrite>
-                                            <outputDirectory>${project.build.directory}/${jbossas-test-version}</outputDirectory>
+                                            <outputDirectory>${project.build.directory}</outputDirectory>
                                         </artifactItem>
                                     </artifactItems>
                                 </configuration>
@@ -148,7 +132,7 @@
                                     <goal>copy-resources</goal>
                                 </goals>
                                 <configuration>
-                                    <outputDirectory>${project.build.directory}/${jbossas-test-version}/standalone/configuration</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/teiid-${project.version}/standalone/configuration</outputDirectory>
                                     <resources>
                                         <resource>
                                             <directory>src/test/resources/arquillian/credentials</directory>
@@ -173,7 +157,7 @@
                                 </goals>
                                 <configuration>
                                     <systemPropertyVariables>
-                                        <jbossHome>${project.build.directory}/${jbossas-test-version}</jbossHome>
+                                        <jbossHome>${project.build.directory}/teiid-${project.version}</jbossHome>
                                         <serverConfig>standalone-teiid.xml</serverConfig>
                                     </systemPropertyVariables>
                                     <includes>

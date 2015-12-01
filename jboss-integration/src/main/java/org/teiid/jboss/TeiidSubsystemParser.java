@@ -21,9 +21,73 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
-import static org.jboss.as.controller.parsing.ParseUtils.*;
-import static org.teiid.jboss.TeiidConstants.*;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUBSYSTEM;
+import static org.jboss.as.controller.parsing.ParseUtils.requireNoAttributes;
+import static org.teiid.jboss.TeiidConstants.ALLOW_ENV_FUNCTION_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_TYPE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.AUTHORIZATION_VALIDATOR_MODULE_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.DATA_ROLES_REQUIRED_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.DC_STACK_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.DETECTING_CHANGE_EVENTS_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.ENCRYPT_FILES_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.INLINE_LOBS;
+import static org.teiid.jboss.TeiidConstants.LOB_CHUNK_SIZE_IN_KB_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.MAX_ACTIVE_PLANS_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.MAX_BUFFER_SPACE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.MAX_FILE_SIZE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.MAX_OPEN_FILES_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.MAX_PROCESSING_KB_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.MAX_RESERVED_KB_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.MAX_ROWS_FETCH_SIZE_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.MAX_SOURCE_ROWS_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.MAX_THREADS_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.MEMORY_BUFFER_OFFHEAP_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.MEMORY_BUFFER_SPACE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.PG_MAX_LOB_SIZE_ALLOWED_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.POLICY_DECIDER_MODULE_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.PPC_CONTAINER_NAME_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.PPC_ENABLE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.PPC_NAME_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.PREPARSER_MODULE_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.PROCESSOR_BATCH_SIZE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.QUERY_THRESHOLD_IN_SECS_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.QUERY_TIMEOUT;
+import static org.teiid.jboss.TeiidConstants.RSC_CONTAINER_NAME_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.RSC_ENABLE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.RSC_MAX_STALENESS_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.RSC_NAME_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.SSL_AUTH_MODE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.SSL_KETSTORE_ALIAS_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.SSL_KETSTORE_KEY_PASSWORD_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.SSL_KETSTORE_NAME_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.SSL_KETSTORE_PASSWORD_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.SSL_KETSTORE_TYPE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.SSL_KEY_MANAGEMENT_ALG_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.SSL_MODE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.SSL_SSL_PROTOCOL_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.SSL_TRUSTSTORE_NAME_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.THREAD_COUNT_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.TIME_SLICE_IN_MILLI_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.TRANSLATOR_MODULE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.TRANSLATOR_SLOT_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.TRANSPORT_IN_BUFFER_SIZE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.TRANSPORT_PROTOCOL_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.TRANSPORT_SOCKET_BINDING_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.USE_DISK_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.WORKMANAGER;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,7 +116,12 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
         }
         
         ALLOW_ENV_FUNCTION_ELEMENT.marshallAsElement(node, false, writer);
-        ASYNC_THREAD_POOL_ELEMENT.marshallAsElement(node, false, writer);
+        
+        if (like(node, Element.ASYNC_THREAD_POOL_ELEMENT)){
+            writer.writeStartElement(Element.ASYNC_THREAD_POOL_ELEMENT.getLocalName());
+            writeThreadConfiguration(writer, node);
+            writer.writeEndElement();
+        }
         
     	if (like(node, Element.BUFFER_SERVICE_ELEMENT)){
     		writer.writeStartElement(Element.BUFFER_SERVICE_ELEMENT.getLocalName());
@@ -119,6 +188,11 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 	    	}        
     	}
         writer.writeEndElement(); // End of subsystem element
+    }
+    
+    private void writeThreadConfiguration(XMLExtendedStreamWriter writer,
+            ModelNode node) throws XMLStreamException {
+        THREAD_COUNT_ATTRIBUTE.marshallAsAttribute(node, false, writer);
     }
     
     private void writeObjectReplicatorConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
@@ -247,7 +321,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
         // elements
         while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
             switch (Namespace.forUri(reader.getNamespaceURI())) {
-                case TEIID_1_0: {
+                case TEIID_1_1: {
                     Element element = Element.forName(reader.getLocalName());
                     switch (element) {
     				case ALLOW_ENV_FUNCTION_ELEMENT:
@@ -278,7 +352,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     					break;
 
     				case ASYNC_THREAD_POOL_ELEMENT:
-    					bootServices.get(reader.getLocalName()).set(reader.getElementText());
+    				    parseAsyncThreadConfiguration(reader, bootServices);
     					break;
     					
   					// complex types
@@ -347,6 +421,26 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
         }  
     }
     
+    private ModelNode parseAsyncThreadConfiguration(XMLExtendedStreamReader reader,
+            ModelNode node) throws XMLStreamException {
+        if (reader.getAttributeCount() > 0) {
+            for(int i=0; i<reader.getAttributeCount(); i++) {
+                String attrName = reader.getAttributeLocalName(i);
+                String attrValue = reader.getAttributeValue(i);
+                Element element = Element.forName(attrName, Element.ASYNC_THREAD_POOL_ELEMENT);
+                switch(element) {
+                case THREAD_COUNT_ATTRIBUTE:
+                    node.get(element.getModelName()).set(attrValue);
+                    break;
+                default: 
+                    throw ParseUtils.unexpectedAttribute(reader, i);
+                }               
+            }
+        }
+        while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT));
+        return node;        
+    }
+
     private ModelNode parseObjectReplicator(XMLExtendedStreamReader reader, ModelNode node) throws XMLStreamException {
     	if (reader.getAttributeCount() > 0) {
     		for(int i=0; i<reader.getAttributeCount(); i++) {

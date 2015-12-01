@@ -22,6 +22,8 @@
 
 package org.teiid.jboss;
 
+import org.jboss.as.naming.ContextListAndJndiViewManagedReferenceFactory;
+import org.jboss.as.naming.ContextListManagedReferenceFactory;
 import org.jboss.as.naming.ManagedReference;
 import org.jboss.as.naming.ManagedReferenceFactory;
 import org.jboss.as.naming.ValueManagedReference;
@@ -34,7 +36,7 @@ import org.jboss.msc.value.ImmediateValue;
 import org.jboss.msc.value.InjectedValue;
 
 
-class ReferenceFactoryService<T> implements Service<ManagedReferenceFactory>, ManagedReferenceFactory {
+class ReferenceFactoryService<T> implements Service<ManagedReferenceFactory>, ContextListAndJndiViewManagedReferenceFactory {
     private final InjectedValue<T> injector = new InjectedValue<T>();
 
     private ManagedReference reference;
@@ -58,4 +60,16 @@ class ReferenceFactoryService<T> implements Service<ManagedReferenceFactory>, Ma
     public Injector<T> getInjector() {
         return injector; 
     }
+
+    @Override
+    public String getInstanceClassName() {
+        final Object value = reference != null ? reference.getInstance() : null;
+        return value != null ? value.getClass().getName() : ContextListManagedReferenceFactory.DEFAULT_INSTANCE_CLASS_NAME;
+    }
+
+    @Override
+    public String getJndiViewInstanceValue() {
+        final Object value = reference != null ? reference.getInstance() : null;
+        return String.valueOf(value);
+    }    
 }

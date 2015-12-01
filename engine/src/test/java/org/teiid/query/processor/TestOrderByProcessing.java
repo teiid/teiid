@@ -279,6 +279,7 @@ public class TestOrderByProcessing {
 		bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
 		bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
 		bsc.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
+		bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, true);
 		ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc));
 
 		List[] expected = new List[] { Arrays.asList(1), 

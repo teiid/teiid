@@ -22,23 +22,19 @@
  */
 package org.teiid.transport;
 
-import static org.jboss.netty.buffer.ChannelBuffers.*;
-import static org.jboss.netty.channel.Channels.*;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufOutputStream;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelOutboundHandlerAdapter;
+import io.netty.channel.ChannelPromise;
+import io.netty.handler.stream.ChunkedStream;
 
 import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBufferOutputStream;
-import org.jboss.netty.channel.ChannelDownstreamHandler;
-import org.jboss.netty.channel.ChannelEvent;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelPipelineCoverage;
-import org.jboss.netty.channel.Channels;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.handler.stream.ChunkedInput;
-import org.jboss.netty.handler.stream.ChunkedStream;
 import org.teiid.core.util.ExternalizeUtil;
 import org.teiid.netty.handler.codec.serialization.CompactObjectOutputStream;
 import org.teiid.netty.handler.codec.serialization.ObjectDecoderInputStream;
@@ -60,8 +56,7 @@ import org.teiid.netty.handler.codec.serialization.ObjectDecoderInputStream;
  * @apiviz.landmark
  * @apiviz.has org.jboss.netty.handler.codec.serialization.ObjectEncoderOutputStream - - - compatible with
  */
-@ChannelPipelineCoverage("all")
-public class ObjectEncoder implements ChannelDownstreamHandler {
+public class ObjectEncoder extends ChannelOutboundHandlerAdapter {
 	
 	public static class FailedWriteException extends Exception {
 		private static final long serialVersionUID = -998903582526732966L;
@@ -81,12 +76,13 @@ public class ObjectEncoder implements ChannelDownstreamHandler {
 	private static final int CHUNK_SIZE = (1 << 16) - 1;
 
     private final int estimatedLength;
-
+    private final boolean preferDirect;
+    
     /**
      * Creates a new encoder with the estimated length of 512 bytes.
      */
     public ObjectEncoder() {
-        this(512);
+        this(512, true);
     }
 
     /**
@@ -100,48 +96,60 @@ public class ObjectEncoder implements ChannelDownstreamHandler {
      *        memory bandwidth.  To avoid unnecessary memory copy or allocation
      *        cost, please specify the properly estimated value.
      */
-    public ObjectEncoder(int estimatedLength) {
+    public ObjectEncoder(int estimatedLength, boolean preferDirect) {
         if (estimatedLength < 0) {
             throw new IllegalArgumentException(
                     "estimatedLength: " + estimatedLength);
         }
         this.estimatedLength = estimatedLength;
+        this.preferDirect = preferDirect;
     }
     
-    public void handleDownstream(
-            final ChannelHandlerContext ctx, ChannelEvent evt) throws Exception {
-        if (!(evt instanceof MessageEvent)) {
-            ctx.sendDownstream(evt);
-            return;
-        }
-
-        MessageEvent e = (MessageEvent) evt;
-        
-        if (e.getMessage() instanceof ChunkedInput) {
-            ctx.sendDownstream(evt);
-            return;
-        }
-        
-        ChannelBufferOutputStream bout =
-            new ChannelBufferOutputStream(dynamicBuffer(
-                    estimatedLength, ctx.getChannel().getConfig().getBufferFactory()));
+    @Override
+    public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
+        ByteBuf out = allocateBuffer(ctx, this.estimatedLength, this.preferDirect);
+        int startIdx = out.writerIndex();
+        ByteBufOutputStream bout = new ByteBufOutputStream(out);
         bout.write(LENGTH_PLACEHOLDER);
         final CompactObjectOutputStream oout = new CompactObjectOutputStream(bout);
         try {
-	        oout.writeObject(e.getMessage());
+	        oout.writeObject(msg);
 	        ExternalizeUtil.writeCollection(oout, oout.getReferences());
 	        oout.flush();
 	        oout.close();
+	        
+	        int endIdx = out.writerIndex();
+	        out.setInt(startIdx, endIdx - startIdx - 4);
+	        
+	        if (out.isReadable()) {
+	            ctx.write(out, promise);
+	            for (InputStream is : oout.getStreams()) {
+	                ctx.write(new AnonymousChunkedStream(new BufferedInputStream(is, CHUNK_SIZE)), promise);
+	            }
+	        } else {
+	            out.release();
+	            ctx.write(Unpooled.EMPTY_BUFFER, promise);
+	        }
+	        ctx.flush();
+	        out = null;        
         } catch (Throwable t) {
-        	throw new FailedWriteException(e.getMessage(), t);
+        	throw new FailedWriteException(msg, t);
+        } finally {
+            if (out != null) {
+                out.release();
+            }
         }
-        ChannelBuffer encoded = bout.buffer();
-        encoded.setInt(0, encoded.writerIndex() - 4);
-        write(ctx, e.getFuture(), encoded, e.getRemoteAddress());
-		for (InputStream is : oout.getStreams()) {
-			Channels.write(ctx.getChannel(), new AnonymousChunkedStream(new BufferedInputStream(is, CHUNK_SIZE)));
-		}
     }
+    
+    protected ByteBuf allocateBuffer(ChannelHandlerContext ctx,
+            int estimatedSize, boolean preferDirect)
+            throws Exception {
+        if (preferDirect) {
+            return ctx.alloc().ioBuffer(estimatedSize);
+        } else {
+            return ctx.alloc().heapBuffer(estimatedSize);
+        }
+    }    
     
     static class AnonymousChunkedStream extends ChunkedStream {
 
@@ -150,17 +158,16 @@ public class ObjectEncoder implements ChannelDownstreamHandler {
 		}
     	
 		@Override
-		public Object nextChunk() throws Exception {
-			ChannelBuffer cb = (ChannelBuffer)super.nextChunk();
+		public ByteBuf readChunk(ChannelHandlerContext ctx) throws Exception {
+		    ByteBuf cb = (ByteBuf)super.readChunk(ctx);
 			int length = cb.capacity();
-			ChannelBuffer prefix = wrappedBuffer(new byte[2]);
+			ByteBuf prefix = Unpooled.wrappedBuffer(new byte[2]);
 			prefix.setShort(0, (short)length);
-			if (!hasNextChunk()) {
+			if (isEndOfInput()) {
 				//append a 0 short
-				return wrappedBuffer(prefix, cb, wrappedBuffer(new byte[2]));
+				return Unpooled.wrappedBuffer(prefix, cb, Unpooled.wrappedBuffer(new byte[2]));
 			}
-			
-			return wrappedBuffer(prefix, cb);
+			return Unpooled.wrappedBuffer(prefix, cb);
 		}
 		
     }

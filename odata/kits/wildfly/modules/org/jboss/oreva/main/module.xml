@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.0" name="org.jboss.oreva">
+    <properties>
+        <property name="jboss.api" value="UNSUPPORTED"/>
+    </properties>
+    
+    <resources>
+        <resource-root path="odata-core-${version.org.jboss.oreva}.jar" />
+        <resource-root path="common-${version.org.jboss.oreva}.jar" />
+    </resources>
+
+    <dependencies>
+        <module name="javax.api" />
+        <module name="org.joda.time" />
+        <module name="javax.ws.rs.api"/>
+    </dependencies>
+
+</module>

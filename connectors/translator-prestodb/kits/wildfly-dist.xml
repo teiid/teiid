@@ -1,0 +1,41 @@
+<!--This script builds a zip for Teiid Server Installation -->
+<assembly>
+  
+  <id>wildfly-dist</id>
+  
+  <formats>
+    <format>zip</format>
+  </formats>
+  
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <baseDirectory>modules</baseDirectory>
+
+ <fileSets>
+    <fileSet>
+        <directory>kits/wildfly/modules</directory>
+        <outputDirectory>${wildfly-module-root}</outputDirectory>     
+        <filtered>true</filtered> 
+        <includes>
+          <include>**/*</include>
+        </includes>   
+    </fileSet>    
+  </fileSets>
+  
+  <dependencySets>
+    <dependencySet>
+      <outputDirectory>${wildfly-module-root}/org/jboss/teiid/translator/prestodb/main</outputDirectory>
+      <useTransitiveDependencies>false</useTransitiveDependencies>
+      <excludes>
+        <exclude>com.facebook.presto:presto-jdbc</exclude>
+      </excludes>
+    </dependencySet>
+    <dependencySet>
+      <outputDirectory>${wildfly-module-root}/com/facebook/presto/main</outputDirectory>
+      <useTransitiveDependencies>false</useTransitiveDependencies>
+      <includes>
+        <include>com.facebook.presto:presto-jdbc</include>
+      </includes>
+    </dependencySet>
+  </dependencySets>  
+  
+</assembly>

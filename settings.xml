@@ -57,6 +57,7 @@ http://maven.apache.org/xsd/settings-1.0.0.xsd">
         </repository>
       </repositories> 
     </profile>    
+    <!-- 
     <profile>
       <id>jboss-techpreview</id>
       <repositories>
@@ -92,14 +93,17 @@ http://maven.apache.org/xsd/settings-1.0.0.xsd">
           </snapshots>
         </repository>
       </repositories>
-    </profile>                     
+    </profile>       
+     -->              
   </profiles>
 
   <activeProfiles>
     <activeProfile>jboss-public-repository</activeProfile>
     <activeProfile>jboss-developer-repository</activeProfile>
+    <!-- 
     <activeProfile>jboss-techpreview</activeProfile>
     <activeProfile>jboss-earlyaccess</activeProfile>
+     -->
   </activeProfiles>
 
 </settings>

@@ -29,10 +29,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.language.AggregateFunction;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
+import org.teiid.language.LanguageObject;
 import org.teiid.language.Limit;
 import org.teiid.language.Literal;
+import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.MetadataProcessor;
@@ -51,6 +54,8 @@ import org.teiid.translator.jdbc.Version;
 @Translator(name = "hana", description = "SAP HANA translator")
 public class HanaExecutionFactory extends JDBCExecutionFactory {
 	
+	private static final String TINYINT_TYPE = "tinyint"; //$NON-NLS-1$
+
 	public static final Version SPS8 = Version.getVersion("SPS8"); //$NON-NLS-1$
 	
 	private static final String TIME_FORMAT = "HH24:MI:SS"; //$NON-NLS-1$
@@ -153,7 +158,8 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
 		//TYPE CONVERION MODIFIERS////////////////////////////////
 		//////////////////////////////////////////////////////////
         ConvertModifier convertModifier = new ConvertModifier();
-        convertModifier.addTypeMapping("tinyint", FunctionModifier.BOOLEAN, FunctionModifier.BYTE); //$NON-NLS-1$
+        convertModifier.addTypeMapping("boolean", FunctionModifier.BOOLEAN); //$NON-NLS-1$
+        convertModifier.addTypeMapping(TINYINT_TYPE, FunctionModifier.BYTE);
         convertModifier.addTypeMapping("smallint", FunctionModifier.SHORT); //$NON-NLS-1$
         convertModifier.addTypeMapping("integer", FunctionModifier.INTEGER); //$NON-NLS-1$
         convertModifier.addTypeMapping("bigint", FunctionModifier.LONG, FunctionModifier.BIGINTEGER); //$NON-NLS-1$
@@ -182,6 +188,13 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
         convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIMESTAMP, new ConvertModifier.FormatModifier("to_timestamp", DATETIME_FORMAT));  //$NON-NLS-1$ 
         
     	convertModifier.setWideningNumericImplicit(true);
+    	convertModifier.addSourceConversion(new FunctionModifier() {
+			@Override
+			public List<?> translate(Function function) {
+				((Literal)function.getParameters().get(1)).setValue(TINYINT_TYPE);
+				return null;
+			}
+		}, FunctionModifier.BOOLEAN);
     	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
     	
     	/*
@@ -393,6 +406,22 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
     		}
     		
     	};
+    }
+	
+	/**
+     * Hana doesn't provide min/max(boolean)
+     */
+    @Override
+    public List<?> translate(LanguageObject obj, ExecutionContext context) {
+    	if (obj instanceof AggregateFunction) {
+    		AggregateFunction agg = (AggregateFunction)obj;
+    		if (agg.getParameters().size() == 1 
+    				&& (agg.getName().equalsIgnoreCase(NonReserved.MIN) || agg.getName().equalsIgnoreCase(NonReserved.MAX)) 
+    				&& TypeFacility.RUNTIME_TYPES.BOOLEAN.equals(agg.getParameters().get(0).getType())) {
+        		return Arrays.asList("cast(", agg.getName(), "(to_tinyint(", agg.getParameters().get(0), ")) as boolean)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            }
+    	}
+    	return super.translate(obj, context);
     }
 	
 }

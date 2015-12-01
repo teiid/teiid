@@ -42,6 +42,7 @@ import org.teiid.metadata.Column;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
+import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TranslatorException;
 
 public class ODataSQLVisitor extends HierarchyVisitor {
@@ -233,12 +234,18 @@ public class ODataSQLVisitor extends HierarchyVisitor {
             this.filter.append(name)
                   .append(Tokens.LPAREN);
             if (args != null && args.size() != 0) {
-                for (int i = 0; i < args.size(); i++) {
-                    append(args.get(i));
-                    if (i < args.size()-1) {
-                    	this.filter.append(Tokens.COMMA);
-                    }
-                }
+            	if (SourceSystemFunctions.ENDSWITH.equalsIgnoreCase(name)) {
+            		append(args.get(1));
+            		this.filter.append(Tokens.COMMA);
+            		append(args.get(0));
+            	} else {
+	                for (int i = 0; i < args.size(); i++) {
+	                    append(args.get(i));
+	                    if (i < args.size()-1) {
+	                    	this.filter.append(Tokens.COMMA);
+	                    }
+	                }
+            	}
             }
             this.filter.append(Tokens.RPAREN);
         }

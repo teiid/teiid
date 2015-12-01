@@ -1,7 +1,6 @@
-<subsystem xmlns="urn:jboss:domain:teiid:1.0">
+<subsystem xmlns="urn:jboss:domain:teiid:1.1">
     <allow-env-function>true</allow-env-function>
-    <async-thread-pool>teiid-async</async-thread-pool>
-
+    <async-thread-pool max-thread-count="10"/>
     <buffer-service use-disk="false" processor-batch-size="2"  
         max-processing-kb="2" max-reserve-kb="2" max-file-size="2" max-buffer-space="2" max-open-files="2"
         memory-buffer-space="-2" memory-buffer-off-heap="true" max-storage-object-size="2" inline-lobs="false" encrypt-files="true"/>

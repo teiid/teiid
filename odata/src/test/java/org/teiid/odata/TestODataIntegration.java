@@ -34,7 +34,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -52,6 +52,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.odata4j.core.OCollection;
+import org.odata4j.core.OComplexObject;
 import org.odata4j.core.OEntities;
 import org.odata4j.core.OEntity;
 import org.odata4j.core.OEntityKey;
@@ -168,7 +170,7 @@ public class TestODataIntegration extends BaseResourceTest {
 	}
 
 	private static TransformationMetadata metadata;
-	
+    
 	@BeforeClass
 	public static void before() throws Exception {	    
 		deployment = EmbeddedContainer.start("/odata/northwind");
@@ -178,8 +180,8 @@ public class TestODataIntegration extends BaseResourceTest {
 		deployment.getRegistry().addPerRequestResource(MetadataResource.class);
 		deployment.getRegistry().addPerRequestResource(ServiceDocumentResource.class);
 		deployment.getProviderFactory().registerProvider(ODataBatchProvider.class);
-		deployment.getProviderFactory().addExceptionMapper(ODataExceptionMappingProvider.class);
-		deployment.getProviderFactory().addContextResolver(org.teiid.odata.MockProvider.class);		
+		deployment.getProviderFactory().registerProvider(ODataExceptionMappingProvider.class);
+		deployment.getProviderFactory().registerProvider(MockProvider.class);		
 		metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.ddl")),"northwind", "nw");		
 	}	
 	
@@ -241,22 +243,25 @@ public class TestODataIntegration extends BaseResourceTest {
 		Client client = mockClient();
 		MockProvider.CLIENT = client;
 		ArgumentCaptor<Query> sql = ArgumentCaptor.forClass(Query.class);
-		ArgumentCaptor<EdmEntitySet> entitySet = ArgumentCaptor.forClass(EdmEntitySet.class);
 		
 		OEntity entity = createCustomersEntity(client.getMetadata());
 		ArrayList<OEntity> list = new ArrayList<OEntity>();
 		list.add(entity);
 		
 		EntityList result = Mockito.mock(EntityList.class);
-		when(result.get(0)).thenReturn(entity);
+        EdmEntitySet entitySet = client.getMetadata().getEdmEntitySet("nw.Customers");
+        when(result.getEntitySet()).thenReturn(entitySet);
+        when(result.getEntities()).thenReturn(Arrays.asList(entity));
 		when(result.size()).thenReturn(1);
 		when(result.iterator()).thenReturn(list.iterator());
 		
-		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), any(EdmEntitySet.class), (LinkedHashMap<String, Boolean>) any(), any(QueryInfo.class))).thenReturn(result);
+		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), 
+		        any(QueryInfo.class), any(EntityCollector.class))).thenReturn(result);
 		
         ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/Customers?$select=CustomerID,CompanyName,Address"));
         ClientResponse<String> response = request.get(String.class);
-        verify(client).executeSQL(sql.capture(),  anyListOf(SQLParam.class), entitySet.capture(), (LinkedHashMap<String, Boolean>) any(), any(QueryInfo.class));
+        verify(client).executeSQL(sql.capture(),  anyListOf(SQLParam.class), 
+                any(QueryInfo.class), any(EntityCollector.class));
         
         Assert.assertEquals("SELECT g0.CustomerID, g0.CompanyName, g0.Address FROM nw.Customers AS g0 ORDER BY g0.CustomerID", sql.getValue().toString());
         Assert.assertEquals(200, response.getStatus());
@@ -270,18 +275,20 @@ public class TestODataIntegration extends BaseResourceTest {
 		MockProvider.CLIENT = client;
 		ArgumentCaptor<Command> insertCmd = ArgumentCaptor.forClass(Command.class);
 		ArgumentCaptor<Query> sql = ArgumentCaptor.forClass(Query.class);
-		ArgumentCaptor<EdmEntitySet> entitySet = ArgumentCaptor.forClass(EdmEntitySet.class);
 		
 		OEntity entity = createCustomersEntity(client.getMetadata());
 		ArrayList<OEntity> list = new ArrayList<OEntity>();
 		list.add(entity);
 		
 		EntityList result = Mockito.mock(EntityList.class);
-		when(result.get(0)).thenReturn(entity);
+        EdmEntitySet entitySet = client.getMetadata().getEdmEntitySet("nw.Customers");
+        when(result.getEntitySet()).thenReturn(entitySet);
+        when(result.getEntities()).thenReturn(list);
 		when(result.size()).thenReturn(1);
 		when(result.iterator()).thenReturn(list.iterator());
 		
-		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), any(EdmEntitySet.class), (LinkedHashMap<String, Boolean>) any(), any(QueryInfo.class))).thenReturn(result);
+		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), 
+		        any(QueryInfo.class), any(EntityCollector.class))).thenReturn(result);
 		
 		UpdateResponse respose = new UpdateResponse() {
 			@Override
@@ -327,31 +334,100 @@ public class TestODataIntegration extends BaseResourceTest {
         
         // post after insert pulls the entity inserted. In above XML there is customer id, but
         // below selection is based on primary key 1234
-        verify(client).executeSQL(sql.capture(),  anyListOf(SQLParam.class), entitySet.capture(), (LinkedHashMap<String, Boolean>) any(), any(QueryInfo.class));
+        verify(client).executeSQL(sql.capture(),  anyListOf(SQLParam.class), 
+                any(QueryInfo.class), any(EntityCollector.class));
         
-        Assert.assertEquals("INSERT INTO nw.Customers (CompanyName, ContactName, ContactTitle, Address, City, Region, PostalCode, Country, Phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", insertCmd.getValue().toString());
-        Assert.assertEquals("SELECT g0.* FROM nw.Customers AS g0 WHERE g0.CustomerID = 1234 ORDER BY g0.CustomerID", sql.getValue().toString());
+        Assert.assertEquals("INSERT INTO nw.Customers (CompanyName, ContactName, ContactTitle, "
+                + "Address, City, Region, PostalCode, Country, Phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+                insertCmd.getValue().toString());
+        Assert.assertEquals("SELECT g0.* FROM nw.Customers AS g0 "
+                + "WHERE g0.CustomerID = 1234 ORDER BY g0.CustomerID", sql.getValue().toString());
         Assert.assertEquals(201, response.getStatus());
 	}	
 	
 	@Test
-	public void testProcedure() throws Exception {
+	@SuppressWarnings("unchecked")
+	public void testProcedureOptions() throws Exception {
 		Client client = mockClient();
 		MockProvider.CLIENT = client;
-		ArgumentCaptor<String> sql = ArgumentCaptor.forClass(String.class);
+		ArgumentCaptor<Query> sql = ArgumentCaptor.forClass(Query.class);
 		ArgumentCaptor<List> params = ArgumentCaptor.forClass(List.class);
 		
-		when(client.executeCall(any(String.class), anyListOf(SQLParam.class), any(EdmType.class))).thenReturn(Responses.simple(EdmSimpleType.INT32, "return", null));
+		OCollection<OComplexObject> collection = mock(OCollection.class);
+		stub(collection.getType()).toReturn(mock(EdmType.class));
+		stub(collection.iterator()).toReturn(mock(Iterator.class));
 		
+		ComplexCollection result = mock(ComplexCollection.class);
+		stub(result.getCollection()).toReturn(collection);
+		stub(result.getCollectionName()).toReturn("any");
+		
+		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), 
+                    any(QueryInfo.class), any(EntityCollector.class))).thenReturn(result);
+		
+		String url = TestPortProvider.generateURL("/odata/northwind/getSuppliers?p3=2&$filter=SupplierID eq 1");
+        ClientRequest request = new ClientRequest(url);
+        ClientResponse<String> response = request.get(String.class);
+        verify(client).executeSQL(sql.capture(), params.capture(),  any(QueryInfo.class),any(EntityCollector.class));
+        
+        Assert.assertEquals("SELECT g0.* FROM TABLE(EXEC nw.getSuppliers(p3 => ?)) AS g0 WHERE g0.SupplierID = ?", 
+                sql.getValue().toString());        
+        Assert.assertEquals(Integer.valueOf(2), ((SQLParam)params.getValue().get(0)).value);
+        Assert.assertEquals(Integer.valueOf(1), ((SQLParam)params.getValue().get(1)).value);
+        Assert.assertEquals(200, response.getStatus());
+	}
+	
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testProcedureOptions2() throws Exception {
+        Client client = mockClient();
+        MockProvider.CLIENT = client;
+        ArgumentCaptor<Query> sql = ArgumentCaptor.forClass(Query.class);
+        ArgumentCaptor<List> params = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<QueryInfo> queryInfo = ArgumentCaptor.forClass(QueryInfo.class);
+        
+        OCollection<OComplexObject> collection = mock(OCollection.class);
+        stub(collection.getType()).toReturn(mock(EdmType.class));
+        stub(collection.iterator()).toReturn(mock(Iterator.class));
+        
+        ComplexCollection result = mock(ComplexCollection.class);
+        stub(result.getCollection()).toReturn(collection);
+        stub(result.getCollectionName()).toReturn("any");
+        
+        when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), 
+                    any(QueryInfo.class), any(EntityCollector.class))).thenReturn(result);
+        
+        String url = TestPortProvider.generateURL("/odata/northwind/getSuppliers?p3=2&$select=SupplierID&$top=10&$orderby=SupplierID");
+        ClientRequest request = new ClientRequest(url);
+        ClientResponse<String> response = request.get(String.class);
+        verify(client).executeSQL(sql.capture(), params.capture(),  queryInfo.capture(),any(EntityCollector.class));
+        
+        Assert.assertEquals("SELECT g0.SupplierID FROM TABLE(EXEC nw.getSuppliers(p3 => ?)) AS g0 ORDER BY g0.SupplierID", 
+                sql.getValue().toString());        
+        Assert.assertEquals(Integer.valueOf(2), ((SQLParam)params.getValue().get(0)).value);
+        Assert.assertEquals(Integer.valueOf(10), queryInfo.getValue().top);
+        Assert.assertEquals(200, response.getStatus());
+    }	
+	
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testProcedure() throws Exception {
+        Client client = mockClient();
+        MockProvider.CLIENT = client;
+        ArgumentCaptor<String> sql = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<List> params = ArgumentCaptor.forClass(List.class);
+        
+        when(client.executeCall(any(String.class), anyListOf(SQLParam.class), any(EdmType.class))).thenReturn(Responses.simple(EdmSimpleType.INT32, "return", null));
+        
         ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/getCustomers?p2=datetime'2011-09-11T00:00:00'&p3=2.0M"));
         ClientResponse<String> response = request.get(String.class);
         verify(client).executeCall(sql.capture(), params.capture(), any(EdmType.class));
         
-        Assert.assertEquals("{? = call nw.getCustomers(p2=>?,p3=>?)}", sql.getValue().toString());
+        Assert.assertEquals("{ ? = CALL nw.getCustomers(p2 => ?, p3 => ?) }", sql.getValue().toString());
         Assert.assertEquals(TimestampUtil.createTimestamp(111, 8, 11, 0, 0, 0, 0), ((SQLParam)params.getValue().get(0)).value);
         Assert.assertEquals(BigDecimal.valueOf(2.0), ((SQLParam)params.getValue().get(1)).value);
         Assert.assertEquals(200, response.getStatus());
-	}
+    }
+    
 	
 	@Test
 	public void testProcedureNoReturn() throws Exception {
@@ -389,7 +465,13 @@ public class TestODataIntegration extends BaseResourceTest {
         ClientResponse<String> response = request.get(String.class);
         
         Assert.assertEquals(404, response.getStatus());
-        Assert.assertTrue(response.getEntity().endsWith("<error xmlns=\"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata\"><code>NotFoundException</code><message lang=\"en-US\">TEIID16011 EntitySet \"NoPKTable\" is not found; Check the spelling, use modelName.tableName; The table that representing the Entity type must either have a PRIMARY KEY or UNIQUE key(s)</message></error>"));
+        String endsWith = "<error xmlns=\"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata\">"
+                + "<code>NotFoundException</code>"
+                + "<message lang=\"en-US\">TEIID16011 EntitySet \"NoPKTable\" is not found; "
+                + "Check the spelling, use modelName.tableName; The table that representing "
+                + "the Entity type must either have a PRIMARY KEY or UNIQUE key(s)</message>"
+                + "</error>";
+        Assert.assertTrue(response.getEntity().endsWith(endsWith));
 	}	
 	
 	@Test
@@ -397,13 +479,18 @@ public class TestODataIntegration extends BaseResourceTest {
 		Client client = mockClient();
 		MockProvider.CLIENT = client;
 		
-		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), any(EdmEntitySet.class), (LinkedHashMap<String, Boolean>) any(), any(QueryInfo.class))).thenThrow(new NullPointerException());
+		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class),  
+		        any(QueryInfo.class), any(EntityCollector.class))).thenThrow(new NullPointerException());
 		
-        ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/Customers?$select=CustomerID,CompanyName,Address"));
+        ClientRequest request = new ClientRequest(TestPortProvider.generateURL(
+                "/odata/northwind/Customers?$select=CustomerID,CompanyName,Address"));
         ClientResponse<String> response = request.get(String.class);
         
         Assert.assertEquals(500, response.getStatus());
-        Assert.assertTrue(response.getEntity().endsWith("<error xmlns=\"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata\"><code>ServerErrorException</code><message lang=\"en-US\">Internal Server Error</message></error>"));
+        String endsWith = "<error xmlns=\"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata\">"
+                + "<code>ServerErrorException</code>"
+                + "<message lang=\"en-US\">Internal Server Error</message></error>";
+        Assert.assertTrue(response.getEntity().endsWith(endsWith));
 	}	
 	
 	@Test
@@ -411,27 +498,64 @@ public class TestODataIntegration extends BaseResourceTest {
 		Client client = mockClient();
 		MockProvider.CLIENT = client;
 		ArgumentCaptor<Query> sql = ArgumentCaptor.forClass(Query.class);
-		ArgumentCaptor<EdmEntitySet> entitySet = ArgumentCaptor.forClass(EdmEntitySet.class);
 		
 		OEntity entity = createCustomersEntity(client.getMetadata());
 		ArrayList<OEntity> list = new ArrayList<OEntity>();
 		list.add(entity);
 		
 		EntityList result = Mockito.mock(EntityList.class);
-		when(result.get(0)).thenReturn(entity);
+		EdmEntitySet entitySet = client.getMetadata().getEdmEntitySet("nw.Customers");
+		when(result.getEntitySet()).thenReturn(entitySet);
+		when(result.getEntities()).thenReturn(Arrays.asList(entity));
 		when(result.size()).thenReturn(1);
 		when(result.iterator()).thenReturn(list.iterator());
 		
-		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), any(EdmEntitySet.class), (LinkedHashMap<String, Boolean>) any(), any(QueryInfo.class))).thenReturn(result);
+		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), any(QueryInfo.class), 
+		        any(EntityCollector.class))).thenReturn(result);
 		
-        ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/Customers?$select=CustomerID,CompanyName,Address"));
+        ClientRequest request = new ClientRequest(
+                TestPortProvider.generateURL("/odata/northwind/Customers?$select=CustomerID,CompanyName,Address"));
         ClientResponse<String> response = request.get(String.class);
-        verify(client).executeSQL(sql.capture(),  anyListOf(SQLParam.class), entitySet.capture(), (LinkedHashMap<String, Boolean>) any(), any(QueryInfo.class));
+        verify(client).executeSQL(sql.capture(),  anyListOf(SQLParam.class), any(QueryInfo.class), 
+                any(EntityCollector.class));
         
-        Assert.assertEquals("SELECT g0.CustomerID, g0.CompanyName, g0.Address FROM nw.Customers AS g0 ORDER BY g0.CustomerID", sql.getValue().toString());
+        Assert.assertEquals("SELECT g0.CustomerID, g0.CompanyName, g0.Address FROM nw.Customers "
+                + "AS g0 ORDER BY g0.CustomerID", sql.getValue().toString());
         Assert.assertEquals(200, response.getStatus());
         
-	}	
+	}
+	
+    @Test
+    public void testSelectWithExpand() throws Exception {
+        Client client = mockClient();
+        MockProvider.CLIENT = client;
+        ArgumentCaptor<Query> sql = ArgumentCaptor.forClass(Query.class);
+        
+        OEntity entity = createCustomersEntity(client.getMetadata());
+        ArrayList<OEntity> list = new ArrayList<OEntity>();
+        list.add(entity);
+        
+        EntityList result = Mockito.mock(EntityList.class);
+        EdmEntitySet entitySet = client.getMetadata().getEdmEntitySet("nw.Customers");
+        when(result.getEntitySet()).thenReturn(entitySet);
+        when(result.getEntities()).thenReturn(Arrays.asList(entity));
+        when(result.size()).thenReturn(1);
+        when(result.iterator()).thenReturn(list.iterator());
+        
+        when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), any(QueryInfo.class), 
+                any(EntityCollector.class))).thenReturn(result);
+        
+        ClientRequest request = new ClientRequest(
+                TestPortProvider.generateURL("/odata/northwind/Customers?$expand=Orders"));
+        ClientResponse<String> response = request.get(String.class);
+        verify(client).executeSQL(sql.capture(),  anyListOf(SQLParam.class), any(QueryInfo.class), 
+                any(EntityCollector.class));
+        
+        Assert.assertEquals("SELECT g0.*, g1.* FROM nw.Customers AS g0 "
+                + "INNER JOIN nw.Orders AS g1 ON g0.CustomerID = g1.CustomerID "
+                + "ORDER BY g0.CustomerID", sql.getValue().toString());
+        Assert.assertEquals(200, response.getStatus());
+    }   	
 	
 	@Test
 	public void testGetEntity() throws Exception {
@@ -440,8 +564,24 @@ public class TestODataIntegration extends BaseResourceTest {
 		try {
 			ModelMetaData mmd = new ModelMetaData();
 			mmd.setName("vw");
-			mmd.addSourceMetadata("ddl", "create view x (a string primary key, b string) as select 'a', 'b' union all select 'c', 'd';"
-					+ " create view y (a1 string primary key, b1 string, foreign key (a1) references x (a)) as select 'a', 'b' union all select 'c', 'd';");
+			mmd.addSourceMetadata("ddl", 
+			        "create view x ("
+			        + "a string primary key, "
+			        + "b string) "
+			        + "as select 'a', 'b' union all select 'c', 'd';"
+			        +"\n"
+					+ "create view y ("
+					+ "a1 string primary key, "
+					+ "b1 string, "
+					+ "foreign key (a1) references x (a)) "
+					+ "as select 'a', 'b' union all select 'c', 'd';"
+					+"\n"
+                    + "create view z ("
+                    + "a1 string, "
+                    + "b1 string primary key,"
+                    + "foreign key (a1) references x (a)) "
+                    + "as select 'a', 'b' union all select 'c', 'd';"					
+			        );
 			mmd.setModelType(Type.VIRTUAL);
 			es.deployVDB("northwind", mmd);
 			
@@ -467,16 +607,23 @@ public class TestODataIntegration extends BaseResourceTest {
 	        assertTrue(response.getEntity().contains("('a')"));
 	        Assert.assertEquals(200, response.getStatus());
 	        
-	        //ensure that a child is nav property works
+	        //ensure that a child is nav property works - one -to-one
 	        request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x('a')/y"));
 	        response = request.get(String.class);
-	        assertTrue(response.getEntity().contains("('a')"));
+	        assertTrue(!response.getEntity().contains("<feed"));
 	        Assert.assertEquals(200, response.getStatus());
 	        
+            //ensure that a child is nav property works - one -to-many
+            request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x('a')/z"));
+            response = request.get(String.class);
+            assertTrue(response.getEntity().contains("<feed"));
+            Assert.assertEquals(200, response.getStatus());
+	        
+            // invalid entity - should be 404 a1 = a can't be also c
 	        request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x('a')/y?$filter=a1 eq 'c'"));
 	        response = request.get(String.class);
 	        assertFalse(response.getEntity().contains("('c')"));
-	        Assert.assertEquals(200, response.getStatus());
+	        Assert.assertEquals(404, response.getStatus());
 		} finally {
 			es.stop();
 		}
@@ -527,16 +674,104 @@ public class TestODataIntegration extends BaseResourceTest {
 			
 	        ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x?$format=json&$select=a,b"));
 	        ClientResponse<String> response = request.get(String.class);
-	        assertEquals(200, response.getStatus());
+	        assertEquals(200, response.getStatus());	       
 	        assertTrue(response.getEntity().contains("1, 2, 3"));
 	        
+	        String expected = "{\n" + 
+	                "\"d\" : {\n" + 
+	                "\"results\" : [\n" + 
+	                "{\n" + 
+	                "\"__metadata\" : {\n" + 
+	                "\"uri\" : \"http://localhost:8081/odata/northwind/vw.x('x')\", \"type\" : \"vw.x\"\n" + 
+	                "}, \"a\" : \"x\", \"b\" : {\n" + 
+	                "\"results\" : [\n" + 
+	                "1, 2, 3\n" + 
+	                "]\n" + 
+	                "}, \"c\" : {\n" + 
+	                "\"results\" : [\n" + 
+	                "{\n" + 
+	                "\"results\" : [\n" + 
+	                "\"a\", \"b\"\n" + 
+	                "]\n" + 
+	                "}, {\n" + 
+	                "\"results\" : [\n" + 
+	                "\"c\", \"d\"\n" + 
+	                "]\n" + 
+	                "}\n" + 
+	                "]\n" + 
+	                "}\n" + 
+	                "}\n" + 
+	                "]\n" + 
+	                "}\n" + 
+	                "}";
 	        request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x?$format=json"));
 	        response = request.get(String.class);
-	        assertEquals(500, response.getStatus());
+	        assertEquals(expected, response.getEntity());
+	        assertEquals(200, response.getStatus());
 		} finally {
 			es.stop();
 		}
 	}
+	
+    @Test 
+    public void testArrayResultsInAtom() throws Exception {
+        EmbeddedServer es = new EmbeddedServer();
+        es.start(new EmbeddedConfiguration());
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("vw");
+            mmd.addSourceMetadata("ddl", "create view x (a string primary key, b integer[], c string[][]) as select 'x', (1, 2, 3), (('a','b'),('c','d'));");
+            mmd.setModelType(Type.VIRTUAL);
+            es.deployVDB("northwind", mmd);
+            
+            TeiidDriver td = es.getDriver();
+            Properties props = new Properties();
+            LocalClient lc = new LocalClient("northwind", 1, props);
+            lc.setDriver(td);
+            MockProvider.CLIENT = lc;
+            
+            ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x?$select=a,b"));
+            ClientResponse<String> response = request.get(String.class);
+            assertEquals(200, response.getStatus());             
+            String expected = 
+                    "<content type=\"application/xml\">" + 
+                        "<m:properties>" + 
+                            "<d:a>x</d:a>" + 
+                            "<d:b m:type=\"Collection(Edm.Int32)\">" + 
+                                "<d:element>1</d:element>" + 
+                                "<d:element>2</d:element>" + 
+                                "<d:element>3</d:element>" + 
+                            "</d:b>" + 
+                        "</m:properties>" + 
+                    "</content>";
+            assertTrue(response.getEntity().contains(expected));
+            
+            expected = "<m:properties>" +
+                        "<d:a>x</d:a>" + 
+                        "<d:b m:type=\"Collection(Edm.Int32)\">" + 
+                            "<d:element>1</d:element>" + 
+                            "<d:element>2</d:element>" + 
+                            "<d:element>3</d:element>" + 
+                        "</d:b>" + 
+                        "<d:c m:type=\"Collection(Collection(Edm.String))\">" + 
+                            "<d:element m:type=\"Collection(Edm.String)\">" + 
+                                "<d:element>a</d:element>" + 
+                                "<d:element>b</d:element>" + 
+                            "</d:element>" + 
+                            "<d:element m:type=\"Collection(Edm.String)\">" + 
+                                "<d:element>c</d:element>" + 
+                                "<d:element>d</d:element>" + 
+                            "</d:element>" + 
+                        "</d:c>" +
+                    "</m:properties>";
+            request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x"));
+            response = request.get(String.class);
+            assertTrue(response.getEntity(), response.getEntity().contains(expected));
+            assertEquals(200, response.getStatus());
+        } finally {
+            es.stop();
+        }
+    }	
 	
 	@Test public void testSkipToken() throws Exception {
 		EmbeddedServer es = new EmbeddedServer();
@@ -846,15 +1081,27 @@ public class TestODataIntegration extends BaseResourceTest {
 			lc.setDriver(td);
 			MockProvider.CLIENT = lc;
 			
-	        ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x?$format=json"));
-	        ClientResponse<String> response = request.get(String.class);
+			String expected = "{\n" + 
+			        "\"d\" : [\n" + 
+			        "{\n" + 
+			        "\"y\" : \"x\"\n" + 
+			        "}, {\n" + 
+			        "\"y\" : \"y\"\n" + 
+			        "}\n" + 
+			        "]\n" + 
+			        "}";
+	        ClientRequest clientRequest = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x?$format=json"));
+	        ClientResponse<String> response = clientRequest.get(String.class);
 	        assertEquals(200, response.getStatus());
+	        assertEquals(expected, response.getEntity());
 		} finally {
 			es.stop();
 		}
 	}
 	
-	@Test public void testBasicTypes() throws Exception {
+	@SuppressWarnings("unchecked")
+	@Test 
+	public void testBasicTypes() throws Exception {
 		EmbeddedServer es = new EmbeddedServer();
 		es.start(new EmbeddedConfiguration());
 		try {
@@ -930,7 +1177,9 @@ public class TestODataIntegration extends BaseResourceTest {
 		}
 	}
 	
-	@Test public void testEmbeddedComplexType() throws Exception {
+	@Test
+	@SuppressWarnings("unchecked")
+	public void testEmbeddedComplexType() throws Exception {
 		EmbeddedServer es = new EmbeddedServer();
 		es.start(new EmbeddedConfiguration());
 		try {
@@ -1045,4 +1294,284 @@ public class TestODataIntegration extends BaseResourceTest {
 		return entity;
 	}
 	
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testProperty() throws Exception {
+        EmbeddedServer es = new EmbeddedServer();
+        HardCodedExecutionFactory hc = new HardCodedExecutionFactory() {
+            @Override
+            public boolean supportsCompareCriteriaEquals() {
+                return true;
+            }
+        };
+        hc.addData("SELECT x.a FROM x WHERE x.a = 'a'", Arrays.asList(Arrays.asList("x"), Arrays.asList("y")));
+        es.addTranslator("x", hc);
+        es.start(new EmbeddedConfiguration());
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("m");
+            mmd.addSourceMetadata("ddl", "create foreign table x (a string, b string, c integer, primary key (a)) options (updatable true);");
+            mmd.addSourceMapping("x", "x", null);
+            es.deployVDB("northwind", mmd);
+            
+            TeiidDriver td = es.getDriver();
+            Properties props = new Properties();
+            LocalClient lc = new LocalClient("northwind", 1, props);
+            lc.setDriver(td);
+            MockProvider.CLIENT = lc;
+            
+            ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x('a')/a?$format=json"));
+            ClientResponse<String> response = request.get(String.class);
+            assertEquals(200, response.getStatus());
+            String expected = "{\n" + 
+                    "\"d\" : {\n" + 
+                    "\"a\" : \"x\"\n" + 
+                    "}\n" + 
+                    "}";
+            assertEquals(expected, response.getEntity());
+            
+            request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x('a')/a/$value?$format=json"));
+            response = request.get(String.class);
+            assertEquals(200, response.getStatus());
+            expected = "x";
+            assertEquals(expected, response.getEntity());            
+
+            request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x('a')/a/$value"));
+            response = request.get(String.class);
+            assertEquals(200, response.getStatus());
+            expected = "x";
+            assertEquals(expected, response.getEntity());            
+            
+        } finally {
+            es.stop();
+        }
+    }	
+    
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testExpandJson() throws Exception {
+        EmbeddedServer es = new EmbeddedServer();
+        HardCodedExecutionFactory hc = new HardCodedExecutionFactory() {
+            @Override
+            public boolean supportsCompareCriteriaEquals() {
+                return true;
+            }
+            public boolean supportsInnerJoins() {
+                return true;
+            }
+            public boolean supportsOuterJoins() {
+                return true;
+            }            
+        };
+        hc.addData("SELECT x.a, x.b, y.a1, y.b1 FROM x, y WHERE x.a = y.a1", 
+                Arrays.asList(Arrays.asList("xa", "xb", "xa", "yb"), 
+                        Arrays.asList("xa1", "xb1", "xa1", "yb1"),
+                        Arrays.asList("xa2", "xb2", "xa2", "yb2")
+                        ));
+        hc.addData("SELECT x.a, x.b, z.a1, z.b1 FROM x, z WHERE x.a = z.a1", 
+                Arrays.asList(Arrays.asList("xa", "xb", "xa", "zb"), 
+                        Arrays.asList("xa", "xb", "xa", "zb1"),
+                        Arrays.asList("xa", "xb", "xa", "zb2")
+                        ));
+
+        es.addTranslator("x", hc);
+        es.start(new EmbeddedConfiguration());
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("m");
+            mmd.addSourceMetadata("ddl", 
+                    "create foreign table x ("
+                    + "a string primary key, "
+                    + "b string);"
+                    +"\n"
+                    + "create foreign table y ("
+                    + "a1 string primary key, "
+                    + "b1 string, "
+                    + "foreign key (a1) references x (a)); "
+                    +"\n"
+                    + "create foreign table z ("
+                    + "a1 string, "
+                    + "b1 string primary key,"
+                    + "foreign key (a1) references x (a));");
+            
+            mmd.addSourceMapping("x", "x", null);
+            es.deployVDB("northwind", mmd);
+            
+            TeiidDriver td = es.getDriver();
+            Properties props = new Properties();
+            LocalClient lc = new LocalClient("northwind", 1, props);
+            lc.setDriver(td);
+            MockProvider.CLIENT = lc;
+
+            // in one-2-one
+            String url = TestPortProvider.generateURL("/odata/northwind/x?$expand=y&$format=json&$inlinecount=allpages");
+            ClientRequest request = new ClientRequest(url);
+            ClientResponse<String> response = request.get(String.class);
+            assertEquals(200, response.getStatus());
+            String expected = "{\n" + 
+                    "\"d\" : {\n" + 
+                    "\"results\" : [\n" + 
+                    "{\n" + 
+                    "\"__metadata\" : {\n" + 
+                    "\"uri\" : \"http://localhost:8081/odata/northwind/m.x('xa')\", \"type\" : \"m.x\"\n" + 
+                    "}, \"a\" : \"xa\", \"b\" : \"xb\", \"y\" : {\n" + 
+                    "\"__metadata\" : {\n" + 
+                    "\"uri\" : \"http://localhost:8081/odata/northwind/m.y('xa')\", \"type\" : \"m.y\"\n" + 
+                    "}, \"a1\" : \"xa\", \"b1\" : \"yb\"\n" + 
+                    "}, \"z\" : {\n" + 
+                    "\"__deferred\" : {\n" + 
+                    "\"uri\" : \"http://localhost:8081/odata/northwind/m.x('xa')/z\"\n" + 
+                    "}\n" + 
+                    "}\n" + 
+                    "}, {\n" + 
+                    "\"__metadata\" : {\n" + 
+                    "\"uri\" : \"http://localhost:8081/odata/northwind/m.x('xa1')\", \"type\" : \"m.x\"\n" + 
+                    "}, \"a\" : \"xa1\", \"b\" : \"xb1\", \"y\" : {\n" + 
+                    "\"__metadata\" : {\n" + 
+                    "\"uri\" : \"http://localhost:8081/odata/northwind/m.y('xa1')\", \"type\" : \"m.y\"\n" + 
+                    "}, \"a1\" : \"xa1\", \"b1\" : \"yb1\"\n" + 
+                    "}, \"z\" : {\n" + 
+                    "\"__deferred\" : {\n" + 
+                    "\"uri\" : \"http://localhost:8081/odata/northwind/m.x('xa1')/z\"\n" + 
+                    "}\n" + 
+                    "}\n" + 
+                    "}, {\n" + 
+                    "\"__metadata\" : {\n" + 
+                    "\"uri\" : \"http://localhost:8081/odata/northwind/m.x('xa2')\", \"type\" : \"m.x\"\n" + 
+                    "}, \"a\" : \"xa2\", \"b\" : \"xb2\", \"y\" : {\n" + 
+                    "\"__metadata\" : {\n" + 
+                    "\"uri\" : \"http://localhost:8081/odata/northwind/m.y('xa2')\", \"type\" : \"m.y\"\n" + 
+                    "}, \"a1\" : \"xa2\", \"b1\" : \"yb2\"\n" + 
+                    "}, \"z\" : {\n" + 
+                    "\"__deferred\" : {\n" + 
+                    "\"uri\" : \"http://localhost:8081/odata/northwind/m.x('xa2')/z\"\n" + 
+                    "}\n" + 
+                    "}\n" + 
+                    "}\n" + 
+                    "]\n" + 
+                    "}\n" + 
+                    "}";
+            assertEquals(expected, response.getEntity());
+            
+            // in one-2-many
+            url = TestPortProvider.generateURL("/odata/northwind/x?$expand=z&$format=json");
+            request = new ClientRequest(url);
+            response = request.get(String.class);
+            assertEquals(200, response.getStatus());
+            expected = "{\n" + 
+                    "\"d\" : {\n" + 
+                    "\"results\" : [\n" + 
+                    "{\n" + 
+                    "\"__metadata\" : {\n" + 
+                    "\"uri\" : \"http://localhost:8081/odata/northwind/m.x('xa')\", \"type\" : \"m.x\"\n" + 
+                    "}, \"a\" : \"xa\", \"b\" : \"xb\", \"y\" : {\n" + 
+                    "\"__deferred\" : {\n" + 
+                    "\"uri\" : \"http://localhost:8081/odata/northwind/m.x('xa')/y\"\n" + 
+                    "}\n" +                     
+                    "}, \"z\" : {\n" + 
+                    "\"results\" : [\n" + 
+                    "{\n" + 
+                    "\"__metadata\" : {\n" + 
+                    "\"uri\" : \"http://localhost:8081/odata/northwind/m.z('zb')\", \"type\" : \"m.z\"\n" + 
+                    "}, \"a1\" : \"xa\", \"b1\" : \"zb\"\n" + 
+                    "}, {\n" + 
+                    "\"__metadata\" : {\n" + 
+                    "\"uri\" : \"http://localhost:8081/odata/northwind/m.z('zb1')\", \"type\" : \"m.z\"\n" + 
+                    "}, \"a1\" : \"xa\", \"b1\" : \"zb1\"\n" + 
+                    "}, {\n" + 
+                    "\"__metadata\" : {\n" + 
+                    "\"uri\" : \"http://localhost:8081/odata/northwind/m.z('zb2')\", \"type\" : \"m.z\"\n" + 
+                    "}, \"a1\" : \"xa\", \"b1\" : \"zb2\"\n" + 
+                    "}\n" + 
+                    "]\n" + 
+                    "}\n" +
+                    "}\n" + 
+                    "]\n" + 
+                    "}\n" + 
+                    "}";
+            assertEquals(expected, response.getEntity());
+        } finally {
+            es.stop();
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Test 
+    public void testExpandXML() throws Exception {
+        EmbeddedServer es = new EmbeddedServer();
+        HardCodedExecutionFactory hc = new HardCodedExecutionFactory() {
+            @Override
+            public boolean supportsCompareCriteriaEquals() {
+                return true;
+            }
+            public boolean supportsInnerJoins() {
+                return true;
+            }
+            public boolean supportsOuterJoins() {
+                return true;
+            }            
+        };
+        hc.addData("SELECT x.a, x.b, y.a1, y.b1 FROM x, y WHERE x.a = y.a1", 
+                Arrays.asList(Arrays.asList("xa", "xb", "xa", "yb"), 
+                        Arrays.asList("xa1", "xb1", "xa1", "yb1"),
+                        Arrays.asList("xa2", "xb2", "xa2", "yb2")
+                        ));
+        hc.addData("SELECT x.a, x.b, z.a1, z.b1 FROM x, z WHERE x.a = z.a1", 
+                Arrays.asList(Arrays.asList("xa", "xb", "xa", "zb"), 
+                        Arrays.asList("xa", "xb", "xa", "zb1"),
+                        Arrays.asList("xa", "xb", "xa", "zb2")
+                        ));
+
+        es.addTranslator("x", hc);
+        es.start(new EmbeddedConfiguration());
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("m");
+            mmd.addSourceMetadata("ddl", 
+                    "create foreign table x ("
+                    + "a string primary key, "
+                    + "b string);"
+                    +"\n"
+                    + "create foreign table y ("
+                    + "a1 string primary key, "
+                    + "b1 string, "
+                    + "foreign key (a1) references x (a)); "
+                    +"\n"
+                    + "create foreign table z ("
+                    + "a1 string, "
+                    + "b1 string primary key,"
+                    + "foreign key (a1) references x (a));");
+            
+            mmd.addSourceMapping("x", "x", null);
+            es.deployVDB("northwind", mmd);
+            
+            TeiidDriver td = es.getDriver();
+            Properties props = new Properties();
+            LocalClient lc = new LocalClient("northwind", 1, props);
+            lc.setDriver(td);
+            MockProvider.CLIENT = lc;
+
+            // in one-2-one
+            String url = TestPortProvider.generateURL("/odata/northwind/x?$expand=y");
+            ClientRequest request = new ClientRequest(url);
+            ClientResponse<String> response = request.get(String.class);
+            assertEquals(200, response.getStatus());
+            assertTrue(response.getEntity().contains("<m:inline>"));
+            assertTrue(response.getEntity().contains("<id>http://localhost:8081/odata/northwind/m.y('xa')</id>"));
+            assertTrue(response.getEntity().contains("<id>http://localhost:8081/odata/northwind/m.x('xa2')</id>"));
+            
+            // in one-2-many
+            url = TestPortProvider.generateURL("/odata/northwind/x?$expand=z");
+            request = new ClientRequest(url);
+            response = request.get(String.class);
+            assertEquals(200, response.getStatus());
+            // atom has all dates so can't assert properly
+            assertTrue(response.getEntity().contains("<m:inline>"));
+            assertTrue(response.getEntity().contains("<id>http://localhost:8081/odata/northwind/m.z('zb')</id>"));
+            assertTrue(response.getEntity().contains("<id>http://localhost:8081/odata/northwind/m.z('zb2')</id>"));
+            
+        } finally {
+            es.stop();
+        }
+    }    
 }

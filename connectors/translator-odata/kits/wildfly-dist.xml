@@ -1,0 +1,44 @@
+<!--This script builds a zip for Teiid Server Installation -->
+<assembly>
+  
+ <id>wildfly-dist</id>
+  
+  <formats>
+    <format>zip</format>
+  </formats>
+  
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <baseDirectory>modules</baseDirectory>
+
+ <fileSets>
+    <fileSet>
+        <directory>kits/wildfly/modules</directory>
+        <outputDirectory>${wildfly-module-root}</outputDirectory>     
+        <filtered>true</filtered> 
+        <includes>
+          <include>**/*</include>
+        </includes>   
+    </fileSet>    
+  </fileSets>
+  
+  <dependencySets>
+        <dependencySet>
+          <outputDirectory>${wildfly-module-root}/org/jboss/oreva/main</outputDirectory>
+          <useTransitiveDependencies>false</useTransitiveDependencies>
+          <includes>
+              <include>org.jboss.oreva:common</include>
+              <include>org.jboss.oreva:odata-core</include>
+          </includes>
+      </dependencySet>
+      
+      <dependencySet>
+          <outputDirectory>${wildfly-module-root}/org/jboss/teiid/translator/odata/main</outputDirectory>
+          <useTransitiveDependencies>false</useTransitiveDependencies>
+          <includes>
+              <include>org.jboss.teiid.connectors:translator-odata</include>
+          </includes>
+      </dependencySet>
+  </dependencySets>
+  
+  
+</assembly>

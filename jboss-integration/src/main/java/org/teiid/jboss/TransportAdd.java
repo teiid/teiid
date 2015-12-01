@@ -50,7 +50,6 @@ import static org.teiid.jboss.TeiidConstants.asLong;
 import static org.teiid.jboss.TeiidConstants.asString;
 import static org.teiid.jboss.TeiidConstants.isDefined;
 
-import java.util.List;
 
 import javax.naming.InitialContext;
 
@@ -121,8 +120,9 @@ class TransportAdd extends AbstractAddStepHandler {
 	}
 
 	@Override
-	protected void performRuntime(final OperationContext context, final ModelNode operation, final ModelNode model,
-            final ServiceVerificationHandler verificationHandler, final List<ServiceController<?>> newControllers) throws OperationFailedException {
+    protected void performRuntime(final OperationContext context,
+            final ModelNode operation, final ModelNode model)
+            throws OperationFailedException {
 
     	ServiceTarget target = context.getServiceTarget();
     	
@@ -182,7 +182,7 @@ class TransportAdd extends AbstractAddStepHandler {
     	transportBuilder.addDependency(TeiidServiceNames.ENGINE, DQPCore.class, transport.getDqpInjector());
         
         transportBuilder.setInitialMode(ServiceController.Mode.ACTIVE);
-        newControllers.add(transportBuilder.install());
+        transportBuilder.install();
         
         // register a JNDI name, this looks hard.
         if (transport.isEmbedded() && !isEmbeddedRegistered(transportName)) {
@@ -199,8 +199,8 @@ class TransportAdd extends AbstractAddStepHandler {
 			binderBuilder.addDependency(bindInfo.getParentContextServiceName(), ServiceBasedNamingStore.class, binderService.getNamingStoreInjector());        
 			binderBuilder.setInitialMode(ServiceController.Mode.ACTIVE);
 				
-			newControllers.add(referenceBuilder.install());
-			newControllers.add(binderBuilder.install());         	
+			referenceBuilder.install();
+			binderBuilder.install();         	
         }
 	}
 	
@@ -220,6 +220,8 @@ class TransportAdd extends AbstractAddStepHandler {
 
 		if (isDefined(TRANSPORT_PROTOCOL_ATTRIBUTE, node, context)) {
 			socket.setProtocol(asString(TRANSPORT_PROTOCOL_ATTRIBUTE, node, context));
+		} else {
+		    socket.setProtocol("teiid");
 		}
 				
    		if (isDefined(TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE, node, context)) {

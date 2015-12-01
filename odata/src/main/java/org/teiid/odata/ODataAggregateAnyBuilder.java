@@ -28,9 +28,36 @@ import java.util.List;
 import java.util.Stack;
 
 import org.jboss.resteasy.spi.NotFoundException;
-import org.odata4j.expression.*;
+import org.odata4j.expression.AggregateAllFunction;
+import org.odata4j.expression.AndExpression;
+import org.odata4j.expression.BinaryCommonExpression;
+import org.odata4j.expression.BinaryLiteral;
+import org.odata4j.expression.BoolParenExpression;
+import org.odata4j.expression.BooleanLiteral;
+import org.odata4j.expression.ByteLiteral;
+import org.odata4j.expression.DateTimeLiteral;
+import org.odata4j.expression.DecimalLiteral;
+import org.odata4j.expression.DoubleLiteral;
+import org.odata4j.expression.EntitySimpleProperty;
+import org.odata4j.expression.EqExpression;
+import org.odata4j.expression.GeExpression;
+import org.odata4j.expression.GtExpression;
+import org.odata4j.expression.GuidLiteral;
+import org.odata4j.expression.Int64Literal;
+import org.odata4j.expression.IntegralLiteral;
+import org.odata4j.expression.IsofExpression;
+import org.odata4j.expression.LeExpression;
+import org.odata4j.expression.LtExpression;
+import org.odata4j.expression.NeExpression;
+import org.odata4j.expression.NegateExpression;
+import org.odata4j.expression.NotExpression;
+import org.odata4j.expression.NullLiteral;
+import org.odata4j.expression.OrExpression;
+import org.odata4j.expression.SByteLiteral;
+import org.odata4j.expression.SingleLiteral;
+import org.odata4j.expression.StringLiteral;
+import org.odata4j.expression.TimeLiteral;
 import org.teiid.metadata.ForeignKey;
-import org.teiid.metadata.Table;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.CompoundCriteria;
 import org.teiid.query.sql.lang.Criteria;
@@ -43,7 +70,6 @@ import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
-import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.translator.SourceSystemFunctions;
 
 /**
@@ -54,17 +80,14 @@ import org.teiid.translator.SourceSystemFunctions;
 public class ODataAggregateAnyBuilder extends ODataHierarchyVisitor {
 	private Stack<Expression> stack = new Stack<Expression>();
 	private AggregateAllFunction parentExpr;
-	private GroupSymbol childGroup;
-	private GroupSymbol parentGroup;
-	private Table parent; 
-	private Table childTable;
+	private DocumentNode parentNode;
+	private DocumentNode childNode;
 
-	public ODataAggregateAnyBuilder(AggregateAllFunction expr, Table parent, GroupSymbol parentGroup, Table childTable, GroupSymbol childGroup) {
+    public ODataAggregateAnyBuilder(AggregateAllFunction expr,
+            DocumentNode parentNode, DocumentNode childNode) {
 		this.parentExpr = expr;
-		this.parent = parent;
-		this.parentGroup = parentGroup;
-		this.childTable = childTable;
-		this.childGroup = childGroup;
+		this.parentNode = parentNode;
+		this.childNode = childNode;
 		visitNode(expr.getPredicate());
 	}
 
@@ -84,18 +107,23 @@ public class ODataAggregateAnyBuilder extends ODataHierarchyVisitor {
 
 	private QueryCommand buildSubquery(Expression projected) {
 		Criteria criteria = null;
-    	for (ForeignKey fk:this.childTable.getForeignKeys()) {
-    		if (fk.getPrimaryKey().getParent().equals(this.parent)) {
+    	for (ForeignKey fk:this.childNode.getEntityTable().getForeignKeys()) {
+    		if (fk.getPrimaryKey().getParent().equals(this.parentNode.getEntityTable())) {
 				List<String> refColumns = fk.getReferenceColumns();
 				if (refColumns == null) {
-					refColumns = ODataSQLBuilder.getColumnNames(childTable.getPrimaryKey().getColumns());
+                    refColumns = ODataSQLBuilder.getColumnNames(this.childNode
+                            .getEntityTable().getPrimaryKey().getColumns());
 				}    				
 				
-				List<String> pkColumns = ODataSQLBuilder.getColumnNames(parent.getPrimaryKey().getColumns());
+                List<String> pkColumns = ODataSQLBuilder
+                        .getColumnNames(parentNode.getEntityTable().getPrimaryKey().getColumns());
 				List<Criteria> critList = new ArrayList<Criteria>();
 
 				for (int i = 0; i < refColumns.size(); i++) {
-					critList.add(new CompareCriteria(new ElementSymbol(pkColumns.get(i), this.parentGroup), CompareCriteria.EQ, new ElementSymbol(refColumns.get(i), this.childGroup)));
+                    critList.add(new CompareCriteria(
+                            new ElementSymbol(pkColumns.get(i), this.parentNode.getEntityGroup()), 
+                            CompareCriteria.EQ,
+                            new ElementSymbol(refColumns.get(i), this.childNode.getEntityGroup())));
 				}         			
 				
 				criteria = critList.get(0);
@@ -107,7 +135,7 @@ public class ODataAggregateAnyBuilder extends ODataHierarchyVisitor {
         Select s1 = new Select();
         s1.addSymbol(projected); 
         From f1 = new From();
-        f1.addGroup(this.childGroup);
+        f1.addGroup(this.childNode.getEntityGroup());
         Query q1 = new Query();
         q1.setSelect(s1);
         q1.setFrom(f1);	   
@@ -171,7 +199,8 @@ public class ODataAggregateAnyBuilder extends ODataHierarchyVisitor {
 		visitNode(expr.getRHS());
 		Expression rhs = stack.pop();
 		Expression lhs = stack.pop();
-		Criteria critera = new SubqueryCompareCriteria(rhs, buildSubquery(lhs), op, SubqueryCompareCriteria.ALL); //$NON-NLS-1$
+		Criteria critera = new SubqueryCompareCriteria(rhs, buildSubquery(lhs), 
+		        op, SubqueryCompareCriteria.ALL); //$NON-NLS-1$
 		stack.push(critera);
 	}
 	
@@ -183,7 +212,7 @@ public class ODataAggregateAnyBuilder extends ODataHierarchyVisitor {
 		if (!property.substring(0, idx).equals(this.parentExpr.getVariable())) {
 			throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16010));
 		}
-		stack.push(new ElementSymbol(property.substring(idx+1), this.childGroup));
+		stack.push(new ElementSymbol(property.substring(idx+1), this.childNode.getEntityGroup()));
 	}
 	
 	@Override

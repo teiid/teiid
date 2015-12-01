@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.Scanner;
 
 import org.apache.cxf.jaxrs.client.WebClient;
+import org.apache.cxf.jaxrs.provider.FormEncodingProvider;
 import org.apache.cxf.rs.security.oauth.client.OAuthClientUtils;
 import org.apache.cxf.rs.security.oauth2.common.AccessTokenGrant;
 import org.apache.cxf.rs.security.oauth2.common.ClientAccessToken;
@@ -92,7 +93,7 @@ public class OAuthUtil {
         
         String requestURL = getInput(in, "Enter the Request Token URL = ");
         
-        FormEncodingProvider provider = new FormEncodingProvider<Object>();
+        FormEncodingProvider<?> provider = new FormEncodingProvider<Object>();
         provider.setConsumeMediaTypes(Arrays.asList("text/html"));
         
         WebClient client = WebClient.create(requestURL, Arrays.asList(provider));

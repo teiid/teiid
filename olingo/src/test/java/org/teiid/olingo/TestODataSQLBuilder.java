@@ -24,7 +24,6 @@ package org.teiid.olingo;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.sql.Time;
-import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -33,8 +32,10 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.TimeZone;
 
+import javax.servlet.ReadListener;
 import javax.servlet.ServletInputStream;
 import javax.servlet.ServletOutputStream;
+import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -46,7 +47,9 @@ import org.apache.olingo.server.api.ServiceMetadata;
 import org.apache.olingo.server.api.edmx.EdmxReference;
 import org.apache.olingo.server.core.OData4Impl;
 import org.apache.olingo.server.core.SchemaBasedEdmProvider;
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -182,6 +185,13 @@ public class TestODataSQLBuilder {
             @Override
             public void write(int b) throws IOException {
                 sb.append((char)b);
+            }
+            @Override
+            public boolean isReady() {
+                return true;
+            }
+            @Override
+            public void setWriteListener(WriteListener writeListener) {
             }
         };
         HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
@@ -718,6 +728,17 @@ public class TestODataSQLBuilder {
         public int read() throws IOException {
             return this.stream.read();
         }
+        @Override
+        public boolean isFinished() {
+            return false;
+        }
+        @Override
+        public boolean isReady() {
+            return true;
+        }
+        @Override
+        public void setReadListener(ReadListener readListener) {
+        }
     }
             
     @Test
@@ -890,5 +911,14 @@ public class TestODataSQLBuilder {
     public void testSelectStarWithNonSelectableColumn3() throws Exception {
         helpTest("/odata4/vdb/PM1/G5?$filter=e1 eq 1",
                 "SELECT g0.e2, g0.e3 FROM PM1.G5 AS g0 WHERE g0.e1 = 1 ORDER BY g0.e2");        
-    }     
+    }   
+    
+    @BeforeClass public static void oneTimeSetup() {
+    	TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT"));
+    }
+    
+    @AfterClass public static void oneTimeTearDown() {
+    	TimestampWithTimezone.resetCalendar(null);
+    }
+    
 }

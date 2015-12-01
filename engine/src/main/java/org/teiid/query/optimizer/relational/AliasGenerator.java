@@ -23,6 +23,7 @@
 package org.teiid.query.optimizer.relational;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -184,6 +185,7 @@ public class AliasGenerator extends PreOrderNavigator {
     private int viewIndex;
     private boolean stripColumnAliases;
 	private Map<String, String> aliasMapping;
+	private Collection<String> correlationGroups;
 
     public AliasGenerator(boolean aliasGroups) {
     	this(aliasGroups, false);
@@ -304,10 +306,15 @@ public class AliasGenerator extends PreOrderNavigator {
      */
     private String recontextGroup(GroupSymbol symbol, boolean virtual) {
         String newAlias = null;
-        if (virtual) {
-            newAlias = view_prefix + viewIndex++; 
-        } else {
-            newAlias = table_prefix + groupIndex++; 
+        while (true) {
+	        if (virtual) {
+	            newAlias = view_prefix + viewIndex++; 
+	        } else {
+	            newAlias = table_prefix + groupIndex++; 
+	        }
+	        if (correlationGroups == null || !correlationGroups.contains(newAlias)) {
+	        	break;
+	        }
         }
         if (this.aliasMapping != null && symbol.getDefinition() != null) {
         	String oldAlias = this.aliasMapping.get(symbol.getName());
@@ -419,6 +426,10 @@ public class AliasGenerator extends PreOrderNavigator {
 
 	public void setAliasMapping(Map<String, String> aliasMapping) {
 		this.aliasMapping = aliasMapping;
+	}
+	
+	public void setCorrelationGroups(Collection<String> correlationGroups) {
+		this.correlationGroups = correlationGroups;
 	}
 
 }

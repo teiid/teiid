@@ -21,8 +21,7 @@
  */
 package org.teiid.translator.odata4;
 
-import static org.teiid.language.SQLConstants.Reserved.NOT;
-import static org.teiid.language.SQLConstants.Reserved.NULL;
+import static org.teiid.language.SQLConstants.Reserved.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,23 +29,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
-import org.teiid.language.AndOr;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Comparison;
-import org.teiid.language.Condition;
-import org.teiid.language.Expression;
-import org.teiid.language.Function;
-import org.teiid.language.In;
-import org.teiid.language.IsNull;
-import org.teiid.language.LanguageObject;
-import org.teiid.language.Literal;
-import org.teiid.language.Not;
+import org.teiid.language.*;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
+import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TranslatorException;
 
 /**
@@ -258,12 +248,18 @@ public class ODataFilterVisitor extends HierarchyVisitor {
                 this.exprType.push(type);
             } else {
                 if (args != null && args.size() != 0) {
-                    for (int i = 0; i < args.size(); i++) {
-                        append(args.get(i));
-                        if (i < args.size()-1) {
-                            this.filter.append(Tokens.COMMA);
-                        }
-                    }
+                	if (SourceSystemFunctions.ENDSWITH.equalsIgnoreCase(name)) {
+                		append(args.get(1));
+                		this.filter.append(Tokens.COMMA);
+                		append(args.get(0));
+                	} else {
+    	                for (int i = 0; i < args.size(); i++) {
+    	                    append(args.get(i));
+    	                    if (i < args.size()-1) {
+    	                    	this.filter.append(Tokens.COMMA);
+    	                    }
+    	                }
+                	}
                 }
                 this.exprType.push(odataType(
                         method.getOutputParameter().getNativeType(), 

@@ -21,7 +21,13 @@
  */
 package org.teiid.resource.adapter.simpledb;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.resource.ResourceException;
 
@@ -251,8 +257,8 @@ public class SimpleDBConnectionImpl extends BasicConnection implements SimpleDBC
         }
     }
     
-    private void addAttribute(String name, Object value, List<ReplaceableAttribute> attributes) {
-        if (value.getClass().isArray()) { 
+    void addAttribute(String name, Object value, List<ReplaceableAttribute> attributes) {
+        if (value != null && value.getClass().isArray()) { 
             String[] values = (String[])value;
             for (int i = 0; i < values.length; i++) {
                 addAttribute(name, values[i], attributes);
@@ -282,7 +288,7 @@ public class SimpleDBConnectionImpl extends BasicConnection implements SimpleDBC
     }
 
     private Map<String, List<String>> createAttributeMap(List<Attribute> attributes) {
-        Map<String, List<String>> map = new HashMap<String, List<String>>();
+        Map<String, List<String>> map = new LinkedHashMap<String, List<String>>();
         for (Attribute attribute : attributes) {
             if (map.get(attribute.getName()) == null) {
                 List<String> list = new ArrayList<String>();

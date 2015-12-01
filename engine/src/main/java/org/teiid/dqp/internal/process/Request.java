@@ -431,8 +431,10 @@ public class Request {
         }
         // Run the optimizer
         try {
+			CommandContext.pushThreadLocalContext(context);
             processPlan = QueryOptimizer.optimizePlan(command, metadata, idGenerator, capabilitiesFinder, analysisRecord, context);
         } finally {
+			CommandContext.popThreadLocalContext();
             String debugLog = analysisRecord.getDebugLog();
             if(debugLog != null && debugLog.length() > 0) {
                 LogManager.log(requestMsg.getShowPlan()==ShowPlan.DEBUG?MessageLevel.INFO:MessageLevel.TRACE, LogConstants.CTX_QUERY_PLANNER, debugLog);               
