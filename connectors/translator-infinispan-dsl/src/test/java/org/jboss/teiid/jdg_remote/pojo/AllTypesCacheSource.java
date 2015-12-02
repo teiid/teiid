@@ -38,12 +38,14 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import org.infinispan.client.hotrod.CacheTopologyInfo;
 import org.infinispan.client.hotrod.Flag;
 import org.infinispan.client.hotrod.MetadataValue;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.ServerStatistics;
 import org.infinispan.client.hotrod.VersionedValue;
+import org.infinispan.commons.util.CloseableIterator;
 import org.infinispan.commons.util.concurrent.NotifyingFuture;
 import org.infinispan.protostream.FileDescriptorSource;
 import org.infinispan.protostream.config.Configuration;
@@ -978,4 +980,35 @@ public class AllTypesCacheSource<K, V>  implements RemoteCache<K, V>{
     public <T> T execute(String arg0, Map<String, ?> arg1) {
         return null;
     }
+
+
+	@Override
+	public CacheTopologyInfo getCacheTopologyInfo() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public boolean replaceWithVersion(K arg0, V arg1, long arg2, long arg3,
+			TimeUnit arg4, long arg5, TimeUnit arg6) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+
+	@Override
+	public CloseableIterator<java.util.Map.Entry<Object, Object>> retrieveEntries(
+			String arg0, int arg1) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public CloseableIterator<java.util.Map.Entry<Object, Object>> retrieveEntries(
+			String arg0, Set<Integer> arg1, int arg2) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
