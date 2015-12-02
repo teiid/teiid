@@ -39,7 +39,7 @@ import org.teiid.common.buffer.impl.MemoryStorageManager;
 import org.teiid.core.crypto.NullCryptor;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
-import org.teiid.dqp.service.SessionServiceException;
+import org.teiid.security.SessionServiceException;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.ServerConnection;

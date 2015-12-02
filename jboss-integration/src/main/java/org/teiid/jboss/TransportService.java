@@ -48,7 +48,7 @@ import org.teiid.common.buffer.BufferManager;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.DQPWorkContext;
-import org.teiid.dqp.service.SessionServiceException;
+import org.teiid.security.SessionServiceException;
 import org.teiid.jdbc.ConnectionImpl;
 import org.teiid.jdbc.ConnectionProfile;
 import org.teiid.jdbc.TeiidDriver;
@@ -106,10 +106,9 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
 	public void start(StartContext context) throws StartException {
 		this.setSecurityHelper(new JBossSecurityHelper());
 		this.setVDBRepository(this.getVdbRepository());
-		this.sessionService = new JBossSessionService();
+		this.sessionService = new SessionServiceImpl();
 		if (this.authenticationDomain != null) {
-			this.sessionService.setSecurityDomain(this.authenticationDomain);	
-			this.sessionService.setAuthenticationHandler((JBossSessionService)this.sessionService);
+			this.sessionService.setSecurityDomain(this.authenticationDomain);				
 		}
 		this.sessionService.setSessionExpirationTimeLimit(this.sessionExpirationTimeLimit);
 		this.sessionService.setSessionMaxLimit(this.sessionMaxLimit);

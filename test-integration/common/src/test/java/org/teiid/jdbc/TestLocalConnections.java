@@ -29,7 +29,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.lang.Thread.UncaughtExceptionHandler;
-import java.security.Principal;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -48,7 +47,9 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.security.auth.Subject;
+import javax.security.auth.login.LoginException;
 
+import org.apache.cxf.common.security.SimplePrincipal;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -71,6 +72,8 @@ import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
+import org.teiid.security.Credentials;
+import org.teiid.security.GSSResult;
 import org.teiid.security.SecurityHelper;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.Execution;
@@ -404,37 +407,20 @@ public class TestLocalConnections {
 	}
 
 	static int calls;
-	static Object currentContext = new Object();
+	static Subject currentContext = new Subject();
 	
 	@Test public void testPassThroughDifferentUsers() throws Throwable {
 		SecurityHelper securityHelper = new SecurityHelper() {
 			
 			@Override
-			public boolean sameSubject(String securityDomain, Object context,
-					Subject subject) {
-				return context == currentContext;
-			}
-			
-			@Override
 			public Subject getSubjectInContext(String securityDomain) {
-				return new Subject();
+				return currentContext;
 			}
-			
-			@Override
-			public String getSecurityDomain(Object context) {
-				return "teiid-security";
-			}
-			
+						
 			@Override
 			public Object getSecurityContext() {
 				calls++;
 				return currentContext;
-			}
-			
-			@Override
-			public Object createSecurityContext(String securityDomain, Principal p,
-					Object credentials, Subject subject) {
-				throw new UnsupportedOperationException();
 			}
 			
 			@Override
@@ -444,9 +430,20 @@ public class TestLocalConnections {
 			@Override
 			public Object associateSecurityContext(Object context) {
 				Object result = currentContext;
-				currentContext = context;
+				currentContext = (Subject)context;
 				return result;
 			}
+			
+			@Override
+			public Object authenticate(String securityDomain, String baseUserName,
+					Credentials credentials, String applicationName) throws LoginException {
+                return null;
+            }
+
+            @Override
+            public GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
+                return null;
+            }
 		};
 		SecurityHelper current = server.getSessionService().getSecurityHelper();
 		server.getClientServiceRegistry().setSecurityHelper(securityHelper);
@@ -457,16 +454,17 @@ public class TestLocalConnections {
 			
 			Statement s = c.createStatement();
 			ResultSet rs = s.executeQuery("select session_id()");
-			Object o = currentContext;
+			Subject o = currentContext;
 			currentContext = null;
 			s.cancel();
 			currentContext = o;
 			rs.next();
 			String id = rs.getString(1);
 			rs.close();
-			assertEquals(2, calls);
+			assertEquals(4, calls);
 			server.getSessionService().pingServer(id);
-			currentContext = new Object();
+			currentContext = new Subject();
+			currentContext.getPrincipals().add(new SimplePrincipal("x"));
 			rs = s.executeQuery("select session_id()");
 			rs.next();
 			String id1 = rs.getString(1);
@@ -491,30 +489,13 @@ public class TestLocalConnections {
 		SecurityHelper securityHelper = new SecurityHelper() {
 			
 			@Override
-			public boolean sameSubject(String securityDomain, Object context,
-					Subject subject) {
-				return context == currentContext;
-			}
-			
-			@Override
 			public Subject getSubjectInContext(String securityDomain) {
 				return new Subject();
 			}
-			
-			@Override
-			public String getSecurityDomain(Object context) {
-				return "teiid-security";
-			}
-			
+						
 			@Override
 			public Object getSecurityContext() {
 				return currentContext;
-			}
-			
-			@Override
-			public Object createSecurityContext(String securityDomain, Principal p,
-					Object credentials, Subject subject) {
-				throw new UnsupportedOperationException();
 			}
 			
 			@Override
@@ -524,9 +505,20 @@ public class TestLocalConnections {
 			@Override
 			public Object associateSecurityContext(Object context) {
 				Object result = currentContext;
-				currentContext = context;
+				currentContext = (Subject)context;
 				return result;
 			}
+			
+			@Override
+			public Object authenticate(String securityDomain, String baseUserName,
+					Credentials credentials, String applicationName) throws LoginException {
+                return null;
+            }
+
+            @Override
+            public GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
+                return null;
+            }
 		};
 		SecurityHelper current = server.getSessionService().getSecurityHelper();
 		server.getClientServiceRegistry().setSecurityHelper(securityHelper);
@@ -554,7 +546,7 @@ public class TestLocalConnections {
 			
 			Statement s = c.createStatement();
 			ResultSet rs = s.executeQuery("select session_id()");
-			Object o = currentContext;
+			Subject o = currentContext;
 			currentContext = null;
 			s.cancel();
 			currentContext = o;

@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.dqp.service;
+package org.teiid.security;
 
 import java.util.Collection;
 import java.util.Properties;

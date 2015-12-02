@@ -82,7 +82,6 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	private SecurityHelper securityHelper;
 	private String securityDomain;
 	private TransactionManager transactionManager;
-	private AuthenticationHandler authenticationHandler;
 	private ObjectReplicator objectReplicator;
 	private WorkManager workManager;
 	private boolean useDisk = true;
@@ -247,12 +246,4 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	public void setMaxODBCLobSizeAllowed(int lobSize) {
 		this.maxODBCLobSizeAllowed = lobSize;
 	}	
-
-    public AuthenticationHandler getAuthenticationHandler() {
-        return authenticationHandler;
-    }
-
-    public void setAuthenticationHandler(AuthenticationHandler authenticationHandler) {
-        this.authenticationHandler = authenticationHandler;
-    }	
 }

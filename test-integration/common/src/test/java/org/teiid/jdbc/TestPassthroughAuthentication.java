@@ -23,15 +23,16 @@ package org.teiid.jdbc;
 
 import static org.junit.Assert.*;
 
-import java.security.Principal;
-
 import javax.security.auth.Subject;
+import javax.security.auth.login.LoginException;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.runtime.EmbeddedConfiguration;
+import org.teiid.security.Credentials;
+import org.teiid.security.GSSResult;
 import org.teiid.security.SecurityHelper;
 
 @SuppressWarnings("nls")
@@ -47,7 +48,8 @@ public class TestPassthroughAuthentication {
 	@BeforeClass public static void oneTimeSetup() throws Exception {
     	server.setUseCallingThread(true);
     	server.start(new EmbeddedConfiguration() {
-    		public SecurityHelper getSecurityHelper() {
+    		@Override
+            public SecurityHelper getSecurityHelper() {
     			return securityHelper;
     		}  		
     	}, false);
@@ -88,11 +90,6 @@ public class TestPassthroughAuthentication {
 		public Object getSecurityContext() {
 			return this.ctx;
 		}
-		@Override
-		public Object createSecurityContext(String securityDomain,
-				Principal p, Object credentials, Subject subject) {
-			return securityDomain+"SC";
-		}
 
 		@Override
 		public Subject getSubjectInContext(String securityDomain) {
@@ -102,17 +99,15 @@ public class TestPassthroughAuthentication {
 			}
 			return null;
 		}
-
-		@Override
-		public boolean sameSubject(String securityDomain,
-				Object context, Subject subject) {
-			return false;
-		}
-
-		@Override
-		public String getSecurityDomain(Object context) {
-			return null;
-		}
 		
+		@Override
+		public Object authenticate(String securityDomain, String baseUserName,
+				Credentials credentials, String applicationName) throws LoginException {
+            return null;
+        }
+        @Override
+        public GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
+            return null;
+        }
 	};
 }

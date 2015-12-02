@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.dqp.service;
+package org.teiid.security;
 
 import org.teiid.client.security.TeiidSecurityException;
 import org.teiid.core.BundleUtil;

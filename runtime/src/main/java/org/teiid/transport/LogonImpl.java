@@ -42,9 +42,9 @@ import org.teiid.core.util.Base64;
 import org.teiid.core.util.LRUCache;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.DQPWorkContext.Version;
-import org.teiid.dqp.service.GSSResult;
-import org.teiid.dqp.service.SessionService;
-import org.teiid.dqp.service.SessionServiceException;
+import org.teiid.security.GSSResult;
+import org.teiid.security.SessionService;
+import org.teiid.security.SessionServiceException;
 import org.teiid.jdbc.BaseDataSource;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -53,6 +53,7 @@ import org.teiid.net.TeiidURL;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.security.Credentials;
+import org.teiid.security.GSSResult;
 import org.teiid.security.SecurityHelper;
 
 

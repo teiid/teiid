@@ -49,7 +49,7 @@ import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.util.ApplicationInfo;
 import org.teiid.core.util.StringUtil;
 import org.teiid.deployers.PgCatalogMetadataStore;
-import org.teiid.dqp.service.SessionService;
+import org.teiid.security.SessionService;
 import org.teiid.jdbc.*;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;

@@ -38,7 +38,7 @@ import org.teiid.client.security.SessionToken;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.dqp.service.SessionService;
+import org.teiid.security.SessionService;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.HostInfo;

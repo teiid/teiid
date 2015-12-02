@@ -22,7 +22,8 @@
 
 package org.teiid.jdbc;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import java.io.FileInputStream;
 import java.security.Identity;
@@ -79,7 +80,8 @@ public class TestRowBasedSecurity {
 		});
 		es.start(ec);
 		HardCodedExecutionFactory hcef = new HardCodedExecutionFactory() {
-			public void getMetadata(MetadataFactory metadataFactory, Object conn) throws TranslatorException {
+			@Override
+            public void getMetadata(MetadataFactory metadataFactory, Object conn) throws TranslatorException {
 				Table t = metadataFactory.addTable("x");
 				Column col = metadataFactory.addColumn("col", TypeFacility.RUNTIME_NAMES.STRING, t);
 				metadataFactory.addColumn("col2", TypeFacility.RUNTIME_NAMES.STRING, t);
@@ -109,7 +111,7 @@ public class TestRowBasedSecurity {
 		es.addTranslator("hc", hcef);
 		es.deployVDB(new FileInputStream(UnitTestUtil.getTestDataFile("roles-vdb.xml")));
 		
-		Connection c = es.getDriver().connect("jdbc:teiid:z", null);
+		Connection c = es.getDriver().connect("jdbc:teiid:z;PassthroughAuthentication=true", null);
 		Statement s = c.createStatement();
 		ResultSet rs = s.executeQuery("select * from x");
 		rs.next();
@@ -130,7 +132,7 @@ public class TestRowBasedSecurity {
 		
 		//different session with different roles
 		v.clear();
-		c = es.getDriver().connect("jdbc:teiid:z", null);
+		c = es.getDriver().connect("jdbc:teiid:z;PassthroughAuthentication=true", null);
 		s = c.createStatement();
 		rs = s.executeQuery("select count(col2) from v where col is not null");
 		rs.next();

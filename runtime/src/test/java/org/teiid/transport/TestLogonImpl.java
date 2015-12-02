@@ -23,13 +23,11 @@
 
 package org.teiid.transport;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.util.Properties;
 
 import javax.security.auth.Subject;
-import javax.security.auth.login.LoginException;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -44,15 +42,11 @@ import org.teiid.client.security.SessionToken;
 import org.teiid.core.util.Base64;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPWorkContext;
-import org.teiid.dqp.service.SessionService;
+import org.teiid.security.SessionService;
 import org.teiid.net.TeiidURL;
 import org.teiid.net.socket.AuthenticationType;
-import org.teiid.runtime.AuthenticationHandler;
-import org.teiid.security.Credentials;
-import org.teiid.security.GSSResult;
-import org.teiid.security.SecurityHelper;
+import org.teiid.runtime.DoNothingSecurityHelper;
 import org.teiid.services.SessionServiceImpl;
-import org.teiid.services.TeiidLoginContext;
 
 @SuppressWarnings("nls")
 public class TestLogonImpl {
@@ -61,21 +55,16 @@ public class TestLogonImpl {
 	@Before
 	public void setup() {
 		ssi = new SessionServiceImpl();
-        ssi.setAuthenticationHandler(new AuthenticationHandler() {
-            @Override
-            public GSSResult neogitiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
-                return null;
-            }
-            @Override
-            public TeiidLoginContext authenticate(String securityDomain, String userName, Credentials credentials,
-                    String applicationName) throws LoginException {
-                return new TeiidLoginContext(userName, null, securityDomain, null);
-            }
-        });		
-		
-		SecurityHelper sc = Mockito.mock(SecurityHelper.class);
-		Mockito.stub(sc.getSubjectInContext("SC")).toReturn(new Subject());
-		ssi.setSecurityHelper(sc);
+		ssi.setSecurityHelper(new DoNothingSecurityHelper() {
+		    @Override
+            public Subject getSubjectInContext(String securityDomain) {
+		        if (securityDomain.equals("SC")) {
+		            return new Subject();
+		        }
+		        return null;
+		    }
+		    
+		});
 	}
 	
 	@Test
@@ -125,7 +114,7 @@ public class TestLogonImpl {
 		Properties p = buildProperties("fred", "name");		
 		LogonImpl impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
 		LogonResult result = impl.logon(p);
-		assertEquals("fred", result.getUserName());
+		assertEquals("fred@SC", result.getUserName());
 		
 		// if no preference then choose USERPASSWORD
 		ssi.setAuthenticationType(AuthenticationType.USERPASSWORD); // this is transport default		
@@ -133,7 +122,7 @@ public class TestLogonImpl {
 		p = buildProperties("fred", "name");		
 		impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
 		result = impl.logon(p);
-		assertEquals("fred", result.getUserName());
+		assertEquals("fred@SC", result.getUserName());
 
 		// if user name is set to "GSS", then the preference is set to "GSS"
 		ssi.setAuthenticationType(AuthenticationType.USERPASSWORD); // this is transport default		
@@ -172,7 +161,7 @@ public class TestLogonImpl {
 		Properties p = buildProperties("fred", "name");		
 		LogonImpl impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
 		LogonResult result = impl.logon(p);
-		assertEquals("fred", result.getUserName());
+		assertEquals("fred@SC", result.getUserName());
 		
 		// if no preference then choose USERPASSWORD
 		VDBMetaData metadata = addVdb(repo, "name1", "SC", AuthenticationType.USERPASSWORD.name());
@@ -181,7 +170,7 @@ public class TestLogonImpl {
 		impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
 		p = buildProperties("fred", "name1");		
 		result = impl.logon(p);
-		assertEquals("fred", result.getUserName());
+		assertEquals("fred@SC", result.getUserName());
 
 		p = buildProperties("GSS", "name1");
 		FakeGssLogonImpl fimpl = new FakeGssLogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
@@ -195,7 +184,7 @@ public class TestLogonImpl {
 		try {
 			p = buildProperties("GSS", "name");		
 			result = impl.logon(p);
-			assertEquals("GSS", result.getUserName());
+			assertEquals("GSS@SC", result.getUserName());
 		} catch(LogonException e) {
 			
 		}
