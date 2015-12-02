@@ -494,6 +494,10 @@ public class ConnectorWorkItem implements ConnectorWork {
 		if (this.securityContext.getCacheDirective() != null) {
 			response.setScope(this.securityContext.getCacheDirective().getScope());
 		}
+		if (this.securityContext.getScope() != null && 
+				(response.getScope() == null || response.getScope().compareTo(this.securityContext.getScope()) > 0)) {
+			response.setScope(this.securityContext.getScope());
+		}
 
 		if ( lastBatch ) {
 		    response.setFinalRow(rowCount);

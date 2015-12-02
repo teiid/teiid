@@ -80,11 +80,14 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.*;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.metadata.Table.Type;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.CompositeMetadataStore.RecordHolder;
+import org.teiid.query.metadata.DDLConstants;
+import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TransformationMetadata;
@@ -948,9 +951,35 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		}
 		Collection<GroupSymbol> accessedGroups = null;
 		if (context.getDataObjects() != null) {
+			QueryMetadataInterface metadata = context.getMetadata();
 			accessedGroups = GroupCollectorVisitor.getGroupsIgnoreInlineViews(command, false);
+			boolean usedModel = false;
 			for (GroupSymbol gs : accessedGroups) {
 				context.accessedDataObject(gs.getMetadataID());
+				
+				//check the source/tables/procs for determinism level
+				Object mid = gs.getMetadataID();
+				if (mid instanceof TempMetadataID) {
+					TempMetadataID tid = (TempMetadataID)mid;
+					if (tid.getOriginalMetadataID() != null) {
+						mid = tid.getOriginalMetadataID();
+					}
+				}
+				String specificProp = metadata.getExtensionProperty(mid, AbstractMetadataRecord.RELATIONAL_URI + DDLConstants.DETERMINISM, false);
+				if (specificProp == null) {
+					if (!usedModel) {
+						Object modelId = metadata.getModelID(mid);
+						String prop = metadata.getExtensionProperty(modelId, AbstractMetadataRecord.RELATIONAL_URI + DDLConstants.DETERMINISM, false);
+						
+						if (prop != null) {
+							usedModel = true;
+							//set model property
+							context.setDeterminismLevel(Determinism.valueOf(prop.toUpperCase()));
+						}
+					}
+					continue;
+				}
+				context.setDeterminismLevel(Determinism.valueOf(specificProp.toUpperCase()));
 			}
 		}
 		ConnectorManagerRepository cmr = workItem.getDqpWorkContext().getVDB().getAttachment(ConnectorManagerRepository.class);
