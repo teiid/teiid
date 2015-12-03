@@ -22,19 +22,35 @@
 package org.teiid.odata;
 
 import java.io.IOException;
-import java.sql.*;
-import java.util.*;
+import java.sql.Array;
+import java.sql.Clob;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.SQLXML;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
-import org.odata4j.core.*;
 import org.odata4j.core.OCollection.Builder;
+import org.odata4j.core.OCollection;
 import org.odata4j.core.OCollections;
-import org.odata4j.core.OComplexObject;
-import org.odata4j.core.OComplexObjects;
 import org.odata4j.core.OObject;
 import org.odata4j.core.OProperties;
 import org.odata4j.core.OProperty;
 import org.odata4j.core.OSimpleObjects;
-import org.odata4j.edm.*;
+import org.odata4j.edm.EdmCollectionType;
+import org.odata4j.edm.EdmDataServices;
+import org.odata4j.edm.EdmEntityContainer;
+import org.odata4j.edm.EdmEntitySet;
+import org.odata4j.edm.EdmFunctionImport;
+import org.odata4j.edm.EdmSchema;
+import org.odata4j.edm.EdmSimpleType;
+import org.odata4j.edm.EdmType;
 import org.odata4j.exceptions.NotFoundException;
 import org.odata4j.exceptions.ServerErrorException;
 import org.odata4j.internal.EdmDataServicesDecorator;
@@ -55,13 +71,16 @@ import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.PropertiesUtils;
-import org.teiid.jdbc.*;
+import org.teiid.jdbc.CallableStatementImpl;
+import org.teiid.jdbc.ConnectionImpl;
+import org.teiid.jdbc.EmbeddedProfile;
+import org.teiid.jdbc.PreparedStatementImpl;
+import org.teiid.jdbc.TeiidDriver;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.net.TeiidURL;
-import org.teiid.odbc.ODBCServerRemoteImpl;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
@@ -77,15 +96,14 @@ public class LocalClient implements Client {
 	private static final String BATCH_SIZE = "batch-size"; //$NON-NLS-1$
 	private static final String SKIPTOKEN_TIME = "skiptoken-cache-time"; //$NON-NLS-1$
 	static final String INVALID_CHARACTER_REPLACEMENT = "invalid-xml10-character-replacement"; //$NON-NLS-1$
-
+	static final String DELIMITER = "--" ; //$NON-NLS-1$
+	
 	private volatile VDBMetaData vdb;
 	private String vdbName;
 	private int vdbVersion;
 	private int batchSize;
 	private long cacheTime;
-	private String transportName;
 	private String connectionString;
-	private Properties connectionProperties = new Properties();
 	private Properties initProperties;
 	private EdmDataServices edmMetaData;
 	private TeiidDriver driver = TeiidDriver.getInstance();
@@ -96,17 +114,22 @@ public class LocalClient implements Client {
 		this.vdbVersion = vdbVersion;
 		this.batchSize = PropertiesUtils.getIntProperty(props, BATCH_SIZE, BufferManagerImpl.DEFAULT_PROCESSOR_BATCH_SIZE);
 		this.cacheTime = PropertiesUtils.getLongProperty(props, SKIPTOKEN_TIME, 300000L);
-		this.transportName = props.getProperty(EmbeddedProfile.TRANSPORT_NAME, "odata"); //$NON-NLS-1$
 		this.invalidCharacterReplacement = props.getProperty(INVALID_CHARACTER_REPLACEMENT);
 		StringBuilder sb = new StringBuilder();
 		sb.append("jdbc:teiid:").append(this.vdbName).append(".").append(this.vdbVersion).append(";"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		this.initProperties = props;
-		connectionProperties.put(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "true"); //$NON-NLS-1$
-		connectionProperties.put(EmbeddedProfile.TRANSPORT_NAME, transportName); 
-		connectionProperties.put(EmbeddedProfile.WAIT_FOR_LOAD, "0"); //$NON-NLS-1$
+		if (this.initProperties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION) == null) {
+		    this.initProperties.put(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "true"); //$NON-NLS-1$    
+		}
+		if (this.initProperties.getProperty(EmbeddedProfile.TRANSPORT_NAME) == null) {
+		    this.initProperties.setProperty(EmbeddedProfile.TRANSPORT_NAME, "odata");    
+		}		 
+		if (this.initProperties.getProperty(EmbeddedProfile.WAIT_FOR_LOAD) == null) {
+		    this.initProperties.put(EmbeddedProfile.WAIT_FOR_LOAD, "0"); //$NON-NLS-1$
+		}
 		this.connectionString = sb.toString();
 	}
-	
+
 	@Override
 	public VDBMetaData getVDB() {
         ConnectionImpl connection = null;
@@ -139,9 +162,7 @@ public class LocalClient implements Client {
 	}
 
 	ConnectionImpl getConnection() throws SQLException {
-		ConnectionImpl connection = driver.connect(this.connectionString, connectionProperties);
-		ODBCServerRemoteImpl.setConnectionProperties(connection);
-		ODBCServerRemoteImpl.setConnectionProperties(connection, initProperties);
+		ConnectionImpl connection = driver.connect(this.connectionString, this.initProperties);
 		return connection;
 	}
 
@@ -155,7 +176,8 @@ public class LocalClient implements Client {
 
 			int i = 1;
 			if (returnType != null && returnType.isSimple()) {
-				stmt.registerOutParameter(i++, JDBCSQLTypeInfo.getSQLType(ODataTypeManager.teiidType(returnType.getFullyQualifiedTypeName())));
+                stmt.registerOutParameter(i++, JDBCSQLTypeInfo
+                        .getSQLType(ODataTypeManager.teiidType(returnType.getFullyQualifiedTypeName())));
 			}
 
 			if (!parameters.isEmpty()) {
@@ -165,32 +187,12 @@ public class LocalClient implements Client {
 			}
 
 			boolean results = stmt.execute();
-			if (results) {
-				final ResultSet rs = stmt.getResultSet();
-                OCollection.Builder resultRows = OCollections.newBuilder((EdmComplexType)((EdmCollectionType)returnType).getItemType());
-                while (rs.next()) {
-                	int idx = 1;
-                	List<OProperty<?>> row = new ArrayList<OProperty<?>>();
-                	Iterator<EdmProperty> props = ((EdmComplexType)((EdmCollectionType)returnType).getItemType()).getProperties().iterator();
-                	while (props.hasNext()) {
-                		EdmProperty prop = props.next();
-                		row.add(buildPropery(prop.getName(), prop.getType(), rs.getObject(idx++), invalidCharacterReplacement));
-                	}
-                	OComplexObject erow = OComplexObjects.create((EdmComplexType)((EdmCollectionType)returnType).getItemType(), row);
-                	resultRows.add(erow);
-                }
-                String collectionName = returnType.getFullyQualifiedTypeName();
-                collectionName = collectionName.replace("(", "_"); //$NON-NLS-1$ //$NON-NLS-2$
-                collectionName = collectionName.replace(")", "_"); //$NON-NLS-1$ //$NON-NLS-2$
-				return Responses.collection(resultRows.build(), null, null, null, collectionName);
-			}
-
-            if (returnType != null) {
+			if (returnType != null && !results) {
             	Object result = stmt.getObject(1);
-            	OProperty prop = buildPropery("return", returnType, result, invalidCharacterReplacement); //$NON-NLS-1$
+            	OProperty<?> prop = buildPropery("return", returnType, result, invalidCharacterReplacement); //$NON-NLS-1$
             	return Responses.property(prop); 
             }
-			return null;
+			return Responses.simple(EdmSimpleType.INT32, 1);
 		} catch (Exception e) {
 			throw new ServerErrorException(e.getMessage(), e);
 		} finally {
@@ -209,14 +211,16 @@ public class LocalClient implements Client {
 	}
 
 	@Override
-	public EntityList executeSQL(Query query, List<SQLParam> parameters, EdmEntitySet entitySet, LinkedHashMap<String, Boolean> projectedColumns, QueryInfo queryInfo) {
-		Connection connection = null;
+    public BaseResponse executeSQL(Query query, List<SQLParam> parameters,
+            QueryInfo queryInfo, EntityCollector<?> collector) {
+	    ConnectionImpl connection = null;
 		try {
 			boolean cache = queryInfo != null && this.batchSize > 0; 
 			if (cache) {
 				CacheHint hint = new CacheHint();
 				hint.setTtl(this.cacheTime);
 				hint.setScope(CacheDirective.Scope.USER);
+				hint.setMinRows(Long.valueOf(this.batchSize));
 				query.setCacheHint(hint);
 			}
 			
@@ -233,12 +237,28 @@ public class LocalClient implements Client {
 				}
 			}
 
-			String sql = query.toString();
-
-			LogManager.logDetail(LogConstants.CTX_ODATA, "Teiid-Query:",sql); //$NON-NLS-1$
-
 			connection = getConnection();
-			final PreparedStatement stmt = connection.prepareStatement(sql, cache?ResultSet.TYPE_SCROLL_INSENSITIVE:ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+			String sessionId = connection.getServerConnection().getLogonResult().getSessionID();
+			
+			String skipToken = null;			
+			if (queryInfo != null && queryInfo.skipToken != null) {
+			    skipToken = queryInfo.skipToken;
+			    if (cache) {
+    			    int idx = queryInfo.skipToken.indexOf(DELIMITER);
+    			    sessionId = queryInfo.skipToken.substring(0, idx);
+    			    skipToken = queryInfo.skipToken.substring(idx+2);
+			    }
+			}
+			String sql = query.toString();
+			if (cache) {
+			    sql += " /* "+ sessionId +" */"; //$NON-NLS-1$ //$NON-NLS-2$
+			}
+			LogManager.logDetail(LogConstants.CTX_ODATA, "Teiid-Query:",sql); //$NON-NLS-1$
+			
+            final PreparedStatement stmt = connection.prepareStatement(sql,
+                    cache ? ResultSet.TYPE_SCROLL_INSENSITIVE
+                            : ResultSet.TYPE_FORWARD_ONLY,
+                    ResultSet.CONCUR_READ_ONLY);
 			if (parameters!= null && !parameters.isEmpty()) {
 				for (int i = 0; i < parameters.size(); i++) {
 					stmt.setObject(i+1, parameters.get(i).value, parameters.get(i).sqlType);
@@ -247,37 +267,19 @@ public class LocalClient implements Client {
 
 			final ResultSet rs = stmt.executeQuery();
 			
-			if (projectedColumns == null) {
-				projectedColumns = new LinkedHashMap<String, Boolean>();
-				for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
-					projectedColumns.put(rs.getMetaData().getColumnLabel(i+1), Boolean.TRUE);
-				}
-			}
-			
-			EntityList result = new EntityList(invalidCharacterReplacement);
-			
-			HashMap<String, EdmProperty> propertyTypes = new HashMap<String, EdmProperty>();
-			
-			EdmEntityType entityType = entitySet.getType();
-			Iterator<EdmProperty> propIter = entityType.getProperties().iterator();
-			while(propIter.hasNext()) {
-				EdmProperty prop = propIter.next();
-				propertyTypes.put(prop.getName(), prop);
-			}
-			
 			//skip to the initial position
-			int count = 0;
+			int skipcount = 0;
 			int skipSize = 0;
 			//skip based upon the skip value
 			if (getCount && queryInfo.skip != null) {
 				skipSize = queryInfo.skip;
 			}
 			//skip based upon the skipToken
-			if (queryInfo != null && queryInfo.skipToken != null) {
-				skipSize += Integer.parseInt(queryInfo.skipToken);
+			if (skipToken != null) {
+				skipSize += Integer.parseInt(skipToken);
 			}
 			if (skipSize > 0) {
-				count += skip(cache, rs, skipSize);
+				skipcount += skip(cache, rs, skipSize);
 			}
 
 			//determine the number of records to return
@@ -294,41 +296,64 @@ public class LocalClient implements Client {
 			}
 			
 			//build the results
+			Object previous = null;
 			for (int i = 0; i < size; i++) {
-				if (!rs.next()) {
-					break;
+			    if (!rs.next()) {
+			        break;
+			    }
+				if (previous != null) {
+				    boolean sameRow = true;
+				    // this needs to be done because, we do not want break the expand nodes
+				    // in between
+				    while(sameRow) {				        
+				        Object current = collector.addRow(previous, rs, this.invalidCharacterReplacement);
+				        sameRow = collector.isSameRow(previous, current);
+				        previous = current;
+				        if (sameRow) {
+				            // advance cursor
+			                if (!rs.next()) {
+			                    break;
+			                }
+			                skipcount++;
+			                i++; // keep the total count or rows
+				        } else {
+				            break;
+				        }
+				    };
+				} else {
+				    previous = collector.addRow(previous, rs, this.invalidCharacterReplacement);
+				    skipcount++;
 				}
-				count++;
-				result.addEntity(rs, propertyTypes, projectedColumns, entitySet);
 			}
+			collector.lastRow(previous);
 			
 			//set the count
 			if (getCount) {
 				if (!cache) {
 					while (rs.next()) {
-						count++;
+						skipcount++;
 					}
 				} else {
 					rs.last();
-					count = rs.getRow();
+					skipcount = rs.getRow();
 				}
 			}
-			result.setCount(count);
+			collector.setInlineCount(skipcount);
 			
 			//set the skipToken if needed
-			if (cache && result.size() == this.batchSize) {
-				int end = skipSize + result.size();
+			if (cache && collector.size() == this.batchSize) {
+				int end = skipSize + collector.size();
 				if (getCount) {
-					if (end < Math.min(top, count)) {
-						result.setSkipToken(String.valueOf(end));
+					if (end < Math.min(top, skipcount)) {
+					    collector.setSkipToken(nextToken(cache, sessionId, end));
 					}
 				} else if (rs.next()) {
-					result.setSkipToken(String.valueOf(end));
+				    collector.setSkipToken(nextToken(cache, sessionId, end));
 					//will force the entry to cache or is effectively a no-op when already cached
 					rs.last();	
 				}
 			}
-			return result;
+			return collector;
 		} catch (Exception e) {
 			throw new ServerErrorException(e.getMessage(), e);
 		} finally {
@@ -340,7 +365,14 @@ public class LocalClient implements Client {
 			}
 		}
 	}
-
+	
+	private String nextToken(boolean cache, String sessionid, int skip) {
+	    if (cache) {
+	        return sessionid+DELIMITER+String.valueOf(skip);
+	    }
+	    return String.valueOf(skip);
+	}
+	
 	private int skip(boolean cache, final ResultSet rs, int skipSize)
 			throws SQLException {
 		int skipped = 0;
@@ -542,7 +574,10 @@ public class LocalClient implements Client {
         return model.isVisible();
     }
 	
-	static OProperty<?> buildPropery(String propName, EdmType type, Object value, String invalidCharacterReplacement) throws TransformationException, SQLException, IOException {
+    static OProperty<?> buildPropery(String propName, EdmType type,
+            Object value, String invalidCharacterReplacement)
+            throws TransformationException, SQLException, IOException {
+        
 		if (!(type instanceof EdmSimpleType)) {
 			if (type instanceof EdmCollectionType) {
 				EdmCollectionType collectionType = (EdmCollectionType)type;
@@ -554,12 +589,13 @@ public class LocalClient implements Client {
 				int length = java.lang.reflect.Array.getLength(value);
 				for (int i = 0; i < length; i++) {
 					Object o = java.lang.reflect.Array.get(value, i);
-					OProperty p = buildPropery("x", componentType, o, invalidCharacterReplacement);
+					OProperty<?> p = buildPropery("x", componentType, o, invalidCharacterReplacement);
 					if (componentType instanceof EdmSimpleType) {
-						b.add(OSimpleObjects.create((EdmSimpleType) componentType, p.getValue()));
-					} else {
-						throw new AssertionError("Multi-dimensional arrays are not yet supported.");
-						//b.add((OCollection)p.getValue());
+						b.add(OSimpleObjects.create((EdmSimpleType<?>) componentType, p.getValue()));
+					} else if (componentType instanceof EdmCollectionType) {
+					    //Builder<OObject> cb = OCollections.newBuilder(componentType);
+					    b.add((OCollection<?>)p.getValue());
+					    //b.add(cb.build());
 					}
 				}
 				return OProperties.collection(propName, collectionType, b.build());

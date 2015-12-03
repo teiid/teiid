@@ -39,8 +39,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.ietf.jgss.GSSCredential;
-import org.teiid.adminapi.impl.SessionMetadata;
-import org.teiid.adminapi.VDB;
 import org.teiid.client.RequestMessage.ResultsMode;
 import org.teiid.client.security.ILogon;
 import org.teiid.client.security.LogonException;
@@ -71,7 +69,7 @@ import org.teiid.transport.PgFrontendProtocol.NullTerminatedStringDataInputStrea
  */
 public class ODBCServerRemoteImpl implements ODBCServerRemote {
 
-	public static final String CONNECTION_PROPERTY_PREFIX = "connection."; //$NON-NLS-1$
+        public static final String CONNECTION_PROPERTY_PREFIX = "connection."; //$NON-NLS-1$
 	private static final String UNNAMED = ""; //$NON-NLS-1$
 	private static Pattern setPattern = Pattern.compile("set\\s+(\\w+)\\s+to\\s+((?:'[^']*')+)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE);//$NON-NLS-1$
 	
@@ -194,6 +192,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		} catch (LogonException e) {
 			errorOccurred(e);
 			terminate();
+			return;
 		}
 		
 		if (authType.equals(AuthenticationType.USERPASSWORD)) {
@@ -260,9 +259,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			
 			this.connection =  driver.connect(url, info);
 			//Propagate so that we can use in pg methods
-			SessionMetadata sm = ((LocalServerConnection)this.connection.getServerConnection()).getWorkContext().getSession();
-			sm.addAttchment(ODBCServerRemoteImpl.class, this);
-			setConnectionProperties(this.connection);
+			((LocalServerConnection)this.connection.getServerConnection()).getWorkContext().getSession().addAttchment(ODBCServerRemoteImpl.class, this);
 			int hash = this.connection.getConnectionId().hashCode();
 			Enumeration<?> keys = this.props.propertyNames();
 			while (keys.hasMoreElements()) {
@@ -270,7 +267,11 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 				this.connection.setExecutionProperty(key, this.props.getProperty(key));
 			}
 			StatementImpl s = this.connection.createStatement();
-			s.execute("select teiid_session_set('resolve_groupby_positional', true)"); //$NON-NLS-1$
+			try {
+				s.execute("select teiid_session_set('resolve_groupby_positional', true)"); //$NON-NLS-1$
+			} finally {
+				s.close();
+			}
 			this.client.authenticationSucess(hash, hash);
 			ready();
 		} catch (SQLException e) {
@@ -282,25 +283,6 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		} catch (IOException e) {
 			errorOccurred(e);
 			terminate();			
-		}
-	}
-
-	public static void setConnectionProperties(ConnectionImpl conn)
-			throws SQLException {
-		SessionMetadata sm = ((LocalServerConnection)conn.getServerConnection()).getWorkContext().getSession();
-		VDB vdb = sm.getVdb();
-		Properties p = vdb.getProperties();
-		setConnectionProperties(conn, p);
-	}
-
-	public static void setConnectionProperties(ConnectionImpl conn,
-			Properties p) {
-		for (Map.Entry<Object, Object> entry : p.entrySet()) {
-			String key = (String)entry.getKey();
-			
-			if (key.startsWith(CONNECTION_PROPERTY_PREFIX)) {
-				conn.setExecutionProperty(key.substring(CONNECTION_PROPERTY_PREFIX.length()), (String) entry.getValue());
-			}
 		}
 	}	
 	
@@ -505,7 +487,10 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		// An unnamed portal is destroyed at the end of the transaction, or as soon as 
 		// the next Bind statement specifying the unnamed portal as destination is issued. 
 		if (bindName == null || bindName.length() == 0) {
-			this.portalMap.remove(UNNAMED);
+			Portal p = this.portalMap.remove(UNNAMED);
+			if (p != null) {
+				closePortal(p);
+			}
 			bindName  = UNNAMED;
 		} else if (this.portalMap.get(bindName) != null || this.cursorMap.get(bindName) != null) {
 			errorOccurred(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40111, bindName));
@@ -737,7 +722,10 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			return;
 		}
 		//46.2.3 Note that a simple Query message also destroys the unnamed portal.
-		this.portalMap.remove(UNNAMED);
+		Portal p = this.portalMap.remove(UNNAMED);
+		if (p != null) {
+			closePortal(p);
+		}
 		this.preparedMap.remove(UNNAMED);
 		query = query.trim();
 		if (query.length() == 0) {
@@ -1065,18 +1053,22 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			String schema = meta.getSchemaName(i);
 			if (schema != null) {
 				final PreparedStatementImpl ps = this.connection.prepareStatement("select attrelid, attnum, typoid from matpg_relatt where attname = ? and relname = ? and nspname = ?"); //$NON-NLS-1$
-				ps.setString(1, name);
-				ps.setString(2, table);
-				ps.setString(3, schema);	
-				ResultSet rs = ps.executeQuery();
-				if (rs.next()) {
-					info.reloid = rs.getInt(1);
-					info.attnum = rs.getShort(2);
-					int specificType = rs.getInt(3);
-					if (!rs.wasNull()) {
-						info.type = specificType;
-					}
-				}					
+				try {
+					ps.setString(1, name);
+					ps.setString(2, table);
+					ps.setString(3, schema);	
+					ResultSet rs = ps.executeQuery();
+					if (rs.next()) {
+						info.reloid = rs.getInt(1);
+						info.attnum = rs.getShort(2);
+						int specificType = rs.getInt(3);
+						if (!rs.wasNull()) {
+							info.type = specificType;
+						}
+					}	
+				} finally {
+					ps.close();
+				}
 			}
 			result.add(info);
 		}
