@@ -30,6 +30,7 @@ import javax.naming.InitialContext;
 import javax.resource.ResourceException;
 
 import org.infinispan.Cache;
+import org.infinispan.CacheSet;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.query.Search;
@@ -123,9 +124,13 @@ public class LocalCacheConnection<K,V>  implements InfinispanCacheWrapper<K,V> {
 	public Collection<Object> getAll() {
 		Collection<Object> objs = new ArrayList<Object>();
 		Cache c = getCache();
-		for (Object k : c.keySet()) {
-			objs.add(c.get(k));
+		CacheSet cs = c.keySet();
+//		CloseableIterator 
+		java.util.Iterator it = cs.iterator();
+		while (it.hasNext()) {
+			objs.add(c.get(it.next()));
 		}
+
 		return objs;
 	}
 
