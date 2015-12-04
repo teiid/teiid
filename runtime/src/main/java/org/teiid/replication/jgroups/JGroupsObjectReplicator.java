@@ -22,11 +22,7 @@
 
 package org.teiid.replication.jgroups;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -56,14 +52,12 @@ import org.jgroups.blocks.MethodLookup;
 import org.jgroups.blocks.RequestOptions;
 import org.jgroups.blocks.ResponseMode;
 import org.jgroups.blocks.RpcDispatcher;
-import org.jgroups.util.Buffer;
 import org.jgroups.util.Promise;
 import org.jgroups.util.Rsp;
 import org.jgroups.util.RspList;
 import org.teiid.Replicated;
 import org.teiid.Replicated.ReplicationMode;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.core.util.ObjectInputStreamWithClassloader;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.ObjectReplicator;
@@ -89,7 +83,6 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 			this.object = object;
 			this.methodMap = methodMap;
 			this.methodList = methodList;
-			setMarshaller(new ContextAwareMarshaller(getClass().getClassLoader()));
 		}
 
 		@Override
@@ -104,7 +97,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 		    try {
 		        body=req_marshaller != null?
 		                req_marshaller.objectFromBuffer(req.getBuffer(), req.getOffset(), req.getLength())
-		                : req.getObject();
+		                : req.getObject(getClass().getClassLoader());
 		    }
 		    catch(Throwable e) {
 		        if(log.isErrorEnabled()) log.error("exception marshalling object", e); //$NON-NLS-1$
@@ -506,7 +499,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 	@Override
 	public <T, S> T replicate(String nodeName, String mux_id,
 			Class<T> iface, final S object, long startTimeout) throws Exception {
-		Channel channel = channelFactory.createChannel(nodeName+"-"+mux_id);
+		Channel channel = channelFactory.createChannel(mux_id);
 		
 		// To keep the order of methods same at all the nodes.
 		TreeMap<String, Method> methods = new TreeMap<String, Method>();
@@ -584,32 +577,4 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 			}
 		}
 	}	
-	
-	// This class is used so that the objects are loaded with the current classes class loader
-	// rather than foreign class loader
-	static class ContextAwareMarshaller implements RpcDispatcher.Marshaller {
-		private ClassLoader classloader;
-		
-		public ContextAwareMarshaller(ClassLoader classloader) {
-			this.classloader = classloader;
-		}
-		
-		@Override
-		public Buffer objectToBuffer(Object obj) throws Exception {
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			ObjectOutputStream out = new ObjectOutputStream(baos);
-			out.writeObject(obj);
-			out.close();
-			return new Buffer(baos.toByteArray());
-		}
-
-		@Override
-		public Object objectFromBuffer(byte[] buf, int offset, int length) throws Exception {
-			ObjectInputStream in = new ObjectInputStreamWithClassloader(new ByteArrayInputStream(buf, offset, length), this.classloader);
-			Object anObj = in.readObject();
-			in.close();
-			return anObj;
-		}
-	}
-	
 }

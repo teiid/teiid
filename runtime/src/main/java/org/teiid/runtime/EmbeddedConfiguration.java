@@ -48,6 +48,8 @@ import org.teiid.transport.SocketConfiguration;
 
 public class EmbeddedConfiguration extends DQPConfiguration {
 	
+	private static final String DEFAULT_NODE_NAME = "localhost"; //$NON-NLS-1$
+	private static final String JBOSS_NODE_NAME = "jboss.node.name"; //$NON-NLS-1$
 	static final int DEFAULT_MAX_ASYNC_WORKERS = 10;
 	private SecurityHelper securityHelper;
 	private String securityDomain;
@@ -344,17 +346,17 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	
     public String getNodeName() {
         if (this.nodeName == null) {
-            this.nodeName = System.getProperty("jboss.node.name");
+            this.nodeName = System.getProperty(JBOSS_NODE_NAME);
         }
         try {
             return (this.nodeName != null)?this.nodeName:InetAddress.getLocalHost().getHostName();
         } catch (UnknownHostException e) {
-            return "localhost";
+            return DEFAULT_NODE_NAME;
         } 
     }
 
     public void setNodeName(String nodeName) {
-        System.setProperty("jboss.node.name", nodeName);
+        System.setProperty(JBOSS_NODE_NAME, nodeName);
         this.nodeName = nodeName;
     }	
 	public AuthenticationType getAuthenticationType() {

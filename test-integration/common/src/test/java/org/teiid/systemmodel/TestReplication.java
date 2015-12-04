@@ -31,9 +31,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 
+import org.infinispan.transaction.tm.DummyTransactionManager;
 import org.junit.After;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -51,7 +51,6 @@ import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.translator.TranslatorException;
 
 @SuppressWarnings("nls")
-@Ignore
 public class TestReplication {
 	
     private static final String MATVIEWS = "matviews";
@@ -87,7 +86,7 @@ public class TestReplication {
 		double d1 = rs.getDouble(1);
 		double d2 = rs.getDouble(2);
 		
-		server2 = createServer("infinispan-replicated-config-1.xml", "tcp-shared-1.xml", "Node-B");
+		server2 = createServer("infinispan-replicated-config-1.xml", "tcp-shared.xml", "Node-B");
     	deployMatViewVDB(server2);    	
 
 		Connection c2 = server2.createConnection("jdbc:teiid:matviews");
@@ -155,7 +154,7 @@ public class TestReplication {
 		
 		Thread.sleep(1000);
 		
-		server2 = createServer("infinispan-replicated-config-1.xml", "tcp-shared-1.xml","node-2");
+		server2 = createServer("infinispan-replicated-config-1.xml", "tcp-shared.xml","node-2");
     	deployLargeVDB(server2);    	
 
 		Connection c2 = server2.createConnection("jdbc:teiid:large");
@@ -173,8 +172,6 @@ public class TestReplication {
 			rowCount2++;
 		}
 		
-		System.out.println(rowCount);
-		
 		assertEquals(rowCount, rowCount2);
     }
 
@@ -185,6 +182,7 @@ public class TestReplication {
 		config.setInfinispanConfigFile(ispn);
 		config.setJgroupsConfigFile(jgroups);
 		config.setNodeName(nodeName);
+		config.setTransactionManager(new DummyTransactionManager());
 		server.start(config, true);
 		return server;
 	}

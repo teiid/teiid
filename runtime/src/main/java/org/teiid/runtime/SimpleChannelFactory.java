@@ -22,18 +22,14 @@
 
 package org.teiid.runtime;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Map;
-import java.util.WeakHashMap;
-
 import org.jgroups.Channel;
-import org.jgroups.ChannelListener;
 import org.jgroups.JChannel;
+import org.jgroups.fork.ForkChannel;
 import org.teiid.replication.jgroups.ChannelFactory;
 
-final class SimpleChannelFactory implements ChannelFactory, ChannelListener {
+final class SimpleChannelFactory implements ChannelFactory {
     private final EmbeddedConfiguration embeddedConfiguration;
+    private JChannel channel;
 
     /**
      * @param embeddedConfiguration
@@ -42,36 +38,20 @@ final class SimpleChannelFactory implements ChannelFactory, ChannelListener {
         this.embeddedConfiguration = embeddedConfiguration;
     }
 
-    private final Map<Channel, String> channels = Collections.synchronizedMap(new WeakHashMap<Channel, String>());
-    
     @Override
     public Channel createChannel(String id) throws Exception {
-        JChannel channel = new JChannel(this.getClass().getClassLoader().getResource(this.embeddedConfiguration.getJgroupsConfigFile()));
-        channel.setName(id);
-        channels.put(channel, id);
-        channel.addChannelListener(this);
-        return channel;
+    	synchronized (this) {
+        	if (channel == null) {
+        		channel = new JChannel(this.getClass().getClassLoader().getResource(this.embeddedConfiguration.getJgroupsConfigFile()));
+        		channel.connect("teiid-replicator"); //$NON-NLS-1$
+        	}
+		}
+    	//assumes fork and other necessary protocols are in the main stack
+    	ForkChannel fc = new ForkChannel(channel, "teiid-replicator-fork", id); //$NON-NLS-1$
+        return fc;
     }
 
-    @Override
-    public void channelClosed(Channel channel) {
-        channels.remove(channel);
-    }
-
-    @Override
-    public void channelConnected(Channel channel) {
-    }
-
-    @Override
-    public void channelDisconnected(Channel channel) {
-    }
-    
     void stop() {
-        synchronized (channels) {
-            for (Channel c : new ArrayList<Channel>(channels.keySet())) {
-                c.close();
-            }
-            channels.clear();
-        }
+    	channel.close();
     }
 }
