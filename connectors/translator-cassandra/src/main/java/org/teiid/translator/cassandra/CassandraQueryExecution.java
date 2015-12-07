@@ -36,13 +36,16 @@ import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 
 import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Row;
+import com.google.common.util.concurrent.MoreExecutors;
 
 public class CassandraQueryExecution implements ResultSetExecution {
 
 	private Command query;
 	private CassandraConnection connection;
-	private ResultSet resultSet = null;
+	private ResultSetFuture resultSetFuture;
+	private ResultSet resultSet;
 	private ExecutionContext executionContext;
 	protected boolean returnsArray;
 	
@@ -55,13 +58,16 @@ public class CassandraQueryExecution implements ResultSetExecution {
 	@Override
 	public void close() {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, CassandraExecutionFactory.UTIL.getString("close_query")); //$NON-NLS-1$
-		
+		this.resultSet = null;
+		this.resultSetFuture = null;
 	}
 
 	@Override
 	public void cancel() throws TranslatorException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, CassandraExecutionFactory.UTIL.getString("cancel_query")); //$NON-NLS-1$
-		
+		if (resultSetFuture != null) {
+			resultSetFuture.cancel(true);
+		}
 	}
 
 	@Override
@@ -72,17 +78,27 @@ public class CassandraQueryExecution implements ResultSetExecution {
 		execute(cql);
 	}
 
-	protected void execute(String cql) throws TranslatorException {
+	protected void execute(String cql) {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Source-Query:", cql); //$NON-NLS-1$
-		try {
-			resultSet = connection.executeQuery(cql);
-		} catch(Throwable t) {
-			throw new TranslatorException(t);
-		}
+		resultSetFuture = connection.executeQuery(cql);
+		resultSetFuture.addListener(new Runnable() {
+			
+			@Override
+			public void run() {
+				executionContext.dataAvailable();
+			}
+		}, MoreExecutors.sameThreadExecutor());
 	}
 
 	@Override
 	public List<?> next() throws TranslatorException, DataNotAvailableException {
+		if (!resultSetFuture.isDone()) {
+			throw DataNotAvailableException.NO_POLLING;
+		}
+		if (resultSet == null) {
+			this.resultSet = this.resultSetFuture.getUninterruptibly();
+		}
+		//TODO: use asynch for results fetching
 		return getRow(resultSet.one());
 	}
 	

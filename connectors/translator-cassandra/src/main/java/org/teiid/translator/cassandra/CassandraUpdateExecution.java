@@ -21,11 +21,14 @@
  */
 package org.teiid.translator.cassandra;
 
+import java.nio.ByteBuffer;
+import java.sql.Blob;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
-import javax.resource.ResourceException;
-
+import org.teiid.core.types.BinaryType;
 import org.teiid.language.BatchedCommand;
 import org.teiid.language.BatchedUpdates;
 import org.teiid.language.Command;
@@ -37,6 +40,9 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
 
+import com.datastax.driver.core.ResultSetFuture;
+import com.google.common.util.concurrent.MoreExecutors;
+
 public class CassandraUpdateExecution implements UpdateExecution {
 	
 	private CassandraConnection connection;
@@ -44,6 +50,7 @@ public class CassandraUpdateExecution implements UpdateExecution {
 	private RuntimeMetadata metadata;
 	private Command command;
 	private int updateCount = 1;
+	private ResultSetFuture resultSetFuture;
 	
 	public CassandraUpdateExecution(Command command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
@@ -56,14 +63,28 @@ public class CassandraUpdateExecution implements UpdateExecution {
 
 	@Override
 	public void close() {
+		this.resultSetFuture = null;
 	}
 
 	@Override
 	public void cancel() throws TranslatorException {
+		if (this.resultSetFuture != null) {
+			this.resultSetFuture.cancel(true);
+		}
 	}
 
 	@Override
 	public void execute() throws TranslatorException {
+		internalExecute();
+		resultSetFuture.addListener(new Runnable() {
+			@Override
+			public void run() {
+				executionContext.dataAvailable();
+			}
+		}, MoreExecutors.sameThreadExecutor());
+	}
+
+	private void internalExecute() throws TranslatorException {
 		if (this.command instanceof BatchedUpdates) {
 			handleBatchedUpdates();
 			return;
@@ -75,15 +96,36 @@ public class CassandraUpdateExecution implements UpdateExecution {
 		if (this.command instanceof BatchedCommand) {
 			BatchedCommand bc = (BatchedCommand)this.command;
 			if (bc.getParameterValues() != null) {
-				try {
-					this.updateCount = connection.executeBatch(cql, bc.getParameterValues());
-				} catch (ResourceException e) {
-					throw new TranslatorException(e);
+				int count = 0;
+				List<Object[]> newValues = new ArrayList<Object[]>();
+				Iterator<? extends List<?>> values = bc.getParameterValues();
+				while (values.hasNext()) {
+					Object[] bindValues = values.next().toArray();
+					for (int i = 0; i < bindValues.length; i++) {
+						if (bindValues[i] instanceof Blob) {
+							Blob blob = (Blob)bindValues[i];
+							try {
+								if (blob.length() > Integer.MAX_VALUE) {
+									throw new AssertionError("Blob is too large"); //$NON-NLS-1$
+								}
+								byte[] bytes = ((Blob)bindValues[i]).getBytes(0, (int) blob.length());
+								bindValues[i] = ByteBuffer.wrap(bytes);
+							} catch (SQLException e) {
+								throw new TranslatorException(e);
+							}
+						} else if (bindValues[i] instanceof BinaryType) {
+							bindValues[i] = ByteBuffer.wrap(((BinaryType)bindValues[i]).getBytesDirect());
+						}
+					}
+					newValues.add(bindValues);
+					count++;
 				}
+				updateCount = count;
+				resultSetFuture = connection.executeBatch(cql, newValues);
 				return;
 			}
 		}
-		connection.executeQuery(cql);
+		resultSetFuture = connection.executeQuery(cql);
 	}
 
 	private void handleBatchedUpdates() {
@@ -96,12 +138,16 @@ public class CassandraUpdateExecution implements UpdateExecution {
 			cqlUpdates.add(cql);
 		}
 		this.updateCount = cqlUpdates.size();
-		connection.executeBatch(cqlUpdates);
+		resultSetFuture = connection.executeBatch(cqlUpdates);
 	}
 
 	@Override
 	public int[] getUpdateCounts() throws DataNotAvailableException,
 			TranslatorException {
+		if (!resultSetFuture.isDone()) {
+			throw DataNotAvailableException.NO_POLLING;
+		}
+		resultSetFuture.getUninterruptibly();
 		return new int[] {this.updateCount};
 	}
 
