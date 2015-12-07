@@ -41,6 +41,7 @@ import org.teiid.translator.TranslatorException;
 
 import com.datastax.driver.core.ColumnDefinitions;
 import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Row;
 
 @SuppressWarnings("nls")
@@ -58,13 +59,16 @@ public class TestNativeCassandra {
         RuntimeMetadata rm = Mockito.mock(RuntimeMetadata.class);
         CassandraConnection connection = Mockito.mock(CassandraConnection.class);
 
+        ResultSetFuture rsf = Mockito.mock(ResultSetFuture.class);
+        Mockito.stub(rsf.isDone()).toReturn(true);
         ResultSet rs = Mockito.mock(ResultSet.class);
+        Mockito.stub(rsf.getUninterruptibly()).toReturn(rs);
         Row row = Mockito.mock(Row.class);
         ColumnDefinitions cd = Mockito.mock(ColumnDefinitions.class);
         Mockito.stub(row.getColumnDefinitions()).toReturn(cd);
         Mockito.stub(rs.one()).toReturn(row).toReturn(null);
         
-        Mockito.stub(connection.executeQuery("select 'a'")).toReturn(rs);
+        Mockito.stub(connection.executeQuery("select 'a'")).toReturn(rsf);
         
 		ResultSetExecution execution = (ResultSetExecution)cef.createExecution(command, ec, rm, connection);
         execution.execute();
@@ -86,6 +90,9 @@ public class TestNativeCassandra {
         RuntimeMetadata rm = Mockito.mock(RuntimeMetadata.class);
         CassandraConnection connection = Mockito.mock(CassandraConnection.class);
 
+        ResultSetFuture rsf = Mockito.mock(ResultSetFuture.class);
+        Mockito.stub(connection.executeQuery("delete from 'a' where 1")).toReturn(rsf);
+        
 		Execution execution = cef.createExecution(command, ec, rm, connection);
         execution.execute();
 

@@ -44,6 +44,8 @@ import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
 
+import com.datastax.driver.core.ProtocolVersion;
+
 
 @Translator(name = "cassandra", description = "A translator for Cassandra NoSql database")
 public class CassandraExecutionFactory extends ExecutionFactory<ConnectionFactory, CassandraConnection> {
@@ -52,6 +54,8 @@ public class CassandraExecutionFactory extends ExecutionFactory<ConnectionFactor
 	public static enum Event implements BundleUtil.Event {
 		TEIID22000
 	}
+
+	private boolean isV2;
 	
 	@Override
 	public void start() throws TranslatorException {
@@ -131,16 +135,29 @@ public class CassandraExecutionFactory extends ExecutionFactory<ConnectionFactor
 	
 	@Override
 	public boolean supportsBulkUpdate() {
-		return true;
+		return isV2;
 	}
 	
 	@Override
 	public boolean supportsBatchedUpdates() {
-		return true;
+		return isV2;
 	}
 	
 	@Override
 	public boolean returnsSingleUpdateCount() {
+		return true;
+	}
+	
+	@Override
+	public void initCapabilities(CassandraConnection connection)
+			throws TranslatorException {
+		if (connection.getVersion().compareTo(ProtocolVersion.V2) >= 0) {
+			this.isV2 = true;
+		}
+	}
+	
+	@Override
+	public boolean isSourceRequiredForCapabilities() {
 		return true;
 	}
 	

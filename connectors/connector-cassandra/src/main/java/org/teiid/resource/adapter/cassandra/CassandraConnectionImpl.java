@@ -22,29 +22,16 @@
 
 package org.teiid.resource.adapter.cassandra;
 
-import java.nio.ByteBuffer;
-import java.sql.Blob;
-import java.sql.SQLException;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.resource.ResourceException;
 
-import org.teiid.core.types.BinaryType;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnection;
 import org.teiid.translator.cassandra.CassandraConnection;
 
-import com.datastax.driver.core.BatchStatement;
-import com.datastax.driver.core.BoundStatement;
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.KeyspaceMetadata;
-import com.datastax.driver.core.Metadata;
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.SimpleStatement;
+import com.datastax.driver.core.*;
 
 /**
  * Represents a connection to Cassandra database.
@@ -54,6 +41,7 @@ public class CassandraConnectionImpl extends BasicConnection implements Cassandr
 	private Cluster cluster = null;
 	private Session session = null;
 	private Metadata metadata = null;
+	private ProtocolVersion version;
 	
 	public CassandraConnectionImpl(CassandraManagedConnectionFactory config, Metadata metadata) {
 		this.config = config;
@@ -78,6 +66,8 @@ public class CassandraConnectionImpl extends BasicConnection implements Cassandr
 		this.metadata = cluster.getMetadata();
 		
 		this.session = cluster.connect(config.getKeyspace());
+		
+		this.version = this.session.getCluster().getConfiguration().getProtocolOptions().getProtocolVersionEnum();
 	}
 
 	@Override
@@ -95,48 +85,28 @@ public class CassandraConnectionImpl extends BasicConnection implements Cassandr
 	}
 	
 	@Override
-	public ResultSet executeQuery(String query){
-		return session.execute(query);
+	public ResultSetFuture executeQuery(String query){
+		return session.executeAsync(query);
 	}
 	
 	@Override
-	public void executeBatch(List<String> updates){
+	public ResultSetFuture executeBatch(List<String> updates){
 		BatchStatement bs = new BatchStatement();
 		for (String update : updates) {
 			bs.add(new SimpleStatement(update));
 		}
-		session.execute(bs);
+		return session.executeAsync(bs);
 	}
 	
 	@Override
-	public int executeBatch(String update, Iterator<? extends List<?>> values) throws ResourceException {
+	public ResultSetFuture executeBatch(String update, List<Object[]> values) {
 		PreparedStatement ps = session.prepare(update);
 		BatchStatement bs = new BatchStatement();
-		int count = 0;
-		while (values.hasNext()) {
-			Object[] bindValues = values.next().toArray();
-			for (int i = 0; i < bindValues.length; i++) {
-				if (bindValues[i] instanceof Blob) {
-					Blob blob = (Blob)bindValues[i];
-					try {
-						if (blob.length() > Integer.MAX_VALUE) {
-							throw new AssertionError("Blob is too large"); //$NON-NLS-1$
-						}
-						byte[] bytes = ((Blob)bindValues[i]).getBytes(0, (int) blob.length());
-						bindValues[i] = ByteBuffer.wrap(bytes);
-					} catch (SQLException e) {
-						throw new ResourceException(e);
-					}
-				} else if (bindValues[i] instanceof BinaryType) {
-					bindValues[i] = ByteBuffer.wrap(((BinaryType)bindValues[i]).getBytesDirect());
-				}
-			}
+		for (Object[] bindValues : values) {
 			BoundStatement bound = ps.bind(bindValues);
 			bs.add(bound);
-			count++;
 		}
-		session.execute(bs);
-		return count;
+		return session.executeAsync(bs);
 	}
 
 	@Override
@@ -152,6 +122,11 @@ public class CassandraConnectionImpl extends BasicConnection implements Cassandr
 			throw new ResourceException(keyspace);
 		}
 		return result;
+	}
+	
+	@Override
+	public ProtocolVersion getVersion() {
+		return version;
 	}
 	
 }

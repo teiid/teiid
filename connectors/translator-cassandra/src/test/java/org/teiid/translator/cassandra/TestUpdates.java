@@ -25,10 +25,7 @@ package org.teiid.translator.cassandra;
 import static org.junit.Assert.*;
 
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
-
-import javax.resource.ResourceException;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -43,6 +40,8 @@ import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
+
+import com.datastax.driver.core.ResultSetFuture;
 
 @SuppressWarnings("nls")
 public class TestUpdates {
@@ -62,6 +61,11 @@ public class TestUpdates {
         RuntimeMetadata rm = Mockito.mock(RuntimeMetadata.class);
         CassandraConnection connection = Mockito.mock(CassandraConnection.class);
 
+        ResultSetFuture rsf = Mockito.mock(ResultSetFuture.class);
+        Mockito.stub(rsf.isDone()).toReturn(true);
+        
+        Mockito.stub(connection.executeBatch(Arrays.asList("INSERT INTO g1 (e1) VALUES ('a')", "UPDATE g1 SET e1 = 'b'"))).toReturn(rsf);
+        
 		UpdateExecution execution = (UpdateExecution)cef.createExecution(command, ec, rm, connection);
         execution.execute();
         assertArrayEquals(new int[] {2}, execution.getUpdateCounts());
@@ -69,7 +73,7 @@ public class TestUpdates {
         Mockito.verify(connection).executeBatch(Arrays.asList("INSERT INTO g1 (e1) VALUES ('a')", "UPDATE g1 SET e1 = 'b'"));
 	}
 	
-	@Test public void testBulkUpdate() throws TranslatorException, ResourceException {
+	@Test public void testBulkUpdate() throws Exception {
 		CassandraExecutionFactory cef = new CassandraExecutionFactory();
 		
 		String input = "insert into pm1.g1 (e1) values ('a')";
@@ -87,7 +91,10 @@ public class TestUpdates {
         RuntimeMetadata rm = Mockito.mock(RuntimeMetadata.class);
         CassandraConnection connection = Mockito.mock(CassandraConnection.class);
         
-        Mockito.stub(connection.executeBatch(Mockito.eq("INSERT INTO g1 (e1) VALUES (?)"), (Iterator<? extends List<?>>) Mockito.anyObject())).toReturn(2);
+        ResultSetFuture rsf = Mockito.mock(ResultSetFuture.class);
+        Mockito.stub(rsf.isDone()).toReturn(true);
+        
+        Mockito.stub(connection.executeBatch(Mockito.eq("INSERT INTO g1 (e1) VALUES (?)"), (List<Object[]>) Mockito.anyObject())).toReturn(rsf);
 
 		UpdateExecution execution = (UpdateExecution)cef.createExecution(command, ec, rm, connection);
         execution.execute();
