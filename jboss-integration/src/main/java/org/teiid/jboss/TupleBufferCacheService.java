@@ -35,18 +35,13 @@ class TupleBufferCacheService implements Service<TupleBufferCache>{
 	protected InjectedValue<BufferManager> bufferMgrInjector = new InjectedValue<BufferManager>();
 	
 	private TupleBufferCache tupleBufferCache;
-	private String nodeName;
-	
-	public TupleBufferCacheService(String nodeName) {
-	    this.nodeName = nodeName;
-	}
 	
 	@Override
 	public void start(StartContext context) throws StartException {
 		if (this.replicatorInjector.getValue() != null) {
 			try {
 				//use a mux name that will not conflict with any vdb
-				this.tupleBufferCache = this.replicatorInjector.getValue().replicate(this.nodeName, "$TEIID_BM$", TupleBufferCache.class, bufferMgrInjector.getValue(), 0); //$NON-NLS-1$
+				this.tupleBufferCache = this.replicatorInjector.getValue().replicate("$TEIID_BM$", TupleBufferCache.class, bufferMgrInjector.getValue(), 0); //$NON-NLS-1$
 			} catch (Exception e) {
 				throw new StartException(e);
 			}

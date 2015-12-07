@@ -41,7 +41,7 @@ public class TestCompositeGlobalTableStore {
 
 	@Test public void testCompositeGlobalTableStore() throws VirtualDatabaseException {
 		CompositeVDB vdb = TestCompositeVDB.createCompositeVDB(new MetadataStore(), "foo");
-		GlobalTableStore gts = CompositeGlobalTableStore.createInstance("test", vdb, BufferManagerFactory.getStandaloneBufferManager(), null);
+		GlobalTableStore gts = CompositeGlobalTableStore.createInstance(vdb, BufferManagerFactory.getStandaloneBufferManager(), null);
 		assertTrue(gts instanceof GlobalTableStoreImpl);
 		
 		vdb.children = new LinkedHashMap<VDBKey, CompositeVDB>();
@@ -54,7 +54,7 @@ public class TestCompositeGlobalTableStore {
 		imported.getVDB().addAttchment(GlobalTableStore.class, gts1);
 		vdb.getChildren().put(new VDBKey("foo1", 1), imported);
 		
-		CompositeGlobalTableStore cgts = (CompositeGlobalTableStore)CompositeGlobalTableStore.createInstance("test", vdb, BufferManagerFactory.getStandaloneBufferManager(), null);
+		CompositeGlobalTableStore cgts = (CompositeGlobalTableStore)CompositeGlobalTableStore.createInstance(vdb, BufferManagerFactory.getStandaloneBufferManager(), null);
 		assertEquals(gts1, cgts.getStoreForTable(RelationalPlanner.MAT_PREFIX + "X.Y"));
 		assertEquals(cgts.getPrimary(), cgts.getStore("Z"));
 	}

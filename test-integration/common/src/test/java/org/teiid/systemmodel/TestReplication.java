@@ -75,7 +75,7 @@ public class TestReplication {
     }
     
     @Test public void testReplication() throws Exception {
-		server1 = createServer("infinispan-replicated-config.xml", "tcp-shared.xml", "Node-A");
+		server1 = createServer("infinispan-replicated-config.xml", "tcp-shared.xml");
     	deployMatViewVDB(server1);    	
 
 		Connection c1 = server1.createConnection("jdbc:teiid:matviews");
@@ -86,7 +86,7 @@ public class TestReplication {
 		double d1 = rs.getDouble(1);
 		double d2 = rs.getDouble(2);
 		
-		server2 = createServer("infinispan-replicated-config-1.xml", "tcp-shared.xml", "Node-B");
+		server2 = createServer("infinispan-replicated-config-1.xml", "tcp-shared.xml");
     	deployMatViewVDB(server2);    	
 
 		Connection c2 = server2.createConnection("jdbc:teiid:matviews");
@@ -140,7 +140,7 @@ public class TestReplication {
     }
     
     @Test public void testLargeReplication() throws Exception {
-		server1 = createServer("infinispan-replicated-config.xml", "tcp-shared.xml", "node-1");
+		server1 = createServer("infinispan-replicated-config.xml", "tcp-shared.xml");
     	deployLargeVDB(server1);    	
 
 		Connection c1 = server1.createConnection("jdbc:teiid:large");
@@ -154,7 +154,7 @@ public class TestReplication {
 		
 		Thread.sleep(1000);
 		
-		server2 = createServer("infinispan-replicated-config-1.xml", "tcp-shared.xml","node-2");
+		server2 = createServer("infinispan-replicated-config-1.xml", "tcp-shared.xml");
     	deployLargeVDB(server2);    	
 
 		Connection c2 = server2.createConnection("jdbc:teiid:large");
@@ -175,13 +175,12 @@ public class TestReplication {
 		assertEquals(rowCount, rowCount2);
     }
 
-	private FakeServer createServer(String ispn, String jgroups, String nodeName) throws Exception {
+	private FakeServer createServer(String ispn, String jgroups) throws Exception {
 		FakeServer server = new FakeServer(false);
 
 		EmbeddedConfiguration config = new EmbeddedConfiguration();
 		config.setInfinispanConfigFile(ispn);
 		config.setJgroupsConfigFile(jgroups);
-		config.setNodeName(nodeName);
 		config.setTransactionManager(new DummyTransactionManager());
 		server.start(config, true);
 		return server;

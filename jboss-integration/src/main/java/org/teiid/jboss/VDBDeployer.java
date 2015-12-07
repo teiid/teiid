@@ -40,18 +40,10 @@ import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.modules.ModuleClassLoader;
-import org.jboss.msc.service.AbstractServiceListener;
-import org.jboss.msc.service.Service;
-import org.jboss.msc.service.ServiceBuilder;
+import org.jboss.msc.service.*;
 import org.jboss.msc.service.ServiceBuilder.DependencyType;
-import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.service.ServiceController.State;
-import org.jboss.msc.service.ServiceName;
-import org.jboss.msc.service.ServiceTarget;
-import org.jboss.msc.service.StartContext;
-import org.jboss.msc.service.StartException;
-import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 import org.jboss.vfs.VirtualFile;
 import org.teiid.adminapi.Model;
@@ -82,11 +74,9 @@ class VDBDeployer implements DeploymentUnitProcessor {
 	private TranslatorRepository translatorRepository;
 	private VDBRepository vdbRepository;
 	JBossLifeCycleListener shutdownListener;
-	private String nodeName;
 	
-    public VDBDeployer(String nodeName, TranslatorRepository translatorRepo,            
+    public VDBDeployer(TranslatorRepository translatorRepo,            
             VDBRepository vdbRepo, JBossLifeCycleListener shutdownListener) {
-        this.nodeName = nodeName;
 		this.translatorRepository = translatorRepo;
 		this.vdbRepository = vdbRepo;
 		this.shutdownListener = shutdownListener;
@@ -161,7 +151,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		
 		this.vdbRepository.addPendingDeployment(deployment);
 		// build a VDB service
-		final VDBService vdb = new VDBService(this.nodeName, deployment, resources, shutdownListener);
+		final VDBService vdb = new VDBService(deployment, resources, shutdownListener);
 		vdb.addMetadataRepository("index", new IndexMetadataRepository()); //$NON-NLS-1$
 		
 		final ServiceBuilder<RuntimeVDB> vdbService = context.getServiceTarget().addService(TeiidServiceNames.vdbServiceName(deployment.getName(), deployment.getVersion()), vdb);

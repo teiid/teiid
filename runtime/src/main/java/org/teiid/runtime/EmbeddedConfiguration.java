@@ -23,8 +23,6 @@
 package org.teiid.runtime;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -78,7 +76,6 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	private int maxStorageObjectSize ;
 	private boolean memoryBufferOffHeap = false;
 	private int memoryBufferSpace ;
-	private String nodeName;
 	
     private DefaultCacheManager cacheManager;
 	private AuthenticationType authenticationType;
@@ -344,21 +341,6 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 		this.memoryBufferSpace = memoryBufferSpace;
 	}
 	
-    public String getNodeName() {
-        if (this.nodeName == null) {
-            this.nodeName = System.getProperty(JBOSS_NODE_NAME);
-        }
-        try {
-            return (this.nodeName != null)?this.nodeName:InetAddress.getLocalHost().getHostName();
-        } catch (UnknownHostException e) {
-            return DEFAULT_NODE_NAME;
-        } 
-    }
-
-    public void setNodeName(String nodeName) {
-        System.setProperty(JBOSS_NODE_NAME, nodeName);
-        this.nodeName = nodeName;
-    }	
 	public AuthenticationType getAuthenticationType() {
 		return this.authenticationType;
 	}
