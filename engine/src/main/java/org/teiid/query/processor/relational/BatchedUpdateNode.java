@@ -189,7 +189,7 @@ public class BatchedUpdateNode extends SubqueryAwareRelationalNode {
     
     @Override
     public Boolean requiresTransaction(boolean transactionalReads) {
-    	return true;
+    	return null;
     }
     
     @Override
