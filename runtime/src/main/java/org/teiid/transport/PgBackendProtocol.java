@@ -394,9 +394,6 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 	
 	@Override
 	public void flush() {
-	    if (this.dataOut != null) {
-	        this.dataOut.release();
-	    }
 		this.dataOut = null;
 		this.writer = null;
 		this.ctx.writeAndFlush(null);
@@ -601,7 +598,6 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 			buffer.writeByte('S');
 		}
 		this.ctx.writeAndFlush(buffer, promise);
-		buffer.release();
 	}
 	
 	private void sendErrorResponse(Throwable t) {
@@ -826,7 +822,6 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 		this.dataOut = null;
 		this.writer = null;
 		this.ctx.writeAndFlush(cb);
-		cb.release();
 	}
 
 	private static void trace(String... msg) {
