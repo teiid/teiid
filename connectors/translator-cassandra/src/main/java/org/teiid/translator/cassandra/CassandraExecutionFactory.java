@@ -35,7 +35,14 @@ import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.*;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.MetadataProcessor;
+import org.teiid.translator.ProcedureExecution;
+import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.Translator;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.UpdateExecution;
 
 
 @Translator(name = "cassandra", description = "A translator for Cassandra NoSql database")
@@ -119,6 +126,21 @@ public class CassandraExecutionFactory extends ExecutionFactory<ConnectionFactor
 
 	@Override
 	public boolean supportsRowLimit() {
+		return true;
+	}
+	
+	@Override
+	public boolean supportsBulkUpdate() {
+		return true;
+	}
+	
+	@Override
+	public boolean supportsBatchedUpdates() {
+		return true;
+	}
+	
+	@Override
+	public boolean returnsSingleUpdateCount() {
 		return true;
 	}
 	

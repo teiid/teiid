@@ -21,6 +21,13 @@
  */
 package org.teiid.translator.cassandra;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.resource.ResourceException;
+
+import org.teiid.language.BatchedCommand;
+import org.teiid.language.BatchedUpdates;
 import org.teiid.language.Command;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -57,15 +64,39 @@ public class CassandraUpdateExecution implements UpdateExecution {
 
 	@Override
 	public void execute() throws TranslatorException {
+		if (this.command instanceof BatchedUpdates) {
+			handleBatchedUpdates();
+			return;
+		}
 		CassandraSQLVisitor visitor = new CassandraSQLVisitor();
 		visitor.translateSQL(this.command);
 		String cql = visitor.getTranslatedSQL();
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Source-Query:", cql); //$NON-NLS-1$
-		try {
-			connection.executeQuery(cql);
-		} catch(Exception t) {
-			throw new TranslatorException(t);
+		if (this.command instanceof BatchedCommand) {
+			BatchedCommand bc = (BatchedCommand)this.command;
+			if (bc.getParameterValues() != null) {
+				try {
+					this.updateCount = connection.executeBatch(cql, bc.getParameterValues());
+				} catch (ResourceException e) {
+					throw new TranslatorException(e);
+				}
+				return;
+			}
 		}
+		connection.executeQuery(cql);
+	}
+
+	private void handleBatchedUpdates() {
+		BatchedUpdates updates = (BatchedUpdates)this.command;
+		List<String> cqlUpdates = new ArrayList<String>();
+		for (Command update : updates.getUpdateCommands()) {
+			CassandraSQLVisitor visitor = new CassandraSQLVisitor();
+			visitor.translateSQL(update);
+			String cql = visitor.getTranslatedSQL();
+			cqlUpdates.add(cql);
+		}
+		this.updateCount = cqlUpdates.size();
+		connection.executeBatch(cqlUpdates);
 	}
 
 	@Override

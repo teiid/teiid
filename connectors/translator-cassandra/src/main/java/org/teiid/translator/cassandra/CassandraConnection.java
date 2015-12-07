@@ -22,6 +22,9 @@
 
 package org.teiid.translator.cassandra;
 
+import java.util.Iterator;
+import java.util.List;
+
 import javax.resource.ResourceException;
 import javax.resource.cci.Connection;
 
@@ -43,5 +46,21 @@ public interface CassandraConnection extends Connection{
 	 * @throws KeyspaceNotDefinedException 
 	 * */
 	public KeyspaceMetadata keyspaceInfo() throws ResourceException;
+
+	/**
+	 * Execute a batch of updates
+	 * @param updates
+	 * @return
+	 */
+	void executeBatch(List<String> updates);
+
+	/**
+	 * Execute a bulk update
+	 * @param update
+	 * @param values
+	 * @return
+	 * @throws ResourceException 
+	 */
+	int executeBatch(String update, Iterator<? extends List<?>> values) throws ResourceException;
 	
 }
