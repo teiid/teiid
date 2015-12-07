@@ -116,7 +116,6 @@ public class ObjectDecoder extends LengthFieldBasedFrameDecoder {
 	        result = cois.readObject();
 	        streams = ExternalizeUtil.readList(cois, StreamFactoryReference.class);
 	        streamIndex = 0;
-	        frame.release();
     	}
     	while (streamIndex < streams.size()) {
     		//read the new chunk size
