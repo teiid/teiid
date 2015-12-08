@@ -32,14 +32,17 @@
         <version.com.google.guava>18.0</version.com.google.guava>
         <version.dom4j>1.6.1</version.dom4j>
          
-        <version.org.hibernate.search>5.2.0.Final</version.org.hibernate.search>
-        <version.org.infinispan.6>7.2.3.Final</version.org.infinispan.6>  
-        <version.org.apache.lucene.infinispan>7.2.3.Final</version.org.apache.lucene.infinispan>
-        <version.com.squareup.protoparser>3.1.5</version.com.squareup.protoparser>
-        <version.org.infinispan.protostream>3.0.4.Final</version.org.infinispan.protostream>        
+         
         <!-- JDG module slot to use  -->
-        <jdg.slot>jdg-6.5</jdg.slot>  
-        
+        <jdg.slot>ispn-8.1</jdg.slot>  
+        <version.org.infinispan.6>8.0.1.Final</version.org.infinispan.6>  
+         
+        <version.org.infinispan.hibernate.search>5.5.1.Final</version.org.infinispan.hibernate.search>     
+        <version.org.apache.lucene.infinispan>5.3.1</version.org.apache.lucene.infinispan>
+        <version.com.squareup.protoparser>3.1.5</version.com.squareup.protoparser>
+        <version.org.infinispan.protostream>3.0.4.Final</version.org.infinispan.protostream>  
+        <version.org.hibernate.hql>1.3.0.Alpha2</version.org.hibernate.hql>      
+        <version.org.antlr.infinispan>3.4</version.org.antlr.infinispan>
 
         <!-- Teiid specific properties -->
         <version.org.apache.commons>3.3.2</version.org.apache.commons>
@@ -1001,12 +1004,10 @@
                   <artifactId>jaxen</artifactId>
                   <version>${version.jaxen}</version>                    
             </dependency>
-                                                        
-            <dependency>
-                <groupId>org.apache.lucene</groupId>
-                <artifactId>lucene-core</artifactId>
-                <version>${version.org.apache.lucene}</version>
-            </dependency>                           
+             -->                                           
+            
+            
+            <!--                       
             <dependency>
 		        <groupId>com.google.guava</groupId>
 		        <artifactId>guava</artifactId>
@@ -1363,6 +1364,8 @@
                 <artifactId>noggit</artifactId>
                 <version>${version.noggit}</version>
             </dependency>
+ 
+
             <!--dependency>
                 <groupId>org.hibernate</groupId>
                 <artifactId>hibernate-search</artifactId>
