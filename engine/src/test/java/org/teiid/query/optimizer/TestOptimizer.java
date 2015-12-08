@@ -6028,8 +6028,8 @@ public class TestOptimizer {
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         ProcessorPlan plan = helpPlan(sql, metadata, new String[] {"SELECT DISTINCT g_0.e1 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
-        //no txn required, since an interated insert is used
-        assertFalse(plan.requiresTransaction(false));
+        //txn required, since the insert could be split
+        assertTrue(plan.requiresTransaction(false));
         
         checkNodeTypes(plan, FULL_PUSHDOWN); 
         

@@ -356,10 +356,7 @@ public class ProjectIntoNode extends RelationalNode {
     
     @Override
     public Boolean requiresTransaction(boolean transactionalReads) {
-		if (getMode() != Mode.ITERATOR) {
-			return true;
-		}
-		return null;
+		return true;
     }
     
     public void setConstraint(Criteria constraint) {
