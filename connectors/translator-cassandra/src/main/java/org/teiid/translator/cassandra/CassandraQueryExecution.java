@@ -74,6 +74,7 @@ public class CassandraQueryExecution implements ResultSetExecution {
 
 	protected void execute(String cql) throws TranslatorException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Source-Query:", cql); //$NON-NLS-1$
+		this.executionContext.logCommand(cql);
 		try {
 			resultSet = connection.executeQuery(cql);
 		} catch(Throwable t) {

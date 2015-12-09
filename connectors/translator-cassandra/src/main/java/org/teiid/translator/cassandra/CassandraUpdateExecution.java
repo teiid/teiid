@@ -61,6 +61,7 @@ public class CassandraUpdateExecution implements UpdateExecution {
 		visitor.translateSQL(this.command);
 		String cql = visitor.getTranslatedSQL();
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Source-Query:", cql); //$NON-NLS-1$
+		this.executionContext.logCommand(cql);
 		try {
 			connection.executeQuery(cql);
 		} catch(Exception t) {
