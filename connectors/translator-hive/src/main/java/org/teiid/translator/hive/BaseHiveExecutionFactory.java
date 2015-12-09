@@ -324,4 +324,9 @@ public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
     public boolean requiresLeftLinearJoin() {
     	return false;
     }
+    
+    @Override
+    public boolean supportsOrderByUnrelated() {
+    	return false;
+    }
 }
