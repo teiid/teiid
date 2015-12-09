@@ -498,4 +498,31 @@ public class TestRuleMergeVirtual {
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
     
+    @Test public void testUnrelated() throws Exception {
+        BasicSourceCapabilities caps = TestAggregatePushdown.getAggregateCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FUNCTIONS_IN_GROUP_BY, false);
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY_UNRELATED, false);
+
+        String sql = "select a from (SELECT intkey as a, stringkey as b FROM BQT1.SmallA group by intkey, stringkey) as v order by b";
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
+            new String[]{"SELECT v_0.c_0, v_0.c_1 FROM (SELECT g_0.IntKey AS c_0, g_0.StringKey AS c_1 FROM BQT1.SmallA AS g_0 GROUP BY g_0.IntKey, g_0.StringKey) AS v_0 ORDER BY c_1"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING);
+        
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+                1,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                0,      // NestedLoopJoinStrategy
+                0,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                1,      // Project
+                0,      // Select
+                0,      // Sort
+                0       // UnionAll
+            });
+    }
+    
 }
