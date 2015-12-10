@@ -76,7 +76,7 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
         if (address instanceof InetSocketAddress) {
         	InetSocketAddress addr = (InetSocketAddress)address;
         	this.workContext.setClientAddress(addr.getAddress().getHostAddress());
-        	this.workContext.setClientHostname(addr.getHostName());
+        	this.workContext.setClientHostname(addr.getHostString());
         }
     }
     
