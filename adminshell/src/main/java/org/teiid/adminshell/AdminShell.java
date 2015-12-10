@@ -74,7 +74,7 @@ public class AdminShell {
 	@SuppressWarnings("nls")
 	public static void connectAsAdmin() throws AdminException {
 		loadConnectionProperties();
-		connectAsAdmin(p.getProperty("admin.host", "localhost"), Integer.parseInt(p.getProperty("admin.port", "9999")), p.getProperty("admin.user", "admin"), p.getProperty("admin.password", "admin"), "conn-" + connectionCount++);
+		connectAsAdmin(p.getProperty("admin.host", "localhost"), Integer.parseInt(p.getProperty("admin.port", "9990")), p.getProperty("admin.user", "admin"), p.getProperty("admin.password", "admin"), "conn-" + connectionCount++);
 	}
 
 	static void loadConnectionProperties() {
