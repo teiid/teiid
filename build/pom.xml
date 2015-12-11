@@ -39,22 +39,22 @@
             <artifactId>slf4j-api</artifactId>
         </dependency> 
        
-	<dependency>
-	    <groupId>org.jboss.narayana.jta</groupId>
-	    <artifactId>narayana-jta</artifactId>
-	</dependency> 
-	<dependency>
-	    <groupId>org.jboss.ironjacamar</groupId>
-	    <artifactId>ironjacamar-jdbc</artifactId>
-	</dependency>
-	<dependency>
-	    <groupId>org.jboss.ironjacamar</groupId>
-	    <artifactId>ironjacamar-core-api</artifactId>
-	</dependency>
-	<dependency>
-	    <groupId>org.jboss.ironjacamar</groupId>
-	    <artifactId>ironjacamar-core-impl</artifactId>
-	</dependency>
+		<dependency>
+		    <groupId>org.jboss.narayana.jta</groupId>
+		    <artifactId>narayana-jta</artifactId>
+		</dependency> 
+		<dependency>
+		    <groupId>org.jboss.ironjacamar</groupId>
+		    <artifactId>ironjacamar-jdbc</artifactId>
+		</dependency>
+		<dependency>
+		    <groupId>org.jboss.ironjacamar</groupId>
+		    <artifactId>ironjacamar-core-api</artifactId>
+		</dependency>
+		<dependency>
+		    <groupId>org.jboss.ironjacamar</groupId>
+		    <artifactId>ironjacamar-core-impl</artifactId>
+		</dependency>
 
     </dependencies>   
       
@@ -120,17 +120,14 @@
                                     <type>zip</type>
                                     <outputDirectory>${project.build.directory}</outputDirectory>
                                 </artifactItem>
-                                <!-- 
                                 <artifactItem>
-                                    <groupId>org.jboss.teiid.web-console</groupId>
-                                    <artifactId>teiid-console-dist</artifactId>
-                                    <version>${version.teiid.console}</version>
-                                    <classifier>wildfly</classifier>
-                                    <type>zip</type>
-                                    <outputDirectory>${project.build.directory}/${dir.jboss-orig}</outputDirectory>
-                                    <overWrite>true</overWrite>
+									  <groupId>org.jboss.teiid.hal</groupId>
+									  <artifactId>dist</artifactId>
+									  <version>${version.teiid.console}</version>
+									  <classifier>overlay</classifier>
+									  <type>zip</type>
+	                                  <outputDirectory>${project.build.directory}/${dir.wildfly}</outputDirectory>
                                 </artifactItem>
-                                 -->
                             </artifactItems>
                         </configuration>
                     </execution>
