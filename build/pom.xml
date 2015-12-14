@@ -142,7 +142,6 @@
                         <descriptor>assembly/client-jar.xml</descriptor>
                         <descriptor>assembly/wildfly-dist.xml</descriptor>
                         <descriptor>assembly/adminshell-dist.xml</descriptor>
-                        <descriptor>assembly/embedded-dist.xml</descriptor>
                         <descriptor>assembly/wildfly-server.xml</descriptor>
                         <descriptor>assembly/docker.xml</descriptor>            
                     </descriptors>
@@ -257,7 +256,6 @@
                                 <descriptor>assembly/client-jar.xml</descriptor>
                                 <descriptor>assembly/wildfly-dist.xml</descriptor>
                                 <descriptor>assembly/adminshell-dist.xml</descriptor>
-                                <descriptor>assembly/embedded-dist.xml</descriptor>
                                 <descriptor>assembly/wildfly-server.xml</descriptor>
                                 <descriptor>assembly/docker.xml</descriptor>
                             </descriptors>

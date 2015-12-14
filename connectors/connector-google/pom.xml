@@ -39,7 +39,6 @@
                 <configuration>
                     <descriptors>
                         <descriptor>kits/wildfly-dist.xml</descriptor>
-                        <descriptor>kits/embedded-dist.xml</descriptor>
                     </descriptors>
                 </configuration>
                 <executions>
