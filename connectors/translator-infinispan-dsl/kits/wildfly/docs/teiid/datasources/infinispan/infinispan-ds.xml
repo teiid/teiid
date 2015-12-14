@@ -1,0 +1,33 @@
+#  If susbsytem is already defined, only copy the contents under resource-adapters and edit to suit your needs
+#
+#  the properties are pre-filled based on using teiid jdg-local-cache quickstart, and as an example of what the content should look like
+#
+#  for the complete details on the format for each property, see the ra.xml file for the resource adapter: connector-infinispan.6 
+
+<subsystem xmlns="urn:jboss:domain:resource-adapters:1.1">
+    <resource-adapters>
+		<resource-adapter id="infinispanLocalQS">
+			<module slot="6" id="org.jboss.teiid.resource-adapter.infinispan"/>
+			<transaction-support>NoTransaction</transaction-support>
+			<connection-definitions>
+				<connection-definition class-name="org.teiid.resource.adapter.infinispan.InfinispanManagedConnectionFactory" 
+				jndi-name="java:/infinispanLocal" 
+				enabled="true" 
+				use-java-context="true" 
+				pool-name="infinispanLocal">					
+					<!-- cacheName:className[;pkFieldName[:cacheKeyJavaType]]) -->
+					<config-property name="CacheTypeMap">
+						local-quickstart-cache:com.client.quickstart.pojo.Stock;productId
+					</config-property>
+					
+					<!-- JNDI lookup name of the Infinispan cache container.  other options include remote hot rod access,
+					   host:port server list, to access a jdg cache -->
+					<config-property name="CacheJndiName">
+						java:jboss/teiid/jdg-quickstart
+					</config-property>
+				</connection-definition>
+			</connection-definitions>
+		</resource-adapter>
+    
+    </resource-adapters>
+</subsystem>

@@ -1,0 +1,26 @@
+#  This resource adapter is for accessing a remote cache by key using hot rod client, not using remote query.
+#  For remote query (using Google Protobuf), see setup_resource_adapter_6.2_dsl.txt
+
+#  Note:  The RemoteServerList host:port may have to be changed, depending on your JDG deployment.  Also, the port is based on running it locally and incrementing the ports
+
+#  Also, didn't create a CLI script at this time, because 'slot' could not be specified in the CLI script and therefore, still required manual editing of the configuration.
+
+                <resource-adapter id="infinispanRemQS">
+                    <module slot="6" id="org.jboss.teiid.resource-adapter.infinispan"/>
+                    <connection-definitions>
+                        <connection-definition class-name="org.teiid.resource.adapter.infinispan.InfinispanManagedConnectionFactory" jndi-name="java:/infinispanRemote" enabled="true" use-java-context="true" pool-name="infinispanRemote">
+                            <!-- module name to load the cache classes from -->
+                            <config-property name="Module">
+                                com.client.quickstart.order.pojos
+                            </config-property>
+                            <!-- cacheName:className[;pkFieldName[:cacheKeyJavaType]]) -->
+                            <config-property name="CacheTypeMap">
+                                local-quickstart-cache:com.client.quickstart.pojo.Order;id
+                            </config-property>
+                            <!-- comma seperated list of hostname:port  -->
+                            <config-property name="RemoteServerList">
+                                127.0.0.1:11322
+                            </config-property>
+                        </connection-definition>
+                    </connection-definitions>
+                </resource-adapter>
