@@ -18,7 +18,15 @@
         <includes>
           <include>**/*</include>
         </includes>   
-    </fileSet>    
+    </fileSet>
+    <fileSet>
+        <directory>kits/wildfly/docs</directory>
+        <outputDirectory>docs</outputDirectory>     
+        <filtered>true</filtered> 
+        <includes>
+          <include>**/*</include>
+        </includes>   
+    </fileSet>          
   </fileSets>
   
   <dependencySets>

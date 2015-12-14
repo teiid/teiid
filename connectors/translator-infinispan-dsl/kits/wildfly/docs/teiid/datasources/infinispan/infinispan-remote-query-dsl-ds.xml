@@ -1,0 +1,38 @@
+#  this resource adapter is for connecting to a remote Infinispan cache using the Hot Rod Client. remote query dsl feature that uses Google protobuf's for serialization.
+#
+#  the properties are pre-filled based on using the JDG remote-query quickstart, and as an example of what the content should look like
+#
+#  for the complete details on the format for each property, see the ra.xml file for the resource adapter: connector-translator-dsl 
+#
+#  Note:  The RemoteServerList host:port may have to be changed, depending on your JDG deployment.  Also, the port is based on running it locally and incrementing the ports
+
+                <resource-adapter id="infinispanRemQSDSL">
+                    <module slot="main" id="org.jboss.teiid.resource-adapter.infinispan.dsl"/>
+                    <connection-definitions>
+                        <connection-definition class-name="org.teiid.resource.adapter.infinispan.dsl.InfinispanManagedConnectionFactory" jndi-name="java:/infinispanRemoteDSL" enabled="true" use-java-context="true" pool-name="infinispanRemoteDSL">
+                            <!-- cacheName:className[;pkFieldName[:cacheKeyJavaType]]) -->
+                            <config-property name="CacheTypeMap">
+                                addressbook_indexed:org.jboss.as.quickstarts.datagrid.hotrod.query.domain.Person;id
+                            </config-property>
+                            <!-- protobuf definition file that defines the schema and, possibly, indexes -->
+                            <config-property name="ProtobufDefinitionFile">
+                                 /quickstart/addressbook.proto
+                            </config-property>
+                            <!-- the protobuf definition root message descriptor that corresponds the root class defined in CasheTypeMap -->
+                            <config-property name="MessageDescriptor">
+                                quickstart.Person
+                            </config-property>
+                             <!-- module name to load the cache classes from -->
+                            <config-property name="Module">
+                                com.client.quickstart.addressbook.pojos
+                            </config-property>
+                            <config-property name="MessageMarshallers">
+                                org.jboss.as.quickstarts.datagrid.hotrod.query.domain.Person:org.jboss.as.quickstarts.datagrid.hotrod.query.marshallers.PersonMarshaller,org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PhoneNumber:org.jboss.as.quickstarts.datagrid.hotrod.query.marshallers.PhoneNumberMarshaller,org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PhoneType:org.jboss.as.quickstarts.datagrid.hotrod.query.marshallers.PhoneTypeMarshaller
+                            </config-property>
+                            <!-- comma seperated list of hostname:port  -->
+                            <config-property name="RemoteServerList">
+                                127.0.0.1:11322
+                            </config-property>
+                        </connection-definition>
+                    </connection-definitions>
+                </resource-adapter>

@@ -22,6 +22,24 @@
 			</includes>
 		</fileSet>
 
+        <fileSet>
+            <directory>kits/wildfly/standalone</directory>
+            <outputDirectory>standalone</outputDirectory>
+            <filtered>true</filtered>
+            <includes>
+                <include>**/*</include>
+            </includes>
+        </fileSet>
+        
+        <fileSet>
+            <directory>kits/wildfly/bin</directory>
+            <outputDirectory>bin</outputDirectory>
+            <filtered>true</filtered>
+            <includes>
+                <include>**/*</include>
+            </includes>
+        </fileSet>
+                
 		<fileSet>
 			<directory>src/main/resources/schema</directory>
 			<includes>
@@ -29,6 +47,14 @@
 			</includes>
 			<outputDirectory>docs/schema</outputDirectory>
 		</fileSet>
+		
+        <fileSet>
+            <directory>kits/wildfly</directory>
+            <includes>
+                <include>layers.conf</include>
+            </includes>
+            <outputDirectory>modules</outputDirectory>
+        </fileSet>		
 
 	</fileSets>
 
