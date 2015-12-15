@@ -104,7 +104,7 @@ public class ConnectorWorkItem implements ConnectorWork {
     private int expectedColumns;
         
     /* End state information */    
-    private boolean lastBatch;
+    private volatile boolean lastBatch;
     private int rowCount;
     
     private AtomicBoolean isCancelled = new AtomicBoolean();
@@ -186,15 +186,21 @@ public class ConnectorWorkItem implements ConnectorWork {
 	}
     
     @Override
-    public void cancel() {
+    public void cancel(boolean abnormal) {
+    	if (lastBatch) {
+    		return;
+    	}
     	try {
-			LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Processing CANCEL request"}); //$NON-NLS-1$
-            if (this.isCancelled.compareAndSet(false, true)) {
-        		this.manager.logSRCCommand(this.requestMsg, this.securityContext, Event.CANCEL, -1, null);
-    	        if(execution != null) {
-    	            execution.cancel();
-    	        }            
-    	        LogManager.logDetail(LogConstants.CTX_CONNECTOR, QueryPlugin.Util.getString("DQPCore.The_atomic_request_has_been_cancelled", this.id)); //$NON-NLS-1$
+			if (this.isCancelled.compareAndSet(false, true)) {
+				LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Processing CANCEL request"}); //$NON-NLS-1$
+            	Execution ex = this.execution;
+            	if(ex != null) {
+            		if (abnormal) {
+            			this.manager.logSRCCommand(this.requestMsg, this.securityContext, Event.CANCEL, -1, null);
+            		}
+    	            ex.cancel();
+    	            LogManager.logDetail(LogConstants.CTX_CONNECTOR, QueryPlugin.Util.getString("DQPCore.The_atomic_request_has_been_cancelled", this.id)); //$NON-NLS-1$
+            	}
         	}
         } catch (TranslatorException e) {
             LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30024, this.id));
@@ -268,12 +274,13 @@ public class ConnectorWorkItem implements ConnectorWork {
     	if (t instanceof RuntimeException && t.getCause() != null) {
     		t = t.getCause();
     	}
-        manager.logSRCCommand(this.requestMsg, this.securityContext, Event.ERROR, null, null);
         
         String msg = QueryPlugin.Util.getString("ConnectorWorker.process_failed", this.id); //$NON-NLS-1$
         if (isCancelled.get()) {            
             LogManager.logDetail(LogConstants.CTX_CONNECTOR, msg);
         } else {
+            manager.logSRCCommand(this.requestMsg, this.securityContext, Event.ERROR, null, null);
+
         	Throwable toLog = t;
         	if (this.requestMsg.getCommandContext().getOptions().isSanitizeMessages() && !LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.DETAIL)) {
 	    		toLog = ExceptionUtil.sanitize(toLog, true);

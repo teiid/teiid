@@ -50,9 +50,9 @@ import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.translator.CacheDirective.Scope;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.CacheDirective.Scope;
 
 
 /**
@@ -331,7 +331,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 		cancelAsynch = true;
     	if (closing.compareAndSet(false, true)) {
         	if (!done) {
-        		this.cwi.cancel();
+        		this.cwi.cancel(false);
         	}
 	    	workItem.closeAtomicRequest(this.aqr.getAtomicRequestID());
 	    	if (aqr.isSerial() || futureResult == null) {
@@ -359,7 +359,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
     
     public void cancelRequest() {
     	this.canceled = true;
-		this.cwi.cancel();
+		this.cwi.cancel(true);
 		cancelFutures();
     }
 
