@@ -450,6 +450,8 @@ public class RelationalPlanner {
             			}
 					});
             		QueryCommand query = (QueryCommand)command;
+            		List<SubqueryContainer<?>> subqueries = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(query);
+            		pullupWith(with, subqueries);
             		if (query.getWith() != null) {
             			//we need to accumulate as a with clause could have been used at a lower scope
             			query.getWith().addAll(with);
@@ -468,6 +470,22 @@ public class RelationalPlanner {
         	assignWithClause(children[i], pushdownWith);
         }
     }
+
+	private void pullupWith(List<WithQueryCommand> with,
+			List<SubqueryContainer<?>> subqueries) {
+		for (SubqueryContainer<?> subquery : subqueries) {
+			if (subquery.getCommand() instanceof QueryCommand) {
+				QueryCommand qc = (QueryCommand)subquery.getCommand();
+				if (qc.getWith() != null) {
+					qc.getWith().removeAll(with);
+				}
+				if (qc.getWith().isEmpty()) {
+					qc.setWith(null);
+				}
+				pullupWith(with, ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(qc));
+			}
+		}
+	}
 
 	private void discoverWith(
 			LinkedHashMap<String, WithQueryCommand> pushdownWith,
