@@ -285,7 +285,7 @@ public class RelationalPlanner {
         return result;
     }
     
-    private static void assignWithClause(RelationalNode node, Map<String, WithQueryCommand> pushdownWith, Set<GroupSymbol> groups) {
+    private void assignWithClause(RelationalNode node, Map<String, WithQueryCommand> pushdownWith, Set<GroupSymbol> groups) {
     	if (node instanceof PlanExecutionNode) {
     		//need to check for nested relational plans.  these are created by things such as the semi-join optimization in rulemergevirtual
     		ProcessorPlan plan = ((PlanExecutionNode)node).getProcessorPlan();
@@ -316,6 +316,8 @@ public class RelationalPlanner {
 				}
             	if (!with.isEmpty()) {
             		QueryCommand query = (QueryCommand)command;
+            		List<SubqueryContainer<?>> subqueries = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(query);
+            		pullupWith(with, subqueries);
             		if (query.getWith() != null) {
             			//we need to accumulate as a with clause could have been used at a lower scope
             			query.getWith().addAll(with);
@@ -334,6 +336,22 @@ public class RelationalPlanner {
         	assignWithClause(children[i], pushdownWith, groups);
         }
     }
+    
+	private void pullupWith(List<WithQueryCommand> with,
+			List<SubqueryContainer<?>> subqueries) {
+		for (SubqueryContainer<?> subquery : subqueries) {
+			if (subquery.getCommand() instanceof QueryCommand) {
+				QueryCommand qc = (QueryCommand)subquery.getCommand();
+				if (qc.getWith() != null) {
+					qc.getWith().removeAll(with);
+					if (qc.getWith().isEmpty()) {
+						qc.setWith(null);
+					}
+				}
+				pullupWith(with, ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(qc));
+			}
+		}
+	}
 
     /**
      * mark all relevant group symbols as being from the modelid

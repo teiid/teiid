@@ -380,4 +380,17 @@ public class TestWithClauseProcessing {
 	    TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList("ba", 1)});
 	}
 	
+	@Test public void testSubqueryWith() throws Exception {
+	    //full push down
+	    CommandContext cc = TestProcessor.createCommandContext();
+	    BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+		bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+		bsc.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
+		String sql = "with eee as (select * from pm1.g1) select * from pm1.g2 where pm1.g2.e1 in (select e1 from eee)";
+	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), cc);
+	    HardcodedDataManager hdm = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+	    hdm.addData("WITH eee (e1, e2, e3, e4) AS (SELECT g_0.e1, g_0.e2, g_0.e3, g_0.e4 FROM g1 AS g_0) SELECT g_0.e1, g_0.e2, g_0.e3, g_0.e4 FROM g2 AS g_0 WHERE g_0.e1 IN (SELECT g_1.e1 FROM eee AS g_1)", Arrays.asList("a", 1, 3.0, true));
+	    TestProcessor.helpProcess(plan, hdm, null);
+	}
+	
 }
