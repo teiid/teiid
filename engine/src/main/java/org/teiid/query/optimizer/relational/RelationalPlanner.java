@@ -63,6 +63,7 @@ import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.proc.ProcedurePlan;
 import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
+import org.teiid.query.processor.relational.PlanExecutionNode;
 import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.resolver.ProcedureContainerResolver;
@@ -277,6 +278,14 @@ public class RelationalPlanner {
     }
     
     private static void assignWithClause(RelationalNode node, Map<String, WithQueryCommand> pushdownWith, Set<GroupSymbol> groups) {
+    	if (node instanceof PlanExecutionNode) {
+    		//need to check for nested relational plans.  these are created by things such as the semi-join optimization in rulemergevirtual
+    		ProcessorPlan plan = ((PlanExecutionNode)node).getProcessorPlan();
+    		if (plan instanceof RelationalPlan) {
+    			//other types of plans will be contained under non-relational plans, which would be out of scope for the parent with
+    			node = ((RelationalPlan)plan).getRootNode();
+    		}
+    	}
         if(node instanceof AccessNode) {
             AccessNode accessNode = (AccessNode) node;
             Map<GroupSymbol, RelationalPlan> subplans = accessNode.getSubPlans();
