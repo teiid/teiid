@@ -244,6 +244,9 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 					record = metadataFactory.addProcedureParameter(columnName, runtimeType, Type.Out, procedure);
 					break;
 				case DatabaseMetaData.procedureColumnReturn:
+					if (columnName == null) {
+						columnName = "return"; //$NON-NLS-1$
+					}
 					record = metadataFactory.addProcedureParameter(columnName, runtimeType, Type.ReturnValue, procedure);
 					break;
 				default:
