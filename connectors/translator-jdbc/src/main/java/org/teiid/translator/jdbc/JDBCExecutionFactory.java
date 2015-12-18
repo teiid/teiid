@@ -1056,6 +1056,14 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
                     } 
     				return result;
     			}
+    			case DataTypeManager.DefaultTypeCodes.VARBINARY: {
+    				try {
+    					return results.getBytes(columnIndex);
+    				} catch (SQLException e) {
+    					// ignore
+    				}
+    				break;
+    			}
             }
         }
 
@@ -1153,6 +1161,14 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
                         return null;
                     } 
     				return result;
+    			}
+    			case DataTypeManager.DefaultTypeCodes.VARBINARY: {
+    				try {
+    					return results.getBytes(parameterIndex);
+    				} catch (SQLException e) {
+    					// ignore
+    				}
+    				break;
     			}
             }
         }
