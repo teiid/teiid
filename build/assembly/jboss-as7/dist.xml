@@ -286,11 +286,17 @@
                     <useTransitiveDependencies>true</useTransitiveDependencies>
                     <includes>
                          <include>io.swagger:swagger-jaxrs</include>
+                    </includes>
+                    <outputDirectory>${jbossas-module-root}/io/swagger/main</outputDirectory>
+                </dependencySet>
+		<dependencySet>
+                    <useTransitiveDependencies>true</useTransitiveDependencies>
+                    <includes>
                          <include>io.swagger:swagger-core</include>
                          <include>io.swagger:swagger-models</include>
                          <include>io.swagger:swagger-annotations</include>
                     </includes>
-                    <outputDirectory>${jbossas-module-root}/io/swagger/main</outputDirectory>
+                    <outputDirectory>${jbossas-module-root}/io/swagger/core/main</outputDirectory>
                 </dependencySet>
                 <dependencySet>
                     <includes>

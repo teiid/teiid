@@ -57,6 +57,10 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 	private String wsdl;
 	private String serviceName = WSManagedConnectionFactory.DEFAULT_LOCAL_NAME;
 	private URL wsdlUrl;
+	
+	//swagger json file or url
+	private String swaggerUrl;
+	
 	//shared properties
 	private String securityType = SecurityType.None.name(); // None, HTTPBasic, WS-Security
 	private String configFile; // path to the "jbossws-cxf.xml" file
@@ -228,7 +232,15 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 		this.wsdl = wsdl;
 	}
 
-	public List<? extends Interceptor> getOutInterceptors() {
+	public String getSwaggerUrl() {
+        return swaggerUrl;
+    }
+
+    public void setSwaggerUrl(String swaggerUrl) {
+        this.swaggerUrl = swaggerUrl;
+    }
+
+    public List<? extends Interceptor> getOutInterceptors() {
 		return this.outInterceptors;
 	}
 	

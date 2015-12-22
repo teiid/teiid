@@ -482,6 +482,11 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 	}
 
 	@Override
+    public String getSwagger() {
+        return this.mcf.getSwaggerUrl();
+    }
+
+    @Override
 	public QName getServiceQName() {
 		return this.mcf.getServiceQName();
 	}
