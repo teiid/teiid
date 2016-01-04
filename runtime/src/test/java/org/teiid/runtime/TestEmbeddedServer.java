@@ -1486,5 +1486,27 @@ public class TestEmbeddedServer {
 		rs.next();
 		fail();
 	}
+	
+	@Test public void testVirtualFunctions() throws Exception {
+		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		es.start(ec);
+		es.deployVDB(new ByteArrayInputStream(("<vdb name=\"ddlfunctions\" version=\"1\">"
+				+ "<model visible=\"true\" type=\"VIRTUAL\" name=\"FunctionModel\">"
+				+ "			<metadata type=\"DDL\"><![CDATA["
+				+ "	 	   CREATE VIRTUAL function f1(p1 integer) RETURNS integer as return p1;"
+				+ " 	   CREATE VIEW TestView (c1 integer) AS SELECT f1(42) AS c1;"
+				+ "	      ]]>"
+				+ "</metadata></model></vdb>").getBytes()));
+		Connection c = es.getDriver().connect("jdbc:teiid:ddlfunctions", null);
+		Statement s = c.createStatement();
+		s.execute("select f1(1)");
+		ResultSet rs = s.getResultSet();
+		rs.next();
+		assertEquals(1, rs.getInt(1));
+		s.execute("select * from testview");
+		rs = s.getResultSet();
+		rs.next();
+		assertEquals(42, rs.getInt(1));
+	}
 
 }
