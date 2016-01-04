@@ -635,6 +635,33 @@ public class TestEmbeddedServer {
 		assertEquals(1, ps.executeUpdate());
 	}
 	
+	@Test public void testGeneratedKeysVirtual() throws Exception {
+		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		MockTransactionManager tm = new MockTransactionManager();
+		ec.setTransactionManager(tm);
+		ec.setUseDisk(false);
+		es.start(ec);
+		
+		es.addTranslator("t", new ExecutionFactory<Void, Void>());
+		
+		ModelMetaData mmd1 = new ModelMetaData();
+		mmd1.setName("b");
+		mmd1.setModelType(Type.VIRTUAL);
+		mmd1.addSourceMetadata("ddl", "create view v (i integer, k integer auto_increment) OPTIONS (UPDATABLE true) as select 1, 2; " +
+				"create trigger on v instead of insert as for each row begin atomic " +
+				"\ncreate local temporary table x (y serial, z integer, primary key (y));"
+				+ "\ninsert into x (z) values (1);" +
+				"end; ");
+		
+		es.deployVDB("vdb", mmd1);
+		
+		Connection c = es.getDriver().connect("jdbc:teiid:vdb", null);
+		PreparedStatement ps = c.prepareStatement("insert into v (i) values (1)", Statement.RETURN_GENERATED_KEYS);
+		assertEquals(1, ps.executeUpdate());
+		ResultSet rs = ps.getGeneratedKeys();
+		assertFalse(rs.next());
+	}
+	
 	@Test public void testMultiSourceMetadata() throws Exception {
 		EmbeddedConfiguration ec = new EmbeddedConfiguration();
 		MockTransactionManager tm = new MockTransactionManager();

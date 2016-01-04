@@ -1542,5 +1542,13 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 			boolean useBindingsForDependentJoin) {
 		this.useBindingsForDependentJoin = useBindingsForDependentJoin;
 	}
+
+	/**
+	 * 
+	 * @return true if column names are required to retreive generated keys
+	 */
+	public boolean useColumnNamesForGeneratedKeys() {
+		return false;
+	}
 	
 }

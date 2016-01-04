@@ -299,7 +299,7 @@ public class TestODataIntegration extends BaseResourceTest {
 			@Override
 			public Map<String, Object> getGeneratedKeys() {
 				HashMap<String, Object> map = new HashMap<String, Object>();
-				map.put("id", 1234);
+				map.put("CustomerID", 1234);
 				return map;
 			}
 		};

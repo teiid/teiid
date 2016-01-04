@@ -1144,5 +1144,11 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		}
 		return false;
 	}
+
+	public void clearGeneratedKeys() {
+		synchronized (this.globalState) {
+			this.globalState.generatedKeys = null;
+		}
+	}
 	
 }
