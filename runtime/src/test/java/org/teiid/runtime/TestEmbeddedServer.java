@@ -635,6 +635,33 @@ public class TestEmbeddedServer {
 		assertEquals(1, ps.executeUpdate());
 	}
 	
+	@Test public void testGeneratedKeysVirtual() throws Exception {
+		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		MockTransactionManager tm = new MockTransactionManager();
+		ec.setTransactionManager(tm);
+		ec.setUseDisk(false);
+		es.start(ec);
+		
+		es.addTranslator("t", new ExecutionFactory<Void, Void>());
+		
+		ModelMetaData mmd1 = new ModelMetaData();
+		mmd1.setName("b");
+		mmd1.setModelType(Type.VIRTUAL);
+		mmd1.addSourceMetadata("ddl", "create view v (i integer, k integer auto_increment) OPTIONS (UPDATABLE true) as select 1, 2; " +
+				"create trigger on v instead of insert as for each row begin atomic " +
+				"\ncreate local temporary table x (y serial, z integer, primary key (y));"
+				+ "\ninsert into x (z) values (1);" +
+				"end; ");
+		
+		es.deployVDB("vdb", mmd1);
+		
+		Connection c = es.getDriver().connect("jdbc:teiid:vdb", null);
+		PreparedStatement ps = c.prepareStatement("insert into v (i) values (1)", Statement.RETURN_GENERATED_KEYS);
+		assertEquals(1, ps.executeUpdate());
+		ResultSet rs = ps.getGeneratedKeys();
+		assertFalse(rs.next());
+	}
+	
 	@Test public void testMultiSourceMetadata() throws Exception {
 		EmbeddedConfiguration ec = new EmbeddedConfiguration();
 		MockTransactionManager tm = new MockTransactionManager();
@@ -1485,6 +1512,28 @@ public class TestEmbeddedServer {
 		ResultSet rs = s.executeQuery("select count(*) from columns c, columns c1, columns c2, columns c3, columns c4");
 		rs.next();
 		fail();
+	}
+	
+	@Test public void testVirtualFunctions() throws Exception {
+		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		es.start(ec);
+		es.deployVDB(new ByteArrayInputStream(("<vdb name=\"ddlfunctions\" version=\"1\">"
+				+ "<model visible=\"true\" type=\"VIRTUAL\" name=\"FunctionModel\">"
+				+ "			<metadata type=\"DDL\"><![CDATA["
+				+ "	 	   CREATE VIRTUAL function f1(p1 integer) RETURNS integer as return p1;"
+				+ " 	   CREATE VIEW TestView (c1 integer) AS SELECT f1(42) AS c1;"
+				+ "	      ]]>"
+				+ "</metadata></model></vdb>").getBytes()));
+		Connection c = es.getDriver().connect("jdbc:teiid:ddlfunctions", null);
+		Statement s = c.createStatement();
+		s.execute("select f1(1)");
+		ResultSet rs = s.getResultSet();
+		rs.next();
+		assertEquals(1, rs.getInt(1));
+		s.execute("select * from testview");
+		rs = s.getResultSet();
+		rs.next();
+		assertEquals(42, rs.getInt(1));
 	}
 
 }

@@ -629,5 +629,48 @@ public class TestWithClauseProcessing {
 	    plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), cc);
 	    TestOptimizer.checkAtomicQueries(new String[] {"WITH x (e1) AS (SELECT g_0.e1 FROM pm1.g1 AS g_0) SELECT g_0.e1, SUM(MAX(g_0.e2)) OVER (PARTITION BY g_0.e1) FROM pm1.g1 AS g_0, x AS g_1 WHERE g_1.e1 = g_0.e1 GROUP BY g_0.e1"}, plan);
 	}
+	
+	@Test public void testSubqueryWith() throws Exception {
+	    //full push down
+	    CommandContext cc = TestProcessor.createCommandContext();
+	    BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+		bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+		bsc.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
+		String sql = "with eee as (select * from pm1.g1) select * from pm1.g2 where pm1.g2.e1 in (select e1 from eee)";
+	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), cc);
+	    HardcodedDataManager hdm = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+	    hdm.addData("WITH eee (e1, e2, e3, e4) AS (SELECT g_0.e1, NULL, NULL, NULL FROM g1 AS g_0) SELECT g_0.e1, g_0.e2, g_0.e3, g_0.e4 FROM g2 AS g_0 WHERE g_0.e1 IN (SELECT g_1.e1 FROM eee AS g_1)", Arrays.asList("a", 1, 3.0, true));
+	    TestProcessor.helpProcess(plan, hdm, null);
+	}
+	
+	@Test public void testSubqueryWithSemijoin() throws Exception {
+	    CommandContext cc = TestProcessor.createCommandContext();
+	    BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+		bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+		bsc.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
+		String sql = "with eee as (select * from pm2.g1) select * from pm1.g2 where pm1.g2.e1 in (select e1 from eee)";
+	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), cc);
+	    HardcodedDataManager hdm = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+	    //we need the with associated with the subquery
+	    hdm.addData("WITH eee (e1, e2, e3, e4) AS (SELECT g_0.e1, NULL, NULL, NULL FROM g1 AS g_0) SELECT g_0.e1 AS c_0 FROM eee AS g_0 ORDER BY c_0", Arrays.asList("a"), Arrays.asList("b"));
+	    hdm.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM g2 AS g_0 WHERE g_0.e1 IN ('a', 'b') ORDER BY c_0", Arrays.asList("a", 1, 2.0, true), Arrays.asList("b", 2, 3.0, false));
+	    TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("a", 1, 2.0, true), Arrays.asList("b", 2, 3.0, false)});
+	}
+	
+	@Test public void testSubqueryWithSemijoinMultiLevel() throws Exception {
+	    CommandContext cc = TestProcessor.createCommandContext();
+	    BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+		bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+		bsc.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
+		String sql = "with eee as (with aaa as (select e1 from pm3.g1) select e1 from pm2.g1 where e1 in (select e1 from aaa)) select * from pm1.g2 where pm1.g2.e1 in (select e1 from eee)";
+	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), cc);
+	    HardcodedDataManager hdm = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+	    //we need the with associated with the subquery
+	    hdm.addData("WITH aaa__1 (e1) AS (SELECT g_0.e1 FROM g1 AS g_0) SELECT g_0.e1 AS c_0 FROM aaa__1 AS g_0 ORDER BY c_0", Arrays.asList("a"));
+	    hdm.addData("SELECT g_0.e1 AS c_0 FROM g1 AS g_0 WHERE g_0.e1 = 'a' ORDER BY c_0", Arrays.asList("a"));
+	    hdm.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM g2 AS g_0 WHERE g_0.e1 = 'a' ORDER BY c_0", Arrays.asList("a", 1, 2.0, true));
+	    TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("a", 1, 2.0, true)});
+	}
+	
 }
 

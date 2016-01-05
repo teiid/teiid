@@ -129,7 +129,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 			case LOADED:
 				if (!firstPass
 						|| refresh 
-						|| ttl >= 0 && System.currentTimeMillis() - updateTime - ttl > 0) {
+						|| (ttl >= 0 && System.currentTimeMillis() - updateTime - ttl > 0)) {
 					if (firstPass) {
 						setState(MatState.NEEDS_LOADING, null);
 					} else {
@@ -138,7 +138,8 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 					}
 					return true;
 				}
-				return false;
+				//other nodes may still need to load
+				return !localAddress.equals(possibleLoadingAddress);
     		}
 			throw new AssertionError();
 		}
@@ -593,8 +594,10 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 			ois.close();
 		} catch (Exception e) {
 			MatTableInfo info = this.getMatTableInfo(stateId);
-			info.setState(MatState.FAILED_LOAD, null);	
-			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30222, e);
+			if (!info.isUpToDate()) {
+				info.setState(MatState.FAILED_LOAD, null);
+			}
+			throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30222, e);
 		}
 	}
 

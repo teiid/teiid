@@ -106,6 +106,7 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 	
 	private String columnNamePattern;
 	
+	private boolean importRowIdAsBinary;
 	
 	public void process(MetadataFactory metadataFactory, Connection conn) throws TranslatorException {
     	try {
@@ -244,6 +245,9 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 					record = metadataFactory.addProcedureParameter(columnName, runtimeType, Type.Out, procedure);
 					break;
 				case DatabaseMetaData.procedureColumnReturn:
+					if (columnName == null) {
+						columnName = "return"; //$NON-NLS-1$
+					}
 					record = metadataFactory.addProcedureParameter(columnName, runtimeType, Type.ReturnValue, procedure);
 					break;
 				default:
@@ -461,6 +465,9 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 	}
 
 	protected String getRuntimeType(int type, String typeName, int precision) {
+		if (importRowIdAsBinary && type == Types.ROWID) {
+			return TypeFacility.RUNTIME_NAMES.VARBINARY;
+		}
 		if (type == Types.BIT && precision > 1) {
 			type = Types.BINARY;
 		}
@@ -936,6 +943,15 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
     
     public void setQuoteString(String quoteString) {
 		this.quoteString = quoteString;
+	}
+    
+    @TranslatorProperty(display="Import RowId as binary", category=PropertyType.IMPORT, description="Import RowId values as varbinary rather than object.")
+    public boolean isImportRowIdAsBinary() {
+    	return this.importRowIdAsBinary;
+    }
+    
+    public void setImportRowIdAsBinary(boolean importRowIdAsBinary) {
+		this.importRowIdAsBinary = importRowIdAsBinary;
 	}
     
 }

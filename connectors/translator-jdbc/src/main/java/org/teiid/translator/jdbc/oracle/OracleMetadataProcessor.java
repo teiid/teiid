@@ -31,6 +31,7 @@ import java.sql.Types;
 import org.teiid.core.util.StringUtil;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
@@ -151,6 +152,20 @@ public final class OracleMetadataProcessor extends
     		}
     	}
     }
+	
+	@Override
+	protected String getFullyQualifiedName(String catalogName,
+			String schemaName, String objectName, boolean quoted) {
+		if (catalogName != null) {
+			//must be a package name
+			if (quoted) {
+				//name in source is required to be package.objectName
+				return quoteName(catalogName) + AbstractMetadataRecord.NAME_DELIM_CHAR + quoteName(objectName);
+			}
+			return super.getFullyQualifiedName(schemaName, catalogName, objectName, quoted);
+		}
+		return super.getFullyQualifiedName(catalogName, schemaName, objectName, quoted);
+	}
 	
 	@TranslatorProperty (display="Use Integral Types", category=PropertyType.IMPORT, description="Use integral types rather than decimal when the scale is 0.")
 	public boolean isUseIntegralTypes() {
