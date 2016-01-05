@@ -558,9 +558,9 @@ public class TempTableDataManager implements ProcessorDataManager {
 						boolean load = false;
 						if (!info.isUpToDate()) {
 							boolean invalidate = shouldInvalidate(context.getVdb());
-							load = globalStore.needsLoading(tableName, globalStore.getAddress(), true, false, invalidate);
+							load = globalStore.needsLoading(tableName, globalStore.getAddress(), true, false, info.isValid() && invalidate);
 							if (load) {
-								load = globalStore.needsLoading(tableName, globalStore.getAddress(), false, false, invalidate);
+								load = globalStore.needsLoading(tableName, globalStore.getAddress(), false, false, info.isValid() && invalidate);
 							}
 							if (!load) {
 								synchronized (info) {
