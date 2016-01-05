@@ -161,7 +161,7 @@ public class TestReplication {
 		
 		Thread.sleep(1000);
 		
-		server2 = createServer("infinispan-replicated-config-1.xml", "tcp-shared-1.xml");
+		server2 = createServer("infinispan-replicated-config-1.xml", "tcp-shared.xml");
 		
 		//add a replicator to kill transfers
 		final ObjectReplicator or = server2.getObjectReplicator();
