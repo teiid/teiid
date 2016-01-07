@@ -497,7 +497,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         			}
         		} else if (command.equalsIgnoreCase("rollback")) { //$NON-NLS-1$
         			commit = false;
-        			if (synch) {
+        			if (synch || !this.getConnection().isInLocalTxn()) {
         				this.getConnection().rollback(false);
         			}
         		}
