@@ -340,4 +340,43 @@ public class TestAsynch {
 		assertEquals(partIds.get(1), partIds.get(2));
 	}
 
+	@Test public void testTransactionCycle() throws Exception {
+		Statement stmt = this.internalConnection.createStatement();
+		TeiidStatement ts = stmt.unwrap(TeiidStatement.class);
+		final ResultsFuture<Void> result = new ResultsFuture<Void>(); 
+		ts.submitExecute("start transaction", new StatementCallback() {
+			@Override
+			public void onRow(Statement s, ResultSet rs) {
+			}
+			
+			@Override
+			public void onException(Statement s, Exception e) {
+				result.getResultsReceiver().exceptionOccurred(e);
+			}
+			
+			@Override
+			public void onComplete(Statement s) {
+				result.getResultsReceiver().receiveResults(null);
+			}
+		}, new RequestOptions());
+		result.get();
+		final ResultsFuture<Void> rollBackResult = new ResultsFuture<Void>(); 
+		ts.submitExecute("rollback", new StatementCallback() {
+			@Override
+			public void onRow(Statement s, ResultSet rs) {
+			}
+			
+			@Override
+			public void onException(Statement s, Exception e) {
+				rollBackResult.getResultsReceiver().exceptionOccurred(e);
+			}
+			
+			@Override
+			public void onComplete(Statement s) {
+				rollBackResult.getResultsReceiver().receiveResults(null);
+			}
+		}, new RequestOptions());
+		rollBackResult.get();
+	}
+	
 }
