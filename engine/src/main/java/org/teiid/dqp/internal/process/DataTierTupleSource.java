@@ -330,7 +330,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
     	cancelFutures();
 		cancelAsynch = true;
     	if (closing.compareAndSet(false, true)) {
-        	if (!done) {
+        	if (!done && !errored) {
         		this.cwi.cancel(false);
         	}
 	    	workItem.closeAtomicRequest(this.aqr.getAtomicRequestID());
