@@ -13,7 +13,7 @@ pg_index                                                           Clob[815]
 pg_namespace                                                       Clob[79]                                                         
 pg_proc                                                            Clob[3051]                                                       
 pg_trigger                                                         Clob[188]                                                        
-pg_type                                                            Clob[1355]                                                       
+pg_type                                                            Clob[1418]                                                       
 pg_user                                                            Clob[74]                                                         
 spatial_ref_sys                                                    Clob[209]                                                        
 Row Count : 16
