@@ -44,4 +44,20 @@ public class TestMetatdataFactory {
 		assertEquals("1", val);
 	}
 	
+	@Test public void testCreateFunction() throws NoSuchMethodException, SecurityException {
+		FunctionMethod fm = MetadataFactory.createFunctionFromMethod("x", TestMetatdataFactory.class.getMethod("someFunction"));
+		assertEquals(Boolean.class, fm.getOutputParameter().getJavaType());
+		
+		fm = MetadataFactory.createFunctionFromMethod("x", TestMetatdataFactory.class.getMethod("someArrayFunction"));
+		assertEquals(String[].class, fm.getOutputParameter().getJavaType());
+	}
+	
+	public static boolean someFunction() {
+		return true;
+	}
+	
+	public static String[] someArrayFunction() {
+		return null;
+	}
+	
 }

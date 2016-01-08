@@ -525,7 +525,11 @@ public class MetadataFactory implements Serializable {
 	}
 
 	public static FunctionMethod createFunctionFromMethod(String name, Method method) {
-		String returnType = DataTypeManager.getDataTypeName(method.getReturnType());
+		Class<?> returnTypeClass = method.getReturnType();
+		if (returnTypeClass.isPrimitive()) {
+			returnTypeClass = TypeFacility.convertPrimitiveToObject(returnTypeClass);
+		}
+		String returnType = DataTypeManager.getDataTypeName(returnTypeClass);
 		Class<?>[] params = method.getParameterTypes();
 		String[] paramTypes = new String[params.length];
 		boolean nullOnNull = false;
