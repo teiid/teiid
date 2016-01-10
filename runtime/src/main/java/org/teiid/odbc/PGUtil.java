@@ -25,8 +25,10 @@ import java.sql.Types;
 
 public class PGUtil {
 
+	public static final int PG_TYPE_UNSPECIFIED = 0;
+	
 	public static final int PG_TYPE_VARCHAR = 1043;
-
+	
 	public static final int PG_TYPE_BOOL = 16;
 	public static final int PG_TYPE_BYTEA = 17;
 	public static final int PG_TYPE_BPCHAR = 1042;
