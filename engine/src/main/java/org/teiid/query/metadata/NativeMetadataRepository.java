@@ -65,7 +65,16 @@ public class NativeMetadataRepository extends MetadataRepository {
 
     private void getMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory)
             throws TranslatorException {
-        Object connection = executionFactory.getConnection(connectionFactory, null);
+        Object connection = null;
+        try {
+            connection = executionFactory.getConnection(connectionFactory, null);
+        } catch (Throwable e) {
+            // if security pass through is enabled the connection creation may fail at the startup
+            if (executionFactory.isSourceRequiredForMetadata()) {
+                throw new TranslatorException(QueryPlugin.Event.TEIID30477, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30477));
+            }            
+        }
+        
 		Object unwrapped = null;
 		
 		if (connection instanceof WrappedConnection) {

@@ -234,6 +234,7 @@ public class ExecutionFactory<F, C> {
      * Flag that indicates if a underlying source connection required for this execution factory to return metadata 
      * @return true if required
      */
+	@TranslatorProperty(display="Source required for metadata", description="True, if source is required", advanced=true)
 	public boolean isSourceRequiredForMetadata() {
 		if (sourceRequiredForMetadata == null) {
 			//matches pre 8.1 behavior
