@@ -80,16 +80,20 @@ public class GeometryUtils {
 
     public static GeometryType geometryFromClob(ClobType wkt)
             throws FunctionExecutionException {
-        return geometryFromClob(wkt, GeometryType.UNKNOWN_SRID);
+        return geometryFromClob(wkt, GeometryType.UNKNOWN_SRID, false);
     }
 
-    public static GeometryType geometryFromClob(ClobType wkt, int srid) 
+    public static GeometryType geometryFromClob(ClobType wkt, int srid, boolean allowEwkt) 
             throws FunctionExecutionException {
     	Reader r = null;
         try {
             WKTReader reader = new WKTReader();
             r = wkt.getCharacterStream();
             Geometry jtsGeometry = reader.read(r);
+            if (!allowEwkt && (jtsGeometry.getSRID() != GeometryType.UNKNOWN_SRID || (jtsGeometry.getCoordinate() != null && !Double.isNaN(jtsGeometry.getCoordinate().z)))) {
+            	//don't allow ewkt that requires a specific function
+            	throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31160, "EWKT")); //$NON-NLS-1$
+            }
             return getGeometryType(jtsGeometry, srid);
         } catch (ParseException e) {
             throw new FunctionExecutionException(e);
@@ -325,9 +329,9 @@ public class GeometryUtils {
         try {
             WKBReader reader = new WKBReader();
             Geometry jtsGeom = reader.read(new InputStreamInStream(is1));
-            if (!allowEwkb && (jtsGeom.getSRID() != GeometryType.UNKNOWN_SRID || jtsGeom.getDimension() > 2)) {
+            if (!allowEwkb && (jtsGeom.getSRID() != GeometryType.UNKNOWN_SRID || (jtsGeom.getCoordinate() != null && !Double.isNaN(jtsGeom.getCoordinate().z)))) {
             	//don't allow ewkb - that needs an explicit function
-            	throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31160));
+            	throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31160, "EWKB")); //$NON-NLS-1$
             }
             if (srid != null) { 
             	jtsGeom.setSRID(srid);
