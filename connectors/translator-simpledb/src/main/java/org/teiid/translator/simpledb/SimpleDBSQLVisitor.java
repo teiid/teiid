@@ -22,10 +22,7 @@
 
 package org.teiid.translator.simpledb;
 
-import static org.teiid.language.SQLConstants.Reserved.FROM;
-import static org.teiid.language.SQLConstants.Reserved.NULL;
-import static org.teiid.language.SQLConstants.Reserved.SELECT;
-import static org.teiid.language.SQLConstants.Reserved.WHERE;
+import static org.teiid.language.SQLConstants.Reserved.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -41,7 +38,7 @@ import org.teiid.translator.TranslatorException;
 
 public class SimpleDBSQLVisitor extends SQLStringVisitor {
     
-    private List<Column> projectedColumns = new ArrayList<Column>();
+    private List<String> projectedColumns = new ArrayList<String>();
     private ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
     private Column previousColumn;
     private boolean skipCompare;
@@ -56,28 +53,46 @@ public class SimpleDBSQLVisitor extends SQLStringVisitor {
     public void visit(Select obj) {
         buffer.append(SELECT).append(Tokens.SPACE);
         
-        if (obj.getDerivedColumns().size() > 1) {
-            List<DerivedColumn> allowedColumns = new ArrayList<DerivedColumn>();
-            for(int i = 0; i < obj.getDerivedColumns().size(); i++) {
-                DerivedColumn dc = obj.getDerivedColumns().get(i);
-                if (dc.getExpression() instanceof ColumnReference) {
-                    ColumnReference column = (ColumnReference)dc.getExpression();
-                    if (SimpleDBMetadataProcessor.isItemName(column.getMetadataObject())) {
-                        this.projectedColumns.add(column.getMetadataObject());
-                    }
-                    else {
-                        allowedColumns.add(dc);
-                    }
+        List<DerivedColumn> allowedColumns = new ArrayList<DerivedColumn>();
+        
+        boolean otherCols = false;
+        for(int i = 0; i < obj.getDerivedColumns().size(); i++) {
+            DerivedColumn dc = obj.getDerivedColumns().get(i);
+            if (!(dc.getExpression() instanceof ColumnReference)) {
+            	otherCols = true;
+            	break;
+            }
+            ColumnReference column = (ColumnReference)dc.getExpression();
+            if (!SimpleDBMetadataProcessor.isItemName(column.getMetadataObject())) {
+            	otherCols = true;
+            	break;
+            }
+        }
+        
+        boolean addedItemName = false;
+        for(int i = 0; i < obj.getDerivedColumns().size(); i++) {
+            DerivedColumn dc = obj.getDerivedColumns().get(i);
+            if (dc.getExpression() instanceof ColumnReference) {
+                ColumnReference column = (ColumnReference)dc.getExpression();
+                if (SimpleDBMetadataProcessor.isItemName(column.getMetadataObject())) {
+                	if (!addedItemName && !otherCols) {
+	                	allowedColumns.add(dc);
+	                	addedItemName = true;
+                	}
                 }
                 else {
-                    this.exceptions.add(new TranslatorException(SimpleDBPlugin.Event.TEIID24004, SimpleDBPlugin.Util.gs(SimpleDBPlugin.Event.TEIID24004, dc)));
+                    allowedColumns.add(dc);
                 }
+                projectedColumns.add(SimpleDBMetadataProcessor.getName(column.getMetadataObject()));
+            } else if (dc.getExpression() instanceof AggregateFunction) {
+            	allowedColumns.add(dc);
+            	projectedColumns.add("Count"); //$NON-NLS-1$
             }
-            append(allowedColumns);
+            else {
+                this.exceptions.add(new TranslatorException(SimpleDBPlugin.Event.TEIID24004, SimpleDBPlugin.Util.gs(SimpleDBPlugin.Event.TEIID24004, dc)));
+            }
         }
-        else {
-            append(obj.getDerivedColumns());
-        }
+        append(allowedColumns);
 
         if (obj.getFrom() != null && !obj.getFrom().isEmpty()) {
             buffer.append(Tokens.SPACE).append(FROM).append(Tokens.SPACE);      
@@ -161,18 +176,6 @@ public class SimpleDBSQLVisitor extends SQLStringVisitor {
     }
         
     @Override
-    public void visit(DerivedColumn obj) {
-        super.visit(obj);
-        if (obj.getExpression() instanceof ColumnReference) {
-            ColumnReference ref = (ColumnReference)obj.getExpression();
-            this.projectedColumns.add(ref.getMetadataObject());
-        }
-        else {
-            
-        }
-    }
-    
-    @Override
     public void visit(Function obj) {
         String name = obj.getName();
         List<Expression> args = obj.getParameters();
@@ -200,7 +203,7 @@ public class SimpleDBSQLVisitor extends SQLStringVisitor {
         this.previousColumn = obj.getMetadataObject();
     }    
     
-    public List<Column> getProjectedColumns() {
+    public List<String> getProjectedColumns() {
         return this.projectedColumns;
     }
 

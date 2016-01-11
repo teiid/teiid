@@ -41,6 +41,7 @@ import org.teiid.dqp.message.RequestID;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.CacheDirective;
+import org.teiid.translator.CacheDirective.Scope;
 import org.teiid.translator.ExecutionContext;
 
 
@@ -68,6 +69,7 @@ public class ExecutionContextImpl implements ExecutionContext {
 	private CacheDirective cacheDirective;
 	private RuntimeMetadata runtimeMetadata;
 	private ConnectorWorkItem workItem;
+	private Scope scope;
 	
 	public ExecutionContextImpl(String vdbName, int vdbVersion,  Serializable executionPayload, 
             String originalConnectionID, String connectorName, long requestId, String partId, String execCount) {
@@ -305,6 +307,16 @@ public class ExecutionContextImpl implements ExecutionContext {
 		if (this.workItem != null) {
 			this.workItem.logCommand(command);
 		}
+	}
+
+	@Override
+	public Scope getScope() {
+		return scope;
+	}
+	
+	@Override
+	public void setScope(Scope scope) {
+		this.scope = scope;
 	}
 
 }

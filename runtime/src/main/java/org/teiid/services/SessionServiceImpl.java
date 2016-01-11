@@ -156,8 +156,14 @@ public class SessionServiceImpl implements SessionService {
         
         Object securityContext = null;
         Subject subject = null;
-        
-        AuditMessage.LogonInfo info = new AuditMessage.LogonInfo(vdbName, vdbVersion, authType.toString(), userName, applicationName);
+
+        String hostName = properties.getProperty(TeiidURL.CONNECTION.CLIENT_HOSTNAME);
+        String ipAddress = properties.getProperty(TeiidURL.CONNECTION.CLIENT_IP_ADDRESS);
+        String clientMac = properties.getProperty(TeiidURL.CONNECTION.CLIENT_MAC);
+        boolean onlyAllowPassthrough = Boolean.valueOf(properties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION,
+                "false")); //$NON-NLS-1$
+
+        AuditMessage.LogonInfo info = new AuditMessage.LogonInfo(vdbName, vdbVersion, authType.toString(), userName, applicationName, hostName, ipAddress, clientMac, onlyAllowPassthrough);
         
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_AUDITLOGGING, MessageLevel.DETAIL)) {
         	LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, new AuditMessage("session", "logon-request", info, null)); //$NON-NLS-1$ //$NON-NLS-2$
@@ -181,8 +187,6 @@ public class SessionServiceImpl implements SessionService {
 		        // if not authenticated, this method throws exception
 	            LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"authenticateUser", userName, applicationName}); //$NON-NLS-1$
 	
-	            boolean onlyAllowPassthrough = Boolean.valueOf(properties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION,
-	                    "false")); //$NON-NLS-1$
 	        	String baseUserName = getBaseUsername(userName);
 	    		if (onlyAllowPassthrough || authType.equals(AuthenticationType.GSS)) {
 	        		subject = this.securityHelper.getSubjectInContext(securityDomain);
@@ -213,9 +217,9 @@ public class SessionServiceImpl implements SessionService {
 	        newSession.setUserName(userName);
 	        newSession.setCreatedTime(creationTime);
 	        newSession.setApplicationName(applicationName);
-	        newSession.setClientHostName(properties.getProperty(TeiidURL.CONNECTION.CLIENT_HOSTNAME));
-	        newSession.setIPAddress(properties.getProperty(TeiidURL.CONNECTION.CLIENT_IP_ADDRESS));
-	        newSession.setClientHardwareAddress(properties.getProperty(TeiidURL.CONNECTION.CLIENT_MAC));
+	        newSession.setClientHostName(hostName);
+			newSession.setIPAddress(ipAddress);
+			newSession.setClientHardwareAddress(clientMac);
 	        newSession.setSecurityDomain(securityDomain);
 	        if (vdb != null) {
 		        newSession.setVDBName(vdb.getName());

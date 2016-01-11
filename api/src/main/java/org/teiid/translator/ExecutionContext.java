@@ -32,6 +32,7 @@ import org.teiid.CommandContext;
 import org.teiid.adminapi.Session;
 import org.teiid.jdbc.TeiidSQLWarning;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.translator.CacheDirective.Scope;
 
 
 
@@ -233,4 +234,20 @@ public interface ExecutionContext {
      * @param command
      */
     void logCommand(Object... command);
+
+    /**
+     * Get the result cache scope for the current execution 
+     * @return
+     */
+	Scope getScope();
+
+	/**
+	 * Set the result cache scope for the current execution.
+	 * <br>
+	 * Setting to {@link Scope#NONE} will typically result in the user query result being
+	 * cached at the {@link Scope#SESSION} level.
+	 * 
+	 * @param scope
+	 */
+	void setScope(Scope scope);
 }

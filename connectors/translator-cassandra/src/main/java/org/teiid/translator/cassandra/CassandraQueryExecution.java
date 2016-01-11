@@ -80,6 +80,7 @@ public class CassandraQueryExecution implements ResultSetExecution {
 
 	protected void execute(String cql) {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Source-Query:", cql); //$NON-NLS-1$
+		this.executionContext.logCommand(cql);
 		resultSetFuture = connection.executeQuery(cql);
 		resultSetFuture.addListener(new Runnable() {
 			
@@ -87,7 +88,7 @@ public class CassandraQueryExecution implements ResultSetExecution {
 			public void run() {
 				executionContext.dataAvailable();
 			}
-		}, MoreExecutors.sameThreadExecutor());
+		}, MoreExecutors.directExecutor());
 	}
 
 	@Override

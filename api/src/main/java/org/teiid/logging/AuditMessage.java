@@ -42,15 +42,23 @@ public class AuditMessage {
 		private final String authType;
 		private final String userName;
 		private final String applicationName;
+		private final String clientHostName;
+		private final String clientIpAddress;
+		private final String clientMac;
+		private final boolean passThrough;
 
 		public LogonInfo(String vdbName, String vdbVersion,
 				String authType, String userName,
-				String applicationName) {
+				String applicationName, String hostName, String ipAddress, String clientMac, boolean onlyAllowPassthrough) {
 			this.vdbName = vdbName;
 			this.vdbVersion = vdbVersion;
 			this.authType = authType;
 			this.userName = userName;
 			this.applicationName = applicationName;
+			this.clientHostName = hostName;
+			this.clientIpAddress = ipAddress;
+			this.clientMac = clientMac;
+			this.passThrough = onlyAllowPassthrough;
 		}
 		
 		public String getVdbName() {
@@ -73,6 +81,22 @@ public class AuditMessage {
 			return applicationName;
 		}
 		
+		public String getClientHostName() {
+			return clientHostName;
+		}
+		
+		public String getClientIpAddress() {
+			return clientIpAddress;
+		}
+		
+		public String getClientMac() {
+			return clientMac;
+		}
+		
+		public boolean isPassThrough() {
+			return passThrough;
+		}
+		
 		@Override
 		public String toString() {
 			StringBuffer msg = new StringBuffer();
@@ -83,6 +107,14 @@ public class AuditMessage {
 	        msg.append( userName );
 	        msg.append(' ');
 	        msg.append(authType);
+	        msg.append(' ');
+	        msg.append(clientHostName);
+	        msg.append(' ');
+	        msg.append(clientIpAddress);
+	        msg.append(' ');
+	        msg.append(clientMac);
+	        msg.append(' ');
+	        msg.append(passThrough);
 	        return msg.toString();
 		}
 		

@@ -110,10 +110,13 @@ final class CachingTupleSource extends
 			switch (scope) {
 			case VDB:
 				determinismLevel = Determinism.VDB_DETERMINISTIC;
+				break;
 			case SESSION:
 				determinismLevel = Determinism.SESSION_DETERMINISTIC;
+				break;
 			case USER:
 				determinismLevel = Determinism.USER_DETERMINISTIC;
+				break;
 			}
 		}
 		return determinismLevel;
