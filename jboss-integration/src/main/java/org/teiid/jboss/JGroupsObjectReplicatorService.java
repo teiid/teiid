@@ -23,7 +23,6 @@ package org.teiid.jboss;
 
 import java.util.concurrent.Executor;
 
-import org.jboss.as.clustering.jgroups.ChannelFactory;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
@@ -31,6 +30,7 @@ import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 import org.jgroups.Channel;
 import org.teiid.replication.jgroups.JGroupsObjectReplicator;
+import org.wildfly.clustering.jgroups.ChannelFactory;
 
 class JGroupsObjectReplicatorService implements Service<JGroupsObjectReplicator> {
 
@@ -44,7 +44,9 @@ class JGroupsObjectReplicatorService implements Service<JGroupsObjectReplicator>
 		this.replicator = new JGroupsObjectReplicator(new org.teiid.replication.jgroups.ChannelFactory() {
 			@Override
 			public Channel createChannel(String id) throws Exception {
-				return channelFactoryInjector.getValue().createChannel(id);
+				 Channel c = channelFactoryInjector.getValue().createChannel(id);
+				 c.connect(id);
+				 return c;
 			}
 		}, executorInjector.getValue());
 	}

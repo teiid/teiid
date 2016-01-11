@@ -52,7 +52,12 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
         }
         
         ALLOW_ENV_FUNCTION_ELEMENT.marshallAsElement(node, false, writer);
-        ASYNC_THREAD_POOL_ELEMENT.marshallAsElement(node, false, writer);
+        
+        if (like(node, Element.ASYNC_THREAD_POOL_ELEMENT)){
+            writer.writeStartElement(Element.ASYNC_THREAD_POOL_ELEMENT.getLocalName());
+            writeThreadConfiguration(writer, node);
+            writer.writeEndElement();
+        }
         
     	if (like(node, Element.BUFFER_SERVICE_ELEMENT)){
     		writer.writeStartElement(Element.BUFFER_SERVICE_ELEMENT.getLocalName());
@@ -130,6 +135,11 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 	    	}        
     	}
         writer.writeEndElement(); // End of subsystem element
+    }
+    
+    private void writeThreadConfiguration(XMLExtendedStreamWriter writer,
+            ModelNode node) throws XMLStreamException {
+        THREAD_COUNT_ATTRIBUTE.marshallAsAttribute(node, false, writer);
     }
     
     private void writeObjectReplicatorConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
@@ -248,12 +258,13 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
         // elements
         while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
             switch (Namespace.forUri(reader.getNamespaceURI())) {
-                case TEIID_1_0: {
+                case TEIID_1_1: {
                     Element element = Element.forName(reader.getLocalName());
                     switch (element) {
     				case ALLOW_ENV_FUNCTION_ELEMENT:
     				case EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT:
-    				case DETECTING_CHANGE_EVENTS_ELEMENT:    					
+    				case DETECTING_CHANGE_EVENTS_ELEMENT:
+    				case DATA_ROLES_REQUIRED_ELEMENT:
     					bootServices.get(reader.getLocalName()).set(Boolean.parseBoolean(reader.getElementText()));
     					break;
 
@@ -279,7 +290,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     					break;
 
     				case ASYNC_THREAD_POOL_ELEMENT:
-    					bootServices.get(reader.getLocalName()).set(reader.getElementText());
+    				    parseAsyncThreadConfiguration(reader, bootServices);
     					break;
     					
   					// complex types
@@ -350,6 +361,26 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
         }  
     }
     
+    private ModelNode parseAsyncThreadConfiguration(XMLExtendedStreamReader reader,
+            ModelNode node) throws XMLStreamException {
+        if (reader.getAttributeCount() > 0) {
+            for(int i=0; i<reader.getAttributeCount(); i++) {
+                String attrName = reader.getAttributeLocalName(i);
+                String attrValue = reader.getAttributeValue(i);
+                Element element = Element.forName(attrName, Element.ASYNC_THREAD_POOL_ELEMENT);
+                switch(element) {
+                case THREAD_COUNT_ATTRIBUTE:
+                    node.get(element.getModelName()).set(attrValue);
+                    break;
+                default: 
+                    throw ParseUtils.unexpectedAttribute(reader, i);
+                }               
+            }
+        }
+        while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT));
+        return node;        
+    }
+
     private ModelNode parseObjectReplicator(XMLExtendedStreamReader reader, ModelNode node) throws XMLStreamException {
     	if (reader.getAttributeCount() > 0) {
     		for(int i=0; i<reader.getAttributeCount(); i++) {

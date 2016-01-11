@@ -23,6 +23,7 @@
 package org.teiid.query.processor;
 
 import static org.junit.Assert.*;
+import static org.teiid.query.resolver.TestFunctionResolving.*;
 
 import java.io.ByteArrayOutputStream;
 import java.sql.Blob;
@@ -47,7 +48,6 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.io.OutputStreamOutStream;
 import com.vividsolutions.jts.io.WKBWriter;
 import com.vividsolutions.jts.io.WKTReader;
-import static org.teiid.query.resolver.TestFunctionResolving.assertEval;
 
 @SuppressWarnings("nls")
 public class TestGeometry {
@@ -98,11 +98,11 @@ public class TestGeometry {
     @Test public void testAsGeoJson() throws Exception {        
         assertEval(
                 "ST_AsGeoJson(ST_GeomFromText('POINT (-48.23456 20.12345)'))",
-                "{\"coordinates\":[-48.23456,20.12345],\"type\":\"Point\"}"
+                "{\"type\":\"Point\",\"coordinates\":[-48.23456,20.12345]}"
         );
         assertEval(
                 "ST_AsGeoJson(ST_GeomFromText('POLYGON ((40 0, 50 50, 0 50, 0 0, 40 0))'))",
-                "{\"coordinates\":[[[40.0,0.0],[50.0,50.0],[0.0,50.0],[0.0,0.0],[40.0,0.0]]],\"type\":\"Polygon\"}"
+                "{\"type\":\"Polygon\",\"coordinates\":[[[40.0,0.0],[50.0,50.0],[0.0,50.0],[0.0,0.0],[40.0,0.0]]]}"
         );
     }
         
@@ -237,5 +237,11 @@ public class TestGeometry {
                 "+proj=longlat +datum=WGS84 +no_defs" // EPSG:4326
         );
         assertEquals("POINT (8.07013599546795 44.76924401481436)", g1.toText());
+    }
+    
+    @Test public void testGeoJsonCollection() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("ST_AsGeoJson(ST_GeomFromText('GEOMETRYCOLLECTION(POINT(4 6),LINESTRING(4 6,7 10))'))");
+		ClobType c = (ClobType) Evaluator.evaluate(ex);
+		assertEquals("{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"Point\",\"coordinates\":[4.0,6.0]},{\"type\":\"LineString\",\"coordinates\":[[4.0,6.0],[7.0,10.0]]}]}", ClobType.getString(c));
     }
 }

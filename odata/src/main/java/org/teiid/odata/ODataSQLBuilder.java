@@ -59,24 +59,7 @@ import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.odata.DocumentNode.ProjectedColumn;
-import org.teiid.query.sql.lang.CompareCriteria;
-import org.teiid.query.sql.lang.CompoundCriteria;
-import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.Delete;
-import org.teiid.query.sql.lang.ExpressionCriteria;
-import org.teiid.query.sql.lang.From;
-import org.teiid.query.sql.lang.FromClause;
-import org.teiid.query.sql.lang.Insert;
-import org.teiid.query.sql.lang.JoinPredicate;
-import org.teiid.query.sql.lang.JoinType;
-import org.teiid.query.sql.lang.OrderBy;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.SPParameter;
-import org.teiid.query.sql.lang.Select;
-import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.sql.lang.SubqueryFromClause;
-import org.teiid.query.sql.lang.UnaryFromClause;
-import org.teiid.query.sql.lang.Update;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -663,17 +646,9 @@ public class ODataSQLBuilder extends ODataExpressionVisitor {
 			} catch (Exception e) {
 				Object value = generatedKeys.get(c.getName());
 				if (value == null) {
-					// I observed with mysql did not return the label for column, 
-					// this may be workaround in single key case in compound case 
-					// we got to error.
-					if (pk.getColumns().size() == 1 && generatedKeys.size() == 1) {
-						value = generatedKeys.values().iterator().next();
-					}					
-					if (value == null) {
-                        throw new NotFoundException(ODataPlugin.Util.gs(
-                                ODataPlugin.Event.TEIID16016,
-                                entity.getEntitySetName()));
-					}
+                    throw new NotFoundException(ODataPlugin.Util.gs(
+                            ODataPlugin.Event.TEIID16016,
+                            entity.getEntitySetName()));
 				}
 				prop = OProperties.simple(c.getName(),value);
 			}

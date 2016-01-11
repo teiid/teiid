@@ -46,32 +46,11 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>attach</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>attach-artifact</goal>
-                        </goals>
-                        <configuration>
-                            <artifacts>
-                                <artifact>                                    
-                                    <file>${project.build.directory}/${project.artifactId}-${project.version}-odata4.war</file>
-                                    <type>war</type>
-                                </artifact>
-                            </artifacts>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
                     <descriptors>
                         <!-- Assembly plugin does not allow multiple DependencySets see MASSEMBLY-577 thus needed to do here-->
-                        <descriptor>dependencies.xml</descriptor>
+                        <descriptor>kits/wildfly-dist.xml</descriptor>
                     </descriptors>
                 </configuration>
                 <executions>
@@ -92,31 +71,26 @@
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-common-core</artifactId>
-            <scope>provided</scope>
         </dependency>
         
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-engine</artifactId>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-api</artifactId>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-client</artifactId>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-admin</artifactId>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -152,34 +126,35 @@
 		<dependency>
 		    <groupId>com.fasterxml.jackson.core</groupId>
 		    <artifactId>jackson-databind</artifactId>
-		</dependency> 
+		</dependency>
         
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-runtime</artifactId>
+        </dependency>
+        		         
         <!--  runtime dependencies -->
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
-            <scope>provided</scope>
         </dependency>        
         <dependency>
             <groupId>org.antlr</groupId>
             <artifactId>antlr4-runtime</artifactId>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.jboss.spec.javax.servlet</groupId>
-            <artifactId>jboss-servlet-api_3.0_spec</artifactId>
-            <scope>provided</scope>
+            <artifactId>jboss-servlet-api_3.1_spec</artifactId>
         </dependency>
         <dependency>
             <groupId>com.fasterxml</groupId>
             <artifactId>aalto-xml</artifactId>
-            <scope>runtime</scope>
-        </dependency>
+        </dependency>         
+        
         <!-- Test dependencies -->
         <dependency>
             <groupId>org.jboss.teiid</groupId>
@@ -231,17 +206,21 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-        
+        <dependency>
+          <groupId>org.jboss.spec.javax.transaction</groupId>
+          <artifactId>jboss-transaction-api_1.2_spec</artifactId>
+          <scope>test</scope>
+        </dependency>        
+        <dependency>
+            <groupId>org.jboss.spec.javax.resource</groupId>
+            <artifactId>jboss-connector-api_1.7_spec</artifactId>
+            <scope>test</scope>
+        </dependency>        
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-runtime</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-runtime</artifactId>
-            <scope>provided</scope>
         </dependency>
     </dependencies>
 

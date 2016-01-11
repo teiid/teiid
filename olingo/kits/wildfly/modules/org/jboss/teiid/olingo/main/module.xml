@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.0" name="org.jboss.teiid.olingo">
+    <properties>
+        <property name="jboss.api" value="UNSUPPORTED"/>
+    </properties>
+    
+    <resources>
+        <resource-root path="teiid-olingo-${project.version}.jar" />
+    </resources>
+
+    <dependencies>
+        <module name="javax.servlet.api"/>
+        <module name="org.apache.olingo.common"/>    
+        <module name="org.apache.olingo.server"/>
+        <module name="org.jboss.teiid.common-core" />
+        <module name="org.jboss.teiid.client" />
+        <module name="org.jboss.teiid.admin"/>
+        <module name="org.jboss.teiid.api"/>
+        <module name="org.jboss.teiid"/>
+    </dependencies>
+
+</module>

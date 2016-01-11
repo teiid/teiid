@@ -59,6 +59,7 @@ import org.teiid.metadata.Schema;
 import org.teiid.metadata.VDBResource;
 import org.teiid.metadata.index.VDBMetadataFactory;
 import org.teiid.metadata.index.VDBMetadataFactory.IndexVDB;
+import org.teiid.query.ObjectReplicator;
 import org.teiid.query.metadata.VDBResources.Resource;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
@@ -265,6 +266,14 @@ public class FakeServer extends EmbeddedServer {
 
 	public SessionServiceImpl getSessionService() {
 		return this.sessionService;
+	}
+	
+	public void setObjectReplicator(ObjectReplicator replicator) {
+		this.replicator = replicator;
+	}
+	
+	public ObjectReplicator getObjectReplicator() {
+		return this.replicator;
 	}
 	
 }

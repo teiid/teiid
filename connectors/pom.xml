@@ -63,19 +63,6 @@
       <scope>test</scope>
     </dependency>        
 
-    <!-- External dependencies
-    <dependency>
-        <groupId>org.jboss</groupId>
-        <artifactId>jboss-vfs</artifactId>
-        <scope>test</scope>
-    </dependency>    
-    <dependency>
-        <groupId>org.jboss.man</groupId>
-        <artifactId>jboss-managed</artifactId>
-        <scope>test</scope>
-    </dependency>     
-     -->
-     
     <dependency>
         <groupId>org.jboss</groupId>
         <artifactId>jboss-vfs</artifactId>
@@ -116,7 +103,6 @@
     <module>translator-odata4</module>
     <module>translator-infinispan-cache</module>
     <module>translator-infinispan-dsl</module>
-
     <module>connector-file</module>
     <module>connector-google</module>
     <module>connector-salesforce</module>
@@ -125,14 +111,13 @@
     <module>connector-ws</module>
     <module>connector-mongodb</module>
     <module>connector-cassandra</module>
-    <module>connector-infinispan.6</module>
     <module>connector-simpledb</module>
     <module>connector-accumulo</module>
     <module>connector-solr</module>
     <module>connector-infinispan-dsl</module>
+    <module>connector-infinispan.6</module>
     <module>translator-prestodb</module>
     <module>sandbox</module>
-
     <module>translator-hbase</module>
   </modules>
 </project>

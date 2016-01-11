@@ -73,13 +73,12 @@ import org.teiid.vdb.runtime.VDBKey;
 class VDBDeployer implements DeploymentUnitProcessor {
 	private static final String JAVA_CONTEXT = "java:/"; //$NON-NLS-1$			
 	private TranslatorRepository translatorRepository;
-	private String asyncThreadPoolName;
 	private VDBRepository vdbRepository;
 	JBossLifeCycleListener shutdownListener;
 	
-	public VDBDeployer (TranslatorRepository translatorRepo, String poolName, VDBRepository vdbRepo, JBossLifeCycleListener shutdownListener) {
+    public VDBDeployer(TranslatorRepository translatorRepo,            
+            VDBRepository vdbRepo, JBossLifeCycleListener shutdownListener) {
 		this.translatorRepository = translatorRepo;
-		this.asyncThreadPoolName = poolName;
 		this.vdbRepository = vdbRepo;
 		this.shutdownListener = shutdownListener;
 	}
@@ -186,7 +185,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		ServiceName vdbSwitchServiceName = TeiidServiceNames.vdbSwitchServiceName(deployment.getName(), deployment.getVersion());
 		vdbService.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class,  vdb.vdbRepositoryInjector);
 		vdbService.addDependency(TeiidServiceNames.TRANSLATOR_REPO, TranslatorRepository.class,  vdb.translatorRepositoryInjector);
-		vdbService.addDependency(TeiidServiceNames.executorServiceName(this.asyncThreadPoolName), Executor.class,  vdb.executorInjector);
+		vdbService.addDependency(TeiidServiceNames.THREAD_POOL_SERVICE, Executor.class,  vdb.executorInjector);
 		vdbService.addDependency(TeiidServiceNames.OBJECT_SERIALIZER, ObjectSerializer.class, vdb.serializerInjector);
 		vdbService.addDependency(TeiidServiceNames.BUFFER_MGR, BufferManager.class, vdb.bufferManagerInjector);
 		vdbService.addDependency(TeiidServiceNames.VDB_STATUS_CHECKER, VDBStatusChecker.class, vdb.vdbStatusCheckInjector);

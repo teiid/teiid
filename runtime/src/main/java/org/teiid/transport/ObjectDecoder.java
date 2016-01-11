@@ -22,20 +22,18 @@
  */
 package org.teiid.transport;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import io.netty.handler.codec.serialization.CompatibleObjectEncoder;
+
 import java.io.BufferedOutputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.StreamCorruptedException;
 import java.util.List;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBufferInputStream;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.handler.codec.frame.LengthFieldBasedFrameDecoder;
-import org.jboss.netty.handler.codec.serialization.CompatibleObjectDecoder;
-import org.jboss.netty.handler.codec.serialization.CompatibleObjectEncoder;
-import org.jboss.netty.handler.codec.serialization.ObjectEncoder;
 import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.FileStoreInputStreamFactory;
 import org.teiid.common.buffer.StorageManager;
@@ -107,15 +105,14 @@ public class ObjectDecoder extends LengthFieldBasedFrameDecoder {
     }
 
     @Override
-    protected Object decode(
-            ChannelHandlerContext ctx, Channel channel, ChannelBuffer buffer) throws Exception {
+    protected Object decode(ChannelHandlerContext ctx, ByteBuf buffer) throws Exception {
     	if (result == null) {
-    		ChannelBuffer frame = (ChannelBuffer) super.decode(ctx, channel, buffer);
+    	    ByteBuf frame = (ByteBuf) super.decode(ctx, buffer);
             if (frame == null) {
                 return null;
             }
 	        CompactObjectInputStream cois = new CompactObjectInputStream(
-	                new ChannelBufferInputStream(frame), classLoader);
+	                new ByteBufInputStream(frame), classLoader);
 	        result = cois.readObject();
 	        streams = ExternalizeUtil.readList(cois, StreamFactoryReference.class);
 	        streamIndex = 0;
@@ -148,21 +145,20 @@ public class ObjectDecoder extends LengthFieldBasedFrameDecoder {
 		                    "lob too big: " + (store.getLength() + streamDataToRead) + " (max: " + maxLobSize + ')'); //$NON-NLS-1$ //$NON-NLS-2$
 	        	}
 	        }
+	        int toRead = Math.min(buffer.readableBytes(), streamDataToRead);
+        	if (toRead == 0) {
+        		return null;
+        	}
 	        if (error == null) {
-	        	int toRead = Math.min(buffer.readableBytes(), streamDataToRead);
-	        	if (toRead == 0) {
-	        		return null;
-	        	}
 	        	buffer.readBytes(this.stream, toRead);
-	        	streamDataToRead -= toRead;
-	        	if (streamDataToRead == 0) {
-	        		//get the next chunk
-	        		streamDataToRead = -1;
-	        	}
 	        } else {
-	        	buffer.skipBytes(streamDataToRead);
-	        	streamDataToRead = -1;
+	        	buffer.skipBytes(toRead);
 	        }
+        	streamDataToRead -= toRead;
+        	if (streamDataToRead == 0) {
+        		//get the next chunk
+        		streamDataToRead = -1;
+        	}
     	}
         Object toReturn = result;
         result = null;
@@ -176,10 +172,10 @@ public class ObjectDecoder extends LengthFieldBasedFrameDecoder {
         }
         return toReturn;
     }
-
+    
     @Override
-    protected ChannelBuffer extractFrame(ChannelBuffer buffer, int index, int length) {
-        return buffer.slice(index, length);
+    protected ByteBuf extractFrame(ChannelHandlerContext ctx, ByteBuf buffer, int index, int length) {
+    	return buffer.slice(index, length);
     }
 
 }

@@ -28,8 +28,9 @@ import java.net.URL;
 import java.net.URLEncoder;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
 
-public class ProxyHttpServletRequest extends HttpServletRequestDelegate {
+public class ProxyHttpServletRequest extends HttpServletRequestWrapper {
     private URI encodedURI;
     private URL encodedURL;
 

@@ -24,6 +24,11 @@ package org.teiid.systemmodel;
 
 import static org.junit.Assert.*;
 
+import java.io.InputStream;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -31,6 +36,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 
+import org.infinispan.transaction.tm.DummyTransactionManager;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -46,6 +52,8 @@ import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.FunctionParameter;
+import org.teiid.query.ObjectReplicator;
+import org.teiid.query.ReplicatedObject;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.translator.TranslatorException;
 
@@ -85,7 +93,7 @@ public class TestReplication {
 		double d1 = rs.getDouble(1);
 		double d2 = rs.getDouble(2);
 		
-		server2 = createServer("infinispan-replicated-config-1.xml", "tcp-shared-1.xml");
+		server2 = createServer("infinispan-replicated-config-1.xml", "tcp-shared.xml");
     	deployMatViewVDB(server2);    	
 
 		Connection c2 = server2.createConnection("jdbc:teiid:matviews");
@@ -138,6 +146,73 @@ public class TestReplication {
 		assertEquals(d1, d2, 0);
     }
     
+    @Test public void testLargeReplicationFailedTransfer() throws Exception {
+    	server1 = createServer("infinispan-replicated-config.xml", "tcp-shared.xml");
+    	deployLargeVDB(server1);    	
+
+		Connection c1 = server1.createConnection("jdbc:teiid:large");
+		Statement stmt = c1.createStatement();
+		stmt.execute("select * from c");
+		ResultSet rs = stmt.getResultSet();
+		int rowCount = 0;
+		while (rs.next()) {
+			rowCount++;
+		}
+		
+		Thread.sleep(1000);
+		
+		server2 = createServer("infinispan-replicated-config-1.xml", "tcp-shared.xml");
+		
+		//add a replicator to kill transfers
+		final ObjectReplicator or = server2.getObjectReplicator();
+		server2.setObjectReplicator(new ObjectReplicator() {
+			
+			@Override
+			public void stop(Object o) {
+				
+			}
+			
+			@Override
+			public <T, S> T replicate(String id, Class<T> iface, final S object,
+					long startTimeout) throws Exception {
+				Object o = Proxy.newProxyInstance(TestReplication.class.getClassLoader(), new Class<?>[] {iface, ReplicatedObject.class},  new InvocationHandler() {
+					
+					@Override
+					public Object invoke(Object proxy, Method method, Object[] args)
+							throws Throwable {
+						if (method.getName().equals("setState")) {
+							((InputStream)args[args.length - 1]).close();
+						}
+						try {
+							return method.invoke(object, args);
+						} catch (InvocationTargetException e) {
+							throw e.getCause();
+						}
+					}
+				});
+				return or.replicate(id, iface, o, startTimeout);
+			}
+		});
+    	deployLargeVDB(server2);    	
+
+		Connection c2 = server2.createConnection("jdbc:teiid:large");
+		
+		Statement stmt2 = c2.createStatement();
+		ResultSet rs2 = stmt2.executeQuery("select * from matviews where name = 'c'");
+		assertTrue(rs2.next());
+		assertEquals("NEEDS_LOADING", rs2.getString("loadstate"));
+		
+		stmt2 = c2.createStatement();
+		rs2 = stmt2.executeQuery("select * from c");
+		
+		int rowCount2 = 0;
+		while (rs2.next()) {
+			rowCount2++;
+		}
+		
+		assertEquals(rowCount, rowCount2);
+    }
+    
     @Test public void testLargeReplication() throws Exception {
 		server1 = createServer("infinispan-replicated-config.xml", "tcp-shared.xml");
     	deployLargeVDB(server1);    	
@@ -153,7 +228,7 @@ public class TestReplication {
 		
 		Thread.sleep(1000);
 		
-		server2 = createServer("infinispan-replicated-config-1.xml", "tcp-shared-1.xml");
+		server2 = createServer("infinispan-replicated-config-1.xml", "tcp-shared.xml");
     	deployLargeVDB(server2);    	
 
 		Connection c2 = server2.createConnection("jdbc:teiid:large");
@@ -171,8 +246,6 @@ public class TestReplication {
 			rowCount2++;
 		}
 		
-		System.out.println(rowCount);
-		
 		assertEquals(rowCount, rowCount2);
     }
 
@@ -182,6 +255,7 @@ public class TestReplication {
 		EmbeddedConfiguration config = new EmbeddedConfiguration();
 		config.setInfinispanConfigFile(ispn);
 		config.setJgroupsConfigFile(jgroups);
+		config.setTransactionManager(new DummyTransactionManager());
 		server.start(config, true);
 		return server;
 	}

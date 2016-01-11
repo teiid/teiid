@@ -96,6 +96,16 @@ public class CompositeVDB {
 			}
 		}
 		
+		//add functions for procedures
+		for (Schema schema:store.getSchemas().values()) {
+			if (!schema.getProcedures().isEmpty()) {
+				FunctionTree ft = FunctionTree.getFunctionProcedures(schema);
+				if (ft != null) {
+					udfs.add(ft);
+				}
+			}
+		}
+		
 		CompositeMetadataStore compositeStore = new CompositeMetadataStore(store);
 		for (MetadataStore s:additionalStores) {
 			compositeStore.merge(s);

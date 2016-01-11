@@ -1,211 +1,224 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <parent>
-    <artifactId>teiid-parent</artifactId>
-    <groupId>org.jboss.teiid</groupId>
-        <version>9.0.0.Alpha1-SNAPSHOT</version>
-  </parent>
-  <modelVersion>4.0.0</modelVersion>
-  <artifactId>teiid-jboss-integration</artifactId>
-  <name>teiid-jboss-integration</name>
-  <description>JBoss specific integration layer for teiid</description>
-  
-  <dependencies>
- 
-    <dependency>
-      <groupId>org.jboss.teiid</groupId>
-      <artifactId>teiid-runtime</artifactId>
-      <exclusions>
-        <exclusion>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-core</artifactId>
-        </exclusion>
-        <exclusion>
-            <groupId>org.jboss.marshalling</groupId>
-            <artifactId>jboss-marshalling-river</artifactId>
-        </exclusion>
-        <exclusion>
-            <groupId>org.jboss.marshalling</groupId>
-            <artifactId>jboss-marshalling</artifactId>
-        </exclusion>        
-        <exclusion>
-            <groupId>org.jgroups</groupId>
-            <artifactId>jgroups</artifactId>
-        </exclusion>
-        <exclusion>
-            <groupId>org.jboss.logging</groupId>
-            <artifactId>jboss-logging</artifactId>
-        </exclusion>        
-      </exclusions>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.jboss.teiid</groupId>
-      <artifactId>teiid-api</artifactId>
-      <scope>provided</scope>
-    </dependency>
-               
-    <dependency>
-      <groupId>org.jboss.teiid</groupId>
-      <artifactId>teiid-client</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.jboss.teiid</groupId>
-      <artifactId>teiid-admin</artifactId>
-      <scope>provided</scope>
-    </dependency>    
-    
-    <dependency>
-      <groupId>org.jboss.teiid</groupId>
-      <artifactId>teiid-jboss-admin</artifactId>
-      <scope>provided</scope>
-    </dependency>  
-        
-    <dependency>
-      <groupId>org.jboss.teiid</groupId>
-      <artifactId>teiid-metadata</artifactId>
-    </dependency>
-        
-    <dependency>
-        <groupId>org.jboss</groupId>
-        <artifactId>jboss-dmr</artifactId>
-        <scope>provided</scope>
-    </dependency>
-    
-    <dependency>
-        <groupId>org.jboss</groupId>
-        <artifactId>jboss-vfs</artifactId>
-        <scope>provided</scope>   
-    </dependency>
-    
-    <dependency>
-        <groupId>org.jboss.msc</groupId>
-        <artifactId>jboss-msc</artifactId>
-        <scope>provided</scope>
-    </dependency>
-    
-    <dependency>
-        <groupId>javax.transaction</groupId>
-        <artifactId>jta</artifactId>
-        <scope>provided</scope>
-    </dependency>
+	<parent>
+		<artifactId>teiid-parent</artifactId>
+		<groupId>org.jboss.teiid</groupId>
+		<version>9.0.0.Alpha1-SNAPSHOT</version>
+	</parent>
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>teiid-jboss-integration</artifactId>
+	<name>teiid-jboss-integration</name>
+	<description>JBoss specific integration layer for teiid</description>
 
-    <dependency>
-        <groupId>org.jboss.as</groupId>
-        <artifactId>jboss-as-security</artifactId>
-        <scope>provided</scope>        
-    </dependency>    
-    
-    <dependency>
-        <groupId>asm</groupId>
-        <artifactId>asm</artifactId>
-        <scope>provided</scope>
-    </dependency>
-    
-    <dependency>
-        <groupId>org.jboss.resteasy</groupId>
-        <artifactId>resteasy-multipart-provider</artifactId>
-        <scope>provided</scope>
-    </dependency>
-    
-    <dependency>
-        <groupId>io.swagger</groupId>
-		<artifactId>swagger-jaxrs</artifactId>
-		<exclusions>
-		    <exclusion>
-		  		<groupId>javax.ws.rs</groupId>
-		  		<artifactId>jsr311-api</artifactId>
-		  	</exclusion>
-		  	<exclusion>
-		  	    <groupId>javax.validation</groupId>
-		  		<artifactId>validation-api</artifactId>
-		  	</exclusion>
-		  	<exclusion>
-		  		<groupId>org.slf4j</groupId>
-		  		<artifactId>slf4j-api</artifactId>
-		  	</exclusion>
-		  	<exclusion>
-		  		<groupId>com.fasterxml.jackson.core</groupId>
-		  		<artifactId>*</artifactId>
-		  	</exclusion>
-		  	<exclusion>
-		  		<groupId>com.google.guava</groupId>
-		  		<artifactId>guava</artifactId>
-		  	</exclusion>
-		  	<exclusion>
-		  		<groupId>org.javassist</groupId>
-		  		<artifactId>javassist</artifactId>
-		  	</exclusion>
-		  	<exclusion>
-		  		<groupId>org.apache.commons</groupId>
-		  		<artifactId>commons-lang3</artifactId>
-		  	</exclusion>
-		  	<exclusion>
-		  		<groupId>org.yaml</groupId>
-		  		<artifactId>snakeyaml</artifactId>
-		  	</exclusion>
-		  	<exclusion>
-		  		<groupId>org.codehaus.woodstox</groupId>
-		  		<artifactId>stax2-api</artifactId>
-		  	</exclusion>
-		  	<exclusion>
-		  		<groupId>joda-time</groupId>
-		  		<artifactId>joda-time</artifactId>
-		    </exclusion>
-	    </exclusions>
-    </dependency>                             
-    
-    <!-- This dependency is to read the ra.xml file details -->
-    <dependency>
-        <groupId>org.jboss.as</groupId>
-        <artifactId>jboss-as-connector</artifactId>
-        <scope>provided</scope>        
-    </dependency>    
-    
-    <dependency>
-        <groupId>org.jboss.as</groupId>
-        <artifactId>jboss-as-server</artifactId>
-        <scope>provided</scope>
-    </dependency> 
-    
-    <dependency>
-        <groupId>org.jboss.as</groupId>
-        <artifactId>jboss-as-subsystem-test-framework</artifactId>
-        <scope>test</scope>
-    </dependency>
-    <dependency>
-        <groupId>org.jboss.as</groupId>
-        <artifactId>jboss-as-cli</artifactId>
-        <scope>test</scope>
-    </dependency> 
-       
-    <dependency>
-      <groupId>org.jboss.teiid</groupId>
-      <artifactId>teiid-common-core</artifactId>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.jboss.teiid</groupId>
-      <artifactId>teiid-runtime</artifactId>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
+	<dependencies>
 
-    <dependency>
-      <groupId>org.jboss.teiid</groupId>
-      <artifactId>teiid-engine</artifactId>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.jboss.teiid.connectors</groupId>
-      <artifactId>translator-jdbc</artifactId>
-      <scope>test</scope>
-    </dependency>    
-  </dependencies>
-  
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-common-core</artifactId>
+        </dependency>
+
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-runtime</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-api</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-client</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-admin</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-jboss-admin</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-metadata</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jboss</groupId>
+			<artifactId>jboss-dmr</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jboss</groupId>
+			<artifactId>jboss-vfs</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jboss.msc</groupId>
+			<artifactId>jboss-msc</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>asm</groupId>
+			<artifactId>asm</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jboss.resteasy</groupId>
+			<artifactId>resteasy-multipart-provider</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.wildfly</groupId>
+			<artifactId>wildfly-naming</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.wildfly</groupId>
+			<artifactId>wildfly-clustering-jgroups-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.wildfly</groupId>
+			<artifactId>wildfly-security</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.wildfly.core</groupId>
+			<artifactId>wildfly-controller</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.wildfly</groupId>
+			<artifactId>wildfly-connector</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.spec.javax.ws.rs</groupId>
+			<artifactId>jboss-jaxrs-api_2.0_spec</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.ironjacamar</groupId>
+			<artifactId>ironjacamar-common-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.security</groupId>
+			<artifactId>jboss-negotiation-spnego</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.spec.javax.servlet</groupId>
+			<artifactId>jboss-servlet-api_3.1_spec</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.spec.javax.transaction</groupId>
+			<artifactId>jboss-transaction-api_1.2_spec</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.spec.javax.resource</groupId>
+			<artifactId>jboss-connector-api_1.7_spec</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.picketbox</groupId>
+			<artifactId>picketbox</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.wildfly.core</groupId>
+			<artifactId>wildfly-subsystem-test-framework</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.swagger</groupId>
+			<artifactId>swagger-jaxrs</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>javax.ws.rs</groupId>
+					<artifactId>jsr311-api</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>javax.validation</groupId>
+					<artifactId>validation-api</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.slf4j</groupId>
+					<artifactId>slf4j-api</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.fasterxml.jackson.core</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.google.guava</groupId>
+					<artifactId>guava</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.javassist</groupId>
+					<artifactId>javassist</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.commons</groupId>
+					<artifactId>commons-lang3</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.yaml</groupId>
+					<artifactId>snakeyaml</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.codehaus.woodstox</groupId>
+					<artifactId>stax2-api</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>joda-time</groupId>
+					<artifactId>joda-time</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-common-core</artifactId>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-runtime</artifactId>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-engine</artifactId>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jboss.teiid.connectors</groupId>
+			<artifactId>translator-jdbc</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<configuration>
+					<descriptors>
+						<!-- Assembly plugin does not allow multiple DependencySets see MASSEMBLY-577 
+							thus needed to do here -->
+						<descriptor>kits/wildfly-dist.xml</descriptor>
+					</descriptors>
+				</configuration>
+				<executions>
+					<execution>
+						<id>create-assemblies</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 </project>

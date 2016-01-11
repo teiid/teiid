@@ -1446,6 +1446,19 @@ public class TestSubqueryPushdown {
         TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(1)} );
         
     }
+    
+    @Test public void testAliasConflict() throws Exception {
+    	String sql = "select * from ( SELECT ( SELECT x.e1 FROM pm1.g1 AS x WHERE x.e2 = g_0.e2 ) AS c_2 FROM pm1.g2 AS g_0 ) AS v_0";
+    	
+    	BasicSourceCapabilities bsc = getTypicalCapabilities();
+    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, true);
+        TestOptimizer.helpPlan(sql, //$NON-NLS-1$
+                                      RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(bsc),
+                                      new String[] {
+                                          "SELECT (SELECT g_1.e1 FROM pm1.g1 AS g_1 WHERE g_1.e2 = g_0.e2) FROM pm1.g2 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    }
     	
 
 }

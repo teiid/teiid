@@ -117,36 +117,34 @@
 							<xs:element name="description" type="xs:string" minOccurs="0"/>
                             <xs:element name="permission" minOccurs="0" maxOccurs="unbounded">
                                 <xs:complexType>
-                                    <xs:sequence>                            
-							            <xs:element name="resource-name" type="xs:string"/>
-										<xs:sequence>
-                                             <xs:element name="allow-create" type="xs:boolean" minOccurs="0"/>
-								             <xs:element name="allow-read" type="xs:boolean" minOccurs="0"/>
-								             <xs:element name="allow-update" type="xs:boolean" minOccurs="0"/>
-								             <xs:element name="allow-delete" type="xs:boolean" minOccurs="0"/>
-								             <xs:element name="allow-execute" type="xs:boolean" minOccurs="0"/>
-								             <xs:element name="allow-alter" type="xs:boolean" minOccurs="0"/>	
-								             <xs:element name="condition" minOccurs="0">
-								             	<xs:complexType>
-								             		<xs:simpleContent>
-     														<xs:extension base="xs:string">
-       														<xs:attribute name="constraint" type="xs:boolean" default="true"/>
-       													</xs:extension>
-   													</xs:simpleContent>
-   												</xs:complexType>
-								             </xs:element>
-								             <xs:element name="mask" minOccurs="0">
-								             	<xs:complexType>
-								             		<xs:simpleContent>
-     														<xs:extension base="xs:string">
-       														<xs:attribute name="order" type="xs:string"/>
-       													</xs:extension>
-   													</xs:simpleContent>
-   												</xs:complexType>
-								             </xs:element>
-								             <xs:element name="allow-language" type="xs:boolean" minOccurs="0"/>
-										</xs:sequence>
-                                   </xs:sequence>      
+							        <xs:all>
+                                         <xs:element name="resource-name" type="xs:string" minOccurs="1"/>
+						                 <xs:element name="allow-create" type="xs:boolean" minOccurs="0"/>
+							             <xs:element name="allow-read" type="xs:boolean" minOccurs="0"/>
+							             <xs:element name="allow-update" type="xs:boolean" minOccurs="0"/>
+							             <xs:element name="allow-delete" type="xs:boolean" minOccurs="0"/>
+							             <xs:element name="allow-execute" type="xs:boolean" minOccurs="0"/>
+							             <xs:element name="allow-alter" type="xs:boolean" minOccurs="0"/>	
+							             <xs:element name="condition" minOccurs="0">
+							             	<xs:complexType>
+							             		<xs:simpleContent>
+    														<xs:extension base="xs:string">
+      														<xs:attribute name="constraint" type="xs:boolean" default="true"/>
+      													</xs:extension>
+  													</xs:simpleContent>
+  												</xs:complexType>
+							             </xs:element>
+							             <xs:element name="mask" minOccurs="0">
+							             	<xs:complexType>
+							             		<xs:simpleContent>
+    														<xs:extension base="xs:string">
+      														<xs:attribute name="order" type="xs:string"/>
+      													</xs:extension>
+  													</xs:simpleContent>
+  												</xs:complexType>
+							             </xs:element>
+							             <xs:element name="allow-language" type="xs:boolean" minOccurs="0"/>
+									</xs:all>
                                 </xs:complexType>
                             </xs:element>                                                                      
                             <xs:element name="mapped-role-name" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>

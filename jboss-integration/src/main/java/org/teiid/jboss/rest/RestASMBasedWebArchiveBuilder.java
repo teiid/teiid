@@ -349,13 +349,13 @@ public class RestASMBasedWebArchiveBuilder {
 
     	{
     	av0 = cw.visitAnnotation("Ljavax/ws/rs/Path;", true);
-    	av0.visit("value", "/"+modelName.toLowerCase());
+    	av0.visit("value", "/"+modelName);
     	av0.visitEnd();
     	}
     	
     	{
             av0 = cw.visitAnnotation("Lio/swagger/annotations/Api;", true);
-            av0.visit("value", "/" + modelName.toLowerCase());
+            av0.visit("value", "/" + modelName);
             av0.visitEnd();
         }
     	

@@ -963,20 +963,6 @@ public class AllTypesCacheSource<K, V>  implements RemoteCache<K, V>{
 	public void removeClientListener(Object arg0) {
 	}
 
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.infinispan.client.hotrod.RemoteCache#replaceWithVersion(java.lang.Object, java.lang.Object, long, long, java.util.concurrent.TimeUnit, long, java.util.concurrent.TimeUnit)
-	 */
-	@Override
-	public boolean replaceWithVersion(K key, V newValue, long version,
-			long lifespan, TimeUnit lifespanTimeUnit, long maxIdle,
-			TimeUnit maxIdleTimeUnit) {
-		return false;
-	}
-
-
 	/**
 	 * {@inheritDoc}
 	 *
@@ -986,7 +972,10 @@ public class AllTypesCacheSource<K, V>  implements RemoteCache<K, V>{
 	public Map<K, V> getAll(Set<? extends K> keys) {
 		return null;
 	}
-	
-	
-	
+
+
+    @Override
+    public <T> T execute(String arg0, Map<String, ?> arg1) {
+        return null;
+    }
 }

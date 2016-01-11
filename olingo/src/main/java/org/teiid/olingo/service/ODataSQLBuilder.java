@@ -43,41 +43,9 @@ import org.apache.olingo.commons.api.edm.EdmProperty;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmInt32;
 import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
 import org.apache.olingo.server.api.ServiceMetadata;
-import org.apache.olingo.server.api.uri.UriInfo;
-import org.apache.olingo.server.api.uri.UriInfoAll;
-import org.apache.olingo.server.api.uri.UriInfoBatch;
-import org.apache.olingo.server.api.uri.UriInfoCrossjoin;
-import org.apache.olingo.server.api.uri.UriInfoEntityId;
-import org.apache.olingo.server.api.uri.UriInfoMetadata;
-import org.apache.olingo.server.api.uri.UriInfoService;
-import org.apache.olingo.server.api.uri.UriResourceAction;
-import org.apache.olingo.server.api.uri.UriResourceComplexProperty;
-import org.apache.olingo.server.api.uri.UriResourceCount;
-import org.apache.olingo.server.api.uri.UriResourceEntitySet;
-import org.apache.olingo.server.api.uri.UriResourceFunction;
-import org.apache.olingo.server.api.uri.UriResourceIt;
-import org.apache.olingo.server.api.uri.UriResourceLambdaAll;
-import org.apache.olingo.server.api.uri.UriResourceLambdaAny;
-import org.apache.olingo.server.api.uri.UriResourceLambdaVariable;
-import org.apache.olingo.server.api.uri.UriResourceNavigation;
-import org.apache.olingo.server.api.uri.UriResourcePrimitiveProperty;
-import org.apache.olingo.server.api.uri.UriResourceRef;
-import org.apache.olingo.server.api.uri.UriResourceRoot;
-import org.apache.olingo.server.api.uri.UriResourceSingleton;
-import org.apache.olingo.server.api.uri.UriResourceValue;
-import org.apache.olingo.server.api.uri.queryoption.CountOption;
-import org.apache.olingo.server.api.uri.queryoption.ExpandItem;
-import org.apache.olingo.server.api.uri.queryoption.ExpandOption;
-import org.apache.olingo.server.api.uri.queryoption.FilterOption;
-import org.apache.olingo.server.api.uri.queryoption.FormatOption;
+import org.apache.olingo.server.api.uri.*;
+import org.apache.olingo.server.api.uri.queryoption.*;
 import org.apache.olingo.server.api.uri.queryoption.OrderByItem;
-import org.apache.olingo.server.api.uri.queryoption.OrderByOption;
-import org.apache.olingo.server.api.uri.queryoption.SearchOption;
-import org.apache.olingo.server.api.uri.queryoption.SelectItem;
-import org.apache.olingo.server.api.uri.queryoption.SelectOption;
-import org.apache.olingo.server.api.uri.queryoption.SkipOption;
-import org.apache.olingo.server.api.uri.queryoption.SkipTokenOption;
-import org.apache.olingo.server.api.uri.queryoption.TopOption;
 import org.apache.olingo.server.core.RequestURLHierarchyVisitor;
 import org.apache.olingo.server.core.uri.UriResourceEntitySetImpl;
 import org.apache.olingo.server.core.uri.parser.Parser;
@@ -99,19 +67,7 @@ import org.teiid.odata.api.SQLParameter;
 import org.teiid.olingo.ODataPlugin;
 import org.teiid.olingo.ODataTypeManager;
 import org.teiid.olingo.service.TeiidServiceHandler.UniqueNameGenerator;
-import org.teiid.query.sql.lang.AbstractCompareCriteria;
-import org.teiid.query.sql.lang.CompareCriteria;
-import org.teiid.query.sql.lang.CompoundCriteria;
-import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.Delete;
-import org.teiid.query.sql.lang.FromClause;
-import org.teiid.query.sql.lang.Insert;
-import org.teiid.query.sql.lang.JoinType;
-import org.teiid.query.sql.lang.OrderBy;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.Select;
-import org.teiid.query.sql.lang.UnaryFromClause;
-import org.teiid.query.sql.lang.Update;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.Constant;
@@ -545,15 +501,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             } else {
                 Object value = generatedKeys.get(c.getName());
                 if (value == null) {
-                    // I observed with mysql did not return the label for column, 
-                    // this may be workaround in single key case in compound case 
-                    // we got to error.
-                    if (pk.getColumns().size() == 1 && generatedKeys.size() == 1) {
-                        value = generatedKeys.values().iterator().next();
-                    }                    
-                    if (value == null) {
-                        throw new TeiidRuntimeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16016, entityType.getName()));
-                    }
+                    throw new TeiidRuntimeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16016, entityType.getName()));
                 }
                 right = new Constant(value);
             }

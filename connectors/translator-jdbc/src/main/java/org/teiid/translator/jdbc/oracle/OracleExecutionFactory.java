@@ -1086,4 +1086,9 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsCorrelatedSubqueryLimit() {
     	return false;
     }
+    
+    @Override
+    public boolean useColumnNamesForGeneratedKeys() {
+    	return false;
+    }
 }

@@ -173,5 +173,17 @@ public class TestConnection {
     	Array array = getMMConnection().createArrayOf("integer[]", new Integer[] {3, 4});
     	assertEquals(3, java.lang.reflect.Array.get(array.getArray(), 0));
     }
+    
+    @Test public void testXACommit() throws Exception {
+    	ConnectionImpl conn = getMMConnection();
+        conn.setAutoCommit(false);
+        conn.setTransactionXid(Mockito.mock(XidImpl.class));
+        try {
+            conn.setAutoCommit(true);
+            fail("Error Expected"); //$NON-NLS-1$
+        } catch (SQLException e) {
+            // error expected
+        }
+    }
 
 }

@@ -1,0 +1,28 @@
+<module xmlns="urn:jboss:module:1.1" name="org.apache.cxf.impl.frontend-jaxrs">
+    <properties>
+        <property name="jboss.api" value="private"/>
+    </properties>
+       
+    <resources>
+        <resource-root path="cxf-rt-frontend-jaxrs-${version.org.apache.cxf}.jar"/>
+        <resource-root path="cxf-rt-rs-client-${version.org.apache.cxf}.jar"/>
+        <!-- This is to fix NPE in CXF, can be removed later versions -->
+        <resource-root path="cxf-rt-oauth2-patch.jar"/>
+        <resource-root path="cxf-rt-rs-security-oauth-${version.org.apache.cxf}.jar"/>
+        <resource-root path="cxf-rt-rs-security-oauth2-${version.org.apache.cxf}.jar"/>
+        <resource-root path="cxf-rt-rs-security-oauth2-saml-${version.org.apache.cxf}.jar"/>
+        <resource-root path="cxf-rt-transports-http-hc-${version.org.apache.cxf}.jar"/>
+        <resource-root path="."/>
+        <!-- Insert resources here -->
+    </resources>
+
+    <dependencies>
+        <module name="javax.api"/>
+        <module name="javax.activation.api"/>
+        <module name="org.apache.cxf"/>
+        <module name="org.apache.cxf.impl"/>
+        <module name="javax.ws.rs.api" services="export" export="true"/>
+        <module name="net.oauth.core"/>
+        <module name="org.apache.httpcomponents"/>
+    </dependencies>
+</module>

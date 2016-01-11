@@ -644,6 +644,27 @@ public class TestODataIntegration {
     }
     
     @Test 
+    public void testSkipTokenNoSystemOptions() throws Exception {
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("vw");
+            mmd.addSourceMetadata("ddl", "create view x (a string primary key, b integer) as select 'xyz', 123 union all select 'abc', 456;");
+            mmd.setModelType(Model.Type.VIRTUAL);
+            teiid.deployVDB("northwind", mmd);
+
+            Properties props = new Properties();
+            props.setProperty("batch-size", "1");
+            localClient = getClient(teiid.getDriver(), "northwind", 1, props);
+            
+            ContentResponse response = http.GET(baseURL + "/northwind/vw/x");
+            assertEquals(200, response.getStatus());
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }    
+    
+    @Test 
     public void testSkipTokenWithPageSize() throws Exception {
         try {
             ModelMetaData mmd = new ModelMetaData();

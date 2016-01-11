@@ -3,7 +3,7 @@
   <parent>
     <artifactId>teiid-parent</artifactId>
     <groupId>org.jboss.teiid</groupId>
-        <version>9.0.0.Alpha1-SNAPSHOT</version>
+    <version>9.0.0.Alpha1-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>teiid-api</artifactId>
@@ -14,19 +14,16 @@
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-common-core</artifactId>
-      <scope>provided</scope>
     </dependency>
     
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-client</artifactId>
-      <scope>provided</scope>
     </dependency>
     
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-admin</artifactId>
-      <scope>provided</scope>
     </dependency>    
     
     <dependency>
@@ -37,9 +34,8 @@
     </dependency>
         
     <dependency>
-      <groupId>javax.resource</groupId>
-      <artifactId>connector-api</artifactId>
-      <scope>provided</scope>
+        <groupId>org.jboss.spec.javax.resource</groupId>
+        <artifactId>jboss-connector-api_1.7_spec</artifactId>
     </dependency>
     
   </dependencies>

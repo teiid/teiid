@@ -26,7 +26,6 @@ package org.teiid.odbc;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
-import org.teiid.odbc.ScriptReader;
 
 @SuppressWarnings("nls")
 public class TestScriptReader {

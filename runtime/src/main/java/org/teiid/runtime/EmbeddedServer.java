@@ -265,6 +265,20 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			return true;
 		}
 	};
+	
+	class EmbeddedEventDistributorFactoryService extends AbstractEventDistributorFactoryService {
+
+        @Override
+        protected VDBRepository getVdbRepository() {
+            return repo;
+        }
+        
+        @Override
+        protected ObjectReplicator getObjectReplicator() {
+            return replicator;
+        }
+    };	
+	
 	protected boolean throwMetadataErrors = true;
 	private ConcurrentHashMap<String, ExecutionFactory<?, ?>> translators = new ConcurrentHashMap<String, ExecutionFactory<?, ?>>();
 	private ConcurrentHashMap<String, ConnectionFactoryProvider<?>> connectionFactoryProviders = new ConcurrentHashMap<String, ConnectionFactoryProvider<?>>();
@@ -289,18 +303,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	private TeiidDriver driver = new TeiidDriver();
 	protected ConnectorManagerRepository cmr = new ProviderAwareConnectorManagerRepository();
 	
-	protected AbstractEventDistributorFactoryService eventDistributorFactoryService = new AbstractEventDistributorFactoryService() {
-		
-		@Override
-		protected VDBRepository getVdbRepository() {
-			return repo;
-		}
-		
-		@Override
-		protected ObjectReplicator getObjectReplicator() {
-			return replicator;
-		}
-	};
+	protected AbstractEventDistributorFactoryService eventDistributorFactoryService;
 	protected boolean useCallingThread = true;
 	private Boolean running;
 	private EmbeddedConfiguration config;
@@ -342,6 +345,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		}
 		this.shutdownListener.setBootInProgress(true);
 		this.config = config;
+		this.eventDistributorFactoryService = new EmbeddedEventDistributorFactoryService();
 		this.eventDistributorFactoryService.start();
 		this.dqp.setEventDistributor(this.eventDistributorFactoryService.getReplicatedEventDistributor());
 		this.scheduler = Executors.newScheduledThreadPool(config.getMaxAsyncThreads(), new NamedThreadFactory("Asynch Worker")); //$NON-NLS-1$

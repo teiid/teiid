@@ -185,7 +185,6 @@ public class AdminFactory {
     }
 
 	private class ResultCallback {
-		@SuppressWarnings("unused")
 		void onSuccess(ModelNode outcome, ModelNode result) throws AdminException {
 		}
 		void onFailure(String msg) throws AdminProcessingException {
@@ -511,10 +510,6 @@ public class AdminFactory {
             		addConnectionProperty(deploymentName, key, value);
             	}
             }
-
-	        // issue the "enable" operation
-			cliCall("enable", new String[] { "subsystem", "datasources","data-source", deploymentName },
-					null, new ResultCallback());
 			
 			flush();
 		}

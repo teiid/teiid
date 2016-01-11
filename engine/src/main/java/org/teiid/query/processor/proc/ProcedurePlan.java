@@ -267,6 +267,8 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
 		try {
 			return nextBatchDirect();
 		} finally {
+			//ensure that the generatedkeys don't escape
+			getContext().clearGeneratedKeys();
 			if (blockContext != null) {
 				this.getContext().getTransactionServer().suspend(blockContext);
 			}

@@ -180,10 +180,9 @@ public class TestODataIntegration extends BaseResourceTest {
 		deployment.getRegistry().addPerRequestResource(MetadataResource.class);
 		deployment.getRegistry().addPerRequestResource(ServiceDocumentResource.class);
 		deployment.getProviderFactory().registerProvider(ODataBatchProvider.class);
-		deployment.getProviderFactory().addExceptionMapper(ODataExceptionMappingProvider.class);
-		deployment.getProviderFactory().addContextResolver(org.teiid.odata.MockProvider.class);		
-		metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(
-		        UnitTestUtil.getTestDataFile("northwind.ddl")),"northwind", "nw");		
+		deployment.getProviderFactory().registerProvider(ODataExceptionMappingProvider.class);
+		deployment.getProviderFactory().registerProvider(MockProvider.class);		
+		metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.ddl")),"northwind", "nw");		
 	}	
 	
 	@Test
@@ -299,7 +298,7 @@ public class TestODataIntegration extends BaseResourceTest {
 			@Override
 			public Map<String, Object> getGeneratedKeys() {
 				HashMap<String, Object> map = new HashMap<String, Object>();
-				map.put("id", 1234);
+				map.put("CustomerID", 1234);
 				return map;
 			}
 		};

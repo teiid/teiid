@@ -33,7 +33,10 @@ public class TeiidSubsytemResourceDefinition extends SimpleResourceDefinition {
 	private boolean server;
 	
 	public TeiidSubsytemResourceDefinition(boolean server) {
-		super(PATH_SUBSYSTEM,TeiidExtension.getResourceDescriptionResolver(TeiidExtension.TEIID_SUBSYSTEM),TeiidAdd.INSTANCE, TeiidRemove.INSTANCE);
+        super(PATH_SUBSYSTEM,
+              TeiidExtension.getResourceDescriptionResolver(TeiidExtension.TEIID_SUBSYSTEM),
+              TeiidAdd.INSTANCE, 
+              TeiidRemove.INSTANCE);
 		this.server = server;
 	}
 
@@ -96,4 +99,6 @@ public class TeiidSubsytemResourceDefinition extends SimpleResourceDefinition {
     	resourceRegistration.registerSubModel(new TranslatorResourceDefinition());
     	resourceRegistration.registerSubModel(new TransportResourceDefinition());
     }
+    
+    
 }

@@ -7817,7 +7817,7 @@ public class TestProcessor {
         helpProcess(plan, fdm, new List[] {Arrays.asList("a", "a")});
     }
     
-	@Test public void testSomething() throws Exception {
+	@Test public void testMultiJoinWithLateral() throws Exception {
 		String sql = "SELECT csv_table.* FROM (exec sq1()) f, TEXTTABLE(f.e1 COLUMNS a STRING, b STRING DELIMITER ',' QUOTE '''' SKIP 1) csv_table LEFT JOIN (SELECT '1' as a, '2' as b) as t ON csv_table.a = t.a;";
 		ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 		HardcodedDataManager dataManager = new HardcodedDataManager();
@@ -7825,7 +7825,7 @@ public class TestProcessor {
 		TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList("1", "2"), Arrays.asList("3", "4")});
 	 }
 	
-	@Test public void testSomething1() throws Exception {
+	@Test public void testMultiJoinWithLateral1() throws Exception {
 		String sql = "SELECT csv_table.* FROM (exec sq1()) f, TEXTTABLE(f.e1 COLUMNS a STRING, b STRING DELIMITER ',' QUOTE '''' SKIP 1) csv_table JOIN (SELECT '1' as a, '2' as b) as t ON csv_table.a = t.a;";
 		ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 		HardcodedDataManager dataManager = new HardcodedDataManager();

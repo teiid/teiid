@@ -33,11 +33,10 @@ import org.jgroups.blocks.MethodCall;
 import org.jgroups.blocks.RequestOptions;
 import org.jgroups.blocks.ResponseMode;
 import org.jgroups.blocks.RpcDispatcher;
-import org.teiid.core.types.Streamable;
 
 public class JGroupsOutputStream extends OutputStream {
 	
-	static final int CHUNK_SIZE=Streamable.STREAMING_BATCH_SIZE_IN_BYTES;
+	static final int CHUNK_SIZE=1<<15; //need to stay under the default of 64000 for the JGroups bundling size
     
 	protected final RpcDispatcher disp;
     protected final List<Address> dests;

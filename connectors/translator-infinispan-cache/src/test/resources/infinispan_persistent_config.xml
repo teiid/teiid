@@ -1,23 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <infinispan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xsi:schemaLocation="urn:infinispan:config:6.0 http://www.infinispan.org/schemas/infinispan-config-6.0.xsd"
-            xmlns="urn:infinispan:config:6.0">
-	<global>
-        <globalJmxStatistics enabled="false" allowDuplicateDomains="false"/>
-    </global>
-    <namedCache name="Trades">
-        <eviction
-                strategy="LIRS"
-                maxEntries="1000"/>
-        <persistence passivation="false">
-            <singleFile
-                    shared="false"
-                    fetchPersistentState="true"
-                    ignoreModifications="false"
-                    purgeOnStartup="true"
-                    preload="true"
-                    location="./target/localcache/persistent/trades">
-            </singleFile>
-        </persistence>
-    </namedCache> 
+	xsi:schemaLocation="urn:infinispan:config:7.2 http://www.infinispan.org/schemas/infinispan-config-7.2.xsd"
+	xmlns="urn:infinispan:config:7.2">
+
+	<cache-container default-cache="default"
+		statistics="false" shutdown-hook="DONT_REGISTER">
+		<jmx duplicate-domains="true" />
+
+		<local-cache name="Trades">
+			<eviction strategy="LIRS" max-entries="1000" />
+			<persistence passivation="false">
+				<file-store shared="false" fetch-state="true" read-only="false"
+					purge="true" preload="true" path="./target/localcache/persistent/trades">
+				</file-store>
+			</persistence>
+		</local-cache>
+		
+	</cache-container>
 </infinispan>

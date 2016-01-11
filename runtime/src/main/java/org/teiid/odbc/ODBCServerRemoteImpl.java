@@ -494,7 +494,8 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 					ParameterMetaData pmd = stmt.getParameterMetaData();
 					for (int i = 0; i < paramType.length; i++) {
 						if (paramType[i] == 0) {
-							paramType[i] = convertType(pmd.getParameterType(i + 1));
+							//TODO: this is incorrect - should be oid
+							//paramType[i] = convertType(pmd.getParameterType(i + 1));
 						}
 					}
 				}
@@ -516,6 +517,14 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			}
 		}
 	}	
+	
+	private long readLong(byte[] bytes, int length) {
+		long val = 0;
+		for (int k = 0; k < length; k++) {
+			val += ((bytes[k] & 255) << ((length - k - 1)*8));
+		}
+		return val;
+	}
 	
 	@Override
 	public void bindParameters(String bindName, String prepareName, Object[] params, int resultCodeCount, int[] resultColumnFormat) {
@@ -545,7 +554,39 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		try {
 			stmt = this.connection.prepareStatement(prepared.modifiedSql);
 			for (int i = 0; i < params.length; i++) {
-				stmt.setObject(i+1, params[i]);
+				Object param = params[i];
+				if (param instanceof byte[] && prepared.paramType.length > i) {
+					int oid = prepared.paramType[i];
+					switch (oid) {
+					//binary array
+					//pgobject
+					//hstore
+					//date
+					//time
+					//timestamp
+					case PGUtil.PG_TYPE_UNSPECIFIED:
+						//TODO: should infer type from the parameter metadata from the parse message
+						break;
+					case PGUtil.PG_TYPE_BYTEA:
+						break;
+					case PGUtil.PG_TYPE_INT2:
+						param = (short)readLong((byte[])param, 2);
+						break;
+					case PGUtil.PG_TYPE_INT4:
+						param = (int)readLong((byte[])param, 4);
+						break;
+					case PGUtil.PG_TYPE_INT8:
+						param = readLong((byte[])param, 8);
+						break;
+					case PGUtil.PG_TYPE_FLOAT4:
+						param = Float.intBitsToFloat((int)readLong((byte[])param, 4));
+						break;
+					case PGUtil.PG_TYPE_FLOAT8:
+						param = Double.longBitsToDouble(readLong((byte[])param, 8));
+						break;
+					}
+				}
+				stmt.setObject(i+1, param);
 			}
 			this.portalMap.put(bindName, new Portal(bindName, prepared, resultColumnFormat, stmt));
 			this.client.bindComplete();

@@ -133,7 +133,23 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.CONCAT, new AliasModifier("||")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new FunctionModifier() {
+			
+			@Override
+			public List<?> translate(Function function) {
+				List<Object> parts = new ArrayList<Object>(4);
+				parts.add("substring("); //$NON-NLS-1$
+				parts.add(function.getParameters().get(0));
+				parts.add(" from "); //$NON-NLS-1$
+				parts.add(function.getParameters().get(1));
+				if (function.getParameters().size() > 2) {
+					parts.add(" for "); //$NON-NLS-1$
+					parts.add(function.getParameters().get(2));
+				}
+				parts.add(")"); //$NON-NLS-1$
+				return parts;
+			}
+		});  
         registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$ 
         
         registerFunctionModifier(SourceSystemFunctions.DAYNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Day"));//$NON-NLS-1$ 
@@ -416,7 +432,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add("SQRT"); //$NON-NLS-1$
         supportedFunctions.add("TAN"); //$NON-NLS-1$
         
-        supportedFunctions.add("ASCII"); //$NON-NLS-1$
+        supportedFunctions.add(SourceSystemFunctions.ASCII);
         supportedFunctions.add("CHR"); //$NON-NLS-1$
         supportedFunctions.add("CHAR"); //$NON-NLS-1$
         supportedFunctions.add("||"); //$NON-NLS-1$

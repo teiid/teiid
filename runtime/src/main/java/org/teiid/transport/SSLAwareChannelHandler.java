@@ -25,6 +25,16 @@
  */
 package org.teiid.transport;
 
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelDuplexHandler;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandler.Sharable;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.ssl.SslHandler;
+import io.netty.util.concurrent.DefaultPromise;
+import io.netty.util.concurrent.GenericFutureListener;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.SocketAddress;
@@ -36,14 +46,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 
-import javax.net.ssl.SSLEngine;
-
-import org.jboss.netty.channel.*;
-import org.jboss.netty.channel.ChannelHandler.Sharable;
-import org.jboss.netty.handler.ssl.SslHandler;
-import org.jboss.netty.handler.stream.ChunkedWriteHandler;
-import org.teiid.common.buffer.StorageManager;
-import org.teiid.core.util.PropertiesUtils;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.net.socket.ObjectChannel;
@@ -55,10 +57,8 @@ import org.teiid.runtime.RuntimePlugin;
  */
 
 @Sharable
-public class SSLAwareChannelHandler extends SimpleChannelHandler implements ChannelPipelineFactory {
+public class SSLAwareChannelHandler extends ChannelDuplexHandler {
 	
-	private static final int DEFAULT_MAX_MESSAGE_SIZE = 1 << 21;
-
 	public class ObjectChannelImpl implements ObjectChannel {
 		private final Channel channel;
 
@@ -75,7 +75,7 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 		}
 		
 		public SocketAddress getRemoteAddress() {
-			return channel.getRemoteAddress();
+			return channel.remoteAddress();
 		}
 		
 		@Override
@@ -91,12 +91,13 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 
 		public Future<?> write(Object msg) {
 			final ChannelFuture future = channel.write(msg);
+			channel.flush();
 			future.addListener(completionListener);
 			return new Future<Void>() {
 
 				@Override
 				public boolean cancel(boolean arg0) {
-					return future.cancel();
+					return future.cancel(arg0);
 				}
 
 				@Override
@@ -104,7 +105,7 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 						ExecutionException {
 					future.await();
 					if (!future.isSuccess()) {
-						throw new ExecutionException(future.getCause());
+						throw new ExecutionException(future.cause());
 					}
 					return null;
 				}
@@ -115,7 +116,7 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 						TimeoutException {
 					if (future.await(arg0, arg1)) {
 						if (!future.isSuccess()) {
-							throw new ExecutionException(future.getCause());
+							throw new ExecutionException(future.cause());
 						}
 						return null;
 					}
@@ -136,15 +137,10 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 	}
 	
 	private final ChannelListener.ChannelListenerFactory listenerFactory;
-	private final SSLConfiguration config;
-	private final ClassLoader classLoader;
-	private final StorageManager storageManager;
 	private Map<Channel, ChannelListener> listeners = new ConcurrentHashMap<Channel, ChannelListener>();
 	private AtomicLong objectsRead = new AtomicLong(0);
 	private AtomicLong objectsWritten = new AtomicLong(0);
 	private volatile int maxChannels;
-	private int maxMessageSize = PropertiesUtils.getIntProperty(System.getProperties(), "org.teiid.maxMessageSize", DEFAULT_MAX_MESSAGE_SIZE); //$NON-NLS-1$
-	private long maxLobSize = PropertiesUtils.getLongProperty(System.getProperties(), "org.teiid.maxStreamingLobSize", ObjectDecoder.MAX_LOB_SIZE); //$NON-NLS-1$
 	
 	private ChannelFutureListener completionListener = new ChannelFutureListener() {
 
@@ -153,35 +149,34 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 				throws Exception {
 			if (arg0.isSuccess()) {
 				objectsWritten.getAndIncrement();
+			} else if (arg0.cause() != null) {
+				writeExceptionCaught(arg0.channel(), arg0.cause());
 			}
 		}
 		
 	};
-	 
-	public SSLAwareChannelHandler(ChannelListener.ChannelListenerFactory listenerFactory,
-			SSLConfiguration config, ClassLoader classloader, StorageManager storageManager) {
+	
+	public SSLAwareChannelHandler(ChannelListener.ChannelListenerFactory listenerFactory) {
 		this.listenerFactory = listenerFactory;
-		this.config = config;
-		this.classLoader = classloader;
-		this.storageManager = storageManager;
 	}
-
+	
 	@Override
-	public void channelConnected(ChannelHandlerContext ctx,
-			final ChannelStateEvent e) throws Exception {
-		ChannelListener listener = this.listenerFactory.createChannelListener(new ObjectChannelImpl(e.getChannel()));
-		this.listeners.put(e.getChannel(), listener);
+	public void channelActive(final ChannelHandlerContext ctx) throws Exception {
+		ChannelListener listener = this.listenerFactory.createChannelListener(new ObjectChannelImpl(ctx.channel()));
+		this.listeners.put(ctx.channel(), listener);
 		maxChannels = Math.max(maxChannels, this.listeners.size());
-		SslHandler sslHandler = ctx.getPipeline().get(SslHandler.class);
+		SslHandler sslHandler = ctx.pipeline().get(SslHandler.class);
 		if (sslHandler != null) {
-	        sslHandler.handshake().addListener(new ChannelFutureListener() {
-	        	public void operationComplete(ChannelFuture arg0)
-	        			throws Exception {
-	        		onConnection(e.getChannel());
-	        	}
-	        });
+	        sslHandler.handshakeFuture().addListener(new GenericFutureListener<DefaultPromise<Channel>>() {
+                @Override
+                public void operationComplete(DefaultPromise<Channel> future)
+                        throws Exception {
+                    onConnection(ctx.channel());
+                    
+                }
+            });
 		} else {
-			onConnection(e.getChannel());
+			onConnection(ctx.channel());
 		}
 	}
 	
@@ -192,51 +187,45 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 		}
 	}
 	
-	@Override
-	public void exceptionCaught(ChannelHandlerContext ctx,
-			ExceptionEvent e) throws Exception {
-		ChannelListener listener = this.listeners.get(e.getChannel());
+	
+	private void writeExceptionCaught(Channel channel,
+	        Throwable cause) {
+		ChannelListener listener = this.listeners.get(channel);
 		if (listener != null) {
-			listener.exceptionOccurred(e.getCause());
+			listener.exceptionOccurred(cause);
 		} else {
-			e.getChannel().close();
-		}
-	}
-
-	@Override
-	public void messageReceived(ChannelHandlerContext ctx,
-			MessageEvent e) throws Exception {
-		objectsRead.getAndIncrement();
-		ChannelListener listener = this.listeners.get(e.getChannel());
-		if (listener != null) {
-			listener.receivedMessage(e.getMessage());
+			channel.close();
 		}
 	}
 	
 	@Override
-	public void channelDisconnected(ChannelHandlerContext ctx,
-			ChannelStateEvent e) throws Exception {
-		ChannelListener listener = this.listeners.remove(e.getChannel());
-		if (listener != null) {
-			LogManager.logDetail(LogConstants.CTX_TRANSPORT, RuntimePlugin.Util.getString("SSLAwareChannelHandler.channel_closed")); //$NON-NLS-1$
-			listener.disconnected();
-		}
+    public void exceptionCaught(ChannelHandlerContext ctx,
+            Throwable cause) throws Exception {
+	    writeExceptionCaught(ctx.channel(), cause);
 	}
 
-	public ChannelPipeline getPipeline() throws Exception {
-		ChannelPipeline pipeline = new DefaultChannelPipeline();
-
-		if (this.config != null) {
-			SSLEngine engine = config.getServerSSLEngine();
-		    if (engine != null) {
-		        pipeline.addLast("ssl", new SslHandler(engine)); //$NON-NLS-1$
-		    }
+	public void messageReceived(ChannelHandlerContext ctx,
+			Object msg) throws Exception {
+		objectsRead.getAndIncrement();
+		ChannelListener listener = this.listeners.get(ctx.channel());
+		if (listener != null) {
+			listener.receivedMessage(msg);
 		}
-	    pipeline.addLast("decoder", new ObjectDecoder(maxMessageSize, maxLobSize, classLoader, storageManager)); //$NON-NLS-1$
-	    pipeline.addLast("chunker", new ChunkedWriteHandler()); //$NON-NLS-1$
-	    pipeline.addLast("encoder", new ObjectEncoder()); //$NON-NLS-1$
-	    pipeline.addLast("handler", this); //$NON-NLS-1$
-	    return pipeline;
+	}
+	
+	@Override
+	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        messageReceived(ctx, msg);
+	}
+	
+	@Override
+	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+		ChannelListener listener = this.listeners.remove(ctx.channel());
+		if (listener != null) {
+			LogManager.logDetail(LogConstants.CTX_TRANSPORT, 
+			        RuntimePlugin.Util.getString("SSLAwareChannelHandler.channel_closed")); //$NON-NLS-1$
+			listener.disconnected();
+		}
 	}
 	
 	public long getObjectsRead() {
@@ -254,17 +243,4 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 	public int getMaxConnectedChannels() {
 		return this.maxChannels;
 	}
-	
-	public int getMaxMessageSize() {
-		return maxMessageSize;
-	}
-	
-	public void setMaxMessageSize(int maxMessageSize) {
-		this.maxMessageSize = maxMessageSize;
-	}
-	
-	public void setMaxLobSize(long maxLobSize) {
-		this.maxLobSize = maxLobSize;
-	}
-
 }
