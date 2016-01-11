@@ -326,7 +326,8 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
                     switch (element) {
     				case ALLOW_ENV_FUNCTION_ELEMENT:
     				case EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT:
-    				case DETECTING_CHANGE_EVENTS_ELEMENT:    					
+    				case DETECTING_CHANGE_EVENTS_ELEMENT:
+    				case DATA_ROLES_REQUIRED_ELEMENT:
     					bootServices.get(reader.getLocalName()).set(Boolean.parseBoolean(reader.getElementText()));
     					break;
 

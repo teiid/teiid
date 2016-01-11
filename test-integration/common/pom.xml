@@ -11,7 +11,7 @@
 	<description>Common Integration tests that do not require external dependencies</description>
     <dependencies>
         <dependency>
-            <groupId>postgresql</groupId>
+            <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
         </dependency>
         <dependency>

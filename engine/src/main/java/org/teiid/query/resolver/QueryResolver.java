@@ -459,13 +459,13 @@ public class QueryResolver {
 	    		UpdateInfo info = validator.getUpdateInfo();
 	    		if (logValidation && qmi.groupSupports(virtualGroup.getMetadataID(), SupportConstants.Group.UPDATE)) {
 	    			if (info.isInherentInsert() && validator.getInsertReport().hasItems()) {
-	    				LogManager.logInfo(LogConstants.CTX_QUERY_RESOLVER, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31173, validator.getInsertReport().getFailureMessage(), SQLConstants.Reserved.INSERT, qmi.getFullName(virtualGroup.getMetadataID())));
+	    				LogManager.logDetail(LogConstants.CTX_QUERY_RESOLVER, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31173, validator.getInsertReport().getFailureMessage(), SQLConstants.Reserved.INSERT, qmi.getFullName(virtualGroup.getMetadataID())));
 	    			}
 	    			if (info.isInherentUpdate() && validator.getUpdateReport().hasItems()) {
-	    				LogManager.logInfo(LogConstants.CTX_QUERY_RESOLVER, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31173, validator.getUpdateReport().getFailureMessage(), SQLConstants.Reserved.UPDATE, qmi.getFullName(virtualGroup.getMetadataID())));
+	    				LogManager.logDetail(LogConstants.CTX_QUERY_RESOLVER, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31173, validator.getUpdateReport().getFailureMessage(), SQLConstants.Reserved.UPDATE, qmi.getFullName(virtualGroup.getMetadataID())));
 	    			}
 	    			if (info.isInherentDelete() && validator.getDeleteReport().hasItems()) {
-	    				LogManager.logInfo(LogConstants.CTX_QUERY_RESOLVER, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31173, validator.getDeleteReport().getFailureMessage(), SQLConstants.Reserved.DELETE, qmi.getFullName(virtualGroup.getMetadataID())));
+	    				LogManager.logDetail(LogConstants.CTX_QUERY_RESOLVER, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31173, validator.getDeleteReport().getFailureMessage(), SQLConstants.Reserved.DELETE, qmi.getFullName(virtualGroup.getMetadataID())));
 	    			}
 	    		}
 	    		cachedNode.setUpdateInfo(info);

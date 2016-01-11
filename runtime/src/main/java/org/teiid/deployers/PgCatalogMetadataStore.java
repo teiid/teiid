@@ -449,6 +449,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 			"1700,decimal,-1,b,0,-1,0,0\n" + //$NON-NLS-1$
 			"142,xml,-1,b,0,-1,0,0\n" + //$NON-NLS-1$
 			"14939,lo,-1,b,0,-1,0,0\n" + //$NON-NLS-1$
+			"32816,geometry,-1,b,0,-1,0,0\n" + //$NON-NLS-1$
 			"2278,void,4,p,0,-1,0,0\n" + //$NON-NLS-1$
 			"2249,record,-1,p,0,-1,0,0\n" + //$NON-NLS-1$
 			"30,oidvector,-1,b,0,-1,0,26\n" + //$NON-NLS-1$
@@ -466,6 +467,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 			"1115,_timestamp,-1,b,0,-1,0,1114\n" + //$NON-NLS-1$
 			"1182,_date,-1,b,0,-1,0,1082\n" + //$NON-NLS-1$
 			"1183,_time,-1,b,0,-1,0,1083\n" + //$NON-NLS-1$
+			"32824,_geometry,-1,b,0,-1,0,32816\n" + //$NON-NLS-1$
 			"2287,_record,-1,b,0,-1,0,2249\n" + //$NON-NLS-1$
 			"2283,anyelement,4,p,0,-1,0,0\n" + //$NON-NLS-1$
 			"22,int2vector,-1,b,0,-1,0,0" + //$NON-NLS-1$

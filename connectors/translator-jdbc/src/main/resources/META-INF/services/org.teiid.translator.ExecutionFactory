@@ -28,3 +28,4 @@ org.teiid.translator.jdbc.ucanaccess.UCanAccessExecutionFactory #ucanaccess
 org.teiid.translator.jdbc.vertica.VerticaExecutionFactory #vertica
 org.teiid.translator.jdbc.actian.ActianVectorInHadoopExecutionFactory #actian-vector
 org.teiid.translator.jdbc.pi.PIExecutionFactory #osisoft-pi
+org.teiid.translator.jdbc.redshift.RedshiftExecutionFactory #redshift

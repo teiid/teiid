@@ -209,7 +209,7 @@ public class ScriptReader {
                         				}
                             			builder.insert(expressionStart, "(SELECT oid FROM pg_class WHERE upper(relname) = "); //$NON-NLS-1$
                             			builder.append(")"); //$NON-NLS-1$ 
-                            		} else if ("regproc".equalsIgnoreCase(type)) {
+                            		} else if ("regproc".equalsIgnoreCase(type)) { //$NON-NLS-1$
                             			String name = builder.substring(expressionStart);
                         				if (name.startsWith("'\"") && name.length() > 4) { //$NON-NLS-1$ 
                             				name = name.substring(2, name.length()-2);

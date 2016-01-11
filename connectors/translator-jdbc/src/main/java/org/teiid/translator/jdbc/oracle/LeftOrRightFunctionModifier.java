@@ -28,6 +28,7 @@ import java.util.List;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageFactory;
+import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.FunctionModifier;
 
@@ -49,7 +50,7 @@ public class LeftOrRightFunctionModifier extends FunctionModifier {
         Function func = null;
         
         if (function.getName().equalsIgnoreCase("left")) { //$NON-NLS-1$
-            func = langFactory.createFunction("SUBSTR",  //$NON-NLS-1$
+            func = langFactory.createFunction(SourceSystemFunctions.SUBSTRING,  
                 Arrays.asList(
                     args.get(0), 
                     langFactory.createLiteral(Integer.valueOf(1), TypeFacility.RUNTIME_TYPES.INTEGER),
@@ -60,7 +61,7 @@ public class LeftOrRightFunctionModifier extends FunctionModifier {
                 Arrays.asList(langFactory.createLiteral(Integer.valueOf(-1), TypeFacility.RUNTIME_TYPES.INTEGER), args.get(1)),
                 Integer.class);
                             
-            func = langFactory.createFunction("SUBSTR",  //$NON-NLS-1$
+            func = langFactory.createFunction(SourceSystemFunctions.SUBSTRING,  
                 Arrays.asList(
                     args.get(0), 
                     negIndex),

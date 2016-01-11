@@ -620,6 +620,9 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
         //Check to see the connection is open
         checkConnection();
         if (!autoCommitFlag) {
+        	if (this.transactionXid != null) {
+                throw new TeiidSQLException(JDBCPlugin.Util.getString("MMStatement.In_XA_Transaction"));//$NON-NLS-1$ 
+            }
             try {
             	if (this.inLocalTxn) {
             		this.inLocalTxn = false;
@@ -672,6 +675,10 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
 
         if (autoCommit == this.autoCommitFlag) {
             return;
+        }
+        
+        if (autoCommit && this.transactionXid != null) {
+            throw new TeiidSQLException(JDBCPlugin.Util.getString("MMStatement.In_XA_Transaction"));//$NON-NLS-1$ 
         }
         
         this.autoCommitFlag = autoCommit;
@@ -1050,6 +1057,10 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
 	
 	public Properties getConnectionProps() {
 		return connectionProps;
+	}
+	
+	void setTransactionXid(XidImpl transactionXid) {
+		this.transactionXid = transactionXid;
 	}
 	
 }
