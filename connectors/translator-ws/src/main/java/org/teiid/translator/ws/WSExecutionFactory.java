@@ -47,6 +47,7 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.WSConnection;
+import org.teiid.translator.TranslatorProperty.PropertyType;
 
 @Translator(name="ws", description="A translator for making Web Service calls")
 public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSConnection> {
@@ -79,14 +80,16 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
     	TEIID15004, 
     	TEIID15005, 
     	TEIID15006,
+    	TEIID15007
     }	
 		
 	private Mode defaultServiceMode = Mode.PAYLOAD;
 	private Binding defaultBinding = Binding.SOAP12;
 	private String xmlParamName;
+	private boolean importWSDL = true;
 	
 	public WSExecutionFactory() {
-		setSourceRequiredForMetadata(true);
+		setSourceRequiredForMetadata(false);
 	}
 
 	@TranslatorProperty(description="Contols request/response message wrapping - set to MESSAGE for full control over SOAP messages.", display="Default Service Mode")
@@ -190,13 +193,16 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 		param = metadataFactory.addProcedureParameter("headers", TypeFacility.RUNTIME_NAMES.CLOB, Type.In, p); //$NON-NLS-1$
 		param.setAnnotation("Headers to send"); //$NON-NLS-1$
 		param.setNullType(NullType.Nullable);
+
+		if (this.importWSDL && conn == null) {
+		    throw new TranslatorException(UTIL.gs(Event.TEIID15007, UTIL.gs(Event.TEIID15007)));
+		}
 		
-		if (conn != null && conn.getWsdl() != null) {
+		if (this.importWSDL && conn != null && conn.getWsdl() != null) {
 			WSDLMetadataProcessor metadataProcessor = new WSDLMetadataProcessor(conn.getWsdl().toString());
 			PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
 			metadataProcessor.getMetadata(metadataFactory, conn);
 		}
-		
 	}
 	
 	@Override
@@ -204,4 +210,12 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 		return true;
 	}
 
+    @TranslatorProperty(display="Import WSDL", category=PropertyType.IMPORT, description="true to import WSDL for the metadata.")
+    public boolean isImportWSDL() {
+        return this.importWSDL;
+    }
+    
+    public void setImportWSDL(boolean bool) {
+        this.importWSDL = bool;
+    }   
 }
