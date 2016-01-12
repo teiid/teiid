@@ -107,6 +107,13 @@ public class IntegrationTestOData extends AbstractMMQueryTestCase {
 		client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
 		response = client.invoke("GET", null);
 		assertEquals(200, response.getStatus());
+		
+		//try an invalid url
+		client = WebClient.create("http://localhost:8080/odata/test$metadata");
+		client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
+		response = client.invoke("GET", null);
+		assertEquals(404, response.getStatus());
+		
 		admin.undeploy("loopy-vdb.xml");
 	}
 	
