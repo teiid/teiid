@@ -41,13 +41,13 @@ import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.WSConnection;
-import org.teiid.translator.TranslatorProperty.PropertyType;
 
 @Translator(name="ws", description="A translator for making Web Service calls")
 public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSConnection> {
@@ -86,7 +86,6 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 	private Mode defaultServiceMode = Mode.PAYLOAD;
 	private Binding defaultBinding = Binding.SOAP12;
 	private String xmlParamName;
-	private boolean importWSDL = true;
 	
 	public WSExecutionFactory() {
 		setSourceRequiredForMetadata(false);
@@ -135,6 +134,11 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
     public final List<String> getSupportedFunctions() {
         return Collections.emptyList();
     }
+	
+	@Override
+	public MetadataProcessor<WSConnection> getMetadataProcessor() {
+		return new WSDLMetadataProcessor();
+	}
 	
 	@Override
 	public void getMetadata(MetadataFactory metadataFactory, WSConnection conn) throws TranslatorException {
@@ -194,15 +198,9 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 		param.setAnnotation("Headers to send"); //$NON-NLS-1$
 		param.setNullType(NullType.Nullable);
 
-		if (this.importWSDL && conn == null) {
-		    throw new TranslatorException(UTIL.gs(Event.TEIID15007, UTIL.gs(Event.TEIID15007)));
-		}
-		
-		if (this.importWSDL && conn != null && conn.getWsdl() != null) {
-			WSDLMetadataProcessor metadataProcessor = new WSDLMetadataProcessor(conn.getWsdl().toString());
-			PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
-			metadataProcessor.getMetadata(metadataFactory, conn);
-		}
+		WSDLMetadataProcessor metadataProcessor = new WSDLMetadataProcessor();
+		PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
+		metadataProcessor.process(metadataFactory, conn);
 	}
 	
 	@Override
@@ -210,12 +208,4 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 		return true;
 	}
 
-    @TranslatorProperty(display="Import WSDL", category=PropertyType.IMPORT, description="true to import WSDL for the metadata.")
-    public boolean isImportWSDL() {
-        return this.importWSDL;
-    }
-    
-    public void setImportWSDL(boolean bool) {
-        this.importWSDL = bool;
-    }   
 }
