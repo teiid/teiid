@@ -44,7 +44,6 @@ import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.FunctionMethod.Determinism;
-import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -132,9 +131,6 @@ public class DDLStringVisitor {
 		
 		if (this.includeFunctions) {
 			for (FunctionMethod f:schema.getFunctions().values()) {
-				if (f.getPushdown() == PushDown.SYNTHETIC) {
-					continue;
-				}
 				if (first) {
 					first = false;
 				}
