@@ -27,11 +27,13 @@ import static org.junit.Assert.*;
 import java.util.Collections;
 
 import org.junit.Test;
+import org.teiid.CommandContext;
+import org.teiid.UserDefinedAggregate;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.metadata.AbstractMetadataRecord.DataModifiable;
 
 @SuppressWarnings("nls")
-public class TestMetatdataFactory {
+public class TestMetadataFactory {
 
 	@Test public void testSchemaProperties() {
 		ModelMetaData mmd = new ModelMetaData();
@@ -45,11 +47,17 @@ public class TestMetatdataFactory {
 	}
 	
 	@Test public void testCreateFunction() throws NoSuchMethodException, SecurityException {
-		FunctionMethod fm = MetadataFactory.createFunctionFromMethod("x", TestMetatdataFactory.class.getMethod("someFunction"));
+		FunctionMethod fm = MetadataFactory.createFunctionFromMethod("x", TestMetadataFactory.class.getMethod("someFunction"));
 		assertEquals(Boolean.class, fm.getOutputParameter().getJavaType());
 		
-		fm = MetadataFactory.createFunctionFromMethod("x", TestMetatdataFactory.class.getMethod("someArrayFunction"));
+		fm = MetadataFactory.createFunctionFromMethod("x", TestMetadataFactory.class.getMethod("someArrayFunction"));
 		assertEquals(String[].class, fm.getOutputParameter().getJavaType());
+	}
+	
+	@Test public void testCreateAggregateFunction() throws NoSuchMethodException, SecurityException {
+		FunctionMethod fm = MetadataFactory.createFunctionFromMethod("x", MyUDAF.class.getMethod("addInput", String.class));
+		assertEquals(Boolean.class, fm.getOutputParameter().getJavaType());
+		assertNotNull(fm.getAggregateAttributes());
 	}
 	
 	public static boolean someFunction() {
@@ -58,6 +66,22 @@ public class TestMetatdataFactory {
 	
 	public static String[] someArrayFunction() {
 		return null;
+	}
+	
+	public static class MyUDAF implements UserDefinedAggregate<Boolean> {
+		@Override
+		public Boolean getResult(CommandContext commandContext) {
+			return null;
+		}
+		
+		@Override
+		public void reset() {
+			
+		}
+		
+		public void addInput(String val) {
+			
+		}
 	}
 	
 }
