@@ -218,6 +218,17 @@ public class TestGeometry {
 		Evaluator.evaluate(ex1);
     }
     
+    @Test(expected=ExpressionEvaluationException.class) public void testEwkbZCooridinate() throws Exception {
+    	WKBWriter writer = new WKBWriter(3, true);
+    	GeometryFactory gf = new GeometryFactory();
+    	Point point = gf.createPoint(new Coordinate(0, 0, 0));
+    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    	writer.write(point, new OutputStreamOutStream(baos));
+    	
+		Expression ex1 = TestFunctionResolving.getExpression("ST_GeomFromBinary(X'"+new BinaryType(baos.toByteArray())+"', 8307)");
+		Evaluator.evaluate(ex1);
+    }
+    
     @Test
     public void testGmlParseSrid() throws Exception {
         String gml = "<gml:Polygon srsName=\"SDO:8307\" xmlns:gml=\"http://www.opengis.net/gml\"><gml:outerBoundaryIs><gml:LinearRing><gml:coordinates decimal=\".\" cs=\",\" ts=\" \">5,1 8,1 8,6 5,7 5,1 </gml:coordinates></gml:LinearRing></gml:outerBoundaryIs></gml:Polygon>";
@@ -244,4 +255,10 @@ public class TestGeometry {
 		ClobType c = (ClobType) Evaluator.evaluate(ex);
 		assertEquals("{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"Point\",\"coordinates\":[4.0,6.0]},{\"type\":\"LineString\",\"coordinates\":[[4.0,6.0],[7.0,10.0]]}]}", ClobType.getString(c));
     }
+    
+    @Test(expected=ExpressionEvaluationException.class) public void testEwktNotExpected() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("ST_GeomFromText('POINT(0 0 0)'))");
+    	Evaluator.evaluate(ex);
+    }
+    
 }

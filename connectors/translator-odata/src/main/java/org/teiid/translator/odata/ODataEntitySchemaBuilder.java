@@ -21,8 +21,6 @@
  */
 package org.teiid.translator.odata;
 
-import static org.teiid.language.visitor.SQLStringVisitor.*;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -259,11 +257,7 @@ public class ODataEntitySchemaBuilder {
     
     static boolean hasColumn(KeyRecord pk, String columnName) {
         if (pk != null) {
-            for (Column column : pk.getColumns()) {
-                if (getRecordName(column).equals(columnName)) {
-                    return true;
-                }
-            }
+        	return pk.getColumnByName(columnName) != null;
         }
         return false;
     }

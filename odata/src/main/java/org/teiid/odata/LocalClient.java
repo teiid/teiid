@@ -36,8 +36,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.odata4j.core.OCollection.Builder;
 import org.odata4j.core.OCollection;
+import org.odata4j.core.OCollection.Builder;
 import org.odata4j.core.OCollections;
 import org.odata4j.core.OObject;
 import org.odata4j.core.OProperties;
@@ -163,7 +163,13 @@ public class LocalClient implements Client {
 	}
 
 	ConnectionImpl getConnection() throws SQLException {
+		if (vdbName == null || !vdbName.matches("[\\w-\\.]+")) { //$NON-NLS-1$
+			throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16008));			
+		}
 		ConnectionImpl connection = driver.connect(this.connectionString, this.initProperties);
+		if (connection == null) {
+			throw new TeiidRuntimeException("URL not valid " + this.connectionString); //$NON-NLS-1$
+		}
 		ODBCServerRemoteImpl.setConnectionProperties(connection);
 		ODBCServerRemoteImpl.setConnectionProperties(connection, this.initProperties);
 		return connection;

@@ -103,7 +103,7 @@ public class GeometryFunctionMethods {
                    pushdown=PushDown.CAN_PUSHDOWN)
     public static GeometryType geomFromText(ClobType wkt, int srid) 
             throws FunctionExecutionException {
-    	return GeometryUtils.geometryFromClob(wkt, srid);
+    	return GeometryUtils.geometryFromClob(wkt, srid, false);
     }
     
     @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMWKB,

@@ -34,7 +34,6 @@ import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
 
 import org.odata4j.producer.ODataProducer;
-import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.LRUCache;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.VDBLifeCycleListener;
@@ -57,7 +56,7 @@ public class TeiidProducerProvider implements ContextResolver<ODataProducer>, VD
 	@Override
 	public ODataProducer getContext(Class<?> arg0) {
 		if (!arg0.equals(ODataProducer.class)) {
-			throw new TeiidRuntimeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16007));
+			return null;
 		}
 		
 		String vdbName = null;
@@ -77,19 +76,19 @@ public class TeiidProducerProvider implements ContextResolver<ODataProducer>, VD
 			vdbName = getInitParameters().getProperty("allow-vdb"); //$NON-NLS-1$		
 		}
 		
-		if (vdbName == null) {
-		    throw new TeiidRuntimeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16008));
+		if (vdbName != null) { 
+			int versionIdx = vdbName.indexOf('.');
+			if (versionIdx != -1) {
+				version = Integer.parseInt(vdbName.substring(versionIdx+1));
+				vdbName = vdbName.substring(0, versionIdx);
+			}
+			
+			vdbName = vdbName.trim();
 		}
 		
-		int versionIdx = vdbName.indexOf('.');
-		if (versionIdx != -1) {
-			version = Integer.parseInt(vdbName.substring(versionIdx+1));
-			vdbName = vdbName.substring(0, versionIdx);
-		}
-		
-		vdbName = vdbName.trim();
-		if (vdbName.isEmpty()) {
-			throw new TeiidRuntimeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16008));
+		if (vdbName == null || !vdbName.matches("[\\w-\\.]+")) { //$NON-NLS-1$
+			//simply invalid don't bother caching
+			return new TeiidProducer(new LocalClient(vdbName, version, getInitParameters()));
 		}
 		
 		VDBKey key = new VDBKey(vdbName, version);
