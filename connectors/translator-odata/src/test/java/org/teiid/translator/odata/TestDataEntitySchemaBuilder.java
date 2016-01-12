@@ -24,6 +24,7 @@ package org.teiid.translator.odata;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
 import java.io.FileReader;
@@ -233,6 +234,18 @@ public class TestDataEntitySchemaBuilder {
 	@Test
 	public void testUnquieTreatedAsKey() {
 		// test that unique key is treated as key, when pk is absent.
+	}
+	
+	@Test
+	public void testEdmPropertyPrimaryKey() throws Exception{
+	    String ddl = "CREATE FOREIGN TABLE Sales (\n" + 
+	            "	id integer PRIMARY KEY OPTIONS(NAMEINSOURCE 'myid'),\n" +
+                "   name string(5));";
+	    
+	    TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "sales", "sl");		
+	    EdmDataServices edm = ODataEntitySchemaBuilder.buildMetadata(metadata.getMetadataStore());
+	    assertFalse("Primary key is nullable.", ((EdmProperty)edm.findEdmProperty("id")).isNullable());
+	    assertTrue(((EdmProperty)edm.findEdmProperty("name")).isNullable());
 	}
 	
 	@Test
