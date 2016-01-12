@@ -77,7 +77,7 @@ public class TeiidProducerProvider implements ContextResolver<ODataProducer>, VD
 			vdbName = getInitParameters().getProperty("allow-vdb"); //$NON-NLS-1$		
 		}
 		
-		if (vdbName == null) {
+		if (vdbName == null || !vdbName.matches("[\\w-\\.]+")) { //$NON-NLS-1$
 		    throw new TeiidRuntimeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16008));
 		}
 		
