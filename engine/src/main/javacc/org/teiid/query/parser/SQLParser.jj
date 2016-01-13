@@ -571,6 +571,7 @@ TOKEN :
 |   <SEMICOLON: ";">
 |   <COLON: ":">
 |	<CONCAT_OP: "||">
+|   <DOUBLE_AMP_OP: "&&">
 }
 
 /*
@@ -3788,14 +3789,15 @@ Expression commonValueExpression(ParseInfo info) :
 {
 	Expression leftExpression = null;
 	Expression rightExpression = null;
+	Token operator = null;
 }
 {
 	(	leftExpression=plusExpression(info)
 		(
-			<CONCAT_OP>
+			(operator=<DOUBLE_AMP_OP>|operator=<CONCAT_OP>)
 			rightExpression=plusExpression(info)
 			{
-				leftExpression = new Function("||", new Expression[] {leftExpression, rightExpression}); //$NON-NLS-1$
+				leftExpression = new Function(operator.image, new Expression[] {leftExpression, rightExpression}); //$NON-NLS-1$
 				rightExpression = null;				
 			}
 		)*

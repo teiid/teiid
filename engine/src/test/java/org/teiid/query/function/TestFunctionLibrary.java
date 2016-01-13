@@ -1453,13 +1453,17 @@ public class TestFunctionLibrary {
         assertEquals("value1", result);
     }
 	
-	@Test() public void testTokenize() throws Exception {
+	@Test public void testTokenize() throws Exception {
 		helpInvokeMethod("tokenize", new Object[] {"bxaxxc", 'x'}, new ArrayImpl("b", "axc")); //$NON-NLS-1$
 	}
 	
-	@Test() public void testNodeId() throws Exception {
+	@Test public void testNodeId() throws Exception {
 		System.setProperty("jboss.node.name", "x");
 		helpInvokeMethod("node_id", new Object[] {}, "x"); //$NON-NLS-1$
+	}
+	
+	@Test public void testGetBuiltin() throws Exception {
+		assertEquals(17, RealMetadataFactory.SFM.getSystemFunctionLibrary().getBuiltInAggregateFunctions(false).size());
 	}
 
 }

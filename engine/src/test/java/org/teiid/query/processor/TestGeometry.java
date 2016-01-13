@@ -23,11 +23,14 @@
 package org.teiid.query.processor;
 
 import static org.junit.Assert.*;
+import static org.teiid.query.processor.TestProcessor.*;
 import static org.teiid.query.resolver.TestFunctionResolving.*;
 
 import java.io.ByteArrayOutputStream;
 import java.sql.Blob;
 import java.sql.Clob;
+import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Test;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
@@ -40,6 +43,7 @@ import org.teiid.query.function.GeometryTransformUtils;
 import org.teiid.query.function.GeometryUtils;
 import org.teiid.query.resolver.TestFunctionResolving;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.unittest.RealMetadataFactory;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
@@ -260,5 +264,82 @@ public class TestGeometry {
     	Expression ex = TestFunctionResolving.getExpression("ST_GeomFromText('POINT(0 0 0)'))");
     	Evaluator.evaluate(ex);
     }
+    
+    @Test public void testEnvelope() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("ST_AsText(ST_Envelope(ST_GEOMFROMTEXT('LINESTRING(0 0, 1 3)')))");
+		ClobType c = (ClobType) Evaluator.evaluate(ex);
+		assertEquals("POLYGON ((0 0, 0 3, 1 3, 1 0, 0 0))", ClobType.getString(c));
+    }
+    
+    @Test public void testEwkt() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("st_asewkt(ST_GeomFromEwkt('POINT(0 0 0)')))");
+    	assertEquals("POINT (0 0)", ClobType.getString((ClobType)Evaluator.evaluate(ex)));
+    }
+    
+    @Test public void testEwktWithSRID() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("st_asewkt(ST_GeomFromEwkt('SRID=4326;POINT(0 0)')))");
+    	Evaluator.evaluate(ex);
+    	
+    	//whitespace
+    	ex = TestFunctionResolving.getExpression("st_asewkt(ST_GeomFromEwkt('   SRID=4326;POINT(0 0)')))");
+    	Evaluator.evaluate(ex);
+    	
+    	//mixed case
+    	ex = TestFunctionResolving.getExpression("st_asewkt(ST_GeomFromEwkt('SrID=4326;POINT(0 0)')))");
+    	assertEquals("SRID=4326;POINT (0 0)", ClobType.getString((ClobType)Evaluator.evaluate(ex)));
+    }
+    
+    @Test public void testAsFromEwkb() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("st_asewkt(st_geomfromewkb(st_asewkb(ST_GeomFromEwkt('SrID=4326;POINT(0 0)'))))");
+    	assertEquals("SRID=4326;POINT (0 0)", ClobType.getString((ClobType)Evaluator.evaluate(ex)));
+    }
+    
+    @Test public void testSimplify() throws Exception {
+		Expression ex = TestFunctionResolving.getExpression("ST_AsText(ST_SIMPLIFY(ST_GeomFromText('LINESTRING(1 1,2 2,2 3.5,1 3,1 2,2 1)'), 1))");
+		assertEquals("LINESTRING (1 1, 2 3.5, 2 1)", ClobType.getString((ClobType)Evaluator.evaluate(ex)));
+	}
+    
+    @Test public void testWithin() throws Exception {
+		Expression ex = TestFunctionResolving.getExpression("ST_WITHIN(ST_GeomFromText('POINT(0 0)'), ST_GeomFromText('POINT(0 0)'))");
+		assertTrue((Boolean)Evaluator.evaluate(ex));
+		
+		ex = TestFunctionResolving.getExpression("ST_WITHIN(ST_GeomFromText('POINT(0 1)'), ST_GeomFromText('POINT(0 0)'))");
+		assertFalse((Boolean)Evaluator.evaluate(ex));
+	}
+    
+    @Test public void testDWithin() throws Exception {
+		Expression ex = TestFunctionResolving.getExpression("ST_DWITHIN(ST_GeomFromText('POINT(0 0)'), ST_GeomFromText('POINT(0 .5)'), 1)");
+		assertTrue((Boolean)Evaluator.evaluate(ex));
+		
+		ex = TestFunctionResolving.getExpression("ST_DWITHIN(ST_GeomFromText('POINT(0 1)'), ST_GeomFromText('POINT(0 0)'), 1)");
+		assertFalse((Boolean)Evaluator.evaluate(ex));
+	}
+    
+    @Test public void testBoundingBoxIntesects() throws Exception {
+		Expression ex = TestFunctionResolving.getExpression("ST_GEOMFROMTEXT('LINESTRING(0 0, 1 3)') && ST_GEOMFROMTEXT('POINT(0 1)')");
+		assertTrue((Boolean)Evaluator.evaluate(ex));
+	}
+    
+    @Test public void testExtent() throws Exception {
+       final String sql = "SELECT st_astext(st_extent(g)) from (select ST_GEOMFROMTEXT('LINESTRING(0 0, 1 3)') as g union all select ST_GEOMFROMTEXT('POINT(5 5)')) as x"; //$NON-NLS-1$
+        
+       List<?>[] expected = new List[] { 
+           Arrays.asList("POLYGON ((0 0, 0 5, 5 5, 5 0, 0 0))")
+       };    
+    
+       ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+
+       helpProcess(plan, new HardcodedDataManager(), expected);
+	}
+    
+    @Test public void testForce2d() throws Exception {
+		Expression ex = TestFunctionResolving.getExpression("st_astext(st_force_2d(ST_GEOMFROMTEXT('LINESTRING(0 0, 1 3)')))");
+		assertEquals("LINESTRING (0 0, 1 3)", ClobType.getString((ClobType)Evaluator.evaluate(ex)));
+	}
+    
+    @Test public void testHasArc() throws Exception {
+		Expression ex = TestFunctionResolving.getExpression("(st_hasarc(ST_GEOMFROMTEXT('LINESTRING(0 0, 1 3)')))");
+		assertFalse((Boolean)Evaluator.evaluate(ex));
+	}
     
 }
