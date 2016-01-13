@@ -41,6 +41,7 @@ import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
@@ -79,6 +80,7 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
     	TEIID15004, 
     	TEIID15005, 
     	TEIID15006,
+    	TEIID15007
     }	
 		
 	private Mode defaultServiceMode = Mode.PAYLOAD;
@@ -86,7 +88,7 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 	private String xmlParamName;
 	
 	public WSExecutionFactory() {
-		setSourceRequiredForMetadata(true);
+		setSourceRequiredForMetadata(false);
 	}
 
 	@TranslatorProperty(description="Contols request/response message wrapping - set to MESSAGE for full control over SOAP messages.", display="Default Service Mode")
@@ -132,6 +134,11 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
     public final List<String> getSupportedFunctions() {
         return Collections.emptyList();
     }
+	
+	@Override
+	public MetadataProcessor<WSConnection> getMetadataProcessor() {
+		return new WSDLMetadataProcessor();
+	}
 	
 	@Override
 	public void getMetadata(MetadataFactory metadataFactory, WSConnection conn) throws TranslatorException {
@@ -190,13 +197,10 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 		param = metadataFactory.addProcedureParameter("headers", TypeFacility.RUNTIME_NAMES.CLOB, Type.In, p); //$NON-NLS-1$
 		param.setAnnotation("Headers to send"); //$NON-NLS-1$
 		param.setNullType(NullType.Nullable);
-		
-		if (conn != null && conn.getWsdl() != null) {
-			WSDLMetadataProcessor metadataProcessor = new WSDLMetadataProcessor(conn.getWsdl().toString());
-			PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
-			metadataProcessor.getMetadata(metadataFactory, conn);
-		}
-		
+
+		WSDLMetadataProcessor metadataProcessor = new WSDLMetadataProcessor();
+		PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
+		metadataProcessor.process(metadataFactory, conn);
 	}
 	
 	@Override

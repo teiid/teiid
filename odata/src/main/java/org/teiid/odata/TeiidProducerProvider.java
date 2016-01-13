@@ -34,7 +34,6 @@ import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
 
 import org.odata4j.producer.ODataProducer;
-import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.LRUCache;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.VDBLifeCycleListener;
@@ -57,7 +56,7 @@ public class TeiidProducerProvider implements ContextResolver<ODataProducer>, VD
 	@Override
 	public ODataProducer getContext(Class<?> arg0) {
 		if (!arg0.equals(ODataProducer.class)) {
-			throw new TeiidRuntimeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16007));
+			return null;
 		}
 		
 		String vdbName = null;
@@ -77,30 +76,28 @@ public class TeiidProducerProvider implements ContextResolver<ODataProducer>, VD
 			vdbName = getInitParameters().getProperty("allow-vdb"); //$NON-NLS-1$		
 		}
 		
-		if (vdbName == null) {
-		    throw new TeiidRuntimeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16008));
-		}
-		
-		int versionIdx = vdbName.indexOf('.');
-		if (versionIdx != -1) {
-			String versionString = vdbName.substring(versionIdx+1);
-			try {
-				version = Integer.parseInt(versionString);
-				vdbName = vdbName.substring(0, versionIdx);
-			} catch (NumberFormatException e) {
-				//semantic version
+		if (vdbName != null) {
+			int versionIdx = vdbName.indexOf('.');
+			if (versionIdx != -1) {
+				String versionString = vdbName.substring(versionIdx+1);
+				try {
+					version = Integer.parseInt(versionString);
+					vdbName = vdbName.substring(0, versionIdx);
+				} catch (NumberFormatException e) {
+					//semantic version
+				}
 			}
+			
+			vdbName = vdbName.trim();
 		}
-		
-		vdbName = vdbName.trim();
-		if (vdbName.isEmpty()) {
-			throw new TeiidRuntimeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16008));
-		}
-		
+
 		VDBKey key = new VDBKey(vdbName, version==null?1:version);
-		if (key.isSemantic() && (!key.isFullySpecified() || key.isAtMost() || key.getVersion() != 1)) {
-			throw new TeiidRuntimeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16021, key));
+
+		if (vdbName == null || !vdbName.matches("[\\w-\\.]+") || (key.isSemantic() && (!key.isFullySpecified() || key.isAtMost() || key.getVersion() != 1))) { //$NON-NLS-1$
+			//simply invalid don't bother caching
+			return new TeiidProducer(new LocalClient(vdbName, version, getInitParameters()));
 		}
+		
 		SoftReference<LocalClient> ref = this.clientMap.get(key);
 		LocalClient client = null;
 		if (ref != null) {

@@ -62,8 +62,9 @@ public class TestWSTranslator {
 
 	@Test public void testPre81Procedure() throws Exception {
 		WSExecutionFactory ef = new WSExecutionFactory();
+		WSConnection mockConnection = Mockito.mock(WSConnection.class);
     	MetadataFactory mf = new MetadataFactory("vdb", 1, "x", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
-		ef.getMetadata(mf, null);
+		ef.getMetadata(mf, mockConnection);
 		Procedure p = mf.getSchema().getProcedure(WSExecutionFactory.INVOKE_HTTP);
 		assertEquals(7, p.getParameters().size());
 		p.getParameters().remove(4);
@@ -79,8 +80,7 @@ public class TestWSTranslator {
 		}
 		
 		TransformationMetadata tm = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "vdb");
-		RuntimeMetadataImpl rm = new RuntimeMetadataImpl(tm);
-		WSConnection mockConnection = Mockito.mock(WSConnection.class);
+		RuntimeMetadataImpl rm = new RuntimeMetadataImpl(tm);		
 		Dispatch<Object> mockDispatch = mockDispatch();
 		DataSource source = Mockito.mock(DataSource.class);
 		Mockito.stub(mockDispatch.invoke(Mockito.any(DataSource.class))).toReturn(source);
@@ -105,14 +105,14 @@ public class TestWSTranslator {
 	
 	@Test public void testStreaming() throws Exception {
 		WSExecutionFactory ef = new WSExecutionFactory();
+		WSConnection mockConnection = Mockito.mock(WSConnection.class);
     	MetadataFactory mf = new MetadataFactory("vdb", 1, "x", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
-		ef.getMetadata(mf, null);
+		ef.getMetadata(mf, mockConnection);
 		Procedure p = mf.getSchema().getProcedure(WSExecutionFactory.INVOKE_HTTP);
 		assertEquals(7, p.getParameters().size());
 		
 		TransformationMetadata tm = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "vdb");
-		RuntimeMetadataImpl rm = new RuntimeMetadataImpl(tm);
-		WSConnection mockConnection = Mockito.mock(WSConnection.class);
+		RuntimeMetadataImpl rm = new RuntimeMetadataImpl(tm);		
 		Dispatch<Object> mockDispatch = mockDispatch();
 		DataSource mock = Mockito.mock(DataSource.class);
 		ByteArrayInputStream baos = new ByteArrayInputStream(new byte[100]);
@@ -138,13 +138,13 @@ public class TestWSTranslator {
 	
 	@Test public void testHeaders() throws Exception {
 		WSExecutionFactory ef = new WSExecutionFactory();
+		WSConnection mockConnection = Mockito.mock(WSConnection.class);
     	MetadataFactory mf = new MetadataFactory("vdb", 1, "x", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
-		ef.getMetadata(mf, null);
+		ef.getMetadata(mf, mockConnection);
 		Procedure p = mf.getSchema().getProcedure(WSExecutionFactory.INVOKE_HTTP);
 		
 		TransformationMetadata tm = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "vdb");
 		RuntimeMetadataImpl rm = new RuntimeMetadataImpl(tm);
-		WSConnection mockConnection = Mockito.mock(WSConnection.class);
 		Dispatch<Object> mockDispatch = mockDispatch();
 		DataSource mock = Mockito.mock(DataSource.class);
 		ByteArrayInputStream baos = new ByteArrayInputStream(new byte[100]);

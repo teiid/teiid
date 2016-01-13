@@ -92,6 +92,7 @@ import org.teiid.translator.CacheDirective;
 import org.teiid.translator.odata.ODataEntitySchemaBuilder;
 import org.teiid.translator.odata.ODataTypeManager;
 import org.teiid.transport.LocalServerConnection;
+import org.teiid.vdb.runtime.VDBKey;
 
 public class LocalClient implements Client {
 	private static final String BATCH_SIZE = "batch-size"; //$NON-NLS-1$
@@ -167,7 +168,21 @@ public class LocalClient implements Client {
 	}
 
 	ConnectionImpl getConnection() throws SQLException {
+		if (this.vdb == null) {
+			//validate the name
+			if (vdbName == null || !vdbName.matches("[\\w-\\.]+")) { //$NON-NLS-1$
+				throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16008));			
+			}
+			VDBKey key = new VDBKey(vdbName, vdbVersion==null?0:vdbVersion);
+			if (key.isSemantic() && (!key.isFullySpecified() || key.isAtMost() || key.getVersion() != 1)) {
+				throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16021, key));
+			}
+		}
+		
 		ConnectionImpl connection = driver.connect(this.connectionString, this.initProperties);
+		if (connection == null) {
+			throw new TeiidRuntimeException("URL not valid " + this.connectionString); //$NON-NLS-1$
+		}
 		ODBCServerRemoteImpl.setConnectionProperties(connection);
 		ODBCServerRemoteImpl.setConnectionProperties(connection, this.initProperties);
 		return connection;
