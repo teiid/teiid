@@ -24,7 +24,10 @@ package org.teiid.query.function;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PushbackInputStream;
+import java.io.PushbackReader;
 import java.io.Reader;
+import java.sql.Blob;
 import java.sql.SQLException;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -32,12 +35,15 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.teiid.CommandContext;
+import org.teiid.UserDefinedAggregate;
 import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.ClobType.Type;
 import org.teiid.core.types.GeometryType;
+import org.teiid.core.types.InputStreamFactory;
 import org.teiid.query.QueryPlugin;
 import org.wololo.geojson.GeoJSON;
 import org.wololo.jts2geojson.GeoJSONReader;
@@ -49,6 +55,7 @@ import org.xml.sax.SAXException;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.io.ByteOrderValues;
 import com.vividsolutions.jts.io.InputStreamInStream;
 import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKBReader;
@@ -56,6 +63,7 @@ import com.vividsolutions.jts.io.WKBWriter;
 import com.vividsolutions.jts.io.WKTReader;
 import com.vividsolutions.jts.io.gml2.GMLHandler;
 import com.vividsolutions.jts.io.gml2.GMLWriter;
+import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
 
 /**
  * Utility methods for geometry
@@ -83,23 +91,66 @@ public class GeometryUtils {
         return geometryFromClob(wkt, GeometryType.UNKNOWN_SRID, false);
     }
 
-    public static GeometryType geometryFromClob(ClobType wkt, int srid, boolean allowEwkt) 
+    public static GeometryType geometryFromClob(ClobType wkt, Integer srid, boolean allowEwkt) 
             throws FunctionExecutionException {
     	Reader r = null;
         try {
             WKTReader reader = new WKTReader();
             r = wkt.getCharacterStream();
+            if (allowEwkt) {
+            	PushbackReader pbr = new PushbackReader(r, 1);
+            	r = pbr;
+            	char[] expected = new char[] {'s', 'r', 'i', 'd','='};
+            	int expectedIndex = 0;
+            	StringBuilder sridBuffer = null;
+            	for (int i = 0; i < 100000; i++) {
+            		int charRead = pbr.read();
+            		if (charRead == -1) {
+            			break;
+            		}
+            		if (expectedIndex == expected.length) {
+            			//parse srid
+            			if (sridBuffer == null) {
+            				sridBuffer = new StringBuilder(4);
+            			}
+            			if (charRead == ';') {
+            				if (sridBuffer.length() == 0) {
+            					pbr.unread(charRead);
+            				}
+            				break;
+            			}
+            			sridBuffer.append((char)charRead);
+            			continue;
+            		}
+            		if (expectedIndex == 0 && Character.isWhitespace(charRead)) {
+            			continue;
+            		}
+            		if (expected[expectedIndex] != Character.toLowerCase(charRead)) {
+    					pbr.unread(charRead);
+            			break;
+            		}
+            		expectedIndex++;	
+            	}
+            	if (sridBuffer != null) {
+            		srid = Integer.parseInt(sridBuffer.toString());
+            	}
+            }
             Geometry jtsGeometry = reader.read(r);
             if (!allowEwkt && (jtsGeometry.getSRID() != GeometryType.UNKNOWN_SRID || (jtsGeometry.getCoordinate() != null && !Double.isNaN(jtsGeometry.getCoordinate().z)))) {
             	//don't allow ewkt that requires a specific function
             	throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31160, "EWKT")); //$NON-NLS-1$
+            }
+            if (srid == null) {
+            	srid = jtsGeometry.getSRID();
             }
             return getGeometryType(jtsGeometry, srid);
         } catch (ParseException e) {
             throw new FunctionExecutionException(e);
         } catch (SQLException e) {
             throw new FunctionExecutionException(e);
-        } finally {
+        } catch (IOException e) {
+        	throw new FunctionExecutionException(e);
+		} finally {
         	if (r != null) {
         		try {
 					r.close();
@@ -359,4 +410,100 @@ public class GeometryUtils {
 		Geometry geom = getGeometry(is, srid, true);
 		return getGeometryType(geom);
 	}
+
+	public static GeometryType simplify(
+			GeometryType geom, double tolerance) throws FunctionExecutionException {
+		return getGeometryType(DouglasPeuckerSimplifier.simplify(getGeometry(geom), tolerance));
+	}
+	
+	public static boolean boundingBoxIntersects(
+			GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
+		Geometry g1 = getGeometry(geom1);
+        Geometry g2 = getGeometry(geom2);
+		return g1.getEnvelope().intersects(g2.getEnvelope());
+	}
+
+	public static GeometryType envelope(GeometryType geom) throws FunctionExecutionException {
+		return getGeometryType(getGeometry(geom).getEnvelope());
+	}
+
+	public static Boolean within(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
+		Geometry g1 = getGeometry(geom1);
+        Geometry g2 = getGeometry(geom2);
+		return g1.within(g2);
+	}
+	
+	public static Boolean dwithin(GeometryType geom1, GeometryType geom2, double distance) throws FunctionExecutionException {
+		return distance(geom1, geom2) < distance;
+	}
+	
+	public static class Extent implements UserDefinedAggregate<GeometryType> {
+		
+		private Geometry g;
+		
+		public Extent() {
+		}
+		
+		@Override
+		public void reset() {
+			g = null;
+		}
+		
+		public void addInput(GeometryType geom) throws FunctionExecutionException {
+			Geometry g1 = getGeometry(geom);
+			if (g == null) {
+				g = g1.getEnvelope();
+			} else {
+				g = g.union(g1.getEnvelope());
+			}
+		}
+		
+		@Override
+		public GeometryType getResult(CommandContext commandContext) {
+			if (g == null) {
+				return null;
+			}
+			return getGeometryType(g.getEnvelope());
+		}
+
+	}
+
+	/**
+	 * We'll take the wkb format and add the extended flag/srid
+	 * @param geometry
+	 * @return
+	 */
+	public static BlobType geometryToEwkb(final GeometryType geometry) {
+		final Blob b = geometry.getReference();
+    	BlobImpl blobImpl = new BlobImpl(new InputStreamFactory() {
+			
+			@Override
+			public InputStream getInputStream() throws IOException {
+				PushbackInputStream pbis;
+				try {
+					pbis = new PushbackInputStream(b.getBinaryStream(), 9);
+				} catch (SQLException e) {
+					throw new IOException(e);
+				}
+				int byteOrder = pbis.read();
+				if (byteOrder == -1) {
+					return pbis;
+				}
+				byte[] typeInt = new byte[4];
+				int bytesRead = pbis.read(typeInt);
+				if (bytesRead == 4) {
+					int srid = geometry.getSrid();
+					byte[] sridInt = new byte[4];
+					ByteOrderValues.putInt(srid, sridInt, byteOrder==0?ByteOrderValues.BIG_ENDIAN:ByteOrderValues.LITTLE_ENDIAN);
+					pbis.unread(sridInt);
+					typeInt[byteOrder==0?0:3] |= 0x20;
+				}
+				pbis.unread(typeInt, 0, bytesRead);
+				pbis.unread(byteOrder);
+				return pbis;
+			}
+		});
+    	return new BlobType(blobImpl);
+	}
+
 }

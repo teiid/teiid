@@ -47,6 +47,7 @@ import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
+import org.teiid.translator.SourceSystemFunctions;
 
 
 
@@ -560,12 +561,17 @@ public class FunctionLibrary {
      */
     public List<FunctionMethod> getBuiltInAggregateFunctions(boolean includeAnalytic) {
     	ArrayList<FunctionMethod> result = new ArrayList<FunctionMethod>();
+    	if (this.systemFunctions != null) {
+	    	FunctionDescriptor stExtent = this.systemFunctions.getFunction(SourceSystemFunctions.ST_EXTENT, new Class[] {DataTypeManager.DefaultDataClasses.GEOMETRY});
+	    	result.add(stExtent.getMethod());
+    	}
     	for (Type type : AggregateSymbol.Type.values()) {
 			AggregateAttributes aa = new AggregateAttributes();
     		String returnType = null;
     		String[] argTypes = null;
     		aa.setAllowsDistinct(true);
     		switch (type) {
+    		case TEXTAGG:
     		case USER_DEFINED:
     			continue;
 			case DENSE_RANK:

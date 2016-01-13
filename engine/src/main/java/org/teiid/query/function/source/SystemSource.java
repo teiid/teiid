@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.Comparator;
 
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.GeometryType;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
@@ -38,6 +39,7 @@ import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.function.GeometryFunctionMethods;
+import org.teiid.query.function.GeometryUtils;
 import org.teiid.query.function.JSONFunctionMethods;
 import org.teiid.query.function.SystemFunctionMethods;
 import org.teiid.query.function.TeiidFunction;
@@ -130,7 +132,8 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
         addStringFunction(SourceSystemFunctions.LTRIM, QueryPlugin.Util.getString("SystemSource.Left_result"), "leftTrim", DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
         addStringFunction(SourceSystemFunctions.RTRIM, QueryPlugin.Util.getString("SystemSource.Right_result"), "rightTrim", DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
         addConcatFunction();    
-        addSubstringFunction(); 
+        addSubstringFunction(SourceSystemFunctions.SUBSTRING); 
+        addSubstringFunction("substr"); //$NON-NLS-1$
         addLeftRightFunctions();
         addLocateFunction();
         addReplaceFunction();
@@ -205,6 +208,14 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
         addFunctions(SystemFunctionMethods.class);
         addFunctions(FunctionMethods.class);
         addFunctions(XMLSystemFunctions.class);
+		try {
+			FunctionMethod fm = MetadataFactory.createFunctionFromMethod("st_extent", GeometryUtils.Extent.class.getMethod("addInput", GeometryType.class)); //$NON-NLS-1$ //$NON-NLS-2$
+			this.functions.add(fm);
+		} catch (NoSuchMethodException e) {
+			throw new AssertionError("Could not find function"); //$NON-NLS-1$
+		} catch (SecurityException e) {
+			throw new AssertionError("Could not find function"); //$NON-NLS-1$
+		}
     }
     
     private void addFunctions(Class<?> clazz) {
@@ -600,16 +611,16 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
         functions.add(concat2);                         
     }
 
-    private void addSubstringFunction() {
+    private void addSubstringFunction(String name) {
         functions.add(
-            new FunctionMethod(SourceSystemFunctions.SUBSTRING, QueryPlugin.Util.getString("SystemSource.Substring_desc"), STRING, FUNCTION_CLASS, "substring", //$NON-NLS-1$ //$NON-NLS-2$ 
+            new FunctionMethod(name, QueryPlugin.Util.getString("SystemSource.Substring_desc"), STRING, FUNCTION_CLASS, "substring", //$NON-NLS-1$ //$NON-NLS-2$ 
                 new FunctionParameter[] {
                     new FunctionParameter("string", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Substring_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("index", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Substring_arg2")), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("length", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Substring_arg3")) }, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Substring_result")) ) );                 //$NON-NLS-1$ //$NON-NLS-2$
         functions.add(
-            new FunctionMethod(SourceSystemFunctions.SUBSTRING, QueryPlugin.Util.getString("SystemSource.Susbstring2_desc"), STRING, FUNCTION_CLASS, "substring", //$NON-NLS-1$ //$NON-NLS-2$ 
+            new FunctionMethod(name, QueryPlugin.Util.getString("SystemSource.Susbstring2_desc"), STRING, FUNCTION_CLASS, "substring", //$NON-NLS-1$ //$NON-NLS-2$ 
                 new FunctionParameter[] {
                     new FunctionParameter("string", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Substring2_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("index", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Substring2_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
