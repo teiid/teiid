@@ -41,6 +41,7 @@ import org.teiid.query.metadata.TempCapabilitiesFinder;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.QueryOptimizer;
+import org.teiid.query.optimizer.TestAggregatePushdown;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -619,5 +620,25 @@ public class TestMultiSourcePlanToProcessConverter {
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB(), null, new Options().implicitMultiSourceJoin(false), new BasicSourceCapabilities());
         assertEquals(3, dataMgr.getCommandHistory().size());
     }
+    
+    @Test public void testCountStar() throws Exception {
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
 
+        final String userSql = "SELECT count(*) FROM MultiModel.Phys limit 100"; //$NON-NLS-1$
+        final String multiModel = "MultiModel"; //$NON-NLS-1$
+        final int sources = 2;
+        final List<?>[] expected = new List<?>[] {
+            Arrays.asList(4),
+        };
+        final HardcodedDataManager dataMgr = new HardcodedDataManager(metadata);
+        dataMgr.addData("SELECT COUNT(*) FROM Phys AS g_0", //$NON-NLS-1$
+                        new List<?>[] {
+                            Arrays.asList(2)}); 
+        
+        BasicSourceCapabilities bsc = TestAggregatePushdown.getAggregateCapabilities();
+        bsc.setFunctionSupport("ifnull", true);
+        
+        helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB(), null, new Options().implicitMultiSourceJoin(false), bsc);
+    }
+    
 }
