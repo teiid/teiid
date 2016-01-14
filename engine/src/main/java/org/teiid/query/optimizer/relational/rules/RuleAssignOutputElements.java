@@ -188,13 +188,15 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	            	if (NodeEditor.findParent(root, NodeConstants.Types.PROJECT, NodeConstants.Types.SOURCE) != null) {
 	            		//there's a chance that partial projection was used.  we are not a defacto project node
 	            		//take credit for creating anything that is not an element symbol
-	            		List<Expression> filteredElements = new ArrayList<Expression>(outputElements.size());
+	            		LinkedHashSet<Expression> filteredElements = new LinkedHashSet<Expression>();
 	                    for (Expression element : outputElements) {
 	                        if(element instanceof ElementSymbol) {
 	                            filteredElements.add(element);
+	                        } else {
+	                        	filteredElements.addAll(ElementCollectorVisitor.getElements(element, false));
 	                        }
 	                    }
-	                    outputElements = filteredElements;
+	                    outputElements = new ArrayList<Expression>(filteredElements);
 	            	}
 		    	}
 		        assignOutputElements(root.getLastChild(), outputElements, metadata, capFinder, rules, analysisRecord, context);
