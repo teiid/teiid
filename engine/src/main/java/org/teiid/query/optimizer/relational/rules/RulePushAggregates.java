@@ -142,7 +142,7 @@ public class RulePushAggregates implements
 		            			}
 		            			Set<Expression> stagedGroupingSymbols = new LinkedHashSet<Expression>();
 		            			stagedGroupingSymbols.addAll(groupingExpressions);
-	                        	aggregates = stageAggregates(groupNode, metadata, stagedGroupingSymbols, aggregates);
+	                        	aggregates = stageAggregates(groupNode, metadata, stagedGroupingSymbols, aggregates, false);
 			                    if (aggregates.isEmpty() && stagedGroupingSymbols.isEmpty()) {
 			                        continue;
 			                    }
@@ -275,7 +275,7 @@ public class RulePushAggregates implements
 		
 		List<AggregateSymbol> copy = new ArrayList<AggregateSymbol>(aggregates);
 		aggregates.clear();
-		Map<AggregateSymbol, Expression> aggMap = buildAggregateMap(copy, metadata, aggregates);
+		Map<AggregateSymbol, Expression> aggMap = buildAggregateMap(copy, metadata, aggregates, false);
 		
 		boolean shouldPushdown = false;
 		List<Boolean> pushdownList = new ArrayList<Boolean>(unionChildren.size());
@@ -754,7 +754,7 @@ public class RulePushAggregates implements
             }*/
             
             if (aggregates != null) {
-                aggregates = stageAggregates(groupNode, metadata, stagedGroupingSymbols, aggregates);
+                aggregates = stageAggregates(groupNode, metadata, stagedGroupingSymbols, aggregates, true);
             } else {
                 aggregates = new ArrayList<AggregateSymbol>(1);
             }
@@ -829,7 +829,7 @@ public class RulePushAggregates implements
     Set<AggregateSymbol> stageAggregates(PlanNode groupNode,
                                  QueryMetadataInterface metadata,
                                  Set<Expression> stagedGroupingSymbols,
-                                 Collection<AggregateSymbol> aggregates) throws TeiidComponentException, QueryPlannerException {
+                                 Collection<AggregateSymbol> aggregates, boolean join) throws TeiidComponentException, QueryPlannerException {
         //remove any aggregates that are computed over a group by column
         for (final Iterator<AggregateSymbol> iterator = aggregates.iterator(); iterator.hasNext();) {
             final AggregateSymbol symbol = iterator.next();
@@ -849,7 +849,7 @@ public class RulePushAggregates implements
         Set<AggregateSymbol> newAggs = new HashSet<AggregateSymbol>();
         Map<AggregateSymbol, Expression> aggMap;
 		try {
-			aggMap = buildAggregateMap(aggregates, metadata, newAggs);
+			aggMap = buildAggregateMap(aggregates, metadata, newAggs, join);
 		} catch (QueryResolverException e) {
 			 throw new QueryPlannerException(QueryPlugin.Event.TEIID30266, e);
 		}
@@ -1101,7 +1101,7 @@ public class RulePushAggregates implements
     }
 
     private static Map<AggregateSymbol, Expression> buildAggregateMap(Collection<? extends AggregateSymbol> aggregateExpressions,
-                                                                        QueryMetadataInterface metadata, Set<AggregateSymbol> nestedAggregates) throws QueryResolverException,
+                                                                        QueryMetadataInterface metadata, Set<AggregateSymbol> nestedAggregates, boolean join) throws QueryResolverException,
                                                                                                         TeiidComponentException {
         Map<AggregateSymbol, Expression> aggMap = new LinkedHashMap<AggregateSymbol, Expression>();
         for (AggregateSymbol partitionAgg : aggregateExpressions) {
@@ -1112,7 +1112,7 @@ public class RulePushAggregates implements
             if (aggFunction == Type.COUNT) {
                 //COUNT(x) -> IFNULL(CONVERT(SUM(COUNT(x)), INTEGER), 0)
             	AggregateSymbol newAgg = null;
-            	if (partitionAgg.getArgs().length == 0) {
+            	if (partitionAgg.getArgs().length == 0 && join) {
             		//count * case (if on the inner side of an outer join)
             		Function ifnull = new Function(FunctionLibrary.IFNULL, new Expression[] {partitionAgg, new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER)});
             		newAgg = new AggregateSymbol(NonReserved.SUM, false, ifnull);
@@ -1120,11 +1120,13 @@ public class RulePushAggregates implements
             		newAgg = new AggregateSymbol(NonReserved.SUM, false, partitionAgg);
             	}
                 // Build conversion function to convert SUM (which returns LONG) back to INTEGER
-                Function convertFunc = new Function(FunctionLibrary.CONVERT, new Expression[] {newAgg, new Constant(DataTypeManager.getDataTypeName(partitionAgg.getType()))});
-                Function ifnull = new Function(FunctionLibrary.IFNULL, new Expression[] {convertFunc, new Constant(0, DataTypeManager.DefaultDataClasses.INTEGER)});
-                ResolverVisitor.resolveLanguageObject(ifnull, metadata);
+                Function func = new Function(FunctionLibrary.CONVERT, new Expression[] {newAgg, new Constant(DataTypeManager.getDataTypeName(partitionAgg.getType()))});
+                if (join) {
+                	func = new Function(FunctionLibrary.IFNULL, new Expression[] {func, new Constant(0, DataTypeManager.DefaultDataClasses.INTEGER)});
+                }
+                ResolverVisitor.resolveLanguageObject(func, metadata);
                 
-                newExpression = ifnull;  
+                newExpression = func;  
                 nestedAggregates.add(partitionAgg);
             } else if (aggFunction == Type.AVG) {
                 //AVG(x) -> SUM(SUM(x)) / SUM(COUNT(x))
