@@ -394,15 +394,29 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		Statement stmt = conn.createStatement();
 		ExtendedQueryExectutorImpl.simplePortal = "foo";
 		try {
-			assertFalse(stmt.execute("declare \"foo\" insensitive scroll cursor for select * from pg_proc;"));
+			assertFalse(stmt.execute("declare \"foo\" insensitive scroll cursor for select * from pg_proc limit 11;"));
 			assertFalse(stmt.execute("move 5 in \"foo\""));
-			stmt.execute("fetch 6 in \"foo\"");
+			stmt.execute("fetch 7 in \"foo\"");
 			ResultSet rs = stmt.getResultSet();
 			int rowCount = 0;
 			while (rs.next()) {
 				rowCount++;
 			}
 			assertEquals(6, rowCount);
+			
+			//move past the end
+			//assertFalse(stmt.execute("move forward 0 in \"foo\""));
+			//move back
+			assertFalse(stmt.execute("move backward 2 in \"foo\""));
+			
+			stmt.execute("fetch 6 in \"foo\"");
+			rs = stmt.getResultSet();
+			rowCount = 0;
+			while (rs.next()) {
+				rowCount++;
+			}
+			assertEquals(1, rowCount);
+			
 			stmt.execute("close \"foo\"");
 		} finally {
 			ExtendedQueryExectutorImpl.simplePortal = null;
