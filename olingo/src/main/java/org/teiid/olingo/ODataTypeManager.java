@@ -163,6 +163,7 @@ public class ODataTypeManager {
         try {
             if (value.startsWith("'") && value.endsWith("'")) {
                 value = value.substring(1, value.length()-1);
+                value = value.replaceAll("''", "'");
             }
             Object converted =  primitiveType.valueOfString(value, 
                     edmParameter.isNullable(), 
