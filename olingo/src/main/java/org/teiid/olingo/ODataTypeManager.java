@@ -39,6 +39,7 @@ import org.apache.olingo.commons.core.edm.primitivetype.EdmDate;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmDecimal;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmPrimitiveTypeFactory;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmStream;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmString;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmTimeOfDay;
 import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
 import org.teiid.core.TeiidException;
@@ -161,10 +162,14 @@ public class ODataTypeManager {
                         .getFullQualifiedNameAsString().substring(4)));
         
         try {
-            if (value.startsWith("'") && value.endsWith("'")) {
-                value = value.substring(1, value.length()-1);
-                value = value.replaceAll("''", "'");
-            }
+        	if (edmParameter.getType() == EdmString.getInstance()) {
+                if (value.startsWith("'") && value.endsWith("'")) {
+                    value = value.substring(1, value.length()-1);
+                    value = value.replaceAll("''", "'");
+                } else {
+                	throw new EdmPrimitiveTypeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16045, edmParameter.getType()));
+                }
+        	}
             Object converted =  primitiveType.valueOfString(value, 
                     edmParameter.isNullable(), 
                     edmParameter.getMaxLength(), 
