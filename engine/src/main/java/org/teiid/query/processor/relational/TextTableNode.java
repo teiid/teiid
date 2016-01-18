@@ -80,7 +80,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 	private int textLine = 0;
 	private Map<String, Integer> nameIndexes;
 	private String systemId;
-	private int rowNumber;
+	private long rowNumber;
 
 	private boolean cr;
 	private boolean eof;
@@ -324,7 +324,10 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 					int index = output;
 					
 					if (col.isOrdinal()) {
-						tuple.add(rowNumber);
+						if (rowNumber > Integer.MAX_VALUE) {
+				    		throw new TeiidRuntimeException(new TeiidProcessingException(QueryPlugin.Event.TEIID31174, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31174)));
+				    	}
+						tuple.add((int)rowNumber);
 						continue;
 					}
 					

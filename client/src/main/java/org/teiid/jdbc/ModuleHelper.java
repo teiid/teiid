@@ -50,7 +50,7 @@ class ModuleHelper {
         	}
 			final Module module = callerModuleLoader.loadModule(ModuleIdentifier.create("org.jboss.teiid")); //$NON-NLS-1$
         	Thread.currentThread().setContextClassLoader(module.getClassLoader());
-        	return (ServerConnection)ReflectionHelper.create("org.teiid.transport.LocalServerConnection", Arrays.asList(info, PropertiesUtils.getBooleanProperty(info, EmbeddedProfile.USE_CALLING_THREAD, true)), Thread.currentThread().getContextClassLoader()); //$NON-NLS-1$
+        	return (ServerConnection)ReflectionHelper.create("org.teiid.transport.LocalServerConnection", Arrays.asList(info, PropertiesUtils.getBooleanProperty(info, LocalProfile.USE_CALLING_THREAD, true)), Thread.currentThread().getContextClassLoader()); //$NON-NLS-1$
         } catch (ModuleLoadException e) {
         	 throw new ConnectionException(JDBCPlugin.Event.TEIID20008, e, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20008));
 		} finally {

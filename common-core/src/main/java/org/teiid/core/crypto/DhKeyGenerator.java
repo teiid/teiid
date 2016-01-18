@@ -47,12 +47,18 @@ public class DhKeyGenerator {
 	private static String ALGORITHM = "DiffieHellman"; //$NON-NLS-1$
 	private static String DIGEST = "SHA-256"; //$NON-NLS-1$
 	private static DHParameterSpec DH_SPEC;
+	private static DHParameterSpec DH_SPEC_2048;
 
 	static {
+		DH_SPEC = loadKeySpecification("dh.properties"); //$NON-NLS-1$
+		DH_SPEC_2048 = loadKeySpecification("dh-2048.properties"); //$NON-NLS-1$
+	}
+
+	private static DHParameterSpec loadKeySpecification(String propsFile) {
 		Properties props = new Properties();
 		InputStream is = null;
 		try {
-			is = DhKeyGenerator.class.getResourceAsStream("dh.properties"); //$NON-NLS-1$
+			is = DhKeyGenerator.class.getResourceAsStream(propsFile); 
 			props.load(is); 
 		} catch (IOException e) {
 			  throw new TeiidRuntimeException(CorePlugin.Event.TEIID10000, e);
@@ -66,24 +72,35 @@ public class DhKeyGenerator {
 		}
 		BigInteger p = new BigInteger(props.getProperty("p")); //$NON-NLS-1$
 		BigInteger g = new BigInteger(props.getProperty("g")); //$NON-NLS-1$
-		DH_SPEC = new DHParameterSpec(p, g, Integer.parseInt(props
+		DHParameterSpec result = new DHParameterSpec(p, g, Integer.parseInt(props
 				.getProperty("l"))); //$NON-NLS-1$
+		return result;
 	}
-
+	
 	private PrivateKey privateKey;
+	private PrivateKey privateKeyLarge;
 
 	/*
 	 * TODO: add support for configurable key sizes
 	 */
 	private int keySize = SymmetricCryptor.DEFAULT_KEY_BITS;
 
-	public byte[] createPublicKey() throws CryptoException {
+	public byte[] createPublicKey(boolean large) throws CryptoException {
 		try {
 			KeyPairGenerator keyGen = KeyPairGenerator.getInstance(ALGORITHM);
-			keyGen.initialize(DH_SPEC);
+			if (large) {
+				keyGen.initialize(DH_SPEC_2048);
+			} else {
+				keyGen.initialize(DH_SPEC);
+			}
 			KeyPair keypair = keyGen.generateKeyPair();
 
-			privateKey = keypair.getPrivate();
+			if (large) {
+				privateKeyLarge = keypair.getPrivate();
+			} else {
+				privateKey = keypair.getPrivate();
+			}
+			
 			PublicKey publicKey = keypair.getPublic();
 
 			return publicKey.getEncoded();
@@ -94,9 +111,10 @@ public class DhKeyGenerator {
 		}
 	}
 
-	public SymmetricCryptor getSymmetricCryptor(byte[] peerPublicKeyBytes, boolean useSealedObject, ClassLoader classLoader)
+	public SymmetricCryptor getSymmetricCryptor(byte[] peerPublicKeyBytes, boolean useSealedObject, ClassLoader classLoader, boolean large)
 			throws CryptoException {
-		if (privateKey == null) {
+		PrivateKey privKey = large?privateKeyLarge:privateKey;
+		if (privKey == null) {
 			throw new IllegalStateException(
 					"KeyGenerator did not successfully generate public key"); //$NON-NLS-1$
 		}
@@ -107,7 +125,7 @@ public class DhKeyGenerator {
 			PublicKey publicKey = keyFact.generatePublic(x509KeySpec);
 
 			KeyAgreement ka = KeyAgreement.getInstance(ALGORITHM);
-			ka.init(privateKey);
+			ka.init(privKey);
 			ka.doPhase(publicKey, true);
 			byte[] secret = ka.generateSecret();
 			//we expect a 1024-bit DH key, but vms handle leading zeros differently
@@ -140,7 +158,7 @@ public class DhKeyGenerator {
 	public static void main(String[] args) throws Exception {
 		AlgorithmParameterGenerator paramGen = AlgorithmParameterGenerator
 				.getInstance(ALGORITHM);
-		paramGen.init(1024);
+		paramGen.init(2048);
 
 		AlgorithmParameters params = paramGen.generateParameters();
 

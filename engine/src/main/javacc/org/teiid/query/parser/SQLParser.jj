@@ -571,6 +571,7 @@ TOKEN :
 |   <SEMICOLON: ";">
 |   <COLON: ":">
 |	<CONCAT_OP: "||">
+|   <DOUBLE_AMP_OP: "&&">
 }
 
 /*
@@ -3166,7 +3167,7 @@ Expression booleanPrimary(ParseInfo info) :
 			LOOKAHEAD(2) ex=regexMatchCrit(info, ex) |
 			ex=setCrit(info, ex) |
 			ex=isNullCrit(info, ex) |
-			LOOKAHEAD(operator() (<ANY>|<SOME>|<ALL>) subquery(info)) ex=subqueryCompareCriteria(info, ex) |
+			LOOKAHEAD(operator() (<ANY>|<SOME>|<ALL>)) ex=subqueryCompareCriteria(info, ex) |
 			ex=compareCrit(info, ex)
 	     )]
 	    )
@@ -3268,6 +3269,7 @@ SubqueryCompareCriteria subqueryCompareCriteria(ParseInfo info, Expression expre
     Token operator = null;
     Token quantifier = null;
     ExistsCriteria.SubqueryHint hint = null;
+    Expression expr = null;
 }
 {
 	operator=operator()
@@ -3276,12 +3278,15 @@ SubqueryCompareCriteria subqueryCompareCriteria(ParseInfo info, Expression expre
 	  quantifier=<ALL>
 	)
 	{ hint = getSubqueryHint(getToken(1)); }
-	subquery = subquery(info)
+	( LOOKAHEAD(subquery(info)) subquery = subquery(info) | 
+      (<LPAREN> expr = expression(info) <RPAREN>)
+    )
 
 	{
 		subqueryCrit = new SubqueryCompareCriteria();
 	    subqueryCrit.setLeftExpression(expression);
 	    subqueryCrit.setCommand(subquery);
+	    subqueryCrit.setArrayExpression(expr);
     
 		// Set operator
 		subqueryCrit.setOperator(getOperator(operator.image));
@@ -3784,14 +3789,15 @@ Expression commonValueExpression(ParseInfo info) :
 {
 	Expression leftExpression = null;
 	Expression rightExpression = null;
+	Token operator = null;
 }
 {
 	(	leftExpression=plusExpression(info)
 		(
-			<CONCAT_OP>
+			(operator=<DOUBLE_AMP_OP>|operator=<CONCAT_OP>)
 			rightExpression=plusExpression(info)
 			{
-				leftExpression = new Function("||", new Expression[] {leftExpression, rightExpression}); //$NON-NLS-1$
+				leftExpression = new Function(operator.image, new Expression[] {leftExpression, rightExpression}); //$NON-NLS-1$
 				rightExpression = null;				
 			}
 		)*
@@ -5006,7 +5012,7 @@ void procedureParameter(MetadataFactory factory, Procedure proc) :
 	ParsedDataType type = null;
 	ProcedureParameter.Type ppType = ProcedureParameter.Type.In;
 	ProcedureParameter param = null;
-	String defaultValue = null;
+	Expression defaultValue = null;
 	boolean notNull = false;
 	boolean vararg = false;
 }
@@ -5036,7 +5042,7 @@ void procedureParameter(MetadataFactory factory, Procedure proc) :
 			param.setVarArg(vararg);
 		}			
 	}
-	[<DEFAULT_KEYWORD> defaultValue = stringVal() {param.setDefaultValue(defaultValue);}]
+	[<DEFAULT_KEYWORD> defaultValue = expression(ParseInfo.DEFAULT_INSTANCE) {setDefault(param, defaultValue);}]
 	[optionsClause(param, factory)
 	   {
 	      setColumnOptions(param);
@@ -5311,7 +5317,7 @@ void createColumn(MetadataFactory factory, Table table) :
 	ParsedDataType type = null;
 	boolean autoIncrement = false;
 	boolean notNull = false;
-	String defalt = null;
+	Expression defaultValue = null;
 	Column column = null;
 	List<String> columnName = new ArrayList<String>();
 	boolean index = false;
@@ -5342,7 +5348,7 @@ void createColumn(MetadataFactory factory, Table table) :
        columnName.add(element);
      }
 	 ((<PRIMARY> <KEY> { pk = true; }) | ([<UNIQUE> { unique = true;  }] [<INDEX> { index = true; }]))
-	 [<DEFAULT_KEYWORD> defalt = stringVal() {column.setDefaultValue(defalt);}]
+	 [<DEFAULT_KEYWORD> defaultValue = expression(ParseInfo.DEFAULT_INSTANCE) {setDefault(column, defaultValue);}]
 	 [optionsClause(column, factory)
 	   {
 	      setColumnOptions(column);

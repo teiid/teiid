@@ -51,6 +51,11 @@ public class SQLConstants {
 		public static final String COLON = ":"; //$NON-NLS-1$
 		public static final String TICK = "'"; //$NON-NLS-1$
 		public static final String SEMICOLON = ";"; //$NON-NLS-1$
+		public static final String DOUBLE_AMP = "&&"; //$NON-NLS-1$
+		public static final String PLUS = "+"; //$NON-NLS-1$
+		public static final String MINUS = "-"; //$NON-NLS-1$
+		public static final String SLASH = "/"; //$NON-NLS-1$
+		public static final String CONCAT = "||"; //$NON-NLS-1$
 	}
 	
 	public interface NonReserved {

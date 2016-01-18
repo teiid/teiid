@@ -157,7 +157,12 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
             keyGen = new DhKeyGenerator();
             byte[] publicKey;
 			try {
-				publicKey = keyGen.createPublicKey();
+				handshake.setPublicKeyLarge(keyGen.createPublicKey(true));
+			} catch (CryptoException e) {
+				//not supported on this platform
+			}
+			try {
+				publicKey = keyGen.createPublicKey(false);
 			} catch (CryptoException e) {
 				 throw new CommunicationException(RuntimePlugin.Event.TEIID40051, e);
 			}
@@ -187,14 +192,22 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
 		this.workContext.setClientVersion(Version.getVersion(clientVersion));
 		if (usingEncryption) {
             byte[] returnedPublicKey = handshake.getPublicKey();
+            byte[] returnedPublicKeyLarge = handshake.getPublicKeyLarge();
             
+            boolean large = false;
             //ensure the key information
             if (returnedPublicKey == null) {
-                 throw new CommunicationException(RuntimePlugin.Event.TEIID40052, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40052));
+            	if (returnedPublicKeyLarge == null) {
+            		throw new CommunicationException(RuntimePlugin.Event.TEIID40052, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40052));
+            	}
+            	large = true;
+            	returnedPublicKey = returnedPublicKeyLarge;
             }
-            
+            if (LogManager.isMessageToBeRecorded(LogConstants.CTX_TRANSPORT, MessageLevel.DETAIL)) { 
+    			LogManager.logDetail(LogConstants.CTX_TRANSPORT, large?"2048":"1024", "key exchange being used."); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            }
             try {
-				this.cryptor = keyGen.getSymmetricCryptor(returnedPublicKey, "08.03".compareTo(clientVersion) > 0, SocketClientInstance.class.getClassLoader()); //$NON-NLS-1$
+				this.cryptor = keyGen.getSymmetricCryptor(returnedPublicKey, "08.03".compareTo(clientVersion) > 0, SocketClientInstance.class.getClassLoader(), large); //$NON-NLS-1$
 			} catch (CryptoException e) {
 				 throw new CommunicationException(RuntimePlugin.Event.TEIID40053, e);
 			}

@@ -23,11 +23,13 @@
 package org.teiid.query.function;
 
 import java.sql.Blob;
+import java.sql.SQLException;
 
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.GeometryType;
+import org.teiid.language.SQLConstants;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.query.util.CommandContext;
@@ -61,6 +63,14 @@ public class GeometryFunctionMethods {
         Blob b = geometry.getReference();
         return new BlobType(b);
     }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_ASEWKB,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+	public static BlobType asEwkb(final GeometryType geometry) {
+    	return GeometryUtils.geometryToEwkb(geometry);
+	}
     
     @TeiidFunction(name=SourceSystemFunctions.ST_ASGEOJSON,
                    category=FunctionCategoryConstants.GEOMETRY,
@@ -252,4 +262,85 @@ public class GeometryFunctionMethods {
             throws FunctionExecutionException {        
         return GeometryTransformUtils.transform(context, geom, srid);
     }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_ENVELOPE,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static GeometryType envelope(GeometryType geom) throws FunctionExecutionException {
+    	return GeometryUtils.envelope(geom);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_WITHIN,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static Boolean within(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
+    	return GeometryUtils.within(geom1, geom2);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_DWITHIN,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static Boolean dwithin(GeometryType geom1, GeometryType geom2, double distance) throws FunctionExecutionException {
+    	return GeometryUtils.dwithin(geom1, geom2, distance);
+    }
+    
+    /*
+     * PostGIS compatibility
+     */
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_SIMPLIFY,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+	public static GeometryType simplify(GeometryType geom, 
+	                                  double tolerance)
+	                                		  throws FunctionExecutionException {        
+    	return GeometryUtils.simplify(geom, tolerance);
+	}
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_FORCE_2D,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+	public static GeometryType force2D(GeometryType geom) {
+    	return geom; //higher dimensions not supported
+	}
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_HASARC,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+	public static boolean hasArc(@SuppressWarnings("unused") GeometryType geom) {
+		return false; //curved not supported
+	}
+    
+    @TeiidFunction(name=SQLConstants.Tokens.DOUBLE_AMP,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+	public static boolean boundingBoxIntersects(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
+		return GeometryUtils.boundingBoxIntersects(geom1, geom2);
+	}
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMEWKT,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+	public static GeometryType geomFromEwkt(ClobType ewkt) 
+	     throws FunctionExecutionException {
+		return GeometryUtils.geometryFromClob(ewkt, null, true);
+	}
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMEWKB,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+	public static GeometryType geomFromEwkb(BlobType ewkb) 
+	     throws FunctionExecutionException, SQLException {
+		return GeometryUtils.geometryFromEwkb(ewkb.getBinaryStream(), null);
+	}
+    
 }

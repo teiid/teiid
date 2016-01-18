@@ -104,7 +104,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 	private List<XMLColumn> projectedColumns;
 	
 	private Result result;
-	private int rowCount = 0;
+	private long rowCount = 0;
 	private Item item;
 	
 	private TupleBuffer buffer;
@@ -117,7 +117,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 	
 	private State state = State.BUILDING;
 	private volatile TeiidRuntimeException asynchException;
-	private int outputRow = 1;
+	private long outputRow = 1;
 	private boolean usingOutput;
 	
 	private int rowLimit = -1;
@@ -303,7 +303,10 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 		List<Object> tuple = new ArrayList<Object>(projectedColumns.size());
 		for (XMLColumn proColumn : projectedColumns) {
 			if (proColumn.isOrdinal()) {
-				tuple.add(rowCount);
+				if (rowCount > Integer.MAX_VALUE) {
+		    		throw new TeiidRuntimeException(new TeiidProcessingException(QueryPlugin.Event.TEIID31174, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31174)));
+		    	}
+				tuple.add((int)rowCount);
 			} else {
 				try {
 					XPathExpression path = proColumn.getPathExpression();

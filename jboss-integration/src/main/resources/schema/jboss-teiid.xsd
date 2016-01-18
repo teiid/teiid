@@ -269,7 +269,37 @@
                 <xs:complexType>
                     <xs:attribute name="jgroups-stack" type="xs:string" use="required"/>
                 </xs:complexType>
-            </xs:element>            
+            </xs:element>
+            
+            <xs:element name="authentication" minOccurs="0" maxOccurs="1">
+                <xs:complexType>
+                    <xs:attribute name="security-domain" type="xs:string">
+                        <xs:annotation>
+                            <xs:documentation>Comma separated list of domains to be used to login into Teiid</xs:documentation>
+                        </xs:annotation>                    
+                    </xs:attribute>
+                    <xs:attribute name="max-sessions-allowed" type="xs:int" default="10000">
+                        <xs:annotation>
+                            <xs:documentation>Maximum number of sessions allowed by the system (default 10000)</xs:documentation>
+                        </xs:annotation>                    
+                    </xs:attribute>
+                    <xs:attribute name="sessions-expiration-timelimit" type="xs:int">
+                        <xs:annotation>
+                            <xs:documentation>Max allowed time before the session is terminated by the system, 0 indicates unlimited (default 0)</xs:documentation>
+                        </xs:annotation>                    
+                    </xs:attribute>
+                    <xs:attribute name="type" type="xs:string">
+                        <xs:annotation>
+                            <xs:documentation>Default authentication type to be used. Allowed values(USERPASSWORD, GSS)</xs:documentation>
+                        </xs:annotation>                    
+                    </xs:attribute>                    
+                    <xs:attribute name="trust-all-local" type="xs:boolean">
+                        <xs:annotation>
+                            <xs:documentation>Allow all local pass-through connections regardless of whether they are in the configured security domain.</xs:documentation>
+                        </xs:annotation>                    
+                    </xs:attribute>                    
+                </xs:complexType>                
+            </xs:element>
         
             <xs:element name="transport" type="transport-type" maxOccurs="unbounded" minOccurs="0">
                 <xs:annotation>
@@ -291,36 +321,6 @@
 
     <xs:complexType name="transport-type">
         <xs:sequence>
-            <xs:element name="authentication" minOccurs="0" maxOccurs="1">
-                <xs:complexType>
-                    <xs:attribute name="security-domain" type="xs:string">
-                        <xs:annotation>
-                            <xs:documentation>Comma separated list of domains to be used to login into Teiid</xs:documentation>
-                        </xs:annotation>                    
-                    </xs:attribute>
-                    <xs:attribute name="max-sessions-allowed" type="xs:int" default="5000">
-                        <xs:annotation>
-                            <xs:documentation>Maximum number of sessions allowed by the system (default 5000)</xs:documentation>
-                        </xs:annotation>                    
-                    </xs:attribute>
-                    <xs:attribute name="sessions-expiration-timelimit" type="xs:int">
-                        <xs:annotation>
-                            <xs:documentation>Max allowed time before the session is terminated by the system, 0 indicates unlimited (default 0)</xs:documentation>
-                        </xs:annotation>                    
-                    </xs:attribute>
-                    <xs:attribute name="krb5-domain" type="xs:string">
-                        <xs:annotation>
-                            <xs:documentation>Kerberos domain name if GSS API based single sign on is being used</xs:documentation>
-                        </xs:annotation>                    
-                    </xs:attribute>                                        
-                    <xs:attribute name="type" type="xs:string">
-                        <xs:annotation>
-                            <xs:documentation>Default authentication type to be used with the transport. Allowed values(CLEARTEXT, GSS)</xs:documentation>
-                        </xs:annotation>                    
-                    </xs:attribute>                    
-                </xs:complexType>                
-            </xs:element>
-
             <xs:element name="pg" minOccurs="0" maxOccurs="1">
                 <xs:complexType>
                     <xs:attribute name="max-lob-size-in-bytes" type="xs:int">

@@ -23,7 +23,9 @@ package org.teiid.deployers;
 
 import static org.teiid.odbc.PGUtil.*;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
@@ -31,11 +33,14 @@ import java.util.Properties;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.types.ArrayImpl;
+import org.teiid.core.types.BlobType;
+import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Datatype;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.Determinism;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.metadata.Table.Type;
@@ -63,6 +68,8 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		add_matpg_relatt();
 		add_matpg_datatype();
 		add_pg_description();
+		addFunction("encode", "encode").setPushdown(PushDown.CAN_PUSHDOWN);; //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("postgisVersion", "PostGIS_Lib_Version"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("hasPerm", "has_function_privilege"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("getExpr2", "pg_get_expr"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("getExpr3", "pg_get_expr"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -577,6 +584,14 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 	}
 	
 	public static class FunctionMethods {
+		public static ClobType encode(BlobType value, String encoding) throws SQLException, IOException {
+			return org.teiid.query.function.FunctionMethods.toChars(value, encoding);
+		}
+		
+		public static String postgisVersion() {
+			return "1.4.0"; //$NON-NLS-1$
+		}
+		
 		public static Boolean hasPerm(@SuppressWarnings("unused") Integer oid,
 				@SuppressWarnings("unused") String permission) {
 			return true;

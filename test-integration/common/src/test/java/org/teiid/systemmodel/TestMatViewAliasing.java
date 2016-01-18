@@ -84,7 +84,7 @@ public class TestMatViewAliasing {
 		assertTrue(rs.next());
 		assertEquals("LOADED", rs.getString("loadstate"));
 		
-		rs = s.executeQuery("select * from mat as a, mat as b where a.x = b.name order by a.x");
+		rs = s.executeQuery("select * from mat as a, mat as b where cast(a.x as string) = b.name order by a.x");
 		assertFalse(rs.next());
 	}
 	

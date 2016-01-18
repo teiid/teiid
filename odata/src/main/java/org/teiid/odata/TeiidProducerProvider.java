@@ -60,7 +60,7 @@ public class TeiidProducerProvider implements ContextResolver<ODataProducer>, VD
 		}
 		
 		String vdbName = null;
-		int version = 1;
+		Integer version = null;
 		String uri = uriInfo.getBaseUri().getRawPath();
 		int idx = uri.indexOf("/odata/"); //$NON-NLS-1$
 		if (idx != -1) {
@@ -76,22 +76,28 @@ public class TeiidProducerProvider implements ContextResolver<ODataProducer>, VD
 			vdbName = getInitParameters().getProperty("allow-vdb"); //$NON-NLS-1$		
 		}
 		
-		if (vdbName != null) { 
+		if (vdbName != null) {
 			int versionIdx = vdbName.indexOf('.');
 			if (versionIdx != -1) {
-				version = Integer.parseInt(vdbName.substring(versionIdx+1));
-				vdbName = vdbName.substring(0, versionIdx);
+				String versionString = vdbName.substring(versionIdx+1);
+				try {
+					version = Integer.parseInt(versionString);
+					vdbName = vdbName.substring(0, versionIdx);
+				} catch (NumberFormatException e) {
+					//semantic version
+				}
 			}
 			
 			vdbName = vdbName.trim();
 		}
-		
-		if (vdbName == null || !vdbName.matches("[\\w-\\.]+")) { //$NON-NLS-1$
+
+		VDBKey key = new VDBKey(vdbName, version==null?1:version);
+
+		if (vdbName == null || !vdbName.matches("[\\w-\\.]+") || (key.isSemantic() && (!key.isFullySpecified() || key.isAtMost() || key.getVersion() != 1))) { //$NON-NLS-1$
 			//simply invalid don't bother caching
 			return new TeiidProducer(new LocalClient(vdbName, version, getInitParameters()));
 		}
 		
-		VDBKey key = new VDBKey(vdbName, version);
 		SoftReference<LocalClient> ref = this.clientMap.get(key);
 		LocalClient client = null;
 		if (ref != null) {
@@ -139,12 +145,12 @@ public class TeiidProducerProvider implements ContextResolver<ODataProducer>, VD
 	
 	@Override
 	public void removed(String name, int version, CompositeVDB vdb) {
-		this.clientMap.remove(new VDBKey(name, version));
+		this.clientMap.remove(vdb.getVDBKey());
 	}
 	
 	@Override
 	public void finishedDeployment(String name, int version, CompositeVDB vdb,boolean reloading) {
-		this.clientMap.remove(new VDBKey(name, version));		
+		this.clientMap.remove(vdb.getVDBKey());		
 	}
 	
 	@Override

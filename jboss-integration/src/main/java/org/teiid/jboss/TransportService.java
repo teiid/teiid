@@ -25,9 +25,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import java.util.Properties;
 
 import org.jboss.as.network.SocketBinding;
@@ -37,9 +34,6 @@ import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
-import org.teiid.adminapi.AdminComponentException;
-import org.teiid.adminapi.AdminException;
-import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
@@ -50,7 +44,7 @@ import org.teiid.common.buffer.BufferManager;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.DQPWorkContext;
-import org.teiid.dqp.service.SessionServiceException;
+import org.teiid.dqp.service.SessionService;
 import org.teiid.jdbc.ConnectionImpl;
 import org.teiid.jdbc.ConnectionProfile;
 import org.teiid.jdbc.TeiidDriver;
@@ -62,7 +56,6 @@ import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.runtime.RuntimePlugin;
-import org.teiid.services.SessionServiceImpl;
 import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.ClientServiceRegistryImpl;
 import org.teiid.transport.LocalServerConnection;
@@ -76,13 +69,10 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
 	private transient LogonImpl logon;
 	private SocketConfiguration socketConfig;
 	private String authenticationDomain;	
-	private long sessionMaxLimit;
-	private long sessionExpirationTimeLimit;
 	private SocketListener socketListener;
-	private transient SessionServiceImpl sessionService;
 	private AuthenticationType authenticationType;
 	private int maxODBCLobSizeAllowed = 5*1024*1024; // 5 MB
-	private boolean embedded;
+	private boolean local;
 	private InetSocketAddress address = null;
 	private String transportName;
 	
@@ -90,6 +80,7 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
 	private final InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
 	private final InjectedValue<DQPCore> dqpInjector = new InjectedValue<DQPCore>();	
 	private final InjectedValue<BufferManager> bufferManagerInjector = new InjectedValue<BufferManager>();
+	private final InjectedValue<SessionService> sessionServiceInjector = new InjectedValue<SessionService>();
 	
 	public TransportService(String transportName) {
 		this.transportName = transportName;
@@ -114,28 +105,17 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
 	
 	@Override
 	public void start(StartContext context) throws StartException {
-		this.setSecurityHelper(new JBossSecurityHelper());
 		this.setVDBRepository(this.getVdbRepository());
-		this.sessionService = new SessionServiceImpl();
-		if (this.authenticationDomain != null) {
-			this.sessionService.setSecurityDomain(this.authenticationDomain);				
-		}
-		this.sessionService.setSessionExpirationTimeLimit(this.sessionExpirationTimeLimit);
-		this.sessionService.setSessionMaxLimit(this.sessionMaxLimit);
-		this.sessionService.setDqp(getDQP());
-		this.sessionService.setVDBRepository(getVdbRepository());
-		this.sessionService.setSecurityHelper(this.getSecurityHelper());
-		this.sessionService.setAuthenticationType(getAuthenticationType());
-		this.sessionService.start();
-		this.setAuthenticationType(this.sessionService.getDefaultAuthenticationType());
+		SessionService ss = sessionServiceInjector.getValue();
+		this.setSecurityHelper(ss.getSecurityHelper());
 		
     	// create the necessary services
-		this.logon = new LogonImpl(this.sessionService, "teiid-cluster"); //$NON-NLS-1$
+		this.logon = new LogonImpl(ss, "teiid-cluster"); //$NON-NLS-1$
 		
 		DQP dqpProxy = proxyService(DQP.class, getDQP(), LogConstants.CTX_DQP);
     	this.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
     	this.registerClientService(DQP.class, dqpProxy, LogConstants.CTX_DQP);    	
-		
+    	this.setAuthenticationType(ss.getDefaultAuthenticationType());
     	if (this.socketConfig != null) {
     		/*
     		try {
@@ -160,7 +140,7 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
     		}
     		else if (socketConfig.getProtocol() == WireProtocol.pg) {
         		TeiidDriver driver = new TeiidDriver();
-        		driver.setEmbeddedProfile(new ConnectionProfile() {
+        		driver.setLocalProfile(new ConnectionProfile() {
 					@Override
 					public ConnectionImpl connect(String url, Properties info) throws TeiidSQLException {
 						try {
@@ -198,7 +178,6 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
     		this.socketListener.stop();
     		this.socketListener = null;
     	}
-    	this.sessionService.stop();
     	
     	if (this.socketConfig != null) {
     		if (socketConfig.getProtocol() == WireProtocol.teiid) {
@@ -249,33 +228,6 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
 		}));
 	}	
 	
-    public List<RequestMetadata> getRequestsUsingVDB(String vdbName, int vdbVersion) {
-		List<RequestMetadata> requests = new ArrayList<RequestMetadata>();
-		Collection<SessionMetadata> sessions = this.sessionService.getActiveSessions();
-		for (SessionMetadata session:sessions) {
-			if (vdbName.equals(session.getVDBName()) && session.getVDBVersion() == vdbVersion) {
-				requests.addAll(getDQP().getRequestsForSession(session.getSessionId()));
-			}
-		}
-		return requests;
-	}	
-    
-    public void terminateSession(String terminateeId) {
-		this.sessionService.terminateSession(terminateeId, DQPWorkContext.getWorkContext().getSessionId());
-    }    
-    
-	public Collection<SessionMetadata> getActiveSessions(){
-		return this.sessionService.getActiveSessions();
-	}
-	
-	public int getActiveSessionsCount() throws AdminException{
-		try {
-			return this.sessionService.getActiveSessionsCount();
-		} catch (SessionServiceException e) {
-			 throw new AdminComponentException(IntegrationPlugin.Event.TEIID50056, e);
-		}
-	}	
-	
 	public InjectedValue<SocketBinding> getSocketBindingInjector() {
 		return this.socketBindingInjector;
 	}
@@ -287,31 +239,13 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
 	public void setSocketConfig(SocketConfiguration socketConfig) {
 		this.socketConfig = socketConfig;
 	}
-
+	
 	public String getAuthenticationDomain() {
 		return authenticationDomain;
 	}
 
 	public void setAuthenticationDomain(String authenticationDomain) {
 		this.authenticationDomain = authenticationDomain;
-	}
-	
-	public void setSessionMaxLimit(long limit) {
-		this.sessionMaxLimit = limit;
-	}	
-
-	public void setSessionExpirationTimeLimit(long limit) {
-		this.sessionExpirationTimeLimit = limit;
-	}
-
-	@Override
-	public AuthenticationType getAuthenticationType() {
-		return authenticationType;
-	}
-
-	@Override
-	public void setAuthenticationType(AuthenticationType authenticationType) {
-		this.authenticationType = authenticationType;
 	}
 	
 	public InjectedValue<VDBRepository> getVdbRepositoryInjector() {
@@ -332,7 +266,21 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
 	
 	public InjectedValue<BufferManager> getBufferManagerInjector() {
 		return bufferManagerInjector;
-	}	
+	}
+	
+	@Override
+	public AuthenticationType getAuthenticationType() {
+		return authenticationType;
+	}
+
+	@Override
+	public void setAuthenticationType(AuthenticationType authenticationType) {
+		this.authenticationType = authenticationType;
+	}
+	
+	public InjectedValue<SessionService> getSessionServiceInjector() {
+		return sessionServiceInjector;
+	}
 	
 	private int getMaxODBCLobSizeAllowed() {
 		return this.maxODBCLobSizeAllowed;
@@ -342,11 +290,11 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
 		this.maxODBCLobSizeAllowed = lobSize;
 	}
 
-	public void setEmbedded(boolean v) {
-		this.embedded = v;
+	public void setLocal(boolean v) {
+		this.local = v;
 	}
 	
-	public boolean isEmbedded() {
-		return this.embedded;
+	public boolean isLocal() {
+		return this.local;
 	}	
 }

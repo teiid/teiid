@@ -31,6 +31,8 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.core.types.ClobImpl;
+import org.teiid.core.types.ClobType;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.processor.TestProcessor;
@@ -140,6 +142,10 @@ public class TestFunctionMethods {
         assertEquals(
                 "xxbye Wxx",
                 FunctionMethods.regexpReplace(TestProcessor.createCommandContext(), "Goodbye World", "[g-o].", "x", "gi")
+        );
+        assertEquals(
+        		new ClobType(new ClobImpl("xxbye Wxx")),
+                FunctionMethods.regexpReplace(TestProcessor.createCommandContext(), new ClobType(new ClobImpl("Goodbye World")), "[g-o].", "x", "gi")
         );
     }
 

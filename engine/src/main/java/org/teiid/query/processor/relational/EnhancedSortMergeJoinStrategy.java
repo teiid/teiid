@@ -343,8 +343,8 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     
     private boolean shouldIndex(SourceState possibleIndex, SourceState other) throws TeiidComponentException, TeiidProcessingException {
     	long size = joinNode.getBatchSize();
-    	int indexSize = possibleIndex.hasBuffer()?possibleIndex.getRowCount():-1;
-    	int otherSize = other.hasBuffer()?other.getRowCount():-1;
+    	long indexSize = possibleIndex.hasBuffer()?possibleIndex.getRowCount():-1;
+    	long otherSize = other.hasBuffer()?other.getRowCount():-1;
     	int schemaSize = this.joinNode.getBufferManager().getSchemaSize(other.getSource().getOutputElements());
     	int toReserve = this.joinNode.getBufferManager().getMaxProcessingSize();
     	int minSize = toReserve/schemaSize*this.joinNode.getBatchSize();

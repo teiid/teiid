@@ -63,6 +63,7 @@ import org.jboss.msc.service.ServiceRegistry;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.Admin.SchemaObjectType;
 import org.teiid.adminapi.Admin.TranlatorPropertyType;
+import org.teiid.adminapi.AdminComponentException;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.VDB;
@@ -90,6 +91,8 @@ import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.SessionAwareCache;
+import org.teiid.dqp.service.SessionService;
+import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.jboss.TeiidServiceNames.InvalidServiceNameException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -154,26 +157,15 @@ abstract class TeiidOperationHandler extends BaseOperationHandler<DQPCore> {
 	}
 
 	protected int getSessionCount(OperationContext context) throws AdminException {
-		int count = 0;
-		List<TransportService> transportServices = getTransportServices(context);
-		for (TransportService t: transportServices) {
-			count += t.getActiveSessionsCount();
+		try {
+			return getSessionService(context).getActiveSessionsCount();
+		} catch (SessionServiceException e) {
+			 throw new AdminComponentException(IntegrationPlugin.Event.TEIID50056, e);
 		}
-		return count;
 	}
 
-	protected List<TransportService> getTransportServices(OperationContext context){
-		List<TransportService> transports = new ArrayList<TransportService>();
-		List<ServiceName> services = context.getServiceRegistry(false).getServiceNames();
-        for (ServiceName name:services) {
-        	if (TeiidServiceNames.TRANSPORT_BASE.isParentOf(name)) {
-        		ServiceController<?> transport = context.getServiceRegistry(isChangesRuntimes()).getService(name);
-        		if (transport != null) {
-        			transports.add(TransportService.class.cast(transport.getValue()));
-        		}
-        	}
-        }
-        return transports;
+	protected SessionService getSessionService(OperationContext context){
+		return (SessionService) context.getServiceRegistry(false).getService(TeiidServiceNames.SESSION).getValue();
 	}
 	
     public static ModelNode executeQuery(final VDBMetaData vdb,  final DQPCore engine, final String command, final long timoutInMilli, final ModelNode resultsNode, final boolean timeAsString) throws OperationFailedException {
@@ -345,17 +337,15 @@ class ListSessions extends TeiidOperationHandler{
 		}
 
 		ModelNode result = context.getResult();
-		for (TransportService t: getTransportServices(context)) {
-			Collection<SessionMetadata> sessions = t.getActiveSessions();
-			for (SessionMetadata session:sessions) {
-				if (filter) {
-					if (session.getVDBName().equals(vdbName) && session.getVDBVersion() == version) {
-						VDBMetadataMapper.SessionMetadataMapper.INSTANCE.wrap(session, result.add());
-					}
-				}
-				else {
+		Collection<SessionMetadata> sessions = getSessionService(context).getActiveSessions();
+		for (SessionMetadata session:sessions) {
+			if (filter) {
+				if (session.getVDBName().equals(vdbName) && session.getVDBVersion() == version) {
 					VDBMetadataMapper.SessionMetadataMapper.INSTANCE.wrap(session, result.add());
 				}
+			}
+			else {
+				VDBMetadataMapper.SessionMetadataMapper.INSTANCE.wrap(session, result.add());
 			}
 		}
 	}
@@ -459,17 +449,21 @@ class ListRequestsPerVDB extends TeiidOperationHandler{
 		String vdbName = operation.get(OperationsConstants.VDB_NAME.getName()).asString();
 		int vdbVersion = operation.get(OperationsConstants.VDB_VERSION.getName()).asInt();
 		checkVDB(context, vdbName, vdbVersion);
-		for (TransportService t: getTransportServices(context)) {
-			List<RequestMetadata> requests = t.getRequestsUsingVDB(vdbName,vdbVersion);
-			for (RequestMetadata request:requests) {
-				if (request.sourceRequest()) {
-					if (includeSourceQueries) {
-						VDBMetadataMapper.RequestMetadataMapper.INSTANCE.wrap(request, result.add());
-					}
-				}
-				else {
+		List<RequestMetadata> requests = new ArrayList<RequestMetadata>();
+		Collection<SessionMetadata> sessions = getSessionService(context).getActiveSessions();
+		for (SessionMetadata session:sessions) {
+			if (vdbName.equals(session.getVDBName()) && session.getVDBVersion() == vdbVersion) {
+				requests.addAll(engine.getRequestsForSession(session.getSessionId()));
+			}
+		}
+		for (RequestMetadata request:requests) {
+			if (request.sourceRequest()) {
+				if (includeSourceQueries) {
 					VDBMetadataMapper.RequestMetadataMapper.INSTANCE.wrap(request, result.add());
 				}
+			}
+			else {
+				VDBMetadataMapper.RequestMetadataMapper.INSTANCE.wrap(request, result.add());
 			}
 		}
 	}
@@ -514,9 +508,7 @@ class TerminateSession extends TeiidOperationHandler{
 		if (!operation.hasDefined(OperationsConstants.SESSION.getName())) {
 			throw new OperationFailedException(IntegrationPlugin.Util.getString(OperationsConstants.SESSION.getName()+MISSING));
 		}
-		for (TransportService t: getTransportServices(context)) {
-			t.terminateSession(operation.get(OperationsConstants.SESSION.getName()).asString());
-		}
+		getSessionService(context).terminateSession(operation.get(OperationsConstants.SESSION.getName()).asString(), null);
 	}
 
 	@Override

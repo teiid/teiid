@@ -1514,6 +1514,137 @@ public class TestEmbeddedServer {
 		fail();
 	}
 	
+	@Test public void testSemanticVersioning() throws Exception {
+		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		es.start(ec);
+		
+		ModelMetaData mmd = new ModelMetaData();
+		mmd.setName("x");
+		mmd.setModelType(Type.VIRTUAL);
+		mmd.addSourceMetadata("ddl", "create view v as select 1;");
+		
+		es.deployVDB("x.v0.9.0", mmd);
+		es.deployVDB("x.v1.0.1", mmd);
+		es.deployVDB("x.v1.1.0", mmd);
+		
+		Connection c = es.getDriver().connect("jdbc:teiid:x", null);
+		Statement s = c.createStatement();
+		ResultSet rs = s.executeQuery("values (current_database())");
+		rs.next();
+		assertEquals("x", rs.getString(1));
+		
+		rs = s.executeQuery("select version from virtualdatabases");
+		rs.next();
+		assertEquals("0.9.0", rs.getString(1));
+		
+		try {
+			//v1.0.0 does not exist
+			c = es.getDriver().connect("jdbc:teiid:x.v1.0", null);
+			fail();
+		} catch (TeiidSQLException e) {
+			
+		}
+
+		c = es.getDriver().connect("jdbc:teiid:x.v1.0.1", null);
+		s = c.createStatement();
+		rs = s.executeQuery("select version from virtualdatabases");
+		rs.next();
+		assertEquals("1.0.1", rs.getString(1));
+		
+		try {
+			//old style non-semantic version
+			c = es.getDriver().connect("jdbc:teiid:x.1", null);
+			fail();
+		} catch (TeiidSQLException e) {
+			
+		}
+		
+		c = es.getDriver().connect("jdbc:teiid:x.v1.", null);
+		s = c.createStatement();
+		rs = s.executeQuery("select version from virtualdatabases");
+		rs.next();
+		assertEquals("1.0.1", rs.getString(1));
+
+		
+		c = es.getDriver().connect("jdbc:teiid:x.v1.1.", null);
+		s = c.createStatement();
+		rs = s.executeQuery("select version from virtualdatabases");
+		rs.next();
+		assertEquals("1.1.0", rs.getString(1));
+	}
+	
+	@Test public void testSemanticVersioningAny() throws Exception {
+		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		es.start(ec);
+		
+		try {
+			es.deployVDB(new ByteArrayInputStream(createVDB("x.v0.9").getBytes("UTF-8")));
+			fail();
+		} catch (VirtualDatabaseException e) {
+			//not fully specified
+		}
+		
+		es.deployVDB(new ByteArrayInputStream(createVDB("x.v0.9.0").getBytes("UTF-8")));
+		
+		Connection c = es.getDriver().connect("jdbc:teiid:x", null);
+		Statement s = c.createStatement();
+		ResultSet rs = s.executeQuery("values (current_database())");
+		rs.next();
+		assertEquals("x", rs.getString(1));
+		
+		rs = s.executeQuery("select version from virtualdatabases");
+		rs.next();
+		assertEquals("0.9.0", rs.getString(1));
+		
+		es.deployVDB(new ByteArrayInputStream(createVDB("x.v1.1.1").getBytes("UTF-8")));
+		
+		try {
+			//old style non-semantic version
+			c = es.getDriver().connect("jdbc:teiid:x.1", null);
+			fail();
+		} catch (TeiidSQLException e) {
+			
+		}
+		
+		c = es.getDriver().connect("jdbc:teiid:x.v1.", null);
+		s = c.createStatement();
+		rs = s.executeQuery("select version from virtualdatabases");
+		rs.next();
+		assertEquals("1.1.1", rs.getString(1));
+		
+		c = es.getDriver().connect("jdbc:teiid:x.v1.1.", null);
+		s = c.createStatement();
+		rs = s.executeQuery("select version from virtualdatabases");
+		rs.next();
+		assertEquals("1.1.1", rs.getString(1));
+
+		es.deployVDB(new ByteArrayInputStream(createVDB("x.v1.11.1").getBytes("UTF-8")));
+		es.deployVDB(new ByteArrayInputStream(createVDB("x.v1.0.1").getBytes("UTF-8")));
+		
+		c = es.getDriver().connect("jdbc:teiid:x.v1.1.", null);
+		s = c.createStatement();
+		rs = s.executeQuery("select version from virtualdatabases");
+		rs.next();
+		assertEquals("1.1.1", rs.getString(1));
+		
+		c = es.getDriver().connect("jdbc:teiid:x.v1.0.", null);
+		s = c.createStatement();
+		rs = s.executeQuery("select version from virtualdatabases");
+		rs.next();
+		assertEquals("1.0.1", rs.getString(1));
+
+		try {
+			c = es.getDriver().connect("jdbc:teiid:x.v1.12.0", null);
+			fail();
+		} catch (TeiidSQLException e) {
+			
+		}
+	}
+
+	private String createVDB(String name) {
+		return "<vdb name=\""+ name +"\"><connection-type>ANY</connection-type><model name=\"x\" type=\"VIRTUAL\"><metadata type=\"ddl\">create view v as select 1</metadata></model></vdb>";
+	}
+	
 	@Test public void testVirtualFunctions() throws Exception {
 		EmbeddedConfiguration ec = new EmbeddedConfiguration();
 		es.start(ec);

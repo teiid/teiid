@@ -57,7 +57,7 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
 	public static class TableData {
 		Collection<TempMetadataID> accessPatterns;
 		List<TempMetadataID> elements;
-		int cardinality = QueryMetadataInterface.UNKNOWN_CARDINALITY;
+		long cardinality = QueryMetadataInterface.UNKNOWN_CARDINALITY;
 		List<TempMetadataID> primaryKey;
 		QueryNode queryNode;
 		Map<Object, Object> localCache;
@@ -79,7 +79,7 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
 			this.lastModified = -1;
 		}
 		
-		public void dataModified(int updateCount) {
+		public void dataModified(long updateCount) {
 			if (updateCount == 0) {
 				return;
 			}
@@ -316,11 +316,11 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
         this.getTableData().accessPatterns = accessPatterns;
     }
 
-    public int getCardinality() {
+    public long getCardinality() {
         return this.getTableData().cardinality;
     }
 
-    public void setCardinality(int cardinality) {
+    public void setCardinality(long cardinality) {
         this.getTableData().cardinality = cardinality;
     }
 

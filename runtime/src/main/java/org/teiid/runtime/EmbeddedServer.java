@@ -84,12 +84,11 @@ import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.internal.process.TransactionServerImpl;
 import org.teiid.dqp.service.BufferService;
-import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.events.EventDistributor;
 import org.teiid.events.EventDistributorFactory;
 import org.teiid.jdbc.CallableStatementImpl;
 import org.teiid.jdbc.ConnectionImpl;
-import org.teiid.jdbc.EmbeddedProfile;
+import org.teiid.jdbc.LocalProfile;
 import org.teiid.jdbc.PreparedStatementImpl;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.jdbc.TeiidPreparedStatement;
@@ -138,7 +137,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		LogManager.setLogListener(new JBossLogger());
 	}
 
-	private EmbeddedProfile embeddedProfile = new EmbeddedProfile() {
+	private LocalProfile embeddedProfile = new LocalProfile() {
 		@Override
 		public ConnectionImpl connect(String url, Properties info)
 				throws TeiidSQLException {
@@ -458,7 +457,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	}
 
 	private void initDriver() {
-		driver.setEmbeddedProfile(embeddedProfile);
+		driver.setLocalProfile(embeddedProfile);
 	}
 	
 	private SocketListener startTransport(SocketConfiguration socketConfig, BufferManager bm, int maxODBCLobSize) {
@@ -501,15 +500,11 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 				}
 				rs.clearForVDB(name, 1);
 				ppc.clearForVDB(name, 1);
-				try {
-					for (SessionMetadata session : sessionService.getSessionsLoggedInToVDB(name, version)) {
-						try {
-							sessionService.closeSession(session.getSessionId());
-						} catch (InvalidSessionException e) {
-						}
+				for (SessionMetadata session : sessionService.getSessionsLoggedInToVDB(name, version)) {
+					try {
+						sessionService.closeSession(session.getSessionId());
+					} catch (InvalidSessionException e) {
 					}
-				} catch (SessionServiceException e) {
-					LogManager.logDetail(LogConstants.CTX_RUNTIME, e, "Could not terminate sessions for", name, version);  //$NON-NLS-1$
 				}
 			}
 

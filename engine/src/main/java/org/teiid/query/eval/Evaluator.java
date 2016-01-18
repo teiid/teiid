@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -573,11 +574,43 @@ public class Evaluator {
         }
 
         ValueIterator valueIter;
-		try {
-			valueIter = evaluateSubquery(criteria, tuple);
-		} catch (TeiidProcessingException e) {
-			 throw new ExpressionEvaluationException(e);
-		}
+        if (criteria.getCommand() != null) {
+			try {
+				valueIter = evaluateSubquery(criteria, tuple);
+			} catch (TeiidProcessingException e) {
+				 throw new ExpressionEvaluationException(e);
+			}
+        } else {
+        	Object array = evaluate(criteria.getArrayExpression(), tuple);
+        	final Object[] vals;
+        	if (array instanceof Object[]) {
+				vals = (Object[])array;
+			} else {
+				ArrayImpl arrayImpl = (ArrayImpl)array;
+				vals = arrayImpl.getValues();
+			}
+        	valueIter = new ValueIterator() {
+				int index = 0;
+				
+				@Override
+				public void reset() {
+					index = 0;
+				}
+				
+				@Override
+				public boolean hasNext() {
+					return index < vals.length;
+				}
+
+				@Override
+				public Object next() {
+					if (!hasNext()) {
+						throw new NoSuchElementException();
+					}
+					return vals[index++];
+				}
+			};
+        }
         while(valueIter.hasNext()) {
             Object value = valueIter.next();
             

@@ -76,6 +76,9 @@ public class LanguageBridgeFactory {
     
 		private TupleBufferList(TupleBuffer tb) {
 			this.tb = tb;
+			if (tb.getRowCount() > Integer.MAX_VALUE) {
+				throw new AssertionError("TupleBuffer too large for TupleBufferList"); //$NON-NLS-1$
+			}
 		}
 
 		@Override
@@ -92,7 +95,7 @@ public class LanguageBridgeFactory {
 
 		@Override
 		public int size() {
-			return tb.getRowCount();
+			return (int)tb.getRowCount();
 		}
 	}
 

@@ -105,7 +105,7 @@ public class ConnectorWorkItem implements ConnectorWork {
         
     /* End state information */    
     private volatile boolean lastBatch;
-    private int rowCount;
+    private long rowCount;
     
     private AtomicBoolean isCancelled = new AtomicBoolean();
 	private org.teiid.language.Command translatedCommand;
@@ -196,7 +196,7 @@ public class ConnectorWorkItem implements ConnectorWork {
             	Execution ex = this.execution;
             	if(ex != null) {
             		if (abnormal) {
-            			this.manager.logSRCCommand(this.requestMsg, this.securityContext, Event.CANCEL, -1, null);
+                		this.manager.logSRCCommand(this.requestMsg, this.securityContext, Event.CANCEL, -1l, null);
             		}
     	            ex.cancel();
     	            LogManager.logDetail(LogConstants.CTX_CONNECTOR, QueryPlugin.Util.getString("DQPCore.The_atomic_request_has_been_cancelled", this.id)); //$NON-NLS-1$

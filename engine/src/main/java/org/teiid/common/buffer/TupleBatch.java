@@ -41,7 +41,7 @@ public class TupleBatch {
 	public static final byte TERMINATED = 1;
 	public static final byte ITERATION_TERMINATED = 2;
 	
-	private int rowOffset;    
+	private long rowOffset;    
     protected List<List<?>> tuples;
     
     // Optional state
@@ -58,7 +58,7 @@ public class TupleBatch {
      * @param tuples array of List objects, each of which is
      * a single tuple
      */
-    public TupleBatch(int beginRow, List<?>[] tuples) {
+    public TupleBatch(long beginRow, List<?>[] tuples) {
         this.rowOffset = beginRow;
         this.tuples = Arrays.asList(tuples);
     }
@@ -70,7 +70,7 @@ public class TupleBatch {
      * @param listOfTupleLists List containing List objects, each of which is
      * a single tuple
      */
-    public TupleBatch(int beginRow, List<? extends List<?>> listOfTupleLists) {
+    public TupleBatch(long beginRow, List<? extends List<?>> listOfTupleLists) {
         this.rowOffset = beginRow;
         this.tuples = new ArrayList<List<?>>(listOfTupleLists);
     }
@@ -80,7 +80,7 @@ public class TupleBatch {
      * contained in this batch (one-based).
      * @return the first row contained in this tuple batch
      */
-    public int getBeginRow() {
+    public long getBeginRow() {
         return rowOffset;
     }
     
@@ -89,7 +89,7 @@ public class TupleBatch {
      * this batch (one-based).
      * @return the last row contained in this tuple batch
      */
-    public int getEndRow() {
+    public long getEndRow() {
         return rowOffset + tuples.size() - 1;
     }
     
@@ -105,8 +105,13 @@ public class TupleBatch {
      * Return the tuple at the given index (one-based).
      * @return the tuple at the given index
      */
-    public List<?> getTuple(int rowIndex) {
-        return tuples.get(rowIndex-rowOffset);
+    public List<?> getTuple(long rowIndex) {
+    	long base = rowIndex - rowOffset;
+    	int intVal = (int)base;
+    	if (base != intVal) {
+    		throw new AssertionError("rowIndex overflow " + rowIndex); //$NON-NLS-1$
+    	}
+        return tuples.get(intVal);
     }
     
     public List<List<?>> getTuples() {
@@ -145,7 +150,7 @@ public class TupleBatch {
     	return this.terminationFlag;
     }
     
-    public boolean containsRow(int row) {
+    public boolean containsRow(long row) {
     	return rowOffset <= row && getEndRow() >= row;
     }
     
@@ -164,7 +169,7 @@ public class TupleBatch {
         return s.toString();
     }
 
-    public void setRowOffset(int rowOffset) {
+    public void setRowOffset(long rowOffset) {
 		this.rowOffset = rowOffset;
 	}
 }

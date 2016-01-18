@@ -116,8 +116,6 @@ public abstract class AbstractCompareCriteria extends PredicateCriteria implemen
 		return this.leftExpression;
 	}
     
-    public abstract Expression getRightExpression();
-
     /**
      * Returns the operator as a string.
      * @return String version of operator

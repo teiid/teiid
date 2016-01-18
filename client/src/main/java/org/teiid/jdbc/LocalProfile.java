@@ -30,7 +30,7 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.net.ServerConnection;
 
 
-public class EmbeddedProfile implements ConnectionProfile {
+public class LocalProfile implements ConnectionProfile {
 	
     public static final String USE_CALLING_THREAD = "useCallingThread"; //$NON-NLS-1$
 	public static final String WAIT_FOR_LOAD = "waitForLoad"; //$NON-NLS-1$

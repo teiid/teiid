@@ -94,7 +94,7 @@ public class TestCase3473 {
         ResultSet rs1 = dbmd.getTables(null, "%foo", null, null); //$NON-NLS-1$ 
         ResultSet rs2 = dbmd.getTables("foo", "%foo", null, null); //$NON-NLS-1$ //$NON-NLS-2$
         TestMMDatabaseMetaData.compareResultSet(rs, rs1, rs2);
-        assertFalse(dbmd.getTables(null, null, null, new String[] {"VIEW"}).next());
+        assertTrue(dbmd.getTables(null, null, null, new String[] {"VIEW"}).next());
         
         Properties p = new Properties();
         p.setProperty(DatabaseMetaDataImpl.REPORT_AS_VIEWS, "true");

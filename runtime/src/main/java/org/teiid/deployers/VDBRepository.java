@@ -84,8 +84,6 @@ public class VDBRepository implements Serializable{
 	private boolean dataRolesRequired;
 	
 	public void addVDB(VDBMetaData vdb, MetadataStore metadataStore, LinkedHashMap<String, VDBResources.Resource> visibilityMap, UDFMetaData udf, ConnectorManagerRepository cmr, boolean reload) throws VirtualDatabaseException {
-		VDBKey key = vdbId(vdb);
-		
 		// get the system VDB metadata store
 		if (this.systemStore == null) {
 			 throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40022, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40022));
@@ -110,11 +108,16 @@ public class VDBRepository implements Serializable{
 		CompositeVDB cvdb = new CompositeVDB(vdb, metadataStore, visibilityMap, udf, this.systemFunctionManager.getSystemFunctions(), cmr, this, stores);
 		lock.lock();
 		try {
-			if (vdbRepo.containsKey(key)) {
-				 throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40035, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40035, vdb.getName(), vdb.getVersion()));
+			VDBKey vdbKey = cvdb.getVDBKey();
+			cvdb.getVDB().setBaseName(vdbKey.getBaseName());
+			if (vdbKey.isSemantic() && (!vdbKey.isFullySpecified() || vdbKey.isAtMost() || vdbKey.getVersion() != 1)) {
+				throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40145, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40145, vdbKey));
 			}
-			this.vdbRepo.put(key, cvdb);
-			this.pendingDeployments.remove(key);
+			if (vdbRepo.containsKey(vdbKey)) {
+				throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40035, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40035, vdb.getName(), vdb.getVersion()));
+			}
+			this.vdbRepo.put(vdbKey, cvdb);
+			this.pendingDeployments.remove(vdbKey);
 			vdbAdded.signalAll();
 		} finally {
 			lock.unlock();
@@ -193,33 +196,32 @@ public class VDBRepository implements Serializable{
 		return vdbRepo.values();
 	}
 	
-    protected VDBKey vdbId(VDBMetaData vdb) {
-        return new VDBKey(vdb.getName(), vdb.getVersion());
-    } 	
-		
     /**
      * A live vdb may be loading or active
      * @param vdbName
      * @return
      */
 	public VDBMetaData getLiveVDB(String vdbName) {
-    	int latestVersion = 0;
     	VDBMetaData result = null;
-        for (Map.Entry<VDBKey, CompositeVDB> entry:this.vdbRepo.tailMap(new VDBKey(vdbName, 0)).entrySet()) {
-            if(!entry.getKey().getName().equalsIgnoreCase(vdbName)) {
+    	VDBKey key = new VDBKey(vdbName, 1);
+    	if (key.isSemantic() && !key.isAtMost()) {
+    		CompositeVDB v = this.vdbRepo.get(key);
+    		if (v != null) {
+    			return v.getVDB();
+    		}
+    		return null;
+    	}
+        for (Map.Entry<VDBKey, CompositeVDB> entry:this.vdbRepo.tailMap(key).entrySet()) {
+        	if(!key.getBaseName().equalsIgnoreCase(entry.getKey().getBaseName()) || !key.acceptsVerion(entry.getKey())) {
             	break;
             }
         	VDBMetaData vdb = entry.getValue().getVDB();
         	switch (vdb.getConnectionType()) {
         	case ANY:
-        		if (vdb.getVersion() > latestVersion) {
-        			latestVersion = vdb.getVersion();
-        			result = vdb;
-        		}
+    			result = vdb;
         		break;
         	case BY_VERSION:
-                if (latestVersion == 0) {
-            		latestVersion = vdb.getVersion();
+        		if (result == null) {
             		result = vdb;
                 }            	
                 break;
@@ -401,7 +403,7 @@ public class VDBRepository implements Serializable{
 	}
 
 	public void addPendingDeployment(VDBMetaData deployment) {
-		VDBKey key = vdbId(deployment);
+		VDBKey key = new VDBKey(deployment.getName(), deployment.getVersion());
 		this.pendingDeployments.put(key, deployment);
 	}
 

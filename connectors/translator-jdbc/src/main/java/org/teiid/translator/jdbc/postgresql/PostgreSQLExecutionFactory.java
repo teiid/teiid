@@ -619,6 +619,18 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         	supportedFunctions.add(SourceSystemFunctions.ST_SETSRID);
         	supportedFunctions.add(SourceSystemFunctions.ST_SRID);
         	supportedFunctions.add(SourceSystemFunctions.ST_TOUCHES);
+        	supportedFunctions.add(SourceSystemFunctions.ST_HASARC);
+            supportedFunctions.add(SourceSystemFunctions.ST_SIMPLIFY);
+            supportedFunctions.add(SourceSystemFunctions.ST_FORCE_2D);
+            supportedFunctions.add(SourceSystemFunctions.ST_ENVELOPE);
+            supportedFunctions.add(SourceSystemFunctions.ST_WITHIN);
+            supportedFunctions.add(SourceSystemFunctions.ST_DWITHIN);
+            supportedFunctions.add(SourceSystemFunctions.ST_EXTENT);
+            supportedFunctions.add(SourceSystemFunctions.DOUBLE_AMP_OP);
+            supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMEWKT);
+            supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMEWKB);
+            supportedFunctions.add(SourceSystemFunctions.ST_ASEWKB);
+            supportedFunctions.add(SourceSystemFunctions.ST_ASEWKT);
         }
         if (this.postGisVersion.compareTo(ONE_4) >= 0) {
         	supportedFunctions.add(SourceSystemFunctions.ST_ASGEOJSON);
@@ -634,6 +646,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         	supportedFunctions.add(SourceSystemFunctions.ST_TRANSFORM);
         	supportedFunctions.add(SourceSystemFunctions.ST_ASKML);
         }
+        supportedFunctions.add("pg_catalog.encode"); //$NON-NLS-1$
         return supportedFunctions;
     }
     

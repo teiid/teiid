@@ -338,7 +338,7 @@ public class IntegrationTestDeployment {
 		
 		VDB vdb = admin.getVDB("bqt", 1);
 		Model model = vdb.getModels().get(0);
-		admin.assignToModel("bqt", 1, model.getName(), "Source", "h2", "java:jboss/datasources/ExampleDS");
+		admin.updateSource("bqt", 1, "Source", "h2", "java:jboss/datasources/ExampleDS");
 		return vdbOneDeployed;
 	}
 	
@@ -474,7 +474,7 @@ public class IntegrationTestDeployment {
 
 		VDB vdb = admin.getVDB("bqt", 2);
 		Model model = vdb.getModels().get(0);
-		admin.assignToModel("bqt", 2, model.getName(), "Source", "h2", "java:jboss/datasources/ExampleDS");
+		admin.updateSource("bqt", 2, "Source", "h2", "java:jboss/datasources/ExampleDS");
 		
 		vdb = admin.getVDB("bqt", 2);
 		assertTrue(vdb.isValid());

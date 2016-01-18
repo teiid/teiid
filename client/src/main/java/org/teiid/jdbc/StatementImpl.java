@@ -681,7 +681,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 		if (this.getConnection().getServerConnection() == null || !this.getConnection().getServerConnection().isLocal()) {
 			return false;
 		}
-		String useCallingThread = getExecutionProperty(EmbeddedProfile.USE_CALLING_THREAD);
+		String useCallingThread = getExecutionProperty(LocalProfile.USE_CALLING_THREAD);
 		return (useCallingThread == null || Boolean.valueOf(useCallingThread));
 	}
 

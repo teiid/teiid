@@ -4,6 +4,7 @@
     <property name="vdb-property2">vdb-value2</property>
     <property name="vdb-property" value="vdb-value"></property>
     <import-vdb name="x" version="2"/>
+    <import-vdb name="y"/>
     <model name="model-one" type="PHYSICAL" visible="false">
         <description>model description</description>
         <property name="model-prop" value="model-value-override"></property>

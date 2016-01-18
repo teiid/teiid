@@ -21,73 +21,9 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUBSYSTEM;
-import static org.jboss.as.controller.parsing.ParseUtils.requireNoAttributes;
-import static org.teiid.jboss.TeiidConstants.ALLOW_ENV_FUNCTION_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_TYPE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.AUTHORIZATION_VALIDATOR_MODULE_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.DATA_ROLES_REQUIRED_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.DC_STACK_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.DETECTING_CHANGE_EVENTS_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.ENCRYPT_FILES_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.INLINE_LOBS;
-import static org.teiid.jboss.TeiidConstants.LOB_CHUNK_SIZE_IN_KB_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.MAX_ACTIVE_PLANS_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.MAX_BUFFER_SPACE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.MAX_FILE_SIZE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.MAX_OPEN_FILES_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.MAX_PROCESSING_KB_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.MAX_RESERVED_KB_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.MAX_ROWS_FETCH_SIZE_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.MAX_SOURCE_ROWS_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.MAX_THREADS_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.MEMORY_BUFFER_OFFHEAP_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.MEMORY_BUFFER_SPACE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.PG_MAX_LOB_SIZE_ALLOWED_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.POLICY_DECIDER_MODULE_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.PPC_CONTAINER_NAME_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.PPC_ENABLE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.PPC_NAME_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.PREPARSER_MODULE_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.PROCESSOR_BATCH_SIZE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.QUERY_THRESHOLD_IN_SECS_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.QUERY_TIMEOUT;
-import static org.teiid.jboss.TeiidConstants.RSC_CONTAINER_NAME_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.RSC_ENABLE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.RSC_MAX_STALENESS_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.RSC_NAME_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_AUTH_MODE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_KETSTORE_ALIAS_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_KETSTORE_KEY_PASSWORD_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_KETSTORE_NAME_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_KETSTORE_PASSWORD_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_KETSTORE_TYPE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_KEY_MANAGEMENT_ALG_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_MODE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_SSL_PROTOCOL_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_TRUSTSTORE_NAME_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.THREAD_COUNT_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.TIME_SLICE_IN_MILLI_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.TRANSLATOR_MODULE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.TRANSLATOR_SLOT_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.TRANSPORT_IN_BUFFER_SIZE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.TRANSPORT_PROTOCOL_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.TRANSPORT_SOCKET_BINDING_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT;
-import static org.teiid.jboss.TeiidConstants.USE_DISK_ATTRIBUTE;
-import static org.teiid.jboss.TeiidConstants.WORKMANAGER;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.jboss.as.controller.parsing.ParseUtils.*;
+import static org.teiid.jboss.TeiidConstants.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -165,6 +101,17 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     		writeObjectReplicatorConfiguration(writer, node);
     		writer.writeEndElement();
     	}
+    	
+    	// authentication
+    	if (like(node, Element.AUTHENTICATION_ELEMENT)) {
+			writer.writeStartElement(Element.AUTHENTICATION_ELEMENT.getLocalName());
+			AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+			AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+			AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+			AUTHENTICATION_TYPE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+			AUTHENTICATION_TRUST_ALL_LOCAL.marshallAsAttribute(node, false, writer);
+			writer.writeEndElement();
+    	}
     	   	
     	if (has(node, Element.TRANSPORT_ELEMENT.getLocalName())) {
 	    	ArrayList<String> transports = new ArrayList<String>(node.get(Element.TRANSPORT_ELEMENT.getLocalName()).keys());
@@ -214,16 +161,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     	TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE.marshallAsAttribute(node, false, writer);
     	TRANSPORT_IN_BUFFER_SIZE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
     	TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
-    	
-    	// authentication
-    	if (like(node, Element.AUTHENTICATION_ELEMENT)) {
-			writer.writeStartElement(Element.AUTHENTICATION_ELEMENT.getLocalName());
-			AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE.marshallAsAttribute(node, false, writer);
-			AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE.marshallAsAttribute(node, false, writer);
-			AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE.marshallAsAttribute(node, false, writer);
-			AUTHENTICATION_TYPE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
-			writer.writeEndElement();
-    	}
     	
     	if (like(node, Element.PG_ELEMENT)) {
 			writer.writeStartElement(Element.PG_ELEMENT.getLocalName());
@@ -408,8 +345,10 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
                     	else {
                         	throw new XMLStreamException();
                     	}
-                        break;                            
-                            
+                        break;
+                    case AUTHENTICATION_ELEMENT:
+    					parseAuthentication(reader, bootServices);
+    					break;
                      default: 
                         throw ParseUtils.unexpectedElement(reader);
                     }
@@ -498,9 +437,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
         while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
             Element element = Element.forName(reader.getLocalName());
             switch (element) {
-				case AUTHENTICATION_ELEMENT:
-					parseAuthentication(reader, node);
-					break;
 				case PG_ELEMENT:
 					parsePg(reader, node);
 					break;					
@@ -524,9 +460,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     			
     			switch(element) {
     			case AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE:
-    				node.get(element.getModelName()).set(attrValue);
-    				break;
-    			case AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE:
     				node.get(element.getModelName()).set(attrValue);
     				break;
     			case AUTHENTICATION_TYPE_ATTRIBUTE:

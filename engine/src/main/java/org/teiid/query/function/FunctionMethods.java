@@ -1353,6 +1353,10 @@ public final class FunctionMethods {
     }
     
     public static Object current_database(CommandContext context) {
+    	if (context.getVdb() != null) {
+    		//vdb can be null in unit tests
+    		return context.getVdb().getBaseName();
+    	}
     	return context.getVdbName();
     }
 
@@ -1573,6 +1577,43 @@ public final class FunctionMethods {
             throws FunctionExecutionException {
         return regexpReplace(context, source, regex, replacement, ""); //$NON-NLS-1$
     }
+    
+    @TeiidFunction(name=SourceSystemFunctions.REGEXP_REPLACE,
+            category=FunctionCategoryConstants.STRING,
+            nullOnNull=true)
+	public static ClobType regexpReplace(CommandContext context,
+	                                ClobType source,
+	                                String regex,
+	                                String replacement)
+	     throws FunctionExecutionException {
+    	return regexpReplace(context, source, regex, replacement, ""); //$NON-NLS-1$
+	}
+    
+    @TeiidFunction(name=SourceSystemFunctions.REGEXP_REPLACE,
+            category=FunctionCategoryConstants.STRING,
+            nullOnNull=true)
+    public static String regexpReplace(CommandContext context,
+                                String source,
+                                String regex,
+                                String replacement,
+                                String flags)
+                                		throws FunctionExecutionException {
+    	return regexpReplace(context, (CharSequence)source, regex, replacement, flags);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.REGEXP_REPLACE,
+            category=FunctionCategoryConstants.STRING,
+            nullOnNull=true)
+    public static ClobType regexpReplace(CommandContext context,
+    							ClobType source,
+                                String regex,
+                                String replacement,
+                                String flags)
+                                		throws FunctionExecutionException {
+    	//TODO: this is not very memory safe - we can write out to the buffermanger if needed
+    	String result = regexpReplace(context, source.getCharSequence(), regex, replacement, flags);
+    	return new ClobType(new ClobImpl(result));
+    }
 
     /**
      * Perform find-replace operation on a string using regular expressions.
@@ -1596,11 +1637,8 @@ public final class FunctionMethods {
      * @throws FunctionExecutionException If an invalid flag was supplied or if the
      *                                    regex pattern was invalid.
      */
-    @TeiidFunction(name=SourceSystemFunctions.REGEXP_REPLACE,
-                   category=FunctionCategoryConstants.STRING,
-                   nullOnNull=true)
     public static String regexpReplace(CommandContext context,
-                                       String source,
+                                       CharSequence source,
                                        String regex,
                                        String replacement,
                                        String flags)

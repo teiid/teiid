@@ -573,7 +573,7 @@ public class TestInsertProcessing {
         String sql = "insert into x (y) values ('1')"; //$NON-NLS-1$
         TransformationMetadata tm = RealMetadataFactory.fromDDL("" +
         		"create foreign table t (y string, z string) options (updatable true); " +
-        		"create view x (y string, z string default '''a'' || user()' options (\"teiid_rel:default_handling\" 'expression')) options (updatable true) as select * from t; " +
+        		"create view x (y string, z string default 'a' || user()) options (updatable true) as select * from t; " +
         		"create trigger on x instead of insert as for each row begin insert into t (y, z) values (new.y, new.z); end;", "vdb", "source");
         Command command = helpParse(sql); 
 

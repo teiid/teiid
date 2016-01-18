@@ -73,7 +73,7 @@ import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.jdbc.CallableStatementImpl;
 import org.teiid.jdbc.ConnectionImpl;
-import org.teiid.jdbc.EmbeddedProfile;
+import org.teiid.jdbc.LocalProfile;
 import org.teiid.jdbc.PreparedStatementImpl;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.logging.LogConstants;
@@ -92,6 +92,7 @@ import org.teiid.translator.CacheDirective;
 import org.teiid.translator.odata.ODataEntitySchemaBuilder;
 import org.teiid.translator.odata.ODataTypeManager;
 import org.teiid.transport.LocalServerConnection;
+import org.teiid.vdb.runtime.VDBKey;
 
 public class LocalClient implements Client {
 	private static final String BATCH_SIZE = "batch-size"; //$NON-NLS-1$
@@ -101,7 +102,7 @@ public class LocalClient implements Client {
 	
 	private volatile VDBMetaData vdb;
 	private String vdbName;
-	private int vdbVersion;
+	private Integer vdbVersion;
 	private int batchSize;
 	private long cacheTime;
 	private String connectionString;
@@ -110,23 +111,27 @@ public class LocalClient implements Client {
 	private TeiidDriver driver = TeiidDriver.getInstance();
 	private String invalidCharacterReplacement;
 
-	public LocalClient(String vdbName, int vdbVersion, Properties props) {
+	public LocalClient(String vdbName, Integer vdbVersion, Properties props) {
 		this.vdbName = vdbName;
 		this.vdbVersion = vdbVersion;
 		this.batchSize = PropertiesUtils.getIntProperty(props, BATCH_SIZE, BufferManagerImpl.DEFAULT_PROCESSOR_BATCH_SIZE);
 		this.cacheTime = PropertiesUtils.getLongProperty(props, SKIPTOKEN_TIME, 300000L);
 		this.invalidCharacterReplacement = props.getProperty(INVALID_CHARACTER_REPLACEMENT);
 		StringBuilder sb = new StringBuilder();
-		sb.append("jdbc:teiid:").append(this.vdbName).append(".").append(this.vdbVersion).append(";"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		sb.append("jdbc:teiid:").append(this.vdbName); //$NON-NLS-1$
+		if (vdbVersion != null) {
+			sb.append(".").append(this.vdbVersion); //$NON-NLS-1$
+		}
+		sb.append(";"); //$NON-NLS-1$ 
 		this.initProperties = props;
 		if (this.initProperties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION) == null) {
 		    this.initProperties.put(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "true"); //$NON-NLS-1$    
 		}
-		if (this.initProperties.getProperty(EmbeddedProfile.TRANSPORT_NAME) == null) {
-		    this.initProperties.setProperty(EmbeddedProfile.TRANSPORT_NAME, "odata");    
+		if (this.initProperties.getProperty(LocalProfile.TRANSPORT_NAME) == null) {
+		    this.initProperties.setProperty(LocalProfile.TRANSPORT_NAME, "odata");    
 		}		 
-		if (this.initProperties.getProperty(EmbeddedProfile.WAIT_FOR_LOAD) == null) {
-		    this.initProperties.put(EmbeddedProfile.WAIT_FOR_LOAD, "0"); //$NON-NLS-1$
+		if (this.initProperties.getProperty(LocalProfile.WAIT_FOR_LOAD) == null) {
+		    this.initProperties.put(LocalProfile.WAIT_FOR_LOAD, "0"); //$NON-NLS-1$
 		}
 		this.connectionString = sb.toString();
 	}
@@ -163,9 +168,17 @@ public class LocalClient implements Client {
 	}
 
 	ConnectionImpl getConnection() throws SQLException {
-		if (vdbName == null || !vdbName.matches("[\\w-\\.]+")) { //$NON-NLS-1$
-			throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16008));			
+		if (this.vdb == null) {
+			//validate the name
+			if (vdbName == null || !vdbName.matches("[\\w-\\.]+")) { //$NON-NLS-1$
+				throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16008));			
+			}
+			VDBKey key = new VDBKey(vdbName, vdbVersion==null?0:vdbVersion);
+			if (key.isSemantic() && (!key.isFullySpecified() || key.isAtMost() || key.getVersion() != 1)) {
+				throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16021, key));
+			}
 		}
+		
 		ConnectionImpl connection = driver.connect(this.connectionString, this.initProperties);
 		if (connection == null) {
 			throw new TeiidRuntimeException("URL not valid " + this.connectionString); //$NON-NLS-1$

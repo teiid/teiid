@@ -35,7 +35,7 @@ public class StatsFunction extends SingleArgumentAggregateFunction {
 	
 	private double sum = 0;
 	private double sumSq = 0;
-	private int count = 0;
+	private long count = 0;
 	private Type type;
 	
 	public StatsFunction(Type function) {
@@ -96,12 +96,12 @@ public class StatsFunction extends SingleArgumentAggregateFunction {
 	
 	@Override
 	public List<? extends Class<?>> getStateTypes() {
-		return Arrays.asList(Integer.class, Double.class, Double.class);
+		return Arrays.asList(Long.class, Double.class, Double.class);
 	}
 	
 	@Override
 	public int setState(List<?> state, int index) {
-		count = (Integer) state.get(index++);
+		count = (Long) state.get(index++);
 		sum = (Double) state.get(index++);
 		sumSq = (Double) state.get(index++);
 		return index;

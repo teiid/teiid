@@ -60,7 +60,7 @@ public class CommandLogMessage {
     private String requestID;
     private Long sourceCommandID;
     private String sql;
-    private Integer rowCount;
+    private Long rowCount;
     private String modelName;
     private String translatorName;
     private ExecutionContext executionContext;
@@ -92,7 +92,7 @@ public class CommandLogMessage {
                                 String principal,
                                 String vdbName,
                                 int vdbVersion, 
-                                Integer finalRowCount,
+                                Long finalRowCount,
                                 Event event, PlanNode plan) {
         // userCommandEnd
         this.event = event;
@@ -128,7 +128,7 @@ public class CommandLogMessage {
                                 String translatorName,
                                 String sessionID,
                                 String principal,
-                                Integer finalRowCount,
+                                Long finalRowCount,
                                 Event event,
                                 ExecutionContext context, Long cpuTime) {
         // dataSourceCommandEnd
@@ -200,7 +200,7 @@ public class CommandLogMessage {
 	 * Returns the command.  Only valid for {@link Event#END}
 	 * @return
 	 */
-	public Integer getRowCount() {
+	public Long getRowCount() {
 		return rowCount;
 	}
 	public String getModelName() {

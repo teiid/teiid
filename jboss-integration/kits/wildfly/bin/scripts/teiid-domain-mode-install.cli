@@ -41,7 +41,7 @@ connect
 :restart-servers(blocking=true)
 
 /profile=ha/subsystem=teiid:add(distributed-cache-jgroups-stack=teiid-cluster, resultset-cache-infinispan-container=teiid-cache, preparedplan-cache-infinispan-container=teiid-cache, policy-decider-module=org.jboss.teiid)
-/profile=ha/subsystem=teiid/transport=embedded:add()
+/profile=ha/subsystem=teiid/transport=local:add()
 /profile=ha/subsystem=teiid/transport=odata:add(authentication-security-domain=teiid-security)
 /profile=ha/subsystem=teiid/transport=jdbc:add(protocol=teiid, socket-binding=teiid-jdbc, authentication-security-domain=teiid-security)
 /profile=ha/subsystem=teiid/transport=odbc:add(protocol=pg, socket-binding=teiid-odbc, authentication-security-domain=teiid-security, ssl-mode=disabled) 

@@ -65,7 +65,7 @@ import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionService;
 import org.teiid.jdbc.ConnectionImpl;
-import org.teiid.jdbc.EmbeddedProfile;
+import org.teiid.jdbc.LocalProfile;
 import org.teiid.jdbc.TeiidConnection;
 import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.logging.LogConstants;
@@ -1061,10 +1061,10 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	
 	@Override
 	public TeiidConnection getConnection() throws TeiidSQLException {
-		EmbeddedProfile ep = getDQPWorkContext().getConnectionProfile();
+		LocalProfile ep = getDQPWorkContext().getConnectionProfile();
 		//TODO: this is problematic as the client properties are not conveyed
 		Properties info = new Properties();
-		info.put(EmbeddedProfile.DQP_WORK_CONTEXT, getDQPWorkContext());
+		info.put(LocalProfile.DQP_WORK_CONTEXT, getDQPWorkContext());
 		String url = "jdbc:teiid:" + getVdbName() + "." + getVdbVersion(); //$NON-NLS-1$ //$NON-NLS-2$
 		ServerConnection sc;
 		try {

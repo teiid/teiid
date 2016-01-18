@@ -39,6 +39,7 @@ import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.TeiidException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.language.SortSpecification.NullOrdering;
@@ -5263,6 +5264,13 @@ public class TestParser {
     	String sql = "select DATE '1970-01-02', TIME '00:01:02', TIMESTAMP '2001-01-01 02:03:04.1'";
     	Query actualCommand = (Query)QueryParser.getQueryParser().parseCommand(sql, new ParseInfo());
 		assertEquals("SELECT {d'1970-01-02'}, {t'00:01:02'}, {ts'2001-01-01 02:03:04.1'}", actualCommand.toString()); 
+    }
+    
+    @Test public void testDoubleAmp() {
+    	String sql = "select 1 && 2";
+    	Query query = new Query();
+    	query.setSelect(new Select(Arrays.asList(new Function(SQLConstants.Tokens.DOUBLE_AMP, new Expression[] {new Constant(1), new Constant(2)}))));
+        helpTest(sql, "SELECT (1 && 2)", query);
     }
 
 }

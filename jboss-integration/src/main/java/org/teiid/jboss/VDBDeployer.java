@@ -66,6 +66,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.metadata.index.IndexMetadataRepository;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.metadata.VDBResources;
+import org.teiid.runtime.RuntimePlugin;
 import org.teiid.vdb.runtime.VDBKey;
 
 
@@ -160,6 +161,11 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		dataSourceDependencies(deployment, context.getServiceTarget());
 		
 		for (VDBImport vdbImport : deployment.getVDBImports()) {
+			VDBKey vdbKey = new VDBKey(vdbImport.getName(), vdbImport.getVersion());
+			if (vdbKey.isSemantic() && (!vdbKey.isFullySpecified() || vdbKey.isAtMost() || vdbKey.getVersion() != 1)) {
+				//TODO: could allow partial versions here if we canonicalize
+				throw new DeploymentUnitProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40144, deployment, vdbKey));
+			}
 			vdbService.addDependency(TeiidServiceNames.vdbFinishedServiceName(vdbImport.getName(), vdbImport.getVersion()));
 		}
 		

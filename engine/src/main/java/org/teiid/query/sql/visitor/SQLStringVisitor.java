@@ -26,9 +26,11 @@ import static org.teiid.language.SQLConstants.Reserved.*;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
@@ -87,6 +89,9 @@ public class SQLStringVisitor extends LanguageVisitor {
     private static final String BEGIN_HINT = "/*+"; //$NON-NLS-1$
     private static final String END_HINT = "*/"; //$NON-NLS-1$
     private static final char ID_ESCAPE_CHAR = '\"';
+	private static final Set<String> INFIX_FUNCTIONS = new HashSet<String>(Arrays.asList(SQLConstants.Tokens.PLUS, 
+			SQLConstants.Tokens.MINUS, SQLConstants.Tokens.ALL_COLS, SQLConstants.Tokens.SLASH, 
+			SQLConstants.Tokens.CONCAT, SQLConstants.Tokens.DOUBLE_AMP));
 	protected StringBuilder parts = new StringBuilder();
 	private boolean shortNameOnly = false;
 
@@ -1493,7 +1498,7 @@ public class SQLStringVisitor extends LanguageVisitor {
             }
             append(")"); //$NON-NLS-1$
 
-        } else if (name.equals("+") || name.equals("-") || name.equals("*") || name.equals("/") || name.equals("||")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+        } else if (INFIX_FUNCTIONS.contains(name)) { 
             append("("); //$NON-NLS-1$
 
             if (args != null) {
@@ -1851,7 +1856,11 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(quantifier);
         addSubqueryHint(obj.getSubqueryHint());
         append(" ("); //$NON-NLS-1$
-        visitNode(obj.getCommand());
+        if (obj.getCommand() != null) {
+        	visitNode(obj.getCommand());
+        } else {
+        	visitNode(obj.getArrayExpression());
+        }
         append(")"); //$NON-NLS-1$
     }
 
