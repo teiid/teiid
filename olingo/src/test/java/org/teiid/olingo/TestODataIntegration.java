@@ -335,7 +335,7 @@ public class TestODataIntegration {
 
     @Test
     public void testFunctionDate() throws Exception {
-        ContentResponse response = http.GET(baseURL + "/loopy/vm1/getCustomers(p2='2011-09-11T00:00:00',p3=2.0)");
+        ContentResponse response = http.GET(baseURL + "/loopy/vm1/getCustomers(p2=2011-09-11T00:00:00Z,p3=2.0)");
         assertEquals(200, response.getStatus());
         assertEquals("{\"@odata.context\":\"$metadata#Edm.DateTimeOffset\",\"value\":\"2011-09-11T00:00:00Z\"}", 
                 response.getContentAsString());        
@@ -346,7 +346,10 @@ public class TestODataIntegration {
         ContentResponse response = http.GET(baseURL + "/loopy/vm1/procResultSet(x='foo''bar',y=1)");
         assertEquals(200, response.getStatus());
         assertEquals("{\"@odata.context\":\"$metadata#Collection(Loopy.1.VM1.procResultSet_RSParam)\",\"value\":[{\"x\":\"foo'bar\",\"y\":1}]}", 
-                response.getContentAsString());        
+                response.getContentAsString());
+        
+        response = http.GET(baseURL + "/loopy/vm1/procResultSet(x='foo',y='1'");
+        assertEquals(400, response.getStatus());
     }
     
     @Test
