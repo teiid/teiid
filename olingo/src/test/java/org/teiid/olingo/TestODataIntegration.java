@@ -343,9 +343,9 @@ public class TestODataIntegration {
     
     @Test
     public void testFunctionReturningResultSet() throws Exception {
-        ContentResponse response = http.GET(baseURL + "/loopy/vm1/procResultSet(x='foo',y=1)");
+        ContentResponse response = http.GET(baseURL + "/loopy/vm1/procResultSet(x='foo''bar',y=1)");
         assertEquals(200, response.getStatus());
-        assertEquals("{\"@odata.context\":\"$metadata#Collection(Loopy.1.VM1.procResultSet_RSParam)\",\"value\":[{\"x\":\"foo\",\"y\":1}]}", 
+        assertEquals("{\"@odata.context\":\"$metadata#Collection(Loopy.1.VM1.procResultSet_RSParam)\",\"value\":[{\"x\":\"foo'bar\",\"y\":1}]}", 
                 response.getContentAsString());        
     }
     
