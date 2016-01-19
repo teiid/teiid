@@ -38,7 +38,6 @@ import org.apache.olingo.commons.core.edm.primitivetype.EdmPrimitiveTypeFactory;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmStream;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmString;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmTimeOfDay;
-import org.teiid.core.TeiidException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
@@ -156,7 +155,7 @@ public class ODataTypeManager {
         } else {
             
             if (value instanceof String) {
-                return parseLiteral(odataType, (String)value);
+                value = parseLiteral(odataType, (String)value);
             }
 
             Transform transform = DataTypeManager.getTransform(value.getClass(), expectedType);
@@ -193,6 +192,7 @@ public class ODataTypeManager {
         try {
             if (value.startsWith("'") && value.endsWith("'")) {
                 value = value.substring(1, value.length()-1);
+                value = value.replaceAll("''", "'");
             }
             Object converted =  primitiveType.valueOfString(value,
                     false,
