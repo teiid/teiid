@@ -38,6 +38,8 @@ import org.jboss.security.SimplePrincipal;
 import org.jboss.security.vault.SecurityVaultException;
 import org.jboss.security.vault.SecurityVaultUtil;
 import org.picketbox.datasource.security.AbstractPasswordCredentialLoginModule;
+import org.teiid.OAuthCredential;
+import org.teiid.OAuthCredentialContext;
 
 /**
  * A simple login module passes the principal making the connection request 
@@ -122,6 +124,11 @@ public class PassthroughIdentityLoginModule extends AbstractPasswordCredentialLo
           makeCopy(this.callerSubject, this.subject);
       }
       addPrivateCredential(this.subject, this.properties);
+      
+      // if oauth credential available in calling context then add the OAuthCredential.
+      if (OAuthCredentialContext.getCredential() != null) {
+          addPrivateCredential(this.subject, OAuthCredentialContext.getCredential());
+      }
       return true;
    }
    
