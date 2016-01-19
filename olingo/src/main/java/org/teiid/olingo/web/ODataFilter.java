@@ -39,12 +39,15 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.olingo.server.api.ODataHttpHandler;
+import org.teiid.OAuthCredential;
+import org.teiid.OAuthCredentialContext;
 import org.teiid.core.util.LRUCache;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.jdbc.ConnectionImpl;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.net.TeiidURL;
 import org.teiid.odata.api.Client;
 import org.teiid.olingo.ODataPlugin;
 import org.teiid.olingo.service.LocalClient;
@@ -100,6 +103,12 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
 
         String uri = ((HttpServletRequest) request).getRequestURL().toString();
         int idx = uri.indexOf("/odata4/"); //$NON-NLS-1$
+        
+        if (idx != -1 && (uri.endsWith("auth") || uri.endsWith("token"))){
+            chain.doFilter(httpRequest, response);
+            return;
+        }
+        
         if (idx != -1) {
             String contextPath = httpRequest.getContextPath();
             if (contextPath == null) {
@@ -147,6 +156,12 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
                     this.initProperties.getProperty("vdb-version") == null) { //$NON-NLS-1$ 
                 throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16018));
             }
+            
+            if (uri.endsWith("auth") || uri.endsWith("token")){
+                chain.doFilter(httpRequest, response);
+                return;
+            }
+            
             vdbName = this.initProperties.getProperty("vdb-name"); //$NON-NLS-1$
             String versionString = this.initProperties.getProperty("vdb-version"); //$NON-NLS-1$
             if (versionString != null) {
@@ -177,6 +192,11 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
             context = new OlingoBridge();
             ref = new SoftReference<OlingoBridge>(context);
             this.contextMap.put(key, ref);
+        }
+        
+        // send the access token using jdbc protocol
+        if (OAuthCredentialContext.getCredential() != null) {
+            this.initProperties.setProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "false");
         }
         
         Client client = buildClient(vdbName, version, this.initProperties);
