@@ -21,8 +21,7 @@
  */
 package org.teiid.olingo.service;
 
-import static org.teiid.language.SQLConstants.Reserved.CAST;
-import static org.teiid.language.SQLConstants.Reserved.CONVERT;
+import static org.teiid.language.SQLConstants.Reserved.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,29 +31,11 @@ import java.util.Stack;
 import org.apache.olingo.commons.api.edm.EdmEntityType;
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
 import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
-import org.apache.olingo.server.api.uri.UriInfo;
-import org.apache.olingo.server.api.uri.UriInfoResource;
-import org.apache.olingo.server.api.uri.UriResourceCount;
-import org.apache.olingo.server.api.uri.UriResourceEntitySet;
-import org.apache.olingo.server.api.uri.UriResourceIt;
-import org.apache.olingo.server.api.uri.UriResourceLambdaAll;
-import org.apache.olingo.server.api.uri.UriResourceLambdaAny;
-import org.apache.olingo.server.api.uri.UriResourceLambdaVariable;
-import org.apache.olingo.server.api.uri.UriResourceNavigation;
-import org.apache.olingo.server.api.uri.UriResourcePrimitiveProperty;
-import org.apache.olingo.server.api.uri.UriResourceRoot;
-import org.apache.olingo.server.api.uri.queryoption.expression.Alias;
-import org.apache.olingo.server.api.uri.queryoption.expression.Binary;
-import org.apache.olingo.server.api.uri.queryoption.expression.Enumeration;
-import org.apache.olingo.server.api.uri.queryoption.expression.Expression;
-import org.apache.olingo.server.api.uri.queryoption.expression.LambdaRef;
-import org.apache.olingo.server.api.uri.queryoption.expression.Literal;
-import org.apache.olingo.server.api.uri.queryoption.expression.Member;
-import org.apache.olingo.server.api.uri.queryoption.expression.Method;
-import org.apache.olingo.server.api.uri.queryoption.expression.TypeLiteral;
-import org.apache.olingo.server.api.uri.queryoption.expression.Unary;
+import org.apache.olingo.server.api.uri.*;
+import org.apache.olingo.server.api.uri.queryoption.expression.*;
 import org.apache.olingo.server.core.RequestURLHierarchyVisitor;
 import org.teiid.core.TeiidException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.metadata.Column;
@@ -66,21 +47,7 @@ import org.teiid.olingo.ODataPlugin;
 import org.teiid.olingo.ODataTypeManager;
 import org.teiid.olingo.service.ODataSQLBuilder.URLParseService;
 import org.teiid.olingo.service.TeiidServiceHandler.UniqueNameGenerator;
-import org.teiid.query.sql.lang.CompareCriteria;
-import org.teiid.query.sql.lang.CompoundCriteria;
-import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.ExpressionCriteria;
-import org.teiid.query.sql.lang.From;
-import org.teiid.query.sql.lang.IsNullCriteria;
-import org.teiid.query.sql.lang.JoinType;
-import org.teiid.query.sql.lang.NotCriteria;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.QueryCommand;
-import org.teiid.query.sql.lang.SPParameter;
-import org.teiid.query.sql.lang.Select;
-import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.sql.lang.SubqueryCompareCriteria;
-import org.teiid.query.sql.lang.SubqueryFromClause;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.Constant;
@@ -97,7 +64,6 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
     private final Stack<org.teiid.query.sql.symbol.Expression> stack = new Stack<org.teiid.query.sql.symbol.Expression>();
     private List<SQLParameter> params;
     private boolean prepared = false;
-    private final List<TeiidException> exceptions = new ArrayList<TeiidException>();
     private final UriInfo uriInfo;
     private MetadataStore metadata;
     private DocumentNode ctxQuery;
@@ -122,18 +88,26 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
     }
 
     public org.teiid.query.sql.symbol.Expression getExpression(Expression expr) throws TeiidException {
-        accept(expr);
-        if (!this.exceptions.isEmpty()) {
-            throw this.exceptions.get(0);
-        }
+    	try {
+    		accept(expr);
+    	} catch (TeiidRuntimeException e) {
+    		if (e.getCause() instanceof TeiidException) {
+    			throw (TeiidException)e.getCause();
+    		}
+    		throw e;
+    	}
         return this.stack.pop();
     }
     
     public org.teiid.query.sql.symbol.Expression getExpression(UriInfoResource info) throws TeiidException {
-        visit(info);
-        if (!this.exceptions.isEmpty()) {
-            throw this.exceptions.get(0);
-        }
+        try {
+        	visit(info);
+    	} catch (TeiidRuntimeException e) {
+    		if (e.getCause() instanceof TeiidException) {
+    			throw (TeiidException)e.getCause();
+    		}
+    		throw e;
+    	}
         return this.stack.pop();
     }
     
@@ -168,7 +142,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
                 }
             }
         } catch (TeiidException e) {
-            this.exceptions.add(e);
+            throw new TeiidRuntimeException(e);
         }
         
     }
@@ -185,8 +159,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
         switch (expr.getOperator()) {
         case HAS:
             // TODO: not supported. What would be SQL equivalent?
-            this.exceptions.add(new TeiidException(ODataPlugin.Event.TEIID16036, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16036)));
-            break;
+        	throw new TeiidRuntimeException(new TeiidException(ODataPlugin.Event.TEIID16036, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16036)));
         case MUL:
             binaryExpr = new Function("*", new org.teiid.query.sql.symbol.Expression[] { lhs, rhs }); //$NON-NLS-1$
             break;
@@ -282,7 +255,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
 
     @Override
     public void visit(Enumeration expr) {
-        this.exceptions.add(new TeiidException("unsupported option"));//$NON-NLS-1$
+    	throw new TeiidRuntimeException(new TeiidException("unsupported option"));//$NON-NLS-1$
     }
 
     @Override
@@ -305,7 +278,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
                 this.stack.add(new Constant(value));
             }
         } catch (TeiidException e) {
-            this.exceptions.add(e);
+        	throw new TeiidRuntimeException(e);
         }
     }
 
@@ -402,7 +375,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
         case GEOINTERSECTS:
         case ISOF:
         default:
-            this.exceptions.add(new TeiidException(ODataPlugin.Event.TEIID16027, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16027, expr.getMethod())));
+        	throw new TeiidRuntimeException(new TeiidException(ODataPlugin.Event.TEIID16027, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16027, expr.getMethod())));
         }
     }
 
@@ -508,7 +481,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             query.setCriteria(criteria);
             this.stack.add(new ScalarSubquery(query));
         } catch (TeiidException e) {
-            this.exceptions.add(e);
+        	throw new TeiidRuntimeException(e);
         }
     }
     
@@ -551,7 +524,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
                 this.ctxQuery = lambda;
             }
         } catch (TeiidException e) {
-            this.exceptions.add(e);
+        	throw new TeiidRuntimeException(e);
         }
     }    
     
@@ -604,7 +577,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             this.ctxQuery.addSibiling(itResource);
         }
         else {
-            this.exceptions.add(new TeiidException(ODataPlugin.Event.TEIID16010, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16010)));
+        	throw new TeiidRuntimeException(new TeiidException(ODataPlugin.Event.TEIID16010, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16010)));
         }
     }
     
@@ -622,7 +595,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
                         info.getKeyPredicates(), this.metadata, this.nameGenerator,
                         true, getUriInfo(), null);
             } catch (TeiidException e) {
-                this.exceptions.add(e);
+            	throw new TeiidRuntimeException(e);
             }
         }
         else {

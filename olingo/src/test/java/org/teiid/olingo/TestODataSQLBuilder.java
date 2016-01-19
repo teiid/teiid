@@ -21,6 +21,8 @@
  */
 package org.teiid.olingo;
 
+import static org.junit.Assert.*;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.sql.Time;
@@ -119,6 +121,7 @@ public class TestODataSQLBuilder {
     static class BaseState {
         Client client;
         String response;
+		Integer status;
     }
     
     static class ProcedureState extends BaseState {
@@ -197,9 +200,11 @@ public class TestODataSQLBuilder {
         } finally {
             TeiidServiceHandler.setClient(null);
         }
-        
+        ArgumentCaptor<Integer> statusCapture = ArgumentCaptor.forClass(Integer.class);
+        Mockito.verify(response).setStatus(statusCapture.capture());
         state.client = client;        
         state.response = sb.toString();
+        state.status = statusCapture.getValue();
         return state;
     }
     
@@ -368,8 +373,10 @@ public class TestODataSQLBuilder {
     
     @Test
     public void testAlias2() throws Exception {
-        helpTest("/odata4/vdb/PM1/G1?$filter=e1 eq @p1&@p1=1",
-                "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 WHERE g0.e1 = '1' ORDER BY g0.e2");
+        QueryState state = helpTest("/odata4/vdb/PM1/G1?$filter=e1 eq @p1&@p1=1",
+                null);
+        //should really be 400
+        assertEquals(Integer.valueOf(500), state.status);
     }    
 
     @Test
