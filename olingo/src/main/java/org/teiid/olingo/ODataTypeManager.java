@@ -191,9 +191,14 @@ public class ODataTypeManager {
                         .getFullQualifiedNameAsString().substring(4)));
         
         try {
-            if (value.startsWith("'") && value.endsWith("'")) {
-                value = value.substring(1, value.length()-1);
-            }
+        	if (edmProperty.getType() == EdmString.getInstance()) {
+                if (value.startsWith("'") && value.endsWith("'")) {
+                    value = value.substring(1, value.length()-1);
+                    value = value.replaceAll("''", "'");
+                } else {
+                	throw new EdmPrimitiveTypeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16045, edmProperty.getType()));
+                }
+        	}
             Object converted =  primitiveType.valueOfString(value, 
                     edmProperty.isNullable(), 
                     edmProperty.getMaxLength(), 
@@ -227,9 +232,14 @@ public class ODataTypeManager {
         Class<?> expectedClass = primitiveType.getDefaultType();
         
         try {
-            if (value.startsWith("'") && value.endsWith("'")) {
-                value = value.substring(1, value.length()-1);
-            }
+        	if (primitiveType == EdmString.getInstance()) {
+                if (value.startsWith("'") && value.endsWith("'")) {
+                    value = value.substring(1, value.length()-1);
+                    value = value.replaceAll("''", "'");
+                } else {
+                	throw new EdmPrimitiveTypeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16045, primitiveType));
+                }
+        	}
             Object converted =  primitiveType.valueOfString(value,
                     false,
                     maxLength, 
