@@ -395,7 +395,12 @@
 			  <groupId>org.jboss.teiid.connectors</groupId>
 			  <artifactId>translator-odata</artifactId>
 			  <version>${project.version}</version>
-			</dependency>      
+			</dependency>
+			<dependency>
+              <groupId>org.jboss.teiid</groupId>
+              <artifactId>teiid-olingo-common</artifactId>
+              <version>${project.version}</version>
+            </dependency>      
         	<dependency>
             	<groupId>org.jboss.teiid.connectors</groupId>
             	<artifactId>translator-loopback</artifactId>
@@ -1636,6 +1641,7 @@
 		<module>admin</module>
 		<module>jboss-admin</module>
 		<module>odata</module>
+		<module>olingo-common</module>
 		<module>olingo</module>
 	</modules>
 </project>

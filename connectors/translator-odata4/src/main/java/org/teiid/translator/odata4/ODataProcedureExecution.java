@@ -37,6 +37,7 @@ import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.olingo.common.ODataTypeManager;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
@@ -87,7 +88,7 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
                     }
                     sb.append(WSConnection.Util.httpURLEncode(param.getMetadataObject().getName()));
                     sb.append(Tokens.EQ);
-                    sb.append(WSConnection.Util.httpURLEncode(ODataTypeManager.convertToODataInput(param.getArgumentValue(), 
+                    sb.append(WSConnection.Util.httpURLEncode(ODataTypeManager.convertToODataURIValue(param.getArgumentValue().getValue(), 
                             ODataTypeManager.odataType(param.getType()).getFullQualifiedName()
                             .getFullQualifiedNameAsString())));
                 }
