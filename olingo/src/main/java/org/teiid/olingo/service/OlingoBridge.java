@@ -22,7 +22,7 @@
 package org.teiid.olingo.service;
 
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.ServletException;
 
@@ -40,7 +40,7 @@ import org.teiid.olingo.ODataPlugin;
 
 public class OlingoBridge {
     
-    private HashMap<String, ODataHttpHandler> handlers = new HashMap<String, ODataHttpHandler>();
+    private ConcurrentHashMap<String, ODataHttpHandler> handlers = new ConcurrentHashMap<String, ODataHttpHandler>();
     
     public ODataHttpHandler getHandler(Client client, String schemaName) throws ServletException {
         if (this.handlers.get(schemaName) == null) {
