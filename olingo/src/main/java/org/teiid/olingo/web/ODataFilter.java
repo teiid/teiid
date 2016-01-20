@@ -194,11 +194,6 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
             this.contextMap.put(key, ref);
         }
         
-        // send the access token using jdbc protocol
-        if (OAuthCredentialContext.getCredential() != null) {
-            this.initProperties.setProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "false");
-        }
-        
         Client client = buildClient(vdbName, version, this.initProperties);
         try {
             Connection connection = client.open();
