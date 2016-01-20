@@ -17,7 +17,7 @@
         <module name="com.fasterxml.jackson.dataformat.xml"/>
         <module name="org.slf4j"/>
         <module name="org.apache.httpcomponents"/>
-        <module name="org.apache.olingo.common" export="true"/>
+        <module name="org.apache.olingo.commons" export="true"/>
     </dependencies>
     
 </module>

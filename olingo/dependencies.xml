@@ -19,7 +19,7 @@
       <useProjectArtifact>false</useProjectArtifact>
     </dependencySet>
     <dependencySet>
-      <outputDirectory>${jbossas-module-root}/org/apache/olingo/common/main</outputDirectory>
+      <outputDirectory>${jbossas-module-root}/org/apache/olingo/commons/main</outputDirectory>
       <useTransitiveDependencies>false</useTransitiveDependencies>
       <includes>
         <include>org.apache.olingo:odata-commons-*</include>

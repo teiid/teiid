@@ -9,7 +9,7 @@
     </resources>
 
     <dependencies>
-        <module name="org.apache.olingo.common" export="true"/>    
+        <module name="org.apache.olingo.commons" export="true"/>    
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.api"/>
     </dependencies>
