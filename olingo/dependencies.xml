@@ -14,7 +14,15 @@
       <outputDirectory>${jbossas-module-root}/org/apache/olingo/main</outputDirectory>
       <useTransitiveDependencies>false</useTransitiveDependencies>
       <includes>
-        <include>org.apache.olingo:*</include>
+        <include>org.apache.olingo:odata-server-*</include>
+      </includes>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet>
+    <dependencySet>
+      <outputDirectory>${jbossas-module-root}/org/apache/olingo/common/main</outputDirectory>
+      <useTransitiveDependencies>false</useTransitiveDependencies>
+      <includes>
+        <include>org.apache.olingo:odata-commons-*</include>
       </includes>
       <useProjectArtifact>false</useProjectArtifact>
     </dependencySet>

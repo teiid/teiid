@@ -159,6 +159,18 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
+        <include>org.jboss.teiid:teiid-olingo-common</include>   
+      </includes>
+      <binaries>
+        <includeDependencies>false</includeDependencies>
+        <unpack>false</unpack>
+        <outputDirectory>${jbossas-module-root}/org/jboss/teiid/olingo/common/main</outputDirectory>
+      </binaries>
+    </moduleSet>
+    
+    <moduleSet>
+      <useAllReactorProjects>true</useAllReactorProjects>
+      <includes>
         <include>org.jboss.teiid:teiid-jboss-security</include>   
       </includes>
       <binaries>
@@ -236,12 +248,6 @@
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>true</useTransitiveDependencies>
-                </dependencySet>
-                <dependencySet>
-                    <includes>
-                        <include>org.apache.olingo:*</include>
-                    </includes>
-                    <outputDirectory>${jbossas-module-root}/org/apache/olingo</outputDirectory>
                 </dependencySet>
                 <dependencySet>
                     <useTransitiveDependencies>true</useTransitiveDependencies>

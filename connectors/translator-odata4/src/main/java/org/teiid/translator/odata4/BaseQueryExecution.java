@@ -36,9 +36,9 @@ import java.util.Map;
 import org.apache.commons.codec.Charsets;
 import org.apache.olingo.client.core.serialization.JsonDeserializer;
 import org.apache.olingo.commons.api.ex.ODataError;
-import org.apache.olingo.commons.api.format.AcceptType;
 import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
+import org.teiid.core.TeiidException;
 import org.teiid.language.Argument;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.Call;
@@ -49,6 +49,7 @@ import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.olingo.common.ODataTypeManager;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
@@ -223,9 +224,13 @@ public class BaseQueryExecution {
             if (!columnParent.equals(record)) {
                 colName = getName(columnParent)+"/"+column.getName();
             }
-            Object value = ODataTypeManager.convertTeiidRuntimeType(
-                    values.get(colName), ODataMetadataProcessor.getNativeType(column),
-                    expectedType[i]);                    
+            Object value;
+			try {
+				value = ODataTypeManager.convertToTeiidRuntimeType(expectedType[i], 
+						values.get(colName), ODataMetadataProcessor.getNativeType(column));
+			} catch (TeiidException e) {
+				throw new TranslatorException(e);
+			}
             results.add(value);
         }
         return results;

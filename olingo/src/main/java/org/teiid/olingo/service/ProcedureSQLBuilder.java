@@ -53,7 +53,7 @@ import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.Schema;
 import org.teiid.odata.api.ProcedureReturnType;
 import org.teiid.odata.api.SQLParameter;
-import org.teiid.olingo.ODataTypeManager;
+import org.teiid.olingo.common.ODataTypeManager;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public class ProcedureSQLBuilder {

@@ -120,6 +120,11 @@
         </dependency>
 
         <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-olingo-common</artifactId>
+        </dependency>
+        
+        <dependency>
             <groupId>org.apache.olingo</groupId>
             <artifactId>odata-commons-api</artifactId>
         </dependency>

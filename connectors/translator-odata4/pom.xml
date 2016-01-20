@@ -20,6 +20,10 @@
         </dependency>    
         <dependency>
             <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-olingo-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-api</artifactId>
             <scope>provided</scope>
         </dependency>

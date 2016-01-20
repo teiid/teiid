@@ -65,8 +65,8 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.odata.api.QueryResponse;
 import org.teiid.olingo.ODataPlugin;
-import org.teiid.olingo.ODataTypeManager;
 import org.teiid.olingo.ProjectedColumn;
+import org.teiid.olingo.common.ODataTypeManager;
 import org.teiid.query.sql.symbol.Symbol;
 
 public class EntityCollectionResponse extends EntityCollection implements QueryResponse {

@@ -36,6 +36,7 @@ import org.teiid.metadata.Column;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
+import org.teiid.olingo.common.ODataTypeManager;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TranslatorException;
 
@@ -284,7 +285,7 @@ public class ODataFilterVisitor extends HierarchyVisitor {
     public void visit(Literal obj) {
         try {
             String odataType = this.exprType.pop();
-            this.filter.append(ODataTypeManager.convertToODataInput(obj, odataType));
+            this.filter.append(ODataTypeManager.convertToODataURIValue(obj.getValue(), odataType));
         } catch (TranslatorException e) {
             this.exceptions.add(e);
         }
