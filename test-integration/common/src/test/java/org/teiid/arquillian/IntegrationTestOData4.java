@@ -133,7 +133,7 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
                 "    <model name=\"TestOData\" type=\"PHYSICAL\" visible=\"true\">\n" +
                 "     <property name=\"importer.entityContainer\" value=\"MarketData\"/>\n"+
                 "     <property name=\"importer.schemaNamespace\" value=\"MarketData\"/>\n"+
-                "     <source name=\"TestOData\" translator-name=\"odata4\" connection-jndi-name=\"java:/TestOData\"/>\n" + 
+                "     <source name=\"TestOData\" translator-name=\"odata4\" connection-jndi-name=\"java:/TestOData4\"/>\n" + 
                 "    </model>\n" + 
                 "</vdb>";
         
@@ -143,7 +143,7 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
         p.setProperty("SecurityType", "HTTPBasic");
         p.setProperty("AuthUserName", "user");
         p.setProperty("AuthPassword", "user");
-        admin.createDataSource("TestOData", "webservice", p); 
+        admin.createDataSource("TestOData4", "webservice", p); 
         
         admin.deploy("test-vdb.xml", new ReaderInputStream(new StringReader(vdb2), Charset.forName("UTF-8")));
         assertTrue(AdminUtil.waitForVDBLoad(admin, "TestOData", 1, 30000));
