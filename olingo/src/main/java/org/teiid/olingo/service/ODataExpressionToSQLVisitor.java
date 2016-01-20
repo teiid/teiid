@@ -44,7 +44,7 @@ import org.teiid.metadata.MetadataStore;
 import org.teiid.odata.api.SQLParameter;
 import org.teiid.olingo.ODataExpressionVisitor;
 import org.teiid.olingo.ODataPlugin;
-import org.teiid.olingo.ODataTypeManager;
+import org.teiid.olingo.common.ODataTypeManager;
 import org.teiid.olingo.service.ODataSQLBuilder.URLParseService;
 import org.teiid.olingo.service.TeiidServiceHandler.UniqueNameGenerator;
 import org.teiid.query.sql.lang.*;

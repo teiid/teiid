@@ -10,7 +10,7 @@
 
     <dependencies>
         <module name="javax.servlet.api"/>
-        <module name="org.apache.olingo.common"/>    
+        <module name="org.jboss.teiid.olingo.common"/>    
         <module name="org.apache.olingo.server"/>
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.client" />

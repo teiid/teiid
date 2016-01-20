@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.olingo;
+package org.teiid.olingo.common;
 
 import java.lang.reflect.Array;
 import java.sql.Date;
@@ -46,6 +46,7 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
+import org.teiid.translator.TranslatorException;
 
 public class ODataTypeManager {
 
@@ -122,7 +123,15 @@ public class ODataTypeManager {
         return EdmPrimitiveTypeKind.valueOfFQN(type);
     }    
     
-    public static Object convertToTeiidRuntimeType(Class<?> type, Object value) throws TeiidException {
+    /**
+     * 
+     * @param type
+     * @param value
+     * @param odataType type hint if the value could be a string containing a literal value of another type
+     * @return
+     * @throws TeiidException
+     */
+    public static Object convertToTeiidRuntimeType(Class<?> type, Object value, String odataType) throws TeiidException {
         if (value == null) {
             return null;
         }
@@ -137,10 +146,18 @@ public class ODataTypeManager {
             Class<?> expectedArrayComponentType = type.getComponentType();
             Object array = Array.newInstance(type.getComponentType(), list.size());
             for (int i = 0; i < list.size(); i++) {
-                Object arrayItem = convertToTeiidRuntimeType(expectedArrayComponentType, list.get(i));
+                Object arrayItem = convertToTeiidRuntimeType(expectedArrayComponentType, list.get(i), null);
                 Array.set(array, i, arrayItem);
             }
             return array;
+        }
+        
+        if (odataType != null && value instanceof String) {
+            try {
+				value = ODataTypeManager.parseLiteral(odataType, (String)value);
+			} catch (TeiidException e) {
+				throw new TranslatorException(e);
+			}
         }
         
         Transform transform = DataTypeManager.getTransform(value.getClass(), type);
@@ -162,13 +179,8 @@ public class ODataTypeManager {
                         .getFullQualifiedNameAsString().substring(4)));
         
         try {
-        	if (edmParameter.getType() == EdmString.getInstance()) {
-                if (value.startsWith("'") && value.endsWith("'")) {
-                    value = value.substring(1, value.length()-1);
-                    value = value.replaceAll("''", "'");
-                } else {
-                	throw new EdmPrimitiveTypeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16045, edmParameter.getType()));
-                }
+        	if (EdmString.getInstance().equals(edmParameter.getType())) {
+        		value = EdmString.getInstance().fromUriLiteral(value);
         	}
             Object converted =  primitiveType.valueOfString(value, 
                     edmParameter.isNullable(), 
@@ -191,13 +203,8 @@ public class ODataTypeManager {
                         .getFullQualifiedNameAsString().substring(4)));
         
         try {
-        	if (edmProperty.getType() == EdmString.getInstance()) {
-                if (value.startsWith("'") && value.endsWith("'")) {
-                    value = value.substring(1, value.length()-1);
-                    value = value.replaceAll("''", "'");
-                } else {
-                	throw new EdmPrimitiveTypeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16045, edmProperty.getType()));
-                }
+        	if (EdmString.getInstance().equals(edmProperty.getType())) {
+        		value = EdmString.getInstance().fromUriLiteral(value);
         	}
             Object converted =  primitiveType.valueOfString(value, 
                     edmProperty.isNullable(), 
@@ -232,13 +239,8 @@ public class ODataTypeManager {
         Class<?> expectedClass = primitiveType.getDefaultType();
         
         try {
-        	if (primitiveType == EdmString.getInstance()) {
-                if (value.startsWith("'") && value.endsWith("'")) {
-                    value = value.substring(1, value.length()-1);
-                    value = value.replaceAll("''", "'");
-                } else {
-                	throw new EdmPrimitiveTypeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16045, primitiveType));
-                }
+        	if (EdmString.getInstance().equals(primitiveType)) {
+        		value = EdmString.getInstance().fromUriLiteral(value);
         	}
             Object converted =  primitiveType.valueOfString(value,
                     false,
@@ -260,4 +262,25 @@ public class ODataTypeManager {
             throw new TeiidException(e);
         }
     }    
+    
+    public static String convertToODataURIValue(Object val, String odataType) throws TranslatorException {
+        if (val == null) {
+            return "null"; // is this correct? //$NON-NLS-1$
+        }
+        try {
+            if(odataType.startsWith("Edm.")) { //$NON-NLS-1$
+                odataType = odataType.substring(4);
+            }
+            EdmPrimitiveTypeKind kind = EdmPrimitiveTypeKind.valueOf(odataType);
+            String value =  EdmPrimitiveTypeFactory.getInstance(kind).valueToString(
+                    val, true, 4000, 0, 0, true);
+            if (kind == EdmPrimitiveTypeKind.String) {
+                return EdmString.getInstance().toUriLiteral(value);
+            }
+            return value;
+        } catch (EdmPrimitiveTypeException e) {
+            throw new TranslatorException(e);
+        }
+    }   
+
 }

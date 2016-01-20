@@ -65,7 +65,7 @@ import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.odata.api.SQLParameter;
 import org.teiid.olingo.ODataPlugin;
-import org.teiid.olingo.ODataTypeManager;
+import org.teiid.olingo.common.ODataTypeManager;
 import org.teiid.olingo.service.TeiidServiceHandler.UniqueNameGenerator;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.symbol.AggregateSymbol;
@@ -437,7 +437,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             return new SQLParameter(null, sqlType);
         }
         return new SQLParameter(ODataTypeManager.convertToTeiidRuntimeType(
-                DataTypeManager.getDataTypeClass(teiidType), value), sqlType);
+                DataTypeManager.getDataTypeClass(teiidType), value, null), sqlType);
     }    
     
     private Table findTable(String tableName, MetadataStore store) {
@@ -497,7 +497,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             Property prop = entity.getProperty(c.getName());
             Constant right = null;
             if (prop != null) {
-                right = new Constant(ODataTypeManager.convertToTeiidRuntimeType(c.getJavaType(), prop.getValue()));
+                right = new Constant(ODataTypeManager.convertToTeiidRuntimeType(c.getJavaType(), prop.getValue(), null));
             } else {
                 Object value = generatedKeys.get(c.getName());
                 if (value == null) {
