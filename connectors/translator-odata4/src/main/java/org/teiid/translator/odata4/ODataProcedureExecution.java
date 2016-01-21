@@ -29,6 +29,7 @@ import java.util.Map;
 import org.apache.olingo.client.api.serialization.ODataDeserializerException;
 import org.apache.olingo.client.core.serialization.JsonDeserializer;
 import org.apache.olingo.commons.api.data.Property;
+import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeException;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
 import org.teiid.language.Argument;
 import org.teiid.language.Argument.Direction;
@@ -75,7 +76,7 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
         return null;
     }
     
-    private String getQueryParameters(Call obj) throws TranslatorException {
+    private String getQueryParameters(Call obj) throws EdmPrimitiveTypeException {
         StringBuilder sb = new StringBuilder();
         final List<Argument> params = obj.getArguments();
         if (params != null && params.size() != 0) {
@@ -109,9 +110,9 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
     
     @Override
     public void execute() throws TranslatorException {
-        String  parameters = getQueryParameters(this.command); 
         try {
-            
+        	String  parameters = getQueryParameters(this.command); 
+                
             InputStream response = null;
             Procedure procedure = this.command.getMetadataObject();
             if (isFunction(procedure)) {
@@ -125,7 +126,9 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
             }
         } catch (ODataDeserializerException e) {
             throw new TranslatorException(e);
-        }
+        } catch (EdmPrimitiveTypeException e) {
+        	throw new TranslatorException(e);
+		}
     }
 
     private void handleResponse(final Procedure procedure, final String baseUri, final InputStream payload)
