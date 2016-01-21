@@ -44,6 +44,7 @@ import org.apache.olingo.commons.api.data.Link;
 import org.apache.olingo.commons.api.data.Property;
 import org.apache.olingo.commons.api.edm.EdmEntityType;
 import org.apache.olingo.commons.api.edm.EdmNavigationProperty;
+import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeException;
 import org.apache.olingo.commons.api.edm.EdmProperty;
 import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.commons.api.http.HttpMethod;
@@ -105,6 +106,7 @@ public class TeiidServiceHandler implements ServiceHandler {
     private static final String PREFERENCE_APPLIED = "Preference-Applied";
     private static final String ODATA_MAXPAGESIZE = "odata.maxpagesize";
     private boolean prepared = true;
+    @SuppressWarnings("unused")
     private OData odata;
     private ServiceMetadata serviceMetadata;
     private String schemaName;
@@ -343,12 +345,15 @@ public class TeiidServiceHandler implements ServiceHandler {
                 }
             }
 
-            QueryResponse result = new EntityCollectionResponse(getClient().getProperty(Client.INVALID_CHARACTER_REPLACEMENT),
+            QueryResponse result = new EntityCollectionResponse(request
+                    .getODataRequest().getRawBaseUri(), getClient()
+                    .getProperty(Client.INVALID_CHARACTER_REPLACEMENT),
                     visitor.getContext());
             
             if (visitor.getContext() instanceof CrossJoinNode) {
-                result = new CrossJoinResult(getClient().getProperty(Client.INVALID_CHARACTER_REPLACEMENT),
-                        (CrossJoinNode)visitor.getContext());
+                result = new CrossJoinResult(request.getODataRequest().getRawBaseUri(), 
+                        getClient().getProperty(Client.INVALID_CHARACTER_REPLACEMENT),
+                        (CrossJoinNode) visitor.getContext());
             }
 
             getClient().executeSQL(query, visitor.getParameters(),
@@ -447,8 +452,9 @@ public class TeiidServiceHandler implements ServiceHandler {
                                 entity, updateResponse.getGeneratedKeys(), deepInsertNames(entityType, entity));
                 LogManager.logDetail(LogConstants.CTX_ODATA, null, "created entity = ", entityType.getName(), " with key=", query.getCriteria().toString()); //$NON-NLS-1$ //$NON-NLS-2$
                 
-                EntityCollectionResponse result = new EntityCollectionResponse(getClient().getProperty(
-                        Client.INVALID_CHARACTER_REPLACEMENT),
+                EntityCollectionResponse result = new EntityCollectionResponse(
+                        request.getODataRequest().getRawBaseUri(), getClient()
+                                .getProperty(Client.INVALID_CHARACTER_REPLACEMENT),
                         visitor.getContext());
                 
                 getClient().executeSQL(query, visitor.getParameters(), false, null, null, null, 1, result);
@@ -475,6 +481,10 @@ public class TeiidServiceHandler implements ServiceHandler {
                     HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
                     Locale.getDefault(), e);
         } catch (TeiidException e) {
+            throw new ODataApplicationException(e.getMessage(),
+                    HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
+                    Locale.getDefault(), e);
+        } catch (EdmPrimitiveTypeException e) {
             throw new ODataApplicationException(e.getMessage(),
                     HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
                     Locale.getDefault(), e);
