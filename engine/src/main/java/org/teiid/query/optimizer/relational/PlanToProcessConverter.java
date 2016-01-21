@@ -227,16 +227,29 @@ public class PlanToProcessConverter {
             		
             		if (node.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)) {
             			WindowFunctionProjectNode wfpn = new WindowFunctionProjectNode(getID());
-            			Set<WindowFunction> windowFunctions = RuleAssignOutputElements.getWindowFunctions(symbols);
-            			//TODO: check for selecting all window functions
-            			List<Expression> outputElements = new ArrayList<Expression>(windowFunctions);
-            			//collect the other projected expressions
-            			for (Expression singleElementSymbol : (List<Expression>)node.getFirstChild().getProperty(Info.OUTPUT_COLS)) {
-							outputElements.add(singleElementSymbol);
-						}
-            			wfpn.setElements(outputElements);
-            			wfpn.init();
-            			pnode.addChild(wfpn);
+            			
+            			//with partial projection the window function may already be pushed, we'll check for that here
+            			ArrayList<Expression> filtered = new ArrayList<Expression>();
+            			List<Expression> childSymbols = (List) node.getFirstChild().getProperty(NodeConstants.Info.OUTPUT_COLS);
+            			for (Expression ex : symbols) {
+            				ex = SymbolMap.getExpression(ex);
+            				if (childSymbols.contains(ex)) {
+            					continue;
+            				}
+            				filtered.add(ex);
+            			}
+            			Set<WindowFunction> windowFunctions = RuleAssignOutputElements.getWindowFunctions(filtered);
+            			if (!windowFunctions.isEmpty()) {
+	            			//TODO: check for selecting all window functions
+	            			List<Expression> outputElements = new ArrayList<Expression>(windowFunctions);
+	            			//collect the other projected expressions
+	            			for (Expression singleElementSymbol : (List<Expression>)node.getFirstChild().getProperty(Info.OUTPUT_COLS)) {
+								outputElements.add(singleElementSymbol);
+							}
+	            			wfpn.setElements(outputElements);
+	            			wfpn.init();
+	            			pnode.addChild(wfpn);
+            			}
             		}
                 }
                 break;

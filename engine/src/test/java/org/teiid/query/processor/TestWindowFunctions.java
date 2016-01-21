@@ -25,6 +25,7 @@ package org.teiid.query.processor;
 import static org.teiid.query.optimizer.TestOptimizer.*;
 import static org.teiid.query.processor.TestProcessor.*;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
@@ -427,6 +428,44 @@ public class TestWindowFunctions {
                     "SELECT 1 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
     	checkNodeTypes(plan, new int[] {1, 1, 1}, new Class<?>[] {AccessNode.class, WindowFunctionProjectNode.class, ProjectNode.class});                                    
+    }
+    
+    @Test public void testPartialProjection() throws TeiidComponentException, TeiidProcessingException {
+    	String sql = "SELECT user() AS a, "
+        		+ " AVG(e2) OVER ( ) AS b,"
+        		+ " MAX(e2) OVER ( ) AS b"
+        		+ " FROM pm1.g1";
+
+    	HardcodedDataManager dataMgr = new HardcodedDataManager();
+        dataMgr.addData("SELECT ROUND(convert((g_0.L_DISCOUNT - AVG(g_0.L_DISCOUNT) OVER ()), FLOAT), 0) FROM TPCR_Oracle_9i.LINEITEM AS g_0", Arrays.asList(2.0f), Arrays.asList(2.0f));
+    	
+    	BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+    	bsc.setCapabilitySupport(Capability.ELEMENTARY_OLAP, true);
+    	bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_AVG, true);
+    	bsc.setCapabilitySupport(Capability.WINDOW_FUNCTION_ORDER_BY_AGGREGATES, true);
+    	 
+    	ProcessorPlan plan = TestOptimizer.helpPlan(sql, 
+                RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(bsc),
+                new String[] {
+                    "SELECT AVG(g_0.e2) OVER (), g_0.e2 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+
+    	checkNodeTypes(plan, new int[] {1, 1, 1}, new Class<?>[] {AccessNode.class, WindowFunctionProjectNode.class, ProjectNode.class});
+    	
+        List<?>[] expected =
+                new List<?>[] {Arrays.asList(null, BigDecimal.valueOf(1.5), 2), Arrays.asList(null, BigDecimal.valueOf(1.5), 2)}; 
+
+        dataMgr.addData("SELECT AVG(g_0.e2) OVER (), g_0.e2 FROM pm1.g1 AS g_0", //$NON-NLS-1$
+                        Arrays.asList(1.5, 2), Arrays.asList(1.5, 1));
+
+        helpProcess(plan, dataMgr, expected);
+        
+        //should completely eliminate the window function node 
+        plan = TestOptimizer.helpPlan("SELECT uuid() AS a, AVG(e2) OVER ( ) AS b FROM pm1.g1", 
+                RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(bsc),
+                new String[] {
+                    "SELECT AVG(g_0.e2) OVER () FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+
+    	checkNodeTypes(plan, new int[] {1, 1}, new Class<?>[] {AccessNode.class, ProjectNode.class});
     }
     
 }

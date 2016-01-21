@@ -749,7 +749,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 			Set<Expression> requiredSymbols, PlanNode accessParent,
 			PlanNode accessNode, Expression ss)
 			throws QueryMetadataException, TeiidComponentException {
-		if (finalRun && accessParent == null && !node.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)) {
+		if (finalRun && accessParent == null) {
 			Expression ex = SymbolMap.getExpression(ss);
 			if (ex instanceof ElementSymbol || ex instanceof Constant) {
 				return false;
