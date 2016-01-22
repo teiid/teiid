@@ -29,6 +29,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.olingo.server.api.ODataHttpHandler;
 import org.teiid.odata.api.Client;
+import org.teiid.olingo.ODataPlugin;
 import org.teiid.olingo.service.TeiidServiceHandler;
 
 @SuppressWarnings("serial")
@@ -38,6 +39,11 @@ public class ODataServlet extends HttpServlet {
             throws IOException {
         ODataHttpHandler handler = (ODataHttpHandler) request.getAttribute(ODataHttpHandler.class.getName());
         Client client = (Client) request.getAttribute(Client.class.getName());
+        
+        String uri = request.getRequestURI();
+        if (uri.endsWith("auth") || uri.endsWith("token")) {
+            throw new IOException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16046));
+        }
         
         try {
             TeiidServiceHandler.setClient(client);
