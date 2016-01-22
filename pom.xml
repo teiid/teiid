@@ -400,7 +400,12 @@
               <groupId>org.jboss.teiid</groupId>
               <artifactId>teiid-olingo-common</artifactId>
               <version>${project.version}</version>
-            </dependency>      
+            </dependency>
+           <dependency>
+                <groupId>org.jboss.teiid</groupId>
+                <artifactId>teiid-olingo-patches</artifactId>
+                <version>${project.version}</version>
+           </dependency>                  
         	<dependency>
             	<groupId>org.jboss.teiid.connectors</groupId>
             	<artifactId>translator-loopback</artifactId>
@@ -1648,6 +1653,7 @@
 		<module>jboss-admin</module>
 		<module>odata</module>
 		<module>olingo-common</module>
+		<module>olingo-patches</module>
 		<module>olingo</module>
 	</modules>
 </project>

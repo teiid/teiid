@@ -39,6 +39,7 @@
       <outputDirectory>${wildfly-module-root}/org/apache/olingo/server/main</outputDirectory>
       <useTransitiveDependencies>false</useTransitiveDependencies>
       <includes>
+        <include>org.jboss.teiid:teiid-olingo-patches</include>
         <include>org.apache.olingo:odata-server-api</include>
         <include>org.apache.olingo:odata-server-core</include>
         <include>org.apache.olingo:odata-server-core-ext</include>
