@@ -2,7 +2,7 @@
   <parent>
     <artifactId>teiid-parent</artifactId>
     <groupId>org.jboss.teiid</groupId>
-        <version>8.12.5-SNAPSHOT</version>
+        <version>8.12.0.6_3</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   
@@ -15,10 +15,77 @@
       <dir.jboss-orig>${jbossas-test-version}</dir.jboss-orig>
       <!-- Teiid server directory name. -->
       <dir.server>teiid-${project.version}</dir.server>
+      
+      <jdbcjar.loc>dataVirtualization/jdbc</jdbcjar.loc>
+      <adminshell.loc>dataVirtualization/teiid-adminshell</adminshell.loc>
+      <cli.scriploc>/cli-scripts</cli.scriploc>
+      <vdb.loc>dataVirtualization/vdb</vdb.loc>  
   </properties>
   
     <dependencies>
-        <dependency>
+
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-common-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-admin</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-jboss-admin</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-adminshell</artifactId>
+		</dependency>                      
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-engine</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-metadata</artifactId>
+		</dependency>
+		<!--dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-txn-jbossts</artifactId>
+		</dependency-->
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-jboss-integration</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-runtime</artifactId>
+		</dependency>    
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-hibernate-dialect</artifactId>
+		</dependency>    
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-olingo</artifactId>
+		</dependency>    
+		<!-- dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-odata</artifactId>
+		</dependency-->    
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-jboss-security</artifactId>
+		</dependency>    
+
+	    <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-client-jdk15</artifactId>
             <scope>provided</scope>
@@ -43,27 +110,27 @@
             <artifactId>slf4j-api</artifactId>
             <scope>provided</scope>
         </dependency> 
-       
-	<dependency>
-	    <groupId>org.jboss.narayana.jta</groupId>
-	    <artifactId>narayana-jta</artifactId>
-	    <scope>provided</scope>
-	</dependency> 
-	<dependency>
-	    <groupId>org.jboss.ironjacamar</groupId>
-	    <artifactId>ironjacamar-jdbc</artifactId>
-	    <scope>provided</scope>
-	</dependency>
-	<dependency>
-	    <groupId>org.jboss.ironjacamar</groupId>
-	    <artifactId>ironjacamar-core-api</artifactId>
-	    <scope>provided</scope>
-	</dependency>
-	<dependency>
-	    <groupId>org.jboss.ironjacamar</groupId>
-	    <artifactId>ironjacamar-core-impl</artifactId>
-	    <scope>provided</scope>
-	</dependency>
+	   
+		<dependency>
+			<groupId>org.jboss.narayana.jta</groupId>
+			<artifactId>narayana-jta</artifactId>
+			<scope>provided</scope>
+		</dependency> 
+		<dependency>
+			<groupId>org.jboss.ironjacamar</groupId>
+			<artifactId>ironjacamar-jdbc</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.ironjacamar</groupId>
+			<artifactId>ironjacamar-core-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.ironjacamar</groupId>
+			<artifactId>ironjacamar-core-impl</artifactId>
+			<scope>provided</scope>
+		</dependency>
 
     </dependencies>   
       
@@ -127,13 +194,13 @@
                         </goals>
                         <configuration>
                             <artifactItems>
-                                <artifactItem>
+                                <!--artifactItem>
                                     <groupId>org.jboss.as</groupId>
                                     <artifactId>jboss-as-dist</artifactId>
                                     <version>${version.org.jboss.as}</version>
                                     <type>zip</type>
                                     <outputDirectory>${project.build.directory}</outputDirectory>
-                                </artifactItem>
+                                </artifactItem-->
                                 <artifactItem>
                                     <groupId>org.jboss.teiid.web-console</groupId>
                                     <artifactId>teiid-console-dist</artifactId>
@@ -156,11 +223,11 @@
                         <descriptor>assembly/src.xml</descriptor>
                         <descriptor>assembly/client-jar.xml</descriptor>
                         <descriptor>assembly/console-jar.xml</descriptor>    
-                        <descriptor>assembly/jboss-as7/dist.xml</descriptor>
                         <descriptor>assembly/adminshell/adminshell-dist.xml</descriptor>
                         <descriptor>assembly/embedded-dist.xml</descriptor>
-                        <descriptor>assembly/server.xml</descriptor>
-                        <descriptor>assembly/docker.xml</descriptor>            
+                        <descriptor>assembly/jboss-as7/dist.xml</descriptor>
+                        <!-- descriptor>assembly/server.xml</descriptor>
+                        <descriptor>assembly/docker.xml</descriptor-->            
                     </descriptors>
                 </configuration>
                 <executions>
@@ -272,11 +339,11 @@
                                 <descriptor>assembly/src.xml</descriptor>
                                 <descriptor>assembly/client-jar.xml</descriptor>
                                 <descriptor>assembly/console-jar.xml</descriptor>
-                                <descriptor>assembly/jboss-as7/dist.xml</descriptor>
                                 <descriptor>assembly/adminshell/adminshell-dist.xml</descriptor>
                                 <descriptor>assembly/embedded-dist.xml</descriptor>
-                                <descriptor>assembly/server.xml</descriptor>
-                                <descriptor>assembly/docker.xml</descriptor>
+                                <descriptor>assembly/jboss-as7/dist.xml</descriptor>
+                                <!-- descriptor>assembly/server.xml</descriptor>
+                                <descriptor>assembly/docker.xml</descriptor-->
                             </descriptors>
                         </configuration>
                     </plugin>

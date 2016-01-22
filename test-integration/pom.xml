@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>teiid-parent</artifactId>
 		<groupId>org.jboss.teiid</groupId>
-        <version>8.12.5-SNAPSHOT</version>
+        <version>8.12.0.6_3</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>teiid-test-integration</artifactId>
@@ -75,17 +75,33 @@
 			<artifactId>derby</artifactId>
 		</dependency>
 		
-		<dependency>
-      		<groupId>javax.resource</groupId>
-      		<artifactId>connector-api</artifactId>
-      		<scope>provided</scope>
-    	</dependency>
+    
+    <dependency>
+        <groupId>org.jboss.spec.javax.resource</groupId>
+        <artifactId>jboss-connector-api_1.6_spec</artifactId>
+      <scope>provided</scope>
+    </dependency>
+<!--        
+    <dependency>
+      <groupId>javax.resource</groupId>
+      <artifactId>connector-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+-->    
     	
-    	<dependency>
-			<groupId>javax.transaction</groupId>
+
+     		<dependency>
+				<groupId>org.jboss.spec.javax.transaction</groupId>
+				<artifactId>jboss-transaction-api_1.1_spec</artifactId>
+      <scope>provided</scope>
+	      </dependency>
+<!--	      
+        <dependency>
+            <groupId>javax.transaction</groupId>
             <artifactId>jta</artifactId>
-		</dependency>
-		<dependency>
+            <scope>provided</scope>
+        </dependency>
+ -->       		<dependency>
 			<groupId>org.jboss</groupId>
 			<artifactId>jboss-vfs</artifactId>
 			<scope>test</scope>

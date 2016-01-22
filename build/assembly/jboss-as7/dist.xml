@@ -12,8 +12,43 @@
   <baseDirectory>teiid-${project.version}</baseDirectory>
 
   <fileSets>
-          
+        <fileSet>
+        <directory>target/kits/jboss-as7/overlay/bin/scripts</directory>
+        <outputDirectory>${cli.scriploc}</outputDirectory>           
+    </fileSet>
+    
+     <fileSet>
+        <directory>target/kits/jboss-as7/overlay/bin/</directory>
+        <outputDirectory>bin</outputDirectory>      
+        <includes>
+          <include>**/*.sh</include>
+        </includes>   
+        <fileMode>755</fileMode>  
+    </fileSet> 
+     <fileSet>
+        <directory>target/kits/jboss-as7/overlay/bin/</directory>
+        <outputDirectory>bin</outputDirectory>      
+        <includes>
+          <include>**/*.bat</include>
+        </includes>   
+    </fileSet>      
+
+     <fileSet>
+        <directory>target/kits/jboss-as7/overlay/docs</directory>
+        <outputDirectory>docs</outputDirectory>      
+     </fileSet>  
+     
     <fileSet>
+        <directory>target/kits/jboss-as7/overlay/modules</directory>
+        <includes>
+            <include>layers.conf</include>
+        </includes>                
+        <outputDirectory>modules</outputDirectory>
+    </fileSet>       
+        
+    <!-- do not includes standalone-teiid.xml, will install using cli scripts -->
+     
+    <!--fileSet>
         <directory>target/kits/jboss-as7/overlay</directory>
         <outputDirectory>/</outputDirectory>      
         <includes>
@@ -28,15 +63,15 @@
         <excludes>
           <exclude>**/*.sh</exclude>
         </excludes>      
-    </fileSet>
+    </fileSet-->
     
-    <fileSet>
+    <!--fileSet>
         <directory>target/kits/jboss-as7/overlay</directory>
         <outputDirectory>/</outputDirectory>      
         <excludes>
           <exclude>**/*.properties</exclude>
         </excludes>      
-    </fileSet>  
+    </fileSet-->  
     
     <fileSet>
         <directory>target/kits/jboss-as7/modules</directory>
@@ -78,7 +113,30 @@
         </includes>                
         <outputDirectory>docs/schema</outputDirectory>
     </fileSet>    
+    
+     <fileSet>  
+        <directory>target</directory>
+        <outputDirectory>${jdbcjar.loc}</outputDirectory>      
+        <includes>
+          <include>teiid-*-jdbc.jar</include>
+        </includes>      
+    </fileSet>
     	
+    <fileSet>  
+        <directory>target</directory>
+        <outputDirectory>${adminshell.loc}</outputDirectory>      
+        <includes>
+        <!-- deliver the adminshell kit in zip form -->
+          <include>teiid-*-adminshell-dist.zip</include>
+        </includes>      
+    </fileSet>
+
+	<fileSet>
+        <directory>target/kits/jboss-as7/overlay/vdb</directory>
+        <outputDirectory>${vdb.loc}</outputDirectory>         
+    </fileSet>  
+    
+        
   </fileSets>
   
   <!--  these have external dependent clients like connectors-->
@@ -132,7 +190,20 @@
       </binaries>
     </moduleSet>
     
+    <!-- pulling out the war to be located where datavirtualization files are located -->
     <moduleSet>
+      <useAllReactorProjects>true</useAllReactorProjects>
+      <includes>
+        <include>org.jboss.teiid:teiid-odata</include>   
+      </includes>
+      <binaries>
+        <includeDependencies>false</includeDependencies>
+        <unpack>false</unpack>
+        <outputDirectory>${vdb.loc}</outputDirectory>
+      </binaries>
+    </moduleSet>    
+    
+    <!--moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
         <include>org.jboss.teiid:teiid-odata</include>   
@@ -142,7 +213,7 @@
         <unpack>false</unpack>
         <outputDirectory>${jbossas-module-root}/org/jboss/teiid/main/deployments</outputDirectory>
       </binaries>
-    </moduleSet>
+    </moduleSet-->
     
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>

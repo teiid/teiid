@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.jboss.teiid</groupId>
     <artifactId>connectors</artifactId>
-        <version>8.12.5-SNAPSHOT</version>
+        <version>8.12.0.6_3</version>
   </parent>
   <groupId>org.jboss.teiid.connectors</groupId>
   <artifactId>translator-accumulo</artifactId>
@@ -26,11 +26,19 @@
             <artifactId>teiid-engine</artifactId>
             <scope>provided</scope>
         </dependency>        
-        <dependency>
-          <groupId>javax.resource</groupId>
-          <artifactId>connector-api</artifactId>
-          <scope>provided</scope>
-        </dependency>    
+    
+    <dependency>
+        <groupId>org.jboss.spec.javax.resource</groupId>
+        <artifactId>jboss-connector-api_1.6_spec</artifactId>
+      <scope>provided</scope>
+    </dependency>
+<!--        
+    <dependency>
+      <groupId>javax.resource</groupId>
+      <artifactId>connector-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+-->      
         <dependency>
             <groupId>org.apache.accumulo</groupId>
             <artifactId>accumulo-core</artifactId>
