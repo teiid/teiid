@@ -24,13 +24,24 @@
  */
 package org.teiid.translator.jdbc.teiid;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.core.types.JDBCSQLTypeInfo;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
+import org.teiid.translator.jdbc.JDBCMetdataProcessor;
 import org.teiid.translator.jdbc.SQLDialect;
 import org.teiid.translator.jdbc.Version;
 
@@ -51,6 +62,9 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
 	public static final Version EIGHT_4 = Version.getVersion("8.4"); //$NON-NLS-1$
 	public static final Version EIGHT_5 = Version.getVersion("8.5"); //$NON-NLS-1$
 	public static final Version EIGHT_10 = Version.getVersion("8.10"); //$NON-NLS-1$
+	public static final Version EIGHT_12_5 = Version.getVersion("8.12.5"); //$NON-NLS-1$
+	public static final Version EIGHT_13 = Version.getVersion("8.13.0"); //$NON-NLS-1$
+	public static final Version NINE_0 = Version.getVersion("9.0"); //$NON-NLS-1$
 	
 	public TeiidExecutionFactory() {
 	}
@@ -183,6 +197,22 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
         	supportedFunctions.add(SourceSystemFunctions.ST_TOUCHES);
         	supportedFunctions.add(SourceSystemFunctions.ST_SRID);
         	supportedFunctions.add(SourceSystemFunctions.ST_SETSRID);
+        }
+        
+        if (getVersion().compareTo(NINE_0) >= 0 || (getVersion().compareTo(EIGHT_12_5) >= 0 && getVersion().compareTo(EIGHT_13) < 0)) {
+        	supportedFunctions.add(SourceSystemFunctions.ST_TOUCHES);
+        	supportedFunctions.add(SourceSystemFunctions.ST_HASARC);
+            supportedFunctions.add(SourceSystemFunctions.ST_SIMPLIFY);
+            supportedFunctions.add(SourceSystemFunctions.ST_FORCE_2D);
+            supportedFunctions.add(SourceSystemFunctions.ST_ENVELOPE);
+            supportedFunctions.add(SourceSystemFunctions.ST_WITHIN);
+            supportedFunctions.add(SourceSystemFunctions.ST_DWITHIN);
+            supportedFunctions.add(SourceSystemFunctions.ST_EXTENT);
+            supportedFunctions.add(SourceSystemFunctions.DOUBLE_AMP_OP);
+            supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMEWKT);
+            supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMEWKB);
+            supportedFunctions.add(SourceSystemFunctions.ST_ASEWKB);
+            supportedFunctions.add(SourceSystemFunctions.ST_ASEWKT);
         }
         
         return supportedFunctions;
@@ -360,6 +390,58 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsOrderByUnrelated() {
     	//prior to 8.10 we did not support unrelated from the grouping columns
     	return getVersion().compareTo(EIGHT_10) >= 0;
+    }
+    
+    @Override
+    public MetadataProcessor<Connection> getMetadataProcessor() {
+    	return new JDBCMetdataProcessor() {
+    		@Override
+            protected String getRuntimeType(int type, String typeName, int precision) {
+            	if ("geometry".equalsIgnoreCase(typeName)) { //$NON-NLS-1$
+                    return TypeFacility.RUNTIME_NAMES.GEOMETRY;
+                }                
+                return super.getRuntimeType(type, typeName, precision);                    
+            }
+            
+            @Override
+            protected void getGeometryMetadata(Column c, Connection conn,
+            		String tableCatalog, String tableSchema, String tableName,
+            		String columnName) {
+            	PreparedStatement ps = null;
+            	ResultSet rs = null;
+            	try {
+            		if (tableCatalog == null) {
+            			tableCatalog = conn.getCatalog();
+            		}
+	            	ps = conn.prepareStatement("select coord_dimension, srid, type from sys.geometry_columns where f_table_catalog=? and f_table_schema=? and f_table_name=? and f_geometry_column=?"); //$NON-NLS-1$
+	            	ps.setString(1, tableCatalog);
+	            	ps.setString(2, tableSchema);
+	            	ps.setString(3, tableName);
+	            	ps.setString(4, columnName);
+	            	rs = ps.executeQuery();
+	            	if (rs.next()) {
+	            		c.setProperty(MetadataFactory.SPATIAL_URI + "coord_dimension", rs.getString(1)); //$NON-NLS-1$
+	            		c.setProperty(MetadataFactory.SPATIAL_URI + "srid", rs.getString(2)); //$NON-NLS-1$
+	            		c.setProperty(MetadataFactory.SPATIAL_URI + "type", rs.getString(3)); //$NON-NLS-1$
+	            	}
+            	} catch (SQLException e) {
+            		LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Could not get geometry metadata for column", tableSchema, tableName, columnName); //$NON-NLS-1$
+            	} finally {
+            		if (rs != null) {
+            			try {
+							rs.close();
+						} catch (SQLException e) {
+						}
+            		}
+            		if (ps != null) {
+            			try {
+							ps.close();
+						} catch (SQLException e) {
+						}
+            		}
+            	}
+            }
+    	};
     }
     
 }
