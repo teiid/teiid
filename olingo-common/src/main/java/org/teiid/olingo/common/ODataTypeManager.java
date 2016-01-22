@@ -263,24 +263,20 @@ public class ODataTypeManager {
         }
     }    
     
-    public static String convertToODataURIValue(Object val, String odataType) throws TranslatorException {
+    public static String convertToODataURIValue(Object val, String odataType) throws EdmPrimitiveTypeException {
         if (val == null) {
             return "null"; // is this correct? //$NON-NLS-1$
         }
-        try {
-            if(odataType.startsWith("Edm.")) { //$NON-NLS-1$
-                odataType = odataType.substring(4);
-            }
-            EdmPrimitiveTypeKind kind = EdmPrimitiveTypeKind.valueOf(odataType);
-            String value =  EdmPrimitiveTypeFactory.getInstance(kind).valueToString(
-                    val, true, 4000, 0, 0, true);
-            if (kind == EdmPrimitiveTypeKind.String) {
-                return EdmString.getInstance().toUriLiteral(value);
-            }
-            return value;
-        } catch (EdmPrimitiveTypeException e) {
-            throw new TranslatorException(e);
+        if(odataType.startsWith("Edm.")) { //$NON-NLS-1$
+            odataType = odataType.substring(4);
         }
+        EdmPrimitiveTypeKind kind = EdmPrimitiveTypeKind.valueOf(odataType);
+        String value =  EdmPrimitiveTypeFactory.getInstance(kind).valueToString(
+                val, true, 4000, 0, 0, true);
+        if (kind == EdmPrimitiveTypeKind.String) {
+            return EdmString.getInstance().toUriLiteral(value);
+        }
+        return value;
     }   
 
 }
