@@ -640,13 +640,15 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		assertEquals(1, odbcServer.server.getDqp().getRequests().size());
 	}
 	
-	@Test public void testSomething() throws Exception {
+	@Test public void testExportedKey() throws Exception {
 		String sql = ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("exported-fk-query.txt"));
 		
 		Statement s = conn.createStatement();
 		s.execute(sql);
 		ResultSet rs = s.getResultSet();
 		assertTrue(rs.next());
+		assertEquals("STATUS_ID", rs.getString(4));
+		assertFalse(rs.next());
 	}
 
 }
