@@ -29,12 +29,13 @@ import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
 import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.commons.api.http.HttpHeader;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
+import org.apache.olingo.commons.core.Encoder;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmPrimitiveTypeFactory;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmString;
 import org.apache.olingo.server.api.ODataApplicationException;
+import org.apache.olingo.server.api.ODataLibraryException;
 import org.apache.olingo.server.api.ODataResponse;
 import org.apache.olingo.server.api.ODataServerError;
-import org.apache.olingo.server.api.ODataLibraryException;
 import org.apache.olingo.server.api.ServiceMetadata;
 import org.apache.olingo.server.api.serializer.EntitySerializerOptions;
 import org.apache.olingo.server.api.serializer.ODataSerializer;
@@ -42,8 +43,6 @@ import org.apache.olingo.server.api.serializer.SerializerException;
 import org.apache.olingo.server.core.ContentNegotiatorException;
 import org.apache.olingo.server.core.ReturnRepresentation;
 import org.apache.olingo.server.core.ServiceRequest;
-import org.apache.olingo.server.core.responses.ServiceResponse;
-import org.apache.olingo.server.core.responses.ServiceResponseVisior;
 
 /**
  * REMOVE AFTER Olingo 4.2.0 Update. 
@@ -116,7 +115,6 @@ public class EntityResponse extends ServiceResponse {
     } catch (EdmPrimitiveTypeException e) {
       throw new SerializerException(e.getMessage(), e, SerializerException.MessageKeys.WRONG_PRIMITIVE_VALUE);
     }
-
     // Note that if media written just like Stream, but on entity URL
 
     // 8.2.8.7
@@ -179,8 +177,9 @@ public class EntityResponse extends ServiceResponse {
     close();
   }  
   
-  public static String buildLocation(String baseURL, Entity entity, String enitySetName, EdmEntityType type) 
-          throws EdmPrimitiveTypeException {
+    public static String buildLocation(String baseURL, Entity entity,
+            String enitySetName, EdmEntityType type)
+            throws EdmPrimitiveTypeException {
         StringBuilder location = new StringBuilder();
         location.append(baseURL).append("/").append(enitySetName);
         int i = 0;
@@ -194,6 +193,7 @@ public class EntityResponse extends ServiceResponse {
           if (usename) {
             location.append(key).append("=");
           }
+          //TEIID-3914 CHANGE - adding the Encoder.encode
           String propertyType = entity.getProperty(key).getType();
           Object propertyValue = entity.getProperty(key).getValue();
           
@@ -201,11 +201,11 @@ public class EntityResponse extends ServiceResponse {
             propertyType = propertyType.substring(4);
           }
           EdmPrimitiveTypeKind kind = EdmPrimitiveTypeKind.valueOf(propertyType);
-          String value =  EdmPrimitiveTypeFactory.getInstance(kind).valueToString(
-              propertyValue, true, 4000, 0, 0, true);
+          String value = EdmPrimitiveTypeFactory.getInstance(kind).valueToString(propertyValue, true, 4000, 0, 0, true);
           if (kind == EdmPrimitiveTypeKind.String) {
-              value = EdmString.getInstance().toUriLiteral(value);
+            value = EdmString.getInstance().toUriLiteral(Encoder.encode(value));
           }
+          //TEIID-3914 DONE          
           location.append(value);
         }
         location.append(")");

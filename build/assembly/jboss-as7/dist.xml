@@ -159,6 +159,18 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
+        <include>org.jboss.teiid:teiid-olingo-patches</include>   
+      </includes>
+      <binaries>
+        <includeDependencies>false</includeDependencies>
+        <unpack>false</unpack>
+        <outputDirectory>${jbossas-module-root}/org/apache/olingo/main</outputDirectory>
+      </binaries>
+    </moduleSet>
+        
+    <moduleSet>
+      <useAllReactorProjects>true</useAllReactorProjects>
+      <includes>
         <include>org.jboss.teiid:teiid-olingo-common</include>   
       </includes>
       <binaries>
