@@ -5,6 +5,7 @@
     </properties>
     
     <resources>
+        <resource-root path="teiid-olingo-patches-${project.version}.jar" />
         <resource-root path="odata-server-api-${version.org.apache.olingo}.jar" />
         <resource-root path="odata-server-core-${version.org.apache.olingo}.jar" />
         <resource-root path="odata-server-core-ext-${version.org.apache.olingo}.jar" />
