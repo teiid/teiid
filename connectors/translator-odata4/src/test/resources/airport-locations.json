@@ -1,0 +1,31 @@
+{
+   "value":[
+      {
+         "IcaoCode":"xyz",
+         "Location":
+            {
+               "Loc":{"type":"Point","coordinates":[-48.23456,20.12345]},
+               "Address":"187 Suffolk Ln.",
+               "City":{
+                  "CountryRegion":"United States",
+                  "Name":"Boise",
+                  "Region":"ID"
+               }
+            }
+         
+      },
+      {
+         "IcaoCode":"gso",
+         "Location":
+            {
+               "Loc":{"type":"Point","coordinates":[1,2]},
+               "Address":"187 Suffolk Ln.",
+               "City":{
+                  "CountryRegion":"United States",
+                  "Name":"Boise",
+                  "Region":"ID"
+               }
+            }
+      }
+   ]
+}

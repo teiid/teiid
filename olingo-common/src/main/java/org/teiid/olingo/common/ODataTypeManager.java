@@ -21,6 +21,10 @@
  */
 package org.teiid.olingo.common;
 
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.lang.reflect.Array;
 import java.sql.Date;
 import java.sql.Time;
@@ -29,11 +33,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamWriter;
+
 import org.apache.olingo.commons.api.edm.EdmParameter;
 import org.apache.olingo.commons.api.edm.EdmPrimitiveType;
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeException;
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
 import org.apache.olingo.commons.api.edm.EdmProperty;
+import org.apache.olingo.commons.api.edm.geo.Geospatial;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmBinary;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmDate;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmDecimal;
@@ -42,11 +50,18 @@ import org.apache.olingo.commons.core.edm.primitivetype.EdmStream;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmString;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmTimeOfDay;
 import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
+import org.teiid.GeometryInputSource;
+import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.GeometryType;
 import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
+import org.teiid.query.function.GeometryUtils;
 import org.teiid.translator.TranslatorException;
+
+import com.vividsolutions.jts.geom.Geometry;
 
 public class ODataTypeManager {
 
@@ -70,6 +85,13 @@ public class ODataTypeManager {
         odataTypes.put("Edm.Stream", DataTypeManager.DefaultDataTypes.BLOB);
         odataTypes.put("Edm.Guid", DataTypeManager.DefaultDataTypes.STRING);
         odataTypes.put("Edm.Binary", DataTypeManager.DefaultDataTypes.VARBINARY); //$NON-NLS-1$
+        odataTypes.put("Edm.Geometry", DataTypeManager.DefaultDataTypes.GEOMETRY); //$NON-NLS-1$
+        odataTypes.put("Edm.GeometryPoint", DataTypeManager.DefaultDataTypes.GEOMETRY); //$NON-NLS-1$
+        odataTypes.put("Edm.GeometryLineString", DataTypeManager.DefaultDataTypes.GEOMETRY); //$NON-NLS-1$
+        odataTypes.put("Edm.GeometryPolygon", DataTypeManager.DefaultDataTypes.GEOMETRY); //$NON-NLS-1$
+        odataTypes.put("Edm.GeometryMultiPoint", DataTypeManager.DefaultDataTypes.GEOMETRY); //$NON-NLS-1$
+        odataTypes.put("Edm.GeometryMultiLineString", DataTypeManager.DefaultDataTypes.GEOMETRY); //$NON-NLS-1$
+        odataTypes.put("Edm.GeometryCollection", DataTypeManager.DefaultDataTypes.GEOMETRY); //$NON-NLS-1$
         
         teiidTypes.put(DataTypeManager.DefaultDataTypes.STRING, "Edm.String");
         teiidTypes.put(DataTypeManager.DefaultDataTypes.BOOLEAN, "Edm.Boolean");
@@ -88,7 +110,9 @@ public class ODataTypeManager {
         teiidTypes.put(DataTypeManager.DefaultDataTypes.CLOB, "Edm.Stream");
         teiidTypes.put(DataTypeManager.DefaultDataTypes.XML, "Edm.Stream");
         teiidTypes.put(DataTypeManager.DefaultDataTypes.VARBINARY, "Edm.Binary"); //$NON-NLS-1$
-        teiidTypes.put(DataTypeManager.DefaultDataTypes.OBJECT, "Edm.Binary"); //$NON-NLS-1$
+        //will fail for most values
+        teiidTypes.put(DataTypeManager.DefaultDataTypes.OBJECT, "Edm.Binary"); //$NON-NLS-1$ 
+        teiidTypes.put(DataTypeManager.DefaultDataTypes.GEOMETRY, "Edm.Stream"); //$NON-NLS-1$
     }
     
     public static String teiidType(SingletonPrimitiveType odataType, boolean array) {
@@ -131,7 +155,7 @@ public class ODataTypeManager {
      * @return
      * @throws TeiidException
      */
-    public static Object convertToTeiidRuntimeType(Class<?> type, Object value, String odataType) throws TeiidException {
+	public static Object convertToTeiidRuntimeType(Class<?> type, Object value, String odataType) throws TeiidException {
         if (value == null) {
             return null;
         }
@@ -158,6 +182,40 @@ public class ODataTypeManager {
 			} catch (TeiidException e) {
 				throw new TranslatorException(e);
 			}
+        }
+        
+        if (value instanceof Geospatial && type == DataTypeManager.DefaultDataClasses.GEOMETRY) {
+        	final Geospatial val = (Geospatial)value;
+        	
+        	//the strategy of converting to GML will only work for reading from
+        	//the odata translator - we need to actually convert to the GeometryType
+        	//for the odata service.  When we undertake that, then the forked Atom serializer can be removed.
+        	
+        	//the parser will guess geography by default.  we'll simply rely on the import logic to have chosen geometry only for edm geometry type values
+        	//if (val.getDimension() == Dimension.GEOMETRY) {
+				return new GeometryInputSource() {
+					@Override
+					public Reader getGml() throws Exception {
+						AtomGeoValueSerializer serializer = new AtomGeoValueSerializer();
+						XMLOutputFactory factory = XMLOutputFactory.newInstance();
+						StringWriter sw = new StringWriter();
+						final XMLStreamWriter writer = factory.createXMLStreamWriter(sw);
+						serializer.serialize(writer, val);
+						writer.close();
+						return new StringReader(sw.toString());
+					}
+					
+					@Override
+					public Integer getSrid() {
+						String srid = val.getSrid().toString();
+						try {
+							return Integer.parseInt(srid);
+						} catch (NumberFormatException e) {
+							return null;
+						}
+					}
+				};
+        	//}
         }
         
         Transform transform = DataTypeManager.getTransform(value.getClass(), type);
@@ -269,6 +327,26 @@ public class ODataTypeManager {
         }
         if(odataType.startsWith("Edm.")) { //$NON-NLS-1$
             odataType = odataType.substring(4);
+        }
+        if (odataType.startsWith("Geometry") && val instanceof GeometryType) { //$NON-NLS-1$
+        	Geometry g;
+			try {
+				g = GeometryUtils.getGeometry((GeometryType)val);
+			} catch (FunctionExecutionException e1) {
+				throw new EdmPrimitiveTypeException(e1.getMessage(), e1);
+			}
+        	StringWriter sw = new StringWriter();
+        	sw.write("geometry'SRID="); //$NON-NLS-1$
+        	sw.write(String.valueOf(g.getSRID()));
+        	sw.write(";"); //$NON-NLS-1$
+        	ODataWKTWriter writer = new ODataWKTWriter();
+        	try {
+				writer.write(g, sw);
+			} catch (IOException e) {
+				throw new TeiidRuntimeException(e);
+			}
+        	sw.write("'"); //$NON-NLS-1$
+        	return sw.toString();
         }
         EdmPrimitiveTypeKind kind = EdmPrimitiveTypeKind.valueOf(odataType);
         String value =  EdmPrimitiveTypeFactory.getInstance(kind).valueToString(

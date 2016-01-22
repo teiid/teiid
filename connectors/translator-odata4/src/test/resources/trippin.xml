@@ -40,7 +40,7 @@
                 <Property Name="BuildingInfo" Type="Edm.String" />
             </ComplexType>
             <ComplexType Name="AirportLocation" BaseType="Microsoft.OData.SampleService.Models.TripPin.Location" OpenType="true">
-                <Property Name="Loc" Type="Edm.GeographyPoint" Nullable="false" SRID="4326" />
+                <Property Name="Loc" Type="Edm.GeometryPoint" Nullable="false" SRID="4326" />
             </ComplexType>
             <EntityType Name="ItemPurchased">
                 <Key>

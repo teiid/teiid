@@ -186,9 +186,13 @@ public class ODataDocument {
         } else {
             if (property.isPrimitive()) {
                 document.addProperty(property.getName(), property.asPrimitive());
-            } else {
+            } else if (property.isComplex()) {
                 document.addChildDocuments(property.getName(), Arrays.asList(createDocument(
                         property.getName(), property.asComplex(), document)));
+            } else if (property.isGeospatial()) {
+                document.addProperty(property.getName(), property.asGeospatial());
+            } else {
+            	throw new AssertionError(property.getType() + " not supported"); //$NON-NLS-1$
             }
         }
     }

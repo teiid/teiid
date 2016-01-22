@@ -30,24 +30,21 @@ import org.apache.olingo.client.api.edm.xml.XMLMetadata;
 import org.apache.olingo.commons.api.edm.provider.*;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
-import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
-import org.teiid.metadata.ExtensionMetadataProperty;
-import org.teiid.metadata.KeyRecord;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.ProcedureParameter;
-import org.teiid.metadata.Table;
 import org.teiid.olingo.common.ODataTypeManager;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TranslatorProperty.PropertyType;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.WSConnection;
 
 public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
-    public enum ODataType {
+    private static final String EDM_GEOMETRY = "Edm.Geometry"; //$NON-NLS-1$
+
+	public enum ODataType {
         COMPLEX, 
         NAVIGATION, 
         ENTITY, 
@@ -615,7 +612,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         }
 
         if (property.getSrid() != null) {
-            c.setProperty("SRID", property.getSrid().toString());
+            c.setProperty(BaseColumn.SPATIAL_SRID, property.getSrid().toString());
         }
         if (!property.getType().equals("Edm.String")) {
             if (property.isCollection()) {
@@ -639,7 +636,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         c.setScale(property.getScale());
         c.setDefaultValue(property.getDefaultValue());
         c.setProperty("MIME-TYPE", c.getProperty("MIME-TYPE", false));
-        c.setProperty("SRID", property.getProperty("SRID", false));
+        c.setProperty(BaseColumn.SPATIAL_SRID, property.getProperty(BaseColumn.SPATIAL_SRID, false));
         c.setProperty("NATIVE_TYPE", property.getProperty("NATIVE_TYPE", false));
         return c;
     }
@@ -664,7 +661,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
             p.setScale(parameter.getScale());
         }
         if (parameter.getSrid() != null) {
-            p.setProperty("SRID", parameter.getSrid().toString());
+            p.setProperty(BaseColumn.SPATIAL_SRID, parameter.getSrid().toString());
         }
         return p;
     }    
@@ -673,6 +670,12 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         String columnName = property.getName();
         Column c = mf.addColumn(columnName, ODataTypeManager.teiidType(property.getType(), 
                 property.isCollection()), table);
+        if (TypeFacility.RUNTIME_NAMES.GEOMETRY.equals(c.getDatatype().getName())) {
+        	String type = property.getType();
+        	if (type.startsWith(EDM_GEOMETRY) && type.length() > EDM_GEOMETRY.length()) {
+        		c.setProperty(BaseColumn.SPATIAL_TYPE, type.substring(EDM_GEOMETRY.length()).toUpperCase());
+        	}
+        }
         if(property.isCollection()) {
             c.setSearchType(SearchType.Unsearchable);
         }
