@@ -38,6 +38,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.adapter.infinispan.InfinispanCacheWrapper;
 import org.teiid.resource.adapter.infinispan.InfinispanManagedConnectionFactory;
+import org.teiid.translator.TranslatorException;
 
 /**
  * This wrapper will contain a local Infinispan cache, and will the necessary logic
@@ -47,11 +48,12 @@ import org.teiid.resource.adapter.infinispan.InfinispanManagedConnectionFactory;
  * @param <K>
  * @param <V> 
  */
-public class LocalCacheConnection<K,V>  implements InfinispanCacheWrapper<K,V> {
+public class LocalCacheConnection<K,V>  extends InfinispanCacheWrapper<K,V> {
 
 	private EmbeddedCacheManager ecm = null;
 	private InfinispanManagedConnectionFactory config;
 
+	@Override
 	public InfinispanManagedConnectionFactory getConfig() {
 		return config;
 	}
@@ -111,8 +113,19 @@ public class LocalCacheConnection<K,V>  implements InfinispanCacheWrapper<K,V> {
 		if (config.getCacheName() == null) {
 			return ecm.getCache();
 		}
-		return ecm.getCache(config.getCacheName());
+		
+		return getCache(config.getCacheName());
 	}
+	
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#getCache(java.lang.String)
+	 */
+	@Override
+	public Cache<Object, Object> getCache(String cacheName) {
+		return ecm.getCache(cacheName);
+	}	
 
 	/**
 	 * {@inheritDoc}
@@ -188,7 +201,7 @@ public class LocalCacheConnection<K,V>  implements InfinispanCacheWrapper<K,V> {
 	 */
 	@Override
 	public void add(Object key, Object value)  {
-		getCache().put(key, value);
+		getCache(this.getConfig().getCacheNameForUpdate()).put(key, value);
 	}
 
 	/**
@@ -198,7 +211,7 @@ public class LocalCacheConnection<K,V>  implements InfinispanCacheWrapper<K,V> {
 	 */
 	@Override
 	public Object remove(Object key)  {
-		return getCache().removeAsync(key);
+		return getCache(this.getConfig().getCacheNameForUpdate()).removeAsync(key);
 	}
 
 	/**
@@ -208,7 +221,17 @@ public class LocalCacheConnection<K,V>  implements InfinispanCacheWrapper<K,V> {
 	 */
 	@Override
 	public void update(Object key, Object value) {
-		getCache().replace(key, value);
+		getCache(this.getConfig().getCacheNameForUpdate()).replace(key, value);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#clearCache(java.lang.String)
+	 */
+	@Override
+	public void clearCache(String cacheName) throws TranslatorException {		
+		getCache(cacheName).clearAsync();
 	}
 
 }

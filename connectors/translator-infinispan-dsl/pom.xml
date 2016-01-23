@@ -14,7 +14,7 @@
 	
     <properties>
         <!-- slot defined in the module  -->
-        <jdg.slot>jdg-6.4</jdg.slot>
+        <!-- jdg.slot>jdg-6.4</jdg.slot-->
     </properties>	
 
     <dependencyManagement>
@@ -96,7 +96,17 @@
         <dependency>
            <groupId>org.jboss.modules</groupId>
            <artifactId>jboss-modules</artifactId>
-        </dependency>                    
+        </dependency>     
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>translator-object</artifactId>
+        </dependency>  
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>translator-object</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>  
     </dependencies>
 
      <build>

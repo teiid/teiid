@@ -21,13 +21,11 @@
  */
 package org.teiid.resource.adapter.infinispan;
 
-import java.util.Collection;
-import java.util.Map;
-
 import javax.resource.ResourceException;
 
-import org.infinispan.query.dsl.QueryFactory;
-import org.teiid.translator.TranslatorException;
+import org.teiid.translator.infinispan.cache.InfinispanCacheConnection;
+import org.teiid.translator.object.ClassRegistry;
+import org.teiid.translator.object.ObjectMaterializeLifeCycle;
 
 /**
  * @author vanhalbert
@@ -35,14 +33,16 @@ import org.teiid.translator.TranslatorException;
  * @param <V>
  *
  */
-public interface InfinispanCacheWrapper<K,V> {
+public abstract class InfinispanCacheWrapper<K,V> implements InfinispanCacheConnection {
 
+	public abstract InfinispanManagedConnectionFactory getConfig();
+	
 	/**
 	 * Called so the wrapper, with the configuration, can create the cache manager it will use
 	 * @param config
 	 * @throws ResourceException
 	 */
-	public void init(InfinispanManagedConnectionFactory config) throws ResourceException;
+	public abstract void init(InfinispanManagedConnectionFactory config) throws ResourceException;
 
 	/** 
 	 * Called to pass in the cacheManager it will use.  This will be called when
@@ -51,68 +51,66 @@ public interface InfinispanCacheWrapper<K,V> {
 	 * @param config 
 	 * @param cacheManager object
 	 */
-	public void init(InfinispanManagedConnectionFactory config, Object cacheManager);
-
-	/** 
-	 * Will return <code>true</true> if the CacheContainer has been started.
-	 * @return boolean true if CacheContainer has been started
-	 */
-	public boolean isAlive();
-
-	/** 
-	 * Call to obtain Cache
-	 * @return Map of cache
-	 */
-	public Map<Object, Object> getCache();
+	public abstract void init(InfinispanManagedConnectionFactory config, Object cacheManager);
 
 	/**
-	 * Call to obtain all the objects from the cache
-	 * @return List of all the objects in the cache
-	 */
-	public Collection<Object> getAll();
-
-
-	public void cleanUp();
-
-	/**
-	 * @return QueryFactory
-	 */
-	public QueryFactory getQueryFactory();
-	
-	/**
+	 * {@inheritDoc}
 	 *
-	 * @param key 
-	 * @return Object from cache
-	 * @throws TranslatorException 
-	 * @see org.teiid.translator.object.ObjectConnection#get(java.lang.Object)
+	 * @see org.teiid.translator.object.ObjectConnection#getPkField()
 	 */
-	public Object get(Object key) throws TranslatorException;
-	
-	/**
-	 * @param key 
-	 * @param value 
-	 * @throws TranslatorException 
-	 *
-	 * @see org.teiid.translator.object.ObjectConnection#add(java.lang.Object, java.lang.Object)
-	 */
-	public void add(Object key, Object value) throws TranslatorException;
+	@Override
+	public String getPkField() {
+		return getConfig().getPKey();
+	}
 
 	/**
+	 * {@inheritDoc}
 	 *
-	 * @param key 
-	 * @return Object removed from cache
-	 * @throws TranslatorException 
-	 * @see org.teiid.translator.object.ObjectConnection#remove(java.lang.Object)
+	 * @see org.teiid.translator.object.ObjectConnection#getCacheKeyClassType()
 	 */
-	public Object remove(Object key) throws TranslatorException;
-	
+	@Override
+	public Class<?> getCacheKeyClassType()  {
+		return getConfig().getCacheKeyClassType();
+	}
+
 	/**
+	 * {@inheritDoc}
 	 *
-	 * @param key 
-	 * @param value 
-	 * @throws TranslatorException 
-	 * @see org.teiid.translator.object.ObjectConnection#update(java.lang.Object, java.lang.Object)
+	 * @see org.teiid.translator.object.ObjectConnection#getCacheName()
 	 */
-	public void update(Object key, Object value) throws TranslatorException;
+	@Override
+	public String getCacheName() {
+		return getConfig().getCacheName();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#getCacheClassType()
+	 */
+	@Override
+	public Class<?> getCacheClassType()  {
+		return getConfig().getCacheClassType();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#getClassRegistry()
+	 */
+	@Override
+	public ClassRegistry getClassRegistry() {
+		return getConfig().getClassRegistry();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#getMaterializeLifeCycle()
+	 */
+	@Override
+	public ObjectMaterializeLifeCycle getMaterializeLifeCycle() {
+		return new ObjectMaterializeLifeCycle(this, getConfig().getCacheNameProxy());
+	}	
 
 }

@@ -137,7 +137,14 @@ public class ClassRegistry {
         
     	List<Object> args = new ArrayList<Object>(1);
     	args.add(arg);
-        return m.invoke(api, args.toArray());
+    	try {
+    		return m.invoke(api, args.toArray());
+    	} catch (java.lang.IllegalArgumentException ia) {
+    		String msg = "Unable to execute method, invalid argument: (api) " + api.getClass().getName() + " (method) " + m.getName() + " (methodarg) " +  m.getParameterTypes().toString() + " (arg) " + arg.getClass().getName(); 
+    				//ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21000, "write", "table:" + tableName);
+    		throw new TranslatorException(msg);
+    		
+    	}
     } 
     
     private static Map<String, Method> getWriteMethodMap(Class<?> clazz) throws TranslatorException {

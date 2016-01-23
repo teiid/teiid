@@ -50,10 +50,8 @@ import org.infinispan.protostream.config.Configuration;
 import org.infinispan.protostream.descriptors.Descriptor;
 import org.infinispan.protostream.descriptors.FileDescriptor;
 import org.infinispan.protostream.impl.parser.SquareProtoParser;
-import org.infinispan.query.dsl.QueryFactory;
-import org.teiid.translator.TranslatorException;
-import org.teiid.translator.infinispan.dsl.ClassRegistry;
-import org.teiid.translator.infinispan.dsl.InfinispanConnection;
+import org.teiid.translator.infinispan.dsl.InfinispanDSLConnection;
+import org.teiid.translator.object.ClassRegistry;
 
 /**
  * Sample cache of objects
@@ -75,7 +73,7 @@ public class AllTypesCacheSource<K, V>  implements RemoteCache<K, V>{
 	public static Random RANDOM = new Random();
 	
 	
-	static ClassRegistry CLASS_REGISTRY = new ClassRegistry();
+	public static ClassRegistry CLASS_REGISTRY = new ClassRegistry();
 	
 	private Map cache = Collections.synchronizedMap(new HashMap<Object, Object>());
 	
@@ -91,64 +89,66 @@ public class AllTypesCacheSource<K, V>  implements RemoteCache<K, V>{
 	}
 	
 	
-	public static InfinispanConnection createConnection() {
+	public static InfinispanDSLConnection createConnection() {
 		return createConnection(true);
 		
 	}
 
 		
-	public static InfinispanConnection createConnection(final boolean useKeyClassType) {
+	public static InfinispanDSLConnection createConnection(final boolean useKeyClassType) {
 
-		final Map <Object, Object> objects = AllTypesCacheSource.loadCache();
-
-		return new InfinispanConnection() {
-
-			@Override
-			public String getPkField() throws TranslatorException {
-				return "intKey";
-			}
-
-			@Override
-			public Class<?> getCacheKeyClassType() throws TranslatorException {
-				if (useKeyClassType) {
-					return Integer.class;
-				} 
-				return null;
-			}
-			@Override
-			public String getCacheName() throws TranslatorException {
-				return AllTypesCacheSource.ALLTYPES_CACHE_NAME;
-			}
-
-
-			@Override
-			public Class<?> getCacheClassType() throws TranslatorException {
-				return AllTypes.class;
-			}
-
-
-			@Override
-			public Descriptor getDescriptor() throws TranslatorException {
-				return DESCRIPTOR;
-			}
-
-
-			@Override
-			public Map<Object, Object> getCache() throws TranslatorException {
-				return objects;
-			}
-
-
-			@Override
-			public QueryFactory getQueryFactory() throws TranslatorException {
-				return null;
-			}
-
-			
-	        public ClassRegistry getClassRegistry() {
-		        return AllTypesCacheSource.CLASS_REGISTRY;
-		    }
-		};
+		final RemoteCache objects = AllTypesCacheSource.loadCache();
+		
+		return AllTypeCacheConnection.createConnection(objects, useKeyClassType, DESCRIPTOR);
+//
+//		return new TestInfinispanDSLConnection()   {
+//
+//			@Override
+//			public String getPkField() {
+//				return "intKey";
+//			}
+//
+//			@Override
+//			public Class<?> getCacheKeyClassType() throws TranslatorException {
+//				if (useKeyClassType) {
+//					return Integer.class;
+//				} 
+//				return null;
+//			}
+//			
+//			@Override
+//			public String getCacheName() {
+//				return AllTypesCacheSource.ALLTYPES_CACHE_NAME;
+//			}
+//
+//
+//			@Override
+//			public Class<?> getCacheClassType() throws TranslatorException {
+//				return AllTypes.class;
+//			}
+//
+//
+//			@Override
+//			public Descriptor getDescriptor() throws TranslatorException {
+//				return DESCRIPTOR;
+//			}
+//
+//
+//			@Override
+//			public RemoteCache getCache(String cacheName)  {
+//				return objects;
+//			}
+//			
+//			@Override
+//			public QueryFactory getQueryFactory() throws TranslatorException {
+//				return null;
+//			}
+//
+//			@Override
+//	        public ClassRegistry getClassRegistry() {
+//		        return AllTypesCacheSource.CLASS_REGISTRY;
+//		    }
+//		};
 	}
 	
 	public static void loadCache(Map<Object, Object> cache) {
@@ -216,7 +216,7 @@ public class AllTypesCacheSource<K, V>  implements RemoteCache<K, V>{
 		return rand;
 	}
 
-	public static Map<Object, Object>  loadCache() {
+	public static RemoteCache  loadCache() {
 		AllTypesCacheSource tcs = new AllTypesCacheSource();
 		AllTypesCacheSource.loadCache(tcs);
 		return tcs;

@@ -33,6 +33,12 @@
                             <config-property name="RemoteServerList">
                                 127.0.0.1:11322
                             </config-property>
+                            <config-property name="StagingCacheName">
+                                addressbook_indexed_mat
+                            </config-property>                            
+                            <config-property name="AliasCacheName">
+                                aliasCache
+                            </config-property>                            
                         </connection-definition>
                     </connection-definitions>
                 </resource-adapter>
