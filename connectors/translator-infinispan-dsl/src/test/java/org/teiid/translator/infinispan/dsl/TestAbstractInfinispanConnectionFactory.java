@@ -72,10 +72,6 @@ public class TestAbstractInfinispanConnectionFactory  {
 				return null;
 			}
 			
-			@Override
-			protected void registerMarshallers(SerializationContext ctx, ClassLoader cl) throws ResourceException {
-			
-			}
 
 		};
 		

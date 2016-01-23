@@ -40,19 +40,16 @@ import org.infinispan.client.hotrod.ServerStatistics;
 import org.infinispan.client.hotrod.VersionedValue;
 import org.infinispan.commons.util.concurrent.NotifyingFuture;
 import org.infinispan.protostream.FileDescriptorSource;
-import org.infinispan.protostream.ProtobufUtil;
-import org.infinispan.protostream.SerializationContext;
-import org.infinispan.protostream.annotations.ProtoSchemaBuilder;
 import org.infinispan.protostream.config.Configuration;
 import org.infinispan.protostream.descriptors.Descriptor;
-import org.infinispan.protostream.descriptors.EnumDescriptor;
 import org.infinispan.protostream.descriptors.FileDescriptor;
 import org.infinispan.protostream.impl.parser.SquareProtoParser;
-import org.infinispan.query.dsl.QueryFactory;
-import org.infinispan.util.concurrent.SynchronizedRestarter;
-import org.teiid.translator.infinispan.dsl.ClassRegistry;
-import org.teiid.translator.infinispan.dsl.InfinispanConnection;
+import org.jboss.teiid.jdg_remote.pojo.AllTypeCacheConnection;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.infinispan.dsl.InfinispanDSLConnection;
+import org.teiid.translator.infinispan.dsl.TestInfinispanDSLConnection;
+import org.teiid.translator.object.ClassRegistry;
+import org.teiid.translator.object.ObjectMaterializeLifeCycle;
 
 /**
  * Sample cache of objects
@@ -70,10 +67,6 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 	public static final String PERSON_CLASS_NAME = Person.class.getName();
 	public static final String PHONENUMBER_CLASS_NAME = PhoneNumber.class.getName();
 	public static final String PHONETYPE_CLASS_NAME = PhoneType.class.getName();
-	
-//	public static Map<String, Class<?>> mapOfCaches = new HashMap<String, Class<?>>(1);
-
-	
 	public static Descriptor DESCRIPTOR;
 	
 	public static final int NUMPERSONS = 10;
@@ -84,9 +77,8 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 	private Map<Object, Object> cache =  Collections.synchronizedMap(new HashMap<Object, Object>());
 	
 	static {
-//		mapOfCaches.put(PersonCacheSource.PERSON_CACHE_NAME, Person.class);
 		try {
-			DESCRIPTOR = (Descriptor) createDescriptor();
+			DESCRIPTOR = createDescriptor();
 
 			CLASS_REGISTRY.registerClass(Person.class);
 			CLASS_REGISTRY.registerClass(PhoneNumber.class);
@@ -98,59 +90,11 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 	}
 	
 	
-	public static InfinispanConnection createConnection(final boolean useKeyClass) {
-		final Map <Object, Object> objects = PersonCacheSource.loadCache();
+	public static InfinispanDSLConnection createConnection(final boolean useKeyClass) {
+		final RemoteCache objects = PersonCacheSource.loadCache();
 
-		return new InfinispanConnection() {
-			
+		return PersonCacheConnection.createConnection(objects, useKeyClass, DESCRIPTOR);
 
-			@Override
-			public String getPkField() throws TranslatorException {
-				return "id";
-			}
-
-			@Override
-			public Class<?> getCacheKeyClassType() throws TranslatorException {
-				if (useKeyClass) {
-					return int.class;
-				}
-				return null;
-			}
-			
-			@Override
-			public String getCacheName() throws TranslatorException {
-				return PersonCacheSource.PERSON_CACHE_NAME;
-			}
-
-
-			@Override
-			public Class<?> getCacheClassType() throws TranslatorException {
-				return Person.class;
-			}
-
-
-			@Override
-			public Descriptor getDescriptor() throws TranslatorException {
-				return DESCRIPTOR;
-			}
-
-
-			@Override
-			public Map<Object, Object> getCache() throws TranslatorException {
-				return objects;
-			}
-
-
-			@Override
-			public QueryFactory getQueryFactory() throws TranslatorException {
-				return null;
-			}
-
-			
-	        public ClassRegistry getClassRegistry() {
-		        return PersonCacheSource.CLASS_REGISTRY;
-		    }
-		};
 	}
 	
 	public static void loadCache(Map<Object, Object> cache) {
@@ -177,7 +121,7 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 		}
 	}
 
-	public static Map<Object, Object>  loadCache() {
+	public static RemoteCache loadCache() {
 		PersonCacheSource tcs = new PersonCacheSource();
 		PersonCacheSource.loadCache(tcs);
 		return tcs;

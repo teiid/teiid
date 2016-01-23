@@ -70,7 +70,20 @@
                <description>{$display:"Cache JndiName",$description:"JNDI Name to find CacheContainer"}</description>
                <config-property-name>CacheJndiName</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
-            </config-property>                                        
+            </config-property>   
+            
+            <config-property>
+                <description>{$display:"Staging Cache Name",$description:"Cache name for the staging cache used in materialization",$required="false"}</description>
+               <config-property-name>StagingCacheName</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>  
+ 
+            <config-property>
+                <description>{$display:"Alias Cache Name",$description:"Cache name for the alias cache used in aliasing caches used in materialization",$required="false"}</description>
+               <config-property-name>AliasCacheName</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>  
+                                                 
             
             <connectionfactory-interface>javax.resource.cci.ConnectionFactory</connectionfactory-interface>
             <connectionfactory-impl-class>org.teiid.resource.spi.WrappedConnectionFactory</connectionfactory-impl-class>

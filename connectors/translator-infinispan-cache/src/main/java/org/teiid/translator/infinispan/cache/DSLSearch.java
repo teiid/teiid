@@ -116,7 +116,8 @@ public final class DSLSearch implements SearchType   {
 		    	if (spec.getOrdering().name().equalsIgnoreCase(SortOrder.DESC.name())) {
 		    		so = SortOrder.DESC;
 		    	}
-		    	qb = qb.orderBy(mdIDElement.getNameInSource(), so);		    }
+		    	qb = qb.orderBy(getRecordName(mdIDElement), so);
+		    }
 	    }
 	    	
 	    FilterConditionContext fcc = buildQueryFromWhereClause(where, qb, null);	 
@@ -131,7 +132,7 @@ public final class DSLSearch implements SearchType   {
 			if (results == null) {
 				return Collections.emptyList();
 			}
-		} else if (orderby != null) {
+		} else if (orderby != null || visitor.getLimit() > 0) {
 			   query = qb.build();
 	           results = query.list();
 	           if (results == null) {
@@ -167,7 +168,6 @@ public final class DSLSearch implements SearchType   {
 
 		if (criteria == null) return null;
 		FilterConditionContext fcc = null;
-
 		
 		if (criteria instanceof AndOr) {
 			LogManager.logTrace(LogConstants.CTX_CONNECTOR,

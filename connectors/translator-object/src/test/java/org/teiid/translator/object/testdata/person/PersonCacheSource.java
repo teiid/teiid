@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.translator.object.CacheNameProxy;
 import org.teiid.translator.object.ClassRegistry;
 import org.teiid.translator.object.ObjectConnection;
 
@@ -59,7 +60,20 @@ public class PersonCacheSource extends HashMap <Object, Object> {
 			throw new RuntimeException(e);
 		}
 	}
+
 	
+	public static ObjectConnection createConnectionForMaterialization(CacheNameProxy proxy) {
+		Map <Object, Object> primaryCache = PersonCacheSource.loadCache();
+		Map <Object, Object> stageCache = new PersonCacheSource();
+		Map <Object, Object> aliasCache = new HashMap<Object,Object>(3);
+		
+		proxy.initializeAliasCache(aliasCache);		
+
+		ObjectConnection toc = PersonObjectConnection.createConnection(primaryCache, stageCache, aliasCache, proxy );
+		return toc;
+
+	}
+
 	
 	public static ObjectConnection createConnection() {
 		final Map <Object, Object> objects = PersonCacheSource.loadCache();

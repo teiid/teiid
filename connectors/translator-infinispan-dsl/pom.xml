@@ -14,7 +14,7 @@
 	
     <properties>
         <!-- slot defined in the module  -->
-        <jdg.slot>jdg-6.4</jdg.slot>
+        <!-- jdg.slot>jdg-6.4</jdg.slot-->
     </properties>	
 
     <dependencyManagement>
@@ -52,27 +52,7 @@
         </dependencies> 
     </dependencyManagement>
     
-    <dependencies>
-        <dependency>
-            <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-api</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-common-core</artifactId>
-            <scope>provided</scope>
-        </dependency> 
-        <dependency>
-            <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-engine</artifactId>
-            <scope>provided</scope>
-        </dependency>            
-        <dependency>
-            <groupId>javax.resource</groupId>
-            <artifactId>connector-api</artifactId>
-            <scope>provided</scope>
-        </dependency>
+    <dependencies>      
         <dependency>
              <groupId>org.infinispan.protostream</groupId>
              <artifactId>protostream</artifactId>
@@ -104,10 +84,43 @@
             <scope>provided</scope>
         </dependency>  
         <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-common-core</artifactId>
+            <scope>provided</scope>
+        </dependency> 
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-engine</artifactId>
+            <scope>provided</scope>
+        </dependency>             
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>translator-object</artifactId>
+            <scope>provided</scope>
+        </dependency>  
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>translator-object</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>  
+        
+	    <dependency>
+	        <groupId>org.jboss.spec.javax.resource</groupId>
+	        <artifactId>jboss-connector-api_1.6_spec</artifactId>
+	      <scope>provided</scope>
+	    </dependency>
+       <dependency>
            <groupId>org.jboss.modules</groupId>
            <artifactId>jboss-modules</artifactId>
            <scope>provided</scope>
-        </dependency>                    
+        </dependency> 
+                                     
     </dependencies>
 
      <build>

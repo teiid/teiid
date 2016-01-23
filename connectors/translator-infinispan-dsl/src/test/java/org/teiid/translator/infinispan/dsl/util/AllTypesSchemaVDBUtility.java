@@ -23,23 +23,19 @@ package org.teiid.translator.infinispan.dsl.util;
  
 import java.util.Properties;
 
-import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PersonCacheSource;
 import org.jboss.teiid.jdg_remote.pojo.AllTypesCacheSource;
 import org.teiid.cdk.api.TranslationUtility;
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Schema;
-import org.teiid.metadata.Table;
-import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.infinispan.dsl.InfinispanConnection;
+import org.teiid.translator.infinispan.dsl.InfinispanDSLConnection;
 import org.teiid.translator.infinispan.dsl.InfinispanExecutionFactory;
 
 /**
@@ -70,7 +66,7 @@ public class AllTypesSchemaVDBUtility {
 					SystemMetadata.getInstance().getRuntimeTypeMap(),
 					new Properties(), null);
 	
-			InfinispanConnection conn = AllTypesCacheSource.createConnection();
+			InfinispanDSLConnection conn = AllTypesCacheSource.createConnection();
 	
 			translator.getMetadataProcessor().process(mf, conn);
 		

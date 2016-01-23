@@ -22,7 +22,6 @@
 package org.teiid.resource.adapter.infinispan;
 
 import java.util.Collection;
-import java.util.Map;
 
 import org.infinispan.query.dsl.QueryFactory;
 import org.teiid.logging.LogConstants;
@@ -31,6 +30,7 @@ import org.teiid.resource.spi.BasicConnection;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.infinispan.cache.InfinispanCacheConnection;
 import org.teiid.translator.object.ClassRegistry;
+import org.teiid.translator.object.ObjectMaterializeLifeCycle;
 
 /**
  * @author vanhalbert
@@ -40,68 +40,35 @@ public class InfinispanCacheRAConnection extends BasicConnection
 		implements InfinispanCacheConnection {
 
 	private InfinispanCacheWrapper<?, ?> cacheWrapper;
-	private InfinispanManagedConnectionFactory config;	
 	
 	public InfinispanCacheRAConnection(InfinispanManagedConnectionFactory config) {
-		this.config = config;	
 		this.cacheWrapper = config.getCacheWrapper();
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Infinispan-Cache Connection has been created."); //$NON-NLS-1$				
 	}
-	
-	protected InfinispanManagedConnectionFactory getConfig() {
-		return config;
-	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.teiid.translator.object.ObjectConnection#getCache()
-	 */
 	@Override
-	public Map<Object, Object> getCache() {
+	public Object getCache() throws TranslatorException  {
 		return cacheWrapper.getCache();
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.teiid.translator.object.ObjectConnection#getAll()
-	 */
 	@Override
-	public Collection<Object> getAll()  {
+	public Collection<Object> getAll() throws TranslatorException {
 		return cacheWrapper.getAll();
 	}
 	
-	
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.teiid.translator.infinispanCache.InfinispanCacheConnection#getQueryFactory()
-	 */
 	@Override
 	public QueryFactory getQueryFactory() throws TranslatorException {
 		return cacheWrapper.getQueryFactory();
 	}
 
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.teiid.translator.object.ObjectConnection#getPkField()
-	 */
 	@Override
 	public String getPkField() {
-		return config.getPKey();
+		return cacheWrapper.getPkField();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.teiid.translator.object.ObjectConnection#getCacheKeyClassType()
-	 */
 	@Override
 	public Class<?> getCacheKeyClassType() {
-		return config.getCacheKeyClassType();
+		return cacheWrapper.getCacheKeyClassType();
 	}
 
 	/**
@@ -111,7 +78,7 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	 */
 	@Override
 	public String getCacheName()  {
-		return config.getCacheName();
+		return cacheWrapper.getCacheName();
 	}
 
 	/**
@@ -121,7 +88,7 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	 */
 	@Override
 	public Class<?> getCacheClassType() {
-		return config.getCacheClassType();
+		return cacheWrapper.getCacheClassType();
 	}
 
 	/**
@@ -161,7 +128,7 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	 */
 	@Override
 	public ClassRegistry getClassRegistry() {
-		return config.getClassRegistry();
+		return cacheWrapper.getClassRegistry();
 	}
 
 	/**
@@ -182,7 +149,36 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	@Override
 	public void close() {
 		this.cacheWrapper = null;
-		this.config = null;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#getCache(java.lang.String)
+	 */
+	@Override
+	public Object getCache(String cacheName) throws TranslatorException {
+		return cacheWrapper.getCache(cacheName);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#clearCache(java.lang.String)
+	 */
+	@Override
+	public void clearCache(String cacheName) throws TranslatorException {
+		cacheWrapper.clearCache(cacheName);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#getMaterializeLifeCycle()
+	 */
+	@Override
+	public ObjectMaterializeLifeCycle getMaterializeLifeCycle() {
+		return cacheWrapper.getMaterializeLifeCycle();
 	}
 
 

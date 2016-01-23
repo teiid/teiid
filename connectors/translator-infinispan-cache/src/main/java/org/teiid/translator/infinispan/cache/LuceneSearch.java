@@ -53,6 +53,7 @@ import org.teiid.translator.object.SearchType;
  * @author vhalbert
  * @deprecated 
  */
+@Deprecated
 public class LuceneSearch implements SearchType  {
 	
 
@@ -62,9 +63,8 @@ public class LuceneSearch implements SearchType  {
 	   
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
 				"Perform Lucene KeySearch."); //$NON-NLS-1$
-		
-		Cache<?,?> c = (Cache<?, ?>) connection.getCache();
-		return c.get(String.valueOf(value));
+		return connection.get(String.valueOf(value));
+
 	}
 	
 	/**
@@ -75,12 +75,6 @@ public class LuceneSearch implements SearchType  {
 	@Override
 	public List<Object> performSearch(ObjectVisitor visitor,
 			ObjectConnection connection) throws TranslatorException {
-//		return performSearch(visitor.getWhereCriteria(), visitor.getOrderBy(), conn);
-//	}	
-//	
-//
-//	private static List<Object> performSearch(Condition where, OrderBy orderby,  ObjectConnection connection)
-//			throws TranslatorException {
 		
 		Condition  where= visitor.getWhereCriteria();
 		OrderBy orderby = visitor.getOrderBy();
