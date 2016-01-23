@@ -21,7 +21,6 @@
  */
 package org.teiid.resource.adapter.infinispan.dsl.base;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -35,7 +34,6 @@ import javax.resource.spi.InvalidPropertyException;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.protostream.BaseMarshaller;
-import org.infinispan.protostream.FileDescriptorSource;
 import org.infinispan.protostream.SerializationContext;
 import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
@@ -46,8 +44,9 @@ import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.infinispan.dsl.ClassRegistry;
 import org.teiid.translator.infinispan.dsl.InfinispanPlugin;
+import org.teiid.translator.object.CacheNameProxy;
+import org.teiid.translator.object.ClassRegistry;
 
 
 public abstract class AbstractInfinispanManagedConnectionFactory extends
@@ -67,7 +66,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	private Class<?> cacheTypeClass = null; // cacheName ==> ClassType
 	private String cacheTypes = null;
 	@SuppressWarnings("rawtypes")
-	private Map<String, BaseMarshaller> messageMarshallerMap = null;
+	protected Map<String, BaseMarshaller> messageMarshallerMap = null;
 	private ClassRegistry methodUtil = new ClassRegistry();
 	
 	private String protobufDefFile = null;
@@ -75,12 +74,15 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	private String messageDescriptor = null;
 	
 	private RemoteCacheManager cacheContainer = null;
-	private String cacheName;
+	private String stagingCacheName;
+	private String aliasCacheName;
 	private String pkKey;
 	private Class<?> pkCacheKeyJavaType = null;
 	private CACHE_TYPE cacheType;
 	private String module;
 	private ClassLoader cl;
+	private CacheNameProxy cacheNameProxy;
+
 
 
 	@Override
@@ -135,13 +137,26 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	}
 
 	public String getCacheName() {
-		return this.cacheName;
+		// return the cacheName that is mapped as the alias
+		return cacheNameProxy.getPrimaryCacheAliasName();
 	}
+	
+	public String getCacheNameForUpdate() {
+		if (cacheNameProxy.useMaterialization()) {
+			return cacheNameProxy.getStageCacheAliasName();
+		}
+		return cacheNameProxy.getPrimaryCacheAliasName();
+	}	
 	
 	@SuppressWarnings("rawtypes")
 	public RemoteCache getCache() {
-		return cacheContainer.getCache(this.getCacheName());
+		return getCache(this.getCacheName());
 	}
+	
+	@SuppressWarnings("rawtypes")
+	public RemoteCache getCache(String cacheName) {
+		return cacheContainer.getCache(cacheName);
+	}	
 
 	/**
 	 * Get the <code>cacheName:className[;pkFieldName[:cacheJavaType]]</code> cache
@@ -261,6 +276,30 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	public void setMessageDescriptor(String messageDescriptor) {
 		this.messageDescriptor = messageDescriptor;
 	}	
+	
+	public String getStagingCacheName() {
+		return this.stagingCacheName;
+	}
+
+	/**
+	 * An option to configure the staging cache name to use when using JDG to materialize data.
+	 * @param cacheName
+	 */
+	public void setStagingCacheName(String cacheName) {
+		this.stagingCacheName = cacheName;
+	}
+	
+	public String getAliasCacheName() {
+		return this.aliasCacheName;
+	}
+	
+	/**
+	 * An option to configure the alias cache name to use when using JDG to materialize data.
+	 * @param cacheName
+	 */
+	public void setAliasCacheName(String cacheName) {
+		this.aliasCacheName = cacheName;
+	}	
 
 	public String getPk() {
 		return pkKey;
@@ -271,7 +310,6 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	 * on the resouce adapter.
 	 * 
 	 * @return Class<?>
-	 * @see #setCacheNameClassTypeMapping(Map)
 	 */
 	public Class<?> getCacheKeyClassType() {
 		return pkCacheKeyJavaType;
@@ -365,6 +403,27 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	public void setCacheJndiName(String jndiName) {
 		this.cacheJndiName = jndiName;
 	}
+	
+	/** 
+	 * Call to set the name of the cache to access when calling getCache
+	 * @param cacheName
+	 * @throws ResourceException 
+	 */
+	protected void setCacheName(String cacheName) throws ResourceException {
+		if (getAliasCacheName() != null && getStagingCacheName() != null) {
+			cacheNameProxy = new CacheNameProxy(cacheName, getStagingCacheName(),getAliasCacheName() );
+			
+		} else if (getStagingCacheName() != null || getAliasCacheName() != null)  {
+				throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25011));
+
+		} else {
+			cacheNameProxy = new CacheNameProxy(cacheName);
+		}
+	}
+	
+	public CacheNameProxy getCacheNameProxy() {
+		return cacheNameProxy;
+	}
 
 	public boolean isAlive() {
 		return this.cacheContainer != null;
@@ -433,7 +492,8 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 			throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25022));
 		}
 		
-		cacheName = cacheClassparm.get(0);
+		String cn = cacheClassparm.get(0);
+		setCacheName(cn);
 		String className = cacheClassparm.get(1);
 		cacheTypeClass = loadClass(className);
 		try {
@@ -464,14 +524,14 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 			if (marshallMap.size() != 2) {
 				throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25031, new Object[] {mm}));
 			}
-			final String marshallClassName = marshallMap.get(0);
+			final String clzName = marshallMap.get(0);
 			final String m = marshallMap.get(1);
 
 			try {
 				Object bmi = (loadClass(m)).newInstance();
-				Class ci = loadClass(marshallClassName);
+				Class ci = loadClass(clzName);
 
-				mmp.put(marshallClassName, (BaseMarshaller) bmi); 	
+				mmp.put(clzName, (BaseMarshaller) bmi); 	
 
 				methodUtil.registerClass(ci);
 		
@@ -507,7 +567,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 
 			switch (cacheType) {
 			case USE_JNDI:
-				cc = createRemoteCacheWrapperFromJNDI(this.getCacheJndiName(), classLoader);
+				cc = getRemoteCacheWrapperFromJNDI(this.getCacheJndiName(), classLoader);
 				break;
 	
 			case REMOTE_HOT_ROD_PROPERTIES:
@@ -522,7 +582,17 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 
 			setCacheContainer(cc);
 
-			registerMarshallers(getContext(), classLoader);
+			registerMarshallers(getContext(), cc, classLoader);
+			
+			// if configured for materialization, initialize the cacheNameProxy
+			if (cacheNameProxy.useMaterialization()) {
+				RemoteCache aliasCache = cc.getCache(cacheNameProxy.getAliasCacheName());
+				if (aliasCache == null) {
+					throw new ResourceException(	
+							InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25010, new Object[] {cacheNameProxy.getAliasCacheName()}));
+				}
+				cacheNameProxy.initializeAliasCache(aliasCache);
+			}
 
 		
 		} finally {
@@ -551,7 +621,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 			ClassLoader classLoader) throws ResourceException;
 
 	
-	private RemoteCacheManager createRemoteCacheWrapperFromJNDI(
+	private RemoteCacheManager getRemoteCacheWrapperFromJNDI(
 			String jndiName, ClassLoader classLoader) throws ResourceException {
 
 		Object cache = null;
@@ -580,24 +650,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	protected void registerMarshallers(SerializationContext ctx, ClassLoader cl) throws ResourceException {
-
-		try {
-			FileDescriptorSource fds = new FileDescriptorSource();
-			fds.addProtoFile("protofile", cl.getResourceAsStream(getProtobufDefinitionFile() ) );
-						
-			ctx.registerProtoFiles( fds );
-
-			List<Class<?>> registeredClasses = methodUtil.getRegisteredClasses();
-			for (Class clz:registeredClasses) {
-				BaseMarshaller m = messageMarshallerMap.get(clz.getName());
-				ctx.registerMarshaller(m);				
-			}
-
-		} catch (IOException e) {
-			throw new ResourceException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25032), e);
-		} 
+	protected void registerMarshallers(SerializationContext ctx, RemoteCacheManager cc, ClassLoader cl) throws ResourceException {
 	}
 
 	@Override

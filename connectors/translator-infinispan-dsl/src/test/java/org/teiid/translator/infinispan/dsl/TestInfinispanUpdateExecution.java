@@ -1,9 +1,9 @@
 package org.teiid.translator.infinispan.dsl;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,25 +11,26 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+//import org.teiid.translator.object.testdata.person.*;
 import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.Person;
 import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PersonCacheSource;
 import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PhoneNumber;
 import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PhoneType;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.language.Command;
-import org.teiid.language.Delete;
-import org.teiid.language.Update;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.infinispan.dsl.util.PersonSchemaVDBUtility;
+import org.teiid.translator.object.testdata.person.PersonSchemaVDBUtility;
+import org.teiid.translator.object.ObjectConnection;
+import org.teiid.translator.object.ObjectUpdateExecution;
+import org.teiid.translator.object.ObjectVisitor;
 
 public class TestInfinispanUpdateExecution {
-	private static InfinispanConnection CONNECTION;
+	private static InfinispanDSLConnection CONNECTION;
 	private static TranslationUtility translationUtility = PersonSchemaVDBUtility.TRANSLATION_UTILITY;
 
 	private static Map<Object, Object> DATA = PersonCacheSource.loadCache();
@@ -61,7 +62,7 @@ public class TestInfinispanUpdateExecution {
 	
 	private void insertRoot() throws Exception {
 		// check the object doesn't exist before inserting
-		Object o = CONNECTION.getCache().get((new Integer(99).intValue()));
+		Object o = getCache().get((new Integer(99).intValue()));
 		assertNull(o);
 		
 		Command command = translationUtility
@@ -69,11 +70,11 @@ public class TestInfinispanUpdateExecution {
 
 		// no search required by the UpdateExecution logic
 		@SuppressWarnings("unchecked")
-		InfinispanUpdateExecution ie = createExecution(command, Collections.EMPTY_LIST);
+		ObjectUpdateExecution ie = createExecution(command, Collections.EMPTY_LIST);
 
 		ie.execute();
 
-		Person p = (Person) CONNECTION.getCache().get((new Integer(99).intValue()));
+		Person p = (Person) getCache().get((new Integer(99).intValue()));
 
 		assertNotNull(p);
 		assertTrue(p.getName().equals("TestName"));
@@ -94,18 +95,18 @@ public class TestInfinispanUpdateExecution {
 	}
 		
 	private void insertChildClass() throws Exception {
-		assertNotNull(CONNECTION.getCache().get((new Integer(2).intValue())));
+		assertNotNull(getCache().get((new Integer(2).intValue())));
 
 		Command command = translationUtility
 				.parseCommand("Insert into PhoneNumber (id, number, type) VALUES (2, '999-888-7777', 'HOME')");
 
 		// no search required by the UpdateExecution logic
 		@SuppressWarnings("unchecked")
-		InfinispanUpdateExecution ie = createExecution(command, Collections.EMPTY_LIST);
+		ObjectUpdateExecution ie = createExecution(command, Collections.EMPTY_LIST);
 
 		ie.execute();
 
-		Person p = (Person) CONNECTION.getCache().get((new Integer(2).intValue()));
+		Person p = (Person) getCache().get((new Integer(2).intValue()));
 		assertNotNull(p);
 
 		boolean found = false;
@@ -132,7 +133,7 @@ public class TestInfinispanUpdateExecution {
 	private void updateRootClass() throws Exception {
 		
 		// check the object doesn't exist before inserting
-		Object o = CONNECTION.getCache().get((new Integer(5).intValue()));
+		Object o = getCache().get((new Integer(5).intValue()));
 		assertNotNull(o);
 		
 		Command command = translationUtility
@@ -142,11 +143,11 @@ public class TestInfinispanUpdateExecution {
 		List rows = new ArrayList();
 		rows.add(o);
 
-		InfinispanUpdateExecution ie = createExecution(command, rows);
+		ObjectUpdateExecution ie = createExecution(command, rows);
 
 		ie.execute();
 
-		Person p = (Person) CONNECTION.getCache().get((new Integer(5).intValue()));
+		Person p = (Person) getCache().get((new Integer(5).intValue()));
 
 		assertNotNull(p);
 		assertTrue(p.getName().equals("Person 5 Changed"));
@@ -168,7 +169,7 @@ public class TestInfinispanUpdateExecution {
 	
 	private void deleteRootClass() throws Exception {
 		
-		assertNotNull(CONNECTION.getCache().get(new Integer(1).intValue()));
+		assertNotNull(getCache().get(new Integer(1).intValue()));
 
 		Command command = translationUtility
 				.parseCommand("Delete From Person Where id = 1");
@@ -177,11 +178,10 @@ public class TestInfinispanUpdateExecution {
 		List rows = new ArrayList();
 		rows.add(TestInfinispanUpdateExecution.DATA.get(new Integer(1).intValue()));
 
-		InfinispanUpdateExecution ie = createExecution(command, rows);
+		ObjectUpdateExecution ie = createExecution(command, rows);
 
 		ie.execute();
-		assertNull(CONNECTION.getCache()
-				.get(new Integer(1).intValue()));
+		assertNull(getCache().get(new Integer(1).intValue()));
 
 	}
 
@@ -199,7 +199,7 @@ public class TestInfinispanUpdateExecution {
 	
 	private void deleteRootByValue() throws Exception {
 			
-		assertNotNull(CONNECTION.getCache().get(new Integer(2).intValue()));
+		assertNotNull(getCache().get(new Integer(2).intValue()));
 
 		Command command = translationUtility
 				.parseCommand("Delete From Person Where Name = 'Person 2'");
@@ -208,11 +208,10 @@ public class TestInfinispanUpdateExecution {
 		List rows = new ArrayList();
 		rows.add(TestInfinispanUpdateExecution.DATA.get((new Integer(2).intValue())));
 
-		InfinispanUpdateExecution ie = createExecution(command, rows);
+		ObjectUpdateExecution ie = createExecution(command, rows);
 		
 		ie.execute();
-		assertNull(CONNECTION.getCache()
-				.get((new Integer(2).intValue())));
+		assertNull(getCache().get((new Integer(2).intValue())));
 
 	}
 
@@ -221,7 +220,7 @@ public class TestInfinispanUpdateExecution {
 		String phoneNumber="(111)222-3451";	
 		
 		// check the phone number exists
-		Iterator it=CONNECTION.getCache().values().iterator();
+		Iterator it=getCache().values().iterator();
 		boolean found = false;
 		while (it.hasNext()) {
 			Person p = (Person) it.next();
@@ -240,15 +239,15 @@ public class TestInfinispanUpdateExecution {
 		List rows = new ArrayList();
 		rows.addAll(TestInfinispanUpdateExecution.DATA.values());
 
-		InfinispanUpdateExecution ie = createExecution(command, rows);
+		ObjectUpdateExecution ie = createExecution(command, rows);
 
-		assertNotNull(CONNECTION.getCache().get(2));
+		assertNotNull(getCache().get(2));
 		
 		ie.execute();
 		int[] cnts = ie.getUpdateCounts();
 		assertTrue(cnts[0] == 10);
 		
-		it=CONNECTION.getCache().values().iterator();
+		it=getCache().values().iterator();
 		// verify phone was completely removed
 		while (it.hasNext()) {
 			Person p = (Person) it.next();
@@ -258,39 +257,33 @@ public class TestInfinispanUpdateExecution {
 		}
 	}
 	
-	protected InfinispanUpdateExecution createExecution(Command command, final List<Object> results)
+	protected ObjectUpdateExecution createExecution(Command command, final List<Object> results)
 			throws TranslatorException {
 		
 		TRANSLATOR = new InfinispanExecutionFactory() {
-
 			@Override
-			public List<Object> search(Delete command, String cacheName,
-					InfinispanConnection conn, ExecutionContext executionContext)
+			public List<Object> search(ObjectVisitor visitor, ObjectConnection connection, ExecutionContext executionContext)
 					throws TranslatorException {
-				return results;
+    			return results;
 			}
 
+       
 			@Override
-			public List<Object> search(Update command, String cacheName,
-					InfinispanConnection conn, ExecutionContext executionContext)
-					throws TranslatorException {
-				return results;
-			}
-
-			@Override
-			public Object performKeySearch(String cacheName, String colunName,
-					Object value, InfinispanConnection conn,
-					ExecutionContext executionContext)
-					throws TranslatorException {
+			public Object performKeySearch(String columnName, Object value, ObjectConnection connection, ExecutionContext executionContext) throws TranslatorException {
 				return DATA.get(value);
 			}
+
 
 		};
 		TRANSLATOR.start();
 
-		return (InfinispanUpdateExecution) TRANSLATOR.createUpdateExecution(
+		return (ObjectUpdateExecution) TRANSLATOR.createUpdateExecution(
 				command,
 				context,
 				PersonSchemaVDBUtility.RUNTIME_METADATA, CONNECTION);
+	}
+	
+	private static Map<Object,Object> getCache() throws TranslatorException {
+		return (Map<Object,Object>) CONNECTION.getCache();
 	}
 }

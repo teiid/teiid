@@ -22,12 +22,12 @@
 package org.teiid.translator.object;
 
 import java.util.Collection;
-import java.util.Map;
 
 import org.teiid.translator.TranslatorException;
 
 /**
- * Each ObjectConnection implementation represents a connection to maps or caches to be searched
+ * Each ObjectConnection implementation represents a connection to a single cache. 
+ * 
  * 
  * @author vhalbert
  *
@@ -41,11 +41,20 @@ public interface ObjectConnection {
 	public boolean isAlive();
 	
 	/**
-	 * Call to obtain the cache object
+	 * Call to obtain the default cache object
 	 * @return Map object cache
+	 * @throws TranslatorException 
 	 */
-	public Map<Object, Object> getCache();  
-		
+	public Object getCache() throws TranslatorException; 
+
+	/**
+	 * Call to obtain the cache object based on the provided cacheName;
+	 * @param cacheName 
+	 * @return Map object cache
+	 * @throws TranslatorException 
+	 */
+	public Object getCache(String cacheName) throws TranslatorException;  
+
 	/**
 	 * Returns the name of the primary key to the cache
 	 * @return String key name
@@ -66,9 +75,8 @@ public interface ObjectConnection {
 	/**
 	 * Returns the name of the cache
 	 * @return String cacheName
-	 * @throws TranslatorException 
 	 */
-	public String getCacheName() throws TranslatorException;
+	public String getCacheName();
 	
 		
 	/**
@@ -132,6 +140,20 @@ public interface ObjectConnection {
 	 * @throws TranslatorException 
 	 */
 	public Collection<Object> getAll() throws TranslatorException;
+	
+	
+	/**
+	 * Called to clear the cache and delete all objects.
+	 * @param cacheName 
+	 * @throws TranslatorException
+	 */
+	public void clearCache(String cacheName) throws TranslatorException;
+	
+	/**
+	 * Implement @link ObjectMaterializeLifeCycle if the translator supports materialization.
+	 * @return ObjectMaterializeLifeCycle
+	 */
+	public ObjectMaterializeLifeCycle getMaterializeLifeCycle();
 
 	
 }

@@ -32,7 +32,8 @@ import org.mockito.MockitoAnnotations;
 import org.teiid.language.Select;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.infinispan.dsl.util.PersonSchemaVDBUtility;
+import org.teiid.translator.object.testdata.person.PersonSchemaVDBUtility;
+import org.teiid.translator.object.ObjectExecution;
 
 @SuppressWarnings("nls")
 public class TestInfinispanExecutionFactory {
@@ -47,7 +48,7 @@ public class TestInfinispanExecutionFactory {
 	private Select command;
 	
 	
-	private InfinispanConnection connection = PersonCacheSource.createConnection(true);
+	private InfinispanDSLConnection connection = PersonCacheSource.createConnection(true);
 	
     @BeforeClass
     public static void setUp() throws TranslatorException {
@@ -62,7 +63,7 @@ public class TestInfinispanExecutionFactory {
 
 	@Test public void testFactory() throws Exception {
 
-		InfinispanExecution exec = (InfinispanExecution) TRANSLATOR.createExecution(command, context, PersonSchemaVDBUtility.RUNTIME_METADATA, connection);
+		ObjectExecution exec = (ObjectExecution) TRANSLATOR.createExecution(command, context, PersonSchemaVDBUtility.RUNTIME_METADATA, connection);
 		
 		assertNotNull(exec);
 		assertNotNull(TRANSLATOR.getMetadataProcessor());

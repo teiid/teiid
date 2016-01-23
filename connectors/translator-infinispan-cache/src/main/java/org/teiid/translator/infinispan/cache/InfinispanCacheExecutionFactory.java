@@ -23,7 +23,6 @@ package org.teiid.translator.infinispan.cache;
 
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
-import org.teiid.language.Select;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
@@ -88,7 +87,7 @@ public class InfinispanCacheExecutionFactory extends ObjectExecutionFactory {
 	public ResultSetExecution createResultSetExecution(QueryExpression command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
 			ObjectConnection connection) throws TranslatorException {
-		return new ObjectExecution((Select) command, metadata, this, connection, executionContext) {
+		return new ObjectExecution(command, this, connection, executionContext) {
 			@Override
 			protected ObjectVisitor createVisitor() {
 				// us the base object visitor when perform DSL or Lucence searching
@@ -102,10 +101,10 @@ public class InfinispanCacheExecutionFactory extends ObjectExecutionFactory {
 		};
 	}
 	
-    @Override
+	@Override
 	public UpdateExecution createUpdateExecution(Command command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
-			ObjectConnection connection) throws TranslatorException {
+			ObjectConnection connection) {
     	return new ObjectUpdateExecution(command, connection, executionContext, this) {
 			@Override
 			protected ObjectVisitor createVisitor() {
@@ -117,8 +116,9 @@ public class InfinispanCacheExecutionFactory extends ObjectExecutionFactory {
 		    	return new SimpleKeyVisitor();
 
 		    }  		
-    	};
-	}		
+    	};		
+
+	}
 
 	/**
 	 * Indicates if Hibernate Search and Apache Lucene were used to index and

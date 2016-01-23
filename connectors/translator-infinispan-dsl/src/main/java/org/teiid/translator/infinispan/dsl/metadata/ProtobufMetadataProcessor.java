@@ -40,8 +40,9 @@ import org.teiid.metadata.Table;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
-import org.teiid.translator.infinispan.dsl.InfinispanConnection;
+import org.teiid.translator.infinispan.dsl.InfinispanDSLConnection;
 import org.teiid.translator.infinispan.dsl.InfinispanPlugin;
+import org.teiid.translator.object.ObjectConnection;
 
 import protostream.com.google.protobuf.Descriptors;
 
@@ -82,7 +83,7 @@ import protostream.com.google.protobuf.Descriptors;
  * will be used as the primary key.</li>
  * 
  */
-public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanConnection>{
+public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnection>{
 //    @ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="Entity Class", description="Java Entity Class that represents this table", required=true)
 //    public static final String ENTITYCLASS= MetadataFactory.JPA_URI+"entity_class"; //$NON-NLS-1$
 				
@@ -91,16 +92,16 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 
 	
 	@Override
-	public void process(MetadataFactory metadataFactory, InfinispanConnection conn) throws TranslatorException {
+	public void process(MetadataFactory metadataFactory, ObjectConnection conn) throws TranslatorException {
 			
 			String cacheName = conn.getCacheName();			
 
 			Class<?> type = conn.getCacheClassType();
-			createRootTable(metadataFactory, type, conn.getDescriptor(), cacheName,conn);
+			createRootTable(metadataFactory, type, ((InfinispanDSLConnection) conn).getDescriptor(), cacheName,conn);
 	}
 
 
-	private Table createRootTable(MetadataFactory mf, Class<?> entity, Descriptor descriptor, String cacheName, InfinispanConnection conn) throws TranslatorException {
+	private Table createRootTable(MetadataFactory mf, Class<?> entity, Descriptor descriptor, String cacheName, ObjectConnection conn) throws TranslatorException {
 			
 		String pkField = conn.getPkField();
 		boolean updatable = (pkField != null ? true : false);
@@ -179,7 +180,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 		
 	}
 	
-    private static Method findMethod(String className, String methodName, InfinispanConnection conn) throws TranslatorException {
+    private static Method findMethod(String className, String methodName, ObjectConnection conn) throws TranslatorException {
         Map<String, Method> mapMethods = conn.getClassRegistry().getReadClassMethods(className);
 
         Method m = mapMethods.get(methodName);
@@ -198,7 +199,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 
     }
     
-	private void processRepeatedType(MetadataFactory mf, FieldDescriptor fd, Table rootTable, Method pkMethod, InfinispanConnection conn) throws TranslatorException  {
+	private void processRepeatedType(MetadataFactory mf, FieldDescriptor fd, Table rootTable, Method pkMethod, ObjectConnection conn) throws TranslatorException  {
 		
 		Descriptor d = fd.getMessageType();
 		Descriptor parent = d.getContainingType();
@@ -244,7 +245,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 		}
 	}	
 	
-    private  String findMethodName(String className, String methodName, InfinispanConnection conn) throws TranslatorException {
+    private  String findMethodName(String className, String methodName, ObjectConnection conn) throws TranslatorException {
         if (methodName == null || methodName.length() == 0) {
             return null;
         }
@@ -254,16 +255,16 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
         	Method m = mapMethods.get(methodName.toLowerCase());
     		if (Collection.class.isAssignableFrom(m.getReturnType()) || m.getReturnType().isArray()) {
     			return methodName;
-    		} else {
-    			return null;
     		}
+    		return null;
+    		
         } else   if (mapMethods.get(methodName) != null) {
         	Method m = mapMethods.get(methodName);
     		if (Collection.class.isAssignableFrom(m.getReturnType()) || m.getReturnType().isArray()) {
     			return methodName;
-    		} else {
-    			return null;
     		}
+    		return null;
+    		
         }
         
         // because the class 'methods' contains 2 different references
@@ -280,7 +281,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
         return null;
     }	
 	
-	private Class<?> getRegisteredClass(String name, InfinispanConnection conn) throws TranslatorException {
+	private Class<?> getRegisteredClass(String name, ObjectConnection conn) throws TranslatorException {
 		Class<?> c = conn.getClassRegistry().getRegisteredClassUsingTableName(name);
 		if (c != null) return c;
 		
@@ -400,7 +401,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 
 	}
 	
-	private static Class<?> getJavaType(FieldDescriptor fd, Class<?> c, InfinispanConnection conn) throws TranslatorException {
+	private static Class<?> getJavaType(FieldDescriptor fd, Class<?> c, ObjectConnection conn) throws TranslatorException {
 
 			Method m = findMethod(c.getName(), fd.getName(), conn);
 			return m.getReturnType();

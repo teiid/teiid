@@ -22,12 +22,12 @@
 
 package org.teiid.translator.object.metadata;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
-import javax.script.ScriptException;
 
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -54,6 +54,11 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 	public static final String OBJECT_COL_SUFFIX = "Object"; //$NON-NLS-1$
 	
 	protected boolean isUpdatable = false;
+	protected boolean useAnnotations = false;
+	
+	public JavaBeanMetadataProcessor(boolean useAnnotations) {
+		this.useAnnotations = useAnnotations;
+	}
 
 	@Override
 	public void process(MetadataFactory mf, ObjectConnection conn) throws TranslatorException {
@@ -84,8 +89,9 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 		addColumn(mf, entity, entity, columnName, "this", SearchType.Unsearchable, table, true); //$NON-NLS-1$
 		Map<String, Method> methods;
 		try {
-			methods = registry.getReadScriptEngine().getMethodMap(entity);
-		} catch (ScriptException e) {
+			
+			methods = registry.getReadClassMethods(entity.getName());
+		} catch (TranslatorException e) {
 			throw new MetadataException(e);
 		}
 		
@@ -109,7 +115,8 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
  			// warn if no pk is defined
  			LogManager.logWarning(LogConstants.CTX_CONNECTOR, ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21000, tableName));				
          }
-			
+        
+		
 		//we have to filter the duplicate names, isFoo vs. foo
 		Map<Method, String> methodsToAdd = new LinkedHashMap<Method, String>();
 		for (Map.Entry<String, Method> entry : methods.entrySet()) {
@@ -126,12 +133,75 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 				methodsToAdd.put(entry.getValue(), entry.getKey());
 			}
 		}
+
+        // determine if class is indexed
+        boolean isIndexed = false;
+		if (useAnnotations) {
+			isIndexed = isIndexed(entity.getAnnotations());
+		}
 		
 		for (Map.Entry<Method, String> entry : methodsToAdd.entrySet()) {
-			addColumn(mf, entity, entry.getKey().getReturnType(), entry.getValue(), entry.getValue(), SearchType.Unsearchable, table, true);			
+			Method m = (Method) entry.getKey();
+	
+				SearchType st = SearchType.Unsearchable;
+
+				// default for Hibernate index = true, so setting based on finding false
+				if (isIndexed) {
+					// first check the method if its indexed
+					if (!isFieldIndexed(m.getDeclaredAnnotations())) {
+						st = SearchType.Unsearchable;
+					} else {
+						// then check if there's an attribute that's indexed
+						Field f = findClassField(entity, m);
+						if (f != null && !isFieldIndexed(f.getDeclaredAnnotations())) {
+							st = SearchType.Unsearchable;
+						} else {
+							st = SearchType.Searchable;
+						}
+					} 
+				}
+				
+				addColumn(mf, entity, m.getReturnType(), entry.getValue(), entry.getValue(), st, table, true);			
 		}
 				
 		return table;
+	}
+	
+	private Field findClassField(Class<?> clzz, Method m) {
+		final String ml = m.getName().toLowerCase();
+		Field[] fields = clzz.getDeclaredFields();
+		if (fields != null) {
+			for (Field f:fields) {
+				
+				String fl = f.getName().toLowerCase();
+				if (ml.endsWith(fl)) {
+					return f;
+				}
+			}
+		}
+		return null;
+		
+	}
+
+	private boolean isIndexed(Annotation[] ai) {
+		for (Annotation a : ai) {
+			if (a.annotationType().getName().equals("org.hibernate.search.annotations.Indexed")) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	private boolean isFieldIndexed(Annotation[] ai) {
+		for (Annotation a : ai) {
+			if (a instanceof org.hibernate.search.annotations.Field) {
+				org.hibernate.search.annotations.Field f = (org.hibernate.search.annotations.Field) a;
+				if (f.index() == org.hibernate.search.annotations.Index.NO) {
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 	
 	/**

@@ -83,7 +83,7 @@ public abstract class BasicSearchTest {
 		List<Object> rows = new ArrayList<Object>();
 		
 		int cnt = 0;
-		List<Object> row = exec.next();
+		List<?> row = exec.next();
 	
 		while (row != null) {
 			rows.add(row);

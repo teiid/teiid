@@ -24,23 +24,18 @@ package org.teiid.translator.infinispan.dsl;
 
 import java.util.List;
 
-import javax.resource.cci.ConnectionFactory;
-
+import org.teiid.language.Argument;
 import org.teiid.language.Command;
-import org.teiid.language.Delete;
-import org.teiid.language.QueryExpression;
-import org.teiid.language.Select;
-import org.teiid.language.Update;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.MetadataProcessor;
-import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.infinispan.dsl.metadata.ProtobufMetadataProcessor;
+import org.teiid.translator.object.ObjectConnection;
+import org.teiid.translator.object.ObjectExecutionFactory;
 
 
 
@@ -54,8 +49,7 @@ import org.teiid.translator.infinispan.dsl.metadata.ProtobufMetadataProcessor;
  *
  */
 @Translator(name = "infinispan-cache-dsl", description = "The Infinispan Translator Using DSL to Query Cache")
-public class InfinispanExecutionFactory extends
-		ExecutionFactory<ConnectionFactory, InfinispanConnection> {
+public class InfinispanExecutionFactory extends ObjectExecutionFactory {
 
 	public static final int MAX_SET_SIZE = 10000;
 	
@@ -73,8 +67,8 @@ public class InfinispanExecutionFactory extends
 		setSupportsFullOuterJoins(false);
 		setSupportsOuterJoins(true);
 		
-	
 		setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
+		setSearchType(new DSLSearch());
 	}
 
 	@Override
@@ -82,22 +76,20 @@ public class InfinispanExecutionFactory extends
 		return 2;
 	}
 
+
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectExecutionFactory#createDirectExecution(java.util.List, org.teiid.language.Command, org.teiid.translator.ExecutionContext, org.teiid.metadata.RuntimeMetadata, org.teiid.translator.object.ObjectConnection)
+	 */
 	@Override
-	public ResultSetExecution createResultSetExecution(QueryExpression command,
-			ExecutionContext executionContext, RuntimeMetadata metadata,
-			InfinispanConnection connection) throws TranslatorException {
-		return new InfinispanExecution((Select) command, metadata, this, connection, executionContext);
-	}
-	
-    @Override
-	public UpdateExecution createUpdateExecution(Command command,
-			ExecutionContext executionContext, RuntimeMetadata metadata,
-			InfinispanConnection connection) throws TranslatorException {
-    	// if no primary key defined,then updates are not enabled
-    	if (connection.getPkField() == null) {
-			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25007, new Object[] {connection.getCacheName()}));
-    	}
-    	return new InfinispanUpdateExecution(command, connection, executionContext, this);
+	public ProcedureExecution createDirectExecution(List<Argument> arguments,
+			Command command, ExecutionContext executionContext,
+			RuntimeMetadata metadata, ObjectConnection connection)
+			throws TranslatorException {
+		return super.createDirectExecution(arguments, command, executionContext,
+				metadata, connection);
 	}
     
 
@@ -112,9 +104,10 @@ public class InfinispanExecutionFactory extends
 	}
 
 	/**
-	 * @see @link https://issues.jboss.org/browse/TEIID-3573
 	 * Discusses issue with trying to support IS NULL and IS NOT NULL;
+	 * @return boolean
 	 */
+	 // "https://issues.jboss.org/browse/TEIID-3573"
 	@Override
     public boolean supportsIsNullCriteria() {
 		return Boolean.FALSE.booleanValue();
@@ -151,36 +144,18 @@ public class InfinispanExecutionFactory extends
 	}	
 	
 	/**
-	 * @see @link https://issues.jboss.org/browse/TEIID-3573
 	 * Discusses issue with trying to support NOT;
 	 */
+	// https://issues.jboss.org/browse/TEIID-3573
+
 	@Override
 	public boolean supportsNotCriteria() {
 		return Boolean.FALSE.booleanValue();
 	}
 
-	public List<Object> search(Select command, String cacheName,
-			InfinispanConnection connection, ExecutionContext executionContext)
-			throws TranslatorException {
-		return DSLSearch.performSearch(command, cacheName, connection);
-	}
-	
-	public List<Object> search(Delete command, String cacheName, InfinispanConnection conn, ExecutionContext executionContext)
-				throws TranslatorException {   
-		return DSLSearch.performSearch(command, cacheName, conn);
-	}
-	
-	public List<Object> search(Update command, String cacheName, InfinispanConnection conn, ExecutionContext executionContext)
-			throws TranslatorException {   
-		return DSLSearch.performSearch(command, cacheName, conn);
-	}	
-	
-	public Object performKeySearch(String cacheName, String columnName, Object value, InfinispanConnection conn, ExecutionContext executionContext) throws TranslatorException {
-		return DSLSearch.performKeySearch(cacheName, columnName, value, conn);
-	}	
-
 	@Override
-    public MetadataProcessor<InfinispanConnection> getMetadataProcessor(){
+    public MetadataProcessor<ObjectConnection> getMetadataProcessor(){
 	    return new ProtobufMetadataProcessor();
 	}
+
 }

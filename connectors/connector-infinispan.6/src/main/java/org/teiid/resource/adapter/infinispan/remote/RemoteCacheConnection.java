@@ -24,7 +24,6 @@ package org.teiid.resource.adapter.infinispan.remote;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -43,6 +42,8 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.adapter.infinispan.InfinispanCacheWrapper;
 import org.teiid.resource.adapter.infinispan.InfinispanManagedConnectionFactory;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.object.ObjectMaterializeLifeCycle;
 
 
 /**
@@ -56,10 +57,11 @@ import org.teiid.resource.adapter.infinispan.InfinispanManagedConnectionFactory;
  * @param <V> 
  *
  */
-public class RemoteCacheConnection<K,V>  implements InfinispanCacheWrapper<K,V> {
+public class RemoteCacheConnection<K,V>  extends InfinispanCacheWrapper<K,V> {
 	private RemoteCacheManager rcm;
 	private InfinispanManagedConnectionFactory config;
 
+	@Override
 	public InfinispanManagedConnectionFactory getConfig() {
 		return config;
 	}
@@ -110,18 +112,25 @@ public class RemoteCacheConnection<K,V>  implements InfinispanCacheWrapper<K,V> 
 			results.add(v);
 			
 		}
-//		for (Iterator<?> it = c.keySet().iterator(); it.hasNext();) {
-//			Object v = cache.get(it.next());
-//			results.add(v);
-//		}
+
 		return results;
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "rawtypes" })
 	@Override
 	public RemoteCache getCache() {
-		return rcm.getCache(getConfig().getCacheName());
+		return getCache(config.getCacheName());
 	}
+	
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#getCache(java.lang.String)
+	 */
+	@Override
+	public RemoteCache getCache(String cacheName) {
+		return rcm.getCache(cacheName);
+	}	
 
 	private RemoteCacheManager createUsingPropertiesFile() throws ResourceException {
 
@@ -204,7 +213,7 @@ public class RemoteCacheConnection<K,V>  implements InfinispanCacheWrapper<K,V> 
 	 */
 	@Override
 	public void add(Object key, Object value)  {
-		getCache().put(key, value);
+		getCache(this.getConfig().getCacheNameForUpdate()).put(key, value);
 	}
 
 	/**
@@ -214,7 +223,7 @@ public class RemoteCacheConnection<K,V>  implements InfinispanCacheWrapper<K,V> 
 	 */
 	@Override
 	public Object remove(Object key)  {
-		return getCache().removeAsync(key);
+		return getCache(this.getConfig().getCacheNameForUpdate()).removeAsync(key);
 	}
 
 	/**
@@ -224,8 +233,28 @@ public class RemoteCacheConnection<K,V>  implements InfinispanCacheWrapper<K,V> 
 	 */
 	@Override
 	public void update(Object key, Object value) {
-		getCache().replace(key, value);
+		getCache(this.getConfig().getCacheNameForUpdate()).replace(key, value);
 	}
+
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#clearCache(java.lang.String)
+	 */
+	@Override
+	public void clearCache(String cacheName) throws TranslatorException {
+		RemoteCache cache = getCache(cacheName);
+
+		Map<Object, Object> c = cache.getBulk();
+		List<Object> results = new ArrayList<Object>();
+		for (Object k:c.keySet()) {
+			cache.removeAsync(k);
+			
+		}
+	}
+
+
 }
 
 class PojoMarshaller extends AbstractJBossMarshaller {
