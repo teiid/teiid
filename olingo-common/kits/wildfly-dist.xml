@@ -36,7 +36,7 @@
       <useProjectArtifact>true</useProjectArtifact>
     </dependencySet>      
     <dependencySet>
-      <outputDirectory>${wildfly-module-root}/org/apache/olingo/common/main</outputDirectory>
+      <outputDirectory>${wildfly-module-root}/org/apache/olingo/commons/main</outputDirectory>
       <useTransitiveDependencies>false</useTransitiveDependencies>
       <includes>
         <include>org.apache.olingo:odata-commons-api</include>
