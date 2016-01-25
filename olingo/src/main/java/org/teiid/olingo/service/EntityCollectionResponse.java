@@ -47,7 +47,7 @@ import org.apache.olingo.commons.api.data.Property;
 import org.apache.olingo.commons.api.data.ValueType;
 import org.apache.olingo.commons.api.edm.EdmEntityType;
 import org.apache.olingo.commons.api.edm.EdmPrimitiveType;
-import org.apache.olingo.commons.core.Encoder;
+import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeException;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmBinary;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmDate;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmDateTimeOffset;
@@ -55,6 +55,7 @@ import org.apache.olingo.commons.core.edm.primitivetype.EdmStream;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmString;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmTimeOfDay;
 import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
+import org.apache.olingo.server.core.responses.EntityResponse;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
@@ -74,9 +75,11 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
     private String nextToken;
     private Entity currentEntity;
     private DocumentNode documentNode;
+    private String baseURL;
 
-    public EntityCollectionResponse(String invalidCharacterReplacement,
+    public EntityCollectionResponse(String baseURL, String invalidCharacterReplacement,
             DocumentNode resource) {
+        this.baseURL = baseURL;
         this.invalidCharacterReplacement = invalidCharacterReplacement;
         this.documentNode = resource;
     }
@@ -87,14 +90,14 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
         boolean add = true;
         
         if (this.currentEntity == null) {
-            entity = createEntity(rs, this.documentNode, this.invalidCharacterReplacement);
+            entity = createEntity(rs, this.documentNode, this.invalidCharacterReplacement, this.baseURL);
             this.currentEntity = entity;
         } else {
             if(isSameRow(rs, this.documentNode, this.currentEntity)) {
                 entity = this.currentEntity;
                 add = false;
             } else {
-                entity = createEntity(rs, this.documentNode, this.invalidCharacterReplacement);
+                entity = createEntity(rs, this.documentNode, this.invalidCharacterReplacement, this.baseURL);
                 this.currentEntity = entity;            
             }
         }
@@ -104,7 +107,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
             // need to be re-done.
             for (DocumentNode resource : this.documentNode.getExpands()) {
                 ExpandDocumentNode expandNode = (ExpandDocumentNode)resource;
-                Entity expandEntity = createEntity(rs, expandNode, this.invalidCharacterReplacement);
+                Entity expandEntity = createEntity(rs, expandNode, this.invalidCharacterReplacement, this.baseURL);
                 
                 Link link = entity.getNavigationLink(expandNode.getNavigationName());
                 if (expandNode.isCollection()) {
@@ -151,7 +154,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
         return null;
     }
 
-    static Entity createEntity(ResultSet rs, DocumentNode node, String invalidChar)
+    static Entity createEntity(ResultSet rs, DocumentNode node, String invalidChar, String baseURL)
             throws SQLException {
         
         List<ProjectedColumn> projected = node.getAllProjectedColumns();
@@ -192,7 +195,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
             
         // Build the navigation and Stream Links
         try {
-            String id = buildId(entity, entityType);
+            String id = EntityResponse.buildLocation(baseURL, entity, entityType.getName(), entityType);
             entity.setId(new URI(id));
             
             // build stream properties
@@ -217,6 +220,8 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                 entity.getAssociationLinks().add(assosiationLink);
             }
         } catch (URISyntaxException e) {
+            throw new SQLException(e);
+        } catch (EdmPrimitiveTypeException e) {
             throw new SQLException(e);
         }            
         
@@ -449,29 +454,5 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
     @Override
     public String getNextToken() {
         return this.nextToken;
-    }
-    
-    public static String buildId(Entity entity, EdmEntityType type) {
-        String location = type.getName() + "(";
-        int i = 0;
-        boolean usename = type.getKeyPredicateNames().size() > 1;
-
-        for (String key : type.getKeyPredicateNames()) {
-          if (i > 0) {
-            location += ",";
-          }
-          i++;
-          if (usename) {
-            location += (key + "=");
-          }
-          Property p = entity.getProperty(key);
-          if (p.getType().equals("Edm.String")) {
-            location = location + "'" + Encoder.encode(p.getValue().toString()) + "'";
-          } else {
-            location = location + p.getValue().toString();
-          }
-        }
-        location += ")";
-        return location;
     }
 }

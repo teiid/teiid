@@ -158,5 +158,35 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
         
         admin.undeploy("loopy-vdb.xml");
         admin.undeploy("test-vdb.xml");
-    }	
+    }
+    
+    // TEIID-3914 - test the olingo-patch work
+    public void testCompositeKeyTimestamp() throws Exception {
+        
+        String vdb = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" + 
+                "<vdb name=\"northwind\" version=\"1\">\n" + 
+                "    <model name=\"m\">\n" + 
+                "        <source name=\"x1\" translator-name=\"loopback\" />\n" + 
+                "         <metadata type=\"DDL\"><![CDATA[\n" + 
+                "                CREATE FOREIGN TABLE x (a string, b timestamp, c integer, primary key (a, b)) options (updatable true);\n" + 
+                "        ]]> </metadata>\n" + 
+                "    </model>\n" + 
+                "</vdb>";
+        
+        admin.deploy("loopy-vdb.xml", new ReaderInputStream(new StringReader(vdb), Charset.forName("UTF-8")));
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1, 3));
+        
+        WebClient client = WebClient.create("http://localhost:8080/odata4/m/x(a='a',b=2011-09-11T00:00:00Z)");
+        client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
+        Response response = client.invoke("GET", null);
+        assertEquals(200, response.getStatus());
+        
+        client = WebClient.create("http://localhost:8080/odata4/m/x");
+        client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
+        response = client.post("{\"a\":\"b\", \"b\":\"2000-02-02T22:22:22Z\"}");
+        assertEquals(204, response.getStatus());
+        
+        admin.undeploy("loopy-vdb.xml");
+    }
+    
 }
