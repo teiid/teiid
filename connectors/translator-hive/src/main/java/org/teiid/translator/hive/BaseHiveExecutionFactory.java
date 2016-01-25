@@ -31,7 +31,6 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.List;
 
-import org.teiid.language.Argument;
 import org.teiid.language.Call;
 import org.teiid.language.Command;
 import org.teiid.language.Insert;
@@ -69,12 +68,6 @@ public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
         throw new TranslatorException(HivePlugin.Event.TEIID24000, HivePlugin.Util.gs(HivePlugin.Event.TEIID24000, command));
     }    
     
-    @Override
-    public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
-            throws TranslatorException {
-        throw new TranslatorException(HivePlugin.Event.TEIID24000, HivePlugin.Util.gs(HivePlugin.Event.TEIID24000, command));
-    }    
-
 	@Override
     public SQLConversionVisitor getSQLConversionVisitor() {
     	return new HiveSQLConversionVisitor(this);
