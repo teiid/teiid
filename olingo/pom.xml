@@ -121,6 +121,11 @@
 
         <dependency>
             <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-olingo-patches</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-olingo-common</artifactId>
         </dependency>
         
