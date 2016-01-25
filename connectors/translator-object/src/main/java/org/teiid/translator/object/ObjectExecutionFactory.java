@@ -26,15 +26,15 @@ import java.util.List;
 
 import javax.resource.cci.ConnectionFactory;
 
-import org.teiid.language.Command;
-import org.teiid.language.QueryExpression;
-import org.teiid.language.Select;
+import org.teiid.language.*;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.MetadataProcessor;
+import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.object.metadata.JavaBeanMetadataProcessor;
 
@@ -51,6 +51,7 @@ public abstract class ObjectExecutionFactory extends
 
 	public static final int MAX_SET_SIZE = 10000;
 	private SearchType searchType=null;
+	private boolean searchabilityBasedOnAnnotations = true;
 	
 	public ObjectExecutionFactory() {
 		setSourceRequiredForMetadata(false);
@@ -62,7 +63,7 @@ public abstract class ObjectExecutionFactory extends
 		setSupportsInnerJoins(false);
 		setSupportsFullOuterJoins(false);
 		setSupportsOuterJoins(false);
-		
+			
 	}
 	
 	/**
@@ -80,14 +81,33 @@ public abstract class ObjectExecutionFactory extends
 	public ResultSetExecution createResultSetExecution(QueryExpression command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
 			ObjectConnection connection) throws TranslatorException {
-		return new ObjectExecution((Select) command, metadata, this, connection, executionContext);
+		return new ObjectExecution(command, this, connection, executionContext);
 	}
 	
     @Override
 	public UpdateExecution createUpdateExecution(Command command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
-			ObjectConnection connection) throws TranslatorException {
+			ObjectConnection connection)  {
     	return new ObjectUpdateExecution(command, connection, executionContext, this);
+	}
+    
+	@Override
+	public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, ObjectConnection connection) throws TranslatorException {
+		return new ObjectDirectExecution(arguments, command, connection, executionContext, this);
+	}   
+	
+	@TranslatorProperty(display="SearchabilityBasedOnAnnotations", description="If false, will turn off determining column searchability based on hibernate annotations", advanced=true)
+	public boolean supportsSearchabilityUsingAnnotations() {
+		return searchabilityBasedOnAnnotations;
+	}	
+	
+	public void setSupportsSearchabilityUsingAnnotations(boolean useAnnotations) {
+		this.searchabilityBasedOnAnnotations = useAnnotations;
+	}
+
+	@Override
+	public boolean supportsBatchedUpdates() {
+		return true;
 	}
 
 	@Override
@@ -115,7 +135,7 @@ public abstract class ObjectExecutionFactory extends
 	
 	@Override
     public MetadataProcessor<ObjectConnection> getMetadataProcessor(){
-	    return new JavaBeanMetadataProcessor();
+	    return new JavaBeanMetadataProcessor(searchabilityBasedOnAnnotations);
 	}
 	
 	public List<Object> search(ObjectVisitor visitor, ObjectConnection connection, ExecutionContext executionContext)
@@ -146,7 +166,5 @@ public abstract class ObjectExecutionFactory extends
 	public boolean supportsRowLimit() {
 		return true;
 	}
-
-
 
 }

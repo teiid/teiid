@@ -38,6 +38,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
+import org.teiid.language.BatchedUpdates;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Command;
 import org.teiid.language.Delete;
@@ -61,7 +62,7 @@ import org.teiid.translator.object.util.ObjectUtil;
 
 /**
  */
-public class ObjectUpdateExecution implements UpdateExecution {
+public class ObjectUpdateExecution extends ObjectBaseExecution implements UpdateExecution {
 	public static final String GET = "get"; //$NON-NLS-1$
 	public static final String SET = "set"; //$NON-NLS-1$
 	public static final String IS = "is"; //$NON-NLS-1$
@@ -69,20 +70,23 @@ public class ObjectUpdateExecution implements UpdateExecution {
 	private ScriptContext sc = new SimpleScriptContext();
 
 	// Passed to constructor
-	private ObjectConnection connection;
-	private ExecutionContext context;
-	private ObjectExecutionFactory executionFactory;
 	private Command command;
+	private Class<?> clz =  null;
+	
+	// the assumption is materialization will on be to do inserts, single or batch.  No updates or deletes will be in the commands
+	private boolean useForMat = false;
+	
+	private String tablename = null;
 
-	private int updateCnt = 0;
+	private int[] result;
 
 	public ObjectUpdateExecution(Command command,
 			ObjectConnection connection, ExecutionContext context,
 			ObjectExecutionFactory env) {
-		this.connection = connection;
-		this.context = context;
+		super(connection, context, env);
 		this.command = command;
-		this.executionFactory = env;
+		
+		useForMat = connection.getMaterializeLifeCycle().getCacheNameProxy().useMaterialization();
 		
 	}
 
@@ -92,51 +96,74 @@ public class ObjectUpdateExecution implements UpdateExecution {
 
 	@Override
 	public void execute() throws TranslatorException {
-//		if (command instanceof BatchedUpdates) {
-//			BatchedUpdates updates = (BatchedUpdates)this.command;
-//			this.results = new int[updates.getUpdateCommands().size()];
-//			int index = 0;
-//			for (Command cmd:updates.getUpdateCommands()) {
-//				this.results[index++] = executeUpdate(cmd);
-//			}
-//		}
-		
-		ObjectVisitor visitor = this.createVisitor();
-		visitor.visitNode(command);
-		
-		// throw the 1st exeception in the list
-		if (visitor.getExceptions() != null && !visitor.getExceptions().isEmpty()) {
-			throw visitor.getExceptions().get(0);
-		}
+		ClassRegistry classRegistry = connection.getClassRegistry();
 
+		int index = 0;
 
-		if (command instanceof Update) {
-			handleUpdate((Update) command, visitor);
-		} else if (command instanceof Delete) {
-			handleDelete((Delete) command, visitor);
-		} else if (command instanceof Insert) {
-			handleInsert((Insert) command, visitor);
+		if (command instanceof BatchedUpdates) {
+			BatchedUpdates updates = (BatchedUpdates)this.command;
+			result = new int[updates.getUpdateCommands().size()];
+			for (Command cmd:updates.getUpdateCommands()) {
+				
+				this.result[index++] = executeUpdate(cmd, classRegistry);
+			}		
+			
 		} else {
-			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21004, new Object[] {command.getClass().getName()}));
+			result = new int[1];
+			this.result[index] = executeUpdate(command, classRegistry);
 		}
+	
 	}
 
 	@Override
 	public int[] getUpdateCounts() throws DataNotAvailableException {
-		return new int[] { updateCnt };
+		return this.result;
 	}
-
-	private void handleInsert(Insert insert, ObjectVisitor visitor) throws TranslatorException {
+	
+	private int executeUpdate(Command command, ClassRegistry classRegistry ) throws TranslatorException {
 		
-		ClassRegistry classRegistry = connection.getClassRegistry();
-		// get the class to instantiate instance
-		Class<?> clz = classRegistry.getRegisteredClassUsingTableName(visitor.getTable().getName());
-				//insert.getTable().getName());
-		if (clz == null) {
-			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21005, new Object[] {insert.getTable().getName()}));
+		ObjectVisitor visitor = createVisitor();
+		visitor.visitNode(command);
+
+		// throw the 1st exeception in the list
+		if (visitor.getExceptions() != null && !visitor.getExceptions().isEmpty()) {
+			throw visitor.getExceptions().get(0);
 		}
 		
+		clz = getRegisteredClass(classRegistry, visitor);
+
 		Map<String, Method> writeMethods = classRegistry.getWriteClassMethods(clz.getSimpleName());
+		
+		int cnt = 0;
+		if (command instanceof Update) {
+			cnt = handleUpdate((Update) command, visitor, classRegistry, writeMethods);
+			
+		} else if (command instanceof Delete) {
+			cnt = handleDelete((Delete) command, visitor);
+			
+		} else if (command instanceof Insert) {
+			cnt = handleInsert((Insert) command, visitor, clz, writeMethods);
+			
+		} else {
+			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21004, new Object[] {command.getClass().getName()}));
+		}
+		return cnt;
+	}
+	
+	private Class<?> getRegisteredClass(ClassRegistry classRegistry, ObjectVisitor visitor) throws TranslatorException {
+		String tname = visitor.getTable().getName();
+		if (tablename != null && tablename.equals(tname) ) {
+			return clz;
+		}
+		tablename = tname;
+		Class<?> clz = classRegistry.getRegisteredClassUsingTableName(tname);
+		if (clz == null) {
+			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21005, new Object[] {visitor.getTable().getName()}));
+		}
+		return clz;
+	}
+
+	private int handleInsert(Insert insert, ObjectVisitor visitor,  Class<?> clz, Map<String, Method> writeMethods) throws TranslatorException {
 
 		Object entity = null;
 		try {
@@ -154,8 +181,8 @@ public class ObjectUpdateExecution implements UpdateExecution {
 		ForeignKey fk = visitor.getForeignKey();
 		
 		if (fk != null) {
-			handleInsertChildObject(visitor, entity, writeMethods);
-			return;
+			int r = handleInsertChildObject(visitor, entity, writeMethods);
+			return r;
 		}
 		
 		Column keyCol = null;
@@ -169,7 +196,6 @@ public class ObjectUpdateExecution implements UpdateExecution {
 		List<Expression> values = ((ExpressionValueSource) visitor.getInsert()
 				.getValueSource()).getValues();
 		Object keyValue = null;
-//		Object fkeyValue = null;
 		
 		for (int i = 0; i < columns.size(); i++) {
 			Column column = columns.get(i).getMetadataObject();
@@ -184,7 +210,7 @@ public class ObjectUpdateExecution implements UpdateExecution {
 					
 				writeColumnData(entity, column, value, writeMethods);
 				
-				keyValue = evaluate(entity, ObjectUtil.getRecordName(keyCol), classRegistry.getReadScriptEngine());
+				keyValue = evaluate(entity, ObjectUtil.getRecordName(keyCol), connection.getClassRegistry().getReadScriptEngine());
 				
 			} else {
 				
@@ -199,19 +225,22 @@ public class ObjectUpdateExecution implements UpdateExecution {
 		}
 		
 		keyValue = convertKeyValue(keyValue, keyCol);
-		Object rootObject = this.executionFactory.performKeySearch(ObjectUtil.getRecordName(keyCol), keyValue, connection, context);
-
-		if (rootObject != null) {
-			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21007, new Object[] {insert.getTable().getName(), keyValue}));
-		}
 		
+		// don't perform a search when doing inserts for materialization, its assume a cleared cache
+		if (!useForMat) {
+			Object rootObject = env.performKeySearch(ObjectUtil.getRecordName(keyCol), keyValue, connection, executionContext);
+	
+			if (rootObject != null) {
+				throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21007, new Object[] {insert.getTable().getName(), keyValue}));
+			}
+		}		
 		connection.add(keyValue, entity);
 
-		++updateCnt;
+		return 1;
 
 	}
 
-	private void handleInsertChildObject(ObjectVisitor visitor, Object newEntity, Map<String, Method> writeMethods) throws TranslatorException {
+	private int handleInsertChildObject(ObjectVisitor visitor, Object newEntity, Map<String, Method> writeMethods) throws TranslatorException {
 
 		ForeignKey fk = visitor.getForeignKey();
 
@@ -251,13 +280,14 @@ public class ObjectUpdateExecution implements UpdateExecution {
 		
 
 		fkeyValue = convertKeyValue(fkeyValue, visitor.getPrimaryKeyCol());
-		Object rootObject = this.executionFactory.performKeySearch(fkeyColNIS, fkeyValue, connection, context);
 		String fk_nis = fk.getNameInSource();
+		// don't perform a search when doing inserts for materialization
+						
+		Object rootObject = env.performKeySearch(fkeyColNIS, fkeyValue, connection, executionContext);
 
 		if (rootObject == null) {
 			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21015, new Object[] {fkeyValue, rootTable.getName()}));
 		}
-
 		Object childrenObjects = this.evaluate(rootObject, fk_nis, connection.getClassRegistry().getReadScriptEngine());
 			
 		if (childrenObjects != null) {
@@ -288,33 +318,31 @@ public class ObjectUpdateExecution implements UpdateExecution {
 		}
 		
 		connection.update(fkeyValue, rootObject);
-
-		++updateCnt;
+		
+		return 1;
 
 	}
 
 	// Private method to actually do a delete operation. 
-	private void handleDelete(Delete delete, ObjectVisitor visitor) throws TranslatorException {
-
-		Column keyCol = null;
+	private int handleDelete(Delete delete, ObjectVisitor visitor) throws TranslatorException {
 		
 		NamedTable rootTable = visitor.getTable();
 		
 		// if this is the root class (no foreign key), then for each object, obtain
 		// the primary key value and use it to be removed from the cache
 
-		keyCol = visitor.getPrimaryKeyCol();
+		Column keyCol = visitor.getPrimaryKeyCol();
 		if (keyCol == null) {
 			throw new TranslatorException("Deleting container class is not currently supported, not primary key defined");
 		}
 
 		// Find all the objects that meet the criteria for deletion
-		List<Object> toDelete = this.executionFactory.search(visitor, connection, this.context);
+		List<Object> toDelete = env.search(visitor, connection, executionContext);
 		if (toDelete == null || toDelete.isEmpty()) {
 			LogManager.logWarning(LogConstants.CTX_CONNECTOR, ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21013, new Object[] {rootTable.getName(), visitor.getWhereCriteria()}));
-			return;
+			return 0;
 		}
-	
+		int cnt = 0;
 		try {
 			TeiidScriptEngine scriptEngine = connection.getClassRegistry().getReadScriptEngine();
 							
@@ -334,13 +362,14 @@ public class ObjectUpdateExecution implements UpdateExecution {
 					throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21012, new Object[] {rootTable.getName(), v}));
 						
 				}
-				++updateCnt;
+				++cnt;
+
 			}
 
 		} catch (ScriptException e1) {
 			throw new TranslatorException(e1);
 		}
-
+		return cnt;
 		
 		// TODO:  delete container class 
 //		else {
@@ -410,25 +439,16 @@ public class ObjectUpdateExecution implements UpdateExecution {
 	}
 
 	// Private method to actually do an update operation. 
-	private void handleUpdate(Update update, ObjectVisitor visitor) throws TranslatorException {
-		ClassRegistry classRegistry  = connection.getClassRegistry();
+	private int handleUpdate(Update update, ObjectVisitor visitor, ClassRegistry classRegistry, Map<String, Method> writeMethods) throws TranslatorException {
 		NamedTable rootTable = visitor.getTable();
 		
-		// get the class to instantiate instance
-		Class<?> clz = classRegistry.getRegisteredClassUsingTableName(rootTable.getName());
-		if (clz == null) {
-			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21005, new Object[] {rootTable.getName()}));
-		}
-		
-		Map<String, Method> writeMethods = classRegistry.getWriteClassMethods(clz.getSimpleName());
-
 		// Find all the objects that meet the criteria for updating
-		List<Object> toUpdate = this.executionFactory.search(visitor, connection, this.context);
+		List<Object> toUpdate = env.search(visitor, connection, executionContext);
 		
 		if (toUpdate == null || toUpdate.size() == 0){
 			LogManager.logTrace(LogConstants.CTX_CONNECTOR,
 					"InfinispanUpdateExecution.update: no objects found to update based on - " + update.toString()); //$NON-NLS-1$
-			return;
+			return 0;
 		}
 		
 		Column keyCol = null;
@@ -444,7 +464,7 @@ public class ObjectUpdateExecution implements UpdateExecution {
 		} 		
 
 		List<SetClause> updateList = update.getChanges();
-		
+		int cnt = 0;
 		if (keyCol != null) {
 			for (Object entity:toUpdate) {
 				
@@ -469,26 +489,21 @@ public class ObjectUpdateExecution implements UpdateExecution {
 				}
 				
 				connection.update( convertKeyValue(keyValue, keyCol), entity);
-				++updateCnt;
+				++cnt;
 			
 			}
 			
 		} 
-			//logic for updating container classes
-	}
-
-	@Override
-	public void cancel() {
-		close();
+		return cnt;
 	}
 
 	@Override
 	public void close() {
-		this.connection = null;
+		super.close();
 		this.command = null;
-		this.context = null;
-		this.executionFactory = null;
 		sc = null;
+		clz = null;
+		result = null;
 	}
 
 	private Object evaluate(Object value, String columnName, TeiidScriptEngine scriptEngine)
@@ -582,6 +597,7 @@ public class ObjectUpdateExecution implements UpdateExecution {
 	
 	protected ObjectVisitor createVisitor() {
         return new ObjectVisitor();
+
     }
 	
 }

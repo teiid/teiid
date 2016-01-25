@@ -21,11 +21,13 @@
  */
 package org.teiid.translator.infinispan.dsl;
 
+import static org.teiid.language.visitor.SQLStringVisitor.getRecordName;
+
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.query.dsl.FilterConditionBeginContext;
 import org.infinispan.query.dsl.FilterConditionContext;
 import org.infinispan.query.dsl.Query;
@@ -34,11 +36,25 @@ import org.infinispan.query.dsl.QueryFactory;
 import org.infinispan.query.dsl.SortOrder;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
-import org.teiid.language.*;
+import org.teiid.language.AndOr;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Comparison;
+import org.teiid.language.Condition;
+import org.teiid.language.Expression;
+import org.teiid.language.In;
+import org.teiid.language.IsNull;
+import org.teiid.language.Like;
+import org.teiid.language.Literal;
+import org.teiid.language.Not;
+import org.teiid.language.OrderBy;
+import org.teiid.language.SortSpecification;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.object.ObjectConnection;
+import org.teiid.translator.object.ObjectVisitor;
+import org.teiid.translator.object.SearchType;
 
 
 
@@ -56,36 +72,51 @@ import org.teiid.translator.TranslatorException;
  * Between
  * 
  */
-public final class DSLSearch   {
+public final class DSLSearch implements SearchType  {
 	
-	public static Object performKeySearch(String cacheName, String columnNameInSource, Object value, InfinispanConnection conn) throws TranslatorException {
+	@Override
+	/** 
+	 * Calling to make a key value search on the cache.
+	 * 
+	 * The assumption is the <code>value</code> has already been converted the key object type
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.SearchType#performKeySearch(java.lang.String, java.lang.Object, org.teiid.translator.object.ObjectConnection)
+	 */
+	public Object performKeySearch(String columnNameInSource, Object value, ObjectConnection conn) throws TranslatorException {
 	    
-		RemoteCache<?, Object> c = (RemoteCache<?, Object>) conn.getCache();
-	    Object v = c.get(value);
-	    return v;
-
+		
+		@SuppressWarnings("rawtypes")
+		QueryBuilder qb = getQueryBuilder(conn);
+	    
+		value = escapeReservedChars(value);
+		
+	    FilterConditionContext fcc = qb.having(columnNameInSource).eq(value);
+		
+		Query query = fcc.toBuilder().build();
+		List<Object> results = query.list();
+		if (results.size() == 1) {
+			return results.get(0);
+		} else if (results.size() > 1) {
+//			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID21504, value.toString()));
+		}
+		
+		return null;
 	}
 
-	public static List<Object> performSearch(Update command, String cacheName, InfinispanConnection conn)
-			throws TranslatorException {
-		return performSearch(command.getWhere(), null, cacheName, conn);
-	}
-	
-	public static List<Object> performSearch(Delete command, String cacheName, InfinispanConnection conn)
-			throws TranslatorException {	
-		return performSearch(command.getWhere(), null, cacheName, conn);
-	}
+		
+	@Override
+	public List<Object> performSearch(ObjectVisitor visitor,
+				ObjectConnection conn) throws TranslatorException {
+			
+		Condition where = visitor.getWhereCriteria();
+		OrderBy orderby = visitor.getOrderBy();		
 
-	public static List<Object> performSearch(Select command, String cacheName, InfinispanConnection conn)
-			throws TranslatorException {	
-		return performSearch(command.getWhere(), command.getOrderBy(), cacheName, conn);
-	}
-	
-	@SuppressWarnings("rawtypes")
-	public static List<Object> performSearch(Condition where, OrderBy orderby, String cacheName, InfinispanConnection conn)
-				throws TranslatorException {
-
-	    QueryBuilder qb = getQueryBuilder(cacheName, conn);
+	    QueryBuilder qb = getQueryBuilder(conn);	
+	    
+	    if (visitor.getLimit() > 0) {
+	    	qb.maxResults(visitor.getLimit());
+	    }	    
 	    	    
 	    if (orderby != null) {
 		    List<SortSpecification> sss = orderby.getSortSpecifications();
@@ -96,7 +127,7 @@ public final class DSLSearch   {
 		    	if (spec.getOrdering().name().equalsIgnoreCase(SortOrder.DESC.name())) {
 		    		so = SortOrder.DESC;
 		    	}
-		    	qb = qb.orderBy(mdIDElement.getSourceName(), so);
+		    	qb = qb.orderBy(getRecordName(mdIDElement), so);
 		    }
 	    }
 	    	
@@ -113,7 +144,7 @@ public final class DSLSearch   {
 				return Collections.emptyList();
 			}
 			
-		} else if (orderby != null) {
+		} else if (orderby != null || visitor.getLimit() > 0) {
 		   query = qb.build();
            results = query.list();
            if (results == null) {
@@ -121,11 +152,15 @@ public final class DSLSearch   {
            }
 
 		} else {
-		    results = new ArrayList<Object>();
-			RemoteCache<?, Object> c = (RemoteCache<?, Object>) conn.getCache();
-		    for (Object id : c.keySet()) {
-		          results. add(c.get(id));
-		    }
+			results = new ArrayList<Object>();
+			Collection<Object> all = conn.getAll();
+			results.addAll(all);
+			return results;			
+//		    results = new ArrayList<Object>();
+//			RemoteCache<?, Object> c = (RemoteCache<?, Object>) conn.getCache();
+//		    for (Object id : c.keySet()) {
+//		          results. add(c.get(id));
+//		    }
 		}
 
 		return results;
@@ -133,15 +168,13 @@ public final class DSLSearch   {
 	}
 	
 	@SuppressWarnings("rawtypes")
-	private static QueryBuilder getQueryBuilder(String cacheName, InfinispanConnection conn) throws TranslatorException {
+	private static QueryBuilder getQueryBuilder(ObjectConnection conn) throws TranslatorException {
 		
 		Class<?> type = conn.getCacheClassType();
 		
-		QueryFactory qf = conn.getQueryFactory();
+		QueryFactory qf = ((InfinispanDSLConnection) conn).getQueryFactory();
 	    		  
-	    QueryBuilder qb = qf.from(type);
-
-	    return qb;
+	    return qf.from(type);
 	}
 	
 	private static FilterConditionContext buildQueryFromWhereClause(Condition criteria, @SuppressWarnings("rawtypes") QueryBuilder queryBuilder, FilterConditionBeginContext fcbc)
@@ -257,40 +290,40 @@ public final class DSLSearch   {
 		switch (op) {
 		case NE:
 			if (fcbc == null) {
-				return queryBuilder.not().having(mdIDElement.getSourceName()).eq(value);
+				return queryBuilder.not().having(getRecordName(mdIDElement)).eq(value);
 			} 
-			return fcbc.not().having(mdIDElement.getSourceName()).eq(value);
+			return fcbc.not().having(getRecordName(mdIDElement)).eq(value);
 			
 
 		case EQ:
 			if (fcbc == null ) {
-				return queryBuilder.having(mdIDElement.getSourceName()).eq(value);
+				return queryBuilder.having(getRecordName(mdIDElement)).eq(value);
 			}
-			return fcbc.having(mdIDElement.getSourceName()).eq(value);
+			return fcbc.having(getRecordName(mdIDElement)).eq(value);
 
 		case GT:
 			if (fcbc == null) {
-				return queryBuilder.having(mdIDElement.getSourceName()).gt(value);
+				return queryBuilder.having(getRecordName(mdIDElement)).gt(value);
 			}
-			return fcbc.having(mdIDElement.getSourceName()).gt(value);
+			return fcbc.having(getRecordName(mdIDElement)).gt(value);
 
 		case GE:
 			if (fcbc == null) {
-				return queryBuilder.having(mdIDElement.getSourceName()).gte(value);
+				return queryBuilder.having(getRecordName(mdIDElement)).gte(value);
 			}
-			return fcbc.having(mdIDElement.getSourceName()).gte(value);
+			return fcbc.having(getRecordName(mdIDElement)).gte(value);
 
 		case LT:
 			if (fcbc == null) {
-				return queryBuilder.having(mdIDElement.getSourceName()).lt(value);
+				return queryBuilder.having(getRecordName(mdIDElement)).lt(value);
 			}
-			return fcbc.having(mdIDElement.getSourceName()).lt(value);
+			return fcbc.having(getRecordName(mdIDElement)).lt(value);
 			
 		case LE:
 			if (fcbc == null) {
-				return queryBuilder.having(mdIDElement.getSourceName()).lte(value);
+				return queryBuilder.having(getRecordName(mdIDElement)).lte(value);
 			}
-			return fcbc.having(mdIDElement.getSourceName()).lte(value);
+			return fcbc.having(getRecordName(mdIDElement)).lte(value);
 
 		default:
 			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25050, new Object[] { op, "NE, EQ, GT, GE, LT, LE" }));
@@ -329,14 +362,14 @@ public final class DSLSearch   {
 
 			if (fcbc == null) {
 				if (obj.isNegated()) {
-					return  queryBuilder.not().having(col.getSourceName()).in(v);
+					return  queryBuilder.not().having(getRecordName(col)).in(v);
 				}
-				return  queryBuilder.having(col.getSourceName()).in(v);
+				return  queryBuilder.having(getRecordName(col)).in(v);
 			}
 			if (obj.isNegated()) {
-				return fcbc.not().having(col.getSourceName()).in(v);
+				return fcbc.not().having(getRecordName(col)).in(v);
 			}
-			return fcbc.having(col.getSourceName()).in(v);
+			return fcbc.having(getRecordName(col)).in(v);
 		}
 		return null;
 	}
@@ -367,15 +400,15 @@ public final class DSLSearch   {
 
 			if (fcbc == null) {
 				if (obj.isNegated()) {
-					return queryBuilder.not().having(c.getSourceName()).like(value);
+					return queryBuilder.not().having(getRecordName(c)).like(value);
 				}
-				return queryBuilder.having(c.getSourceName()).like(value);
+				return queryBuilder.having(getRecordName(c)).like(value);
 			}
 			if (obj.isNegated()) {
-				return fcbc.not().having(c.getSourceName()).like(value);
+				return fcbc.not().having(getRecordName(c)).like(value);
 			}
 
-			return fcbc.having(c.getSourceName()).like(value);
+			return fcbc.having(getRecordName(c)).like(value);
 		} 
 		throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25052, new Object[] { literalExp.toString(), "LIKE" }));
 
@@ -391,15 +424,15 @@ public final class DSLSearch   {
 
 		if (fcbc == null) {
 			if (obj.isNegated()) {
-				return queryBuilder.not().having(c.getSourceName()).isNull();
+				return queryBuilder.not().having(getRecordName(c)).isNull();
 			}
-			return queryBuilder.having(c.getSourceName()).isNull();
+			return queryBuilder.having(getRecordName(c)).isNull();
 		}
 		if (obj.isNegated()) {
-			return fcbc.not().having(c.getSourceName()).isNull();
+			return fcbc.not().having(getRecordName(c)).isNull();
 		}
 
-		return fcbc.having(c.getSourceName()).isNull();
+		return fcbc.having(getRecordName(c)).isNull();
 
 	}	
 

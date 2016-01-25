@@ -23,34 +23,34 @@
 package org.teiid.resource.adapter.infinispan.dsl.base;
 
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.Search;
-import org.infinispan.protostream.SerializationContext;
 import org.infinispan.protostream.descriptors.Descriptor;
 import org.infinispan.query.dsl.QueryFactory;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnection;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.infinispan.dsl.ClassRegistry;
-import org.teiid.translator.infinispan.dsl.InfinispanConnection;
+import org.teiid.translator.infinispan.dsl.InfinispanDSLConnection;
 import org.teiid.translator.infinispan.dsl.InfinispanPlugin;
+import org.teiid.translator.object.ObjectMaterializeLifeCycle;
 
 /** 
  * Represents a connection to an Infinispan cache container. The <code>cacheName</code> that is specified will dictate the
  * cache to be accessed in the container.
  * 
  */
-public class InfinispanConnectionImpl extends BasicConnection implements InfinispanConnection { 
+public class InfinispanConnectionImpl extends BasicConnection implements InfinispanDSLConnection { 
 	
-	
-	SerializationContext ctx = null;
 	AbstractInfinispanManagedConnectionFactory config = null;
 
 	public InfinispanConnectionImpl(AbstractInfinispanManagedConnectionFactory config)   {
 		this.config = config;
-		
-		this.ctx = config.getContext();
 
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Infinispan Connection has been newly created "); //$NON-NLS-1$
 	}
@@ -62,7 +62,6 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	@Override
     public void close() {
 		config = null;
-		ctx = null;
 	}
 
 	/** 
@@ -96,7 +95,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public RemoteCache getCache() {
+	public RemoteCache getCache() throws TranslatorException {
 
 		return config.getCache();
 
@@ -109,7 +108,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	@Override
 	public Descriptor getDescriptor()
 			throws TranslatorException {
-		Descriptor d = ctx.getMessageDescriptor(config.getMessageDescriptor());
+		Descriptor d = config.getContext().getMessageDescriptor(config.getMessageDescriptor());
 		if (d == null) {
 			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25028,  config.getMessageDescriptor(), config.getCacheName()));			
 		}
@@ -123,20 +122,128 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 		
 		return Search.getQueryFactory(getCache());
 	}
-	
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#add(java.lang.Object, java.lang.Object)
+	 */
+	@SuppressWarnings("unchecked")
 	@Override
-	public  ClassRegistry getClassRegistry() {
+	public void add(Object key, Object value) throws TranslatorException {
+		getCache(config.getCacheNameForUpdate()).put(key, value);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#remove(java.lang.Object)
+	 */
+	@Override
+	public Object remove(Object key) throws TranslatorException {
+		return getCache(config.getCacheNameForUpdate()).removeAsync(key);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#update(java.lang.Object, java.lang.Object)
+	 */
+	@SuppressWarnings("unchecked")
+	@Override
+	public void update(Object key, Object value) throws TranslatorException {
+		getCache(config.getCacheNameForUpdate()).replace(key, value);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#getClassRegistry()
+	 */
+	@Override
+	public org.teiid.translator.object.ClassRegistry getClassRegistry() {
 		return config.getClassRegistry();
 	}
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#get(java.lang.Object)
+	 */
 	@Override
-	public String getPkField() throws TranslatorException {
+	public Object get(Object key) throws TranslatorException {
+		return getCache().get(key);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#getAll()
+	 */
+	@Override
+	public Collection<Object> getAll() throws TranslatorException {
+		@SuppressWarnings("rawtypes")
+		RemoteCache cache = getCache();
+
+		Map<Object, Object> c = cache.getBulk();
+		List<Object> results = new ArrayList<Object>();
+		for (Object k:c.keySet()) {
+			Object v = cache.get(k);
+			results.add(v);
+			
+		}
+
+		return results;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#getMaterializeLifeCycle()
+	 */
+	@Override
+	public ObjectMaterializeLifeCycle getMaterializeLifeCycle() {
+		return new ObjectMaterializeLifeCycle(this, config.getCacheNameProxy());
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#getPkField()
+	 */
+	@Override
+	public String getPkField() {
 		return config.getPk();
 	}
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#getCacheName()
+	 */
 	@Override
-	public String getCacheName() throws TranslatorException {
+	public String getCacheName() {
 		return config.getCacheName();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#getCache(java.lang.String)
+	 */
+	@Override
+	public RemoteCache getCache(String cacheName) {
+		return config.getCache(cacheName);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#clearCache(java.lang.String)
+	 */
+	@Override
+	public void clearCache(String cacheName) throws TranslatorException {
+		config.getCache(cacheName).clear();
 	}
 
 

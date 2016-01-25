@@ -24,7 +24,6 @@ package org.teiid.translator.object.simpleMap;
 
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
-import org.teiid.language.Select;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
@@ -70,7 +69,7 @@ public class SimpleMapCacheExecutionFactory extends ObjectExecutionFactory {
 	public ResultSetExecution createResultSetExecution(QueryExpression command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
 			ObjectConnection connection) throws TranslatorException {
-		return new ObjectExecution((Select) command, metadata, this, connection, executionContext) {
+		return new ObjectExecution(command, this, connection, executionContext) {
 			@Override
 			protected ObjectVisitor createVisitor() {
 		        return new SimpleKeyVisitor();
@@ -81,7 +80,7 @@ public class SimpleMapCacheExecutionFactory extends ObjectExecutionFactory {
     @Override
 	public UpdateExecution createUpdateExecution(Command command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
-			ObjectConnection connection) throws TranslatorException {
+			ObjectConnection connection) {
     	return new ObjectUpdateExecution(command, connection, executionContext, this) {
 			@Override
 			protected ObjectVisitor createVisitor() {

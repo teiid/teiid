@@ -235,9 +235,9 @@ public class ObjectVisitor extends HierarchyVisitor {
 	 */
 	@Override
 	public void visit(Delete obj) {
+		super.visit(obj);
 		this.condition = obj.getWhere();
 		this.delete = obj;
-		super.visit(obj);
 	}	
 	
 
@@ -248,9 +248,9 @@ public class ObjectVisitor extends HierarchyVisitor {
 	 */
 	@Override
 	public void visit(Update obj) {
+		super.visit(obj);
 		this.condition = obj.getWhere();
 		this.update = obj;
-		super.visit(obj);
 	}		
 	
 	protected String getForeignKeyNIS(NamedTable table, ForeignKey fk)  {

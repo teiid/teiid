@@ -32,10 +32,10 @@ public class TestInfinispanUpdateExecution {
 		context = mock(ExecutionContext.class);
 
 		factory = new InfinispanCacheExecutionFactory();
-		factory.setSupportsLuceneSearching(true);
+		factory.setSupportsDSLSearching(true);
 		factory.start();
 		
-		CONNECTION = TestInfinispanConnection.createConnection(true);
+		CONNECTION = TestInfinispanConnection.createConnection(false);
     }
 	
 	@AfterClass
@@ -67,7 +67,7 @@ public class TestInfinispanUpdateExecution {
 	public void testInsertRootClass() throws Exception {
 
 		// check the object doesn't exist before inserting
-		Object o = CONNECTION.getCache().get(Long.valueOf(599));
+		Object o = CONNECTION.get(Long.valueOf(599));
 		assertNull(o);
 		
 		Command command = translationUtility
@@ -78,7 +78,7 @@ public class TestInfinispanUpdateExecution {
 
 		ie.execute();
 
-		Trade p = (Trade) CONNECTION.getCache().get(Long.valueOf(599));
+		Trade p = (Trade) CONNECTION.get(Long.valueOf(599));
 
 		assertNotNull(p);
 		assertTrue(p.getName().equals("TestName"));
@@ -117,7 +117,7 @@ public class TestInfinispanUpdateExecution {
 	public void testUpdateByKey() throws Exception {
 		
 		// check the object exists
-		Object o = CONNECTION.getCache().get(Long.valueOf(1));
+		Object o = CONNECTION.get(Long.valueOf(1));
 		assertNotNull(o);
 		
 		Command command = translationUtility
@@ -127,7 +127,7 @@ public class TestInfinispanUpdateExecution {
 
 		ie.execute();
 
-		Trade p = (Trade) CONNECTION.getCache().get(Long.valueOf(1));
+		Trade p = (Trade) CONNECTION.get(Long.valueOf(1));
 
 		assertNotNull(p);
 		assertTrue(p.getName().equals("Person 1 Changed"));
@@ -145,12 +145,12 @@ public class TestInfinispanUpdateExecution {
 
 		ie.execute();
 
-		Trade p = (Trade) CONNECTION.getCache().get(Long.valueOf(2));
+		Trade p = (Trade) CONNECTION.get(Long.valueOf(2));
 
 		assertNotNull(p);
 		assertFalse(p.isSettled());
 		
-		p = (Trade) CONNECTION.getCache().get(Long.valueOf(99));
+		p = (Trade) CONNECTION.get(Long.valueOf(99));
 
 		assertNotNull(p);
 		assertFalse(p.isSettled());
@@ -159,7 +159,7 @@ public class TestInfinispanUpdateExecution {
 
 	public void testDeleteRootByKey() throws Exception {
 		
-		Object o = CONNECTION.getCache().get(Long.valueOf(99));
+		Object o = CONNECTION.get(Long.valueOf(99));
 		assertNotNull(o);
 
 		Command command = translationUtility
@@ -172,7 +172,7 @@ public class TestInfinispanUpdateExecution {
 		// sleep so that the async delete is completed
 		Thread.sleep(3000);
 
-		Trade p = (Trade) CONNECTION.getCache().get(Long.valueOf(99));
+		Trade p = (Trade) CONNECTION.get(Long.valueOf(99));
 
 		assertNull(p);
 
@@ -180,8 +180,8 @@ public class TestInfinispanUpdateExecution {
 
 	public void testDeleteRootByValue() throws Exception {
 
-		assertNotNull(CONNECTION.getCache().get(Long.valueOf(2)));
-		assertNotNull(CONNECTION.getCache().get(Long.valueOf(3)));
+		assertNotNull(CONNECTION.get(Long.valueOf(2)));
+		assertNotNull(CONNECTION.get(Long.valueOf(3)));
 		
 		Command command = translationUtility
 				.parseCommand("Delete From Trade Where settled = 'false'");
@@ -195,8 +195,8 @@ public class TestInfinispanUpdateExecution {
 		Thread.sleep(3000);
 
 		
-		assertNull(CONNECTION.getCache().get(Long.valueOf(2)));
-		assertNull(CONNECTION.getCache().get(Long.valueOf(3)));
+		assertNull(CONNECTION.get(Long.valueOf(2)));
+		assertNull(CONNECTION.get(Long.valueOf(3)));
 
 	}
 //
