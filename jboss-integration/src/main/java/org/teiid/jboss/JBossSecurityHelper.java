@@ -24,6 +24,8 @@ package org.teiid.jboss;
 
 import java.io.Serializable;
 import java.security.Principal;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.security.auth.Subject;
@@ -36,9 +38,17 @@ import org.jboss.as.server.CurrentServiceContainer;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.security.AuthenticationManager;
+import org.jboss.security.PicketBoxLogger;
+import org.jboss.security.SecurityConstants;
 import org.jboss.security.SecurityContext;
+import org.jboss.security.SecurityRolesAssociation;
 import org.jboss.security.SimplePrincipal;
 import org.jboss.security.SubjectInfo;
+import org.jboss.security.identity.RoleGroup;
+import org.jboss.security.identity.plugins.SimpleRoleGroup;
+import org.jboss.security.mapping.MappingContext;
+import org.jboss.security.mapping.MappingManager;
+import org.jboss.security.mapping.MappingType;
 import org.jboss.security.negotiation.Constants;
 import org.jboss.security.negotiation.common.NegotiationContext;
 import org.jboss.security.negotiation.spnego.KerberosMessage;
@@ -102,18 +112,46 @@ public class JBossSecurityHelper implements SecurityHelper, Serializable {
 	    // If username specifies a domain (user@domain) only that domain is authenticated against.
         SecurityDomainContext securityDomainContext = getSecurityDomainContext(domain);
         if (securityDomainContext != null) {
+            Subject subject = new Subject();
+            boolean isValid = false;
+            SecurityContext securityContext = null;
             AuthenticationManager authManager = securityDomainContext.getAuthenticationManager();
             if (authManager != null) {
-                Principal userPrincipal = new SimplePrincipal(baseUsername);
-                Subject subject = new Subject();
+                Principal userPrincipal = new SimplePrincipal(baseUsername);                
                 String credString = credentials==null?null:new String(credentials.getCredentialsAsCharArray());
-                boolean isValid = authManager.isValid(userPrincipal, credString, subject);
-                if (isValid) {
-                	SecurityContext securityContext = createSecurityContext(domain, userPrincipal, credString, subject);
-                    LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful for \"", baseUsername, "\" in security domain", domain}); //$NON-NLS-1$ //$NON-NLS-2$
-                    return securityContext;
-                }                       
+                isValid = authManager.isValid(userPrincipal, credString, subject);
+                securityContext = createSecurityContext(domain, userPrincipal, credString, subject);
+                LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful for \"", baseUsername, "\" in security domain", domain}); //$NON-NLS-1$ //$NON-NLS-2$                
             }
+            
+            if (isValid) {
+                MappingManager mappingManager = securityDomainContext.getMappingManager();
+                if (mappingManager != null) {
+                    MappingContext<RoleGroup> mc = mappingManager.getMappingContext(MappingType.ROLE.name());
+                    if(mc != null && mc.hasModules()) {
+                        RoleGroup userRoles = securityContext.getUtil().getRoles();
+                        if(userRoles == null) {
+                            userRoles = new SimpleRoleGroup(SecurityConstants.ROLES_IDENTIFIER);
+                         }
+
+                        Map<String,Object> contextMap = new HashMap<String,Object>();
+                        contextMap.put(SecurityConstants.ROLES_IDENTIFIER, userRoles);
+                        //Append any deployment role->principals configuration done by the user
+                        contextMap.put(SecurityConstants.DEPLOYMENT_PRINCIPAL_ROLES_MAP,
+                              SecurityRolesAssociation.getSecurityRoles());
+                        
+                        //Append the principals also
+                        contextMap.put(SecurityConstants.PRINCIPALS_SET_IDENTIFIER, subject.getPrincipals());
+                        LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Roles before mapping \"", userRoles.toString()}); //$NON-NLS-1$
+                        PicketBoxLogger.LOGGER.traceRolesBeforeMapping(userRoles != null ? userRoles.toString() : "");
+
+                        mc.performMapping(contextMap, userRoles);
+                        RoleGroup mappedRoles = mc.getMappingResult().getMappedObject();
+                        LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Roles after mapping \"", mappedRoles.toString()}); //$NON-NLS-1$                        
+                    }
+                }            
+                return securityContext;
+            }                       
         }
         throw new LoginException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50072, baseUsername, domain ));       
     }           
