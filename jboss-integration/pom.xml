@@ -2,7 +2,7 @@
   <parent>
     <artifactId>teiid-parent</artifactId>
     <groupId>org.jboss.teiid</groupId>
-        <version>8.12.5-SNAPSHOT</version>
+        <version>8.12.5</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>teiid-jboss-integration</artifactId>
@@ -127,7 +127,15 @@
 		  	</exclusion>
 		  	<exclusion>
 		  		<groupId>com.fasterxml.jackson.core</groupId>
-		  		<artifactId>*</artifactId>
+		  		<artifactId>jackson-core</artifactId>
+		  	</exclusion>
+		  	<exclusion>
+		  		<groupId>com.fasterxml.jackson.core</groupId>
+		  		<artifactId>jackson-databind</artifactId>
+		  	</exclusion>
+		  	<exclusion>
+		  		<groupId>com.fasterxml.jackson.core</groupId>
+		  		<artifactId>jackson-annotations</artifactId>
 		  	</exclusion>
 		  	<exclusion>
 		  		<groupId>com.google.guava</groupId>

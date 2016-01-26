@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.jboss.integration-platform</groupId>
         <artifactId>jboss-integration-platform-parent</artifactId>
-        <version>6.0.0.CR25</version>
+        <version>6.0.0.CR30</version>
     </parent>  
     <modelVersion>4.0.0</modelVersion>
 	<groupId>org.jboss.teiid</groupId>
@@ -11,42 +11,33 @@
 	<packaging>pom</packaging>
 	<name>Teiid</name>
 
-    <version>8.12.5-SNAPSHOT</version>
+    <version>8.12.5</version>
 	<description>Federated SQL and XML query engine.</description>
 	<properties>
 	    <site.url>http://www.jboss.org/teiid</site.url>
 	    <illegaltransitivereportonly>true</illegaltransitivereportonly>
 	    <!-- Overrides to allow the release process to commit: https://jira.codehaus.org/browse/MRELEASE-812 -->
 	    <version.release.plugin>2.5</version.release.plugin>
-	            
-        <!-- jboss bom overrides -->
-        <version.com.google.guava>14.0.1</version.com.google.guava>
- 
-        <version.org.infinispan.hibernate.search>4.6.1.Final-redhat-1</version.org.infinispan.hibernate.search> <!-- versions required by infinispan  --> 
-        <version.org.infinispan.6>6.3.0.Final-redhat-5</version.org.infinispan.6>  
-        <version.org.apache.lucene.infinispan>3.6.2.redhat-8</version.org.apache.lucene.infinispan>
-        <!-- JDG module slot to use  -->
-        <jdg.slot>jdg-6.5</jdg.slot>  
-        
+	    <!-- version.org.jboss.resteasy>2.3.7.Final</version.org.jboss.resteasy--> <!-- BOM 30 upgraded to 2.3.10, but breaks odata https://issues.jboss.org/browse/TEIID-3826  -->
+	    <!-- EAP and IP Bom specific and overrides -->
+	    <version.org.jboss.integration-platform>6.0.0.CR30</version.org.jboss.integration-platform>
+        <version.org.jboss.as>7.5.0.Final-redhat-15</version.org.jboss.as>
+        <version.com.google.guava>14.0.1</version.com.google.guava>     <!--  bom 13.0.1 -->
         <version.jaxen>1.1.4</version.jaxen> <!-- NOTE changing to use bom version of 1.1.3 will cause a build issue in teiid-engine -->
-        <version.org.mongodb.mongo-java-driver>2.13.1</version.org.mongodb.mongo-java-driver>
-        <version.org.jboss.as>7.5.0.Final-redhat-15</version.org.jboss.as> <!--  same in BOM -->
-        <version.commons-codec>1.9</version.commons-codec>
-        <version.org.antlr>4.5</version.org.antlr>
-        <version.org.apache.commons>3.3.2</version.org.apache.commons>
+        <!--version.commons-codec>1.9</version.commons-codec-->   <!-- bom version of 1.4 -->
+        <version.org.antlr>4.5</version.org.antlr>   <!-- bom 3.5 -->  
+        <version.org.apache.commons>3.3.2</version.org.apache.commons>  <!-- bom 3.1  but will cause odata4 to fail--> 
 	    <version.org.codehaus.btm>2.1.3</version.org.codehaus.btm>
         
         
         <!-- Not in integration BOM; Need to check these jboss-parent BOM-->
         <version.org.jboss.jboss-vfs>3.2.2.Final-redhat-1</version.org.jboss.jboss-vfs>
-        <version.org.picketbox>4.0.19.SP4-redhat-1</version.org.picketbox>               
         <version.nu.xom>1.2.7.redhat-4</version.nu.xom>
-        <version.org.apache.phoenix.phoenix-core>4.2.1</version.org.apache.phoenix.phoenix-core>       
         
         <!-- Teiid specific properties -->
         <version.sun.jaxb>2.2.5</version.sun.jaxb> 
         <version.teiid.console>2.5.1</version.teiid.console>
-        <version.org.picketbox.jbosssx-client>3.0.0.CR2</version.org.picketbox.jbosssx-client>
+        <!--version.org.picketbox.jbosssx-client>3.0.0.CR2</version.org.picketbox.jbosssx-client--> <!-- no dependency found in this file -->
         <version.net.sourceforge.saxon>9.5.1-6</version.net.sourceforge.saxon>
         <version.connector-api>1.5</version.connector-api>
         <version.jta>1.1</version.jta>
@@ -56,6 +47,44 @@
         <version.com.force.api>22.0.0</version.com.force.api>
         <version.com.force.api.34>34.0.0</version.com.force.api.34>
         <version.nux>1.6</version.nux>
+        <version.noggit>0.5</version.noggit>
+        <version.aws-java-sdk>1.10.11</version.aws-java-sdk>
+        <version.org.jboss.resteasy.tjws>2.3.6.Final</version.org.jboss.resteasy.tjws>        
+        <version.postgresql>9.2-1004-jdbc4</version.postgresql>
+        <version.org.codehaus.groovy>2.4.4</version.org.codehaus.groovy>
+        <version.com.h2database>1.3.152</version.com.h2database>  <!-- bom 1.3.168 -->
+        
+        
+        <version.com.codahale.metrics.metrics-core>3.0.2</version.com.codahale.metrics.metrics-core>
+        <version.org.jboss.spec.jboss-javaee-6.0>1.0.0.Final</version.org.jboss.spec.jboss-javaee-6.0>
+        <version.de.flapdoodle.embed.mongo>1.46.0</version.de.flapdoodle.embed.mongo>
+        <version.org.eclipse.persistence>2.5.0</version.org.eclipse.persistence>
+        <version.org.apache.olingo>4.1.0</version.org.apache.olingo>
+        <version.org.eclipse.jetty>9.2.7.v20150116</version.org.eclipse.jetty>
+        <version.commons-codec>1.9</version.commons-codec>
+        <version.com.fasterxml.jackson.core>2.4.2</version.com.fasterxml.jackson.core>
+	    <!--version.com.fasterxml.jackson.swagger>2.4.5</version.com.fasterxml.jackson.swagger-->  <!--  no dependency -->
+	    <version.com.fasterxml.aalto-xml>0.9.10</version.com.fasterxml.aalto-xml>
+        <version.org.reflections>0.9.9</version.org.reflections>
+        <version.com.google.code.findbugs>2.0.1</version.com.google.code.findbugs>
+        <version.javax.ws.rs>2.0-m10</version.javax.ws.rs>  <!-- override eap to resolve classNotFoundException -->
+        <version.com.facebook.presto>0.89</version.com.facebook.presto>
+        <version.net.oauth.core>20100527</version.net.oauth.core>
+        <version.jts>1.13</version.jts>
+        <version.jts2geojson>0.7.0</version.jts2geojson>
+        <version.proj4j>0.1.0</version.proj4j>
+
+	    <version.swagger-jaxrs>1.5.2</version.swagger-jaxrs>
+
+	    <version.narayana>5.0.4.Final</version.narayana>
+	    <version.org.apache.httpcomponents.httpcore-nio>4.2.4</version.org.apache.httpcomponents.httpcore-nio>
+	    <version.org.apache.httpcomponents.httpasyncclient>4.0-beta3</version.org.apache.httpcomponents.httpasyncclient>
+	    
+	    
+	    <!-- connector specific dependencies included in kit -->
+	    
+        <version.com.squareup.protoparser>3.1.4.redhat-1</version.com.squareup.protoparser>
+        <version.org.infinispan.protostream>3.0.0.Alpha8-redhat-1</version.org.infinispan.protostream>
         <version.gdata-spreadsheet>3.0</version.gdata-spreadsheet>
         <version.gdata-core>1.0</version.gdata-core>
         <version.olap4j>1.1.0</version.olap4j>
@@ -65,39 +94,28 @@
         <version.zookeeper>3.4.5</version.zookeeper>
         <version.accumulo>1.5.0</version.accumulo>
         <version.solr>4.6.0</version.solr>
-        <version.noggit>0.5</version.noggit>
-        <version.aws-java-sdk>1.10.11</version.aws-java-sdk>
+        <version.org.apache.phoenix.phoenix-core>4.2.1</version.org.apache.phoenix.phoenix-core>       
+  	    
+
+
+        <version.org.infinispan.hibernate.search>4.6.1.Final-redhat-1</version.org.infinispan.hibernate.search> <!-- versions required by infinispan  --> 
+        <version.org.infinispan.6>6.3.0.Final-redhat-5</version.org.infinispan.6>  
+        <version.org.apache.lucene.infinispan>3.6.2.redhat-8</version.org.apache.lucene.infinispan>
+        <!-- JDG module slot to use  -->
+        <jdg.slot>jdg-6.5</jdg.slot>  
+ 
+	    
+	    <!-- drivers and other external, provided, dependencies -->
+    	<version.org.mongodb.mongo-java-driver>2.13.1</version.org.mongodb.mongo-java-driver>
+    	<derby.version>10.2.1.6</derby.version>
+		<mysql.connector.version>5.1.5</mysql.connector.version>
         <version.cassandra-driver-core>2.1.3</version.cassandra-driver-core>
-        <version.org.jboss.resteasy.tjws>2.3.6.Final</version.org.jboss.resteasy.tjws>        
-        <version.postgresql>9.2-1004-jdbc4</version.postgresql>
-        <derby.version>10.2.1.6</derby.version>
-	    <mysql.connector.version>5.1.5</mysql.connector.version>
-        <version.org.codehaus.groovy>2.4.4</version.org.codehaus.groovy>
-        <version.com.h2database>1.3.152</version.com.h2database>
-        <version.com.codahale.metrics.metrics-core>3.0.2</version.com.codahale.metrics.metrics-core>
-        <version.org.jboss.spec.jboss-javaee-6.0>1.0.0.Final</version.org.jboss.spec.jboss-javaee-6.0>
-        <version.com.squareup.protoparser>3.1.4.redhat-1</version.com.squareup.protoparser>
-        <version.org.infinispan.protostream>3.0.0.Alpha8-redhat-1</version.org.infinispan.protostream>
-        <version.de.flapdoodle.embed.mongo>1.46.0</version.de.flapdoodle.embed.mongo>
-        <version.org.eclipse.persistence>2.5.0</version.org.eclipse.persistence>
-        <version.org.apache.olingo>4.1.0</version.org.apache.olingo>
-        <version.org.eclipse.jetty>9.2.7.v20150116</version.org.eclipse.jetty>
-        <version.commons-codec>1.9</version.commons-codec>
-        <version.com.fasterxml.jackson.core>2.4.2</version.com.fasterxml.jackson.core>
-	    <version.com.fasterxml.jackson.swagger>2.4.5</version.com.fasterxml.jackson.swagger>
-	    <version.com.fasterxml.aalto-xml>0.9.10</version.com.fasterxml.aalto-xml>
-        <version.org.reflections>0.9.9</version.org.reflections>
-        <version.com.google.code.findbugs>2.0.1</version.com.google.code.findbugs>
-        <version.javax.ws.rs>2.0-m10</version.javax.ws.rs>
-        <version.com.facebook.presto>0.89</version.com.facebook.presto>
-        <version.net.oauth.core>20100527</version.net.oauth.core>
-        <version.jts>1.13</version.jts>
-        <version.jts2geojson>0.7.0</version.jts2geojson>
-        <version.proj4j>0.1.0</version.proj4j>
-	    <version.swagger-jaxrs>1.5.2</version.swagger-jaxrs>
-	    <version.narayana>5.0.4.Final</version.narayana>
-	    <version.org.apache.httpcomponents.httpcore-nio>4.2.4</version.org.apache.httpcomponents.httpcore-nio>
-	    <version.org.apache.httpcomponents.httpasyncclient>4.0-beta3</version.org.apache.httpcomponents.httpasyncclient>	    
+ 	   
+ 	    
+ 	    <!--  Test only dependencies -->
+	    	    
+	    <!-- ?? -->        <version.org.picketbox>4.0.19.SP4-redhat-1</version.org.picketbox>     <!-- bom 4.1.1.Final  will cause jboss-integration to fail -->                  
+
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -254,7 +272,7 @@
 					<showWarnings>false</showWarnings>
 				</configuration>
 			</plugin>
-                        <plugin>
+                        <!--plugin>
                             <groupId>org.apache.maven.plugins</groupId>
                             <artifactId>maven-checkstyle-plugin</artifactId>
                             <version>2.13</version>
@@ -276,7 +294,7 @@
                                     </module>
                                 </checkstyleRules>
                             </configuration>
-                        </plugin>
+                        </plugin-->
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>${version.surefire.plugin}</version>
@@ -377,13 +395,13 @@
                 <artifactId>mockito-all</artifactId>
                 <version>${version.org.mockito}</version>
             </dependency>        
-           <!--  dependency>
+           <dependency>
             <groupId>org.jboss.integration-platform</groupId>
             <artifactId>jboss-integration-platform-bom</artifactId>
             <version>${version.org.jboss.integration-platform}</version>
             <scope>import</scope>
             <type>pom</type>
-          </dependency-->
+          </dependency>
           <dependency>
              <groupId>org.jboss.as</groupId>
              <artifactId>jboss-as-parent</artifactId>
@@ -391,7 +409,18 @@
              <type>pom</type>
              <scope>import</scope>
           </dependency>   
+			<dependency>
+			  <groupId>org.jboss.resteasy</groupId>
+			  <artifactId>jaxrs-api</artifactId>
+			  <version>${version.org.jboss.resteasy}</version>
+			</dependency>      
 
+          <!--dependency>
+                <groupId>org.jboss.as</groupId>
+                <artifactId>jboss-as-controller</artifactId>
+                <version>${version.org.jboss.as}</version>
+                <scope>test</scope>
+            </dependency-->                                                                                                                                    
       <!--
       Declare all dependency versions and default scopes here, but not optional.
       Each module should declare it's direct dependency and possibily overwrite scope/optional.
@@ -402,17 +431,7 @@
 			  <groupId>org.jboss.teiid.connectors</groupId>
 			  <artifactId>translator-odata</artifactId>
 			  <version>${project.version}</version>
-			</dependency>
-			<dependency>
-              <groupId>org.jboss.teiid</groupId>
-              <artifactId>teiid-olingo-common</artifactId>
-              <version>${project.version}</version>
-            </dependency>
-           <dependency>
-                <groupId>org.jboss.teiid</groupId>
-                <artifactId>teiid-olingo-patches</artifactId>
-                <version>${project.version}</version>
-           </dependency>                  
+			</dependency>      
         	<dependency>
             	<groupId>org.jboss.teiid.connectors</groupId>
             	<artifactId>translator-loopback</artifactId>
@@ -590,6 +609,36 @@
                 <scope>test</scope>
             </dependency>
 			<dependency>
+				<groupId>org.jboss.teiid</groupId>
+				<artifactId>teiid-hibernate-dialect</artifactId>
+                <version>${project.version}</version>
+			</dependency>    
+			<dependency>
+				<groupId>org.jboss.teiid</groupId>
+				<artifactId>teiid-olingo</artifactId>
+                <version>${project.version}</version>
+			</dependency>   
+			<dependency>
+				<groupId>org.jboss.teiid</groupId>
+				<artifactId>teiid-olingo-common </artifactId>
+                <version>${project.version}</version>
+			</dependency>   			
+			<dependency>
+            	<groupId>org.jboss.teiid</groupId>
+            	<artifactId>teiid-olingo-patches</artifactId>
+                <version>${project.version}</version>
+        	</dependency>
+			<dependency>
+				<groupId>org.jboss.teiid</groupId>
+				<artifactId>teiid-odata</artifactId>
+                <version>${project.version}</version>
+			</dependency>    
+			<dependency>
+				<groupId>org.jboss.teiid</groupId>
+				<artifactId>teiid-jboss-security</artifactId>
+                <version>${project.version}</version>
+			</dependency>              
+			<dependency>
 			  <groupId>org.jboss.teiid</groupId>
 			  <artifactId>test-integration-common</artifactId>
 			  <version>${project.version}</version>
@@ -600,6 +649,13 @@
             	<artifactId>teiid-client-jdk15</artifactId>
             	<version>${project.version}</version>
         	</dependency>
+		    <dependency>
+		        <groupId>org.jboss.teiid.web-console</groupId>
+		        <artifactId>teiid-console-dist</artifactId>
+		        <version>${version.teiid.console}</version>
+		        <classifier>jboss-as7</classifier>
+		        <type>zip</type>
+		    </dependency>        	
 			<dependency>
 				<groupId>org.jboss.teiid.connectors</groupId>
 				<artifactId>translator-infinispan-dsl</artifactId>
@@ -964,6 +1020,12 @@
                 <artifactId>tjws</artifactId>
                 <version>${version.org.jboss.resteasy.tjws}</version>
             </dependency>
+            
+            <dependency>
+        		<groupId>org.jboss.resteasy</groupId>
+        		<artifactId>resteasy-test-tjws</artifactId>
+        		<version>${version.org.jboss.resteasy}</version>
+    		</dependency>  
             <dependency>
                 <groupId>org.jboss.resteasy</groupId>
                 <artifactId>resteasy-multipart-provider</artifactId>
@@ -1483,7 +1545,25 @@
             </dependency>
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-io</artifactId>
+                <version>${version.org.eclipse.jetty}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-servlet</artifactId>
+                <version>${version.org.eclipse.jetty}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-security</artifactId>
+                <version>${version.org.eclipse.jetty}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-util</artifactId>
                 <version>${version.org.eclipse.jetty}</version>
                 <scope>test</scope>
             </dependency>
@@ -1506,7 +1586,7 @@
             </dependency>
             <dependency>
                 <groupId>org.antlr</groupId>
-                <artifactId>antlr4-runtime</artifactId>
+                <artifactId>antlr4-runtime</artifactId>  
                 <version>${version.org.antlr}</version>
             </dependency>
             <dependency>
@@ -1574,7 +1654,7 @@
                 <artifactId>proj4j</artifactId>
                 <version>${version.proj4j}</version>
             </dependency>
-	    <dependency>
+	   		<dependency>
                 <groupId>io.swagger</groupId>
                 <artifactId>swagger-jaxrs</artifactId>
                 <version>${version.swagger-jaxrs}</version>
@@ -1607,6 +1687,8 @@
 		<module>api</module>
 		<module>client</module>
 		<module>engine</module>
+		<module>olingo-common</module>
+		<module>olingo-patches</module>
 		<module>connectors</module>
 		<module>metadata</module>
 		<module>runtime</module>
@@ -1620,8 +1702,6 @@
 		<module>admin</module>
 		<module>jboss-admin</module>
 		<module>odata</module>
-		<module>olingo-common</module>
-		<module>olingo-patches</module>
 		<module>olingo</module>
 	</modules>
 </project>

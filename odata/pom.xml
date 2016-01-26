@@ -2,7 +2,7 @@
   <parent>
     <artifactId>teiid-parent</artifactId>
     <groupId>org.jboss.teiid</groupId>
-        <version>8.12.5-SNAPSHOT</version>
+        <version>8.12.5</version>
   </parent>
   
   <modelVersion>4.0.0</modelVersion>
@@ -39,6 +39,12 @@
       <artifactId>teiid-api</artifactId>
       <scope>provided</scope>
     </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid-common-core</artifactId>
+      <scope>provided</scope>
+    </dependency>    
                
     <dependency>
       <groupId>org.jboss.teiid</groupId>
@@ -76,7 +82,10 @@
         <artifactId>resteasy-jaxrs</artifactId>
         <scope>provided</scope>
     </dependency>
-    
+    <dependency>
+        <groupId>org.jboss.resteasy</groupId>
+        <artifactId>resteasy-test-tjws</artifactId>
+    </dependency>   
     <dependency>
         <groupId>org.jboss.oreva</groupId>
         <artifactId>odata-core</artifactId>
