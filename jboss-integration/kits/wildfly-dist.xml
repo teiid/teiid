@@ -48,6 +48,11 @@
 			<outputDirectory>docs/schema</outputDirectory>
 		</fileSet>
 		
+		<fileSet>
+            <directory>kits/wildfly/docs/teiid</directory>
+            <outputDirectory>docs/teiid</outputDirectory>
+        </fileSet>
+		
         <fileSet>
             <directory>kits/wildfly</directory>
             <includes>
