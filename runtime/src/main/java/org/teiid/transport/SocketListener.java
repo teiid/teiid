@@ -34,8 +34,10 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
+import io.netty.util.concurrent.Future;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLEngine;
 
@@ -144,10 +146,16 @@ public class SocketListener implements ChannelListenerFactory {
     	return ((InetSocketAddress)this.serverChannel.localAddress()).getPort();
     }
     
-    public void stop() {
+    /**
+     * Stops the {@link SocketListener}
+     * @return a Future if the transport was started successfully 
+     * that can notify of successfully killing all clients
+     */
+    public Future<?> stop() {
     	ChannelFuture future = this.serverChannel.closeFuture();
+    	Future<?> shutdown = null;
     	if (this.bootstrap != null) {
-        	bootstrap.group().shutdownGracefully();
+        	shutdown = bootstrap.group().shutdownGracefully(0, 0, TimeUnit.SECONDS);
         	bootstrap = null;
     	}
     	try {
@@ -155,6 +163,7 @@ public class SocketListener implements ChannelListenerFactory {
 		} catch (InterruptedException e) {
 			throw new TeiidRuntimeException(e);
 		}
+    	return shutdown;
     }
    
     public SocketListenerStats getStats() {
