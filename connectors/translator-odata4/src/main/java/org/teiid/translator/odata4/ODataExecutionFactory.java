@@ -62,7 +62,6 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 
     static final String INVOKE_HTTP = "invokeHttp"; //$NON-NLS-1$
     protected Map<String, FunctionModifier> functionModifiers = new TreeMap<String, FunctionModifier>(String.CASE_INSENSITIVE_ORDER);
-    private String databaseTimeZone;
     private boolean supportsOdataFilter;
     private boolean supportsOdataOrderBy;
     private boolean supportsOdataCount;
@@ -103,21 +102,6 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
     @Override
     public void start() throws TranslatorException {
         super.start();
-        if(this.databaseTimeZone != null && this.databaseTimeZone.trim().length() > 0) {
-            TimeZone tz = TimeZone.getTimeZone(this.databaseTimeZone);
-            //TODO: Convert the dates accordingly
-        }
-    }
-
-    @TranslatorProperty(display="Database time zone", 
-            description="Time zone of the database, if different than Integration Server", 
-            advanced=true)
-    public String getDatabaseTimeZone() {
-        return this.databaseTimeZone;
-    }
-
-    public void setDatabaseTimeZone(String databaseTimeZone) {
-        this.databaseTimeZone = databaseTimeZone;
     }
 
     @Override
