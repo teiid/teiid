@@ -10,6 +10,16 @@
 	<name>Adminshell</name>
 	<description>Adminshell for Teiid</description>
     <packaging>bundle</packaging>
+    
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.codehaus.groovy</groupId>
+                <artifactId>groovy-all</artifactId>
+                <version>${version.org.codehaus.groovy}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>    
 	<dependencies>
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
