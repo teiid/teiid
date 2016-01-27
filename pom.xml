@@ -63,9 +63,9 @@
         <version.org.eclipse.jetty>9.2.7.v20150116</version.org.eclipse.jetty>
         <version.commons-codec>1.9</version.commons-codec>
         <version.com.fasterxml.jackson.core>2.4.2</version.com.fasterxml.jackson.core>
-	    <!--version.com.fasterxml.jackson.swagger>2.4.5</version.com.fasterxml.jackson.swagger-->  <!--  no dependency -->
+	    <version.com.fasterxml.jackson.swagger>2.4.5</version.com.fasterxml.jackson.swagger>
 	    <version.com.fasterxml.aalto-xml>0.9.10</version.com.fasterxml.aalto-xml>
-        <version.org.reflections>0.9.9</version.org.reflections>
+        <!-- <version.org.reflections>0.9.9</version.org.reflections>  -->
         <version.com.google.code.findbugs>2.0.1</version.com.google.code.findbugs>
         <version.javax.ws.rs>2.0-m10</version.javax.ws.rs>  <!-- override eap to resolve classNotFoundException -->
         <version.com.facebook.presto>0.89</version.com.facebook.presto>

@@ -55,7 +55,7 @@
           <include>**/*.sh</include>
         </includes>   
         <fileMode>755</fileMode>  
-    </fileSet> 
+    </fileSet>--> 
           
     <fileSet>
         <directory>target/kits/jboss-as7/overlay</directory>
@@ -63,7 +63,7 @@
         <excludes>
           <exclude>**/*.sh</exclude>
         </excludes>      
-    </fileSet-->
+    </fileSet>
     
     <!--fileSet>
         <directory>target/kits/jboss-as7/overlay</directory>
@@ -203,18 +203,6 @@
       </binaries>
     </moduleSet>    
     
-    <!--moduleSet>
-      <useAllReactorProjects>true</useAllReactorProjects>
-      <includes>
-        <include>org.jboss.teiid:teiid-odata</include>   
-      </includes>
-      <binaries>
-        <includeDependencies>false</includeDependencies>
-        <unpack>false</unpack>
-        <outputDirectory>${jbossas-module-root}/org/jboss/teiid/main/deployments</outputDirectory>
-      </binaries>
-    </moduleSet-->
-    
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
@@ -224,6 +212,30 @@
         <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
         <outputDirectory>${jbossas-module-root}/org/jboss/teiid/olingo/main</outputDirectory>
+      </binaries>
+    </moduleSet>
+    
+    <moduleSet>
+      <useAllReactorProjects>true</useAllReactorProjects>
+      <includes>
+        <include>org.jboss.teiid:teiid-olingo-patches</include>   
+      </includes>
+      <binaries>
+        <includeDependencies>false</includeDependencies>
+        <unpack>false</unpack>
+        <outputDirectory>${jbossas-module-root}/org/apache/olingo/main</outputDirectory>
+      </binaries>
+    </moduleSet>
+        
+    <moduleSet>
+      <useAllReactorProjects>true</useAllReactorProjects>
+      <includes>
+        <include>org.jboss.teiid:teiid-olingo-common</include>   
+      </includes>
+      <binaries>
+        <includeDependencies>false</includeDependencies>
+        <unpack>false</unpack>
+        <outputDirectory>${jbossas-module-root}/org/jboss/teiid/olingo/common/main</outputDirectory>
       </binaries>
     </moduleSet>
     
@@ -247,7 +259,7 @@
         <binaries>
             <includeDependencies>false</includeDependencies>
             <unpack>false</unpack>
-            <outputDirectory>${jbossas-module-root}/org/jboss/teiid/main/deployments</outputDirectory>
+            <outputDirectory>${vdb.loc}</outputDirectory>
             <attachmentClassifier>odata4</attachmentClassifier>
         </binaries>
     </moduleSet> 
@@ -307,12 +319,6 @@
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>true</useTransitiveDependencies>
-                </dependencySet>
-                <dependencySet>
-                    <includes>
-                        <include>org.apache.olingo:*</include>
-                    </includes>
-                    <outputDirectory>${jbossas-module-root}/org/apache/olingo</outputDirectory>
                 </dependencySet>
                 <dependencySet>
                     <useTransitiveDependencies>true</useTransitiveDependencies>

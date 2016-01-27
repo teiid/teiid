@@ -24,6 +24,7 @@ package org.teiid.arquillian;
 
 import static org.junit.Assert.*;
 
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.nio.charset.Charset;
@@ -43,6 +44,7 @@ import org.junit.runner.RunWith;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.jboss.AdminFactory;
+import org.teiid.core.util.ApplicationInfo;
 import org.teiid.core.util.Base64;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.ReaderInputStream;
@@ -59,6 +61,7 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
 	@Before
 	public void setup() throws Exception {
 		admin = AdminFactory.getInstance().createAdmin("localhost", 9999, "admin", "admin".toCharArray());
+		admin.deploy("teiid-olingo-" + ApplicationInfo.getInstance().getReleaseNumber() + "-odata4.war", new FileInputStream("target/jboss-eap-6.4/dataVirtualization/vdb/teiid-olingo-" + ApplicationInfo.getInstance().getReleaseNumber() + "-odata4.war"));
 	}
 
 	@After
@@ -106,7 +109,7 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
 		client = WebClient.create("http://localhost:8080/odata/x/y$metadata");
 		client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
 		response = client.invoke("GET", null);
-		assertEquals(500, response.getStatus());
+		assertEquals(404, response.getStatus());
 		
 		admin.undeploy("loopy-vdb.xml");
 	}
