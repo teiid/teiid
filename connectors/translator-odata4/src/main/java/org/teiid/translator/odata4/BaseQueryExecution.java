@@ -33,7 +33,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.codec.Charsets;
 import org.apache.olingo.client.core.serialization.JsonDeserializer;
 import org.apache.olingo.commons.api.ex.ODataError;
 import org.apache.olingo.commons.api.format.AcceptType;
@@ -194,7 +193,7 @@ public class BaseQueryExecution {
             String skip = null;
             try {
                 skip = next.substring(idx + 11);
-                skip = URLDecoder.decode(skip, Charsets.UTF_8.name());
+                skip = URLDecoder.decode(skip, "UTF-8");
             } catch (UnsupportedEncodingException e) {
                 throw new TranslatorException(e);
             }
