@@ -28,12 +28,22 @@ import java.util.Stack;
 
 import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.data.Range;
-import org.teiid.language.*;
+import org.teiid.language.AggregateFunction;
+import org.teiid.language.AndOr;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Comparison;
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.In;
+import org.teiid.language.IsNull;
+import org.teiid.language.Literal;
+import org.teiid.language.NamedTable;
+import org.teiid.language.Select;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.KeyRecord;
 import org.teiid.metadata.Table;
+import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.translator.TranslatorException;
 
@@ -87,14 +97,14 @@ public class AccumuloQueryVisitor extends HierarchyVisitor {
         visitNode(obj.getLimit());
         
         if (this.doScanEvaluation) {
-        	HashMap<String, String> options = buildTableMetadata(this.scanTable.getName(), this.scanTable.getColumns(), this.ef.getEncoding());
+        	HashMap<String, String> options = buildEvaluatorOptions(this.scanTable, this.ef.getEncoding());
         	options.put(EvaluatorIterator.QUERYSTRING, SQLStringVisitor.getSQLString(obj.getWhere()));
         	IteratorSetting it = new IteratorSetting(1, EvaluatorIterator.class, options);
         	this.scanIterators.add(it);
         }
         
         if (this.selectColumns.size() < this.scanTable.getColumns().size()) {
-        	HashMap<String, String> options = buildTableMetadata(this.scanTable.getName(), this.selectColumns, this.ef.getEncoding());
+            HashMap<String, String> options = buildLimitProjectionOptions(this.selectColumns);
         	IteratorSetting it = new IteratorSetting(iteratorPriority++, LimitProjectionIterator.class, options);
         	this.scanIterators.add(it);
         }
@@ -274,26 +284,28 @@ public class AccumuloQueryVisitor extends HierarchyVisitor {
 		this.scanTable = obj.getMetadataObject();
 	}
 	
-	private static HashMap<String, String> buildTableMetadata(String tableName, List<Column> columns, String encoding) {
+	private static HashMap<String, String> buildEvaluatorOptions(Table table, String encoding) {
         HashMap<String, String> options = new HashMap<String, String>();
-        options.put(EvaluatorIterator.COLUMNS_COUNT, String.valueOf(columns.size()));
-        options.put(EvaluatorIterator.TABLENAME, tableName);
         options.put(EvaluatorIterator.ENCODING, encoding);
+        options.put(EvaluatorIterator.TABLE, table.getName());
         
-        for (int i = 0; i < columns.size(); i++) {
-        	Column column = columns.get(i);
-        	options.put(EvaluatorIterator.createColumnName(EvaluatorIterator.NAME, i), column.getName());
-        	if (!SQLStringVisitor.getRecordName(column).equals(AccumuloMetadataProcessor.ROWID)) {
-	        	options.put(EvaluatorIterator.createColumnName(EvaluatorIterator.CF, i), column.getProperty(AccumuloMetadataProcessor.CF, false));
-	        	if (column.getProperty(AccumuloMetadataProcessor.CQ, false) != null) {
-	        		options.put(EvaluatorIterator.createColumnName(EvaluatorIterator.CQ, i), column.getProperty(AccumuloMetadataProcessor.CQ, false));
-	        	}
-	        	if (column.getProperty(AccumuloMetadataProcessor.VALUE_IN, false) != null) {
-	        		options.put(EvaluatorIterator.createColumnName(EvaluatorIterator.VALUE_IN, i), column.getProperty(AccumuloMetadataProcessor.VALUE_IN, false));
-	        	}
-        	}
-        	options.put(EvaluatorIterator.createColumnName(EvaluatorIterator.DATA_TYPE, i), column.getDatatype().getJavaClassName());
-        }
+        String ddl = DDLStringVisitor.getDDLString(table.getParent(), null, table.getName());
+        options.put(EvaluatorIterator.DDL, ddl);
 		return options;
 	}
+	
+    private static HashMap<String, String> buildLimitProjectionOptions(List<Column> columns) {
+        HashMap<String, String> options = new HashMap<String, String>();
+        options.put(LimitProjectionIterator.COLUMNS_COUNT, String.valueOf(columns.size()));
+        for (int i = 0; i < columns.size(); i++) {
+            Column column = columns.get(i);
+            if (column.getProperty(AccumuloMetadataProcessor.CF, false) != null) {
+                options.put(LimitProjectionIterator.createColumnName(LimitProjectionIterator.CF, i), column.getProperty(AccumuloMetadataProcessor.CF, false));
+            }
+            if (column.getProperty(AccumuloMetadataProcessor.CQ, false) != null) {
+                options.put(LimitProjectionIterator.createColumnName(LimitProjectionIterator.CQ, i), column.getProperty(AccumuloMetadataProcessor.CQ, false));
+            }
+        }
+        return options;
+    }	
 }
