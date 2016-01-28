@@ -46,8 +46,16 @@
         <outputDirectory>modules</outputDirectory>
     </fileSet>       
         
-    <!-- do not includes standalone-teiid.xml, will install using cli scripts -->
-     
+    <fileSet>
+         <directory>target/kits/jboss-as7/overlay/standalone</directory>
+        <outputDirectory>standalone</outputDirectory>      
+     </fileSet> 
+          
+     <!-- 
+     	  the following filesets are not used because the overlay directories
+     	  have to individually included
+     	    -->
+     	    
     <!--fileSet>
         <directory>target/kits/jboss-as7/overlay</directory>
         <outputDirectory>/</outputDirectory>      
@@ -55,7 +63,8 @@
           <include>**/*.sh</include>
         </includes>   
         <fileMode>755</fileMode>  
-    </fileSet>--> 
+    </fileSet>
+          
           
     <fileSet>
         <directory>target/kits/jboss-as7/overlay</directory>
@@ -63,7 +72,7 @@
         <excludes>
           <exclude>**/*.sh</exclude>
         </excludes>      
-    </fileSet>
+    </fileSet--> 
     
     <!--fileSet>
         <directory>target/kits/jboss-as7/overlay</directory>
