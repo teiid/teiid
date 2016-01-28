@@ -44,7 +44,7 @@ import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 
-@SuppressWarnings("nls")
+@SuppressWarnings({"nls", "unchecked"})
 public class TestAccumuloQueryExecution {
     private static AccumuloExecutionFactory translator;
     private static TranslationUtility utility;
@@ -68,13 +68,13 @@ public class TestAccumuloQueryExecution {
     }
     
 	private Execution executeCmd(String sql) throws TranslatorException {
-		Command cmd = this.utility.parseCommand(sql);
-    	Execution exec =  this.translator.createExecution(cmd, Mockito.mock(ExecutionContext.class), this.utility.createRuntimeMetadata(), this.connection);
+		Command cmd = TestAccumuloQueryExecution.utility.parseCommand(sql);
+    	Execution exec =  translator.createExecution(cmd, Mockito.mock(ExecutionContext.class), 
+    	        utility.createRuntimeMetadata(), TestAccumuloQueryExecution.connection);
     	exec.execute();
     	return exec;
 	}
 
-	
     @Test
     public void testExecution() throws Exception {
     	executeCmd("delete from customer");
@@ -212,5 +212,38 @@ public class TestAccumuloQueryExecution {
     	assertEquals(Arrays.asList(new BigDecimal("11.99")), exec.next());
     	assertEquals(Arrays.asList(new BigDecimal("12.99")), exec.next());
     	assertNull(exec.next());    
-    }     
+    }  
+    
+    @Test
+    public void testNumericComparision() throws Exception {
+        executeCmd("delete from smalla");
+        executeCmd("insert into smalla (ROWID, LONGNUM, DOUBLENUM, BIGINTEGERVALUE) values (1, 1,1.99, 1)");
+        executeCmd("insert into smalla (ROWID, LONGNUM, DOUBLENUM, BIGINTEGERVALUE) values (2, 2, 2.99, 2)");
+        executeCmd("insert into smalla (ROWID, LONGNUM, DOUBLENUM, BIGINTEGERVALUE) values (3, 3, 3.99, 3)");
+        executeCmd("insert into smalla (ROWID, LONGNUM, DOUBLENUM, BIGINTEGERVALUE) values (4, 4, 4.99, 4)");
+        
+        AccumuloQueryExecution exec = (AccumuloQueryExecution) executeCmd("select ROWID from smalla "
+                + "where LONGNUM > 2");
+        assertEquals(Arrays.asList(new Integer(3)), exec.next());
+        assertEquals(Arrays.asList(new Integer(4)), exec.next());
+        assertNull(exec.next());
+        
+        exec = (AccumuloQueryExecution) executeCmd("select ROWID from smalla "
+                + "where DOUBLENUM > 3");
+        assertEquals(Arrays.asList(new Integer(3)), exec.next());
+        assertEquals(Arrays.asList(new Integer(4)), exec.next());
+        assertNull(exec.next());    
+    }
+    
+    @Test
+    public void testSelectRowID() throws Exception {
+        executeCmd("delete from smalla");
+        executeCmd("insert into smalla (ROWID, LONGNUM, DOUBLENUM, BIGINTEGERVALUE) values (1, 1,1.99, 1)");
+        executeCmd("insert into smalla (ROWID, LONGNUM, DOUBLENUM, BIGINTEGERVALUE) values (2, 2, 2.99, 2)");
+        
+        AccumuloQueryExecution exec = (AccumuloQueryExecution)executeCmd("select ROWID from smalla");
+        assertEquals(Arrays.asList(new Integer("1")), exec.next());
+        assertEquals(Arrays.asList(new Integer("2")), exec.next());
+        assertNull(exec.next());    
+    }    
 }
