@@ -1256,4 +1256,15 @@ public class TestOracleTranslator {
         String output = "INSERT INTO binary_test (BIN_COL) VALUES (HEXTORAW('BC'))"; //$NON-NLS-1$
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
+    
+    @Test public void testPackageQualified() throws Exception {
+    	OracleMetadataProcessor omp = new OracleMetadataProcessor();
+    	omp.setQuoteString("\"");
+    	String val = omp.getFullyQualifiedName("package", "schema", "proc", true);
+    	assertEquals("\"schema\".\"package\".\"proc\"", val);
+    	
+    	omp.setUseQualifiedName(false);
+    	val = omp.getFullyQualifiedName("package", "schema", "proc", true);
+    	assertEquals("\"package\".\"proc\"", val);
+    }
 }
