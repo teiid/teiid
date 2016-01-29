@@ -368,6 +368,7 @@ temporary table access.
 	</li>
 	<li>TEIID-3808 - The Informix driver handling of timezone information is inconsistent - even if the databaseTimezone translator property is set.  Consider ensuring that the Informix server and the application server are in the same timezone.  
 	<li>TEIID-3805 - SAP Hana returns an empty string rather than null for the substring function when the from index is larger than the string length.
+	<li>TEIID-3816 - Informix can return incorrect results for subquery comparisons involving a boolean value and a subquery that has only a single row.  If you encounter such a scneario and need Teiid to compensate, then please open an issue.
 </ul>
 <h4>from 7.0</h4>
 <ul>
