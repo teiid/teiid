@@ -160,7 +160,11 @@ public final class OracleMetadataProcessor extends
 			//must be a package name
 			if (quoted) {
 				//name in source is required to be package.objectName
-				return quoteName(catalogName) + AbstractMetadataRecord.NAME_DELIM_CHAR + quoteName(objectName);
+				String fullName = quoteName(catalogName) + AbstractMetadataRecord.NAME_DELIM_CHAR + quoteName(objectName);
+				if (this.isUseQualifiedName() && schemaName != null && schemaName.length() > 0) {
+					fullName = (quoted?quoteName(schemaName):schemaName) + AbstractMetadataRecord.NAME_DELIM_CHAR + fullName;
+				}
+				return fullName;
 			}
 			return super.getFullyQualifiedName(schemaName, catalogName, objectName, quoted);
 		}
