@@ -139,8 +139,10 @@ public class TestConnection {
     @Test public void testSetReadOnly2() throws Exception {
     	ConnectionImpl conn = getMMConnection();
         conn.setAutoCommit(false);
+        conn.setReadOnly(true);
+        conn.setInLocalTxn(true);
         try {
-            conn.setReadOnly(true);
+            conn.setReadOnly(false);
             fail("Error Expected"); //$NON-NLS-1$
         } catch (SQLException e) {
             // error expected

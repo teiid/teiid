@@ -528,7 +528,8 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
     }
 
     public boolean isReadOnly() throws SQLException {
-         return readOnly; 
+    	checkConnection();
+    	return readOnly; 
     }
 
     public String nativeSQL(String sql) throws SQLException {
@@ -705,11 +706,9 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
      * @throws throws SQLException.
      */
     public void setReadOnly(boolean readOnly) throws SQLException {
-        if (this.readOnly == readOnly) {
-            return;
-        }
+    	checkConnection();
         // During transaction do not allow to change this flag
-        if (!autoCommitFlag || this.transactionXid != null) {
+        if (isInLocalTxn() || this.transactionXid != null) {
             throw new TeiidSQLException(JDBCPlugin.Util.getString("MMStatement.Invalid_During_Transaction", "setReadOnly(" + readOnly + ")"));//$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$
         }
         this.readOnly = readOnly;
@@ -1061,6 +1060,10 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
 	
 	void setTransactionXid(XidImpl transactionXid) {
 		this.transactionXid = transactionXid;
+	}
+	
+	public void setInLocalTxn(boolean inLocalTxn) {
+		this.inLocalTxn = inLocalTxn;
 	}
 	
 }
