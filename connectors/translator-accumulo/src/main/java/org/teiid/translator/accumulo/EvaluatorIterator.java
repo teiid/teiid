@@ -383,7 +383,6 @@ public class EvaluatorIterator extends WrappingIterator {
 		
 		public List<?> buildTuple (ArrayList<KeyValuePair> values) {
 			Object[] tuple = new Object[this.elementMap.size()];
-			
 			for (KeyValuePair kv:values) {
 				ColumnInfo info = findColumnInfo(kv.key);
 				if (info != null) {
@@ -400,11 +399,14 @@ public class EvaluatorIterator extends WrappingIterator {
 		}
 		
 		private Object convert(byte[] content, ElementSymbol es, Charset enc) {
-			return AccumuloDataTypeManager.convertFromAccumuloType(content, es.getType(), enc);			
+		    if (es.getName().equals(AccumuloMetadataProcessor.ROWID)) {
+		        return AccumuloDataTypeManager.fromLexiCode(content, es.getType());
+		    }
+			return AccumuloDataTypeManager.deserialize(content, es.getType());			
 		}
 		
 		private ColumnInfo findColumnInfo(Key key) {
-			// could not to do hash look up, as colums may be just based on CF or CF+CQ 
+			// could not to do hash look up, as columns may be just based on CF or CF+CQ 
 			for(ColumnSet cs:columnMap.keySet()){
 				if (cs.contains(key)) {
 					return this.columnMap.get(cs);
