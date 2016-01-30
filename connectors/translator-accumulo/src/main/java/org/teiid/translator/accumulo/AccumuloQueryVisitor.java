@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Stack;
 
 import org.apache.accumulo.core.client.IteratorSetting;
+import org.apache.accumulo.core.data.Key;
+import org.apache.accumulo.core.data.PartialKey;
 import org.apache.accumulo.core.data.Range;
 import org.teiid.language.AggregateFunction;
 import org.teiid.language.AndOr;
@@ -109,8 +111,8 @@ public class AccumuloQueryVisitor extends HierarchyVisitor {
         	this.scanIterators.add(it);
         }
     }
-	
-	@Override
+
+    @Override
 	public void visit(DerivedColumn obj) {
 		this.currentAlias = buildAlias(obj.getAlias());
 		visitNode(obj.getExpression());
@@ -157,27 +159,28 @@ public class AccumuloQueryVisitor extends HierarchyVisitor {
 		
 		visitNode(obj.getRightExpression());
 		Object rightExpr = this.onGoingExpression.pop();
-		
+		Key rightKey = buildKey(rightExpr); 
 		if (isPartOfPrimaryKey(column)) {
 	    	switch(obj.getOperator()) {
 	        case EQ:
-	        	this.ranges.add(Range.exact(rightExpr.toString()));
+	        	this.ranges.add(singleRowRange(rightKey));
 	        	break;
 	        case NE:
-	        	this.ranges.add(new Range(null, true, rightExpr.toString(), false));
-	        	this.ranges.add(new Range(rightExpr.toString(), false, null, true));
+	        	this.ranges.add(new Range(null, true, rightKey, false));
+	        	this.ranges.add(new Range(rightKey.followingKey(PartialKey.ROW), null, false, true, false, true));
 	        	break;
 	        case LT:
-	        	this.ranges.add(new Range(null, true, rightExpr.toString(), false));        	
+	        	this.ranges.add(new Range(null, true, rightKey, false));        	
 	        	break;
 	        case LE:
-	        	this.ranges.add(new Range(null, true, rightExpr.toString(), true));
+	            this.ranges.add(new Range(null, true, rightKey, false));
+	            this.ranges.add(singleRowRange(rightKey));
 	        	break;
 	        case GT:
-	        	this.ranges.add(new Range(rightExpr.toString(), false, null, true));        	
+	        	this.ranges.add(new Range(rightKey.followingKey(PartialKey.ROW), null, false, true, false, true));
 	        	break;
 	        case GE:
-	        	this.ranges.add(new Range(rightExpr.toString(), true, null, true));
+	        	this.ranges.add(new Range(rightKey, true, null, true));
 	        	break;
 	        }
 		}
@@ -185,6 +188,15 @@ public class AccumuloQueryVisitor extends HierarchyVisitor {
 			this.doScanEvaluation = true;
 		}
 	}
+
+    static Key buildKey(Object value) {
+        byte[] row = AccumuloDataTypeManager.toLexiCode(value);
+		Key rangeKey = new Key(row, AccumuloDataTypeManager.EMPTY_BYTES, 
+		        AccumuloDataTypeManager.EMPTY_BYTES, 
+		        AccumuloDataTypeManager.EMPTY_BYTES,
+		        Long.MAX_VALUE);
+        return rangeKey;
+    }
 	
 	@Override
 	public void visit(In obj) {
@@ -192,22 +204,26 @@ public class AccumuloQueryVisitor extends HierarchyVisitor {
 		Column column = (Column)this.onGoingExpression.pop();
 		
 		visitNodes(obj.getRightExpressions());
-		
 		if (isPartOfPrimaryKey(column)) {
 			Object prevExpr = null;
 			// NOTE: we are popping in reverse order to IN stmt
 	        for (int i = 0; i < obj.getRightExpressions().size(); i++) {
 	        	Object rightExpr = this.onGoingExpression.pop();
-	        	Range range = Range.exact(rightExpr.toString());
+	        	Key rightKey = buildKey(rightExpr);
+	        	Key prevKey = null;
+	        	if (prevExpr != null) {
+	        	    prevKey = buildKey(prevExpr);
+	        	}
+	        	Range range = singleRowRange(rightKey);
 	        	if (obj.isNegated()) {
 	        		if (prevExpr == null) {
-	        			this.ranges.add(new Range(rightExpr.toString(), false, null, true));
-	        			this.ranges.add(new Range(null, true, rightExpr.toString(), false));
+	        			this.ranges.add(new Range(rightKey, false, null, true));
+	        			this.ranges.add(new Range(null, true, rightKey, false));
 	        		}
 	        		else {
 	        			this.ranges.remove(this.ranges.size()-1);
-	        			this.ranges.add(new Range(rightExpr.toString(), false, prevExpr.toString(), false));
-	        			this.ranges.add(new Range(null, true, rightExpr.toString(), false));
+	        			this.ranges.add(new Range(rightKey, false, prevKey, false));
+	        			this.ranges.add(new Range(null, true, rightKey, false));
 	        		}
 	        		prevExpr = rightExpr;
 	        	}
@@ -220,6 +236,11 @@ public class AccumuloQueryVisitor extends HierarchyVisitor {
 			this.doScanEvaluation = true;
 		}
 	}
+
+    static Range singleRowRange(Key key) {
+        Range range = new Range(key, key.followingKey(PartialKey.ROW), true, false, false, false);
+        return range;
+    }
 	
 	public static boolean isPartOfPrimaryKey(Column column) {
 		KeyRecord pk = ((Table)column.getParent()).getPrimaryKey();
