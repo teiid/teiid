@@ -57,11 +57,10 @@
         <version.gdata-spreadsheet>3.0</version.gdata-spreadsheet>
         <version.gdata-core>1.0</version.gdata-core>
         <version.olap4j>1.1.0</version.olap4j>
-        <version.accumulo>1.5.0</version.accumulo>
-        <version.hadoop-core>0.20.2</version.hadoop-core>
+        <version.hadoop-core>1.2.1</version.hadoop-core>
         <version.thrift>0.9.1</version.thrift>
-        <version.zookeeper>3.4.5</version.zookeeper>
-        <version.accumulo>1.5.0</version.accumulo>
+        <version.zookeeper>3.3.6</version.zookeeper>
+        <version.accumulo>1.6.4</version.accumulo>
         <version.solr>4.6.0</version.solr>
         <version.noggit>0.5</version.noggit>
         <version.aws-java-sdk>1.10.11</version.aws-java-sdk>

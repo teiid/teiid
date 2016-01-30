@@ -32,8 +32,13 @@ import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.ZooKeeperInstance;
 import org.apache.accumulo.core.client.impl.ConnectorImpl;
+import org.apache.accumulo.core.client.impl.ServerClient;
+import org.apache.accumulo.core.client.impl.thrift.ClientService;
+import org.apache.accumulo.core.client.impl.thrift.ClientService.Client;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.core.security.Authorizations;
+import org.apache.accumulo.core.util.Pair;
+import org.apache.thrift.transport.TTransportException;
 import org.teiid.core.util.StringUtil;
 import org.teiid.resource.spi.BasicConnection;
 import org.teiid.resource.spi.ConnectionContext;
@@ -61,6 +66,7 @@ public class AccumuloConnectionImpl extends BasicConnection implements AccumuloC
 				password = ConnectionContext.getPassword(subject, mcf, userName, password);
 				this.roles = ConnectionContext.getRoles(subject, this.roles);
 			}
+			checkTabletServerExists(inst);
 			this.conn = (ConnectorImpl) inst.getConnector(userName, new PasswordToken(password));
 		} catch (AccumuloException e) {
 			throw new ResourceException(e);
@@ -68,6 +74,21 @@ public class AccumuloConnectionImpl extends BasicConnection implements AccumuloC
 			throw new ResourceException(e);
 		}
 	}
+
+    private void checkTabletServerExists(ZooKeeperInstance inst)
+            throws ResourceException {
+        ClientService.Client client = null;
+        try {
+            Pair<String,Client> pair = ServerClient.getConnection(inst, true, 10);
+            client = pair.getSecond();
+        } catch (TTransportException e) {
+            throw new ResourceException(AccumuloManagedConnectionFactory.UTIL.getString("no_tserver"), e);
+        } finally {
+            if (client != null) {
+                ServerClient.close(client);
+            }
+        }
+    }
 	
 	@Override
 	public Connector getInstance() {
