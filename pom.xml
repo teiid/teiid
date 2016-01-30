@@ -88,11 +88,10 @@
         <version.gdata-spreadsheet>3.0</version.gdata-spreadsheet>
         <version.gdata-core>1.0</version.gdata-core>
         <version.olap4j>1.1.0</version.olap4j>
-        <version.accumulo>1.5.0</version.accumulo>
+        <version.accumulo>1.6.4</version.accumulo>
         <version.hadoop-core>0.20.2</version.hadoop-core>
         <version.thrift>0.9.1</version.thrift>
         <version.zookeeper>3.4.5</version.zookeeper>
-        <version.accumulo>1.5.0</version.accumulo>
         <version.solr>4.6.0</version.solr>
         <version.org.apache.phoenix.phoenix-core>4.2.1</version.org.apache.phoenix.phoenix-core>       
   	    

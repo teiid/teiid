@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.accumulo.core.data.ByteSequence;
 import org.apache.accumulo.core.data.Key;
@@ -40,16 +41,34 @@ import org.apache.accumulo.core.iterators.IteratorEnvironment;
 import org.apache.accumulo.core.iterators.SortedKeyValueIterator;
 import org.apache.accumulo.core.iterators.WrappingIterator;
 import org.apache.hadoop.io.Text;
+import org.teiid.adminapi.Model;
+import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.QueryParserException;
+import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
 import org.teiid.query.eval.Evaluator;
+import org.teiid.query.function.FunctionTree;
+import org.teiid.query.function.SystemFunctionManager;
+import org.teiid.query.metadata.CompositeMetadataStore;
+import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.SystemMetadata;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.parser.QueryParser;
+import org.teiid.query.resolver.util.ResolverUtil;
+import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
+import org.teiid.query.util.CommandContext;
 import org.teiid.translator.accumulo.AccumuloMetadataProcessor.ValueIn;
 
 /**
@@ -60,16 +79,13 @@ import org.teiid.translator.accumulo.AccumuloMetadataProcessor.ValueIn;
  * flag after calling deep copy not supported", this is copy of WholeRowIterator
  */
 public class EvaluatorIterator extends WrappingIterator {
+    private static final SystemFunctionManager SFM = new SystemFunctionManager();
 	public static final String QUERYSTRING = "QUERYSTRING"; //$NON-NLS-1$
-	public static final String COLUMNS_COUNT = "COLUMN_COUNT"; //$NON-NLS-1$
-	public static final String COLUMN = "COLUMN"; //$NON-NLS-1$
-	public static final String NAME = "NAME"; //$NON-NLS-1$
-	public static final String CF = "CF"; //$NON-NLS-1$
-	public static final String CQ = "CQ"; //$NON-NLS-1$
-	public static final String VALUE_IN = "VALUE_IN"; //$NON-NLS-1$
-	public static final String DATA_TYPE = "DATA_TYPE"; //$NON-NLS-1$
-	public static final String TABLENAME = "TABLENAME";//$NON-NLS-1$
 	public static final String ENCODING = "ENCODING";//$NON-NLS-1$
+	public static final String TABLE = "TABLE";//$NON-NLS-1$
+	public static final String DDL = "DDL";//$NON-NLS-1$
+	
+	public static final String IMPLICIT_MODEL_NAME = "model";//$NON-NLS-1$
 	
 	static class KeyValuePair{
 		Key key;
@@ -91,33 +107,69 @@ public class EvaluatorIterator extends WrappingIterator {
 			Map<String, String> options, IteratorEnvironment env)
 			throws IOException {
 		super.init(source, options, env);
-		
-		this.evaluatorUtil = new EvaluatorUtil(Charset.forName(options.get(ENCODING)));
-		String query = options.get(QUERYSTRING);
-		QueryParser parser = QueryParser.getQueryParser();
+
 		try {
-			this.criteria = parser.parseCriteria(query);
-			this.elementsInExpression = ElementCollectorVisitor.getElements(this.criteria, true);
-			
-			String tableName = options.get(TABLENAME);
-			GroupSymbol table = new GroupSymbol(tableName);
-			int columnCount = Integer.parseInt(options.get(COLUMNS_COUNT));
-			
-			for (int i = 0; i < columnCount; i++) {
-				String name = options.get(createColumnName(NAME, i));
-				String cf = options.get(createColumnName(CF, i));
-				String cq = options.get(createColumnName(CQ, i));
-				String type = options.get(createColumnName(DATA_TYPE, i));				
-				String valueIn = options.get(createColumnName(VALUE_IN, i));
-				evaluatorUtil.addColumn(i, table, name, cf, cq, type, valueIn);
-			}
+		    GroupSymbol gs = null;
+		    String query = options.get(QUERYSTRING);
+		    TransformationMetadata tm = createTransformationMetadata(options.get(DDL));
+		    this.criteria = QueryParser.getQueryParser().parseCriteria(query);
+		    this.elementsInExpression = ElementCollectorVisitor.getElements(this.criteria, false);
+	        for (ElementSymbol es : this.elementsInExpression) {
+	            gs = es.getGroupSymbol();
+	            ResolverUtil.resolveGroup(gs, tm);
+	        }
+	        ResolverVisitor.resolveLanguageObject(this.criteria, tm);
+	        this.evaluatorUtil = new EvaluatorUtil(Charset.forName(options.get(ENCODING)), gs);
 		} catch (QueryParserException e) {
 			throw new IOException(e);
 		} catch (ClassNotFoundException e) {
 			throw new IOException(e);
-		}
-		this.evaluator = new Evaluator(this.evaluatorUtil.getElementMap(), null, null);
+		} catch (QueryResolverException e) {
+		    throw new IOException(e);
+		} catch (TeiidComponentException e) {
+	        throw new IOException(e);
+        }
+		CommandContext cc = new CommandContext();
+		this.evaluator = new Evaluator(this.evaluatorUtil.getElementMap(), null, cc);
 	}
+    
+    public static TransformationMetadata createTransformationMetadata(String ddl) {
+        MetadataStore mds = new MetadataStore();
+        MetadataFactory mf = new MetadataFactory(null, 1, IMPLICIT_MODEL_NAME,
+                SystemMetadata.getInstance().getRuntimeTypeMap(),
+                new Properties(), null);        
+        QueryParser.getQueryParser().parseDDL(mf, ddl);
+        mf.mergeInto(mds);
+        CompositeMetadataStore store = new CompositeMetadataStore(mds);
+        
+        VDBMetaData vdbMetaData = new VDBMetaData();
+        vdbMetaData.setName("vdb"); //$NON-NLS-1$
+        vdbMetaData.setVersion(1);
+        List<FunctionTree> udfs = new ArrayList<FunctionTree>();
+        for (Schema schema : store.getSchemas().values()) {
+            vdbMetaData.addModel(createModel(schema.getName(), schema.isPhysical()));
+        }
+        TransformationMetadata metadata = new TransformationMetadata(vdbMetaData, store, null, SFM.getSystemFunctions(), udfs);
+        vdbMetaData.addAttchment(TransformationMetadata.class, metadata);
+        vdbMetaData.addAttchment(QueryMetadataInterface.class, metadata);
+        return metadata;
+    }
+    
+    public static ModelMetaData createModel(String name, boolean source) {
+        ModelMetaData model = new ModelMetaData();
+        model.setName(name);
+        if (source) {
+            model.setModelType(Model.Type.PHYSICAL);
+        }
+        else {
+            model.setModelType(Model.Type.VIRTUAL);
+        }
+        model.setVisible(true);
+        model.setSupportsMultiSourceBindings(false);
+        model.addSourceMapping(name, name, null);
+        
+        return model;
+    }    
 	
 	@Override
 	public SortedKeyValueIterator<Key, Value> deepCopy(IteratorEnvironment env) {
@@ -236,10 +288,6 @@ public class EvaluatorIterator extends WrappingIterator {
 		}		
 	}
 	
-	public static String createColumnName(String prop, int index) {
-		return COLUMN+"."+index+"."+prop;//$NON-NLS-1$ //$NON-NLS-2$
-	}
-	
 	private static class ColumnInfo {
 		ElementSymbol es;
 		int pos;
@@ -296,40 +344,45 @@ public class EvaluatorIterator extends WrappingIterator {
 		private Map<ElementSymbol, Integer> elementMap = new HashMap<ElementSymbol, Integer>();
 		private Charset encoding;
 		
-		public EvaluatorUtil(Charset encoding) {
+		public EvaluatorUtil(Charset encoding, GroupSymbol group) throws ClassNotFoundException {
 			this.encoding = encoding;
-		}
-		
-		public void addColumn(int position, GroupSymbol table, String name, String cf, String cq, String type, String valueIn) throws ClassNotFoundException {
-			ElementSymbol element = new ElementSymbol(name, table, Class.forName(type));
-			this.elementMap.put(element, position);
-
-			AccumuloMetadataProcessor.ValueIn valueInEnum = AccumuloMetadataProcessor.ValueIn.VALUE;
-			if (valueIn != null) {
-				valueInEnum = AccumuloMetadataProcessor.ValueIn.valueOf(valueIn.substring(1, valueIn.length()-1));
-			} 
 			
-			ColumnInfo col = new ColumnInfo();
-			col.es = element;
-			col.in = valueInEnum;
-			col.pos = position;
+			List<Column> columns = ((Table)(group.getMetadataID())).getColumns();
+			for (int i = 0; i < columns.size(); i++) {
+			    Column column = columns.get(i);
+	            ElementSymbol element = new ElementSymbol(column.getName(), group, Class.forName(column.getDatatype().getJavaClassName()));
+	            this.elementMap.put(element, i);
 			
-			ColumnSet cs = null;
-			if (cf != null && cq != null) {
-				cs = new ColumnSet(new Text(cf), new Text(cq)); 
-			} 
-			else {
-				if (cf == null) {
-					cf = AccumuloMetadataProcessor.ROWID;
-				}
-				cs = new ColumnSet(new Text(cf));
-			}		
-			this.columnMap.put(cs, col);
+	            String valueIn = column.getProperty(AccumuloMetadataProcessor.VALUE_IN, false);
+	            String cf = column.getProperty(AccumuloMetadataProcessor.CF, false);
+	            String cq = column.getProperty(AccumuloMetadataProcessor.CQ, false);
+	            
+	            AccumuloMetadataProcessor.ValueIn valueInEnum = AccumuloMetadataProcessor.ValueIn.VALUE;
+	            if (valueIn != null) {
+	                valueInEnum = AccumuloMetadataProcessor.ValueIn.valueOf(valueIn.substring(1, valueIn.length()-1));
+	            } 
+	            
+	            ColumnInfo col = new ColumnInfo();
+	            col.es = element;
+	            col.in = valueInEnum;
+	            col.pos = i;
+	            
+	            ColumnSet cs = null;
+	            if (cf != null && cq != null) {
+	                cs = new ColumnSet(new Text(cf), new Text(cq)); 
+	            } 
+	            else {
+	                if (cf == null) {
+	                    cf = AccumuloMetadataProcessor.ROWID;
+	                }
+	                cs = new ColumnSet(new Text(cf));
+	            }       
+	            this.columnMap.put(cs, col);
+			}
 		}
 		
 		public List<?> buildTuple (ArrayList<KeyValuePair> values) {
 			Object[] tuple = new Object[this.elementMap.size()];
-			
 			for (KeyValuePair kv:values) {
 				ColumnInfo info = findColumnInfo(kv.key);
 				if (info != null) {
@@ -346,11 +399,14 @@ public class EvaluatorIterator extends WrappingIterator {
 		}
 		
 		private Object convert(byte[] content, ElementSymbol es, Charset enc) {
-			return AccumuloDataTypeManager.convertFromAccumuloType(content, es.getType(), enc);			
+		    if (es.getName().equals(AccumuloMetadataProcessor.ROWID)) {
+		        return AccumuloDataTypeManager.fromLexiCode(content, es.getType());
+		    }
+			return AccumuloDataTypeManager.deserialize(content, es.getType());			
 		}
 		
 		private ColumnInfo findColumnInfo(Key key) {
-			// could not to do hash look up, as colums may be just based on CF or CF+CQ 
+			// could not to do hash look up, as columns may be just based on CF or CF+CQ 
 			for(ColumnSet cs:columnMap.keySet()){
 				if (cs.contains(key)) {
 					return this.columnMap.get(cs);

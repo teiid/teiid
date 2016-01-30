@@ -28,6 +28,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.accumulo.core.data.PartialKey;
 import org.apache.accumulo.core.data.Range;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,7 +53,8 @@ public class TestAccumuloQueryVisitor {
     	this.translator = new AccumuloExecutionFactory();
     	this.translator.start();
 
-    	TransformationMetadata metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("sampledb.ddl")), "sakila", "rental");
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL(
+                ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("sampledb.ddl")), "sakila", "rental");
     	this.utility = new TranslationUtility(metadata);
     }
 
@@ -80,7 +82,6 @@ public class TestAccumuloQueryVisitor {
 		assertEquals("firstNameAttribute", firstName.getProperty(AccumuloMetadataProcessor.CQ, false));
 		
 	}
-
 	
 	@Test
 	public void testSelectColumn() throws Exception {
@@ -115,7 +116,7 @@ public class TestAccumuloQueryVisitor {
 		assertEquals("customer", visitor.getScanTable().getName());
 		assertEquals(1, visitor.getRanges().size());
 		Range range = visitor.getRanges().get(0);
-		assertEquals(Range.exact("1"), range);
+		assertEquals(AccumuloQueryVisitor.singleRowRange(AccumuloQueryVisitor.buildKey(new Integer(1))), range);
 	}
 	
 	@Test
@@ -125,8 +126,10 @@ public class TestAccumuloQueryVisitor {
 		
 		assertEquals("customer", visitor.getScanTable().getName());
 		assertEquals(2, visitor.getRanges().size());
-		assertEquals(Range.exact("2"), visitor.getRanges().get(0));
-		assertEquals(Range.exact("1"), visitor.getRanges().get(1));
+        assertEquals(AccumuloQueryVisitor.singleRowRange(AccumuloQueryVisitor
+                .buildKey(new Integer(2))), visitor.getRanges().get(0));
+        assertEquals(AccumuloQueryVisitor.singleRowRange(AccumuloQueryVisitor
+                .buildKey(new Integer(1))), visitor.getRanges().get(1));
 	}	
 	
 	@Test
@@ -136,9 +139,13 @@ public class TestAccumuloQueryVisitor {
 		
 		assertEquals("customer", visitor.getScanTable().getName());
 		assertEquals(3, visitor.getRanges().size());
-		assertEquals(new Range("2", false, null, true), visitor.getRanges().get(0));
-		assertEquals(new Range("1", false, "2", false), visitor.getRanges().get(1));
-		assertEquals(new Range(null, true, "1", false), visitor.getRanges().get(2));
+        assertEquals(new Range(AccumuloQueryVisitor.buildKey(new Integer(2)),
+                false, null, true), visitor.getRanges().get(0));
+        assertEquals(new Range(AccumuloQueryVisitor.buildKey(new Integer(1)),
+                false, AccumuloQueryVisitor.buildKey(new Integer(2)), false),
+                visitor.getRanges().get(1));
+        assertEquals(new Range(null, true,AccumuloQueryVisitor.buildKey(new Integer(1)), false),
+                visitor.getRanges().get(2));
 	}
 	
 	@Test
@@ -148,7 +155,7 @@ public class TestAccumuloQueryVisitor {
 		
 		assertEquals("customer", visitor.getScanTable().getName());
 		assertEquals(1, visitor.getRanges().size());
-		assertEquals(new Range(null, true, "2", false), visitor.getRanges().get(0));
+		assertEquals(new Range(null, true, AccumuloQueryVisitor.buildKey(new Integer(2)), false), visitor.getRanges().get(0));
 	}
 	
 	@Test
@@ -157,10 +164,12 @@ public class TestAccumuloQueryVisitor {
 		AccumuloQueryVisitor visitor = buildVisitor(cmd);
 		
 		assertEquals("customer", visitor.getScanTable().getName());
-		assertEquals(1, visitor.getRanges().size());
-		assertEquals(new Range(null, true, "2", true), visitor.getRanges().get(0));
+		assertEquals(2, visitor.getRanges().size());
+		Range r1 = new Range(null, true, AccumuloQueryVisitor.buildKey(new Integer(2)), false);
+		Range r2 = AccumuloQueryVisitor.singleRowRange(AccumuloQueryVisitor.buildKey(new Integer(2)));
+		assertEquals(r1, visitor.getRanges().get(0));
+		assertEquals(r2, visitor.getRanges().get(1));
 	}		
-	
 
 	@Test
 	public void testWhereComapreGT()  throws Exception {
@@ -169,7 +178,8 @@ public class TestAccumuloQueryVisitor {
 		
 		assertEquals("customer", visitor.getScanTable().getName());
 		assertEquals(1, visitor.getRanges().size());
-		assertEquals(new Range("2", false, null, true), visitor.getRanges().get(0));
+		assertEquals(new Range(AccumuloQueryVisitor.buildKey(new Integer(2)).followingKey(PartialKey.ROW), 
+		        null, false, true, false, true),visitor.getRanges().get(0));
 	}
 	
 	@Test
@@ -179,7 +189,7 @@ public class TestAccumuloQueryVisitor {
 		
 		assertEquals("customer", visitor.getScanTable().getName());
 		assertEquals(1, visitor.getRanges().size());
-		assertEquals(new Range("2", true, null, true), visitor.getRanges().get(0));
+		assertEquals(new Range(AccumuloQueryVisitor.buildKey(new Integer(2)), true, null, true), visitor.getRanges().get(0));
 	}
 	
 	@Test
@@ -189,8 +199,10 @@ public class TestAccumuloQueryVisitor {
 		
 		assertEquals("customer", visitor.getScanTable().getName());
 		assertEquals(2, visitor.getRanges().size());
-		assertEquals(new Range(null, true, "2", false), visitor.getRanges().get(0));
-		assertEquals(new Range("2", false, null, true), visitor.getRanges().get(1));
+		assertEquals(new Range(null, true, AccumuloQueryVisitor.buildKey(new Integer(2)), false), 
+		        visitor.getRanges().get(0));
+		assertEquals(new Range(AccumuloQueryVisitor.buildKey(new Integer(2)).followingKey(PartialKey.ROW), 
+		        null, false, true, false, true), visitor.getRanges().get(1));
 	}	
 
 	@Test
@@ -200,8 +212,9 @@ public class TestAccumuloQueryVisitor {
 		
 		assertEquals("customer", visitor.getScanTable().getName());
 		assertEquals(2, visitor.getRanges().size());
-		Range r1 = new Range(null, true, "2", false);
-		Range r2 = new Range("4", false, null, true);
+		Range r1 = new Range(null, true, AccumuloQueryVisitor.buildKey(new Integer(2)), false);
+        Range r2 = new Range(AccumuloQueryVisitor.buildKey(new Integer(4)).followingKey(PartialKey.ROW), 
+                null, false, true, false, true);
 		assertEquals(Range.mergeOverlapping(Arrays.asList(r1, r2)), visitor.getRanges());
 	}
 	
@@ -212,9 +225,10 @@ public class TestAccumuloQueryVisitor {
 		
 		assertEquals("customer", visitor.getScanTable().getName());
 		assertEquals(2, visitor.getRanges().size());
-		Range r1 = new Range(null, true, "2", false);
-		Range r2 = new Range(null, true, "4", false);
-		Range r3 = new Range("4", false, null, true);
+		Range r1 = new Range(null, true, AccumuloQueryVisitor.buildKey(new Integer(2)), false);
+		Range r2 = new Range(null, true, AccumuloQueryVisitor.buildKey(new Integer(4)), false);
+		Range r3 = new Range(AccumuloQueryVisitor.buildKey(new Integer(4)).followingKey(PartialKey.ROW), 
+		        null, false, true, false, true);
 		assertEquals(Range.mergeOverlapping(Arrays.asList(r1, r2, r3)), visitor.getRanges());
 	}	
 	

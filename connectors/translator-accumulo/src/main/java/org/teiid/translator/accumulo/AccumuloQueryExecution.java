@@ -60,8 +60,8 @@ public class AccumuloQueryExecution implements ResultSetExecution {
 	private Entry<Key, Value> prevEntry;
 	
 	public AccumuloQueryExecution(AccumuloExecutionFactory aef, Select command,
-			@SuppressWarnings("unused") ExecutionContext executionContext,
-			@SuppressWarnings("unused") RuntimeMetadata metadata,
+			ExecutionContext executionContext,
+			RuntimeMetadata metadata,
 			AccumuloConnection connection) throws TranslatorException {
 		this.aef = aef;
 		this.connection = connection;
@@ -184,16 +184,16 @@ public class AccumuloQueryExecution implements ResultSetExecution {
 	
 	private List<?> nextRow(Map<String, byte[]> values) {
 		if (!values.isEmpty()) {
-			ArrayList list = new ArrayList();
+			ArrayList<Object> list = new ArrayList<Object>();
 			for(int i = 0; i < this.visitor.projectedColumns().size(); i++) {
 				Column column = this.visitor.projectedColumns().get(i);
 				String colName = SQLStringVisitor.getRecordName(column);
 				byte[] value = values.get(colName);
 				if (colName.equals(AccumuloMetadataProcessor.ROWID)) {
-					list.add(AccumuloDataTypeManager.convertFromAccumuloType(value, this.expectedColumnTypes[i], this.aef.getChasetEncoding()));
+					list.add(AccumuloDataTypeManager.fromLexiCode(value, this.expectedColumnTypes[i]));
 				}
 				else {
-					list.add(AccumuloDataTypeManager.convertFromAccumuloType(value, this.expectedColumnTypes[i], this.aef.getChasetEncoding()));
+					list.add(AccumuloDataTypeManager.deserialize(value, this.expectedColumnTypes[i]));
 				}
 			}
 			return list;
