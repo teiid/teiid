@@ -59,6 +59,7 @@ import org.teiid.common.buffer.impl.BufferFrontedFileStoreCache;
 import org.teiid.common.buffer.impl.FileStorageManager;
 import org.teiid.common.buffer.impl.SplittableStorageManager;
 import org.teiid.common.queue.FakeWorkManager;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.SQLXMLImpl;
@@ -86,6 +87,7 @@ import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.UpdateExecution;
+import org.teiid.transport.SSLConfiguration;
 import org.teiid.transport.SocketConfiguration;
 import org.teiid.transport.WireProtocol;
 
@@ -436,6 +438,22 @@ public class TestEmbeddedServer {
 				conn.close();
 			}
 		}
+	}
+	
+	@Test(expected=TeiidRuntimeException.class)
+	public void testRemoteTrasportSSLFail() throws Exception {
+		SocketConfiguration s = new SocketConfiguration();
+		InetSocketAddress addr = new InetSocketAddress(0);
+		s.setBindAddress(addr.getHostName());
+		s.setPortNumber(addr.getPort());
+		s.setProtocol(WireProtocol.teiid);
+		SSLConfiguration sslConfiguration = new SSLConfiguration();
+		sslConfiguration.setSslProtocol("x");
+		sslConfiguration.setMode("enabled");
+		s.setSSLConfiguration(sslConfiguration);
+		EmbeddedConfiguration config = new EmbeddedConfiguration();
+		config.addTransport(s);
+		es.start(config);
 	}	
 	
 	@Test public void testRemoteODBCTrasport() throws Exception {

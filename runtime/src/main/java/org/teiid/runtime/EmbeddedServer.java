@@ -413,9 +413,14 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		if ( transports != null && !transports.isEmpty()) {
 			for (SocketConfiguration socketConfig:transports) {
 				SocketListener socketConnection = startTransport(socketConfig, bs.getBufferManager(), config.getMaxODBCLobSizeAllowed());
-				if (socketConnection != null) {
-					this.transports.add(socketConnection);
+				if (socketConfig.getSSLConfiguration() != null) {
+					try {
+						socketConfig.getSSLConfiguration().getServerSSLEngine();
+					} catch (Exception e) {
+						throw new TeiidRuntimeException(e);
+					}
 				}
+				this.transports.add(socketConnection);
 			}
 		}
 		this.shutdownListener.setBootInProgress(false);
@@ -482,7 +487,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
     		ODBCSocketListener odbc = new ODBCSocketListener(address, socketConfig, this.services, bm, maxODBCLobSize, this.logon, driver);
     		return odbc;
 		}
-		return null;
+		throw new AssertionError("Unknown protocol " + socketConfig.getProtocol()); //$NON-NLS-1$
 	}
 
 	private void startVDBRepository() {
