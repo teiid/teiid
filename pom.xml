@@ -21,7 +21,8 @@
 	    <!-- version.org.jboss.resteasy>2.3.7.Final</version.org.jboss.resteasy--> <!-- BOM 30 upgraded to 2.3.10, but breaks odata https://issues.jboss.org/browse/TEIID-3826  -->
 	    <!-- EAP and IP Bom specific and overrides -->
 	    <version.org.jboss.integration-platform>6.0.0.CR30</version.org.jboss.integration-platform>
-        <version.org.jboss.as>7.5.0.Final-redhat-15</version.org.jboss.as>
+        <!--version.org.jboss.as>7.5.0.Final-redhat-15</version.org.jboss.as-->
+        <version.org.jboss.as>7.5.5.Final-redhat-3</version.org.jboss.as>
         <version.com.google.guava>14.0.1</version.com.google.guava>     <!--  bom 13.0.1 -->
         <version.jaxen>1.1.4</version.jaxen> <!-- NOTE changing to use bom version of 1.1.3 will cause a build issue in teiid-engine -->
         <!--version.commons-codec>1.9</version.commons-codec-->   <!-- bom version of 1.4 -->
@@ -114,7 +115,9 @@
  	    
  	    <!--  Test only dependencies -->
 	    	    
-	    <!-- ?? -->        <version.org.picketbox>4.0.19.SP4-redhat-1</version.org.picketbox>     <!-- bom 4.1.1.Final  will cause jboss-integration to fail -->                  
+	    <!-- ?? -->       
+	    <version.org.picketbox>4.1.2.Final-redhat-1</version.org.picketbox>
+	    <!--4.0.19.SP4-redhat-1</version.org.picketbox-->     <!-- bom 4.1.1.Final  will cause jboss-integration to fail -->                  
 
 	</properties>
 	<scm>

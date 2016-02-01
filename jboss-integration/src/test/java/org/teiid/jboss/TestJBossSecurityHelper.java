@@ -104,6 +104,10 @@ public class TestJBossSecurityHelper extends TestCase {
 			public Subject getActiveSubject() {
 				return null;
 			}
+			
+			@Override
+			public void logout(Principal principal, Subject subject) {
+			}
 		};
         
         Mockito.stub(securityContext.getAuthenticationManager()).toReturn(authManager);

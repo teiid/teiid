@@ -136,13 +136,13 @@
                         </goals>
                         <configuration>
                             <artifactItems>
-                                <artifactItem>
+                                <!--artifactItem>
                                     <groupId>org.jboss.as</groupId>
                                     <artifactId>jboss-as-dist</artifactId>
                                     <version>${version.org.jboss.as}</version>
                                     <type>zip</type>
                                     <outputDirectory>${project.build.directory}</outputDirectory>
-                                </artifactItem>
+                                </artifactItem-->
                                 <artifactItem>
                                     <groupId>org.jboss.teiid.web-console</groupId>
                                     <artifactId>teiid-console-dist</artifactId>
