@@ -221,18 +221,21 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	@Override
 	public void initCapabilities(Connection connection)
 			throws TranslatorException {
+		DatabaseMetaData metadata = null;
     	try {
-			DatabaseMetaData metadata = connection.getMetaData();
-    		supportsGeneratedKeys = metadata.supportsGetGeneratedKeys();
+			metadata = connection.getMetaData();
     		if (this.version == null) {
     			String fullVersion = metadata.getDatabaseProductVersion();
     			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Setting the database version to", fullVersion); //$NON-NLS-1$
     			setDatabaseVersion(fullVersion);
     		}
 		} catch (SQLException e) {
-			if (this.version == null) {
-				throw new TranslatorException(e);
-			}
+			throw new TranslatorException(e);
+		}
+    	try {
+    		supportsGeneratedKeys = metadata.supportsGetGeneratedKeys();
+    	} catch (SQLException e) {
+    		//ignore -- it's not supported
 		}
 	}
 

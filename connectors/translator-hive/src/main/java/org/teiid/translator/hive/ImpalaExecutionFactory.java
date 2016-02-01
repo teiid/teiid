@@ -293,4 +293,9 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
     	return super.translateCommand(command, context);
     }
     
+    @Override
+    protected boolean usesDatabaseVersion() {
+    	return true;
+    }
+    
 }

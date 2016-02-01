@@ -24,6 +24,8 @@ package org.teiid.translator.jdbc;
 import static org.junit.Assert.*;
 
 import java.sql.Array;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Struct;
@@ -105,5 +107,15 @@ public class TestJDBCExecutionFactory {
 		} finally {
 			TimestampWithTimezone.resetCalendar(null);
 		}
+	}
+	
+	@Test public void testInitCaps() throws Exception {
+		JDBCExecutionFactory jef = new JDBCExecutionFactory();
+		Connection connection = Mockito.mock(Connection.class);
+		DatabaseMetaData mock = Mockito.mock(DatabaseMetaData.class);
+		Mockito.stub(connection.getMetaData()).toReturn(mock);
+		Mockito.stub(mock.supportsGetGeneratedKeys()).toThrow(new SQLException());
+		//should still succeed even if an exception is thrown from supportsGetGeneratedKeys
+		jef.initCapabilities(connection);
 	}
 }
