@@ -527,5 +527,25 @@ public class TestFunctionPushdown {
         dm.addData("SELECT v_0.c_0, g_0.e1, (SELECT g_2.e1 FROM g1 AS g_2 WHERE g_2.e1 = g_0.e1) FROM g2 AS g_0, (SELECT MAX(g_1.e1) AS c_0 FROM g2 AS g_1) AS v_0 WHERE v_0.c_0 = g_0.e1", new List[] {Arrays.asList("a", "a", "a")});
         TestProcessor.helpProcess(plan, dm, new List[] {Arrays.asList("a", 0, "a")});
 	}
+
+	@Test public void testMustPushdownSubexpression() throws Exception {
+		TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign function func (param integer) returns integer; create foreign table g1 (e1 integer)", "x", "y");
+		BasicSourceCapabilities bsc = new BasicSourceCapabilities();
+		bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
+		final DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
+        
+		CommandContext cc = TestProcessor.createCommandContext();
+        cc.setMetadata(tm);
+		
+		String sql = "select xmlelement(name x, func(1)) from g1"; //$NON-NLS-1$
+        
+        ProcessorPlan plan = helpPlan(sql, tm, null, capFinder, 
+                                      new String[] {"SELECT func(1) FROM y.g1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        dataManager.addData("SELECT func(1) FROM g1", new List[] {Arrays.asList(2)});
+        TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList("<x>2</x>")});
+        
+	}
 	
 }

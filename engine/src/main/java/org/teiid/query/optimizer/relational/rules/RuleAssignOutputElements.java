@@ -754,18 +754,31 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 			if (ex instanceof ElementSymbol || ex instanceof Constant) {
 				return false;
 			}
-			if (accessNode != null) {
+			Object modelId = null;
+	        if (accessNode != null) {
+	        	modelId = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
 				//narrow check for projection pushing
-				Object modelId = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
-		        if (RuleRaiseAccess.canPushSymbol(ss, true, modelId, metadata, capFinder, null)) {
+				if (RuleRaiseAccess.canPushSymbol(ss, true, modelId, metadata, capFinder, null)) {
 		        	requiredSymbols.add(ss);
 					return true;
 		        }
 			}
 			if (NodeEditor.findNodePreOrder(node, NodeConstants.Types.GROUP, NodeConstants.Types.ACCESS) == null) {
 		    	Collection<Function> functions = FunctionCollectorVisitor.getFunctions(ss, false);
+		    	List<Function> mustPushSubexpression = null;
 		    	for (Function function : functions) {
-					if (function.getFunctionDescriptor().getPushdown() != PushDown.MUST_PUSHDOWN || EvaluatableVisitor.willBecomeConstant(function)) {
+					if (function.getFunctionDescriptor().getPushdown() != PushDown.MUST_PUSHDOWN 
+							|| (EvaluatableVisitor.willBecomeConstant(function) && accessNode != null && CapabilitiesUtil.supports(Capability.SELECT_WITHOUT_FROM, modelId, metadata, capFinder))) {
+						continue;
+					}
+		    		//there is a special check in the evaluator for a must pushdown function to use
+		    		//the projected value
+					//TODO: we could try to get something in between everything and just the partial
+					if (accessNode != null && RuleRaiseAccess.canPushSymbol(function, true, modelId, metadata, capFinder, null)) {
+			        	if (mustPushSubexpression == null) {
+			        		mustPushSubexpression = new ArrayList<Function>();
+			        	}
+			        	mustPushSubexpression.add(function);
 						continue;
 					}
 					//assume we need the whole thing
@@ -773,6 +786,9 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 					checkSymbols = true;
 					return true;
 				}
+		    	if (mustPushSubexpression != null) {
+		    		requiredSymbols.addAll(mustPushSubexpression);
+		    	}
 			}
 		}
 		return false;

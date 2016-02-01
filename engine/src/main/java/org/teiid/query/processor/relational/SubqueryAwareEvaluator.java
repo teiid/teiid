@@ -438,6 +438,12 @@ public class SubqueryAwareEvaluator extends Evaluator {
 	    	}
 	    } else {
 	    	if (!CapabilitiesUtil.supports(Capability.SELECT_WITHOUT_FROM, fd.getMethod().getParent(), context.getMetadata(), context.getQueryProcessorFactory().getCapabiltiesFinder())) {
+	    		if (elements != null) {
+	    			Integer index = (Integer) elements.get(function);
+	    			 if(index != null) {
+	  		           return tuple.get(index.intValue());
+	  		       }
+	    		}
 		    	throw new FunctionExecutionException(QueryPlugin.Event.TEIID30341, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30341, fd.getFullName()));
 	    	}
 	    	schema = fd.getSchema();
