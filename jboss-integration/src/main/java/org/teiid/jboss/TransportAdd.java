@@ -24,6 +24,8 @@ package org.teiid.jboss;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
 import static org.teiid.jboss.TeiidConstants.*;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 
 import javax.naming.InitialContext;
 
@@ -31,7 +33,6 @@ import org.jboss.as.controller.AbstractAddStepHandler;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.PathAddress;
-import org.jboss.as.controller.ServiceVerificationHandler;
 import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.as.naming.ManagedReferenceFactory;
 import org.jboss.as.naming.ServiceBasedNamingStore;
@@ -104,6 +105,13 @@ class TransportAdd extends AbstractAddStepHandler {
 		if (isDefined(TRANSPORT_SOCKET_BINDING_ATTRIBUTE, operation, context)) {
 			socketBinding = asString(TRANSPORT_SOCKET_BINDING_ATTRIBUTE, operation, context);
     		transport.setSocketConfig(buildSocketConfiguration(context, operation));
+    		try {
+    			transport.getSocketConfig().getSSLConfiguration().getServerSSLEngine();
+    		} catch (IOException e) {
+    			throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50107, transportName, e.getMessage()), e);
+    		} catch (GeneralSecurityException e) {
+    			throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50107, transportName, e.getMessage()), e);
+    		}
 		}
 		else {
 			transport.setLocal(true);
@@ -163,7 +171,7 @@ class TransportAdd extends AbstractAddStepHandler {
 		if (isDefined(TRANSPORT_PROTOCOL_ATTRIBUTE, node, context)) {
 			socket.setProtocol(asString(TRANSPORT_PROTOCOL_ATTRIBUTE, node, context));
 		} else {
-		    socket.setProtocol("teiid");
+		    socket.setProtocol("teiid"); //$NON-NLS-1$
 		}
 				
    		if (isDefined(TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE, node, context)) {

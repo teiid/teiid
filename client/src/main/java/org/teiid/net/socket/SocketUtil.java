@@ -67,7 +67,7 @@ public class SocketUtil {
     static final String KEY_PASSWORD = "org.teiid.ssl.keyPassword"; //$NON-NLS-1$
     static final String TRUST_ALL = "org.teiid.ssl.trustAll"; //$NON-NLS-1$
     
-    static final String DEFAULT_KEYSTORE_TYPE = "JKS"; //$NON-NLS-1$
+    public static final String DEFAULT_KEYSTORE_TYPE = "JKS"; //$NON-NLS-1$
     
     public static final String ANON_CIPHER_SUITE = "TLS_DH_anon_WITH_AES_128_CBC_SHA"; //$NON-NLS-1$
     public static final String DEFAULT_PROTOCOL = "TLSv1"; //$NON-NLS-1$

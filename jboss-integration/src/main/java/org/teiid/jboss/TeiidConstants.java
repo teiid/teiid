@@ -428,6 +428,7 @@ public class TeiidConstants {
         .setAllowExpression(false)
         .setAllowNull(true)
         .setDefaultValue(new ModelNode(SSLConfiguration.LOGIN))
+        .setAllowedValues(SSLConfiguration.LOGIN, SSLConfiguration.ENABLED, SSLConfiguration.DISABLED)
         /*.addAccessConstraint(SensitiveTargetAccessConstraintDefinition.SOCKET_CONFIG)*/
         .build(); 
 	
@@ -436,6 +437,7 @@ public class TeiidConstants {
         .setAllowExpression(false)
         .setAllowNull(true)
         .setDefaultValue(new ModelNode(SSLConfiguration.ONEWAY))
+        .setAllowedValues(SSLConfiguration.ONEWAY, SSLConfiguration.TWOWAY, SSLConfiguration.ANONYMOUS)
         /*.addAccessConstraint(SensitiveTargetAccessConstraintDefinition.SOCKET_CONFIG)*/
         .build();  
 	
@@ -497,7 +499,7 @@ public class TeiidConstants {
         .setXmlName(Element.SSL_KETSTORE_TYPE_ATTRIBUTE.getXMLName())
         .setAllowExpression(false)
         .setAllowNull(true)
-        .setDefaultValue(new ModelNode("JKS"))
+        .setDefaultValue(new ModelNode(SocketUtil.DEFAULT_KEYSTORE_TYPE))
         /*.addAccessConstraint(SensitiveTargetAccessConstraintDefinition.SOCKET_CONFIG)*/
         .build();    
 	
