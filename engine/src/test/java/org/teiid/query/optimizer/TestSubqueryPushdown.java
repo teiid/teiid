@@ -32,6 +32,7 @@ import org.junit.Test;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer.AntiSemiJoin;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.TestOptimizer.SemiJoin;
@@ -44,6 +45,7 @@ import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.rewriter.TestQueryRewriter;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory.DDLHolder;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.util.Options;
 import org.teiid.translator.ExecutionFactory;
@@ -1459,6 +1461,58 @@ public class TestSubqueryPushdown {
                                       new String[] {
                                           "SELECT (SELECT g_1.e1 FROM pm1.g1 AS g_1 WHERE g_1.e2 = g_0.e2) FROM pm1.g2 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
+    
+    @Test public void testPreEvaluationInAggregate() throws Exception {
+    	TransformationMetadata tm = RealMetadataFactory.fromDDL("x", 
+    			new DDLHolder("my", "CREATE foreign TABLE test_b (b integer, c integer)"), 
+				new DDLHolder("pg", "CREATE foreign TABLE test_a (a integer, b integer); CREATE foreign TABLE test_only_pg (a integer, b integer);"));
+		
+    	String sql = "SELECT SUM(x.b - (SELECT a FROM pg.test_only_pg WHERE b = 1)) FROM my.test_b x INNER JOIN pg.test_a y ON x.b = y.b";
     	
+    	BasicSourceCapabilities bsc = getTypicalCapabilities();
+    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, true);
+    	bsc.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+    	bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
+    	bsc.setFunctionSupport("-", true);
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, //$NON-NLS-1$
+                                      tm, null, new DefaultCapabilitiesFinder(bsc),
+                                      new String[] {
+                                          "SELECT g_0.b AS c_0, SUM((g_0.b - (SELECT a FROM pg.test_only_pg WHERE b = 1 LIMIT 2))) AS c_1 FROM my.test_b AS g_0 GROUP BY g_0.b ORDER BY c_0", "SELECT g_0.b AS c_0 FROM pg.test_a AS g_0 ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        HardcodedDataManager hdm = new HardcodedDataManager(tm);
+        hdm.addData("SELECT g_0.a FROM test_only_pg AS g_0 WHERE g_0.b = 1", Arrays.asList(2));
+        hdm.addData("SELECT g_0.b AS c_0, SUM((g_0.b - 2)) AS c_1 FROM test_b AS g_0 GROUP BY g_0.b ORDER BY c_0", Arrays.asList(3, 1));
+        hdm.addData("SELECT g_0.b AS c_0 FROM test_a AS g_0 ORDER BY c_0", Arrays.asList(3));
+        CommandContext cc = TestProcessor.createCommandContext();
+        cc.setMetadata(tm);
+        TestProcessor.helpProcess(plan, cc, hdm, new List[] {Arrays.asList(Long.valueOf(1))} );
+    }
+    
+    @Test public void testPreEvaluationInAggregate1() throws Exception {
+    	TransformationMetadata tm = RealMetadataFactory.fromDDL("x", 
+    			new DDLHolder("my", "CREATE foreign TABLE test_b (b integer, c integer)"), 
+				new DDLHolder("pg", "CREATE foreign TABLE test_a (a integer, b integer); CREATE foreign TABLE test_only_pg (a integer, b integer);"));
+		
+    	String sql = "SELECT SUM(x.b - (SELECT a FROM pg.test_only_pg WHERE b = 1)) FROM my.test_b x";
+    	
+    	BasicSourceCapabilities bsc = getTypicalCapabilities();
+    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, true);
+    	bsc.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+    	bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
+    	bsc.setFunctionSupport("-", true);
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, //$NON-NLS-1$
+                                      tm, null, new DefaultCapabilitiesFinder(bsc),
+                                      new String[] {
+                                          "SELECT SUM((g_0.b - (SELECT a FROM pg.test_only_pg WHERE b = 1 LIMIT 2))) FROM my.test_b AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        HardcodedDataManager hdm = new HardcodedDataManager(tm);
+        hdm.addData("SELECT g_0.a FROM test_only_pg AS g_0 WHERE g_0.b = 1", Arrays.asList(2));
+        hdm.addData("SELECT SUM((g_0.b - 2)) FROM test_b AS g_0", Arrays.asList(Long.valueOf(3)));
+        CommandContext cc = TestProcessor.createCommandContext();
+        cc.setMetadata(tm);
+        TestProcessor.helpProcess(plan, cc, hdm, new List[] {Arrays.asList(Long.valueOf(3))} );
+    }
 
 }
