@@ -781,7 +781,8 @@ public class RulePushAggregates implements
 		    // if the source has no rows we need to insert a select node with criteria
 		    addEmptyFilter(aggregates, stageGroup, metadata, capFinder, RuleRaiseAccess.getModelIDFromAccess(NodeEditor.findNodePreOrder(child, NodeConstants.Types.ACCESS), metadata));
 		}
-		Map<Expression, ElementSymbol> reverseMapping = RelationalPlanner.buildGroupingNode(aggregates, stagedGroupingSymbols, stageGroup, context, idGenerator).inserseMapping();
+		SymbolMap groupingSymbolMap = RelationalPlanner.buildGroupingNode(aggregates, stagedGroupingSymbols, stageGroup, context, idGenerator);
+		Map<Expression, ElementSymbol> reverseMapping = groupingSymbolMap.inserseMapping();
 		
 		GroupSymbol newGroup = reverseMapping.values().iterator().next().getGroupSymbol();
 		PlanNode node = stageGroup.getParent();
@@ -801,17 +802,27 @@ public class RulePushAggregates implements
         PlanNode accessNode = stageGroup.getFirstChild();
         if (accessNode.getType() != NodeConstants.Types.ACCESS) {
         	groupingNodes.add(stageGroup);
-        } else if (RuleRaiseAccess.canRaiseOverGroupBy(stageGroup, accessNode, aggregates, metadata, capFinder, null, false)) {
-			if (considerMultiSource && accessNode.hasBooleanProperty(Info.IS_MULTI_SOURCE)) {
-				groupingNodes.add(stageGroup);
-			} else {
-	        	accessNode.getGroups().clear();
-	        	accessNode.getGroups().addAll(stageGroup.getGroups());
-	            RuleRaiseAccess.performRaise(null, accessNode, stageGroup);
-	            if (filterEmpty && RuleRaiseAccess.canRaiseOverSelect(accessNode, metadata, capFinder, accessNode.getParent(), null)) {
-	            	RuleRaiseAccess.performRaise(null, accessNode, accessNode.getParent());
-	            }
-			}
+        } else { 
+        	//we need the aggregates from the symbol map, which has been cloned from the actual symbols
+        	//this ensures that side effects from testing pushdown will be preserved
+        	Collection<AggregateSymbol> aggs = new ArrayList<AggregateSymbol>(aggregates.size());
+        	for (Expression ex : groupingSymbolMap.asMap().values()) {
+        		if (ex instanceof AggregateSymbol) {
+        			aggs.add((AggregateSymbol)ex);
+        		}
+        	}
+	        if (RuleRaiseAccess.canRaiseOverGroupBy(stageGroup, accessNode, aggs, metadata, capFinder, null, false)) {
+				if (considerMultiSource && accessNode.hasBooleanProperty(Info.IS_MULTI_SOURCE)) {
+					groupingNodes.add(stageGroup);
+				} else {
+		        	accessNode.getGroups().clear();
+		        	accessNode.getGroups().addAll(stageGroup.getGroups());
+		            RuleRaiseAccess.performRaise(null, accessNode, stageGroup);
+		            if (filterEmpty && RuleRaiseAccess.canRaiseOverSelect(accessNode, metadata, capFinder, accessNode.getParent(), null)) {
+		            	RuleRaiseAccess.performRaise(null, accessNode, accessNode.getParent());
+		            }
+				}
+	        }
         }
 	}
 
