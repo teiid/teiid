@@ -54,8 +54,7 @@
         <version.com.force.api>22.0.0</version.com.force.api>
         <version.com.force.api.34>34.0.0</version.com.force.api.34>
         <version.nux>1.6</version.nux>
-        <version.gdata-spreadsheet>3.0</version.gdata-spreadsheet>
-        <version.gdata-core>1.0</version.gdata-core>
+        <version.gdata-core>1.47.1</version.gdata-core>
         <version.olap4j>1.1.0</version.olap4j>
         <version.hadoop-core>1.2.1</version.hadoop-core>
         <version.thrift>0.9.1</version.thrift>
@@ -1408,13 +1407,8 @@
               <version>1.7.2.redhat-3</version>
            </dependency> -->
            <dependency>
-              <groupId>org.jboss.teiid.connectors.google</groupId>
-              <artifactId>gdata-spreadsheet</artifactId>
-              <version>${version.gdata-spreadsheet}</version>
-            </dependency>
-           <dependency>
-              <groupId>org.jboss.teiid.connectors.google</groupId>
-              <artifactId>gdata-core</artifactId>
+              <groupId>com.google.gdata</groupId>
+              <artifactId>core</artifactId>
               <version>${version.gdata-core}</version>
             </dependency>  
     		<dependency>

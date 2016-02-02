@@ -33,8 +33,7 @@
       <dependencySet>
             <includes>
                 <include>org.jboss.teiid.connectors:google-api</include>
-                <include>org.jboss.teiid.connectors.google:gdata-core</include>
-                <include>org.jboss.teiid.connectors.google:gdata-spreadsheet</include>
+                <include>com.google.gdata:core</include>
             </includes>        
             <outputDirectory>${wildfly-module-root}/org/jboss/teiid/translator/google/api/main</outputDirectory>
             <useTransitiveDependencies>true</useTransitiveDependencies>
