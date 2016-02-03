@@ -77,7 +77,7 @@ public class FileManagedConnectionFactory extends BasicManagedConnectionFactory{
 	}
 	
 	public void setAllowParentPaths(Boolean allowParentPaths) {
-		this.allowParentPaths = allowParentPaths;
+		this.allowParentPaths = allowParentPaths != null && allowParentPaths;
 	}
 
 	@Override

@@ -102,7 +102,7 @@ public class LDAPManagedConnectionFactory extends BasicManagedConnectionFactory 
 		result = prime * result + ((ldapAdminUserDN == null) ? 0 : ldapAdminUserDN.hashCode());
 		result = prime * result	+ ((ldapAdminUserPassword == null) ? 0 : ldapAdminUserPassword.hashCode());
 		result = prime * result	+ ((ldapContextFactory == null) ? 0 : ldapContextFactory.hashCode());
-		result = prime * result	+ (int) (ldapTxnTimeoutInMillis ^ (ldapTxnTimeoutInMillis >>> 32));
+		result = prime * result	+ (ldapTxnTimeoutInMillis == null ? 0 : (int) (ldapTxnTimeoutInMillis ^ (ldapTxnTimeoutInMillis >>> 32)));
 		result = prime * result + ((ldapUrl == null) ? 0 : ldapUrl.hashCode());
 		return result;
 	}
