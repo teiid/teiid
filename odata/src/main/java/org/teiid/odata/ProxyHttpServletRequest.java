@@ -28,7 +28,6 @@ import java.net.URL;
 import javax.servlet.http.HttpServletRequest;
 
 import org.jboss.resteasy.util.Encode;
-import org.jboss.resteasy.util.HttpServletRequestDelegate;
 
 public class ProxyHttpServletRequest extends HttpServletRequestDelegate {
 	private URI encodedURI;
