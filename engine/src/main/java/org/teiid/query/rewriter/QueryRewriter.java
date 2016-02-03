@@ -2173,7 +2173,7 @@ public class QueryRewriter {
 		return isConstantConvert(f.getArg(0));
     }
     
-    private Expression rewriteExpression(AggregateSymbol expression) {
+    private Expression rewriteExpression(AggregateSymbol expression) throws TeiidComponentException, TeiidProcessingException {
     	if (expression.isBoolean()) {
     		if (expression.getAggregateFunction() == Type.EVERY) {
     			expression.setAggregateFunction(Type.MIN);
@@ -2192,7 +2192,8 @@ public class QueryRewriter {
     	if (expression.isDistinct() && expression.getAggregateFunction() == Type.USER_DEFINED && expression.getFunctionDescriptor().getMethod().getAggregateAttributes().usesDistinctRows()) {
     		expression.setDistinct(false);
     	}
-    	if (expression.getArgs().length == 1 && expression.getCondition() != null && !expression.respectsNulls()) {
+    	Expression[] args = expression.getArgs();
+		if (args.length == 1 && expression.getCondition() != null && !expression.respectsNulls()) {
     		Expression cond = expression.getCondition();
     		Expression ex = expression.getArg(0);
     		if (!(cond instanceof Criteria)) {
@@ -2202,6 +2203,10 @@ public class QueryRewriter {
     		sce.setType(ex.getType());
     		expression.setCondition(null);
     		expression.setArgs(new Expression[] {sce});
+    		args = expression.getArgs();
+    	}
+    	for (int i = 0; i < args.length; i++) {
+    		args[i] = rewriteExpressionDirect(expression.getArg(i));
     	}
 		return expression;
 	}
