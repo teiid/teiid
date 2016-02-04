@@ -262,11 +262,7 @@ public class StoredProcedure extends ProcedureContainer {
                 ElementSymbol symbol = parameter.getParameterSymbol();
                 symbol.setGroupSymbol(this.getGroup());
                 //should be first among parameters, which we'll ensure
-                if (result.size() == size) {
-                	result.add(symbol);
-                } else {
-                	result.set(size, symbol);
-                }
+            	result.add(size, symbol);
 	        } else if(parameter.getParameterType() == ParameterInfo.INOUT || parameter.getParameterType() == ParameterInfo.OUT){
                 ElementSymbol symbol = parameter.getParameterSymbol();
                 symbol.setGroupSymbol(this.getGroup());
