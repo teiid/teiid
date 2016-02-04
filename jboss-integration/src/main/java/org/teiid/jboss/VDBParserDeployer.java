@@ -79,7 +79,10 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 					
 					@Override
 					public boolean accepts(VirtualFile file) {
-						if (file.isDirectory() && file.getName().toLowerCase().endsWith(VDBResources.MODEL_EXT)) {
+						if (file.isDirectory()) {
+							return false;
+						}
+						if (file.getName().toLowerCase().endsWith(VDBResources.MODEL_EXT)) {
 							UDFMetaData udf = deploymentUnit.getAttachment(TeiidAttachments.UDF_METADATA);
 							if (udf == null) {
 								udf = new FileUDFMetaData();
@@ -88,7 +91,7 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 							((FileUDFMetaData)udf).addModelFile(file);
 							return false;
 						}
-						return !file.isDirectory() && file.getName().toLowerCase().equals(VDBResources.DEPLOYMENT_FILE);
+						return file.getName().toLowerCase().equals(VDBResources.DEPLOYMENT_FILE);
 					}
 				});
 				
