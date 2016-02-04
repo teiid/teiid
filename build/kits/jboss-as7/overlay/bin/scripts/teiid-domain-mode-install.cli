@@ -18,8 +18,14 @@
 /profile=ha/subsystem=logging/logger=org.teiid.COMMAND_LOG:add
 /profile=ha/subsystem=logging/logger=org.teiid.COMMAND_LOG:write-attribute(name="level", value="WARN")
 
+/profile=ha/subsystem=logging/logger=org.teiid.AUDIT_LOG:add
+/profile=ha/subsystem=logging/logger=org.teiid.AUDIT_LOG:write-attribute(name="level", value="WARN")
+
 /profile=full-ha/subsystem=logging/logger=org.teiid.COMMAND_LOG:add
 /profile=full-ha/subsystem=logging/logger=org.teiid.COMMAND_LOG:write-attribute(name="level", value="WARN")
+
+/profile=full-ha/subsystem=logging/logger=org.teiid.AUDIT_LOG:add
+/profile=full-ha/subsystem=logging/logger=org.teiid.AUDIT_LOG:write-attribute(name="level", value="WARN")
 
 
 /profile=ha/subsystem=infinispan/cache-container=teiid-cache:add(default-cache=resultset)
@@ -220,9 +226,5 @@
 /deployment=teiid-odata-${project.version}.war:add(runtime-name=teiid-odata-${project.version}.war,content=[{path=dataVirtualization/vdb/teiid-odata-${project.version}.war/,archive=false,relative-to=jboss.home.dir}])
 /server-group=main-server-group/deployment=teiid-odata-${project.version}.war:add(enabled=true)
 /server-group=other-server-group/deployment=teiid-odata-${project.version}.war:add(enabled=true)
-
-/deployment=teiid-olingo-${project.version}-odata4.war:add(runtime-name=teiid-olingo-${project.version}-odata4.war,content=[{path=dataVirtualization/vdb/teiid-olingo-${project.version}-odata4.war/,archive=false,relative-to=jboss.home.dir}])
-/server-group=main-server-group/deployment=teiid-olingo-${project.version}-odata4.war:add(enabled=true)
-/server-group=other-server-group/deployment=teiid-olingo-${project.version}-odata4.war:add(enabled=true)
 
 /host=master:reload(restart-servers=true)  
