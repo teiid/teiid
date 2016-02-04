@@ -21,12 +21,11 @@
  */
 package org.teiid.translator.accumulo;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -39,6 +38,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
+import org.teiid.core.types.GeometryType;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.language.Command;
@@ -373,5 +373,14 @@ public class TestAccumuloQueryExecution {
         assertEquals(Arrays.asList(new Integer(1), null), exec.next());
         assertEquals(Arrays.asList(new Integer(2), null), exec.next());
         assertNull(exec.next());        
+    }
+    
+    @Test public void testAccumuloDataTypeManager() throws SQLException {
+    	GeometryType gt = new GeometryType(new byte[10]);
+    	gt.setSrid(4000);
+    	byte[] bytes = AccumuloDataTypeManager.serialize(gt);
+    	GeometryType gt1 = (GeometryType) AccumuloDataTypeManager.deserialize(bytes, GeometryType.class);
+    	assertEquals(4000, gt1.getSrid());
+    	assertEquals(10, gt1.length());
     }
 }
