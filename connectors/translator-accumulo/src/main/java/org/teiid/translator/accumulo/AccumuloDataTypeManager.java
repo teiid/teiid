@@ -75,21 +75,29 @@ public class AccumuloDataTypeManager {
                 // this type materialization of the value is BAD
                 Clob clob = (Clob)value;
                 return ObjectConverterUtil.convertToByteArray(clob.getAsciiStream());
+            } else if (value instanceof GeometryType) {
+                GeometryType geometry = (GeometryType)value;
+                //TODO: handle srid
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                ObjectConverterUtil.write(baos, geometry.getBinaryStream(), -1, true);
+                int srid = geometry.getSrid();
+                baos.write((srid >>> 24) & 0xFF);
+                baos.write((srid >>> 16) & 0xFF);
+                baos.write((srid >>>  8) & 0xFF);
+                baos.write((srid >>>  0) & 0xFF);
+                return baos.toByteArray();
             } else if (value instanceof Blob) {
                 // TODO: same as CLOB
                 Blob blob = (Blob)value;
                 return ObjectConverterUtil.convertToByteArray(blob.getBinaryStream());
-            }  else if (value instanceof SQLXML) {
+            } else if (value instanceof SQLXML) {
                 // TODO: same as CLOB
                 SQLXML xml = (SQLXML)value;
                 return ObjectConverterUtil.convertToByteArray(xml.getBinaryStream());
             } else if (value instanceof BinaryType) {
                 BinaryType binary = (BinaryType)value;
                 return binary.getBytes();
-            } else if (value instanceof GeometryType) {
-                GeometryType geometry = (GeometryType)value;
-                return ObjectConverterUtil.convertToByteArray(geometry.getBinaryStream());
-            }  else if (value instanceof byte[]) {
+            } else if (value instanceof byte[]) {
                 return bytesLexicoder.encode((byte[])value);
             }
             else if (value instanceof Object[] ) {
@@ -139,9 +147,16 @@ public class AccumuloDataTypeManager {
                     }
                 });            
             } else if (expectedType.isAssignableFrom(BinaryType.class)) {
+            	
                 return new BinaryType(value);
             } else if (expectedType.isAssignableFrom(GeometryType.class)) {
-                return new GeometryType(value);
+                GeometryType result = new GeometryType(Arrays.copyOf(value, value.length -4));
+                int srid = (((value[value.length - 4] & 0xff) << 24) + 
+                		((value[value.length - 3] & 0xff) << 16) + 
+                		((value[value.length - 2] & 0xff) << 8) + 
+                		((value[value.length - 1] & 0xff) << 0));
+                result.setSrid(srid);
+                return result;
             } else if (expectedType.isAssignableFrom(byte[].class)) {
                 return value;
             }
