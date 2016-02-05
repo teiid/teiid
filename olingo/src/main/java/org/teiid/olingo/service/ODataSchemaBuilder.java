@@ -151,7 +151,7 @@ public class ODataSchemaBuilder {
                 new ArrayList<CsdlEntitySet>(entitySets.values()));
 
         // build entity schema
-        edmSchema.setNamespace(fullSchemaName).setAlias(schema.getName()) //$NON-NLS-1$
+        edmSchema.setNamespace(fullSchemaName).setAlias(schema.getName()) 
                 .setEntityTypes(new ArrayList<CsdlEntityType>(entityTypes.values()))
                 .setEntityContainer(entityContainer);
     }
@@ -360,31 +360,34 @@ public class ODataSchemaBuilder {
     }
 
     private static boolean allowedProcedure(Procedure proc) {
-        // any number of in, inouts, but can have only one LOB if lob is present
-        // only *one* out or inout or result, or resultset allowed
+    	// out not supported
+        // any number of in, but can have only one LOB if lob is present
+        // only *one* result, or resultset allowed
         int inouts = 0;
         int lobs = 0;
         int outs = 0;
         for (ProcedureParameter pp : proc.getParameters()) {
-            if (pp.getType().equals(ProcedureParameter.Type.In) || 
-                    pp.getType().equals(ProcedureParameter.Type.InOut)) {
+            if (pp.getType().equals(ProcedureParameter.Type.Out)) { 
+                return false;
+            }
+        	
+            if (pp.getType().equals(ProcedureParameter.Type.In) 
+            		|| pp.getType().equals(ProcedureParameter.Type.InOut)) {
                 inouts++;
                 if (DataTypeManager.isLOB(pp.getRuntimeType())) {
                     lobs++;
                 }                
-            }
-            
-            if (pp.getType().equals(ProcedureParameter.Type.Out) || 
-                    pp.getType().equals(ProcedureParameter.Type.InOut)) { 
-                return false;
-            }
-            
-            if (pp.getType().equals(ProcedureParameter.Type.ReturnValue)) { 
+            } else if (pp.getType().equals(ProcedureParameter.Type.ReturnValue)) { 
                 outs++;
             }                        
         }
         
         if (proc.getResultSet() != null) {
+        	for (Column c : proc.getResultSet().getColumns()) {
+        		if (DataTypeManager.isLOB(c.getRuntimeType())) {
+        			return false;
+        		}
+        	}
             outs++;
         }
         
@@ -428,7 +431,7 @@ public class ODataSchemaBuilder {
         ArrayList<CsdlParameter> params = new ArrayList<CsdlParameter>();
         for (ProcedureParameter pp : proc.getParameters()) {
             EdmPrimitiveTypeKind odataType = ODataTypeManager.odataType(pp.getRuntimeType());            
-            if (pp.getType().equals(ProcedureParameter.Type.ReturnValue)) { //$NON-NLS-1$                
+            if (pp.getType().equals(ProcedureParameter.Type.ReturnValue)) {                 
                 edmFunction.setReturnType(new CsdlReturnType().setType(odataType.getFullQualifiedName()));
                 continue;
             } 
@@ -443,19 +446,10 @@ public class ODataSchemaBuilder {
         // add a complex type for return resultset.
         ColumnSet<Procedure> returnColumns = proc.getResultSet();
         if (returnColumns != null) {
-            // if return single LOB column treat it as return instead of complex, so the behavior matches 
-            // to that of the REST service.
-            List<Column> columns = returnColumns.getColumns();
-            if (columns.size() == 1 && DataTypeManager.isLOB(columns.get(0).getJavaType())) {
-                EdmPrimitiveTypeKind odataType = ODataTypeManager.odataType(columns.get(0).getRuntimeType());
-                edmFunction.setReturnType(new CsdlReturnType().setType(odataType.getFullQualifiedName()));                
-            }
-            else {
-                CsdlComplexType complexType = buildComplexType(proc, returnColumns);
-                complexTypes.add(complexType);
-                FullQualifiedName odataType = new FullQualifiedName(schemaName, complexType.getName());
-                edmFunction.setReturnType((new CsdlReturnType().setType(odataType).setCollection(true)));
-            }
+            CsdlComplexType complexType = buildComplexType(proc, returnColumns);
+            complexTypes.add(complexType);
+            FullQualifiedName odataType = new FullQualifiedName(schemaName, complexType.getName());
+            edmFunction.setReturnType((new CsdlReturnType().setType(odataType).setCollection(true)));
         }
 
         CsdlFunctionImport functionImport = new CsdlFunctionImport();
@@ -502,7 +496,7 @@ public class ODataSchemaBuilder {
         ArrayList<CsdlParameter> params = new ArrayList<CsdlParameter>();        
         for (ProcedureParameter pp : proc.getParameters()) {
             EdmPrimitiveTypeKind odatatype = ODataTypeManager.odataType(pp.getRuntimeType());
-            if (pp.getType().equals(ProcedureParameter.Type.ReturnValue)) { //$NON-NLS-1$                
+            if (pp.getType().equals(ProcedureParameter.Type.ReturnValue)) {                 
                 edmAction.setReturnType(new CsdlReturnType().setType(odatatype.getFullQualifiedName()));
                 continue;
             }
@@ -517,20 +511,11 @@ public class ODataSchemaBuilder {
         // add a complex type for return resultset.
         ColumnSet<Procedure> returnColumns = proc.getResultSet();
         if (returnColumns != null) {
-            // if return single LOB column treat it as return instead of complex, so the behavior matches 
-            // to that of the REST service.
-            List<Column> columns = returnColumns.getColumns();
-            if (columns.size() == 1 && DataTypeManager.isLOB(columns.get(0).getJavaType())) {
-                EdmPrimitiveTypeKind odataType = ODataTypeManager.odataType(columns.get(0).getRuntimeType());
-                edmAction.setReturnType(new CsdlReturnType().setType(odataType.getFullQualifiedName()));                
-            }
-            else {            
-                CsdlComplexType complexType = buildComplexType(proc, returnColumns);
-                complexTypes.add(complexType);
-                edmAction.setReturnType((new CsdlReturnType()
-                        .setType(new FullQualifiedName(schemaName, complexType
-                                .getName())).setCollection(true)));
-            }
+            CsdlComplexType complexType = buildComplexType(proc, returnColumns);
+            complexTypes.add(complexType);
+            edmAction.setReturnType((new CsdlReturnType()
+                    .setType(new FullQualifiedName(schemaName, complexType
+                            .getName())).setCollection(true)));
         }
 
         CsdlActionImport actionImport = new CsdlActionImport();

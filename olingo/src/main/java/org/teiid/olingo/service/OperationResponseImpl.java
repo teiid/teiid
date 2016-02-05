@@ -18,7 +18,6 @@ import org.apache.olingo.commons.api.edm.EdmType;
 import org.apache.olingo.commons.api.edm.constants.EdmTypeKind;
 import org.apache.olingo.commons.core.edm.EdmPropertyImpl;
 import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
 import org.teiid.odata.api.OperationResponse;
 import org.teiid.olingo.ODataPlugin;
@@ -37,13 +36,6 @@ public class OperationResponseImpl implements OperationResponse {
     @Override
     public void addRow(ResultSet rs) throws SQLException {
         // check for special lob case where single value resultset is present
-        if (rs.getMetaData().getColumnCount() == 1) {
-            Object value = rs.getObject(1);
-            if (DataTypeManager.isLOB(value.getClass())) {
-                addPrimitive(value);
-                return;
-            }
-        }
         this.complexValues.add(getComplexProperty(rs));
     }
     

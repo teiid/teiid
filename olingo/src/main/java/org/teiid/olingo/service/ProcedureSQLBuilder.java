@@ -137,17 +137,8 @@ public class ProcedureSQLBuilder {
         Class<?> teiidType = null;
         
         if (hasResultSet()) {
-            Column column = getResultSetLobColumn();
-            if (column != null) {
-                // this special case where single LOB column in result treated as return
-                teiidType = DataTypeManager.getDataTypeClass(column.getRuntimeType());
-                Integer sqlType = JDBCSQLTypeInfo.getSQLType(DataTypeManager.getDataTypeName(teiidType));
-                this.procedureReturn = new ProcedureReturn(type, sqlType, true, true);                
-            }
-            else {
-                // this is complex type
-                this.procedureReturn = new ProcedureReturn(type, null, true, false);
-            }
+            // this is complex type
+            this.procedureReturn = new ProcedureReturn(type, null, true, false);
         }
         else {
             // must not be null
@@ -197,7 +188,7 @@ public class ProcedureSQLBuilder {
             sql.append("{? = "); //$NON-NLS-1$
         }
         
-        sql.append("call ").append(SQLStringVisitor.escapeSinglePart(this.procedure.getFullName())); //$NON-NLS-1$ //$NON-NLS-2$
+        sql.append("call ").append(SQLStringVisitor.escapeSinglePart(this.procedure.getFullName())); //$NON-NLS-1$ 
         sql.append("("); //$NON-NLS-1$
         
         boolean first = true;
