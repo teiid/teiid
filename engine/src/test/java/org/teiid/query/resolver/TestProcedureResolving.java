@@ -64,6 +64,7 @@ import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.visitor.CommandCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.validator.TestValidator;
 
 @SuppressWarnings("nls")
 public class TestProcedureResolving {
@@ -1154,6 +1155,26 @@ public class TestProcedureResolving {
         CreateProcedureCommand sp = (CreateProcedureCommand) TestResolver.helpResolve(sql, RealMetadataFactory.example1Cached());
         assertEquals(0, sp.getProjectedSymbols().size());
         assertFalse(sp.returnsResultSet());
+    }
+    
+    @Test public void testReturnAndResultSet() throws Exception {
+    	String ddl = "CREATE FOREIGN PROCEDURE proc (OUT param STRING RESULT) RETURNS TABLE (a INTEGER, b STRING);"; //$NON-NLS-1$
+    	TransformationMetadata tm = RealMetadataFactory.fromDDL(ddl, "x", "y");
+    	StoredProcedure sp = (StoredProcedure) TestResolver.helpResolve("exec proc()", tm);
+        assertEquals(2, sp.getProjectedSymbols().size());
+        assertEquals("y.proc.b", sp.getProjectedSymbols().get(1).toString());
+        assertTrue(sp.returnsResultSet());
+        
+        sp.setCallableStatement(true);
+        assertEquals(3, sp.getProjectedSymbols().size());
+        assertEquals("y.proc.param", sp.getProjectedSymbols().get(2).toString());
+        
+        CreateProcedureCommand cpc = (CreateProcedureCommand) TestResolver.helpResolve("begin exec proc(); end", tm);
+        assertEquals(2, cpc.getProjectedSymbols().size());
+        assertEquals(2, ((CommandStatement)cpc.getBlock().getStatements().get(0)).getCommand().getProjectedSymbols().size());
+        assertTrue(cpc.returnsResultSet());
+        
+        TestValidator.helpValidate("begin declare string var; var = exec proc(); select var; end", new String[] {"SELECT var;"}, tm);
     }
     
 }

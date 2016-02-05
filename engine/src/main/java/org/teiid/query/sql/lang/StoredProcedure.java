@@ -255,12 +255,14 @@ public class StoredProcedure extends ProcedureContainer {
 		}
 		//add result set columns
 		List<ElementSymbol> result = new ArrayList<ElementSymbol>(getResultSetColumns());
+		int size = result.size();
 		//add out/inout parameter symbols
 		for (SPParameter parameter : mapOfParameters.values()) {
 			if(parameter.getParameterType() == ParameterInfo.RETURN_VALUE){
                 ElementSymbol symbol = parameter.getParameterSymbol();
                 symbol.setGroupSymbol(this.getGroup());
-                result.add(0, symbol);
+                //should be first among parameters, which we'll ensure
+            	result.add(size, symbol);
 	        } else if(parameter.getParameterType() == ParameterInfo.INOUT || parameter.getParameterType() == ParameterInfo.OUT){
                 ElementSymbol symbol = parameter.getParameterSymbol();
                 symbol.setGroupSymbol(this.getGroup());

@@ -48,9 +48,6 @@ import org.jboss.resteasy.test.BaseResourceTest;
 import org.jboss.resteasy.test.EmbeddedContainer;
 import org.jboss.resteasy.test.TestPortProvider;
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -106,7 +103,6 @@ import org.teiid.runtime.EmbeddedServer;
 import org.teiid.runtime.HardCodedExecutionFactory;
 
 @SuppressWarnings("nls")
-@Ignore
 public class TestODataIntegration extends BaseResourceTest {
 	
 	private static final class JSONValueExtractor implements ContentHandler {
@@ -173,9 +169,9 @@ public class TestODataIntegration extends BaseResourceTest {
 	}
 
 	private static TransformationMetadata metadata;
-	@Before
-	public void beforeTODI() throws Exception {	
-		super.before();
+    
+	@Override
+	protected void startContainer() throws Exception {
 		deployment = EmbeddedContainer.start("/odata/northwind");
 		dispatcher = deployment.getDispatcher();
 		deployment.getRegistry().addPerRequestResource(EntitiesRequestResource.class);

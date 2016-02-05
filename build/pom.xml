@@ -136,13 +136,13 @@
                         </goals>
                         <configuration>
                             <artifactItems>
-                                <artifactItem>
+                                <!--artifactItem>
                                     <groupId>org.jboss.as</groupId>
                                     <artifactId>jboss-as-dist</artifactId>
                                     <version>${version.org.jboss.as}</version>
                                     <type>zip</type>
                                     <outputDirectory>${project.build.directory}</outputDirectory>
-                                </artifactItem>
+                                </artifactItem-->
                                 <artifactItem>
                                     <groupId>org.jboss.teiid.web-console</groupId>
                                     <artifactId>teiid-console-dist</artifactId>
@@ -279,7 +279,6 @@
                                 <descriptor>assembly/src.xml</descriptor>
                                 <descriptor>assembly/client-jar.xml</descriptor>
                                 <descriptor>assembly/console-jar.xml</descriptor>
-                                <descriptor>assembly/jboss-as7/dist.xml</descriptor>
                                 <descriptor>assembly/adminshell/adminshell-dist.xml</descriptor>
                                 <descriptor>assembly/embedded-dist.xml</descriptor>
 		                        <descriptor>assembly/jboss-as7/dist.xml</descriptor>
