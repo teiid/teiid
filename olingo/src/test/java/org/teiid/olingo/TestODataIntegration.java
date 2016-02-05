@@ -367,9 +367,8 @@ public class TestODataIntegration {
     @Test
     public void testFunctionReturningStreamDesignedToReturnTable() throws Exception {
         ContentResponse response = http.GET(baseURL + "/loopy/vm1/procComposableXML(x='foo')");
-        assertEquals(200, response.getStatus());
-        assertEquals("<name>foo</name>", 
-                response.getContentAsString());        
+        //can't handle multiple lob rows
+        assertEquals(404, response.getStatus());
     }    
     
     @Test
