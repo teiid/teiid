@@ -30,6 +30,8 @@ import javax.naming.InitialContext;
 import javax.resource.ResourceException;
 
 import org.infinispan.Cache;
+import org.infinispan.configuration.cache.Configuration;
+//import org.infinispan.;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.query.Search;
@@ -81,6 +83,20 @@ public class LocalCacheConnection<K,V>  extends InfinispanCacheWrapper<K,V> {
 
 				ecm = cc;
 				
+				Configuration conf = cc.getCacheConfiguration(config.getCacheNameProxy().getPrimaryCacheAliasName());
+				if (conf == null) {
+					throw new ResourceException("Program Error: cache " +  config.getCacheNameProxy().getPrimaryCacheAliasName() + " was not configured");
+				}
+				conf.module(config.getCacheClassType());
+				
+				if (config.getCacheNameProxy().useMaterialization()) {
+					conf = cc.getCacheConfiguration(config.getCacheNameProxy().getStageCacheAliasName());
+					if (conf == null) {
+						throw new ResourceException("Program Error: cache " +  config.getCacheNameProxy().getStageCacheAliasName() + " was not configured");
+					}
+					
+					conf.module(config.getCacheClassType());
+				}
 			} catch (IOException e) {
 				throw new ResourceException(e);
 			}
@@ -232,6 +248,17 @@ public class LocalCacheConnection<K,V>  extends InfinispanCacheWrapper<K,V> {
 	@Override
 	public void clearCache(String cacheName) throws TranslatorException {		
 		getCache(cacheName).clearAsync();
+	}
+	
+	/**
+	 * Note:  This is used in testing only to enable shutting down the cache so that the next test can recreate it
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.resource.adapter.infinispan.InfinispanCacheWrapper#shutDownCacheManager()
+	 */
+	@Override
+	protected void shutDownCacheManager() {
+		ecm.stop();
 	}
 
 }

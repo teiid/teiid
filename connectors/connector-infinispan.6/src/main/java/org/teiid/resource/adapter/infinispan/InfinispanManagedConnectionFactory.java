@@ -273,10 +273,9 @@ public class InfinispanManagedConnectionFactory extends
 	 * Get the name of the configuration resource or file that should be used to
 	 * configure a local cache manager
 	 * 
-	 * @return the name of the resource or file configuration that should be
-	 *         passed to the cache container
+	 * @return the name, and if indicated full path, of the file configuration that is used
+	 *         to configure the cache container
 	 * @see #setConfigurationFileNameForLocalCache(String)
-	 * @deprecated
 	 */
 	
 	public String getConfigurationFileNameForLocalCache() {
@@ -288,10 +287,9 @@ public class InfinispanManagedConnectionFactory extends
 	 * local cache .
 	 * 
 	 * @param configurationFileName
-	 *            the name of the configuration file that should be used to load
+	 *            the name, and the full path, to the configuration file that should be used to configure
 	 *            the cacheContainer
 	 * @see #getConfigurationFileNameForLocalCache()
-	 * @deprecated
 	 */
 	public void setConfigurationFileNameForLocalCache(
 			String configurationFileName) {

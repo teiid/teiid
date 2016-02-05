@@ -112,5 +112,10 @@ public abstract class InfinispanCacheWrapper<K,V> implements InfinispanCacheConn
 	public ObjectMaterializeLifeCycle getMaterializeLifeCycle() {
 		return new ObjectMaterializeLifeCycle(this, getConfig().getCacheNameProxy());
 	}	
+	
+	/**
+	 * Provided for testing purposes
+	 */
+	protected abstract void shutDownCacheManager();
 
 }

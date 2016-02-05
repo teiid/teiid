@@ -253,6 +253,18 @@ public class RemoteCacheConnection<K,V>  extends InfinispanCacheWrapper<K,V> {
 			
 		}
 	}
+	
+	/**
+	 * Note:  This is used in testing only to enable shutting down the cache so that the next test can recreate it
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.resource.adapter.infinispan.InfinispanCacheWrapper#shutDownCacheManager()
+	 */
+	@Override
+	protected void shutDownCacheManager() {
+		rcm.stop();
+	}
+
 
 
 }

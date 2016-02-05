@@ -42,7 +42,7 @@ public class TestInfinispanConfigFileLocalCache {
 		factory = new InfinispanManagedConnectionFactory();
 
 		factory.setConfigurationFileNameForLocalCache("./src/test/resources/infinispan_persistent_config.xml");
-		factory.setCacheTypeMap(RemoteInfinispanTestHelper.TEST_CACHE_NAME + ":" + "org.teiid.translator.object.testdata.trades.Trade;longValue:long");
+		factory.setCacheTypeMap(RemoteInfinispanTestHelper.TRADE_CACHE_NAME + ":" + "org.teiid.translator.object.testdata.trades.Trade;longValue:long");
 		
 	}
 	
