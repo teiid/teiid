@@ -68,17 +68,7 @@ import org.apache.olingo.server.core.requests.MediaRequest;
 import org.apache.olingo.server.core.requests.MetadataRequest;
 import org.apache.olingo.server.core.requests.OperationRequest;
 import org.apache.olingo.server.core.requests.ServiceDocumentRequest;
-import org.apache.olingo.server.core.responses.CountResponse;
-import org.apache.olingo.server.core.responses.EntityResponse;
-import org.apache.olingo.server.core.responses.EntitySetResponse;
-import org.apache.olingo.server.core.responses.MetadataResponse;
-import org.apache.olingo.server.core.responses.NoContentResponse;
-import org.apache.olingo.server.core.responses.PrimitiveValueResponse;
-import org.apache.olingo.server.core.responses.PropertyResponse;
-import org.apache.olingo.server.core.responses.ServiceDocumentResponse;
-import org.apache.olingo.server.core.responses.ServiceResponse;
-import org.apache.olingo.server.core.responses.ServiceResponseVisior;
-import org.apache.olingo.server.core.responses.StreamResponse;
+import org.apache.olingo.server.core.responses.*;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.TeiidException;
 import org.teiid.core.types.BlobType;
@@ -221,12 +211,10 @@ public class TeiidServiceHandler implements ServiceHandler {
 
             public void visit(StreamResponse response)
                     throws ODataLibraryException, ODataApplicationException {
-                EntityCollection entitySet = (EntityCollection)queryResponse;
-                Entity entity = entitySet.getEntities().get(0);
+            	EntityCollectionResponse entitySet = (EntityCollectionResponse)queryResponse;
                 
                 EdmProperty edmProperty = request.getUriResourceProperty().getProperty();
-                Property property = entity.getProperty(edmProperty.getName());
-                Object value = property.getValue();
+                Object value = entitySet.getStream(edmProperty.getName());
                 if (value == null) {
                     response.writeNoContent(true);
                 }
