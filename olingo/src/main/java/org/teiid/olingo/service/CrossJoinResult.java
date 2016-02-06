@@ -49,7 +49,7 @@ public class CrossJoinResult implements QueryResponse {
         ArrayList<ComplexReturnType> row = new ArrayList<ComplexReturnType>();
         
         Entity entity = EntityCollectionResponse.createEntity(rs,
-                this.documentNode, this.invalidCharacterReplacement, this.baseURL);
+                this.documentNode, this.invalidCharacterReplacement, this.baseURL, null);
         
         row.add(new ComplexReturnType(this.documentNode.getTable().getName(),
                 this.documentNode.getEdmEntityType(), entity, this.documentNode
@@ -57,7 +57,7 @@ public class CrossJoinResult implements QueryResponse {
         
         for (DocumentNode node : this.documentNode.getSibilings()) {
             Entity sibiling = EntityCollectionResponse.createEntity(rs, node,
-                    this.invalidCharacterReplacement, this.baseURL);
+                    this.invalidCharacterReplacement, this.baseURL, null);
             
             row.add(new ComplexReturnType(node.getTable().getName(),
                     this.documentNode.getEdmEntityType(), sibiling,
