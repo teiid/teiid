@@ -102,9 +102,9 @@ public class LocalClient implements Client {
     
     public static ConnectionImpl buildConnection(TeiidDriver driver, String vdbName, Integer version, Properties props) throws SQLException {
         StringBuilder sb = new StringBuilder();
-        sb.append("jdbc:teiid:").append(vdbName).append("."); //$NON-NLS-1$ //$NON-NLS-2$
+        sb.append("jdbc:teiid:").append(vdbName); //$NON-NLS-1$ 
         if (version != null) {
-        	sb.append(version); 
+        	sb.append(".").append(version); //$NON-NLS-1$
         }
         sb.append(";"); //$NON-NLS-1$ 
         
