@@ -17,9 +17,13 @@
   
 /profile=ha/subsystem=logging/logger=org.teiid.COMMAND_LOG:add
 /profile=ha/subsystem=logging/logger=org.teiid.COMMAND_LOG:write-attribute(name="level", value="WARN")
+/profile=ha/subsystem=logging/logger=org.teiid.AUDIT_LOG:add
+/profile=ha/subsystem=logging/logger=org.teiid.AUDIT_LOG:write-attribute(name="level", value="WARN")
 
 /profile=full-ha/subsystem=logging/logger=org.teiid.COMMAND_LOG:add
 /profile=full-ha/subsystem=logging/logger=org.teiid.COMMAND_LOG:write-attribute(name="level", value="WARN")
+/profile=full-ha/subsystem=logging/logger=org.teiid.AUDIT_LOG:add
+/profile=full-ha/subsystem=logging/logger=org.teiid.AUDIT_LOG:write-attribute(name="level", value="WARN")
 
 
 /profile=ha/subsystem=infinispan/cache-container=teiid-cache:add(default-cache=resultset)
