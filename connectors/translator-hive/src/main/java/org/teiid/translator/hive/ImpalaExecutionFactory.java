@@ -28,8 +28,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.*;
 import org.teiid.language.Join.JoinType;
+import org.teiid.language.SortSpecification.Ordering;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
@@ -237,6 +239,11 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
     public List<?> translateCommand(Command command, ExecutionContext context) {
     	if (command instanceof Select) {
     		Select select = (Select)command;
+    		
+    		if (select.getLimit() != null && select.getLimit().getRowOffset() != 0 && select.getOrderBy() == null) {
+    			select.setOrderBy(new OrderBy(Arrays.asList(new SortSpecification(Ordering.ASC, new Literal(1, DataTypeManager.DefaultDataClasses.INTEGER)))));
+    		}
+    		
     		//compensate for an impala issue - https://issues.jboss.org/browse/TEIID-3743
     		if (select.getGroupBy() == null && select.getHaving() == null) {
     			boolean rewrite = false;
@@ -302,6 +309,14 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
     @Override
     protected boolean usesDatabaseVersion() {
     	return true;
+    }
+    
+    @Override
+    public List<?> translateLimit(Limit limit, ExecutionContext context) {
+    	if (limit.getRowOffset() > 0) {
+    		return Arrays.asList("LIMIT ", limit.getRowLimit(), " OFFSET ", limit.getRowOffset()); //$NON-NLS-1$ //$NON-NLS-2$ 
+    	}
+        return null;
     }
     
 }
