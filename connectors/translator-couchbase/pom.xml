@@ -16,7 +16,7 @@
         <version.org.jboss.teiid>8.12.0.Final</version.org.jboss.teiid>
         <version.javax.resource.connector.api>1.5</version.javax.resource.connector.api>
         <jbossas-module-root>modules/system/layers/dv</jbossas-module-root>
-    </properties>    
+    </properties>
     <dependencies>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
@@ -35,6 +35,11 @@
             <artifactId>connector-api</artifactId>
             <version>${version.javax.resource.connector.api}</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.couchbase.client</groupId>
+            <artifactId>java-client</artifactId>
+           <version>2.1.6</version>
         </dependency>
     </dependencies>
 
@@ -76,7 +81,7 @@
                     </goals>
                   </execution>
                 </executions>
-            </plugin>   
-        </plugins>         
+            </plugin>
+        </plugins>
     </build>
 </project>
