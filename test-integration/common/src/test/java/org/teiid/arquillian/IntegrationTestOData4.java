@@ -106,10 +106,10 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
 		conn.close();
 		
 		//try an invalid url
-		client = WebClient.create("http://localhost:8080/odata/x/y$metadata");
+		client = WebClient.create("http://localhost:8080/odata4/x/y$metadata");
 		client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
 		response = client.invoke("GET", null);
-		assertEquals(404, response.getStatus());
+		assertEquals(500, response.getStatus());
 		
 		admin.undeploy("loopy-vdb.xml");
 	}
@@ -155,7 +155,7 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
         
         execute("SELECT Name FROM Sys.Tables Where name='G1'"); //$NON-NLS-1$
         assertResultsSetEquals("Name[string]\nG1");
-        
+
         execute("SELECT * from G1"); //$NON-NLS-1$
         assertResultsSetEquals("e1[string[]]    e2[integer]\n[ABCDEFGHIJ]    0");        
         
