@@ -22,6 +22,7 @@
 package org.teiid.olingo.web;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.ref.SoftReference;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -38,7 +39,10 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.UnavailableException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.olingo.commons.api.http.HttpHeader;
 import org.apache.olingo.server.api.ODataHttpHandler;
 import org.teiid.core.util.LRUCache;
 import org.teiid.deployers.CompositeVDB;
@@ -85,6 +89,22 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response,
+    		FilterChain chain) throws IOException, ServletException {
+    	try {
+    		internalDoFilter(request, response, chain);
+    	} catch (UnavailableException e) {
+    		LogManager.logWarning(LogConstants.CTX_ODATA, e, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16047, e.getMessage()));
+    		HttpServletResponse httpResponse = (HttpServletResponse)response;
+    	    httpResponse.setStatus(404);
+    	    //TODO: json error as well
+    	    httpResponse.setHeader(HttpHeader.CONTENT_TYPE, "application/xml"); //$NON-NLS-1$
+    		PrintWriter writer = httpResponse.getWriter();
+    		writer.write("<m:error xmlns:m=\"http://docs.oasis-open.org/odata/ns/metadata\"><m:code/><m:message>"+StringEscapeUtils.escapeXml10(e.getMessage())+"</m:message></m:error>"); //$NON-NLS-1$ //$NON-NLS-2$
+    		writer.close();
+    	}
+    }
+
+    public void internalDoFilter(ServletRequest request, ServletResponse response,
             FilterChain chain) throws IOException, ServletException {
 
         HttpServletRequest httpRequest = (HttpServletRequest) request;

@@ -103,10 +103,10 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
 		conn.close();
 		
 		//try an invalid url
-		client = WebClient.create("http://localhost:8080/odata/x/y$metadata");
+		client = WebClient.create("http://localhost:8080/odata4/x/y$metadata");
 		client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
 		response = client.invoke("GET", null);
-		assertEquals(500, response.getStatus());
+		assertEquals(404, response.getStatus());
 		
 		admin.undeploy("loopy-vdb.xml");
 	}
@@ -161,10 +161,9 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
     }
     
     // TEIID-3914 - test the olingo-patch work
-    public void testCompositeKeyTimestamp() throws Exception {
-        
+    @Test public void testCompositeKeyTimestamp() throws Exception {
         String vdb = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" + 
-                "<vdb name=\"northwind\" version=\"1\">\n" + 
+                "<vdb name=\"Loopy\" version=\"1\">\n" + 
                 "    <model name=\"m\">\n" + 
                 "        <source name=\"x1\" translator-name=\"loopback\" />\n" + 
                 "         <metadata type=\"DDL\"><![CDATA[\n" + 
@@ -176,15 +175,16 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
         admin.deploy("loopy-vdb.xml", new ReaderInputStream(new StringReader(vdb), Charset.forName("UTF-8")));
         assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1, 3));
         
-        WebClient client = WebClient.create("http://localhost:8080/odata4/m/x(a='a',b=2011-09-11T00:00:00Z)");
+        WebClient client = WebClient.create("http://localhost:8080/odata4/Loopy/m/x(a='a',b=2011-09-11T00:00:00Z)");
         client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
         Response response = client.invoke("GET", null);
         assertEquals(200, response.getStatus());
         
-        client = WebClient.create("http://localhost:8080/odata4/m/x");
+        client = WebClient.create("http://localhost:8080/odata4/Loopy/m/x");
         client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
+        client.header("Content-Type", "application/json");
         response = client.post("{\"a\":\"b\", \"b\":\"2000-02-02T22:22:22Z\"}");
-        assertEquals(204, response.getStatus());
+        assertEquals(304, response.getStatus());
         
         admin.undeploy("loopy-vdb.xml");
     }

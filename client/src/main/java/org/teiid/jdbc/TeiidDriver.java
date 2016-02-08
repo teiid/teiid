@@ -107,7 +107,7 @@ public class TeiidDriver implements Driver {
         		myConnection = socketProfile.connect(url, info);
         	}
         } catch (TeiidSQLException e) {
-            logger.log(Level.SEVERE, "Could not create connection", e); //$NON-NLS-1$
+            logger.log(Level.FINE, "Could not create connection", e); //$NON-NLS-1$
             throw TeiidSQLException.create(e, e.getMessage());
         }
 
