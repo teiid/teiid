@@ -272,12 +272,11 @@ public class EvaluatableVisitor extends LanguageVisitor {
 		return hasCorrelatedReferences;
 	}
     
-    public static final EvaluatableVisitor needsEvaluation(LanguageObject obj, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) {
+    public static final EvaluatableVisitor needsEvaluationVisitor(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) {
         EvaluatableVisitor visitor = new EvaluatableVisitor();
         visitor.modelId = modelID;
         visitor.metadata = metadata;
         visitor.capFinder = capFinder;
-        DeepPreOrderNavigator.doVisit(obj, visitor);
         return visitor;
     }
 

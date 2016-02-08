@@ -57,7 +57,9 @@ import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.rules.CapabilitiesUtil;
 import org.teiid.query.optimizer.relational.rules.RuleChooseDependent;
 import org.teiid.query.parser.QueryParser;
+import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.processor.relational.*;
 import org.teiid.query.processor.relational.SortUtility.Mode;
 import org.teiid.query.resolver.QueryResolver;
@@ -5602,12 +5604,43 @@ public class TestOptimizer {
     /**
      * Try substituting "is not null" for "exists" criteria 
      */
-    @Test public void testScalarSubQueryInSelect() {
+    @Test public void testScalarSubQueryInSelect() throws TeiidComponentException, TeiidProcessingException {
         String sql = "select intkey, case when (select stringkey from bqt1.smallb) is not null then 'nuge' end as a from vqt.smalla"; //$NON-NLS-1$
 
         ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.exampleBQTCached(), 
                                       new String[] { 
-                                          "SELECT BQT1.SmallA.IntKey FROM BQT1.SmallA" }); //$NON-NLS-1$ 
+                                          "SELECT g_0.IntKey, CASE WHEN (SELECT g_0.StringKey FROM BQT1.SmallB AS g_0) IS NOT NULL THEN 'nuge' END FROM BQT1.SmallA AS g_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
+
+        checkNodeTypes(plan, new int[] {
+            1,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // Join
+            0,      // MergeJoin
+            0,      // Null
+            0,      // PlanExecution
+            0,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        });
+        
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT g_0.StringKey FROM BQT1.SmallB AS g_0", Arrays.asList("a"));
+        hdm.addData("SELECT g_0.IntKey FROM BQT1.SmallA AS g_0", Arrays.asList(1));
+        TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(1, "nuge")});
+        
+    }
+    
+    @Test public void testScalarSubQueryInSelect1() throws TeiidComponentException, TeiidProcessingException {
+        String sql = "select intkey, case when (select stringkey from bqt1.smallb where intkey = vqt.smalla.intkey) is not null then 'nuge' end as a from vqt.smalla"; //$NON-NLS-1$
+
+        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.exampleBQTCached(), 
+                                      new String[] { 
+                                          "SELECT g_0.IntKey FROM BQT1.SmallA AS g_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
 
         checkNodeTypes(plan, new int[] {
             1,      // Access
