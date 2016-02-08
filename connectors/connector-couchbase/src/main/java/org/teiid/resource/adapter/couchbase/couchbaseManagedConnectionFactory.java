@@ -15,32 +15,62 @@ public class couchbaseManagedConnectionFactory extends BasicManagedConnectionFac
 
 	public static final BundleUtil UTIL = BundleUtil.getBundleUtil(couchbaseManagedConnectionFactory.class);
 
-	private String sampleProperty = null;
-	
+	//private String sampleProperty = null;
+	private String serverAddress = null;
+	private String bucketName = null;
+	private String bucketPassword = null;
+
+
 	@Override
 	public BasicConnectionFactory<couchbaseConnectionImpl> createConnectionFactory() throws ResourceException {
 
-		if (sampleProperty == null) {
-	 		throw new InvalidPropertyException(UTIL.getString("couchbaseManagedConnectionFactory.sampleproperty_not_set")); //$NON-NLS-1$
+		if (serverAddress == null) {
+	 		throw new InvalidPropertyException(UTIL.getString("couchbaseManagedConnectionFactory.serveraddress_not_set")); //$NON-NLS-1$
 		}
-		
+
+		if (bucketName == null) {
+			throw new InvalidPropertyException(UTIL.getString("couchbaseManagedConnectionFactory.bucketName_not_set")); //$NON-NLS-1$
+		}
+
+		if (bucketPassword == null) {
+	 		throw new InvalidPropertyException(UTIL.getString("couchbaseManagedConnectionFactory.bucketPassword_not_set")); //$NON-NLS-1$
+		}
 		return new BasicConnectionFactory<couchbaseConnectionImpl>() {
 			@Override
 			public couchbaseConnectionImpl getConnection() throws ResourceException {
 				return new couchbaseConnectionImpl(couchbaseManagedConnectionFactory.this);
 			}
 		};
-	}	
-	
-	// ra.xml files getters and setters go here.
-	public String getSampleProperty() {
-		return sampleProperty;
 	}
-	
-	public void setSampleProperty(String property) {
-		this.sampleProperty = property;
+
+	// get couchbase server address
+		public String getServerAddress() {
+		return this.serverAddress;
 	}
-		
+	// get couchbase server address
+	public void setServerAddress(String server) {
+		return this.serverAddress = server;
+	}
+
+	// get couchbase bucket name
+	public String getBucketName() {
+		return this.bucketName;
+	}
+	// set couchbase bucket name
+	public void setBucketName(String bucketName) {
+		return this.bucketName = bucketName;
+	}
+
+	// get couchbase bucket passowrd
+	public String getBucketPassword() {
+		return this.bucketPassword;
+	}
+	// set couchbase bucket name
+	public void setBucketPassword(String bucketPassword) {
+		return this.bucketPassword = bucketPassword;
+	}
+
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -59,7 +89,7 @@ public class couchbaseManagedConnectionFactory extends BasicManagedConnectionFac
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-			
+
 		couchbaseManagedConnectionFactory other = (couchbaseManagedConnectionFactory) obj;
 
 		if (!checkEquals(this.getSampleProperty(), other.getSampleProperty())) {
