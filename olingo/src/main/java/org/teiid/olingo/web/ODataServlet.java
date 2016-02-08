@@ -42,7 +42,7 @@ public class ODataServlet extends HttpServlet {
         
         String uri = request.getRequestURI();
         if (uri.endsWith("auth") || uri.endsWith("token")) {
-            throw new IOException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16044));
+            throw new IOException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16046));
         }
         
         try {
