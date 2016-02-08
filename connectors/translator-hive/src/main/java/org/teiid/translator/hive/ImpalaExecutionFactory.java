@@ -43,6 +43,7 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
     
     public static String IMPALA = "impala"; //$NON-NLS-1$
     public static final Version TWO_0 = Version.getVersion("2.0"); //$NON-NLS-1$
+    public static final Version ONE_2_1 = Version.getVersion("1.2.1"); //$NON-NLS-1$
     
     @Override
     public void start() throws TranslatorException {
@@ -205,6 +206,11 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
          * to produce a small result set that is different from a top-N query
          */
         return true;
+    }
+    
+    @Override
+    public boolean supportsRowOffset() {
+    	return getVersion().compareTo(ONE_2_1) >= 0;
     }
     
     @Override
