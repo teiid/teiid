@@ -442,6 +442,8 @@ public class PlanToProcessConverter {
 	                    	//there's a non-supported construct pushed, we should eval
 	                    	ev.evaluationNotPossible(EvaluationLevel.PROCESSING);
 	                    }
+                    } else {
+                    	DeepPreOrderNavigator.doVisit(command, ev);
                     }
                     aNode.setShouldEvaluateExpressions(ev.requiresEvaluation(EvaluationLevel.PROCESSING) || shouldEval);
                     aNode.setCommand(command);
