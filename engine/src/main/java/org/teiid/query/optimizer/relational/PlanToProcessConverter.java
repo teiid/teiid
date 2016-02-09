@@ -55,6 +55,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.rules.CapabilitiesUtil;
+import org.teiid.query.optimizer.relational.rules.CriteriaCapabilityValidatorVisitor;
 import org.teiid.query.optimizer.relational.rules.FrameUtil;
 import org.teiid.query.optimizer.relational.rules.RuleAssignOutputElements;
 import org.teiid.query.optimizer.relational.rules.RuleChooseJoinStrategy;
@@ -70,6 +71,7 @@ import org.teiid.query.sql.lang.ObjectTable.ObjectColumn;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.SourceHint.SpecificHint;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
+import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -358,7 +360,29 @@ public class PlanToProcessConverter {
                     } catch (QueryMetadataException err) {
                         throw new TeiidComponentException(QueryPlugin.Event.TEIID30248, err);
                     }
-                    ev = EvaluatableVisitor.needsEvaluation(command, modelID, metadata, capFinder);
+                    ev = EvaluatableVisitor.needsEvaluationVisitor(modelID, metadata, capFinder);
+                    if (modelID != null) {
+                    	//do a capabilities sensitive check for needs eval
+	                    String modelName = metadata.getFullName(modelID);
+	                    SourceCapabilities caps = capFinder.findCapabilities(modelName);
+	                    final CriteriaCapabilityValidatorVisitor capVisitor = new CriteriaCapabilityValidatorVisitor(modelID, metadata, capFinder, caps);
+	                    capVisitor.setCheckEvaluation(false);
+	                    DeepPreOrderNavigator nav = new DeepPreOrderNavigator(ev) {
+	                    	protected void visitNode(org.teiid.query.sql.LanguageObject obj) {
+	                    		if (capVisitor.isValid() && obj instanceof Expression) {
+	                    			obj.acceptVisitor(capVisitor);
+	                    		}
+	                    		super.visitNode(obj);
+	                    	}
+	                    };
+	                    command.acceptVisitor(nav);
+	                    if (!capVisitor.isValid()) {
+	                    	//there's a non-supported construct pushed, we should eval
+	                    	ev.evaluationNotPossible(EvaluationLevel.PROCESSING);
+	                    }
+                    } else {
+                    	DeepPreOrderNavigator.doVisit(command, ev);
+                    }
                     aNode.setShouldEvaluateExpressions(ev.requiresEvaluation(EvaluationLevel.PROCESSING));
                     setRoutingName(aNode, node, command);
                     if (command instanceof QueryCommand) {

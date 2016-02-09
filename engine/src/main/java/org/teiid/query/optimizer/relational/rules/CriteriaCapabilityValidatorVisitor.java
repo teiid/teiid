@@ -75,13 +75,15 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     private TeiidComponentException exception;
     private boolean valid = true;
     private boolean isJoin;
+	
+	private boolean checkEvaluation = true;
 
     /**
      * @param iterator
      * @throws TeiidComponentException 
      * @throws QueryMetadataException 
      */
-    CriteriaCapabilityValidatorVisitor(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, SourceCapabilities caps) throws QueryMetadataException, TeiidComponentException {        
+    public CriteriaCapabilityValidatorVisitor(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, SourceCapabilities caps) throws QueryMetadataException, TeiidComponentException {        
         this.modelID = modelID;
         this.metadata = metadata;
         this.capFinder = capFinder;
@@ -90,11 +92,21 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     
     @Override
     public void visit(XMLAttributes obj) {
+    	if (willBecomeConstant(obj)) {
+    		return;
+    	}
     	markInvalid(obj, "Pushdown of XMLAttributes not allowed"); //$NON-NLS-1$
     }
+
+	private boolean willBecomeConstant(LanguageObject obj) {
+		return checkEvaluation && EvaluatableVisitor.willBecomeConstant(obj, true);
+	}
     
     @Override
     public void visit(XMLNamespaces obj) {
+    	if (willBecomeConstant(obj)) {
+    		return;
+    	}
     	markInvalid(obj, "Pushdown of XMLNamespaces not allowed"); //$NON-NLS-1$
     }
     
@@ -105,36 +117,57 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     
     @Override
     public void visit(XMLForest obj) {
+    	if (willBecomeConstant(obj)) {
+    		return;
+    	}
     	markInvalid(obj, "Pushdown of XMLForest not allowed"); //$NON-NLS-1$
     }
     
     @Override
     public void visit(JSONObject obj) {
+    	if (willBecomeConstant(obj)) {
+    		return;
+    	}
     	markInvalid(obj, "Pushdown of JSONObject not allowed"); //$NON-NLS-1$
     }
     
     @Override
     public void visit(XMLElement obj) {
+    	if (willBecomeConstant(obj)) {
+    		return;
+    	}
     	markInvalid(obj, "Pushdown of XMLElement not allowed"); //$NON-NLS-1$
     }
     
     @Override
     public void visit(XMLSerialize obj) {
+    	if (willBecomeConstant(obj)) {
+    		return;
+    	}
     	markInvalid(obj, "Pushdown of XMLSerialize not allowed"); //$NON-NLS-1$
     }
     
     @Override
     public void visit(XMLParse obj) {
+    	if (willBecomeConstant(obj)) {
+    		return;
+    	}
     	markInvalid(obj, "Pushdown of XMLParse not allowed"); //$NON-NLS-1$
     }
     
     @Override
     public void visit(XMLQuery obj) {
+    	if (willBecomeConstant(obj)) {
+    		return;
+    	}
     	markInvalid(obj, "Pushdown of XMLQuery not allowed"); //$NON-NLS-1$
     }
-    
+        
     @Override
     public void visit(QueryString obj) {
+    	if (willBecomeConstant(obj)) {
+    		return;
+    	}
     	markInvalid(obj, "Pushdown of QueryString not allowed"); //$NON-NLS-1$
     }
     
@@ -219,7 +252,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     }
     
     public void visit(CaseExpression obj) {
-        if(! this.caps.supportsCapability(Capability.QUERY_CASE)) {
+        if(! this.caps.supportsCapability(Capability.QUERY_CASE) && !willBecomeConstant(obj)) {
             markInvalid(obj, "CaseExpression pushdown not supported by source"); //$NON-NLS-1$
         }
     }
@@ -285,7 +318,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         int operator = crit.getOperator();
         
         // Verify capabilities are supported
-        if(operator == CompoundCriteria.OR && !this.caps.supportsCapability(Capability.CRITERIA_OR)) {
+        if(operator == CompoundCriteria.OR && !this.caps.supportsCapability(Capability.CRITERIA_OR) && !willBecomeConstant(crit)) {
                 markInvalid(crit, "OR criteria not supported by source"); //$NON-NLS-1$
         }
     }
@@ -302,7 +335,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     public void visit(Function obj) {
         try {
             //if the function can be evaluated then return as it will get replaced during the final rewrite 
-            if (EvaluatableVisitor.willBecomeConstant(obj, true)) { 
+            if (willBecomeConstant(obj)) { 
                 return; 
             }
             if(obj.getFunctionDescriptor().getPushdown() == PushDown.CANNOT_PUSHDOWN) {
@@ -339,6 +372,9 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
 
     public void visit(IsNullCriteria obj) {
         // Check if compares are allowed
+    	if (willBecomeConstant(obj)) {
+    		return;
+    	}
         if(! this.caps.supportsCapability(Capability.CRITERIA_ISNULL)) {
             markInvalid(obj, "IsNull not supported by source"); //$NON-NLS-1$
             return;
@@ -351,6 +387,9 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     }
 
     public void visit(MatchCriteria obj) {
+    	if (willBecomeConstant(obj)) {
+    		return;
+    	}
     	switch (obj.getMode()) {
     	case LIKE:
             if(! this.caps.supportsCapability(Capability.CRITERIA_LIKE)) {
@@ -399,19 +438,22 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
 
     public void visit(NotCriteria obj) {
         // Check if compares are allowed
-        if(! this.caps.supportsCapability(Capability.CRITERIA_NOT)) {
+        if(! this.caps.supportsCapability(Capability.CRITERIA_NOT) && !willBecomeConstant(obj)) {
             markInvalid(obj, "Negation is not supported by source"); //$NON-NLS-1$
             return;
         }
     }
 
     public void visit(SearchedCaseExpression obj) {
-        if(! this.caps.supportsCapability(Capability.QUERY_SEARCHED_CASE)) {
+        if(! this.caps.supportsCapability(Capability.QUERY_SEARCHED_CASE) && !willBecomeConstant(obj)) {
             markInvalid(obj, "SearchedCase is not supported by source"); //$NON-NLS-1$
         }
     }
     
     public void visit(SetCriteria crit) {
+    	if (willBecomeConstant(crit)) {
+    		return;
+    	}
     	checkAbstractSetCriteria(crit);
         try {    
             int maxSize = CapabilitiesUtil.getMaxInCriteriaSize(modelID, metadata, capFinder); 
@@ -805,5 +847,9 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
 
         return visitor.isValid();
     }
+
+	public void setCheckEvaluation(boolean b) {
+		this.checkEvaluation = b;
+	}
 
 }
