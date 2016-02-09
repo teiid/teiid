@@ -20,11 +20,16 @@
 						local-quickstart-cache:com.client.quickstart.pojo.Stock;productId
 					</config-property>
 					
+					<!-- make sure the path to the configuration file is correct -->
+                    <config-property name="ConfigurationFileNameForLocalCache">
+                        ${jboss.home.dir}/standalone/configuration/infinispan.xml
+                    </config-property>					
+					
 					<!-- JNDI lookup name of the Infinispan cache container.  other options include remote hot rod access,
 					   host:port server list, to access a jdg cache -->
-					<config-property name="CacheJndiName">
+					<!--config-property name="CacheJndiName">
 						java:jboss/teiid/jdg-quickstart
-					</config-property>
+					</config-property-->
 				</connection-definition>
 			</connection-definitions>
 		</resource-adapter>
