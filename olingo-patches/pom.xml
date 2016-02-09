@@ -9,7 +9,7 @@
     <artifactId>teiid-olingo-patches</artifactId>
     <name>teiid-olingo-patches</name>
     <description>Teiid OData4 patches module</description>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>

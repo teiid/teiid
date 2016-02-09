@@ -22,10 +22,14 @@ batch
 
 # Create the logger for teiid
 /profile=ha/subsystem=logging/logger=org.teiid.COMMAND_LOG:remove
+/profile=ha/subsystem=logging/logger=org.teiid.AUDIT_LOG:remove
+
 /profile=ha/subsystem=logging/logger=org.teiid.COMMAND_LOG:add(level=DEBUG, handlers=[TEIID_COMMAND_LOG_ASYNC], use-parent-handlers=false)
 /profile=ha/subsystem=logging/logger=org.teiid.AUDIT_LOG:add(level=DEBUG, handlers=[TEIID_AUDIT_LOG_ASYNC], use-parent-handlers=false)
 
 /profile=full-ha/subsystem=logging/logger=org.teiid.COMMAND_LOG:remove
+/profile=full-ha/subsystem=logging/logger=org.teiid.AUDIT_LOG:remove
+
 /profile=full-ha/subsystem=logging/logger=org.teiid.COMMAND_LOG:add(level=DEBUG, handlers=[TEIID_COMMAND_LOG_ASYNC], use-parent-handlers=false)
 /profile=full-ha/subsystem=logging/logger=org.teiid.AUDIT_LOG:add(level=DEBUG, handlers=[TEIID_AUDIT_LOG_ASYNC], use-parent-handlers=false)
 

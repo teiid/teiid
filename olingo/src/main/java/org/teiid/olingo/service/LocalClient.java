@@ -158,12 +158,7 @@ public class LocalClient implements Client {
         if (results) {
             final ResultSet rs = stmt.getResultSet();
             while (rs.next()) {
-                if (returnType.hasResultSetBasedLob()) {
-                    response.addPrimitive(rs.getObject(1));
-                }
-                else {
-                    response.addRow(rs);
-                }
+                response.addRow(rs);
             }
         }
 
