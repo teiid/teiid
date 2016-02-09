@@ -393,7 +393,15 @@ public class TestODataIntegration {
         ContentResponse response = http.GET(baseURL + "/loopy/vm1/procComposableXML(x='foo')");
         //can't handle multiple lob rows
         assertEquals(404, response.getStatus());
-    }    
+    }
+    
+    @Test
+    public void testFunctionReturningReturningArray() throws Exception {
+        ContentResponse response = http.GET(baseURL + "/loopy/vm1/getCustomerIds(p1=1)");
+        assertEquals(200, response.getStatus());
+        assertEquals("{\"@odata.context\":\"$metadata#Collection(Edm.Int32)\",\"value\":[1,2]}", 
+                response.getContentAsString());
+    }
     
     @Test
     public void testActionStream() throws Exception {

@@ -30,7 +30,6 @@ import org.apache.olingo.commons.api.data.Parameter;
 import org.apache.olingo.commons.api.edm.EdmOperation;
 import org.apache.olingo.commons.api.edm.EdmParameter;
 import org.apache.olingo.commons.api.edm.EdmReturnType;
-import org.apache.olingo.commons.api.edm.EdmType;
 import org.apache.olingo.server.api.deserializer.DeserializerException;
 import org.apache.olingo.server.api.uri.UriParameter;
 import org.apache.olingo.server.core.requests.ActionRequest;
@@ -64,29 +63,23 @@ public class ProcedureSQLBuilder {
     private ParameterValueProvider parameterValueProvider;
     
     static class ProcedureReturn implements ProcedureReturnType {
-        private EdmType type;
+        private EdmReturnType type;
         private Integer sqlType = null;
-        private boolean resultSetBasedLob;
         private boolean hasResultSet;
         
-        public ProcedureReturn(EdmType type, Integer sqlType, boolean hasResultSet, boolean resultsetLob) {
+        public ProcedureReturn(EdmReturnType type, Integer sqlType, boolean hasResultSet) {
             this.type = type;
             this.sqlType = sqlType;
-            this.resultSetBasedLob = resultsetLob;
             this.hasResultSet = hasResultSet;
         }
         
-        public EdmType getReturnType() {
+        public EdmReturnType getReturnType() {
             return type;
         }
         
         public boolean hasResultSet() {
             return this.hasResultSet;
         } 
-        
-        public boolean hasResultSetBasedLob() {
-            return resultSetBasedLob;
-        }
         
         public Integer getSqlType() {
             return sqlType;
@@ -133,19 +126,16 @@ public class ProcedureSQLBuilder {
     }
     
     private void visit(EdmReturnType returnType) {        
-        EdmType type = returnType.getType();
-        Class<?> teiidType = null;
-        
         if (hasResultSet()) {
             // this is complex type
-            this.procedureReturn = new ProcedureReturn(type, null, true, false);
+            this.procedureReturn = new ProcedureReturn(returnType, null, true);
         }
         else {
             // must not be null
             ProcedureParameter parameter = getReturnParameter();
-            teiidType = DataTypeManager.getDataTypeClass(parameter.getRuntimeType());
+            Class<?> teiidType = DataTypeManager.getDataTypeClass(parameter.getRuntimeType());
             Integer sqlType = JDBCSQLTypeInfo.getSQLType(DataTypeManager.getDataTypeName(teiidType));
-            this.procedureReturn = new ProcedureReturn(type, sqlType, false, false);
+            this.procedureReturn = new ProcedureReturn(returnType, sqlType, false);
         }
     }
     

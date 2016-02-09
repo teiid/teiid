@@ -669,7 +669,7 @@ public class TeiidServiceHandler implements ServiceHandler {
             ProcedureReturn procedureReturn = builder.getReturn();
             result = new OperationResponseImpl(
                     getClient().getProperty(Client.INVALID_CHARACTER_REPLACEMENT), 
-                    procedureReturn.getReturnType());
+                    procedureReturn);
             
             getClient().executeCall(builder.buildProcedureSQL(), builder.getSqlParameters(), procedureReturn, result);
         } catch (SQLException e) {

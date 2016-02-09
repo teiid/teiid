@@ -63,10 +63,14 @@
             BEGIN
                 return x;
             END
-            CREATE PROCEDURE getCustomers(IN p2 timestamp, IN p3 decimal) RETURNS timestamp OPTIONS (UPDATECOUNT 0) AS
+            CREATE PROCEDURE getCustomers(IN p2 timestamp, IN p3 decimal, out p4 string) RETURNS timestamp OPTIONS (UPDATECOUNT 0) AS
             BEGIN 
               return p2;
             END                                   
+            CREATE PROCEDURE getCustomerIds(IN p1 integer) RETURNS integer[] OPTIONS (UPDATECOUNT 0) AS
+            BEGIN 
+              return (p1, 2);
+            END
         ]]> </metadata>
     </model>
 
