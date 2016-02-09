@@ -21,9 +21,11 @@
  */
 package org.teiid.odata.api;
 
+import java.sql.SQLException;
+
 public interface OperationResponse extends QueryResponse {
 
     Object getResult();
     
-    void addPrimitive(Object value);
+    void setReturnValue(Object value) throws SQLException;
 }
