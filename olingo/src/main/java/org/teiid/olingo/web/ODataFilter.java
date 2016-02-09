@@ -37,13 +37,14 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
-import javax.servlet.UnavailableException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.commons.api.http.HttpHeader;
 import org.apache.olingo.server.api.ODataHttpHandler;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.LRUCache;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.VDBLifeCycleListener;
@@ -97,20 +98,28 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
     		FilterChain chain) throws IOException, ServletException {
     	try {
     		internalDoFilter(request, response, chain);
-    	} catch (UnavailableException e) {
+    	} catch (TeiidProcessingException e) {
+    		//TODO: use engine style logic to determine if the stack should be logged
     		LogManager.logWarning(LogConstants.CTX_ODATA, e, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16047, e.getMessage()));
     		HttpServletResponse httpResponse = (HttpServletResponse)response;
     	    httpResponse.setStatus(404);
-    	    //TODO: json error as well
-    	    httpResponse.setHeader(HttpHeader.CONTENT_TYPE, "application/xml"); //$NON-NLS-1$
-    		PrintWriter writer = httpResponse.getWriter();
-    		writer.write("<m:error xmlns:m=\"http://docs.oasis-open.org/odata/ns/metadata\"><m:code/><m:message>"+StringEscapeUtils.escapeXml10(e.getMessage())+"</m:message></m:error>"); //$NON-NLS-1$ //$NON-NLS-2$
+    	    ContentType contentType = ContentType.parse(request.getContentType());
+    	    PrintWriter writer = httpResponse.getWriter();
+    	    String code = e.getCode()==null?"":e.getCode(); //$NON-NLS-1$
+    	    String message = e.getMessage()==null?"":e.getMessage(); //$NON-NLS-1$
+    		if (contentType != null && contentType.isCompatible(ContentType.APPLICATION_JSON)) {
+    			httpResponse.setHeader(HttpHeader.CONTENT_TYPE, ContentType.APPLICATION_JSON.toContentTypeString());
+    			writer.write("{ \"error\": { \"code\": \""+StringEscapeUtils.escapeJson(code)+"\", \"message\": \""+StringEscapeUtils.escapeJson(message)+"\" } }"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    	    } else {
+        	    httpResponse.setHeader(HttpHeader.CONTENT_TYPE, ContentType.APPLICATION_XML.toContentTypeString()); 
+        		writer.write("<m:error xmlns:m=\"http://docs.oasis-open.org/odata/ns/metadata\"><m:code>"+StringEscapeUtils.escapeXml10(code)+"</m:code><m:message>"+StringEscapeUtils.escapeXml10(message)+"</m:message></m:error>"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    	    }
     		writer.close();
     	}
     }
 
     public void internalDoFilter(ServletRequest request, ServletResponse response,
-            FilterChain chain) throws IOException, ServletException {
+            FilterChain chain) throws IOException, ServletException, TeiidProcessingException {
 
         HttpServletRequest httpRequest = (HttpServletRequest) request;
 
@@ -137,7 +146,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
         
         if (contextPath.equals("/odata4")) { //$NON-NLS-1$
             if (endIdx == -1) {
-                throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16020));
+                throw new TeiidProcessingException(ODataPlugin.Event.TEIID16020, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16020));
             }
 
             vdbName = uri.substring(beginIdx, endIdx);
@@ -145,7 +154,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
             if (modelIdx == -1) {
                 modelName = uri.substring(endIdx + 1).trim();
                 if (modelName.isEmpty()) {
-                    throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16019));
+                    throw new TeiidProcessingException(ODataPlugin.Event.TEIID16019, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16019));
                 }
             } else {
                 modelName = uri.substring(endIdx + 1, modelIdx);
@@ -161,7 +170,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
 
             vdbName = vdbName.trim();
             if (vdbName.isEmpty()) {
-                throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16008));
+                throw new TeiidProcessingException(ODataPlugin.Event.TEIID16008, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16008));
             }
 
             ContextAwareHttpSerlvetRequest contextAwareRequest = new ContextAwareHttpSerlvetRequest(httpRequest);
@@ -170,7 +179,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
         } else {
             if (this.initProperties.getProperty("vdb-name") == null || //$NON-NLS-1$
                     this.initProperties.getProperty("vdb-version") == null) { //$NON-NLS-1$ 
-                throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16018));
+                throw new TeiidProcessingException(ODataPlugin.Event.TEIID16018, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16018));
             }
             
             vdbName = this.initProperties.getProperty("vdb-name"); //$NON-NLS-1$
@@ -179,7 +188,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
             if (endIdx == -1) {
                 modelName = uri.substring(beginIdx).trim();
                 if (modelName.isEmpty()) {
-                    throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16021));
+                    throw new TeiidProcessingException(ODataPlugin.Event.TEIID16021, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16021));
                 }
             } else {
                 modelName = uri.substring(beginIdx, endIdx);
@@ -214,7 +223,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
             httpRequest.setAttribute(Client.class.getName(), client);
             chain.doFilter(httpRequest, response);
         } catch(SQLException e) {
-            throw new ServletException(e);
+            throw new TeiidProcessingException(e);
         } finally {
             try {
                 client.close();
