@@ -8,7 +8,6 @@ import javax.resource.spi.InvalidPropertyException;
 
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
-
 import org.teiid.core.BundleUtil;
 
 public class couchbaseManagedConnectionFactory extends BasicManagedConnectionFactory {
@@ -48,7 +47,7 @@ public class couchbaseManagedConnectionFactory extends BasicManagedConnectionFac
 		return this.serverAddress;
 	}
 	// get couchbase server address
-	public void setServerAddress(String server) {
+	public String setServerAddress(String server) {
 		return this.serverAddress = server;
 	}
 
@@ -57,7 +56,7 @@ public class couchbaseManagedConnectionFactory extends BasicManagedConnectionFac
 		return this.bucketName;
 	}
 	// set couchbase bucket name
-	public void setBucketName(String bucketName) {
+	public String setBucketName(String bucketName) {
 		return this.bucketName = bucketName;
 	}
 
@@ -66,7 +65,7 @@ public class couchbaseManagedConnectionFactory extends BasicManagedConnectionFac
 		return this.bucketPassword;
 	}
 	// set couchbase bucket name
-	public void setBucketPassword(String bucketPassword) {
+	public String setBucketPassword(String bucketPassword) {
 		return this.bucketPassword = bucketPassword;
 	}
 
@@ -77,7 +76,7 @@ public class couchbaseManagedConnectionFactory extends BasicManagedConnectionFac
 		int result = 1;
 		result = prime
 				* result
-				+ ((sampleProperty == null) ? 0 : sampleProperty.hashCode());
+				+ ((serverAddress == null) ? 0 : serverAddress.hashCode());
 		return result;
 	}
 
@@ -92,7 +91,7 @@ public class couchbaseManagedConnectionFactory extends BasicManagedConnectionFac
 
 		couchbaseManagedConnectionFactory other = (couchbaseManagedConnectionFactory) obj;
 
-		if (!checkEquals(this.getSampleProperty(), other.getSampleProperty())) {
+		if (!checkEquals(this.getServerAddress(), other.getServerAddress())) {
 			return false;
 		}
 

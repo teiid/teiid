@@ -1,54 +1,62 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  
-      <modelVersion>4.0.0</modelVersion>
-  
-      <parent>
-    <artifactId>connectors</artifactId>
-    <groupId>org.jboss.teiid</groupId>
-    <version>8.12.0.Final</version>
-  </parent>
-      <groupId>org.jboss.teiid.connectors</groupId>
-      <artifactId>connector-couchbase</artifactId>
-      <version>0.0.1-SNAPSHOT</version>
-      <name>couchbase Resource Adapter</name>
-      <description>couchbase Resource Adapter</description>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<parent>
+		<artifactId>connectors</artifactId>
+		<groupId>org.jboss.teiid</groupId>
+		<version>8.12.0.Final</version>
+	</parent>
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>connector-couchbase</artifactId>
+	<groupId>org.jboss.teiid.connectors</groupId>
+	<name>couchbase Resource Adapter</name>
+	<description>couchbase Resource Adapter</description>
 
-      <packaging>jar</packaging>
+	<packaging>jar</packaging>
 
-    <properties>
-        <version.org.jboss.teiid>8.12.0.Final</version.org.jboss.teiid>
-        <version.javax.resource.connector.api>1.5</version.javax.resource.connector.api>
-        <version.junit.junit>3.8.1</version.junit.junit>
-        <jbossas-module-root>modules/system/layers/dv</jbossas-module-root>
-    </properties> 
-      <dependencies>
-            <dependency>
-                <groupId>org.jboss.teiid</groupId>
-                <artifactId>teiid-api</artifactId>
-                <version>${version.org.jboss.teiid}</version>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.jboss.teiid</groupId>
-                <artifactId>teiid-common-core</artifactId>
-                <version>${version.org.jboss.teiid}</version>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>javax.resource</groupId>
-                <artifactId>connector-api</artifactId>
-                <version>${version.javax.resource.connector.api}</version>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
-              <groupId>junit</groupId>
-              <artifactId>junit</artifactId>
-              <version>${version.junit.junit}</version>
-              <scope>test</scope>
-            </dependency>
-      </dependencies>  
- 	<build>
+	<properties>
+		<version.org.jboss.teiid>8.12.0.Final</version.org.jboss.teiid>
+		<version.javax.resource.connector.api>1.5</version.javax.resource.connector.api>
+		<version.junit.junit>3.8.1</version.junit.junit>
+		<jbossas-module-root>modules/system/layers/dv</jbossas-module-root>
+		<version.com.couchbase.client.java.client>2.1.6</version.com.couchbase.client.java.client>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-api</artifactId>
+			<!-- <version>${version.org.jboss.teiid}</version> -->
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-common-core</artifactId>
+			<!-- <version>${version.org.jboss.teiid}</version> -->
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>javax.resource</groupId>
+			<artifactId>connector-api</artifactId>
+			<!-- <version>${version.javax.resource.connector.api}</version> -->
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.couchbase.client</groupId>
+			<artifactId>java-client</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid.connectors</groupId>
+			<artifactId>translator-couchbase</artifactId>
+			<scope>provided</scope>
+		</dependency>
+	</dependencies>
+	<build>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.felix</groupId>
@@ -93,7 +101,9 @@
 						<phase>package</phase>
 						<configuration>
 							<tasks>
-								<unzip src="${project.build.directory}/${project.artifactId}-${project.version}.rar" dest="${project.build.directory}/rar-unpack" />
+								<unzip
+									src="${project.build.directory}/${project.artifactId}-${project.version}.rar"
+									dest="${project.build.directory}/rar-unpack" />
 							</tasks>
 						</configuration>
 						<goals>
@@ -143,5 +153,5 @@
 				</executions>
 			</plugin>
 		</plugins>
-	</build>            
-  </project>
+	</build>
+</project>
