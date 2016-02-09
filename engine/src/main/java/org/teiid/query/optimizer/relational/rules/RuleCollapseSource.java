@@ -291,8 +291,8 @@ public final class RuleCollapseSource implements OptimizerRule {
 				if (requireDupPush) { //remove the upper dup remove
 					PlanNode dupRemove = NodeEditor.findParent(accessNode, NodeConstants.Types.DUP_REMOVE, NodeConstants.Types.SOURCE);
 					if (dupRemove.getParent() == null) {
+						root = dupRemove.getFirstChild();
 						dupRemove.getFirstChild().removeFromParent();
-						root = accessNode.getParent();
 					} else {
 						dupRemove.getParent().replaceChild(dupRemove, dupRemove.getFirstChild());
 					}
