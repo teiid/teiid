@@ -181,7 +181,7 @@ public class TestODataIntegration {
                 "},{" +
                 "\"name\":\"G4\"," +
                 "\"url\":\"G4\"" +
-                "}]" +
+                "},{\"name\":\"LobTable\",\"url\":\"LobTable\"}]" +
                 "}";
         assertEquals(expected, response.getContentAsString());
     }
@@ -367,9 +367,8 @@ public class TestODataIntegration {
     @Test
     public void testFunctionReturningStreamDesignedToReturnTable() throws Exception {
         ContentResponse response = http.GET(baseURL + "/loopy/vm1/procComposableXML(x='foo')");
-        assertEquals(200, response.getStatus());
-        assertEquals("<name>foo</name>", 
-                response.getContentAsString());        
+        //can't handle multiple lob rows
+        assertEquals(404, response.getStatus());
     }    
     
     @Test
@@ -1167,4 +1166,22 @@ public class TestODataIntegration {
             teiid.undeployVDB("northwind");
         }
     }
+    
+    @Test
+    public void testStreamProperties() throws Exception {
+        ContentResponse response = http.newRequest(baseURL + "/loopy/vm1/LobTable(2)/e2")
+                .method("GET")
+                .send();
+        assertEquals(200, response.getStatus());
+        assertEquals("<name>content2</name>", 
+                response.getContentAsString());      
+        
+        response = http.newRequest(baseURL + "/loopy/vm1/LobTable")
+                .method("GET")
+                .send();
+        assertEquals(200, response.getStatus());
+        String string = response.getContentAsString();
+        assertTrue(string.contains("odata4/loopy/vm1/LobTable(1)/e2"));
+        assertTrue(string.contains("odata4/loopy/vm1/LobTable(2)/e2"));
+    } 
 }

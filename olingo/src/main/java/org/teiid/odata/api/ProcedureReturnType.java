@@ -24,6 +24,5 @@ package org.teiid.odata.api;
 
 public interface ProcedureReturnType {
     boolean hasResultSet();
-    boolean hasResultSetBasedLob();
     Integer getSqlType();
 }

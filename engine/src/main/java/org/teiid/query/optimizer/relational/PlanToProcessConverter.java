@@ -64,6 +64,7 @@ import org.teiid.query.sql.lang.ObjectTable.ObjectColumn;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.SourceHint.SpecificHint;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
+import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -421,7 +422,27 @@ public class PlanToProcessConverter {
                     } else if (command instanceof QueryCommand) {
 	                    command = aliasCommand(aNode, command, modelID);
                     }
-                    ev = EvaluatableVisitor.needsEvaluation(command, modelID, metadata, capFinder);
+                    ev = EvaluatableVisitor.needsEvaluationVisitor(modelID, metadata, capFinder);
+                    if (!shouldEval && modelID != null) {
+                    	//do a capabilities sensitive check for needs eval
+	                    String modelName = metadata.getFullName(modelID);
+	                    SourceCapabilities caps = capFinder.findCapabilities(modelName);
+	                    final CriteriaCapabilityValidatorVisitor capVisitor = new CriteriaCapabilityValidatorVisitor(modelID, metadata, capFinder, caps);
+	                    capVisitor.setCheckEvaluation(false);
+	                    DeepPreOrderNavigator nav = new DeepPreOrderNavigator(ev) {
+	                    	protected void visitNode(org.teiid.query.sql.LanguageObject obj) {
+	                    		if (capVisitor.isValid() && obj instanceof Expression) {
+	                    			obj.acceptVisitor(capVisitor);
+	                    		}
+	                    		super.visitNode(obj);
+	                    	}
+	                    };
+	                    command.acceptVisitor(nav);
+	                    if (!capVisitor.isValid()) {
+	                    	//there's a non-supported construct pushed, we should eval
+	                    	ev.evaluationNotPossible(EvaluationLevel.PROCESSING);
+	                    }
+                    }
                     aNode.setShouldEvaluateExpressions(ev.requiresEvaluation(EvaluationLevel.PROCESSING) || shouldEval);
                     aNode.setCommand(command);
                     Map<GroupSymbol, PlanNode> subPlans = (Map<GroupSymbol, PlanNode>) node.getProperty(Info.SUB_PLANS);

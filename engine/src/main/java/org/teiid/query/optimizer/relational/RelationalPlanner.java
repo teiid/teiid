@@ -87,7 +87,6 @@ import org.teiid.query.sql.visitor.CommandCollectorVisitor;
 import org.teiid.query.sql.visitor.CorrelatedReferenceCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
-import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
@@ -1366,9 +1365,8 @@ public class RelationalPlanner {
             	JoinType jt = (JoinType) parent.getProperty(Info.JOIN_TYPE);
             	if (jt != JoinType.JOIN_FULL_OUTER && parent.getChildCount() > 0) {
 	            	ArrayTable at = (ArrayTable)tt;
-		        	//rewrite if deterministic and free of subqueries
-		        	if (FunctionCollectorVisitor.isNonDeterministic(at.getArrayValue())
-		        			|| ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(at).isEmpty()) {
+		        	//rewrite if free of subqueries
+		        	if (ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(at).isEmpty()) {
 		            	List<ElementSymbol> symbols = at.getProjectedSymbols();
 		        		FunctionLibrary funcLib = this.metadata.getFunctionLibrary();
 		                FunctionDescriptor descriptor = funcLib.findFunction(FunctionLibrary.ARRAY_GET, 

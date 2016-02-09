@@ -22,6 +22,7 @@
 package org.teiid.olingo.web;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.ref.SoftReference;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -36,18 +37,19 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.UnavailableException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.olingo.commons.api.http.HttpHeader;
 import org.apache.olingo.server.api.ODataHttpHandler;
-import org.teiid.OAuthCredential;
-import org.teiid.OAuthCredentialContext;
 import org.teiid.core.util.LRUCache;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.jdbc.ConnectionImpl;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.net.TeiidURL;
 import org.teiid.odata.api.Client;
 import org.teiid.olingo.ODataPlugin;
 import org.teiid.olingo.service.LocalClient;
@@ -87,6 +89,22 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response,
+    		FilterChain chain) throws IOException, ServletException {
+    	try {
+    		internalDoFilter(request, response, chain);
+    	} catch (UnavailableException e) {
+    		LogManager.logWarning(LogConstants.CTX_ODATA, e, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16047, e.getMessage()));
+    		HttpServletResponse httpResponse = (HttpServletResponse)response;
+    	    httpResponse.setStatus(404);
+    	    //TODO: json error as well
+    	    httpResponse.setHeader(HttpHeader.CONTENT_TYPE, "application/xml"); //$NON-NLS-1$
+    		PrintWriter writer = httpResponse.getWriter();
+    		writer.write("<m:error xmlns:m=\"http://docs.oasis-open.org/odata/ns/metadata\"><m:code/><m:message>"+StringEscapeUtils.escapeXml10(e.getMessage())+"</m:message></m:error>"); //$NON-NLS-1$ //$NON-NLS-2$
+    		writer.close();
+    	}
+    }
+
+    public void internalDoFilter(ServletRequest request, ServletResponse response,
             FilterChain chain) throws IOException, ServletException {
 
         HttpServletRequest httpRequest = (HttpServletRequest) request;
@@ -117,7 +135,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
 
             int endIdx = uri.indexOf('/', idx + 8);
             if (endIdx == -1) {
-                throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16020));
+                throw new UnavailableException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16020));
             }
 
             vdbName = uri.substring(idx + 8, endIdx);
@@ -125,7 +143,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
             if (modelIdx == -1) {
                 modelName = uri.substring(endIdx + 1).trim();
                 if (modelName.isEmpty()) {
-                    throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16019));
+                    throw new UnavailableException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16019));
                 }
             } else {
                 modelName = uri.substring(endIdx + 1, modelIdx);
@@ -145,7 +163,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
 
             vdbName = vdbName.trim();
             if (vdbName.isEmpty()) {
-                throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16008));
+                throw new UnavailableException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16008));
             }
 
             ContextAwareHttpSerlvetRequest contextAwareRequest = new ContextAwareHttpSerlvetRequest(httpRequest);
@@ -154,7 +172,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
         } else {
             if (this.initProperties.getProperty("vdb-name") == null ||  //$NON-NLS-1$
                     this.initProperties.getProperty("vdb-version") == null) { //$NON-NLS-1$ 
-                throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16018));
+                throw new UnavailableException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16018));
             }
             
             if (uri.endsWith("auth") || uri.endsWith("token")){
@@ -171,7 +189,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
             if (modelIdx == -1) {
                 modelName = uri.substring(uri.indexOf('/') + 1).trim();
                 if (modelName.isEmpty()) {
-                    throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16021));
+                    throw new UnavailableException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16021));
                 }
             }
             modelName = uri.substring(uri.indexOf('/'), uri.indexOf('/', uri.indexOf('/')));
@@ -179,7 +197,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
         
         key = new VDBKey(vdbName, version==null?1:version);
         if (key.isSemantic() && (!key.isFullySpecified() || key.isAtMost() || key.getVersion() != 1)) {
-        	throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16044, key));
+        	throw new UnavailableException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16044, key));
         }
         
         SoftReference<OlingoBridge> ref = this.contextMap.get(key);
@@ -203,7 +221,9 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
             httpRequest.setAttribute(Client.class.getName(), client);
             chain.doFilter(httpRequest, response);
         } catch(SQLException e) {
-            throw new ServletException(e);
+            UnavailableException ue = new UnavailableException(e.getMessage());
+            ue.initCause(e);
+            throw ue;
         } finally {
             try {
                 client.close();
