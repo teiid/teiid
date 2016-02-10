@@ -21,7 +21,7 @@
  */
 package org.teiid.translator.google;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -121,7 +121,7 @@ public class DirectSpreadsheetQueryExecution implements ProcedureExecution {
 		if (this.rowIterator != null && this.rowIterator.hasNext()) {
 			List<?> result = rowIterator.next().getRow();
 			if (returnsArray) {
-				return Collections.singletonList((Object)result.toArray());
+				return Arrays.asList((Object)result.toArray());
 			}
 			return result;
 		}

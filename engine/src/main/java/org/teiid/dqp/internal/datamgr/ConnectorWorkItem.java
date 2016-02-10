@@ -25,6 +25,7 @@ package org.teiid.dqp.internal.datamgr;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -126,6 +127,8 @@ public class ConnectorWorkItem implements ConnectorWork {
 	private TeiidException conversionError;
 	
 	private ThreadCpuTimer timer = new ThreadCpuTimer();
+	
+	private boolean unmodifiableList;
 	
 	ConnectorWorkItem(AtomicRequestMessage message, ConnectorManager manager) throws TeiidComponentException {
         this.id = message.getAtomicRequestID();
@@ -432,7 +435,21 @@ public class ConnectorWorkItem implements ConnectorWork {
             		throw new AssertionError("Inproper results returned.  Expected " + this.expectedColumns + " columns, but was " + row.size()); //$NON-NLS-1$ //$NON-NLS-2$
         		}
             	try {
-					row = correctTypes(row);
+	            	try {
+	            		if (unmodifiableList) {
+	                		row = new ArrayList<Object>(row);
+	            		}
+						row = correctTypes(row);
+	            	} catch (UnsupportedOperationException e) {
+	            		//it's generally expected that the returned list from 
+	            		//the translator should be modifiable, but we should be lax
+	            		if (unmodifiableList) {
+	            			throw e;
+	            		}
+	            		unmodifiableList = true;
+	            		row = new ArrayList<Object>(row);
+	            		row = correctTypes(row);
+	            	}
 				} catch (TeiidException e) {
 					conversionError = e;
 					break;
