@@ -62,6 +62,13 @@ public class TestWSTranslator {
 		Procedure p = mf.getSchema().getProcedure(WSExecutionFactory.INVOKE_HTTP);
 		assertEquals(6, p.getParameters().size());
 		p.getParameters().remove(4);
+		//designer treated the result as an out parameter
+		p.getParameters().get(0).setType(Type.Out);
+		p.getParameters().add(3,p.getParameters().remove(0));
+		for (int i = 0; i < p.getParameters().size(); i++) {
+			p.getParameters().get(i).setPosition(i+1);
+		}
+		
 		p = mf.getSchema().getProcedure("invoke");
 		assertEquals(6, p.getParameters().size());
 		p.getParameters().remove(5);
