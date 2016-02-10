@@ -24,7 +24,6 @@ package org.teiid.jboss;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.List;
 
 import javax.xml.stream.XMLStreamException;
 
@@ -75,7 +74,7 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 		else {
 			// scan for different files 
 			try {
-				List<VirtualFile> childFiles = file.getChildrenRecursively(new VirtualFileFilter() {
+				file.getChildrenRecursively(new VirtualFileFilter() {
 					
 					@Override
 					public boolean accepts(VirtualFile file) {
@@ -89,16 +88,17 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 								deploymentUnit.putAttachment(TeiidAttachments.UDF_METADATA, udf);
 							}
 							((FileUDFMetaData)udf).addModelFile(file);
-							return false;
 						}
-						return file.getName().toLowerCase().equals(VDBResources.DEPLOYMENT_FILE);
+						return false;
 					}
 				});
 				
-				if (childFiles.size() != 1) {
-					throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50101, deploymentUnit, childFiles.size()));
+				VirtualFile vdbXml = file.getChild("/META-INF/vdb.xml"); //$NON-NLS-1$
+				
+				if (!vdbXml.exists()) {
+					throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50101, deploymentUnit));
 				}
-				parseVDBXML(childFiles.get(0), deploymentUnit, phaseContext, false);
+				parseVDBXML(vdbXml, deploymentUnit, phaseContext, false);
 				
 				mergeMetaData(deploymentUnit);
 
