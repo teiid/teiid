@@ -24,7 +24,7 @@ package org.teiid.translator.cassandra;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.language.Command;
@@ -166,7 +166,7 @@ public class CassandraQueryExecution implements ResultSetExecution {
 			
 		}
 		if (returnsArray) {
-			return Collections.singletonList((Object)values.toArray());
+			return Arrays.asList((Object)values.toArray());
 		}
 		return values;
 	}
