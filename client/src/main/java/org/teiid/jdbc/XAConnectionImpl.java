@@ -203,7 +203,7 @@ public class XAConnectionImpl implements XAConnection, XAResource {
     }
 
     private XAException handleError(Exception e,String logMsg) {
-        logger.log(Level.SEVERE, logMsg, e);
+        logger.log(Level.FINE, logMsg, e);
 
         if(e instanceof TeiidSQLException){
             Throwable ex = ((TeiidSQLException)e).getCause();
