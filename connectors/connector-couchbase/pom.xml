@@ -45,6 +45,7 @@
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<!-- TODO: Add notes for managing depenecyies in master pom.xml -->
 		<dependency>
 			<groupId>com.couchbase.client</groupId>
 			<artifactId>java-client</artifactId>

@@ -25,8 +25,8 @@
             <!-- Common properties for all connectors -->
             <!-- Only adding support for a single server, but in future should support a cluster-->
             <config-property>
-               <description>{$display:"Server Address",$required:"true"}</description>
-               <config-property-name>server</config-property-name>
+               <description>{$display:"Server URL Address",$required:"true"}</description>
+               <config-property-name>serverURL</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
             </config-property>
 
@@ -36,6 +36,7 @@
                <config-property-name>bucketName</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
             </config-property>
+
             <config-property>
                <description>{$display:"Bucket Password",$required:"false"}</description>
                <config-property-name>bucketPassword</config-property-name>
