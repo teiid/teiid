@@ -125,6 +125,14 @@ public class TestClobValue {
     		}
     	};
     	assertEquals("aa", clob.getSubString(1, 3));
+    	
+    	assertEquals("", clob.getSubString(1, 0));
+    	
+    	clob = new ClobImpl("hello world");
+    	
+    	assertEquals("hel", clob.getSubString(1, 3));
+    	
+    	assertEquals("orld", clob.getSubString(8, 5));
     }
     
     public void testClobCompare() throws Exception {
