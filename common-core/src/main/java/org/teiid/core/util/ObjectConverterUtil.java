@@ -108,7 +108,7 @@ public class ObjectConverterUtil {
 	        		continue;
 	        	}
 	        	count += l_nbytes;
-	        	if (count >= l_buffer.length) {
+	        	if (count >= l_buffer.length || (length > -1 && count + writen >= length)) {
 	        		out.write(l_buffer, 0, count);
 	        		writen += count;
 	        		count = 0;
@@ -161,7 +161,7 @@ public class ObjectConverterUtil {
 	        		continue;
 	        	}
 	        	count += l_nbytes;
-	        	if (count >= l_buffer.length) {
+	        	if (count >= l_buffer.length || (length > -1 && count + writen >= length)) {
 	        		out.write(l_buffer, 0, count);
 	        		writen += count;
 	        		count = 0;
