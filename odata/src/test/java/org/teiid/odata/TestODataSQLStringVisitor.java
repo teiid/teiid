@@ -107,7 +107,7 @@ public class TestODataSQLStringVisitor {
 	
 	@Test
 	public void testEndsWith() {
-		te("endswith(x, 'foo')", "ENDSWITH(x, 'foo') = TRUE");
+		te("endswith(x, 'foo')", "ENDSWITH('foo', x) = TRUE");
 	}	
 	
 	@Test
@@ -153,6 +153,7 @@ public class TestODataSQLStringVisitor {
 		te("toupper(x)", "UCASE(x)");
 		te("trim('x')", "TRIM(' ' FROM 'x')");
 		te("trim(x) ne 'foo' and toupper(y) eq 'bar'", "(TRIM(' ' FROM x) <> 'foo') AND (UCASE(y) = 'bar')");
+		te("substringof(x, 'foo')", "LOCATE(x, 'foo', 1) >= 1");
 	}	
 	
 	
@@ -248,7 +249,7 @@ public class TestODataSQLStringVisitor {
 	@Test
 	public void testSelectQuery() throws Exception {
 		testSelect(
-				"SELECT g0.ShipperID, g0.CompanyName, g0.Phone FROM nw.Shippers AS g0 WHERE (g0.ShipperID >= 10) AND (g0.ShipperID < 20) ORDER BY g0.ShipperID",
+				"SELECT g0.* FROM nw.Shippers AS g0 WHERE (g0.ShipperID >= 10) AND (g0.ShipperID < 20) ORDER BY g0.ShipperID",
 				"nw.Shippers", "ShipperID ge 10 and ShipperID lt 20", null,
 				null, -1, null, null);
 		testSelect(
@@ -260,7 +261,7 @@ public class TestODataSQLStringVisitor {
 				"nw.Shippers", "CompanyName ne 'foo'", "CompanyName,Phone",
 				"CompanyName desc, Phone", -1, null, null);
 		testSelect(
-				"SELECT g0.ShipperID, g0.CompanyName, g0.Phone FROM nw.Shippers AS g0 ORDER BY g0.ShipperID",
+				"SELECT g0.* FROM nw.Shippers AS g0 ORDER BY g0.ShipperID",
 				"nw.Shippers", null, null, null, 10, null, null);
 	}	
 	
@@ -289,7 +290,7 @@ public class TestODataSQLStringVisitor {
 	
 	@Test
 	public void testEntityKeyQuery() throws Exception {
-		testSelect("SELECT g0.ShipperID, g0.CompanyName, g0.Phone FROM nw.Shippers AS g0 WHERE g0.ShipperID = 12 ORDER BY g0.ShipperID", "nw.Shippers", null, null, null, -1, null, OEntityKey.create(12));
+		testSelect("SELECT g0.* FROM nw.Shippers AS g0 WHERE g0.ShipperID = 12 ORDER BY g0.ShipperID", "nw.Shippers", null, null, null, -1, null, OEntityKey.create(12));
 	}	
 	
 	@Test
@@ -309,10 +310,10 @@ public class TestODataSQLStringVisitor {
 	@Test
 	public void testOrderByWithCriteria() throws Exception {
 		testSelect(
-				"SELECT g0.ShipperID, g0.CompanyName, g0.Phone FROM nw.Shippers AS g0 WHERE g0.ShipperID = 12 ORDER BY g0.ShipperID DESC",
+				"SELECT g0.* FROM nw.Shippers AS g0 ORDER BY g0.ShipperID = 12 DESC",
 				"nw.Shippers", null, null, "ShipperID eq 12 desc", -1, null,
 				null);
-	}	
+	}
 	
 	@Test
 	public void testAny() throws Exception {	
@@ -333,7 +334,7 @@ public class TestODataSQLStringVisitor {
 	@Test
 	public void testMultiEntitykey() throws Exception {
 		OEntityKey key = OEntityKey.parse("(11044)");
-		testSelect("SELECT g1.OrderID, g1.ProductID FROM nw.Orders AS g0 INNER JOIN nw.OrderDetails AS g1 ON g0.OrderID = g1.OrderID WHERE (g0.OrderID = 11044) AND ((g1.OrderID = 11044) AND (g1.ProductID = 62)) ORDER BY g1.OrderID, g1.ProductID",
+		testSelect("SELECT g1.OrderID, g1.ProductID FROM nw.Orders AS g0 INNER JOIN nw.OrderDetails AS g1 ON g0.OrderID = g1.OrderID WHERE (g0.OrderID = 11044) AND (g1.OrderID = 11044) AND (g1.ProductID = 62) ORDER BY g1.OrderID, g1.ProductID",
 				"nw.Orders", null,
 				"OrderID", null, -1, "nw.OrderDetails(OrderID=11044L,ProductID=62L)", key);		
 	}
@@ -354,7 +355,7 @@ public class TestODataSQLStringVisitor {
 		Insert insert = visitor.insert(entitySet, entity);
 		assertEquals("INSERT INTO nw.Categories (Description) VALUES (?)", insert.toString());
 	}
-
+	
 }
 
 

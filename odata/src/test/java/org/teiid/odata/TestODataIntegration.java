@@ -1159,7 +1159,8 @@ public class TestODataIntegration extends BaseResourceTest {
 			ModelMetaData mmd = new ModelMetaData();
 			mmd.setName("m");
 			mmd.setModelType(Type.VIRTUAL);
-			mmd.addSourceMetadata("ddl", "create view v as select 1");
+			mmd.setSchemaSourceType("ddl");
+			mmd.setSchemaText("create view v as select 1");
 			
 			Properties props = new Properties();
 			props.setProperty(ODBCServerRemoteImpl.CONNECTION_PROPERTY_PREFIX + ExecutionProperties.RESULT_SET_CACHE_MODE, "true");
@@ -1178,6 +1179,7 @@ public class TestODataIntegration extends BaseResourceTest {
 		}
 	}
 	
+/** <<<<<<< HEAD
 	@Test
 	@SuppressWarnings("unchecked")
 	public void testEmbeddedComplexType() throws Exception {
@@ -1277,6 +1279,8 @@ public class TestODataIntegration extends BaseResourceTest {
 		}
 	}
 	
+=======
+>>>>>>> 939349d... TEIID-2981 allowing connection. properties for odata **/
 	private OEntity createCustomersEntity(EdmDataServices metadata) {
 		EdmEntitySet entitySet = metadata.findEdmEntitySet("Customers");
 		OEntityKey entityKey = OEntityKey.parse("CustomerID='12'");

@@ -81,6 +81,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.net.TeiidURL;
+import org.teiid.odbc.ODBCServerRemoteImpl;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
@@ -129,7 +130,7 @@ public class LocalClient implements Client {
 		}
 		this.connectionString = sb.toString();
 	}
-
+	
 	@Override
 	public VDBMetaData getVDB() {
         ConnectionImpl connection = null;
@@ -163,6 +164,8 @@ public class LocalClient implements Client {
 
 	ConnectionImpl getConnection() throws SQLException {
 		ConnectionImpl connection = driver.connect(this.connectionString, this.initProperties);
+		ODBCServerRemoteImpl.setConnectionProperties(connection);
+		ODBCServerRemoteImpl.setConnectionProperties(connection, this.initProperties);
 		return connection;
 	}
 
@@ -192,7 +195,7 @@ public class LocalClient implements Client {
             	OProperty<?> prop = buildPropery("return", returnType, result, invalidCharacterReplacement); //$NON-NLS-1$
             	return Responses.property(prop); 
             }
-			return Responses.simple(EdmSimpleType.INT32, 1);
+			return null;
 		} catch (Exception e) {
 			throw new ServerErrorException(e.getMessage(), e);
 		} finally {
