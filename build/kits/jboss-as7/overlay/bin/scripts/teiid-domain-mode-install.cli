@@ -137,9 +137,6 @@
 /profile=ha/subsystem=teiid/translator=osisoft-pi:add(module=org.jboss.teiid.translator.jdbc)
 /profile=ha/subsystem=teiid/translator=odata4:add(module=org.jboss.teiid.translator.odata4)
 /profile=ha/subsystem=teiid/translator=redshift:add(module=org.jboss.teiid.translator.jdbc)
-/profile=ha/subsystem=teiid/translator=jpa2:add(module=org.jboss.teiid.translator.jpa)
-/profile=ha/subsystem=teiid/translator=ucanaccess:add(module=org.jboss.teiid.translator.jdbc)
-/profile=ha/subsystem=teiid/translator=simpledb:add(module=org.jboss.teiid.translator.simpldb)
 
 /profile=full-ha/subsystem=teiid/translator=jdbc-simple:add(module=org.jboss.teiid.translator.jdbc)
 /profile=full-ha/subsystem=teiid/translator=jdbc-ansi:add(module=org.jboss.teiid.translator.jdbc)
@@ -190,9 +187,6 @@
 /profile=full-ha/subsystem=teiid/translator=osisoft-pi:add(module=org.jboss.teiid.translator.jdbc)
 /profile=full-ha/subsystem=teiid/translator=odata4:add(module=org.jboss.teiid.translator.odata4)
 /profile=full-ha/subsystem=teiid/translator=redshift:add(module=org.jboss.teiid.translator.jdbc)
-/profile=full-ha/subsystem=teiid/translator=jpa2:add(module=org.jboss.teiid.translator.jpa)
-/profile=full-ha/subsystem=teiid/translator=ucanaccess:add(module=org.jboss.teiid.translator.jdbc)
-/profile=full-ha/subsystem=teiid/translator=simpledb:add(module=org.jboss.teiid.translator.simpldb)
 
 
 /profile=ha/subsystem=datasources/jdbc-driver=teiid:add(driver-name=teiid, driver-module-name=org.jboss.teiid.client, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)
