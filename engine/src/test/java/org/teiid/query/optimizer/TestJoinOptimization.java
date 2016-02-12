@@ -25,6 +25,7 @@ package org.teiid.query.optimizer;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
@@ -46,7 +47,9 @@ import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.rules.JoinUtil;
 import org.teiid.query.parser.QueryParser;
+import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.processor.relational.JoinNode;
 import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.processor.relational.RelationalPlan;
@@ -1163,5 +1166,22 @@ public class TestJoinOptimization {
 	   				"SELECT g_0.e2 AS c_0 FROM pm2.g2 AS g_0 ORDER BY c_0", 
 	   				"SELECT g_1.e2 AS c_0, g_0.e3 AS c_1 FROM pm1.g1 AS g_0 LEFT OUTER JOIN pm1.g3 AS g_1 ON g_0.e1 = g_1.e1 ORDER BY c_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 	 }
+	
+    @Test public void testOutputColumnsWithMergeJoinAndNonPushedSelect() throws TeiidComponentException, TeiidProcessingException {
+        String sql = "select bqt1.smalla.intkey, bqt2.smalla.intkey "
+        		+ "from bqt1.smalla inner join bqt2.smalla on (bqt2.smalla.intkey = case when bqt1.smalla.intkey = 1 then 2 else 3 end) where right(bqt1.smalla.stringkey, 1) = 'a'"; //$NON-NLS-1$
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
+        // Plan query
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), 
+        		new String[] {"SELECT g_0.StringKey AS c_0, g_0.IntKey AS c_1, CASE WHEN g_0.IntKey = 1 THEN 2 ELSE 3 END AS c_2 FROM BQT1.SmallA AS g_0 ORDER BY c_2", 
+        	"SELECT g_0.IntKey AS c_0 FROM BQT2.SmallA AS g_0 ORDER BY c_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT g_0.StringKey AS c_0, g_0.IntKey AS c_1, CASE WHEN g_0.IntKey = 1 THEN 2 ELSE 3 END AS c_2 FROM BQT1.SmallA AS g_0 ORDER BY c_2", Arrays.asList("aa", 1, 2));
+        hdm.addData("SELECT g_0.IntKey AS c_0 FROM BQT2.SmallA AS g_0 ORDER BY c_0", Arrays.asList(1));
+        
+        TestProcessor.helpProcess(plan, hdm, new List<?>[] {});
+    }
     
 }

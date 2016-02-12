@@ -238,7 +238,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
         PlanNode sourceNode = FrameUtil.findJoinSourceNode(childNode);
         PlanNode joinNode = childNode.getParent();
 
-        Set<Expression> outputSymbols = new LinkedHashSet<Expression>((List<Expression>)childNode.getProperty(NodeConstants.Info.OUTPUT_COLS));
+        Set<Expression> outputSymbols = new LinkedHashSet<Expression>((List<Expression>)sourceNode.getProperty(NodeConstants.Info.OUTPUT_COLS));
         
         int oldSize = outputSymbols.size();
         
@@ -270,7 +270,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
 	            sourceNode.getFirstChild().addAsParent(sortNode);
 	            
 	            if (needsCorrection) {
-	                correctOutputElements(joinNode, outputSymbols, sortNode);
+	                correctOutputElements(joinNode, expressions, sortNode.getParent());
 	            }
 	            return true;
 	        }
@@ -290,8 +290,9 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
         if (needsCorrection) {
             PlanNode projectNode = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
             projectNode.setProperty(NodeConstants.Info.PROJECT_COLS, new ArrayList<Expression>(outputSymbols));
+            projectNode.setProperty(NodeConstants.Info.OUTPUT_COLS, new ArrayList<Expression>(outputSymbols));
             childNode.addAsParent(projectNode);
-            correctOutputElements(joinNode, outputSymbols, projectNode);
+            correctOutputElements(joinNode, expressions, projectNode.getParent());
         }        
         return false;
     }
@@ -309,7 +310,9 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
                                               Collection<Expression> outputElements,
                                               PlanNode startNode) {
         while (startNode != endNode) {
-            startNode.setProperty(NodeConstants.Info.OUTPUT_COLS, new ArrayList<Expression>(outputElements));
+        	LinkedHashSet<Expression> outputSymbols = new LinkedHashSet<Expression>((List<Expression>)startNode.getProperty(NodeConstants.Info.OUTPUT_COLS));
+            outputSymbols.addAll(outputElements);
+            startNode.setProperty(NodeConstants.Info.OUTPUT_COLS, new ArrayList<Expression>(outputSymbols));
             startNode = startNode.getParent();
         }
     }
