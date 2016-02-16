@@ -47,6 +47,8 @@ import org.jboss.security.SimplePrincipal;
 import org.picketbox.datasource.security.AbstractPasswordCredentialLoginModule;
 
 /**
+ * @deprecated This Login module is no longer supported
+ * 
  * A credential mapping login module that associates currently logged in
  * principle's role name to password mapping from a simple properties file. It
  * is similar to name=password, only here this uses role=password. If user has
