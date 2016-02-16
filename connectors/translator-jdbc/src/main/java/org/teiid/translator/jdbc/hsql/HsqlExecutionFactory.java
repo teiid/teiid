@@ -28,6 +28,10 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.language.Command;
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.Select;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
@@ -61,7 +65,7 @@ public class HsqlExecutionFactory extends JDBCExecutionFactory {
 		convert.addTypeMapping("time", FunctionModifier.TIME); //$NON-NLS-1$
 		convert.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
 		convert.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
-		convert.addTypeMapping("varchar", FunctionModifier.STRING); //$NON-NLS-1$
+		convert.addTypeMapping("varchar(4000)", FunctionModifier.STRING); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);		
 	}
 	
@@ -204,4 +208,26 @@ public class HsqlExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsDependentJoins() {
     	return getVersion().compareTo(TWO_0) >= 0;
     }
+    
+    @Override
+	public List<?> translateCommand(Command command, ExecutionContext context) {
+		if (command instanceof Select) {
+			Select select = (Select)command;
+			if (select.getFrom() == null || select.getFrom().isEmpty()) {
+				List<Object> result = new ArrayList<Object>();
+				result.add("VALUES("); //$NON-NLS-1$
+				for (int i = 0; i < select.getDerivedColumns().size(); i++) {
+					DerivedColumn dc = select.getDerivedColumns().get(i);
+					if (i != 0) {
+						result.add(", "); //$NON-NLS-1$
+					}
+					result.add(dc.getExpression());
+					
+				}
+				result.add(")"); //$NON-NLS-1$
+				return result;
+			}
+		}
+		return super.translateCommand(command, context);
+	}
 }

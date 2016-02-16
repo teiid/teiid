@@ -45,5 +45,19 @@ public class TestHsqlTranslator {
     @Test public void testTempTable() throws Exception {
     	assertEquals("declare local temporary table foo (COL1 integer, COL2 varchar(100)) ", TranslationHelper.helpTestTempTable(TRANSLATOR, true));
     }
+    
+    @Test public void testVarcharCast() throws Exception {
+		String input = "select cast(SmallA.IntKey as varchar) from bqt1.smalla"; //$NON-NLS-1$       
+        String output = "SELECT cast(SmallA.IntKey AS varchar(4000)) FROM SmallA";  //$NON-NLS-1$
+        
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+	}
+    
+    @Test public void testSelectWithoutFrom() throws Exception {
+    	String input = "select 1"; //$NON-NLS-1$       
+        String output = "VALUES(1)";  //$NON-NLS-1$
+        
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
 	
 }
