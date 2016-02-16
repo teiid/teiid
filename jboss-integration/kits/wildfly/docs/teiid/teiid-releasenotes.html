@@ -164,16 +164,13 @@ See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on c
 
 <h4>from 8.x</h4>
 <ul>
+   <li><a href="https://issues.jboss.org/browse/TEIID-3754">TEIID-3754</a> The OData2 web serice layer has been deprecated and will be removed in a future release.  You should migrate to the OData v4 service layer instead.</li>
    <li><a href="https://issues.jboss.org/browse/TEIID-2754">TEIID-2754</a> view are reported as VIEW table type in the metadata.  Use the connection property reportAsViews=false to restore the old behavior.</li>
    <li><a href="https://issues.jboss.org/browse/TEIID-3753">TEIID-3753</a> org.teiid.widenComparisonToString now defaults to false.</li>
    <li><a href="https://issues.jboss.org/browse/TEIID-3669">TEIID-3669</a> there is now a single session service.  Common configuration properties need to be consolidated.  With <a href="https://issues.jboss.org/browse/TEIID-3790">TEIID-3790</a> this also means that you may want to change the default of trust-all-local to false to restrict local pass-through connections.  Also the VDB REST passthrough-auth property is no longer used.</li>
    <li><a href="https://issues.jboss.org/browse/TEIID-3797">TEIID-3797</a> the embedded transport is now known as the local transport.</li>
 </ul>
 
-<h2><a name="Configuration">Configuration Issues</a></h2>
-
-See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on configuration and installation.
-TEIID-3859 updating to 9990
 <h4>from 8.12</h4>
 <ul>
   <li>TEIID-3859 the "native" 9999 management port is no longer used.  AdminShell will default to the http 9990 management port instead.
