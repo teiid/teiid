@@ -52,6 +52,8 @@ final class SimpleChannelFactory implements ChannelFactory {
     }
 
     void stop() {
-    	channel.close();
+    	if (this.channel != null) {
+    		channel.close();
+    	}
     }
 }
