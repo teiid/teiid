@@ -22,7 +22,6 @@
 package org.teiid.translator.jpa;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -104,7 +103,7 @@ public class JPQLDirectQueryExecution extends JPQLBaseExecution implements Proce
 				return Arrays.asList((Object[])obj);
 			}
 			if (returnsArray) {
-				return Collections.singletonList(new Object[] {obj});
+				return Arrays.asList((Object)new Object[] {obj});
 			}
 			return Arrays.asList(obj);
 		}

@@ -33,11 +33,17 @@ import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.DOUBLE;
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.FLOAT;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.language.AggregateFunction;
+import org.teiid.language.LanguageObject;
+import org.teiid.language.SQLConstants.NonReserved;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 
@@ -212,6 +218,18 @@ public class VerticaExecutionFactory extends JDBCExecutionFactory{
     public boolean supportsIntersect() {
         return true;
     }
-    
+
+    @Override
+    public List<?> translate(LanguageObject obj, ExecutionContext context) {
+        if (obj instanceof AggregateFunction) {
+            AggregateFunction agg = (AggregateFunction)obj;
+            if (agg.getParameters().size() == 1
+                    && (agg.getName().equalsIgnoreCase(NonReserved.MIN) || agg.getName().equalsIgnoreCase(NonReserved.MAX))
+                    && TypeFacility.RUNTIME_TYPES.BOOLEAN.equals(agg.getParameters().get(0).getType())) {
+                return Arrays.asList("CAST(", agg.getName(), "(CAST(", agg.getParameters().get(0), " AS tinyint)) AS boolean)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                    }
+        }
+        return super.translate(obj, context);
+    }
 
 }

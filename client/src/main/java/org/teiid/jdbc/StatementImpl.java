@@ -968,7 +968,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
                 this.resultSet.close();
             }
         } catch (SQLException se) {
-            logger.log(Level.SEVERE, JDBCPlugin.Util.getString("MMStatement.Error_timing_out."), se); //$NON-NLS-1$
+            logger.log(Level.FINE, JDBCPlugin.Util.getString("MMStatement.Error_timing_out."), se); //$NON-NLS-1$
         }
     }
 

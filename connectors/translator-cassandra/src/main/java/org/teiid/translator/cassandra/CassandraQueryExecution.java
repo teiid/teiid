@@ -24,7 +24,7 @@ package org.teiid.translator.cassandra;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.language.Command;
@@ -35,6 +35,7 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 
+import com.datastax.driver.core.ColumnDefinitions;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Row;
@@ -109,13 +110,18 @@ public class CassandraQueryExecution implements ResultSetExecution {
 	 * @param row the row returned by the ResultSet
 	 * @return list of values in {@code row}
 	 */
-	private List<Object> getRow(Row row) {
+	List<Object> getRow(Row row) {
 		if(row == null){
 			return null;
 		}
-		final List<Object> values = new ArrayList<Object>(row.getColumnDefinitions().size());
-		for(int i = 0; i < row.getColumnDefinitions().size(); i++){
-			switch(row.getColumnDefinitions().getType(i).getName()){
+		ColumnDefinitions columnDefinitions = row.getColumnDefinitions();
+		final List<Object> values = new ArrayList<Object>(columnDefinitions.size());
+		for(int i = 0; i < columnDefinitions.size(); i++){
+			if (row.isNull(i)) {
+				values.add(null);
+				continue;
+			}
+			switch(columnDefinitions.getType(i).getName()){
 			case ASCII:
 				values.add(row.getString(i));
 				break;
@@ -144,14 +150,14 @@ public class CassandraQueryExecution implements ResultSetExecution {
 				values.add(Integer.valueOf(row.getInt(i)));
 				break;
 			case LIST:
-				values.add(row.getList(i, row.getColumnDefinitions().getType(i).getTypeArguments().get(0).asJavaClass()));
+				values.add(row.getList(i, columnDefinitions.getType(i).getTypeArguments().get(0).asJavaClass()));
 				break;
 			case MAP:
-				values.add(row.getMap(i, row.getColumnDefinitions().getType(i).getTypeArguments().get(0).asJavaClass(),
-										 row.getColumnDefinitions().getType(i).getTypeArguments().get(1).asJavaClass()));
+				values.add(row.getMap(i, columnDefinitions.getType(i).getTypeArguments().get(0).asJavaClass(),
+										 columnDefinitions.getType(i).getTypeArguments().get(1).asJavaClass()));
 				break;
 			case SET:
-				values.add(row.getSet(i, row.getColumnDefinitions().getType(i).getTypeArguments().get(0).asJavaClass()));
+				values.add(row.getSet(i, columnDefinitions.getType(i).getTypeArguments().get(0).asJavaClass()));
 				break;
 			case TEXT:
 				values.add(row.getString(i));
@@ -182,7 +188,7 @@ public class CassandraQueryExecution implements ResultSetExecution {
 			
 		}
 		if (returnsArray) {
-			return Collections.singletonList((Object)values.toArray());
+			return Arrays.asList((Object)values.toArray());
 		}
 		return values;
 	}

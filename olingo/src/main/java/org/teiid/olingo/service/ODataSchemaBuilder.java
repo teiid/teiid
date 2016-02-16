@@ -360,7 +360,6 @@ public class ODataSchemaBuilder {
     }
 
     private static boolean allowedProcedure(Procedure proc) {
-    	// out not supported
         // any number of in, but can have only one LOB if lob is present
         // only *one* result, or resultset allowed
         int inouts = 0;
@@ -368,7 +367,7 @@ public class ODataSchemaBuilder {
         int outs = 0;
         for (ProcedureParameter pp : proc.getParameters()) {
             if (pp.getType().equals(ProcedureParameter.Type.Out)) { 
-                return false;
+                continue;
             }
         	
             if (pp.getType().equals(ProcedureParameter.Type.In) 
@@ -431,8 +430,8 @@ public class ODataSchemaBuilder {
         ArrayList<CsdlParameter> params = new ArrayList<CsdlParameter>();
         for (ProcedureParameter pp : proc.getParameters()) {
             EdmPrimitiveTypeKind odataType = ODataTypeManager.odataType(pp.getRuntimeType());            
-            if (pp.getType().equals(ProcedureParameter.Type.ReturnValue)) {                 
-                edmFunction.setReturnType(new CsdlReturnType().setType(odataType.getFullQualifiedName()));
+            if (pp.getType().equals(ProcedureParameter.Type.ReturnValue)) {
+                edmFunction.setReturnType(new CsdlReturnType().setType(odataType.getFullQualifiedName()).setCollection(DataTypeManager.isArrayType(pp.getRuntimeType())));
                 continue;
             } 
             
@@ -497,7 +496,7 @@ public class ODataSchemaBuilder {
         for (ProcedureParameter pp : proc.getParameters()) {
             EdmPrimitiveTypeKind odatatype = ODataTypeManager.odataType(pp.getRuntimeType());
             if (pp.getType().equals(ProcedureParameter.Type.ReturnValue)) {                 
-                edmAction.setReturnType(new CsdlReturnType().setType(odatatype.getFullQualifiedName()));
+                edmAction.setReturnType(new CsdlReturnType().setType(odatatype.getFullQualifiedName()).setCollection(DataTypeManager.isArrayType(pp.getRuntimeType())));
                 continue;
             }
 

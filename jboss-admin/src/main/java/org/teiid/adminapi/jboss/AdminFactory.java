@@ -105,7 +105,7 @@ public class AdminFactory {
         }
 
         if(port < 0) {
-            port = 9999;
+            port = 9990;
         }
 
         try {

@@ -27,6 +27,7 @@ import static org.junit.Assert.*;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -415,6 +416,69 @@ public class TestConnectorWorkItem {
 		} catch (TranslatorException e) {
 			//should throw the conversion error
 		}
+    }
+    
+    @Test public void testUnmodifibleList() throws Exception {
+    	BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
+    	final ExecutionFactory<Object, Object> ef = new ExecutionFactory<Object, Object> () {
+    		@Override
+    		public boolean isSourceRequired() {
+    			return false;
+    		}
+    		@Override
+    		public ResultSetExecution createResultSetExecution(
+    				QueryExpression command, ExecutionContext executionContext,
+    				RuntimeMetadata metadata, Object connection)
+    				throws TranslatorException {
+    			List<String> list1 = Collections.singletonList("1");
+    			final Iterator<List<String>> iter = Arrays.asList(list1).iterator(); 
+    			return new ResultSetExecution() {
+					
+					@Override
+					public void execute() throws TranslatorException {
+						
+					}
+					
+					@Override
+					public void close() {
+						
+					}
+					
+					@Override
+					public void cancel() throws TranslatorException {
+						
+					}
+					
+					@Override
+					public List<?> next() throws TranslatorException, DataNotAvailableException {
+						if (iter.hasNext()) {
+							return iter.next();
+						}
+						return null;
+					}
+				};
+    		}
+    	};
+		ConnectorManager cm = new ConnectorManager("FakeConnector","FakeConnector") { //$NON-NLS-1$ //$NON-NLS-2$
+			public ExecutionFactory getExecutionFactory() {
+				return ef;
+			}
+			public Object getConnectionFactory(){
+				return null;
+			}
+		};
+		cm.start();
+    	AtomicRequestMessage requestMsg = createNewAtomicRequestMessage(1, 1);
+    	requestMsg.setCommand(helpGetCommand("SELECT intkey FROM bqt1.smalla", EXAMPLE_BQT)); //$NON-NLS-1$
+    	requestMsg.setBufferManager(bm);
+    	ConnectorWorkItem cwi = new ConnectorWorkItem(requestMsg, cm);
+    	cwi.execute();
+    	AtomicResultsMessage message = cwi.more();
+    	List[] results = message.getResults();
+    	assertEquals(1, results.length);
+		List<?> tuple = results[0];
+		assertEquals(1, tuple.get(0));
+		assertEquals(1, message.getFinalRow());
     }
     
 	@Test public void testSourcHints() throws Exception {

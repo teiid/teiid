@@ -50,6 +50,7 @@ import org.teiid.json.simple.JSONParser;
 import org.teiid.json.simple.ParseException;
 import org.teiid.json.simple.SimpleContentHandler;
 import org.teiid.language.Argument;
+import org.teiid.language.Argument.Direction;
 import org.teiid.language.Call;
 import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.metadata.RuntimeMetadata;
@@ -223,7 +224,9 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
     	Object result = this.returnValue;
-		if (this.returnValue != null && this.procedure.getArguments().size() > 4 && Boolean.TRUE.equals(this.procedure.getArguments().get(3).getArgumentValue().getValue())) {
+    	if (returnValue != null && procedure.getArguments().size() > 4
+				&& procedure.getArguments().get(3).getDirection() == Direction.IN
+				&& Boolean.TRUE.equals(procedure.getArguments().get(3).getArgumentValue().getValue())) {
 			try {
 				result = new BlobType(new StreamingBlob(this.returnValue.getInputStream()));
 			} catch (IOException e) {

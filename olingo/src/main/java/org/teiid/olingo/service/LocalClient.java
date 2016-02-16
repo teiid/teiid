@@ -168,7 +168,7 @@ public class LocalClient implements Client {
 
         if (!returnType.hasResultSet()) {
             Object result = stmt.getObject(1);
-            response.addPrimitive(result);
+            response.setReturnValue(result);
         }
     }
 

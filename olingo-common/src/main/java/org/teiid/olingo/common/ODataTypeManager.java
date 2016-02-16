@@ -139,6 +139,7 @@ public class ODataTypeManager {
     public static EdmPrimitiveTypeKind odataType(String teiidRuntimeType) {
         if (teiidRuntimeType.endsWith("[]")) {
             teiidRuntimeType = teiidRuntimeType.substring(0, teiidRuntimeType.length()-2);
+            //multi-dimensional is not supported - will be returned as string
         }
         String type =  teiidTypes.get(teiidRuntimeType);
         if (type == null) {
