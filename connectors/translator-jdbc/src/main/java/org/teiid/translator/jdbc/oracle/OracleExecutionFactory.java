@@ -1089,6 +1089,6 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     public boolean useColumnNamesForGeneratedKeys() {
-    	return false;
+    	return true;
     }
 }
