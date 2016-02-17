@@ -445,11 +445,21 @@
             	<artifactId>translator-salesforce</artifactId>
             	<version>${project.version}</version>
         	</dependency>
+            <dependency>
+                <groupId>org.jboss.teiid.connectors</groupId>
+                <artifactId>translator-salesforce-34</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 	        <dependency>
 	            <groupId>org.jboss.teiid.connectors</groupId>
 	            <artifactId>connector-salesforce</artifactId>
 	            <version>${project.version}</version>
-	        </dependency>        	
+	        </dependency>
+            <dependency>
+                <groupId>org.jboss.teiid.connectors</groupId>
+                <artifactId>connector-salesforce-34</artifactId>
+                <version>${project.version}</version>
+            </dependency>           	                	
       		<dependency>
             	<groupId>org.jboss.teiid.connectors</groupId>
            		<artifactId>translator-jdbc</artifactId>
