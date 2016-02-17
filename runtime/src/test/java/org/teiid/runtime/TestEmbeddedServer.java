@@ -662,6 +662,33 @@ public class TestEmbeddedServer {
 		assertFalse(rs.next());
 	}
 	
+	@Test public void testGeneratedKeysTemp() throws Exception {
+		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		MockTransactionManager tm = new MockTransactionManager();
+		ec.setTransactionManager(tm);
+		ec.setUseDisk(false);
+		es.start(ec);
+		
+		ModelMetaData mmd1 = new ModelMetaData();
+		mmd1.setName("b");
+		mmd1.setModelType(Type.VIRTUAL);
+		mmd1.addSourceMetadata("ddl", "create view v as select 1");
+		
+		es.deployVDB("vdb", mmd1);
+		
+		Connection c = es.getDriver().connect("jdbc:teiid:vdb", null);
+		Statement s = c.createStatement();
+		s.execute("create temporary table t (x serial, y string, primary key (x))");
+		PreparedStatement ps = c.prepareStatement("insert into t (y) values ('a')", Statement.RETURN_GENERATED_KEYS);
+		assertFalse(ps.execute());
+		assertEquals(1, ps.getUpdateCount());
+		ResultSet rs = ps.getGeneratedKeys();
+		assertTrue(rs.next());
+		assertEquals(1, rs.getInt(1));
+		//should just be the default, rather than an exception
+		assertEquals(11, rs.getMetaData().getColumnDisplaySize(1));
+	}
+	
 	@Test public void testMultiSourceMetadata() throws Exception {
 		EmbeddedConfiguration ec = new EmbeddedConfiguration();
 		MockTransactionManager tm = new MockTransactionManager();
