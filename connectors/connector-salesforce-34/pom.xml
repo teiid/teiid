@@ -15,7 +15,17 @@
 		<dependency>
 			<groupId>org.jboss.teiid.connectors</groupId>
 			<artifactId>connector-salesforce</artifactId>
+			<exclusions>
+	            <exclusion>
+	                <groupId>org.jboss.teiid.connectors</groupId>
+	                <artifactId>translator-salesforce</artifactId>
+	            </exclusion>			
+			</exclusions>
 		</dependency>
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>translator-salesforce-34</artifactId>
+        </dependency>		
 	</dependencies>
 
 	<build>
