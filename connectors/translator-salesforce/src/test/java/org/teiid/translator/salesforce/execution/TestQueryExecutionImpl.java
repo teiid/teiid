@@ -107,4 +107,19 @@ public class TestQueryExecutionImpl {
 		assertEquals(TimestampUtil.createTimestamp(101, 0, 1, 2, 0, 0, 1000000), QueryExecutionImpl.parseDateTime("2001-01-01T08:00:00.001Z", Timestamp.class, Calendar.getInstance()));
 	}
 	
+	@Test public void testRetrieve() throws Exception {
+		Select command = (Select)translationUtility.parseCommand("select Name from Account where id = 'abc'"); //$NON-NLS-1$
+		SalesforceConnection sfc = Mockito.mock(SalesforceConnection.class);
+		
+		QueryResult finalQr = new QueryResult();
+		finalQr.setRecords(new SObject[] {null});
+		finalQr.setDone(true);
+		finalQr.setSize(1);
+		
+		Mockito.stub(sfc.retrieve("Account.Name", "Account", Arrays.asList("abc"))).toReturn(finalQr);
+		QueryExecutionImpl qei = new QueryExecutionImpl(command, sfc, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class));
+		qei.execute();
+		assertNull(qei.next());
+	}
+	
 }
