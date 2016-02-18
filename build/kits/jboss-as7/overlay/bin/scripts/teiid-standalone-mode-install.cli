@@ -110,5 +110,5 @@
 /subsystem=resource-adapters/resource-adapter=accumulo:add(module=org.jboss.teiid.resource-adapter.accumulo)
 /subsystem=resource-adapters/resource-adapter=solr:add(module=org.jboss.teiid.resource-adapter.solr)
 
-/deployment=teiid-odata-${project.version}.war:add(runtime-name=teiid-odata-${project.version}.war,content=[{path=dataVirtualization/vdb/teiid-odata-${project.version}.war/,archive=false,relative-to=jboss.home.dir}],enabled=true)
-/deployment=teiid-olingo-${project.version}-odata4.war:add(runtime-name=teiid-olingo-${project.version}-odata4.war,content=[{path=dataVirtualization/vdb/teiid-olingo-${project.version}-odata4.war/,archive=false,relative-to=jboss.home.dir}],enabled=true)
+/deployment=teiid-odata.war:add(runtime-name=teiid-odata.war,content=[{path=dataVirtualization/vdb/teiid-odata.war/,archive=false,relative-to=jboss.home.dir}],enabled=true)
+/deployment=teiid-olingo-odata4.war:add(runtime-name=teiid-olingo-odata4.war,content=[{path=dataVirtualization/vdb/teiid-olingo-odata4.war/,archive=false,relative-to=jboss.home.dir}],enabled=true)

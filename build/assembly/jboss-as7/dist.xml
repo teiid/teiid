@@ -198,6 +198,18 @@
         <outputDirectory>${jbossas-module-root}/org/jboss/teiid/client/main</outputDirectory>
       </binaries>
     </moduleSet>
+  
+    <moduleSet>
+      <useAllReactorProjects>true</useAllReactorProjects>
+      <includes>
+      	<include>org.jboss.teiid:teiid-hibernate-dialect</include>   
+      </includes>
+      <binaries>
+		<includeDependencies>false</includeDependencies>
+		<unpack>false</unpack>
+        <outputDirectory>${jdbcjar.loc}</outputDirectory>
+      </binaries>
+    </moduleSet>  
     
     <!-- pulling out the war to be located where datavirtualization files are located -->
     <moduleSet>
@@ -209,6 +221,7 @@
         <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
         <outputDirectory>${vdb.loc}</outputDirectory>
+        <outputFileNameMapping>teiid-odata.war</outputFileNameMapping>
       </binaries>
     </moduleSet>    
     
@@ -270,6 +283,7 @@
             <unpack>false</unpack>
             <outputDirectory>${vdb.loc}</outputDirectory>
             <attachmentClassifier>odata4</attachmentClassifier>
+             <outputFileNameMapping>teiid-olingo-odata4.war</outputFileNameMapping>
         </binaries>
     </moduleSet> 
     
