@@ -84,8 +84,7 @@
 	    
 	    <!-- connector specific dependencies included in kit -->
 	    
-        <version.com.squareup.protoparser>3.1.4.redhat-1</version.com.squareup.protoparser>
-        <version.org.infinispan.protostream>3.0.0.Alpha8-redhat-1</version.org.infinispan.protostream>
+ 
         <version.gdata-spreadsheet>3.0</version.gdata-spreadsheet>
         <version.gdata-core>1.0</version.gdata-core>
         <version.olap4j>1.1.0</version.olap4j>
@@ -97,12 +96,16 @@
         <version.org.apache.phoenix.phoenix-core>4.2.1</version.org.apache.phoenix.phoenix-core>       
   	    
 
-
-        <version.org.infinispan.hibernate.search>4.6.1.Final-redhat-1</version.org.infinispan.hibernate.search> <!-- versions required by infinispan  --> 
-        <version.org.infinispan.6>6.3.0.Final-redhat-5</version.org.infinispan.6>  
+        <version.com.squareup.protoparser>3.1.4.redhat-1</version.com.squareup.protoparser>
+        <version.org.infinispan.protostream>3.0.4.Final-redhat-1</version.org.infinispan.protostream>
+        <!--3.0.0.Alpha8-redhat-1</version.org.infinispan.protostream-->
+        <version.org.infinispan.hibernate.search>4.6.3.Final-redhat-1</version.org.infinispan.hibernate.search> 
+        <!--4.6.1.Final-redhat-1</version.org.infinispan.hibernate.search--> <!-- versions required by infinispan  --> 
+        <version.org.infinispan.6>6.4.0.Final-redhat-4</version.org.infinispan.6>
+        <!-- 6.3.0.Final-redhat-5</version.org.infinispan.6-->  
         <version.org.apache.lucene.infinispan>3.6.2.redhat-8</version.org.apache.lucene.infinispan>
         <!-- JDG module slot to use  -->
-        <jdg.slot>jdg-6.5</jdg.slot>  
+        <jdg.slot>jdg-6.6</jdg.slot>  
  
 	    
 	    <!-- drivers and other external, provided, dependencies -->
