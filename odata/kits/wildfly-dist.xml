@@ -8,7 +8,20 @@
   
   <includeBaseDirectory>false</includeBaseDirectory>
   <baseDirectory>modules</baseDirectory>
-
+  <moduleSets>
+	  <moduleSet>
+	      <useAllReactorProjects>true</useAllReactorProjects>
+	      <includes>
+	        <include>org.jboss.teiid:teiid-odata</include>   
+	      </includes>
+	      <binaries>
+	        <includeDependencies>false</includeDependencies>
+	        <unpack>false</unpack>
+	        <outputDirectory>${wildfly-module-root}/org/jboss/teiid/main/deployments</outputDirectory>
+	        <outputFileNameMapping>teiid-odata.war</outputFileNameMapping>
+	      </binaries>
+	  </moduleSet>
+  </moduleSets>
   <fileSets>
 		<fileSet>
 			<directory>kits/wildfly/modules</directory>
@@ -18,13 +31,6 @@
 				<include>**/*</include>
 			</includes>
 		</fileSet>
-        <fileSet>
-            <directory>target</directory>
-            <outputDirectory>${wildfly-module-root}/org/jboss/teiid/main/deployments</outputDirectory>
-            <includes>
-                <include>**/*.war</include>
-            </includes>
-        </fileSet>
   </fileSets>  
   <dependencySets>
     <dependencySet>

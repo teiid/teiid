@@ -102,7 +102,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
     	    PrintWriter writer = httpResponse.getWriter();
     	    String code = e.getCode()==null?"":e.getCode(); //$NON-NLS-1$
     	    String message = e.getMessage()==null?"":e.getMessage(); //$NON-NLS-1$
-    		if (contentType != null && contentType.isCompatible(ContentType.APPLICATION_JSON)) {
+    		if (contentType == null || contentType.isCompatible(ContentType.APPLICATION_JSON)) {
     			httpResponse.setHeader(HttpHeader.CONTENT_TYPE, ContentType.APPLICATION_JSON.toContentTypeString());
     			writer.write("{ \"error\": { \"code\": \""+StringEscapeUtils.escapeJson(code)+"\", \"message\": \""+StringEscapeUtils.escapeJson(message)+"\" } }"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     	    } else {
