@@ -1,26 +1,16 @@
 package org.jboss.teiid.jdg_remote.pojo;
 
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.io.Serializable;
-import java.lang.Character;
-import java.math.BigDecimal;
-import java.math.BigInteger;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-
-import org.hibernate.search.annotations.Analyze;
-import org.hibernate.search.annotations.DateBridge;
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Index;
 import org.hibernate.search.annotations.Indexed;
-import org.hibernate.search.annotations.IndexedEmbedded;
-import org.hibernate.search.annotations.Resolution;
-import org.hibernate.search.annotations.Store;
 
-@Entity
 @Indexed(index="AllTypes")
 public class AllTypes implements Serializable{
 	
@@ -44,7 +34,6 @@ public class AllTypes implements Serializable{
 	private Boolean booleanValue;
 	private Timestamp timeStampValue;
 	
-	@Id 
 	@Field(index=Index.YES)
 	private Integer intKey;
 	private String stringKey;
