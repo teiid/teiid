@@ -33,6 +33,7 @@ import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.MutationsRejectedException;
 import org.apache.accumulo.core.client.TableExistsException;
 import org.apache.accumulo.core.client.TableNotFoundException;
+import org.apache.accumulo.core.client.admin.TimeType;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Value;
@@ -128,6 +129,7 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 	private void writeMutation(BatchWriter writer, List<ColumnReference> columns, List<Expression> values) 
 	        throws MutationsRejectedException, TranslatorException {
 		byte[] rowId = getRowId(columns, values);
+		Mutation mutation = new Mutation(rowId);
 		for (int i = 0; i < columns.size(); i++) {
 			Column column = columns.get(i).getMetadataObject();			
 			if (SQLStringVisitor.getRecordName(column).equalsIgnoreCase(AccumuloMetadataProcessor.ROWID)) {
@@ -135,12 +137,13 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 			}
 			Object value = values.get(i);
 			if (value instanceof Literal) {
-				writer.addMutation(buildMutation(rowId, column, ((Literal)value).getValue()));
+				buildMutation(mutation, column, ((Literal)value).getValue());
 			}
 			else {
-				writer.addMutation(buildMutation(rowId, column, value));
+				buildMutation(mutation, column, value);
 			}
 		}
+		writer.addMutation(mutation);
 	}
 	
     private void performUpdate(Update update) throws TranslatorException,
@@ -173,6 +176,7 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 
 			if (prevRow == null || !prevRow.equals(rowId)) {
 				prevRow = rowId;
+				Mutation mutation = new Mutation(rowId);
 				List<SetClause> changes = update.getChanges();
 				for (SetClause clause:changes) {
 					Column column = clause.getSymbol().getMetadataObject();
@@ -183,8 +187,7 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 					}
 					Expression value = clause.getValue();
 					if (value instanceof Literal) {
-						Mutation mutation = buildMutation(rowId.getBytes(), column, ((Literal)value).getValue());
-						writer.addMutation(mutation);
+						buildMutation(mutation, column, ((Literal)value).getValue());
 					}
 					else {
                         throw new TranslatorException(
@@ -192,6 +195,7 @@ public class AccumuloUpdateExecution implements UpdateExecution {
                                 AccumuloPlugin.Util.gs(AccumuloPlugin.Event.TEIID19001));
 					}
 				}
+				writer.addMutation(mutation);
 				this.updateCount++;
 			}
 		}
@@ -205,7 +209,7 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 			writer = connector.createBatchWriter(tableName, new BatchWriterConfig());
 		} catch (TableNotFoundException e) {
 			try {
-				connector.tableOperations().create(tableName);
+				connector.tableOperations().create(tableName, true, TimeType.LOGICAL);
 			} catch (AccumuloException e1) {
 				throw new TranslatorException(e1);
 			} catch (AccumuloSecurityException e1) {
@@ -275,7 +279,7 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 		return null;
 	}
 	
-	private Mutation buildMutation(byte[] rowid, Column column, Object value) {
+	private void buildMutation(Mutation mutation, Column column, Object value) {
 		String CF = column.getProperty(AccumuloMetadataProcessor.CF, false);
 		String CQ = column.getProperty(AccumuloMetadataProcessor.CQ, false);
 		String valuePattern = column.getProperty(AccumuloMetadataProcessor.VALUE_IN, false);
@@ -287,7 +291,6 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 		byte[] columnQualifier = (CQ == null)?AccumuloDataTypeManager.EMPTY_BYTES:CQ.getBytes();
 		byte[] columnValue = AccumuloDataTypeManager.EMPTY_BYTES;
 		
-		Mutation mutation = new Mutation(rowid);
 		valuePattern = valuePattern.substring(1, valuePattern.length()-1); // remove the curleys
 		if (valuePattern.equals(AccumuloMetadataProcessor.ValueIn.VALUE.name())) {
 			columnValue = AccumuloDataTypeManager.serialize(value);
@@ -296,7 +299,6 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 			columnQualifier = AccumuloDataTypeManager.serialize(value);
 		}
 		mutation.put(columnFamily, columnQualifier, columnValue);
-		return mutation;
 	}	
 
 	@Override
