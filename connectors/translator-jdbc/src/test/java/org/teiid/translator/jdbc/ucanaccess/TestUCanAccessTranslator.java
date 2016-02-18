@@ -44,27 +44,27 @@ public class TestUCanAccessTranslator {
 		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
 		
 		input = "SELECT ucanaccess.DSum('id','T20','id > 100')"; //$NON-NLS-1$
-		output = "SELECT DSum('id', 'T20', 'id > 100')"; //$NON-NLS-1$
+		output = "VALUES(DSum('id', 'T20', 'id > 100'))"; //$NON-NLS-1$
 		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
 		
 		input = "SELECT ucanaccess.DMax('id', 'T20')"; //$NON-NLS-1$
-		output = "SELECT DMax('id', 'T20')"; //$NON-NLS-1$
+		output = "VALUES(DMax('id', 'T20'))"; //$NON-NLS-1$
 		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
 		
 		input = "SELECT ucanaccess.DMin('id', 'T20')"; //$NON-NLS-1$
-		output = "SELECT DMin('id', 'T20')"; //$NON-NLS-1$
+		output = "VALUES(DMin('id', 'T20'))"; //$NON-NLS-1$
 		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
 		
 		input = "SELECT ucanaccess.DAvg('id', 'T20')"; //$NON-NLS-1$
-		output = "SELECT DAvg('id', 'T20')"; //$NON-NLS-1$
+		output = "VALUES(DAvg('id', 'T20'))"; //$NON-NLS-1$
 		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
 		
 		input = "SELECT ucanaccess.DFirst('descr', 'T20')"; //$NON-NLS-1$
-		output = "SELECT DFirst('descr', 'T20')"; //$NON-NLS-1$
+		output = "VALUES(DFirst('descr', 'T20'))"; //$NON-NLS-1$
 		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
 		
 		input = "SELECT ucanaccess.DLast('descr', 'T20')"; //$NON-NLS-1$
-		output = "SELECT DLast('descr', 'T20')"; //$NON-NLS-1$
+		output = "VALUES(DLast('descr', 'T20'))"; //$NON-NLS-1$
 		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
 	}
 

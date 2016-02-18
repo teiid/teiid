@@ -138,6 +138,7 @@ public class TestODataIntegration {
 
     @After
     public void after() throws Exception {
+    	http.stop();
     	TimestampWithTimezone.resetCalendar(null);
         server.stop();
         teiid.stop();
