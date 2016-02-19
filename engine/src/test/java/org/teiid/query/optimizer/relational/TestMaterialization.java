@@ -37,9 +37,7 @@ import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.RelationalPlan;
-import org.teiid.query.processor.relational.SelectNode;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.tempdata.GlobalTableStoreImpl;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
@@ -209,12 +207,8 @@ public class TestMaterialization {
         
         Command command = helpGetCommand(userSql, metadata, null);
         
-        RelationalPlan plan = (RelationalPlan)TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT g_0.e1 FROM MatTable.MatTable AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        RelationalPlan plan = (RelationalPlan)TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT g_0.e1 FROM MatTable.MatTable AS g_0 WHERE (SELECT mvstatus('MatView', 'ManagedMatView', Valid, LoadState, null) FROM (SELECT 1) AS x LEFT OUTER JOIN MatSrc.Status ON SchemaName = 'MatView' AND Name = 'ManagedMatView' LIMIT 2) = 1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
-        Criteria crit = ((SelectNode)plan.getRootNode().getChildren()[0]).getCriteria();
-        
-        assertEquals("EXISTS (SELECT mvstatus(SchemaName, Name, Valid, LoadState, null) FROM (SELECT 1) AS x LEFT OUTER JOIN MatSrc.Status ON 1 = 1 WHERE (SchemaName = 'MatView') AND (Name = 'ManagedMatView') LIMIT 1)", crit.toString());
-        
         Collection<Annotation> annotations = analysis.getAnnotations();
         assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$
         assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), Annotation.MATERIALIZED_VIEW); //$NON-NLS-1$
