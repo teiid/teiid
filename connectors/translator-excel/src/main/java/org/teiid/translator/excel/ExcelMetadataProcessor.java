@@ -68,6 +68,12 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
 		}
 		try {
 			File xlsFile = conn.getFile(this.excelFileName);
+			if (xlsFile.isDirectory()) {
+			    File[] files = xlsFile.listFiles();
+			    if (files.length > 0) {
+			        xlsFile = files[0];
+			    }
+			}
 			if (xlsFile.isDirectory() || !xlsFile.exists()) {
 				throw new TranslatorException(ExcelPlugin.Event.TEIID23005, ExcelPlugin.Util.gs(ExcelPlugin.Event.TEIID23005, xlsFile.getName()));
 			}
