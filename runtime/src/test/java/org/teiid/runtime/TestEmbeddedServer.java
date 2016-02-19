@@ -35,6 +35,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -1109,7 +1110,7 @@ public class TestEmbeddedServer {
 		}
 	}
 
-    //@Test 
+    @Test 
     public void testExternalMaterializationManagement() throws Exception {
         EmbeddedConfiguration ec = new EmbeddedConfiguration();
         ec.setUseDisk(false);
@@ -1120,13 +1121,11 @@ public class TestEmbeddedServer {
         es.start(ec);
         es.transactionService.setDetectTransactions(false);
         
-        final AtomicBoolean firsttime = new AtomicBoolean(true);
-        final AtomicInteger loadingCount = new AtomicInteger();
-        final AtomicInteger loading = new AtomicInteger();
-        final AtomicInteger loaded = new AtomicInteger();
-        final AtomicInteger matviewCount = new AtomicInteger();
+        final AtomicBoolean loaded = new AtomicBoolean();
+        final AtomicBoolean valid = new AtomicBoolean();
+        final AtomicInteger matTableCount = new AtomicInteger();
         final AtomicInteger tableCount = new AtomicInteger();
-        final AtomicInteger loadedCount = new AtomicInteger();
+        final AtomicBoolean hasStatus = new AtomicBoolean();
         
         es.addTranslator("y", new ExecutionFactory<AtomicInteger, Object> () {
             public boolean supportsCompareCriteriaEquals() {
@@ -1164,7 +1163,7 @@ public class TestEmbeddedServer {
                 t.setSupportsUpdate(true);
                 c = metadataFactory.addColumn("VDBName", TypeFacility.RUNTIME_NAMES.STRING, t);
                 c.setUpdatable(true);
-                c = metadataFactory.addColumn("VDBVersion", TypeFacility.RUNTIME_NAMES.STRING, t);
+                c = metadataFactory.addColumn("VDBVersion", TypeFacility.RUNTIME_NAMES.INTEGER, t);
                 c.setUpdatable(true);
                 c = metadataFactory.addColumn("SchemaName", TypeFacility.RUNTIME_NAMES.STRING, t);
                 c.setUpdatable(true);
@@ -1194,6 +1193,7 @@ public class TestEmbeddedServer {
                 throws TranslatorException {
                 
                 return new ResultSetExecution() {
+                	Iterator<? extends List<? extends Object>> results;
                     @Override
                     public void execute() throws TranslatorException {
                     }
@@ -1207,42 +1207,26 @@ public class TestEmbeddedServer {
                     public List<?> next() throws TranslatorException, DataNotAvailableException {
                         String status = "SELECT status.TargetSchemaName, status.TargetName, status.Valid, "
                                 + "status.LoadState, status.Updated, status.Cardinality, status.LoadNumber "
-                                + "FROM status WHERE status.VDBName = 'test' AND status.VDBVersion = '1' "
+                                + "FROM status WHERE status.VDBName = 'test' AND status.VDBVersion = 1 "
                                 + "AND status.SchemaName = 'virt' AND status.Name = 'my_view'";
-                        if (command.toString().equals(status)) {
-                            if (loading.get() == 1 && loadingCount.getAndIncrement() == 0) {
-                                return Arrays.asList(null, "mat_table", false, "LOADING", new Timestamp(System.currentTimeMillis()), -1, new Integer(1));                                
-                            }
-                            if (loaded.get() == 1 && loadedCount.getAndIncrement() == 0) {
-                                return Arrays.asList(null, "mat_table", false, "LOADED", new Timestamp(System.currentTimeMillis()), -1, new Integer(1));
-                            }
+                        if (results == null) {
+	                        String commandString = command.toString();
+							if (hasStatus.get() && commandString.equals(status)) {
+	                            results = Arrays.asList(Arrays.asList(null, "mat_table", valid.get(), loaded.get()?"LOADED":"LOADING", new Timestamp(System.currentTimeMillis()), -1, new Integer(1))).iterator();
+	                        } else if (hasStatus.get() && commandString.startsWith("SELECT status.Valid, status.LoadState FROM status")) {
+	                        	results = Arrays.asList(Arrays.asList(valid.get(), loaded.get()?"LOADED":"LOADING")).iterator();
+	                        } else if (loaded.get() && commandString.equals("SELECT mat_table.my_column FROM mat_table")) {
+	                        	matTableCount.getAndIncrement();
+	                        	results = Arrays.asList(Arrays.asList("mat_column0"), Arrays.asList("mat_column1")).iterator();
+	                        } else if (commandString.equals("SELECT my_table.my_column FROM my_table")) {
+	                            tableCount.getAndIncrement();
+	                            results = Arrays.asList(Arrays.asList("regular_column")).iterator();
+	                        }
                         }
-                        
-                        if (command.toString().startsWith("SELECT status.SchemaName, status.Name, status.Valid, status.LoadState FROM status")) {
-                            if (loading.get() == 1 && loadingCount.getAndIncrement() == 0) {
-                                return Arrays.asList("virt", "my_view", false, "LOADING", new Timestamp(System.currentTimeMillis()), -1, new Integer(1));                                
-                            }
-                            if (loaded.get() == 1 && loadedCount.getAndIncrement() == 0) {
-                                return Arrays.asList("virt", "my_view", true, "LOADED");
-                            }
+                        if (results != null && results.hasNext()) {
+                    		return results.next();
                         }
-                        
-                        if (command.toString().equals("SELECT mat_table.my_column FROM mat_table")) {
-                            if (loaded.get() == 1 && matviewCount.getAndIncrement() == 0) {
-                                return Arrays.asList("mat_column");
-                            }
-                        }
-                        
-                        if (command.toString().equals("SELECT my_table.my_column FROM my_table")) {
-                            if (tableCount.getAndIncrement() == 0) {
-                                return Arrays.asList("regular_column");
-                            }
-                        }
-                        tableCount.set(0);
-                        matviewCount.set(0);
-                        loadingCount.set(0);
-                        loadedCount.set(0);
-                        return null;
+                    	return null;
                     }
                 };
             }
@@ -1256,9 +1240,20 @@ public class TestEmbeddedServer {
                     
                     @Override
                     public void execute() throws TranslatorException {
-                        if (command.toString().startsWith("INSERT INTO status") || command.toString().startsWith("UPDATE status SET")) {
-                            loading.set(command.toString().indexOf("LOADING") != -1 ? 1:0);
-                            loaded.set(command.toString().indexOf("LOADED") != -1? 1:0);
+                    	String commandString = command.toString();
+						if (commandString.startsWith("INSERT INTO status")) {
+                    		hasStatus.set(true);
+                    	}
+                        if (commandString.startsWith("INSERT INTO status") || commandString.startsWith("UPDATE status SET")) {
+                        	if (commandString.contains("LoadState")) {
+	                            synchronized (loaded) {
+	                            	loaded.set(commandString.indexOf("LOADED") != -1);
+	                            	loaded.notifyAll();
+								}
+                        	}
+                            if (commandString.contains("Valid")) {
+                            	valid.set(commandString.indexOf("TRUE") != -1);
+                            }
                         }
                     }
                     
@@ -1294,7 +1289,7 @@ public class TestEmbeddedServer {
         mmd1.setName("virt");
         mmd1.setModelType(Type.VIRTUAL);
         mmd1.setSchemaSourceType("ddl");
-        mmd1.setSchemaText("create view my_view OPTIONS (" +
+        mmd1.setSchemaText("	create view my_view OPTIONS (" +
                 "UPDATABLE 'true',MATERIALIZED 'TRUE',\n" + 
                 "MATERIALIZED_TABLE 'my_schema.mat_table', \n" + 
                 "\"teiid_rel:MATERIALIZED_STAGE_TABLE\" 'my_schema.mat_table',\n" + 
@@ -1302,18 +1297,57 @@ public class TestEmbeddedServer {
                 "\"teiid_rel:MATVIEW_STATUS_TABLE\" 'my_schema.status', \n" + 
                 "\"teiid_rel:MATVIEW_SHARE_SCOPE\" 'NONE',\n" + 
                 "\"teiid_rel:MATVIEW_ONERROR_ACTION\" 'THROW_EXCEPTION',\n" + 
-                "\"teiid_rel:MATVIEW_TTL\" 10000)" +
+                "\"teiid_rel:MATVIEW_TTL\" 100000)" +
                 "as select * from \"my_table\"");
 
         es.deployVDB("test", mmd, mmd1);
-        
-        TeiidDriver td = es.getDriver();
+        synchronized (loaded) {
+            while (!loaded.get()) {
+            	loaded.wait();
+            }
+		}
+        final TeiidDriver td = es.getDriver();
         Connection c = td.connect("jdbc:teiid:test", null);
-        Thread.sleep(3000);
         Statement s = c.createStatement();
         ResultSet rs = s.executeQuery("select * from my_view");
         assertTrue(rs.next());
-        assertEquals("mat_column", rs.getString(1));
+        assertEquals("mat_column0", rs.getString(1));
+        
+        s.execute("update my_schema.status set valid=false");
+        
+        try {
+        	rs = s.executeQuery("select * from my_view");
+        	fail("expected throw exception to work");
+        } catch (SQLException e) {
+        	
+        }
+        
+        assertEquals(1, tableCount.get());
+        
+        s.execute("call setProperty((SELECT UID FROM Sys.Tables WHERE SchemaName = 'virt' AND Name = 'my_view'), 'teiid_rel:MATVIEW_ONERROR_ACTION', 'WAIT')");
+
+        //this thread should hang, until the status changes
+        final AtomicBoolean success = new AtomicBoolean();
+        Thread t = new Thread() {
+        	public void run() {
+                try {
+                	Connection c1 = td.connect("jdbc:teiid:test", null);
+					Statement s1 = c1.createStatement();
+                	s1.executeQuery("select * from my_view");
+                	success.set(true);
+				} catch (SQLException e) {
+				}
+        	};
+        };
+        t.start();
+        
+        //wait to ensure that the thread is blocked
+        Thread.sleep(5000);
+        
+        //update the status and make sure the thread finished
+		s.execute("update my_schema.status set valid=true");
+		t.join(10000);
+		assertTrue(success.get());
     }
     
 	@Test public void testPreparedTypeResolving() throws Exception {

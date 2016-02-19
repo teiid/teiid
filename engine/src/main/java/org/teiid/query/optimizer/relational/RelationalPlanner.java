@@ -1911,13 +1911,17 @@ public class RelationalPlanner {
 			if (scope == null) {
 				scope = MaterializationMetadataRepository.Scope.NONE.name();
 			}
-			Expression expr1 = new ElementSymbol("SchemaName"); //$NON-NLS-1$
-			Expression expr2 = new ElementSymbol("Name"); //$NON-NLS-1$
-			Expression expr3 = new ElementSymbol("Valid"); //$NON-NLS-1$
-			Expression expr4 = new ElementSymbol("LoadState"); //$NON-NLS-1$
 			String onErrorAction = metadata.getExtensionProperty(viewMatadataId, MaterializationMetadataRepository.MATVIEW_ONERROR_ACTION, false);
 			
 			if (onErrorAction == null || !ErrorAction.IGNORE.name().equalsIgnoreCase(onErrorAction)) {
+				String schemaName = metadata.getName(metadata.getModelID(viewMatadataId));
+				String viewName = metadata.getName(viewMatadataId);
+
+				Expression expr1 = new Constant(schemaName);
+				Expression expr2 = new Constant(viewName); 
+				Expression expr3 = new ElementSymbol("Valid"); //$NON-NLS-1$
+				Expression expr4 = new ElementSymbol("LoadState"); //$NON-NLS-1$
+
 				Query subquery = new Query();
 				Select subSelect = new Select();
 		        subSelect.addSymbol(new Function("mvstatus", new Expression[] {expr1, expr2, expr3, expr4, new Constant(onErrorAction)})); //$NON-NLS-1$ 
@@ -1928,14 +1932,10 @@ public class RelationalPlanner {
 				Select s = new Select();
 				s.addSymbol(new Constant(1));
 				one.setSelect(s);
-				subquery.setFrom(new From(Arrays.asList(new JoinPredicate(new SubqueryFromClause("x", one), new UnaryFromClause(statusTable), JoinType.JOIN_LEFT_OUTER, QueryRewriter.TRUE_CRITERIA)))); //$NON-NLS-1$
-				
-				String schemaName = metadata.getName(metadata.getModelID(viewMatadataId));
-				String viewName = metadata.getName(viewMatadataId);
 				
 				CompoundCriteria cc  = null;
 		        CompareCriteria c1 = new CompareCriteria(new ElementSymbol("VDBName"), CompareCriteria.EQ, new Constant(context.getVdbName())); //$NON-NLS-1$
-		        CompareCriteria c2 = new CompareCriteria(new ElementSymbol("VDBVersion"), CompareCriteria.EQ, new Constant(context.getVdbVersion())); //$NON-NLS-1$
+		        CompareCriteria c2 = new CompareCriteria(new ElementSymbol("VDBVersion"), CompareCriteria.EQ, new Constant(String.valueOf(context.getVdbVersion()))); //$NON-NLS-1$
 		        CompareCriteria c3 = new CompareCriteria(new ElementSymbol("SchemaName"), CompareCriteria.EQ, new Constant(schemaName)); //$NON-NLS-1$
 		        CompareCriteria c4 = new CompareCriteria(new ElementSymbol("Name"), CompareCriteria.EQ, new Constant(viewName)); //$NON-NLS-1$
 				
@@ -1948,8 +1948,10 @@ public class RelationalPlanner {
 				else if (scope.equalsIgnoreCase(MaterializationMetadataRepository.Scope.SCHEMA.name())) { 
 					cc = new CompoundCriteria(CompoundCriteria.AND, Arrays.asList(c3, c4));
 				}			
-		        subquery.setCriteria(cc);
-				query.setCriteria(new ExistsCriteria(subquery));
+		        
+				subquery.setFrom(new From(Arrays.asList(new JoinPredicate(new SubqueryFromClause("x", one), new UnaryFromClause(statusTable), JoinType.JOIN_LEFT_OUTER, cc)))); //$NON-NLS-1$
+		        
+				query.setCriteria(new CompareCriteria(new Constant(1), CompareCriteria.EQ, new ScalarSubquery(subquery)));
 			}
 		}
 		return query;
