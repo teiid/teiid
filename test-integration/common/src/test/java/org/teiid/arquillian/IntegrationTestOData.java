@@ -61,7 +61,7 @@ public class IntegrationTestOData extends AbstractMMQueryTestCase {
 	@Before
 	public void setup() throws Exception {
 		admin = AdminFactory.getInstance().createAdmin("localhost", 9999, "admin", "admin".toCharArray());
-		admin.deploy("teiid-odata-" + ApplicationInfo.getInstance().getReleaseNumber() + ".war", new FileInputStream("target/jboss-eap-6.4/dataVirtualization/vdb/teiid-odata-" + ApplicationInfo.getInstance().getReleaseNumber() + ".war"));
+		admin.deploy("teiid-odata-" + ApplicationInfo.getInstance().getReleaseNumber() + ".war", new FileInputStream("target/jboss-eap-6.4/dataVirtualization/vdb/teiid-odata.war"));
 	}
 
 	@After
