@@ -1542,10 +1542,10 @@ public final class FunctionMethods {
 			if (MaterializationMetadataRepository.ErrorAction.THROW_EXCEPTION.name().equalsIgnoreCase(action)) {
 				throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31147, schemaName, viewName));
 			}
-			Connection c = null;
+			PreparedStatement ps = null;
 			try {
-				c = context.getConnection();
-				PreparedStatement ps = c.prepareStatement("SELECT status.Valid, status.LoadState FROM status WHERE status.VDBName = ? AND status.VDBVersion = ? AND status.SchemaName = ? AND status.Name = ?");
+				Connection c = context.getConnection();
+				ps = c.prepareStatement("SELECT status.Valid, status.LoadState FROM status WHERE status.VDBName = ? AND status.VDBVersion = ? AND status.SchemaName = ? AND status.Name = ?"); //$NON-NLS-1$
 				ps.setString(1, context.getVdbName());
 				ps.setInt(2, context.getVdbVersion());
 				ps.setString(3, schemaName);
@@ -1557,8 +1557,8 @@ public final class FunctionMethods {
 					}
 				}
 			} finally {
-				if (c != null) {
-					c.close();
+				if (ps != null) {
+					ps.close();
 				}
 			}
 			context.getWorkItem().scheduleWork(10000);
