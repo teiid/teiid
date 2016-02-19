@@ -33,6 +33,9 @@ import java.math.RoundingMode;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.CodingErrorAction;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -1538,10 +1541,29 @@ public final class FunctionMethods {
 	}
 	
 	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM, determinism = Determinism.COMMAND_DETERMINISTIC)
-	public static int mvstatus(CommandContext context, String schemaName, String viewName, Boolean validity, String status, String action) throws BlockedException, FunctionExecutionException {
-		if (!validity && !MaterializationMetadataRepository.ErrorAction.IGNORE.name().equalsIgnoreCase(action)) {
+	public static int mvstatus(CommandContext context, String schemaName, String viewName, Boolean validity, String status, String action) throws BlockedException, FunctionExecutionException, SQLException {
+		if ((validity == null || !validity) && !MaterializationMetadataRepository.ErrorAction.IGNORE.name().equalsIgnoreCase(action)) {
 			if (MaterializationMetadataRepository.ErrorAction.THROW_EXCEPTION.name().equalsIgnoreCase(action)) {
 				throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31147, schemaName, viewName));
+			}
+			Connection c = null;
+			try {
+				c = context.getConnection();
+				PreparedStatement ps = c.prepareStatement("SELECT status.Valid, status.LoadState FROM status WHERE status.VDBName = ? AND status.VDBVersion = ? AND status.SchemaName = ? AND status.Name = ?");
+				ps.setString(1, context.getVdbName());
+				ps.setInt(2, context.getVdbVersion());
+				ps.setString(3, schemaName);
+				ps.setString(4, viewName);
+				ResultSet rs = ps.executeQuery();
+				if (rs.next()) {
+					if (rs.getBoolean(1)) {
+						return 1;
+					}
+				}
+			} finally {
+				if (c != null) {
+					c.close();
+				}
 			}
 			context.getWorkItem().scheduleWork(10000);
 			throw BlockedException.INSTANCE;
