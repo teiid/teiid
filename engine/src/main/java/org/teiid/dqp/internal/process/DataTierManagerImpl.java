@@ -1206,6 +1206,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 					String uuid = (String)((Constant)proc.getParameter(2).getExpression()).getValue();
 					String key = (String)((Constant)proc.getParameter(3).getExpression()).getValue();
 					Clob value = (Clob)((Constant)proc.getParameter(4).getExpression()).getValue();
+					key = MetadataFactory.resolvePropertyKey(null, key);
 					String strVal = null;
 					String result = null;
 					if (value != null) {
@@ -1232,6 +1233,8 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 					if (eventDistributor != null) {
 						eventDistributor.setProperty(vdbName, vdbVersion, uuid, key, strVal);
 					}
+					//materialization depends upon the property values
+					indexMetadata.addToMetadataCache(target, "transformation/matview", null); //$NON-NLS-1$
 					if (proc.returnParameters()) {
 						if (result == null) {
 							rows.add(Arrays.asList((Clob)null));

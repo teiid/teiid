@@ -891,7 +891,7 @@ public class MetadataFactory implements Serializable {
 	 	if (index > 0 && index < key.length() - 1) {
 	 		String prefix = key.substring(0, index);
 	 		String uri = BUILTIN_NAMESPACES.get(prefix);
-	 		if (uri == null) {
+	 		if (uri == null && factory != null) {
 	 			uri = factory.getNamespaces().get(prefix);
 	 		}
 	 		if (uri != null) {
