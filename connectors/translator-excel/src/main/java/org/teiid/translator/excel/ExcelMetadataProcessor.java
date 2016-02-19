@@ -26,7 +26,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Pattern;
 
 import javax.resource.ResourceException;
 
@@ -38,10 +37,17 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.*;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
-import org.teiid.translator.*;
+import org.teiid.metadata.ExtensionMetadataProperty;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Table;
+import org.teiid.translator.FileConnection;
+import org.teiid.translator.MetadataProcessor;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TranslatorProperty.PropertyType;
+import org.teiid.translator.TypeFacility;
 
 public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection> {
     
@@ -91,7 +97,7 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
 				int sheetCount = workbook.getNumberOfSheets();
 				for (int i = 0; i < sheetCount; i++) {
 					Sheet sheet = workbook.getSheetAt(i);
-					addTable(mf, sheet, xlsFile.getName());
+                    addTable(mf, sheet, xlsFile.getName(), this.excelFileName);
 				}
 			} finally {
 				xlsFileStream.close();
@@ -103,7 +109,7 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
 		}
 	}
 
-	private void addTable(MetadataFactory mf, Sheet sheet, String xlsName) {
+	private void addTable(MetadataFactory mf, Sheet sheet, String xlsName, String originalName) {
 		int firstRowNumber = sheet.getFirstRowNum();
 		Row headerRow = null;
 		int firstCellNumber = -1;
@@ -137,7 +143,7 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
 		AtomicInteger columnCount = new AtomicInteger();
 		Table table = mf.addTable(sheet.getSheetName());
 		table.setNameInSource(sheet.getSheetName());
-		table.setProperty(ExcelMetadataProcessor.FILE, xlsName);
+		table.setProperty(ExcelMetadataProcessor.FILE, originalName);
 		
 		// add implicit row_id column based on row number from excel sheet 
 		Column column = mf.addColumn(ROW_ID, TypeFacility.RUNTIME_NAMES.INTEGER, table);
@@ -228,7 +234,8 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
 		}
 	}
 	
-	@TranslatorProperty(display="Header Row Number", category=PropertyType.IMPORT, description="Row number that contains the header information")
+	@TranslatorProperty(display="Header Row Number", category=PropertyType.IMPORT, 
+	        description="Row number that contains the header information")
     public int getHeaderRowNumber() {
         return headerRowNumber;
     }
@@ -242,7 +249,8 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
         }
     }
     
-    @TranslatorProperty(display="Data Row Number", category=PropertyType.IMPORT, description="Row number from which data rows start from")
+    @TranslatorProperty(display = "Data Row Number", category = PropertyType.IMPORT, 
+            description = "Row number from which data rows start from")
     public int getDataRowNumber() {
         return dataRowNumber;
     }
@@ -256,8 +264,9 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
         }
     }
 
-    @TranslatorProperty(display="Excel File", category=PropertyType.IMPORT, description="Name of the Excel file to read metadata from", required=true)
+    @TranslatorProperty(display="Excel File", category=PropertyType.IMPORT, 
+            description="Name of the Excel file to read metadata from", required=true)
     public String getExcelFileName() {
         return excelFileName;
-    }	
+    }
 }
