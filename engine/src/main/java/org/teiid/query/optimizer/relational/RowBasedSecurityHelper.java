@@ -335,7 +335,7 @@ public class RowBasedSecurityHelper {
 		Set<GroupSymbol> groups = Collections.singleton(gs);
 		planner.planSubqueries(null, groups, null, subqueries, true);
 		List<Reference> refs = new LinkedList<Reference>();
-		CorrelatedReferenceCollectorVisitor.collectReferences(object, groups, refs);
+		CorrelatedReferenceCollectorVisitor.collectReferences(object, groups, refs, planner.metadata);
 		if (!refs.isEmpty()) {
 			throw new QueryValidatorException(QueryPlugin.Event.TEIID31142, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31142, object, gs));
 		}

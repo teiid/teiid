@@ -420,8 +420,23 @@ public class AliasGenerator extends PreOrderNavigator {
     }
     
     public void visit(Reference obj) {
+    	if (!obj.isCorrelated()) {
+    		return;
+    	}
     	//we need to follow references to correct correlated variables
-        visitNode(obj.getExpression());
+    	org.teiid.query.optimizer.relational.AliasGenerator.NamingVisitor.SQLNamingContext sqlNamingContext = this.visitor.namingContext.parent;
+    	while (sqlNamingContext != null) {
+	    	if (sqlNamingContext.groupNames.containsKey(obj.getExpression().getGroupSymbol().getName())) {
+	            visitNode(obj.getExpression());
+	            return;
+	    	}
+	    	sqlNamingContext = sqlNamingContext.parent;
+    	}
+    	if (!this.visitor.namingContext.groupNames.containsKey(obj.getExpression().getGroupSymbol().getName())) {
+    		visitNode(obj.getExpression());
+    	} else {
+        	// else - this is a naming conflict that is not handled gracefully
+    	}
     }
 
 	public void setAliasMapping(Map<String, String> aliasMapping) {

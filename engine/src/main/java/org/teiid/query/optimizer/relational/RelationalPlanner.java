@@ -564,7 +564,7 @@ public class RelationalPlanner {
 			}
 			try {
 			    ArrayList<Reference> correlatedReferences = new ArrayList<Reference>();
-			    CorrelatedReferenceCollectorVisitor.collectReferences(subCommand, localGroupSymbols, correlatedReferences);
+			    CorrelatedReferenceCollectorVisitor.collectReferences(subCommand, localGroupSymbols, correlatedReferences, metadata);
 			    ProcessorPlan procPlan = QueryOptimizer.optimizePlan(subCommand, metadata, idGenerator, capFinder, analysisRecord, context);
 			    if (procPlan instanceof RelationalPlan && pushdownWith != null && !pushdownWith.isEmpty()) {
 			    	LinkedHashMap<String, WithQueryCommand> parentPushdownWith = pushdownWith;
@@ -630,7 +630,7 @@ public class RelationalPlanner {
 
 	private static Set<GroupSymbol> getGroupSymbols(PlanNode plan) {
 		Set<GroupSymbol> groupSymbols = new HashSet<GroupSymbol>();
-        for (PlanNode source : NodeEditor.findAllNodes(plan, NodeConstants.Types.SOURCE | NodeConstants.Types.GROUP, NodeConstants.Types.GROUP)) {
+        for (PlanNode source : NodeEditor.findAllNodes(plan, NodeConstants.Types.SOURCE | NodeConstants.Types.GROUP, NodeConstants.Types.GROUP | NodeConstants.Types.SOURCE)) {
             groupSymbols.addAll(source.getGroups());
         }
 		return groupSymbols;
@@ -950,7 +950,7 @@ public class RelationalPlanner {
 				continue;
 			}
 			List<Reference> correlatedReferences = new ArrayList<Reference>();
-			CorrelatedReferenceCollectorVisitor.collectReferences(subqueryContainer.getCommand(), Arrays.asList(container.getGroup()), correlatedReferences);
+			CorrelatedReferenceCollectorVisitor.collectReferences(subqueryContainer.getCommand(), Arrays.asList(container.getGroup()), correlatedReferences, metadata);
 			setCorrelatedReferences(subqueryContainer, correlatedReferences);
 		}
 		String cacheString = "transformation/" + container.getClass().getSimpleName().toUpperCase(); //$NON-NLS-1$
@@ -1473,7 +1473,7 @@ public class RelationalPlanner {
 			rootJoin = rootJoin.getParent();
 		}
 		List<Reference> correlatedReferences = new ArrayList<Reference>();
-		CorrelatedReferenceCollectorVisitor.collectReferences(lo, rootJoin.getGroups(), correlatedReferences);
+		CorrelatedReferenceCollectorVisitor.collectReferences(lo, rootJoin.getGroups(), correlatedReferences, metadata);
 		
 		if (correlatedReferences.isEmpty()) {
 			return null;

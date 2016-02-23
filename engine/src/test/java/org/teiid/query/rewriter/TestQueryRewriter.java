@@ -53,6 +53,7 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.FakeFunctionMetadataSource;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
+import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.symbol.Constant;
@@ -1274,7 +1275,7 @@ public class TestQueryRewriter {
         helpTestRewriteCommand("select * from xmltest.doc1 where node1 = null", "SELECT * FROM xmltest.doc1 WHERE node1 = null"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    @Test public void testRewriteCorrelatedSubqueryInHaving() {
+    @Test public void testRewriteCorrelatedSubqueryInHaving() throws Exception {
         String sql = "select pm1.g1.e1 from pm1.g1 group by pm1.g1.e1 having pm1.g1.e1 in (select pm1.g1.e1 from pm1.g2)"; //$NON-NLS-1$
         String expected = "SELECT pm1.g1.e1 FROM pm1.g1 GROUP BY pm1.g1.e1 HAVING pm1.g1.e1 IN (SELECT pm1.g1.e1 FROM pm1.g2)"; //$NON-NLS-1$
                 
@@ -1282,7 +1283,10 @@ public class TestQueryRewriter {
         
         List<Reference> refs = new LinkedList<Reference>();
         
-        CorrelatedReferenceCollectorVisitor.collectReferences(query, Arrays.asList(new GroupSymbol("pm1.g1")), refs);//$NON-NLS-1$
+        GroupSymbol gs = new GroupSymbol("pm1.g1");
+        ResolverUtil.resolveGroup(gs, RealMetadataFactory.example1Cached());
+        
+        CorrelatedReferenceCollectorVisitor.collectReferences(query.getHaving(), Arrays.asList(gs), refs, RealMetadataFactory.example1Cached());//$NON-NLS-1$
         
         assertEquals(1, refs.size());
     }

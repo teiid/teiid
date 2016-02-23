@@ -49,7 +49,7 @@ public class TestCorrelatedReferenceCollectorVisitor {
 		LinkedList<Reference> correlatedReferences = new LinkedList<Reference>();
 		GroupSymbol gs = new GroupSymbol("bqt1.smalla");
 		ResolverUtil.resolveGroup(gs, RealMetadataFactory.exampleBQTCached());
-		CorrelatedReferenceCollectorVisitor.collectReferences(command, Arrays.asList(gs), correlatedReferences);
+		CorrelatedReferenceCollectorVisitor.collectReferences(command, Arrays.asList(gs), correlatedReferences, RealMetadataFactory.exampleBQTCached());
 		assertEquals(1, correlatedReferences.size());
 	}
 
