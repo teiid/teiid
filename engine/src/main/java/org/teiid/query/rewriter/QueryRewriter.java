@@ -524,7 +524,7 @@ public class QueryRewriter {
 				//create the correlated refs if they exist
 				//there is a little bit of a design problem here that null usually means no refs.
 				ArrayList<Reference> correlatedReferences = new ArrayList<Reference>();
-				CorrelatedReferenceCollectorVisitor.collectReferences(plannedResult.query, groups, correlatedReferences);
+				CorrelatedReferenceCollectorVisitor.collectReferences(plannedResult.query, groups, correlatedReferences, metadata);
 				if (!correlatedReferences.isEmpty()) {
 		            SymbolMap map = new SymbolMap();
 		            for (Reference reference : correlatedReferences) {
