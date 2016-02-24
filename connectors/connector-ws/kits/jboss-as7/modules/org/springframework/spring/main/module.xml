@@ -7,12 +7,10 @@
     <resource-root path="spring-beans-${version.org.springframework}.jar"/>
     <resource-root path="spring-context-${version.org.springframework}.jar"/>    
     <resource-root path="spring-core-${version.org.springframework}.jar"/>
-    <!-- 
     <resource-root path="spring-asm.jar"/>
     <resource-root path="spring-aop.jar"/>    
     <resource-root path="spring-expression.jar"/>
     <resource-root path="spring-tx.jar"/>
-     -->    
   </resources>
   <dependencies>
     <module name="javax.api"/>

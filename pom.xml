@@ -81,7 +81,9 @@
 	    <version.org.apache.httpcomponents.httpcore-nio>4.2.4</version.org.apache.httpcomponents.httpcore-nio>
 	    <version.org.apache.httpcomponents.httpasyncclient>4.0-beta3</version.org.apache.httpcomponents.httpasyncclient>
 	    
-	    
+	    	    
+	    <version.org.asm.springframework>3.1.4.RELEASE</version.org.asm.springframework>
+
 	    <!-- connector specific dependencies included in kit -->
 	    
  
@@ -1639,6 +1641,26 @@
                 <artifactId>spring-core</artifactId>
                 <version>${version.org.springframework}</version>
             </dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-aop</artifactId>
+				<version>${version.org.springframework}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-asm</artifactId>
+				<version>${version.org.asm.springframework}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-expression</artifactId>
+				<version>${version.org.springframework}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-tx</artifactId>
+				<version>${version.org.springframework}</version>
+			</dependency>               
             <dependency>
                 <groupId>com.facebook.presto</groupId>
                 <artifactId>presto-jdbc</artifactId>
