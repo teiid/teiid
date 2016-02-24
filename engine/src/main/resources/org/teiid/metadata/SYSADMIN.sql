@@ -174,6 +174,7 @@ BEGIN
         VARIABLES.status = 'LOAD';
     EXCEPTION e
         DELETE FROM #load;
+        EXECUTE logMsg(context=>'WARN', msg=>e.exception);
         EXECUTE IMMEDIATE 'SELECT Name, TargetSchemaName, TargetName, Valid, LoadState, Updated, Cardinality, LoadNumber FROM ' || VARIABLES.statusTable || crit AS Name string, TargetSchemaName string, TargetName string, Valid boolean, LoadState string, Updated timestamp, Cardinality long, LoadNumber long INTO #load USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = loadMatView.viewName;		       
     END
     

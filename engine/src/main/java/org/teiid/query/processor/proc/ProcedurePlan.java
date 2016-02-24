@@ -428,6 +428,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
         		}
 	        	Program exceptionProgram = program.getExceptionProgram();
 				this.push(exceptionProgram);
+				LogManager.logDetail(LogConstants.CTX_DQP, "Caught exception in exception hanlding block", e); //$NON-NLS-1$
 				TeiidSQLException tse = TeiidSQLException.create(e);
 				GroupSymbol gs = new GroupSymbol(program.getExceptionGroup());
 				this.currentVarContext.setValue(exceptionSymbol(gs, 0), tse.getSQLState());
