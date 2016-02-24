@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.client.SourceWarning;
 import org.teiid.core.CorePlugin;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
@@ -84,6 +85,17 @@ public class ExceptionHolder implements Externalizable {
 					
 				} catch (OptionalDataException e) {
 					
+				}
+			} else if (!classNames.isEmpty() && classNames.get(0).equals(SourceWarning.class.getName())) {
+				try {
+					String connectorBindingName = in.readUTF();
+					String modelName = in.readUTF();
+					boolean partial = in.readBoolean();
+					this.exception = new SourceWarning(modelName, connectorBindingName, this.exception.getCause(), partial);
+				} catch (EOFException e) {
+					//for backwards compatibility
+				} catch (OptionalDataException e) {
+					//for backwards compatibility
 				}
 			}
 		}
@@ -143,6 +155,11 @@ public class ExceptionHolder implements Externalizable {
 					next = next.getNextException();
 				}
 			}
+		} else if (exception instanceof SourceWarning) {
+			SourceWarning sw = (SourceWarning)exception;
+			out.writeUTF(sw.getConnectorBindingName());
+			out.writeUTF(sw.getModelName());
+			out.writeBoolean(sw.isPartialResultsError());
 		}
 	}
 	

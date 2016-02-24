@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -37,6 +38,7 @@ import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Test;
+import org.teiid.client.SourceWarning;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
@@ -201,5 +203,33 @@ public class TestExceptionHolder {
         ExceptionHolder holder = (ExceptionHolder)ois.readObject();
         Throwable e = holder.getException();
         assertTrue(e instanceof TeiidException);
+	}
+	
+	@Test public void testSourceWarning() throws Exception {
+		ClassLoader cl = new URLClassLoader(new URL[] {UnitTestUtil.getTestDataFile("test.jar").toURI().toURL()}); //$NON-NLS-1$
+		ArrayList<String> args = new ArrayList<String>();
+		args.add("Unknown Exception"); //$NON-NLS-1$
+		Exception obj = (Exception)ReflectionHelper.create("test.UnknownException", args, cl); //$NON-NLS-1$ 
+		
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(baos);
+        oos.writeObject(new ExceptionHolder(new SourceWarning("x", "y", obj, true)));
+        oos.flush();
+
+        ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
+        ExceptionHolder holder = (ExceptionHolder)ois.readObject();
+        SourceWarning sw = (SourceWarning)holder.getException();
+        assertEquals(sw.getConnectorBindingName(), "y");
+        assertEquals(sw.getModelName(), "x");
+        assertTrue(sw.isPartialResultsError());
+        
+        try {
+	        ois = new ObjectInputStream(new FileInputStream(UnitTestUtil.getTestDataFile("old-exceptionholder.ser")));
+	        holder = (ExceptionHolder)ois.readObject();
+	        assertTrue(holder.getException() instanceof TeiidException);
+        } finally {
+    		ois.close();
+        }
+        
 	}
 }
