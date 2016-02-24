@@ -564,43 +564,49 @@ public class ConnectorWorkItem implements ConnectorWork {
 		return this.connector.isThreadBound();
 	}
 	
-	private List<?> correctTypes(List row) throws TransformationException, TeiidComponentException {
+	private List<?> correctTypes(List row) throws TeiidException {
 		//TODO: add a proper intermediate schema
 		for (int i = 0; i < row.size(); i++) {
-			Object value = row.get(i);
-			if (value == null) {
-				continue;
-			}
-			if (convertToRuntimeType[i]) {
-				Object result = convertToRuntimeType(requestMsg.getBufferManager(), value, this.schema[i], this.requestMsg.getCommandContext());
-				if (value == result && !DataTypeManager.DefaultDataClasses.OBJECT.equals(this.schema[i])) {
-					convertToRuntimeType[i] = false;
-				} else {
-					if (!explicitClose && isLob[i] && !copyLobs && !areLobsUsableAfterClose && DataTypeManager.isLOB(result.getClass()) 
-							&& DataTypeManager.isLOB(DataTypeManager.convertToRuntimeType(value, false).getClass())) {
-						explicitClose = true;
-					}				
-					row.set(i, result);
-					value = result;
+			try {
+				Object value = row.get(i);
+				if (value == null) {
+					continue;
 				}
-			}
-			if (convertToDesiredRuntimeType[i]) {
-				if (value != null) {
-					Object result = DataTypeManager.transformValue(value, value.getClass(), this.schema[i]);
-					if (isLob[i] && copyLobs) {
-						if (lobStore == null) {
-							lobStore = requestMsg.getBufferManager().createFileStore("lobs"); //$NON-NLS-1$
-							lobBuffer = new byte[1 << 14];
-						}
-						requestMsg.getBufferManager().persistLob((Streamable<?>) result, lobStore, lobBuffer);
-					} else if (value == result) {
-						convertToDesiredRuntimeType[i] = false;
-						continue;
+				if (convertToRuntimeType[i]) {
+					Object result = convertToRuntimeType(requestMsg.getBufferManager(), value, this.schema[i], this.requestMsg.getCommandContext());
+					if (value == result && !DataTypeManager.DefaultDataClasses.OBJECT.equals(this.schema[i])) {
+						convertToRuntimeType[i] = false;
+					} else {
+						if (!explicitClose && isLob[i] && !copyLobs && !areLobsUsableAfterClose && DataTypeManager.isLOB(result.getClass()) 
+								&& DataTypeManager.isLOB(DataTypeManager.convertToRuntimeType(value, false).getClass())) {
+							explicitClose = true;
+						}				
+						row.set(i, result);
+						value = result;
 					}
-					row.set(i, result);
 				}
-			} else if (DataTypeManager.isValueCacheEnabled()) {
-				row.set(i, DataTypeManager.getCanonicalValue(value));
+				if (convertToDesiredRuntimeType[i]) {
+					if (value != null) {
+						Object result = DataTypeManager.transformValue(value, value.getClass(), this.schema[i]);
+						if (isLob[i] && copyLobs) {
+							if (lobStore == null) {
+								lobStore = requestMsg.getBufferManager().createFileStore("lobs"); //$NON-NLS-1$
+								lobBuffer = new byte[1 << 14];
+							}
+							requestMsg.getBufferManager().persistLob((Streamable<?>) result, lobStore, lobBuffer);
+						} else if (value == result) {
+							convertToDesiredRuntimeType[i] = false;
+							continue;
+						}
+						row.set(i, result);
+					}
+				} else if (DataTypeManager.isValueCacheEnabled()) {
+					row.set(i, DataTypeManager.getCanonicalValue(value));
+				}
+			} catch (TeiidComponentException e) {
+				throw new TeiidComponentException(QueryPlugin.Event.TEIID31176, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31176, this.requestMsg.getCommand().getProjectedSymbols().get(i), DataTypeManager.getDataTypeName(this.schema[i])));
+			} catch (TransformationException e) {
+				throw new TeiidException(QueryPlugin.Event.TEIID31176, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31176, this.requestMsg.getCommand().getProjectedSymbols().get(i), DataTypeManager.getDataTypeName(this.schema[i])));
 			}
 		}
 		return row;
