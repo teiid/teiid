@@ -48,10 +48,6 @@
                 <include>org.springframework:spring-beans</include>
                 <include>org.springframework:spring-context</include>
                 <include>org.springframework:spring-core</include>
-                <include>org.springframework:spring-asm</include>
-                <include>org.springframework:spring-expression</include>
-                <include>org.springframework:spring-aop</include>
-                <include>org.springframework:spring-tx</include>                
             </includes>
         </dependencySet>
         <dependencySet>
