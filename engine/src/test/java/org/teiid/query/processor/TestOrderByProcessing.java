@@ -447,5 +447,29 @@ public class TestOrderByProcessing {
     @Test public void testOrderByUnrelated2() {
     	TestValidator.helpValidate("SELECT max(e2) FROM pm1.g1 group by e1 ORDER BY e4", new String[] {"e4"}, RealMetadataFactory.example1Cached());
     }
+    
+	@Test public void testOrderedNestedGrouping() throws Exception {
+		String sql = "select e1, e2, '1|1' as COL, count(DISTINCT x) from pm1.g1 inner join (select e3 as x, e4 as y from pm1.g2) as v on (e4 = y) group by e1, e2"
+				+ " UNION ALL select e1, null, '1|0' as COL, count(DISTINCT x) from pm1.g1 inner join (select e3 as x, e4 as y from pm1.g2) as v on (e4 = y) group by e1"
+				+ " UNION ALL select null, e2, '0|1' as COL, count(DISTINCT x) from pm1.g1 inner join (select e3 as x, e4 as y from pm1.g2) as v on (e4 = y) group by e2"
+				+ " UNION ALL select null, null, '0|0' as COL, count(DISTINCT x) from pm1.g1 inner join (select e3 as x, e4 as y from pm1.g2) as v on (e4 = y) order by e1, e2 limit 1000";
+		
+		ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
+				new String[] {
+			"SELECT pm1.g1.e4 FROM pm1.g1", 
+			"SELECT pm1.g2.e4, pm1.g2.e3 FROM pm1.g2", 
+			"SELECT pm1.g1.e4, pm1.g1.e1 FROM pm1.g1", 
+			"SELECT pm1.g1.e4, pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", 
+			"SELECT pm1.g1.e4, pm1.g1.e2 FROM pm1.g1"}, new DefaultCapabilitiesFinder(), ComparisonMode.EXACT_COMMAND_STRING);
+		
+		HardcodedDataManager hdm = new HardcodedDataManager();
+		hdm.addData("SELECT pm1.g1.e4 FROM pm1.g1", Arrays.asList(1.0));
+		hdm.addData("SELECT pm1.g2.e4, pm1.g2.e3 FROM pm1.g2", Arrays.asList(1.0, true));
+		hdm.addData("SELECT pm1.g1.e4, pm1.g1.e1 FROM pm1.g1", Arrays.asList(1.0, "a"));
+		hdm.addData("SELECT pm1.g1.e4, pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", Arrays.asList(1.0, "a", 1));
+		hdm.addData("SELECT pm1.g1.e4, pm1.g1.e2 FROM pm1.g1", Arrays.asList(1.0, 1));
+		
+		TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("a", 1, "1|1", 1), Arrays.asList("a", null, "1|0", 1), Arrays.asList(null, 1, "0|1", 1), Arrays.asList(null, null, "0|0", 1)});
+	}
 	
 }
