@@ -15,6 +15,7 @@
 	        <include>org.jboss.teiid:teiid-olingo</include>   
 	      </includes>
 	      <binaries>
+	        <attachmentClassifier>odata4</attachmentClassifier>
 	        <includeDependencies>false</includeDependencies>
 	        <unpack>false</unpack>
 	        <outputDirectory>${wildfly-module-root}/org/jboss/teiid/main/deployments</outputDirectory>

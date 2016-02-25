@@ -196,7 +196,6 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"SYS.Tables as st ON st.Name = t1.TableName AND st.SchemaName = t1.SchemaName) LEFT OUTER JOIN " + //$NON-NLS-1$
 				"pg_catalog.matpg_datatype pt ON t1.DataType = pt.Name WHERE kc.keytype in ('Primary', 'Unique', 'Index')"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
-		t.setMaterialized(true);
 		return t;		
 	}
 	
@@ -252,7 +251,6 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"false as relhasoids " + //$NON-NLS-1$
 				"FROM SYS.Keys t1 WHERE t1.type in ('Primary', 'Unique', 'Index')"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
-		t.setMaterialized(true);
 		return t;		
 	}
 	
@@ -299,7 +297,6 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"null as indexprs, null as indpred " + //$NON-NLS-1$
 				"FROM Sys.KeyColumns as t1 GROUP BY t1.uid, t1.KeyType, t1.SchemaName, t1.TableName, t1.KeyName"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
-		t.setMaterialized(true);
 		return t;		
 	}
 
@@ -369,7 +366,6 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		"FROM SYS.Procedures as t1";//$NON-NLS-1$			
 		
 		t.setSelectTransformation(transformation);
-		t.setMaterialized(true);
 		return t;		
 	}
 	

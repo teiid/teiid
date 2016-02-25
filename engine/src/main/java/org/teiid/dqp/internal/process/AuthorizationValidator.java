@@ -24,6 +24,7 @@ package org.teiid.dqp.internal.process;
 
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.util.CommandContext;
@@ -56,11 +57,18 @@ public interface AuthorizationValidator {
 	boolean validate(String[] originalSql, Command command, QueryMetadataInterface metadata, CommandContext commandContext, CommandType commandType) throws QueryValidatorException, TeiidComponentException;
 	
 	/**
-	 * 
+	 * Uses the context or other information to determine if the current user has the given role name.
 	 * @param roleName
 	 * @param commandContext
 	 * @return true if the current user has the given role
 	 */
 	boolean hasRole(String roleName, CommandContext commandContext);
 	
+	/**
+	 * Determines if the metadata record is accessible in system queries
+	 * @param record
+	 * @param commandContext
+	 * @return
+	 */
+	boolean isAccessible(AbstractMetadataRecord record, CommandContext commandContext);
 }
