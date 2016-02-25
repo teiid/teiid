@@ -58,9 +58,11 @@ import java.util.regex.PatternSyntaxException;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.client.util.ExceptionUtil;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.CorePlugin;
+import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
@@ -75,10 +77,13 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
+import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.query.metadata.MaterializationMetadataRepository;
+import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.visitor.SQLStringVisitor;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.SourceSystemFunctions;
 
@@ -1537,15 +1542,26 @@ public final class FunctionMethods {
 	}
 	
 	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM, determinism = Determinism.COMMAND_DETERMINISTIC)
-	public static int mvstatus(CommandContext context, String schemaName, String viewName, Boolean validity, String status, String action) throws BlockedException, FunctionExecutionException, SQLException {
+	public static int mvstatus(CommandContext context, String schemaName, String viewName, Boolean validity, String status, String action) throws FunctionExecutionException, SQLException, QueryMetadataException, TeiidComponentException {
 		if ((validity == null || !validity) && !MaterializationMetadataRepository.ErrorAction.IGNORE.name().equalsIgnoreCase(action)) {
 			if (MaterializationMetadataRepository.ErrorAction.THROW_EXCEPTION.name().equalsIgnoreCase(action)) {
 				throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31147, schemaName, viewName));
 			}
+			
+			Object id = context.getMetadata().getGroupID(schemaName + AbstractMetadataRecord.NAME_DELIM_CHAR + viewName);
+			String statusTable = context.getMetadata().getExtensionProperty(id, MaterializationMetadataRepository.MATVIEW_STATUS_TABLE, false);
+			
+			if (statusTable == null) {
+				throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31177, schemaName, viewName));
+			}
+			
+			//add quoting if needed, although this needs to be resolved to be fully correct
+			statusTable = SQLStringVisitor.getSQLString(new GroupSymbol(statusTable)).toString();
+			
 			PreparedStatement ps = null;
 			try {
 				Connection c = context.getConnection();
-				ps = c.prepareStatement("SELECT status.Valid, status.LoadState FROM status WHERE status.VDBName = ? AND status.VDBVersion = ? AND status.SchemaName = ? AND status.Name = ?"); //$NON-NLS-1$
+				ps = c.prepareStatement("SELECT Valid, LoadState FROM "+statusTable+" WHERE VDBName = ? AND VDBVersion = ? AND SchemaName = ? AND Name = ?"); //$NON-NLS-1$ //$NON-NLS-2$
 				ps.setString(1, context.getVdbName());
 				ps.setInt(2, context.getVdbVersion());
 				ps.setString(3, schemaName);
