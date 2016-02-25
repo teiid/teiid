@@ -24,3 +24,4 @@ Enter the following:
 	
 you can find the deployment artifacts in the "teiid/build/target" directory once the build is completed.
 
+# teiid-coherence
