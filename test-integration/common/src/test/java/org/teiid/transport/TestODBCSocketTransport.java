@@ -626,7 +626,7 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 	
 	@Test public void testInt2Vector() throws Exception {
 		Statement s = conn.createStatement();
-		ResultSet rs = s.executeQuery("select indkey FROM pg_index");
+		ResultSet rs = s.executeQuery("select indkey FROM pg_index order by oid");
 		TestMMDatabaseMetaData.compareResultSet(rs);
 	}
 	

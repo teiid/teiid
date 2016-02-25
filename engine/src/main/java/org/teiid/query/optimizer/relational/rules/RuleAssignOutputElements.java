@@ -526,7 +526,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
             newCols = RelationalNode.projectTuple(filteredIndex, projectCols, true);
             
             if (newSymbols) {
-				SymbolMap childMap = SymbolMap.createSymbolMap(symbolMap.getKeys(), (List) projectNode.getProperty(NodeConstants.Info.PROJECT_COLS));
+				SymbolMap childMap = SymbolMap.createSymbolMap(symbolMap.getKeys(), projectCols);
             	for (int j = 0; j < filteredIndex.length; j++) {
 					if (filteredIndex[j] != -1) {
 						continue;

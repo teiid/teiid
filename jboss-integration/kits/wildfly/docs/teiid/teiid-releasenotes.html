@@ -40,6 +40,12 @@
     <li><a href="https://issues.jboss.org/browse/TEIID-4556">TEIID-4556</a> <a href="https://issues.jboss.org/browse/TEIID-4545">TEIID-4545</a> <a href="https://issues.jboss.org/browse/TEIID-4515">TEIID-4515</a> Phoenix/Hbase Translator now supports joins
     , more system functions/pushdown functions, and offset</li>
     <li><a href="https://issues.jboss.org/browse/TEIID-4532">TEIID-4532</a> <b>Hashing Functions</b> were added for md5, sha1, sha2-256, and sha2-512.
+    <li><a href="https://issues.jboss.org/browse/TEIID-3601">TEIID-3601</a> <b>Large row counts</b> internal tables and source queries are no longer limited to max integer rows.  However update counts, count aggregate values, user result sets, etc. are still limited to max integer.
+    <li><a href="https://issues.jboss.org/browse/TEIID-3792">TEIID-3792</a> <b>Array Quantified Comparisons</b> can be used to search array values - for example expression = SOME (array_expression)
+    <li><a href="https://issues.jboss.org/browse/TEIID-3462">TEIID-3462</a> <b>Semantic VDB Versioning</b> can be used in the VDB name and connection string, rather than the simple integer version.  See the Reference for more.
+    <li><a href="https://issues.jboss.org/browse/TEIID-3849">TEIID-3849</a> <b>Cassandra Update Improvements</b> for bulk/batch updates and asynch processing.</li>
+    <li><a href="https://issues.jboss.org/browse/TEIID-3869">TEIID-3869</a> <b>Additional geospatial support</b> for Geoserver integration with Teiid.</li>
+    <li><a href="https://issues.jboss.org/browse/TEIID-2476">TEIID-2476</a> <b>Data role metadata filtering</b> to omit non-accessible objects from system tables.</li>
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -79,6 +85,7 @@
    <li><a href="https://issues.jboss.org/browse/TEIID-2476">TEIID-2476</a> The AuthorizationValidator and PolicyDecider interfaces had minor changes - see their javadocs for new/altered methods</li>
    <li><a href="https://issues.jboss.org/browse/TEIID-3503">TEIID-3503</a> To better isolate dependencies a separate teiid-jboss-admin jar was created from classes in teiid-admin - most notably AdminFactory was moved there.</li>
    <li><a href="https://issues.jboss.org/browse/TEIID-4206">TEIID-4206</a> TranslatorProperty annotations on methods without setters must have the readOnly attribute as true.</li>
+   <li><a href="https://issues.jboss.org/browse/TEIID-2476">TEIID-2476</a> The AuthorizationValidator and PolicyDecider interfaces had minor changes - see their javadocs for new/altered methods</li>
 </ul>
 
 <h4>from 8.11</h4>

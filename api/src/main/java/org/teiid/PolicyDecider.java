@@ -66,7 +66,7 @@ public interface PolicyDecider {
 	 * @param commandContext
 	 * @return true if the access is allowed, otherwise false
 	 */
-	boolean isTempAccessable(PermissionType action, String resource,
+	boolean isTempAccessible(PermissionType action, String resource,
 			Context context, CommandContext commandContext);
 	
 	/**

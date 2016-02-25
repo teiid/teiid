@@ -51,18 +51,18 @@ class SchemaRecordTable extends RecordTable<Schema> {
 		super(new int[] {0}, columns.subList(pkColumnIndex, pkColumnIndex + 1));
 	}
 	
-	protected boolean isValid(Schema s, VDBMetaData vdb, List<Object> rowBuffer, Criteria condition) throws TeiidProcessingException, TeiidComponentException {
+	protected boolean isValid(Schema s, VDBMetaData vdb, List<Object> rowBuffer, Criteria condition, CommandContext commandContext) throws TeiidProcessingException, TeiidComponentException {
 		if (s == null || !vdb.isVisible(s.getName())) {
 			return false;
 		}
-		return super.isValid(s, vdb, rowBuffer, condition);
+		return super.isValid(s, vdb, rowBuffer, condition, commandContext);
 	}
 	
 	@Override
 	public SimpleIterator<Schema> processQuery(
 			VDBMetaData vdb, CompositeMetadataStore metadataStore,
-			BaseIndexInfo<?> ii, TransformationMetadata metadata) {
-		return processQuery(vdb, metadataStore.getSchemas(), ii);
+			BaseIndexInfo<?> ii, TransformationMetadata metadata, CommandContext commandContext) {
+		return processQuery(vdb, metadataStore.getSchemas(), ii, commandContext);
 	}
 
 }
@@ -79,13 +79,13 @@ abstract class SchemaChildRecordTable<T extends AbstractMetadataRecord> extends 
 	@Override
 	public SimpleIterator<T> processQuery(
 			final VDBMetaData vdb, final CompositeMetadataStore metadataStore,
-			final BaseIndexInfo<?> ii, final TransformationMetadata metadata) {
-		final SimpleIterator<Schema> schemas = schemaTable.processQuery(vdb, metadataStore.getSchemas(), ii);
+			final BaseIndexInfo<?> ii, final TransformationMetadata metadata, final CommandContext commandContext) {
+		final SimpleIterator<Schema> schemas = schemaTable.processQuery(vdb, metadataStore.getSchemas(), ii, commandContext);
 		return new ExpandingSimpleIterator<Schema, T>(schemas) {
 			@Override
 			protected SimpleIterator<T> getChildIterator(
 					Schema parent) {
-				return processQuery(vdb, getChildren(parent, metadata), ii.next);
+				return processQuery(vdb, getChildren(parent, metadata), ii.next, commandContext);
 			}
 		};
 	}

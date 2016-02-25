@@ -109,7 +109,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 		Set<String> resources = Collections.singleton(resource);
 		logRequest(resources, context);
         
-    	boolean allowed = decider.isTempAccessable(action, schema?resource:null, context, commandContext);
+    	boolean allowed = decider.isTempAccessible(action, schema?resource:null, context, commandContext);
     	
     	logResult(resources, context, allowed);
     	if (!allowed) {

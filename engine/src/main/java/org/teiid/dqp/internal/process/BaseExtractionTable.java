@@ -130,7 +130,7 @@ abstract class RecordExtractionTable<T extends AbstractMetadataRecord> extends B
 	public TupleSource processQuery(Query query, VDBMetaData vdb,
 			TransformationMetadata metadata, CommandContext cc) {
 		BaseIndexInfo<?> ii = baseTable.planQuery(query, query.getCriteria(), cc);
-		final SimpleIterator<T> iter = baseTable.processQuery(vdb, metadata.getMetadataStore(), ii, metadata);
+		final SimpleIterator<T> iter = baseTable.processQuery(vdb, metadata.getMetadataStore(), ii, metadata, cc);
 		return new ExtractionTupleSource<T>(ii.getNonCoveredCriteria(), iter, cc, vdb, metadata, this);
 	}
 	
@@ -144,20 +144,29 @@ abstract class ChildRecordExtractionTable<P extends AbstractMetadataRecord, T> e
 		this.baseTable = baseTable;
 	}
 	
+	protected boolean isValid(T result, CommandContext cc) {
+		return !(result instanceof AbstractMetadataRecord) || cc.getDQPWorkContext().isAdmin() || cc.getAuthorizationValidator().isAccessible((AbstractMetadataRecord)result, cc);
+	}
+	
 	@Override
 	public TupleSource processQuery(Query query, VDBMetaData vdb,
-			final TransformationMetadata metadata, CommandContext cc) {
+			final TransformationMetadata metadata, final CommandContext cc) {
 		BaseIndexInfo<?> ii = baseTable.planQuery(query, query.getCriteria(), cc);
-		final SimpleIterator<P> iter = baseTable.processQuery(vdb, metadata.getMetadataStore(), ii, metadata);
+		final SimpleIterator<P> iter = baseTable.processQuery(vdb, metadata.getMetadataStore(), ii, metadata, cc);
 		while (ii.next != null) {
 			ii = ii.next;
 		}
 		return new ExtractionTupleSource<T>(ii.getNonCoveredCriteria(), new ExpandingSimpleIterator<P, T>(iter) {
 			
-			SimpleIteratorWrapper<T> wrapper = new SimpleIteratorWrapper<T>(null);
+			SimpleIteratorWrapper<T> wrapper = new SimpleIteratorWrapper<T>(null) {
+				@Override
+				protected boolean isValid(T result) {
+					return ChildRecordExtractionTable.this.isValid(result, cc);
+				}
+			};
 			
 			protected RecordTable.SimpleIterator<T> getChildIterator(P parent) {
-				Collection<? extends T> children = getChildren(parent);
+				Collection<? extends T> children = getChildren(parent, cc);
 				if (children.isEmpty()) {
 					return RecordTable.emptyIterator();
 				}
@@ -168,6 +177,6 @@ abstract class ChildRecordExtractionTable<P extends AbstractMetadataRecord, T> e
 		}, cc, vdb, metadata, this);
 	}
 	
-	protected abstract Collection<? extends T> getChildren(P parent);
+	protected abstract Collection<? extends T> getChildren(P parent, CommandContext cc);
 	
 }

@@ -1198,7 +1198,11 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			String table = meta.getTableName(i);
 			String schema = meta.getSchemaName(i);
 			if (schema != null) {
-				final PreparedStatementImpl ps = this.connection.prepareStatement("select attrelid, attnum, typoid from pg_catalog.matpg_relatt where attname = ? and relname = ? and nspname = ?"); //$NON-NLS-1$
+				final PreparedStatementImpl ps = this.connection.prepareStatement("select " //$NON-NLS-1$
+						+ "pg_catalog.getOid(SYS.Columns.TableUID), " //$NON-NLS-1$
+						+ "cast(SYS.Columns.Position as short), " //$NON-NLS-1$
+						+ "cast((select p.value from SYS.Properties p where p.name = 'pg_type:oid' and p.uid = SYS.Columns.uid) as integer) " //$NON-NLS-1$ 
+						+ "from SYS.Columns where Name = ? and TableName = ? and SchemaName = ?"); //$NON-NLS-1$
 				try {
 					ps.setString(1, name);
 					ps.setString(2, table);
