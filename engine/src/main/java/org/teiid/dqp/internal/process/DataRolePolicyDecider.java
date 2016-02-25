@@ -22,12 +22,11 @@
 
 package org.teiid.dqp.internal.process;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 import org.teiid.CommandContext;
@@ -49,7 +48,7 @@ public class DataRolePolicyDecider implements PolicyDecider {
 		if (action == PermissionType.EXECUTE && context == Context.FUNCTION && allowFunctionCallsByDefault) {
 			return Collections.emptySet();
 		}
-		List<DataPolicy> policies = new ArrayList<DataPolicy>(commandContext.getAllowedDataPolicies().values());
+		Collection<DataPolicy> policies = commandContext.getAllowedDataPolicies().values();
 		int policyCount = policies.size();
 		boolean[] exclude = new boolean[policyCount];
 		outer:for (Iterator<String> iter = resources.iterator(); iter.hasNext();) {
@@ -57,11 +56,12 @@ public class DataRolePolicyDecider implements PolicyDecider {
 			Arrays.fill(exclude, false);
 			int excludeCount = 0;
 			while (resource.length() > 0) {
+				Iterator<DataPolicy> policyIter = policies.iterator();
 				for (int j = 0; j < policyCount; j++) {
+					DataPolicyMetadata policy = (DataPolicyMetadata)policyIter.next();
 					if (exclude[j]) {
 						continue;
 					}
-					DataPolicyMetadata policy = (DataPolicyMetadata)policies.get(j);
 					if (policy.isGrantAll()) {
 						if (policy.getSchemas() == null) {
 							resources.clear();
@@ -106,7 +106,7 @@ public class DataRolePolicyDecider implements PolicyDecider {
 	}
 
 	@Override
-	public boolean isTempAccessable(PermissionType action, String resource,
+	public boolean isTempAccessible(PermissionType action, String resource,
 			Context context, CommandContext commandContext) {
 		if (resource != null) {
 			return getInaccessibleResources(action, new HashSet<String>(Arrays.asList(resource)), context, commandContext).isEmpty();

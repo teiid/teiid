@@ -30,6 +30,7 @@
     <li><a href="https://issues.jboss.org/browse/TEIID-3462">TEIID-3462</a> <b>Semantic VDB Versioning</b> can be used in the VDB name and connection string, rather than the simple integer version.  See the Reference for more.
     <li><a href="https://issues.jboss.org/browse/TEIID-3849">TEIID-3849</a> <b>Cassandra Update Improvements</b> for bulk/batch updates and asynch processing.</li>
     <li><a href="https://issues.jboss.org/browse/TEIID-3869">TEIID-3869</a> <b>Additional geospatial support</b> for Geoserver integration with Teiid.</li>
+    <li><a href="https://issues.jboss.org/browse/TEIID-2476">TEIID-2476</a> <b>Data role metadata filtering</b> to omit non-accessible objects from system tables.</li>
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -53,6 +54,7 @@
    <li><a href="https://issues.jboss.org/browse/TEIID-3601">TEIID-3601</a> changed the rowCount field on CommandLogMessages from Integer to Long.</li>
    <li><a href="https://issues.jboss.org/browse/TEIID-3752">TEIID-3752</a> the admin assignToModel method was removed</li>
    <li><a href="https://issues.jboss.org/browse/TEIID-3684">TEIID-3684</a> RoleBasedCredentialMapIdentityLoginModule removed, consider using alternative login modules with roles to restrict access to VDB</li>
+   <li><a href="https://issues.jboss.org/browse/TEIID-2476">TEIID-2476</a> The AuthorizationValidator and PolicyDecider interfaces had minor changes - see their javadocs for new/altered methods</li>
 </ul>
 
 <h4>from 8.11</h4>
