@@ -304,7 +304,7 @@ public class SubqueryAwareEvaluator extends Evaluator {
             			deterministic = Determinism.COMMAND_DETERMINISTIC.compareTo(determinism) <= 0;
             			if (deterministic) {
 	            			//allowed to track up to 4x the maximum results size
-		    				maxTuples = Math.max(tb.getRowCount() << 2, maxTuples);
+		    				maxTuples = Math.max((int)Math.min(Integer.MAX_VALUE, tb.getRowCount() << 2), maxTuples);
 		    				ArrayList<Object> cacheKey = new ArrayList<Object>(state.refValues);
 		    				cacheKey.add(key);
 		    				tb.saveBatch(); //ensure that we aren't leaving large last batches in memory
@@ -438,6 +438,12 @@ public class SubqueryAwareEvaluator extends Evaluator {
 	    	}
 	    } else {
 	    	if (!CapabilitiesUtil.supports(Capability.SELECT_WITHOUT_FROM, fd.getMethod().getParent(), context.getMetadata(), context.getQueryProcessorFactory().getCapabiltiesFinder())) {
+	    		if (elements != null) {
+	    			Integer index = (Integer) elements.get(function);
+	    			 if(index != null) {
+	  		           return tuple.get(index.intValue());
+	  		       }
+	    		}
 		    	throw new FunctionExecutionException(QueryPlugin.Event.TEIID30341, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30341, fd.getFullName()));
 	    	}
 	    	schema = fd.getSchema();

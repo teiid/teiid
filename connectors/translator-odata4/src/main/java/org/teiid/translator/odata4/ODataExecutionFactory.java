@@ -45,18 +45,7 @@ import org.teiid.language.QueryExpression;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.MetadataProcessor;
-import org.teiid.translator.ProcedureExecution;
-import org.teiid.translator.ResultSetExecution;
-import org.teiid.translator.SourceSystemFunctions;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
-import org.teiid.translator.TranslatorProperty;
-import org.teiid.translator.TypeFacility;
-import org.teiid.translator.UpdateExecution;
-import org.teiid.translator.WSConnection;
+import org.teiid.translator.*;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.ws.BinaryWSProcedureExecution;
@@ -73,7 +62,6 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 
     static final String INVOKE_HTTP = "invokeHttp"; //$NON-NLS-1$
     protected Map<String, FunctionModifier> functionModifiers = new TreeMap<String, FunctionModifier>(String.CASE_INSENSITIVE_ORDER);
-    private String databaseTimeZone;
     private boolean supportsOdataFilter;
     private boolean supportsOdataOrderBy;
     private boolean supportsOdataCount;
@@ -101,30 +89,19 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("tolower")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("toupper")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day")); //$NON-NLS-1$
-        addPushDownFunction("odata", "startswith", TypeFacility.RUNTIME_NAMES.BOOLEAN, 
-                TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$
-        addPushDownFunction("odata", "contains", TypeFacility.RUNTIME_NAMES.BOOLEAN, 
-                TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        registerFunctionModifier(SourceSystemFunctions.ST_DISTANCE, new AliasModifier("geo.distance")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_INTERSECTS, new AliasModifier("geo.intersects")); //$NON-NLS-1$
+        
+        addPushDownFunction("odata", "startswith", TypeFacility.RUNTIME_NAMES.BOOLEAN, //$NON-NLS-1$ //$NON-NLS-2$
+                TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); 
+        addPushDownFunction("odata", "contains", TypeFacility.RUNTIME_NAMES.BOOLEAN, //$NON-NLS-1$ //$NON-NLS-2$
+                TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); 
     }
 
     @Override
     public void start() throws TranslatorException {
         super.start();
-        if(this.databaseTimeZone != null && this.databaseTimeZone.trim().length() > 0) {
-            TimeZone tz = TimeZone.getTimeZone(this.databaseTimeZone);
-            //TODO: Convert the dates accordingly
-        }
-    }
-
-    @TranslatorProperty(display="Database time zone", 
-            description="Time zone of the database, if different than Integration Server", 
-            advanced=true)
-    public String getDatabaseTimeZone() {
-        return this.databaseTimeZone;
-    }
-
-    public void setDatabaseTimeZone(String databaseTimeZone) {
-        this.databaseTimeZone = databaseTimeZone;
     }
 
     @Override
@@ -219,11 +196,15 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
         supportedFunctions.add(SourceSystemFunctions.SECOND);
         supportedFunctions.add(SourceSystemFunctions.DAYOFMONTH);
         
-        // airthamatic functions
+        // arithmetic functions
         supportedFunctions.add(SourceSystemFunctions.ROUND);
         supportedFunctions.add(SourceSystemFunctions.FLOOR);
         supportedFunctions.add(SourceSystemFunctions.CEILING);
         supportedFunctions.add(SourceSystemFunctions.MOD);
+        
+        // geospatial functions
+        supportedFunctions.add(SourceSystemFunctions.ST_DISTANCE);
+        supportedFunctions.add(SourceSystemFunctions.ST_INTERSECTS);
 
         return supportedFunctions;
     }

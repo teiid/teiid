@@ -25,6 +25,7 @@ package org.teiid.dqp.internal.datamgr;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -104,8 +105,8 @@ public class ConnectorWorkItem implements ConnectorWork {
     private int expectedColumns;
         
     /* End state information */    
-    private boolean lastBatch;
-    private int rowCount;
+    private volatile boolean lastBatch;
+    private long rowCount;
     
     private AtomicBoolean isCancelled = new AtomicBoolean();
 	private org.teiid.language.Command translatedCommand;
@@ -126,6 +127,8 @@ public class ConnectorWorkItem implements ConnectorWork {
 	private TeiidException conversionError;
 	
 	private ThreadCpuTimer timer = new ThreadCpuTimer();
+	
+	private boolean unmodifiableList;
 	
 	ConnectorWorkItem(AtomicRequestMessage message, ConnectorManager manager) throws TeiidComponentException {
         this.id = message.getAtomicRequestID();
@@ -186,15 +189,21 @@ public class ConnectorWorkItem implements ConnectorWork {
 	}
     
     @Override
-    public void cancel() {
+    public void cancel(boolean abnormal) {
+    	if (lastBatch) {
+    		return;
+    	}
     	try {
-			LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Processing CANCEL request"}); //$NON-NLS-1$
-            if (this.isCancelled.compareAndSet(false, true)) {
-        		this.manager.logSRCCommand(this.requestMsg, this.securityContext, Event.CANCEL, -1, null);
-    	        if(execution != null) {
-    	            execution.cancel();
-    	        }            
-    	        LogManager.logDetail(LogConstants.CTX_CONNECTOR, QueryPlugin.Util.getString("DQPCore.The_atomic_request_has_been_cancelled", this.id)); //$NON-NLS-1$
+			if (this.isCancelled.compareAndSet(false, true)) {
+				LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Processing CANCEL request"}); //$NON-NLS-1$
+            	Execution ex = this.execution;
+            	if(ex != null) {
+            		if (abnormal) {
+                		this.manager.logSRCCommand(this.requestMsg, this.securityContext, Event.CANCEL, -1l, null);
+            		}
+    	            ex.cancel();
+    	            LogManager.logDetail(LogConstants.CTX_CONNECTOR, QueryPlugin.Util.getString("DQPCore.The_atomic_request_has_been_cancelled", this.id)); //$NON-NLS-1$
+            	}
         	}
         } catch (TranslatorException e) {
             LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30024, this.id));
@@ -268,12 +277,13 @@ public class ConnectorWorkItem implements ConnectorWork {
     	if (t instanceof RuntimeException && t.getCause() != null) {
     		t = t.getCause();
     	}
-        manager.logSRCCommand(this.requestMsg, this.securityContext, Event.ERROR, null, null);
         
         String msg = QueryPlugin.Util.getString("ConnectorWorker.process_failed", this.id); //$NON-NLS-1$
         if (isCancelled.get()) {            
             LogManager.logDetail(LogConstants.CTX_CONNECTOR, msg);
         } else {
+            manager.logSRCCommand(this.requestMsg, this.securityContext, Event.ERROR, null, null);
+
         	Throwable toLog = t;
         	if (this.requestMsg.getCommandContext().getOptions().isSanitizeMessages() && !LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.DETAIL)) {
 	    		toLog = ExceptionUtil.sanitize(toLog, true);
@@ -425,7 +435,21 @@ public class ConnectorWorkItem implements ConnectorWork {
             		throw new AssertionError("Inproper results returned.  Expected " + this.expectedColumns + " columns, but was " + row.size()); //$NON-NLS-1$ //$NON-NLS-2$
         		}
             	try {
-					row = correctTypes(row);
+	            	try {
+	            		if (unmodifiableList) {
+	                		row = new ArrayList<Object>(row);
+	            		}
+						row = correctTypes(row);
+	            	} catch (UnsupportedOperationException e) {
+	            		//it's generally expected that the returned list from 
+	            		//the translator should be modifiable, but we should be lax
+	            		if (unmodifiableList) {
+	            			throw e;
+	            		}
+	            		unmodifiableList = true;
+	            		row = new ArrayList<Object>(row);
+	            		row = correctTypes(row);
+	            	}
 				} catch (TeiidException e) {
 					conversionError = e;
 					break;
@@ -494,6 +518,10 @@ public class ConnectorWorkItem implements ConnectorWork {
 		if (this.securityContext.getCacheDirective() != null) {
 			response.setScope(this.securityContext.getCacheDirective().getScope());
 		}
+		if (this.securityContext.getScope() != null && 
+				(response.getScope() == null || response.getScope().compareTo(this.securityContext.getScope()) > 0)) {
+			response.setScope(this.securityContext.getScope());
+		}
 
 		if ( lastBatch ) {
 		    response.setFinalRow(rowCount);
@@ -536,43 +564,49 @@ public class ConnectorWorkItem implements ConnectorWork {
 		return this.connector.isThreadBound();
 	}
 	
-	private List<?> correctTypes(List row) throws TransformationException, TeiidComponentException {
+	private List<?> correctTypes(List row) throws TeiidException {
 		//TODO: add a proper intermediate schema
 		for (int i = 0; i < row.size(); i++) {
-			Object value = row.get(i);
-			if (value == null) {
-				continue;
-			}
-			if (convertToRuntimeType[i]) {
-				Object result = convertToRuntimeType(requestMsg.getBufferManager(), value, this.schema[i], this.requestMsg.getCommandContext());
-				if (value == result && !DataTypeManager.DefaultDataClasses.OBJECT.equals(this.schema[i])) {
-					convertToRuntimeType[i] = false;
-				} else {
-					if (!explicitClose && isLob[i] && !copyLobs && !areLobsUsableAfterClose && DataTypeManager.isLOB(result.getClass()) 
-							&& DataTypeManager.isLOB(DataTypeManager.convertToRuntimeType(value, false).getClass())) {
-						explicitClose = true;
-					}				
-					row.set(i, result);
-					value = result;
+			try {
+				Object value = row.get(i);
+				if (value == null) {
+					continue;
 				}
-			}
-			if (convertToDesiredRuntimeType[i]) {
-				if (value != null) {
-					Object result = DataTypeManager.transformValue(value, value.getClass(), this.schema[i]);
-					if (isLob[i] && copyLobs) {
-						if (lobStore == null) {
-							lobStore = requestMsg.getBufferManager().createFileStore("lobs"); //$NON-NLS-1$
-							lobBuffer = new byte[1 << 14];
-						}
-						requestMsg.getBufferManager().persistLob((Streamable<?>) result, lobStore, lobBuffer);
-					} else if (value == result) {
-						convertToDesiredRuntimeType[i] = false;
-						continue;
+				if (convertToRuntimeType[i]) {
+					Object result = convertToRuntimeType(requestMsg.getBufferManager(), value, this.schema[i], this.requestMsg.getCommandContext());
+					if (value == result && !DataTypeManager.DefaultDataClasses.OBJECT.equals(this.schema[i])) {
+						convertToRuntimeType[i] = false;
+					} else {
+						if (!explicitClose && isLob[i] && !copyLobs && !areLobsUsableAfterClose && DataTypeManager.isLOB(result.getClass()) 
+								&& DataTypeManager.isLOB(DataTypeManager.convertToRuntimeType(value, false).getClass())) {
+							explicitClose = true;
+						}				
+						row.set(i, result);
+						value = result;
 					}
-					row.set(i, result);
 				}
-			} else if (DataTypeManager.isValueCacheEnabled()) {
-				row.set(i, DataTypeManager.getCanonicalValue(value));
+				if (convertToDesiredRuntimeType[i]) {
+					if (value != null) {
+						Object result = DataTypeManager.transformValue(value, value.getClass(), this.schema[i]);
+						if (isLob[i] && copyLobs) {
+							if (lobStore == null) {
+								lobStore = requestMsg.getBufferManager().createFileStore("lobs"); //$NON-NLS-1$
+								lobBuffer = new byte[1 << 14];
+							}
+							requestMsg.getBufferManager().persistLob((Streamable<?>) result, lobStore, lobBuffer);
+						} else if (value == result) {
+							convertToDesiredRuntimeType[i] = false;
+							continue;
+						}
+						row.set(i, result);
+					}
+				} else if (DataTypeManager.isValueCacheEnabled()) {
+					row.set(i, DataTypeManager.getCanonicalValue(value));
+				}
+			} catch (TeiidComponentException e) {
+				throw new TeiidComponentException(QueryPlugin.Event.TEIID31176, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31176, this.requestMsg.getCommand().getProjectedSymbols().get(i), DataTypeManager.getDataTypeName(this.schema[i])));
+			} catch (TransformationException e) {
+				throw new TeiidException(QueryPlugin.Event.TEIID31176, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31176, this.requestMsg.getCommand().getProjectedSymbols().get(i), DataTypeManager.getDataTypeName(this.schema[i])));
 			}
 		}
 		return row;

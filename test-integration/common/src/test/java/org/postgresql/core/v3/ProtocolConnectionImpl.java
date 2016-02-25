@@ -3,8 +3,6 @@
 * Copyright (c) 2004-2011, PostgreSQL Global Development Group
 * Copyright (c) 2004, Open Cloud Limited.
 *
-* IDENTIFICATION
-*   $PostgreSQL: pgjdbc/org/postgresql/core/v3/ProtocolConnectionImpl.java,v 1.14 2011/08/02 13:40:12 davecramer Exp $
 *
 *-------------------------------------------------------------------------
 */
@@ -14,7 +12,9 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Properties;
+import java.util.Set;
 
 import org.postgresql.PGNotification;
 import org.postgresql.core.Encoding;
@@ -22,14 +22,15 @@ import org.postgresql.core.Logger;
 import org.postgresql.core.PGStream;
 import org.postgresql.core.ProtocolConnection;
 import org.postgresql.core.QueryExecutor;
+import org.postgresql.util.HostSpec;
+
 
 /**
  * ProtocolConnection implementation for the V3 protocol.
  *
  * @author Oliver Jowett (oliver@opencloud.com)
  */
-public class ProtocolConnectionImpl implements ProtocolConnection {
-	
+class ProtocolConnectionImpl implements ProtocolConnection {
     ProtocolConnectionImpl(PGStream pgStream, String user, String database, Properties info, Logger logger) {
         this.pgStream = pgStream;
         this.user = user;
@@ -40,12 +41,8 @@ public class ProtocolConnectionImpl implements ProtocolConnection {
         this.standardConformingStrings = false;
     }
 
-    public String getHost() {
-        return pgStream.getHost();
-    }
-
-    public int getPort() {
-        return pgStream.getPort();
+    public HostSpec getHostSpec() {
+        return pgStream.getHostSpec();
     }
 
     public String getUser() {
@@ -96,7 +93,7 @@ public class ProtocolConnectionImpl implements ProtocolConnection {
             if (logger.logDebug())
                 logger.debug(" FE=> CancelRequest(pid=" + cancelPid + ",ckey=" + cancelKey + ")");
 
-            cancelStream = new PGStream(pgStream.getHost(), pgStream.getPort());
+            cancelStream = new PGStream(pgStream.getHostSpec());
             cancelStream.SendInteger4(16);
             cancelStream.SendInteger2(1234);
             cancelStream.SendInteger2(5678);
@@ -206,6 +203,34 @@ public class ProtocolConnectionImpl implements ProtocolConnection {
         return 3;
     }
 
+    public boolean useBinaryForReceive(int oid) {
+        return useBinaryForOids.contains(oid);
+    }
+
+    public void setBinaryReceiveOids(Set oids) {
+        useBinaryForOids.clear();
+        useBinaryForOids.addAll(oids);
+    }
+
+    public void setIntegerDateTimes(boolean state) {
+        integerDateTimes = state;
+    }
+
+    public boolean getIntegerDateTimes() {
+        return integerDateTimes;
+    }
+
+   /**
+     * True if server uses integers for date and time fields. False if
+     * server uses double.
+     */
+    private boolean integerDateTimes;
+
+    /**
+    * Bit set that has a bit set for each oid which should be received
+    * using binary format.
+    */
+    private final Set<Integer> useBinaryForOids = new HashSet<Integer>();
     private String serverVersion;
     private int cancelPid;
     private int cancelKey;

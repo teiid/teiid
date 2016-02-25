@@ -22,11 +22,7 @@
 
 package org.teiid.replication.jgroups;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -56,14 +52,12 @@ import org.jgroups.blocks.MethodLookup;
 import org.jgroups.blocks.RequestOptions;
 import org.jgroups.blocks.ResponseMode;
 import org.jgroups.blocks.RpcDispatcher;
-import org.jgroups.util.Buffer;
 import org.jgroups.util.Promise;
 import org.jgroups.util.Rsp;
 import org.jgroups.util.RspList;
 import org.teiid.Replicated;
 import org.teiid.Replicated.ReplicationMode;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.core.util.ObjectInputStreamWithClassloader;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.ObjectReplicator;
@@ -89,7 +83,6 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 			this.object = object;
 			this.methodMap = methodMap;
 			this.methodList = methodList;
-			setMarshaller(new ContextAwareMarshaller(getClass().getClassLoader()));
 		}
 
 		@Override
@@ -104,7 +97,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 		    try {
 		        body=req_marshaller != null?
 		                req_marshaller.objectFromBuffer(req.getBuffer(), req.getOffset(), req.getLength())
-		                : req.getObject();
+		                : req.getObject(getClass().getClassLoader());
 		    }
 		    catch(Throwable e) {
 		        if(log.isErrorEnabled()) log.error("exception marshalling object", e); //$NON-NLS-1$
@@ -129,7 +122,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 		        }
 
 		        if (method_call.getId() >= methodList.size() - 3) {
-		        	Serializable address = new AddressWrapper(req.getSrc());
+		        	Serializable address = req.getSrc();
 		        	Serializable stateId = (Serializable)method_call.getArgs()[0];
 		        	List<?> key = Arrays.asList(stateId, address);
 		        	JGroupsInputStream is = inputStreams.get(key);
@@ -176,9 +169,9 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 		        	//sendState
 		        	ReplicatedObject ro = (ReplicatedObject)object;
 		        	String stateId = (String)method_call.getArgs()[0];
-		        	AddressWrapper dest = (AddressWrapper)method_call.getArgs()[1];
+		        	Address dest = (Address)method_call.getArgs()[1];
 		        	
-		        	JGroupsOutputStream oStream = new JGroupsOutputStream(this, Arrays.asList(dest.address), stateId, (short)(methodMap.size() - 3), false);
+		        	JGroupsOutputStream oStream = new JGroupsOutputStream(this, Arrays.asList(dest), stateId, (short)(methodMap.size() - 3), false);
 					try {
 						if (stateId == null) {
 							ro.getState(oStream);
@@ -420,11 +413,11 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 					}
 					JGroupsInputStream is = new JGroupsInputStream(IO_TIMEOUT);
 					StreamingRunner runner = new StreamingRunner(object, stateId, is, p);
-					List<?> key = Arrays.asList(stateId, new AddressWrapper(addr));
+					List<?> key = Arrays.asList(stateId, addr);
 					disp.inputStreams.put(key, is);
 					executor.execute(runner);
 					
-					this.disp.callRemoteMethod(addr, new MethodCall((short)(methodMap.size() - 4), stateId, new AddressWrapper(this.disp.getChannel().getAddress())), new RequestOptions(ResponseMode.GET_NONE, 0).setAnycasting(true));
+					this.disp.callRemoteMethod(addr, new MethodCall((short)(methodMap.size() - 4), stateId, this.disp.getChannel().getAddress()), new RequestOptions(ResponseMode.GET_NONE, 0).setAnycasting(true));
 					
 					Boolean fetched = p.getResult(timeout);
 
@@ -464,7 +457,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 					if (object instanceof ReplicatedObject<?> && !remoteMembers.isEmpty()) {
 						HashSet<Serializable> dropped = new HashSet<Serializable>();
 						for (Address address : remoteMembers) {
-							dropped.add(new AddressWrapper(address));
+							dropped.add(address);
 						}
 						((ReplicatedObject<?>)object).droppedMembers(dropped);
 					}
@@ -477,7 +470,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 	}
 	
 	private interface Streaming {
-		void sendState(Serializable id, AddressWrapper dest);
+		void sendState(Serializable id, Address dest);
 		void createState(Serializable id);
 		void buildState(Serializable id, byte[] bytes);
 		void finishState(Serializable id);
@@ -504,9 +497,9 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 	}
 	
 	@Override
-	public <T, S> T replicate(String nodeName, String mux_id,
+	public <T, S> T replicate(String mux_id,
 			Class<T> iface, final S object, long startTimeout) throws Exception {
-		Channel channel = channelFactory.createChannel(nodeName+"-"+mux_id);
+		Channel channel = channelFactory.createChannel(mux_id);
 		
 		// To keep the order of methods same at all the nodes.
 		TreeMap<String, Method> methods = new TreeMap<String, Method>();
@@ -529,7 +522,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 		methodList.add(hasState);
 		methodMap.put(hasState, (short)(methodList.size() - 1));
 		
-		Method sendState = JGroupsObjectReplicator.Streaming.class.getMethod(SEND_STATE, new Class<?>[] {Serializable.class, AddressWrapper.class});
+		Method sendState = JGroupsObjectReplicator.Streaming.class.getMethod(SEND_STATE, new Class<?>[] {Serializable.class, Address.class});
 		methodList.add(sendState);
 		methodMap.put(sendState, (short)(methodList.size() - 1));
 		
@@ -563,7 +556,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 		try {
 			channel.connect(mux_id);
 			if (object instanceof ReplicatedObject) {
-				((ReplicatedObject)object).setAddress(new AddressWrapper(channel.getAddress()));
+				((ReplicatedObject)object).setAddress(channel.getAddress());
 				proxy.pullState(null, null, null, startTimeout);
 			}
 			success = true;
@@ -584,32 +577,4 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 			}
 		}
 	}	
-	
-	// This class is used so that the objects are loaded with the current classes class loader
-	// rather than foreign class loader
-	static class ContextAwareMarshaller implements RpcDispatcher.Marshaller {
-		private ClassLoader classloader;
-		
-		public ContextAwareMarshaller(ClassLoader classloader) {
-			this.classloader = classloader;
-		}
-		
-		@Override
-		public Buffer objectToBuffer(Object obj) throws Exception {
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			ObjectOutputStream out = new ObjectOutputStream(baos);
-			out.writeObject(obj);
-			out.close();
-			return new Buffer(baos.toByteArray());
-		}
-
-		@Override
-		public Object objectFromBuffer(byte[] buf, int offset, int length) throws Exception {
-			ObjectInputStream in = new ObjectInputStreamWithClassloader(new ByteArrayInputStream(buf, offset, length), this.classloader);
-			Object anObj = in.readObject();
-			in.close();
-			return anObj;
-		}
-	}
-	
 }

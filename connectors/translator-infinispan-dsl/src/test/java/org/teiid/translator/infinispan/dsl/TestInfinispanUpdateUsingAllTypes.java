@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.infinispan.client.hotrod.RemoteCache;
 import org.jboss.teiid.jdg_remote.pojo.AllTypes;
 import org.jboss.teiid.jdg_remote.pojo.AllTypesCacheSource;
 import org.junit.Before;
@@ -18,20 +19,21 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.language.Command;
-import org.teiid.language.Delete;
 import org.teiid.language.Select;
-import org.teiid.language.Update;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.infinispan.dsl.util.AllTypesSchemaVDBUtility;
+import org.teiid.translator.object.ObjectConnection;
+import org.teiid.translator.object.ObjectUpdateExecution;
+import org.teiid.translator.object.ObjectVisitor;
 
 
 public class TestInfinispanUpdateUsingAllTypes {
 	
-	private static InfinispanConnection CONNECTION;
+	private static InfinispanDSLConnection CONNECTION;
 	private static TranslationUtility translationUtility = AllTypesSchemaVDBUtility.TRANSLATION_UTILITY;
 
-	private static Map<Object, Object> DATA = AllTypesCacheSource.loadCache();
+	private static RemoteCache DATA = AllTypesCacheSource.loadCache();
 	private static InfinispanExecutionFactory TRANSLATOR;
 	
 	@Mock
@@ -59,7 +61,7 @@ public class TestInfinispanUpdateUsingAllTypes {
 	private void insertRootClass() throws Exception {
 
 		// check the object doesn't exist before inserting
-		Object o = CONNECTION.getCache().get(99);
+		Object o = getCache().get(99);
 		assertNull(o);
 		
 		Command command = translationUtility
@@ -73,11 +75,11 @@ public class TestInfinispanUpdateUsingAllTypes {
 
 		// no search required by the UpdateExecution logic
 		@SuppressWarnings("unchecked")
-		InfinispanUpdateExecution ie = createExecution(command, Collections.EMPTY_LIST);
+		ObjectUpdateExecution ie = createExecution(command, Collections.EMPTY_LIST);
 
 		ie.execute();
 
-		AllTypes p = (AllTypes) CONNECTION.getCache().get(99);
+		AllTypes p = (AllTypes) getCache().get(99);
 
 		String stringNum = String.valueOf("999");
 		
@@ -96,7 +98,7 @@ public class TestInfinispanUpdateUsingAllTypes {
 	private void insertBytes() throws Exception {
 
 		// check the object doesn't exist before inserting
-		Object o = CONNECTION.getCache().get(199);
+		Object o = getCache().get(199);
 		assertNull(o);
 		
 		byte[] b = new byte[] {'1', '2', '3', '4', '5', '1'};
@@ -108,11 +110,11 @@ public class TestInfinispanUpdateUsingAllTypes {
 		
 		// no search required by the UpdateExecution logic
 		@SuppressWarnings("unchecked")
-		InfinispanUpdateExecution ie = createExecution(command, Collections.EMPTY_LIST);
+		ObjectUpdateExecution ie = createExecution(command, Collections.EMPTY_LIST);
 
 		ie.execute();
 
-		AllTypes p = (AllTypes) CONNECTION.getCache().get(199);
+		AllTypes p = (AllTypes) getCache().get(199);
 
 		String stringNum = String.valueOf("199");
 		
@@ -146,7 +148,7 @@ public class TestInfinispanUpdateUsingAllTypes {
 	private void insertBooleanOfNull() throws Exception {
 
 		// check the object doesn't exist before inserting
-		Object o = CONNECTION.getCache().get(99);
+		Object o = getCache().get(99);
 		assertNull(o);
 		
 		Command command = translationUtility
@@ -155,11 +157,11 @@ public class TestInfinispanUpdateUsingAllTypes {
 
 		// no search required by the UpdateExecution logic
 		@SuppressWarnings("unchecked")
-		InfinispanUpdateExecution ie = createExecution(command, Collections.EMPTY_LIST);
+		ObjectUpdateExecution ie = createExecution(command, Collections.EMPTY_LIST);
 
 		ie.execute();
 
-		AllTypes p = (AllTypes) CONNECTION.getCache().get(99);
+		AllTypes p = (AllTypes) getCache().get(99);
 
 		String stringNum = String.valueOf("999");
 		
@@ -183,7 +185,7 @@ public class TestInfinispanUpdateUsingAllTypes {
 		CONNECTION = AllTypesCacheSource.createConnection();
 
 		// check the object doesn't exist before inserting
-		Object o = CONNECTION.getCache().get(99);
+		Object o = getCache().get(99);
 		assertNull(o);
 		
 		Command command = translationUtility
@@ -192,7 +194,7 @@ public class TestInfinispanUpdateUsingAllTypes {
 
 		// no search required by the UpdateExecution logic
 		@SuppressWarnings("unchecked")
-		InfinispanUpdateExecution ie = createExecution(command, Collections.EMPTY_LIST);
+		ObjectUpdateExecution ie = createExecution(command, Collections.EMPTY_LIST);
 
 		ie.execute();
 		
@@ -207,7 +209,7 @@ public class TestInfinispanUpdateUsingAllTypes {
 		
 		
 
-		AllTypes p = (AllTypes) CONNECTION.getCache().get(99);
+		AllTypes p = (AllTypes) getCache().get(99);
 
 		String stringNum = String.valueOf("999");
 		
@@ -238,7 +240,7 @@ public class TestInfinispanUpdateUsingAllTypes {
 	
 	
 	// check the object doesn't exist before inserting
-		Object o = CONNECTION.getCache().get(5);
+		Object o = getCache().get(5);
 		assertNotNull(o);
 		
 		Command command = translationUtility
@@ -248,11 +250,11 @@ public class TestInfinispanUpdateUsingAllTypes {
 		List rows = new ArrayList();
 		rows.add(o);
 
-		InfinispanUpdateExecution ie = createExecution(command, rows);
+		ObjectUpdateExecution ie = createExecution(command, rows);
 
 		ie.execute();
 
-		AllTypes p = (AllTypes) CONNECTION.getCache().get(5);
+		AllTypes p = (AllTypes) getCache().get(5);
 
 		String stringNum = String.valueOf("10000");
 		
@@ -275,7 +277,7 @@ public class TestInfinispanUpdateUsingAllTypes {
 
 	private void deleteRootByKey() throws Exception {
 	
-		assertNotNull(CONNECTION.getCache().get(1));
+		assertNotNull(getCache().get(1));
 
 		Command command = translationUtility
 				.parseCommand("Delete From AllTypes Where intKey=99");
@@ -284,48 +286,42 @@ public class TestInfinispanUpdateUsingAllTypes {
 		List rows = new ArrayList();
 		rows.add(TestInfinispanUpdateUsingAllTypes.DATA.get(1));
 
-		InfinispanUpdateExecution ie = createExecution(command, rows);
+		ObjectUpdateExecution ie = createExecution(command, rows);
 
 		ie.execute();
-		assertNull(CONNECTION.getCache()
-				.get(new Integer(1).intValue()));
+		assertNull(getCache().get(new Integer(1).intValue()));
 
 	}
 
 
-	protected InfinispanUpdateExecution createExecution(Command command, final List<Object> results)
+	protected ObjectUpdateExecution createExecution(Command command, final List<Object> results)
 			throws TranslatorException {
 		
 		TRANSLATOR = new InfinispanExecutionFactory() {
 
 			@Override
-			public List<Object> search(Delete command, String cacheName,
-					InfinispanConnection conn, ExecutionContext executionContext)
+			public List<Object> search(ObjectVisitor visitor, ObjectConnection connection, ExecutionContext executionContext)
 					throws TranslatorException {
-				return results;
+    			return results;
 			}
 
+       
 			@Override
-			public List<Object> search(Update command, String cacheName,
-					InfinispanConnection conn, ExecutionContext executionContext)
-					throws TranslatorException {
-				return results;
-			}
-
-			@Override
-			public Object performKeySearch(String cacheName, String colunName,
-					Object value, InfinispanConnection conn,
-					ExecutionContext executionContext)
-					throws TranslatorException {
+			public Object performKeySearch(String columnName, Object value, ObjectConnection connection, ExecutionContext executionContext) throws TranslatorException {
 				return DATA.get(value);
 			}
 
 		};
 		TRANSLATOR.start();
 
-		return (InfinispanUpdateExecution) TRANSLATOR.createUpdateExecution(
+		return (ObjectUpdateExecution) TRANSLATOR.createUpdateExecution(
 				command,
 				context,
 				AllTypesSchemaVDBUtility.RUNTIME_METADATA, CONNECTION);
 	}
+	
+	private static Map<Object,Object> getCache() throws TranslatorException {
+		return (Map<Object,Object>) CONNECTION.getCache();
+	}
+	
 }

@@ -22,6 +22,13 @@
         <param-value>false</param-value>
     </context-param>
     
+    <!-- 
+    <context-param>
+        <param-name>invalid-xml10-character-replacement</param-name>
+        <param-value>?</param-value>
+    </context-param>
+     -->
+    
     <!--
     If you want to restrict access to single VDB, uncomment and provide the VDB name(must be in format vdbName.vdbVersion), 
     and provide a context name in jboss-web.xml that is not "odata"

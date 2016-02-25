@@ -36,11 +36,15 @@ public class UserDefined extends AggregateFunction {
 	
 	private FunctionDescriptor fd;
 	private UserDefinedAggregate<?> instance;
+	private ExposedStateUserDefinedAggregate<?> exposed;
 	private Object[] values;
 	
 	public UserDefined(FunctionDescriptor functionDescriptor) {
 		this.fd = functionDescriptor;
 		this.instance = (UserDefinedAggregate<?>) fd.newInstance();
+		if (instance instanceof ExposedStateUserDefinedAggregate) {
+			this.exposed = (ExposedStateUserDefinedAggregate)instance;
+		}
 	}
 
 	@Override
@@ -74,5 +78,25 @@ public class UserDefined extends AggregateFunction {
 	public boolean respectsNull() {
 		return !fd.getMethod().isNullOnNull();
 	}
+	
+	public List<? extends Class<?>> getStateTypes() {
+    	if (this.exposed != null) {
+    		return this.exposed.getStateTypes();
+    	}
+    	return null;
+    }
+    
+    public void getState(List<Object> state) {
+    	if (this.exposed != null) {
+    		this.exposed.getState(state);
+    	}
+    }
+    
+    public int setState(List<?> state, int index) {
+    	if (this.exposed != null) {
+    		return this.exposed.setState(state, index);
+    	}
+    	return 0;
+    }
 	
 }

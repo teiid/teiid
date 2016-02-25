@@ -35,7 +35,16 @@ import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.*;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.MetadataProcessor;
+import org.teiid.translator.ProcedureExecution;
+import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.Translator;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.UpdateExecution;
+
+import com.datastax.driver.core.ProtocolVersion;
 
 
 @Translator(name = "cassandra", description = "A translator for Cassandra NoSql database")
@@ -45,6 +54,8 @@ public class CassandraExecutionFactory extends ExecutionFactory<ConnectionFactor
 	public static enum Event implements BundleUtil.Event {
 		TEIID22000
 	}
+
+	private boolean isV2;
 	
 	@Override
 	public void start() throws TranslatorException {
@@ -119,6 +130,34 @@ public class CassandraExecutionFactory extends ExecutionFactory<ConnectionFactor
 
 	@Override
 	public boolean supportsRowLimit() {
+		return true;
+	}
+	
+	@Override
+	public boolean supportsBulkUpdate() {
+		return isV2;
+	}
+	
+	@Override
+	public boolean supportsBatchedUpdates() {
+		return isV2;
+	}
+	
+	@Override
+	public boolean returnsSingleUpdateCount() {
+		return true;
+	}
+	
+	@Override
+	public void initCapabilities(CassandraConnection connection)
+			throws TranslatorException {
+		if (connection.getVersion().compareTo(ProtocolVersion.V2) >= 0) {
+			this.isV2 = true;
+		}
+	}
+	
+	@Override
+	public boolean isSourceRequiredForCapabilities() {
 		return true;
 	}
 	

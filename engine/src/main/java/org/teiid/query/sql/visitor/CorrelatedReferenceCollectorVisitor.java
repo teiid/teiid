@@ -22,13 +22,21 @@
 
 package org.teiid.query.sql.visitor;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidRuntimeException;
+import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
+import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -47,11 +55,17 @@ import org.teiid.query.sql.symbol.Reference;
 public class CorrelatedReferenceCollectorVisitor extends LanguageVisitor {
 
 	// index of the reference on the language object    
-    private Collection<GroupSymbol> groupSymbols;
     private List<Reference> references;
+    private ArrayList<Map<GroupSymbol,GroupSymbol>> outerGroups = new ArrayList<Map<GroupSymbol,GroupSymbol>>(2);
+    private QueryMetadataInterface metadata;
+	private boolean queryRoot;
 
-    public CorrelatedReferenceCollectorVisitor(Collection<GroupSymbol> groupSymbols, List<Reference> correlatedReferences) {
-        this.groupSymbols = groupSymbols;
+    CorrelatedReferenceCollectorVisitor(Collection<GroupSymbol> groupSymbols, List<Reference> correlatedReferences) {
+    	HashMap<GroupSymbol, GroupSymbol> groupMap = new HashMap<GroupSymbol, GroupSymbol>();
+		for (GroupSymbol g : groupSymbols) {
+			groupMap.put(g, g);
+		}
+		outerGroups.add(groupMap);
         this.references = correlatedReferences;
     }
 
@@ -68,13 +82,27 @@ public class CorrelatedReferenceCollectorVisitor extends LanguageVisitor {
      */
     public void visit(Reference obj) {
         ElementSymbol e = obj.getExpression();
-        if (e == null) {
+        if (e == null|| !e.isExternalReference()) {
         	return;
         }
         GroupSymbol g = e.getGroupSymbol();
-        if (this.groupSymbols.contains(g) && e.isExternalReference()){
-            this.references.add(obj);
-        }
+    	for (int i = this.outerGroups.size() - (queryRoot?2:1); i >= 0; i--) {
+    		GroupSymbol outer = this.outerGroups.get(i).get(g);
+    		if (outer == null) {
+    			continue;
+    		}
+    		try {
+				if (ResolverUtil.resolveElementsInGroup(outer, metadata).contains(e)) {
+					//add if correlated to the root groups
+					if (i == 0) {
+				        this.references.add(obj);
+					}
+					return; 
+				}
+			} catch (TeiidComponentException e1) {
+				throw new TeiidRuntimeException(e1);
+			}
+    	}
     }
 
     /**
@@ -84,26 +112,28 @@ public class CorrelatedReferenceCollectorVisitor extends LanguageVisitor {
      * that the client (outer query) is interested in references to from the correlated subquery
      * @param correlatedReferences List of References collected
      */
-    public static final void collectReferences(final LanguageObject obj, final Collection<GroupSymbol> groupSymbols, List<Reference> correlatedReferences){
+    public static final void collectReferences(final LanguageObject obj, final Collection<GroupSymbol> groupSymbols, List<Reference> correlatedReferences, QueryMetadataInterface metadata) {
     	final Set<GroupSymbol> groups = new HashSet<GroupSymbol>(groupSymbols);
-        CorrelatedReferenceCollectorVisitor visitor =
-            new CorrelatedReferenceCollectorVisitor(groups, correlatedReferences);
+        final CorrelatedReferenceCollectorVisitor visitor = new CorrelatedReferenceCollectorVisitor(groups, correlatedReferences);
+        visitor.metadata = metadata;
+        visitor.queryRoot = obj instanceof Command;
         obj.acceptVisitor(new PreOrPostOrderNavigator(visitor, PreOrPostOrderNavigator.PRE_ORDER, true) {
 
         	@Override
         	public void visit(Query query) {
         		//don't allow confusion with deep nesting by removing intermediate groups
         		List<GroupSymbol> fromGroups = null;
-				if (query != obj && query.getFrom() != null) {
+				if (query.getFrom() != null) {
 					fromGroups = query.getFrom().getGroups();
-        			if (!groups.removeAll(fromGroups)) {
-        				fromGroups = null;
-        			}
+					HashMap<GroupSymbol, GroupSymbol> groupMap = new HashMap<GroupSymbol, GroupSymbol>();
+					for (GroupSymbol g : fromGroups) {
+						groupMap.put(g, g);
+					}
+					visitor.outerGroups.add(groupMap);
         		}
     			super.visit(query);
     			if (fromGroups != null) {
-    				fromGroups.retainAll(groupSymbols);
-    				groups.addAll(fromGroups);
+    				visitor.outerGroups.remove(visitor.outerGroups.size() - 1);
     			}
         	}
         });

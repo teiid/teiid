@@ -22,36 +22,60 @@
 
 package org.teiid.vdb.runtime;
 
+import static org.junit.Assert.*;
+
+import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
-import org.teiid.vdb.runtime.VDBKey;
 
-
-import junit.framework.TestCase;
-
-public class TestVDBKey extends TestCase {
+public class TestVDBKey {
     
-    public void testCaseInsensitive() {
-        VDBKey key = new VDBKey("foo", "1");  //$NON-NLS-1$ //$NON-NLS-2$
-        VDBKey key1 = new VDBKey("FOO", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+    @Test public void testCaseInsensitive() {
+        VDBKey key = new VDBKey("foo", 1);  //$NON-NLS-1$ 
+        VDBKey key1 = new VDBKey("FOO", 1); //$NON-NLS-1$ 
         UnitTestUtil.helpTestEquivalence(0, key, key1);
     }
     
-    public void testNotEqual() {
-        VDBKey key = new VDBKey("a", "1");  //$NON-NLS-1$ //$NON-NLS-2$
-        VDBKey key1 = new VDBKey("b", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+    @Test public void testNotEqual() {
+        VDBKey key = new VDBKey("a", 1);  //$NON-NLS-1$ 
+        VDBKey key1 = new VDBKey("b", 1); //$NON-NLS-1$ 
         assertFalse(key.equals(key1));
     }
     
-    public void testNameEndingInNumber() {
-        VDBKey key = new VDBKey("a1", "1");  //$NON-NLS-1$ //$NON-NLS-2$
-        VDBKey key1 = new VDBKey("a", "11"); //$NON-NLS-1$ //$NON-NLS-2$
+    @Test public void testNameEndingInNumber() {
+        VDBKey key = new VDBKey("a1", 1);  //$NON-NLS-1$ 
+        VDBKey key1 = new VDBKey("a", 11); //$NON-NLS-1$ 
         assertFalse(key.equals(key1));
     }
     
-    public void testDiffertVersion() {
-        VDBKey key = new VDBKey("a", "1");  //$NON-NLS-1$ //$NON-NLS-2$
-        VDBKey key1 = new VDBKey("a", "11"); //$NON-NLS-1$ //$NON-NLS-2$
+    @Test public void testDiffertVersion() {
+        VDBKey key = new VDBKey("a", 1);  //$NON-NLS-1$ 
+        VDBKey key1 = new VDBKey("a", 11); //$NON-NLS-1$ 
         assertFalse(key.equals(key1));
     }
-
+    
+    @Test public void testSemanticVersion() {
+        VDBKey key = new VDBKey("a.v1.2.3", 1);  //$NON-NLS-1$ 
+        VDBKey key1 = new VDBKey("a.v1.11.3", 1); //$NON-NLS-1$
+        assertTrue(key.isSemantic());
+        assertTrue(key.isFullySpecified());
+        assertFalse(key.isAtMost());
+        assertFalse(key.equals(key1));
+        assertEquals(-1, key.compareTo(key1));
+        assertEquals(1, key1.compareTo(key));
+    }
+    
+    @Test public void testShortSemanticVersion() {
+        VDBKey key = new VDBKey("a.v1.3", 1);  //$NON-NLS-1$ 
+        VDBKey key1 = new VDBKey("a.v1.2.", 1); //$NON-NLS-1$
+        assertTrue(key.isSemantic());
+        assertFalse(key.isFullySpecified());
+        assertFalse(key.isAtMost());
+        assertTrue(key1.isSemantic());
+        assertFalse(key1.isFullySpecified());
+        assertTrue(key1.isAtMost());
+        assertFalse(key.equals(key1));
+        assertEquals(1, key.compareTo(key1));
+        assertEquals(-1, key1.compareTo(key));
+    }
+    
 }

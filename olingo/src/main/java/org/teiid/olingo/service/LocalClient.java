@@ -37,7 +37,7 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.jdbc.ConnectionImpl;
-import org.teiid.jdbc.EmbeddedProfile;
+import org.teiid.jdbc.LocalProfile;
 import org.teiid.jdbc.PreparedStatementImpl;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.logging.LogConstants;
@@ -67,11 +67,11 @@ public class LocalClient implements Client {
 
     private volatile VDBMetaData vdb;
     private final String vdbName;
-    private final int vdbVersion;
+    private final Integer vdbVersion;
     private ConnectionImpl connection;
     private Properties properties;
 
-    public LocalClient(String vdbName, int vdbVersion, Properties properties) {
+    public LocalClient(String vdbName, Integer vdbVersion, Properties properties) {
         this.vdbName = vdbName;
         this.vdbVersion = vdbVersion;
         this.properties = properties;
@@ -100,18 +100,22 @@ public class LocalClient implements Client {
         return this.connection;
     }
     
-    public static ConnectionImpl buildConnection(TeiidDriver driver, String vdbName, int version, Properties props) throws SQLException {
+    public static ConnectionImpl buildConnection(TeiidDriver driver, String vdbName, Integer version, Properties props) throws SQLException {
         StringBuilder sb = new StringBuilder();
-        sb.append("jdbc:teiid:").append(vdbName).append(".").append(version).append(";"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        sb.append("jdbc:teiid:").append(vdbName); //$NON-NLS-1$ 
+        if (version != null) {
+        	sb.append(".").append(version); //$NON-NLS-1$
+        }
+        sb.append(";"); //$NON-NLS-1$ 
         
         if (props.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION) == null) {
             props.setProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "true"); //$NON-NLS-1$    
         }
-        if (props.getProperty(EmbeddedProfile.TRANSPORT_NAME) == null) {
-            props.setProperty(EmbeddedProfile.TRANSPORT_NAME, "odata");    
+        if (props.getProperty(LocalProfile.TRANSPORT_NAME) == null) {
+            props.setProperty(LocalProfile.TRANSPORT_NAME, "odata");    
         }        
-        if (props.getProperty(EmbeddedProfile.WAIT_FOR_LOAD) == null) {
-            props.setProperty(EmbeddedProfile.WAIT_FOR_LOAD, "0"); //$NON-NLS-1$
+        if (props.getProperty(LocalProfile.WAIT_FOR_LOAD) == null) {
+            props.setProperty(LocalProfile.WAIT_FOR_LOAD, "0"); //$NON-NLS-1$
         }        
         ConnectionImpl connection = driver.connect(sb.toString(), props);
         return connection;
@@ -158,18 +162,13 @@ public class LocalClient implements Client {
         if (results) {
             final ResultSet rs = stmt.getResultSet();
             while (rs.next()) {
-                if (returnType.hasResultSetBasedLob()) {
-                    response.addPrimitive(rs.getObject(1));
-                }
-                else {
-                    response.addRow(rs);
-                }
+                response.addRow(rs);
             }
         }
 
         if (!returnType.hasResultSet()) {
             Object result = stmt.getObject(1);
-            response.addPrimitive(result);
+            response.setReturnValue(result);
         }
     }
 

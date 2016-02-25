@@ -40,11 +40,14 @@ import javax.xml.ws.Service.Mode;
 import javax.xml.ws.handler.MessageContext;
 import javax.xml.ws.http.HTTPBinding;
 
+import org.apache.olingo.commons.api.edm.geo.Point;
 import org.apache.olingo.commons.api.edm.provider.CsdlComplexType;
 import org.apache.olingo.commons.api.edm.provider.CsdlReturnType;
+import org.apache.olingo.commons.core.edm.primitivetype.EdmGeometryPoint;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.teiid.GeometryInputSource;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
@@ -641,4 +644,49 @@ public class TestODataQueryExecution {
         assertNull(excution.next());
         
     }    
+    
+    @Test
+    public void testGeometry() throws Exception {
+        String query = "SELECT * FROM Airports_Location";
+        String expectedURL = "Airports?$select=IcaoCode,Location";
+        
+        FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("airport-locations.json"));
+        ResultSetExecution execution = helpExecute(TestODataMetadataProcessor.tripPinMetadata(),
+                query, ObjectConverterUtil.convertToString(reader), expectedURL);
+
+        List<?> row = execution.next();
+        
+        assertEquals("187 Suffolk Ln.", row.get(1));
+        assertEquals("xyz", row.get(2));
+        
+        GeometryInputSource gis = (GeometryInputSource)row.get(0);
+        assertEquals("<gml:Point><gml:pos>-48.23456 20.12345</gml:pos></gml:Point>", ObjectConverterUtil.convertToString(gis.getGml()));
+        assertEquals(4326, gis.getSrid().intValue());
+        
+        row = execution.next();
+        
+        assertEquals("gso", row.get(2));
+        
+        gis = (GeometryInputSource)row.get(0);
+        assertEquals("<gml:Point><gml:pos>1.0 2.0</gml:pos></gml:Point>", ObjectConverterUtil.convertToString(gis.getGml()));
+        
+        assertNull(execution.next());
+        
+        reader.close();
+        
+    }
+    
+    @Test
+    public void testGeometryFilter() throws Exception {
+        String query = "SELECT Loc FROM Airports_Location where st_distance(Loc, st_geomfromtext('point(1 2)')) < 2";
+        String expectedURL = "Airports?$select=Location&$filter=geo.distance(Location/Loc,geometry'SRID=0;Point(1.0 2.0)') lt 2.0";
+        
+        FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("airport-locations.json"));
+        ResultSetExecution execution = helpExecute(TestODataMetadataProcessor.tripPinMetadata(),
+                query, ObjectConverterUtil.convertToString(reader), expectedURL);
+        
+        //make sure the format is valid
+        EdmGeometryPoint.getInstance().valueOfString("geometry'SRID=0;Point(1.0 2.0)'", false, 4000, 0, 0, true, Point.class);
+    }
+    
 }

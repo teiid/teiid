@@ -97,6 +97,17 @@ public class TestBlobValue extends TestCase {
     	assertEquals(0, b1.length);
     	byte[] b2 = b.getBytes(1, 1);
     	assertEquals(0, b2.length);
+    	
+    	b = new BlobImpl(new InputStreamFactory() {
+			
+			@Override
+			public InputStream getInputStream() throws IOException {
+				return new ByteArrayInputStream(new byte[]{1,2});
+			}
+		});
+    	
+    	byte[] b3 = b.getBytes(1, 1);
+    	assertEquals(1, b3.length);
     }
     
 }

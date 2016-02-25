@@ -29,10 +29,8 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelPromise;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.DefaultChannelPromise;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.concurrent.GenericFutureListener;
@@ -62,22 +60,22 @@ import org.teiid.runtime.RuntimePlugin;
 public class SSLAwareChannelHandler extends ChannelDuplexHandler {
 	
 	public class ObjectChannelImpl implements ObjectChannel {
-		private final ChannelHandlerContext ctx;
+		private final Channel channel;
 
-		public ObjectChannelImpl(ChannelHandlerContext ctx) {
-			this.ctx = ctx;
+		public ObjectChannelImpl(Channel channel) {
+			this.channel = channel;
 		}
 
 		public void close() {
-			this.ctx.channel().close();
+			channel.close();
 		}
 
 		public boolean isOpen() {
-			return this.ctx.channel().isOpen();
+			return channel.isOpen();
 		}
 		
 		public SocketAddress getRemoteAddress() {
-			return this.ctx.channel().remoteAddress();
+			return channel.remoteAddress();
 		}
 		
 		@Override
@@ -92,23 +90,14 @@ public class SSLAwareChannelHandler extends ChannelDuplexHandler {
 		}
 
 		public Future<?> write(Object msg) {
-		    ChannelPromise promise = this.ctx.channel().newPromise();
-		    promise.addListener(new ChannelFutureListener() {
-                @Override
-                public void operationComplete(ChannelFuture future) throws Exception {
-                    if (future.cause() != null) {
-                        writeExceptionCaught(ObjectChannelImpl.this.ctx, future.cause());
-                    }
-                }
-            });
-		    
-			final ChannelFuture future = this.ctx.channel().write(msg, promise);
+			final ChannelFuture future = channel.write(msg);
+			channel.flush();
 			future.addListener(completionListener);
 			return new Future<Void>() {
 
 				@Override
 				public boolean cancel(boolean arg0) {
-					return future.cancel(true);
+					return future.cancel(arg0);
 				}
 
 				@Override
@@ -154,22 +143,26 @@ public class SSLAwareChannelHandler extends ChannelDuplexHandler {
 	private volatile int maxChannels;
 	
 	private ChannelFutureListener completionListener = new ChannelFutureListener() {
+
 		@Override
 		public void operationComplete(ChannelFuture arg0)
 				throws Exception {
 			if (arg0.isSuccess()) {
 				objectsWritten.getAndIncrement();
+			} else if (arg0.cause() != null) {
+				writeExceptionCaught(arg0.channel(), arg0.cause());
 			}
 		}
+		
 	};
 	
 	public SSLAwareChannelHandler(ChannelListener.ChannelListenerFactory listenerFactory) {
 		this.listenerFactory = listenerFactory;
 	}
-
+	
 	@Override
 	public void channelActive(final ChannelHandlerContext ctx) throws Exception {
-		ChannelListener listener = this.listenerFactory.createChannelListener(new ObjectChannelImpl(ctx));
+		ChannelListener listener = this.listenerFactory.createChannelListener(new ObjectChannelImpl(ctx.channel()));
 		this.listeners.put(ctx.channel(), listener);
 		maxChannels = Math.max(maxChannels, this.listeners.size());
 		SslHandler sslHandler = ctx.pipeline().get(SslHandler.class);
@@ -194,20 +187,21 @@ public class SSLAwareChannelHandler extends ChannelDuplexHandler {
 		}
 	}
 	
-	private void writeExceptionCaught(ChannelHandlerContext ctx,
+	
+	private void writeExceptionCaught(Channel channel,
 	        Throwable cause) {
-		ChannelListener listener = this.listeners.get(ctx.channel());
+		ChannelListener listener = this.listeners.get(channel);
 		if (listener != null) {
 			listener.exceptionOccurred(cause);
 		} else {
-			ctx.channel().close();
+			channel.close();
 		}
 	}
 	
 	@Override
     public void exceptionCaught(ChannelHandlerContext ctx,
             Throwable cause) throws Exception {
-	    writeExceptionCaught(ctx, cause);
+	    writeExceptionCaught(ctx.channel(), cause);
 	}
 
 	public void messageReceived(ChannelHandlerContext ctx,

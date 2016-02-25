@@ -34,6 +34,7 @@ import org.teiid.language.Update;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.olingo.common.ODataTypeManager;
 import org.teiid.translator.TranslatorException;
 
 public class ODataUpdateVisitor extends HierarchyVisitor {

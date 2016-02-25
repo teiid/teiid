@@ -821,7 +821,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 		ByteBuf cb = this.dataOut;
 		this.dataOut = null;
 		this.writer = null;
-		this.ctx.writeAndFlush(cb);		
+		this.ctx.writeAndFlush(cb);
 	}
 
 	private static void trace(String... msg) {

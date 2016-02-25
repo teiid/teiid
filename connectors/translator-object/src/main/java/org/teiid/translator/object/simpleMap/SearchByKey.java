@@ -87,7 +87,8 @@ public  class SearchByKey implements SearchType  {
 	
 	private List<Object> getFirst(ObjectConnection conn, int limit) throws TranslatorException {
 		List<Object> objs = new ArrayList<Object>();
-		Map<Object, Object> c = conn.getCache();
+		@SuppressWarnings("unchecked")
+		Map<Object, Object> c = (Map<Object, Object>) conn.getCache();
 		int i = 0;
 		
 		for (Object k : c.keySet()) {

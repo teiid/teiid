@@ -35,6 +35,7 @@ import org.jboss.security.SimplePrincipal;
 import org.jboss.security.SecurityContextAssociation;
 import org.picketbox.datasource.security.AbstractPasswordCredentialLoginModule;
 import org.teiid.OAuthCredential;
+import org.teiid.OAuthCredentialContext;
 
 /**
  * Login module to capture OAuth 2.0 profile credential for web service resource-adapter.
@@ -145,7 +146,10 @@ public class OAuth20LoginModule extends AbstractPasswordCredentialLoginModule {
     }     
 
     public OAuthCredential getCredential() {
-        return credential;
+        if (this.credential != null) {
+            return this.credential;
+        }
+        return OAuthCredentialContext.getCredential();
     }
 
     public void setCredential(OAuthCredential credential) {

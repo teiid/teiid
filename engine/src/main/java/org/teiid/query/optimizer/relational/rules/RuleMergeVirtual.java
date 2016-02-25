@@ -347,6 +347,11 @@ public final class RuleMergeVirtual implements
             return root;
         }
         
+		PlanNode sort = NodeEditor.findParent(parentProject, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE);
+		if (sort != null && sort.hasBooleanProperty(Info.UNRELATED_SORT)) {
+			return root;
+		}
+		
         // re-order the lower projects
         RuleAssignOutputElements.filterVirtualElements(frame, new ArrayList<Expression>(symbols), metadata);
 
@@ -377,7 +382,7 @@ public final class RuleMergeVirtual implements
             }
         }
 
-        correctOrderBy(frame, selectSymbols, parentProject);
+    	correctOrderBy(frame, sort, selectSymbols, parentProject);
 
         PlanNode parentSource = NodeEditor.findParent(frame, NodeConstants.Types.SOURCE);        
   
@@ -400,9 +405,8 @@ public final class RuleMergeVirtual implements
     /**
      * special handling is needed since we are retaining the child aliases
      */
-	private static void correctOrderBy(PlanNode frame,
+	private static void correctOrderBy(PlanNode frame, PlanNode sort,
 			List<Expression> selectSymbols, PlanNode parentProject) {
-		PlanNode sort = NodeEditor.findParent(parentProject, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE);
 		if (sort == null || NodeEditor.findNodePreOrder(sort, NodeConstants.Types.PROJECT, NodeConstants.Types.SOURCE) != parentProject) {
 			return;
 		}

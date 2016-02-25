@@ -1476,4 +1476,16 @@ public class TestAggregatePushdown {
         TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[]{"SELECT v_0.c_0 FROM (SELECT 'aaa' AS c_0 FROM pm1.g1 AS g_0) AS v_0 GROUP BY v_0.c_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); 
     }
+    
+    @Test public void testExpressions() throws Exception {
+    	String sql = "SELECT stringkey, sum(intnum),count(distinct case when floatnum >= 0 then 1 end)"
+				+ " FROM bqt1.smalla WHERE intkey=6 GROUP BY stringkey HAVING sum(intnum)>100 AND count(distinct case when floatnum >= 0 then 1 end)=0";
+    			
+        BasicSourceCapabilities caps = getAggregateCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FUNCTIONS_IN_GROUP_BY, true);
+        caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_DISTINCT, true);
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
+            new String[]{"SELECT g_0.StringKey, SUM(g_0.IntNum), COUNT(DISTINCT CASE WHEN g_0.FloatNum >= 0.0 THEN 1 END) FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey = 6 GROUP BY g_0.StringKey HAVING (SUM(g_0.IntNum) > 100) AND (COUNT(DISTINCT CASE WHEN g_0.FloatNum >= 0.0 THEN 1 END) = 0)"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); 
+    }
 }

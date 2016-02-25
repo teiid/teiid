@@ -245,7 +245,7 @@ public class TestPostgreSQLTranslator {
     
     @Test public void testLeft() throws Exception {
         String input = "SELECT left(PART_WEIGHT, 2) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT SUBSTR(PARTS.PART_WEIGHT, 1, 2) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT substring(PARTS.PART_WEIGHT from 1 for 2) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
@@ -358,7 +358,7 @@ public class TestPostgreSQLTranslator {
     }
     @Test public void testSubstring1() throws Exception {
         String input = "SELECT substring(PART_WEIGHT, 1) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT substr(PARTS.PART_WEIGHT, 1) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT substring(PARTS.PART_WEIGHT from 1) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
@@ -366,7 +366,7 @@ public class TestPostgreSQLTranslator {
     }
     @Test public void testSubstring2() throws Exception {
         String input = "SELECT substring(PART_WEIGHT, 1, 5) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT substr(PARTS.PART_WEIGHT, 1, 5) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT substring(PARTS.PART_WEIGHT from 1 for 5) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 

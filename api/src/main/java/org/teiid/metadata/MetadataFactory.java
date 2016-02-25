@@ -25,6 +25,7 @@ package org.teiid.metadata;
 import java.io.Reader;
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -35,10 +36,12 @@ import java.util.Properties;
 import java.util.TreeMap;
 
 import org.teiid.CommandContext;
+import org.teiid.UserDefinedAggregate;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.connector.DataPlugin;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.StringUtil;
 import org.teiid.metadata.FunctionMethod.PushDown;
@@ -525,7 +528,25 @@ public class MetadataFactory implements Serializable {
 	}
 
 	public static FunctionMethod createFunctionFromMethod(String name, Method method) {
-		String returnType = DataTypeManager.getDataTypeName(method.getReturnType());
+		Class<?> returnTypeClass = method.getReturnType();
+		AggregateAttributes aa = null;
+		//handle user defined aggregates
+		if ((method.getModifiers() & Modifier.STATIC) == 0 && UserDefinedAggregate.class.isAssignableFrom(method.getDeclaringClass())) {
+			aa = new AggregateAttributes();
+			Method m;
+			try {
+				m = method.getDeclaringClass().getMethod("getResult", CommandContext.class); //$NON-NLS-1$
+			} catch (NoSuchMethodException e) {
+				throw new TeiidRuntimeException(e);
+			} catch (SecurityException e) {
+				throw new TeiidRuntimeException(e);
+			}
+			returnTypeClass = m.getReturnType();
+		}
+		if (returnTypeClass.isPrimitive()) {
+			returnTypeClass = TypeFacility.convertPrimitiveToObject(returnTypeClass);
+		}
+		String returnType = DataTypeManager.getDataTypeName(returnTypeClass);
 		Class<?>[] params = method.getParameterTypes();
 		String[] paramTypes = new String[params.length];
 		boolean nullOnNull = false;
@@ -545,6 +566,7 @@ public class MetadataFactory implements Serializable {
 			paramTypes = Arrays.copyOfRange(paramTypes, 1, paramTypes.length);
 		}
 		FunctionMethod func = FunctionMethod.createFunctionMethod(name, null, null, returnType, paramTypes);
+		func.setAggregateAttributes(aa);
 		func.setInvocationMethod(method.getName());
 		func.setPushdown(PushDown.CANNOT_PUSHDOWN);
 		func.setMethod(method);
@@ -869,7 +891,7 @@ public class MetadataFactory implements Serializable {
 	 	if (index > 0 && index < key.length() - 1) {
 	 		String prefix = key.substring(0, index);
 	 		String uri = BUILTIN_NAMESPACES.get(prefix);
-	 		if (uri == null) {
+	 		if (uri == null && factory != null) {
 	 			uri = factory.getNamespaces().get(prefix);
 	 		}
 	 		if (uri != null) {

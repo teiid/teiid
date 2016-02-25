@@ -32,7 +32,7 @@ public class AtomicResultsMessage {
 	private List<?>[] results;
 
     // Final row index in complete result set, if known
-    private int finalRow = -1;
+    private long finalRow = -1;
     
     // by default we support implicit close.
     private boolean supportsImplicitClose = true;
@@ -57,11 +57,11 @@ public class AtomicResultsMessage {
         this.supportsImplicitClose = supportsImplicitClose;
     }    
     
-    public int getFinalRow() {
+    public long getFinalRow() {
         return finalRow;
     }
     
-    public void setFinalRow(int i) {
+    public void setFinalRow(long i) {
         finalRow = i;
     }
 

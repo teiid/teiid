@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.Serializable;
 
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.StorageManager;
 import org.teiid.common.buffer.TupleBufferCache;
 import org.teiid.common.buffer.impl.BufferFrontedFileStoreCache;
@@ -141,7 +142,27 @@ public class BufferServiceImpl implements BufferService, Serializable {
                 this.bufferMgr.setCache(fsc);
                 this.workingMaxReserveKb = this.bufferMgr.getMaxReserveKB();
             } else {
-            	this.bufferMgr.setCache(new MemoryStorageManager());
+            	MemoryStorageManager msm = new MemoryStorageManager() {
+                	volatile SplittableStorageManager ssm;
+
+            		public FileStore createFileStore(String name) {
+            			if (ssm == null) { //TODO could refactor MemoryStorageManager, but it seems just as easy to do this inline
+            				synchronized (this) {
+            					if (ssm == null) {
+		            				ssm = new SplittableStorageManager(this);
+		                        	ssm.setMaxFileSizeDirect(MemoryStorageManager.MAX_FILE_SIZE);
+		            				try {
+										ssm.initialize();
+									} catch (TeiidComponentException e) {
+										throw new TeiidRuntimeException();
+									}
+            					}
+            				}
+            			}
+            			return ssm.createFileStore(name);
+            		}
+            	};
+            	this.bufferMgr.setCache(msm);
             }
             
         } catch(TeiidComponentException e) { 

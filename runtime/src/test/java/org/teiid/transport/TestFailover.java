@@ -129,11 +129,11 @@ public class TestFailover {
 		assertEquals(1, logonAttempts);
 		//restart the second instance now that we know the connection was made to the first
 		listener1 = createListener(new InetSocketAddress(addr.getAddress(), listener1.getPort()), config);
-		listener.stop();
+		listener.stop().await();
 		conn.isOpen(1000); //there is a chance this call can fail
 		assertTrue(conn.isOpen(1000));
 		assertEquals(2, logonAttempts);
-		listener1.stop();
+		listener1.stop().await();
 		//both instances are down
 		assertFalse(conn.isOpen(1000));
 		//bring the first back up

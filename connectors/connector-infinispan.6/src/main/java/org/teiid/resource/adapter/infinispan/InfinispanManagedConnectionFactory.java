@@ -37,6 +37,7 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.object.CacheNameProxy;
 import org.teiid.translator.object.ClassRegistry;
 
 public class InfinispanManagedConnectionFactory extends
@@ -57,12 +58,14 @@ public class InfinispanManagedConnectionFactory extends
 	private InfinispanCacheWrapper<?, ?> cacheWrapper = null;
 
 	private String module;
-	private String cacheName;
+	private String stagingCacheName;
+	private String aliasCacheName;
 	private String pkKey;
 	private Class<?> pkCacheKeyJavaType = null;
 	private Class<?> cacheTypeClass = null; // cacheName ==> ClassType
 	private ClassLoader cl;
 	private String connectionType = null;
+	private CacheNameProxy cacheNameProxy;
 
 	@Override
 	public BasicConnectionFactory<InfinispanCacheRAConnection> createConnectionFactory()
@@ -107,9 +110,38 @@ public class InfinispanManagedConnectionFactory extends
 	}
 	
 	public String getCacheName() {
-		return this.cacheName;
+		// return the cacheName that is mapped as the alias
+		return cacheNameProxy.getPrimaryCacheAliasName();
+	}
+	
+	public String getCacheNameForUpdate() {
+		if (cacheNameProxy.useMaterialization()) {
+			return cacheNameProxy.getStageCacheAliasName();
+		}
+		return cacheNameProxy.getPrimaryCacheAliasName();
 	}
 
+	/** 
+	 * Call to set the name of the cache to access when calling getCache
+	 * @param cacheName
+	 * @throws ResourceException 
+	 */
+	protected void setCacheName(String cacheName) throws ResourceException {
+		if (getAliasCacheName() != null && getStagingCacheName() != null) {
+			cacheNameProxy = new CacheNameProxy(cacheName, getStagingCacheName(),getAliasCacheName() );
+			
+		} else if (getStagingCacheName() != null || getAliasCacheName() != null)  {
+			throw new InvalidPropertyException(
+					UTIL.getString("InfinispanManagedConnectionFactory.invalidMaterializationSettings")); //$NON-NLS-1$	
+
+		} else {
+			cacheNameProxy = new CacheNameProxy(cacheName);
+		}
+	}
+	
+	public CacheNameProxy getCacheNameProxy() {
+		return cacheNameProxy;
+	}
 	/**
 	 * Get the <code>cacheName:className[;pkFieldName[:cacheJavaType]]</code> cache
 	 * type mappings.
@@ -144,7 +176,30 @@ public class InfinispanManagedConnectionFactory extends
 	public void setCacheTypeMap(String cacheTypeMap) {
 		this.cacheTypeMapping = cacheTypeMap;
 	}
+	
+	public String getStagingCacheName() {
+		return this.stagingCacheName;
+	}
 
+	/**
+	 * An option to configure the staging cache name to use when using JDG to materialize data.
+	 * @param cacheName
+	 */
+	public void setStagingCacheName(String cacheName) {
+		this.stagingCacheName = cacheName;
+	}
+	
+	public String getAliasCacheName() {
+		return this.aliasCacheName;
+	}
+	
+	/**
+	 * An option to configure the alias cache name to use when using JDG to materialize data.
+	 * @param cacheName
+	 */
+	public void setAliasCacheName(String cacheName) {
+		this.aliasCacheName = cacheName;
+	}
 
 	/**
 	 * Sets the (optional) module(s) where the ClassName class is defined, that
@@ -349,7 +404,8 @@ public class InfinispanManagedConnectionFactory extends
 			throw new InvalidPropertyException(UTIL.gs("TEIID25022"));
 		}
 		
-		cacheName = cacheClassparm.get(0);
+		String cn = cacheClassparm.get(0);
+		setCacheName(cn);
 		String className = cacheClassparm.get(1);
 		cacheTypeClass = loadClass(className);
 		try {
@@ -401,7 +457,19 @@ public class InfinispanManagedConnectionFactory extends
 					cachewrapper.init(this);
 					this.cacheWrapper =cachewrapper;
 				}
-							
+						
+				// if configured for materialization, initialize the 
+				if (cacheNameProxy.useMaterialization()) {
+					Map<Object,Object> aliasCache = (Map<Object, Object>) this.cacheWrapper.getCache(cacheNameProxy.getAliasCacheName());
+					if (aliasCache == null) {
+						throw new ResourceException(	
+							InfinispanManagedConnectionFactory.UTIL
+							.getString(
+									"InfinispanManagedConnectionFactory.aliasCacheNotDefined", cacheNameProxy.getAliasCacheName())); //$NON-NLS-1$
+					}
+					cacheNameProxy.initializeAliasCache(aliasCache);
+				}
+
 			} catch (Exception e) {
 				throw new ResourceException(e);
 			} finally {

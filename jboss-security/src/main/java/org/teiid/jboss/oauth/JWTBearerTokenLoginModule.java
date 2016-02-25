@@ -35,6 +35,7 @@ import javax.security.auth.login.LoginException;
 import org.apache.cxf.jaxrs.client.WebClient;
 import org.apache.cxf.rs.security.oauth2.client.OAuthClientUtils;
 import org.apache.cxf.rs.security.oauth2.common.ClientAccessToken;
+import org.apache.cxf.rs.security.oauth2.grants.jwt.JwtBearerGrant;
 import org.jboss.security.JBossJSSESecurityDomain;
 import org.teiid.core.util.Base64;
 import org.teiid.logging.LogConstants;

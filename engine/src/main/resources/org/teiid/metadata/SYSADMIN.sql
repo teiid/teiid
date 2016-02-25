@@ -174,6 +174,7 @@ BEGIN
         VARIABLES.status = 'LOAD';
     EXCEPTION e
         DELETE FROM #load;
+        EXECUTE logMsg(context=>'WARN', msg=>e.exception);
         EXECUTE IMMEDIATE 'SELECT Name, TargetSchemaName, TargetName, Valid, LoadState, Updated, Cardinality, LoadNumber FROM ' || VARIABLES.statusTable || crit AS Name string, TargetSchemaName string, TargetName string, Valid boolean, LoadState string, Updated timestamp, Cardinality long, LoadNumber long INTO #load USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = loadMatView.viewName;		       
     END
     
@@ -265,7 +266,7 @@ BEGIN
         EXECUTE IMMEDIATE updateStmt || ' AND loadNumber = DVARS.loadNumber' USING  loadNumber = VARIABLES.loadNumber, vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = loadMatView.viewName, updated = now(), LoadState = 'FAILED_LOAD', valid = VARIABLES.valid AND NOT invalidate, cardinality = -1;
         VARIABLES.status = 'FAILED';
         VARIABLES.rowsUpdated = -3;
-        EXECUTE logMsg(msg=>e.exception);
+        EXECUTE logMsg(context=>'WARN', msg=>e.exception);
     END
 
 	RETURN  rowsUpdated;
@@ -322,7 +323,7 @@ BEGIN
         EXECUTE IMMEDIATE updateStmtWithCardinality USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = updateMatView.viewName, updated = now(), LoadState = 'LOADED', valid = true, cardinality = VARIABLES.rowsUpdated;        			
     EXCEPTION e 
         VARIABLES.rowsUpdated = -3;
-        EXECUTE logMsg(msg=>e.exception);
+        EXECUTE logMsg(context=>'WARN', msg=>e.exception);
     END
 
 	RETURN  rowsUpdated;

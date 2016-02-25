@@ -161,5 +161,17 @@ public class TestVerticaTranslator {
     }
     
    
+    @Test
+    public void testMinMaxBoolean() throws TranslatorException {
+        String input = "SELECT MIN(booleanvalue) FROM BQT1.SmallA";
+        String output = "SELECT CAST(MIN(CAST(SmallA.BooleanValue AS tinyint)) AS boolean) FROM SmallA";
+
+        helpTestVisitor(getBQT_VDB(), input, output);
+
+        input = "SELECT MAX(booleanvalue) FROM BQT1.SmallA";
+        output = "SELECT CAST(MAX(CAST(SmallA.BooleanValue AS tinyint)) AS boolean) FROM SmallA";
+
+        helpTestVisitor(getBQT_VDB(), input, output);
+    }
 
 }

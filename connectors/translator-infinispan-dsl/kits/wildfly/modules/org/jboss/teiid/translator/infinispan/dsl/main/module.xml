@@ -13,12 +13,17 @@
     <dependencies>
         <module name="javax.api"/>
         <module name="javax.resource.api"/>
+ <!--
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.api" />
         <module name="org.jboss.teiid" />
-        
+   -->     
+                
+        <module name="org.jboss.teiid.translator.object" export="true" />        
+
+<!--        
         <module name="org.jboss.modules" export="true"/>
-        
+ -->       
  	  	<module name="org.infinispan.commons" slot="${jdg.slot}" optional="true" export="true" />
    		<module name="org.infinispan.protostream" slot="${jdg.slot}" optional="true" export="true" />
    		<module name="org.infinispan.client.hotrod" slot="${jdg.slot}" optional="true" export="true" />

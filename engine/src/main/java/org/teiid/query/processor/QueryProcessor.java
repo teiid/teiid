@@ -80,7 +80,7 @@ public class QueryProcessor implements BatchProducer {
     private boolean continuous;
     private String query; //used only in continuous mode
     private PreparedPlan plan;
-    private int rowOffset = 1;
+    private long rowOffset = 1;
     
     /**
      * Construct a processor with all necessary information to process.

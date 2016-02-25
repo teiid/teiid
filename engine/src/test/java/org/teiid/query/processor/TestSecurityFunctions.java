@@ -30,6 +30,7 @@ import junit.framework.TestCase;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.dqp.internal.process.AuthorizationValidator;
+import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.sql.lang.Command;
@@ -94,7 +95,15 @@ public class TestSecurityFunctions extends TestCase {
 			public boolean hasRole(String roleName,
 					CommandContext commandContext) {
 				return false;
-			}});
+			}
+			
+			@Override
+			public boolean isAccessible(AbstractMetadataRecord record,
+					CommandContext commandContext) {
+				return true;
+			}
+			
+        });
         
         Command command = TestProcessor.helpParse(sql);   
         ProcessorPlan plan = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), context);

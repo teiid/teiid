@@ -2,7 +2,7 @@
   <parent>
     <artifactId>teiid-parent</artifactId>
     <groupId>org.jboss.teiid</groupId>
-        <version>8.13.0.Alpha1-SNAPSHOT</version>
+        <version>9.0.0.Alpha2-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   
@@ -18,18 +18,6 @@
   </properties>
   
     <dependencies>
-        <dependency>
-            <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-client-jdk15</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>net.sf.retrotranslator</groupId>
-            <artifactId>retrotranslator-runtime</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>net.sf.retrotranslator</groupId>
-            <artifactId>retrotranslator-transformer</artifactId>
-        </dependency>
     	<dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
@@ -39,22 +27,22 @@
             <artifactId>slf4j-api</artifactId>
         </dependency> 
        
-	<dependency>
-	    <groupId>org.jboss.narayana.jta</groupId>
-	    <artifactId>narayana-jta</artifactId>
-	</dependency> 
-	<dependency>
-	    <groupId>org.jboss.ironjacamar</groupId>
-	    <artifactId>ironjacamar-jdbc</artifactId>
-	</dependency>
-	<dependency>
-	    <groupId>org.jboss.ironjacamar</groupId>
-	    <artifactId>ironjacamar-core-api</artifactId>
-	</dependency>
-	<dependency>
-	    <groupId>org.jboss.ironjacamar</groupId>
-	    <artifactId>ironjacamar-core-impl</artifactId>
-	</dependency>
+		<dependency>
+		    <groupId>org.jboss.narayana.jta</groupId>
+		    <artifactId>narayana-jta</artifactId>
+		</dependency> 
+		<dependency>
+		    <groupId>org.jboss.ironjacamar</groupId>
+		    <artifactId>ironjacamar-jdbc</artifactId>
+		</dependency>
+		<dependency>
+		    <groupId>org.jboss.ironjacamar</groupId>
+		    <artifactId>ironjacamar-core-api</artifactId>
+		</dependency>
+		<dependency>
+		    <groupId>org.jboss.ironjacamar</groupId>
+		    <artifactId>ironjacamar-core-impl</artifactId>
+		</dependency>
 
     </dependencies>   
       
@@ -120,17 +108,14 @@
                                     <type>zip</type>
                                     <outputDirectory>${project.build.directory}</outputDirectory>
                                 </artifactItem>
-                                <!-- 
                                 <artifactItem>
-                                    <groupId>org.jboss.teiid.web-console</groupId>
-                                    <artifactId>teiid-console-dist</artifactId>
-                                    <version>${version.teiid.console}</version>
-                                    <classifier>wildfly</classifier>
-                                    <type>zip</type>
-                                    <outputDirectory>${project.build.directory}/${dir.jboss-orig}</outputDirectory>
-                                    <overWrite>true</overWrite>
+									  <groupId>org.jboss.teiid.hal</groupId>
+									  <artifactId>dist</artifactId>
+									  <version>${version.teiid.console}</version>
+									  <classifier>overlay</classifier>
+									  <type>zip</type>
+	                                  <outputDirectory>${project.build.directory}/${dir.wildfly}</outputDirectory>
                                 </artifactItem>
-                                 -->
                             </artifactItems>
                         </configuration>
                     </execution>
@@ -145,7 +130,6 @@
                         <descriptor>assembly/client-jar.xml</descriptor>
                         <descriptor>assembly/wildfly-dist.xml</descriptor>
                         <descriptor>assembly/adminshell-dist.xml</descriptor>
-                        <descriptor>assembly/embedded-dist.xml</descriptor>
                         <descriptor>assembly/wildfly-server.xml</descriptor>
                         <descriptor>assembly/docker.xml</descriptor>            
                     </descriptors>
@@ -163,54 +147,6 @@
             
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>1.1.1</version>
-                <executions>
-                    <execution>
-                        <id>jdbc-15</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>java</goal>
-                        </goals>
-                        <configuration>
-                            <mainClass>net.sf.retrotranslator.transformer.Retrotranslator</mainClass>
-                            <arguments>                     
-                                <argument>-srcjar</argument>
-                                <argument>${project.basedir}/target/teiid-${project.version}-jdbc.jar</argument>
-                                <argument>-destjar</argument>
-                                <argument>${project.basedir}/target/teiid-${project.version}-jdbc-jdk15.jar</argument>            
-                                <argument>-embed</argument>
-                                <argument>org.teiid</argument>
-                                <argument>-target</argument>
-                                <argument>1.5</argument>    
-                            </arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>jdbc-14</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>java</goal>
-                        </goals>
-                        <configuration>
-                            <mainClass>net.sf.retrotranslator.transformer.Retrotranslator</mainClass>
-                            <arguments>                     
-                                <argument>-srcjar</argument>
-                                <argument>${project.basedir}/target/teiid-${project.version}-jdbc.jar</argument>
-                                <argument>-destjar</argument>
-                                <argument>${project.basedir}/target/teiid-${project.version}-jdbc-jdk14.jar</argument>            
-                                <argument>-embed</argument>
-                                <argument>org.teiid</argument>
-                                <argument>-target</argument>
-                                <argument>1.4</argument>    
-                            </arguments>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-                        
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
                 <executions>
                     <execution>
@@ -220,16 +156,6 @@
                         </goals>
                         <configuration>
                             <artifacts>
-                                <artifact>
-                                    <file>target/teiid-${project.version}-jdbc-jdk15.jar</file>
-                                    <type>jar</type>
-                                    <classifier>jdbc-jdk15</classifier>
-                                </artifact>
-                                <artifact>
-                                    <file>target/teiid-${project.version}-jdbc-jdk14.jar</file>
-                                    <type>jar</type>
-                                    <classifier>jdbc-jdk14</classifier>
-                                </artifact>
                                 <artifact>
                                     <file>target/kits/karaf/teiid-karaf-features.xml</file>
                                     <type>xml</type>
@@ -260,7 +186,6 @@
                                 <descriptor>assembly/client-jar.xml</descriptor>
                                 <descriptor>assembly/wildfly-dist.xml</descriptor>
                                 <descriptor>assembly/adminshell-dist.xml</descriptor>
-                                <descriptor>assembly/embedded-dist.xml</descriptor>
                                 <descriptor>assembly/wildfly-server.xml</descriptor>
                                 <descriptor>assembly/docker.xml</descriptor>
                             </descriptors>

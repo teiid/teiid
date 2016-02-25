@@ -62,7 +62,7 @@ public class TestLeftOrRightFunctionModifier extends TestCase {
         Literal arg1 = LANG_FACTORY.createLiteral("1234214", String.class); //$NON-NLS-1$
         Literal count = LANG_FACTORY.createLiteral(new Integer(11), Integer.class);
         helpTestMod(arg1, count, "left", //$NON-NLS-1$
-            "SUBSTR('1234214', 1, 11)"); //$NON-NLS-1$
+            "substr('1234214', 1, 11)"); //$NON-NLS-1$
     }
     
 }

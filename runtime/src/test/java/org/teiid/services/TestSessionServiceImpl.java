@@ -1,7 +1,6 @@
 package org.teiid.services;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.util.Properties;
 
@@ -45,6 +44,22 @@ public class TestSessionServiceImpl {
 		ssi.getActiveVDB("name", null);
 		
 		Mockito.verify(repo, Mockito.times(1)).getLiveVDB("name");
+	}
+	
+	@Test
+	public void testActiveVDBWithSemanticVersion() throws Exception {
+		VDBRepository repo = Mockito.mock(VDBRepository.class);
+		VDBMetaData vdb = new VDBMetaData();
+		vdb.setName("name.1.2.3");
+		vdb.setVersion(1);
+		vdb.setStatus(Status.ACTIVE);
+		
+		Mockito.stub(repo.getLiveVDB("name.1.2.3")).toReturn(vdb);
+		
+		ssi.setVDBRepository(repo);
+		
+		ssi.getActiveVDB("name.1.2.3", null);
+		Mockito.verify(repo, Mockito.times(1)).getLiveVDB("name.1.2.3");
 	}
 	
 	@Test

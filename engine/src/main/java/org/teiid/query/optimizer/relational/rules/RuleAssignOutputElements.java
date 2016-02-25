@@ -188,13 +188,15 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	            	if (NodeEditor.findParent(root, NodeConstants.Types.PROJECT, NodeConstants.Types.SOURCE) != null) {
 	            		//there's a chance that partial projection was used.  we are not a defacto project node
 	            		//take credit for creating anything that is not an element symbol
-	            		List<Expression> filteredElements = new ArrayList<Expression>(outputElements.size());
+	            		LinkedHashSet<Expression> filteredElements = new LinkedHashSet<Expression>();
 	                    for (Expression element : outputElements) {
 	                        if(element instanceof ElementSymbol) {
 	                            filteredElements.add(element);
+	                        } else {
+	                        	filteredElements.addAll(ElementCollectorVisitor.getElements(element, false));
 	                        }
 	                    }
-	                    outputElements = filteredElements;
+	                    outputElements = new ArrayList<Expression>(filteredElements);
 	            	}
 		    	}
 		        assignOutputElements(root.getLastChild(), outputElements, metadata, capFinder, rules, analysisRecord, context);
@@ -524,7 +526,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
             newCols = RelationalNode.projectTuple(filteredIndex, projectCols, true);
             
             if (newSymbols) {
-				SymbolMap childMap = SymbolMap.createSymbolMap(symbolMap.getKeys(), (List) projectNode.getProperty(NodeConstants.Info.PROJECT_COLS));
+				SymbolMap childMap = SymbolMap.createSymbolMap(symbolMap.getKeys(), projectCols);
             	for (int j = 0; j < filteredIndex.length; j++) {
 					if (filteredIndex[j] != -1) {
 						continue;
@@ -747,23 +749,36 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 			Set<Expression> requiredSymbols, PlanNode accessParent,
 			PlanNode accessNode, Expression ss)
 			throws QueryMetadataException, TeiidComponentException {
-		if (finalRun && accessParent == null && !node.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)) {
+		if (finalRun && accessParent == null) {
 			Expression ex = SymbolMap.getExpression(ss);
 			if (ex instanceof ElementSymbol || ex instanceof Constant) {
 				return false;
 			}
-			if (accessNode != null) {
+			Object modelId = null;
+	        if (accessNode != null) {
+	        	modelId = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
 				//narrow check for projection pushing
-				Object modelId = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
-		        if (RuleRaiseAccess.canPushSymbol(ss, true, modelId, metadata, capFinder, null)) {
+				if (RuleRaiseAccess.canPushSymbol(ss, true, modelId, metadata, capFinder, null)) {
 		        	requiredSymbols.add(ss);
 					return true;
 		        }
 			}
 			if (NodeEditor.findNodePreOrder(node, NodeConstants.Types.GROUP, NodeConstants.Types.ACCESS) == null) {
 		    	Collection<Function> functions = FunctionCollectorVisitor.getFunctions(ss, false);
+		    	List<Function> mustPushSubexpression = null;
 		    	for (Function function : functions) {
-					if (function.getFunctionDescriptor().getPushdown() != PushDown.MUST_PUSHDOWN || EvaluatableVisitor.willBecomeConstant(function)) {
+					if (function.getFunctionDescriptor().getPushdown() != PushDown.MUST_PUSHDOWN 
+							|| (EvaluatableVisitor.willBecomeConstant(function) && accessNode != null && CapabilitiesUtil.supports(Capability.SELECT_WITHOUT_FROM, modelId, metadata, capFinder))) {
+						continue;
+					}
+		    		//there is a special check in the evaluator for a must pushdown function to use
+		    		//the projected value
+					//TODO: we could try to get something in between everything and just the partial
+					if (accessNode != null && RuleRaiseAccess.canPushSymbol(function, true, modelId, metadata, capFinder, null)) {
+			        	if (mustPushSubexpression == null) {
+			        		mustPushSubexpression = new ArrayList<Function>();
+			        	}
+			        	mustPushSubexpression.add(function);
 						continue;
 					}
 					//assume we need the whole thing
@@ -771,6 +786,9 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 					checkSymbols = true;
 					return true;
 				}
+		    	if (mustPushSubexpression != null) {
+		    		requiredSymbols.addAll(mustPushSubexpression);
+		    	}
 			}
 		}
 		return false;

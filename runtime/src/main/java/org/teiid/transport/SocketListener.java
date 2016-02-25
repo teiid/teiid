@@ -23,6 +23,7 @@
 package org.teiid.transport;
 
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -33,9 +34,10 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
+import io.netty.util.concurrent.Future;
 
 import java.net.InetSocketAddress;
-import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLEngine;
 
@@ -58,9 +60,8 @@ public class SocketListener implements ChannelListenerFactory {
     private static final int DEFAULT_MAX_MESSAGE_SIZE = 1 << 21;
 
     protected SSLAwareChannelHandler channelHandler;
-    private ChannelFuture serverChannel;
+    private Channel serverChannel;
     private boolean isClientEncryptionEnabled;
-    private ThreadFactory nettyPool;
     private ClientServiceRegistryImpl csr;
 	private ServerBootstrap bootstrap;
     
@@ -91,7 +92,7 @@ public class SocketListener implements ChannelListenerFactory {
     	}
     	this.csr = csr;
 
-    	this.nettyPool = new NamedThreadFactory("NIO"); //$NON-NLS-1$
+    	NamedThreadFactory nettyPool = new NamedThreadFactory("NIO"); //$NON-NLS-1$
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_TRANSPORT, MessageLevel.DETAIL)) { 
             LogManager.logDetail(LogConstants.CTX_TRANSPORT, "server = " + address.getAddress() + "binding to port:" + address.getPort()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
@@ -99,7 +100,7 @@ public class SocketListener implements ChannelListenerFactory {
         if (maxWorkers == 0) {
         	maxWorkers = Math.max(4, 2*Runtime.getRuntime().availableProcessors());
         }
-        EventLoopGroup workers = new NioEventLoopGroup(maxWorkers, this.nettyPool); 
+        EventLoopGroup workers = new NioEventLoopGroup(maxWorkers, nettyPool); 
         
         bootstrap = new ServerBootstrap();
         bootstrap.group(workers).channel(NioServerSocketChannel.class);
@@ -112,16 +113,16 @@ public class SocketListener implements ChannelListenerFactory {
             }
         });
         if (inputBufferSize != 0) {
-        	bootstrap.option(ChannelOption.SO_RCVBUF, new Integer(inputBufferSize)); //$NON-NLS-1$
+        	bootstrap.childOption(ChannelOption.SO_RCVBUF, new Integer(inputBufferSize)); 
         }
         if (outputBufferSize != 0) {
-        	bootstrap.option(ChannelOption.SO_SNDBUF, new Integer(outputBufferSize)); //$NON-NLS-1$
+        	bootstrap.childOption(ChannelOption.SO_SNDBUF, new Integer(outputBufferSize)); 
         }
-        bootstrap.option(ChannelOption.TCP_NODELAY, Boolean.TRUE); //$NON-NLS-1$
-        bootstrap.option(ChannelOption.SO_KEEPALIVE, Boolean.TRUE); //$NON-NLS-1$
-        
-        this.serverChannel = bootstrap.bind(address);
-        this.serverChannel.syncUninterruptibly();
+        bootstrap.childOption(ChannelOption.TCP_NODELAY, Boolean.TRUE); 
+        bootstrap.childOption(ChannelOption.SO_KEEPALIVE, Boolean.TRUE); 
+        ChannelFuture future = bootstrap.bind(address);
+		future.syncUninterruptibly();
+        this.serverChannel = future.channel();
     }
     
     protected void configureChannelPipeline(ChannelPipeline pipeline,
@@ -132,40 +133,45 @@ public class SocketListener implements ChannelListenerFactory {
                 pipeline.addLast("ssl", new SslHandler(engine)); //$NON-NLS-1$
             }
         }
-        pipeline.addLast("decoder", new ObjectDecoder(maxMessageSize, 
+        pipeline.addLast("decoder", new ObjectDecoder(maxMessageSize, //$NON-NLS-1$ 
                 maxLobSize, 
                 Thread.currentThread().getContextClassLoader(), 
-                storageManager)); //$NON-NLS-1$
+                storageManager)); 
         pipeline.addLast("chunker", new ChunkedWriteHandler()); //$NON-NLS-1$
         pipeline.addLast("encoder", new ObjectEncoder()); //$NON-NLS-1$        
         pipeline.addLast("handler", this.channelHandler); //$NON-NLS-1$                
     }
     
     public int getPort() {
-    	return ((InetSocketAddress)this.serverChannel.channel().localAddress()).getPort();
+    	return ((InetSocketAddress)this.serverChannel.localAddress()).getPort();
     }
     
-    public void stop() {
-    	ChannelFuture future = this.serverChannel.channel().closeFuture();
+    /**
+     * Stops the {@link SocketListener}
+     * @return a Future if the transport was started successfully 
+     * that can notify of successfully killing all clients
+     */
+    public Future<?> stop() {
+    	ChannelFuture future = this.serverChannel.closeFuture();
+    	Future<?> shutdown = null;
     	if (this.bootstrap != null) {
-        	bootstrap.group().shutdownGracefully();
+        	shutdown = bootstrap.group().shutdownGracefully(0, 0, TimeUnit.SECONDS);
         	bootstrap = null;
     	}
     	try {
-			future.sync();
+			future.await();
 		} catch (InterruptedException e) {
 			throw new TeiidRuntimeException(e);
 		}
+    	return shutdown;
     }
    
     public SocketListenerStats getStats() {
-        SocketListenerStats stats = new SocketListenerStats();      
-        if (this.channelHandler != null) {
-            stats.objectsRead = this.channelHandler.getObjectsRead();
-            stats.objectsWritten = this.channelHandler.getObjectsWritten();
-            stats.sockets = this.channelHandler.getConnectedChannels();
-            stats.maxSockets = this.channelHandler.getMaxConnectedChannels();
-        }
+        SocketListenerStats stats = new SocketListenerStats();             
+        stats.objectsRead = this.channelHandler.getObjectsRead();
+        stats.objectsWritten = this.channelHandler.getObjectsWritten();
+        stats.sockets = this.channelHandler.getConnectedChannels();
+        stats.maxSockets = this.channelHandler.getMaxConnectedChannels();
         return stats;
     }
 

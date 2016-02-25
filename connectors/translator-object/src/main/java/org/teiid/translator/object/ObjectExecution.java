@@ -37,13 +37,13 @@ import javax.script.SimpleScriptContext;
 
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.ColumnReference;
+import org.teiid.language.Command;
 import org.teiid.language.DerivedColumn;
 import org.teiid.language.Select;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.ForeignKey;
-import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.query.eval.TeiidScriptEngine;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
@@ -54,7 +54,7 @@ import org.teiid.translator.object.util.ObjectUtil;
 /**
  * Execution of the SELECT Command
  */
-public class ObjectExecution implements ResultSetExecution {
+public class ObjectExecution extends ObjectBaseExecution implements ResultSetExecution {
 	public enum  OBJECT_TYPE {
 		COLLECTION,
 		ARRAY,
@@ -179,25 +179,20 @@ public class ObjectExecution implements ResultSetExecution {
 		}
 	}
 	
-	protected Select query;
-	protected ObjectConnection connection;
+	protected Command query;
 	private Object[] colObjects;
 	private ScriptContext sc = new SimpleScriptContext();
 	private TeiidScriptEngine scriptEngine;
 	private Iterator<Object> objResultsItr = null;
 	private Iterator<Object> cacheResultsIt = null;
-	private ObjectExecutionFactory factory;
-	private ExecutionContext executionContext;
 	private ObjectVisitor visitor;
 	private int depth = 0; // the bottom depth to go, not all depths may retrieve data/
 	private int colSize = 0;
 
-	public ObjectExecution(Select query, RuntimeMetadata metadata,
+	public ObjectExecution(Command command, 
 			ObjectExecutionFactory factory, ObjectConnection connection, ExecutionContext executionContext) throws TranslatorException {
-		this.factory = factory;
-		this.query = query;
-		this.connection = connection;
-		this.executionContext = executionContext;
+		super(connection, executionContext, factory);
+		this.query = command;
 		this.scriptEngine = connection.getClassRegistry().getReadScriptEngine();
 		
 		visitor = this.createVisitor();
@@ -231,7 +226,7 @@ public class ObjectExecution implements ResultSetExecution {
 					// nis with a period indicates an internal class to the root
 			} else if (nis.indexOf(".") > 0)  {
 					if (fk == null) {
-						throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21003, new Object[] {query.getFrom()}));
+						throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21003, new Object[] { ((Select)query).getFrom()}));
 					}
 						DepthNode dn = new DepthNode(ObjectUtil.getRecordName(fk) + "." + name, col);
  						colObjects[col] = dn;
@@ -261,7 +256,7 @@ public class ObjectExecution implements ResultSetExecution {
 		}
 	    
 		// column NIS for a column will be used to query the cache
-	    List<Object> objResults = factory.search(visitor, connection, executionContext);
+	    List<Object> objResults = env.search(visitor, connection, executionContext);
 	    
 		if (objResults == null) {
 			objResults = Collections.emptyList();
@@ -275,7 +270,7 @@ public class ObjectExecution implements ResultSetExecution {
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public List<Object> next() throws TranslatorException,
+	public List<?> next() throws TranslatorException,
 			DataNotAvailableException {
 		if  (cacheResultsIt != null && cacheResultsIt.hasNext()) {
 		
@@ -545,14 +540,10 @@ public class ObjectExecution implements ResultSetExecution {
 	
 	@Override
 	public void close() {
+		super.close();
 		this.query = null;
-		this.connection = null;
 		this.colObjects = null;
-		this.objResultsItr = null;
 		this.scriptEngine = null;
-		this.connection = null;
-		this.factory = null;
-		this.executionContext = null;
 		this.sc = null;
 	
 		this.cacheResultsIt = null;
@@ -562,13 +553,6 @@ public class ObjectExecution implements ResultSetExecution {
 		
 	}
 
-	@Override
-	public void cancel()  {
-		this.objResultsItr = null;
-		
-		this.visitor.cleanUp();
-		this.visitor = null;
-	}
 	
 	protected ObjectVisitor createVisitor() {
         return new ObjectVisitor();
@@ -580,4 +564,11 @@ public class ObjectExecution implements ResultSetExecution {
 		return scriptEngine.compile(ClassRegistry.OBJECT_NAME + "." + nodeName);
 	}
 	
+	public ObjectExecutionFactory getFactory() {
+		return this.env;
+	}
+	
+	public Command getCommand() {
+		return this.query;
+	}
 }

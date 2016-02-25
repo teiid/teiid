@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -122,6 +122,8 @@ public class DQPCore implements DQP {
 	
 	private EnhancedTimer cancellationTimer;
 	private Options options;
+
+	private ExecutorService timeoutExecutor;
     
     /**
      * perform a full shutdown and wait for 10 seconds for all threads to finish
@@ -130,6 +132,11 @@ public class DQPCore implements DQP {
     	processWorkerPool.shutdownNow();
     	try {
 			processWorkerPool.awaitTermination(10, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+		}
+    	this.timeoutExecutor.shutdownNow();
+    	try {
+    		timeoutExecutor.awaitTermination(10, TimeUnit.SECONDS);
 		} catch (InterruptedException e) {
 		}
     	// TODO: Should we be doing more cleanup here??
@@ -540,7 +547,7 @@ public class DQPCore implements DQP {
 		this.transactionService.terminateTransaction(xid);
 	}	
 	
-    void logMMCommand(RequestWorkItem workItem, Event status, Integer rowCount, Long cpuTime) {
+    void logMMCommand(RequestWorkItem workItem, Event status, Long rowCount, Long cpuTime) {
     	if ((status != Event.PLAN && !LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.INFO))
     			|| (status == Event.PLAN && !LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.TRACE))) {
     		return;
@@ -602,7 +609,7 @@ public class DQPCore implements DQP {
         this.processWorkerPool = config.getTeiidExecutor();
         //we don't want cancellations waiting on normal processing, so they get a small dedicated pool
         //TODO: overflow to the worker pool
-        Executor timeoutExecutor = ExecutorUtils.newFixedThreadPool(3, "Server Side Timeout"); //$NON-NLS-1$
+        timeoutExecutor = ExecutorUtils.newFixedThreadPool(3, "Server Side Timeout"); //$NON-NLS-1$
         this.cancellationTimer = new EnhancedTimer(timeoutExecutor, timeoutExecutor);
         this.maxActivePlans = config.getMaxActivePlans();
         

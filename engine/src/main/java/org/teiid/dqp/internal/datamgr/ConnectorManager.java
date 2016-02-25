@@ -253,11 +253,11 @@ public class ConnectorManager  {
     	stopped = true;
         //ensure that all requests receive a response
         for (ConnectorWork workItem : this.requestStates.values()) {
-    		workItem.cancel();
+    		workItem.cancel(true);
 		}
     }
     
-    void logSRCCommand(AtomicRequestMessage qr, ExecutionContext context, Event cmdStatus, Integer finalRowCnt, Long cpuTime) {
+    void logSRCCommand(AtomicRequestMessage qr, ExecutionContext context, Event cmdStatus, Long finalRowCnt, Long cpuTime) {
     	logSRCCommand(qr, context, cmdStatus, finalRowCnt, cpuTime, null);
     }
 
@@ -265,7 +265,7 @@ public class ConnectorManager  {
      * Add begin point to transaction monitoring table.
      * @param qr Request that contains the MetaMatrix command information in the transaction.
      */
-    void logSRCCommand(AtomicRequestMessage qr, ExecutionContext context, Event cmdStatus, Integer finalRowCnt, Long cpuTime, Object[] command) {
+    void logSRCCommand(AtomicRequestMessage qr, ExecutionContext context, Event cmdStatus, Long finalRowCnt, Long cpuTime, Object[] command) {
     	if (!LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.DETAIL)) {
     		return;
     	}

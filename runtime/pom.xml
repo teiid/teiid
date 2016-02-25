@@ -3,7 +3,7 @@
   <parent>
     <artifactId>teiid-parent</artifactId>
     <groupId>org.jboss.teiid</groupId>
-    <version>8.13.0.Alpha1-SNAPSHOT</version>
+    <version>9.0.0.Alpha2-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>teiid-runtime</artifactId>
@@ -65,7 +65,6 @@
     <dependency>
       <groupId>org.jboss.teiid.connectors</groupId>
       <artifactId>connector-file</artifactId>
-      <classifier>lib</classifier>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -118,7 +117,7 @@
         <artifactId>staxmapper</artifactId>
     </dependency>    
     <dependency>
-        <groupId>postgresql</groupId>
+        <groupId>org.postgresql</groupId>
         <artifactId>postgresql</artifactId>
         <scope>test</scope>
     </dependency>

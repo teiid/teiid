@@ -27,13 +27,13 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 
 public abstract class AbstractTupleSource implements IndexedTupleSource {
-    private int currentRow = 1;
-    private int mark = 1;
+    private long currentRow = 1;
+    private long mark = 1;
 	protected List<?> currentTuple;
 	protected TupleBatch batch;
 
     @Override
-    public int getCurrentIndex() {
+    public long getCurrentIndex() {
     	return this.currentRow;
     }
 
@@ -57,7 +57,7 @@ public abstract class AbstractTupleSource implements IndexedTupleSource {
 			BlockedException, TeiidProcessingException {
 		if (available() > 0) {
 			//if (forwardOnly) {
-				int row = getCurrentIndex();
+				long row = getCurrentIndex();
 				if (batch == null || !batch.containsRow(row)) {
 					batch = getBatch(row);
 				}
@@ -72,9 +72,9 @@ public abstract class AbstractTupleSource implements IndexedTupleSource {
 
 	protected abstract List<?> finalRow() throws BlockedException, TeiidComponentException, TeiidProcessingException;
 	
-	protected abstract TupleBatch getBatch(int row) throws TeiidComponentException, TeiidProcessingException;
+	protected abstract TupleBatch getBatch(long row) throws TeiidComponentException, TeiidProcessingException;
 	
-	protected abstract int available();
+	protected abstract long available();
 	
     @Override
     public void closeSource() {
@@ -105,7 +105,7 @@ public abstract class AbstractTupleSource implements IndexedTupleSource {
     }
 
     @Override
-    public void setPosition(int position) {
+    public void setPosition(long position) {
         if (this.currentRow != position) {
 	        this.currentRow = position;
 	        this.currentTuple = null;

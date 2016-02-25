@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeException;
 import org.teiid.language.*;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.visitor.HierarchyVisitor;
@@ -36,6 +37,7 @@ import org.teiid.metadata.Column;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
+import org.teiid.olingo.common.ODataTypeManager;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TranslatorException;
 
@@ -284,9 +286,9 @@ public class ODataFilterVisitor extends HierarchyVisitor {
     public void visit(Literal obj) {
         try {
             String odataType = this.exprType.pop();
-            this.filter.append(ODataTypeManager.convertToODataInput(obj, odataType));
-        } catch (TranslatorException e) {
-            this.exceptions.add(e);
+            this.filter.append(ODataTypeManager.convertToODataURIValue(obj.getValue(), odataType));
+        } catch (EdmPrimitiveTypeException e) {
+            this.exceptions.add(new TranslatorException(e));
         }
     }
 

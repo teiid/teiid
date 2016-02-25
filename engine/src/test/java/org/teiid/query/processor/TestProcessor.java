@@ -230,7 +230,7 @@ public class TestProcessor {
         }
     }
         
-    public static int doProcess(ProcessorPlan plan, ProcessorDataManager dataManager, List[] expectedResults, CommandContext context) throws Exception {
+    public static long doProcess(ProcessorPlan plan, ProcessorDataManager dataManager, List[] expectedResults, CommandContext context) throws Exception {
     	BufferManager bufferMgr = context.getBufferManager();
     	if (bufferMgr == null) {
 	        BufferManagerImpl bm = BufferManagerFactory.createBufferManager();
@@ -255,7 +255,7 @@ public class TestProcessor {
         	context.setQueryProcessorFactory(new QueryProcessorFactoryImpl(bufferMgr, dataManager, new DefaultCapabilitiesFinder(), null, context.getMetadata()));
         }
         TupleBuffer id = null;
-        int rowCount = 0;
+        long rowCount = 0;
         try {
             QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataManager);
             //processor.setNonBlocking(true);
@@ -304,7 +304,7 @@ public class TestProcessor {
         
         // Create QueryResults from TupleSource
         TupleSource ts = tsID.createIndexedTupleSource();
-        int count = tsID.getRowCount();   
+        long count = tsID.getRowCount();   
 
         // Compare actual to expected row count
         assertEquals("Did not get expected row count: ", expectedResults.length, count); //$NON-NLS-1$
@@ -7817,7 +7817,7 @@ public class TestProcessor {
         helpProcess(plan, fdm, new List[] {Arrays.asList("a", "a")});
     }
     
-	@Test public void testSomething() throws Exception {
+	@Test public void testMultiJoinWithLateral() throws Exception {
 		String sql = "SELECT csv_table.* FROM (exec sq1()) f, TEXTTABLE(f.e1 COLUMNS a STRING, b STRING DELIMITER ',' QUOTE '''' SKIP 1) csv_table LEFT JOIN (SELECT '1' as a, '2' as b) as t ON csv_table.a = t.a;";
 		ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 		HardcodedDataManager dataManager = new HardcodedDataManager();
@@ -7825,7 +7825,7 @@ public class TestProcessor {
 		TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList("1", "2"), Arrays.asList("3", "4")});
 	 }
 	
-	@Test public void testSomething1() throws Exception {
+	@Test public void testMultiJoinWithLateral1() throws Exception {
 		String sql = "SELECT csv_table.* FROM (exec sq1()) f, TEXTTABLE(f.e1 COLUMNS a STRING, b STRING DELIMITER ',' QUOTE '''' SKIP 1) csv_table JOIN (SELECT '1' as a, '2' as b) as t ON csv_table.a = t.a;";
 		ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
 		HardcodedDataManager dataManager = new HardcodedDataManager();

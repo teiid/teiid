@@ -22,6 +22,8 @@
 
 package org.teiid.resource.adapter.cassandra;
 
+import java.util.List;
+
 import javax.resource.ResourceException;
 
 import org.teiid.logging.LogConstants;
@@ -29,11 +31,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnection;
 import org.teiid.translator.cassandra.CassandraConnection;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.KeyspaceMetadata;
-import com.datastax.driver.core.Metadata;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Session;
+import com.datastax.driver.core.*;
 
 /**
  * Represents a connection to Cassandra database.
@@ -43,6 +41,7 @@ public class CassandraConnectionImpl extends BasicConnection implements Cassandr
 	private Cluster cluster = null;
 	private Session session = null;
 	private Metadata metadata = null;
+	private ProtocolVersion version;
 	
 	public CassandraConnectionImpl(CassandraManagedConnectionFactory config, Metadata metadata) {
 		this.config = config;
@@ -67,6 +66,8 @@ public class CassandraConnectionImpl extends BasicConnection implements Cassandr
 		this.metadata = cluster.getMetadata();
 		
 		this.session = cluster.connect(config.getKeyspace());
+		
+		this.version = this.session.getCluster().getConfiguration().getProtocolOptions().getProtocolVersionEnum();
 	}
 
 	@Override
@@ -84,8 +85,28 @@ public class CassandraConnectionImpl extends BasicConnection implements Cassandr
 	}
 	
 	@Override
-	public ResultSet executeQuery(String query){
-		return session.execute(query);
+	public ResultSetFuture executeQuery(String query){
+		return session.executeAsync(query);
+	}
+	
+	@Override
+	public ResultSetFuture executeBatch(List<String> updates){
+		BatchStatement bs = new BatchStatement();
+		for (String update : updates) {
+			bs.add(new SimpleStatement(update));
+		}
+		return session.executeAsync(bs);
+	}
+	
+	@Override
+	public ResultSetFuture executeBatch(String update, List<Object[]> values) {
+		PreparedStatement ps = session.prepare(update);
+		BatchStatement bs = new BatchStatement();
+		for (Object[] bindValues : values) {
+			BoundStatement bound = ps.bind(bindValues);
+			bs.add(bound);
+		}
+		return session.executeAsync(bs);
 	}
 
 	@Override
@@ -101,6 +122,11 @@ public class CassandraConnectionImpl extends BasicConnection implements Cassandr
 			throw new ResourceException(keyspace);
 		}
 		return result;
+	}
+	
+	@Override
+	public ProtocolVersion getVersion() {
+		return version;
 	}
 	
 }

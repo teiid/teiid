@@ -32,6 +32,7 @@ import org.junit.Test;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer.AntiSemiJoin;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.TestOptimizer.SemiJoin;
@@ -44,6 +45,7 @@ import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.rewriter.TestQueryRewriter;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.unittest.RealMetadataFactory.DDLHolder;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.util.Options;
 import org.teiid.translator.ExecutionFactory;
@@ -128,7 +130,7 @@ public class TestSubqueryPushdown {
             });
 	}
 	
-	@Test public void testPushCorrelatedSubquery1() {
+	@Test public void testPushCorrelatedSubquery1() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
@@ -146,7 +148,7 @@ public class TestSubqueryPushdown {
 
         ProcessorPlan plan = helpPlan("SELECT intkey FROM bqt1.smalla AS n WHERE intkey = /*+ NO_UNNEST */ (SELECT MAX(intkey) FROM bqt1.smallb AS s WHERE s.stringkey = n.stringkey )", RealMetadataFactory.exampleBQTCached(),  //$NON-NLS-1$
             null, capFinder,
-            new String[] { "SELECT intkey FROM bqt1.smalla AS n WHERE intkey = /*+ NO_UNNEST */ (SELECT MAX(intkey) FROM bqt1.smallb AS s WHERE s.stringkey = n.stringkey)" }, SHOULD_SUCCEED); //$NON-NLS-1$ 
+            new String[] { "SELECT g_0.IntKey FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey = /*+ NO_UNNEST */ (SELECT MAX(g_1.IntKey) FROM BQT1.SmallB AS g_1 WHERE g_1.StringKey = g_0.StringKey)" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
         checkNodeTypes(plan, FULL_PUSHDOWN); 
         
         assertFalse(plan.requiresTransaction(true));
@@ -1333,8 +1335,8 @@ public class TestSubqueryPushdown {
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }   
 
-    /** Case 1456, defect 10492*/
-    @Test public void testAliasingDefect1(){
+    /** Case 1456, defect 10492 */
+    @Test public void testAliasingDefect1() throws Exception{
         // Create query
         String sql = "SELECT e1 FROM vm1.g1 X WHERE e2 = /*+ NO_UNNEST */ (SELECT MAX(e2) FROM vm1.g1 Y WHERE X.e1 = Y.e1)";//$NON-NLS-1$
 
@@ -1352,7 +1354,7 @@ public class TestSubqueryPushdown {
 
         ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(),  
             null, capFinder,
-            new String[] { "SELECT g1__1.e1 FROM pm1.g1 AS g1__1 WHERE g1__1.e2 = /*+ NO_UNNEST */ (SELECT MAX(pm1.g1.e2) FROM pm1.g1 WHERE pm1.g1.e1 = g1__1.e1)" }, SHOULD_SUCCEED); //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e2 = /*+ NO_UNNEST */ (SELECT MAX(g_1.e2) FROM pm1.g1 AS g_1 WHERE g_1.e1 = g_0.e1)" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }   
 
@@ -1436,12 +1438,13 @@ public class TestSubqueryPushdown {
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, 
                 RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(bsc),
                 new String[] {
-                    "SELECT g_0.IntKey AS c_0, g_0.IntNum AS c_1 FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey IN (<dependent values>) ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+                    "SELECT g_0.IntKey AS c_0 FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey IN (<dependent values>) ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
         HardcodedDataManager hdm = new HardcodedDataManager();
-        hdm.addData("SELECT g_0.StringKey FROM BQT1.SmallA AS g_0", Arrays.asList("1"), Arrays.asList("2"));
-        hdm.addData("SELECT g_0.IntKey AS c_0, g_0.IntNum AS c_1 FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey IN (1, 2) ORDER BY c_0", Arrays.asList(1, 2));
-        hdm.addData("SELECT g_0.IntKey FROM BQT1.SmallA AS g_0 WHERE g_0.IntNum = 2", Arrays.asList(1));
+        hdm.addData("SELECT g_0.StringKey, g_0.IntNum FROM BQT1.SmallA AS g_0", Arrays.asList("1", 1), Arrays.asList("2", 2));
+        hdm.addData("SELECT g_0.IntKey AS c_0 FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey IN (1, 2) ORDER BY c_0", Arrays.asList(1));
+        hdm.addData("SELECT g_0.IntKey FROM BQT1.SmallA AS g_0 WHERE g_0.IntNum = 1", Arrays.asList(1));
+        hdm.addData("SELECT g_0.IntKey FROM BQT1.SmallA AS g_0 WHERE g_0.IntNum = 2", Arrays.asList(2));
         
         TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(1)} );
         
@@ -1459,6 +1462,120 @@ public class TestSubqueryPushdown {
                                       new String[] {
                                           "SELECT (SELECT g_1.e1 FROM pm1.g1 AS g_1 WHERE g_1.e2 = g_0.e2) FROM pm1.g2 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
+    
+    @Test public void testPreEvaluationInAggregate() throws Exception {
+    	TransformationMetadata tm = RealMetadataFactory.fromDDL("x", 
+    			new DDLHolder("my", "CREATE foreign TABLE test_b (b integer, c integer)"), 
+				new DDLHolder("pg", "CREATE foreign TABLE test_a (a integer, b integer); CREATE foreign TABLE test_only_pg (a integer, b integer);"));
+		
+    	String sql = "SELECT SUM(x.b - (SELECT a FROM pg.test_only_pg WHERE b = 1)) FROM my.test_b x INNER JOIN pg.test_a y ON x.b = y.b";
     	
+    	BasicSourceCapabilities bsc = getTypicalCapabilities();
+    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, true);
+    	bsc.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+    	bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
+    	bsc.setFunctionSupport("-", true);
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, //$NON-NLS-1$
+                                      tm, null, new DefaultCapabilitiesFinder(bsc),
+                                      new String[] {
+                                          "SELECT g_0.b AS c_0, SUM((g_0.b - (SELECT a FROM pg.test_only_pg WHERE b = 1 LIMIT 2))) AS c_1 FROM my.test_b AS g_0 GROUP BY g_0.b ORDER BY c_0", "SELECT g_0.b AS c_0 FROM pg.test_a AS g_0 ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        HardcodedDataManager hdm = new HardcodedDataManager(tm);
+        hdm.addData("SELECT g_0.a FROM test_only_pg AS g_0 WHERE g_0.b = 1", Arrays.asList(2));
+        hdm.addData("SELECT g_0.b AS c_0, SUM((g_0.b - 2)) AS c_1 FROM test_b AS g_0 GROUP BY g_0.b ORDER BY c_0", Arrays.asList(3, 1));
+        hdm.addData("SELECT g_0.b AS c_0 FROM test_a AS g_0 ORDER BY c_0", Arrays.asList(3));
+        CommandContext cc = TestProcessor.createCommandContext();
+        cc.setMetadata(tm);
+        TestProcessor.helpProcess(plan, cc, hdm, new List[] {Arrays.asList(Long.valueOf(1))} );
+    }
+    
+    @Test public void testPreEvaluationInAggregate1() throws Exception {
+    	TransformationMetadata tm = RealMetadataFactory.fromDDL("x", 
+    			new DDLHolder("my", "CREATE foreign TABLE test_b (b integer, c integer)"), 
+				new DDLHolder("pg", "CREATE foreign TABLE test_a (a integer, b integer); CREATE foreign TABLE test_only_pg (a integer, b integer);"));
+		
+    	String sql = "SELECT SUM(x.b - (SELECT a FROM pg.test_only_pg WHERE b = 1)) FROM my.test_b x";
+    	
+    	BasicSourceCapabilities bsc = getTypicalCapabilities();
+    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, true);
+    	bsc.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+    	bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
+    	bsc.setFunctionSupport("-", true);
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, //$NON-NLS-1$
+                                      tm, null, new DefaultCapabilitiesFinder(bsc),
+                                      new String[] {
+                                          "SELECT SUM((g_0.b - (SELECT a FROM pg.test_only_pg WHERE b = 1 LIMIT 2))) FROM my.test_b AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        HardcodedDataManager hdm = new HardcodedDataManager(tm);
+        hdm.addData("SELECT g_0.a FROM test_only_pg AS g_0 WHERE g_0.b = 1", Arrays.asList(2));
+        hdm.addData("SELECT SUM((g_0.b - 2)) FROM test_b AS g_0", Arrays.asList(Long.valueOf(3)));
+        CommandContext cc = TestProcessor.createCommandContext();
+        cc.setMetadata(tm);
+        TestProcessor.helpProcess(plan, cc, hdm, new List[] {Arrays.asList(Long.valueOf(3))} );
+    }
+    
+    @Test public void testNestedCorrelation() throws Exception {
+    	TransformationMetadata tm = RealMetadataFactory.fromDDL("CREATE foreign TABLE a (c1 integer, c2 integer); "
+    			+ "CREATE foreign TABLE b (c3 integer, c4 integer); CREATE foreign TABLE c (c5 integer, c6 integer);", "x", "y");
+		
+    	String sql = "SELECT (select c2 from b where c3 = (select c5 from c where c6 = c1)) FROM a group by c1, c2";
+    	
+    	BasicSourceCapabilities bsc = getTypicalCapabilities();
+        /*ProcessorPlan plan = TestOptimizer.helpPlan(sql, //$NON-NLS-1$
+                                      tm, null, new DefaultCapabilitiesFinder(bsc),
+                                      new String[] {
+                                          "SELECT g_0.c1, g_0.c2 FROM y.a AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        */
+        HardcodedDataManager hdm = new HardcodedDataManager(tm);
+        hdm.addData("SELECT g_0.c1, g_0.c2 FROM a AS g_0", Arrays.asList(1, 2));
+        hdm.addData("SELECT g_0.c5 FROM c AS g_0 WHERE g_0.c6 = 1", Arrays.asList(1));
+        hdm.addData("SELECT 2 FROM b AS g_0 WHERE g_0.c3 = 1", Arrays.asList(2));
+        CommandContext cc = TestProcessor.createCommandContext();
+        cc.setMetadata(tm);
+        //TestProcessor.helpProcess(plan, cc, hdm, new List[] {Arrays.asList(2)} );
+        
+        //with conflicting aliases it should still work
+        sql = "SELECT (select c2 from b where c3 = (select c5 from c as x where c6 = c1)) FROM a as x group by c1, c2";
+    	
+    /*    plan = TestOptimizer.helpPlan(sql, //$NON-NLS-1$
+                                      tm, null, new DefaultCapabilitiesFinder(bsc),
+                                      new String[] {
+                                          "SELECT g_0.c1, g_0.c2 FROM y.a AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        TestProcessor.helpProcess(plan, cc, hdm, new List[] {Arrays.asList(2)} );
+        */
+        //with conflicting aliases it should still work
+        sql = "SELECT (select c2 from b as x where c3 = (select c5 from c as x where c6 = c1)) FROM a as x group by c1, c2";
+    	
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, //$NON-NLS-1$
+                                      tm, null, new DefaultCapabilitiesFinder(bsc),
+                                      new String[] {
+                                          "SELECT g_0.c1, g_0.c2 FROM y.a AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        TestProcessor.helpProcess(plan, cc, hdm, new List[] {Arrays.asList(2)} );
+    }
+    
+    @Test public void testNestedCorrelationInAggregate() throws Exception {
+    	TransformationMetadata tm = RealMetadataFactory.fromDDL("CREATE foreign TABLE a (c1 integer, c2 integer); "
+    			+ "CREATE foreign TABLE b (c3 integer, c4 integer); CREATE foreign TABLE c (c5 integer, c6 integer);", "x", "y");
+		
+    	String sql = "SELECT max((select c2 from (select * from b as x) as b where c3 = (select c5 from c as x where c6 = c1))) FROM a as x group by c1, c2";
+    	
+    	BasicSourceCapabilities bsc = getTypicalCapabilities();
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, //$NON-NLS-1$
+                                      tm, null, new DefaultCapabilitiesFinder(bsc),
+                                      new String[] {
+                                          "SELECT g_0.c1, g_0.c2 FROM y.a AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        HardcodedDataManager hdm = new HardcodedDataManager(tm);
+        hdm.addData("SELECT g_0.c1, g_0.c2 FROM a AS g_0", Arrays.asList(1, 2));
+        hdm.addData("SELECT g_0.c5 FROM c AS g_0 WHERE g_0.c6 = 1", Arrays.asList(1));
+        hdm.addData("SELECT 2 FROM b AS g_0 WHERE g_0.c3 = 1", Arrays.asList(2));
+        CommandContext cc = TestProcessor.createCommandContext();
+        cc.setMetadata(tm);
+        TestProcessor.helpProcess(plan, cc, hdm, new List[] {Arrays.asList(2)} );
+    }
 
 }

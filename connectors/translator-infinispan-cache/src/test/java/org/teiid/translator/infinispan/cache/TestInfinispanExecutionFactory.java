@@ -26,9 +26,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
-import org.teiid.translator.infinispan.cache.DSLSearch;
-import org.teiid.translator.infinispan.cache.InfinispanCacheExecutionFactory;
-import org.teiid.translator.infinispan.cache.LuceneSearch;
 import org.teiid.translator.object.ObjectExecution;
 import org.teiid.translator.object.ObjectExecutionFactory;
 import org.teiid.translator.object.TestObjectExecutionFactory;

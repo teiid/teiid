@@ -38,6 +38,10 @@
         "jdbc-simple" : {"module" : "org.jboss.teiid.translator.jdbc"},
         "jdbc-ansi" : {"module" : "org.jboss.teiid.translator.jdbc"}
     },
+    "authentication-sessions-expiration-timelimit" : 2,
+    "authentication-max-sessions-allowed" : 5,
+    "authentication-security-domain" : "teiid-security,teiid-security2",
+    "authentication-type" : "GSS",
     "transport" : {
         "jdbc" : {
             "input-buffer-size" : 2,
@@ -47,10 +51,6 @@
             "socket-binding" : "teiid-jdbc"
         },
         "odbc" : {
-            "authentication-security-domain" : "teiid-security,teiid-security2",
-            "authentication-sessions-expiration-timelimit" : 2,
-            "authentication-max-sessions-allowed" : 5,
-            "authentication-type" : "GSS",
             "input-buffer-size" : 2,
             "keystore-name" : "keystore name",
             "keystore-password" : "keystore passs",

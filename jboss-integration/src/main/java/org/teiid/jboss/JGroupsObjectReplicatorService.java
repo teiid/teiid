@@ -44,7 +44,9 @@ class JGroupsObjectReplicatorService implements Service<JGroupsObjectReplicator>
 		this.replicator = new JGroupsObjectReplicator(new org.teiid.replication.jgroups.ChannelFactory() {
 			@Override
 			public Channel createChannel(String id) throws Exception {
-				return channelFactoryInjector.getValue().createChannel(id);
+				 Channel c = channelFactoryInjector.getValue().createChannel(id);
+				 c.connect(id);
+				 return c;
 			}
 		}, executorInjector.getValue());
 	}

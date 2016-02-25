@@ -29,6 +29,7 @@ import java.util.Properties;
 
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.asset.ArchiveAsset;
 import org.jboss.shrinkwrap.api.exporter.ZipExporter;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.After;
@@ -94,10 +95,12 @@ public class IntegrationTestDynamicViewDefinition extends AbstractMMQueryTestCas
 		assertRowCount(1);
 	}
 	
-	@Test public void testVdbZipWithDDL() throws Exception {
+	@Test public void testVdbZipWithDDLAndUDF() throws Exception {
+		JavaArchive udfJar = ShrinkWrap.create(JavaArchive.class, "func.jar").addClasses(SampleFunctions.class);
 		JavaArchive jar = ShrinkWrap.create(JavaArchive.class, "temp.jar")
 			      .addAsManifestResource(UnitTestUtil.getTestDataFile("vdb.xml"))
-			      .addAsResource(UnitTestUtil.getTestDataFile("test.ddl"));
+			      .addAsResource(UnitTestUtil.getTestDataFile("test.ddl"))
+			      .addAsResource(new ArchiveAsset(udfJar, ZipExporter.class), "lib/udf.jar");
 		admin.deploy("dynamic-ddl.vdb", jar.as(ZipExporter.class).exportAsInputStream());
 		
 		assertTrue(AdminUtil.waitForVDBLoad(admin, "dynamic-ddl", 1, 3));
@@ -105,6 +108,8 @@ public class IntegrationTestDynamicViewDefinition extends AbstractMMQueryTestCas
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:dynamic-ddl@mm://localhost:31000;user=user;password=user", null);
 		
 		execute("SELECT * from stock"); //$NON-NLS-1$
+		assertRowCount(1);
+		execute("SELECT func('a')"); //$NON-NLS-1$
 		assertRowCount(1);
 	}
 

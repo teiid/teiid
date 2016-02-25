@@ -816,6 +816,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add("IFNULL"); //$NON-NLS-1$
         supportedFunctions.add("NVL");      //$NON-NLS-1$ 
         supportedFunctions.add("COALESCE"); //$NON-NLS-1$
+        supportedFunctions.add(SourceSystemFunctions.ROUND); 
         supportedFunctions.add(RELATE);
         supportedFunctions.add(NEAREST_NEIGHBOR);
         supportedFunctions.add(NEAREST_NEIGHBOR_DISTANCE);
@@ -1085,5 +1086,10 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsCorrelatedSubqueryLimit() {
     	return false;
+    }
+    
+    @Override
+    public boolean useColumnNamesForGeneratedKeys() {
+    	return true;
     }
 }

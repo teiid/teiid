@@ -65,6 +65,7 @@ import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.proc.ProcedurePlan;
 import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
+import org.teiid.query.processor.relational.PlanExecutionNode;
 import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.resolver.ProcedureContainerResolver;
@@ -86,7 +87,6 @@ import org.teiid.query.sql.visitor.CommandCollectorVisitor;
 import org.teiid.query.sql.visitor.CorrelatedReferenceCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
-import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
@@ -416,6 +416,14 @@ public class RelationalPlanner {
 	}
     
     private void assignWithClause(RelationalNode node, LinkedHashMap<String, WithQueryCommand> pushdownWith) {
+    	if (node instanceof PlanExecutionNode) {
+    		//need to check for nested relational plans.  these are created by things such as the semi-join optimization in rulemergevirtual
+    		ProcessorPlan plan = ((PlanExecutionNode)node).getProcessorPlan();
+    		if (plan instanceof RelationalPlan) {
+    			//other types of plans will be contained under non-relational plans, which would be out of scope for the parent with
+    			node = ((RelationalPlan)plan).getRootNode();
+    		}
+    	}
         if(node instanceof AccessNode) {
             AccessNode accessNode = (AccessNode) node;
             Map<GroupSymbol, RelationalPlan> subplans = accessNode.getSubPlans();
@@ -450,6 +458,8 @@ public class RelationalPlanner {
             			}
 					});
             		QueryCommand query = (QueryCommand)command;
+            		List<SubqueryContainer<?>> subqueries = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(query);
+            		pullupWith(with, subqueries);
             		if (query.getWith() != null) {
             			//we need to accumulate as a with clause could have been used at a lower scope
             			query.getWith().addAll(with);
@@ -468,6 +478,22 @@ public class RelationalPlanner {
         	assignWithClause(children[i], pushdownWith);
         }
     }
+
+	private void pullupWith(List<WithQueryCommand> with,
+			List<SubqueryContainer<?>> subqueries) {
+		for (SubqueryContainer<?> subquery : subqueries) {
+			if (subquery.getCommand() instanceof QueryCommand) {
+				QueryCommand qc = (QueryCommand)subquery.getCommand();
+				if (qc.getWith() != null) {
+					qc.getWith().removeAll(with);
+				}
+				if (qc.getWith().isEmpty()) {
+					qc.setWith(null);
+				}
+				pullupWith(with, ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(qc));
+			}
+		}
+	}
 
 	private void discoverWith(
 			LinkedHashMap<String, WithQueryCommand> pushdownWith,
@@ -537,7 +563,7 @@ public class RelationalPlanner {
 			}
 			try {
 			    ArrayList<Reference> correlatedReferences = new ArrayList<Reference>();
-			    CorrelatedReferenceCollectorVisitor.collectReferences(subCommand, localGroupSymbols, correlatedReferences);
+			    CorrelatedReferenceCollectorVisitor.collectReferences(subCommand, localGroupSymbols, correlatedReferences, metadata);
 			    ProcessorPlan procPlan = QueryOptimizer.optimizePlan(subCommand, metadata, idGenerator, capFinder, analysisRecord, context);
 			    if (procPlan instanceof RelationalPlan && pushdownWith != null && !pushdownWith.isEmpty()) {
 			    	LinkedHashMap<String, WithQueryCommand> parentPushdownWith = pushdownWith;
@@ -603,7 +629,7 @@ public class RelationalPlanner {
 
 	private static Set<GroupSymbol> getGroupSymbols(PlanNode plan) {
 		Set<GroupSymbol> groupSymbols = new HashSet<GroupSymbol>();
-        for (PlanNode source : NodeEditor.findAllNodes(plan, NodeConstants.Types.SOURCE | NodeConstants.Types.GROUP, NodeConstants.Types.GROUP)) {
+        for (PlanNode source : NodeEditor.findAllNodes(plan, NodeConstants.Types.SOURCE | NodeConstants.Types.GROUP, NodeConstants.Types.GROUP | NodeConstants.Types.SOURCE)) {
             groupSymbols.addAll(source.getGroups());
         }
 		return groupSymbols;
@@ -923,7 +949,7 @@ public class RelationalPlanner {
 				continue;
 			}
 			List<Reference> correlatedReferences = new ArrayList<Reference>();
-			CorrelatedReferenceCollectorVisitor.collectReferences(subqueryContainer.getCommand(), Arrays.asList(container.getGroup()), correlatedReferences);
+			CorrelatedReferenceCollectorVisitor.collectReferences(subqueryContainer.getCommand(), Arrays.asList(container.getGroup()), correlatedReferences, metadata);
 			setCorrelatedReferences(subqueryContainer, correlatedReferences);
 		}
 		String cacheString = "transformation/" + container.getClass().getSimpleName().toUpperCase(); //$NON-NLS-1$
@@ -1339,9 +1365,8 @@ public class RelationalPlanner {
             	JoinType jt = (JoinType) parent.getProperty(Info.JOIN_TYPE);
             	if (jt != JoinType.JOIN_FULL_OUTER && parent.getChildCount() > 0) {
 	            	ArrayTable at = (ArrayTable)tt;
-		        	//rewrite if deterministic and free of subqueries
-		        	if (FunctionCollectorVisitor.isNonDeterministic(at.getArrayValue())
-		        			|| ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(at).isEmpty()) {
+		        	//rewrite if free of subqueries
+		        	if (ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(at).isEmpty()) {
 		            	List<ElementSymbol> symbols = at.getProjectedSymbols();
 		        		FunctionLibrary funcLib = this.metadata.getFunctionLibrary();
 		                FunctionDescriptor descriptor = funcLib.findFunction(FunctionLibrary.ARRAY_GET, 
@@ -1446,7 +1471,7 @@ public class RelationalPlanner {
 			rootJoin = rootJoin.getParent();
 		}
 		List<Reference> correlatedReferences = new ArrayList<Reference>();
-		CorrelatedReferenceCollectorVisitor.collectReferences(lo, rootJoin.getGroups(), correlatedReferences);
+		CorrelatedReferenceCollectorVisitor.collectReferences(lo, rootJoin.getGroups(), correlatedReferences, metadata);
 		
 		if (correlatedReferences.isEmpty()) {
 			return null;
@@ -1884,13 +1909,17 @@ public class RelationalPlanner {
 			if (scope == null) {
 				scope = MaterializationMetadataRepository.Scope.NONE.name();
 			}
-			Expression expr1 = new ElementSymbol("SchemaName"); //$NON-NLS-1$
-			Expression expr2 = new ElementSymbol("Name"); //$NON-NLS-1$
-			Expression expr3 = new ElementSymbol("Valid"); //$NON-NLS-1$
-			Expression expr4 = new ElementSymbol("LoadState"); //$NON-NLS-1$
 			String onErrorAction = metadata.getExtensionProperty(viewMatadataId, MaterializationMetadataRepository.MATVIEW_ONERROR_ACTION, false);
 			
 			if (onErrorAction == null || !ErrorAction.IGNORE.name().equalsIgnoreCase(onErrorAction)) {
+				String schemaName = metadata.getName(metadata.getModelID(viewMatadataId));
+				String viewName = metadata.getName(viewMatadataId);
+
+				Expression expr1 = new Constant(schemaName);
+				Expression expr2 = new Constant(viewName); 
+				Expression expr3 = new ElementSymbol("Valid"); //$NON-NLS-1$
+				Expression expr4 = new ElementSymbol("LoadState"); //$NON-NLS-1$
+
 				Query subquery = new Query();
 				Select subSelect = new Select();
 		        subSelect.addSymbol(new Function("mvstatus", new Expression[] {expr1, expr2, expr3, expr4, new Constant(onErrorAction)})); //$NON-NLS-1$ 
@@ -1901,14 +1930,10 @@ public class RelationalPlanner {
 				Select s = new Select();
 				s.addSymbol(new Constant(1));
 				one.setSelect(s);
-				subquery.setFrom(new From(Arrays.asList(new JoinPredicate(new SubqueryFromClause("x", one), new UnaryFromClause(statusTable), JoinType.JOIN_LEFT_OUTER, QueryRewriter.TRUE_CRITERIA)))); //$NON-NLS-1$
-				
-				String schemaName = metadata.getName(metadata.getModelID(viewMatadataId));
-				String viewName = metadata.getName(viewMatadataId);
 				
 				CompoundCriteria cc  = null;
 		        CompareCriteria c1 = new CompareCriteria(new ElementSymbol("VDBName"), CompareCriteria.EQ, new Constant(context.getVdbName())); //$NON-NLS-1$
-		        CompareCriteria c2 = new CompareCriteria(new ElementSymbol("VDBVersion"), CompareCriteria.EQ, new Constant(context.getVdbVersion())); //$NON-NLS-1$
+		        CompareCriteria c2 = new CompareCriteria(new ElementSymbol("VDBVersion"), CompareCriteria.EQ, new Constant(String.valueOf(context.getVdbVersion()))); //$NON-NLS-1$
 		        CompareCriteria c3 = new CompareCriteria(new ElementSymbol("SchemaName"), CompareCriteria.EQ, new Constant(schemaName)); //$NON-NLS-1$
 		        CompareCriteria c4 = new CompareCriteria(new ElementSymbol("Name"), CompareCriteria.EQ, new Constant(viewName)); //$NON-NLS-1$
 				
@@ -1921,8 +1946,10 @@ public class RelationalPlanner {
 				else if (scope.equalsIgnoreCase(MaterializationMetadataRepository.Scope.SCHEMA.name())) { 
 					cc = new CompoundCriteria(CompoundCriteria.AND, Arrays.asList(c3, c4));
 				}			
-		        subquery.setCriteria(cc);
-				query.setCriteria(new ExistsCriteria(subquery));
+		        
+				subquery.setFrom(new From(Arrays.asList(new JoinPredicate(new SubqueryFromClause("x", one), new UnaryFromClause(statusTable), JoinType.JOIN_LEFT_OUTER, cc)))); //$NON-NLS-1$
+		        
+				query.setCriteria(new CompareCriteria(new Constant(1), CompareCriteria.EQ, new ScalarSubquery(subquery)));
 			}
 		}
 		return query;

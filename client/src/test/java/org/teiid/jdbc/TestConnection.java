@@ -139,8 +139,10 @@ public class TestConnection {
     @Test public void testSetReadOnly2() throws Exception {
     	ConnectionImpl conn = getMMConnection();
         conn.setAutoCommit(false);
+        conn.setReadOnly(true);
+        conn.setInLocalTxn(true);
         try {
-            conn.setReadOnly(true);
+            conn.setReadOnly(false);
             fail("Error Expected"); //$NON-NLS-1$
         } catch (SQLException e) {
             // error expected
@@ -172,6 +174,18 @@ public class TestConnection {
     @Test public void testCreateArray() throws SQLException {
     	Array array = getMMConnection().createArrayOf("integer[]", new Integer[] {3, 4});
     	assertEquals(3, java.lang.reflect.Array.get(array.getArray(), 0));
+    }
+    
+    @Test public void testXACommit() throws Exception {
+    	ConnectionImpl conn = getMMConnection();
+        conn.setAutoCommit(false);
+        conn.setTransactionXid(Mockito.mock(XidImpl.class));
+        try {
+            conn.setAutoCommit(true);
+            fail("Error Expected"); //$NON-NLS-1$
+        } catch (SQLException e) {
+            // error expected
+        }
     }
 
 }

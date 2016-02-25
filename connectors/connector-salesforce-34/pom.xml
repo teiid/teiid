@@ -3,7 +3,7 @@
     <parent>
         <artifactId>connectors</artifactId>
         <groupId>org.jboss.teiid</groupId>
-        <version>8.13.0.Alpha1-SNAPSHOT</version>
+        <version>9.0.0.Alpha2-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>connector-salesforce-34</artifactId>
@@ -15,7 +15,17 @@
 		<dependency>
 			<groupId>org.jboss.teiid.connectors</groupId>
 			<artifactId>connector-salesforce</artifactId>
+			<exclusions>
+	            <exclusion>
+	                <groupId>org.jboss.teiid.connectors</groupId>
+	                <artifactId>translator-salesforce</artifactId>
+	            </exclusion>			
+			</exclusions>
 		</dependency>
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>translator-salesforce-34</artifactId>
+        </dependency>		
 	</dependencies>
 
 	<build>

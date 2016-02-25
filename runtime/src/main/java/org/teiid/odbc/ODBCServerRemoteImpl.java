@@ -159,14 +159,14 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			"\\s+order by ref.oid, ref.i", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 		
 	private static Pattern cursorSelectPattern = Pattern.compile("DECLARE\\s+\"(\\w+)\"(?:\\s+INSENSITIVE)?(\\s+(NO\\s+)?SCROLL)?\\s+CURSOR\\s+(?:WITH(?:OUT)? HOLD\\s+)?FOR\\s+(.*)", Pattern.CASE_INSENSITIVE|Pattern.DOTALL); //$NON-NLS-1$
-	private static Pattern fetchPattern = Pattern.compile("FETCH (\\d+) IN \"(\\w+)\".*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-	private static Pattern movePattern = Pattern.compile("MOVE (\\d+) IN \"(\\w+)\".*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+	private static Pattern fetchPattern = Pattern.compile("FETCH(?:\\s+FORWARD)?\\s+(\\d+)\\s+(?:IN|FROM)\\s+\"(\\w+)\"\\s*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+	private static Pattern movePattern = Pattern.compile("MOVE(?:\\s+(FORWARD|BACKWARD))?\\s+(\\d+)\\s+(?:IN|FROM)\\s+\"(\\w+)\"\\s*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	private static Pattern closePattern = Pattern.compile("CLOSE \"(\\w+)\"", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	
 	private static Pattern deallocatePattern = Pattern.compile("DEALLOCATE(?:\\s+PREPARE)?\\s+(.*)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	private static Pattern releasePattern = Pattern.compile("RELEASE (\\w+\\d?_*)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	private static Pattern savepointPattern = Pattern.compile("SAVEPOINT (\\w+\\d?_*)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-	private static Pattern rollbackPattern = Pattern.compile("ROLLBACK\\s*(to)*\\s*(\\w+\\d+_*)*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+	private static Pattern rollbackPattern = Pattern.compile("ROLLBACK\\s+(to)?\\s+(\\w+\\d+_*)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	
 	private TeiidDriver driver;
 	private ODBCClientRemote client;
@@ -371,7 +371,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		this.client.sendResults("FETCH", cursor.rs, cursor.prepared.columnMetadata, completion, rows, true); //$NON-NLS-1$
 	}
 	
-	private void cursorMove(String prepareName, final int rows, final ResultsFuture<Integer> completion) throws SQLException {
+	private void cursorMove(String prepareName, String direction, final int rows, final ResultsFuture<Integer> completion) throws SQLException {
 		
 		// win odbc driver sending a move after close; and error is ending up in failure; since the below
 		// is not harmful it is ok to send empty move.
@@ -385,6 +385,8 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		if (cursor == null) {
 			throw new SQLException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40078, prepareName));
 		}
+		
+		final boolean forward = direction == null || direction.equalsIgnoreCase("forward"); //$NON-NLS-1$
 		Runnable r = new Runnable() {
 			public void run() {
 				run(null, 0);
@@ -393,7 +395,14 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 				for (; i < rows; i++) {
 					try {
 						if (next == null) {
-							next = cursor.rs.submitNext();
+							if (forward) {
+								next = cursor.rs.submitNext();
+							} else {
+								//TODO: we know that we are scrollable in this case, we should just
+								//use an absolute positioning
+								//as of now previous is non-blocking
+								next = StatementImpl.booleanFuture(cursor.rs.previous());
+							}
 						}
 						if (!next.isDone()) {
 							final int current = i;
@@ -494,7 +503,8 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 					ParameterMetaData pmd = stmt.getParameterMetaData();
 					for (int i = 0; i < paramType.length; i++) {
 						if (paramType[i] == 0) {
-							paramType[i] = convertType(pmd.getParameterType(i + 1));
+							//TODO: this is incorrect - should be oid
+							//paramType[i] = convertType(pmd.getParameterType(i + 1));
 						}
 					}
 				}
@@ -516,6 +526,14 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			}
 		}
 	}	
+	
+	private long readLong(byte[] bytes, int length) {
+		long val = 0;
+		for (int k = 0; k < length; k++) {
+			val += ((bytes[k] & 255) << ((length - k - 1)*8));
+		}
+		return val;
+	}
 	
 	@Override
 	public void bindParameters(String bindName, String prepareName, Object[] params, int resultCodeCount, int[] resultColumnFormat) {
@@ -545,7 +563,39 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		try {
 			stmt = this.connection.prepareStatement(prepared.modifiedSql);
 			for (int i = 0; i < params.length; i++) {
-				stmt.setObject(i+1, params[i]);
+				Object param = params[i];
+				if (param instanceof byte[] && prepared.paramType.length > i) {
+					int oid = prepared.paramType[i];
+					switch (oid) {
+					//binary array
+					//pgobject
+					//hstore
+					//date
+					//time
+					//timestamp
+					case PGUtil.PG_TYPE_UNSPECIFIED:
+						//TODO: should infer type from the parameter metadata from the parse message
+						break;
+					case PGUtil.PG_TYPE_BYTEA:
+						break;
+					case PGUtil.PG_TYPE_INT2:
+						param = (short)readLong((byte[])param, 2);
+						break;
+					case PGUtil.PG_TYPE_INT4:
+						param = (int)readLong((byte[])param, 4);
+						break;
+					case PGUtil.PG_TYPE_INT8:
+						param = readLong((byte[])param, 8);
+						break;
+					case PGUtil.PG_TYPE_FLOAT4:
+						param = Float.intBitsToFloat((int)readLong((byte[])param, 4));
+						break;
+					case PGUtil.PG_TYPE_FLOAT8:
+						param = Double.longBitsToDouble(readLong((byte[])param, 8));
+						break;
+					}
+				}
+				stmt.setObject(i+1, param);
 			}
 			this.portalMap.put(bindName, new Portal(bindName, prepared, resultColumnFormat, stmt));
 			this.client.bindComplete();
@@ -1044,7 +1094,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		    				cursorFetch(m.group(2), Integer.parseInt(m.group(1)), results);
 		    			}
 		    			else if ((m = movePattern.matcher(sql)).matches()){
-		    				cursorMove(m.group(2), Integer.parseInt(m.group(1)), results);
+		    				cursorMove(m.group(3), m.group(1), Integer.parseInt(m.group(2)), results);
 		    			}
 		    			else if ((m = closePattern.matcher(sql)).matches()){
 		    				cursorClose(m.group(1));

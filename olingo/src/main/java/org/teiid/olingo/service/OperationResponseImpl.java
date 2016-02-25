@@ -14,36 +14,27 @@ import org.apache.olingo.commons.api.data.ValueType;
 import org.apache.olingo.commons.api.edm.EdmComplexType;
 import org.apache.olingo.commons.api.edm.EdmElement;
 import org.apache.olingo.commons.api.edm.EdmProperty;
-import org.apache.olingo.commons.api.edm.EdmType;
-import org.apache.olingo.commons.api.edm.constants.EdmTypeKind;
+import org.apache.olingo.commons.api.edm.EdmReturnType;
 import org.apache.olingo.commons.core.edm.EdmPropertyImpl;
 import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
 import org.teiid.odata.api.OperationResponse;
 import org.teiid.olingo.ODataPlugin;
+import org.teiid.olingo.service.ProcedureSQLBuilder.ProcedureReturn;
 
 public class OperationResponseImpl implements OperationResponse {
     private final String invalidCharacterReplacement;
-    private EdmType type;
     private List<ComplexValue> complexValues = new ArrayList<ComplexValue>();
-    private Object primitiveValue;
+    private Property returnValue;
+    private ProcedureReturn procedureReturn;
     
-    public OperationResponseImpl(String invalidCharacterReplacement, EdmType type) {
+    public OperationResponseImpl(String invalidCharacterReplacement, ProcedureReturn procedureReturn) {
         this.invalidCharacterReplacement = invalidCharacterReplacement;
-        this.type = type;
+        this.procedureReturn = procedureReturn;
     }
     
     @Override
     public void addRow(ResultSet rs) throws SQLException {
-        // check for special lob case where single value resultset is present
-        if (rs.getMetaData().getColumnCount() == 1) {
-            Object value = rs.getObject(1);
-            if (DataTypeManager.isLOB(value.getClass())) {
-                addPrimitive(value);
-                return;
-            }
-        }
         this.complexValues.add(getComplexProperty(rs));
     }
     
@@ -52,7 +43,7 @@ public class OperationResponseImpl implements OperationResponse {
         for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
             Object value = rs.getObject(i + 1);
             String propName = rs.getMetaData().getColumnLabel(i + 1);
-            EdmElement element = ((EdmComplexType)this.type).getProperty(propName);
+            EdmElement element = ((EdmComplexType)this.procedureReturn.getReturnType().getType()).getProperty(propName);
             if (!(element instanceof EdmProperty) && !((EdmProperty) element).isPrimitive()) {
                 throw new SQLException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16024));
             }
@@ -88,11 +79,6 @@ public class OperationResponseImpl implements OperationResponse {
         return new Property(type, name, ValueType.COLLECTION_COMPLEX, complexList);
     }    
     
-    static Property createPrimitive(final String name,
-            final String type, final Object value) {
-        return new Property(type, name, ValueType.PRIMITIVE, value);
-    }    
-
     @Override
     public long size() {
         return this.complexValues.size();
@@ -113,20 +99,20 @@ public class OperationResponseImpl implements OperationResponse {
 
     @Override
     public Object getResult() {
-        String type = this.type.getFullQualifiedName().getFullQualifiedNameAsString();        
-        if (isReturnTypePrimitive()) {
-            return createPrimitive("return", type, this.primitiveValue);
-        } else {
+        if (this.procedureReturn.hasResultSet()) {
+            String type = this.procedureReturn.getReturnType().getType().getFullQualifiedName().getFullQualifiedNameAsString();        
             return createComplexCollection("result", type, this.complexValues);
         }
+        return this.returnValue;
     }
     
-    private boolean isReturnTypePrimitive() {
-        return type.getKind() == EdmTypeKind.PRIMITIVE;
-    }
-
     @Override
-    public void addPrimitive(Object value) {
-        this.primitiveValue = value;
+    public void setReturnValue(Object returnValue) throws SQLException {
+        try {
+			EdmReturnType returnType = this.procedureReturn.getReturnType();
+			this.returnValue = EntityCollectionResponse.buildPropery("return", (SingletonPrimitiveType) returnType.getType(), returnType.isCollection(), returnValue, invalidCharacterReplacement); //$NON-NLS-1$
+		} catch (TransformationException | IOException e) {
+			throw new SQLException(e);
+		}
     }
 }

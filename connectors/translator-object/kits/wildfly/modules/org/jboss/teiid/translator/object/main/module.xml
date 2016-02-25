@@ -19,6 +19,7 @@
         <!-->module name="org.jboss.teiid" /-->
         <module name="org.jboss.modules"  export="true" />
  
+        <module name="org.hibernate.search.engine" />
         
         <!--
         This "your.pojo.module" would be used when the map-cache translator is used.

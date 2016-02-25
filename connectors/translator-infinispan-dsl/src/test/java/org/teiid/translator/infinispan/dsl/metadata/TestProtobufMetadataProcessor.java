@@ -15,7 +15,7 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.infinispan.dsl.InfinispanConnection;
+import org.teiid.translator.infinispan.dsl.InfinispanDSLConnection;
 import org.teiid.translator.infinispan.dsl.InfinispanExecutionFactory;
 
 @SuppressWarnings("nls")
@@ -39,7 +39,7 @@ public class TestProtobufMetadataProcessor {
 				SystemMetadata.getInstance().getRuntimeTypeMap(),
 				new Properties(), null);
 
-		InfinispanConnection conn = PersonCacheSource.createConnection(true);
+		InfinispanDSLConnection conn = PersonCacheSource.createConnection(true);
 
 		TRANSLATOR.getMetadataProcessor().process(mf, conn);
 
@@ -57,7 +57,7 @@ public class TestProtobufMetadataProcessor {
 				SystemMetadata.getInstance().getRuntimeTypeMap(),
 				new Properties(), null);
 
-		InfinispanConnection conn = AllTypesCacheSource.createConnection();
+		InfinispanDSLConnection conn = AllTypesCacheSource.createConnection();
 
 		TRANSLATOR.getMetadataProcessor().process(mf, conn);
 

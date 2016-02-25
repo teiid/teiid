@@ -394,15 +394,29 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		Statement stmt = conn.createStatement();
 		ExtendedQueryExectutorImpl.simplePortal = "foo";
 		try {
-			assertFalse(stmt.execute("declare \"foo\" insensitive scroll cursor for select * from pg_proc;"));
+			assertFalse(stmt.execute("declare \"foo\" insensitive scroll cursor for select * from pg_proc limit 11;"));
 			assertFalse(stmt.execute("move 5 in \"foo\""));
-			stmt.execute("fetch 6 in \"foo\"");
+			stmt.execute("fetch 7 in \"foo\"");
 			ResultSet rs = stmt.getResultSet();
 			int rowCount = 0;
 			while (rs.next()) {
 				rowCount++;
 			}
 			assertEquals(6, rowCount);
+			
+			//move past the end
+			//assertFalse(stmt.execute("move forward 0 in \"foo\""));
+			//move back
+			assertFalse(stmt.execute("move backward 2 in \"foo\""));
+			
+			stmt.execute("fetch 6 in \"foo\"");
+			rs = stmt.getResultSet();
+			rowCount = 0;
+			while (rs.next()) {
+				rowCount++;
+			}
+			assertEquals(1, rowCount);
+			
 			stmt.execute("close \"foo\"");
 		} finally {
 			ExtendedQueryExectutorImpl.simplePortal = null;
@@ -515,7 +529,7 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 	
 	@Test public void testInt2Vector() throws Exception {
 		Statement s = conn.createStatement();
-		ResultSet rs = s.executeQuery("select indkey FROM pg_index");
+		ResultSet rs = s.executeQuery("select indkey FROM pg_index order by oid");
 		TestMMDatabaseMetaData.compareResultSet(rs);
 	}
 	
@@ -626,13 +640,15 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		assertEquals(1, odbcServer.server.getDqp().getRequests().size());
 	}
 	
-	@Test public void testSomething() throws Exception {
+	@Test public void testExportedKey() throws Exception {
 		String sql = ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("exported-fk-query.txt"));
 		
 		Statement s = conn.createStatement();
 		s.execute(sql);
 		ResultSet rs = s.getResultSet();
 		assertTrue(rs.next());
+		assertEquals("STATUS_ID", rs.getString(4));
+		assertFalse(rs.next());
 	}
 
 }

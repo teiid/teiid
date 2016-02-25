@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PersonCacheSource;
 import org.jboss.teiid.jdg_remote.pojo.AllTypesCacheSource;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -38,7 +37,10 @@ import org.teiid.language.Select;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.infinispan.dsl.util.AllTypesSchemaVDBUtility;
-import org.teiid.translator.infinispan.dsl.util.PersonSchemaVDBUtility;
+import org.teiid.translator.object.testdata.person.PersonSchemaVDBUtility;
+import org.teiid.translator.object.ObjectConnection;
+import org.teiid.translator.object.ObjectExecution;
+import org.teiid.translator.object.ObjectVisitor;
 
 /**
  * NOTES: 
@@ -53,7 +55,7 @@ import org.teiid.translator.infinispan.dsl.util.PersonSchemaVDBUtility;
 @SuppressWarnings("nls")
 public class TestInfinispanExecutionUsingAllTypes {
 	
-	private static InfinispanConnection CONNECTION;
+	private static InfinispanDSLConnection CONNECTION;
 	
 	private static TranslationUtility translationUtility = AllTypesSchemaVDBUtility.TRANSLATION_UTILITY;
 	
@@ -91,14 +93,14 @@ public class TestInfinispanExecutionUsingAllTypes {
 	protected List<Object> performTest(int rowcnt, int colCount, Select command)
 			throws TranslatorException {
 		
-		InfinispanExecution exec = createExecution(command, rowcnt, colCount);
+		ObjectExecution exec = createExecution(command, rowcnt, colCount);
 
 		exec.execute();
 		
 		List<Object> rows = new ArrayList<Object>();
 		
 		int cnt = 0;
-		List<Object> row = exec.next();
+		List<?> row = exec.next();
 	
 		while (row != null) {
 			rows.add(row);
@@ -116,14 +118,14 @@ public class TestInfinispanExecutionUsingAllTypes {
 	protected List<Object> performTest(int rowcnt, int colCount, Select command, List<Object> expectedResults)
 			throws TranslatorException {
 		
-		InfinispanExecution exec = createExecution(command, rowcnt, colCount);
+		ObjectExecution exec = createExecution(command, rowcnt, colCount);
 
 		exec.execute();
 		
 		List<Object> rows = new ArrayList<Object>();
 		
 		int cnt = 0;
-		List<Object> row = exec.next();
+		List<?> row = exec.next();
 	
 		while (row != null) {
 			rows.add(row);
@@ -145,19 +147,19 @@ public class TestInfinispanExecutionUsingAllTypes {
 		return rows;
 	}
 
-	protected InfinispanExecution createExecution(Select command, int rowCount, int colCount) throws TranslatorException {
+	protected ObjectExecution createExecution(Select command, int rowCount, int colCount) throws TranslatorException {
 		InfinispanExecutionFactory translator = new InfinispanExecutionFactory() {
 			@Override
-			public List<Object> search(Select command, String cacheName,
-					InfinispanConnection connection, ExecutionContext executionContext) {
-					List<Object> rows = new ArrayList<Object>(DATA.values());
-        			return rows;
-         	}
+			public List<Object> search(ObjectVisitor visitor, ObjectConnection connection, ExecutionContext executionContext)
+					throws TranslatorException {
+				List<Object> rows = new ArrayList<Object>(DATA.values());
+    			return rows;
+			}
 
         };
         translator.start();
 
 		
-		return (InfinispanExecution) translator.createExecution(command, Mockito.mock(ExecutionContext.class), PersonSchemaVDBUtility.RUNTIME_METADATA, CONNECTION);
+		return (ObjectExecution) translator.createExecution(command, Mockito.mock(ExecutionContext.class), PersonSchemaVDBUtility.RUNTIME_METADATA, CONNECTION);
 	}
 }

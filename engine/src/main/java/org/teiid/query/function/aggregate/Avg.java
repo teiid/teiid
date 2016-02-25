@@ -43,7 +43,7 @@ import org.teiid.query.util.CommandContext;
  */
 public class Avg extends Sum {
 
-    private int count = 0;
+    private long count = 0;
 
     /**
      * @see org.teiid.query.function.aggregate.AggregateFunction#initialize(String, Class)
@@ -102,7 +102,7 @@ public class Avg extends Sum {
     public List<? extends Class<?>> getStateTypes() {
     	ArrayList<Class<?>> result = new ArrayList<Class<?>>();
     	result.addAll(super.getStateTypes());
-    	result.add(Integer.class);
+    	result.add(Long.class);
     	return result;
     }
     
@@ -115,7 +115,7 @@ public class Avg extends Sum {
     @Override
     public int setState(List<?> state, int index) {
     	index = super.setState(state, index);
-    	count = (Integer) state.get(index);
+    	count = (Long) state.get(index);
     	return index++;
     }
 

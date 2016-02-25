@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.0" name="org.springframework.spring">
+  <resources>
+    <resource-root path="spring-beans.jar"/>
+    <resource-root path="spring-context.jar"/>    
+    <resource-root path="spring-core.jar"/>
+    <!-- 
+    <resource-root path="spring-asm.jar"/>
+    <resource-root path="spring-aop.jar"/>    
+    <resource-root path="spring-expression.jar"/>
+    <resource-root path="spring-tx.jar"/>
+     -->    
+  </resources>
+  <dependencies>
+    <module name="javax.api"/>
+  </dependencies>
+</module>

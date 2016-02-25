@@ -2445,7 +2445,7 @@ public class TestProcedureProcessor {
         helpProcess(plan, cc, hdm, new List[] {Arrays.asList("a")});
     }
     
-    @Test public void testSomething() throws Exception {
+    @Test public void testVariadicParameterOrdering() throws Exception {
     	TransformationMetadata metadata = RealMetadataFactory.fromDDL("CREATE PROCEDURE p1(VARIADIC parameters integer) returns integer[] AS BEGIN "
     			+ "return parameters; END;", "x", "y");
     	StringBuilder sql = new StringBuilder("exec p1(0");

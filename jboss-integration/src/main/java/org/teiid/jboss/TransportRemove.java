@@ -53,10 +53,10 @@ class TransportRemove extends AbstractRemoveStepHandler {
 		if (controller != null) {
 			TransportService transport = TransportService.class.cast(controller.getValue());
 			
-			if (transport.isEmbedded()) {
+			if (transport.isLocal()) {
 				final ContextNames.BindInfo bindInfo = ContextNames.bindInfoFor(LocalServerConnection.jndiNameForRuntime(transportName));
 				context.removeService(bindInfo.getBinderServiceName());
-				context.removeService(TeiidServiceNames.embeddedTransportServiceName(transportName).append("reference-factory")); //$NON-NLS-1$
+				context.removeService(TeiidServiceNames.localTransportServiceName(transportName).append("reference-factory")); //$NON-NLS-1$
 			}
 			context.removeService(serviceName);
 		}

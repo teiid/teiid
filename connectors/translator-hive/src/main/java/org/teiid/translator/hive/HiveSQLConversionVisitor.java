@@ -196,8 +196,8 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
     
     @Override
     public void visit(Select obj) {
-    	if (obj.getGroupBy() != null && obj.getOrderBy() != null) {
-    		//hive does not like order by with a group by using the full column references
+    	if (obj.getOrderBy() != null) {
+    		//hive does not like order by using the full column references
     		//this should be fine even with joins as the engine should alias the select columns 
 			for (SortSpecification spec : obj.getOrderBy().getSortSpecifications()) {
 				if (spec.getExpression() instanceof ColumnReference) {

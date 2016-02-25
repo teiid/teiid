@@ -21,8 +21,7 @@
  */
 package org.teiid.olingo;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -33,6 +32,7 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.TimeZone;
 
 import javax.servlet.DispatcherType;
 import javax.transaction.TransactionManager;
@@ -57,6 +57,7 @@ import org.teiid.adminapi.Admin.SchemaObjectType;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
@@ -77,6 +78,7 @@ import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.EmbeddedServer;
 import org.teiid.runtime.HardCodedExecutionFactory;
@@ -102,6 +104,7 @@ public class TestODataIntegration {
 
     @Before
     public void before() throws Exception {
+    	TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("UTC"));
         teiid = new EmbeddedServer();
         EmbeddedConfiguration config = new EmbeddedConfiguration();
         config.setTransactionManager(Mockito.mock(TransactionManager.class));
@@ -116,7 +119,7 @@ public class TestODataIntegration {
         context.addServlet(new ServletHolder(new ODataServlet()), "/*");
         context.addFilter(new FilterHolder(new ODataFilter() {
             @Override
-            public Client buildClient(String vdbName, int version, Properties props) {
+            public Client buildClient(String vdbName, Integer version, Properties props) {
                 if (localClient != null) {
                     return localClient;
                 }
@@ -134,6 +137,8 @@ public class TestODataIntegration {
 
     @After
     public void after() throws Exception {
+    	http.stop();
+    	TimestampWithTimezone.resetCalendar(null);
         server.stop();
         teiid.stop();
     }
@@ -177,7 +182,7 @@ public class TestODataIntegration {
                 "},{" +
                 "\"name\":\"G4\"," +
                 "\"url\":\"G4\"" +
-                "}]" +
+                "},{\"name\":\"LobTable\",\"url\":\"LobTable\"}]" +
                 "}";
         assertEquals(expected, response.getContentAsString());
     }
@@ -335,7 +340,7 @@ public class TestODataIntegration {
 
     @Test
     public void testFunctionDate() throws Exception {
-        ContentResponse response = http.GET(baseURL + "/loopy/vm1/getCustomers(p2='2011-09-11T00:00:00',p3=2.0)");
+        ContentResponse response = http.GET(baseURL + "/loopy/vm1/getCustomers(p2=2011-09-11T00:00:00Z,p3=2.0)");
         assertEquals(200, response.getStatus());
         assertEquals("{\"@odata.context\":\"$metadata#Edm.DateTimeOffset\",\"value\":\"2011-09-11T00:00:00Z\"}", 
                 response.getContentAsString());        
@@ -343,10 +348,13 @@ public class TestODataIntegration {
     
     @Test
     public void testFunctionReturningResultSet() throws Exception {
-        ContentResponse response = http.GET(baseURL + "/loopy/vm1/procResultSet(x='foo',y=1)");
+        ContentResponse response = http.GET(baseURL + "/loopy/vm1/procResultSet(x='foo''bar',y=1)");
         assertEquals(200, response.getStatus());
-        assertEquals("{\"@odata.context\":\"$metadata#Collection(Loopy.1.VM1.procResultSet_RSParam)\",\"value\":[{\"x\":\"foo\",\"y\":1}]}", 
-                response.getContentAsString());        
+        assertEquals("{\"@odata.context\":\"$metadata#Collection(Loopy.VM1.procResultSet_RSParam)\",\"value\":[{\"x\":\"foo'bar\",\"y\":1}]}", 
+                response.getContentAsString());
+        
+        response = http.GET(baseURL + "/loopy/vm1/procResultSet(x='foo',y='1'");
+        assertEquals(400, response.getStatus());
     }
     
     @Test
@@ -360,10 +368,17 @@ public class TestODataIntegration {
     @Test
     public void testFunctionReturningStreamDesignedToReturnTable() throws Exception {
         ContentResponse response = http.GET(baseURL + "/loopy/vm1/procComposableXML(x='foo')");
+        //can't handle multiple lob rows
+        assertEquals(404, response.getStatus());
+    }
+    
+    @Test
+    public void testFunctionReturningReturningArray() throws Exception {
+        ContentResponse response = http.GET(baseURL + "/loopy/vm1/getCustomerIds(p1=1)");
         assertEquals(200, response.getStatus());
-        assertEquals("<name>foo</name>", 
-                response.getContentAsString());        
-    }    
+        assertEquals("{\"@odata.context\":\"$metadata#Collection(Edm.Int32)\",\"value\":[1,2]}", 
+                response.getContentAsString());
+    }
     
     @Test
     public void testActionStream() throws Exception {
@@ -436,7 +451,7 @@ public class TestODataIntegration {
         }
     }    
     
-    private LocalClient getClient(final TeiidDriver driver, final String vdb, final int version, final Properties properties) {
+    private LocalClient getClient(final TeiidDriver driver, final String vdb, final Integer version, final Properties properties) {
         return new LocalClient(vdb, 1, properties) {
             ConnectionImpl conn;
             
@@ -645,6 +660,27 @@ public class TestODataIntegration {
     }
     
     @Test 
+    public void testSkipTokenNoSystemOptions() throws Exception {
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("vw");
+            mmd.addSourceMetadata("ddl", "create view x (a string primary key, b integer) as select 'xyz', 123 union all select 'abc', 456;");
+            mmd.setModelType(Model.Type.VIRTUAL);
+            teiid.deployVDB("northwind", mmd);
+
+            Properties props = new Properties();
+            props.setProperty("batch-size", "1");
+            localClient = getClient(teiid.getDriver(), "northwind", 1, props);
+            
+            ContentResponse response = http.GET(baseURL + "/northwind/vw/x");
+            assertEquals(200, response.getStatus());
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }    
+    
+    @Test 
     public void testSkipTokenWithPageSize() throws Exception {
         try {
             ModelMetaData mmd = new ModelMetaData();
@@ -805,13 +841,14 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#Collection(Edm.ComplexType)\",\"value\":[{\"x@odata.navigationLink\":\"x('ABCDEFG')\",\"y@odata.navigationLink\":\"y('ABCDEFG')\"}]}", response.getContentAsString());
+            String u = baseURL + "/northwind/m/";
+            assertEquals("{\"@odata.context\":\"$metadata#Collection(Edm.ComplexType)\",\"value\":[{\"x@odata.navigationLink\":\""+u+"x('ABCDEFG')\",\"y@odata.navigationLink\":\""+u+"y('ABCDEFG')\"}]}", response.getContentAsString());
 
             response = http.newRequest(baseURL + "/northwind/m/$crossjoin(x,y)?$expand=x")
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#Collection(Edm.ComplexType)\",\"value\":[{\"x\":{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"},\"y@odata.navigationLink\":\"y('ABCDEFG')\"}]}", response.getContentAsString());            
+            assertEquals("{\"@odata.context\":\"$metadata#Collection(Edm.ComplexType)\",\"value\":[{\"x\":{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"},\"y@odata.navigationLink\":\""+u+"y('ABCDEFG')\"}]}", response.getContentAsString());            
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");
@@ -847,7 +884,8 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#Collection($ref)\",\"value\":[{\"@odata.id\":\"y('ABCDEFG')\"}]}", response.getContentAsString());
+            String url = baseURL + "/northwind/m/";
+            assertEquals("{\"@odata.context\":\"$metadata#Collection($ref)\",\"value\":[{\"@odata.id\":\""+url+"y('ABCDEFG')\"}]}", response.getContentAsString());
             
             // update to collection based reference
             String payload = "{\n" +
@@ -1065,7 +1103,7 @@ public class TestODataIntegration {
 
         ContentResponse response =  http.GET(baseURL + "/northwind/m/x()?$format=json");
         assertEquals(200, response.getStatus());
-        assertEquals("{\"@odata.context\":\"$metadata#Collection(northwind.1.m.x_RSParam)\",\"value\":[{\"y\":\"x\"},{\"y\":\"y\"}]}", response.getContentAsString());
+        assertEquals("{\"@odata.context\":\"$metadata#Collection(northwind.m.x_RSParam)\",\"value\":[{\"y\":\"x\"},{\"y\":\"y\"}]}", response.getContentAsString());
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");
@@ -1103,4 +1141,56 @@ public class TestODataIntegration {
             teiid.undeployVDB("northwind");
         }
     }
+    
+    @Test 
+    public void testCompositeKeyTimestamp() throws Exception {
+        HardCodedExecutionFactory hc = buildHardCodedExecutionFactory();
+        hc.addData("SELECT x.a, x.b, x.c FROM x WHERE x.a = 'a' AND x.b = {ts '2011-09-11T00:00:00'}", Arrays.asList(Arrays.asList("a", TimestampUtil.createTimestamp(111, 8, 11, 0, 0, 0, 0), 1)));
+        hc.addUpdate("INSERT INTO x (a, b) VALUES ('b', {ts '2000-02-02 22:22:22.0'})", new int[] {1});
+        
+        teiid.addTranslator("x1", hc);
+        
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("m");
+            mmd.addSourceMetadata("ddl", "create foreign table x (a string, b timestamp, c integer, primary key (a, b)) options (updatable true);");
+            mmd.addSourceMapping("x1", "x1", null);
+            teiid.deployVDB("northwind", mmd);
+
+            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+
+            ContentResponse response = http.newRequest(baseURL + "/northwind/m/x")
+                    .method("POST")
+                    .content(new StringContentProvider("{\"a\":\"b\", \"b\":\"2000-02-02T22:22:22Z\"}"), "application/json")
+                    .send();                        
+            assertEquals(204, response.getStatus());
+            
+            response = http.newRequest(baseURL + "/northwind/m/x(a='a',b=2011-09-11T00:00:00Z)")
+                    .method("GET")
+                    .send();
+            assertEquals(200, response.getStatus());
+
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }
+    
+    @Test
+    public void testStreamProperties() throws Exception {
+        ContentResponse response = http.newRequest(baseURL + "/loopy/vm1/LobTable(2)/e2")
+                .method("GET")
+                .send();
+        assertEquals(200, response.getStatus());
+        assertEquals("<name>content2</name>", 
+                response.getContentAsString());      
+        
+        response = http.newRequest(baseURL + "/loopy/vm1/LobTable")
+                .method("GET")
+                .send();
+        assertEquals(200, response.getStatus());
+        String string = response.getContentAsString();
+        assertTrue(string.contains("odata4/loopy/vm1/LobTable(1)/e2"));
+        assertTrue(string.contains("odata4/loopy/vm1/LobTable(2)/e2"));
+    } 
 }

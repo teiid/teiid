@@ -131,7 +131,7 @@ public class ObjectEncoder extends ChannelOutboundHandlerAdapter {
 	            ctx.write(Unpooled.EMPTY_BUFFER, promise);
 	        }
 	        ctx.flush();
-	        out = null;        
+	        out = null;
         } catch (Throwable t) {
         	throw new FailedWriteException(msg, t);
         } finally {

@@ -37,8 +37,10 @@ import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.olingo.commons.api.data.Entity;
 import org.apache.olingo.commons.api.data.EntityCollection;
@@ -47,7 +49,7 @@ import org.apache.olingo.commons.api.data.Property;
 import org.apache.olingo.commons.api.data.ValueType;
 import org.apache.olingo.commons.api.edm.EdmEntityType;
 import org.apache.olingo.commons.api.edm.EdmPrimitiveType;
-import org.apache.olingo.commons.core.Encoder;
+import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeException;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmBinary;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmDate;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmDateTimeOffset;
@@ -55,6 +57,7 @@ import org.apache.olingo.commons.core.edm.primitivetype.EdmStream;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmString;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmTimeOfDay;
 import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
+import org.apache.olingo.server.core.responses.EntityResponse;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
@@ -65,8 +68,8 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.odata.api.QueryResponse;
 import org.teiid.olingo.ODataPlugin;
-import org.teiid.olingo.ODataTypeManager;
 import org.teiid.olingo.ProjectedColumn;
+import org.teiid.olingo.common.ODataTypeManager;
 import org.teiid.query.sql.symbol.Symbol;
 
 public class EntityCollectionResponse extends EntityCollection implements QueryResponse {
@@ -74,9 +77,12 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
     private String nextToken;
     private Entity currentEntity;
     private DocumentNode documentNode;
+    private String baseURL;
+    private Map<String, Object> streams;
 
-    public EntityCollectionResponse(String invalidCharacterReplacement,
+    public EntityCollectionResponse(String baseURL, String invalidCharacterReplacement,
             DocumentNode resource) {
+        this.baseURL = baseURL;
         this.invalidCharacterReplacement = invalidCharacterReplacement;
         this.documentNode = resource;
     }
@@ -87,14 +93,14 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
         boolean add = true;
         
         if (this.currentEntity == null) {
-            entity = createEntity(rs, this.documentNode, this.invalidCharacterReplacement);
+            entity = createEntity(rs, this.documentNode, this.invalidCharacterReplacement, this.baseURL, this);
             this.currentEntity = entity;
         } else {
             if(isSameRow(rs, this.documentNode, this.currentEntity)) {
                 entity = this.currentEntity;
                 add = false;
             } else {
-                entity = createEntity(rs, this.documentNode, this.invalidCharacterReplacement);
+                entity = createEntity(rs, this.documentNode, this.invalidCharacterReplacement, this.baseURL, this);
                 this.currentEntity = entity;            
             }
         }
@@ -104,7 +110,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
             // need to be re-done.
             for (DocumentNode resource : this.documentNode.getExpands()) {
                 ExpandDocumentNode expandNode = (ExpandDocumentNode)resource;
-                Entity expandEntity = createEntity(rs, expandNode, this.invalidCharacterReplacement);
+                Entity expandEntity = createEntity(rs, expandNode, this.invalidCharacterReplacement, this.baseURL, this);
                 
                 Link link = entity.getNavigationLink(expandNode.getNavigationName());
                 if (expandNode.isCollection()) {
@@ -151,7 +157,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
         return null;
     }
 
-    static Entity createEntity(ResultSet rs, DocumentNode node, String invalidChar)
+    static Entity createEntity(ResultSet rs, DocumentNode node, String invalidChar, String baseURL, EntityCollectionResponse response)
             throws SQLException {
         
         List<ProjectedColumn> projected = node.getAllProjectedColumns();
@@ -176,6 +182,10 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                 SingletonPrimitiveType type = (SingletonPrimitiveType) column.getEdmType();
                 if (type instanceof EdmStream) {
                     buildStreamLink(streamProperties, value, propertyName);
+                    if (response != null) {
+                    	//this will only be used for a stream response off of the first entity. In all other scenarios it will be ignored.
+                    	response.setStream(propertyName, value);
+                    }
                 }
                 else {
                     Property property = buildPropery(propertyName, type,
@@ -192,7 +202,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
             
         // Build the navigation and Stream Links
         try {
-            String id = buildId(entity, entityType);
+            String id = EntityResponse.buildLocation(baseURL, entity, entityType.getName(), entityType);
             entity.setId(new URI(id));
             
             // build stream properties
@@ -200,6 +210,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                 Link link = streamProperties.get(name);
                 link.setHref(id+"/"+name);
                 entity.getMediaEditLinks().add(link);
+                entity.addProperty(createPrimitive(name, EdmStream.getInstance(), new URI(link.getHref())));
             }
             
             // build navigations
@@ -218,12 +229,28 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
             }
         } catch (URISyntaxException e) {
             throw new SQLException(e);
+        } catch (EdmPrimitiveTypeException e) {
+            throw new SQLException(e);
         }            
         
         return entity;
     }    
     
-    private static void updateEntity(ResultSet rs, Entity entity, DocumentNode node, String invalidChar)
+    void setStream(String propertyName, Object value) {
+    	if (this.streams == null) {
+    		this.streams = new HashMap<String, Object>();
+    	}
+    	streams.put(propertyName, value);
+	}
+    
+    public Object getStream(String propertyName) {
+    	if (this.streams == null) {
+    		return null;
+    	}
+    	return streams.get(propertyName);
+    }
+
+	private static void updateEntity(ResultSet rs, Entity entity, DocumentNode node, String invalidChar)
             throws SQLException {
         
         List<ProjectedColumn> projected = node.getAllProjectedColumns();
@@ -237,7 +264,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                 continue;
             }
             
-            Object value = rs.getObject(propertyName);
+            Object value = rs.getObject(column.getOrdinal());
             
             try {
                 SingletonPrimitiveType type = (SingletonPrimitiveType) column.getEdmType();
@@ -449,29 +476,5 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
     @Override
     public String getNextToken() {
         return this.nextToken;
-    }
-    
-    public static String buildId(Entity entity, EdmEntityType type) {
-        String location = type.getName() + "(";
-        int i = 0;
-        boolean usename = type.getKeyPredicateNames().size() > 1;
-
-        for (String key : type.getKeyPredicateNames()) {
-          if (i > 0) {
-            location += ",";
-          }
-          i++;
-          if (usename) {
-            location += (key + "=");
-          }
-          Property p = entity.getProperty(key);
-          if (p.getType().equals("Edm.String")) {
-            location = location + "'" + Encoder.encode(p.getValue().toString()) + "'";
-          } else {
-            location = location + p.getValue().toString();
-          }
-        }
-        location += ")";
-        return location;
     }
 }

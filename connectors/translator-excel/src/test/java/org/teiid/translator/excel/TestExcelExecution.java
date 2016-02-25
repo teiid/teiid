@@ -88,6 +88,26 @@ public class TestExcelExecution {
     	assertEquals("[[13, FirstName, LastName, Age], [14, John, Doe, 44.0], [15, Jane, Smith, 40.0], [16, Matt, Liek, 13.0], [17, Sarah, Byne, 10.0], [18, Rocky, Dog, 3.0], [19, Total, null, 110.0]]", results.toString());
 	}
 	
+    @Test
+    public void testFileGlob() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE Sheet1 (\n" + 
+                "   ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" + 
+                "   column1 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '7'),\n" + 
+                "   column2 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '8'),\n" + 
+                "   column3 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '9'),\n" + 
+                "   CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" + 
+                ") OPTIONS (\"teiid_excel:FILE\" '*.xls');";
+
+        FileConnection connection = Mockito.mock(FileConnection.class);
+        File f = Mockito.mock(File.class);
+        Mockito.stub(f.isDirectory()).toReturn(true);
+        Mockito.stub(f.listFiles()).toReturn(new File[] {UnitTestUtil.getTestDataFile("names.xls")});
+        Mockito.stub(connection.getFile("*.xls")).toReturn(f);
+        
+        ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
+        assertEquals("[[13, FirstName, LastName, Age], [14, John, Doe, 44.0], [15, Jane, Smith, 40.0], [16, Matt, Liek, 13.0], [17, Sarah, Byne, 10.0], [18, Rocky, Dog, 3.0], [19, Total, null, 110.0]]", results.toString());
+    }	
+	
 	@Test
 	public void testExecutionNoDataNumberXLSX() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE Sheet1 (\n" + 

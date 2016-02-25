@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.jboss.teiid</groupId>
     <artifactId>connectors</artifactId>
-    <version>8.13.0.Alpha1-SNAPSHOT</version>
+    <version>9.0.0.Alpha2-SNAPSHOT</version>
   </parent>
     
   <groupId>org.jboss.teiid.connectors</groupId>
@@ -168,7 +168,6 @@
                 <configuration>
                     <descriptors>
                         <descriptor>kits/wildfly-dist.xml</descriptor>
-                        <descriptor>kits/embedded-dist.xml</descriptor>
                     </descriptors>
                 </configuration>
                 <executions>

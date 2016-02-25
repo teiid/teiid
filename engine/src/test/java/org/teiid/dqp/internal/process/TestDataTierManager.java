@@ -45,6 +45,7 @@ import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.AutoGenDataService;
 import org.teiid.dqp.service.FakeBufferService;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.parser.QueryParser;
@@ -56,6 +57,7 @@ import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.CacheDirective;
 import org.teiid.translator.CacheDirective.Invalidation;
+import org.teiid.translator.CacheDirective.Scope;
 
 @SuppressWarnings("nls")
 public class TestDataTierManager {
@@ -261,6 +263,13 @@ public class TestDataTierManager {
 	    	}
     	}
     	assertTrue(blocked);
+    }
+    
+    @Test public void testCachingScope() throws Exception {
+    	assertEquals(Determinism.SESSION_DETERMINISTIC, CachingTupleSource.getDeterminismLevel(Scope.SESSION));
+    	assertEquals(Determinism.SESSION_DETERMINISTIC, CachingTupleSource.getDeterminismLevel(Scope.NONE));
+    	assertEquals(Determinism.USER_DETERMINISTIC, CachingTupleSource.getDeterminismLevel(Scope.USER));
+    	assertEquals(Determinism.VDB_DETERMINISTIC, CachingTupleSource.getDeterminismLevel(Scope.VDB));
     }
     
     @Test public void testCaching() throws Exception {

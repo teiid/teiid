@@ -82,6 +82,10 @@ public class ODataPlugin {
         TEIID16040,
         TEIID16041,
         TEIID16042,
-        TEIID16043
+        TEIID16043, 
+        TEIID16044, 
+        TEIID16045,
+        TEIID16046, 
+        TEIID16047
     }
 }

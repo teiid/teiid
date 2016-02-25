@@ -65,12 +65,13 @@ import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionService;
 import org.teiid.jdbc.ConnectionImpl;
-import org.teiid.jdbc.EmbeddedProfile;
+import org.teiid.jdbc.LocalProfile;
 import org.teiid.jdbc.TeiidConnection;
 import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.net.ServerConnection;
 import org.teiid.query.QueryPlugin;
@@ -196,6 +197,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		
 		private Set<InputStreamFactory> created = Collections.newSetFromMap(new WeakHashMap<InputStreamFactory, Boolean>());
 
+		private LRUCache<AbstractMetadataRecord, Boolean> accessible;
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -1061,10 +1063,10 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	
 	@Override
 	public TeiidConnection getConnection() throws TeiidSQLException {
-		EmbeddedProfile ep = getDQPWorkContext().getConnectionProfile();
+		LocalProfile ep = getDQPWorkContext().getConnectionProfile();
 		//TODO: this is problematic as the client properties are not conveyed
 		Properties info = new Properties();
-		info.put(EmbeddedProfile.DQP_WORK_CONTEXT, getDQPWorkContext());
+		info.put(LocalProfile.DQP_WORK_CONTEXT, getDQPWorkContext());
 		String url = "jdbc:teiid:" + getVdbName() + "." + getVdbVersion(); //$NON-NLS-1$ //$NON-NLS-2$
 		ServerConnection sc;
 		try {
@@ -1143,6 +1145,26 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 			return true;
 		}
 		return false;
+	}
+
+	public void clearGeneratedKeys() {
+		synchronized (this.globalState) {
+			this.globalState.generatedKeys = null;
+		}
+	}
+
+	public Boolean isAccessible(AbstractMetadataRecord record) {
+		if (this.globalState.accessible == null) {
+			return null;
+		}
+		return this.globalState.accessible.get(record);
+	}
+
+	public void setAccessible(AbstractMetadataRecord record, Boolean result) {
+		if (this.globalState.accessible == null) {
+			this.globalState.accessible = new LRUCache<>(1000);
+		}
+		this.globalState.accessible.put(record, result);
 	}
 	
 }

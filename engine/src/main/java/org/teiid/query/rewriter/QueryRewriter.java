@@ -119,6 +119,7 @@ public class QueryRewriter {
     	ALIASED_FUNCTIONS.put("nvl", SourceSystemFunctions.IFNULL); //$NON-NLS-1$
     	ALIASED_FUNCTIONS.put("||", SourceSystemFunctions.CONCAT); //$NON-NLS-1$
     	ALIASED_FUNCTIONS.put("chr", SourceSystemFunctions.CHAR); //$NON-NLS-1$
+    	ALIASED_FUNCTIONS.put("substr", SourceSystemFunctions.SUBSTRING); //$NON-NLS-1$
     	ALIASED_FUNCTIONS.put("st_geomfrombinary", SourceSystemFunctions.ST_GEOMFROMWKB); //$NON-NLS-1$
     	PARSE_FORMAT_TYPES.addAll(    Arrays.asList(DataTypeManager.DefaultDataTypes.TIME, 
     		DataTypeManager.DefaultDataTypes.DATE, DataTypeManager.DefaultDataTypes.TIMESTAMP, DataTypeManager.DefaultDataTypes.BIG_DECIMAL, 
@@ -523,7 +524,7 @@ public class QueryRewriter {
 				//create the correlated refs if they exist
 				//there is a little bit of a design problem here that null usually means no refs.
 				ArrayList<Reference> correlatedReferences = new ArrayList<Reference>();
-				CorrelatedReferenceCollectorVisitor.collectReferences(plannedResult.query, groups, correlatedReferences);
+				CorrelatedReferenceCollectorVisitor.collectReferences(plannedResult.query, groups, correlatedReferences, metadata);
 				if (!correlatedReferences.isEmpty()) {
 		            SymbolMap map = new SymbolMap();
 		            for (Reference reference : correlatedReferences) {
@@ -1335,7 +1336,7 @@ public class QueryRewriter {
      */
     private Criteria rewriteCriteria(SubqueryCompareCriteria criteria) throws TeiidComponentException, TeiidProcessingException{
     	
-    	if (criteria.getCommand().getProcessorPlan() == null) {
+    	if (criteria.getCommand() != null && criteria.getCommand().getProcessorPlan() == null) {
     		if ((criteria.getOperator() == CompareCriteria.EQ && criteria.getPredicateQuantifier() != SubqueryCompareCriteria.ALL)
     				|| (criteria.getOperator() == CompareCriteria.NE && criteria.getPredicateQuantifier() == SubqueryCompareCriteria.ALL)) {
     			SubquerySetCriteria result = new SubquerySetCriteria(criteria.getLeftExpression(), criteria.getCommand());
@@ -1384,7 +1385,7 @@ public class QueryRewriter {
 
         Expression leftExpr = rewriteExpressionDirect(criteria.getLeftExpression());
         
-        if (isNull(leftExpr)) {
+        if (isNull(leftExpr) && criteria.getCommand() != null) {
             addImplicitLimit(criteria, 1);
         }
         
@@ -1396,8 +1397,8 @@ public class QueryRewriter {
         
         rewriteSubqueryContainer(criteria, true);
         
-        if (!RelationalNodeUtil.shouldExecute(criteria.getCommand(), false, true)) {
-        	//TODO: this is not interpretted the same way in all databases
+        if (criteria.getCommand() != null && !RelationalNodeUtil.shouldExecute(criteria.getCommand(), false, true)) {
+        	//TODO: this is not interpreted the same way in all databases
         	//for example H2 treat both cases as false - however the spec and all major vendors support the following: 
         	if (criteria.getPredicateQuantifier()==SubqueryCompareCriteria.SOME) {
         		return FALSE_CRITERIA;
@@ -2172,7 +2173,7 @@ public class QueryRewriter {
 		return isConstantConvert(f.getArg(0));
     }
     
-    private Expression rewriteExpression(AggregateSymbol expression) {
+    private Expression rewriteExpression(AggregateSymbol expression) throws TeiidComponentException, TeiidProcessingException {
     	if (expression.isBoolean()) {
     		if (expression.getAggregateFunction() == Type.EVERY) {
     			expression.setAggregateFunction(Type.MIN);
@@ -2191,7 +2192,8 @@ public class QueryRewriter {
     	if (expression.isDistinct() && expression.getAggregateFunction() == Type.USER_DEFINED && expression.getFunctionDescriptor().getMethod().getAggregateAttributes().usesDistinctRows()) {
     		expression.setDistinct(false);
     	}
-    	if (expression.getArgs().length == 1 && expression.getCondition() != null && !expression.respectsNulls()) {
+    	Expression[] args = expression.getArgs();
+		if (args.length == 1 && expression.getCondition() != null && !expression.respectsNulls()) {
     		Expression cond = expression.getCondition();
     		Expression ex = expression.getArg(0);
     		if (!(cond instanceof Criteria)) {
@@ -2201,6 +2203,10 @@ public class QueryRewriter {
     		sce.setType(ex.getType());
     		expression.setCondition(null);
     		expression.setArgs(new Expression[] {sce});
+    		args = expression.getArgs();
+    	}
+    	for (int i = 0; i < args.length; i++) {
+    		args[i] = rewriteExpressionDirect(expression.getArg(i));
     	}
 		return expression;
 	}

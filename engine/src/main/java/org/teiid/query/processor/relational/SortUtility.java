@@ -74,7 +74,6 @@ public class SortUtility {
 		List<?> tuple;
 		int index;
 		TupleBufferTupleSource its;
-		int limit = Integer.MAX_VALUE;
 		
 		@Override
 		public int compareTo(SortedSublist o) {
@@ -483,9 +482,6 @@ public class SortUtility {
 	private void incrementWorkingTuple(ArrayList<SortedSublist> subLists, SortedSublist sortedSublist) throws TeiidComponentException, TeiidProcessingException {
 		while (true) {
 			sortedSublist.tuple = null;
-			if (sortedSublist.limit < sortedSublist.its.getCurrentIndex()) {
-				return; //special case for still reading the output tuplebuffer
-			}
 			sortedSublist.tuple = sortedSublist.its.nextTuple();
 	        if (sortedSublist.tuple == null) {
 	        	return; // done with this sublist

@@ -394,8 +394,11 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 		        }
 		    }
 		}
-
-		resultSet = new ResultSetImpl(resultsMsg, this, null, outParamIndexMap.size());
+		ResultSetMetaData metadata = null;
+		if (updateCounts != null) {
+			metadata = createResultSetMetaData(createMetadataMap(resultsMsg.getColumnNames(), resultsMsg.getDataTypes()));
+		}
+		resultSet = new ResultSetImpl(resultsMsg, this, metadata, outParamIndexMap.size());
 		resultSet.setMaxFieldSize(this.maxFieldSize);
 	}
     
@@ -497,7 +500,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         			}
         		} else if (command.equalsIgnoreCase("rollback")) { //$NON-NLS-1$
         			commit = false;
-        			if (synch) {
+        			if (synch || !this.getConnection().isInLocalTxn()) {
         				this.getConnection().rollback(false);
         			}
         		}
@@ -681,7 +684,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 		if (this.getConnection().getServerConnection() == null || !this.getConnection().getServerConnection().isLocal()) {
 			return false;
 		}
-		String useCallingThread = getExecutionProperty(EmbeddedProfile.USE_CALLING_THREAD);
+		String useCallingThread = getExecutionProperty(LocalProfile.USE_CALLING_THREAD);
 		return (useCallingThread == null || Boolean.valueOf(useCallingThread));
 	}
 
@@ -968,7 +971,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
                 this.resultSet.close();
             }
         } catch (SQLException se) {
-            logger.log(Level.SEVERE, JDBCPlugin.Util.getString("MMStatement.Error_timing_out."), se); //$NON-NLS-1$
+            logger.log(Level.FINE, JDBCPlugin.Util.getString("MMStatement.Error_timing_out."), se); //$NON-NLS-1$
         }
     }
 
@@ -1126,18 +1129,29 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 	}
 	
 	ResultSetImpl createResultSet(List records, String[] columnNames, String[] dataTypes) throws SQLException {
-        Map[] metadata = new Map[columnNames.length];
+        Map[] metadata = createMetadataMap(columnNames, dataTypes);
+		return createResultSet(records, metadata);
+	}
+
+	private Map[] createMetadataMap(String[] columnNames, String[] dataTypes)
+			throws SQLException {
+		Map[] metadata = new Map[columnNames.length];
         for (int i = 0; i < columnNames.length; i++) {
             metadata[i] = getColumnMetadata(null, columnNames[i], dataTypes[i], ResultsMetadataConstants.NULL_TYPES.UNKNOWN, driverConnection);
         }
-		return createResultSet(records, metadata);
+		return metadata;
 	}
 	
     ResultSetImpl createResultSet(List records, Map[] columnMetadata) throws SQLException {
-        ResultSetMetaData rsmd = new ResultSetMetaDataImpl(new MetadataProvider(columnMetadata), this.getExecutionProperty(ExecutionProperties.JDBC4COLUMNNAMEANDLABELSEMANTICS));
+        ResultSetMetaData rsmd = createResultSetMetaData(columnMetadata);
 
         return createResultSet(records, rsmd);
     }
+
+	private ResultSetMetaData createResultSetMetaData(Map[] columnMetadata) {
+		ResultSetMetaData rsmd = new ResultSetMetaDataImpl(new MetadataProvider(columnMetadata), this.getExecutionProperty(ExecutionProperties.JDBC4COLUMNNAMEANDLABELSEMANTICS));
+		return rsmd;
+	}
 
     ResultSetImpl createResultSet(List records, ResultSetMetaData rsmd) throws SQLException {
     	if (rsmd.getColumnCount() > 0) {

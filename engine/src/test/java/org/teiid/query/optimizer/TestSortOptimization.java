@@ -523,5 +523,24 @@ public class TestSortOptimization {
         helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps), 
                 new String[] {"SELECT DISTINCT g_0.e1 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
+    
+    @Test public void testDistinctPushdownWithGrouping() throws Exception{
+        String sql = "select distinct e1, e2, 1, 2 from (select e1, e2 from pm1.g1 group by e1, e2) v";
+        
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, false);
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        
+        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps), 
+                new String[] {"SELECT DISTINCT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT DISTINCT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0", Arrays.asList("a", 1), Arrays.asList("b", 2));
+        
+        List<?>[] expectedResults = new List[] {Arrays.asList("a", 1, 1, 2), Arrays.asList("b", 2, 1, 2)};
+        
+        TestProcessor.helpProcess(plan, dataManager, expectedResults);
+    }
 
 }

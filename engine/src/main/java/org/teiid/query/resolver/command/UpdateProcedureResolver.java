@@ -179,10 +179,12 @@ public class UpdateProcedureResolver implements CommandResolver {
             			switch (param.getParameterType()) {
         	            case ParameterInfo.OUT:
         	            case ParameterInfo.RETURN_VALUE:
-        	            	if (param.getExpression() != null && !isAssignable(metadata, param)) {
-        	                     throw new QueryResolverException(QueryPlugin.Event.TEIID30121, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30121, param.getExpression()));
+        	            	if (param.getExpression() != null) {
+        	            		if (!isAssignable(metadata, param)) {
+        	            			throw new QueryResolverException(QueryPlugin.Event.TEIID30121, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30121, param.getExpression()));
+        	            		}
+            	            	sp.setCallableStatement(true);
         	            	}
-        	            	sp.setCallableStatement(true);
         	            	break;
         	            case ParameterInfo.INOUT:
         	            	if (!isAssignable(metadata, param)) {

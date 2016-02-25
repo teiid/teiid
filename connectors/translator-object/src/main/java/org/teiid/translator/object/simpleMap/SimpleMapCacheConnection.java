@@ -2,33 +2,75 @@ package org.teiid.translator.object.simpleMap;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.object.CacheNameProxy;
 import org.teiid.translator.object.ClassRegistry;
 import org.teiid.translator.object.ObjectConnection;
+import org.teiid.translator.object.ObjectMaterializeLifeCycle;
 
 public class SimpleMapCacheConnection implements ObjectConnection {
-	private Map<Object, Object> cache;
+	private Map<String, Map<Object,Object>> mapCaches = new HashMap<String, Map<Object, Object>>(3);
 	private ClassRegistry registry;
 	private String pkField;
 	private Class<?> cacheKeyClassType;
 	private String cacheName = "SimpleCache";
 	private Class<?> cacheClassType;
+	private CacheNameProxy proxy;
 
-	public SimpleMapCacheConnection(Map<Object, Object> cache, ClassRegistry registry){
-		this.cache = cache;
+	public SimpleMapCacheConnection(Map<Object, Object> cache, ClassRegistry registry, CacheNameProxy proxy){
+		mapCaches.put(proxy.getPrimaryCacheKey(), cache);
+		this.cacheName = proxy.getPrimaryCacheKey();
 		this.registry = registry;
+		this.proxy = proxy;
+	}
+
+	public SimpleMapCacheConnection(Map<Object, Object> cache, Map<Object, Object> stagecache, Map<Object, Object> aliascache, ClassRegistry registry, CacheNameProxy proxy){
+		
+		this.cacheName = proxy.getPrimaryCacheKey();
+		
+		mapCaches.put(proxy.getPrimaryCacheKey(), cache);
+		mapCaches.put(proxy.getStageCacheKey(), stagecache);
+		mapCaches.put(proxy.getAliasCacheName(), aliascache);
+		
+		this.registry = registry;
+		this.proxy = proxy;
+	}
+
+	@Override 
+	public  Map<Object, Object> getCache() throws TranslatorException {
+		return getCache(getCacheName());
 	}
 	
-	@Override 
-	public  Map<Object, Object> getCache() {
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#getCache(java.lang.String)
+	 */
+	@Override
+	public Map<Object, Object> getCache(String cacheName) throws TranslatorException {
+
+		String cn = null;
+		if (cacheName.equals(proxy.getAliasCacheName())) {
+			cn = cacheName;
+		} else {
+			cn = proxy.getCacheName(cacheName);
+		}
+		
+		Map<Object, Object> cache = mapCaches.get(cn);
+		if (cache == null) {
+			String keymsg = proxy.getPrimaryCacheKey() + "|" +  (proxy.getStageCacheKey() != null ? proxy.getStageCacheKey() : "N/A") + "|" + (proxy.getAliasCacheName() != null ? proxy.getAliasCacheName() : "N/A") ;
+			throw new TranslatorException("Cache " + cacheName + " is not defined, must be: " + keymsg);
+		}
 		return cache;
-	}
+	}	
 	
 	
 	@Override
 	public void cleanUp() {
-		cache = null;
+		mapCaches.clear();
 	}
 
 	/**
@@ -87,10 +129,6 @@ public class SimpleMapCacheConnection implements ObjectConnection {
 		return cacheName;
 	}
 	
-	public void setCacheName(String cacheName) {
-		this.cacheName = cacheName;
-	}
-
 	/**
 	 * {@inheritDoc}
 	 *
@@ -111,7 +149,7 @@ public class SimpleMapCacheConnection implements ObjectConnection {
 	 * @see org.teiid.translator.object.ObjectConnection#add(java.lang.Object, java.lang.Object)
 	 */
 	@Override
-	public void add(Object key, Object value) {
+	public void add(Object key, Object value) throws TranslatorException {
 		this.getCache().put(key, value);
 	}
 
@@ -121,7 +159,7 @@ public class SimpleMapCacheConnection implements ObjectConnection {
 	 * @see org.teiid.translator.object.ObjectConnection#remove(java.lang.Object)
 	 */
 	@Override
-	public Object remove(Object key){
+	public Object remove(Object key) throws TranslatorException {
 		return this.getCache().remove(key);
 	}
 
@@ -131,7 +169,7 @@ public class SimpleMapCacheConnection implements ObjectConnection {
 	 * @see org.teiid.translator.object.ObjectConnection#update(java.lang.Object, java.lang.Object)
 	 */
 	@Override
-	public void update(Object key, Object value) {
+	public void update(Object key, Object value) throws TranslatorException {
 		this.getCache().put(key, value);
 	}
 
@@ -141,7 +179,7 @@ public class SimpleMapCacheConnection implements ObjectConnection {
 	 * @see org.teiid.translator.object.ObjectConnection#get(java.lang.Object)
 	 */
 	@Override
-	public Object get(Object key)  {
+	public Object get(Object key)  throws TranslatorException {
 		return this.getCache().get(key);
 	}
 
@@ -151,7 +189,7 @@ public class SimpleMapCacheConnection implements ObjectConnection {
 	 * @see org.teiid.translator.object.ObjectConnection#getAll()
 	 */
 	@Override
-	public Collection<Object> getAll()  {
+	public Collection<Object> getAll()  throws TranslatorException {
 		Collection<Object> objs = new ArrayList<Object>();
 		Map<Object, Object> c = getCache();
 		for (Object k : c.keySet()) {
@@ -159,6 +197,28 @@ public class SimpleMapCacheConnection implements ObjectConnection {
 		}
 		return objs;
 	}
+	
+	/**
+	 * Implement @link ObjectMaterializeLifeCycle if the translator supports materialization.
+	 * The default implementation expects to use a second cache to manage the cache alias names
+	 * in order to support materialization into a staging location.
+	 * @return ObjectMaterializeLifeCycle
+	 */
+	@Override
+	public ObjectMaterializeLifeCycle getMaterializeLifeCycle() {
+		return new ObjectMaterializeLifeCycle(this, proxy);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#clearCache(java.lang.String)
+	 */
+	@Override
+	public void clearCache(String cacheName) throws TranslatorException {
+		Map<Object, Object> c = getCache(cacheName);
+		c.clear();
+	}	
 	
 }
 

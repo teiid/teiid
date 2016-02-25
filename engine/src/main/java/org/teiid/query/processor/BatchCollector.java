@@ -74,13 +74,13 @@ public class BatchCollector {
 	public static class BatchProducerTupleSource implements TupleSource {
 		private final BatchProducer sourceNode;
 		private TupleBatch sourceBatch;           // Current batch loaded from the source, if blocked
-		private int sourceRow = 1;
+		private long sourceRow = 1;
 
 		public BatchProducerTupleSource(BatchProducer sourceNode) {
 			this.sourceNode = sourceNode;
 		}
 		
-		public BatchProducerTupleSource(BatchProducer sourceNode, int startRow) {
+		public BatchProducerTupleSource(BatchProducer sourceNode, long startRow) {
 			this.sourceNode = sourceNode;
 			this.sourceRow = startRow;
 		}
@@ -177,7 +177,8 @@ public class BatchCollector {
     	    	}
     	    	boolean modified = false;
     	    	if (rowLimit < batch.getEndRow()) {
-    	    		int firstRow = Math.min(rowLimit + 1, batch.getBeginRow());
+    	    		//we know row limit must be smaller than max int, so an int cast is safe here
+    	    		int firstRow = (int)Math.min(rowLimit + 1, batch.getBeginRow());
     	    		List<List<?>> tuples = batch.getTuples().subList(0, rowLimit - firstRow + 1);
     	    		batch = new TupleBatch(firstRow, tuples);
     	    		modified = true;
@@ -230,7 +231,7 @@ public class BatchCollector {
     	}
     }
     
-    public int getRowCount() {
+    public long getRowCount() {
     	if (buffer == null) {
     		return 0;
     	}

@@ -24,7 +24,6 @@ package org.teiid.jboss;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.List;
 
 import javax.xml.stream.XMLStreamException;
 
@@ -75,27 +74,31 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 		else {
 			// scan for different files 
 			try {
-				List<VirtualFile> childFiles = file.getChildrenRecursively(new VirtualFileFilter() {
+				file.getChildrenRecursively(new VirtualFileFilter() {
 					
 					@Override
 					public boolean accepts(VirtualFile file) {
-						if (file.isDirectory() && file.getName().toLowerCase().endsWith(VDBResources.MODEL_EXT)) {
+						if (file.isDirectory()) {
+							return false;
+						}
+						if (file.getName().toLowerCase().endsWith(VDBResources.MODEL_EXT)) {
 							UDFMetaData udf = deploymentUnit.getAttachment(TeiidAttachments.UDF_METADATA);
 							if (udf == null) {
 								udf = new FileUDFMetaData();
 								deploymentUnit.putAttachment(TeiidAttachments.UDF_METADATA, udf);
 							}
 							((FileUDFMetaData)udf).addModelFile(file);
-							return false;
 						}
-						return !file.isDirectory() && file.getName().toLowerCase().equals(VDBResources.DEPLOYMENT_FILE);
+						return false;
 					}
 				});
 				
-				if (childFiles.size() != 1) {
-					throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50101, deploymentUnit, childFiles.size()));
+				VirtualFile vdbXml = file.getChild("/META-INF/vdb.xml"); //$NON-NLS-1$
+				
+				if (!vdbXml.exists()) {
+					throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50101, deploymentUnit));
 				}
-				parseVDBXML(childFiles.get(0), deploymentUnit, phaseContext, false);
+				parseVDBXML(vdbXml, deploymentUnit, phaseContext, false);
 				
 				mergeMetaData(deploymentUnit);
 
@@ -123,13 +126,18 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 			} else {
 				String name = deploymentUnit.getName();
 				String fileName = StringUtil.getLastToken(name, "/"); //$NON-NLS-1$
-				String[] parts = fileName.split("\\."); //$NON-NLS-1$
-				if (parts[0].equalsIgnoreCase(vdb.getName()) && parts.length >= 3) {
-					try {
-						int fileVersion = Integer.parseInt(parts[parts.length - 2]);
-						vdb.setVersion(fileVersion);
-					} catch (NumberFormatException e) {
-						
+				if (fileName.startsWith(vdb.getName() + VDBMetaData.VERSION_DELIM)) { 
+					String suffix = fileName.substring(vdb.getName().length() + 1);
+					int index = suffix.lastIndexOf(VDBMetaData.VERSION_DELIM);
+					if (index > 0) {	
+						String version = suffix.substring(0, index);
+						try {
+							int fileVersion = Integer.parseInt(version);
+							vdb.setVersion(fileVersion);
+						} catch (NumberFormatException e) {
+							//should be a semantic version
+							vdb.setName(name + VDBMetaData.VERSION_DELIM + version);
+						}
 					}
 				}
 			}

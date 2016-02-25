@@ -57,7 +57,9 @@ import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.rules.CapabilitiesUtil;
 import org.teiid.query.optimizer.relational.rules.RuleChooseDependent;
 import org.teiid.query.parser.QueryParser;
+import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.processor.relational.*;
 import org.teiid.query.processor.relational.SortUtility.Mode;
 import org.teiid.query.resolver.QueryResolver;
@@ -5345,7 +5347,7 @@ public class TestOptimizer {
                                       SHOULD_SUCCEED );
     }
     
-    @Test public void testCase3367() {
+    @Test public void testCase3367() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         QueryMetadataInterface metadata = example1();
 
@@ -5358,7 +5360,7 @@ public class TestOptimizer {
         
         ProcessorPlan plan = helpPlan("select e1 from pm1.g1 where pm1.g1.e1 IN /*+ no_unnest */ (SELECT pm1.g2.e1 FROM pm1.g2 WHERE (pm1.g1.e1 = 2))", metadata,  //$NON-NLS-1$
                                       null, capFinder,
-            new String[] { "SELECT e1 FROM pm1.g1 WHERE pm1.g1.e1 IN /*+ NO_UNNEST */ (SELECT pm1.g2.e1 FROM pm1.g2 WHERE pm1.g1.e1 = '2')" }, SHOULD_SUCCEED); //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN /*+ NO_UNNEST */ (SELECT g_1.e1 FROM pm1.g2 AS g_1 WHERE g_0.e1 = '2')" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
     
@@ -5602,12 +5604,43 @@ public class TestOptimizer {
     /**
      * Try substituting "is not null" for "exists" criteria 
      */
-    @Test public void testScalarSubQueryInSelect() {
+    @Test public void testScalarSubQueryInSelect() throws TeiidComponentException, TeiidProcessingException {
         String sql = "select intkey, case when (select stringkey from bqt1.smallb) is not null then 'nuge' end as a from vqt.smalla"; //$NON-NLS-1$
 
         ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.exampleBQTCached(), 
                                       new String[] { 
-                                          "SELECT BQT1.SmallA.IntKey FROM BQT1.SmallA" }); //$NON-NLS-1$ 
+                                          "SELECT g_0.IntKey, CASE WHEN (SELECT g_0.StringKey FROM BQT1.SmallB AS g_0) IS NOT NULL THEN 'nuge' END FROM BQT1.SmallA AS g_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
+
+        checkNodeTypes(plan, new int[] {
+            1,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // Join
+            0,      // MergeJoin
+            0,      // Null
+            0,      // PlanExecution
+            0,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        });
+        
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT g_0.StringKey FROM BQT1.SmallB AS g_0", Arrays.asList("a"));
+        hdm.addData("SELECT g_0.IntKey FROM BQT1.SmallA AS g_0", Arrays.asList(1));
+        TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(1, "nuge")});
+        
+    }
+    
+    @Test public void testScalarSubQueryInSelect1() throws TeiidComponentException, TeiidProcessingException {
+        String sql = "select intkey, case when (select stringkey from bqt1.smallb where intkey = vqt.smalla.intkey) is not null then 'nuge' end as a from vqt.smalla"; //$NON-NLS-1$
+
+        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.exampleBQTCached(), 
+                                      new String[] { 
+                                          "SELECT g_0.IntKey FROM BQT1.SmallA AS g_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
 
         checkNodeTypes(plan, new int[] {
             1,      // Access
@@ -5628,7 +5661,7 @@ public class TestOptimizer {
         
     }
     
-    @Test public void testCase4263() {
+    @Test public void testCase4263() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         QueryMetadataInterface metadata = example1();
         
@@ -5643,7 +5676,7 @@ public class TestOptimizer {
         
         ProcessorPlan plan = helpPlan("select vm1.g1.e1 from vm1.g1 left outer join (select * from vm1.g2 as v where v.e1 = /*+ no_unnest */ (select max(vm1.g2.e1) from vm1.g2 where v.e1 = vm1.g2.e1)) f2 on (f2.e1 = vm1.g1.e1)", metadata,  //$NON-NLS-1$
                                       null, capFinder,
-            new String[] { "SELECT g1__1.e1 FROM pm1.g1 AS g1__1 LEFT OUTER JOIN pm1.g1 AS g1__2 ON g1__2.e1 = g1__1.e1 AND g1__2.e1 = /*+ NO_UNNEST */ (SELECT MAX(pm1.g1.e1) FROM pm1.g1 WHERE pm1.g1.e1 = g1__2.e1)" }, SHOULD_SUCCEED); //$NON-NLS-1$ 
+            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 LEFT OUTER JOIN pm1.g1 AS g_1 ON g_1.e1 = g_0.e1 AND g_1.e1 = /*+ NO_UNNEST */ (SELECT MAX(g_2.e1) FROM pm1.g1 AS g_2 WHERE g_2.e1 = g_1.e1)" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
     
@@ -6028,8 +6061,8 @@ public class TestOptimizer {
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         ProcessorPlan plan = helpPlan(sql, metadata, new String[] {"SELECT DISTINCT g_0.e1 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
-        //no txn required, since an interated insert is used
-        assertFalse(plan.requiresTransaction(false));
+        //txn required, since the insert could be split
+        assertTrue(plan.requiresTransaction(false));
         
         checkNodeTypes(plan, FULL_PUSHDOWN); 
         

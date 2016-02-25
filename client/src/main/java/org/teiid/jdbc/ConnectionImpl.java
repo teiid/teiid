@@ -528,7 +528,8 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
     }
 
     public boolean isReadOnly() throws SQLException {
-         return readOnly; 
+    	checkConnection();
+    	return readOnly; 
     }
 
     public String nativeSQL(String sql) throws SQLException {
@@ -620,6 +621,9 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
         //Check to see the connection is open
         checkConnection();
         if (!autoCommitFlag) {
+        	if (this.transactionXid != null) {
+                throw new TeiidSQLException(JDBCPlugin.Util.getString("MMStatement.In_XA_Transaction"));//$NON-NLS-1$ 
+            }
             try {
             	if (this.inLocalTxn) {
             		this.inLocalTxn = false;
@@ -674,6 +678,10 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
             return;
         }
         
+        if (autoCommit && this.transactionXid != null) {
+            throw new TeiidSQLException(JDBCPlugin.Util.getString("MMStatement.In_XA_Transaction"));//$NON-NLS-1$ 
+        }
+        
         this.autoCommitFlag = autoCommit;
 
         if (autoCommit) {
@@ -698,11 +706,9 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
      * @throws throws SQLException.
      */
     public void setReadOnly(boolean readOnly) throws SQLException {
-        if (this.readOnly == readOnly) {
-            return;
-        }
+    	checkConnection();
         // During transaction do not allow to change this flag
-        if (!autoCommitFlag || this.transactionXid != null) {
+        if (isInLocalTxn() || this.transactionXid != null) {
             throw new TeiidSQLException(JDBCPlugin.Util.getString("MMStatement.Invalid_During_Transaction", "setReadOnly(" + readOnly + ")"));//$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$
         }
         this.readOnly = readOnly;
@@ -1050,6 +1056,14 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
 	
 	public Properties getConnectionProps() {
 		return connectionProps;
+	}
+	
+	void setTransactionXid(XidImpl transactionXid) {
+		this.transactionXid = transactionXid;
+	}
+	
+	public void setInLocalTxn(boolean inLocalTxn) {
+		this.inLocalTxn = inLocalTxn;
 	}
 	
 }

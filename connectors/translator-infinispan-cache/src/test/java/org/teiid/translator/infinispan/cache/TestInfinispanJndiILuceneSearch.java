@@ -36,7 +36,7 @@ import org.teiid.translator.object.testdata.trades.VDBUtility;
 @SuppressWarnings("nls")
 public class TestInfinispanJndiILuceneSearch extends BasicAnnotatedSearchTest {
 	
-	private static int SELECT_STAR_COL_COUNT = TradesCacheSource.NUM_OF_ALL_COLUMNS;
+//	private static int SELECT_STAR_COL_COUNT = TradesCacheSource.NUM_OF_ALL_COLUMNS;
 
 	private static ObjectConnection CONNECTION;
 	private static ExecutionContext context;

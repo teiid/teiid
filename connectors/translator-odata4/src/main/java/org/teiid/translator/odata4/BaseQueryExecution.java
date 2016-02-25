@@ -33,12 +33,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.codec.Charsets;
+import org.apache.olingo.client.api.serialization.ODataDeserializer;
+import org.apache.olingo.client.core.serialization.AtomDeserializer;
 import org.apache.olingo.client.core.serialization.JsonDeserializer;
 import org.apache.olingo.commons.api.ex.ODataError;
-import org.apache.olingo.commons.api.format.AcceptType;
 import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.commons.api.http.HttpStatusCode;
+import org.teiid.core.TeiidException;
 import org.teiid.language.Argument;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.Call;
@@ -49,6 +50,7 @@ import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.olingo.common.ODataTypeManager;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
@@ -80,8 +82,8 @@ public class BaseQueryExecution {
         }
 
         if (payload != null) {
-            headers.put("Content-Type", Arrays.asList(
-                    ContentType.APPLICATION_JSON.toContentTypeString())); //$NON-NLS-1$ //$NON-NLS-2$
+            headers.put("Content-Type", Arrays.asList( //$NON-NLS-1$
+                    ContentType.APPLICATION_JSON.toContentTypeString())); 
         }
 
         BinaryWSProcedureExecution execution;
@@ -119,15 +121,29 @@ public class BaseQueryExecution {
         try {
             Blob blob = (Blob)execution.getOutputParameterValues().get(0);
             if (blob != null) {
-                JsonDeserializer parser = new JsonDeserializer(false);
-                ODataError error = parser.toError(blob.getBinaryStream());            
+            	boolean json = false;
+            	String contentTypeString = getHeader(execution, "Content-Type"); //$NON-NLS-1$
+            	if (contentTypeString != null) {
+            		ContentType contentType = ContentType.parse(contentTypeString);
+            		if (contentType != null && ContentType.APPLICATION_JSON.isCompatible(contentType)) {
+            			json = true;
+            		}
+            	}
+            	ODataDeserializer parser = null;
+            	if (json) {
+	                parser = new JsonDeserializer(false);
+	        	} else {
+	        		//TODO: it may not be atom, it could just be xml/html
+	        		parser = new AtomDeserializer();
+	        	}
+             	ODataError error = parser.toError(blob.getBinaryStream());
+                  
                 return new TranslatorException(ODataPlugin.Util.gs(
                         ODataPlugin.Event.TEIID17013, execution.getResponseCode(),
                         error.getCode(), error.getMessage(), error.getInnerError()));
-            } else {
-                return new TranslatorException(ODataPlugin.Util.gs(
-                        ODataPlugin.Event.TEIID17031));
             }
+            return new TranslatorException(ODataPlugin.Util.gs(
+                    ODataPlugin.Event.TEIID17031, execution.getResponseCode()));
         }
         catch (Throwable t) {
             return new TranslatorException(t);
@@ -174,10 +190,10 @@ public class BaseQueryExecution {
     protected Map<String, List<String>> getDefaultHeaders() {
         Map<String, List<String>> headers = new HashMap<String, List<String>>();
         headers.put("Accept", Arrays.asList(ContentType.JSON.toContentTypeString())); //$NON-NLS-1$
-        headers.put("Content-Type", Arrays.asList(
-                ContentType.APPLICATION_JSON.toContentTypeString())); //$NON-NLS-1$ //$NON-NLS-2$
+        headers.put("Content-Type", Arrays.asList( //$NON-NLS-1$
+                ContentType.APPLICATION_JSON.toContentTypeString())); 
         if (this.executionContext != null) {
-            headers.put("Prefer", Arrays.asList("odata.maxpagesize="+this.executionContext.getBatchSize()));
+            headers.put("Prefer", Arrays.asList("odata.maxpagesize="+this.executionContext.getBatchSize())); //$NON-NLS-1$ //$NON-NLS-2$
         }
         return headers;
     }
@@ -188,13 +204,13 @@ public class BaseQueryExecution {
         int idx = next.indexOf("$skiptoken="); //$NON-NLS-1$
         
         if (next.toLowerCase().startsWith("http")) { //$NON-NLS-1$
-            return executeQuery("GET", nextURL.toString(), null, null, accepeted);
+            return executeQuery("GET", nextURL.toString(), null, null, accepeted); //$NON-NLS-1$ 
 
         } else if (idx != -1) {
             String skip = null;
             try {
                 skip = next.substring(idx + 11);
-                skip = URLDecoder.decode(skip, Charsets.UTF_8.name());
+                skip = URLDecoder.decode(skip, "UTF-8");
             } catch (UnsupportedEncodingException e) {
                 throw new TranslatorException(e);
             }
@@ -206,7 +222,7 @@ public class BaseQueryExecution {
             else {
                 nextUri = baseURL + "&$skiptoken="+skip; //$NON-NLS-1$
             }
-            return executeQuery("GET", nextUri, null, null, accepeted);
+            return executeQuery("GET", nextUri, null, null, accepeted); //$NON-NLS-1$
         } else {
             throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17001, next));
         }        
@@ -221,11 +237,15 @@ public class BaseQueryExecution {
             T columnParent = (T)column.getParent();            
             String colName = column.getName();
             if (!columnParent.equals(record)) {
-                colName = getName(columnParent)+"/"+column.getName();
+                colName = getName(columnParent)+"/"+column.getName(); //$NON-NLS-1$
             }
-            Object value = ODataTypeManager.convertTeiidRuntimeType(
-                    values.get(colName), ODataMetadataProcessor.getNativeType(column),
-                    expectedType[i]);                    
+            Object value;
+			try {
+				value = ODataTypeManager.convertToTeiidRuntimeType(expectedType[i], 
+						values.get(colName), ODataMetadataProcessor.getNativeType(column));
+			} catch (TeiidException e) {
+				throw new TranslatorException(e);
+			}
             results.add(value);
         }
         return results;

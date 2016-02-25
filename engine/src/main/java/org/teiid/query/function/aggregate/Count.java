@@ -27,6 +27,7 @@ import java.util.List;
 
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.util.CommandContext;
 
 /**
@@ -43,6 +44,9 @@ public class Count extends AggregateFunction {
     @Override
     public void addInputDirect(List<?> tuple, CommandContext commandContext)
     		throws TeiidComponentException, TeiidProcessingException {
+    	if (count == Integer.MAX_VALUE) {
+    		throw new TeiidProcessingException(QueryPlugin.Event.TEIID31174, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31174));
+    	}
         count++;
     }
 

@@ -22,7 +22,9 @@
 
 package org.teiid.translator.simpledb.visitors;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
+
+import java.util.Arrays;
 
 import org.junit.Test;
 import org.teiid.cdk.api.TranslationUtility;
@@ -55,6 +57,18 @@ public class TestSimpleDBSQLVisitor {
         visitor.append(c);
         assertEquals("SELECT attribute FROM item", visitor.toString());
         assertEquals(2, visitor.getProjectedColumns().size());
+    }
+    
+    @Test 
+    public void testSelectCountStar() throws Exception {
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table item (\"itemName()\" string, attribute string);", "x", "y");
+        TranslationUtility tu = new TranslationUtility(tm);
+
+        Command c = tu.parseCommand("select count(*) from item");
+        SimpleDBSQLVisitor visitor = new SimpleDBSQLVisitor();
+        visitor.append(c);
+        assertEquals("SELECT COUNT(*) FROM item", visitor.toString());
+        assertEquals(Arrays.asList("Count"), visitor.getProjectedColumns());
     }
     
     @Test 

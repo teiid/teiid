@@ -23,7 +23,9 @@ package org.teiid.deployers;
 
 import static org.teiid.odbc.PGUtil.*;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
@@ -31,11 +33,14 @@ import java.util.Properties;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.types.ArrayImpl;
+import org.teiid.core.types.BlobType;
+import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Datatype;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.Determinism;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.metadata.Table.Type;
@@ -63,6 +68,8 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		add_matpg_relatt();
 		add_matpg_datatype();
 		add_pg_description();
+		addFunction("encode", "encode").setPushdown(PushDown.CAN_PUSHDOWN);; //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("postgisVersion", "PostGIS_Lib_Version"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("hasPerm", "has_function_privilege"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("getExpr2", "pg_get_expr"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("getExpr3", "pg_get_expr"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -189,7 +196,6 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"SYS.Tables as st ON st.Name = t1.TableName AND st.SchemaName = t1.SchemaName) LEFT OUTER JOIN " + //$NON-NLS-1$
 				"pg_catalog.matpg_datatype pt ON t1.DataType = pt.Name WHERE kc.keytype in ('Primary', 'Unique', 'Index')"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
-		t.setMaterialized(true);
 		return t;		
 	}
 	
@@ -245,7 +251,6 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"false as relhasoids " + //$NON-NLS-1$
 				"FROM SYS.Keys t1 WHERE t1.type in ('Primary', 'Unique', 'Index')"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
-		t.setMaterialized(true);
 		return t;		
 	}
 	
@@ -292,7 +297,6 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"null as indexprs, null as indpred " + //$NON-NLS-1$
 				"FROM Sys.KeyColumns as t1 GROUP BY t1.uid, t1.KeyType, t1.SchemaName, t1.TableName, t1.KeyName"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
-		t.setMaterialized(true);
 		return t;		
 	}
 
@@ -362,7 +366,6 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		"FROM SYS.Procedures as t1";//$NON-NLS-1$			
 		
 		t.setSelectTransformation(transformation);
-		t.setMaterialized(true);
 		return t;		
 	}
 	
@@ -449,6 +452,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 			"1700,decimal,-1,b,0,-1,0,0\n" + //$NON-NLS-1$
 			"142,xml,-1,b,0,-1,0,0\n" + //$NON-NLS-1$
 			"14939,lo,-1,b,0,-1,0,0\n" + //$NON-NLS-1$
+			"32816,geometry,-1,b,0,-1,0,0\n" + //$NON-NLS-1$
 			"2278,void,4,p,0,-1,0,0\n" + //$NON-NLS-1$
 			"2249,record,-1,p,0,-1,0,0\n" + //$NON-NLS-1$
 			"30,oidvector,-1,b,0,-1,0,26\n" + //$NON-NLS-1$
@@ -466,6 +470,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 			"1115,_timestamp,-1,b,0,-1,0,1114\n" + //$NON-NLS-1$
 			"1182,_date,-1,b,0,-1,0,1082\n" + //$NON-NLS-1$
 			"1183,_time,-1,b,0,-1,0,1083\n" + //$NON-NLS-1$
+			"32824,_geometry,-1,b,0,-1,0,32816\n" + //$NON-NLS-1$
 			"2287,_record,-1,b,0,-1,0,2249\n" + //$NON-NLS-1$
 			"2283,anyelement,4,p,0,-1,0,0\n" + //$NON-NLS-1$
 			"22,int2vector,-1,b,0,-1,0,0" + //$NON-NLS-1$
@@ -575,6 +580,14 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 	}
 	
 	public static class FunctionMethods {
+		public static ClobType encode(BlobType value, String encoding) throws SQLException, IOException {
+			return org.teiid.query.function.FunctionMethods.toChars(value, encoding);
+		}
+		
+		public static String postgisVersion() {
+			return "1.4.0"; //$NON-NLS-1$
+		}
+		
 		public static Boolean hasPerm(@SuppressWarnings("unused") Integer oid,
 				@SuppressWarnings("unused") String permission) {
 			return true;

@@ -32,6 +32,8 @@ import javax.resource.ResourceException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.AccessibleByteArrayOutputStream;
 import org.teiid.core.util.PropertiesUtils;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataRepository;
@@ -65,7 +67,17 @@ public class NativeMetadataRepository extends MetadataRepository {
 
     private void getMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory)
             throws TranslatorException {
-        Object connection = executionFactory.getConnection(connectionFactory, null);
+        Object connection = null;
+        try {
+            connection = executionFactory.getConnection(connectionFactory, null);
+        } catch (Throwable e) {
+            // if security pass through is enabled the connection creation may fail at the startup
+            if (executionFactory.isSourceRequiredForMetadata()) {
+                throw new TranslatorException(QueryPlugin.Event.TEIID30477, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30477));
+            } 
+            LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Could not get exception to get metadata, but no connection is required"); //$NON-NLS-1$
+        }
+        
 		Object unwrapped = null;
 		
 		if (connection instanceof WrappedConnection) {
@@ -73,10 +85,11 @@ public class NativeMetadataRepository extends MetadataRepository {
 				unwrapped = ((WrappedConnection)connection).unwrap();
 			} catch (ResourceException e) {
 				if (executionFactory.isSourceRequiredForMetadata()) {
-					throw new TranslatorException(QueryPlugin.Event.TEIID30477, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30477));
+					throw new TranslatorException(QueryPlugin.Event.TEIID30477, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30477));
 				}
 				connection = null;
-			}	
+				LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Could not unwrap exception to get metadata, but no connection is required"); //$NON-NLS-1$
+			}
 		}
 		
 		try {

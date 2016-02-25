@@ -33,6 +33,7 @@ import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.MutationsRejectedException;
 import org.apache.accumulo.core.client.TableExistsException;
 import org.apache.accumulo.core.client.TableNotFoundException;
+import org.apache.accumulo.core.client.admin.TimeType;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Value;
@@ -63,7 +64,7 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 	private ExecutionContext executionContext;
 	
 	public AccumuloUpdateExecution(AccumuloExecutionFactory aef, Command command,
-			ExecutionContext executionContext, @SuppressWarnings("unused") RuntimeMetadata metadata,
+			ExecutionContext executionContext, RuntimeMetadata metadata,
 			AccumuloConnection connection) {
 		this.aef = aef;
 		this.command = command;
@@ -125,8 +126,10 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 		writer.close();
 	}
 
-	private void writeMutation(BatchWriter writer, List<ColumnReference> columns, List<Expression> values) throws MutationsRejectedException {
+	private void writeMutation(BatchWriter writer, List<ColumnReference> columns, List<Expression> values) 
+	        throws MutationsRejectedException, TranslatorException {
 		byte[] rowId = getRowId(columns, values);
+		Mutation mutation = new Mutation(rowId);
 		for (int i = 0; i < columns.size(); i++) {
 			Column column = columns.get(i).getMetadataObject();			
 			if (SQLStringVisitor.getRecordName(column).equalsIgnoreCase(AccumuloMetadataProcessor.ROWID)) {
@@ -134,19 +137,22 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 			}
 			Object value = values.get(i);
 			if (value instanceof Literal) {
-				writer.addMutation(buildMutation(rowId, column, ((Literal)value).getValue()));
+				buildMutation(mutation, column, ((Literal)value).getValue());
 			}
 			else {
-				writer.addMutation(buildMutation(rowId, column, value));
+				buildMutation(mutation, column, value);
 			}
 		}
+		writer.addMutation(mutation);
 	}
 	
-	private void performUpdate(Update update) throws TranslatorException, TableNotFoundException, MutationsRejectedException {
+    private void performUpdate(Update update) throws TranslatorException,
+            TableNotFoundException, MutationsRejectedException {
 		Table table = update.getTable().getMetadataObject();
 
 		if (update.getParameterValues() != null) {
-			throw new TranslatorException(AccumuloPlugin.Event.TEIID19005, AccumuloPlugin.Util.gs(AccumuloPlugin.Event.TEIID19005));			
+			throw new TranslatorException(AccumuloPlugin.Event.TEIID19005, 
+			        AccumuloPlugin.Util.gs(AccumuloPlugin.Event.TEIID19005));			
 		}
 		
 		AccumuloQueryVisitor visitor = new AccumuloQueryVisitor(this.aef);
@@ -159,28 +165,37 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 		BatchWriter writer = createBatchWriter(table, connector);	        	
 		
 		Text prevRow = null;
-		Iterator<Entry<Key,Value>> results = AccumuloQueryExecution.runQuery(this.aef, this.connection.getInstance(), this.connection.getAuthorizations(), visitor.getRanges(), table, visitor.scanIterators());
+        Iterator<Entry<Key, Value>> results = AccumuloQueryExecution.runQuery(
+                this.aef, this.connection.getInstance(),
+                this.connection.getAuthorizations(), visitor.getRanges(),
+                table, visitor.scanIterators());
+        
 		while (results.hasNext()) {
 			Key key = results.next().getKey();
 			Text rowId = key.getRow();
 
 			if (prevRow == null || !prevRow.equals(rowId)) {
 				prevRow = rowId;
+				Mutation mutation = new Mutation(rowId);
 				List<SetClause> changes = update.getChanges();
 				for (SetClause clause:changes) {
 					Column column = clause.getSymbol().getMetadataObject();
 					if (SQLStringVisitor.getRecordName(column).equalsIgnoreCase(AccumuloMetadataProcessor.ROWID)) {
-						throw new TranslatorException(AccumuloPlugin.Event.TEIID19002, AccumuloPlugin.Util.gs(AccumuloPlugin.Event.TEIID19002, table.getName())); 
+                        throw new TranslatorException(
+                                AccumuloPlugin.Event.TEIID19002,
+                                AccumuloPlugin.Util.gs(AccumuloPlugin.Event.TEIID19002,table.getName())); 
 					}
 					Expression value = clause.getValue();
 					if (value instanceof Literal) {
-						Mutation mutation = buildMutation(rowId.getBytes(), column, ((Literal)value).getValue());
-						writer.addMutation(mutation);
+						buildMutation(mutation, column, ((Literal)value).getValue());
 					}
 					else {
-						throw new TranslatorException(AccumuloPlugin.Event.TEIID19001, AccumuloPlugin.Util.gs(AccumuloPlugin.Event.TEIID19001));
+                        throw new TranslatorException(
+                                AccumuloPlugin.Event.TEIID19001,
+                                AccumuloPlugin.Util.gs(AccumuloPlugin.Event.TEIID19001));
 					}
 				}
+				writer.addMutation(mutation);
 				this.updateCount++;
 			}
 		}
@@ -194,7 +209,7 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 			writer = connector.createBatchWriter(tableName, new BatchWriterConfig());
 		} catch (TableNotFoundException e) {
 			try {
-				connector.tableOperations().create(tableName);
+				connector.tableOperations().create(tableName, true, TimeType.LOGICAL);
 			} catch (AccumuloException e1) {
 				throw new TranslatorException(e1);
 			} catch (AccumuloSecurityException e1) {
@@ -248,22 +263,23 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 		writer.close();
 	}	
 	
-	private byte[] getRowId(List<ColumnReference> columns, List<Expression> values) {
+	private byte[] getRowId(List<ColumnReference> columns, List<Expression> values) throws TranslatorException{
 		for (int i = 0; i < columns.size(); i++) {
 			Column column = columns.get(i).getMetadataObject();
 			String rowId = SQLStringVisitor.getRecordName(column);
 			if (rowId.equalsIgnoreCase(AccumuloMetadataProcessor.ROWID) || AccumuloQueryVisitor.isPartOfPrimaryKey(column)) {
 				Object value = values.get(i);
 				if (value instanceof Literal) {
-					return AccumuloDataTypeManager.convertToAccumuloType(((Literal)value).getValue(), this.aef.getChasetEncoding());
+					return AccumuloDataTypeManager.toLexiCode(((Literal)value).getValue());
 				}
-				return AccumuloDataTypeManager.convertToAccumuloType(value, this.aef.getChasetEncoding());
+				throw new TranslatorException(AccumuloPlugin.Event.TEIID19006, 
+				        AccumuloPlugin.Util.gs(AccumuloPlugin.Event.TEIID19006));
 			}
 		}		
 		return null;
 	}
 	
-	private Mutation buildMutation(byte[] rowid, Column column, Object value) {
+	private void buildMutation(Mutation mutation, Column column, Object value) {
 		String CF = column.getProperty(AccumuloMetadataProcessor.CF, false);
 		String CQ = column.getProperty(AccumuloMetadataProcessor.CQ, false);
 		String valuePattern = column.getProperty(AccumuloMetadataProcessor.VALUE_IN, false);
@@ -271,20 +287,18 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 			valuePattern = AccumuloMetadataProcessor.DEFAULT_VALUE_PATTERN;
 		}
 		
-		byte[] columnFamilty = CF.getBytes();
+		byte[] columnFamily = CF.getBytes();
 		byte[] columnQualifier = (CQ == null)?AccumuloDataTypeManager.EMPTY_BYTES:CQ.getBytes();
 		byte[] columnValue = AccumuloDataTypeManager.EMPTY_BYTES;
 		
-		Mutation mutation = new Mutation(rowid);
 		valuePattern = valuePattern.substring(1, valuePattern.length()-1); // remove the curleys
 		if (valuePattern.equals(AccumuloMetadataProcessor.ValueIn.VALUE.name())) {
-			columnValue = AccumuloDataTypeManager.convertToAccumuloType(value, this.aef.getChasetEncoding());
+			columnValue = AccumuloDataTypeManager.serialize(value);
 		}
 		else if (valuePattern.equals(AccumuloMetadataProcessor.ValueIn.CQ.name())) {
-			columnQualifier = AccumuloDataTypeManager.convertToAccumuloType(value, this.aef.getChasetEncoding());
+			columnQualifier = AccumuloDataTypeManager.serialize(value);
 		}
-		mutation.put(columnFamilty, columnQualifier, columnValue);
-		return mutation;
+		mutation.put(columnFamily, columnQualifier, columnValue);
 	}	
 
 	@Override

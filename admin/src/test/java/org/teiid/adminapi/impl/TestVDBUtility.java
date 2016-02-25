@@ -21,11 +21,7 @@
  */
 package org.teiid.adminapi.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -52,10 +48,14 @@ public class TestVDBUtility {
         assertNotNull(vdb.getModel("model-two")); //$NON-NLS-1$
         assertNull(vdb.getModel("model-unknown")); //$NON-NLS-1$
         
-        assertEquals(1, vdb.getVDBImports().size());
+        assertEquals(2, vdb.getVDBImports().size());
         VDBImport vdbImport = vdb.getVDBImports().get(0);
         assertEquals("x", vdbImport.getName());
         assertEquals(2, vdbImport.getVersion());
+        
+        vdbImport = vdb.getVDBImports().get(1);
+        assertEquals("y", vdbImport.getName());
+        assertEquals(1, vdbImport.getVersion());
         
         modelOne = vdb.getModel("model-one"); //$NON-NLS-1$
         assertEquals("model-one", modelOne.getName()); //$NON-NLS-1$
@@ -142,6 +142,10 @@ public class TestVDBUtility {
         VDBImportMetadata vdbImport = new VDBImportMetadata();
         vdbImport.setName("x");
         vdbImport.setVersion(2);
+        vdb.getVDBImports().add(vdbImport);
+        
+        vdbImport = new VDBImportMetadata();
+        vdbImport.setName("y");
         vdb.getVDBImports().add(vdbImport);
         
         ModelMetaData modelOne = new ModelMetaData();

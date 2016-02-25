@@ -68,8 +68,8 @@ public class ProjectIntoNode extends RelationalNode {
     private Mode mode;
     
     // Processing state
-    private int batchRow = 1;
-    private int insertCount = 0;
+    private long batchRow = 1;
+    private long insertCount = 0;
     private int phase = REQUEST_CREATION;    
     private int requestsRegistered = 0;
     private int tupleSourcesProcessed = 0;
@@ -201,9 +201,9 @@ public class ProjectIntoNode extends RelationalNode {
             	break;
             case BATCH:
                 // Register batched update command against source
-                int endRow = currentBatch.getEndRow();
-                List<Command> rows = new ArrayList<Command>(endRow-batchRow);
-                for(int rowNum = batchRow; rowNum <= endRow; rowNum++) {
+                long endRow = currentBatch.getEndRow();
+                List<Command> rows = new ArrayList<Command>((int)(endRow-batchRow));
+                for(long rowNum = batchRow; rowNum <= endRow; rowNum++) {
 
                     Insert insert = new Insert( intoGroup, 
                                                  intoElements, 
@@ -234,7 +234,9 @@ public class ProjectIntoNode extends RelationalNode {
         }
         
         // End this node's work
-        addBatchRow(Arrays.asList(insertCount));
+        //report only a max int
+        int count = (int)Math.min(Integer.MAX_VALUE, insertCount);
+        addBatchRow(Arrays.asList(count));
         terminateBatches();
         return pullBatch();                                                           
     }
@@ -356,10 +358,7 @@ public class ProjectIntoNode extends RelationalNode {
     
     @Override
     public Boolean requiresTransaction(boolean transactionalReads) {
-		if (getMode() != Mode.ITERATOR) {
-			return true;
-		}
-		return null;
+		return true;
     }
     
     public void setConstraint(Criteria constraint) {

@@ -41,9 +41,9 @@ public class CollectionTupleSource implements TupleSource {
 		return new CollectionTupleSource(Arrays.asList(Arrays.asList(count)).iterator());
 	}
 	
-	public static TupleSource createUpdateCountArrayTupleSource(final int count) {
+	public static TupleSource createUpdateCountArrayTupleSource(final long count) {
 		return new TupleSource() {
-			int index = 0;
+			long index = 0;
 			
 			@Override
 			public List<?> nextTuple() throws TeiidComponentException,

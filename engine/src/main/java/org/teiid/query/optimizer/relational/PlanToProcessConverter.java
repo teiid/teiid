@@ -64,6 +64,7 @@ import org.teiid.query.sql.lang.ObjectTable.ObjectColumn;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.SourceHint.SpecificHint;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
+import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -227,16 +228,29 @@ public class PlanToProcessConverter {
             		
             		if (node.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)) {
             			WindowFunctionProjectNode wfpn = new WindowFunctionProjectNode(getID());
-            			Set<WindowFunction> windowFunctions = RuleAssignOutputElements.getWindowFunctions(symbols);
-            			//TODO: check for selecting all window functions
-            			List<Expression> outputElements = new ArrayList<Expression>(windowFunctions);
-            			//collect the other projected expressions
-            			for (Expression singleElementSymbol : (List<Expression>)node.getFirstChild().getProperty(Info.OUTPUT_COLS)) {
-							outputElements.add(singleElementSymbol);
-						}
-            			wfpn.setElements(outputElements);
-            			wfpn.init();
-            			pnode.addChild(wfpn);
+            			
+            			//with partial projection the window function may already be pushed, we'll check for that here
+            			ArrayList<Expression> filtered = new ArrayList<Expression>();
+            			List<Expression> childSymbols = (List) node.getFirstChild().getProperty(NodeConstants.Info.OUTPUT_COLS);
+            			for (Expression ex : symbols) {
+            				ex = SymbolMap.getExpression(ex);
+            				if (childSymbols.contains(ex)) {
+            					continue;
+            				}
+            				filtered.add(ex);
+            			}
+            			Set<WindowFunction> windowFunctions = RuleAssignOutputElements.getWindowFunctions(filtered);
+            			if (!windowFunctions.isEmpty()) {
+	            			//TODO: check for selecting all window functions
+	            			List<Expression> outputElements = new ArrayList<Expression>(windowFunctions);
+	            			//collect the other projected expressions
+	            			for (Expression singleElementSymbol : (List<Expression>)node.getFirstChild().getProperty(Info.OUTPUT_COLS)) {
+								outputElements.add(singleElementSymbol);
+							}
+	            			wfpn.setElements(outputElements);
+	            			wfpn.init();
+	            			pnode.addChild(wfpn);
+            			}
             		}
                 }
                 break;
@@ -408,7 +422,29 @@ public class PlanToProcessConverter {
                     } else if (command instanceof QueryCommand) {
 	                    command = aliasCommand(aNode, command, modelID);
                     }
-                    ev = EvaluatableVisitor.needsEvaluation(command, modelID, metadata, capFinder);
+                    ev = EvaluatableVisitor.needsEvaluationVisitor(modelID, metadata, capFinder);
+                    if (!shouldEval && modelID != null) {
+                    	//do a capabilities sensitive check for needs eval
+	                    String modelName = metadata.getFullName(modelID);
+	                    SourceCapabilities caps = capFinder.findCapabilities(modelName);
+	                    final CriteriaCapabilityValidatorVisitor capVisitor = new CriteriaCapabilityValidatorVisitor(modelID, metadata, capFinder, caps);
+	                    capVisitor.setCheckEvaluation(false);
+	                    DeepPreOrderNavigator nav = new DeepPreOrderNavigator(ev) {
+	                    	protected void visitNode(org.teiid.query.sql.LanguageObject obj) {
+	                    		if (capVisitor.isValid() && obj instanceof Expression) {
+	                    			obj.acceptVisitor(capVisitor);
+	                    		}
+	                    		super.visitNode(obj);
+	                    	}
+	                    };
+	                    command.acceptVisitor(nav);
+	                    if (!capVisitor.isValid()) {
+	                    	//there's a non-supported construct pushed, we should eval
+	                    	ev.evaluationNotPossible(EvaluationLevel.PROCESSING);
+	                    }
+                    } else {
+                    	DeepPreOrderNavigator.doVisit(command, ev);
+                    }
                     aNode.setShouldEvaluateExpressions(ev.requiresEvaluation(EvaluationLevel.PROCESSING) || shouldEval);
                     aNode.setCommand(command);
                     Map<GroupSymbol, PlanNode> subPlans = (Map<GroupSymbol, PlanNode>) node.getProperty(Info.SUB_PLANS);

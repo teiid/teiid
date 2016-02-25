@@ -50,7 +50,7 @@ import org.teiid.security.SecurityHelper;
 public interface SessionService {
     public static String NAME = "SessionService"; //$NON-NLS-1$
 
-    public static final long DEFAULT_MAX_SESSIONS = 5000; 
+    public static final long DEFAULT_MAX_SESSIONS = 10000; 
     public static final long DEFAULT_SESSION_EXPIRATION = 0; 
     
     public static final String MAX_SESSIONS = "session.maxSessions"; //$NON-NLS-1$
@@ -106,8 +106,7 @@ public interface SessionService {
      * @param VDBName The name of the VDB.
      * @param VDBVersion The version of the VDB.
      */
-    Collection<SessionMetadata> getSessionsLoggedInToVDB(String VDBName, int VDBVersion)
-    throws SessionServiceException;
+    Collection<SessionMetadata> getSessionsLoggedInToVDB(String VDBName, int VDBVersion);
 
     /**
      * Periodically called by the client to indicate the client is still alive.
@@ -120,11 +119,11 @@ public interface SessionService {
     
 	void setDqp(DQPCore dqp);
 	
-	LoginContext createLoginContext(String securityDomain, String user, String password) throws LoginException;
-
 	AuthenticationType getAuthenticationType(String vdbName, String version, String user) throws LogonException;
 	
 	SecurityHelper getSecurityHelper();
 	
 	GSSResult neogitiateGssLogin(String user, String vdbName, String vdbVersion, byte[] serviceTicket) throws LoginException, LogonException;
+
+	AuthenticationType getDefaultAuthenticationType();
 }

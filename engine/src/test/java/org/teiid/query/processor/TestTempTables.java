@@ -160,7 +160,7 @@ public class TestTempTables extends TempTableTestHarness {
 		}
 		setupTransaction(Connection.TRANSACTION_SERIALIZABLE);
 		execute("select count(e1) from x", new List[] {Arrays.asList(1500)});
-		gtsi.updateMatViewRow("X", Arrays.asList(2), true);
+		gtsi.updateMatViewRow("X", Arrays.asList(2l), true);
 		tc=null;
 		//outside of the transaction we can see the row removed
 		execute("select count(e1) from x", new List[] {Arrays.asList(1499)});
@@ -494,7 +494,7 @@ public class TestTempTables extends TempTableTestHarness {
 	    cache.setTupleBufferCache(bm);
 		dataManager = new TempTableDataManager(hdm, bm, cache);
 		
-		execute("create foreign temporary table x (e1 string options (nameinsource 'a'), e2 integer, e3 string, primary key (e1)) options (cardinality 1000, updatable true) on pm1", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		execute("create foreign temporary table x (e1 string options (nameinsource 'a'), e2 integer, e3 string, primary key (e1)) options (cardinality 1000, updatable true, \"other\" 'prop') on pm1", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
 		
 		TempMetadataID id = this.tempStore.getMetadataStore().getData().get("x");
 		
@@ -503,6 +503,7 @@ public class TestTempTables extends TempTableTestHarness {
 		assertNotNull(this.metadata.getPrimaryKey(id));
 		assertEquals(1000, this.metadata.getCardinality(id), 0);
 		assertEquals("pm1", this.metadata.getName(this.metadata.getModelID(id)));
+		assertEquals("prop", this.metadata.getExtensionProperty(id, "other", false));
 		
 		hdm.addData("SELECT x.a, x.e2, x.e3 FROM x", new List[] {Arrays.asList(1, 2, "3")});
 		execute("select * from x", new List[] {Arrays.asList(1, 2, "3")}); //$NON-NLS-1$

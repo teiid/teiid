@@ -41,15 +41,33 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.ProcedureParameter.Type;
+import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TranslatorProperty;
+import org.teiid.translator.TranslatorProperty.PropertyType;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.WSConnection;
+import org.teiid.translator.ws.WSExecutionFactory.Event;
 
-public class WSDLMetadataProcessor {
+public class WSDLMetadataProcessor implements MetadataProcessor<WSConnection> {
 	
 	private Definition definition;
+	private boolean importWSDL = true;
 	
-	public WSDLMetadataProcessor(String wsdl) throws TranslatorException {
+	public WSDLMetadataProcessor() {
+		
+	}
+	
+	@Override
+	public void process(MetadataFactory mf, WSConnection connection)
+			throws TranslatorException {
+		if (this.importWSDL && connection == null) {
+		    throw new TranslatorException(WSExecutionFactory.UTIL.gs(Event.TEIID15007, WSExecutionFactory.UTIL.gs(Event.TEIID15007)));
+		}
+		if (!importWSDL || connection.getWsdl() == null) {
+			return;
+		}
+		String wsdl = connection.getWsdl().toString();
 		try {
 			WSDLFactory wsdlFactory = WSDLFactory.newInstance();
 			WSDLReader reader = wsdlFactory.newWSDLReader();
@@ -57,9 +75,6 @@ public class WSDLMetadataProcessor {
 		} catch (WSDLException e) {
 			throw new TranslatorException(e);
 		}
-	}
-
-	public void getMetadata(MetadataFactory mf, WSConnection connection) throws TranslatorException {
 		Map<QName, Service> services = this.definition.getServices();
 		if (services == null || services.isEmpty()) {
 			throw new TranslatorException(WSExecutionFactory.UTIL.gs(WSExecutionFactory.Event.TEIID15001, connection.getServiceQName()));
@@ -172,5 +187,15 @@ public class WSDLMetadataProcessor {
 			}
 		}
 		return null;
-	}	
+	}
+	
+    @TranslatorProperty(display="Import WSDL", category=PropertyType.IMPORT, description="true to import WSDL for the metadata.")
+    public boolean isImportWSDL() {
+        return this.importWSDL;
+    }
+    
+    public void setImportWSDL(boolean bool) {
+        this.importWSDL = bool;
+    }
+
 }

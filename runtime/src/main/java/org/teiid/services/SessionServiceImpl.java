@@ -93,6 +93,7 @@ public class SessionServiceImpl implements SessionService {
     private Map<String, SessionMetadata> sessionCache = new ConcurrentHashMap<String, SessionMetadata>();
     private Timer sessionMonitor = null;    
     private List<String> securityDomainNames;
+	private boolean trustAllLocal = true;
     
     public void setSecurityDomain(String domainName) {
     	if (domainName == null) {
@@ -155,8 +156,14 @@ public class SessionServiceImpl implements SessionService {
         
         Object securityContext = null;
         Subject subject = null;
-        
-        AuditMessage.LogonInfo info = new AuditMessage.LogonInfo(vdbName, vdbVersion, authType.toString(), userName, applicationName);
+
+        String hostName = properties.getProperty(TeiidURL.CONNECTION.CLIENT_HOSTNAME);
+        String ipAddress = properties.getProperty(TeiidURL.CONNECTION.CLIENT_IP_ADDRESS);
+        String clientMac = properties.getProperty(TeiidURL.CONNECTION.CLIENT_MAC);
+        boolean onlyAllowPassthrough = Boolean.valueOf(properties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION,
+                "false")); //$NON-NLS-1$
+
+        AuditMessage.LogonInfo info = new AuditMessage.LogonInfo(vdbName, vdbVersion, authType.toString(), userName, applicationName, hostName, ipAddress, clientMac, onlyAllowPassthrough);
         
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_AUDITLOGGING, MessageLevel.DETAIL)) {
         	LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, new AuditMessage("session", "logon-request", info, null)); //$NON-NLS-1$ //$NON-NLS-2$
@@ -180,15 +187,16 @@ public class SessionServiceImpl implements SessionService {
 		        // if not authenticated, this method throws exception
 	            LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"authenticateUser", userName, applicationName}); //$NON-NLS-1$
 	
-	            boolean onlyAllowPassthrough = Boolean.valueOf(properties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION,
-	                    "false")); //$NON-NLS-1$
 	        	String baseUserName = getBaseUsername(userName);
 	    		if (onlyAllowPassthrough || authType.equals(AuthenticationType.GSS)) {
 	        		subject = this.securityHelper.getSubjectInContext(securityDomain);
 	    	        if (subject == null) {
-	    	        	throw new LoginException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40087));
+	    	        	if ((!onlyAllowPassthrough || !trustAllLocal)) {
+	    	        		throw new LoginException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40087));
+	    	        	}
+	    	        } else {
+	    	        	userName = escapeName(getUserName(subject, baseUserName)) + AT + securityDomain;
 	    	        }
-	    	        userName = escapeName(getUserName(subject, baseUserName)) + AT + securityDomain;
 	    	        securityContext = this.securityHelper.getSecurityContext();
 	        	} else {
 	        		userName = escapeName(baseUserName) + AT + securityDomain;
@@ -209,9 +217,9 @@ public class SessionServiceImpl implements SessionService {
 	        newSession.setUserName(userName);
 	        newSession.setCreatedTime(creationTime);
 	        newSession.setApplicationName(applicationName);
-	        newSession.setClientHostName(properties.getProperty(TeiidURL.CONNECTION.CLIENT_HOSTNAME));
-	        newSession.setIPAddress(properties.getProperty(TeiidURL.CONNECTION.CLIENT_IP_ADDRESS));
-	        newSession.setClientHardwareAddress(properties.getProperty(TeiidURL.CONNECTION.CLIENT_MAC));
+	        newSession.setClientHostName(hostName);
+			newSession.setIPAddress(ipAddress);
+			newSession.setClientHardwareAddress(clientMac);
 	        newSession.setSecurityDomain(securityDomain);
 	        if (vdb != null) {
 		        newSession.setVDBName(vdb.getName());
@@ -248,14 +256,18 @@ public class SessionServiceImpl implements SessionService {
 		
 		// handle the situation when the version is part of the vdb name.
 		
-		int firstIndex = vdbName.indexOf('.');
-		int lastIndex = vdbName.lastIndexOf('.');
-		if (firstIndex != -1) {
-			if (firstIndex != lastIndex || vdbVersion != null) {
-				 throw new SessionServiceException(RuntimePlugin.Event.TEIID40044, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40044, vdbName, vdbVersion));
+		if (vdbVersion == null) {
+			int firstIndex = vdbName.indexOf('.');
+			if (firstIndex > 0) {
+				vdbVersion = vdbName.substring(firstIndex+1);
+				try {
+					Integer.parseInt(vdbVersion);
+					vdbName = vdbName.substring(0, firstIndex);
+				} catch (NumberFormatException e) {
+					//not a revision
+					vdbVersion = null;
+				}
 			}
-			vdbVersion = vdbName.substring(firstIndex+1);
-			vdbName = vdbName.substring(0, firstIndex);
 		}
 		
 		try {
@@ -279,30 +291,6 @@ public class SessionServiceImpl implements SessionService {
 	}
 
 	@Override
-	public LoginContext createLoginContext(final String securityDomain, final String user, final String password) throws LoginException{
-		CallbackHandler handler = new CallbackHandler() {
-			@Override
-			public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
-				for (int i = 0; i < callbacks.length; i++) {
-					if (callbacks[i] instanceof NameCallback) {
-						NameCallback nc = (NameCallback)callbacks[i];
-						nc.setName(user);
-					} else if (callbacks[i] instanceof PasswordCallback) {
-						PasswordCallback pc = (PasswordCallback)callbacks[i];
-						if (password != null) {
-							pc.setPassword(password.toCharArray());
-						}
-					} else {
-						throw new UnsupportedCallbackException(callbacks[i], "Unrecognized Callback"); //$NON-NLS-1$
-					}
-				}
-			}
-		}; 		
-		
-		return new LoginContext(securityDomain, handler);
-	}
-	
-	@Override
 	public Collection<SessionMetadata> getActiveSessions() {
 		return new ArrayList<SessionMetadata>(this.sessionCache.values());
 	}
@@ -318,8 +306,7 @@ public class SessionServiceImpl implements SessionService {
 	}
 
 	@Override
-	public Collection<SessionMetadata> getSessionsLoggedInToVDB(String VDBName, int vdbVersion)
-			throws SessionServiceException {
+	public Collection<SessionMetadata> getSessionsLoggedInToVDB(String VDBName, int vdbVersion) {
 		if (VDBName == null || vdbVersion <= 0) {
 			return Collections.emptyList();
 		}
@@ -566,5 +553,13 @@ public class SessionServiceImpl implements SessionService {
         }
         return userName;
     }
+    
+    public boolean isTrustAllLocal() {
+		return trustAllLocal;
+	}
+    
+    public void setTrustAllLocal(boolean trustAllLocal) {
+		this.trustAllLocal = trustAllLocal;
+	}
         
 }

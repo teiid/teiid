@@ -23,6 +23,7 @@
 package org.teiid.dqp.internal.process;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -30,11 +31,16 @@ import org.teiid.PolicyDecider;
 import org.teiid.adminapi.DataPolicy.Context;
 import org.teiid.adminapi.DataPolicy.PermissionType;
 import org.teiid.api.exception.query.QueryValidatorException;
+import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.dqp.internal.process.multisource.MultiSourceElement;
+import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.Schema;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
@@ -131,6 +137,43 @@ public class DefaultAuthorizationValidator implements AuthorizationValidator {
 	
 	public void setPolicyDecider(PolicyDecider policyDecider) {
 		this.policyDecider = policyDecider;
+	}
+	
+	@Override
+	public boolean isAccessible(AbstractMetadataRecord record,
+			CommandContext commandContext) {
+		if (policyDecider == null || !policyDecider.validateCommand(commandContext) 
+				//TODO - schemas cannot be hidden - unless we traverse them and find that nothing is accessible
+				|| record instanceof Schema) {
+			return true;
+		}
+		AbstractMetadataRecord parent = record;
+		while (parent.getParent() != null) {
+			parent = parent.getParent();
+			if (parent instanceof Procedure) {
+				return true; //don't check procedure params/rs columns
+			}
+		}
+		if (!(parent instanceof Schema) || (CoreConstants.SYSTEM_MODEL.equalsIgnoreCase(parent.getName()) || CoreConstants.ODBC_MODEL.equalsIgnoreCase(parent.getName()))) {
+			//access is always allowed to system tables / procedures or unrooted objects
+			return true;
+		}
+		PermissionType action = PermissionType.READ;
+		if (record instanceof FunctionMethod || record instanceof Procedure) {
+			action = PermissionType.EXECUTE;
+		}
+		
+		//cache permission check
+		Boolean result = commandContext.isAccessible(record);
+		if (result != null) {
+			return result;
+		}
+		
+		HashSet<String> resources = new HashSet<String>(2);
+		resources.add(record.getFullName());
+		result = this.policyDecider.getInaccessibleResources(action, resources, Context.METADATA, commandContext).isEmpty();
+		commandContext.setAccessible(record, result);
+		return result;
 	}
 	
 }

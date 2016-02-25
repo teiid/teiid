@@ -84,12 +84,11 @@ import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.internal.process.TransactionServerImpl;
 import org.teiid.dqp.service.BufferService;
-import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.events.EventDistributor;
 import org.teiid.events.EventDistributorFactory;
 import org.teiid.jdbc.CallableStatementImpl;
 import org.teiid.jdbc.ConnectionImpl;
-import org.teiid.jdbc.EmbeddedProfile;
+import org.teiid.jdbc.LocalProfile;
 import org.teiid.jdbc.PreparedStatementImpl;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.jdbc.TeiidPreparedStatement;
@@ -138,7 +137,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		LogManager.setLogListener(new JBossLogger());
 	}
 
-	private EmbeddedProfile embeddedProfile = new EmbeddedProfile() {
+	private LocalProfile embeddedProfile = new LocalProfile() {
 		@Override
 		public ConnectionImpl connect(String url, Properties info)
 				throws TeiidSQLException {
@@ -269,10 +268,6 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	
 	class EmbeddedEventDistributorFactoryService extends AbstractEventDistributorFactoryService {
 
-	    public EmbeddedEventDistributorFactoryService(String nodeName) {
-            super(nodeName);
-        }
-
         @Override
         protected VDBRepository getVdbRepository() {
             return repo;
@@ -350,7 +345,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		}
 		this.shutdownListener.setBootInProgress(true);
 		this.config = config;
-		this.eventDistributorFactoryService = new EmbeddedEventDistributorFactoryService(config.getNodeName());
+		this.eventDistributorFactoryService = new EmbeddedEventDistributorFactoryService();
 		this.eventDistributorFactoryService.start();
 		this.dqp.setEventDistributor(this.eventDistributorFactoryService.getReplicatedEventDistributor());
 		this.scheduler = Executors.newScheduledThreadPool(config.getMaxAsyncThreads(), new NamedThreadFactory("Asynch Worker")); //$NON-NLS-1$
@@ -386,10 +381,10 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 
 		this.sessionService.setVDBRepository(repo);
 		setBufferManagerProperties(config);
-		BufferService bs = getBufferService(config.getNodeName());
+		BufferService bs = getBufferService();
 		this.dqp.setBufferManager(bs.getBufferManager());
 
-		startVDBRepository(config.getNodeName());
+		startVDBRepository();
 
 		rs = new SessionAwareCache<CachedResults>("resultset", config.getCacheFactory(), SessionAwareCache.Type.RESULTSET, config.getMaxResultSetCacheStaleness()); //$NON-NLS-1$
 		ppc = new SessionAwareCache<PreparedPlan>("preparedplan", config.getCacheFactory(), SessionAwareCache.Type.PREPAREDPLAN, 0); //$NON-NLS-1$
@@ -418,9 +413,14 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		if ( transports != null && !transports.isEmpty()) {
 			for (SocketConfiguration socketConfig:transports) {
 				SocketListener socketConnection = startTransport(socketConfig, bs.getBufferManager(), config.getMaxODBCLobSizeAllowed());
-				if (socketConnection != null) {
-					this.transports.add(socketConnection);
+				if (socketConfig.getSSLConfiguration() != null) {
+					try {
+						socketConfig.getSSLConfiguration().getServerSSLEngine();
+					} catch (Exception e) {
+						throw new TeiidRuntimeException(e);
+					}
 				}
+				this.transports.add(socketConnection);
 			}
 		}
 		this.shutdownListener.setBootInProgress(false);
@@ -462,7 +462,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	}
 
 	private void initDriver() {
-		driver.setEmbeddedProfile(embeddedProfile);
+		driver.setLocalProfile(embeddedProfile);
 	}
 	
 	private SocketListener startTransport(SocketConfiguration socketConfig, BufferManager bm, int maxODBCLobSize) {
@@ -487,10 +487,10 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
     		ODBCSocketListener odbc = new ODBCSocketListener(address, socketConfig, this.services, bm, maxODBCLobSize, this.logon, driver);
     		return odbc;
 		}
-		return null;
+		throw new AssertionError("Unknown protocol " + socketConfig.getProtocol()); //$NON-NLS-1$
 	}
 
-	private void startVDBRepository(final String nodeName) {
+	private void startVDBRepository() {
 		this.repo.addListener(new VDBLifeCycleListener() {
 
 			@Override
@@ -505,15 +505,11 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 				}
 				rs.clearForVDB(name, 1);
 				ppc.clearForVDB(name, 1);
-				try {
-					for (SessionMetadata session : sessionService.getSessionsLoggedInToVDB(name, version)) {
-						try {
-							sessionService.closeSession(session.getSessionId());
-						} catch (InvalidSessionException e) {
-						}
+				for (SessionMetadata session : sessionService.getSessionsLoggedInToVDB(name, version)) {
+					try {
+						sessionService.closeSession(session.getSessionId());
+					} catch (InvalidSessionException e) {
 					}
-				} catch (SessionServiceException e) {
-					LogManager.logDetail(LogConstants.CTX_RUNTIME, e, "Could not terminate sessions for", name, version);  //$NON-NLS-1$
 				}
 			}
 
@@ -522,7 +518,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 				if (!vdb.getVDB().getStatus().equals(Status.ACTIVE)) {
 					return;
 				}
-				GlobalTableStore gts = CompositeGlobalTableStore.createInstance(nodeName, vdb, dqp.getBufferManager(), replicator);
+				GlobalTableStore gts = CompositeGlobalTableStore.createInstance(vdb, dqp.getBufferManager(), replicator);
 				
 				vdb.getVDB().addAttchment(GlobalTableStore.class, gts);
 			}
@@ -535,11 +531,11 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		this.repo.start();
 	}
 
-	protected BufferService getBufferService(String nodeName) {
+	protected BufferService getBufferService() {
 		bufferService.start();
 		if (replicator != null) {
 			try {
-				final TupleBufferCache tbc = replicator.replicate(nodeName, "$BM$", TupleBufferCache.class, bufferService.getBufferManager(), 0); //$NON-NLS-1$
+				final TupleBufferCache tbc = replicator.replicate("$BM$", TupleBufferCache.class, bufferService.getBufferManager(), 0); //$NON-NLS-1$
 				return new BufferService() {
 
 					@Override

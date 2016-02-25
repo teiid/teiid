@@ -22,6 +22,8 @@
 
 package org.teiid.translator;
 
+import org.teiid.language.SQLConstants;
+
 /**
  * Constants for all the possible standard system push down functions.
  * The names and function forms follow the Open Group CLI functions, with a few exceptions
@@ -187,4 +189,15 @@ public class SourceSystemFunctions {
 	public static final String ST_SETSRID = "st_setsrid"; //$NON-NLS-1$
 	public static final String ST_EQUALS = "st_equals"; //$NON-NLS-1$
 	public static final String ST_TRANSFORM = "st_transform"; //$NON-NLS-1$
+	public static final String ST_SIMPLIFY = "st_simplify"; //$NON-NLS-1$
+	public static final String ST_FORCE_2D = "st_force_2d"; //$NON-NLS-1$
+	public static final String ST_ENVELOPE = "st_envelope"; //$NON-NLS-1$
+	public static final String ST_WITHIN = "st_within"; //$NON-NLS-1$
+	public static final String ST_DWITHIN = "st_dwithin"; //$NON-NLS-1$
+	public static final String ST_EXTENT = "st_extent"; //$NON-NLS-1$
+	public static final String ST_HASARC = "st_hasarc"; //$NON-NLS-1$
+	public static final String DOUBLE_AMP_OP = SQLConstants.Tokens.DOUBLE_AMP;
+	public static final String ST_GEOMFROMEWKT = "st_geomfromewkt"; //$NON-NLS-1$
+	public static final String ST_ASEWKB = "st_asewkb"; //$NON-NLS-1$
+	public static final String ST_GEOMFROMEWKB = "st_geomfromewkb"; //$NON-NLS-1$
 }

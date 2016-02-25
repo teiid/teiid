@@ -33,6 +33,9 @@ import java.math.RoundingMode;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.CodingErrorAction;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -1353,6 +1356,10 @@ public final class FunctionMethods {
     }
     
     public static Object current_database(CommandContext context) {
+    	if (context.getVdb() != null) {
+    		//vdb can be null in unit tests
+    		return context.getVdb().getBaseName();
+    	}
     	return context.getVdbName();
     }
 
@@ -1534,10 +1541,29 @@ public final class FunctionMethods {
 	}
 	
 	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM, determinism = Determinism.COMMAND_DETERMINISTIC)
-	public static int mvstatus(CommandContext context, String schemaName, String viewName, Boolean validity, String status, String action) throws BlockedException, FunctionExecutionException {
-		if (!validity && !MaterializationMetadataRepository.ErrorAction.IGNORE.name().equalsIgnoreCase(action)) {
+	public static int mvstatus(CommandContext context, String schemaName, String viewName, Boolean validity, String status, String action) throws BlockedException, FunctionExecutionException, SQLException {
+		if ((validity == null || !validity) && !MaterializationMetadataRepository.ErrorAction.IGNORE.name().equalsIgnoreCase(action)) {
 			if (MaterializationMetadataRepository.ErrorAction.THROW_EXCEPTION.name().equalsIgnoreCase(action)) {
 				throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31147, schemaName, viewName));
+			}
+			PreparedStatement ps = null;
+			try {
+				Connection c = context.getConnection();
+				ps = c.prepareStatement("SELECT status.Valid, status.LoadState FROM status WHERE status.VDBName = ? AND status.VDBVersion = ? AND status.SchemaName = ? AND status.Name = ?"); //$NON-NLS-1$
+				ps.setString(1, context.getVdbName());
+				ps.setInt(2, context.getVdbVersion());
+				ps.setString(3, schemaName);
+				ps.setString(4, viewName);
+				ResultSet rs = ps.executeQuery();
+				if (rs.next()) {
+					if (rs.getBoolean(1)) {
+						return 1;
+					}
+				}
+			} finally {
+				if (ps != null) {
+					ps.close();
+				}
 			}
 			context.getWorkItem().scheduleWork(10000);
 			throw BlockedException.INSTANCE;
@@ -1573,6 +1599,43 @@ public final class FunctionMethods {
             throws FunctionExecutionException {
         return regexpReplace(context, source, regex, replacement, ""); //$NON-NLS-1$
     }
+    
+    @TeiidFunction(name=SourceSystemFunctions.REGEXP_REPLACE,
+            category=FunctionCategoryConstants.STRING,
+            nullOnNull=true)
+	public static ClobType regexpReplace(CommandContext context,
+	                                ClobType source,
+	                                String regex,
+	                                String replacement)
+	     throws FunctionExecutionException {
+    	return regexpReplace(context, source, regex, replacement, ""); //$NON-NLS-1$
+	}
+    
+    @TeiidFunction(name=SourceSystemFunctions.REGEXP_REPLACE,
+            category=FunctionCategoryConstants.STRING,
+            nullOnNull=true)
+    public static String regexpReplace(CommandContext context,
+                                String source,
+                                String regex,
+                                String replacement,
+                                String flags)
+                                		throws FunctionExecutionException {
+    	return regexpReplace(context, (CharSequence)source, regex, replacement, flags);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.REGEXP_REPLACE,
+            category=FunctionCategoryConstants.STRING,
+            nullOnNull=true)
+    public static ClobType regexpReplace(CommandContext context,
+    							ClobType source,
+                                String regex,
+                                String replacement,
+                                String flags)
+                                		throws FunctionExecutionException {
+    	//TODO: this is not very memory safe - we can write out to the buffermanger if needed
+    	String result = regexpReplace(context, source.getCharSequence(), regex, replacement, flags);
+    	return new ClobType(new ClobImpl(result));
+    }
 
     /**
      * Perform find-replace operation on a string using regular expressions.
@@ -1596,11 +1659,8 @@ public final class FunctionMethods {
      * @throws FunctionExecutionException If an invalid flag was supplied or if the
      *                                    regex pattern was invalid.
      */
-    @TeiidFunction(name=SourceSystemFunctions.REGEXP_REPLACE,
-                   category=FunctionCategoryConstants.STRING,
-                   nullOnNull=true)
     public static String regexpReplace(CommandContext context,
-                                       String source,
+                                       CharSequence source,
                                        String regex,
                                        String replacement,
                                        String flags)

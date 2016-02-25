@@ -22,11 +22,14 @@
 
 package org.teiid.translator.cassandra;
 
+import java.util.List;
+
 import javax.resource.ResourceException;
 import javax.resource.cci.Connection;
 
 import com.datastax.driver.core.KeyspaceMetadata;
-import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.ProtocolVersion;
+import com.datastax.driver.core.ResultSetFuture;
 
 /**
  * Connection to Cassandra NoSql database.
@@ -36,12 +39,34 @@ public interface CassandraConnection extends Connection{
 	/**
 	 * Executes a CQL query.
 	 * */
-	public ResultSet executeQuery(String query);
+	public ResultSetFuture executeQuery(String query);
 	
 	/**
 	 * Returns metadata about Cassandra keyspace (column families, columns metadata etc.)
 	 * @throws KeyspaceNotDefinedException 
 	 * */
 	public KeyspaceMetadata keyspaceInfo() throws ResourceException;
+
+	/**
+	 * Execute a batch of updates
+	 * @param updates
+	 * @return
+	 */
+	ResultSetFuture executeBatch(List<String> updates);
+
+	/**
+	 * Execute a bulk update
+	 * @param update
+	 * @param values
+	 * @return
+	 * @throws ResourceException 
+	 */
+	ResultSetFuture executeBatch(String update, List<Object[]> values);
+
+	/**
+	 * Get the protocol version in use for this connection
+	 * @return
+	 */
+	ProtocolVersion getVersion();
 	
 }

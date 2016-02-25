@@ -42,7 +42,7 @@ import org.teiid.core.util.CopyOnWriteLinkedHashMap;
 
 public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 
-	private static final String VERSION_DELIM = "."; //$NON-NLS-1$
+	public static final String VERSION_DELIM = "."; //$NON-NLS-1$
 
 	private static final long serialVersionUID = -4723595252013356436L;
 	
@@ -53,6 +53,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 	private List<EntryMetaData> entries = new ArrayList<EntryMetaData>(2);
 	
 	private int version = 1;
+	private volatile String baseName;
 	private String description;
 	private boolean xmlDeployment = false;
 	private volatile VDB.Status status = VDB.Status.ACTIVE;
@@ -62,7 +63,10 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 	private Map<String, Boolean> visibilityOverrides = new HashMap<String, Boolean>(2);
 
 	public String getFullName() {
-		return getName() + VERSION_DELIM + getVersion();
+		if (this.version == 1) {
+			return getName();
+		}
+		return getName() + VERSION_DELIM + getVersion(); 
 	}
 	
 	@Override
@@ -307,5 +311,16 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 	
 	public Map<String, Boolean> getVisibilityOverrides() {
 		return visibilityOverrides;
+	}
+
+	/**
+	 * @return the base name without the version.  Will be null for non live vdbs.
+	 */
+	public String getBaseName() {
+		return baseName;
+	}
+	
+	public void setBaseName(String baseName) {
+		this.baseName = baseName;
 	}
 }
