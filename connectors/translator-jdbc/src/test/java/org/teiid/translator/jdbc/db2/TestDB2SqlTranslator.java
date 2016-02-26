@@ -310,5 +310,11 @@ public class TestDB2SqlTranslator {
                 input, output, 
                 TRANSLATOR);
     }
+    
+    @Test public void testWeek() throws Exception {
+        String input = "SELECT week(datevalue) FROM BQT1.MediumA"; //$NON-NLS-1$
+        String output = "SELECT WEEK_ISO(MediumA.DateValue) FROM MediumA"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
 
 }
