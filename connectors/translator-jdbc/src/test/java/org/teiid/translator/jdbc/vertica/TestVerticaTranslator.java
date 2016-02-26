@@ -62,6 +62,10 @@ public class TestVerticaTranslator {
         input = "SELECT curtime() FROM BQT1.MediumA"; //$NON-NLS-1$
         output = "SELECT CURRENT_TIME() FROM MediumA"; //$NON-NLS-1$
         helpTestVisitor(getBQT_VDB(), input, output);
+
+        input = "SELECT week(datevalue) FROM BQT1.MediumA"; //$NON-NLS-1$
+        output = "SELECT WEEK_ISO(MediumA.DateValue) FROM MediumA"; //$NON-NLS-1$
+        helpTestVisitor(getBQT_VDB(), input, output);
     }
     
     @Test
