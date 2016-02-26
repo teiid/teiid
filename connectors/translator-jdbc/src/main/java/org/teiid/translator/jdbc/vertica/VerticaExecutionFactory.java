@@ -75,6 +75,7 @@ public class VerticaExecutionFactory extends JDBCExecutionFactory{
     public static final String AGE_IN_YEARS = "AGE_IN_YEARS"; //$NON-NLS-1$
     public static final String CURRENT_DATE = "CURRENT_DATE"; //$NON-NLS-1$
     public static final String CURRENT_TIME = "CURRENT_TIME"; //$NON-NLS-1$
+    public static final String WEEK_ISO = "WEEK_ISO"; //$NON-NLS-1$
     public static final String DATE_NAME = "DATE"; //$NON-NLS-1$
     public static final String DATEDIFF = "DATEDIFF"; //$NON-NLS-1$
     public static final String DAY = "DAY"; //$NON-NLS-1$
@@ -97,6 +98,7 @@ public class VerticaExecutionFactory extends JDBCExecutionFactory{
                 
         registerFunctionModifier(SourceSystemFunctions.CURDATE, new AliasModifier(CURRENT_DATE)); 
         registerFunctionModifier(SourceSystemFunctions.CURTIME, new AliasModifier(CURRENT_TIME));
+        registerFunctionModifier(SourceSystemFunctions.WEEK, new AliasModifier(WEEK_ISO));
         
         addPushDownFunction(VERTICA, BIT_LENGTH, INTEGER, STRING);
         addPushDownFunction(VERTICA, BITCOUNT, BYTE, BYTE);
