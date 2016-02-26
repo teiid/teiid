@@ -34,6 +34,7 @@ import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
+import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.Version;
 
@@ -46,6 +47,7 @@ public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {
 
 	public static final Version FIVE_4 = Version.getVersion("5.4"); //$NON-NLS-1$
 	public static final Version SIX_1 = Version.getVersion("6.1"); //$NON-NLS-1$
+    private static final String WEEK_ISO = "WEEK_ISO";
 	
 	private boolean dB2ForI;
 	
@@ -167,6 +169,7 @@ public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {
 				return Arrays.asList("STRIP(", p.get(2), ", ", ((Literal)p.get(0)).getValue(), ", ", p.get(1), ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 			}
 		});
+		registerFunctionModifier(SourceSystemFunctions.WEEK, new AliasModifier(WEEK_ISO));
 		addPushDownFunction("db2", "substr", "string", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 	
