@@ -37,7 +37,6 @@ import org.apache.olingo.commons.api.data.EntityCollection;
 import org.apache.olingo.commons.api.data.Property;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.document.DocumentNode;
-import org.teiid.translator.document.ODataDocument;
 import org.teiid.translator.odata4.ODataMetadataProcessor.ODataType;
 
 

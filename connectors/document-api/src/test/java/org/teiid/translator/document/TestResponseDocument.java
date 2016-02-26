@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
-import org.teiid.translator.document.ODataDocument;
 
 public class TestResponseDocument {
 
@@ -23,20 +22,20 @@ public class TestResponseDocument {
     @SuppressWarnings("unchecked")
     @Test
     public void testFlatten() {
-        ODataDocument doc = new ODataDocument();
+        Document doc = new Document();
         doc.addProperty("A", "AA");
         doc.addProperty("B", "BB");
         
-        ODataDocument c1 = new ODataDocument("c1", doc);
+        Document c1 = new Document("c1", false, doc);
         c1.addProperty("1", "11");
-        ODataDocument c2 = new ODataDocument("c1", doc);
+        Document c2 = new Document("c1", false, doc);
         c2.addProperty("2", "22");
         
         doc.addChildDocuments("c1", Arrays.asList(c1, c2));
         
-        ODataDocument c4 = new ODataDocument("c2", doc);
+        Document c4 = new Document("c2", false, doc);
         c4.addProperty("4", "44");
-        ODataDocument c5 = new ODataDocument("c2", doc);
+        Document c5 = new Document("c2", false, doc);
         c5.addProperty("5", "55");
         doc.addChildDocuments("c2", Arrays.asList(c4, c5));
                 
