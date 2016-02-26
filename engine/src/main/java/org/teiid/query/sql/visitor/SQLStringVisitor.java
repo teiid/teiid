@@ -2034,6 +2034,8 @@ public class SQLStringVisitor extends LanguageVisitor {
                 append(NonReserved.ORDINALITY);
             } else {
 	            if (col.getHeader() != null) {
+	            	append(NonReserved.HEADER);
+	            	append(SPACE);
 	            	outputLiteral(String.class, false, col.getHeader());
 	            	append(SPACE);
 	            }
