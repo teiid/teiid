@@ -1376,4 +1376,32 @@ public class TestDependentJoins {
             new String[] { "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g1 AS g_0 ORDER BY c_0", "SELECT g_1.e1 AS c_0, g_0.e1 AS c_1, g_1.e2 AS c_2 FROM pm1.g2 AS g_0, pm1.g1 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (g_1.e1 IN (<dependent values>)) ORDER BY c_0" }, new DefaultCapabilitiesFinder(caps), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
+    @Test public void testSplitPredicateSameTable() throws Exception { 
+        // Create query 
+        String sql = "SELECT a.e1, b.e3 FROM /*+ makedep */ (select pm1.g1.e1, pm1.g1.e2 from pm1.g1, pm1.g2 where pm1.g1.e3 = pm1.g2.e3) as a, "
+        		+ "(select pm2.g1.e1, pm2.g1.e2, pm2.g2.e3 from pm2.g1, pm2.g2 where pm2.g1.e3 = pm2.g2.e3) as b WHERE a.e1=b.e1 AND a.e2=b.e2"; //$NON-NLS-1$
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.ARRAY_TYPE, true);
+
+        // Run query
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {
+        	"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE (g_0.e3 = g_1.e3) AND ((g_0.e1, g_0.e2) IN (<dependent values>)) ORDER BY c_0, c_1", 
+        	"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_1.e3 AS c_2 FROM pm2.g1 AS g_0, pm2.g2 AS g_1 WHERE g_0.e3 = g_1.e3 ORDER BY c_0, c_1"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+    }
+    
+    @Test public void testSplitPredicateDifferentTable() throws Exception { 
+        // Create query 
+        String sql = "SELECT a.e1, b.e3 FROM /*+ makedep */ (select pm1.g1.e1, pm1.g2.e2 from pm1.g1, pm1.g2 where pm1.g1.e3 = pm1.g2.e3) as a, "
+        		+ "(select pm2.g1.e1, pm2.g1.e2, pm2.g2.e3 from pm2.g1, pm2.g2 where pm2.g1.e3 = pm2.g2.e3) as b WHERE a.e1=b.e1 AND a.e2=b.e2"; //$NON-NLS-1$
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.ARRAY_TYPE, true);
+
+        // Run query
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {
+        	"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_1.e3 AS c_2 FROM pm2.g1 AS g_0, pm2.g2 AS g_1 WHERE g_0.e3 = g_1.e3 ORDER BY c_0, c_1"
+        	, "SELECT g_0.e1 AS c_0, g_1.e2 AS c_1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE (g_0.e3 = g_1.e3) AND (g_0.e1 IN (<dependent values>)) AND (g_1.e2 IN (<dependent values>)) ORDER BY c_0, c_1"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+    }
+    
 }

@@ -965,7 +965,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
         
         // Combine hints if necessary
         RulePlaceAccess.copyDependentHints(other, accessNode);
-        RulePlaceAccess.copyDependentHints(joinNode, other);
+        RulePlaceAccess.copyDependentHints(joinNode, accessNode);
         combineSourceHints(accessNode, other);
         
         if (other.hasBooleanProperty(Info.IS_MULTI_SOURCE)) {
