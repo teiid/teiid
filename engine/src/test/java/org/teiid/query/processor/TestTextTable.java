@@ -588,7 +588,7 @@ public class TestTextTable {
 
         HardcodedDataManager dataManager = new HardcodedDataManager();
         Command cmd = helpParse(sql);
-        assertEquals("SELECT x.x FROM TEXTTABLE('h.1\\u000Aa' COLUMNS x 'h.1' string HEADER) AS x", cmd.toString());
+        assertEquals("SELECT x.x FROM TEXTTABLE('h.1\\u000Aa' COLUMNS x HEADER 'h.1' string HEADER) AS x", cmd.toString());
 		ProcessorPlan plan = helpGetPlan(cmd, RealMetadataFactory.example1Cached());
 		helpProcess(plan, dataManager, expected);
     }
