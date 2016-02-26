@@ -22,15 +22,7 @@
 
 package org.teiid.query.optimizer.relational.rules;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
@@ -391,7 +383,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 			throws QueryMetadataException, TeiidComponentException,
 			QueryPlannerException {
 		boolean result = false;
-		List<DependentSetCriteria> dscList = splitDependentSetCriteria(dscOrig);
+		List<DependentSetCriteria> dscList = splitDependentSetCriteria(dscOrig, false, null);
 		List<DependentSetCriteria.AttributeComparison> pushable = new ArrayList<AttributeComparison>();
 		List<DependentSetCriteria.AttributeComparison> nonPushable = new ArrayList<AttributeComparison>();
 		for (DependentSetCriteria dsc : dscList) {
@@ -519,10 +511,9 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 		}
 		accessNode.setProperty(NodeConstants.Info.IS_DEPENDENT_SET, Boolean.TRUE);
 		Criteria crit = (Criteria) critNode.getProperty(NodeConstants.Info.SELECT_CRITERIA);
-		if (isMultiAttributeDependentSet(crit) 
-				&& !CapabilitiesUtil.supports(Capability.ARRAY_TYPE, RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata), metadata, capFinder)) {
-			//split the criteria into individual predicates
-			List<DependentSetCriteria> crits = splitDependentSetCriteria((DependentSetCriteria) crit);
+		if (isMultiAttributeDependentSet(crit)) {
+			//split the criteria as needed
+			List<DependentSetCriteria> crits = splitDependentSetCriteria((DependentSetCriteria) crit, CapabilitiesUtil.supports(Capability.ARRAY_TYPE, RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata), metadata, capFinder), metadata);
 			critNode.setProperty(NodeConstants.Info.SELECT_CRITERIA, new CompoundCriteria(crits));
 		}
 		
@@ -550,12 +541,38 @@ public final class RulePushSelectCriteria implements OptimizerRule {
         }
 	}
 
-	private List<DependentSetCriteria> splitDependentSetCriteria(DependentSetCriteria dsc) {
+	private List<DependentSetCriteria> splitDependentSetCriteria(DependentSetCriteria dsc, boolean supportsArray, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
 		List<AttributeComparison> attributes = dsc.getAttributes();
 		List<DependentSetCriteria> crits = new ArrayList<DependentSetCriteria>(attributes.size());
+		
+		Map<Object, List<AttributeComparison>> splits = new LinkedHashMap<Object, List<AttributeComparison>>();
+		
 		for (int i = 0; i < attributes.size(); i++) {
+			Object key = null;
 			DependentSetCriteria.AttributeComparison comp = attributes.get(i);
-			DependentSetCriteria crit = RuleChooseDependent.createDependentSetCriteria(dsc.getContextSymbol(), Arrays.asList(comp));
+			if (supportsArray && (comp.dep instanceof ElementSymbol)) {
+				ElementSymbol es = (ElementSymbol)comp.dep;
+				GroupSymbol group = es.getGroupSymbol();
+				if (!metadata.isVirtualGroup(group.getMetadataID())) {
+					key = group;
+				}
+				//TODO: we could try to determine further if this is allowable
+				//for now since we are pushing as far as we can, this is a good indication,
+				//that it will need split
+			}
+			if (key == null) {
+				key = splits.size();
+			}
+			List<AttributeComparison> comps = splits.get(key);
+			if (comps == null) {
+				comps = new ArrayList<DependentSetCriteria.AttributeComparison>(2);
+				splits.put(key, comps);
+			}
+			comps.add(comp);
+		}
+
+		for (List<AttributeComparison> comps : splits.values()) {
+			DependentSetCriteria crit = RuleChooseDependent.createDependentSetCriteria(dsc.getContextSymbol(), comps);
 			crit.setMakeDepOptions(dsc.getMakeDepOptions());
 			crits.add(crit);
 		}
