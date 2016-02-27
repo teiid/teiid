@@ -243,7 +243,7 @@ public final class ProcedurePlanner implements CommandPlanner {
 				ProcessorPlan commandPlan = cmdStmt.getCommand().getProcessorPlan();                
                 
 				if (command.getType() == Command.TYPE_DYNAMIC){
-					instruction = new ExecDynamicSqlInstruction(parentProcCommand,((DynamicCommand)command), metadata, idGenerator, capFinder, cmdStmt.isReturnable() );
+					instruction = new ExecDynamicSqlInstruction(parentProcCommand,((DynamicCommand)command), metadata, idGenerator, capFinder, cmdStmt.isReturnable() && parentProcCommand.returnsResultSet());
 				}else{
 					CreateCursorResultSetInstruction cursor = new CreateCursorResultSetInstruction(null, commandPlan, getMode(parentProcCommand, cmdStmt, command));
 					if (cursor.getMode() == Mode.HOLD) {
