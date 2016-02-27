@@ -24,13 +24,8 @@ package org.teiid.transport;
 
 import static org.junit.Assert.*;
 
-import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.UnknownHostException;
 import java.nio.charset.Charset;
-import java.security.NoSuchAlgorithmException;
 import java.sql.Array;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -39,10 +34,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -60,7 +51,6 @@ import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
-import org.teiid.net.socket.SocketUtil;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.TestEmbeddedServer;
 import org.teiid.runtime.TestEmbeddedServer.MockTransactionManager;
@@ -68,70 +58,6 @@ import org.teiid.runtime.TestEmbeddedServer.MockTransactionManager;
 @SuppressWarnings("nls")
 public class TestODBCSocketTransport {
 	
-public static class AnonSSLSocketFactory extends SSLSocketFactory {
-		
-		private SSLSocketFactory sslSocketFactory;
-		
-		public AnonSSLSocketFactory() {
-			try {
-				sslSocketFactory = SSLContext.getDefault().getSocketFactory();
-			} catch (NoSuchAlgorithmException e) {
-				throw new RuntimeException();
-			}			
-		}
-
-		@Override
-		public Socket createSocket() throws IOException {
-			return sslSocketFactory.createSocket();
-		}
-
-		@Override
-		public Socket createSocket(InetAddress address, int port,
-				InetAddress localAddress, int localPort) throws IOException {
-			return sslSocketFactory.createSocket(address, port, localAddress,
-					localPort);
-		}
-
-		@Override
-		public Socket createSocket(InetAddress host, int port)
-				throws IOException {
-			return sslSocketFactory.createSocket(host, port);
-		}
-
-		@Override
-		public Socket createSocket(Socket s, String host, int port,
-				boolean autoClose) throws IOException {
-			SSLSocket socket = (SSLSocket)sslSocketFactory.createSocket(s, host, port, autoClose);
-			SocketUtil.addCipherSuite(socket, SocketUtil.ANON_CIPHER_SUITE);
-			return socket;
-		}
-
-		@Override
-		public Socket createSocket(String host, int port,
-				InetAddress localHost, int localPort) throws IOException,
-				UnknownHostException {
-			return sslSocketFactory.createSocket(host, port, localHost,
-					localPort);
-		}
-
-		@Override
-		public Socket createSocket(String host, int port) throws IOException,
-				UnknownHostException {
-			return sslSocketFactory.createSocket(host, port);
-		}
-
-		@Override
-		public String[] getDefaultCipherSuites() {
-			return sslSocketFactory.getDefaultCipherSuites();
-		}
-
-		@Override
-		public String[] getSupportedCipherSuites() {
-			return sslSocketFactory.getSupportedCipherSuites();
-		}
-		
-	}
-
 	private static final MockTransactionManager TRANSACTION_MANAGER = new TestEmbeddedServer.MockTransactionManager();
 
 	enum Mode {
@@ -153,7 +79,9 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 				sslConfig.setMode(SSLConfiguration.LOGIN);
 			} else if (mode == Mode.ENABLED || mode == Mode.LEGACY) {
 				sslConfig.setMode(SSLConfiguration.ENABLED);
-				sslConfig.setAuthenticationMode(SSLConfiguration.ANONYMOUS);
+				sslConfig.setAuthenticationMode(SSLConfiguration.ONEWAY);
+				sslConfig.setKeystoreFilename(UnitTestUtil.getTestDataFile("keystore.jks").getAbsolutePath());
+				sslConfig.setKeystorePassword("password");
 			} else {
 				sslConfig.setMode(SSLConfiguration.DISABLED);
 			}
@@ -465,7 +393,7 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		p.setProperty("user", "testuser");
 		p.setProperty("password", "testpassword");
 		p.setProperty("ssl", "true");
-		p.setProperty("sslfactory", AnonSSLSocketFactory.class.getName());
+		p.setProperty("sslfactory", "org.postgresql.ssl.NonValidatingFactory");
 		conn = d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/parts", p);
 		Statement s = conn.createStatement();
 		assertTrue(s.execute("select * from tables order by name"));

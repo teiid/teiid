@@ -33,7 +33,6 @@ import org.junit.After;
 import org.junit.Test;
 import org.postgresql.Driver;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
-import org.teiid.transport.TestODBCSocketTransport.AnonSSLSocketFactory;
 import org.teiid.transport.TestODBCSocketTransport.FakeOdbcServer;
 import org.teiid.transport.TestODBCSocketTransport.Mode;
 
@@ -53,7 +52,7 @@ public class TestODBCSSL {
 		p.setProperty("user", "testuser");
 		p.setProperty("password", "testpassword");
 		p.setProperty("ssl", "true");
-		p.setProperty("sslfactory", AnonSSLSocketFactory.class.getName());
+		p.setProperty("sslfactory", "org.postgresql.ssl.NonValidatingFactory");
 		Connection conn = d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/parts", p);
 		Statement s = conn.createStatement();
 		assertTrue(s.execute("select * from tables order by name"));
@@ -84,7 +83,7 @@ public class TestODBCSSL {
 		p.setProperty("user", "testuser");
 		p.setProperty("password", "testpassword");
 		p.setProperty("ssl", "true");
-		p.setProperty("sslfactory", AnonSSLSocketFactory.class.getName());
+		p.setProperty("sslfactory", "org.postgresql.ssl.NonValidatingFactory");
 		d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/parts", p);
 	}
 
