@@ -2257,6 +2257,18 @@ public class TestProcedureProcessor {
         helpTestProcess(plan, expected, dataManager, tm);
     }
     
+    @Test public void testReturnStatementWithDynamicCommad() throws Exception {
+    	String ddl = "create virtual procedure proc (z STRING) returns integer as begin execute immediate 'select '' || z || '''; return 1; end;";
+    	TransformationMetadata tm = TestProcedureResolving.createMetadata(ddl);    	
+        String sql = "{? = call proc('a')}"; //$NON-NLS-1$
+
+        ProcessorPlan plan = getProcedurePlan(sql, tm);
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        List[] expected = new List[] { Arrays.asList(1) }; //$NON-NLS-1$
+        helpTestProcess(plan, expected, dataManager, tm);
+    }
+    
     @Test public void testAnonBlock() throws Exception {
         String sql = "begin insert into #temp (e1) select e1 from pm1.g1; select * from #temp; end;"; //$NON-NLS-1$
         TransformationMetadata tm = RealMetadataFactory.example1Cached();
