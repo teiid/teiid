@@ -440,7 +440,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 	                		row = new ArrayList<Object>(row);
 	            		}
 						row = correctTypes(row);
-	            	} catch (UnsupportedOperationException e) {
+	            	} catch (UnsupportedOperationException | ArrayStoreException e) {
 	            		//it's generally expected that the returned list from 
 	            		//the translator should be modifiable, but we should be lax
 	            		if (unmodifiableList) {
