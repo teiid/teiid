@@ -95,7 +95,8 @@
         <version.org.dbunit>2.2</version.org.dbunit>
         <version.org.apache.poi>3.10.1</version.org.apache.poi>
         <version.org.apache.xmlbeans>2.6.0</version.org.apache.xmlbeans>
-        <version.org.springframework>3.2.6.RELEASE</version.org.springframework>
+        <version.org.springframework>3.2.12.RELEASE</version.org.springframework>
+        <version.org.springframework.asm>3.1.4.RELEASE</version.org.springframework.asm>
         <version.commons-logging>1.1</version.commons-logging>
         <version.commons-configuration>1.6</version.commons-configuration>
         <version.org.apache.ant>1.8.2</version.org.apache.ant>	    	    
@@ -1579,6 +1580,26 @@
                 <artifactId>spring-core</artifactId>
                 <version>${version.org.springframework}</version>
             </dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-aop</artifactId>
+				<version>${version.org.springframework}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-asm</artifactId>
+				<version>${version.org.springframework.asm}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-expression</artifactId>
+				<version>${version.org.springframework}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-tx</artifactId>
+				<version>${version.org.springframework}</version>
+			</dependency>                
             <dependency>
                 <groupId>com.facebook.presto</groupId>
                 <artifactId>presto-jdbc</artifactId>
