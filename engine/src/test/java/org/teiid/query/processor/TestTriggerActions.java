@@ -309,5 +309,27 @@ public class TestTriggerActions {
         List<?>[] expected = new List[] {Arrays.asList(2)};
     	helpProcess(plan, context, dm, expected);
 	}
+	
+	@Test public void testInsertWithQueryExpressionAndAlias() throws Exception {
+		TransformationMetadata metadata = RealMetadataFactory.fromDDL(
+				"create foreign table tablea (TEST_ID integer, TEST_NBR bigdecimal) options (updatable true);\n" +
+			    "create foreign table tableb (TEST_ID integer, TEST_NBR bigdecimal);\n" +
+				"create view viewa options (updatable true) as SELECT TEST_ID, TEST_NBR FROM tablea;\n" +
+				"create trigger on viewa instead of insert as for each row begin atomic "
+				+ "INSERT INTO tablea (tablea.TEST_ID, tablea.TEST_NBR) VALUES (\"NEW\".TEST_ID, \"NEW\".TEST_NBR); END;"
+			    , "x", "y");
+		
+		String sql = "insert into viewa (TEST_ID, TEST_NBR) SELECT TEST_ID AS X, TEST_NBR FROM tableb";
+		
+		HardcodedDataManager dm = new HardcodedDataManager();
+		dm.addData("INSERT INTO tablea (TEST_ID, TEST_NBR) VALUES (1, 2.0)", Arrays.asList(1));
+		dm.addData("SELECT g_0.TEST_ID, g_0.TEST_NBR FROM y.tableb AS g_0", Arrays.asList(1, 2.0));
+		
+		CommandContext context = createCommandContext();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        ProcessorPlan plan = TestProcessor.helpGetPlan(TestResolver.helpResolve(sql, metadata), metadata, new DefaultCapabilitiesFinder(caps), context);
+        List<?>[] expected = new List[] {Arrays.asList(1)};
+    	helpProcess(plan, context, dm, expected);
+	}
 
 }
