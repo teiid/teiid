@@ -37,6 +37,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.GeometryInputSource;
+import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.*;
 import org.teiid.language.Like.MatchMode;
@@ -904,6 +905,11 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean useStreamsForLobs() {
     	return true; //lob bindings require a transaction
+    }
+    
+    @Override
+    public String translateLiteralBinaryType(BinaryType obj) {
+    	return "E'\\\\x" + obj + '\''; //$NON-NLS-1$ 
     }
     
 }

@@ -37,6 +37,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.core.types.BinaryType;
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.Command;
 import org.teiid.language.DerivedColumn;
@@ -481,6 +482,11 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
     
     public boolean supportsLiteralOnlyWithGrouping() {
     	return false;
+    }
+    
+    @Override
+    public String translateLiteralBinaryType(BinaryType obj) {
+    	return "0x" + obj; //$NON-NLS-1$
     }
     
 }
