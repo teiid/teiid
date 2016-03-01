@@ -39,6 +39,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.*;
 import org.teiid.language.Argument.Direction;
@@ -178,9 +179,7 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
             } else if(type.equals(TypeFacility.RUNTIME_TYPES.DATE)) {
                 valuesbuffer.append(executionFactory.translateLiteralDate((java.sql.Date)obj));
             } else if (type.equals(DataTypeManager.DefaultDataClasses.VARBINARY)) {
-            	valuesbuffer.append("X'") //$NON-NLS-1$
-            		  .append(obj)
-            		  .append("'"); //$NON-NLS-1$
+            	valuesbuffer.append(executionFactory.translateLiteralBinaryType((BinaryType)obj));
             } else {
                 // If obj is string, toSting() will not create a new String 
                 // object, it returns it self, so new object creation.

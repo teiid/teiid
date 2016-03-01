@@ -691,6 +691,18 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         return getTypeFacility().convertDate(dateObject, getDatabaseCalendar().getTimeZone(), TimestampWithTimezone.getCalendar(), dateObject.getClass()).toString();
     }    
     
+
+    /**
+     * Subclasses should override this method to provide a different sql translation
+     * of the literal varbinary value.  By default, a varbinary literal is represented as:
+     * <code>X'hex value'</code>
+     * @param obj value, never null
+     * @return Translated string
+     */
+     public String translateLiteralBinaryType(BinaryType obj) {
+    	return "X'" + obj + "'"; //$NON-NLS-1$ //$NON-NLS-2$
+	}
+    
     /**
      * Returns true to indicate that SQL should include a comment
      * indicating the session and request ids.
@@ -1444,5 +1456,4 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	public boolean useUnicodePrefix() {
 		return false;
 	}
-	
 }

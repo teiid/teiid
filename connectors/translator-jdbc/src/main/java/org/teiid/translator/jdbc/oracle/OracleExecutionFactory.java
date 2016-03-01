@@ -36,6 +36,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import org.teiid.core.types.BinaryType;
 import org.teiid.language.*;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.Comparison.Operator;
@@ -1007,4 +1008,8 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	return true;
     }
     
+    @Override
+    public String translateLiteralBinaryType(BinaryType obj) {
+    	return "HEXTORAW('" + obj + "')"; //$NON-NLS-1$ //$NON-NLS-2$
+    }
 }

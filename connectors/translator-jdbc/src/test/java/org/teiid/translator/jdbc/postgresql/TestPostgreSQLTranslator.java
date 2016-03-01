@@ -573,4 +573,9 @@ public class TestPostgreSQLTranslator {
             output);
     }
     
+    @Test public void testBinaryLiteral() throws TranslatorException {
+        helpTestVisitor(TranslationHelper.BQT_VDB,
+                "SELECT X'abcd1234'", //$NON-NLS-1$
+                "SELECT E'\\\\xABCD1234'"); //$NON-NLS-1$
+    }
 }

@@ -269,4 +269,9 @@ public class TestSybaseSQLConversionVisitor {
     	assertTrue(sybaseExecutionFactory.supportsRowLimit());
     }
     
+    @Test public void testBinaryLiteral() {
+        helpTestVisitor(getBQTVDB(),
+                "SELECT X'abcd1234'", //$NON-NLS-1$
+                "SELECT 0xABCD1234"); //$NON-NLS-1$
+    }
 }

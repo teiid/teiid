@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.core.types.BinaryType;
 import org.teiid.language.AggregateFunction;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
@@ -644,4 +645,8 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     	}
     }
     
-}
+    @Override
+    public String translateLiteralBinaryType(BinaryType obj) {
+    	return "E'\\\\x" + obj + '\''; //$NON-NLS-1$ 
+    }
+} 
