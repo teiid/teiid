@@ -99,6 +99,9 @@ public final class BinaryType implements Comparable<BinaryType> {
 		return Arrays.equals(this.bytes, other.bytes);
 	}
 	
+	/**
+	 * Returns the hex string representing the binary value.
+	 */
 	@Override
 	public String toString() {
 		return PropertiesUtils.toHex(bytes);

@@ -38,6 +38,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.teiid.GeometryInputSource;
+import org.teiid.core.types.BinaryType;
 import org.teiid.language.*;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.Comparison.Operator;
@@ -735,18 +736,6 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     			super.visit(obj);
     		}
     		
-    		@Override
-    		protected void translateSQLType(Class<?> type, Object obj,
-    				StringBuilder valuesbuffer) {
-    			if (type == TypeFacility.RUNTIME_TYPES.VARBINARY) {
-    				valuesbuffer.append("HEXTORAW("); //$NON-NLS-1$
-    				super.translateSQLType(TypeFacility.RUNTIME_TYPES.STRING, obj, valuesbuffer);
-    				valuesbuffer.append(")"); //$NON-NLS-1$
-    			} else {
-    				super.translateSQLType(type, obj, valuesbuffer);
-    			}
-    		}
-    		
     	};
     }
     
@@ -1091,5 +1080,10 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean useColumnNamesForGeneratedKeys() {
     	return true;
+    }
+    
+    @Override
+    public String translateLiteralBinaryType(BinaryType obj) {
+    	return "HEXTORAW('" + obj + "')"; //$NON-NLS-1$ //$NON-NLS-2$
     }
 }
