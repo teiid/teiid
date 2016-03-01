@@ -263,7 +263,7 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
             if (!changingOnly) {
             	varSymbol = next.clone();
             	varSymbol.getGroupSymbol().setName(SQLConstants.Reserved.NEW);
-            	result.put(varSymbol, (Expression)valIter.next());
+            	result.put(varSymbol, SymbolMap.getExpression((Expression)valIter.next()));
             }
         }
         
