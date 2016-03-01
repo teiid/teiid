@@ -297,4 +297,10 @@ public class TestSybaseSQLConversionVisitor {
                 "SELECT SmallA.IntKey FROM SmallA GROUP BY SmallA.IntKey"); //$NON-NLS-1$
     }
     
+    @Test public void testBinaryLiteral() {
+        helpTestVisitor(getBQTVDB(),
+                "SELECT X'abcd1234'", //$NON-NLS-1$
+                "SELECT 0xABCD1234"); //$NON-NLS-1$
+    }
+    
 }
