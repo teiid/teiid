@@ -39,14 +39,12 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.olingo.server.api.ODataHttpHandler;
-import org.teiid.OAuthCredentialContext;
 import org.teiid.core.util.LRUCache;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.jdbc.ConnectionImpl;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.net.TeiidURL;
 import org.teiid.odata.api.Client;
 import org.teiid.olingo.ODataPlugin;
 import org.teiid.olingo.service.LocalClient;
@@ -76,7 +74,12 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
         }
 
         Properties props = new Properties();
-        Enumeration<String> names = config.getInitParameterNames();
+        Enumeration<String> names = config.getServletContext().getInitParameterNames();
+        while (names.hasMoreElements()) {
+            String name = names.nextElement();
+            props.setProperty(name, config.getServletContext().getInitParameter(name));
+        }
+        names = config.getInitParameterNames();
         while (names.hasMoreElements()) {
             String name = names.nextElement();
             props.setProperty(name, config.getInitParameter(name));
@@ -100,26 +103,23 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
         int version = 1;
         String modelName = null;
 
-        String uri = ((HttpServletRequest) request).getRequestURL().toString();
-        int idx = uri.indexOf("/odata4/"); //$NON-NLS-1$
+        String uri = ((HttpServletRequest) request).getRequestURI().toString();
         
-        if (idx != -1 && (uri.endsWith("auth") || uri.endsWith("token"))){
+        if (uri.endsWith("auth") || uri.endsWith("token")){ //$NON-NLS-1$ //$NON-NLS-2$
             chain.doFilter(httpRequest, response);
             return;
         }
         
-        if (idx != -1) {
-            String contextPath = httpRequest.getContextPath();
-            if (contextPath == null) {
-                contextPath = "/odata4"; //$NON-NLS-1$
-            }
-
-            int endIdx = uri.indexOf('/', idx + 8);
+        String contextPath = httpRequest.getContextPath();
+        int endIdx = uri.indexOf('/', contextPath.length() + 1);
+        int beginIdx = contextPath.length() + 1;
+        
+        if (contextPath.equals("/odata4")) { //$NON-NLS-1$
             if (endIdx == -1) {
                 throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16020));
             }
 
-            vdbName = uri.substring(idx + 8, endIdx);
+            vdbName = uri.substring(beginIdx, endIdx);
             int modelIdx = uri.indexOf('/', endIdx + 1);
             if (modelIdx == -1) {
                 modelName = uri.substring(endIdx + 1).trim();
@@ -147,33 +147,22 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
             contextAwareRequest.setContextPath(contextPath);
             httpRequest = contextAwareRequest;
         } else {
-            if (this.initProperties.getProperty("vdb-name") == null || 
-                    this.initProperties.getProperty("vdb-version") == null) { //$NON-NLS-1$ //$NON-NLS-2$
+            if (this.initProperties.getProperty("vdb-name") == null || //$NON-NLS-1$
+                    this.initProperties.getProperty("vdb-version") == null) { //$NON-NLS-1$ 
                 throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16018));
-            }
-            
-            if (uri.endsWith("auth") || uri.endsWith("token")){
-                chain.doFilter(httpRequest, response);
-                return;
             }
             
             vdbName = this.initProperties.getProperty("vdb-name"); //$NON-NLS-1$
             version = Integer.parseInt(this.initProperties.getProperty("vdb-version")); //$NON-NLS-1$
-            String contextPath = httpRequest.getContextPath();
-            if(contextPath == null){
-                contextPath = "/odata4"; //$NON-NLS-1$
-            }
-            int idxCP = uri.indexOf(contextPath);
-            int idxS = idxCP + contextPath.length();
-            int modelIdx = uri.indexOf('/', idxS + 1);
-            if (modelIdx == -1) {
-                modelName = uri.substring(idxS + 1).trim();
-                if (modelName.isEmpty()) {
-                    throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16021));
-                }
-            } else {
-                modelName = uri.substring(idxS + 1, modelIdx);
-            }
+            
+			if (endIdx == -1) {
+			    modelName = uri.substring(beginIdx).trim();
+			    if (modelName.isEmpty()) {
+			        throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16021));
+			    }
+			} else {
+			    modelName = uri.substring(beginIdx, endIdx);
+			}
             
             contextPath = contextPath + "/" + modelName; //$NON-NLS-1$
             ContextAwareHttpSerlvetRequest contextAwareRequest = new ContextAwareHttpSerlvetRequest(httpRequest);

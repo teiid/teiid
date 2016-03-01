@@ -21,8 +21,7 @@
  */
 package org.teiid.olingo;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -31,7 +30,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
 
@@ -112,11 +113,22 @@ public class TestODataIntegration {
         teiid.start(config);
         teiid.addTranslator(LoopbackExecutionFactory.class);
 
-        ServerConnector connector = new ServerConnector(server);
+        createContext("/odata4", null);
+        
+        deployVDB();
+    }
+
+	private void createContext(String contextPath, Map<String, String> properties) throws Exception {
+		ServerConnector connector = new ServerConnector(server);
         server.setConnectors(new Connector[] { connector });
 
         ServletContextHandler context = new ServletContextHandler();
-        context.setContextPath("/odata4");
+        if (properties != null) {
+        	for (Map.Entry<String, String> prop : properties.entrySet()) {
+        		context.setInitParameter(prop.getKey(), prop.getValue());
+        	}
+        }
+        context.setContextPath(contextPath);
         context.addServlet(new ServletHolder(new ODataServlet()), "/*");
         context.addFilter(new FilterHolder(new ODataFilter() {
             @Override
@@ -131,9 +143,7 @@ public class TestODataIntegration {
         server.start();
         int port = connector.getLocalPort();
         http.start();
-        baseURL = "http://localhost:"+port+"/odata4";        
-
-        deployVDB();
+        baseURL = "http://localhost:"+port+contextPath;        
     }
 
     @After
@@ -1192,5 +1202,23 @@ public class TestODataIntegration {
         String string = response.getContentAsString();
         assertTrue(string.contains("odata4/loopy/vm1/LobTable(1)/e2"));
         assertTrue(string.contains("odata4/loopy/vm1/LobTable(2)/e2"));
+    } 
+    
+    @Test
+    public void testWithAlternateContext() throws Exception {
+    	http.stop();
+    	server.stop();
+    	Map<String, String> props = new HashMap<String, String>();
+    	props.put("vdb-name", "loopy");
+    	props.put("vdb-version", "1");
+    	
+    	createContext("/other", props);
+    	
+        ContentResponse response = http.newRequest(baseURL + "/vm1/LobTable(2)/e2")
+                .method("GET")
+                .send();
+        assertEquals(200, response.getStatus());
+        assertEquals("<name>content2</name>", 
+                response.getContentAsString());      
     } 
 }
