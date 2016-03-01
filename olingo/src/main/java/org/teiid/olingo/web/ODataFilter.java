@@ -160,14 +160,26 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
             
             vdbName = this.initProperties.getProperty("vdb-name"); //$NON-NLS-1$
             version = Integer.parseInt(this.initProperties.getProperty("vdb-version")); //$NON-NLS-1$
-            int modelIdx = uri.indexOf('/', uri.indexOf('/'));
+            String contextPath = httpRequest.getContextPath();
+            if(contextPath == null){
+                contextPath = "/odata4"; //$NON-NLS-1$
+            }
+            int idxCP = uri.indexOf(contextPath);
+            int idxS = idxCP + contextPath.length();
+            int modelIdx = uri.indexOf('/', idxS + 1);
             if (modelIdx == -1) {
-                modelName = uri.substring(uri.indexOf('/') + 1).trim();
+                modelName = uri.substring(idxS + 1).trim();
                 if (modelName.isEmpty()) {
                     throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16021));
                 }
+            } else {
+                modelName = uri.substring(idxS + 1, modelIdx);
             }
-            modelName = uri.substring(uri.indexOf('/'), uri.indexOf('/', uri.indexOf('/')));
+            
+            contextPath = contextPath + "/" + modelName; //$NON-NLS-1$
+            ContextAwareHttpSerlvetRequest contextAwareRequest = new ContextAwareHttpSerlvetRequest(httpRequest);
+            contextAwareRequest.setContextPath(contextPath);
+            httpRequest = contextAwareRequest;
         }
         
         key = new VDBKey(vdbName, version);
