@@ -463,7 +463,9 @@ public class TestMatViews {
 		mmd2.setName("view1");
 		mmd2.setModelType(Type.VIRTUAL);
 		mmd2.addSourceMetadata("DDL", "CREATE VIEW v1 ( col integer, col1 string, primary key (col, col1) ) "
-				+ "OPTIONS (MATERIALIZED true, \"teiid_rel:ALLOW_MATVIEW_MANAGEMENT\" true, \"teiid_rel:MATVIEW_TTL\" 200) AS select 1, current_database()");
+				+ "OPTIONS (MATERIALIZED true, \"teiid_rel:ALLOW_MATVIEW_MANAGEMENT\" true, \"teiid_rel:MATVIEW_TTL\" 200) AS select 1, current_database(); "
+				+ "CREATE VIEW v2 ( col integer, col1 string, primary key (col, col1) ) "
+				+ "OPTIONS (MATERIALIZED true, \"teiid_rel:ALLOW_MATVIEW_MANAGEMENT\" true) AS select 1, current_database()");
 		server.deployVDB("comp", mmd2);
 		
 		Connection c = server.getDriver().connect("jdbc:teiid:comp", null);
@@ -476,12 +478,22 @@ public class TestMatViews {
 		assertEquals("LOADED", rs.getString("loadstate"));
 		assertEquals(true, rs.getBoolean("valid"));
 		Timestamp ts = rs.getTimestamp("updated");
+
+		rs = s.executeQuery("select * from MatViews where name = 'v2'");
+		assertTrue(rs.next());
+		assertEquals("LOADED", rs.getString("loadstate"));
+		assertEquals(true, rs.getBoolean("valid"));
+		Timestamp v2ts = rs.getTimestamp("updated");
 		
 		//and queryable
 		rs = s.executeQuery("select * from v1");
 		rs.next();
 		assertEquals("1", rs.getString(1));
 		
+		rs = s.executeQuery("select * from v2");
+		rs.next();
+		assertEquals("1", rs.getString(1));
+
 		Thread.sleep(1000); //wait for ttl to expire
 		
 		rs = s.executeQuery("select * from MatViews where name = 'v1'");
@@ -490,6 +502,13 @@ public class TestMatViews {
 		assertEquals(true, rs.getBoolean("valid"));
 		Timestamp ts1 = rs.getTimestamp("updated");
 		assertTrue(ts1.compareTo(ts) > 0);
+		
+		rs = s.executeQuery("select * from MatViews where name = 'v2'");
+		assertTrue(rs.next());
+		assertEquals("LOADED", rs.getString("loadstate"));
+		assertEquals(true, rs.getBoolean("valid"));
+		Timestamp v2ts1 = rs.getTimestamp("updated");
+		assertEquals(v2ts, v2ts1);
 	}
 	
 }
