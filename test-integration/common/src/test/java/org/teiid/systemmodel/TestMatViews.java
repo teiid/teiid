@@ -28,6 +28,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -461,7 +462,8 @@ public class TestMatViews {
 		ModelMetaData mmd2 = new ModelMetaData();
 		mmd2.setName("view1");
 		mmd2.setModelType(Type.VIRTUAL);
-		mmd2.addSourceMetadata("DDL", "CREATE VIEW v1 ( col integer, col1 string, primary key (col, col1) ) OPTIONS (MATERIALIZED true, \"teiid_rel:ALLOW_MATVIEW_MANAGEMENT\" true) AS select 1, current_database()");
+		mmd2.addSourceMetadata("DDL", "CREATE VIEW v1 ( col integer, col1 string, primary key (col, col1) ) "
+				+ "OPTIONS (MATERIALIZED true, \"teiid_rel:ALLOW_MATVIEW_MANAGEMENT\" true, \"teiid_rel:MATVIEW_TTL\" 200) AS select 1, current_database()");
 		server.deployVDB("comp", mmd2);
 		
 		Connection c = server.getDriver().connect("jdbc:teiid:comp", null);
@@ -473,11 +475,21 @@ public class TestMatViews {
 		assertTrue(rs.next());
 		assertEquals("LOADED", rs.getString("loadstate"));
 		assertEquals(true, rs.getBoolean("valid"));
+		Timestamp ts = rs.getTimestamp("updated");
 		
 		//and queryable
 		rs = s.executeQuery("select * from v1");
 		rs.next();
 		assertEquals("1", rs.getString(1));
+		
+		Thread.sleep(1000); //wait for ttl to expire
+		
+		rs = s.executeQuery("select * from MatViews where name = 'v1'");
+		assertTrue(rs.next());
+		assertEquals("LOADED", rs.getString("loadstate"));
+		assertEquals(true, rs.getBoolean("valid"));
+		Timestamp ts1 = rs.getTimestamp("updated");
+		assertTrue(ts1.compareTo(ts) > 0);
 	}
 	
 }
