@@ -133,7 +133,7 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 									public void run() {
 										boolean invalidate = TempTableDataManager.shouldInvalidate(vdb);
 										try {
-											executeAsynchQuery(vdb, "SYSADMIN.refreshMatView(" + table.getSQLString() + ", " + invalidate + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+											executeAsynchQuery(vdb, "call SYSADMIN.refreshMatView('" + table.getFullName().replaceAll("'", "''") + "', " + invalidate + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 										} catch (SQLException e) {
 											LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
 										}
