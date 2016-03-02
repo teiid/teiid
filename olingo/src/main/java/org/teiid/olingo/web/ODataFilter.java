@@ -178,8 +178,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
             }
 
         } else {
-            if (this.initProperties.getProperty("vdb-name") == null ||  //$NON-NLS-1$
-                    this.initProperties.getProperty("vdb-version") == null) { //$NON-NLS-1$ 
+            if (this.initProperties.getProperty("vdb-name") == null) { //$NON-NLS-1$ 
                 throw new TeiidProcessingException(ODataPlugin.Event.TEIID16018, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16018));
             }
             
