@@ -763,7 +763,7 @@ public class Evaluator {
 		   if (ref.isPositional() && ref.getExpression() == null) {
 			   return getContext(ref).getVariableContext().getGlobalValue(ref.getContextSymbol());
 		   }
-		   Object result = internalEvaluate(ref.getExpression(), tuple);
+		   Object result = getContext(ref.getExpression()).getFromContext(ref.getExpression());
 		   if (ref.getConstraint() != null) {
 			   try {
 				   ref.getConstraint().validate(result);

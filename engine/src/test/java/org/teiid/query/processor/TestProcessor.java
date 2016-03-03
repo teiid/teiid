@@ -7831,7 +7831,16 @@ public class TestProcessor {
 		HardcodedDataManager dataManager = new HardcodedDataManager();
 		dataManager.addData("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", Arrays.asList("a,b", 1), Arrays.asList("a,b\n1,2\n3,4", 1));
 		TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList("1", "2")});
-	 }
-    
+	}
+	
+	@Test public void testSubqueriesWithMatchingCorrelationName() throws Exception {
+		String sql = "select e1, (select e1 from (select t1.e1 from pm1.g1 as t1) as t2 where t2.e1 = t1.e1) from pm2.g1 as t1";
+		ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+		dataManager.addData("SELECT pm2.g1.e1 FROM pm2.g1", Arrays.asList("a"));
+		dataManager.addData("SELECT pm1.g1.e1 FROM pm1.g1", Arrays.asList("a"), Arrays.asList("b"));
+		TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList("a", "a")});
+	}
+	
     private static final boolean DEBUG = false;
 }
