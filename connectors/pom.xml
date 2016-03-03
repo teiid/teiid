@@ -11,7 +11,7 @@
   <name>Connectors</name>
   <description>This project is aggregator for all the supported connectors.</description>
   <dependencies>
-          
+
     <!--  Internal Test Dependencies -->
     <dependency>
       <groupId>org.jboss.teiid</groupId>
@@ -45,12 +45,12 @@
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-admin</artifactId>
       <scope>test</scope>
-    </dependency>    
+    </dependency>
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-engine</artifactId>
       <scope>test</scope>
-    </dependency>    
+    </dependency>
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-metadata</artifactId>
@@ -61,39 +61,38 @@
       <artifactId>teiid-metadata</artifactId>
       <type>test-jar</type>
       <scope>test</scope>
-    </dependency>        
+    </dependency>
 
     <!-- External dependencies
     <dependency>
         <groupId>org.jboss</groupId>
         <artifactId>jboss-vfs</artifactId>
         <scope>test</scope>
-    </dependency>    
+    </dependency>
     <dependency>
         <groupId>org.jboss.man</groupId>
         <artifactId>jboss-managed</artifactId>
         <scope>test</scope>
-    </dependency>     
+    </dependency>
      -->
-     
+
     <dependency>
         <groupId>org.jboss</groupId>
         <artifactId>jboss-vfs</artifactId>
         <scope>test</scope>
-    </dependency> 
+    </dependency>
     <dependency>
         <groupId>org.jboss.logging</groupId>
         <artifactId>jboss-logging</artifactId>
-        <scope>test</scope>        
-    </dependency>          
-    
+        <scope>test</scope>
+    </dependency>
+
   </dependencies>
-  
+
   <modules>
     <module>google-api</module>
     <module>mongodb-api</module>
     <module>simpledb-api</module>
-      
     <module>translator-jdbc</module>
     <module>translator-google</module>
     <module>translator-ldap</module>
@@ -116,11 +115,10 @@
     <module>translator-odata4</module>
     <module>translator-infinispan-cache</module>
     <module>translator-infinispan-dsl</module>
-
     <module>connector-file</module>
     <module>connector-google</module>
     <module>connector-salesforce</module>
-    <module>connector-salesforce-34</module>    
+    <module>connector-salesforce-34</module>
     <module>connector-ldap</module>
     <module>connector-ws</module>
     <module>connector-mongodb</module>
@@ -132,7 +130,8 @@
     <module>connector-infinispan-dsl</module>
     <module>translator-prestodb</module>
     <module>sandbox</module>
-
     <module>translator-hbase</module>
+    <module>translator-couchbase</module>
+    <module>connector-couchbase</module>
   </modules>
 </project>

@@ -1,0 +1,3 @@
+/subsystem=teiid/translator=couchbase:add(module=org.jboss.teiid.translator.couchbase)
+
+

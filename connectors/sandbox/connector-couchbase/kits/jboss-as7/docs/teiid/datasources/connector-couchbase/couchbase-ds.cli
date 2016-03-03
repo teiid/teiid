@@ -1,0 +1,7 @@
+/subsystem=resource-adapters/resource-adapter=couchbase:add(module=org.jboss.teiid.resource-adapter.couchbase)
+/subsystem=resource-adapters/resource-adapter=couchbase/connection-definitions=couchbaseDS:add(jndi-name="java:/couchbaseDS", class-name=org.teiid.resource.adapter.couchbase.couchbaseManagedConnectionFactory, enabled="true", use-java-context="true")
+/subsystem=resource-adapters/resource-adapter=couchbase/connection-definitions=couchbaseDS/config-properties=server:add(value="0.0.0.0")
+/subsystem=resource-adapters/resource-adapter=couchbase/connection-definitions=couchbaseDS/config-properties=bucketName:add(value="beer-sample")
+/subsystem=resource-adapters/resource-adapter=couchbase/connection-definitions=couchbaseDS/config-properties=bucketPassword:add(value="r3dhat1")
+/subsystem=resource-adapters/resource-adapter=couchbase:activate
+
