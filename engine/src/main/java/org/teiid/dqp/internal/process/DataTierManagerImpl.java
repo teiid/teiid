@@ -260,7 +260,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         		row.add(model.getUUID());
         		row.add(model.getAnnotation());
         		row.add(model.getPrimaryMetamodelUri());
-        		row.add(null);
         	}
 		});
         name = SystemTables.TABLES.name();
@@ -283,7 +282,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				row.add(table.getAnnotation());
 				row.add(table.isSystem());
 				row.add(table.isMaterialized());
-				row.add(null);
 				row.add(table.getParent().getUUID());
 			}
 		});
@@ -378,7 +376,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				row.add(proc.getResultSet() != null);
 				row.add(proc.getUUID());
 				row.add(proc.getAnnotation());
-				row.add(null);
 				row.add(proc.getParent().getUUID());
 			}
 		});
@@ -436,7 +433,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
  				row.add(datatype.getRuntimeTypeName());
  				row.add(datatype.getBasetypeName());
  				row.add(datatype.getAnnotation());
- 				row.add(null);
         	}
 		});
         name = SystemTables.VIRTUALDATABASES.name();
@@ -495,7 +491,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				row.add(param.getNullType().toString());
 				row.add(param.getUUID());
 				row.add(param.getAnnotation());
-				row.add(null);
         	}
         	
         	@Override
@@ -540,7 +535,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				row.add(param.getNullType().toString());
 				row.add(param.getUUID());
 				row.add(param.getAnnotation());
-				row.add(null);
         	}
         	
         	@Override
@@ -588,7 +582,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				row.add(entry.getKey());
 				row.add(entry.getValue());
 				row.add(((ExpandingSimpleIterator<AbstractMetadataRecord, Entry<String, String>>)iter).getCurrentParent().getUUID());
-				row.add(null);
 				row.add(clobValue);
         	}
         	
@@ -722,7 +715,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         		row.add(column.getRadix());
         		row.add(column.getUUID());
         		row.add(column.getAnnotation());
-        		row.add(null);
         		row.add(column.getParent().getUUID());
         	}
         	
@@ -749,7 +741,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         		row.add(false);
         		row.add((key instanceof ForeignKey)?((ForeignKey)key).getUniqueKeyID():null);
         		row.add(key.getUUID());
-        		row.add(null);
         	}
         	
         	@Override
@@ -790,7 +781,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         		row.add((key instanceof ForeignKey)?((ForeignKey)key).getUniqueKeyID():null);
         		row.add(key.getUUID());
         		row.add(pos);
-        		row.add(null);
         		row.add(key.getParent().getUUID());
         	}
         	

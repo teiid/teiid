@@ -29,7 +29,6 @@ CREATE FOREIGN TABLE Columns (
 	Radix integer NOT NULL,
 	UID string(50) NOT NULL,
 	Description string(255),
-	OID integer,
 	TableUID string (50) NOT NULL,
 	PRIMARY KEY (VDBName, SchemaName, TableName, Name),
 	FOREIGN KEY (VDBName, SchemaName, TableName) REFERENCES Tables (VDBName, SchemaName, Name),
@@ -56,7 +55,6 @@ CREATE FOREIGN TABLE DataTypes (
 	RuntimeType string(64),
 	BaseType string(64),
 	Description string(255),
-	OID integer,
 	PRIMARY KEY (Name),
 	UNIQUE (UID)	
 );
@@ -71,7 +69,6 @@ CREATE FOREIGN TABLE KeyColumns (
 	RefKeyUID string(50),
 	UID string(50) NOT NULL,
 	Position integer,
-	OID integer,
 	TableUID string (50) NOT NULL,
 	PRIMARY KEY (VDBName, SchemaName, TableName, Name),
 	FOREIGN KEY (VDBName, SchemaName, TableName) REFERENCES Tables (VDBName, SchemaName, Name),
@@ -90,7 +87,6 @@ CREATE FOREIGN TABLE Keys (
 	IsIndexed boolean NOT NULL,
 	RefKeyUID string(50),
 	UID string(50) NOT NULL,
-	OID integer,
 	PRIMARY KEY (VDBName, SchemaName, TableName, Name),
 	FOREIGN KEY (VDBName, SchemaName, TableName) REFERENCES Tables (VDBName, SchemaName, Name),
 	UNIQUE (UID)
@@ -112,7 +108,6 @@ CREATE FOREIGN TABLE ProcedureParams (
 	NullType string(10) NOT NULL,
 	UID string(50),
 	Description string(255),
-	OID integer,
 	PRIMARY KEY (VDBName, SchemaName, ProcedureName, Name),
 	FOREIGN KEY (VDBName, SchemaName, ProcedureName) REFERENCES Procedures (VDBName, SchemaName, Name),
 	UNIQUE (UID)	
@@ -126,7 +121,6 @@ CREATE FOREIGN TABLE Procedures (
 	ReturnsResults boolean NOT NULL,
 	UID string(50) NOT NULL,
 	Description string(255),
-	OID integer,
 	SchemaUID string (50) NOT NULL,
 	PRIMARY KEY (VDBName, SchemaName, Name),
 	FOREIGN KEY (VDBName, SchemaName) REFERENCES Schemas (VDBName, Name),
@@ -172,7 +166,6 @@ CREATE FOREIGN TABLE Properties (
 	Name string(4000) NOT NULL,
 	"Value" string(4000) NOT NULL,
 	UID string(50) NOT NULL,
-	OID integer,
 	ClobValue clob(2097152),
 	UNIQUE(UID, Name)
 );
@@ -201,7 +194,6 @@ CREATE FOREIGN TABLE Schemas (
 	UID string(50) NOT NULL,
 	Description string(255),
 	PrimaryMetamodelURI string(255) NOT NULL,
-	OID integer,
 	PRIMARY KEY (VDBName, Name),
 	UNIQUE (UID)	
 );
@@ -219,8 +211,7 @@ CREATE FOREIGN TABLE Tables (
 	Description string(255),
 	IsSystem boolean,
 	IsMaterialized boolean NOT NULL,
-	OID integer,
-    SchemaUID string (50) NOT NULL,
+	SchemaUID string (50) NOT NULL,
 	PRIMARY KEY (VDBName, SchemaName, Name),
 	FOREIGN KEY (VDBName, SchemaName) REFERENCES Schemas (VDBName, Name),
 	FOREIGN KEY (SchemaUID) REFERENCES Schemas (UID),
