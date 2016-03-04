@@ -22,6 +22,8 @@
 
 package org.teiid.jdbc;
 
+import static org.junit.Assert.*;
+
 import java.io.ByteArrayInputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -74,6 +76,45 @@ public class TestDataRoles {
     		//not authorized
     	}
     	es.getMaterializationManager().executeQuery(es.getVDBRepository().getLiveVDB("role-1"), "select * from vw");
+	}
+	
+	@Test public void testExecuteImmediate() throws Exception {
+		es = new ExtendedEmbeddedServer();
+		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		es.start(ec);
+		es.deployVDB(new ByteArrayInputStream(new String("<vdb name=\"role-1\" version=\"1\">"
+				+ "<model name=\"myschema\" type=\"virtual\">"
+				+ "<metadata type = \"DDL\"><![CDATA[CREATE VIEW vw as select 'a' as col;]]></metadata></model>"
+				+ "<data-role name=\"y\" any-authenticated=\"true\"/></vdb>").getBytes()));
+    	Connection c = es.getDriver().connect("jdbc:teiid:role-1", null);
+    	Statement s = c.createStatement();
+    	s.execute("set autoCommitTxn off");
+    	
+    	try {
+    		s.execute("begin execute immediate 'select * from vw'; end");
+    		fail();
+    	} catch (TeiidSQLException e) {
+    		
+    	}
+    	
+    	//should be valid
+    	s.execute("begin execute immediate 'select 1'; end");
+    	
+    	//no temp permission
+    	try {
+    		s.execute("begin execute immediate 'select 1' as x integer into #temp; end");
+    		fail();
+    	} catch (TeiidSQLException e) {
+    		
+    	}
+    	
+    	//nested should not pass either
+    	try {
+	    	s.execute("begin execute immediate 'begin execute immediate ''select * from vw''; end'; end");
+	    	fail();
+    	} catch (TeiidSQLException e) {
+    		
+    	}
 	}
 	
 }
