@@ -145,7 +145,7 @@ abstract class ChildRecordExtractionTable<P extends AbstractMetadataRecord, T> e
 	}
 	
 	protected boolean isValid(T result, CommandContext cc) {
-		return !(result instanceof AbstractMetadataRecord) || cc.getAuthorizationValidator().isAccessible((AbstractMetadataRecord)result, cc);
+		return !(result instanceof AbstractMetadataRecord) || cc.getDQPWorkContext().isAdmin() || cc.getAuthorizationValidator().isAccessible((AbstractMetadataRecord)result, cc);
 	}
 	
 	@Override

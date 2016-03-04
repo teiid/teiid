@@ -253,7 +253,7 @@ abstract class RecordTable<T extends AbstractMetadataRecord> implements Searchab
 		if (s == null) {
 			return false;
 		}
-		if (!commandContext.getAuthorizationValidator().isAccessible(s, commandContext)) {
+		if (!commandContext.getDQPWorkContext().isAdmin() && !commandContext.getAuthorizationValidator().isAccessible(s, commandContext)) {
 			return false;
 		}
 		if (condition != null) {

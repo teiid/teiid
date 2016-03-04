@@ -755,7 +755,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         		}
         		//the referenced table must be accessible also
         		if (result instanceof ForeignKey) {
-        			return cc.getAuthorizationValidator().isAccessible(((ForeignKey)result).getReferenceKey(), cc);
+        			return cc.getDQPWorkContext().isAdmin() || cc.getAuthorizationValidator().isAccessible(((ForeignKey)result).getReferenceKey(), cc);
         		}
         		return true;
         	}
