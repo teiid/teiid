@@ -73,6 +73,13 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     }
     
     @Override
+    public void visit(DynamicCommand obj) {
+    	if (obj.getIntoGroup() != null) {
+    		validateTemp(PermissionType.CREATE, obj.getIntoGroup().getNonCorrelationName(), false, obj.getIntoGroup(), Context.CREATE);
+    	}
+    }
+    
+    @Override
     public void visit(AlterProcedure obj) {
     	validateEntitlements(Arrays.asList(obj.getTarget()), DataPolicy.PermissionType.ALTER, Context.ALTER);
     }

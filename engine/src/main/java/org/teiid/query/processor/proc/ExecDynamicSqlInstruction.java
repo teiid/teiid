@@ -39,6 +39,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.id.IDGenerator;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.dqp.internal.process.AuthorizationValidator.CommandType;
 import org.teiid.dqp.internal.process.Request;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.logging.LogManager;
@@ -165,7 +166,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 
 			QueryResolver.resolveCommand(command, metadata.getDesignTimeMetadata());
 
-			validateDynamicCommand(procEnv, command);
+			validateDynamicCommand(procEnv, command, value.toString());
 
 			// create a new set of variables including vars
 			Map<ElementSymbol, Expression> nameValueMap = createVariableValuesMap(localContext);
@@ -198,6 +199,10 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 					idGenerator, capFinder, AnalysisRecord
 							.createNonRecordingRecord(), procEnv
 							.getContext());
+            
+            if (command instanceof CreateProcedureCommand && commandPlan instanceof ProcedurePlan) {
+            	((ProcedurePlan)commandPlan).setValidateAccess(procEnv.isValidateAccess());
+            }
             
 			CreateCursorResultSetInstruction inst = new CreateCursorResultSetInstruction(null, commandPlan, (insertInto||updateCommand)?Mode.UPDATE:returnable?Mode.HOLD:Mode.NOHOLD) {
 				@Override
@@ -302,7 +307,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 	 * @throws QueryProcessingException
 	 */
 	private void validateDynamicCommand(ProcedurePlan procEnv,
-			Command command) throws TeiidComponentException,
+			Command command, String commandString) throws TeiidComponentException,
 			QueryProcessingException {
 		// validate project symbols
 		List dynamicExpectedColumns = dynamicCommand.getAsColumns();
@@ -343,10 +348,15 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 				}
 			}
 		}
+		
+		CommandContext context = procEnv.getContext();
+		
+		if (procEnv.isValidateAccess() && !context.getDQPWorkContext().isAdmin() && context.getAuthorizationValidator() != null) {
+			context.getAuthorizationValidator().validate(new String[] {commandString}, command, metadata, context, CommandType.USER);
+		}
 
 		// do a recursion check
 		// Add group to recursion stack
-		CommandContext context = procEnv.getContext();
 		if (parentProcCommand.getUpdateType() != Command.TYPE_UNKNOWN) {
 			context.pushCall(Command.getCommandToken(parentProcCommand.getUpdateType()) + " " + parentProcCommand.getVirtualGroup()); //$NON-NLS-1$
 		} else {
