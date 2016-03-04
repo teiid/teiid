@@ -143,6 +143,8 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
      */
     private LinkedList<WeakReference<DataTierTupleSource>> txnTupleSources = new LinkedList<WeakReference<DataTierTupleSource>>();
 
+	private boolean validateAccess;
+
     /**
      * Constructor for ProcedurePlan.
      */
@@ -858,6 +860,14 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
 	@Override
 	public EventDistributor getEventDistributor() {
 		return parentDataMrg.getEventDistributor();
+	}
+
+	public void setValidateAccess(boolean b) {
+		this.validateAccess = b;
+	}
+	
+	public boolean isValidateAccess() {
+		return validateAccess;
 	}
 
 }

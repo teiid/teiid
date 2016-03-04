@@ -64,6 +64,7 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.QueryProcessor;
+import org.teiid.query.processor.proc.ProcedurePlan;
 import org.teiid.query.processor.xml.XMLPlan;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.rewriter.QueryRewriter;
@@ -73,6 +74,7 @@ import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.Limit;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.StoredProcedure;
+import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
@@ -307,6 +309,9 @@ public class Request {
     }
 
     private void createProcessor() throws TeiidComponentException {
+    	if (this.userCommand instanceof CreateProcedureCommand && this.processPlan instanceof ProcedurePlan) {
+    		((ProcedurePlan)this.processPlan).setValidateAccess(true);
+    	}
     	this.context.setTransactionContext(getTransactionContext(true));
         this.processor = new QueryProcessor(processPlan, context, bufferManager, processorDataManager);
     }
