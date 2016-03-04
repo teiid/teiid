@@ -284,6 +284,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				row.add(table.isSystem());
 				row.add(table.isMaterialized());
 				row.add(null);
+				row.add(table.getParent().getUUID());
 			}
 		});
         name = SystemAdminTables.MATVIEWS.name();
@@ -378,6 +379,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				row.add(proc.getUUID());
 				row.add(proc.getAnnotation());
 				row.add(null);
+				row.add(proc.getParent().getUUID());
 			}
 		});
         name = SystemTables.FUNCTIONS.name();
@@ -721,6 +723,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         		row.add(column.getUUID());
         		row.add(column.getAnnotation());
         		row.add(null);
+        		row.add(column.getParent().getUUID());
         	}
         	
         	@Override
@@ -788,6 +791,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         		row.add(key.getUUID());
         		row.add(pos);
         		row.add(null);
+        		row.add(key.getParent().getUUID());
         	}
         	
         	@Override

@@ -30,8 +30,10 @@ CREATE FOREIGN TABLE Columns (
 	UID string(50) NOT NULL,
 	Description string(255),
 	OID integer,
+	TableUID string (50) NOT NULL,
 	PRIMARY KEY (VDBName, SchemaName, TableName, Name),
 	FOREIGN KEY (VDBName, SchemaName, TableName) REFERENCES Tables (VDBName, SchemaName, Name),
+	FOREIGN KEY (TableUID) REFERENCES Tables (UID),
 	UNIQUE (UID)
 );
 
@@ -70,8 +72,10 @@ CREATE FOREIGN TABLE KeyColumns (
 	UID string(50) NOT NULL,
 	Position integer,
 	OID integer,
+	TableUID string (50) NOT NULL,
 	PRIMARY KEY (VDBName, SchemaName, TableName, Name),
 	FOREIGN KEY (VDBName, SchemaName, TableName) REFERENCES Tables (VDBName, SchemaName, Name),
+	FOREIGN KEY (TableUID) REFERENCES Tables (UID),
 	UNIQUE (UID)	
 );
 
@@ -123,8 +127,10 @@ CREATE FOREIGN TABLE Procedures (
 	UID string(50) NOT NULL,
 	Description string(255),
 	OID integer,
+	SchemaUID string (50) NOT NULL,
 	PRIMARY KEY (VDBName, SchemaName, Name),
 	FOREIGN KEY (VDBName, SchemaName) REFERENCES Schemas (VDBName, Name),
+	FOREIGN KEY (SchemaUID) REFERENCES Schemas (UID),
 	UNIQUE (UID)	
 );
 
@@ -214,8 +220,10 @@ CREATE FOREIGN TABLE Tables (
 	IsSystem boolean,
 	IsMaterialized boolean NOT NULL,
 	OID integer,
+    SchemaUID string (50) NOT NULL,
 	PRIMARY KEY (VDBName, SchemaName, Name),
 	FOREIGN KEY (VDBName, SchemaName) REFERENCES Schemas (VDBName, Name),
+	FOREIGN KEY (SchemaUID) REFERENCES Schemas (UID),
 	UNIQUE (UID)	
 );
 

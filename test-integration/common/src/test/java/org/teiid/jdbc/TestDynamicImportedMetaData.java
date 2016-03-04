@@ -131,7 +131,7 @@ public class TestDynamicImportedMetaData {
     	importProperties.setProperty("importer.excludeTables", "VDB\\.SYS.*");
     	importProperties.setProperty("importer.excludeProcedures", "VDB\\..*");
     	MetadataFactory mf = getMetadata(importProperties, conn);
-    	assertEquals(String.valueOf(mf.asMetadataStore().getSchemas().get("TEST").getTables()), 17, mf.asMetadataStore().getSchemas().get("TEST").getTables().size());
+    	assertEquals(String.valueOf(mf.asMetadataStore().getSchemas().get("TEST").getTables()), 16, mf.asMetadataStore().getSchemas().get("TEST").getTables().size());
     	assertEquals(0, mf.asMetadataStore().getSchemas().get("TEST").getProcedures().size());
     }
         
