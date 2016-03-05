@@ -46,7 +46,6 @@ public class ScalarSubquery implements Expression, SubqueryContainer<QueryComman
 	
     private QueryCommand command;
     private Class<?> type;
-    private int hashCode;
     private String id = "$sc/id" + ID.getAndIncrement(); //$NON-NLS-1$
     private boolean shouldEvaluate;
     
@@ -101,12 +100,10 @@ public class ScalarSubquery implements Expression, SubqueryContainer<QueryComman
     }
 
     /**
-     * Sets the command.  Also modifies the hash code of this object, so
-     * caution should be used in using this method.
+     * Sets the command.  
      */
     public void setCommand(QueryCommand command){
         this.command = command;
-        this.hashCode = command.hashCode();
     }
 
     public void acceptVisitor(LanguageVisitor visitor) {
@@ -137,7 +134,10 @@ public class ScalarSubquery implements Expression, SubqueryContainer<QueryComman
      * @return Hash code
      */
     public int hashCode() {
-        return this.hashCode;
+    	if (command != null) {
+    		return command.hashCode();
+    	}
+    	return 0;
     }
 
     /**

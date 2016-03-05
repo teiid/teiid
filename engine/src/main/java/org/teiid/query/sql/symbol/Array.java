@@ -93,7 +93,7 @@ public class Array implements Expression {
 	
 	@Override
 	public int hashCode() {
-		return HashCodeUtil.expHashCode(type.hashCode(), getExpressions());
+		return HashCodeUtil.expHashCode(0, getExpressions());
 	}
 	
 	@Override
