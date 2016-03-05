@@ -285,7 +285,9 @@ public class TestEmbeddedServer {
 	}
 	
 	@After public void teardown() {
-		es.stop();
+		if (es != null) {
+			es.stop();
+		}
 	}
 	
 	@Test public void testDeploy() throws Exception {
@@ -1316,7 +1318,8 @@ public class TestEmbeddedServer {
                 "\"teiid_rel:MATVIEW_SHARE_SCOPE\" 'NONE',\n" + 
                 "\"teiid_rel:MATVIEW_ONERROR_ACTION\" 'THROW_EXCEPTION',\n" + 
                 "\"teiid_rel:MATVIEW_TTL\" 100000)" +
-                "as select * from \"my_table\"");
+                "as select * from \"my_table\";"
+                + " create view mat_table as select 'I conflict';");
 
         es.deployVDB("test", mmd, mmd1);
         synchronized (loaded) {
@@ -1331,7 +1334,7 @@ public class TestEmbeddedServer {
         assertTrue(rs.next());
         assertEquals("mat_column0", rs.getString(1));
         
-        s.execute("update my_schema.status set valid=false");
+		s.execute("update my_schema.status set valid=false");
         
         try {
         	rs = s.executeQuery("select * from my_view");
@@ -1342,6 +1345,13 @@ public class TestEmbeddedServer {
         
         assertEquals(1, tableCount.get());
         
+        //make sure a similar name doesn't cause an issue
+  		rs = s.executeQuery("select * from (call sysadmin.updateMatView('virt', 'my_view', 'true')) as x");
+  		rs.next();
+  		assertEquals(2, rs.getInt(1));
+              
+        assertEquals(2, tableCount.get());
+  		
         s.execute("call setProperty((SELECT UID FROM Sys.Tables WHERE SchemaName = 'virt' AND Name = 'my_view'), 'teiid_rel:MATVIEW_ONERROR_ACTION', 'WAIT')");
 
         //this thread should hang, until the status changes
@@ -1365,7 +1375,7 @@ public class TestEmbeddedServer {
         //update the status and make sure the thread finished
 		s.execute("update my_schema.status set valid=true");
 		t.join(10000);
-		assertTrue(success.get());
+		assertTrue(success.get());		
     }
     
 	@Test public void testPreparedTypeResolving() throws Exception {

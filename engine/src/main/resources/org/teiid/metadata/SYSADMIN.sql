@@ -146,7 +146,9 @@ BEGIN
 	DECLARE integer ttl = (SELECT convert("value", integer) from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_TTL');
 	DECLARE string matViewStageTable = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATERIALIZED_STAGE_TABLE');	
 	DECLARE string scope = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_SHARE_SCOPE');
-	DECLARE string matViewTable = (SELECT TargetName from SYSADMIN.MatViews WHERE VDBName = VARIABLES.vdbName AND SchemaName = loadMatView.schemaName AND Name = loadMatView.viewName);
+	DECLARE string[] targets = (SELECT (TargetName, TargetSchemaName) from SYSADMIN.MatViews WHERE VDBName = VARIABLES.vdbName AND SchemaName = loadMatView.schemaName AND Name = loadMatView.viewName);
+	DECLARE string matViewTable = array_get(targets, 1);
+	DECLARE string targetSchemaName = array_get(targets, 2);
 	DECLARE string action = (SELECT "Value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_ONERROR_ACTION');
 	DECLARE boolean implicitLoadScript = false;
 	
@@ -170,11 +172,11 @@ BEGIN
 	DECLARE string previousRow = (SELECT Name FROM #load);
 	IF (previousRow is null)
     BEGIN 
-        EXECUTE IMMEDIATE 'INSERT INTO '|| VARIABLES.statusTable ||' (VDBName, VDBVersion, SchemaName, Name, TargetSchemaName, TargetName, Valid, LoadState, Updated, Cardinality, LoadNumber) values (DVARS.vdbName, DVARS.vdbVersion, DVARS.schemaName, DVARS.viewName, null, DVARS.matViewTable, DVARS.valid, DVARS.loadStatus, DVARS.updated, -1, 1)' USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = loadMatView.viewName, valid=false, loadStatus='LOADING', matViewTable=matViewTable, updated = now();
+        EXECUTE IMMEDIATE 'INSERT INTO '|| VARIABLES.statusTable ||' (VDBName, VDBVersion, SchemaName, Name, TargetSchemaName, TargetName, Valid, LoadState, Updated, Cardinality, LoadNumber) values (DVARS.vdbName, DVARS.vdbVersion, DVARS.schemaName, DVARS.viewName, DVARS.TargetSchemaName, DVARS.matViewTable, DVARS.valid, DVARS.loadStatus, DVARS.updated, -1, 1)' USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, targetSchemaName = VARIABLES.targetSchemaName, viewName = loadMatView.viewName, valid=false, loadStatus='LOADING', matViewTable=matViewTable, updated = now();
         VARIABLES.status = 'LOAD';
     EXCEPTION e
         DELETE FROM #load;
-        EXECUTE logMsg(context=>'WARN', msg=>e.exception);
+        EXECUTE logMsg(context=>'org.teiid.MATVIEWS', level=>'WARN', msg=>e.exception);
         EXECUTE IMMEDIATE 'SELECT Name, TargetSchemaName, TargetName, Valid, LoadState, Updated, Cardinality, LoadNumber FROM ' || VARIABLES.statusTable || crit AS Name string, TargetSchemaName string, TargetName string, Valid boolean, LoadState string, Updated timestamp, Cardinality long, LoadNumber long INTO #load USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = loadMatView.viewName;		       
     END
     
@@ -244,7 +246,7 @@ BEGIN
         END 
         ELSE
         BEGIN
-	       EXECUTE IMMEDIATE 'SELECT count(*) as rowCount FROM ' || matViewTable AS rowCount integer INTO #load_count;        
+	       EXECUTE IMMEDIATE 'SELECT count(*) as rowCount FROM ' || targetSchemaName || '.' || matViewTable AS rowCount integer INTO #load_count;        
            rowsUpdated = (SELECT rowCount FROM #load_count);        
         END 
     	
@@ -266,7 +268,7 @@ BEGIN
         EXECUTE IMMEDIATE updateStmt || ' AND loadNumber = DVARS.loadNumber' USING  loadNumber = VARIABLES.loadNumber, vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = loadMatView.viewName, updated = now(), LoadState = 'FAILED_LOAD', valid = VARIABLES.valid AND NOT invalidate, cardinality = -1;
         VARIABLES.status = 'FAILED';
         VARIABLES.rowsUpdated = -3;
-        EXECUTE logMsg(context=>'WARN', msg=>e.exception);
+        EXECUTE logMsg(context=>'org.teiid.MATVIEWS', level=>'WARN', msg=>e.exception);
     END
 
 	RETURN  rowsUpdated;
@@ -296,7 +298,9 @@ BEGIN
 	END		
 	
 	DECLARE string statusTable = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_STATUS_TABLE');
-	DECLARE string matViewTable = (SELECT TargetName from SYSADMIN.MatViews WHERE VDBName = VARIABLES.vdbName AND SchemaName = updateMatView.schemaName AND Name = updateMatView.viewName);
+	DECLARE string[] targets = (SELECT (TargetName, TargetSchemaName) from SYSADMIN.MatViews WHERE VDBName = VARIABLES.vdbName AND SchemaName = updateMatView.schemaName AND Name = updateMatView.viewName);
+    DECLARE string matViewTable = array_get(targets, 1);
+    DECLARE string targetSchemaName = array_get(targets, 2);
 	DECLARE string scope = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_SHARE_SCOPE');
 
 	IF ((scope IS null) OR (scope = 'NONE'))
@@ -315,15 +319,15 @@ BEGIN
 	DECLARE string updateStmtWithCardinality = 'UPDATE ' || VARIABLES.statusTable || ' SET LoadState = DVARS.LoadState, valid = DVARS.valid, Updated = DVARS.updated, Cardinality = DVARS.cardinality' ||  crit;
 
     BEGIN ATOMIC
-        EXECUTE IMMEDIATE 'DELETE FROM '|| matViewTable || ' WHERE ' ||  refreshCriteria AS rowCount integer;
-        EXECUTE IMMEDIATE 'INSERT INTO ' || matViewTable || ' SELECT * FROM '|| schemaName || '.' || viewName || ' WHERE ' || refreshCriteria || ' OPTION NOCACHE ' || schemaName || '.' || viewName;
+        EXECUTE IMMEDIATE 'DELETE FROM '|| targetSchemaName || '.' || matViewTable || ' WHERE ' ||  refreshCriteria AS rowCount integer;
+        EXECUTE IMMEDIATE 'INSERT INTO ' || targetSchemaName || '.' || matViewTable || ' SELECT * FROM '|| schemaName || '.' || viewName || ' WHERE ' || refreshCriteria || ' OPTION NOCACHE ' || schemaName || '.' || viewName;
     	
-        EXECUTE IMMEDIATE 'SELECT count(*) as rowCount FROM ' || matViewTable AS rowCount integer INTO #load_count;        
+        EXECUTE IMMEDIATE 'SELECT count(*) as rowCount FROM ' || targetSchemaName || '.' || matViewTable AS rowCount integer INTO #load_count;        
         rowsUpdated = (SELECT rowCount FROM #load_count);        
         EXECUTE IMMEDIATE updateStmtWithCardinality USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = updateMatView.viewName, updated = now(), LoadState = 'LOADED', valid = true, cardinality = VARIABLES.rowsUpdated;        			
     EXCEPTION e 
         VARIABLES.rowsUpdated = -3;
-        EXECUTE logMsg(context=>'WARN', msg=>e.exception);
+        EXECUTE logMsg(context=>'org.teiid.MATVIEWS', level=>'WARN', msg=>e.exception);
     END
 
 	RETURN  rowsUpdated;

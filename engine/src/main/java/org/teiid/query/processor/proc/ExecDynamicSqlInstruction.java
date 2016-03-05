@@ -144,6 +144,8 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 
 			LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP,
 					new Object[] { "Executing dynamic sql ", value }); //$NON-NLS-1$
+			
+			System.out.println(value);
 
 			Command command = QueryParser.getQueryParser().parseCommand(value.toString());
 			command.setExternalGroupContexts(dynamicCommand.getExternalGroupContexts());
