@@ -36,6 +36,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.UnitTestUtil;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
@@ -127,6 +128,16 @@ public class TestArrayProcessing {
 		TestParser.helpTestExpression("(1,)", "(1,)", new Array(Arrays.asList((Expression)new Constant(1))));
 		TestParser.helpTestExpression("(1,2)", "(1, 2)", new Array(Arrays.asList((Expression)new Constant(1), (Expression)new Constant(2))));
 		TestParser.helpTestExpression("(1,2,)", "(1, 2)", new Array(Arrays.asList((Expression)new Constant(1), (Expression)new Constant(2))));
+	}
+	
+	@Test public void testArrayEquivalence() throws Exception {
+		Array a1 = new Array(new ArrayList<Expression>());
+		
+		UnitTestUtil.helpTestEquivalence(0, a1, a1);
+		
+		Array a2 = new Array(Arrays.asList((Expression)new Constant(1)));
+		
+		UnitTestUtil.helpTestEquivalence(1, a1, a2);
 	}
 	
 	@Test public void testArrayTable() throws Exception {
