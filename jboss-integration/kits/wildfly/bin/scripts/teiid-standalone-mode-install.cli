@@ -34,11 +34,11 @@ connect
 /subsystem=security/security-domain=teiid-security/authentication=classic:add()
 /subsystem=security/security-domain=teiid-security/authentication=classic/login-module=RealmDirect:add(code=RealmDirect, flag=sufficient, module-options=[("password-stacking"=>"useFirstPass")])
 
-/subsystem=teiid:add(resultset-cache-infinispan-container=teiid-cache, preparedplan-cache-infinispan-container=teiid-cache, policy-decider-module=org.jboss.teiid)
+/subsystem=teiid:add(authentication-security-domain=teiid-security, resultset-cache-infinispan-container=teiid-cache, preparedplan-cache-infinispan-container=teiid-cache, policy-decider-module=org.jboss.teiid)
 /subsystem=teiid/transport=local:add()
-/subsystem=teiid/transport=odata:add(authentication-security-domain=teiid-security)
-/subsystem=teiid/transport=jdbc:add(protocol=teiid, socket-binding=teiid-jdbc, authentication-security-domain=teiid-security)
-/subsystem=teiid/transport=odbc:add(protocol=pg, socket-binding=teiid-odbc, authentication-security-domain=teiid-security, ssl-mode=disabled) 
+/subsystem=teiid/transport=odata:add()
+/subsystem=teiid/transport=jdbc:add(protocol=teiid, socket-binding=teiid-jdbc)
+/subsystem=teiid/transport=odbc:add(protocol=pg, socket-binding=teiid-odbc, ssl-mode=disabled) 
 
 /subsystem=teiid/translator=jdbc-simple:add(module=org.jboss.teiid.translator.jdbc)
 /subsystem=teiid/translator=jdbc-ansi:add(module=org.jboss.teiid.translator.jdbc)
