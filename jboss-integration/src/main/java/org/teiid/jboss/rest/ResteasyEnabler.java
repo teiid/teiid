@@ -67,13 +67,13 @@ public class ResteasyEnabler implements VDBLifeCycleListener {
 	}
 	
 	@Override
-	public synchronized void added(String name, int version, CompositeVDB vdb, boolean reloading) {
+	public synchronized void added(String name, int version, CompositeVDB vdb) {
 	}
 	@Override
 	public void beforeRemove(String name, int version, CompositeVDB vdb) {
 	}	
 	@Override
-	public synchronized void finishedDeployment(String name, int version, CompositeVDB cvdb, boolean reloading) {
+	public synchronized void finishedDeployment(String name, int version, CompositeVDB cvdb) {
 		if (this.vdbName.equals(name) && this.vdbVersion == version) {
 
 			final VDBMetaData vdb = cvdb.getVDB();
@@ -87,8 +87,7 @@ public class ResteasyEnabler implements VDBLifeCycleListener {
 			final String warName = buildName(vdb);
 			if (generate != null && Boolean.parseBoolean(generate)
 					&& hasRestMetadata(vdb)
-					&& !this.deployed.get()
-					&& !reloading) {
+					&& !this.deployed.get()) {
 
 				this.deployed.set(true);
 				

@@ -26,6 +26,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.StringReader;
@@ -74,8 +76,7 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		p.setProperty("EndPoint", "http://localhost:8080");
 		p.setProperty("RequestTimeout", "20000");
 		AdminUtil.createDataSource(admin, "sample-ws", "webservice", p);
-
-		admin.deploy("sample-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
+		deployVDB();
 		assertTrue(AdminUtil.waitForVDBLoad(admin, "sample", 1, 3));
 		
 		admin.deploy("sample-ws-vdb.xml",new ReaderInputStream(new StringReader(
@@ -106,9 +107,51 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		assertEquals(expected, this.internalResultSet.getString(1));
     }
 	
-	@Test
+    @Test
     public void testPostOperation() throws Exception {
-		admin.deploy("sample-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
+    	deployVDB();
+        
+        this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:sample@mm://localhost:31000;user=user;password=user", null);
+        
+        execute("SELECT * FROM Txns.G1"); //$NON-NLS-1$
+        this.internalResultSet.next();
+        
+        assertTrue("sample_1.war not found", AdminUtil.waitForDeployment(admin, "sample_1.war", 5));
+        
+        String params = URLEncoder.encode("p1", "UTF-8") + "=" + URLEncoder.encode("456", "UTF-8");
+        
+        // post based call with default
+        String response = httpCall("http://localhost:8080/sample_1/View/g1simplepost", "POST", params);
+        assertEquals("response did not match expected", "<rows p1=\"456\" p2=\"1\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
+
+        // post based call
+        params += "&" + URLEncoder.encode("p2", "UTF-8") + "=" + URLEncoder.encode("2", "UTF-8");
+        params += "&" + URLEncoder.encode("p3", "UTF-8") + "=" + URLEncoder.encode("string value", "UTF-8");
+        response = httpCall("http://localhost:8080/sample_1/View/g1simplepost", "POST", params);
+        assertEquals("response did not match expected", "<rows p1=\"456\" p2=\"2\" p3=\"string value\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
+        
+        // ad-hoc procedure
+        params = URLEncoder.encode("sql", "UTF-8") + "=" + URLEncoder.encode("SELECT XMLELEMENT(NAME \"rows\", XMLAGG(XMLELEMENT(NAME \"row\", XMLFOREST(e1, e2)))) AS xml_out FROM Txns.G1", "UTF-8");
+        response = httpCall("http://localhost:8080/sample_1/View/query", "POST", params);
+        assertEquals("response did not match expected", "<rows><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
+        admin.undeploy("sample-vdb.xml");
+        Thread.sleep(2000);
+    }
+
+	private void deployVDB() throws AdminException, FileNotFoundException {
+		//we'll remove the war from the previous test as we are now lazily removing it on the server side
+		try {
+			admin.undeploy("sample_1.war");
+		} catch (AdminException e) {
+			
+		}
+        admin.deploy("sample-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "sample", 1, 3));
+	}
+    
+	@Test
+    public void testMultipartPostOperation() throws Exception {
+		deployVDB();
 		assertTrue(AdminUtil.waitForVDBLoad(admin, "sample", 1, 3));
 		
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:sample@mm://localhost:31000;user=user;password=user", null);

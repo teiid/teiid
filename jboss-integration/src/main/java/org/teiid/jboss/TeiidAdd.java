@@ -40,6 +40,7 @@ import javax.transaction.TransactionManager;
 
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.jboss.as.clustering.jgroups.ChannelFactory;
+import org.jboss.as.controller.access.Environment;
 import org.jboss.as.controller.*;
 import org.jboss.as.controller.registry.ImmutableManagementResourceRegistration;
 import org.jboss.as.controller.registry.Resource;
@@ -169,8 +170,6 @@ class TeiidAdd extends AbstractAddStepHandler {
 	private void initilaizeTeiidEngine(final OperationContext context, final ModelNode operation, final List<ServiceController<?>> newControllers)
 			throws OperationFailedException {
 		ServiceTarget target = context.getServiceTarget();
-		
-		final JBossLifeCycleListener shutdownListener = new JBossLifeCycleListener();
 		
 		final String asyncThreadPoolName = asString(ASYNC_THREAD_POOL_ELEMENT, operation, context);
 				
@@ -370,10 +369,10 @@ class TeiidAdd extends AbstractAddStepHandler {
         engineBuilder.setInitialMode(ServiceController.Mode.ACTIVE);
         ServiceController<DQPCore> controller = engineBuilder.install(); 
         newControllers.add(controller);
-        ServiceContainer container =  controller.getServiceContainer();
-        container.addTerminateListener(shutdownListener);
-        container.getService(Services.JBOSS_SERVER_CONTROLLER).addListener(shutdownListener);
-        shutdownListener.setControlledProcessStateService((ControlledProcessStateService)container.getService(ControlledProcessStateService.SERVICE_NAME).getValue());
+
+        Environment environement = context.getCallEnvironment();
+        
+        final JBossLifeCycleListener shutdownListener = new JBossLifeCycleListener(environement);
             	
         // add JNDI for event distributor
 		final ReferenceFactoryService<EventDistributorFactory> referenceFactoryService = new ReferenceFactoryService<EventDistributorFactory>();

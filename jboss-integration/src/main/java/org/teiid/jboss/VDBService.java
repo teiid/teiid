@@ -134,7 +134,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		final ServiceBuilder<Void> vdbService = addVDBFinishedService(context);
 		this.vdbListener = new VDBLifeCycleListener() {
 			@Override
-			public void added(String name, int version, CompositeVDB cvdb, boolean reloading) {
+			public void added(String name, int version, CompositeVDB cvdb) {
 			}
 			@Override
 			public void beforeRemove(String name, int version, CompositeVDB cvdb) {
@@ -144,7 +144,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 			}
 
 			@Override
-			public void finishedDeployment(String name, int version, CompositeVDB cvdb, boolean reloading) {
+			public void finishedDeployment(String name, int version, CompositeVDB cvdb) {
 				if (!name.equals(VDBService.this.vdb.getName()) || version != VDBService.this.vdb.getVersion()) {
 					return;
 				}
@@ -180,14 +180,14 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 			}
 			this.assignMetadataRepositories(vdb, defaultRepo); 
 			// add transformation metadata to the repository.
-			getVDBRepository().addVDB(this.vdb, store, vdbResources.getEntriesPlusVisibilities(), udf, cmr, this.shutdownListener.isBootInProgress());
+			getVDBRepository().addVDB(this.vdb, store, vdbResources.getEntriesPlusVisibilities(), udf, cmr);
 		} catch (VirtualDatabaseException e) {
 			throw new StartException(e);
 		}		
 		
 		this.vdb.removeAttachment(UDFMetaData.class);
 		try {
-			loadMetadata(this.vdb, cmr, store, this.vdbResources, this.shutdownListener.isBootInProgress());
+			loadMetadata(this.vdb, cmr, store, this.vdbResources);
 		} catch (TranslatorException e) {
 			throw new StartException(e);
 		}
@@ -405,7 +405,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 							cacheMetadataStore(model, factory);
 			    		}
 						
-						metadataLoaded(vdb, model, vdbMetadataStore, loadCount, factory, true, VDBService.this.shutdownListener.isBootInProgress());
+						metadataLoaded(vdb, model, vdbMetadataStore, loadCount, factory, true);
 			    	} else {
 			    		String errorMsg = ex.getMessage()==null?ex.getClass().getName():ex.getMessage();
 			    		if (te != null) {
@@ -416,7 +416,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 			    		//log the exception of a non-teiid runtime exception as it may indicate a problem 
 						LogManager.logWarning(LogConstants.CTX_RUNTIME, (ex instanceof RuntimeException && !(ex instanceof TeiidRuntimeException))?ex:null, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50036,vdb.getName(), vdb.getVersion(), model.getName(), errorMsg));
 						if (ex instanceof RuntimeException) {
-							metadataLoaded(vdb, model, vdbMetadataStore, loadCount, factory, false, VDBService.this.shutdownListener.isBootInProgress());
+							metadataLoaded(vdb, model, vdbMetadataStore, loadCount, factory, false);
 						} else {
 							if (marked != null) {
 								getExecutor().execute(this);
