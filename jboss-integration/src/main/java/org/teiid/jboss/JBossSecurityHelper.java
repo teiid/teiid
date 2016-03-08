@@ -24,7 +24,6 @@ package org.teiid.jboss;
 
 import java.io.Serializable;
 import java.security.Principal;
-import java.util.concurrent.atomic.AtomicLong;
 
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
@@ -51,7 +50,6 @@ import org.teiid.security.SecurityHelper;
 public class JBossSecurityHelper implements SecurityHelper, Serializable {
 	private static final long serialVersionUID = 3598997061994110254L;
 	public static final String AT = "@"; //$NON-NLS-1$
-	private AtomicLong count = new AtomicLong(0);
 	
 	@Override
 	public SecurityContext associateSecurityContext(Object newContext) {
@@ -168,24 +166,22 @@ public class JBossSecurityHelper implements SecurityHelper, Serializable {
         throw new LoginException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50072, "GSS Auth", securityDomain)); //$NON-NLS-1$     
     }
 
-	private GSSResult buildGSSResult(NegotiationContext context, String securityDomain, boolean validAuth) throws LoginException {
-		GSSContext securityContext = (GSSContext) context.getSchemeContext();
-		try {
-			if (context.getResponseMessage() == null && validAuth) {
-				String dummyToken = "Auth validated with no further peer token "+count.getAndIncrement();
-				return new GSSResult(dummyToken.getBytes(), context.isAuthenticated(), securityContext.getCredDelegState()?securityContext.getDelegCred():null);			
-			}
-			if (context.getResponseMessage() instanceof KerberosMessage) {
-				
-	                KerberosMessage km = (KerberosMessage)context.getResponseMessage();
-	                return new GSSResult(km.getToken(), context.isAuthenticated(), securityContext.getCredDelegState()?securityContext.getDelegCred():null);
-			}
+    private GSSResult buildGSSResult(NegotiationContext context, String securityDomain, boolean validAuth) throws LoginException {
+        GSSContext securityContext = (GSSContext) context.getSchemeContext();
+        try {
+            if (context.getResponseMessage() == null && validAuth) {
+                return new GSSResult(context.isAuthenticated(), securityContext.getCredDelegState()?securityContext.getDelegCred():null);            
+            }
+            if (context.getResponseMessage() instanceof KerberosMessage) {
+                KerberosMessage km = (KerberosMessage)context.getResponseMessage();
+                return new GSSResult(km.getToken(), context.isAuthenticated(), securityContext.getCredDelegState()?securityContext.getDelegCred():null);
+            }
         } catch (GSSException e) {
             // login exception can not take exception
             throw new LoginException(e.getMessage());
         }
-		throw new LoginException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50103, securityDomain));
-	}     
+        throw new LoginException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50103, securityDomain));
+    }  
     
     protected SecurityDomainContext getSecurityDomainContext(String securityDomain) {
         if (securityDomain != null && !securityDomain.isEmpty()) {
