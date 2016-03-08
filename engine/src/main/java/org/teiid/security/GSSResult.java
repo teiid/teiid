@@ -21,11 +21,16 @@
  */
 package org.teiid.security;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.ietf.jgss.GSSCredential;
 
 
 public class GSSResult {
-	private byte[] serviceToken;
+    private static String NULL_TOKEN = "Auth validated with no further peer token ";
+    private static AtomicLong COUNT = new AtomicLong(0);
+    
+    private byte[] serviceToken;
 	private boolean authenticated;
 	private Object securityContext;
 	private String userName;
@@ -35,6 +40,17 @@ public class GSSResult {
 		this.serviceToken = token;
 		this.authenticated = authenticated;
 		this.delegationCredential = cred;
+	}
+	
+	public GSSResult(boolean authenticated, GSSCredential cred) {
+        this.serviceToken = (NULL_TOKEN + COUNT.getAndIncrement()).getBytes();
+        this.authenticated = authenticated;
+        this.delegationCredential = cred;
+	}
+	
+	public boolean isNullContinuationToken() {
+	    String token = new String(this.serviceToken);
+	    return token.startsWith(NULL_TOKEN);
 	}
 	
 	public boolean isAuthenticated() {
