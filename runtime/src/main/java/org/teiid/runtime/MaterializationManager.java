@@ -67,7 +67,7 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 	}
 	
 	@Override
-	public void added(String name, int version, CompositeVDB cvdb, boolean reloading) {
+	public void added(String name, int version, CompositeVDB cvdb) {
 	}
 
 	@Override
@@ -114,7 +114,7 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 	}
 
 	@Override
-	public void finishedDeployment(String name, int version, final CompositeVDB cvdb, final boolean reloading) {
+	public void finishedDeployment(String name, int version, final CompositeVDB cvdb) {
 
 		// execute start triggers
 		final VDBMetaData vdb = cvdb.getVDB();
@@ -152,15 +152,13 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 						} 
 						return;
 					}
-					if (!reloading) {
-						String start = table.getProperty(MaterializationMetadataRepository.ON_VDB_START_SCRIPT, false);
-						if (start != null) {
-							for (String script : StringUtil.tokenize(start, ';')) {
-								try {
-									executeQuery(vdb, script);
-								} catch (SQLException e) {
-									LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
-								}
+					String start = table.getProperty(MaterializationMetadataRepository.ON_VDB_START_SCRIPT, false);
+					if (start != null) {
+						for (String script : StringUtil.tokenize(start, ';')) {
+							try {
+								executeQuery(vdb, script);
+							} catch (SQLException e) {
+								LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
 							}
 						}
 					}

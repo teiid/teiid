@@ -22,8 +22,8 @@
 package org.teiid.deployers;
 
 public interface VDBLifeCycleListener {
-	void added(String name, int version, CompositeVDB vdb, boolean reloading);
+	void added(String name, int version, CompositeVDB vdb);
 	void beforeRemove(String name, int version, CompositeVDB vdb);
 	void removed(String name, int version, CompositeVDB vdb);
-	void finishedDeployment(String name, int version, CompositeVDB vdb, boolean reloading);
+	void finishedDeployment(String name, int version, CompositeVDB vdb);
 }

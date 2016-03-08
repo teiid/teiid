@@ -81,7 +81,7 @@ public class TestVDBStatusChecker {
 		ExecutionFactory ef1 = new ExecutionFactory();
 		ConnectorManager mgr = new ConnectorManager("oracle", "dsName", ef1);
 		cmr.addConnectorManager("BQT1", mgr);
-		repo.addVDB(vdb, metadataStore, null, null, cmr, false);
+		repo.addVDB(vdb, metadataStore, null, null, cmr);
 		
 		assertTrue(vsc.dataSourceReplaced("bqt", 1, "BQT1", "BQT1", "oracle", "dsName1"));
 		ExecutionFactory ef = cmr.getConnectorManager("BQT1").getExecutionFactory();

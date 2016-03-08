@@ -44,7 +44,16 @@ import javax.transaction.TransactionManager;
 
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.jboss.as.clustering.jgroups.ChannelFactory;
-import org.jboss.as.controller.*;
+import org.jboss.as.controller.AbstractAddStepHandler;
+import org.jboss.as.controller.OperationContext;
+import org.jboss.as.controller.OperationFailedException;
+import org.jboss.as.controller.OperationStepHandler;
+import org.jboss.as.controller.PathAddress;
+import org.jboss.as.controller.PathElement;
+import org.jboss.as.controller.ProcessType;
+import org.jboss.as.controller.ServiceVerificationHandler;
+import org.jboss.as.controller.SimpleAttributeDefinition;
+import org.jboss.as.controller.access.Environment;
 import org.jboss.as.controller.registry.ImmutableManagementResourceRegistration;
 import org.jboss.as.controller.registry.Resource;
 import org.jboss.as.controller.services.path.RelativePathService;
@@ -54,7 +63,6 @@ import org.jboss.as.naming.deployment.ContextNames;
 import org.jboss.as.naming.service.BinderService;
 import org.jboss.as.server.AbstractDeploymentChainStep;
 import org.jboss.as.server.DeploymentProcessorTarget;
-import org.jboss.as.server.Services;
 import org.jboss.as.server.deployment.Phase;
 import org.jboss.dmr.ModelNode;
 import org.jboss.modules.Module;
@@ -62,7 +70,6 @@ import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoadException;
 import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceBuilder.DependencyType;
-import org.jboss.msc.service.ServiceContainer;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceTarget;
@@ -187,8 +194,6 @@ class TeiidAdd extends AbstractAddStepHandler {
 	private void initilaizeTeiidEngine(final OperationContext context, final ModelNode operation, final List<ServiceController<?>> newControllers)
 			throws OperationFailedException {
 		ServiceTarget target = context.getServiceTarget();
-		
-		final JBossLifeCycleListener shutdownListener = new JBossLifeCycleListener();
 		
 		final String asyncThreadPoolName = asString(ASYNC_THREAD_POOL_ELEMENT, operation, context);
 				
@@ -413,11 +418,10 @@ class TeiidAdd extends AbstractAddStepHandler {
         engineBuilder.setInitialMode(ServiceController.Mode.ACTIVE);
         ServiceController<DQPCore> controller = engineBuilder.install(); 
         newControllers.add(controller);
-        ServiceContainer container =  controller.getServiceContainer();
-        container.addTerminateListener(shutdownListener);
-        container.getService(Services.JBOSS_SERVER_CONTROLLER).addListener(shutdownListener);
-        shutdownListener.setControlledProcessStateService((ControlledProcessStateService)container.getService(ControlledProcessStateService.SERVICE_NAME).getValue());
-            	
+        Environment environement = context.getCallEnvironment();
+        
+        final JBossLifeCycleListener shutdownListener = new JBossLifeCycleListener(environement);
+		
         // add JNDI for event distributor
 		final ReferenceFactoryService<EventDistributorFactory> referenceFactoryService = new ReferenceFactoryService<EventDistributorFactory>();
 		final ServiceName referenceFactoryServiceName = TeiidServiceNames.EVENT_DISTRIBUTOR_FACTORY.append("reference-factory"); //$NON-NLS-1$

@@ -268,7 +268,7 @@ public class EmbeddedAdminFactory {
 					// need get the visibilityMap from runtime
 					LinkedHashMap<String, VDBResources.Resource> visibilityMap = new LinkedHashMap<String, VDBResources.Resource>();
 					MetadataStore store = new MetadataStore();
-					this.embeddedServer.repo.addVDB(currentVdb, store, visibilityMap, udf, cmr, false);
+					this.embeddedServer.repo.addVDB(currentVdb, store, visibilityMap, udf, cmr);
 				} catch (Exception e) {
 					throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40135, vdbName, vdbVersion, models), e);
 				}
