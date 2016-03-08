@@ -243,7 +243,9 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
             	serviceToken = result.getServiceToken();
             	if (result.isAuthenticated()) {
                 	info.put(ILogon.KRB5TOKEN, serviceToken);
-                	this.client.authenticationGSSContinue(serviceToken);
+                	if (!result.isNullContinuationToken()) {
+                	    this.client.authenticationGSSContinue(serviceToken);
+                	}
                 	// if delegation is in progress, participate in it.
                 	if (result.getDelegationCredential() != null) {
                 		info.put(GSSCredential.class.getName(), result.getDelegationCredential());
