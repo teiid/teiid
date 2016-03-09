@@ -122,6 +122,11 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		this.internalResultSet.next();
 		assertEquals("<e1>ABCDEFGHIJ</e1>", this.internalResultSet.getString(1));
 		
+		//test swagger
+		response = httpCall("http://localhost:8080/sample_1/swagger.yaml", "GET", null);
+		
+		assertEquals(13206, response.length());
+		
 		admin.undeploy("sample-vdb.xml");
 		Thread.sleep(2000);
     }
