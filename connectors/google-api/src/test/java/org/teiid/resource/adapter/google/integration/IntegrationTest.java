@@ -13,6 +13,5 @@ package org.teiid.resource.adapter.google.integration;
 
 @SuppressWarnings("nls")
 public class IntegrationTest {
-	protected static final String USERNAME="xxx";
-	protected static final String PASSWORD="xxx";
+	protected static String refreshToken ="1/A6ifXgNxCYVGTkPUTnD6Y35v_GyfmuRAsKKL4eww8xs";
 }

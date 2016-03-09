@@ -6,7 +6,7 @@ import junit.framework.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.teiid.resource.adapter.google.auth.ClientLoginHeaderFactory;
+import org.teiid.resource.adapter.google.auth.OAuth2HeaderFactory;
 import org.teiid.resource.adapter.google.common.SheetRow;
 import org.teiid.resource.adapter.google.dataprotocol.GoogleDataProtocolAPI;
 import org.teiid.resource.adapter.google.gdata.GDataClientLoginAPI;
@@ -53,7 +53,7 @@ public class SpreadsheetDataRetrievalTest extends IntegrationTest {
 	@BeforeClass
 	public static void prepareGoogleData(){
 	    dataProtocol = new GoogleDataProtocolAPI();
-	    ClientLoginHeaderFactory headerFactory = new ClientLoginHeaderFactory(USERNAME, PASSWORD);
+	    OAuth2HeaderFactory headerFactory = new OAuth2HeaderFactory(refreshToken);
 	    //headerFactory.login();
 		dataProtocol.setHeaderFactory(headerFactory);
 		

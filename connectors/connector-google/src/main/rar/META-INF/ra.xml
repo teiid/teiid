@@ -41,19 +41,6 @@
             <managedconnectionfactory-class>org.teiid.resource.adapter.google.SpreadsheetManagedConnectionFactory</managedconnectionfactory-class>
             
             <config-property>
-               <description>{$display:"Google Account username",$description:"",$required:"true"}</description>
-               <config-property-name>Username</config-property-name>
-               <config-property-type>java.lang.String</config-property-type>
-            </config-property>
-            
-            <config-property>
-<!-- TODO masked            <description>{$display:"Google Account password",$description:"",$required:"true",$masked:"true"}</description> -->
-               <description>{$display:"Google Account password",$description:"",$required:"true"}</description>
-               <config-property-name>Password</config-property-name>
-               <config-property-type>java.lang.String</config-property-type>
-            </config-property>    
-            
-            <config-property>
                <description>{$display:"Max result batch size",$description:""}</description>
                <config-property-name>BatchSize</config-property-name>
                <config-property-type>java.lang.Integer</config-property-type>
@@ -61,7 +48,7 @@
             </config-property>       
                     
             <config-property>
-               <description>{$display:"Authentication method",$description:"",$required:"true"}</description>
+               <description>{$display:"Authentication method",$description:""}</description>
                <config-property-name>AuthMethod</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
             </config-property>

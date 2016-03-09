@@ -5,7 +5,7 @@ import junit.framework.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.resource.adapter.google.auth.AuthHeaderFactory;
-import org.teiid.resource.adapter.google.auth.ClientLoginHeaderFactory;
+import org.teiid.resource.adapter.google.auth.OAuth2HeaderFactory;
 import org.teiid.resource.adapter.google.dataprotocol.GoogleDataProtocolAPI;
 import org.teiid.resource.adapter.google.gdata.GDataClientLoginAPI;
 import org.teiid.resource.adapter.google.gdata.SpreadsheetMetadataExtractor;
@@ -26,7 +26,7 @@ public class MetadataLoadingTest extends IntegrationTest {
 	private static GoogleDataProtocolAPI visualizationAPI = null;
 	
 	{
-		AuthHeaderFactory auth=  new ClientLoginHeaderFactory(USERNAME, PASSWORD);
+		AuthHeaderFactory auth= new OAuth2HeaderFactory(refreshToken);
 		auth.login();
 		gdata = new GDataClientLoginAPI();
 		gdata.setHeaderFactory(auth);
