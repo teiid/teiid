@@ -25,13 +25,11 @@ import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.jboss.as.controller.ModelController;
-import org.teiid.adminapi.*;
+import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -50,52 +48,30 @@ import org.teiid.query.metadata.TransformationMetadata;
 
 public class ResteasyEnabler implements VDBLifeCycleListener {
 	static final String REST_NAMESPACE = "{http://teiid.org/rest}"; //$NON-NLS-1$
-	private Admin admin;
+	private AdminImpl admin;
 	private Executor executor;
 	private String vdbName;
 	private int vdbVersion;
 	private AtomicBoolean deployed = new AtomicBoolean(false);
-	private ContainerLifeCycleListener shutdownListener;
 	
 	public ResteasyEnabler(String vdbName, int version, ModelController deployer, Executor executor, ContainerLifeCycleListener shutdownListener) {
-		this.admin = AdminFactory.getInstance().createAdmin(deployer.createClient(executor));
+		this.admin = (AdminImpl)AdminFactory.getInstance().createAdmin(deployer.createClient(executor));
 		this.executor = executor;
 		this.vdbName = vdbName;
 		this.vdbVersion = version;
-		this.shutdownListener = shutdownListener;
 	}
 	
 	@Override
-	public synchronized void added(String name, int version, CompositeVDB vdb, boolean reloading) {
+	public synchronized void added(String name, int version, CompositeVDB vdb) {
 	}
 	
 	@Override
 	public void beforeRemove(String name, int version, CompositeVDB cvdb) {
-        if (this.vdbName.equals(name) && this.vdbVersion == version) {
-    
-            // we only want un-deploy what is auto-generated previously 
-            final String warName = buildName(name, version);
-
-            if (this.deployed.get()) {
-                this.deployed.set(false);
-                if (!this.shutdownListener.isShutdownInProgress()) {
-                    this.executor.execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                            ((AdminImpl)admin).undeploy(warName, true);
-                            } catch (AdminException e) {
-                                // during shutdown some times the logging and other subsystems are shutdown, so this operation may not succeed. 
-                                LogManager.logWarning(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("failed_to_remove", warName)); //$NON-NLS-1$
-                            }                       
-                        }
-                    });
-                }
-            }
-        }	    
+    	this.deployed.set(false);
 	}	
+	
 	@Override
-	public synchronized void finishedDeployment(String name, int version, CompositeVDB cvdb, boolean reloading) {
+	public synchronized void finishedDeployment(String name, int version, CompositeVDB cvdb) {
 		if (this.vdbName.equals(name) && this.vdbVersion == version) {
 
 			final VDBMetaData vdb = cvdb.getVDB();
@@ -109,18 +85,19 @@ public class ResteasyEnabler implements VDBLifeCycleListener {
 			final String warName = buildName(name, version);
 			if (generate != null && Boolean.parseBoolean(generate)
 					&& hasRestMetadata(vdb)
-					&& !this.deployed.get()
-					&& !reloading) {
+					&& this.deployed.compareAndSet(false, true)) {
 
-				this.deployed.set(true);
-				
 				final Runnable job = new Runnable() {
 					@Override
 					public void run() {
 						try {
 							RestASMBasedWebArchiveBuilder builder = new RestASMBasedWebArchiveBuilder();
 							byte[] warContents = builder.createRestArchive(vdb);
-							((AdminImpl)admin).deploy(warName, new ByteArrayInputStream(warContents), true);
+							if (!vdb.getStatus().equals(Status.ACTIVE)) {
+								return;
+							}
+							//make it a non-persistent deployment
+							admin.deploy(warName, new ByteArrayInputStream(warContents), false);
 						} catch (FileNotFoundException e) {
 							LogManager.logWarning(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.getString("failed_to_add", warName)); //$NON-NLS-1$
 						} catch (IOException e) {
@@ -131,27 +108,7 @@ public class ResteasyEnabler implements VDBLifeCycleListener {
 					}
 				};
 
-				if (!((AdminImpl) admin).getDeployments().contains(warName)) {
-					executor.execute(job);
-				}
-				else {
-					// there is timing issue in terms of replacement/re-deploy where remove/add can not be 
-					// synchronized correctly. it would have better if there was a way we could inject dependency
-					// on war file
-					final Timer timer = new Timer("teiid-war-deployer", true); //$NON-NLS-1$
-					TimerTask task = new TimerTask() {
-						@Override
-						public void run() {
-							if (!((AdminImpl) admin).getDeployments().contains(warName)) {
-								executor.execute(job);
-							}
-							else {
-								LogManager.logWarning(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("failed_to_add", warName)); //$NON-NLS-1$								
-							}
-						}
-					};					
-					timer.schedule(task, 3000L);
-				}
+				executor.execute(job);
 			}
 		}
 	}

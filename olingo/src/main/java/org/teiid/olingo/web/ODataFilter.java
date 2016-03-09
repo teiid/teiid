@@ -273,8 +273,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
     }
 
     @Override
-    public void finishedDeployment(String name, int version, CompositeVDB vdb,
-            boolean reloading) {
+    public void finishedDeployment(String name, int version, CompositeVDB vdb) {
         this.contextMap.remove(vdb.getVDBKey());
     }
 
@@ -283,6 +282,6 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
     }
 
     @Override
-    public void added(String name, int version, CompositeVDB vdb, boolean reloading) {
+    public void added(String name, int version, CompositeVDB vdb) {
     }
 }
