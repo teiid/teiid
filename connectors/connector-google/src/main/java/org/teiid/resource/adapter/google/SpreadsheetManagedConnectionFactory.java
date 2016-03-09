@@ -30,7 +30,6 @@ import org.teiid.resource.spi.BasicManagedConnectionFactory;
 public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionFactory {
 	
 	private static final long serialVersionUID = -1832915223199053471L;
-	public static final String CLIENT_LOGIN = "ClientLogin"; //$NON-NLS-1$
 	public static final String OAUTH2_LOGIN = "OAuth2"; //$NON-NLS-1$
 	private Integer batchSize = 4096;
 	public static final BundleUtil UTIL = BundleUtil.getBundleUtil(SpreadsheetManagedConnectionFactory.class);
@@ -41,13 +40,8 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
 	//Can be either ClientLogin or OAuth2
 	private String authMethod;
 	
-	//In case of ClientLogin user has to supply his Google account username and password
-	private String username;
-	private String password;
-	
 	//In case of OAuth2 authentiation user has to supply refreshToken
 	private String refreshToken;
-	
 
 	@Override
 	@SuppressWarnings("serial")
@@ -65,10 +59,6 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + (int) (batchSize ^ (batchSize >>> 32));
-		result = prime * result
-				+ ((password == null) ? 0 : password.hashCode());
-		result = prime * result
-				+ ((username == null) ? 0 : username.hashCode());
 		return result;
 	}
 
@@ -86,34 +76,7 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
 		SpreadsheetManagedConnectionFactory other = (SpreadsheetManagedConnectionFactory) obj;
 		if (batchSize != other.batchSize)
 			return false;
-		if (password == null) {
-			if (other.password != null)
-				return false;
-		} else if (!password.equals(other.password))
-			return false;
-		if (username == null) {
-			if (other.username != null)
-				return false;
-		} else if (!username.equals(other.username))
-			return false;
 		return true;
-	}
-
-	public String getUsername() {
-		return username;
-	}
-
-	public void setUsername(String username) {
-		this.username = username;
-	}
-
-
-	public String getPassword() {
-		return password;
-	}
-
-	public void setPassword(String googlePassword) {
-		this.password = googlePassword;
 	}
 
 	public Integer getBatchSize() {

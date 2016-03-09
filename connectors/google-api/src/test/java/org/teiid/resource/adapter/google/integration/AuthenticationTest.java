@@ -24,7 +24,6 @@ package org.teiid.resource.adapter.google.integration;
 
 import org.junit.Ignore;
 import org.junit.Test;
-import org.teiid.resource.adapter.google.auth.ClientLoginHeaderFactory;
 import org.teiid.resource.adapter.google.auth.OAuth2HeaderFactory;
 import org.teiid.resource.adapter.google.common.SheetRow;
 import org.teiid.resource.adapter.google.dataprotocol.GoogleDataProtocolAPI;
@@ -39,23 +38,13 @@ import org.teiid.resource.adapter.google.result.RowsResult;
 @Ignore
 @SuppressWarnings("nls")
 public class AuthenticationTest extends IntegrationTest {
-//	private String refreshToken ="1/j7FBwqkdGxCwSFAT1VxZAev7HC2qOamO9UXX_Xxz2nQ";
-	private String refreshToken ="1/A6ifXgNxCYVGTkPUTnD6Y35v_GyfmuRAsKKL4eww8xs";
-	
-	@Test
-	public void clientLoginGData(){
-		GDataClientLoginAPI cla = new GDataClientLoginAPI();
-		cla.setHeaderFactory(new ClientLoginHeaderFactory(USERNAME, PASSWORD));
-		//TODO
-		
-	}
 	
 	@Test
 	public void clientLoginVisualization(){
 		GDataClientLoginAPI cla = new GDataClientLoginAPI();
-		cla.setHeaderFactory(new ClientLoginHeaderFactory(USERNAME, PASSWORD));
+		cla.setHeaderFactory(new OAuth2HeaderFactory(refreshToken));
 		GoogleDataProtocolAPI gapi = new GoogleDataProtocolAPI();
-		gapi.setHeaderFactory(new ClientLoginHeaderFactory(USERNAME, PASSWORD));
+		gapi.setHeaderFactory(new OAuth2HeaderFactory(refreshToken));
 		gapi.setSpreadSheetBrowser(cla);
 		RowsResult rresult = gapi.executeQuery("spreadsheet1", "sheet1", "select 1", 10, null, null);
 		for (SheetRow sr : rresult){

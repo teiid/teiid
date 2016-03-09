@@ -25,7 +25,7 @@ package org.teiid.resource.adapter.google.gdata;
 import java.io.IOException;
 import java.util.List;
 
-import org.teiid.resource.adapter.google.GoogleSpreadsheetConnection;
+import org.teiid.core.BundleUtil;
 import org.teiid.resource.adapter.google.common.SpreadsheetOperationException;
 import org.teiid.resource.adapter.google.dataprotocol.GoogleDataProtocolAPI;
 import org.teiid.resource.adapter.google.metadata.Column;
@@ -44,6 +44,8 @@ import com.google.gdata.util.ServiceException;
  *
  */
 public class SpreadsheetMetadataExtractor {
+	public static final BundleUtil UTIL = BundleUtil.getBundleUtil(SpreadsheetMetadataExtractor.class);
+	
 	private GDataClientLoginAPI gdataAPI = null;
 	private GoogleDataProtocolAPI visualizationAPI= null;
 
@@ -86,10 +88,10 @@ public class SpreadsheetMetadataExtractor {
 			}
 		} catch (IOException ex) {
 			throw new SpreadsheetOperationException(
-					GoogleSpreadsheetConnection.UTIL.gs("metadata_error"), ex); //$NON-NLS-1$
+					UTIL.gs("metadata_error"), ex); //$NON-NLS-1$
 		} catch (ServiceException ex) {
 			throw new SpreadsheetOperationException(
-					GoogleSpreadsheetConnection.UTIL.gs("metadata_error"), ex); //$NON-NLS-1$
+					UTIL.gs("metadata_error"), ex); //$NON-NLS-1$
 		}
 		return metadata;
 	}

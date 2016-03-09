@@ -20,31 +20,29 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.resource.adapter.google;
+package org.teiid.resource.adapter.google.dataprotocol;
 
-import java.util.List;
-import java.util.Map;
+import static org.junit.Assert.*;
 
-import javax.resource.cci.Connection;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.util.Arrays;
 
-import org.teiid.resource.adapter.google.common.UpdateResult;
-import org.teiid.resource.adapter.google.common.UpdateSet;
-import org.teiid.resource.adapter.google.metadata.SpreadsheetInfo;
-import org.teiid.resource.adapter.google.result.RowsResult;
+import org.junit.Test;
+import org.teiid.resource.adapter.google.metadata.SpreadsheetColumnType;
 
+@SuppressWarnings("nls")
+public class TestGoogleDataProtocolAPI {
 
-/**
- * Connection to GoogleSpreadsheet API. 
- * 
- */
-public interface GoogleSpreadsheetConnection extends Connection {
-	public RowsResult executeQuery(String worksheetName, String query, Integer offset, Integer limit, int batchSize);
-	public UpdateResult executeListFeedUpdate(String worksheetID, String criteria, List<UpdateSet> set);
-	public UpdateResult deleteRows(String worksheetID, String criteria);
-	public UpdateResult executeRowInsert(String worksheetID, Map<String,String> pair);
-	/**
-	 * Returns information about existing Spreadsheets and worksheets.
-	 * @return
-	 */
-	public SpreadsheetInfo getSpreadsheetInfo();
+	@Test public void testValueConversion() {
+		Date date = (Date)GoogleDataProtocolAPI.convertValue(null, "Date(2001,0,1)", SpreadsheetColumnType.DATE);
+		assertEquals("2001-01-01", date.toString());
+		Timestamp ts = (Timestamp)GoogleDataProtocolAPI.convertValue(null, "Date(2001,0,1,1,2,3)", SpreadsheetColumnType.DATETIME);
+		assertEquals("2001-01-01 01:02:03.0", ts.toString());
+		Time t = (Time)GoogleDataProtocolAPI.convertValue(null, Arrays.asList(1.0, 2.0, 3.0, 4.0), SpreadsheetColumnType.TIMEOFDAY);
+		assertEquals("01:02:03", t.toString());
+	}
+	
+	
 }
