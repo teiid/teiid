@@ -134,6 +134,8 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 
 		VariableContext localContext = procEnv.getCurrentVariableContext();
 
+		String query = null;
+		
 		try {
 			Object value = procEnv.evaluateExpression(dynamicCommand.getSql());
 
@@ -145,9 +147,9 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 			LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP,
 					new Object[] { "Executing dynamic sql ", value }); //$NON-NLS-1$
 			
-			System.out.println(value);
-
-			Command command = QueryParser.getQueryParser().parseCommand(value.toString());
+			query = value.toString();
+			
+			Command command = QueryParser.getQueryParser().parseCommand(query);
 			command.setExternalGroupContexts(dynamicCommand.getExternalGroupContexts());
 			command.setTemporaryMetadata(dynamicCommand.getTemporaryMetadata().clone());
 			updateContextWithUsingValues(procEnv, localContext);
@@ -252,7 +254,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 
             procEnv.push(dynamicProgram);
 		} catch (TeiidProcessingException e) {
-			Object[] params = {dynamicCommand, dynamicCommand.getSql(), e.getMessage()};
+			Object[] params = {dynamicCommand, query == null?dynamicCommand.getSql():query, e.getMessage()};
 			 throw new QueryProcessingException(QueryPlugin.Event.TEIID30168, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30168, params));
 		} 
 	}

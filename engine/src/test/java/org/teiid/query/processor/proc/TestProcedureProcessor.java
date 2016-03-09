@@ -1050,7 +1050,7 @@ public class TestProcedureProcessor {
 
         helpTestProcessFailure(plan,
                                dataMgr,
-                               "TEIID30168 Couldn't execute the dynamic SQL command \"EXECUTE IMMEDIATE 'EXEC pm1.sq2(''First'')' AS e1 string, e2 integer\" with the SQL statement \"'EXEC pm1.sq2(''First'')'\" due to: TEIID30347 There is a recursive invocation of group 'pm1.sq2'. Please correct the SQL.", metadata); //$NON-NLS-1$
+                               "TEIID30168 Couldn't execute the dynamic SQL command \"EXECUTE IMMEDIATE 'EXEC pm1.sq2(''First'')' AS e1 string, e2 integer\" with the SQL statement \"EXEC pm1.sq2('First')\" due to: TEIID30347 There is a recursive invocation of group 'pm1.sq2'. Please correct the SQL.", metadata); //$NON-NLS-1$
     }
     
     @Test(expected=QueryPlannerException.class) public void testDynamicCommandIncorrectProjectSymbolCount() throws Exception {
@@ -1100,7 +1100,7 @@ public class TestProcedureProcessor {
 
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
     	
-        helpTestProcessFailure(plan, dataMgr, "TEIID30168 Couldn't execute the dynamic SQL command \"EXECUTE IMMEDIATE 'select e1 from pm1.g1'\" with the SQL statement \"'select e1 from pm1.g1'\" due to: The datatype 'string' for element 'e1' in the dynamic SQL cannot be implicitly converted to 'integer'.", metadata); //$NON-NLS-1$
+        helpTestProcessFailure(plan, dataMgr, "TEIID30168 Couldn't execute the dynamic SQL command \"EXECUTE IMMEDIATE 'select e1 from pm1.g1'\" with the SQL statement \"select e1 from pm1.g1\" due to: The datatype 'string' for element 'e1' in the dynamic SQL cannot be implicitly converted to 'integer'.", metadata); //$NON-NLS-1$
      }
      
     @Test public void testDynamicCommandWithTwoDynamicStatements() throws Exception {
