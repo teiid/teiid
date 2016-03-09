@@ -28,13 +28,25 @@ import java.util.List;
 import javax.resource.cci.ConnectionFactory;
 
 import org.teiid.core.BundleUtil;
-import org.teiid.language.*;
+import org.teiid.language.Argument;
+import org.teiid.language.Call;
+import org.teiid.language.Command;
+import org.teiid.language.QueryExpression;
+import org.teiid.language.Select;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.resource.adapter.google.GoogleSpreadsheetConnection;
-import org.teiid.translator.*;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.MetadataProcessor;
+import org.teiid.translator.ProcedureExecution;
+import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.SourceSystemFunctions;
+import org.teiid.translator.Translator;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.UpdateExecution;
 
 /**
  * Translator that is used to translate SQL to Google spreadsheet API. Translator uses Google Visualization API and Google Data API.
@@ -46,7 +58,7 @@ import org.teiid.translator.*;
 public class SpreadsheetExecutionFactory extends ExecutionFactory<ConnectionFactory, GoogleSpreadsheetConnection>{
 	public static final BundleUtil UTIL = BundleUtil.getBundleUtil(SpreadsheetExecutionFactory.class);
 	public SpreadsheetExecutionFactory() {
-	    setSourceRequiredForMetadata(false);
+		
 	}
 	
 	@Override

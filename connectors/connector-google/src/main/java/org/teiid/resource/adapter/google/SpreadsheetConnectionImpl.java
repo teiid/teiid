@@ -25,12 +25,9 @@ package org.teiid.resource.adapter.google;
 import java.util.List;
 import java.util.Map;
 
-import javax.security.auth.Subject;
-
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.adapter.google.auth.AuthHeaderFactory;
-import org.teiid.resource.adapter.google.auth.ClientLoginHeaderFactory;
 import org.teiid.resource.adapter.google.auth.OAuth2HeaderFactory;
 import org.teiid.resource.adapter.google.common.SpreadsheetAuthException;
 import org.teiid.resource.adapter.google.common.UpdateResult;
@@ -41,7 +38,6 @@ import org.teiid.resource.adapter.google.gdata.SpreadsheetMetadataExtractor;
 import org.teiid.resource.adapter.google.metadata.SpreadsheetInfo;
 import org.teiid.resource.adapter.google.result.RowsResult;
 import org.teiid.resource.spi.BasicConnection;
-import org.teiid.resource.spi.ConnectionContext;
 
 
 
@@ -57,25 +53,9 @@ public class SpreadsheetConnectionImpl extends BasicConnection implements Google
 	public SpreadsheetConnectionImpl(SpreadsheetManagedConnectionFactory config) {
 		this.config = config;
 		
-		String userName = config.getUsername().trim();
-		String password = config.getPassword(); // not trimming the password as space could be part of it.
-
-		// if security-domain is specified and caller identity is used; then use
-		// credentials from subject
-		Subject subject = ConnectionContext.getSubject();
-		if (subject != null) {
-			userName = ConnectionContext.getUserName(subject, this.config, userName);
-			password = ConnectionContext.getPassword(subject, this.config, userName, password);
-		}
+		checkConfig();		
 		
-		checkConfig(userName, password);		
-		
-		AuthHeaderFactory authHeaderFactory = null;
-		if (SpreadsheetManagedConnectionFactory.CLIENT_LOGIN.equals(config.getAuthMethod())){
-			authHeaderFactory = new ClientLoginHeaderFactory(userName, password);
-		} else {
-			authHeaderFactory = new OAuth2HeaderFactory(config.getRefreshToken().trim());
-		}
+		AuthHeaderFactory authHeaderFactory = new OAuth2HeaderFactory(config.getRefreshToken().trim());
 		gdata=new GDataClientLoginAPI();
 		dataProtocol = new GoogleDataProtocolAPI();
 		authHeaderFactory.login();
@@ -86,7 +66,7 @@ public class SpreadsheetConnectionImpl extends BasicConnection implements Google
 		LogManager.logInfo(LogConstants.CTX_CONNECTOR,SpreadsheetManagedConnectionFactory.UTIL.getString("init") ); //$NON-NLS-1$
 	}
 	
-	private void checkConfig(String userName, String password) {
+	private void checkConfig() {
 
 		//SpreadsheetName should be set
 		if (config.getSpreadsheetName()==null ||  config.getSpreadsheetName().trim().equals("")){ //$NON-NLS-1$
@@ -94,27 +74,19 @@ public class SpreadsheetConnectionImpl extends BasicConnection implements Google
 					getString("provide_spreadsheetname",SpreadsheetManagedConnectionFactory.SPREADSHEET_NAME));		 //$NON-NLS-1$
 		}
 		
-		//Auth method must be either CLIENT_LOGIN or OAUTH2
-		if (config.getAuthMethod()==null ||  (!config.getAuthMethod().equals(SpreadsheetManagedConnectionFactory.CLIENT_LOGIN)
-		 && !config.getAuthMethod().equals(SpreadsheetManagedConnectionFactory.OAUTH2_LOGIN))){
+		//Auth method must be OAUTH2
+		if (config.getAuthMethod()!=null && !config.getAuthMethod().equals(SpreadsheetManagedConnectionFactory.OAUTH2_LOGIN)){
 			throw new SpreadsheetAuthException(SpreadsheetManagedConnectionFactory.UTIL.
-					getString("provide_auth", SpreadsheetManagedConnectionFactory.CLIENT_LOGIN,  //$NON-NLS-1$
+					getString("provide_auth", //$NON-NLS-1$
 							SpreadsheetManagedConnectionFactory.OAUTH2_LOGIN));		
 		}
 		
-		//Client login requires username and password
-		if (config.getAuthMethod().equals(SpreadsheetManagedConnectionFactory.CLIENT_LOGIN)){
-			if (userName == null || password == null || userName.equals("") || password.equals("")) { //$NON-NLS-1$ //$NON-NLS-2$
-				throw new SpreadsheetAuthException(SpreadsheetManagedConnectionFactory.UTIL.getString("client_login_requires_pass"));	 //$NON-NLS-1$
-			}
-		}
-		
 		//OAuth login requires refreshToken
-		if (config.getAuthMethod().equals(SpreadsheetManagedConnectionFactory.OAUTH2_LOGIN)){
+		//if (config.getAuthMethod().equals(SpreadsheetManagedConnectionFactory.OAUTH2_LOGIN)){
 			if (config.getRefreshToken() == null || config.getRefreshToken().trim().equals("")){ //$NON-NLS-1$
 				throw new SpreadsheetAuthException(SpreadsheetManagedConnectionFactory.UTIL.getString("oauth_requires_pass"));	 //$NON-NLS-1$
 			}
-		}
+		//}
 	}
 
 	/** 
