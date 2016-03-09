@@ -9,5 +9,6 @@
     
     <dependencies>
     	<module name="org.yaml.snakeyaml" />
+    	<module name="com.fasterxml.jackson.core.jackson-core" />
     </dependencies>
 </module>
