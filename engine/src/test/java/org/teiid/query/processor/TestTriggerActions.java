@@ -162,7 +162,7 @@ public class TestTriggerActions {
 	    	helpProcess(plan, context, dm, null);
 	    	fail();
         } catch (QueryProcessingException e) {
-        	assertEquals("TEIID30168 Couldn't execute the dynamic SQL command \"EXECUTE IMMEDIATE 'delete from gx where gx.x = new.x'\" with the SQL statement \"'delete from gx where gx.x = new.x'\" due to: TEIID30347 There is a recursive invocation of group 'I gx'. Please correct the SQL.", e.getMessage());
+        	assertEquals("TEIID30168 Couldn't execute the dynamic SQL command \"EXECUTE IMMEDIATE 'delete from gx where gx.x = new.x'\" with the SQL statement \"delete from gx where gx.x = new.x\" due to: TEIID30347 There is a recursive invocation of group 'I gx'. Please correct the SQL.", e.getMessage());
         }
 	}
 	
