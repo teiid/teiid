@@ -212,8 +212,8 @@ public class FakeServer extends EmbeddedServer {
         	}
         	
         	vdbMetaData.setStatus(VDB.Status.ACTIVE);
-			this.repo.addVDB(vdbMetaData, metadata, parameterObject.vdbResources, udfMetaData, cmr, false);
-			this.repo.finishDeployment(vdbMetaData.getName(), vdbMetaData.getVersion(), false);
+			this.repo.addVDB(vdbMetaData, metadata, parameterObject.vdbResources, udfMetaData, cmr);
+			this.repo.finishDeployment(vdbMetaData.getName(), vdbMetaData.getVersion());
 			this.repo.getLiveVDB(vdbMetaData.getName(), vdbMetaData.getVersion()).setStatus(VDB.Status.ACTIVE);
 		} catch (VirtualDatabaseException e) {
 			throw new RuntimeException(e);

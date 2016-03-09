@@ -25,6 +25,7 @@ package org.teiid.arquillian;
 import static org.junit.Assert.*;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -82,8 +83,7 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		p.setProperty("EndPoint", "http://localhost:8080");
 		p.setProperty("RequestTimeout", "20000");
 		AdminUtil.createDataSource(admin, "sample-ws", "webservice", p);
-
-		admin.deploy("sample-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
+		deployVDB();
 		assertTrue(AdminUtil.waitForVDBLoad(admin, "sample", 1, 3));
 		
 		admin.deploy("sample-ws-vdb.xml",new ReaderInputStream(new StringReader(
@@ -128,8 +128,7 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 	
     @Test
     public void testPostOperation() throws Exception {
-        admin.deploy("sample-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
-        assertTrue(AdminUtil.waitForVDBLoad(admin, "sample", 1, 3));
+    	deployVDB();
         
         this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:sample@mm://localhost:31000;user=user;password=user", null);
         
@@ -157,10 +156,21 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
         admin.undeploy("sample-vdb.xml");
         Thread.sleep(2000);
     }
+
+	private void deployVDB() throws AdminException, FileNotFoundException {
+		//we'll remove the war from the previous test as we are now lazily removing it on the server side
+		try {
+			admin.undeploy("sample_1.war");
+		} catch (AdminException e) {
+			
+		}
+        admin.deploy("sample-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "sample", 1, 3));
+	}
     
 	@Test
     public void testMultipartPostOperation() throws Exception {
-		admin.deploy("sample-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
+		deployVDB();
 		assertTrue(AdminUtil.waitForVDBLoad(admin, "sample", 1, 3));
 		
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:sample@mm://localhost:31000;user=user;password=user", null);
