@@ -73,9 +73,9 @@ public class NativeMetadataRepository extends MetadataRepository {
         } catch (Throwable e) {
             // if security pass through is enabled the connection creation may fail at the startup
             if (executionFactory.isSourceRequiredForMetadata()) {
-                throw new TranslatorException(QueryPlugin.Event.TEIID30477, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30477));
+                throw new TranslatorException(QueryPlugin.Event.TEIID31178, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31178, factory.getName()));
             } 
-            LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Could not get exception to get metadata, but no connection is required"); //$NON-NLS-1$
+            LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Exception getting connection for metadata, but no connection is required"); //$NON-NLS-1$
         }
         
 		Object unwrapped = null;
@@ -85,7 +85,7 @@ public class NativeMetadataRepository extends MetadataRepository {
 				unwrapped = ((WrappedConnection)connection).unwrap();
 			} catch (ResourceException e) {
 				if (executionFactory.isSourceRequiredForMetadata()) {
-					throw new TranslatorException(QueryPlugin.Event.TEIID30477, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30477));
+					throw new TranslatorException(QueryPlugin.Event.TEIID30477, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30477, factory.getName()));
 				}
 				connection = null;
 				LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Could not unwrap exception to get metadata, but no connection is required"); //$NON-NLS-1$
