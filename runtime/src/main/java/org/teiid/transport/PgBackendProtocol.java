@@ -575,13 +575,13 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 				engine = config.getServerSSLEngine();
 			}
 		} catch (IOException e) {
-			LogManager.logError(LogConstants.CTX_ODBC, e, RuntimePlugin.Util.gs(requireSecure?RuntimePlugin.Event.TEIID40122:RuntimePlugin.Event.TEIID40016));
+			LogManager.logError(LogConstants.CTX_ODBC, e, RuntimePlugin.Util.gs(secureData()?RuntimePlugin.Event.TEIID40122:RuntimePlugin.Event.TEIID40016));
 		} catch (GeneralSecurityException e) {
-			LogManager.logError(LogConstants.CTX_ODBC, e, RuntimePlugin.Util.gs(requireSecure?RuntimePlugin.Event.TEIID40122:RuntimePlugin.Event.TEIID40016));
+			LogManager.logError(LogConstants.CTX_ODBC, e, RuntimePlugin.Util.gs(secureData()?RuntimePlugin.Event.TEIID40122:RuntimePlugin.Event.TEIID40016));
 		}
 		ChannelBuffer buffer = ctx.getChannel().getConfig().getBufferFactory().getBuffer(1);
 		if (engine == null) {
-			if (requireSecure) {
+			if (secureData()) {
 				sendErrorResponse(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40124));
 				return;
 			}
