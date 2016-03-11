@@ -250,12 +250,7 @@ public class LocalClient implements Client {
 			if (queryInfo != null) {
 				getCount = queryInfo.inlineCount == InlineCount.ALLPAGES;
 				if (!getCount && (queryInfo.top != null || queryInfo.skip != null)) {
-					if (queryInfo.top != null && queryInfo.skip != null) {
-						query.setLimit(new Limit(new Constant(queryInfo.skip), new Constant(queryInfo.top)));
-					}
-					else if (queryInfo.top != null) {
-						query.setLimit(new Limit(new Constant(0), new Constant(queryInfo.top)));
-					}
+					query.setLimit(new Limit(queryInfo.skip!=null?new Constant(queryInfo.skip):null, queryInfo.top!=null?new Constant(queryInfo.top):null));
 				}
 			}
 

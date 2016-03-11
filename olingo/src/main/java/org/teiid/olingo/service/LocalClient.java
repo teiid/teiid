@@ -192,12 +192,7 @@ public class LocalClient implements Client {
         boolean getCount = false; 
         getCount = calculateTotalSize;
         if (!getCount && (topOption != null || skipOption != null)) {
-            if (topOption != null && skipOption != null) {
-                query.setLimit(new Limit(new Constant(skipOption), new Constant(topOption)));
-            }
-            else if (topOption != null) {
-                query.setLimit(new Limit(new Constant(0), new Constant(topOption)));
-            }
+            query.setLimit(new Limit(skipOption!=null?new Constant(skipOption):null, topOption!=null?new Constant(topOption):null));
         }
 
         String sessionId = getConnection().getServerConnection().getLogonResult().getSessionID();
