@@ -581,14 +581,14 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 				engine = config.getServerSSLEngine();
 			}
 		} catch (IOException e) {
-			LogManager.logError(LogConstants.CTX_ODBC, e, RuntimePlugin.Util.gs(requireSecure?RuntimePlugin.Event.TEIID40122:RuntimePlugin.Event.TEIID40016));
+			LogManager.logError(LogConstants.CTX_ODBC, e, RuntimePlugin.Util.gs(secureData()?RuntimePlugin.Event.TEIID40122:RuntimePlugin.Event.TEIID40016));
 		} catch (GeneralSecurityException e) {
-			LogManager.logError(LogConstants.CTX_ODBC, e, RuntimePlugin.Util.gs(requireSecure?RuntimePlugin.Event.TEIID40122:RuntimePlugin.Event.TEIID40016));
+			LogManager.logError(LogConstants.CTX_ODBC, e, RuntimePlugin.Util.gs(secureData()?RuntimePlugin.Event.TEIID40122:RuntimePlugin.Event.TEIID40016));
 		}
 		ByteBuf buffer = Unpooled.buffer(1);
 		ChannelPromise promise = this.ctx.newPromise();
 		if (engine == null) {
-			if (requireSecure) {
+			if (secureData()) {
 				sendErrorResponse(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40124));
 				return;
 			}
