@@ -596,6 +596,11 @@ public class TestODataIntegration extends BaseResourceTest {
 	        assertTrue(response.getEntity().contains("('a')"));
 	        Assert.assertEquals(200, response.getStatus());
 	        
+	        request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x?$skip=2&$format=json"));
+	        response = request.get(String.class);
+	        Assert.assertEquals(200, response.getStatus());
+	        assertFalse(response.getEntity().contains("('a')"));
+	        
 	        //a missing entity should be a 404
 	        request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x('v')"));
 	        response = request.get(String.class);
