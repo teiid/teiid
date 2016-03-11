@@ -31,12 +31,12 @@ import org.teiid.language.NamedTable;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.Select;
 import org.teiid.language.visitor.SQLStringVisitor;
-import org.teiid.resource.adapter.google.common.SpreadsheetOperationException;
-import org.teiid.resource.adapter.google.metadata.SpreadsheetInfo;
-import org.teiid.resource.adapter.google.metadata.Worksheet;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.google.SpreadsheetExecutionFactory;
+import org.teiid.translator.goole.api.SpreadsheetOperationException;
+import org.teiid.translator.goole.api.metadata.SpreadsheetInfo;
+import org.teiid.translator.goole.api.metadata.Worksheet;
 /**
  * Translates SQL SELECT queries
  * 

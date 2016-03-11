@@ -24,15 +24,15 @@ package org.teiid.translator.google;
 
 import org.teiid.language.Command;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.resource.adapter.google.GoogleSpreadsheetConnection;
-import org.teiid.resource.adapter.google.common.SpreadsheetOperationException;
-import org.teiid.resource.adapter.google.common.UpdateResult;
-import org.teiid.resource.adapter.google.metadata.SpreadsheetInfo;
-import org.teiid.resource.adapter.google.metadata.Worksheet;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
+import org.teiid.translator.goole.api.GoogleSpreadsheetConnection;
+import org.teiid.translator.goole.api.SpreadsheetOperationException;
+import org.teiid.translator.goole.api.metadata.SpreadsheetInfo;
+import org.teiid.translator.goole.api.metadata.Worksheet;
+import org.teiid.translator.goole.api.result.UpdateResult;
 
 public abstract class AbstractSpreadsheetExecution implements UpdateExecution {
 	protected GoogleSpreadsheetConnection connection;

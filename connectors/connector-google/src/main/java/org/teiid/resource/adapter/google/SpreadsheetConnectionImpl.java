@@ -29,15 +29,16 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.adapter.google.auth.AuthHeaderFactory;
 import org.teiid.resource.adapter.google.auth.OAuth2HeaderFactory;
-import org.teiid.resource.adapter.google.common.SpreadsheetAuthException;
-import org.teiid.resource.adapter.google.common.UpdateResult;
-import org.teiid.resource.adapter.google.common.UpdateSet;
 import org.teiid.resource.adapter.google.dataprotocol.GoogleDataProtocolAPI;
 import org.teiid.resource.adapter.google.gdata.GDataClientLoginAPI;
 import org.teiid.resource.adapter.google.gdata.SpreadsheetMetadataExtractor;
-import org.teiid.resource.adapter.google.metadata.SpreadsheetInfo;
-import org.teiid.resource.adapter.google.result.RowsResult;
 import org.teiid.resource.spi.BasicConnection;
+import org.teiid.translator.goole.api.GoogleSpreadsheetConnection;
+import org.teiid.translator.goole.api.SpreadsheetAuthException;
+import org.teiid.translator.goole.api.UpdateSet;
+import org.teiid.translator.goole.api.metadata.SpreadsheetInfo;
+import org.teiid.translator.goole.api.result.RowsResult;
+import org.teiid.translator.goole.api.result.UpdateResult;
 
 
 
@@ -63,7 +64,7 @@ public class SpreadsheetConnectionImpl extends BasicConnection implements Google
 		gdata.setHeaderFactory(authHeaderFactory);
 		dataProtocol.setSpreadSheetBrowser(gdata);
 		
-		LogManager.logInfo(LogConstants.CTX_CONNECTOR,SpreadsheetManagedConnectionFactory.UTIL.getString("init") ); //$NON-NLS-1$
+		LogManager.logDetail(LogConstants.CTX_CONNECTOR,SpreadsheetManagedConnectionFactory.UTIL.getString("init") ); //$NON-NLS-1$
 	}
 	
 	private void checkConfig() {
@@ -95,7 +96,7 @@ public class SpreadsheetConnectionImpl extends BasicConnection implements Google
 	 */
 	@Override
     public void close() {
-		LogManager.logInfo(LogConstants.CTX_CONNECTOR, 
+		LogManager.logDetail(LogConstants.CTX_CONNECTOR, 
 				SpreadsheetManagedConnectionFactory.UTIL.
 				getString("closing")); //$NON-NLS-1$
 	}

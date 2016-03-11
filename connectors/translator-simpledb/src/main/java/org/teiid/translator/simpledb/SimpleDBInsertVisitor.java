@@ -29,8 +29,8 @@ import java.util.List;
 import org.teiid.language.*;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.Column;
-import org.teiid.resource.adpter.simpledb.SimpleDBDataTypeManager;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.simpledb.api.SimpleDBDataTypeManager;
 
 public class SimpleDBInsertVisitor extends HierarchyVisitor {
 

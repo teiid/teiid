@@ -6,7 +6,6 @@
     
     <resources>
         <resource-root path="google-api-${project.version}.jar" />
-        <resource-root path="core-${version.gdata-core}.jar" />
     </resources>
 
     <dependencies>
@@ -14,8 +13,5 @@
         <module name="javax.resource.api"/>
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.api" />       
-        <module name="javax.xml.bind.api" />       
-        <module name="org.apache.httpcomponents" />
-        <module name="com.google.guava"/>
     </dependencies>
 </module>

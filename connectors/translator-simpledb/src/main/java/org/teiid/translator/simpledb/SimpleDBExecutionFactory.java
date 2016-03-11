@@ -28,8 +28,8 @@ import javax.resource.cci.ConnectionFactory;
 
 import org.teiid.language.*;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.resource.adpter.simpledb.SimpleDBConnection;
 import org.teiid.translator.*;
+import org.teiid.translator.simpledb.api.SimpleDBConnection;
 
 @Translator(name = "simpledb", description = "Translator for Amazon SimpleDB")
 public class SimpleDBExecutionFactory extends ExecutionFactory<ConnectionFactory, SimpleDBConnection> {

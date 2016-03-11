@@ -27,11 +27,11 @@ import java.util.List;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
-import org.teiid.resource.adpter.simpledb.SimpleDBConnection;
-import org.teiid.resource.adpter.simpledb.SimpleDBConnection.SimpleDBAttribute;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
+import org.teiid.translator.simpledb.api.SimpleDBConnection;
+import org.teiid.translator.simpledb.api.SimpleDBConnection.SimpleDBAttribute;
 
 public class SimpleDBMetadataProcessor implements MetadataProcessor<SimpleDBConnection> {
     public static final String ITEM_NAME = SimpleDBConnection.ITEM_NAME;

@@ -28,8 +28,8 @@ import java.util.List;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.SetClause;
 import org.teiid.language.Update;
-import org.teiid.resource.adapter.google.common.UpdateSet;
-import org.teiid.resource.adapter.google.metadata.SpreadsheetInfo;
+import org.teiid.translator.goole.api.UpdateSet;
+import org.teiid.translator.goole.api.metadata.SpreadsheetInfo;
 
 /**
  * Translates SQL UPDATE commands
