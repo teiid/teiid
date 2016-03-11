@@ -1264,7 +1264,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 				return null;
 			
 			node.get(TOTAL_ENTRIES).set(object.getTotalEntries());
-			node.get(HITRATIO).set(object.getHitRatio());
+			node.get(HITRATIO).set(String.valueOf(object.getHitRatio()));
 			node.get(REQUEST_COUNT).set(object.getRequestCount());
 			
 			wrapDomain(object, node);
@@ -1277,7 +1277,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 				
 			CacheStatisticsMetadata cache = new CacheStatisticsMetadata();
 			cache.setTotalEntries(node.get(TOTAL_ENTRIES).asInt());
-			cache.setHitRatio(node.get(HITRATIO).asDouble());
+			cache.setHitRatio(Double.parseDouble(node.get(HITRATIO).asString()));
 			cache.setRequestCount(node.get(REQUEST_COUNT).asInt());
 			
 			unwrapDomain(cache, node);
@@ -1285,17 +1285,17 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		}
 		
 		public ModelNode describe(ModelNode node) {
-			addAttribute(node, TOTAL_ENTRIES, ModelType.STRING, true);
+			addAttribute(node, TOTAL_ENTRIES, ModelType.INT, true);
 			addAttribute(node, HITRATIO, ModelType.STRING, true);
-			addAttribute(node, REQUEST_COUNT, ModelType.STRING, true);
+			addAttribute(node, REQUEST_COUNT, ModelType.INT, true);
 			return node; 		
 		}
 		
 		public AttributeDefinition[] getAttributeDefinitions() {
 			return new AttributeDefinition[] {
-					new SimpleAttributeDefinition(TOTAL_ENTRIES, ModelType.STRING, false),
+					new SimpleAttributeDefinition(TOTAL_ENTRIES, ModelType.INT, false),
 					new SimpleAttributeDefinition(HITRATIO, ModelType.STRING, false),
-					new SimpleAttributeDefinition(REQUEST_COUNT, ModelType.STRING, false)
+					new SimpleAttributeDefinition(REQUEST_COUNT, ModelType.INT, false)
 			};
 		}
 	}	
