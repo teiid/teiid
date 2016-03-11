@@ -33,10 +33,10 @@ import javax.resource.ResourceException;
 
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.Column;
-import org.teiid.resource.adpter.simpledb.SimpleDBConnection;
-import org.teiid.resource.adpter.simpledb.SimpleDBDataTypeManager;
 import org.teiid.resource.spi.BasicConnection;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.simpledb.api.SimpleDBConnection;
+import org.teiid.translator.simpledb.api.SimpleDBDataTypeManager;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;

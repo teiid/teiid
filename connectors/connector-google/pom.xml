@@ -29,7 +29,22 @@
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>google-api</artifactId>
         </dependency>
-        
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+        </dependency>
+		<dependency>
+			<groupId>org.jboss.teiid.connectors.google</groupId>
+			<artifactId>gdata-spreadsheet</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid.connectors.google</groupId>
+			<artifactId>gdata-core</artifactId>
+		</dependency>
     </dependencies>
     
     <build>

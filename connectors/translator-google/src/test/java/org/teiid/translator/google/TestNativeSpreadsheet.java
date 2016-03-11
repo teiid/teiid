@@ -33,12 +33,12 @@ import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.cdk.unittest.FakeTranslationFactory;
 import org.teiid.language.Command;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.resource.adapter.google.GoogleSpreadsheetConnection;
-import org.teiid.resource.adapter.google.common.SheetRow;
-import org.teiid.resource.adapter.google.result.RowsResult;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.goole.api.GoogleSpreadsheetConnection;
+import org.teiid.translator.goole.api.result.RowsResult;
+import org.teiid.translator.goole.api.result.SheetRow;
 
 public class TestNativeSpreadsheet {
 	

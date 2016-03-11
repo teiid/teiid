@@ -33,8 +33,8 @@ import org.teiid.language.Update;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Table;
-import org.teiid.resource.adpter.simpledb.SimpleDBDataTypeManager;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.simpledb.api.SimpleDBDataTypeManager;
 
 public class SimpleDBUpdateVisitor extends HierarchyVisitor{
     private Table table;

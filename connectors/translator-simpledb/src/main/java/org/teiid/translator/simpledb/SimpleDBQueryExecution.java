@@ -30,12 +30,12 @@ import java.util.TreeMap;
 
 import org.teiid.language.Select;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.resource.adpter.simpledb.SimpleDBConnection;
-import org.teiid.resource.adpter.simpledb.SimpleDBDataTypeManager;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.simpledb.api.SimpleDBConnection;
+import org.teiid.translator.simpledb.api.SimpleDBDataTypeManager;
 
 import com.amazonaws.services.simpledb.model.Attribute;
 import com.amazonaws.services.simpledb.model.Item;

@@ -36,12 +36,12 @@ import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
-import org.teiid.resource.adpter.simpledb.SimpleDBConnection;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.simpledb.SimpleDBExecutionFactory;
 import org.teiid.translator.simpledb.SimpleDBInsertVisitor;
+import org.teiid.translator.simpledb.api.SimpleDBConnection;
 
 import com.amazonaws.services.simpledb.model.Attribute;
 import com.amazonaws.services.simpledb.model.Item;

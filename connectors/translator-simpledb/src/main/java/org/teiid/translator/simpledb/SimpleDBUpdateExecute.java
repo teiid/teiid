@@ -24,10 +24,10 @@ package org.teiid.translator.simpledb;
 
 import org.teiid.language.Command;
 import org.teiid.language.Update;
-import org.teiid.resource.adpter.simpledb.SimpleDBConnection;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
+import org.teiid.translator.simpledb.api.SimpleDBConnection;
 
 public class SimpleDBUpdateExecute implements UpdateExecution {
     private SimpleDBUpdateVisitor visitor;

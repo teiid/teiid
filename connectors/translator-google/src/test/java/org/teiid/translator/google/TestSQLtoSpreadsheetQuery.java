@@ -44,14 +44,14 @@ import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.unittest.RealMetadataFactory;
-import org.teiid.resource.adapter.google.GoogleSpreadsheetConnection;
-import org.teiid.resource.adapter.google.metadata.SpreadsheetColumnType;
-import org.teiid.resource.adapter.google.metadata.SpreadsheetInfo;
-import org.teiid.resource.adapter.google.metadata.Worksheet;
 import org.teiid.translator.google.visitor.SpreadsheetDeleteVisitor;
 import org.teiid.translator.google.visitor.SpreadsheetInsertVisitor;
 import org.teiid.translator.google.visitor.SpreadsheetSQLVisitor;
 import org.teiid.translator.google.visitor.SpreadsheetUpdateVisitor;
+import org.teiid.translator.goole.api.GoogleSpreadsheetConnection;
+import org.teiid.translator.goole.api.metadata.SpreadsheetColumnType;
+import org.teiid.translator.goole.api.metadata.SpreadsheetInfo;
+import org.teiid.translator.goole.api.metadata.Worksheet;
 
 /**
  * Tests transformation from Teiid Query to worksheet Query.

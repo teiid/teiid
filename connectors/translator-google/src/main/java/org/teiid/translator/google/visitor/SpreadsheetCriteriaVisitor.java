@@ -32,8 +32,8 @@ import org.teiid.language.Expression;
 import org.teiid.language.Like;
 import org.teiid.language.Literal;
 import org.teiid.language.visitor.SQLStringVisitor;
-import org.teiid.resource.adapter.google.common.SpreadsheetOperationException;
-import org.teiid.resource.adapter.google.metadata.SpreadsheetInfo;
+import org.teiid.translator.goole.api.SpreadsheetOperationException;
+import org.teiid.translator.goole.api.metadata.SpreadsheetInfo;
 
 /**
  * Base visitor for criteria in the UPDATE and DELETE commands

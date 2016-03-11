@@ -5,6 +5,8 @@
        
     <resources>
         <resource-root path="connector-google-${project.version}.jar"/>
+        <resource-root path="gdata-core-${version.gdata-core}.jar" />
+        <resource-root path="gdata-spreadsheet-${version.gdata-spreadsheet}.jar" />
         <resource-root path="."/>
         <!-- Insert resources here -->
     </resources>
@@ -15,5 +17,8 @@
         <module name="org.jboss.teiid.common-core"/>
         <module name="org.jboss.teiid.api"/>
         <module name="org.jboss.teiid.translator.google.api"/>
+        <module name="javax.xml.bind.api" />       
+        <module name="org.apache.httpcomponents" />
+        <module name="com.google.guava"/>
     </dependencies>
 </module>

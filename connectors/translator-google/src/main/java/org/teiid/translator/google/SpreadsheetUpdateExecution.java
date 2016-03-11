@@ -29,14 +29,14 @@ import org.teiid.language.Update;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.resource.adapter.google.GoogleSpreadsheetConnection;
-import org.teiid.resource.adapter.google.common.UpdateResult;
-import org.teiid.resource.adapter.google.metadata.SpreadsheetInfo;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.google.visitor.SpreadsheetDeleteVisitor;
 import org.teiid.translator.google.visitor.SpreadsheetInsertVisitor;
 import org.teiid.translator.google.visitor.SpreadsheetUpdateVisitor;
+import org.teiid.translator.goole.api.GoogleSpreadsheetConnection;
+import org.teiid.translator.goole.api.metadata.SpreadsheetInfo;
+import org.teiid.translator.goole.api.result.UpdateResult;
 /**
  * Execution of INSERT, DELETE and UPDATE commands
  * 

@@ -38,10 +38,10 @@ import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.validator.ValidatorReport;
-import org.teiid.resource.adpter.simpledb.SimpleDBConnection;
-import org.teiid.resource.adpter.simpledb.SimpleDBConnection.SimpleDBAttribute;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.simpledb.SimpleDBExecutionFactory;
+import org.teiid.translator.simpledb.api.SimpleDBConnection;
+import org.teiid.translator.simpledb.api.SimpleDBConnection.SimpleDBAttribute;
 
 @SuppressWarnings ("nls")
 public class TestSimpleDBMetadataProcessor {

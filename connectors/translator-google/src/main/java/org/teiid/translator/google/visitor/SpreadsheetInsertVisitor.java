@@ -36,8 +36,8 @@ import org.teiid.language.ExpressionValueSource;
 import org.teiid.language.Insert;
 import org.teiid.language.Literal;
 import org.teiid.language.visitor.SQLStringVisitor;
-import org.teiid.resource.adapter.google.common.SpreadsheetOperationException;
-import org.teiid.resource.adapter.google.metadata.SpreadsheetInfo;
+import org.teiid.translator.goole.api.SpreadsheetOperationException;
+import org.teiid.translator.goole.api.metadata.SpreadsheetInfo;
 
 /**
  * Translates SQL INSERT commands

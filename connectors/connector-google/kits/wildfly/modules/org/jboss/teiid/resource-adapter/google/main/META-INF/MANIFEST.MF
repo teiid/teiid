@@ -1,2 +1,2 @@
-Dependencies: org.jboss.teiid.common-core,org.jboss.teiid.api,javax.api, org.jboss.teiid.translator.google.api
+Dependencies: org.jboss.teiid.common-core,org.jboss.teiid.api,javax.api, org.jboss.teiid.translator.google.api, javax.xml.bind.api, org.apache.httpcomponents, com.google.guava
 

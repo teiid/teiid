@@ -37,7 +37,6 @@ import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.resource.adapter.google.GoogleSpreadsheetConnection;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.MetadataProcessor;
@@ -47,6 +46,7 @@ import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
+import org.teiid.translator.goole.api.GoogleSpreadsheetConnection;
 
 /**
  * Translator that is used to translate SQL to Google spreadsheet API. Translator uses Google Visualization API and Google Data API.
