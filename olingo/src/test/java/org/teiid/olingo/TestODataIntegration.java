@@ -1227,4 +1227,36 @@ public class TestODataIntegration {
         assertEquals("<name>content2</name>", 
                 response.getContentAsString());      
     } 
+    
+    @Test 
+    public void testNonExistentEntity() throws Exception {
+        HardCodedExecutionFactory hc = new HardCodedExecutionFactory();
+        hc.addData("SELECT x.a, x.b FROM x", Arrays.asList(Arrays.asList("a", 1)));
+        
+        teiid.addTranslator("x1", hc);
+        
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("m");
+            mmd.addSourceMetadata("ddl", "create foreign table x (a string, b integer, primary key (a));");
+            mmd.addSourceMapping("x1", "x1", null);
+            teiid.deployVDB("northwind", mmd);
+
+            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+
+            ContentResponse response = http.newRequest(baseURL + "/northwind/m/x('b')")
+                    .method("GET")
+                    .send();
+            assertEquals(404, response.getStatus());
+            
+            response = http.newRequest(baseURL + "/northwind/m/x('b')/b")
+                    .method("GET")
+                    .send();
+            assertEquals(404, response.getStatus());
+
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }
 }

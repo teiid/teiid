@@ -232,7 +232,7 @@ public class TeiidServiceHandler implements ServiceHandler {
                     throws ODataLibraryException, ODataApplicationException {
                 EntityCollection entitySet = (EntityCollection)queryResponse;
                 if (entitySet.getEntities().isEmpty()) {
-                    response.writeNoContent(true);
+                    response.writeNotFound(true);
                 } else {
                     response.writeReadEntity(visitor.getContext().getEdmEntityType(), 
                         entitySet.getEntities().get(0));
