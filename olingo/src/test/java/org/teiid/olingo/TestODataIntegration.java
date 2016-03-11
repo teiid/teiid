@@ -111,7 +111,12 @@ public class TestODataIntegration {
         EmbeddedConfiguration config = new EmbeddedConfiguration();
         config.setTransactionManager(Mockito.mock(TransactionManager.class));
         teiid.start(config);
-        teiid.addTranslator(LoopbackExecutionFactory.class);
+        teiid.addTranslator("loopback", new LoopbackExecutionFactory() {
+        	@Override
+        	public boolean supportsRowOffset() {
+        		return false;
+        	}
+        });
 
         createContext("/odata4", null);
         
@@ -203,6 +208,14 @@ public class TestODataIntegration {
         ContentResponse response = http.GET(baseURL + "/loopy/vm1/G1");
         assertEquals(200, response.getStatus());
         assertEquals("{\"@odata.context\":\"$metadata#G1\",\"value\":[{\"e1\":\"ABCDEFGHIJ\",\"e2\":0,\"e3\":0.0}]}", 
+                response.getContentAsString());
+    }
+    
+    @Test
+    public void testEntitySetSkipOnly() throws Exception {
+        ContentResponse response = http.GET(baseURL + "/loopy/vm1/G1/?$skip=1");
+        assertEquals(200, response.getStatus());
+        assertEquals("{\"@odata.context\":\"$metadata#G1\",\"value\":[]}", 
                 response.getContentAsString());
     }
 
