@@ -346,7 +346,7 @@
                     <module slot="main" id="org.jboss.teiid.resource-adapter.salesforce"/>
                 </resource-adapter>
                 <resource-adapter id="salesforce-34">
-                    <module slot="34" id="org.jboss.teiid.resource-adapter.salesforce"/>
+                    <module id="org.jboss.teiid.resource-adapter.salesforce-34"/>
                 </resource-adapter>                
                 <resource-adapter id="webservice">
                     <module slot="main" id="org.jboss.teiid.resource-adapter.webservice"/>
