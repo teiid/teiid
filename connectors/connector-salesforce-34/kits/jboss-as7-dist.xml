@@ -21,7 +21,7 @@
         </fileSet>
         <fileSet>
             <directory>${project.build.directory}/rar-unpack</directory>
-            <outputDirectory>${jbossas-module-root}/org/jboss/teiid/resource-adapter/salesforce/34</outputDirectory>
+            <outputDirectory>${jbossas-module-root}/org/jboss/teiid/resource-adapter/salesforce-34/main</outputDirectory>
         </fileSet>
     </fileSets>
 </assembly>
