@@ -37,7 +37,6 @@ import java.util.Properties;
 import java.util.TimeZone;
 
 import javax.servlet.DispatcherType;
-import javax.transaction.TransactionManager;
 
 import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.commons.core.Encoder;
@@ -50,10 +49,10 @@ import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.infinispan.transaction.tm.DummyBaseTransactionManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.teiid.GeneratedKeys;
 import org.teiid.adminapi.Admin.SchemaObjectType;
 import org.teiid.adminapi.Model;
@@ -109,7 +108,7 @@ public class TestODataIntegration {
     	TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("UTC"));
         teiid = new EmbeddedServer();
         EmbeddedConfiguration config = new EmbeddedConfiguration();
-        config.setTransactionManager(Mockito.mock(TransactionManager.class));
+        config.setTransactionManager(new DummyBaseTransactionManager());
         teiid.start(config);
         teiid.addTranslator("loopback", new LoopbackExecutionFactory() {
         	@Override
@@ -830,6 +829,12 @@ public class TestODataIntegration {
                     .content(new StringContentProvider("{\"c\":10}"), "application/json")
                     .send();                        
             assertEquals(204, response.getStatus());
+            
+            response = http.newRequest(baseURL + "/northwind/m/x(a='a',b='b')")
+                    .method("PUT")
+                    .content(new StringContentProvider("{\"a\":\"a\", \"b\":\"b\", \"c\":5}"), "application/json")
+                    .send();                        
+            assertEquals(204, response.getStatus());            
 
         } finally {
             localClient = null;

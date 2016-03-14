@@ -60,7 +60,6 @@ import org.apache.olingo.server.api.uri.UriInfo;
 import org.apache.olingo.server.api.uri.UriInfoResource;
 import org.apache.olingo.server.api.uri.UriParameter;
 import org.apache.olingo.server.core.ServiceHandler;
-import org.apache.olingo.server.core.deserializer.json.ODataJsonDeserializer;
 import org.apache.olingo.server.core.requests.ActionRequest;
 import org.apache.olingo.server.core.requests.DataRequest;
 import org.apache.olingo.server.core.requests.FunctionRequest;
@@ -363,7 +362,7 @@ public class TeiidServiceHandler implements ServiceHandler {
         ODataSQLBuilder visitor = new ODataSQLBuilder(getClient().getMetadataStore(), this.prepared, false,
                 rawURI, this.serviceMetadata, this.nameGenerator);
         visitor.visit(uriInfo);
-        Insert command = visitor.insert(entityType, entity, this.prepared);
+        Insert command = visitor.insert(entityType, entity, null, this.prepared);
         return getClient().executeUpdate(command, visitor.getParameters());
     }
     
@@ -517,22 +516,13 @@ public class TeiidServiceHandler implements ServiceHandler {
                 updateResponse = getClient().executeUpdate(delete, visitor.getParameters());
                 
                 // insert
-                ODataJsonDeserializer deserializer = new ODataJsonDeserializer(ContentType.JSON);
-                             
                 visitor = new ODataSQLBuilder(getClient().getMetadataStore(), this.prepared, false,
                         request.getODataRequest().getRawBaseUri(), this.serviceMetadata, this.nameGenerator);
                 visitor.visit(request.getUriInfo());
                 
                 EdmEntityType entityType = request.getEntitySet().getEntityType();
                 List<UriParameter> keys = request.getKeyPredicates();
-                for (UriParameter key : keys) {
-                    EdmProperty edmProperty = (EdmProperty)entityType.getProperty(key.getName());
-                    Property property = deserializer.property(
-                            new ByteArrayInputStream(key.getText().getBytes()),
-                            edmProperty).getProperty();
-                    entity.addProperty(property);
-                }
-                Insert command = visitor.insert(entityType, entity, this.prepared);
+                Insert command = visitor.insert(entityType, entity, keys, this.prepared);
                 updateResponse = getClient().executeUpdate(command, visitor.getParameters());
                 commit(txn);
             } catch (SQLException e) {

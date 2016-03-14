@@ -51,7 +51,7 @@ import org.apache.olingo.server.core.uri.UriResourceEntitySetImpl;
 import org.apache.olingo.server.core.uri.parser.Parser;
 import org.apache.olingo.server.core.uri.parser.UriParserException;
 import org.teiid.core.TeiidException;
-import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.DataTypeManager;
@@ -397,7 +397,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         this.exceptions.add(new TeiidException(ODataPlugin.Event.TEIID16035, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16035)));
     }
     
-    public Insert insert(EdmEntityType entityType, Entity entity, boolean prepared) throws TeiidException {
+    public Insert insert(EdmEntityType entityType, Entity entity, List<UriParameter> keys, boolean prepared) throws TeiidException {
         Table entityTable = findTable(entityType.getName(), this.metadata);
         DocumentNode resource = new DocumentNode(entityTable, new GroupSymbol(entityTable.getFullName()), entityType);
         
@@ -405,7 +405,18 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         List<Constant> constantValues = new ArrayList<Constant>();
         Insert insert = new Insert();
         insert.setGroup(resource.getGroupSymbol());
-        
+        if (keys != null) {
+	        for (UriParameter key : keys) {
+	            EdmProperty edmProperty = (EdmProperty)entityType.getProperty(key.getName());
+	            Column column = entityTable.getColumnByName(edmProperty.getName());
+	            Object propertyValue = ODataTypeManager.parseLiteral(edmProperty, column.getJavaType(), key.getText());
+	            Property existing = entity.getProperty(edmProperty.getName());
+	            if (existing == null || (existing.getValue() == null && propertyValue != null) || (existing.getValue() != null && propertyValue == null)
+	            		|| (existing.getValue() != null && !existing.getValue().equals(propertyValue))) {
+	            	throw new TeiidProcessingException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16048, edmProperty.getName()));
+	            }
+	        }
+        }
         int i = 0;
         for (Property prop : entity.getProperties()) {
             EdmProperty edmProp = (EdmProperty)entityType.getProperty(prop.getName());
@@ -501,7 +512,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             } else {
                 Object value = generatedKeys.get(c.getName());
                 if (value == null) {
-                    throw new TeiidRuntimeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16016, entityType.getName()));
+                    throw new TeiidProcessingException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16016, entityType.getName()));
                 }
                 right = new Constant(value);
             }
