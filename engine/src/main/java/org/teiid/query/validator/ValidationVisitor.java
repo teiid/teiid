@@ -690,6 +690,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         Iterator valIter = values.iterator();
         GroupSymbol insertGroup = obj.getGroup();
         try {
+            Set<ElementSymbol> seen = new HashSet<ElementSymbol>();
             boolean multiSource = getMetadata().isMultiSource(getMetadata().getModelID(insertGroup.getMetadataID()));
             // Validate that all elements in variable list are updatable
         	for (ElementSymbol insertElem : vars) {
@@ -699,6 +700,9 @@ public class ValidationVisitor extends AbstractValidationVisitor {
                 if (multiSource && getMetadata().isMultiSourceElement(insertElem.getMetadataID())) {
                 	multiSource = false;
                 }
+            	if (!seen.add(insertElem)) {
+            		handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31179, obj.getGroup(), insertElem), insertElem);
+            	}
             }
         	if (multiSource) {
         		validateMultisourceInsert(insertGroup);

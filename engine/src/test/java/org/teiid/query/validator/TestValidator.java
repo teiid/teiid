@@ -1834,5 +1834,11 @@ public class TestValidator {
         helpValidate(sql, new String[] {}, qmi);
 
     }
-	
+    
+    @Test public void testInsertDuplicateVariable() { 
+        QueryMetadataInterface qmi = RealMetadataFactory.example1Cached(); 
+        String sql = "insert into pm1.g1 (e1, e1) values ('a', 'b')"; //$NON-NLS-1$
+        helpValidate(sql, new String[] {"e1"}, qmi);
+    }
+    
 }
