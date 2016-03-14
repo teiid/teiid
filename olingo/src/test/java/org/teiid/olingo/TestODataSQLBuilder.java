@@ -286,7 +286,7 @@ public class TestODataSQLBuilder {
                 "SELECT g0.e1, g0.e2, CAST(g1.col AS string) AS e3 "
                 + "FROM PM1.G3 AS g0, "
                 + "TABLE(EXEC arrayiterate(g0.e3)) AS g1 "
-                + "WHERE ((g0.e1 = 'e1') AND (g0.e2 = 2)) "
+                + "WHERE (g0.e1 = 'e1') AND (g0.e2 = 2) "
                 + "AND (ENDSWITH('.com', CAST(g1.col AS string)) = TRUE) "
                 + "ORDER BY g0.e1, g0.e2");
     }
