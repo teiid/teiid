@@ -111,8 +111,10 @@ public class OperationResponseImpl implements OperationResponse {
         try {
 			EdmReturnType returnType = this.procedureReturn.getReturnType();
 			this.returnValue = EntityCollectionResponse.buildPropery("return", (SingletonPrimitiveType) returnType.getType(), returnType.isCollection(), returnValue, invalidCharacterReplacement); //$NON-NLS-1$
-		} catch (TransformationException | IOException e) {
+		} catch (TransformationException e) {
 			throw new SQLException(e);
-		}
+		} catch (IOException e) {
+			throw new SQLException(e);
+		} 
     }
 }
