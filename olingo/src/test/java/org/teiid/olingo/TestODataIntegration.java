@@ -201,6 +201,17 @@ public class TestODataIntegration {
                 "}";
         assertEquals(expected, response.getContentAsString());
     }
+    
+    @Test
+    public void testFilterExpression() throws Exception {
+    	//won't resolve
+        ContentResponse response = http.GET(baseURL + "/loopy/vm1/G1?$filter=e1");
+        //TODO: should be 400
+        assertEquals(500, response.getStatus());
+        
+        response = http.GET(baseURL + "/loopy/vm1/G1?$filter=true");
+        assertEquals(200, response.getStatus());
+    }
 
     @Test
     public void testEntitySet() throws Exception {

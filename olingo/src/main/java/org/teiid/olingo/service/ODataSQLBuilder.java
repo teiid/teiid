@@ -192,7 +192,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                 
                 // process $filter
                 if (ei.getFilterOption() != null) {
-                    Criteria expandCriteria = processFilterOption(ei.getFilterOption(), expandResource);
+                    Expression expandCriteria = processFilterOption(ei.getFilterOption(), expandResource);
                     expandResource.addCriteria(expandCriteria);
                     
                 }
@@ -224,17 +224,17 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         }
     }
 
-    private Criteria processFilterOption(FilterOption option, DocumentNode resource) {
+    private Expression processFilterOption(FilterOption option, DocumentNode resource) {
         ODataExpressionToSQLVisitor visitor = new ODataExpressionToSQLVisitor(
                 resource, this.prepared, getUriInfo(), this.metadata,
                 this.nameGenerator, this.params, this.parseService);
-        Criteria filterCriteria = null;
+        Expression filter = null;
         try {
-            filterCriteria = (Criteria)visitor.getExpression(option.getExpression());
+            filter = visitor.getExpression(option.getExpression());
         } catch (TeiidException e) {
             this.exceptions.add(e);
         }
-        return filterCriteria;
+        return filter;
     }
 
     public List<SQLParameter> getParameters(){
@@ -342,16 +342,16 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                 this.context, this.prepared, getUriInfo(), this.metadata,
                 this.nameGenerator, this.params, this.parseService);
         
-        Criteria filterCriteria = null;
+        Expression filter = null;
         try {
-             filterCriteria = (Criteria)visitor.getExpression(info.getExpression());
+        	filter = visitor.getExpression(info.getExpression());
         } catch (TeiidException e) {
             this.exceptions.add(e);
         }
         
         // Here Lambda operation may have joined a table and changed the context.
         this.context = visitor.getEntityResource();
-        this.context.addCriteria(filterCriteria);
+        this.context.addCriteria(filter);
     }
     
     @Override

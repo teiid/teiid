@@ -43,17 +43,7 @@ import org.teiid.olingo.ODataPlugin;
 import org.teiid.olingo.ProjectedColumn;
 import org.teiid.olingo.service.ODataSQLBuilder.URLParseService;
 import org.teiid.olingo.service.TeiidServiceHandler.UniqueNameGenerator;
-import org.teiid.query.sql.lang.CompareCriteria;
-import org.teiid.query.sql.lang.CompoundCriteria;
-import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.From;
-import org.teiid.query.sql.lang.FromClause;
-import org.teiid.query.sql.lang.JoinPredicate;
-import org.teiid.query.sql.lang.JoinType;
-import org.teiid.query.sql.lang.OrderBy;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.Select;
-import org.teiid.query.sql.lang.UnaryFromClause;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -453,14 +443,15 @@ public class DocumentNode {
         this.distinct = b;
     }
     
-    public void addCriteria(Criteria criteria) {
-        if (criteria != null) {
-            if (this.criteria == null) {
-                this.criteria = criteria;
-            }
-            else {
-                this.criteria = new CompoundCriteria(CompoundCriteria.AND, this.criteria, criteria);
-            }
+    public void addCriteria(Expression filter) {
+        if (filter != null) {
+        	Criteria crit = null;
+        	if (filter instanceof Criteria) {
+        		crit = (Criteria)filter;
+        	} else {
+        		crit = new ExpressionCriteria(filter);
+        	}
+        	this.criteria = Criteria.combineCriteria(this.criteria, crit);
         }
     }
     
