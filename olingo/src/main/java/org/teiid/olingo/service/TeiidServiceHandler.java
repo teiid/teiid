@@ -369,6 +369,7 @@ public class TeiidServiceHandler implements ServiceHandler {
     private UpdateResponse performDeepInsert(String rawURI, UriInfo uriInfo,
             EdmEntityType entityType, Entity entity) throws SQLException, TeiidException {
         String txn = getClient().startTransaction();
+        boolean success = false;
         try {
             UpdateResponse response = performInsert(rawURI, uriInfo, entityType, entity);
             for (String navigationName:entityType.getNavigationPropertyNames()) {
@@ -384,21 +385,16 @@ public class TeiidServiceHandler implements ServiceHandler {
                 }
             }
             getClient().commit(txn);
+            success = true;
             return response;
-        } catch (SQLException e) {
-            try {
-                getClient().rollback(txn);
-            } catch (SQLException e1) {
-                // ignore
-            }
-            throw e;
-        } catch (TeiidException e) {
-            try {
-                getClient().rollback(txn);
-            } catch (SQLException e1) {
-                // ignore
-            }
-            throw e;            
+        } finally {
+        	if (!success) {
+                try {
+                    getClient().rollback(txn);
+                } catch (SQLException e1) {
+                    // ignore
+                }
+        	}
         }
     }
 
@@ -508,33 +504,40 @@ public class TeiidServiceHandler implements ServiceHandler {
         else {
             // delete, then insert
             String txn = startTransaction();
+            boolean success = false;
             try {
-                ODataSQLBuilder visitor = new ODataSQLBuilder(getClient().getMetadataStore(), this.prepared, false,
-                        request.getODataRequest().getRawBaseUri(), this.serviceMetadata, this.nameGenerator);
-                visitor.visit(request.getUriInfo());
-                Delete delete = visitor.delete();
-                updateResponse = getClient().executeUpdate(delete, visitor.getParameters());
-                
-                // insert
-                visitor = new ODataSQLBuilder(getClient().getMetadataStore(), this.prepared, false,
+            	// build insert first as it could fail to validate
+            	ODataSQLBuilder visitor = new ODataSQLBuilder(getClient().getMetadataStore(), this.prepared, false,
                         request.getODataRequest().getRawBaseUri(), this.serviceMetadata, this.nameGenerator);
                 visitor.visit(request.getUriInfo());
                 
                 EdmEntityType entityType = request.getEntitySet().getEntityType();
                 List<UriParameter> keys = request.getKeyPredicates();
                 Insert command = visitor.insert(entityType, entity, keys, this.prepared);
+                
+                //run delete
+                ODataSQLBuilder deleteVisitor = new ODataSQLBuilder(getClient().getMetadataStore(), this.prepared, false,
+                        request.getODataRequest().getRawBaseUri(), this.serviceMetadata, this.nameGenerator);
+                deleteVisitor.visit(request.getUriInfo());
+                Delete delete = deleteVisitor.delete();
+                updateResponse = getClient().executeUpdate(delete, deleteVisitor.getParameters());
+                
+                //run insert
                 updateResponse = getClient().executeUpdate(command, visitor.getParameters());
                 commit(txn);
+                success = true;
             } catch (SQLException e) {
-                rollback(txn);
                 throw new ODataApplicationException(e.getMessage(),
                         HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
                         Locale.getDefault(), e);                
             } catch (TeiidException e) {
-                rollback(txn);
                 throw new ODataApplicationException(e.getMessage(),
                         HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
                         Locale.getDefault(), e);            
+            } finally {
+            	if (!success) {
+            		rollback(txn);
+            	}
             }
         }
         

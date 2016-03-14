@@ -57,6 +57,7 @@ import org.teiid.GeneratedKeys;
 import org.teiid.adminapi.Admin.SchemaObjectType;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.core.util.UnitTestUtil;
@@ -72,10 +73,13 @@ import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.odata.api.Client;
+import org.teiid.odata.api.SQLParameter;
+import org.teiid.odata.api.UpdateResponse;
 import org.teiid.olingo.service.LocalClient;
 import org.teiid.olingo.web.ODataFilter;
 import org.teiid.olingo.web.ODataServlet;
 import org.teiid.query.metadata.DDLStringVisitor;
+import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.unittest.RealMetadataFactory;
@@ -94,14 +98,78 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SuppressWarnings("nls")
 public class TestODataIntegration {
-    private static final String CRLF = "\r\n";
+    private static final class UnitTestLocalClient extends LocalClient {
+		private final Properties properties;
+		private final TeiidDriver driver;
+		private final String vdb;
+		ConnectionImpl conn;
+		private boolean throwUpdateException;
+		private boolean rollback;
+
+		private UnitTestLocalClient(String vdbName, Integer vdbVersion,
+				Properties properties, Properties properties2,
+				TeiidDriver driver, String vdb) {
+			super(vdbName, vdbVersion, properties);
+			this.properties = properties2;
+			this.driver = driver;
+			this.vdb = vdb;
+		}
+
+		@Override
+		public ConnectionImpl getConnection() {
+		    return conn;
+		}
+
+		@Override
+		public void close() throws SQLException {
+		    if (conn != null) {
+		        conn.close();
+		    }
+		}
+
+		@Override
+		public Connection open() throws SQLException {
+		    try {
+		        conn = LocalClient.buildConnection(driver, vdb, 1, properties);
+		        return conn;
+		    } catch (SQLException e) {
+		        e.printStackTrace();
+		    }
+		    return null;
+		}
+
+		@Override
+		public UpdateResponse executeUpdate(Command query,
+				List<SQLParameter> parameters) throws SQLException {
+			if (throwUpdateException) {
+				throw new TeiidRuntimeException();
+			}
+			return super.executeUpdate(query, parameters);
+		}
+		
+		public void setThrowUpdateException(boolean throwUpdateException) {
+			this.throwUpdateException = throwUpdateException;
+		}
+		
+		@Override
+		public void rollback(String txnId) throws SQLException {
+			rollback = true;
+			super.rollback(txnId);
+		}
+		
+		public boolean isRollback() {
+			return rollback;
+		}
+	}
+
+	private static final String CRLF = "\r\n";
       private static final String MIME_HEADERS = "Content-Type: application/http" + CRLF
               + "Content-Transfer-Encoding: binary" + CRLF;
     private static EmbeddedServer teiid;
     private static Server server = new Server();
     private static String baseURL;
     private static HttpClient http = new HttpClient();
-    private static LocalClient localClient;
+    private static UnitTestLocalClient localClient;
 
     @Before
     public void before() throws Exception {
@@ -485,33 +553,8 @@ public class TestODataIntegration {
         }
     }    
     
-    private LocalClient getClient(final TeiidDriver driver, final String vdb, final Integer version, final Properties properties) {
-        return new LocalClient(vdb, 1, properties) {
-            ConnectionImpl conn;
-            
-            @Override
-            public ConnectionImpl getConnection() {
-                return conn;
-            }
-            
-            @Override
-            public void close() throws SQLException {
-                if (conn != null) {
-                    conn.close();
-                }
-            }
-            
-            @Override
-            public Connection open() throws SQLException {
-                try {
-                    conn = LocalClient.buildConnection(driver, vdb, 1, properties);
-                    return conn;
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-                return null;
-            }
-        };
+    private UnitTestLocalClient getClient(final TeiidDriver driver, final String vdb, final Integer version, final Properties properties) {
+        return new UnitTestLocalClient(vdb, 1, properties, properties, driver, vdb);
     }
     
     @Test
@@ -847,6 +890,32 @@ public class TestODataIntegration {
                     .send();                        
             assertEquals(204, response.getStatus());            
 
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }
+    
+    @Test 
+    public void testPutFailure() throws Exception {
+    	HardCodedExecutionFactory hc = buildHardCodedExecutionFactory();
+    	teiid.addTranslator("x1", hc);
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("m");
+            mmd.addSourceMetadata("ddl", "create foreign table x (a string, b string, c integer, primary key (a, b)) options (updatable true);");
+            mmd.addSourceMapping("x1", "x1", null);
+            teiid.deployVDB("northwind", mmd);
+
+            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+            localClient.setThrowUpdateException(true);
+
+            ContentResponse response = http.newRequest(baseURL + "/northwind/m/x(a='a',b='b')")
+                    .method("PUT")
+                    .content(new StringContentProvider("{\"a\":\"a\", \"b\":\"b\", \"c\":5}"), "application/json")
+                    .send();                        
+            assertEquals(500, response.getStatus());            
+            assertTrue(localClient.isRollback());
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");
