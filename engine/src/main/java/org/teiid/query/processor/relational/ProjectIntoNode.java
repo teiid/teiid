@@ -192,8 +192,7 @@ public class ProjectIntoNode extends RelationalNode {
             	
             	if (currentBatch.getTerminationFlag() && (buffer.getRowCount() != 0 || intoGroup.isImplicitTempGroupSymbol())) {
             		registerIteratorRequest();
-            	} else if (buffer.getRowCount() >= buffer.getBatchSize() * 4 && getContext().getTransactionContext() != null 
-            			&& (getContext().getTransactionContext().getTransaction() != null || getContext().getTransactionContext().isNoTxn())) {
+            	} else if (buffer.getRowCount() >= buffer.getBatchSize() * 4) {
         			registerIteratorRequest();
             	} else {
             		requests = 0;

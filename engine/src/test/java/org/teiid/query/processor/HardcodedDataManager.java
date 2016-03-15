@@ -60,7 +60,7 @@ public class HardcodedDataManager implements
     private boolean blockOnce;
     
     // Collect all commands run against this class
-    private List<Command> commandHistory = new ArrayList<Command>(); // Commands
+    protected List<Command> commandHistory = new ArrayList<Command>(); // Commands
     private List<org.teiid.language.Command> pushdownCommands = new ArrayList<org.teiid.language.Command>(); // Commands
     
     private LanguageBridgeFactory lbf;
