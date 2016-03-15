@@ -350,10 +350,8 @@ public class Request {
         // If local or global transaction is not started.
         if (tc.getTransactionType() == Scope.NONE && !requestMsg.isNoExec()) {
             if (!startAutoWrap) {
-            	tc.setNoTnx(true);
             	return null;
             }
-            tc.setNoTnx(false);
             boolean startAutoWrapTxn = false;
             
             if(RequestMessage.TXN_WRAP_ON.equals(requestMsg.getTxnAutoWrapMode())){ 

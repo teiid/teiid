@@ -274,6 +274,7 @@ public class TestInsertProcessing {
         		if (command instanceof Insert) {
         			Insert insert = (Insert)command;
         			if (insert.getTupleSource() != null) {
+        				commandHistory.add(insert);
         				TupleSource ts = insert.getTupleSource();
         				int count = 0;
         				try {
@@ -328,7 +329,6 @@ public class TestInsertProcessing {
         CommandContext cc = TestProcessor.createCommandContext();
         if (!txn) {
         	TransactionContext tc = new TransactionContext();
-        	tc.setNoTnx(true);
         	cc.setTransactionContext(tc);
         	cc.setBufferManager(null);
         	cc.setProcessorBatchSize(2);
@@ -343,7 +343,9 @@ public class TestInsertProcessing {
             assertEquals(2, bu.getUpdateCommands().size());
             assertEquals( "INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('1', 1, FALSE, 1.0)", bu.getUpdateCommands().get(0).toString() );  //$NON-NLS-1$
             assertEquals( "INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('2', 2, TRUE, 2.0)", bu.getUpdateCommands().get(1).toString() );  //$NON-NLS-1$ 
-        }        
+        } else if (cap == Capability.INSERT_WITH_ITERATOR) {
+        	assertEquals(txn?6:9, dataManager.getCommandHistory().size());
+        }
     }
     
     @Test public void testInsertIntoWithSubquery2_BATCH_NO_BULK_NO() {
