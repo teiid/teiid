@@ -28,6 +28,7 @@ import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.translator.ExecutionFactory.NullOrder;
+import org.teiid.translator.ExecutionFactory.TransactionSupport;
 
 public class TempCapabilitiesFinder implements CapabilitiesFinder {
 
@@ -51,6 +52,7 @@ public class TempCapabilitiesFinder implements CapabilitiesFinder {
 		tempCaps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 100000);
 		tempCaps.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, 1);
 		tempCaps.setSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER, NullOrder.LOW);
+		tempCaps.setSourceProperty(Capability.TRANSACTION_SUPPORT, TransactionSupport.XA);
 	}
 	
 	private final CapabilitiesFinder delegate;

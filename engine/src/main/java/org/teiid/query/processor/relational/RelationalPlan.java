@@ -227,24 +227,48 @@ public class RelationalPlan extends ProcessorPlan {
     }
     
     @Override
-    public boolean requiresTransaction(boolean transactionalReads) {
-    	if (this.with != null) {
-    		if (transactionalReads) {
-    			return true;
-    		}
+    public Boolean requiresTransaction(boolean transactionalReads) {
+    	boolean txnWtih = false;
+		if (this.with != null) {
     		for (WithQueryCommand withCommand : this.with) {
     			if (withCommand.isRecursive()) {
     				SetQuery setQuery = (SetQuery)withCommand.getCommand();
-    				if (setQuery.getLeftQuery().getProcessorPlan().requiresTransaction(transactionalReads) 
-    						|| setQuery.getLeftQuery().getProcessorPlan().requiresTransaction(transactionalReads)) {
+    				Boolean leftRequires = setQuery.getLeftQuery().getProcessorPlan().requiresTransaction(transactionalReads);
+    				Boolean rightRequires = setQuery.getLeftQuery().getProcessorPlan().requiresTransaction(transactionalReads); 
+    				if (Boolean.TRUE.equals(leftRequires) || Boolean.TRUE.equals(rightRequires)) {
     					return true;
     				}
-    			} else if (withCommand.getCommand().getProcessorPlan().requiresTransaction(transactionalReads)) {
-					return true;
+    				if (leftRequires == null || rightRequires == null) {
+    					if (txnWtih) {
+    						return true;
+    					}
+    					txnWtih = true;
+    				}
+    			} else {
+    				Boolean requires = withCommand.getCommand().getProcessorPlan().requiresTransaction(transactionalReads);
+    				if (Boolean.TRUE.equals(requires)) {
+    					return true;
+    				}
+    				if (requires == null) {
+    					if (txnWtih) {
+    						return true;
+    					}
+    					txnWtih = true;
+    				}
 				}
 			}
     	}
-    	return Boolean.TRUE.equals(requiresTransaction(transactionalReads, root));
+    	Boolean requires = requiresTransaction(transactionalReads, root);
+    	if (Boolean.TRUE.equals(requires)) {
+			return true;
+		}
+		if (requires == null && txnWtih) {
+			return true;
+		}
+		if (txnWtih || requires == null) {
+			return null;
+		}
+		return false;
     }
     
     static Boolean requiresTransaction(boolean transactionalReads, RelationalNode node) {
@@ -260,13 +284,11 @@ public class RelationalPlan extends ProcessorPlan {
 			if (Boolean.TRUE.equals(childRequires)) {
 				return true;
 			}
-			if (transactionalReads) {
-				if (childRequires == null) {
-					if (requiresTxn == null) {
-						return true;
-					}
-					requiresTxn = null;
+			if (childRequires == null) {
+				if (requiresTxn == null) {
+					return true;
 				}
+				requiresTxn = null;
 			}
 		}
 		return requiresTxn;

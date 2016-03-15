@@ -70,6 +70,7 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 		setSupportsOrderBy(false);
 		setSupportsOuterJoins(true);
 		setSupportsInnerJoins(true);
+		setTransactionSupport(TransactionSupport.NONE);
 		setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
 	}
 	

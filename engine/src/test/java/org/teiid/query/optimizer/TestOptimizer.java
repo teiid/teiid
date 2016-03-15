@@ -76,6 +76,7 @@ import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorReport;
 import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.ExecutionFactory.TransactionSupport;
 import org.teiid.translator.SourceSystemFunctions;
 
 @SuppressWarnings({"nls"})
@@ -656,7 +657,7 @@ public class TestOptimizer {
 	@Test public void testQueryPhysical() { 
 		ProcessorPlan plan = helpPlan("SELECT pm1.g1.e1, e2, pm1.g1.e3 as a, e4 as b FROM pm1.g1", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
 			new String[] {"SELECT pm1.g1.e1, e2, pm1.g1.e3, e4 FROM pm1.g1"} ); //$NON-NLS-1$
-		assertTrue(!plan.requiresTransaction(true));
+		assertNull(plan.requiresTransaction(true));
         checkNodeTypes(plan, FULL_PUSHDOWN);    
 	}
     
@@ -6093,6 +6094,14 @@ public class TestOptimizer {
         ProcessorPlan plan = helpPlan(sql, metadata, new String[] {"SELECT g_0.e1 FROM pm1.g2 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         //requires a txn, since an non pushdown/iterated insert is used
         assertTrue(plan.requiresTransaction(false));
+        
+        checkNodeTypes(plan, new int[] {1}, new Class[] {ProjectIntoNode.class});
+        
+        BasicSourceCapabilities bsc = getTypicalCapabilities();
+        bsc.setSourceProperty(Capability.TRANSACTION_SUPPORT, TransactionSupport.NONE);
+        plan = helpPlan(sql, metadata, new String[] {"SELECT g_0.e1 FROM pm1.g2 AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        //requires a txn, since an non pushdown/iterated insert is used
+        assertFalse(plan.requiresTransaction(false));
         
         checkNodeTypes(plan, new int[] {1}, new Class[] {ProjectIntoNode.class});
     }

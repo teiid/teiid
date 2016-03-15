@@ -27,13 +27,20 @@ import javax.resource.cci.ConnectionFactory;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.*;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.FileConnection;
+import org.teiid.translator.MetadataProcessor;
+import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.Translator;
+import org.teiid.translator.TranslatorException;
 
 @Translator(name="excel", description="Excel file translator")
 public class ExcelExecutionFactory extends ExecutionFactory<ConnectionFactory, FileConnection> {
 
 	public ExcelExecutionFactory() {
 		setSourceRequiredForMetadata(true);
+		setTransactionSupport(TransactionSupport.NONE);
 	}
 	
     @Override

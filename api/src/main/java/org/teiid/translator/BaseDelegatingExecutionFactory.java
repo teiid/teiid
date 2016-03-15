@@ -536,4 +536,8 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public boolean supportsScalarSubqueryProjection() {
 		return delegate.supportsScalarSubqueryProjection();
 	}
+	@Override
+	public org.teiid.translator.ExecutionFactory.TransactionSupport getTransactionSupport() {
+		return delegate.getTransactionSupport();
+	}
 }

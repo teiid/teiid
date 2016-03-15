@@ -49,6 +49,7 @@ import org.teiid.query.unittest.RealMetadataFactory.DDLHolder;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.util.Options;
 import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.ExecutionFactory.TransactionSupport;
 import org.teiid.translator.SourceSystemFunctions;
 
 @SuppressWarnings("nls")
@@ -151,7 +152,7 @@ public class TestSubqueryPushdown {
             new String[] { "SELECT g_0.IntKey FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey = /*+ NO_UNNEST */ (SELECT MAX(g_1.IntKey) FROM BQT1.SmallB AS g_1 WHERE g_1.StringKey = g_0.StringKey)" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
         checkNodeTypes(plan, FULL_PUSHDOWN); 
         
-        assertFalse(plan.requiresTransaction(true));
+        assertNull(plan.requiresTransaction(true));
         assertFalse(plan.requiresTransaction(false));
     }   
 
@@ -771,6 +772,16 @@ public class TestSubqueryPushdown {
         checkNodeTypes(plan, FULL_PUSHDOWN); 
         
         assertTrue(plan.requiresTransaction(true));
+        assertFalse(plan.requiresTransaction(false));
+        
+        BasicSourceCapabilities bsc = getTypicalCapabilities();
+        bsc.setSourceProperty(Capability.TRANSACTION_SUPPORT, TransactionSupport.NONE);
+        
+        plan = helpPlan("Select e1 from pm1.g1 where e1 > (select e1 FROM pm2.g1 where e2 = 13)", RealMetadataFactory.example1Cached(),  //$NON-NLS-1$
+                new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 > (SELECT g_0.e1 FROM pm2.g1 AS g_0 WHERE g_0.e2 = 13)" }, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+            checkNodeTypes(plan, FULL_PUSHDOWN);
+            
+        assertFalse(plan.requiresTransaction(true));
         assertFalse(plan.requiresTransaction(false));
     }
     

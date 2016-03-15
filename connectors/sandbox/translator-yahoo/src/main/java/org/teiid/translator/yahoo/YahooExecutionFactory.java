@@ -28,10 +28,10 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
 import org.teiid.metadata.Column;
+import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
-import org.teiid.metadata.Column.SearchType;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ResultSetExecution;
@@ -45,6 +45,7 @@ public class YahooExecutionFactory extends ExecutionFactory<Object, Object> {
 	public YahooExecutionFactory() {
 		setMaxInCriteriaSize(YAHOO_MAX_SET_SIZE);
 		setSourceRequiredForMetadata(false);
+		setTransactionSupport(TransactionSupport.NONE);
 	}
 	
     @Override

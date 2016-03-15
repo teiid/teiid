@@ -132,7 +132,7 @@ public abstract class ProcessorPlan implements Cloneable, BatchProducer {
 	 */
 	public abstract ProcessorPlan clone();
 	
-	public boolean requiresTransaction(boolean transactionalReads) {
+	public Boolean requiresTransaction(boolean transactionalReads) {
 		return transactionalReads;
 	}
 	

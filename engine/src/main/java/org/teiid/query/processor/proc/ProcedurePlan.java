@@ -863,7 +863,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
 	}
     
     @Override
-    public boolean requiresTransaction(boolean transactionalReads) {
+    public Boolean requiresTransaction(boolean transactionalReads) {
     	//TODO: detect simple select case
     	return requiresTransaction || transactionalReads;
     }

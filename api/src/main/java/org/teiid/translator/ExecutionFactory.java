@@ -62,6 +62,12 @@ import org.teiid.translator.TypeFacility.RUNTIME_NAMES;
  */
 public class ExecutionFactory<F, C> {
 	
+	public enum TransactionSupport {
+		XA,
+		LOCAL,
+		NONE
+	}
+	
 	public enum SupportedJoinCriteria {
 		/**
 		 * Indicates that any supported criteria is allowed.
@@ -120,6 +126,8 @@ public class ExecutionFactory<F, C> {
 	private LinkedList<FunctionMethod> pushdownFunctionMethods = new LinkedList<FunctionMethod>();
 	private String nativeProcedureName = "native"; //$NON-NLS-1$
 	private String collationLocale;
+	
+	private TransactionSupport transactionSupport = TransactionSupport.XA;
 	
 	/**
 	 * Initialize the connector with supplied configuration
@@ -1316,5 +1324,14 @@ public class ExecutionFactory<F, C> {
 	 */
 	public boolean supportsScalarSubqueryProjection() {
 		return supportsScalarSubqueries();
+	}
+		
+	@TranslatorProperty(display="Transaction Support", description="The level of transaction support. Used by the engine to determine if a transaction is needed for autoCommit mode.", advanced=true)
+	public TransactionSupport getTransactionSupport() {
+		return transactionSupport;
+	}
+	
+	public void setTransactionSupport(TransactionSupport transactionSupport) {
+		this.transactionSupport = transactionSupport;
 	}
 }

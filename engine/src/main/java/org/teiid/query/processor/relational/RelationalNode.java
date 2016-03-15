@@ -637,7 +637,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 	
 	/**
 	 * @param transactionalReads  
-	 * @return true if required, false if not required, and null if transactional reads and a single source command is issued.
+	 * @return true if required, false if not required, and null if a single source command is issued and a transaction may be needed.
 	 */
 	public Boolean requiresTransaction(boolean transactionalReads) {
 		return false;

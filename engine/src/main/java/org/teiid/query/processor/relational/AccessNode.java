@@ -47,6 +47,7 @@ import org.teiid.query.eval.Evaluator;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.relational.RowBasedSecurityHelper;
 import org.teiid.query.processor.ProcessorDataManager;
+import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.processor.relational.SubqueryAwareEvaluator.SubqueryState;
@@ -63,6 +64,7 @@ import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
+import org.teiid.translator.ExecutionFactory.TransactionSupport;
 
 
 public class AccessNode extends SubqueryAwareRelationalNode {
@@ -78,6 +80,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 	private boolean multiSource;
 	private Object modelId;
 	private Set<Object> conformedTo;
+	private TransactionSupport transactionSupport;
 
     // Processing state
 	private ArrayList<TupleSource> tupleSources = new ArrayList<TupleSource>();
@@ -610,14 +613,39 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 	
 	@Override
 	public Boolean requiresTransaction(boolean transactionalReads) {
-		Boolean required = super.requiresTransaction(transactionalReads);
-		if (Boolean.TRUE.equals(required) || (command instanceof StoredProcedure && ((StoredProcedure)command).getUpdateCount() > 1)) {
+		int subqueryTxn = 0;
+		for (SubqueryContainer<?> subquery : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(getObjects())) {
+			if (!(subquery instanceof SubqueryContainer.Evaluatable) || !((SubqueryContainer.Evaluatable<?>)subquery).shouldEvaluate()) {
+				continue;
+			}
+			ProcessorPlan plan = subquery.getCommand().getProcessorPlan();
+			if (plan != null) {
+				Boolean txn = plan.requiresTransaction(transactionalReads);
+				if (txn != null) {
+					if (txn) {
+						return true;
+					} 
+				} else {
+					subqueryTxn++;
+				}
+			}
+		}
+		if (subqueryTxn > 1) {
 			return true;
 		}
-		if (multiSource && connectorBindingExpression == null && (transactionalReads || RelationalNodeUtil.isUpdate(command))) {
+		if (transactionSupport == TransactionSupport.NONE) {
+			return subqueryTxn > 0?null:false;
+		}
+		if ((command instanceof StoredProcedure && ((StoredProcedure)command).getUpdateCount() > 1)) {
 			return true;
 		}
-		return null;
+		if ((multiSource && connectorBindingExpression == null) && (subqueryTxn > 0 || transactionalReads || RelationalNodeUtil.isUpdate(command))) {
+			return true;
+		}
+		if (transactionalReads || RelationalNodeUtil.isUpdate(command)) {
+			return subqueryTxn > 0?true:null;
+		}
+		return false;
 	}
 	
 	private static RelationalNode multiSourceModify(AccessNode accessNode, Expression ex, QueryMetadataInterface metadata, List<String> sourceNames) throws TeiidComponentException, TeiidProcessingException {
@@ -723,6 +751,10 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 	
 	public void setConformedTo(Set<Object> conformedTo) {
 		this.conformedTo = conformedTo;
+	}
+	
+	public void setTransactionSupport(TransactionSupport transactionSupport) {
+		this.transactionSupport = transactionSupport;
 	}
 	
 }

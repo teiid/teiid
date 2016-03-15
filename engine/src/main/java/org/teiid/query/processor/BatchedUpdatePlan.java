@@ -252,11 +252,25 @@ public class BatchedUpdatePlan extends ProcessorPlan {
     }
     
     @Override
-    public boolean requiresTransaction(boolean transactionalReads) {
-		if (updatePlans.length == 1) {
-			return updatePlans[0].requiresTransaction(transactionalReads);
-		}
-		return true;
+    public Boolean requiresTransaction(boolean transactionalReads) {
+    	boolean possible = false;
+    	for (int i = 0; i < updatePlans.length; i++) {
+			Boolean requires = updatePlans[0].requiresTransaction(transactionalReads);
+			if (requires != null) {
+				if (requires) {
+					return true;
+				}
+			} else {
+				if (possible) {
+					return true;
+				}
+				possible = true;
+			}
+    	}
+    	if (possible) {
+    		return null;
+    	}
+    	return false;
     }
     
     public void setSingleResult(boolean singleResult) {

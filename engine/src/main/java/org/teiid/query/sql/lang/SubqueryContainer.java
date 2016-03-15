@@ -29,6 +29,10 @@ import org.teiid.query.sql.LanguageObject;
  * that contain subqueries. 
  */
 public interface SubqueryContainer<T extends Command> extends LanguageObject {
+	
+	public static interface Evaluatable<T extends Command> extends SubqueryContainer<T> {
+		boolean shouldEvaluate();
+	}
 
     /**
      * Returns the subquery Command object

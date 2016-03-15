@@ -89,6 +89,7 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 	
 	public WSExecutionFactory() {
 		setSourceRequiredForMetadata(false);
+		setTransactionSupport(TransactionSupport.NONE);
 	}
 
 	@TranslatorProperty(description="Contols request/response message wrapping - set to MESSAGE for full control over SOAP messages.", display="Default Service Mode")

@@ -60,6 +60,7 @@ public class CassandraExecutionFactory extends ExecutionFactory<ConnectionFactor
 	@Override
 	public void start() throws TranslatorException {
 		super.start();
+		setTransactionSupport(TransactionSupport.NONE);
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Cassandra ExecutionFactory Started"); //$NON-NLS-1$
 	}
 

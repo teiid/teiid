@@ -30,7 +30,9 @@ import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.eval.Evaluator;
+import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.sql.LanguageObject;
+import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.lang.TableFunctionReference;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -85,10 +87,16 @@ public abstract class SubqueryAwareRelationalNode extends RelationalNode {
 	
 	@Override
 	public Boolean requiresTransaction(boolean transactionalReads) {
-		if (!transactionalReads) {
-			return false;
+		for (SubqueryContainer<?> subquery : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(getObjects())) {
+			ProcessorPlan plan = subquery.getCommand().getProcessorPlan();
+			if (plan != null) {
+				Boolean txn = plan.requiresTransaction(transactionalReads);
+				if (txn == null || txn) {
+					return true; //we can't ensure that this is read only 
+				}
+			}
 		}
-		return !ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(getObjects()).isEmpty();
+		return false;
 	}
 
 }

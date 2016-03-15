@@ -207,7 +207,7 @@ public class ForEachRowPlan extends ProcessorPlan {
 	}
 	
 	@Override
-	public boolean requiresTransaction(boolean transactionalReads) {
+	public Boolean requiresTransaction(boolean transactionalReads) {
 		return true;
 	}
 	

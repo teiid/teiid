@@ -57,8 +57,9 @@ import org.teiid.translator.goole.api.GoogleSpreadsheetConnection;
 @Translator(name="google-spreadsheet", description="A translator for Google Spreadsheet")
 public class SpreadsheetExecutionFactory extends ExecutionFactory<ConnectionFactory, GoogleSpreadsheetConnection>{
 	public static final BundleUtil UTIL = BundleUtil.getBundleUtil(SpreadsheetExecutionFactory.class);
+	
 	public SpreadsheetExecutionFactory() {
-		
+		setTransactionSupport(TransactionSupport.NONE);
 	}
 	
 	@Override

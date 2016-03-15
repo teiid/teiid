@@ -352,7 +352,7 @@ public class Request {
             if (!startAutoWrap) {
             	return null;
             }
-            boolean startAutoWrapTxn = false;
+            Boolean startAutoWrapTxn = false;
             
             if(RequestMessage.TXN_WRAP_ON.equals(requestMsg.getTxnAutoWrapMode())){ 
                 startAutoWrapTxn = true;
@@ -360,6 +360,9 @@ public class Request {
             	boolean transactionalRead = requestMsg.getTransactionIsolation() == Connection.TRANSACTION_REPEATABLE_READ
 						|| requestMsg.getTransactionIsolation() == Connection.TRANSACTION_SERIALIZABLE;
         		startAutoWrapTxn = processPlan.requiresTransaction(transactionalRead);
+        		if (startAutoWrapTxn == null) {
+        			startAutoWrapTxn = false;
+        		}
             } 
             
             if (startAutoWrapTxn) {

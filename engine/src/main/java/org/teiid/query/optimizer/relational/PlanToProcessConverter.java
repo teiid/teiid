@@ -79,6 +79,7 @@ import org.teiid.query.sql.visitor.EvaluatableVisitor.EvaluationLevel;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
 import org.teiid.query.util.CommandContext;
+import org.teiid.translator.ExecutionFactory.TransactionSupport;
 
 
 public class PlanToProcessConverter {
@@ -214,6 +215,7 @@ public class PlanToProcessConverter {
                             } else {
                             	pinode.setMode(org.teiid.query.processor.relational.ProjectIntoNode.Mode.SINGLE);
                             }
+                            pinode.setTransactionSupport((TransactionSupport) caps.getSourceProperty(Capability.TRANSACTION_SUPPORT));
                         }
                     } catch(QueryMetadataException e) {
                          throw new TeiidComponentException(QueryPlugin.Event.TEIID30247, e);
@@ -447,6 +449,11 @@ public class PlanToProcessConverter {
                     }
                     aNode.setShouldEvaluateExpressions(ev.requiresEvaluation(EvaluationLevel.PROCESSING) || shouldEval);
                     aNode.setCommand(command);
+                    if (modelID != null) {
+	                    String fullName = metadata.getFullName(modelID);
+						SourceCapabilities caps = capFinder.findCapabilities(fullName);
+						aNode.setTransactionSupport((TransactionSupport) caps.getSourceProperty(Capability.TRANSACTION_SUPPORT));
+                    }
                     Map<GroupSymbol, PlanNode> subPlans = (Map<GroupSymbol, PlanNode>) node.getProperty(Info.SUB_PLANS);
                     
                     //it makes more sense to allow the multisource affect to be elevated above just access nodes

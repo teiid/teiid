@@ -123,7 +123,11 @@ public class DependentProcedureAccessNode extends AccessNode {
     
     @Override
     public Boolean requiresTransaction(boolean transactionalReads) {
-    	return true; //TODO: check the underlying 
+    	Boolean requires = super.requiresTransaction(transactionalReads);
+		if (requires == null || requires) {
+			return true;
+		}
+		return false; 
     }
 
 }

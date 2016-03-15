@@ -50,6 +50,7 @@ import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.translator.ExecutionFactory.TransactionSupport;
 
 
 public class ProjectIntoNode extends RelationalNode {
@@ -83,6 +84,8 @@ public class ProjectIntoNode extends RelationalNode {
     
     private Criteria constraint;
     private Evaluator eval;
+    
+    private TransactionSupport transactionSupport;
 
     protected ProjectIntoNode() {
         super();
@@ -357,11 +360,22 @@ public class ProjectIntoNode extends RelationalNode {
     
     @Override
     public Boolean requiresTransaction(boolean transactionalReads) {
+		Boolean requires = this.getChildren()[0].requiresTransaction(transactionalReads);
+		if (requires != null && requires) {
+			return true;
+		}
+		if (transactionSupport == TransactionSupport.NONE) {
+			return requires;
+		}
 		return true;
     }
     
     public void setConstraint(Criteria constraint) {
 		this.constraint = constraint;
+	}
+    
+    public void setTransactionSupport(TransactionSupport transactionSupport) {
+		this.transactionSupport = transactionSupport;
 	}
     
 }

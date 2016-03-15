@@ -37,6 +37,7 @@ public class AccumuloExecutionFactory extends ExecutionFactory<ConnectionFactory
 	private Charset encoding = Charset.defaultCharset();
 	
 	public AccumuloExecutionFactory() {
+		setTransactionSupport(TransactionSupport.NONE);
 		setSourceRequiredForMetadata(true);
 	}
 	

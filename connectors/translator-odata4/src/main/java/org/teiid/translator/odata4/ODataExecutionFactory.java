@@ -83,7 +83,7 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
         setSupportsOdataOrderBy(true);
         setSupportsOdataSkip(false); // based on document based on cursoring, this will not be correct 
         setSupportsOdataTop(false);
-        
+        setTransactionSupport(TransactionSupport.NONE);
         registerFunctionModifier(SourceSystemFunctions.CONVERT, new AliasModifier("cast")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.LOCATE, new AliasModifier("indexof")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("tolower")); //$NON-NLS-1$

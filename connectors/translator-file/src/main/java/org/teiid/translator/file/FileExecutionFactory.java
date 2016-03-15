@@ -145,6 +145,7 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 	private boolean exceptionIfFileNotFound = true;
 	
 	public FileExecutionFactory() {
+		setTransactionSupport(TransactionSupport.NONE);
 		setSourceRequiredForMetadata(false);
 	}
 	

@@ -117,7 +117,11 @@ public class InsertPlanExecutionNode extends PlanExecutionNode {
 	
 	@Override
 	public Boolean requiresTransaction(boolean transactionalReads) {
-		return true;
+		Boolean requires = super.requiresTransaction(transactionalReads);
+		if (requires == null || requires) {
+			return true;
+		}
+		return false;
 	}
 
 }

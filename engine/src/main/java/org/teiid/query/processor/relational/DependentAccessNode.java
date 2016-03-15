@@ -190,6 +190,10 @@ public class DependentAccessNode extends AccessNode {
 	
 	@Override
 	public Boolean requiresTransaction(boolean transactionalReads) {
+		Boolean required = super.requiresTransaction(transactionalReads);
+		if (required != null) {
+			return required;
+		}
 		if (transactionalReads || !(this.getCommand() instanceof QueryCommand)) {
 			return true;
 		}
