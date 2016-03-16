@@ -28,6 +28,7 @@ import java.util.Map;
 
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectVisitor;
@@ -38,22 +39,40 @@ import org.teiid.translator.object.SearchType;
  * the key, using EQUI and IN clauses on the SELECT statement.
  */
 public  class SearchByKey implements SearchType  {
+	private ObjectConnection conn;
+	
+	public SearchByKey(ObjectConnection connection) {
+		this.conn  = connection;
+	}
 	
 	@Override
 	public Object performKeySearch(String columnNameInSource,
-			Object value, ObjectConnection conn) throws TranslatorException  {
-
-		return conn.get(value);
+			Object value,   ExecutionContext executionContext) throws TranslatorException  {
+		try {
+			return conn.get(value);
+		} finally {
+			conn = null;
+		}
 	}
 
 	@Override
 	public List<Object> performSearch(ObjectVisitor visitor,
-			ObjectConnection conn) throws TranslatorException  {
+		  ExecutionContext executionContext) throws TranslatorException  {
+		
+		try {
+			return performSearch(visitor);
+		} finally {
+			conn = null;
+		}
+		
+	}
+	
+	private List<Object> performSearch(ObjectVisitor visitor) throws TranslatorException {
 
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
 				"Perform search by key."); //$NON-NLS-1$
 		
-		List<Object> values = ( (SimpleKeyVisitor) visitor).getCriteriaValues();
+		List<Object> values =visitor.getCriteriaValues();
 		List<Object> results = new ArrayList<Object>();
 
 		boolean hasLimit = (visitor.getLimit() > 0);

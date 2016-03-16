@@ -39,12 +39,13 @@ import org.infinispan.client.hotrod.marshall.ProtoStreamMarshaller;
 import org.infinispan.protostream.BaseMarshaller;
 import org.infinispan.protostream.FileDescriptorSource;
 import org.infinispan.protostream.SerializationContext;
+import org.infinispan.protostream.annotations.ProtoSchemaBuilder;
+import org.infinispan.protostream.annotations.ProtoSchemaBuilderException;
 import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
 import org.teiid.core.BundleUtil;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.resource.adapter.infinispan.dsl.base.AbstractInfinispanManagedConnectionFactory;
 import org.teiid.translator.infinispan.dsl.InfinispanPlugin;
 
 public class InfinispanManagedConnectionFactory extends AbstractInfinispanManagedConnectionFactory {
@@ -55,7 +56,7 @@ public class InfinispanManagedConnectionFactory extends AbstractInfinispanManage
 	private static final long serialVersionUID = 1L;
 
 	@Override
-	protected RemoteCacheManager createRemoteCacheWrapperFromProperties(
+	protected RemoteCacheManager createRemoteCacheFromProperties(
 			ClassLoader classLoader) throws ResourceException {
 
 		File f = new File(this.getHotRodClientPropertiesFile());
@@ -74,7 +75,7 @@ public class InfinispanManagedConnectionFactory extends AbstractInfinispanManage
 							LogConstants.CTX_CONNECTOR,
 							"=== Using RemoteCacheManager (created from properties file " + f.getAbsolutePath() + ") ==="); //$NON-NLS-1$
 
-			return createRemoteCacheWrapper(props, classLoader);
+			return createRemoteCache(props, classLoader);
 
 		} catch (Exception err) {
 			throw new ResourceException(err);
@@ -83,7 +84,7 @@ public class InfinispanManagedConnectionFactory extends AbstractInfinispanManage
 	}
 
 	@Override
-	protected RemoteCacheManager createRemoteCacheWrapperFromServerList(
+	protected RemoteCacheManager createRemoteCacheFromServerList(
 			ClassLoader classLoader) throws ResourceException {
 
 		Properties props = new Properties();
@@ -93,10 +94,10 @@ public class InfinispanManagedConnectionFactory extends AbstractInfinispanManage
 		LogManager.logInfo(LogConstants.CTX_CONNECTOR,
 				"=== Using RemoteCacheManager (loaded by serverlist) ==="); //$NON-NLS-1$
 
-		return createRemoteCacheWrapper(props, classLoader);
+		return createRemoteCache(props, classLoader);
 	}
 
-	protected RemoteCacheManager createRemoteCacheWrapper(Properties props,
+	protected RemoteCacheManager createRemoteCache(Properties props,
 			ClassLoader classLoader) throws ResourceException {
 		RemoteCacheManager remoteCacheManager;
 		try {
@@ -121,11 +122,19 @@ public class InfinispanManagedConnectionFactory extends AbstractInfinispanManage
 				.getCacheContainer());
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	protected void registerMarshallers(SerializationContext ctx,
-			RemoteCacheManager cc, ClassLoader cl) throws ResourceException {
-
+	protected void registerWithCacheManager(SerializationContext ctx,
+			RemoteCacheManager cc, ClassLoader cl, boolean useAnnotations) throws ResourceException {
+		if (useAnnotations) {
+			registerToUseAnnotations(ctx, cc, cl);
+		} else {
+			registerMarshallers(ctx, cc, cl);
+		}	
+	}
+	
+	private void registerMarshallers(SerializationContext ctx,
+			RemoteCacheManager cc, ClassLoader cl)  throws ResourceException {
+		
 		String protoBufResource = getProtobufDefinitionFile();
 		try {
 			FileDescriptorSource fds = new FileDescriptorSource();
@@ -160,6 +169,41 @@ public class InfinispanManagedConnectionFactory extends AbstractInfinispanManage
 					e);
 		}
 	}
+	
+	private void registerToUseAnnotations(SerializationContext ctx,
+			RemoteCacheManager cc, ClassLoader cl) throws ResourceException {
+		
+//		String p = this.getCacheClassType().getPackage().getName();
+		
+		String protoName = this.getCacheClassType().getName() + ".proto";
+		
+		ProtoSchemaBuilder protoSchemaBuilder = null;
+				
+		try {
+			Class<?> clzz = loadClass("org.infinispan.protostream.annotations.ProtoSchemaBuilder");
+			protoSchemaBuilder = (ProtoSchemaBuilder) clzz.newInstance();
+
+
+			//			ProtoSchemaBuilder protoSchemaBuilder = new ProtoSchemaBuilder();
+			String protoSchema = protoSchemaBuilder
+			    .fileName(protoName)
+//			    .packageName(p)
+			    .addClass(this.getCacheClassType())
+			    .build(ctx);
+			
+		      RemoteCache<String, String> metadataCache = cc.getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME);
+		      metadataCache.put(protoName, protoSchema);
+			
+		} catch (ProtoSchemaBuilderException e) {
+			throw new ResourceException(e);
+		} catch (IOException e) {
+			throw new ResourceException(e);
+		} catch (InstantiationException e) {
+			throw new ResourceException(e);
+		} catch (IllegalAccessException e) {
+			throw new ResourceException(e);
+		}
+	}
 
 	private String readResource(String resourcePath, ClassLoader cl)
 			throws IOException {
@@ -177,4 +221,6 @@ public class InfinispanManagedConnectionFactory extends AbstractInfinispanManage
 			is.close();
 		}
 	}
+	
 }
+

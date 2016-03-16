@@ -43,7 +43,8 @@ import org.teiid.logging.LogManager;
 import org.teiid.resource.adapter.infinispan.InfinispanCacheWrapper;
 import org.teiid.resource.adapter.infinispan.InfinispanManagedConnectionFactory;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.object.ObjectMaterializeLifeCycle;
+import org.teiid.translator.object.SearchType;
+import org.teiid.translator.object.simpleMap.SearchByKey;
 
 
 /**
@@ -265,6 +266,16 @@ public class RemoteCacheConnection<K,V>  extends InfinispanCacheWrapper<K,V> {
 		rcm.stop();
 	}
 
+	
+	/** 
+	 * Returns the <code>SearchType</code> that will be used to perform
+	 * dynamic searching of the cache.
+	 * @return SearchType
+	 */
+	@Override
+	public SearchType getSearchType() {
+		return new SearchByKey(this);
+	}
 
 
 }

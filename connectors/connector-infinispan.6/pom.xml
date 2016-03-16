@@ -22,12 +22,6 @@
                 <artifactId>infinispan-client-hotrod</artifactId>
                 <version>${version.org.infinispan.6}</version>
             </dependency>
-
-            <dependency>
-                <groupId>org.infinispan</groupId>
-                <artifactId>infinispan-server-hotrod</artifactId>
-                <version>${version.org.infinispan.6}</version>
-            </dependency>
             <dependency>
                 <groupId>org.infinispan</groupId>
                 <artifactId>infinispan-core</artifactId>
@@ -123,12 +117,6 @@
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-client-hotrod</artifactId>
             <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-server-hotrod</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.infinispan</groupId>

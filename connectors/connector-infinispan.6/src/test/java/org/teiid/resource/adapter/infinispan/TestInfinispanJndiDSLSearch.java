@@ -19,41 +19,70 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.translator.infinispan.cache;
+package org.teiid.resource.adapter.infinispan;
 
-import static org.mockito.Mockito.*;
+import java.util.Map;
 
+import static org.mockito.Mockito.mock;
+
+import org.infinispan.manager.DefaultCacheManager;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.language.Select;
+import org.teiid.resource.adapter.infinispan.InfinispanManagedConnectionFactory;
+import org.teiid.resource.adapter.infinispan.InfinispanTestHelper;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.infinispan.cache.BasicAnnotatedSearchTest;
+import org.teiid.translator.infinispan.cache.InfinispanCacheExecutionFactory;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectExecution;
-import org.teiid.translator.object.testdata.trades.TradesCacheSource;
+import org.teiid.translator.object.testdata.annotated.Trade;
+import org.teiid.translator.object.testdata.annotated.TradesAnnotatedCacheSource;
 import org.teiid.translator.object.testdata.trades.VDBUtility;
 
 @SuppressWarnings("nls")
-public class TestInfinispanJndiDSLSearch extends BasicAnnotatedSearchTest {
+public class TestInfinispanJndiDSLSearch extends BasicAnnotatedSearchTest {	
 	
-	private static int SELECT_STAR_COL_COUNT = TradesCacheSource.NUM_OF_ALL_COLUMNS;
+	private static int SELECT_STAR_COL_COUNT = 5;
 	
-	private static ObjectConnection CONNECTION;
+    private static InfinispanManagedConnectionFactory factory = null;
 	private static ExecutionContext context;
-    private static InfinispanCacheExecutionFactory factory;
+	private static ObjectConnection CONNECTION;
+	
+	private static InfinispanCacheExecutionFactory TRANS_FACTORY = null;
 	
 	@BeforeClass
     public static void beforeEachClass() throws Exception {  
 	    
 		context = mock(ExecutionContext.class);
 		
+		final DefaultCacheManager container = new DefaultCacheManager("./src/test/resources/infinispan_persistent_config.xml", true);
+		TradesAnnotatedCacheSource.loadCache(  container.getCache(InfinispanTestHelper.TRADE_CACHE_NAME ));
+
+		factory = new InfinispanManagedConnectionFactory() {
+			
+			/**
+			 */
+			private static final long serialVersionUID = 6241061876834919893L;
+
+			@Override
+			protected Object performJNDICacheLookup(String jnidName) throws Exception {
+				return container;
+			}
+
+		};
+
+		factory.setCacheJndiName("TradeJNDI");
+		factory.setCacheTypeMap(InfinispanTestHelper.TRADE_CACHE_NAME + ":" + Trade.class.getName() + ";longValue:long");
+//		factory.setCacheTypeMap(InfinispanTestHelper.TRADE_CACHE_NAME + ":" + "org.teiid.translator.object.testdata.trades.Trade;longValue:long");
+
+		CONNECTION = factory.createConnectionFactory().getConnection();
 		
-		CONNECTION = TestInfinispanConnection.createConnection(false);
 
-		factory = new InfinispanCacheExecutionFactory();
-		factory.setSupportsDSLSearching(true);
-
-		factory.start();
+		TRANS_FACTORY = new InfinispanCacheExecutionFactory();
+		TRANS_FACTORY.start();
+		
 
 	}	
 	
@@ -61,12 +90,12 @@ public class TestInfinispanJndiDSLSearch extends BasicAnnotatedSearchTest {
     public static void closeConnection() throws Exception {
 
 	    CONNECTION.cleanUp();
-
-    }
+	    factory.shutDown();
+	}
     
 	@Override
 	protected ObjectExecution createExecution(Select command) throws Exception {
-		return (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, CONNECTION);
+		return (ObjectExecution) TRANS_FACTORY.createExecution(command, context, VDBUtility.RUNTIME_METADATA, CONNECTION);
 	}	
 	
 	@Test public void testQueryLikeCriteria1() throws Exception {	

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.translator.infinispan.dsl;
+package org.teiid.resource.adapter.infinispan.dsl;
 
 import static org.teiid.language.visitor.SQLStringVisitor.getRecordName;
 
@@ -51,7 +51,9 @@ import org.teiid.language.SortSpecification;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.infinispan.dsl.InfinispanPlugin;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectVisitor;
 import org.teiid.translator.object.SearchType;
@@ -74,17 +76,33 @@ import org.teiid.translator.object.SearchType;
  */
 public final class DSLSearch implements SearchType  {
 	
-	@Override
+	private ObjectConnection conn;
+	
+	
+	public DSLSearch(ObjectConnection connection) {
+		this.conn = connection;
+	}
+	
 	/** 
 	 * Calling to make a key value search on the cache.
 	 * 
 	 * The assumption is the <code>value</code> has already been converted the key object type
 	 * {@inheritDoc}
 	 *
-	 * @see org.teiid.translator.object.SearchType#performKeySearch(java.lang.String, java.lang.Object, org.teiid.translator.object.ObjectConnection)
 	 */
-	public Object performKeySearch(String columnNameInSource, Object value, ObjectConnection conn) throws TranslatorException {
-	    
+	@Override
+	public Object performKeySearch(String columnNameInSource,
+			Object value,   ExecutionContext executionContext) throws TranslatorException  {	
+		
+		try {
+			return performSearch(columnNameInSource, value);
+		} finally {
+			conn = null;
+		}
+	}
+	
+	private Object performSearch(String columnNameInSource,
+			Object value)  throws TranslatorException  {	
 		
 		@SuppressWarnings("rawtypes")
 		QueryBuilder qb = getQueryBuilder(conn);
@@ -107,8 +125,18 @@ public final class DSLSearch implements SearchType  {
 		
 	@Override
 	public List<Object> performSearch(ObjectVisitor visitor,
-				ObjectConnection conn) throws TranslatorException {
-			
+		  ExecutionContext executionContext) throws TranslatorException  {			
+		try {
+			return performSearch(visitor);
+		} finally {
+			conn = null;
+		}
+		
+	}
+	
+	private List<Object> performSearch(ObjectVisitor visitor) throws TranslatorException  {			
+
+		
 		Condition where = visitor.getWhereCriteria();
 		OrderBy orderby = visitor.getOrderBy();		
 
@@ -172,7 +200,7 @@ public final class DSLSearch implements SearchType  {
 		
 		Class<?> type = conn.getCacheClassType();
 		
-		QueryFactory qf = ((InfinispanDSLConnection) conn).getQueryFactory();
+		QueryFactory qf = ((InfinispanConnectionImpl) conn).getQueryFactory();
 	    		  
 	    return qf.from(type);
 	}

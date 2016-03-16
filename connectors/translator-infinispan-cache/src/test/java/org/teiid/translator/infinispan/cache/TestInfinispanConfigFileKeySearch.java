@@ -49,7 +49,7 @@ public class TestInfinispanConfigFileKeySearch extends BasicSearchTest {
         // Set up the mock JNDI ...
    		context = mock(ExecutionContext.class);
 		
-		conn = TestInfinispanConnection.createNonAnnotatedConnection("./src/test/resources/infinispan_persistent_config.xml");
+		conn = TestInfinispanConnectionHelper.createNonAnnotatedConnection("./src/test/resources/infinispan_persistent_indexing_config.xml");
 
 	}
 	

@@ -31,6 +31,7 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.infinispan.cache.InfinispanCacheConnection;
 import org.teiid.translator.object.ClassRegistry;
 import org.teiid.translator.object.ObjectMaterializeLifeCycle;
+import org.teiid.translator.object.SearchType;
 
 /**
  * @author vanhalbert
@@ -181,5 +182,15 @@ public class InfinispanCacheRAConnection extends BasicConnection
 		return cacheWrapper.getMaterializeLifeCycle();
 	}
 
+	/** 
+	 * Returns the <code>SearchType</code> that will be used to perform
+	 * dynamic searching of the cache.
+	 * @return SearchType
+	 */
+	@Override
+	public SearchType getSearchType() {
+		return cacheWrapper.getSearchType();
+	}
+	
 
 }

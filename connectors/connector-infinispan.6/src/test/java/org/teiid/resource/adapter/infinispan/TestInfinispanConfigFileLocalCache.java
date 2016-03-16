@@ -22,35 +22,59 @@
 package org.teiid.resource.adapter.infinispan;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.teiid.language.Select;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.infinispan.cache.BasicAnnotatedSearchTest;
+import org.teiid.translator.infinispan.cache.InfinispanCacheExecutionFactory;
 import org.teiid.translator.object.ObjectConnection;
+import org.teiid.translator.object.ObjectExecution;
 import org.teiid.translator.object.testdata.trades.Trade;
+import org.teiid.translator.object.testdata.trades.VDBUtility;
 
 @SuppressWarnings("nls")
 @Ignore
-public class TestInfinispanConfigFileLocalCache {
+public class TestInfinispanConfigFileLocalCache extends BasicAnnotatedSearchTest {	
     
     private static InfinispanManagedConnectionFactory factory = null;
-    
+	private static ExecutionContext context;
+	private static ObjectConnection CONNECTION;
+	
+	private static InfinispanCacheExecutionFactory TRANS_FACTORY = null;
+
 	@BeforeClass
     public static void beforeEachClass() throws Exception {  
- 		
+		context = mock(ExecutionContext.class);
+
 		factory = new InfinispanManagedConnectionFactory();
 
 		factory.setConfigurationFileNameForLocalCache("./src/test/resources/infinispan_persistent_config.xml");
-		factory.setCacheTypeMap(RemoteInfinispanTestHelper.TRADE_CACHE_NAME + ":" + "org.teiid.translator.object.testdata.trades.Trade;longValue:long");
+		factory.setCacheTypeMap(InfinispanTestHelper.TRADE_CACHE_NAME + ":" + "org.teiid.translator.object.testdata.trades.Trade;longValue:long");
+
 		
+		TRANS_FACTORY = new InfinispanCacheExecutionFactory();
+		TRANS_FACTORY.start();
+		
+		CONNECTION = factory.createConnectionFactory().getConnection();
+//		CONNECTION = TestInfinispanConnectionHelper.createConnection(false, "org.teiid.resource.adapter.infinispan.local.LocalCacheConnection");
+
 	}
 	
 	@AfterClass
     public static void closeConnection() throws Exception {    	    
     	    
-        RemoteInfinispanTestHelper.releaseServer();
+		factory.getCacheWrapper().shutDownCacheManager();
     }
+	
+	@Override
+	protected ObjectExecution createExecution(Select command) throws Exception {
+		return (ObjectExecution) TRANS_FACTORY.createExecution(command, context, VDBUtility.RUNTIME_METADATA, CONNECTION);
+	}	
 	
     @Test
     public void testConnection() throws Exception {

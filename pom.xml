@@ -99,7 +99,8 @@
   	    
 
         <version.com.squareup.protoparser>3.1.4.redhat-1</version.com.squareup.protoparser>
-        <version.org.infinispan.protostream>3.0.4.Final-redhat-1</version.org.infinispan.protostream>
+        <version.org.infinispan.protostream>3.0.5.Final</version.org.infinispan.protostream>
+        <!--version.org.infinispan.protostream>3.0.4.Final-redhat-1</version.org.infinispan.protostream-->
         <!--3.0.0.Alpha8-redhat-1</version.org.infinispan.protostream-->
         <version.org.infinispan.hibernate.search>4.6.3.Final-redhat-1</version.org.infinispan.hibernate.search> 
         <!--4.6.1.Final-redhat-1</version.org.infinispan.hibernate.search--> <!-- versions required by infinispan  --> 

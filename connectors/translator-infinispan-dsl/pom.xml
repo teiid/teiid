@@ -44,11 +44,7 @@
                  <artifactId>protostream</artifactId>
                  <version>${version.org.infinispan.protostream}</version>
             </dependency>       
-            <dependency>
-                 <groupId>com.squareup</groupId>
-                 <artifactId>protoparser</artifactId>
-                 <version>${version.com.squareup.protoparser}</version>
-            </dependency>                   
+                   
         </dependencies> 
     </dependencyManagement>
     
@@ -57,12 +53,19 @@
              <groupId>org.infinispan.protostream</groupId>
              <artifactId>protostream</artifactId>
               <scope>provided</scope>
-        </dependency>   
+        </dependency> 
+         <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-query-dsl</artifactId>
+            <scope>provided</scope>
+        </dependency>         
+ <!--         
         <dependency>
             <groupId>com.squareup</groupId>
             <artifactId>protoparser</artifactId>
             <scope>provided</scope>
         </dependency>
+   -->
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-commons</artifactId>
@@ -73,16 +76,13 @@
             <artifactId>infinispan-query</artifactId>
             <scope>provided</scope>
         </dependency>   
-        <dependency>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-query-dsl</artifactId>
-            <scope>provided</scope>
-        </dependency>                                                   
+                                                 
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-client-hotrod</artifactId>
             <scope>provided</scope>
         </dependency>  
+      
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-api</artifactId>

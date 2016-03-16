@@ -16,20 +16,10 @@
         <module name="org.jboss.teiid.api"  export="true" />
         <!--  need teiid-engine for the scriptengine -->
         <module name="org.jboss.teiid" export="true" />
-        <!-->module name="org.jboss.teiid" /-->
         <module name="org.jboss.modules"  export="true" />
  
         <module name="org.hibernate.search.engine" />
         
-        <!--
-        This "your.pojo.module" would be used when the map-cache translator is used.
-        The "your.pojo.module" name needs to be replaced with the module name that has
-        the java class(s) that's being stored in the JDG cache 
-         
-        -->
-    
-        <module name="your.pojo.module"  optional="true"  export="true" />
- 
-    </dependencies>
+     </dependencies>
 </module>
         

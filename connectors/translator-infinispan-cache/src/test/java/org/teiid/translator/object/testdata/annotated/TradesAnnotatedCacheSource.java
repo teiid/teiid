@@ -23,11 +23,15 @@ package org.teiid.translator.object.testdata.annotated;
 
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.core.TeiidException;
+import org.teiid.core.util.ReflectionHelper;
+import org.teiid.translator.object.CacheNameProxy;
 import org.teiid.translator.object.ClassRegistry;
 import org.teiid.translator.object.ObjectConnection;
 
@@ -73,21 +77,6 @@ public class TradesAnnotatedCacheSource extends HashMap <Object, Object> {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
-	}
-	
-			
-	public static ObjectConnection createConnection() {
-		Map <Object, Object> objects = TradesAnnotatedCacheSource.loadCache();
-		ObjectConnection toc = createConnection(objects);
-		
-		return toc;
-	}
-	
-	public static ObjectConnection createConnection(Map <Object, Object> objects) {
-				
-		ObjectConnection conn = TradeAnnotatedObjectConnection.createConnection(objects);
-	
-		return conn;
 	}
 	
 	public static void loadCache(Map <Object, Object> cache) {
@@ -140,4 +129,17 @@ public class TradesAnnotatedCacheSource extends HashMap <Object, Object> {
 		return objs;
 	}	
 	
+	public static ObjectConnection createConnection(Map<Object,Object> map,  String className) throws TeiidException {
+		CacheNameProxy proxy = new CacheNameProxy(TradesAnnotatedCacheSource.TRADES_CACHE_NAME);
+		
+		Collection<Object> args = new ArrayList<Object>(3);
+		args.add(map);
+		args.add(TradesAnnotatedCacheSource.CLASS_REGISTRY);
+		args.add(proxy);
+		
+		ObjectConnection conn = (ObjectConnection) ReflectionHelper.create(className, args, null);
+		
+		return conn;
+	}
+		
 }

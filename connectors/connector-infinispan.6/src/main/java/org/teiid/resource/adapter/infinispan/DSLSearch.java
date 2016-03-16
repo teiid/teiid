@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.translator.infinispan.cache;
+package org.teiid.resource.adapter.infinispan;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,12 +34,26 @@ import org.infinispan.query.dsl.QueryFactory;
 import org.infinispan.query.dsl.SortOrder;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
-import org.teiid.language.*;
+import org.teiid.language.AndOr;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Comparison;
+import org.teiid.language.Condition;
+import org.teiid.language.Expression;
+import org.teiid.language.In;
+import org.teiid.language.IsNull;
+import org.teiid.language.Like;
+import org.teiid.language.Literal;
+import org.teiid.language.Not;
+import org.teiid.language.OrderBy;
+import org.teiid.language.SortSpecification;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.infinispan.cache.InfinispanCacheConnection;
+import org.teiid.translator.infinispan.cache.InfinispanPlugin;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectVisitor;
 import org.teiid.translator.object.SearchType;
@@ -63,18 +77,33 @@ import org.teiid.translator.object.SearchType;
  */
 public final class DSLSearch implements SearchType   {
 
+	private ObjectConnection conn;
 	
-	@Override
+	
+	public DSLSearch(ObjectConnection connection) {
+		this.conn = connection;
+	}
+	
 	/** 
 	 * Calling to make a key value search on the cache.
 	 * 
 	 * The assumption is the <code>value</code> has already been converted the key object type
 	 * {@inheritDoc}
 	 *
-	 * @see org.teiid.translator.object.SearchType#performKeySearch(java.lang.String, java.lang.Object, org.teiid.translator.object.ObjectConnection)
 	 */
-	public Object performKeySearch(String columnNameInSource, Object value, ObjectConnection conn) throws TranslatorException {
-	    
+	@Override
+	public Object performKeySearch(String columnNameInSource,
+			Object value,   ExecutionContext executionContext) throws TranslatorException  {	
+		
+		try {
+			return performSearch(columnNameInSource, value);
+		} finally {
+			conn = null;
+		}
+	}
+	
+	private Object performSearch(String columnNameInSource,
+			Object value) throws TranslatorException {    
 		
 		@SuppressWarnings("rawtypes")
 		QueryBuilder qb = getQueryBuilder(conn);
@@ -96,7 +125,17 @@ public final class DSLSearch implements SearchType   {
 	
 	@Override
 	public List<Object> performSearch(ObjectVisitor visitor,
-			ObjectConnection conn) throws TranslatorException {
+		  ExecutionContext executionContext) throws TranslatorException  {			
+		try {
+			return performSearch(visitor);
+		} finally {
+			conn = null;
+		}
+		
+	}
+
+	
+	private List<Object> performSearch(ObjectVisitor visitor) throws TranslatorException {
 		
 		Condition where = visitor.getWhereCriteria();
 		OrderBy orderby = visitor.getOrderBy();		

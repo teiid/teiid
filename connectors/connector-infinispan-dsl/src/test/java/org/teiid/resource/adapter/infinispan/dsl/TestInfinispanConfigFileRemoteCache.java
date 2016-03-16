@@ -19,8 +19,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.resource.adapter.infinispan;
+package org.teiid.resource.adapter.infinispan.dsl;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
@@ -32,7 +34,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.translator.object.ObjectConnection;
-import org.teiid.translator.object.testdata.trades.Trade;
+
 
 @SuppressWarnings("nls")
 @Ignore
@@ -43,23 +45,24 @@ public class TestInfinispanConfigFileRemoteCache {
 
 	@BeforeClass
     public static void beforeEachClass() throws Exception {  
-		RemoteInfinispanTestHelper.loadCacheSimple();
+		RemoteInfinispanTestHelper.startServer();
 		
   		System.out.println("Hostaddress " + RemoteInfinispanTestHelper.hostAddress());
   		
   		// read in the properties template file and set the server host:port and then save for use
-  		File f = new File("./src/test/resources/hotrod-client.properties");
+  		File f = new File("./src/test/resources/jdg.properties");
   		
   		Properties props = PropertiesUtils.load(f.getAbsolutePath());
   		props.setProperty("infinispan.client.hotrod.server_list", RemoteInfinispanTestHelper.hostAddress() + ":" + RemoteInfinispanTestHelper.hostPort());
 		
-  		PropertiesUtils.print("./target/hotrod-client.properties", props);
+  		PropertiesUtils.print("./target/jdg.properties", props);
 
 		factory = new InfinispanManagedConnectionFactory();
 
 		factory.setHotRodClientPropertiesFile("./target/hotrod-client.properties");
-		factory.setCacheTypeMap(RemoteInfinispanTestHelper.TEST_CACHE_NAME + ":" + "org.teiid.translator.object.testdata.trades.Trade;stringValue:java.lang.String");
+		factory.setCacheTypeMap(RemoteInfinispanTestHelper.PERSON_CACHE_NAME + ":" + RemoteInfinispanTestHelper.PERSON_CLASS.getName()+ ";" + RemoteInfinispanTestHelper.PKEY_COLUMN);
 
+		
 	}
 	
 	@AfterClass
@@ -70,21 +73,25 @@ public class TestInfinispanConfigFileRemoteCache {
 	
     @Test
     public void testConnection() throws Exception {
-    	
+    	try {
     		ObjectConnection conn = factory.createConnectionFactory().getConnection();
-
     		Class<?> clz = conn.getCacheClassType();
-	
-    		assertEquals(Trade.class, clz);
+    
+    		assertEquals(RemoteInfinispanTestHelper.PERSON_CLASS, clz);
     		
     		Class<?> t = conn.getCacheKeyClassType();
     		
-    		assertEquals(String.class, t);
+    		 assertNull(t);
+    		 
+    		 assertEquals(RemoteInfinispanTestHelper.PKEY_COLUMN, conn.getPkField());
     		
-    		assertEquals("stringValue", conn.getPkField());
-    		
-    		conn.getAll();
-    		
-    		conn.cleanUp();
+    		 assertNotNull(conn.getCache());
+    		 
+    		 conn.cleanUp();
+    		 
+    	} finally {
+	    	factory.cleanUp();
+	    	RemoteInfinispanTestHelper.releaseServer();
+    	}
     }
 }
