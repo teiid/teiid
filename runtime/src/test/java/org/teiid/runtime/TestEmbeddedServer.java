@@ -1309,6 +1309,8 @@ public class TestEmbeddedServer {
             	loaded.wait();
             }
 		}
+        Thread.sleep(2000); //need to ensure that the mat view is built
+        
         final TeiidDriver td = es.getDriver();
         Connection c = td.connect("jdbc:teiid:test", null);
         Statement s = c.createStatement();
