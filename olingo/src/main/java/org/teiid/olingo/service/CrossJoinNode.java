@@ -24,6 +24,7 @@ package org.teiid.olingo.service;
 import java.util.List;
 
 import org.apache.olingo.commons.api.edm.EdmEntityType;
+import org.apache.olingo.server.api.OData;
 import org.apache.olingo.server.api.uri.UriInfo;
 import org.apache.olingo.server.api.uri.UriParameter;
 import org.teiid.core.TeiidException;
@@ -36,11 +37,11 @@ public class CrossJoinNode extends DocumentNode {
     private boolean expand;
 
     public static CrossJoinNode buildCrossJoin(EdmEntityType type,
-            List<UriParameter> keyPredicates, MetadataStore metadata,
+            List<UriParameter> keyPredicates, MetadataStore metadata, OData odata,
             UniqueNameGenerator nameGenerator, boolean useAlias,
             UriInfo uriInfo, URLParseService parseService, boolean expand) throws TeiidException {
         CrossJoinNode resource = new CrossJoinNode();
-        build(resource, type, null, metadata, nameGenerator, useAlias, uriInfo, parseService);
+        build(resource, type, null, metadata, odata, nameGenerator, useAlias, uriInfo, parseService);
         resource.setExpand(expand);
         return resource;
     }
