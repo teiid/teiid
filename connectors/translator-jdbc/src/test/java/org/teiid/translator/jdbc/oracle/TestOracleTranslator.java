@@ -1267,4 +1267,10 @@ public class TestOracleTranslator {
     	val = omp.getFullyQualifiedName("package", "schema", "proc", true);
     	assertEquals("\"package\".\"proc\"", val);
     }
+    
+    @Test public void testBooleanInGroupByAndHaving() throws Exception {
+        String input = "SELECT g_0.IntKey, cast(g_0.IntNum as boolean) FROM BQT1.SmallA AS g_0 GROUP BY g_0.IntKey, cast(g_0.IntNum as boolean) HAVING CONVERT(cast(g_0.IntNum as boolean), STRING) > 'false'";
+        String output = "SELECT g_0.IntKey, CASE WHEN g_0.IntNum = 0 THEN 0 WHEN g_0.IntNum IS NOT NULL THEN 1 END FROM SmallA g_0 GROUP BY g_0.IntKey, CASE WHEN g_0.IntNum = 0 THEN 0 WHEN g_0.IntNum IS NOT NULL THEN 1 END HAVING CASE WHEN CASE WHEN g_0.IntNum = 0 THEN 0 WHEN g_0.IntNum IS NOT NULL THEN 1 END = 0 THEN 'false' WHEN CASE WHEN g_0.IntNum = 0 THEN 0 WHEN g_0.IntNum IS NOT NULL THEN 1 END IS NOT NULL THEN 'true' END > 'false'"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
 }

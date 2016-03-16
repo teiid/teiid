@@ -192,12 +192,6 @@ public class ConvertModifier extends FunctionModifier {
 			@Override
 			public List<?> translate(Function function) {
 				Expression booleanValue = function.getParameters().get(0);
-				if (booleanValue instanceof Function) {
-					Function nested = (Function)booleanValue;
-					if (nested.getName().equalsIgnoreCase("convert") && Number.class.isAssignableFrom(nested.getParameters().get(0).getType())) { //$NON-NLS-1$
-						booleanValue = nested.getParameters().get(0);
-					}
-				}
 				if (!booleanNullable) {
 					return Arrays.asList("CASE WHEN ", booleanValue, " = 0 THEN 'false' ELSE 'true' END"); //$NON-NLS-1$ //$NON-NLS-2$					
 				}
