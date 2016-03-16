@@ -44,6 +44,7 @@ import org.teiid.translator.jdbc.ExtractFunctionModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.LocateFunctionModifier;
+import org.teiid.translator.jdbc.Version;
 
 
 @Translator(name = "netezza", description = "A translator for Netezza Database")
@@ -53,6 +54,8 @@ public class NetezzaExecutionFactory extends JDBCExecutionFactory {
 	private static final String DATE_FORMAT = "YYYY-MM-DD";  //$NON-NLS-1$
 	private static final String DATETIME_FORMAT = DATE_FORMAT + " " + TIME_FORMAT;  //$NON-NLS-1$
 	private static final String TIMESTAMP_FORMAT = DATETIME_FORMAT + ".MS";   //$NON-NLS-1$
+	
+	private static final Version SEVEN_0 = Version.getVersion("7.0"); //$NON-NLS-1$
 	
 	private boolean sqlExtensionsInstalled;
 
@@ -449,6 +452,16 @@ public class NetezzaExecutionFactory extends JDBCExecutionFactory {
 	
 	public void setSqlExtensionsInstalled(boolean sqlExtensionsInstalled) {
 		this.sqlExtensionsInstalled = sqlExtensionsInstalled;
+	}
+	
+	@Override
+	public boolean supportsCommonTableExpressions() {
+		return getVersion().compareTo(SEVEN_0) >= 0;
+	}
+	
+	@Override
+	protected boolean usesDatabaseVersion() {
+		return true;
 	}
 	
 }
