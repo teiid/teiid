@@ -30,6 +30,7 @@ import java.util.List;
 import org.apache.olingo.commons.api.edm.EdmEntityType;
 import org.apache.olingo.commons.api.edm.EdmNavigationProperty;
 import org.apache.olingo.commons.api.edm.EdmProperty;
+import org.apache.olingo.server.api.OData;
 import org.apache.olingo.server.api.ServiceMetadata;
 import org.apache.olingo.server.api.uri.UriInfo;
 import org.apache.olingo.server.api.uri.UriParameter;
@@ -37,6 +38,7 @@ import org.apache.olingo.server.api.uri.UriResourceEntitySet;
 import org.apache.olingo.server.api.uri.UriResourceNavigation;
 import org.apache.olingo.server.core.RequestURLHierarchyVisitor;
 import org.apache.olingo.server.core.uri.parser.UriParserException;
+import org.apache.olingo.server.core.uri.validator.UriValidationException;
 import org.teiid.core.TeiidException;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ForeignKey;
@@ -56,6 +58,7 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
     private final MetadataStore metadata;
     private String baseURI;
     private ServiceMetadata serviceMetadata;
+    private OData odata;
     
     private ScopedTable updateTable;
     private ScopedTable referenceTable;
@@ -79,10 +82,12 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
         }
     }
     
-    public ReferenceUpdateSQLBuilder(MetadataStore metadata, String baseURI, ServiceMetadata serviceMetadata) {
+    public ReferenceUpdateSQLBuilder(MetadataStore metadata, String baseURI,
+            ServiceMetadata serviceMetadata, OData odata) {
         this.metadata = metadata;
         this.baseURI = baseURI;
-        this.serviceMetadata = serviceMetadata;        
+        this.serviceMetadata = serviceMetadata;
+        this.odata = odata;
     }
 
     @Override
@@ -120,7 +125,7 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
     public Update updateReference(URI referenceId, boolean prepared, boolean delete) throws SQLException {
         try {
             if (referenceId != null) {
-                UriInfo uriInfo = ODataSQLBuilder.buildUriInfo(referenceId, this.baseURI, this.serviceMetadata);
+                UriInfo uriInfo = ODataSQLBuilder.buildUriInfo(referenceId, this.baseURI, this.serviceMetadata, this.odata);
                 UriResourceEntitySet uriEnitytSet = (UriResourceEntitySet)uriInfo.asUriInfoResource().getUriResourceParts().get(0);
                 if (this.collection) {
                     this.updateTable.setKeyPredicates(uriEnitytSet.getKeyPredicates());
@@ -132,6 +137,8 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
         } catch (UriParserException e) {
             throw new SQLException(e);
         } catch (URISyntaxException e) {
+            throw new SQLException(e);
+        } catch (UriValidationException e) {
             throw new SQLException(e);
         }
         
@@ -171,7 +178,7 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
             }
             
             Criteria criteria = DocumentNode.buildEntityKeyCriteria(
-                    this.updateTable, null, this.metadata, null, null);
+                    this.updateTable, null, this.metadata, this.odata, null, null);
             update.setCriteria(criteria);
             
             return update;

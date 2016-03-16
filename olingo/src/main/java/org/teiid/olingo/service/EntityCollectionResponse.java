@@ -58,6 +58,7 @@ import org.apache.olingo.commons.core.edm.primitivetype.EdmString;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmTimeOfDay;
 import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
 import org.apache.olingo.server.core.responses.EntityResponse;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
@@ -195,7 +196,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                 }
             } catch (IOException e) {
                 throw new SQLException(e);
-            } catch (TransformationException e) {
+            } catch (TeiidProcessingException e) {
                 throw new SQLException(e);
             }
         }
@@ -280,7 +281,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                 }                
             } catch (IOException e) {
                 throw new SQLException(e);
-            } catch (TransformationException e) {
+            } catch (TeiidProcessingException e) {
                 throw new SQLException(e);
             }
         }
@@ -316,7 +317,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
 
     static Property buildPropery(String propName,
             SingletonPrimitiveType type, boolean isArray, Object value,
-            String invalidCharacterReplacement) throws TransformationException,
+            String invalidCharacterReplacement) throws TeiidProcessingException,
             SQLException, IOException {
 
         if (value instanceof Array) {
@@ -327,7 +328,8 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
             for (int i = 0; i < length; i++) {
                 Object o = java.lang.reflect.Array.get(value, i);
                 if (o != null && o.getClass().isArray()) {
-                    throw new TransformationException(ODataPlugin.Event.TEIID16029, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16029, propName));
+                    throw new TeiidNotImplementedException(ODataPlugin.Event.TEIID16029, 
+                            ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16029, propName));
                 }
                 Object p = getPropertyValue(type, isArray,  o, invalidCharacterReplacement);
                 values.add(p);

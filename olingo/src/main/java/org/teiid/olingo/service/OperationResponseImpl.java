@@ -17,7 +17,7 @@ import org.apache.olingo.commons.api.edm.EdmProperty;
 import org.apache.olingo.commons.api.edm.EdmReturnType;
 import org.apache.olingo.commons.core.edm.EdmPropertyImpl;
 import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
-import org.teiid.core.types.TransformationException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.odata.api.OperationResponse;
 import org.teiid.olingo.ODataPlugin;
 import org.teiid.olingo.service.ProcedureSQLBuilder.ProcedureReturn;
@@ -45,7 +45,7 @@ public class OperationResponseImpl implements OperationResponse {
             String propName = rs.getMetaData().getColumnLabel(i + 1);
             EdmElement element = ((EdmComplexType)this.procedureReturn.getReturnType().getType()).getProperty(propName);
             if (!(element instanceof EdmProperty) && !((EdmProperty) element).isPrimitive()) {
-                throw new SQLException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16024));
+                throw new SQLException(new TeiidNotImplementedException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16024)));
             }
             EdmPropertyImpl edmProperty = (EdmPropertyImpl) element;
             Property property;
@@ -56,7 +56,7 @@ public class OperationResponseImpl implements OperationResponse {
                 properties.put(i, property);
             } catch (IOException e) {
                 throw new SQLException(e);
-            } catch (TransformationException e) {
+            } catch (TeiidProcessingException e) {
                 throw new SQLException(e);
             }
         }
@@ -111,7 +111,7 @@ public class OperationResponseImpl implements OperationResponse {
         try {
 			EdmReturnType returnType = this.procedureReturn.getReturnType();
 			this.returnValue = EntityCollectionResponse.buildPropery("return", (SingletonPrimitiveType) returnType.getType(), returnType.isCollection(), returnValue, invalidCharacterReplacement); //$NON-NLS-1$
-		} catch (TransformationException e) {
+		} catch (TeiidProcessingException e) {
 			throw new SQLException(e);
 		} catch (IOException e) {
 			throw new SQLException(e);

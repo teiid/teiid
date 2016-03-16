@@ -23,6 +23,7 @@ package org.teiid.olingo.service;
 
 import org.apache.olingo.commons.api.edm.EdmEntityType;
 import org.apache.olingo.commons.api.edm.EdmNavigationProperty;
+import org.apache.olingo.server.api.OData;
 import org.apache.olingo.server.api.uri.UriInfo;
 import org.teiid.core.TeiidException;
 import org.teiid.metadata.MetadataStore;
@@ -35,12 +36,12 @@ public class ExpandDocumentNode extends DocumentNode {
     private boolean collection;
     
     public static ExpandDocumentNode buildExpand(EdmNavigationProperty property,
-            MetadataStore metadata, UniqueNameGenerator nameGenerator,
+            MetadataStore metadata, OData odata, UniqueNameGenerator nameGenerator,
             boolean useAlias, UriInfo uriInfo, URLParseService parseService) throws TeiidException {
         
         EdmEntityType type = property.getType();
         ExpandDocumentNode resource = new ExpandDocumentNode();
-        build(resource, type, null, metadata, nameGenerator, useAlias, uriInfo, parseService);
+        build(resource, type, null, metadata, odata, nameGenerator, useAlias, uriInfo, parseService);
         resource.setNavigationName(property.getName());
         resource.setCollection(property.isCollection());
         return resource;

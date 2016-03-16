@@ -32,7 +32,6 @@ import org.apache.olingo.server.api.ODataHttpHandler;
 import org.apache.olingo.server.api.ServiceMetadata;
 import org.apache.olingo.server.api.edmx.EdmxReference;
 import org.apache.olingo.server.core.OData4Impl;
-import org.apache.olingo.server.core.SchemaBasedEdmProvider;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.odata.api.Client;
@@ -52,8 +51,7 @@ public class OlingoBridge {
             OData odata = OData4Impl.newInstance();
             VDBMetaData vdb = client.getVDB();
             CsdlSchema schema = ODataSchemaBuilder.buildMetadata(vdb.getFullName(), teiidSchema);
-            SchemaBasedEdmProvider edmProvider = new SchemaBasedEdmProvider();
-            edmProvider.addSchema(schema);
+            TeiidEdmProvider edmProvider = new TeiidEdmProvider(schema);
             ServiceMetadata metadata = odata.createServiceMetadata(edmProvider, Collections.<EdmxReference> emptyList());
             ODataHttpHandler handler = odata.createHandler(metadata);
             
