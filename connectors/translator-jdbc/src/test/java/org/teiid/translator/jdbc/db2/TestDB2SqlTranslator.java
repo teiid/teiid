@@ -245,7 +245,7 @@ public class TestDB2SqlTranslator {
     
     @Test public void testBooleanToString() throws Exception {
     	String input = "SELECT convert(convert(INTKEY, boolean), string) FROM BQT1.SmallA"; //$NON-NLS-1$
-        String output = "SELECT CASE WHEN SmallA.IntKey = 0 THEN 'false' WHEN SmallA.IntKey IS NOT NULL THEN 'true' END FROM SmallA"; //$NON-NLS-1$
+        String output = "SELECT CASE WHEN CASE WHEN SmallA.IntKey = 0 THEN 0 WHEN SmallA.IntKey IS NOT NULL THEN 1 END = 0 THEN 'false' WHEN CASE WHEN SmallA.IntKey = 0 THEN 0 WHEN SmallA.IntKey IS NOT NULL THEN 1 END IS NOT NULL THEN 'true' END FROM SmallA"; //$NON-NLS-1$
           
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
             input, 
