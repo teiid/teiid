@@ -770,35 +770,19 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     }
 
     public boolean getMoreResults() throws SQLException {
-        //Check to see the statement is closed and throw an exception
-        checkStatement();
-
-        // close any current ResultSet
-        if ( resultSet != null ) {
-            resultSet.close();
-            resultSet = null;
-        }
-        // set the existing update count to -1
-        // indicating that there are no more results
-        this.updateCounts = null;
-        return false;
+        return getMoreResults(Statement.CLOSE_CURRENT_RESULT);
     }
 
     public boolean getMoreResults(int current) throws SQLException {
         checkStatement();
 
-        /*if (current == CLOSE_ALL_RESULTS || current == CLOSE_CURRENT_RESULT) {
-            // since MetaMatrix only supports one ResultSet per statement,
-            // these two cases are handled the same way.
-            if (resultSet != null) {
-                resultSet.close();
-            }
-        } else if (current == KEEP_CURRENT_RESULT) {
-            // do nothing
+        if ((current == CLOSE_ALL_RESULTS || current == CLOSE_CURRENT_RESULT) && resultSet != null) {
+            resultSet.close();
+            resultSet = null;
         }
-
-        rowsAffected = -1;
-        */
+        
+        // indicate that there are no more results
+        this.updateCounts = null;
         return false;
     }
 

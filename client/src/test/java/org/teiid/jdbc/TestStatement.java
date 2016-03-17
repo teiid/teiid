@@ -28,6 +28,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
+import java.sql.Statement;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -87,6 +88,41 @@ public class TestStatement {
 		SQLWarning warning = statement.getWarnings();
 		assertNotNull(warning);
 		assertNull(warning.getNextWarning());
+	}
+	
+	@Test public void testGetMoreResults() throws Exception {
+		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
+		DQP dqp = Mockito.mock(DQP.class);
+		ResultsFuture<ResultsMessage> results = new ResultsFuture<ResultsMessage>(); 
+		Mockito.stub(dqp.executeRequest(Mockito.anyLong(), (RequestMessage)Mockito.anyObject())).toReturn(results);
+		ResultsMessage rm = new ResultsMessage();
+		rm.setUpdateResult(true);
+		rm.setColumnNames(new String[] {"expr1"});
+		rm.setDataTypes(new String[] {"integer"});
+		rm.setResults(new List<?>[] {Arrays.asList(1)});
+		results.getResultsReceiver().receiveResults(rm);
+		Mockito.stub(conn.getDQP()).toReturn(dqp);
+		StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY) {
+			@Override
+            protected java.util.TimeZone getServerTimeZone() throws java.sql.SQLException {
+				return null;
+			}
+		};
+		statement.execute("update x set a = b");
+		assertEquals(1, statement.getUpdateCount());
+		statement.getMoreResults(Statement.CLOSE_ALL_RESULTS);
+		assertEquals(-1, statement.getUpdateCount());
+		
+		statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY) {
+			@Override
+            protected java.util.TimeZone getServerTimeZone() throws java.sql.SQLException {
+				return null;
+			}
+		};
+		statement.execute("update x set a = b");
+		assertEquals(1, statement.getUpdateCount());
+		statement.getMoreResults();
+		assertEquals(-1, statement.getUpdateCount());
 	}
 	
 	@Test public void testSetStatement() throws Exception {
