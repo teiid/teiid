@@ -27,11 +27,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.olingo.commons.api.edm.EdmEntitySet;
 import org.apache.olingo.commons.api.edm.EdmEntityType;
+import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
 import org.apache.olingo.commons.api.edm.EdmType;
 import org.apache.olingo.commons.api.edm.FullQualifiedName;
 import org.apache.olingo.commons.core.edm.EdmPropertyImpl;
+import org.apache.olingo.server.api.OData;
 import org.apache.olingo.server.api.uri.UriInfo;
 import org.apache.olingo.server.api.uri.UriParameter;
+import org.apache.olingo.server.core.uri.queryoption.expression.LiteralImpl;
 import org.teiid.core.TeiidException;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ForeignKey;
@@ -41,6 +44,7 @@ import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.olingo.ODataPlugin;
 import org.teiid.olingo.ProjectedColumn;
+import org.teiid.olingo.common.ODataTypeManager;
 import org.teiid.olingo.service.ODataSQLBuilder.URLParseService;
 import org.teiid.olingo.service.TeiidServiceHandler.UniqueNameGenerator;
 import org.teiid.query.sql.lang.*;
@@ -61,17 +65,18 @@ public class DocumentNode {
     private boolean distinct;
         
     public static DocumentNode build(EdmEntityType type,
-            List<UriParameter> keyPredicates, MetadataStore metadata,
+            List<UriParameter> keyPredicates, MetadataStore metadata, OData odata,
             UniqueNameGenerator nameGenerator, boolean useAlias,
             UriInfo uriInfo, URLParseService parseService)
             throws TeiidException {
         DocumentNode resource = new DocumentNode();
-        return build(resource, type, keyPredicates, metadata, nameGenerator, useAlias, uriInfo, parseService);
+        return build(resource, type, keyPredicates, metadata, odata,
+                nameGenerator, useAlias, uriInfo, parseService);
     }
     
     public static DocumentNode build(DocumentNode resource,
             EdmEntityType type, List<UriParameter> keyPredicates,
-            MetadataStore metadata, UniqueNameGenerator nameGenerator,
+            MetadataStore metadata, OData odata, UniqueNameGenerator nameGenerator,
             boolean useAlias, UriInfo uriInfo, URLParseService parseService)
             throws TeiidException {
 
@@ -92,7 +97,7 @@ public class DocumentNode {
         
         if (keyPredicates != null && !keyPredicates.isEmpty()) {
             Criteria criteria = DocumentNode.buildEntityKeyCriteria(resource,
-                    uriInfo, metadata, nameGenerator, parseService);
+                    uriInfo, metadata, odata, nameGenerator, parseService);
             resource.setCriteria(criteria);
         }        
         return resource;
@@ -111,7 +116,7 @@ public class DocumentNode {
     }
 
     static Criteria buildEntityKeyCriteria(DocumentNode resource,
-            UriInfo uriInfo, MetadataStore store,
+            UriInfo uriInfo, MetadataStore store, OData odata, 
             UniqueNameGenerator nameGenerator, URLParseService parseService)
             throws TeiidException {
         
@@ -124,12 +129,13 @@ public class DocumentNode {
             Column column = resource.getTable().getPrimaryKey().getColumns().get(0);
             
             ODataExpressionToSQLVisitor visitor = new ODataExpressionToSQLVisitor(
-                    resource, false, uriInfo, store, nameGenerator, null, parseService);
-
+                    resource, false, uriInfo, store, odata, nameGenerator, null, parseService);
+            UriParameter key = resource.getKeyPredicates().get(0);
+            org.apache.olingo.server.api.uri.queryoption.expression.Expression expr = getKeyPredicateExpression(
+                    key, odata, column);
             return new CompareCriteria(new ElementSymbol(column.getName(),
                     resource.getGroupSymbol()), CompareCriteria.EQ,
-                    visitor.getExpression(resource.getKeyPredicates().get(0)
-                            .getExpression()));
+                    visitor.getExpression(expr));
         }
 
         // complex (multi-keyed)
@@ -141,22 +147,34 @@ public class DocumentNode {
         for (UriParameter key : resource.getKeyPredicates()) {
             Column column = findColumn(resource.getTable(), key.getName());
             ODataExpressionToSQLVisitor visitor = new ODataExpressionToSQLVisitor(
-                    resource, false, uriInfo, store, nameGenerator, null, parseService);
+                    resource, false, uriInfo, store, odata, nameGenerator, null, parseService);
+            org.apache.olingo.server.api.uri.queryoption.expression.Expression expr = getKeyPredicateExpression(
+                    key, odata, column);            
             critList.add(new CompareCriteria(new ElementSymbol(column.getName(), resource.getGroupSymbol()), 
-                    CompareCriteria.EQ, visitor.getExpression(key.getExpression())));
+                    CompareCriteria.EQ, visitor.getExpression(expr)));
         }
         return new CompoundCriteria(CompoundCriteria.AND, critList);
+    }
+
+    private static org.apache.olingo.server.api.uri.queryoption.expression.Expression getKeyPredicateExpression(
+            UriParameter key, OData odata, Column column) {        
+        org.apache.olingo.server.api.uri.queryoption.expression.Expression expr = key.getExpression();
+        if ( expr == null) {
+            EdmPrimitiveTypeKind primitiveTypeKind = ODataTypeManager.odataType(column.getRuntimeType()); 
+            expr = new LiteralImpl(key.getText(), odata.createPrimitiveTypeInstance(primitiveTypeKind));
+        }
+        return expr;
     }
     
     static Column findColumn(Table table, String propertyName) {
         return table.getColumnByName(propertyName);
     }
     
-    public void buildEntityKeyCriteria(UriInfo uriInfo, MetadataStore metadata,
+    public void buildEntityKeyCriteria(UriInfo uriInfo, MetadataStore metadata, OData odata,
             UniqueNameGenerator nameGenerator, URLParseService parseService) throws TeiidException {
         // URL is like /entitySet(key)s
         if (getKeyPredicates() != null && !getKeyPredicates().isEmpty()) {
-            this.criteria = buildEntityKeyCriteria(this, uriInfo, metadata, nameGenerator, parseService);
+            this.criteria = buildEntityKeyCriteria(this, uriInfo, metadata, odata, nameGenerator, parseService);
         }        
     }
     

@@ -21,7 +21,8 @@
  */
 package org.teiid.olingo;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -31,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -87,7 +89,9 @@ import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.EmbeddedServer;
 import org.teiid.runtime.HardCodedExecutionFactory;
+import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.loopback.LoopbackExecutionFactory;
@@ -274,8 +278,7 @@ public class TestODataIntegration {
     public void testFilterExpression() throws Exception {
     	//won't resolve
         ContentResponse response = http.GET(baseURL + "/loopy/vm1/G1?$filter=e1");
-        //TODO: should be 400
-        assertEquals(500, response.getStatus());
+        assertEquals(400, response.getStatus());
         
         response = http.GET(baseURL + "/loopy/vm1/G1?$filter=true");
         assertEquals(200, response.getStatus());
@@ -291,7 +294,7 @@ public class TestODataIntegration {
     
     @Test
     public void testEntitySetSkipOnly() throws Exception {
-        ContentResponse response = http.GET(baseURL + "/loopy/vm1/G1/?$skip=1");
+        ContentResponse response = http.GET(baseURL + "/loopy/vm1/G1?$skip=1");
         assertEquals(200, response.getStatus());
         assertEquals("{\"@odata.context\":\"$metadata#G1\",\"value\":[]}", 
                 response.getContentAsString());
@@ -312,6 +315,14 @@ public class TestODataIntegration {
         assertEquals("{\"@odata.context\":\"$metadata#G1(0)/e1\",\"value\":\"ABCDEFGHIJ\"}", 
                 response.getContentAsString());        
     }
+    
+    @Test
+    public void testEntity() throws Exception {
+        ContentResponse response = http.GET(baseURL + "/loopy/vm1/G1(0)");
+        assertEquals(200, response.getStatus());
+        assertEquals("{\"@odata.context\":\"$metadata#G1/$entity\",\"e1\":\"ABCDEFGHIJ\",\"e2\":0,\"e3\":0.0}", 
+                response.getContentAsString());        
+    }    
     
     @Test
     public void testIndividualProperty$Value() throws Exception {
@@ -439,7 +450,7 @@ public class TestODataIntegration {
         assertEquals("{\"@odata.context\":\"$metadata#Edm.String\",\"value\":\"foo\"}", 
                 response.getContentAsString());        
     }
-
+    
     @Test
     public void testFunctionDate() throws Exception {
         ContentResponse response = http.GET(baseURL + "/loopy/vm1/getCustomers(p2=2011-09-11T00:00:00Z,p3=2.0)");
@@ -491,7 +502,18 @@ public class TestODataIntegration {
         assertEquals(200, response.getStatus());
         assertEquals("<name>foo2</name>", 
                 response.getContentAsString());        
-    } 
+    }
+    
+    @Test
+    public void testAllowHeaderOnMethodNotSupported() throws Exception {
+        ContentResponse response = http.newRequest(baseURL + "/loopy/vm1/actionXML")
+                .method("GET")
+                .content(new StringContentProvider("<name>foo2</name>"), "application/xml")
+                .send();
+        assertEquals(405, response.getStatus());
+        assertEquals("POST", getHeader(response, "Allow"));
+    }    
+    
     @Test
     public void testActionSimpleParameters() throws Exception {
         ContentResponse response = http.newRequest(baseURL + "/loopy/vm1/procActionJSON")
@@ -608,8 +630,9 @@ public class TestODataIntegration {
                     + "\"value\":[{\"a\":\"x\",\"b\":[1,2,3]},{\"a\":\"y\",\"b\":[4,5,6]}]}",
                     response.getContentAsString());
 
+            // since there are multi-dimentional array it will be not supported
             response = http.GET(baseURL + "/northwind/vw/x?$format=json");
-            assertEquals(500, response.getStatus());
+            assertEquals(501, response.getStatus());
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");
@@ -755,7 +778,95 @@ public class TestODataIntegration {
             localClient = null;
             teiid.undeployVDB("northwind");
         }
-    }    
+    }
+    
+    @Test 
+    public void test$SkipWithNegitive() throws Exception {
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("vw");
+            mmd.addSourceMetadata("ddl", "create view x (a string primary key, b integer) "
+                    + "as select 'xyz', 123 union all select 'abc', 456;");
+            mmd.setModelType(Model.Type.VIRTUAL);
+            teiid.deployVDB("northwind", mmd);
+
+            Properties props = new Properties();
+            localClient = getClient(teiid.getDriver(), "northwind", 1, props);
+            
+            ContentResponse response = http.GET(baseURL + "/northwind/vw/x?$skip=-1");
+            assertEquals(400, response.getStatus());
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }     
+    
+    @Test 
+    public void testAlias() throws Exception {
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("vw");
+            mmd.addSourceMetadata("ddl", "create view x (a string primary key, b integer) "
+                    + "as select 'xyz', 123 union all select 'abc', 456;");
+            mmd.setModelType(Model.Type.VIRTUAL);
+            teiid.deployVDB("northwind", mmd);
+
+            Properties props = new Properties();
+            localClient = getClient(teiid.getDriver(), "northwind", 1, props);
+            
+            ContentResponse response = http.GET(baseURL
+                    + "/northwind/vw/x?$filter=" + Encoder.encode("a eq @a")
+                    + "&" + Encoder.encode("@a")+"="+Encoder.encode("'xyz'"));
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"xyz\",\"b\":123}]}", 
+                    response.getContentAsString());
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    } 
+    
+    @Test 
+    public void testNegitive$Top() throws Exception {
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("vw");
+            mmd.addSourceMetadata("ddl", "create view x (a string primary key, b integer) "
+                    + "as select 'xyz', 123 union all select 'abc', 456;");
+            mmd.setModelType(Model.Type.VIRTUAL);
+            teiid.deployVDB("northwind", mmd);
+
+            Properties props = new Properties();
+            localClient = getClient(teiid.getDriver(), "northwind", 1, props);
+            
+            ContentResponse response = http.GET(baseURL+ "/northwind/vw/x?$top=-1");
+            assertEquals(400, response.getStatus());
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }     
+
+    @Test 
+    public void testAliasNoValue() throws Exception {
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("vw");
+            mmd.addSourceMetadata("ddl", "create view x (a string primary key, b integer) "
+                    + "as select 'xyz', 123 union all select 'abc', 456;");
+            mmd.setModelType(Model.Type.VIRTUAL);
+            teiid.deployVDB("northwind", mmd);
+
+            Properties props = new Properties();
+            localClient = getClient(teiid.getDriver(), "northwind", 1, props);
+            
+            ContentResponse response = http.GET(baseURL + "/northwind/vw/x?$filter="+Encoder.encode("a eq @a"));
+            assertEquals(400, response.getStatus());
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    } 
     
     @Test 
     public void testSkipTokenWithPageSize() throws Exception {
@@ -953,11 +1064,15 @@ public class TestODataIntegration {
             String u = baseURL + "/northwind/m/";
             assertEquals("{\"@odata.context\":\"$metadata#Collection(Edm.ComplexType)\",\"value\":[{\"x@odata.navigationLink\":\""+u+"x('ABCDEFG')\",\"y@odata.navigationLink\":\""+u+"y('ABCDEFG')\"}]}", response.getContentAsString());
 
+            // TODO: OLINGO-904
+            /*
             response = http.newRequest(baseURL + "/northwind/m/$crossjoin(x,y)?$expand=x")
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#Collection(Edm.ComplexType)\",\"value\":[{\"x\":{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"},\"y@odata.navigationLink\":\""+u+"y('ABCDEFG')\"}]}", response.getContentAsString());            
+            assertEquals("{\"@odata.context\":\"$metadata#Collection(Edm.ComplexType)\",\"value\":[{\"x\":{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"},\"y@odata.navigationLink\":\""+u+"y('ABCDEFG')\"}]}", response.getContentAsString());
+            */
+            
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");
@@ -1012,6 +1127,67 @@ public class TestODataIntegration {
             teiid.undeployVDB("northwind");
         }
     }    
+    
+    @Test
+    public void testRelatedEntities() throws Exception {
+        HardCodedExecutionFactory hc = buildHardCodedExecutionFactory();
+        hc.addData("SELECT x.a, x.b FROM x WHERE x.a = 'xa1'", Arrays.asList(Arrays.asList("xa1", "xb")));
+        hc.addData("SELECT y.a, y.b FROM y WHERE y.b = 'xa1'", Arrays.asList(Arrays.asList("ya1", "xa1"), Arrays.asList("ya2", "xa1")));
+
+        // 1-many
+        hc.addData("SELECT x.a FROM x WHERE x.a = 'xa2'", Arrays.asList(Arrays.asList("xa2")));
+        hc.addData("SELECT y.a, y.b FROM y WHERE y.b = 'xa2'", new ArrayList<List<?>>());
+        
+        // 1-1
+        hc.addData("SELECT z.a FROM z WHERE z.a = 'xa3'", Arrays.asList(Arrays.asList("xa3")));
+        hc.addData("SELECT x.a, x.b FROM x WHERE x.a = 'xa3'", new ArrayList<List<?>>());
+                
+        teiid.addTranslator("x7", hc);
+        
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("m");
+            mmd.addSourceMetadata("ddl", "create foreign table x ("
+                    + " a string, "
+                    + " b string, "
+                    + " primary key (a)"
+                    + ") options (updatable true);"
+                    + "create foreign table y ("
+                    + " a string, "
+                    + " b string, "
+                    + " primary key (a),"
+                    + " CONSTRAINT FKX FOREIGN KEY (b) REFERENCES x(a)"                    
+                    + ") options (updatable true);"
+                    + "create foreign table z ("
+                    + " a string, "
+                    + " b string, "
+                    + " primary key (a),"
+                    + " CONSTRAINT FKX FOREIGN KEY (a) REFERENCES x(a)"                    
+                    + ") options (updatable true);");
+            
+            mmd.addSourceMapping("x7", "x7", null);
+            teiid.deployVDB("northwind", mmd);
+
+            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+
+            ContentResponse response = null;
+            
+            // single 1-many relation
+            response = http.newRequest(baseURL + "/northwind/m/x('xa2')/y_FKX")
+                    .method("GET")
+                    .send();
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#y\",\"value\":[]}", response.getContentAsString());
+
+            response = http.newRequest(baseURL + "/northwind/m/z('xa3')/FKX")
+                    .method("GET")
+                    .send();
+            assertEquals(204, response.getStatus());
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }
     
     @SuppressWarnings("unchecked")
     @Test 
@@ -1068,6 +1244,12 @@ public class TestODataIntegration {
             assertEquals(200, response.getStatus());
             assertEquals("{\"@odata.context\":\"$metadata#z(a)\",\"value\":[{\"a\":\"ABCDEFG\",\"FKX\":{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"}}]}", response.getContentAsString());
 
+            response = http.newRequest(baseURL + "/northwind/m/z?$expand=FKX($select=a)")
+                    .method("GET")
+                    .send();
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#z(FKX(a))\",\"value\":[{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\",\"FKX\":{\"a\":\"ABCDEFG\"}}]}", response.getContentAsString());
+            
             response = http.newRequest(baseURL + "/northwind/m/x?$expand="+Encoder.encode("y_FKX($filter=b eq 'xa1')"))
                     .method("GET")
                     .send();
@@ -1080,12 +1262,19 @@ public class TestODataIntegration {
                     .send();
             assertEquals(200, response.getStatus());
             assertEquals("{\"@odata.context\":\"$metadata#z\",\"value\":[{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\",\"FKX\":{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"}}]}", response.getContentAsString());
+
+            response = http.newRequest(baseURL + "/northwind/m/z?$expand=FKX($top=1)")
+                    .method("GET")
+                    .send();
+            assertEquals(501, response.getStatus());
             
+            /* TODO
             response = http.newRequest(baseURL + "/northwind/m/z?$expand=FKX/a&$select=a")
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
             assertEquals("{\"@odata.context\":\"$metadata#z(a,FKX/a)\",\"value\":[{\"a\":\"ABCDEFG\",\"FKX\":{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"}}]}", response.getContentAsString());
+            */
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");
@@ -1177,9 +1366,10 @@ public class TestODataIntegration {
             @Override
             protected List<? extends List<?>> getData(
                     QueryExpression command) {
-                
+                                
                 if (super.getData(command) != null) {
-                    return super.getData(command);
+                    List<? extends List<?>> results = super.getData(command);
+                    return results;
                 }
                 
                 Class<?>[] colTypes = command.getProjectedQuery().getColumnTypes();
@@ -1352,4 +1542,107 @@ public class TestODataIntegration {
             teiid.undeployVDB("northwind");
         }
     }
+    
+    @Test
+    public void testInvalidResource() throws Exception {
+        http.stop();
+        server.stop();
+        Map<String, String> props = new HashMap<String, String>();
+        props.put("vdb-name", "loopy");
+        props.put("vdb-version", "1");
+        
+        createContext("/other", props);
+        
+        ContentResponse response = http.newRequest(baseURL + "/vm1/Foo")
+                .method("GET")
+                .send();
+        assertEquals(404, response.getStatus());
+        assertEquals("{\"error\":{\"code\":null,\"message\":\"Cannot find EntitySet, Singleton, "
+                + "ActionImport or FunctionImport with name 'Foo'.\"}}",  
+                response.getContentAsString());      
+    }
+    
+    @Test 
+    public void testErrorCodes() throws Exception {        
+        HardCodedExecutionFactory hc = new HardCodedExecutionFactory() {
+            @Override
+            public ResultSetExecution createResultSetExecution(
+                    final QueryExpression command, ExecutionContext executionContext,
+                    RuntimeMetadata metadata, Object connection)
+                    throws TranslatorException {
+                List<? extends List<?>> list = getData(command);
+                if (list == null) {
+                    throw new RuntimeException(command.toString());
+                }
+                final Iterator<? extends List<?>> result = list.iterator();
+                return new ResultSetExecution() {
+                    
+                    @Override
+                    public void execute() throws TranslatorException {
+                        throw new TranslatorException(ODataPlugin.Event.TEIID16001, "execution failed");
+                    }
+                    
+                    @Override
+                    public void close() {
+                        
+                    }
+                    
+                    @Override
+                    public void cancel() throws TranslatorException {
+                        
+                    }
+                    
+                    @Override
+                    public List<?> next() throws TranslatorException, DataNotAvailableException {
+                        if (result.hasNext()) {
+                            return result.next();
+                        }
+                        return null;
+                    }
+                };
+            }            
+        };
+        hc.addData("SELECT x.a, x.b FROM x", Arrays.asList(Arrays.asList("a", 1)));
+        
+        teiid.addTranslator("x1", hc);
+        
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("m");
+            mmd.addSourceMetadata("ddl", "create foreign table x (a string, b integer, primary key (a));");
+            mmd.addSourceMapping("x1", "x1", null);
+            teiid.deployVDB("northwind", mmd);
+
+            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+
+            ContentResponse response = http.newRequest(baseURL + "/northwind/m/x")
+                    .method("GET")
+                    .send();
+            assertEquals(400, response.getStatus());
+            assertEquals("{\"error\":{\"code\":\"TEIID30504\","
+                    + "\"message\":\"TEIID30504 x1: TEIID16001 execution failed\"}}", 
+                    response.getContentAsString());
+
+            response = http.newRequest(baseURL + "/northwind/m/x?$format=xml")
+                    .method("GET")
+                    .send();
+            assertEquals(400, response.getStatus());
+            assertEquals("<?xml version='1.0' encoding='UTF-8'?>"
+                    + "<error xmlns=\"http://docs.oasis-open.org/odata/ns/metadata\">"
+                    +   "<code>TEIID30504</code>"
+                    +   "<message>TEIID30504 x1: TEIID16001 execution failed</message>"
+                    + "</error>", 
+                    response.getContentAsString());
+            
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }
+    
+    @Test
+    public void test$allNotImplemented() throws Exception {
+        ContentResponse response = http.GET(baseURL + "/loopy/vm1/$all");
+        assertEquals(501, response.getStatus());
+    }    
 }
