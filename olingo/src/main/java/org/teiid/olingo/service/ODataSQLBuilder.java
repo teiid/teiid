@@ -55,7 +55,9 @@ import org.apache.olingo.server.core.uri.validator.UriValidationException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.BlobImpl;
+import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
+import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.JDBCSQLTypeInfo;
@@ -467,7 +469,9 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             return new SQLParameter(null, sqlType);
         }
         return new SQLParameter(ODataTypeManager.convertToTeiidRuntimeType(
-                DataTypeManager.getDataTypeClass(teiidType), value, null), sqlType);
+                DataTypeManager.getDataTypeClass(teiidType), value, 
+                ((SingletonPrimitiveType)edmProp.getType()).getFullQualifiedName().getFullQualifiedNameAsString()), 
+                sqlType);
     }    
     
     private Table findTable(String tableName, MetadataStore store) {
@@ -621,9 +625,9 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             
             if (lobType.isAssignableFrom(SQLXML.class)) {
                 value = new SQLXMLImpl(isf);    
-            } else if (lobType.isAssignableFrom(Clob.class)) {
+            } else if (lobType.isAssignableFrom(ClobType.class)) {
                 value = new ClobImpl(isf, -1);
-            } else if (lobType.isAssignableFrom(Blob.class)) {
+            } else if (lobType.isAssignableFrom(BlobType.class)) {
                 value = new BlobImpl(isf);
             } else {
                 this.exceptions.add(new TeiidException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16031, column.getName())));
