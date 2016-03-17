@@ -23,6 +23,7 @@ package org.teiid.translator.object;
 
 import java.util.List;
 
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 
 /**
@@ -35,19 +36,19 @@ public interface SearchType {
 	 * Perform key search to return zero or 1 object based on the key value
 	 * @param columnNameInSource
 	 * @param value
-	 * @param conn
+	 * @param executionContext 
 	 * @return Object
 	 * @throws TranslatorException
 	 */
-	Object performKeySearch(String columnNameInSource, Object value, ObjectConnection conn) throws TranslatorException ;
+	Object performKeySearch(String columnNameInSource, Object value,  ExecutionContext executionContext) throws TranslatorException ;
 
 	/**
 	 * Perform an update
 	 * @param visitor
-	 * @param conn
+	 * @param executionContext 
 	 * @return List of Objects impacted by the update
 	 * @throws TranslatorException
 	 */
-	List<Object> performSearch(ObjectVisitor visitor, ObjectConnection conn) throws TranslatorException;	
+	List<Object> performSearch(ObjectVisitor visitor,  ExecutionContext executionContext) throws TranslatorException;	
 		
 }

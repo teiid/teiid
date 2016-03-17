@@ -38,9 +38,11 @@ import org.infinispan.query.Search;
 import org.infinispan.query.dsl.QueryFactory;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.resource.adapter.infinispan.DSLSearch;
 import org.teiid.resource.adapter.infinispan.InfinispanCacheWrapper;
 import org.teiid.resource.adapter.infinispan.InfinispanManagedConnectionFactory;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.object.SearchType;
 
 /**
  * This wrapper will contain a local Infinispan cache, and will the necessary logic
@@ -259,6 +261,16 @@ public class LocalCacheConnection<K,V>  extends InfinispanCacheWrapper<K,V> {
 	@Override
 	protected void shutDownCacheManager() {
 		ecm.stop();
+	}
+	
+	/** 
+	 * Returns the <code>SearchType</code> that will be used to perform
+	 * dynamic searching of the cache.
+	 * @return SearchType
+	 */
+	@Override
+	public SearchType getSearchType() {
+		return new DSLSearch(this);
 	}
 
 }

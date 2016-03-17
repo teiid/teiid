@@ -1,5 +1,5 @@
 /*
- * JBoss, Home of Professional Open Source.
+// * JBoss, Home of Professional Open Source.
  * See the COPYRIGHT.txt file distributed with this work for information
  * regarding copyright ownership.  Some portions may be licensed
  * to Red Hat, Inc. under one or more contributor license agreements.
@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.resource.adapter.infinispan.dsl.base;
+package org.teiid.resource.adapter.infinispan.dsl;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -73,6 +73,8 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	private String messageMarshallers = null;
 	private String messageDescriptor = null;
 	
+	private boolean usingAnnotations = false;
+	
 	private RemoteCacheManager cacheContainer = null;
 	private String stagingCacheName;
 	private String aliasCacheName;
@@ -89,16 +91,22 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	public BasicConnectionFactory<InfinispanConnectionImpl> createConnectionFactory()
 			throws ResourceException {
 		
-		if (protobufDefFile == null) {
-			throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25030));
-		}
-
-		if (messageMarshallers == null) {
-			throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25029));
-		}
-		
-		if (messageDescriptor == null) {
-			throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25020));
+		// if all the properties are null,then its assumed the pojo has the protobuf annotations for indexing columns
+		if (protobufDefFile == null && messageMarshallers == null && messageDescriptor == null) {
+			usingAnnotations = true;
+		} else {
+			// if any of the following properties are specified, all 3 must be specified
+			if (protobufDefFile == null) {
+				throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25030));
+			}
+	
+			if (messageMarshallers == null) {
+				throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25029));
+			}
+			
+			if (messageDescriptor == null) {
+				throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25020));
+			}
 		}
 		
 		if (this.cacheTypes == null) {
@@ -246,7 +254,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	}
 
 	/**
-	 * Set the Protobin Marshallers classname[,classname,..]
+	 * Set the Protobin Marshallers pojoClassName:marshallerClassName[,pojoClassName:marshallerClassName,..]
 	 * 
 	 * @param messageMarshallers
 	 *            the class names of the marshallers to use
@@ -445,12 +453,12 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	
 	protected Class<?> loadClass(String className) throws ResourceException {
 		try {
-			return Class.forName(className, true, getClassLoader());
+			return Class.forName(className, false, getClassLoader());
 		} catch (ClassNotFoundException e) {
 			throw new ResourceException(e);
 		}
 	}
-
+	
 	@SuppressWarnings("rawtypes")
 	protected synchronized ClassLoader loadClasses() throws ResourceException {
 
@@ -474,8 +482,10 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 				throw new ResourceException(e);
 			}
 
-		} else {
-			cl = this.getClass().getClassLoader();
+		} 
+		
+		if (cl == null) {
+			cl = Thread.currentThread().getContextClassLoader();
 		}
 		
 			
@@ -496,6 +506,9 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 		setCacheName(cn);
 		String className = cacheClassparm.get(1);
 		cacheTypeClass = loadClass(className);
+	
+		
+	
 		try {
 			methodUtil.registerClass(cacheTypeClass);
 		} catch (TranslatorException e1) {
@@ -513,40 +526,43 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 				}
 			}
 		}
-
-		List<String> marshallers = StringUtil.getTokens(this.getMessageMarshallers(), ","); //$NON-NLS-1$
 		
-		Map<String, BaseMarshaller> mmp = new HashMap<String, BaseMarshaller>(marshallers.size());
-		
-		for (String mm : marshallers) {
+		if (!this.usingAnnotations) {
+	
+			List<String> marshallers = StringUtil.getTokens(this.getMessageMarshallers(), ","); //$NON-NLS-1$
 			
-			List<String> marshallMap = StringUtil.getTokens(mm, ":"); //$NON-NLS-1$
-			if (marshallMap.size() != 2) {
-				throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25031, new Object[] {mm}));
+			Map<String, BaseMarshaller> mmp = new HashMap<String, BaseMarshaller>(marshallers.size());
+			
+			for (String mm : marshallers) {
+				
+				List<String> marshallMap = StringUtil.getTokens(mm, ":"); //$NON-NLS-1$
+				if (marshallMap.size() != 2) {
+					throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25031, new Object[] {mm}));
+				}
+				final String clzName = marshallMap.get(0);
+				final String m = marshallMap.get(1);
+	
+				try {
+					Object bmi = (loadClass(m)).newInstance();
+					Class ci = loadClass(clzName);
+	
+					mmp.put(clzName, (BaseMarshaller) bmi); 	
+	
+					methodUtil.registerClass(ci);
+			
+				} catch (InstantiationException e) {
+					throw new ResourceException(e);
+				} catch (IllegalAccessException e) {	
+					throw new ResourceException(e);
+				} catch (TranslatorException e) {
+					throw new ResourceException(e);
+				}
+			
 			}
-			final String clzName = marshallMap.get(0);
-			final String m = marshallMap.get(1);
-
-			try {
-				Object bmi = (loadClass(m)).newInstance();
-				Class ci = loadClass(clzName);
-
-				mmp.put(clzName, (BaseMarshaller) bmi); 	
-
-				methodUtil.registerClass(ci);
-		
-			} catch (InstantiationException e) {
-				throw new ResourceException(e);
-			} catch (IllegalAccessException e) {	
-				throw new ResourceException(e);
-			} catch (TranslatorException e) {
-				throw new ResourceException(e);
-			}
-		
+			
+			messageMarshallerMap=Collections.unmodifiableMap(mmp);
 		}
 		
-		messageMarshallerMap=Collections.unmodifiableMap(mmp);
-
 		return cl;
 
 	}
@@ -557,32 +573,32 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 		
 		RemoteCacheManager cc = null;
 
-		ClassLoader cl = Thread.currentThread().getContextClassLoader();
+
+		ClassLoader lcl = Thread.currentThread().getContextClassLoader();
 		try {
 			Thread.currentThread().setContextClassLoader(
 					this.getClass().getClassLoader());
 		
 			ClassLoader classLoader = loadClasses();
 
-
 			switch (cacheType) {
 			case USE_JNDI:
-				cc = getRemoteCacheWrapperFromJNDI(this.getCacheJndiName(), classLoader);
+				cc = getRemoteCacheFromJNDI(this.getCacheJndiName(), classLoader);
 				break;
 	
 			case REMOTE_HOT_ROD_PROPERTIES:
-				cc = createRemoteCacheWrapperFromProperties(classLoader);
+				cc = createRemoteCacheFromProperties(classLoader);
 				break;
 	
 			case REMOTE_SERVER_LISTS:
-				cc = createRemoteCacheWrapperFromServerList(classLoader);
+				cc = createRemoteCacheFromServerList(classLoader);
 				break;
 	
 			}
 
 			setCacheContainer(cc);
 
-			registerMarshallers(getContext(), cc, classLoader);
+			registerWithCacheManager(getContext(), cc, classLoader, this.usingAnnotations);
 			
 			// if configured for materialization, initialize the cacheNameProxy
 			if (cacheNameProxy.useMaterialization()) {
@@ -596,7 +612,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 
 		
 		} finally {
-			Thread.currentThread().setContextClassLoader(cl);
+			Thread.currentThread().setContextClassLoader(lcl);
 		}
 		
 		
@@ -614,14 +630,14 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 		}
 	}
 
-	protected abstract RemoteCacheManager createRemoteCacheWrapperFromProperties(
+	protected abstract RemoteCacheManager createRemoteCacheFromProperties(
 			ClassLoader classLoader) throws ResourceException;
 	
-	protected abstract RemoteCacheManager createRemoteCacheWrapperFromServerList(
+	protected abstract RemoteCacheManager createRemoteCacheFromServerList(
 			ClassLoader classLoader) throws ResourceException;
 
 	
-	private RemoteCacheManager getRemoteCacheWrapperFromJNDI(
+	private RemoteCacheManager getRemoteCacheFromJNDI(
 			String jndiName, ClassLoader classLoader) throws ResourceException {
 
 		Object cache = null;
@@ -649,8 +665,9 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 		throw new ResourceException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25026, cacheContainer.getClass().getName()));
 
 	}
-
-	protected void registerMarshallers(SerializationContext ctx, RemoteCacheManager cc, ClassLoader cl) throws ResourceException {
+	
+	protected void registerWithCacheManager(SerializationContext ctx, RemoteCacheManager cc, ClassLoader cl, boolean useAnnotations) throws ResourceException {
+		
 	}
 
 	@Override

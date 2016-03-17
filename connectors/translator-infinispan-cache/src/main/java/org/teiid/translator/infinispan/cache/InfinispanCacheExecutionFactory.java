@@ -35,7 +35,6 @@ import org.teiid.translator.object.ObjectExecution;
 import org.teiid.translator.object.ObjectExecutionFactory;
 import org.teiid.translator.object.ObjectUpdateExecution;
 import org.teiid.translator.object.ObjectVisitor;
-import org.teiid.translator.object.simpleMap.SearchByKey;
 import org.teiid.translator.object.simpleMap.SimpleKeyVisitor;
 
 /**
@@ -55,7 +54,7 @@ public class InfinispanCacheExecutionFactory extends ObjectExecutionFactory {
 	public static final int MAX_SET_SIZE = 10000;
 
 	private boolean supportsLuceneSearching = false;
-	private boolean supportsDSLSearching = false;
+	private boolean supportsDSLSearching = true;
 	
 	private boolean supportsCompareCriteriaOrdered = false;
 	private boolean supportNotCriteria = false;
@@ -73,9 +72,6 @@ public class InfinispanCacheExecutionFactory extends ObjectExecutionFactory {
 		setSupportsOuterJoins(true);
 		
 		setSupportedJoinCriteria(SupportedJoinCriteria.EQUI);
-		
-		// default search is by key type
-		setSearchType(new SearchByKey());
 
 	}
 	
@@ -134,30 +130,27 @@ public class InfinispanCacheExecutionFactory extends ObjectExecutionFactory {
 		return this.supportsLuceneSearching;
 	}
 
+	/**
+	 * 
+	 * @param supportsLuceneSearching
+	 */
 	public void setSupportsLuceneSearching(boolean supportsLuceneSearching) {
 		this.supportsLuceneSearching = supportsLuceneSearching;
-		if (this.supportsLuceneSearching) {
-			setSearchType(new LuceneSearch());
-		}
 	}
 	
 	/**
-	 * Indicates if Infinispan DSL Querying is used for searching	 * @return boolean
+	 * Indicates if Infinispan DSL Querying is used for searching	 
 	 * @return boolean
 	 * 
 	 * @since 6.1.0
 	 */
-	@TranslatorProperty(display = "Support Using DSL Searching", description = "True means Infinispan DSL Querying is used for searching ", advanced = true)
+	@TranslatorProperty(display = "Support Using DSL Searching [default=true]", description = "True means Infinispan DSL Querying is used for searching [default=true] ", advanced = true)
 	public boolean supportsDSLSearching() {
 		return this.supportsDSLSearching;
 	}
 
 	public void setSupportsDSLSearching(boolean supportsDSLSearching) {
 		this.supportsDSLSearching = supportsDSLSearching;
-		if (this.supportsDSLSearching) {
-			setSearchType(new DSLSearch());
-
-		}
 		this.setSupportsOrderBy(supportsDSLSearching);
 	}	
 

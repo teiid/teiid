@@ -20,13 +20,13 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.resource.adapter.infinispan;
+package org.teiid.resource.adapter.infinispan.dsl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-import org.junit.Before;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.translator.object.ObjectConnection;
@@ -34,32 +34,34 @@ import org.teiid.translator.object.ObjectConnection;
 
 
 @SuppressWarnings("nls")
-public class TestInfinispanServerList {
+public class TestInfinispanServerListUsingAnnotations {
 	    private static InfinispanManagedConnectionFactory factory = null;
 			
 		@BeforeClass
 	    public static void beforeEachClass() throws Exception { 
-			RemoteInfinispanTestHelper.loadCacheTrades();
+			RemoteInfinispanTestHelper.startServer();
+			
+			factory = new InfinispanManagedConnectionFactory();
+
+			factory.setRemoteServerList(RemoteInfinispanTestHelper.hostAddress() + ":" + RemoteInfinispanTestHelper.hostPort());
+			factory.setCacheTypeMap(RemoteInfinispanTestHelper.PERSON_CACHE_NAME + ":" + RemoteInfinispanTestHelper.PERSON_CLASS.getName()+ ";" + RemoteInfinispanTestHelper.PKEY_COLUMN);
 			
 			Thread.sleep(10000);
 	
 		}
-
-		@Before public void beforeEachTest() throws Exception{	
-	        
-			factory = new InfinispanManagedConnectionFactory();
-
-			factory.setRemoteServerList(RemoteInfinispanTestHelper.hostAddress() + ":" + RemoteInfinispanTestHelper.hostPort());
-			factory.setCacheTypeMap(RemoteInfinispanTestHelper.TRADE_CACHE_NAME + ":" + RemoteInfinispanTestHelper.TRADE_CLASS.getName()+ ";" + RemoteInfinispanTestHelper.PKEY_COLUMN);
+		
+		
+		@AfterClass
+	    public static void closeConnection() throws Exception {
+	          RemoteInfinispanTestHelper.releaseServer();
 	    }
 
 	    @Test
 	    public void testRemoteConnection() throws Exception {
-	    	try {
 	    		ObjectConnection conn = factory.createConnectionFactory().getConnection();
 	    		Class<?> clz = conn.getCacheClassType();
 	    
-	    		assertEquals(RemoteInfinispanTestHelper.TRADE_CLASS, clz);
+	    		assertEquals(RemoteInfinispanTestHelper.PERSON_CLASS, clz);
 	    		
 	    		Class<?> t = conn.getCacheKeyClassType();
 	    		
@@ -71,16 +73,5 @@ public class TestInfinispanServerList {
 	    		 
 	    		 conn.cleanUp();
 	    		 
-	    		 
-	
-	    	} finally {
-		    	factory.cleanUp();
-		    	RemoteInfinispanTestHelper.releaseServer();
-	    	}
 	    }
-
-
-		
-
-
 }

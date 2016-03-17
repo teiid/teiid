@@ -1,4 +1,4 @@
-package org.teiid.translator.object.testdata.annotated;
+package org.teiid.resource.adapter.infinispan;
 
 import java.util.Map;
 
@@ -9,7 +9,9 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.infinispan.cache.InfinispanCacheConnection;
 import org.teiid.translator.object.CacheNameProxy;
 import org.teiid.translator.object.ClassRegistry;
+import org.teiid.translator.object.SearchType;
 import org.teiid.translator.object.simpleMap.SimpleMapCacheConnection;
+import org.teiid.translator.object.testdata.annotated.TradesAnnotatedCacheSource;
 
 public class TradeAnnotatedObjectConnection extends SimpleMapCacheConnection implements InfinispanCacheConnection {
 
@@ -33,6 +35,17 @@ public class TradeAnnotatedObjectConnection extends SimpleMapCacheConnection imp
 
 	}
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.simpleMap.SimpleMapCacheConnection#getSearchType()
+	 */
+	@Override
+	public SearchType getSearchType() {
+		return new DSLSearch(this);
+	}
+
+	
 	
 }
 

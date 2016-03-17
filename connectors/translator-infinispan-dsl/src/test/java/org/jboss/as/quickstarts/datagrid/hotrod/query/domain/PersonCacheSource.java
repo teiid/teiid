@@ -116,7 +116,7 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 			p.setName("Person " + i);
 			p.setPhones(pns);
 				
-			cache.put(i, p);
+			cache.put(new Integer(i), p);
 
 		}
 	}

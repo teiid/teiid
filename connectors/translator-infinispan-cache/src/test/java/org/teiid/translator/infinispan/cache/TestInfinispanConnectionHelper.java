@@ -13,12 +13,13 @@ import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.eviction.EvictionStrategy;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.transaction.TransactionMode;
+import org.teiid.core.TeiidException;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.testdata.annotated.Trade;
 import org.teiid.translator.object.testdata.annotated.TradesAnnotatedCacheSource;
 import org.teiid.translator.object.testdata.trades.TradesCacheSource;
 
-public class TestInfinispanConnection  {
+public class TestInfinispanConnectionHelper  {
 	
 	private static int cnt = 0;
 
@@ -31,21 +32,19 @@ public class TestInfinispanConnection  {
 		TradesCacheSource.loadCache(container.getCache(TradesCacheSource.TRADES_CACHE_NAME));
 		ObjectConnection conn = TradesCacheSource.createConnection(container.getCache(TradesCacheSource.TRADES_CACHE_NAME));
 
-		return conn;  
-
-		
+		return conn;  	
 	}
 
-	public static ObjectConnection createConnection(String configFile)
+	public static ObjectConnection createConnection(String configFile, String connectionClassName)
 			throws Exception {
 
 		DefaultCacheManager container = new DefaultCacheManager(configFile);
 
-		return createConnection(container);   	
+		return createConnection(container, connectionClassName);   	
 		
 	}
 		
-	public static ObjectConnection createConnection(boolean useLucene)
+	public static ObjectConnection createConnection(boolean useLucene, String connectionClassName)
 				throws Exception {
 		DefaultCacheManager container = null;
 		
@@ -56,9 +55,7 @@ public class TestInfinispanConnection  {
 			container = createContainer();
 		}
 		
-		container.startCache(TradesAnnotatedCacheSource.TRADES_CACHE_NAME);
-		TradesAnnotatedCacheSource.loadCache(container.getCache(TradesAnnotatedCacheSource.TRADES_CACHE_NAME));
-		return TradesAnnotatedCacheSource.createConnection(container.getCache(TradesAnnotatedCacheSource.TRADES_CACHE_NAME));
+		return createConnection(container, connectionClassName);
 
 	}
 	
@@ -114,13 +111,15 @@ public class TestInfinispanConnection  {
 		return container;
 	}
 	
-	private static ObjectConnection createConnection(DefaultCacheManager container) {
+	private static ObjectConnection createConnection(DefaultCacheManager container, String className) throws TeiidException {
 		container.startCache(TradesAnnotatedCacheSource.TRADES_CACHE_NAME);
 		TradesAnnotatedCacheSource.loadCache(container.getCache(TradesAnnotatedCacheSource.TRADES_CACHE_NAME));
-		ObjectConnection conn = TradesAnnotatedCacheSource.createConnection(container.getCache(TradesAnnotatedCacheSource.TRADES_CACHE_NAME));
-
-		return conn;  
+		
+		return TradesAnnotatedCacheSource.createConnection(container.getCache(TradesAnnotatedCacheSource.TRADES_CACHE_NAME), "org.teiid.translator.object.testdata.annotated.TradeAnnotatedObjectConnection");
+//		return TradeAnnotatedObjectConnection.createConnection(container.getCache(TradesAnnotatedCacheSource.TRADES_CACHE_NAME));
 	}
+	
+	
 
 
 }

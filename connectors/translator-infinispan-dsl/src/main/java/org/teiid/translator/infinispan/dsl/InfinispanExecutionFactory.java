@@ -33,6 +33,7 @@ import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
+import org.teiid.translator.infinispan.dsl.metadata.AnnotationMetadataProcessor;
 import org.teiid.translator.infinispan.dsl.metadata.ProtobufMetadataProcessor;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectExecutionFactory;
@@ -68,15 +69,12 @@ public class InfinispanExecutionFactory extends ObjectExecutionFactory {
 		setSupportsOuterJoins(true);
 		
 		setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
-		setSearchType(new DSLSearch());
 	}
 
 	@Override
 	public int getMaxFromGroups() {
 		return 2;
 	}
-
-
 
 	/**
 	 * {@inheritDoc}
@@ -155,6 +153,9 @@ public class InfinispanExecutionFactory extends ObjectExecutionFactory {
 
 	@Override
     public MetadataProcessor<ObjectConnection> getMetadataProcessor(){
+		if (this.supportsSearchabilityUsingAnnotations()) {
+			return new AnnotationMetadataProcessor(true);
+		}
 	    return new ProtobufMetadataProcessor();
 	}
 

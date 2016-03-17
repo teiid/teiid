@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.translator.infinispan.cache;
+package org.teiid.resource.adapter.infinispan;
 
 import java.util.Collections;
 import java.util.List;
@@ -39,7 +39,9 @@ import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.infinispan.cache.InfinispanPlugin;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectVisitor;
 import org.teiid.translator.object.SearchType;
@@ -56,25 +58,38 @@ import org.teiid.translator.object.SearchType;
 @Deprecated
 public class LuceneSearch implements SearchType  {
 	
-
+	private ObjectConnection conn;
 	
-	@Override
-	public Object performKeySearch(String columnNameInSource, Object value, ObjectConnection connection) throws TranslatorException {
-	   
-		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
-				"Perform Lucene KeySearch."); //$NON-NLS-1$
-		return connection.get(String.valueOf(value));
-
+	
+	public LuceneSearch(ObjectConnection connection) {
+		this.conn = connection;
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.teiid.translator.object.SearchType#performSearch(org.teiid.translator.object.ObjectVisitor, org.teiid.translator.object.ObjectConnection)
-	 */
+	@Override
+	public Object performKeySearch(String columnNameInSource,
+			Object value,   ExecutionContext executionContext) throws TranslatorException  {	
+		
+		try {
+			return conn.get(String.valueOf(value));
+		} finally {
+			conn = null;
+		}
+	}
+	
+	
 	@Override
 	public List<Object> performSearch(ObjectVisitor visitor,
-			ObjectConnection connection) throws TranslatorException {
+		  ExecutionContext executionContext) throws TranslatorException  {			
+		try {
+			return performSearch(visitor);
+		} finally {
+			conn = null;
+		}
+		
+	}
+
+	
+	private List<Object> performSearch(ObjectVisitor visitor) throws TranslatorException {
 		
 		Condition  where= visitor.getWhereCriteria();
 		OrderBy orderby = visitor.getOrderBy();
@@ -82,11 +97,11 @@ public class LuceneSearch implements SearchType  {
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
 				"Using Lucene Searching."); //$NON-NLS-1$
 		
-		Class<?> type = connection.getCacheClassType();
+		Class<?> type = conn.getCacheClassType();
 		
 		//Map<?, ?> cache, 
 		SearchManager searchManager = Search
-				.getSearchManager((Cache<?, ?>) connection.getCache() );
+				.getSearchManager((Cache<?, ?>) conn.getCache() );
 
 		QueryBuilder queryBuilder = searchManager.buildQueryBuilderForClass(type).get();
 		

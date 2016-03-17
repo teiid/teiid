@@ -17,12 +17,22 @@
               <groupId>org.infinispan</groupId>
               <artifactId>infinispan-client-hotrod</artifactId>
               <version>${version.org.infinispan.6}</version>
-            </dependency>      
+            </dependency>   
+            <dependency>
+                <groupId>org.infinispan</groupId>
+                <artifactId>infinispan-server-hotrod</artifactId>
+                <version>${version.org.infinispan.6}</version>
+            </dependency>               
             <dependency>
                 <groupId>org.infinispan</groupId>
                 <artifactId>infinispan-commons</artifactId>
                 <version>${version.org.infinispan.6}</version>
             </dependency> 
+           <dependency>
+                <groupId>org.infinispan</groupId>
+                <artifactId>infinispan-core</artifactId>
+                <version>${version.org.infinispan.6}</version>
+            </dependency>            
              <dependency>
                 <groupId>org.infinispan</groupId>
                 <artifactId>infinispan-remote-query-client</artifactId>
@@ -37,7 +47,12 @@
                  <groupId>org.infinispan.protostream</groupId>
                  <artifactId>protostream</artifactId>
                  <version>${version.org.infinispan.protostream}</version>
-            </dependency>                                                               
+            </dependency> 
+           <dependency>
+                 <groupId>com.squareup</groupId>
+                 <artifactId>protoparser</artifactId>
+                 <version>${version.com.squareup.protoparser}</version>
+            </dependency>                                                                           
         </dependencies> 
     </dependencyManagement>
     
@@ -45,6 +60,19 @@
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>translator-infinispan-dsl</artifactId>
+        </dependency>
+		<dependency>
+			<groupId>org.jboss.teiid.connectors</groupId>
+			<artifactId>translator-infinispan-dsl</artifactId>
+			<type>test-jar</type>
+		</dependency>       
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>translator-object</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>translator-object</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
@@ -56,19 +84,33 @@
             <artifactId>teiid-common-core</artifactId>
             <scope>provided</scope>
         </dependency>     
-        <dependency>
+         <dependency>
             <groupId>javax.resource</groupId>
             <artifactId>connector-api</artifactId>
             <scope>provided</scope>
+        </dependency>
+		<dependency>
+			<groupId>javax.transaction</groupId>
+			<artifactId>jta</artifactId>
+			<scope>provided</scope>
+		</dependency> 
+       <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-client-hotrod</artifactId>
         </dependency>   
         <dependency>
             <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-client-hotrod</artifactId>
-        </dependency>     
+            <artifactId>infinispan-server-hotrod</artifactId>
+            <scope>test</scope>
+        </dependency>         
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-commons</artifactId>
         </dependency> 
+        <dependency>
+             <groupId>org.infinispan</groupId>
+             <artifactId>infinispan-core</artifactId>
+         </dependency>        
         <dependency>
           <groupId>org.infinispan</groupId>
           <artifactId>infinispan-remote-query-client</artifactId>
