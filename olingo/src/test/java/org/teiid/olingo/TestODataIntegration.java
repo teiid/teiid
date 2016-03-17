@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -382,8 +383,141 @@ public class TestODataIntegration {
             localClient = null;
             teiid.undeployVDB("northwind");
         }
-        
     }    
+    
+    @Test
+    public void testInsertDifferentTypes() throws Exception {
+        HardCodedExecutionFactory hc = new HardCodedExecutionFactory() {
+            @Override
+            public boolean supportsCompareCriteriaEquals() {
+                return true;
+            }
+
+            @Override
+            public UpdateExecution createUpdateExecution(
+                    org.teiid.language.Command command,
+                    ExecutionContext executionContext,
+                    RuntimeMetadata metadata, Object connection)
+                    throws TranslatorException {
+                addUpdate(command.toString(), new int[] {1});
+                return super.createUpdateExecution(command, executionContext, metadata,connection);
+            }
+           
+        };
+        
+        hc.addUpdate("INSERT INTO PostTable (intkey, intnum, stringkey, stringval, booleanval, "
+                + "decimalval, timeval, dateval, timestampval) "
+                + "VALUES (4, 4, '4', 'value_4', FALSE, -20.4, {t '00:00:04'}, "
+                + "{d '2004-04-04'}, {ts '2004-01-01 00:00:04.0'})", 
+                new int[] {1});
+        hc.addData("SELECT PostTable.intkey, PostTable.intnum, PostTable.stringkey, "
+                + "PostTable.stringval, PostTable.booleanval, PostTable.decimalval, "
+                + "PostTable.timeval, PostTable.dateval, PostTable.timestampval, "
+                + "PostTable.clobval FROM PostTable "
+                + "WHERE PostTable.intkey = 4", 
+                Arrays.asList(Arrays.asList(4, 4, "4", "value_4", false, new BigDecimal("-20.4"), 
+                        new java.sql.Time(0), new java.sql.Date(0), 
+                        new java.sql.Timestamp(0), null)));
+        teiid.addTranslator("x11", hc);
+        
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("m");
+            mmd.addSourceMetadata("ddl", "CREATE foreign TABLE PostTable(\n"  
+                    + "intkey integer PRIMARY KEY,\n"
+                    + "intnum integer,\n"
+                    + "stringkey varchar(20),\n"
+                    + "stringval varchar(20),\n"
+                    + "booleanval boolean,\n" + 
+                    "  decimalval decimal(20, 10),\n"
+                    + "timeval time,\n"
+                    + "dateval date,\n"
+                    + "timestampval timestamp,\n"
+                    + "clobval clob) options (updatable true);");
+            mmd.addSourceMapping("x11", "x11", null);
+            teiid.deployVDB("northwind", mmd);
+
+            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+            String payload = "\n" +  
+                    "<entry xmlns=\"http://www.w3.org/2005/Atom\" xmlns:d=\"http://docs.oasis-open.org/odata/ns/data\" "
+                    + "xmlns:georss=\"http://www.georss.org/georss\" "
+                    + "xmlns:gml=\"http://www.opengis.net/gml\" "
+                    + "xmlns:m=\"http://docs.oasis-open.org/odata/ns/metadata\">\n" + 
+                    "   <category scheme=\"http://docs.oasis-open.org/odata/ns/scheme\" />\n" + 
+                    "   <content type=\"application/xml\">\n" + 
+                    "      <m:properties>\n" + 
+                    "         <d:intkey m:type=\"Int32\">4</d:intkey>\n" + 
+                    "         <d:intnum m:type=\"Int32\">4</d:intnum>\n" + 
+                    "         <d:stringkey>4</d:stringkey>\n" + 
+                    "         <d:stringval>value_4</d:stringval>\n" + 
+                    "         <d:booleanval m:type=\"Boolean\">false</d:booleanval>\n" + 
+                    "         <d:decimalval m:type=\"Double\">-20.4</d:decimalval>\n" + 
+                    "         <d:timeval m:type=\"TimeOfDay\">00:00:04</d:timeval>\n" + 
+                    "         <d:dateval m:type=\"Date\">2004-04-04</d:dateval>\n" + 
+                    "         <d:timestampval m:type=\"DateTimeOffset\">2004-01-01T00:00:04Z</d:timestampval>\n" + 
+                    "      </m:properties>\n" + 
+                    "   </content>\n" + 
+                    "</entry>";
+            ContentResponse response = http.newRequest(baseURL + "/northwind/m/PostTable")
+                .method("POST")
+                .content(new StringContentProvider(payload))
+                .header("Content-Type", "application/xml")
+                .send();
+            assertEquals(204, response.getStatus());
+            assertTrue(response.getHeaders().get("OData-EntityId"), 
+                    response.getHeaders().get("OData-EntityId").endsWith("northwind/m/PostTable(4)"));
+            
+            String jsonPlayload= "{\n" +
+                    "  \"intkey\":4,\n" +
+                    "  \"intnum\":4,\n" +
+                    "  \"stringkey\":\"4\",\n" +
+                    "  \"stringval\":\"value_4\",\n" +
+                    "  \"booleanval\":false,\n" +
+                    "  \"decimalval\":-20.4,\n" +
+                    "  \"timeval\":\"00:00:04\",\n" +
+                    "  \"dateval\":\"2004-04-04\",\n" +
+                    "  \"timestampval\":\"2004-01-01T00:00:04Z\"" +
+                    "}";
+            response = http.newRequest(baseURL + "/northwind/m/PostTable")
+                    .method("POST")
+                    .content(new StringContentProvider(jsonPlayload))
+                    .header("Content-Type", "application/json")
+                    .header("Prefer", "return=representation")
+                    .send();
+                assertEquals(201, response.getStatus());
+                assertEquals("{\"@odata.context\":\"$metadata#PostTable\","
+                        + "\"intkey\":4,"
+                        + "\"intnum\":4,"
+                        + "\"stringkey\":\"4\","
+                        + "\"stringval\":\"value_4\","
+                        + "\"booleanval\":false,"
+                        + "\"decimalval\":-20.4,"
+                        + "\"timeval\":\"00:00:00\","
+                        + "\"dateval\":\"1970-01-01\","
+                        + "\"timestampval\":\"1970-01-01T00:00:00Z\","
+                        + "\"clobval\":null}", response.getContentAsString());
+                
+                response = http.newRequest(baseURL + "/northwind/m/PostTable(4)/clobval")
+                        .method("POST")
+                        .content(new StringContentProvider("clob value"))
+                        .send();
+                assertEquals(405, response.getStatus());
+                
+                response = http.newRequest(baseURL + "/northwind/m/PostTable(4)/clobval")
+                        .method("PUT")
+                        .content(new StringContentProvider("clob value"))
+                        .send();
+                assertEquals(204, response.getStatus());
+                
+                response = http.newRequest(baseURL + "/northwind/m/PostTable(4)/clobval")
+                        .method("DELETE")
+                        .send();
+                assertEquals(204, response.getStatus());                
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }     
     
     @Test 
     public void testDeepInsert() throws Exception {
@@ -435,7 +569,8 @@ public class TestODataIntegration {
                     .header("Prefer", "return=representation")
                     .send();
             assertEquals(201, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x\",\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"}", response.getContentAsString());
+            assertEquals("{\"@odata.context\":\"$metadata#x\",\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"}", 
+                    response.getContentAsString());
 
         } finally {
             localClient = null;
@@ -540,7 +675,8 @@ public class TestODataIntegration {
                     ExecutionContext executionContext,
                     RuntimeMetadata metadata, Object connection)
                     throws TranslatorException {
-                GeneratedKeys keys = executionContext.getCommandContext().returnGeneratedKeys(new String[] {"a"}, new Class[] {String.class});
+                GeneratedKeys keys = executionContext.getCommandContext().returnGeneratedKeys(
+                        new String[] { "a" },new Class[] { String.class });
                 keys.addKey(Arrays.asList("ax"));
                 return super.createUpdateExecution(command, executionContext, metadata,
                         connection);
@@ -558,7 +694,8 @@ public class TestODataIntegration {
         try {
             ModelMetaData mmd = new ModelMetaData();
             mmd.setName("m");
-            mmd.addSourceMetadata("ddl", "create foreign table x (a string, b string, c integer, primary key (a)) options (updatable true);");
+            mmd.addSourceMetadata("ddl", "create foreign table x (a string, b string, c integer, "
+                    + "primary key (a)) options (updatable true);");
             mmd.addSourceMapping("x", "x", null);
             teiid.deployVDB("northwind", mmd);
 
@@ -583,7 +720,8 @@ public class TestODataIntegration {
     public void testSkipNoPKTable() throws Exception {
         ContentResponse response = http.GET(baseURL + "/loopy/PM1/NoPKTable");
         assertEquals(404, response.getStatus());
-        assertEquals("{\"error\":{\"code\":null,\"message\":\"Cannot find EntitySet, Singleton, ActionImport or FunctionImport with name 'NoPKTable'.\"}}", 
+        assertEquals("{\"error\":{\"code\":null,\"message\":\"Cannot find EntitySet, Singleton, "
+                + "ActionImport or FunctionImport with name 'NoPKTable'.\"}}", 
                 response.getContentAsString());
     }
     
@@ -592,7 +730,9 @@ public class TestODataIntegration {
         try {
             ModelMetaData mmd = new ModelMetaData();
             mmd.setName("vw");
-            mmd.addSourceMetadata("DDL", "create view x (a string primary key, b char, c string[], d integer) as select 'ab\u0000cd\u0001', char(22), ('a\u00021','b1'), 1;");
+            mmd.addSourceMetadata("DDL", "create view x (a string primary key, b char, "
+                    + "c string[], d integer) as select 'ab\u0000cd\u0001', char(22), "
+                    + "('a\u00021','b1'), 1;");
             mmd.setModelType(Model.Type.VIRTUAL);
             teiid.deployVDB("northwind", mmd);
 
@@ -1357,32 +1497,33 @@ public class TestODataIntegration {
         }
     }
 
-    private HardCodedExecutionFactory buildHardCodedExecutionFactory() {
-        HardCodedExecutionFactory hc = new HardCodedExecutionFactory() {
-            @Override
-            public boolean supportsCompareCriteriaEquals() {
-                return true;
+    static class ODataHardCodedExecutionFactory extends HardCodedExecutionFactory{
+        @Override
+        public boolean supportsCompareCriteriaEquals() {
+            return true;
+        }
+        @Override
+        protected List<? extends List<?>> getData(
+                QueryExpression command) {
+                            
+            if (super.getData(command) != null) {
+                List<? extends List<?>> results = super.getData(command);
+                return results;
             }
-            @Override
-            protected List<? extends List<?>> getData(
-                    QueryExpression command) {
-                                
-                if (super.getData(command) != null) {
-                    List<? extends List<?>> results = super.getData(command);
-                    return results;
-                }
-                
-                Class<?>[] colTypes = command.getProjectedQuery().getColumnTypes();
-                List<Expression> cols = new ArrayList<Expression>();
-                for (int i = 0; i < colTypes.length; i++) {
-                    ElementSymbol elementSymbol = new ElementSymbol("X");
-                    elementSymbol.setType(colTypes[i]);
-                    cols.add(elementSymbol);
-                }
-                return (List)Arrays.asList(AutoGenDataService.createResults(cols, 1, false));
-            }            
-        };
-        return hc;
+            
+            Class<?>[] colTypes = command.getProjectedQuery().getColumnTypes();
+            List<Expression> cols = new ArrayList<Expression>();
+            for (int i = 0; i < colTypes.length; i++) {
+                ElementSymbol elementSymbol = new ElementSymbol("X");
+                elementSymbol.setType(colTypes[i]);
+                cols.add(elementSymbol);
+            }
+            return (List)Arrays.asList(AutoGenDataService.createResults(cols, 1, false));
+        }         
+    }
+    
+    private HardCodedExecutionFactory buildHardCodedExecutionFactory() {
+        return new ODataHardCodedExecutionFactory();
     }
     
     @Test 

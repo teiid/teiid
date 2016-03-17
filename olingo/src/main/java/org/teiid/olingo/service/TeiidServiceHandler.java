@@ -928,7 +928,7 @@ public class TeiidServiceHandler implements ServiceHandler {
     @Override
     public void processError(ODataServerError error, ErrorResponse response) {
         LogManager.logDetail(LogConstants.CTX_ODATA, error.getException());
-        
+        error.getException().printStackTrace();
         Throwable ex = getRoot(error.getException());
         if (ex instanceof TeiidNotImplementedException) {
             error.setException((TeiidNotImplementedException)ex);
