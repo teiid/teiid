@@ -28,6 +28,7 @@ import java.io.StringWriter;
 import java.lang.reflect.Array;
 import java.sql.Date;
 import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
@@ -218,6 +219,24 @@ public class ODataTypeManager {
 				};
         	//}
         }
+        if (value instanceof Calendar) {
+            Calendar calender = (Calendar)value;
+            if (type.isAssignableFrom(java.sql.Time.class)) {
+                calender.set(Calendar.YEAR, 1970);
+                calender.set(Calendar.MONTH, Calendar.JANUARY);
+                calender.set(Calendar.DAY_OF_MONTH, 1);
+                calender.set(Calendar.MILLISECOND, 0);
+                return new Time(calender.getTimeInMillis());                
+            } else if (type.isAssignableFrom(java.sql.Date.class)) {
+                calender.set(Calendar.HOUR_OF_DAY, 0);
+                calender.set(Calendar.MINUTE, 0);
+                calender.set(Calendar.SECOND, 0);
+                calender.set(Calendar.MILLISECOND, 0);
+                return new java.sql.Date(calender.getTimeInMillis());                 
+            } else if (type.isAssignableFrom(java.sql.Timestamp.class)) {
+                return new Timestamp(calender.getTimeInMillis());   
+            }
+        }        
         
         Transform transform = DataTypeManager.getTransform(value.getClass(), type);
         if (transform != null) {
