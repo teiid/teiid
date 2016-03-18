@@ -22,11 +22,7 @@
  */
 package org.teiid.transport;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.Serializable;
@@ -335,6 +331,20 @@ public class TestCommSockets {
 		assertTrue(config.isSslEnabled());
 		config.setMode("login");
 		assertTrue(config.isClientEncryptionEnabled());
+	}
+	
+	@Test(expected=CommunicationException.class) public void testCheckExpired() throws Exception {
+		SSLConfiguration config = new SSLConfiguration();
+		config.setMode(SSLConfiguration.ENABLED);
+		config.setAuthenticationMode(SSLConfiguration.ONEWAY);
+		config.setKeystoreFilename(UnitTestUtil.getTestDataPath() + "/TEIID-4080/keystore_server_root_expired.jks");
+		config.setKeystorePassword("keystorepswd");
+		
+		Properties p = new Properties();
+		p.setProperty("org.teiid.ssl.trustStore", UnitTestUtil.getTestDataPath() + "/TEIID-4080/truststore.jks");
+		p.setProperty("org.teiid.ssl.trustStorePassword", "truststorepswd");
+		p.setProperty("org.teiid.ssl.checkExpired", "true");
+		helpEstablishConnection(true, config, p);
 	}
 	
 }
