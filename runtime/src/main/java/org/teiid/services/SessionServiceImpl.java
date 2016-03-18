@@ -23,7 +23,6 @@
 package org.teiid.services;
 
 
-import java.io.IOException;
 import java.security.Principal;
 import java.security.acl.Group;
 import java.util.*;
@@ -31,12 +30,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 import javax.security.auth.Subject;
-import javax.security.auth.callback.Callback;
-import javax.security.auth.callback.CallbackHandler;
-import javax.security.auth.callback.NameCallback;
-import javax.security.auth.callback.PasswordCallback;
-import javax.security.auth.callback.UnsupportedCallbackException;
-import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
 import org.teiid.adminapi.VDB;
@@ -46,6 +39,7 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.security.InvalidSessionException;
 import org.teiid.client.security.LogonException;
 import org.teiid.client.security.SessionToken;
+import org.teiid.core.CoreConstants;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.deployers.VDBRepository;
@@ -465,6 +459,9 @@ public class SessionServiceImpl implements SessionService {
     
 	@Override
 	public AuthenticationType getAuthenticationType(String vdbName, String version, String userName) throws LogonException {
+		if (userName == null) {
+			userName = CoreConstants.DEFAULT_ANON_USERNAME;
+		}
 		if (vdbName != null) {
 			VDB vdb;
 			try {
