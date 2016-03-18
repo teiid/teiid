@@ -75,9 +75,15 @@ public class LogonImpl implements ILogon {
 	public LogonResult logon(Properties connProps) throws LogonException {
 		String vdbName = connProps.getProperty(BaseDataSource.VDB_NAME);
 		String vdbVersion = connProps.getProperty(BaseDataSource.VDB_VERSION);
-		String user = connProps.getProperty(BaseDataSource.USER_NAME);
+		String user = connProps.getProperty(TeiidURL.CONNECTION.USER_NAME, CoreConstants.DEFAULT_ANON_USERNAME);
+		boolean onlyAllowPassthrough = Boolean.valueOf(connProps.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION,
+                "false")); //$NON-NLS-1$
+
+		AuthenticationType authType = AuthenticationType.USERPASSWORD;
 		
-		AuthenticationType authType = this.service.getAuthenticationType(vdbName, vdbVersion, user);
+		if (!onlyAllowPassthrough) {
+			authType = this.service.getAuthenticationType(vdbName, vdbVersion, user);
+		}
 		
 		// the presence of the KRB5 token take as GSS based login.
 		if (connProps.get(ILogon.KRB5TOKEN) != null) {
@@ -93,7 +99,7 @@ public class LogonImpl implements ILogon {
 					}				
 					previous = securityHelper.associateSecurityContext(securityContext);
 					assosiated = true;
-					return logon(connProps, krb5Token, AuthenticationType.GSS);
+					return logon(connProps, krb5Token, AuthenticationType.GSS, user);
 				} finally {
 					if (assosiated) {
 						securityHelper.associateSecurityContext(previous);
@@ -119,15 +125,14 @@ public class LogonImpl implements ILogon {
 		if (!AuthenticationType.USERPASSWORD.equals(authType)) {
 			 throw new LogonException(RuntimePlugin.Event.TEIID40055, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40055, authType));
 		}		
-		return logon(connProps, null, AuthenticationType.USERPASSWORD);
+		return logon(connProps, null, AuthenticationType.USERPASSWORD, user);
 	}
 
-	private LogonResult logon(Properties connProps, byte[] krb5ServiceTicket, AuthenticationType authType) throws LogonException {
+	private LogonResult logon(Properties connProps, byte[] krb5ServiceTicket, AuthenticationType authType, String user) throws LogonException {
 
 		String vdbName = connProps.getProperty(BaseDataSource.VDB_NAME);
 		String vdbVersion = connProps.getProperty(BaseDataSource.VDB_VERSION);
         String applicationName = connProps.getProperty(TeiidURL.CONNECTION.APP_NAME);
-        String user = connProps.getProperty(TeiidURL.CONNECTION.USER_NAME, CoreConstants.DEFAULT_ANON_USERNAME);
         String password = connProps.getProperty(TeiidURL.CONNECTION.PASSWORD);
 		Credentials credential = null;
         if (password != null) {

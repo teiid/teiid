@@ -200,11 +200,20 @@ public class TestLogonImpl {
 		} catch(LogonException e) {
 			// pass
 		}
+		
+		metadata.addProperty(SessionServiceImpl.GSS_PATTERN_PROPERTY, "GSS");
+		DQPWorkContext.setWorkContext(new DQPWorkContext());
+		impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
+		p = buildProperties(null, "name1");		
+		result = impl.logon(p);
+		assertEquals("anonymous@SC", result.getUserName());
 	}	
 
 	private Properties buildProperties(String userName, String vdbName) {
 		Properties p = new Properties();
-		p.setProperty(TeiidURL.CONNECTION.USER_NAME, userName);
+		if (userName != null) {
+			p.setProperty(TeiidURL.CONNECTION.USER_NAME, userName);
+		}
 		p.setProperty(TeiidURL.CONNECTION.APP_NAME, "test");
 		p.setProperty(TeiidURL.JDBC.VDB_NAME, vdbName);
 		p.setProperty(TeiidURL.JDBC.VDB_VERSION, "1");
