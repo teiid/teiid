@@ -110,7 +110,8 @@ class TransportAdd extends AbstractAddStepHandler {
 		TeiidConstants.SSL_TRUSTSTORE_NAME_ATTRIBUTE,
 		TeiidConstants.SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE,
 		TeiidConstants.SSL_KETSTORE_ALIAS_ATTRIBUTE,
-		TeiidConstants.SSL_KETSTORE_KEY_PASSWORD_ATTRIBUTE
+		TeiidConstants.SSL_KETSTORE_KEY_PASSWORD_ATTRIBUTE,
+		TeiidConstants.SSL_TRUSTSTORE_CHECK_EXPIRED_ATTRIBUTE
 	};
 	
 	@Override
@@ -281,6 +282,9 @@ class TransportAdd extends AbstractAddStepHandler {
     	}
     	if (isDefined(SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE, node, context)) {
     		ssl.setTruststorePassword(asString(SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE, node, context));
+    	}
+    	if (isDefined(SSL_TRUSTSTORE_CHECK_EXPIRED_ATTRIBUTE, node, context)) {
+    		ssl.setTruststoreCheckExpired(asBoolean(SSL_TRUSTSTORE_CHECK_EXPIRED_ATTRIBUTE, node, context));
     	}
 		socket.setSSLConfiguration(ssl);
 		return socket;
