@@ -155,7 +155,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
     public void visit(Binary expr) {
         accept(expr.getLeftOperand());
         org.teiid.query.sql.symbol.Expression lhs = this.stack.pop();
-
+        
         accept(expr.getRightOperand());
         org.teiid.query.sql.symbol.Expression rhs = this.stack.pop();
 
@@ -277,9 +277,19 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
                 String type = expr.getType().getFullQualifiedName().getFullQualifiedNameAsString();
                 value = ODataTypeManager.parseLiteral(type, expr.getText());
             }
-            if (this.prepared) {
-                stack.add(new Reference(this.params.size()));
-                this.params.add(new SQLParameter(value, JDBCSQLTypeInfo.getSQLTypeFromClass(value.getClass().getName())));
+            if (this.prepared) {                
+                if (value == null) {
+                    this.stack.add(new Constant(value));                    
+                } else {
+                    Function ref = new Function(
+                            CONVERT,
+                            new org.teiid.query.sql.symbol.Expression[] {
+                                    new Reference(this.params.size()),
+                                    new Constant(DataTypeManager.getDataTypeName(value.getClass())) });
+                    stack.add(ref);
+                    this.params.add(new SQLParameter(value, 
+                            JDBCSQLTypeInfo.getSQLTypeFromClass(value.getClass().getName())));
+                }
             } else {
                 this.stack.add(new Constant(value));
             }
