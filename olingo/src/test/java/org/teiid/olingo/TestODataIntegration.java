@@ -1407,7 +1407,7 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
             assertEquals(501, response.getStatus());
-            
+
             /* TODO
             response = http.newRequest(baseURL + "/northwind/m/z?$expand=FKX/a&$select=a")
                     .method("GET")
@@ -1828,5 +1828,50 @@ public class TestODataIntegration {
     public void test$allNotImplemented() throws Exception {
         ContentResponse response = http.GET(baseURL + "/loopy/vm1/$all");
         assertEquals(501, response.getStatus());
-    }    
+    } 
+    
+    @SuppressWarnings("unchecked")
+    @Test 
+    public void testExpand() throws Exception {
+        HardCodedExecutionFactory hc = new HardCodedExecutionFactory();
+        hc.addData("SELECT Customers.id, Customers.name FROM Customers", 
+                Arrays.asList(Arrays.asList(1, "customer1"), Arrays.asList(2, "customer2"),
+                Arrays.asList(3, "customer3"), Arrays.asList(4, "customer4")));
+        hc.addData("SELECT Orders.customerid, Orders.id, Orders.place FROM Orders", 
+                Arrays.asList(Arrays.asList(1, 1, "town"), Arrays.asList(1, 2, "state"),
+                Arrays.asList(1, 3, "country"), Arrays.asList(1,4, "abroad"),
+                Arrays.asList(2, 5, "state"), Arrays.asList(2, 6, "country"),
+                Arrays.asList(3,7,"town"), Arrays.asList(3, 8, "town")));
+        teiid.addTranslator("x12", hc);
+        
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("m");
+            mmd.addSourceMetadata("ddl", 
+                    "CREATE FOREIGN TABLE Customers (\n" + 
+                    "  id integer PRIMARY KEY OPTIONS (NAMEINSOURCE 'id'),\n" + 
+                    "  name varchar(10));\n" + 
+                    "CREATE FOREIGN TABLE Orders (\n" + 
+                    "  id integer PRIMARY KEY OPTIONS (NAMEINSOURCE 'id'),\n" + 
+                    "  customerid integer,\n" + 
+                    "  place varchar(10),\n" + 
+                    "  FOREIGN KEY (customerid) REFERENCES Customers(id));");
+            
+            mmd.addSourceMapping("x12", "x12", null);
+            teiid.deployVDB("northwind", mmd);
+
+            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+
+            ContentResponse response = null;
+            
+            response = http.newRequest(baseURL + "/northwind/m/Customers?$expand=Orders_FK0&$count=true")
+                    .method("GET")
+                    .send();
+            assertEquals(200, response.getStatus());
+            assertEquals("", response.getContentAsString());
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }
 }
