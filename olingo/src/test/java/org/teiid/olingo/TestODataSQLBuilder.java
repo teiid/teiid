@@ -983,7 +983,25 @@ public class TestODataSQLBuilder {
     public void testSelectStarWithNonSelectableColumn3() throws Exception {
         helpTest("/odata4/vdb/PM1/G5?$filter=e1 eq '1'",
                 "SELECT g0.e2, g0.e3 FROM PM1.G5 AS g0 WHERE g0.e1 = '1' ORDER BY g0.e2");        
-    }   
+    }
+    
+    @Test
+    public void testFilterOnNull() throws Exception {
+        helpTest("/odata4/vdb/PM1/G1?$filter=e1 eq null",
+                "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 WHERE g0.e1 IS NULL ORDER BY g0.e2");        
+    }     
+    
+    @Test
+    public void testMultipleAirthamatic() throws Exception {
+        helpTest("/odata4/vdb/PM1/G1?$filter=e2 eq 1 add 1 add 1",
+                "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 WHERE g0.e2 = ((1 + 1) + 1) ORDER BY g0.e2");   
+    }     
+    
+    @Test
+    public void testFloor() throws Exception {
+        helpTest("/odata4/vdb/PM1/G1?$filter=e2 eq floor(4.2)",
+                "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 WHERE g0.e2 = FLOOR(4.2) ORDER BY g0.e2");   
+    }     
     
     @BeforeClass public static void oneTimeSetup() {
     	TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT"));

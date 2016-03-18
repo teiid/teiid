@@ -1781,6 +1781,49 @@ public class TestODataIntegration {
         }
     }
     
+    @Test 
+    public void testFilterNull() throws Exception {
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("vw");
+            mmd.addSourceMetadata("ddl", "create view x (a string primary key, b integer) as "
+                    + "select 'xyz', 123 union all "
+                    + "select 'abc', null;");
+            mmd.setModelType(Model.Type.VIRTUAL);
+            teiid.deployVDB("northwind", mmd);
+
+            Properties props = new Properties();
+            localClient = getClient(teiid.getDriver(), "northwind", 1, props);
+            
+            ContentResponse response = http.GET(baseURL + "/northwind/vw/x?$filter="+Encoder.encode("b eq null"));
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"abc\",\"b\":null}]}", 
+                    response.getContentAsString());
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }    
+    
+    
+    @Test
+    public void testMultipleAirthamatic() throws Exception {
+        ContentResponse response = http.GET(baseURL + "/loopy/pm1/G1?$filter="+Encoder.encode("e2 eq 1 add 1 add 1"));
+        assertEquals(200, response.getStatus());
+    }
+
+    @Test
+    public void testFloor() throws Exception {
+        ContentResponse response = http.GET(baseURL + "/loopy/pm1/G1?$filter="+Encoder.encode("e2 eq floor(4.2)"));
+        assertEquals(200, response.getStatus());
+    }
+    
+    @Test
+    public void testRound() throws Exception {
+        ContentResponse response = http.GET(baseURL + "/loopy/pm1/G1?$filter="+Encoder.encode("e2 eq round(4.2)"));
+        assertEquals(200, response.getStatus());
+    }
+    
     @Test
     public void test$allNotImplemented() throws Exception {
         ContentResponse response = http.GET(baseURL + "/loopy/vm1/$all");
