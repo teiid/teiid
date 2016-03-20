@@ -23,6 +23,7 @@
 package org.teiid.query.processor;
 
 import static org.junit.Assert.*;
+import static org.teiid.query.processor.TestProcessor.*;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -1375,5 +1376,26 @@ public class TestDependentJoins {
 		TestOptimizer.helpPlan("select pm1.g1.e1, pm1.g1.e2, pm2.g1.e2 FROM pm1.g2, pm1.g1, /*+ makeind */ pm2.g1 where pm1.g1.e1 = pm2.g1.e1 and pm1.g2.e1 = pm2.g1.e1", TestOptimizer.example1(), //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g1 AS g_0 ORDER BY c_0", "SELECT g_1.e1 AS c_0, g_0.e1 AS c_1, g_1.e2 AS c_2 FROM pm1.g2 AS g_0, pm1.g1 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (g_1.e1 IN (<dependent values>)) ORDER BY c_0" }, new DefaultCapabilitiesFinder(caps), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$
     }
+    
+    @Test public void testIndependentNestedOrderedLimit() {
+	    String sql = "with a (x, y, z) as (select e1, e2, e3 from pm1.g1) SELECT a.x, b.e1 from a, /*+ makeind */ (SELECT * from pm1.g2, a where e1 = x and z = 1 order by e2 limit 2) as b where a.x = b.e1"; //$NON-NLS-1$
+	    
+	    List<?>[] expected = new List[] { 
+	        Arrays.asList("a", "a"),
+	        Arrays.asList("a", "a"),
+	        Arrays.asList("a", "a"),
+	        Arrays.asList("a", "a"),
+	        Arrays.asList("a", "a"),
+	        Arrays.asList("a", "a"),
+	    };    
+	
+	    FakeDataManager dataManager = new FakeDataManager();
+	    dataManager.setBlockOnce();
+	    sampleData1(dataManager);
+	    
+	    ProcessorPlan plan = TestProcessor.helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
+	    
+	    helpProcess(plan, dataManager, expected);
+	}
     
 }
