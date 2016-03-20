@@ -167,5 +167,9 @@ public class DependentValueSource implements
     public void setDistinct(boolean distinct) {
 		this.distinct = distinct;
 	}
+    
+    public List<? extends Expression> getSchema() {
+		return schema;
+	}
            
 }
