@@ -110,7 +110,7 @@ public class DependentCriteriaProcessor {
 		                	//alternatively if we're already sorted by the join node then processing distinct
 		                	//does not require a full pass
 			                List<Boolean> sortDirection = Collections.nCopies(sortSymbols.size(), OrderBy.ASC);
-			                this.sortUtility = new SortUtility(null, sortSymbols, sortDirection, Mode.DUP_REMOVE, dependentNode.getBufferManager(), dependentNode.getConnectionID(), originalVs.getTupleBuffer().getSchema());
+			                this.sortUtility = new SortUtility(null, sortSymbols, sortDirection, Mode.DUP_REMOVE, dependentNode.getBufferManager(), dependentNode.getConnectionID(), originalVs.getSchema());
 			            	this.sortUtility.setWorkingBuffer(originalVs.getTupleBuffer());
 		                }
 	            	}
