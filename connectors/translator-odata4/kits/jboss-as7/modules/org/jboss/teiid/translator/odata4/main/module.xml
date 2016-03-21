@@ -12,7 +12,7 @@
     <dependencies>
         <module name="javax.xml.ws.api"/>
         <module name="javax.api"/>
-        <module name="javax.ws.rs.api"/>
+        <module name="javax.ws.rs.api" services="export"/>
         <module name="javax.resource.api"/>
         <module name="org.jboss.teiid.olingo.common"/>    
         <module name="org.apache.olingo.client"/>
