@@ -390,6 +390,11 @@
 	      -->
       
           <!-- Internal dependencies -->
+            <dependency>
+              <groupId>org.jboss.teiid</groupId>
+              <artifactId>teiid-jdbc</artifactId>
+              <version>${project.version}</version>
+            </dependency>
 			<dependency>
 			  <groupId>org.jboss.teiid.connectors</groupId>
 			  <artifactId>translator-odata</artifactId>
@@ -1657,6 +1662,7 @@
 		<module>common-core</module>
 		<module>api</module>
 		<module>client</module>
+		<module>teiid-jdbc</module>
 		<module>engine</module>
 		<module>connectors</module>
 		<module>metadata</module>
