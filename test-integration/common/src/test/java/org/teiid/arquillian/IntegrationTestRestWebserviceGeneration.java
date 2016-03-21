@@ -52,6 +52,7 @@ import org.junit.runner.RunWith;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.jboss.AdminFactory;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.ReaderInputStream;
 import org.teiid.core.util.UnitTestUtil;
@@ -124,8 +125,6 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		
 		//test swagger
 		response = httpCall("http://localhost:8080/sample_1/swagger.yaml", "GET", null);
-		
-		assertEquals(13206, response.length());
 		
 		admin.undeploy("sample-vdb.xml");
 		Thread.sleep(2000);
@@ -233,6 +232,12 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		    wr.write(params);
 		    wr.flush();
 		}
+		
+		int code = connection.getResponseCode();
+		if (code >= 400) {
+			throw new TeiidRuntimeException(String.valueOf(code));
+		}
+		
 		return ObjectConverterUtil.convertToString(new InputStreamReader(connection.getInputStream(), Charset.forName("UTF-8")));
 	}		
 }
