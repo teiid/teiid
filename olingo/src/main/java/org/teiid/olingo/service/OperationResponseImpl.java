@@ -35,8 +35,17 @@ public class OperationResponseImpl implements OperationResponse {
     }
     
     @Override
-    public void addRow(ResultSet rs) throws SQLException {
+    public void addRow(ResultSet rs, boolean sameEntity) throws SQLException {
         this.complexValues.add(getComplexProperty(rs));
+    }
+    
+    @Override
+    public boolean isSameEntity(ResultSet rs) throws SQLException {
+        return false;
+    }
+    
+    @Override
+    public void advanceRow(ResultSet rs, boolean sameEntity) throws SQLException {
     }
     
     private ComplexValue getComplexProperty(ResultSet rs) throws SQLException {

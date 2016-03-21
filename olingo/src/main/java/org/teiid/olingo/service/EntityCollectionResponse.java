@@ -81,6 +81,10 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
     private String baseURL;
     private Map<String, Object> streams;
 
+    private EntityCollectionResponse() {
+        this.invalidCharacterReplacement = null;
+    }
+    
     public EntityCollectionResponse(String baseURL, String invalidCharacterReplacement,
             DocumentNode resource) {
         this.baseURL = baseURL;
@@ -89,7 +93,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
     }
     
     @Override
-    public void addRow(ResultSet rs) throws SQLException {
+    public void addRow(ResultSet rs, boolean sameEntity) throws SQLException {
         Entity entity = null;
         boolean add = true;
         
@@ -97,7 +101,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
             entity = createEntity(rs, this.documentNode, this.invalidCharacterReplacement, this.baseURL, this);
             this.currentEntity = entity;
         } else {
-            if(isSameRow(rs, this.documentNode, this.currentEntity)) {
+            if(sameEntity) {
                 entity = this.currentEntity;
                 add = false;
             } else {
@@ -113,16 +117,36 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                 ExpandDocumentNode expandNode = (ExpandDocumentNode)resource;
                 Entity expandEntity = createEntity(rs, expandNode, this.invalidCharacterReplacement, this.baseURL, this);
                 
+                // make sure the expanded entity has valid key, otherwise it is just nulls on right side
+                boolean valid = true;
+                for (String key:resource.getEdmEntityType().getKeyPredicateNames()) {
+                    Property p = expandEntity.getProperty(key);
+                    if (p.getValue() == null) {
+                        valid = false;
+                        break;
+                    }
+                }
+                
+                if (!valid) {
+                    continue;
+                }
+                                               
                 Link link = entity.getNavigationLink(expandNode.getNavigationName());
                 if (expandNode.isCollection()) {
                     if (link.getInlineEntitySet() == null) {
-                        link.setInlineEntitySet(new EntityCollection());
+                        link.setInlineEntitySet(new EntityCollectionResponse());
                     }
-                    link.getInlineEntitySet().getEntities().add(expandEntity);
+                    EntityCollectionResponse expandResponse = (EntityCollectionResponse)link.getInlineEntitySet();
+                    boolean addEntity = expandResponse.processOptions(
+                            expandNode.getSkip(), expandNode.getTop(),
+                            expandEntity);
+                    if (addEntity) {
+                        link.getInlineEntitySet().getEntities().add(expandEntity);
+                    }
                 }
                 else {
-                    link.setInlineEntity(expandEntity);  
-                }   
+                    link.setInlineEntity(expandEntity);
+                }
             }
         }
         
@@ -134,8 +158,37 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
         }
     }
     
+    @Override
+    public boolean isSameEntity(ResultSet rs) throws SQLException {
+        if (this.currentEntity == null) {
+            this.currentEntity = createEntity(rs, this.documentNode,
+                    this.invalidCharacterReplacement, this.baseURL, this);
+            return false;
+        } else {
+            if (isSameRow(rs, this.documentNode, this.currentEntity)) {
+                return true;
+            } else {
+                this.currentEntity = createEntity(rs, this.documentNode,
+                        this.invalidCharacterReplacement, this.baseURL, this);
+                return false;
+            }
+        }
+    }    
+    
+    @Override
+    public void advanceRow(ResultSet rs, boolean sameEntity) throws SQLException {
+        if (this.currentEntity == null) {
+            this.currentEntity = createEntity(rs, this.documentNode,
+                    this.invalidCharacterReplacement, this.baseURL, this);
+        } else {
+            if (!sameEntity) {
+                this.currentEntity = createEntity(rs, this.documentNode,
+                        this.invalidCharacterReplacement, this.baseURL, this);
+            }
+        }
+    }
+    
     private boolean isSameRow(ResultSet rs,  DocumentNode node, Entity other) throws SQLException {
-        
         List<ProjectedColumn> projected = node.getAllProjectedColumns();
         EdmEntityType entityType = node.getEdmEntityType();
         
@@ -467,7 +520,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
 
     @Override
     public void setCount(long count) {
-        super.setCount((int) count);
+        this.collectionCount = (int)count;
     }
 
     @Override
@@ -479,4 +532,32 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
     public String getNextToken() {
         return this.nextToken;
     }
+    
+    private int skipped = 0;
+    private int topCount = 0;
+    private int collectionCount = 0;
+    
+    private boolean processOptions(int skip, int top, Entity expandEntity) {
+        this.collectionCount++;
+        
+        if (skip > 0 && this.skipped < skip) {
+            this.skipped++;
+            return false;
+        }
+        
+        if (top > 0 ) {
+            if (this.topCount < top) {
+                this.topCount++;                
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public Integer getCount() {
+        return this.collectionCount;
+    }    
 }
