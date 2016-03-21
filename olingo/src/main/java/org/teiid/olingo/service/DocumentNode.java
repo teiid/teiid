@@ -257,7 +257,6 @@ public class DocumentNode {
 
     void addProjectedColumn(final Expression expr, final boolean visibility,
             final EdmType type, final boolean collection) {
-        
         int i = 0;
         for (i = 0; i < this.projectedColumns.size(); i++) {
             ProjectedColumn pc = this.projectedColumns.get(i);
@@ -268,6 +267,17 @@ public class DocumentNode {
         }
         this.projectedColumns.add(new ProjectedColumn(expr, visibility, type, collection));
     }
+    
+    boolean hasProjectedColumn(final Expression expr) {
+        int i = 0;
+        for (i = 0; i < this.projectedColumns.size(); i++) {
+            ProjectedColumn pc = this.projectedColumns.get(i);
+            if (pc.getExpression().equals(expr)) {
+                return true;
+            }
+        }
+        return false;
+    }    
     
     OrderBy addDefaultOrderBy() {
         OrderBy orderBy = new OrderBy();

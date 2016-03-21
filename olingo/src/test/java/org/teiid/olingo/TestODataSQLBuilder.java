@@ -245,7 +245,7 @@ public class TestODataSQLBuilder {
                     Mockito.eq(parameters), Mockito.eq(count),
                     (Integer) Mockito.eq(skip), (Integer) Mockito.eq(top),
                     (String) Mockito.eq(null), Mockito.anyInt(),
-                    arg6.capture());
+                    arg6.capture(), Mockito.anyBoolean());
             Assert.assertEquals(actualCommand.toString(), arg1.getValue().toString());
         }
         
@@ -328,7 +328,7 @@ public class TestODataSQLBuilder {
                 Mockito.eq(state.parameters), Mockito.eq(true), (Integer)Mockito.eq(null),
                 (Integer)Mockito.eq(null), 
                 (String) Mockito.eq(null), Mockito.anyInt(),
-                state.arg6.capture());
+                state.arg6.capture(), Mockito.anyBoolean());
         Assert.assertEquals(expected, state.arg1.getValue().toString());
     }
 
@@ -410,7 +410,7 @@ public class TestODataSQLBuilder {
     }
     
     @Test
-    public void testAlias2() throws Exception {
+    public void testAlias2InvalidType() throws Exception {
         QueryState state = helpTest("/odata4/vdb/PM1/G1?$filter=e1 eq @p1&@p1=1", null);
         assertEquals(Integer.valueOf(400), state.status);
     }    
@@ -852,7 +852,7 @@ public class TestODataSQLBuilder {
     @Test
     public void testExpandWithNestedSelect() throws Exception {
         helpTest("/odata4/vdb/PM1/G1?$expand=G4_FKX($select=e2)&$select=e3",
-                "SELECT g0.e2, g0.e3, g1.e2 "
+                "SELECT g0.e2, g0.e3, g1.e2, g1.e1 "
                 + "FROM PM1.G1 AS g0 "
                 + "LEFT OUTER JOIN PM1.G4 AS g1 "
                 + "ON g0.e2 = g1.e2 "

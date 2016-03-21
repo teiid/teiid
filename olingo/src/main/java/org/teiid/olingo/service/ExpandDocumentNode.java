@@ -21,6 +21,7 @@
  */
 package org.teiid.olingo.service;
 
+import org.apache.olingo.commons.api.data.Entity;
 import org.apache.olingo.commons.api.edm.EdmEntityType;
 import org.apache.olingo.commons.api.edm.EdmNavigationProperty;
 import org.apache.olingo.server.api.OData;
@@ -34,7 +35,10 @@ import org.teiid.olingo.service.TeiidServiceHandler.UniqueNameGenerator;
 public class ExpandDocumentNode extends DocumentNode {
     private String navigationName;
     private boolean collection;
-    
+    private int top;
+    private int skip;
+    private boolean calculateCount;
+
     public static ExpandDocumentNode buildExpand(EdmNavigationProperty property,
             MetadataStore metadata, OData odata, UniqueNameGenerator nameGenerator,
             boolean useAlias, UriInfo uriInfo, URLParseService parseService) throws TeiidException {
@@ -61,5 +65,29 @@ public class ExpandDocumentNode extends DocumentNode {
     
     public void setCollection(boolean collection) {
         this.collection = collection;
-    } 
+    }
+
+    public void setTop(int value) {
+        this.top = value;
+    }
+
+    public int getTop() {
+        return top;
+    }
+
+    public void setSkip(int value) {
+        this.skip = value;
+    }
+
+    public int getSkip() {
+        return skip;
+    }
+
+    public boolean isCalculateCount() {
+        return this.calculateCount;
+    }
+    
+    public void setCalculateCount(boolean calculateCount) {
+        this.calculateCount = calculateCount;
+    }
 }
