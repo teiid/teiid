@@ -165,7 +165,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 			SSL_SSL_PROTOCOL_ATTRIBUTE.marshallAsAttribute(node, false, writer);
 			SSL_KEY_MANAGEMENT_ALG_ATTRIBUTE.marshallAsAttribute(node, false, writer);
 			SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE.marshallAsAttribute(node, false, writer);
-			SSL_TRUSTSTORE_CHECK_EXPIRED_ATTRIBUTE.marshallAsAttribute(node, false, writer);
 
 			if (like(node, Element.SSL_KETSTORE_ELEMENT)) {
 				writer.writeStartElement(Element.SSL_KETSTORE_ELEMENT.getLocalName());
@@ -181,6 +180,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 				writer.writeStartElement(Element.SSL_TRUSTSTORE_ELEMENT.getLocalName());
 				SSL_TRUSTSTORE_NAME_ATTRIBUTE.marshallAsAttribute(node, false, writer);
 				SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+				SSL_TRUSTSTORE_CHECK_EXPIRED_ATTRIBUTE.marshallAsAttribute(node, false, writer);
 				writer.writeEndElement();
 			}			
 			writer.writeEndElement();
@@ -494,10 +494,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     			case SSL_KETSTORE_KEY_PASSWORD_ATTRIBUTE:
     				node.get(element.getModelName()).set(attrValue);
     				break;
-    			case SSL_TRUSTSTORE_CHECK_EXIRIED_ATTRIBUTE:
-    				node.get(element.getModelName()).set(Boolean.parseBoolean(attrValue));
-    				break;
-
+    				
     			default:
     				throw ParseUtils.unexpectedAttribute(reader, i);    			
     			}
@@ -571,6 +568,10 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     				
     			case SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE:
     				node.get(element.getModelName()).setExpression(attrValue);
+    				break;
+    				
+    			case SSL_TRUSTSTORE_CHECK_EXIRIED_ATTRIBUTE:
+    				node.get(element.getModelName()).set(Boolean.parseBoolean(attrValue));
     				break;
     				
     			default:

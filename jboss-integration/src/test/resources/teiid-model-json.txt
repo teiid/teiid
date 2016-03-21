@@ -69,7 +69,8 @@
             "ssl-mode" : "enabled",
             "ssl-ssl-protocol" : "ssl-protocol",
             "truststore-name" : "truststore name",
-            "truststore-password" : "truststore pass"
+            "truststore-password" : "truststore pass",
+            "truststore-check-expired" : "true"
         }
     }
 }}}
