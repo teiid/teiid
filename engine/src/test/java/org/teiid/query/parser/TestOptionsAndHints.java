@@ -982,6 +982,22 @@ public class TestOptionsAndHints {
         TestParser.helpTest(sql, "/*+ cache */ SELECT * FROM t1", query);         //$NON-NLS-1$
     }
     
+    @Test public void testCacheMultipleComments() {
+        String sql = "/* hello */ /*+ cache */ /* world */ SELECT * FROM t1"; //$NON-NLS-1$
+        
+        Query query = new Query();
+        Select select = new Select();
+        select.addSymbol(new MultipleElementSymbol());
+        query.setSelect(select);
+        From from = new From();
+        UnaryFromClause ufc = new UnaryFromClause();
+        from.addClause(ufc);
+        ufc.setGroup(new GroupSymbol("t1")); //$NON-NLS-1$
+        query.setFrom(from);           
+        query.setCacheHint(new CacheHint());
+        TestParser.helpTest(sql, "/*+ cache */ SELECT * FROM t1", query);         //$NON-NLS-1$
+    }
+    
     @Test public void testCacheProc() {
         String sql = "/*+ cache */ CREATE VIRTUAL PROCEDURE BEGIN END"; //$NON-NLS-1$
         CreateProcedureCommand command = new CreateProcedureCommand(new Block());
