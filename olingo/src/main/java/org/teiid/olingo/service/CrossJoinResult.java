@@ -44,7 +44,7 @@ public class CrossJoinResult implements QueryResponse {
     }
 
     @Override
-    public void addRow(ResultSet rs) throws SQLException {
+    public void addRow(ResultSet rs, boolean sameEntity) throws SQLException {
 
         ArrayList<ComplexReturnType> row = new ArrayList<ComplexReturnType>();
         
@@ -64,6 +64,15 @@ public class CrossJoinResult implements QueryResponse {
                     ((CrossJoinNode) node).hasExpand()));
         }
         this.out.add(row);
+    }
+    
+    @Override
+    public boolean isSameEntity(ResultSet rs) throws SQLException {
+        return false;
+    }
+    
+    @Override
+    public void advanceRow(ResultSet rs, boolean sameEntity) throws SQLException {
     }
     
     public CrossJoinNode getResource() {

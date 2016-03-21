@@ -162,7 +162,7 @@ public class LocalClient implements Client {
         if (results) {
             final ResultSet rs = stmt.getResultSet();
             while (rs.next()) {
-                response.addRow(rs);
+                response.addRow(rs, false);
             }
         }
 
@@ -180,7 +180,8 @@ public class LocalClient implements Client {
     @Override
     public void executeSQL(Query query, List<SQLParameter> parameters,
             boolean calculateTotalSize, Integer skipOption, Integer topOption,
-            String nextOption, int pageSize, final QueryResponse response)  throws SQLException {
+            String nextOption, int pageSize, final QueryResponse response, 
+            final boolean expand)  throws SQLException {
         boolean cache = pageSize > 0; 
         if (cache) {
             CacheHint hint = new CacheHint();
@@ -191,8 +192,9 @@ public class LocalClient implements Client {
         
         boolean getCount = false; 
         getCount = calculateTotalSize;
-        if (!getCount && (topOption != null || skipOption != null)) {
-            query.setLimit(new Limit(skipOption!=null?new Constant(skipOption):null, topOption!=null?new Constant(topOption):null));
+        if (!getCount && !expand && (topOption != null || skipOption != null)) {
+            query.setLimit(new Limit(skipOption!=null?new Constant(skipOption):null, 
+                    topOption!=null?new Constant(topOption):null));
         }
 
         String sessionId = getConnection().getServerConnection().getLogonResult().getSessionID();
@@ -213,7 +215,9 @@ public class LocalClient implements Client {
         }
         LogManager.logDetail(LogConstants.CTX_ODATA, "Teiid-Query:",sql); //$NON-NLS-1$
         
-        final PreparedStatement stmt = getConnection().prepareStatement(sql, cache?ResultSet.TYPE_SCROLL_INSENSITIVE:ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+        final PreparedStatement stmt = getConnection().prepareStatement(sql, 
+                cache?ResultSet.TYPE_SCROLL_INSENSITIVE:ResultSet.TYPE_FORWARD_ONLY, 
+                ResultSet.CONCUR_READ_ONLY);
         if (parameters!= null && !parameters.isEmpty()) {
             for (int i = 0; i < parameters.size(); i++) {
                 stmt.setObject(i+1, parameters.get(i).getValue(), parameters.get(i).getSqlType());
@@ -224,17 +228,25 @@ public class LocalClient implements Client {
                     
         //skip to the initial position
         int count = 0;
+        int entityCount = 0;
         int skipSize = 0;
+        
         //skip based upon the skip value
-        if (getCount && skipOption != null) {
-            skipSize = skipOption;
+        if (nextToken == null && skipOption != null) {            
+            if (skipOption > 0) {                
+                int[] s = skipEntities(response, rs, skipOption);
+                count += s[0];
+                entityCount = s[1];
+                skipSize = count;
+            }                        
         }
+        
         //skip based upon the skipToken
         if (nextToken != null) {
             skipSize += Integer.parseInt(nextToken);
-        }
-        if (skipSize > 0) {
-            count += skip(cache, rs, skipSize);
+            if (skipSize > 0) {
+                count += skip(cache, rs, skipSize);
+            }            
         }
 
         //determine the number of records to return
@@ -251,35 +263,44 @@ public class LocalClient implements Client {
         }
         
         //build the results
-        for (int i = 0; i < size; i++) {
-            count++;
+        int i = 0;
+        int nextCount = count;
+        while(true) {            
             if (!rs.next()) {
                 break;
             }
-            response.addRow(rs);
+            count++;
+            boolean same = response.isSameEntity(rs);
+            if (!same) {
+                i++;
+                if (i > size) {
+                    break;
+                }
+                entityCount++;
+            }
+            nextCount++;
+            response.addRow(rs, same);
         }
         
         //set the count
         if (getCount) {
-            if (!cache) {
-                while (rs.next()) {
-                    count++;
+            while (rs.next()) {
+                count++;
+                if (!response.isSameEntity(rs)) {
+                    entityCount++;
                 }
-            } else {
-                rs.last();
-                count = rs.getRow();
             }
         }
-        response.setCount(count);
+        response.setCount(entityCount);
         
         //set the skipToken if needed
         if (cache && response.size() == pageSize) {
-            long end = skipSize + response.size();
+            long end = nextCount;
             if (getCount) {
                 if (end < Math.min(top, count)) {
                     response.setNextToken(nextToken(cache, sessionId, end));
                 }
-            } else if (rs.next()) {
+            } else if (count != nextCount){
                 response.setNextToken(nextToken(cache, sessionId, end));
                 //will force the entry to cache or is effectively a no-op when already cached
                 rs.last();    
@@ -305,10 +326,29 @@ public class LocalClient implements Client {
                 }
             }
         } else {
+            skipped = skipSize;
             rs.absolute(skipSize);
         }
         return skipped;
     }
+    
+    private int[] skipEntities(QueryResponse response, final ResultSet rs, int skipEntities)
+            throws SQLException {
+        int skipped = 0;
+        int skippedEntities = 0;
+        while (rs.next()) {
+            skipped++;
+            boolean same = response.isSameEntity(rs);
+            if (!same) {                
+                skippedEntities++;
+                if (skippedEntities == skipEntities) {
+                    break;
+                }
+                response.advanceRow(rs, same);
+            }
+        }
+        return new int[] {skipped, skippedEntities};
+    }    
 
     @Override
     public CountResponse executeCount(Query query, List<SQLParameter> parameters)  throws SQLException {
