@@ -157,13 +157,12 @@
                     </execution>
                 </executions>
             </plugin>
-            
+                       
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
                     <descriptors>
                         <descriptor>assembly/src.xml</descriptor>
-                        <descriptor>assembly/client-jar.xml</descriptor>
                         <descriptor>assembly/console-jar.xml</descriptor>    
                         <descriptor>assembly/adminshell/adminshell-dist.xml</descriptor>
                         <descriptor>assembly/embedded-dist.xml</descriptor>
@@ -196,7 +195,7 @@
                             <mainClass>net.sf.retrotranslator.transformer.Retrotranslator</mainClass>
                             <arguments>                     
                                 <argument>-srcjar</argument>
-                                <argument>${project.basedir}/target/teiid-${project.version}-jdbc.jar</argument>
+                                <argument>${project.basedir}/../teiid-jdbc/target/teiid-jdbc-${project.version}.jar</argument>
                                 <argument>-destjar</argument>
                                 <argument>${project.basedir}/target/teiid-${project.version}-jdbc-jdk15.jar</argument>            
                                 <argument>-embed</argument>
@@ -216,7 +215,7 @@
                             <mainClass>net.sf.retrotranslator.transformer.Retrotranslator</mainClass>
                             <arguments>                     
                                 <argument>-srcjar</argument>
-                                <argument>${project.basedir}/target/teiid-${project.version}-jdbc.jar</argument>
+                                <argument>${project.basedir}/../teiid-jdbc/target/teiid-jdbc-${project.version}.jar</argument>
                                 <argument>-destjar</argument>
                                 <argument>${project.basedir}/target/teiid-${project.version}-jdbc-jdk14.jar</argument>            
                                 <argument>-embed</argument>
@@ -277,7 +276,6 @@
                         <configuration>
                             <descriptors>
                                 <descriptor>assembly/src.xml</descriptor>
-                                <descriptor>assembly/client-jar.xml</descriptor>
                                 <descriptor>assembly/console-jar.xml</descriptor>
                                 <descriptor>assembly/adminshell/adminshell-dist.xml</descriptor>
                                 <descriptor>assembly/embedded-dist.xml</descriptor>

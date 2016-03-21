@@ -5,7 +5,7 @@
   
   <formats>
     <format>zip</format>
-    <format>dir</format>
+    <!--format>dir</format-->
   </formats>
   
   <includeBaseDirectory>false</includeBaseDirectory>
@@ -122,14 +122,6 @@
         </includes>                
         <outputDirectory>docs/schema</outputDirectory>
     </fileSet>    
-    
-     <fileSet>  
-        <directory>target</directory>
-        <outputDirectory>${jdbcjar.loc}</outputDirectory>      
-        <includes>
-          <include>teiid-*-jdbc.jar</include>
-        </includes>      
-    </fileSet>
     	
     <fileSet>  
         <directory>target</directory>
@@ -150,6 +142,18 @@
   
   <!--  these have external dependent clients like connectors-->
   <moduleSets>
+    <moduleSet>
+      <useAllReactorProjects>true</useAllReactorProjects>
+      <includes>
+        <include>org.jboss.teiid:teiid-jdbc</include>   
+      </includes>
+      <binaries>
+        <includeDependencies>false</includeDependencies>
+        <unpack>false</unpack>
+        <outputDirectory>${jdbcjar.loc}</outputDirectory>
+        <outputFileNameMapping>teiid-${project.version}-jdbc.jar</outputFileNameMapping>
+      </binaries>
+    </moduleSet>
 
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>

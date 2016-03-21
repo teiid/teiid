@@ -33,6 +33,19 @@
         </binaries>
       
     </moduleSet>
+    
+    <moduleSet>
+      <useAllReactorProjects>true</useAllReactorProjects>
+      <includes>
+        <include>org.jboss.teiid:teiid-jdbc</include>   
+      </includes>
+      <binaries>
+        <includeDependencies>false</includeDependencies>
+        <unpack>false</unpack>
+        <outputDirectory>lib</outputDirectory>
+        <outputFileNameMapping>teiid-${project.version}-jdbc.jar</outputFileNameMapping>       
+      </binaries>
+    </moduleSet>    
   </moduleSets>
   
   <fileSets>
@@ -53,14 +66,6 @@
           <exclude>**/*.sh</exclude>
         </excludes>
     </fileSet>      
-    
-    <fileSet>
-      <directory>target</directory>
-      <includes>
-        <include>teiid-${project.version}-jdbc.jar</include>
-      </includes>
-      <outputDirectory>lib</outputDirectory>
-    </fileSet>
         
   </fileSets>
       

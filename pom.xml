@@ -1714,6 +1714,7 @@
 		<module>common-core</module>
 		<module>api</module>
 		<module>client</module>
+		<module>teiid-jdbc</module>
 		<module>engine</module>
 		<module>olingo-common</module>
 		<module>olingo-patches</module>
