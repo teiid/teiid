@@ -97,7 +97,10 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.loopback.LoopbackExecutionFactory;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -871,7 +874,8 @@ public class TestODataIntegration {
         try {
             ModelMetaData mmd = new ModelMetaData();
             mmd.setName("vw");
-            mmd.addSourceMetadata("ddl", "create view x (a string primary key, b integer) as select 'xyz', 123 union all select 'abc', 456;");
+            mmd.addSourceMetadata("ddl", "create view x (a string primary key, b integer) "
+                    + "as select 'xyz', 123 union all select 'abc', 456;");
             mmd.setModelType(Model.Type.VIRTUAL);
             teiid.deployVDB("northwind", mmd);
 
@@ -881,9 +885,9 @@ public class TestODataIntegration {
             
             ContentResponse response = http.GET(baseURL + "/northwind/vw/x?$format=json");
             assertEquals(200, response.getStatus());
-            String starts = "{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"abc\",\"b\":456}],\"@odata.nextLink\":\""+baseURL+"/northwind/vw/x?$format=json&$skiptoken=";
+            String starts = "{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"abc\",\"b\":456}],"
+                    + "\"@odata.nextLink\":\""+baseURL+"/northwind/vw/x?$format=json&$skiptoken=";
             String ends = "--1\"}";
-            System.out.println(baseURL);
             assertTrue(response.getContentAsString(), response.getContentAsString().startsWith(starts));
             assertTrue(response.getContentAsString().endsWith(ends));
             
@@ -1048,7 +1052,8 @@ public class TestODataIntegration {
         try {
             ModelMetaData mmd = new ModelMetaData();
             mmd.setName("vw");
-            mmd.addSourceMetadata("ddl", "create view x (a string primary key, b integer) as select 'xyz', 123 union all select 'abc', 456;");
+            mmd.addSourceMetadata("ddl", "create view x (a string primary key, b integer) "
+                    + "as select 'xyz', 123 union all select 'abc', 456;");
             mmd.setModelType(Model.Type.VIRTUAL);
             teiid.deployVDB("northwind", mmd);
 
@@ -1061,7 +1066,6 @@ public class TestODataIntegration {
             assertEquals("{\"@odata.context\":\"$metadata#x\",\"@odata.count\":2,\"value\":[{\"a\":\"xyz\",\"b\":123}]}", 
                     response.getContentAsString());
             
-
             //effectively the same as above
             response = http.GET(baseURL + "/northwind/vw/x?$format=json&$count=true&$skip=1");
             assertEquals(200, response.getStatus());
@@ -1072,7 +1076,7 @@ public class TestODataIntegration {
             response = http.GET(baseURL + "/northwind/vw/x?$format=json&$count=true");
             assertEquals(200, response.getStatus());
             String ends = "--1\"}";
-            assertTrue(response.getContentAsString().endsWith(ends));
+            assertTrue(response.getContentAsString(), response.getContentAsString().endsWith(ends));
 
             response = http.GET(baseURL + "/northwind/vw/x/$count");
             assertEquals(200, response.getStatus());            
@@ -1406,7 +1410,7 @@ public class TestODataIntegration {
             response = http.newRequest(baseURL + "/northwind/m/z?$expand=FKX($top=1)")
                     .method("GET")
                     .send();
-            assertEquals(501, response.getStatus());
+            assertEquals(200, response.getStatus());
 
             /* TODO
             response = http.newRequest(baseURL + "/northwind/m/z?$expand=FKX/a&$select=a")
@@ -1842,6 +1846,13 @@ public class TestODataIntegration {
                 Arrays.asList(1, 3, "country"), Arrays.asList(1,4, "abroad"),
                 Arrays.asList(2, 5, "state"), Arrays.asList(2, 6, "country"),
                 Arrays.asList(3,7,"town"), Arrays.asList(3, 8, "town")));
+        hc.addData("SELECT Orders.customerid, Orders.place, Orders.id FROM Orders", 
+                Arrays.asList(Arrays.asList(1, "town", 1), Arrays.asList(1, "state", 2),
+                Arrays.asList(1, "country",3), Arrays.asList(1,"abroad", 4),
+                Arrays.asList(2, "state", 5), Arrays.asList(2, "country", 6),
+                Arrays.asList(3,"town", 7), Arrays.asList(3, "town", 8)));
+        
+        
         teiid.addTranslator("x12", hc);
         
         try {
@@ -1868,7 +1879,144 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("", response.getContentAsString());
+            assertEquals("{\"@odata.context\":\"$metadata#Customers\","
+                    + "\"@odata.count\":4,\""
+                    + "value\":["
+                    + "{\"id\":1,\"name\":\"customer1\","
+                        + "\"Orders_FK0\":["
+                            + "{\"id\":1,\"customerid\":1,\"place\":\"town\"},"
+                            + "{\"id\":2,\"customerid\":1,\"place\":\"state\"},"
+                            + "{\"id\":3,\"customerid\":1,\"place\":\"country\"},"
+                            + "{\"id\":4,\"customerid\":1,\"place\":\"abroad\"}"
+                    + "]},"
+                    + "{\"id\":2,\"name\":\"customer2\","
+                        + "\"Orders_FK0\":["
+                            + "{\"id\":5,\"customerid\":2,\"place\":\"state\"},"
+                            + "{\"id\":6,\"customerid\":2,\"place\":\"country\"}"
+                    + "]},"
+                    + "{\"id\":3,\"name\":\"customer3\","
+                        + "\"Orders_FK0\":["
+                            + "{\"id\":7,\"customerid\":3,\"place\":\"town\"},"
+                            + "{\"id\":8,\"customerid\":3,\"place\":\"town\"}"
+                    + "]},"
+                    + "{\"id\":4,\"name\":\"customer4\","
+                        + "\"Orders_FK0\":["
+                        + "]}]}", 
+                    response.getContentAsString());
+            
+            response = http.newRequest(baseURL + "/northwind/m/Customers?$expand=Orders_FK0&$count=true&$skip=3")
+                    .method("GET")
+                    .send();
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#Customers\","
+                    + "\"@odata.count\":4,\"value\":["
+                    + "{\"id\":4,\"name\":\"customer4\","
+                    + "\"Orders_FK0\":[]"
+                    + "}]}", response.getContentAsString());
+            
+            response = http.newRequest(baseURL + "/northwind/m/Customers?$expand=Orders_FK0&$skip=2")
+                    .method("GET")
+                    .header("Prefer", "odata.maxpagesize=1")
+                    .send();
+            assertEquals(200, response.getStatus());
+            assertTrue(response.getContentAsString().startsWith("{\"@odata.context\":\"$metadata#Customers\","
+                    + "\"value\":[{\"id\":3,\"name\":\"customer3\","
+                    + "\"Orders_FK0\":["
+                    + "{\"id\":7,\"customerid\":3,\"place\":\"town\"},"
+                    + "{\"id\":8,\"customerid\":3,\"place\":\"town\"}"
+                    + "]}],"
+                    + "\"@odata.nextLink\":\"http://localhost:"));
+            assertTrue(response.getContentAsString(), response.getContentAsString().endsWith("--8\"}"));
+            
+            JsonParser parser = new JsonFactory(new ObjectMapper()
+                .configure(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true))
+                .createParser(response.getContentAsString());
+            JsonNode node = parser.getCodec().readTree(parser);
+            
+            response = http.newRequest(node.get("@odata.nextLink").asText())
+                    .method("GET")
+                    .send();
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#Customers\","
+                    + "\"value\":["
+                    + "{\"id\":4,\"name\":\"customer4\","
+                    + "\"Orders_FK0\":[]"
+                    + "}]}", response.getContentAsString());
+
+            // system options
+            response = http.newRequest(baseURL + "/northwind/m/Customers?$expand=Orders_FK0($skip=2)&$count=true")
+                    .method("GET")
+                    .send();
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#Customers\","
+                    + "\"@odata.count\":4,\""
+                    + "value\":["
+                    + "{\"id\":1,\"name\":\"customer1\","
+                        + "\"Orders_FK0\":["
+                            + "{\"id\":3,\"customerid\":1,\"place\":\"country\"},"
+                            + "{\"id\":4,\"customerid\":1,\"place\":\"abroad\"}"
+                    + "]},"
+                    + "{\"id\":2,\"name\":\"customer2\","
+                        + "\"Orders_FK0\":["
+                    + "]},"
+                    + "{\"id\":3,\"name\":\"customer3\","
+                        + "\"Orders_FK0\":["
+                    + "]},"
+                    + "{\"id\":4,\"name\":\"customer4\","
+                        + "\"Orders_FK0\":["
+                        + "]}]}", 
+                    response.getContentAsString());     
+            
+            response = http.newRequest(baseURL + "/northwind/m/Customers?$expand=Orders_FK0($top=2;$count=true)&$count=true")
+                    .method("GET")
+                    .send();
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#Customers\","
+                    + "\"@odata.count\":4,\""
+                    + "value\":["
+                    + "{\"id\":1,\"name\":\"customer1\","
+                        + "\"Orders_FK0\":["
+                        + "{\"id\":1,\"customerid\":1,\"place\":\"town\"},"
+                        + "{\"id\":2,\"customerid\":1,\"place\":\"state\"}"
+                    + "]},"
+                    + "{\"id\":2,\"name\":\"customer2\","
+                        + "\"Orders_FK0\":["
+                        + "{\"id\":5,\"customerid\":2,\"place\":\"state\"},"
+                        + "{\"id\":6,\"customerid\":2,\"place\":\"country\"}"                    
+                    + "]},"
+                    + "{\"id\":3,\"name\":\"customer3\","
+                        + "\"Orders_FK0\":["
+                        + "{\"id\":7,\"customerid\":3,\"place\":\"town\"},"
+                        + "{\"id\":8,\"customerid\":3,\"place\":\"town\"}"                    
+                    + "]},"
+                    + "{\"id\":4,\"name\":\"customer4\","
+                        + "\"Orders_FK0\":["
+                        + "]}]}", 
+                    response.getContentAsString());     
+            
+            response = http.newRequest(baseURL + "/northwind/m/Customers?$expand=Orders_FK0($top=1;$select=place)&$count=true")
+                    .method("GET")
+                    .send();
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#Customers(Orders_FK0(place))\","
+                    + "\"@odata.count\":4,\""
+                    + "value\":["
+                    + "{\"id\":1,\"name\":\"customer1\","
+                        + "\"Orders_FK0\":["
+                        + "{\"place\":\"town\"}"
+                    + "]},"
+                    + "{\"id\":2,\"name\":\"customer2\","
+                        + "\"Orders_FK0\":["
+                        + "{\"place\":\"state\"}"
+                    + "]},"
+                    + "{\"id\":3,\"name\":\"customer3\","
+                        + "\"Orders_FK0\":["
+                        + "{\"place\":\"town\"}"
+                    + "]},"
+                    + "{\"id\":4,\"name\":\"customer4\","
+                        + "\"Orders_FK0\":["
+                        + "]}]}", 
+                    response.getContentAsString());        
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");

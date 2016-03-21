@@ -45,7 +45,7 @@ public interface Client {
 
     void executeSQL(Query query, List<SQLParameter> parameters,
             boolean calculateTotalSize, Integer skip, Integer top, String nextOption, int pageSize,
-            QueryResponse response) throws SQLException;
+            QueryResponse response, boolean expand) throws SQLException;
 
     CountResponse executeCount(Query query, List<SQLParameter> parameters) throws SQLException;
 

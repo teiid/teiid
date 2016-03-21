@@ -166,7 +166,7 @@ public class TeiidServiceHandler implements ServiceHandler {
         try {
             Query query = visitor.selectQuery();
             queryResponse = executeQuery(request, visitor, query);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             throw new ODataApplicationException(e.getMessage(),
                     HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
                     Locale.getDefault(), e);
@@ -351,7 +351,8 @@ public class TeiidServiceHandler implements ServiceHandler {
 
             getClient().executeSQL(query, visitor.getParameters(),
                     visitor.includeTotalSize(), visitor.getSkip(),
-                    visitor.getTop(), visitor.getNextToken(), Integer.parseInt(pageSize), result);
+                    visitor.getTop(), visitor.getNextToken(), Integer.parseInt(pageSize), result, 
+                    !visitor.getContext().getExpands().isEmpty());
             
             return result;
         }
@@ -448,7 +449,7 @@ public class TeiidServiceHandler implements ServiceHandler {
                                 .getProperty(Client.INVALID_CHARACTER_REPLACEMENT),
                         visitor.getContext());
                 
-                getClient().executeSQL(query, visitor.getParameters(), false, null, null, null, 1, result);
+                getClient().executeSQL(query, visitor.getParameters(), false, null, null, null, 1, result, false);
                 
                 if (!result.getEntities().isEmpty()) {
                     entity = result.getEntities().get(0);
