@@ -25,8 +25,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.sql.Blob;
-import java.sql.Clob;
 import java.sql.SQLXML;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -222,19 +220,29 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                 
                 // process $select
                 processSelectOption(ei.getSelectOption(), expandResource, this.reference);
-                
                 this.context.addExpand(expandResource);
+                
+                if (ei.getSkipOption() != null) {
+                    expandResource.setSkip(ei.getSkipOption().getValue());
+                }
+                
+                if (ei.getCountOption() != null) {
+                    expandResource.setCalculateCount(ei.getCountOption().getValue());
+                }
+                
+                if (ei.getTopOption() != null) {
+                    expandResource.setTop(ei.getTopOption().getValue());
+                }
+
+                if (ei.getExpandOption() != null
+                        || ei.getSearchOption() != null
+                        || ei.getLevelsOption() != null) {
+                    this.exceptions.add(new TeiidNotImplementedException(
+                            ODataPlugin.Event.TEIID16041, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16041)));
+                }                            
             } catch (TeiidException e) {
                 this.exceptions.add(e);
-            }
-            
-            if (ei.getSkipOption() != null 
-                    || ei.getCountOption() != null
-                    || ei.getTopOption() != null
-                    || ei.getLevelsOption() != null) {
-                this.exceptions.add(new TeiidNotImplementedException(
-                        ODataPlugin.Event.TEIID16041, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16041)));
-            }
+            }            
         }
     }
 
@@ -296,9 +304,12 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             resource.addAllColumns(onlyReference);
         }
         else {
+            boolean addkeys = true;
+            ArrayList<String> keys = new ArrayList<String>(resource.getEdmEntityType().getKeyPredicateNames());
             for (SelectItem si:option.getSelectItems()) {
                 if (si.isStar()) {
                     resource.addAllColumns(onlyReference);
+                    addkeys = false;
                     continue;
                 }
 
@@ -309,8 +320,17 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                             this.parseService);
                     ElementSymbol expr = (ElementSymbol)visitor.getExpression(si.getResourcePath());
                     resource.addVisibleColumn(expr.getShortName(), expr);
+                    keys.remove(expr.getShortName());
                 } catch (TeiidException e) {
                     this.exceptions.add(e);
+                }
+            }
+            if (!keys.isEmpty() && addkeys) {
+                for (String key:keys) {
+                    ElementSymbol es = new ElementSymbol(key, resource.getGroupSymbol());
+                    if (!resource.hasProjectedColumn(es)) {
+                        resource.addProjectedColumn(key, es, false);
+                    }
                 }
             }
         }
