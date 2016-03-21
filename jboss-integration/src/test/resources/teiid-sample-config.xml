@@ -36,9 +36,9 @@
     <transport name="odbc" protocol="pg" socket-binding="teiid-odbc" max-socket-threads="1" input-buffer-size="2" output-buffer-size="3">
         <pg max-lob-size-in-bytes="50"/>
         <ssl mode="enabled" authentication-mode="2-way" ssl-protocol="ssl-protocol" keymanagement-algorithm="algo"
-            enabled-cipher-suites="x,y">
+            enabled-cipher-suites="x,y" >
             <keystore  key-alias="x" key-password="y" name="keystore name" password="keystore passs" type="keystore type"/>
-            <truststore name="truststore name" password="truststore pass"/>
+            <truststore name="truststore name" password="truststore pass" check-expired="true"/>
         </ssl>
     </transport>
     

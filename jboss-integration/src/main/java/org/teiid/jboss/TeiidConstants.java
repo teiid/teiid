@@ -525,7 +525,6 @@ public class TeiidConstants {
 	    .setAllowExpression(false)
 	    .setAllowNull(true)
 	    .setDefaultValue(new ModelNode(false))
-	    .setRequires(Element.SSL_TRUSTSTORE_CHECK_EXIRIED_ATTRIBUTE.getModelName())
 	    .build();	
 
 	// Translator
