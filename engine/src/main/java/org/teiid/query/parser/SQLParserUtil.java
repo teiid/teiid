@@ -317,11 +317,21 @@ public class SQLParserUtil {
     	return false;
 	}
 	
-	private static Pattern CACHE_HINT = Pattern.compile("/\\*\\+?\\s*cache(\\(\\s*(pref_mem)?\\s*(ttl:\\d{1,19})?\\s*(updatable)?\\s*(scope:(session|vdb|user))?\\s*(min:\\d{1,19})?[^\\)]*\\))?[^\\*]*\\*\\/.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL); //$NON-NLS-1$
+	private static Pattern HINT = Pattern.compile("\\s*/\\*([^/]*)\\*/", Pattern.CASE_INSENSITIVE | Pattern.DOTALL); //$NON-NLS-1$
+	private static Pattern CACHE_HINT = Pattern.compile("\\+?\\s*cache(\\(\\s*(pref_mem)?\\s*(ttl:\\d{1,19})?\\s*(updatable)?\\s*(scope:(session|vdb|user))?\\s*(min:\\d{1,19})?[^\\)]*\\))?[^\\*]*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL); //$NON-NLS-1$
     
 	static CacheHint getQueryCacheOption(String query) {
-    	Matcher match = CACHE_HINT.matcher(query);
-    	if (match.matches()) {
+    	Matcher hintMatch = HINT.matcher(query);
+    	int start = 0;
+    	while (hintMatch.find()) {
+    		if (start != hintMatch.start()) {
+    			break;
+    		}
+    		start = hintMatch.end();
+    		Matcher match = CACHE_HINT.matcher(hintMatch.group(1));
+    		if (!match.matches()) {
+    			continue;
+    		}
     		CacheHint hint = new CacheHint();
     		if (match.group(2) !=null) {
     			hint.setPrefersMemory(true);
