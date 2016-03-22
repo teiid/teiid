@@ -22,7 +22,7 @@
 
 package org.teiid.translator.google;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.Properties;
 
@@ -49,8 +49,10 @@ import org.teiid.translator.google.visitor.SpreadsheetInsertVisitor;
 import org.teiid.translator.google.visitor.SpreadsheetSQLVisitor;
 import org.teiid.translator.google.visitor.SpreadsheetUpdateVisitor;
 import org.teiid.translator.goole.api.GoogleSpreadsheetConnection;
+import org.teiid.translator.goole.api.metadata.Column;
 import org.teiid.translator.goole.api.metadata.SpreadsheetColumnType;
 import org.teiid.translator.goole.api.metadata.SpreadsheetInfo;
+import org.teiid.translator.goole.api.metadata.Util;
 import org.teiid.translator.goole.api.metadata.Worksheet;
 
 /**
@@ -68,7 +70,11 @@ public class TestSQLtoSpreadsheetQuery {
 	    
 		people=  new SpreadsheetInfo("People");
 		Worksheet worksheet = people.createWorksheet("PeopleList");
-		worksheet.setColumnCount(3);
+		for (int i = 1; i <= 3; i++) {
+			Column newCol = new Column();
+			newCol.setAlphaName(Util.convertColumnIDtoString(i));
+			worksheet.addColumn(newCol.getAlphaName(), newCol);
+		}
 		worksheet.getColumns().get("C").setDataType(SpreadsheetColumnType.NUMBER);
 		Mockito.stub(conn.getSpreadsheetInfo()).toReturn(people);
 
