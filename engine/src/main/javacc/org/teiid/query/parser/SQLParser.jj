@@ -1833,13 +1833,16 @@ WithQueryCommand withListElement(ParseInfo info) :
    String name = null;
    List<ElementSymbol> columns = null;
    QueryCommand queryExpression = null;
+   Token lparen = null;
 }
 {
 	name = id(Boolean.FALSE)
 	[ columns = columnList(true, true)] 
-	<AS> <LPAREN> queryExpression = queryExpression(info) <RPAREN>
+	<AS> lparen = <LPAREN> queryExpression = queryExpression(info) <RPAREN>
 	{
-	    return new WithQueryCommand(new GroupSymbol(name), columns, queryExpression);
+	    WithQueryCommand result = new WithQueryCommand(new GroupSymbol(name), columns, queryExpression);
+	    result.setNoInline(isNoInline(lparen));
+	    return result;
 	}
 }
 

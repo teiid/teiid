@@ -12,11 +12,14 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public class WithQueryCommand implements SubqueryContainer<QueryCommand> {
 	
+	public static final String NO_INLINE = "no_inline"; //$NON-NLS-1$
+	
 	private GroupSymbol groupSymbol;
 	private List<ElementSymbol> columns;
 	private QueryCommand queryExpression;
 	private TupleBuffer tupleBuffer;
 	private boolean recursive;
+	private boolean noInline;
 	
 	public WithQueryCommand(GroupSymbol groupSymbol, List<ElementSymbol> columns, QueryCommand queryExpression) {
 		this.groupSymbol = groupSymbol;
@@ -58,6 +61,7 @@ public class WithQueryCommand implements SubqueryContainer<QueryCommand> {
 		}
 		clone.tupleBuffer = this.tupleBuffer;
 		clone.recursive = recursive;
+		clone.noInline = noInline;
 		return clone;
 	}
 	
@@ -77,7 +81,8 @@ public class WithQueryCommand implements SubqueryContainer<QueryCommand> {
 		WithQueryCommand other = (WithQueryCommand)obj;
 		return EquivalenceUtil.areEqual(groupSymbol, other.getGroupSymbol()) &&
 		EquivalenceUtil.areEqual(this.columns, other.getColumns()) &&
-		EquivalenceUtil.areEqual(this.queryExpression, other.queryExpression);
+		EquivalenceUtil.areEqual(this.queryExpression, other.queryExpression) &&
+		noInline == other.noInline;
 	}
 	
 	@Override
@@ -103,6 +108,14 @@ public class WithQueryCommand implements SubqueryContainer<QueryCommand> {
 	
 	public void setRecursive(boolean recursive) {
 		this.recursive = recursive;
+	}
+	
+	public boolean isNoInline() {
+		return noInline;
+	}
+	
+	public void setNoInline(boolean noUnnest) {
+		this.noInline = noUnnest;
 	}
 	
 }

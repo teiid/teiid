@@ -58,7 +58,7 @@ public class TestSourceHints {
 	}
 	
 	@Test public void testWithHint() {
-		String sql = "WITH x as (SELECT /*+ sh:'x' */ e1 from pm1.g2) " +
+		String sql = "WITH x as /*+ no_inline */ (SELECT /*+ sh:'x' */ e1 from pm1.g2) " +
 				"SELECT /*+ sh:'foo' bar:'leading' */ g1.e1 from pm1.g1, x where g1.e1 = x.e1 order by g1.e1 limit 1"; //$NON-NLS-1$
 		
 		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
@@ -68,7 +68,7 @@ public class TestSourceHints {
 	}
 	
 	@Test public void testWithHintPushdown() throws TeiidException {
-		String sql = "WITH x as (SELECT /*+ sh:'x' */ e1 from pm1.g2) " +
+		String sql = "WITH x as /*+ no_inline */ (SELECT /*+ sh:'x' */ e1 from pm1.g2) " +
 				"SELECT /*+ sh:'foo' bar:'leading' */ g1.e1 from pm1.g1, x where g1.e1 = x.e1 order by g1.e1 limit 1"; //$NON-NLS-1$
 		
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();

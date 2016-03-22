@@ -374,6 +374,7 @@ public class RelationalPlanner {
 				continue;
 			}
 			WithQueryCommand wqc = new WithQueryCommand(with.getGroupSymbol(), with.getColumns(), withCommand);
+			wqc.setNoInline(with.isNoInline());
 			((TempMetadataID)with.getGroupSymbol().getMetadataID()).getTableData().setModel(modelID);
 			this.withPlanningState.pushdownWith.put(with.getGroupSymbol().getName(), wqc);
 		}

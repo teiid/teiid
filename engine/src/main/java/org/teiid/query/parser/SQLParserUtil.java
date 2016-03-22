@@ -188,7 +188,6 @@ public class SQLParserUtil {
     	}
     	Matcher m = hintPattern.matcher(comment);
     	int start = 0;
-    	boolean makedep = false;
     	while (m.find(start)) {
     		String hint = m.group(1);
     		start = m.end();
@@ -212,6 +211,20 @@ public class SQLParserUtil {
                 fromClause.setOptional(true);
             }
     	}
+    }
+    
+    boolean isNoInline(Token paren){
+    	String comment = getComment(paren);
+    	if (comment == null || comment.isEmpty()) {
+    		return false;
+    	}
+    	String[] parts = comment.split("\\s"); //$NON-NLS-1$
+    	for (String part : parts) {
+    		if (WithQueryCommand.NO_INLINE.equalsIgnoreCase(part)) {
+    			return true;
+    		}
+    	}
+    	return false;
     }
 
 	//([max:val] [[no] join])

@@ -246,7 +246,7 @@ public class TestSqlServerConversionVisitor {
     }
     
     @Test public void testWith() throws Exception {
-        String input = "with x as (select intkey from bqt1.smalla) select intkey from x limit 100"; //$NON-NLS-1$
+        String input = "with x as /*+ no_inline */ (select intkey from bqt1.smalla) select intkey from x limit 100"; //$NON-NLS-1$
         String output = "WITH x (IntKey) AS (SELECT SmallA.IntKey FROM SmallA) SELECT TOP 100 g_0.intkey AS c_0 FROM x g_0"; //$NON-NLS-1$
                
 		CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
@@ -284,7 +284,7 @@ public class TestSqlServerConversionVisitor {
     }
     
     @Test public void testWithInsert() throws Exception {
-        String input = "insert into bqt1.smalla (intkey) with a (x) as (select intnum from bqt1.smallb) select x from a"; //$NON-NLS-1$
+        String input = "insert into bqt1.smalla (intkey) with a (x) as /*+ no_inline */ (select intnum from bqt1.smallb) select x from a"; //$NON-NLS-1$
         String output = "WITH a (x) AS (SELECT SmallB.IntNum FROM SmallB) INSERT INTO SmallA (IntKey) SELECT a.x FROM a"; //$NON-NLS-1$
                
 		CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());

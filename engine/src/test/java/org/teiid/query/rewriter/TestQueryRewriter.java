@@ -1729,5 +1729,40 @@ public class TestQueryRewriter {
         
 		helpTestRewriteCommand(sql, "SELECT UNKNOWN");
     }
+	
+	@Test public void testWithInliningUnused() throws Exception {
+		String sql = "with a as (select 1) select 2"; //$NON-NLS-1$
+		helpTestRewriteCommand(sql, "SELECT 2");
+	}
+
+	@Test public void testWithInliningChained() throws Exception {
+		String sql = "with a (x) as (select x from (select 1 as x) as b), b as (select * from a) select * from b"; //$NON-NLS-1$
+		helpTestRewriteCommand(sql, "SELECT b.x FROM (SELECT a.x FROM (SELECT x FROM (SELECT 1 AS x) AS b) AS a) AS b");
+    }
+	
+	@Test public void testWithInliningRecursive() throws Exception {
+		String sql = "with a as (select 1 as col union all select col + 1 from a) select * from a"; //$NON-NLS-1$
+		helpTestRewriteCommand(sql, "WITH a (col) AS (SELECT 1 AS col UNION ALL SELECT (col + 1) FROM a) SELECT a.col FROM a");
+	}
+	
+	@Test public void testWithScalar() throws Exception {
+		String sql = "with a as (select 1 as col) select * from a, a as other"; //$NON-NLS-1$
+		helpTestRewriteCommand(sql, "SELECT a.col, other.col FROM (SELECT 1 AS col) AS a, (SELECT 1 AS col) AS other");
+	}
+	
+	@Test public void testWithMultiple() throws Exception {
+		String sql = "with a as (select e1 from pm1.g1) select * from a, a as other"; //$NON-NLS-1$
+		helpTestRewriteCommand(sql, "WITH a (e1) AS (SELECT e1 FROM pm1.g1) SELECT a.e1, other.e1 FROM a, a AS other");
+	}
+	
+	@Test public void testRewriteWithRedefinedName() throws Exception {
+		String sql = "with a as (select e1 from pm1.g1) select * from (select 1 as x) as a"; //$NON-NLS-1$
+		helpTestRewriteCommand(sql, "SELECT a.x FROM (SELECT 1 AS x) AS a");
+	}
+	
+	@Test public void testDeepReplacement() throws Exception {
+		String sql = "with a as (select e1 from pm1.g1) select (select e1 from a) from pm1.g2"; //$NON-NLS-1$
+		helpTestRewriteCommand(sql, "SELECT (SELECT e1 FROM (SELECT e1 FROM pm1.g1) AS a LIMIT 2) FROM pm1.g2");
+	}
 
 }

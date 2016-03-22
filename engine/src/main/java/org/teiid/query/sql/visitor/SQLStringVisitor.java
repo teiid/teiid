@@ -826,6 +826,14 @@ public class SQLStringVisitor extends LanguageVisitor {
     		append(SPACE);
     	}
     	append(AS);
+    	if (obj.isNoInline()) {
+    		append(SPACE);
+        	append(BEGIN_HINT);
+            append(SPACE);
+            append(WithQueryCommand.NO_INLINE);
+            append(SPACE);
+            append(END_HINT);
+    	}
     	append(SPACE);
     	append(Tokens.LPAREN);
     	if (obj.getCommand() == null) {
@@ -1233,7 +1241,15 @@ public class SQLStringVisitor extends LanguageVisitor {
     @Override
     public void visit( UnaryFromClause obj ) {
         addHintComment(obj);
-        visitNode(obj.getGroup());
+        if (obj.getExpandedCommand() != null) {
+            append("(");//$NON-NLS-1$
+            visitNode(obj.getExpandedCommand());
+            append(")");//$NON-NLS-1$
+            append(" AS ");//$NON-NLS-1$
+            append(escapeSinglePart(obj.getGroup().getName()));
+        } else {
+        	visitNode(obj.getGroup());
+    	}
     }
 
     @Override

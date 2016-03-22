@@ -107,7 +107,7 @@ public class TestOracleTranslator {
 	@Test public void testSourceHint2() throws Exception {
 		ExecutionContextImpl impl = new FakeExecutionContextImpl();
 		impl.setHints(Arrays.asList("hello world"));
-		helpTestVisitor(getTestVDB(), "with x (y) as (select part_name from parts) select y from x", impl, null, "WITH x AS (SELECT PARTS.PART_NAME AS y FROM PARTS) SELECT /*+ hello world */ g_0.y FROM x g_0", true);
+		helpTestVisitor(getTestVDB(), "with x (y) as /*+ no_inline */ (select part_name from parts) select y from x", impl, null, "WITH x AS (SELECT PARTS.PART_NAME AS y FROM PARTS) SELECT /*+ hello world */ g_0.y FROM x g_0", true);
 	}
 	
 	@Test public void testSourceHint3() throws Exception {
@@ -1072,7 +1072,7 @@ public class TestOracleTranslator {
     }
     
     @Test public void testWith() throws Exception {
-        String input = "with a (col) as (select intkey from bqt1.smallb) select intkey, col from bqt1.smalla, a where intkey = 5"; //$NON-NLS-1$
+        String input = "with a (col) as /*+ no_inline */ (select intkey from bqt1.smallb) select intkey, col from bqt1.smalla, a where intkey = 5"; //$NON-NLS-1$
         String output = "WITH a AS (SELECT SmallB.IntKey AS col FROM SmallB) SELECT SmallA.IntKey, a.col FROM SmallA, a WHERE SmallA.IntKey = 5"; //$NON-NLS-1$
                
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, null,
@@ -1081,7 +1081,7 @@ public class TestOracleTranslator {
     }
     
     @Test public void testWithAndLimit() throws Exception {
-        String input = "with a (col) as (select intkey from bqt1.smallb) select intkey, col from bqt1.smalla, a where intkey = 5 limit 10"; //$NON-NLS-1$
+        String input = "with a (col) as /*+ no_inline */ (select intkey from bqt1.smallb) select intkey, col from bqt1.smalla, a where intkey = 5 limit 10"; //$NON-NLS-1$
         String output = "WITH a AS (SELECT SmallB.IntKey AS col FROM SmallB) SELECT * FROM (SELECT SmallA.IntKey, a.col FROM SmallA, a WHERE SmallA.IntKey = 5) WHERE ROWNUM <= 10"; //$NON-NLS-1$
                
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, null,

@@ -72,6 +72,7 @@ import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.PredicateCriteria.Negatable;
 import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
+import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.proc.*;
@@ -197,32 +198,74 @@ public class QueryRewriter {
             	if (removeOrderBy && queryCommand.getLimit() == null) {
             		queryCommand.setOrderBy(null);
                 }
-            	Map<Object, WithQueryCommand> replacements = null;
-            	if (queryCommand.getWith() != null) {
-            		outer: for (WithQueryCommand withQueryCommand : queryCommand.getWith()) {
-            			if (withQueryCommand.getColumns() == null) {
+				List<WithQueryCommand> withList = queryCommand.getWith();
+				if (withList != null) {
+					queryCommand.setWith(null);
+					Collection<UnaryFromClause> clauses = getUnaryFromClauses(queryCommand);
+					queryCommand.setWith(withList);
+					WithQueryCommand previous = null;
+            		outer: for (int i = withList.size() - 1; i >= 0; i--) {
+            			if (previous != null) {
+    						clauses.addAll(getUnaryFromClauses(previous.getCommand()));
+            			}
+                    	WithQueryCommand withQueryCommand = withList.get(i);
+                    	previous = withQueryCommand;
+                    	if (withQueryCommand.getColumns() == null) {
             				List<ElementSymbol> columns = ResolverUtil.resolveElementsInGroup(withQueryCommand.getGroupSymbol(), metadata);
             				withQueryCommand.setColumns(LanguageObject.Util.deepClone(columns, ElementSymbol.class));
             			}
 						rewriteSubqueryContainer(withQueryCommand, true);
 						
-						//check for scalar with clauses
-						if (GroupCollectorVisitor.getGroups(withQueryCommand.getCommand(), false).isEmpty()) {
-							//if deterministic, just inline
-							for (Expression ex : FunctionCollectorVisitor.getFunctions(withQueryCommand.getCommand(), false, true)) {
-					            if (FunctionCollectorVisitor.isNonDeterministic(ex)) {
-					            	continue outer;
-					            }
+						//can't inline with a hint or once it's planned
+            			if (withQueryCommand.isNoInline() || withQueryCommand.getCommand().getProcessorPlan() != null) {
+    						continue;
+                    	}
+            			
+            			boolean removeOnly = false;
+            			//check for scalar with clauses
+            			boolean replaceScalar = replaceScalar(withQueryCommand);
+						if (!replaceScalar) {
+							int referenceCount = 0;
+							for (UnaryFromClause ufc : clauses) {
+								if (ufc.getGroup().getMetadataID() != withQueryCommand.getGroupSymbol().getMetadataID()) {
+									continue;
+								}
+								referenceCount++;
+								if (referenceCount > 1) {
+									continue outer; //referenced in more than 1 location
+								}
 							}
-							if (replacements == null) {
-								replacements = new HashMap<Object, WithQueryCommand>();
+							if (referenceCount == 0) {
+								removeOnly = true;
+							} else if (withQueryCommand.isRecursive()) {
+								continue; //can't inline if recursive
 							}
-							replacements.put(withQueryCommand.getGroupSymbol().getMetadataID(), withQueryCommand);
+						}
+						withList.remove(i);
+						if (withList.isEmpty()) {
+							queryCommand.setWith(null);
+						}
+						if (removeOnly) {
+							previous = null; //no need to collect clauses
+							continue;
+						}
+						for (UnaryFromClause clause : clauses) {
+							//we match on equality as the name can be redefined
+							if (clause.getGroup().getMetadataID() != withQueryCommand.getGroupSymbol().getMetadataID()) {
+								continue;
+							}
+							if (!replaceScalar) {
+								//use the original since we need to keep the references 
+								//to nested unaryfromclause instances
+								clause.setExpandedCommand(withQueryCommand.getCommand());
+								break;
+							}
+							clause.setExpandedCommand((Command) withQueryCommand.getCommand().clone());
 						}
 					}
             	}
                 if(command instanceof Query) {
-                    command = rewriteQuery((Query) command, replacements);
+                    command = rewriteQuery((Query) command);
                 }else {
                     command = rewriteSetQuery((SetQuery) command);
                 }
@@ -259,6 +302,32 @@ public class QueryRewriter {
         this.rewriteAggs = oldRewriteAggs;
         this.metadata = oldMetadata;
         return command;
+	}
+
+	private boolean replaceScalar(WithQueryCommand withQueryCommand) {
+		if (!GroupCollectorVisitor.getGroups(withQueryCommand.getCommand(), false).isEmpty()) {
+			return false;
+		}
+		//if deterministic, just inline
+		for (Expression ex : FunctionCollectorVisitor.getFunctions(withQueryCommand.getCommand(), false, true)) {
+	        if (FunctionCollectorVisitor.isNonDeterministic(ex)) {
+	        	return false;
+	        }
+		}
+		return true;
+	}
+
+	private List<UnaryFromClause> getUnaryFromClauses(QueryCommand queryCommand) {
+		final List<UnaryFromClause> clauses = new ArrayList<UnaryFromClause>();
+
+		LanguageVisitor visitor = new LanguageVisitor() {
+			
+			public void visit(UnaryFromClause obj) {
+				clauses.add(obj);
+			}
+		};
+		DeepPreOrderNavigator.doVisit(queryCommand, visitor);
+		return clauses;
 	}
     
 	private Command rewriteUpdateProcedure(CreateProcedureCommand command) throws TeiidComponentException {
@@ -409,7 +478,7 @@ public class QueryRewriter {
         }
     }
     
-	private Command rewriteQuery(Query query, Map<Object, WithQueryCommand> replacements)
+	private Command rewriteQuery(Query query)
              throws TeiidComponentException, TeiidProcessingException{
         
         // Rewrite from clause
@@ -418,7 +487,7 @@ public class QueryRewriter {
             List<FromClause> clauses = new ArrayList<FromClause>(from.getClauses().size());
             Iterator<FromClause> clauseIter = from.getClauses().iterator();
             while(clauseIter.hasNext()) {
-                clauses.add( rewriteFromClause(query, clauseIter.next(), replacements) );
+                clauses.add( rewriteFromClause(query, clauseIter.next()) );
             }
             from.setClauses(clauses);
         } else {
@@ -777,10 +846,10 @@ public class QueryRewriter {
         return setQuery;
     }
 
-	private FromClause rewriteFromClause(Query parent, FromClause clause, Map<Object, WithQueryCommand> replacements)
+	private FromClause rewriteFromClause(Query parent, FromClause clause)
 			 throws TeiidComponentException, TeiidProcessingException{
 		if(clause instanceof JoinPredicate) {
-			return rewriteJoinPredicate(parent, (JoinPredicate) clause, replacements);
+			return rewriteJoinPredicate(parent, (JoinPredicate) clause);
         } else if (clause instanceof SubqueryFromClause) {
             rewriteSubqueryContainer((SubqueryFromClause)clause, true);
         } else if (clause instanceof TextTable) {
@@ -793,19 +862,11 @@ public class QueryRewriter {
         } else if (clause instanceof ArrayTable) {
         	ArrayTable at = (ArrayTable)clause;
         	at.setArrayValue(rewriteExpressionDirect(at.getArrayValue()));
-        } else if (clause instanceof UnaryFromClause) {
-        	if (replacements != null) {
-        		UnaryFromClause ufc = (UnaryFromClause) clause;
-				WithQueryCommand command = replacements.get(ufc.getGroup().getMetadataID());
-        		if (command != null) {
-        			ufc.setExpandedCommand((Command) command.getCommand().clone());
-        		}
-        	}
         }
         return clause;
 	}
 
-	private JoinPredicate rewriteJoinPredicate(Query parent, JoinPredicate predicate, Map<Object, WithQueryCommand> replacements)
+	private JoinPredicate rewriteJoinPredicate(Query parent, JoinPredicate predicate)
 			 throws TeiidComponentException, TeiidProcessingException{
 		List joinCrits = predicate.getJoinCriteria();
 		if(joinCrits != null && joinCrits.size() > 0) {
@@ -831,8 +892,8 @@ public class QueryRewriter {
             predicate.setRightClause(leftClause);
         }
 
-        predicate.setLeftClause( rewriteFromClause(parent, predicate.getLeftClause(), replacements));
-        predicate.setRightClause( rewriteFromClause(parent, predicate.getRightClause(), replacements ));
+        predicate.setLeftClause( rewriteFromClause(parent, predicate.getLeftClause()));
+        predicate.setRightClause( rewriteFromClause(parent, predicate.getRightClause()));
     
 		return predicate;
 	}

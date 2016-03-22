@@ -1161,6 +1161,11 @@ public class TestOptionsAndHints {
         assertEquals("BEGIN\nLOOP ON (SELECT /*+sh:'y' */ 1) AS x\nBEGIN\nEND\nEND", QueryParser.getQueryParser().parseDesignerCommand(sql).toString());
 	}
 	
+	@Test public void testNoInline() throws QueryParserException {
+		String sql = "WITH x as /*+no_inline*/ (SELECT 1) SELECT e1 from pm1.g1 order by e1 limit 1"; //$NON-NLS-1$
+        assertEquals("WITH x AS /*+ no_inline */ (SELECT 1) SELECT e1 FROM pm1.g1 ORDER BY e1 LIMIT 1", QueryParser.getQueryParser().parseCommand(sql, ParseInfo.DEFAULT_INSTANCE).toString());
+	}
+	
     @Test public void testMakedepOptions() throws QueryParserException {
         String sql = "Select a From db.g1 JOIN db.g2 MAKEDEP(max:300) ON a = b"; //$NON-NLS-1$
         assertEquals("SELECT a FROM db.g1 INNER JOIN /*+ MAKEDEP(MAX:300) */ db.g2 ON a = b", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());         //$NON-NLS-1$
