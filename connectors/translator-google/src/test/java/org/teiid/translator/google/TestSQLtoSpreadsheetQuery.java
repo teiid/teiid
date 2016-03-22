@@ -22,7 +22,7 @@
 
 package org.teiid.translator.google;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.Properties;
 
@@ -45,6 +45,8 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.resource.adapter.google.GoogleSpreadsheetConnection;
+import org.teiid.resource.adapter.google.common.Util;
+import org.teiid.resource.adapter.google.metadata.Column;
 import org.teiid.resource.adapter.google.metadata.SpreadsheetColumnType;
 import org.teiid.resource.adapter.google.metadata.SpreadsheetInfo;
 import org.teiid.resource.adapter.google.metadata.Worksheet;
@@ -68,7 +70,11 @@ public class TestSQLtoSpreadsheetQuery {
 	    
 		people=  new SpreadsheetInfo("People");
 		Worksheet worksheet = people.createWorksheet("PeopleList");
-		worksheet.setColumnCount(3);
+		for (int i = 1; i <= 3; i++) {
+			Column newCol = new Column();
+			newCol.setAlphaName(Util.convertColumnIDtoString(i));
+			worksheet.addColumn(newCol.getAlphaName(), newCol);
+		}
 		worksheet.getColumns().get("C").setDataType(SpreadsheetColumnType.NUMBER);
 		Mockito.stub(conn.getSpreadsheetInfo()).toReturn(people);
 
