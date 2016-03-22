@@ -24,21 +24,17 @@ package org.teiid.translator.goole.api.metadata;
 
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 public class Worksheet {
 	private String id;
 	private String name;
-	private HashMap<String, Column> columns = new HashMap<String, Column>();
+	private LinkedHashMap<String, Column> columns = new LinkedHashMap<String, Column>();
 	private boolean headerEnabled=false;
 
-	public HashMap<String, Column> getColumns() {
+	public LinkedHashMap<String, Column> getColumns() {
 		return columns;
-	}
-
-	public void setColumns(HashMap<String, Column> columns) {
-		this.columns = columns;
 	}
 
 	public List<Column> getColumnsAsList() {
@@ -50,22 +46,11 @@ public class Worksheet {
 	}
 
 	public String getColumnID(String columnLabel) {
-		if (columns.get(columnLabel) == null) {
+		Column column = columns.get(columnLabel);
+		if (column == null) {
 			return null;
 		} 
-		return columns.get(columnLabel).getAlphaName();
-	}
-
-	public void setColumnCount(int columnCount) {
-		if (columnCount == 0) {
-			return;
-		} 
-		columns = new HashMap<String,Column>(columnCount);
-		for (int i = 1; i <= columnCount; i++) {
-			Column newCol = new Column();
-			newCol.setAlphaName(Util.convertColumnIDtoString(i));
-			columns.put(newCol.getAlphaName(), newCol);
-		}
+		return column.getAlphaName();
 	}
 
 	public Worksheet( String name) {
