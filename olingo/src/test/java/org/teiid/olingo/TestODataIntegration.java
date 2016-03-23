@@ -234,7 +234,9 @@ public class TestODataIntegration {
         teiid.stop();
     }
 
-    private static void deployVDB() throws IOException, ConnectorManagerException, VirtualDatabaseException, TranslatorException {
+    private static void deployVDB() throws IOException,
+            ConnectorManagerException, VirtualDatabaseException,
+            TranslatorException {
         teiid.deployVDB(new FileInputStream(UnitTestUtil.getTestDataFile("loopy-vdb.xml")));
     }
 
@@ -249,7 +251,8 @@ public class TestODataIntegration {
     public void testMetadata() throws Exception {
         ContentResponse response = http.GET(baseURL + "/loopy/vm1/$metadata");
         assertEquals(200, response.getStatus());
-        assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("loopy-edmx-metadata.xml")),
+        assertEquals(ObjectConverterUtil.convertFileToString(
+                UnitTestUtil.getTestDataFile("loopy-edmx-metadata.xml")),
                 response.getContentAsString());        
     }
     @Test
@@ -601,7 +604,8 @@ public class TestODataIntegration {
     public void testFunctionReturningResultSet() throws Exception {
         ContentResponse response = http.GET(baseURL + "/loopy/vm1/procResultSet(x='foo''bar',y=1)");
         assertEquals(200, response.getStatus());
-        assertEquals("{\"@odata.context\":\"$metadata#Collection(Loopy.VM1.procResultSet_RSParam)\",\"value\":[{\"x\":\"foo'bar\",\"y\":1}]}", 
+        assertEquals("{\"@odata.context\":\"$metadata#Collection(Loopy.VM1.procResultSet_RSParam)\","
+                + "\"value\":[{\"x\":\"foo'bar\",\"y\":1}]}", 
                 response.getContentAsString());
         
         response = http.GET(baseURL + "/loopy/vm1/procResultSet(x='foo',y='1'");
@@ -908,7 +912,8 @@ public class TestODataIntegration {
         try {
             ModelMetaData mmd = new ModelMetaData();
             mmd.setName("vw");
-            mmd.addSourceMetadata("ddl", "create view x (a string primary key, b integer) as select 'xyz', 123 union all select 'abc', 456;");
+            mmd.addSourceMetadata("ddl", "create view x (a string primary key, b integer) "
+                    + "as select 'xyz', 123 union all select 'abc', 456;");
             mmd.setModelType(Model.Type.VIRTUAL);
             teiid.deployVDB("northwind", mmd);
 
@@ -1017,7 +1022,8 @@ public class TestODataIntegration {
         try {
             ModelMetaData mmd = new ModelMetaData();
             mmd.setName("vw");
-            mmd.addSourceMetadata("ddl", "create view x (a string primary key, b integer) as select 'xyz', 123 union all select 'abc', 456;");
+            mmd.addSourceMetadata("ddl", "create view x (a string primary key, b integer) as "
+                    + "select 'xyz', 123 union all select 'abc', 456;");
             mmd.setModelType(Model.Type.VIRTUAL);
             teiid.deployVDB("northwind", mmd);
 
@@ -1026,7 +1032,8 @@ public class TestODataIntegration {
                 .send();
 
             assertEquals(200, response.getStatus());
-            String starts = "{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"abc\",\"b\":456}],\"@odata.nextLink\":\""+baseURL+"/northwind/vw/x?$format=json&$skiptoken=";
+            String starts = "{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"abc\",\"b\":456}],"
+                    + "\"@odata.nextLink\":\""+baseURL+"/northwind/vw/x?$format=json&$skiptoken=";
             String ends = "--1\"}";
             assertTrue(response.getContentAsString().startsWith(starts));
             assertTrue(response.getContentAsString().endsWith(ends));
@@ -1093,13 +1100,15 @@ public class TestODataIntegration {
         hc.addUpdate("DELETE FROM x WHERE x.a = 'a' AND x.b = 'b'", new int[] {1});
         hc.addUpdate("INSERT INTO x (a, b, c) VALUES ('a', 'b', 5)", new int[] {1});
         hc.addUpdate("UPDATE x SET c = 10 WHERE x.a = 'a' AND x.b = 'b'", new int[] {1});
-        hc.addData("SELECT x.a, x.b, x.c FROM x WHERE x.a = 'a' AND x.b = 'b'", Arrays.asList(Arrays.asList("a", "b", 1)));
+        hc.addData("SELECT x.a, x.b, x.c FROM x WHERE x.a = 'a' AND x.b = 'b'", 
+                Arrays.asList(Arrays.asList("a", "b", 1)));
         teiid.addTranslator("x1", hc);
         
         try {
             ModelMetaData mmd = new ModelMetaData();
             mmd.setName("m");
-            mmd.addSourceMetadata("ddl", "create foreign table x (a string, b string, c integer, primary key (a, b)) options (updatable true);");
+            mmd.addSourceMetadata("ddl", "create foreign table x (a string, b string, c integer, "
+                    + "primary key (a, b)) options (updatable true);");
             mmd.addSourceMapping("x1", "x1", null);
             teiid.deployVDB("northwind", mmd);
 
@@ -1158,7 +1167,8 @@ public class TestODataIntegration {
         try {
             ModelMetaData mmd = new ModelMetaData();
             mmd.setName("m");
-            mmd.addSourceMetadata("ddl", "create foreign table x (a string, b string, c integer, primary key (a, b)) options (updatable true);");
+            mmd.addSourceMetadata("ddl", "create foreign table x (a string, b string, c integer, "
+                    + "primary key (a, b)) options (updatable true);");
             mmd.addSourceMapping("x1", "x1", null);
             teiid.deployVDB("northwind", mmd);
 
@@ -1206,7 +1216,10 @@ public class TestODataIntegration {
                     .send();
             assertEquals(200, response.getStatus());
             String u = baseURL + "/northwind/m/";
-            assertEquals("{\"@odata.context\":\"$metadata#Collection(Edm.ComplexType)\",\"value\":[{\"x@odata.navigationLink\":\""+u+"x('ABCDEFG')\",\"y@odata.navigationLink\":\""+u+"y('ABCDEFG')\"}]}", response.getContentAsString());
+            assertEquals("{\"@odata.context\":\"$metadata#Collection(Edm.ComplexType)\","
+                    + "\"value\":[{\"x@odata.navigationLink\":\""+u+"x('ABCDEFG')\","
+                            + "\"y@odata.navigationLink\":\""+u+"y('ABCDEFG')\"}]}", 
+                            response.getContentAsString());
 
             // TODO: OLINGO-904
             /*
@@ -1253,7 +1266,9 @@ public class TestODataIntegration {
                     .send();
             assertEquals(200, response.getStatus());
             String url = baseURL + "/northwind/m/";
-            assertEquals("{\"@odata.context\":\"$metadata#Collection($ref)\",\"value\":[{\"@odata.id\":\""+url+"y('ABCDEFG')\"}]}", response.getContentAsString());
+            assertEquals("{\"@odata.context\":\"$metadata#Collection($ref)\","
+                    + "\"value\":[{\"@odata.id\":\""+url+"y('ABCDEFG')\"}]}", 
+                    response.getContentAsString());
             
             // update to collection based reference
             String payload = "{\n" +
@@ -1276,7 +1291,8 @@ public class TestODataIntegration {
     public void testRelatedEntities() throws Exception {
         HardCodedExecutionFactory hc = buildHardCodedExecutionFactory();
         hc.addData("SELECT x.a, x.b FROM x WHERE x.a = 'xa1'", Arrays.asList(Arrays.asList("xa1", "xb")));
-        hc.addData("SELECT y.a, y.b FROM y WHERE y.b = 'xa1'", Arrays.asList(Arrays.asList("ya1", "xa1"), Arrays.asList("ya2", "xa1")));
+        hc.addData("SELECT y.a, y.b FROM y WHERE y.b = 'xa1'", Arrays.asList(Arrays.asList("ya1", "xa1"), 
+                Arrays.asList("ya2", "xa1")));
 
         // 1-many
         hc.addData("SELECT x.a FROM x WHERE x.a = 'xa2'", Arrays.asList(Arrays.asList("xa2")));
@@ -1338,7 +1354,8 @@ public class TestODataIntegration {
     public void testExpandSimple() throws Exception {
         HardCodedExecutionFactory hc = buildHardCodedExecutionFactory();
         hc.addData("SELECT x.a, x.b FROM x WHERE x.a = 'xa1'", Arrays.asList(Arrays.asList("xa1", "xb")));
-        hc.addData("SELECT y.a, y.b FROM y WHERE y.b = 'xa1'", Arrays.asList(Arrays.asList("ya1", "xa1"), Arrays.asList("ya2", "xa1")));
+        hc.addData("SELECT y.a, y.b FROM y WHERE y.b = 'xa1'", Arrays.asList(Arrays.asList("ya1", "xa1"), 
+                Arrays.asList("ya2", "xa1")));
         teiid.addTranslator("x7", hc);
         
         try {
@@ -1373,39 +1390,48 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\",\"y_FKX\":[{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"}]}]}", response.getContentAsString());
+            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"ABCDEFG\","
+                    + "\"b\":\"ABCDEFG\",\"y_FKX\":[{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"}]}]}", 
+                    response.getContentAsString());
 
             response = http.newRequest(baseURL + "/northwind/m/z?$expand=FKX&$select=a")
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#z(a)\",\"value\":[{\"a\":\"ABCDEFG\",\"FKX\":{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"}}]}", response.getContentAsString());
+            assertEquals("{\"@odata.context\":\"$metadata#z(a)\",\"value\":[{\"a\":\"ABCDEFG\","
+                    + "\"FKX\":{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"}}]}", 
+                    response.getContentAsString());
             
             // explictly selecting and expanding
             response = http.newRequest(baseURL + "/northwind/m/z?$expand=FKX&$select=a")
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#z(a)\",\"value\":[{\"a\":\"ABCDEFG\",\"FKX\":{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"}}]}", response.getContentAsString());
+            assertEquals("{\"@odata.context\":\"$metadata#z(a)\",\"value\":[{\"a\":\"ABCDEFG\","
+                    + "\"FKX\":{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"}}]}", response.getContentAsString());
 
             response = http.newRequest(baseURL + "/northwind/m/z?$expand=FKX($select=a)")
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#z(FKX(a))\",\"value\":[{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\",\"FKX\":{\"a\":\"ABCDEFG\"}}]}", response.getContentAsString());
+            assertEquals("{\"@odata.context\":\"$metadata#z(FKX(a))\",\"value\":[{\"a\":\"ABCDEFG\","
+                    + "\"b\":\"ABCDEFG\",\"FKX\":{\"a\":\"ABCDEFG\"}}]}", response.getContentAsString());
             
             response = http.newRequest(baseURL + "/northwind/m/x?$expand="+Encoder.encode("y_FKX($filter=b eq 'xa1')"))
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"xa1\",\"b\":\"xb\",\"y_FKX\":[{\"a\":\"ya1\",\"b\":\"xa1\"},{\"a\":\"ya2\",\"b\":\"xa1\"}]}]}", response.getContentAsString());
+            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"xa1\","
+                    + "\"b\":\"xb\",\"y_FKX\":[{\"a\":\"ya1\",\"b\":\"xa1\"},{\"a\":\"ya2\",\"b\":\"xa1\"}]}]}", 
+                    response.getContentAsString());
             
 
             response = http.newRequest(baseURL + "/northwind/m/z?$expand=FKX")
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#z\",\"value\":[{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\",\"FKX\":{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"}}]}", response.getContentAsString());
+            assertEquals("{\"@odata.context\":\"$metadata#z\",\"value\":[{\"a\":\"ABCDEFG\","
+                    + "\"b\":\"ABCDEFG\",\"FKX\":{\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"}}]}", response.getContentAsString());
 
             response = http.newRequest(baseURL + "/northwind/m/z?$expand=FKX($top=1)")
                     .method("GET")
@@ -1433,7 +1459,8 @@ public class TestODataIntegration {
         try {
             ModelMetaData mmd = new ModelMetaData();
             mmd.setName("m");
-            mmd.addSourceMetadata("ddl", "create foreign table x (a string, b string, c integer, primary key (a, b)) options (updatable true);");
+            mmd.addSourceMetadata("ddl", "create foreign table x (a string, b string, c integer, "
+                    + "primary key (a, b)) options (updatable true);");
             mmd.addSourceMapping("x", "x", null);
             teiid.deployVDB("northwind", mmd);
 
@@ -1547,7 +1574,8 @@ public class TestODataIntegration {
 
         ContentResponse response =  http.GET(baseURL + "/northwind/m/x()?$format=json");
         assertEquals(200, response.getStatus());
-        assertEquals("{\"@odata.context\":\"$metadata#Collection(northwind.m.x_RSParam)\",\"value\":[{\"y\":\"x\"},{\"y\":\"y\"}]}", response.getContentAsString());
+        assertEquals("{\"@odata.context\":\"$metadata#Collection(northwind.m.x_RSParam)\","
+                + "\"value\":[{\"y\":\"x\"},{\"y\":\"y\"}]}", response.getContentAsString());
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");
@@ -1589,7 +1617,8 @@ public class TestODataIntegration {
     @Test 
     public void testCompositeKeyTimestamp() throws Exception {
         HardCodedExecutionFactory hc = buildHardCodedExecutionFactory();
-        hc.addData("SELECT x.a, x.b, x.c FROM x WHERE x.a = 'a' AND x.b = {ts '2011-09-11T00:00:00'}", Arrays.asList(Arrays.asList("a", TimestampUtil.createTimestamp(111, 8, 11, 0, 0, 0, 0), 1)));
+        hc.addData("SELECT x.a, x.b, x.c FROM x WHERE x.a = 'a' AND x.b = {ts '2011-09-11T00:00:00'}", 
+                Arrays.asList(Arrays.asList("a", TimestampUtil.createTimestamp(111, 8, 11, 0, 0, 0, 0), 1)));
         hc.addUpdate("INSERT INTO x (a, b) VALUES ('b', {ts '2000-02-02 22:22:22.0'})", new int[] {1});
         
         teiid.addTranslator("x1", hc);
@@ -1597,7 +1626,8 @@ public class TestODataIntegration {
         try {
             ModelMetaData mmd = new ModelMetaData();
             mmd.setName("m");
-            mmd.addSourceMetadata("ddl", "create foreign table x (a string, b timestamp, c integer, primary key (a, b)) options (updatable true);");
+            mmd.addSourceMetadata("ddl", "create foreign table x (a string, b timestamp, c integer, "
+                    + "primary key (a, b)) options (updatable true);");
             mmd.addSourceMapping("x1", "x1", null);
             teiid.deployVDB("northwind", mmd);
 
@@ -1605,7 +1635,8 @@ public class TestODataIntegration {
 
             ContentResponse response = http.newRequest(baseURL + "/northwind/m/x")
                     .method("POST")
-                    .content(new StringContentProvider("{\"a\":\"b\", \"b\":\"2000-02-02T22:22:22Z\"}"), "application/json")
+                    .content(new StringContentProvider("{\"a\":\"b\", \"b\":\"2000-02-02T22:22:22Z\"}"), 
+                            "application/json")
                     .send();                        
             assertEquals(204, response.getStatus());
             
@@ -2022,4 +2053,52 @@ public class TestODataIntegration {
             teiid.undeployVDB("northwind");
         }
     }
+    
+    @Test 
+    public void testIndexingOfStringFunctions() throws Exception {
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("vw");
+            mmd.addSourceMetadata("ddl", "create view x (a string primary key, b integer) as "
+                    + "select 'xyz', 123 union all select 'abc', 456;");
+            mmd.setModelType(Model.Type.VIRTUAL);
+            teiid.deployVDB("northwind", mmd);
+
+            Properties props = new Properties();
+            localClient = getClient(teiid.getDriver(), "northwind", 1, props);
+            
+            ContentResponse response = http.GET(baseURL + "/northwind/vw/x?$filter="
+                    +Encoder.encode("indexof(a,'y') eq 1"));
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"xyz\",\"b\":123}]}", 
+                    response.getContentAsString());
+            
+            response = http.GET(baseURL + "/northwind/vw/x?$filter="
+                    +Encoder.encode("indexof(a,'y') eq 2"));
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":[]}", 
+                    response.getContentAsString());
+
+            response = http.GET(baseURL + "/northwind/vw/x?$filter="
+                    +Encoder.encode("substring(a,1) eq 'yz'"));
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"xyz\",\"b\":123}]}", 
+                    response.getContentAsString());
+            
+            response = http.GET(baseURL + "/northwind/vw/x?$filter="
+                    +Encoder.encode("substring(a,1,2) eq 'yz'"));
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"xyz\",\"b\":123}]}", 
+                    response.getContentAsString());
+            
+            response = http.GET(baseURL + "/northwind/vw/x?$filter="
+                    +Encoder.encode("substring(a,0,1) eq 'a'"));
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"abc\",\"b\":456}]}", 
+                    response.getContentAsString());            
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }    
 }
