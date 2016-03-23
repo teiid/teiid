@@ -52,6 +52,7 @@ import org.teiid.olingo.service.TeiidServiceHandler.UniqueNameGenerator;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.AliasSymbol;
+import org.teiid.query.sql.symbol.CaseExpression;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Function;
@@ -304,6 +305,24 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
         visit(expr.getResourcePath());
     }
 
+    private org.teiid.query.sql.symbol.Expression addOne(
+            org.teiid.query.sql.symbol.Expression expr) {
+                
+        org.teiid.query.sql.symbol.Expression when = new CompareCriteria(expr,
+                CompareCriteria.LT, new Constant(0));
+        CaseExpression caseExpr = new CaseExpression(expr, Arrays.asList(when),
+                Arrays.asList(expr));
+        caseExpr.setElseExpression(new Function("+",
+                new org.teiid.query.sql.symbol.Expression[] { expr, new Constant(1) }));
+        return caseExpr;
+    }
+
+    private org.teiid.query.sql.symbol.Expression minusOne(
+            org.teiid.query.sql.symbol.Expression expr) {
+        return new Function("-", new org.teiid.query.sql.symbol.Expression[] {
+                expr, new Constant(1) });        
+    }
+    
     @Override
     public void visit(Method expr) {
         List<org.teiid.query.sql.symbol.Expression> teiidExprs = new ArrayList<org.teiid.query.sql.symbol.Expression>();
@@ -314,70 +333,98 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
 
         switch (expr.getMethod()) {
         case CONTAINS:
-            CompareCriteria criteria = new CompareCriteria(new Function("LOCATE", new org.teiid.query.sql.symbol.Expression[] { teiidExprs.get(1), teiidExprs.get(0), new Constant(1) }), CompareCriteria.GE, new Constant(1)); //$NON-NLS-1$
+            CompareCriteria criteria = new CompareCriteria(new Function("LOCATE", 
+                    new org.teiid.query.sql.symbol.Expression[] {
+                        teiidExprs.get(1), teiidExprs.get(0), new Constant(1) }), 
+                        CompareCriteria.GE, new Constant(1)); //$NON-NLS-1$
             this.stack.push(criteria);
             break;
         case STARTSWITH:
-            criteria = new CompareCriteria(new Function("LOCATE", new org.teiid.query.sql.symbol.Expression[] {teiidExprs.get(1), teiidExprs.get(0), new Constant(1) }), CompareCriteria.EQ, new Constant(1)); //$NON-NLS-1$
+            criteria = new CompareCriteria(new Function("LOCATE", 
+                    new org.teiid.query.sql.symbol.Expression[] {
+                    teiidExprs.get(1), teiidExprs.get(0), new Constant(1) }), 
+                    CompareCriteria.EQ, new Constant(1)); //$NON-NLS-1$
             this.stack.push(criteria);
             break;
         case ENDSWITH:
-            criteria = new CompareCriteria(new Function("ENDSWITH", new org.teiid.query.sql.symbol.Expression[] {teiidExprs.get(1), teiidExprs.get(0) }), CompareCriteria.EQ, new Constant(Boolean.TRUE));//$NON-NLS-1$
+            criteria = new CompareCriteria(new Function("ENDSWITH", 
+                    new org.teiid.query.sql.symbol.Expression[] {teiidExprs.get(1), teiidExprs.get(0) }), 
+                    CompareCriteria.EQ, new Constant(Boolean.TRUE));//$NON-NLS-1$
             this.stack.push(criteria);
             break;
         case LENGTH:
-            this.stack.push(new Function("LENGTH", new org.teiid.query.sql.symbol.Expression[] { teiidExprs.get(0) })); //$NON-NLS-1$
+            this.stack.push(new Function("LENGTH", 
+                    new org.teiid.query.sql.symbol.Expression[] { teiidExprs.get(0) })); //$NON-NLS-1$
             break;
         case INDEXOF:
-            stack.push(new Function("LOCATE", new org.teiid.query.sql.symbol.Expression[] { teiidExprs.get(1), teiidExprs.get(0) })); //$NON-NLS-1$
+            stack.push(minusOne(new Function("LOCATE", new org.teiid.query.sql.symbol.Expression[] 
+                    { teiidExprs.get(1), teiidExprs.get(0)}))); //$NON-NLS-1$
             break;
         case SUBSTRING:
-            this.stack.push(new Function("SUBSTRING", teiidExprs.toArray(new org.teiid.query.sql.symbol.Expression[teiidExprs.size()]))); //$NON-NLS-1$
+            org.teiid.query.sql.symbol.Expression[] exprs = 
+                teiidExprs.toArray(new org.teiid.query.sql.symbol.Expression[teiidExprs.size()]);
+                exprs[1] = addOne(exprs[1]);
+            this.stack.push(new Function("SUBSTRING", exprs)); //$NON-NLS-1$
             break;
         case TOLOWER:
-            this.stack.push(new Function("LCASE", new org.teiid.query.sql.symbol.Expression[] { teiidExprs.get(0) })); //$NON-NLS-1$
+            this.stack.push(new Function("LCASE", 
+                    new org.teiid.query.sql.symbol.Expression[] { teiidExprs.get(0) })); //$NON-NLS-1$
             break;
         case TOUPPER:
-            this.stack.push(new Function("UCASE", new org.teiid.query.sql.symbol.Expression[] { teiidExprs.get(0) })); //$NON-NLS-1$
+            this.stack.push(new Function("UCASE", 
+                    new org.teiid.query.sql.symbol.Expression[] { teiidExprs.get(0) })); //$NON-NLS-1$
             break;
         case TRIM:
-            this.stack.push(new Function("TRIM", new org.teiid.query.sql.symbol.Expression[] { new Constant("BOTH"), new Constant(' '), teiidExprs.get(0) })); //$NON-NLS-1$ //$NON-NLS-2$
+            this.stack.push(new Function("TRIM", 
+                    new org.teiid.query.sql.symbol.Expression[] { new Constant("BOTH"), 
+                    new Constant(' '), teiidExprs.get(0) })); //$NON-NLS-1$ //$NON-NLS-2$
             break;
         case CONCAT:
-            this.stack.push(new Function("CONCAT2", new org.teiid.query.sql.symbol.Expression[] { teiidExprs.get(0), teiidExprs.get(1) })); //$NON-NLS-1$
+            this.stack.push(new Function("CONCAT2", new org.teiid.query.sql.symbol.Expression[] 
+                    { teiidExprs.get(0), teiidExprs.get(1) })); //$NON-NLS-1$
             break;
         case YEAR:
-            this.stack.push(new Function("YEAR", new org.teiid.query.sql.symbol.Expression[] { teiidExprs.get(0) })); //$NON-NLS-1$
+            this.stack.push(new Function("YEAR", new org.teiid.query.sql.symbol.Expression[] 
+                    { teiidExprs.get(0) })); //$NON-NLS-1$
             break;
         case MONTH:
-            this.stack.push(new Function("MONTH", new org.teiid.query.sql.symbol.Expression[] { teiidExprs.get(0) })); //$NON-NLS-1$
+            this.stack.push(new Function("MONTH", new org.teiid.query.sql.symbol.Expression[] 
+                    { teiidExprs.get(0) })); //$NON-NLS-1$
             break;
         case DAY:
-            this.stack.push(new Function("DAYOFMONTH", new org.teiid.query.sql.symbol.Expression[] { teiidExprs.get(0) })); //$NON-NLS-1$
+            this.stack.push(new Function("DAYOFMONTH", new org.teiid.query.sql.symbol.Expression[] 
+                    { teiidExprs.get(0) })); //$NON-NLS-1$
             break;
         case HOUR:
-            this.stack.push(new Function("HOUR", new org.teiid.query.sql.symbol.Expression[] { teiidExprs.get(0) })); //$NON-NLS-1$
+            this.stack.push(new Function("HOUR", new org.teiid.query.sql.symbol.Expression[] 
+                    { teiidExprs.get(0) })); //$NON-NLS-1$
             break;
         case MINUTE:
-            this.stack.push(new Function("MINUTE", new org.teiid.query.sql.symbol.Expression[] { teiidExprs.get(0) })); //$NON-NLS-1$
+            this.stack.push(new Function("MINUTE", new org.teiid.query.sql.symbol.Expression[] 
+                    { teiidExprs.get(0) })); //$NON-NLS-1$
             break;
         case SECOND:
-            this.stack.push(new Function("SECOND", new org.teiid.query.sql.symbol.Expression[] { teiidExprs.get(0) })); //$NON-NLS-1$
+            this.stack.push(new Function("SECOND", new org.teiid.query.sql.symbol.Expression[] 
+                    { teiidExprs.get(0) })); //$NON-NLS-1$
             break;
         case NOW:
             this.stack.push(new Function("NOW", new org.teiid.query.sql.symbol.Expression[] {})); //$NON-NLS-1$
             break;
         case ROUND:
-            stack.push(new Function("ROUND", new org.teiid.query.sql.symbol.Expression[] { teiidExprs.get(0), new Constant(0) })); //$NON-NLS-1$
+            stack.push(new Function("ROUND", new org.teiid.query.sql.symbol.Expression[] 
+                    { teiidExprs.get(0), new Constant(0) })); //$NON-NLS-1$
             break;
         case FLOOR:
-            this.stack.push(new Function("FLOOR", new org.teiid.query.sql.symbol.Expression[] { teiidExprs.get(0) })); //$NON-NLS-1$
+            this.stack.push(new Function("FLOOR", new org.teiid.query.sql.symbol.Expression[] 
+                    { teiidExprs.get(0) })); //$NON-NLS-1$
             break;
         case CEILING:
-            this.stack.push(new Function("CEILING", new org.teiid.query.sql.symbol.Expression[] { teiidExprs.get(0) })); //$NON-NLS-1$
+            this.stack.push(new Function("CEILING", new org.teiid.query.sql.symbol.Expression[] 
+                    { teiidExprs.get(0) })); //$NON-NLS-1$
             break;
         case CAST:
-            this.stack.push(new Function(CONVERT,new org.teiid.query.sql.symbol.Expression[] {teiidExprs.get(0), teiidExprs.get(1) }));
+            this.stack.push(new Function(CONVERT,new org.teiid.query.sql.symbol.Expression[] 
+                    {teiidExprs.get(0), teiidExprs.get(1) }));
             break;
         case FRACTIONALSECONDS:
         case TOTALSECONDS:
@@ -408,7 +455,8 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
         org.teiid.query.sql.symbol.Expression teiidExpr = this.stack.pop();
         switch (expr.getOperator()) {
         case MINUS:
-            this.stack.push(new Function(SourceSystemFunctions.MULTIPLY_OP,new org.teiid.query.sql.symbol.Expression[] {new Constant(-1), teiidExpr }));
+            this.stack.push(new Function(SourceSystemFunctions.MULTIPLY_OP,
+                    new org.teiid.query.sql.symbol.Expression[] {new Constant(-1), teiidExpr }));
             break;
         case NOT:
             this.stack.push(new NotCriteria(new ExpressionCriteria(teiidExpr)));
