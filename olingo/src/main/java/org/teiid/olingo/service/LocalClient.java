@@ -59,6 +59,8 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Limit;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.Reference;
+import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
 import org.teiid.translator.CacheDirective;
 import org.teiid.transport.LocalServerConnection;
 
@@ -219,8 +221,10 @@ public class LocalClient implements Client {
                 cache?ResultSet.TYPE_SCROLL_INSENSITIVE:ResultSet.TYPE_FORWARD_ONLY, 
                 ResultSet.CONCUR_READ_ONLY);
         if (parameters!= null && !parameters.isEmpty()) {
-            for (int i = 0; i < parameters.size(); i++) {
-                stmt.setObject(i+1, parameters.get(i).getValue(), parameters.get(i).getSqlType());
+            List<Reference> references = ReferenceCollectorVisitor.getReferences(query);
+            for (int i = 0; i < references.size(); i++) {
+                int index = references.get(i).getIndex();
+                stmt.setObject(i+1, parameters.get(index).getValue(), parameters.get(index).getSqlType());
             }
         }
 
