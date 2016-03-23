@@ -18,6 +18,12 @@
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-client</artifactId>
+			<exclusions>
+			    <exclusion>
+				  <groupId>org.jboss.modules</groupId>
+				  <artifactId>jboss-modules</artifactId>
+			    </exclusion>
+			</exclusions>
 		</dependency>
 	</dependencies>
 	    
