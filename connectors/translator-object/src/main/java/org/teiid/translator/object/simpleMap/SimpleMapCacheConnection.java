@@ -10,6 +10,7 @@ import org.teiid.translator.object.CacheNameProxy;
 import org.teiid.translator.object.ClassRegistry;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectMaterializeLifeCycle;
+import org.teiid.translator.object.SearchType;
 
 public class SimpleMapCacheConnection implements ObjectConnection {
 	private Map<String, Map<Object,Object>> mapCaches = new HashMap<String, Map<Object, Object>>(3);
@@ -218,7 +219,19 @@ public class SimpleMapCacheConnection implements ObjectConnection {
 	public void clearCache(String cacheName) throws TranslatorException {
 		Map<Object, Object> c = getCache(cacheName);
 		c.clear();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#getSearchType()
+	 */
+	@Override
+	public SearchType getSearchType() {
+		return new SearchByKey(this);
 	}	
+	
+	
 	
 }
 

@@ -29,7 +29,6 @@ import org.junit.Test;
 import org.teiid.translator.object.ObjectExecution;
 import org.teiid.translator.object.ObjectExecutionFactory;
 import org.teiid.translator.object.TestObjectExecutionFactory;
-import org.teiid.translator.object.simpleMap.SearchByKey;
 import org.teiid.translator.object.testdata.trades.VDBUtility;
 
 @SuppressWarnings("nls")
@@ -60,9 +59,7 @@ public class TestInfinispanExecutionFactory extends TestObjectExecutionFactory {
 		
 		assertNotNull(exec);
 		assertFalse(f.supportsLuceneSearching());
-		assertFalse(f.supportsDSLSearching());
-		assertFalse(f.isFullQuerySupported());
-		assertTrue(f.getSearchType() instanceof SearchByKey);
+		assertTrue(f.isFullQuerySupported());
 	}	
 	
 	
@@ -75,7 +72,6 @@ public class TestInfinispanExecutionFactory extends TestObjectExecutionFactory {
 		
 		assertNotNull(exec);
 		assertTrue(f.supportsLuceneSearching());
-		assertTrue(f.getSearchType() instanceof LuceneSearch);
 		assertTrue(f.isFullQuerySupported());
 
 	}	
@@ -90,8 +86,7 @@ public class TestInfinispanExecutionFactory extends TestObjectExecutionFactory {
 		
 		assertNotNull(exec);
 		assertFalse(f.supportsLuceneSearching());
-		assertFalse(f.getSearchType() instanceof LuceneSearch);
-		assertFalse(f.isFullQuerySupported());
+		assertTrue(f.isFullQuerySupported());
 
 	}	
 	
@@ -105,7 +100,6 @@ public class TestInfinispanExecutionFactory extends TestObjectExecutionFactory {
 		
 		assertNotNull(exec);
 		assertTrue(f.supportsDSLSearching());
-		assertTrue(f.getSearchType() instanceof DSLSearch);
 		assertTrue(f.isFullQuerySupported());
 
 	}	
@@ -120,7 +114,6 @@ public class TestInfinispanExecutionFactory extends TestObjectExecutionFactory {
 		
 		assertNotNull(exec);
 		assertFalse(f.supportsDSLSearching());
-		assertFalse(f.getSearchType() instanceof DSLSearch);
 		assertFalse(f.isFullQuerySupported());
 
 	}		

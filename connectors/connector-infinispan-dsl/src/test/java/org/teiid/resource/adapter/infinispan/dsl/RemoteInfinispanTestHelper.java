@@ -19,16 +19,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.resource.adapter.infinispan;
+package org.teiid.resource.adapter.infinispan.dsl;
 
 import java.io.IOException;
 
+import org.infinispan.configuration.cache.Configuration;
+import org.infinispan.configuration.cache.ConfigurationBuilder;
+import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.manager.DefaultCacheManager;
+import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
 import org.infinispan.server.hotrod.HotRodServer;
 import org.infinispan.server.hotrod.configuration.HotRodServerConfiguration;
 import org.infinispan.server.hotrod.configuration.HotRodServerConfigurationBuilder;
-import org.teiid.translator.infinispan.cache.TestInfinispanConnection;
-import org.teiid.translator.object.testdata.annotated.TradesAnnotatedCacheSource;
+import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.Person;
+import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PersonCacheSource;
 
 
 /**
@@ -36,82 +40,57 @@ import org.teiid.translator.object.testdata.annotated.TradesAnnotatedCacheSource
 @SuppressWarnings("nls")
 public class RemoteInfinispanTestHelper {
 	protected static final String TEST_CACHE_NAME = "test";
-	protected static final String TRADE_CACHE_NAME = TradesAnnotatedCacheSource.TRADES_CACHE_NAME;
-	protected static final Class<?> TRADE_CLASS = TradesAnnotatedCacheSource.TRADE_CLASS_TYPE;
-	protected static final String PKEY_COLUMN = TradesAnnotatedCacheSource.TRADE_PK_KEY_NAME;
+	protected static final String PERSON_CACHE_NAME = PersonCacheSource.PERSON_CACHE_NAME;
+	protected static final Class<?> PERSON_CLASS = Person.class;
+	protected static final String PKEY_COLUMN = "id";
 	
-	protected static String CACHE_NAME = "NA"; //$NON-NLS-1$
 	protected static final int PORT = 11312;
 	protected static final int TIMEOUT = 0;
-	protected static final String CONFIG_FILE = "src/test/resources/infinispan_remote_config.xml";
 
 	private static HotRodServer server = null;
 	private static int count = 0;
 	private static DefaultCacheManager CACHEMANAGER = null;
 
-	private static synchronized HotRodServer createServer() throws IOException {
-		count++;
+	private static synchronized HotRodServer createServer()  {
 		if (server == null) {
-			
 			try {
-				CACHEMANAGER = TestInfinispanConnection.createContainer();
+								
+				CACHEMANAGER = new DefaultCacheManager(new ConfigurationBuilder()
+		            .eviction()
+		            .build());
+	
 				CACHEMANAGER.start();
-//				CACHEMANAGER.startCache(TRADE_CACHE_NAME);
-				TradesAnnotatedCacheSource.loadCache(CACHEMANAGER.getCache(CACHE_NAME));
+				
+				CACHEMANAGER.startCache(PERSON_CACHE_NAME);
+				CACHEMANAGER.startCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME);
+								
+				PersonCacheSource.loadCache(CACHEMANAGER.getCache(PERSON_CACHE_NAME));
 				
 			} catch (Exception e) {
 				e.printStackTrace();
 				return null;
 			}
 			
-//			CACHEMANAGER = new DefaultCacheManager(CONFIG_FILE);
-
-//			CACHEMANAGER.start();
-			// This doesn't work on IPv6, because the util assumes "127.0.0.1"
-			// ...
-//		 server = HotRodTestingUtil.startHotRodServer(cacheManager, HOST,
-			// PORT);
-			
 			String hostAddress = hostAddress();
-//			String hostPort = Integer.toString(hostPort());
-//			String timeoutStr = Integer.toString(TIMEOUT);
 
 			HotRodServerConfigurationBuilder bldr = new HotRodServerConfigurationBuilder();
 			bldr.host(hostAddress);
 			bldr.port(PORT);
-//			bldr.proxyPort(PORT);
-
+			
 			HotRodServerConfiguration config = bldr.create();
 
 			server = new HotRodServer();
 
-
 			server.startInternal(config, CACHEMANAGER);
-			server.cacheManager().startCaches(CACHE_NAME);
+			server.cacheManager().startCaches(PERSON_CACHE_NAME);
 
 		}
+		count++;
 		return server;
 	}
-
-	public static void loadCacheSimple() throws IOException {
-		CACHE_NAME = TEST_CACHE_NAME;
-
+	
+	public static void startServer() throws IOException {
 		createServer();
-
-		server.getCacheManager().getCache(CACHE_NAME)
-				.put("1", new String("value1")); //$NON-NLS-1$  //$NON-NLS-2$
-		server.getCacheManager().getCache(CACHE_NAME)
-				.put("2", new String("value2")); //$NON-NLS-1$  //$NON-NLS-2$   	
-	}
-
-	public static void loadCacheTrades() throws IOException {
-		CACHE_NAME = TRADE_CACHE_NAME;
-
-		createServer();
-
-//		TradesCacheSource.loadCache(server.getCacheManager().getCache(
-//				CACHE_NAME));
-
 	}
 
 	public static DefaultCacheManager getCacheManager() {
@@ -128,18 +107,12 @@ public class RemoteInfinispanTestHelper {
 	 * @return the IP address as a string
 	 */
 	public static String hostAddress() {
-//		try {
 			return "localhost";
-//			return InetAddress.getLocalHost().getHostAddress();
-//		} catch (IOException e) {
-//			throw new RuntimeException(e);
-//		}
 	}
 
 	public static synchronized void releaseServer() {
-		--count;
-		if (count <= 0) {
-
+		count--;
+		if (count == 0) {
 			try {
 				if (CACHEMANAGER != null) {
 					CACHEMANAGER.stop();
@@ -147,6 +120,7 @@ public class RemoteInfinispanTestHelper {
 			} finally {
 				CACHEMANAGER = null;
 			}
+			
 
 			try {
 				// System.out.println("Stopping HotRot Server at " +
@@ -157,7 +131,7 @@ public class RemoteInfinispanTestHelper {
 			} finally {
 				server = null;
 			}
-
 		}
+
 	}
 }

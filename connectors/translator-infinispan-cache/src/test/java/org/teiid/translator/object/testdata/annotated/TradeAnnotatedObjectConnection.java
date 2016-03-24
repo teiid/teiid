@@ -9,16 +9,10 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.infinispan.cache.InfinispanCacheConnection;
 import org.teiid.translator.object.CacheNameProxy;
 import org.teiid.translator.object.ClassRegistry;
-import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.simpleMap.SimpleMapCacheConnection;
 
 public class TradeAnnotatedObjectConnection extends SimpleMapCacheConnection implements InfinispanCacheConnection {
 
-	public static ObjectConnection createConnection(Map<Object,Object> map) {
-		CacheNameProxy proxy = new CacheNameProxy(TradesAnnotatedCacheSource.TRADES_CACHE_NAME);
-
-		return new TradeAnnotatedObjectConnection(map, TradesAnnotatedCacheSource.CLASS_REGISTRY, proxy);
-	}
 	
 	public TradeAnnotatedObjectConnection(Map<Object,Object> map, ClassRegistry registry, CacheNameProxy proxy) {
 		super(map, registry, proxy);
@@ -38,6 +32,7 @@ public class TradeAnnotatedObjectConnection extends SimpleMapCacheConnection imp
 		return Search.getQueryFactory((Cache) getCache());
 
 	}
+
 	
 }
 

@@ -30,15 +30,19 @@ import javax.naming.InitialContext;
 import javax.resource.ResourceException;
 
 import org.infinispan.Cache;
+import org.infinispan.configuration.cache.Configuration;
+//import org.infinispan.;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.query.Search;
 import org.infinispan.query.dsl.QueryFactory;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.resource.adapter.infinispan.DSLSearch;
 import org.teiid.resource.adapter.infinispan.InfinispanCacheWrapper;
 import org.teiid.resource.adapter.infinispan.InfinispanManagedConnectionFactory;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.object.SearchType;
 
 /**
  * This wrapper will contain a local Infinispan cache, and will the necessary logic
@@ -81,6 +85,20 @@ public class LocalCacheConnection<K,V>  extends InfinispanCacheWrapper<K,V> {
 
 				ecm = cc;
 				
+				Configuration conf = cc.getCacheConfiguration(config.getCacheNameProxy().getPrimaryCacheAliasName());
+				if (conf == null) {
+					throw new ResourceException("Program Error: cache " +  config.getCacheNameProxy().getPrimaryCacheAliasName() + " was not configured");
+				}
+				conf.module(config.getCacheClassType());
+				
+				if (config.getCacheNameProxy().useMaterialization()) {
+					conf = cc.getCacheConfiguration(config.getCacheNameProxy().getStageCacheAliasName());
+					if (conf == null) {
+						throw new ResourceException("Program Error: cache " +  config.getCacheNameProxy().getStageCacheAliasName() + " was not configured");
+					}
+					
+					conf.module(config.getCacheClassType());
+				}
 			} catch (IOException e) {
 				throw new ResourceException(e);
 			}
@@ -232,6 +250,27 @@ public class LocalCacheConnection<K,V>  extends InfinispanCacheWrapper<K,V> {
 	@Override
 	public void clearCache(String cacheName) throws TranslatorException {		
 		getCache(cacheName).clearAsync();
+	}
+	
+	/**
+	 * Note:  This is used in testing only to enable shutting down the cache so that the next test can recreate it
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.resource.adapter.infinispan.InfinispanCacheWrapper#shutDownCacheManager()
+	 */
+	@Override
+	protected void shutDownCacheManager() {
+		ecm.stop();
+	}
+	
+	/** 
+	 * Returns the <code>SearchType</code> that will be used to perform
+	 * dynamic searching of the cache.
+	 * @return SearchType
+	 */
+	@Override
+	public SearchType getSearchType() {
+		return new DSLSearch(this);
 	}
 
 }

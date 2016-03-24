@@ -21,7 +21,12 @@
  */
 package org.jboss.as.quickstarts.datagrid.hotrod.query.domain;
 
+import java.lang.annotation.Annotation;
+
+import javax.resource.ResourceException;
+
 import org.infinispan.client.hotrod.RemoteCache;
+import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.descriptors.Descriptor;
 import org.infinispan.query.dsl.QueryFactory;
 import org.teiid.translator.TranslatorException;
@@ -61,7 +66,19 @@ public class PersonCacheConnection extends TestInfinispanDSLConnection {
 		if (useKeyClassType) {
 			setCacheKeyClassType(int.class);
 		}
-		this.setCacheClassType(Person.class);
+		
+		String p = "org.jboss.as.quickstarts.datagrid.hotrod.query.domain.Person";
+		Class<?> c = loadClass(p);
+		ProtoField ax = c.getAnnotation(ProtoField.class);
+		this.setCacheClassType(c);
+	}
+	
+	protected Class<?> loadClass(String className)  {
+		try {
+			return Class.forName(className, false, this.getClass().getClassLoader());
+		} catch (ClassNotFoundException e) {
+			return null;
+		}
 	}
 
 		@Override

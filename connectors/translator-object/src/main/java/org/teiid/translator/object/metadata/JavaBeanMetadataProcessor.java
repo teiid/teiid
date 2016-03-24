@@ -22,7 +22,6 @@
 
 package org.teiid.translator.object.metadata;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -32,8 +31,11 @@ import java.util.Map;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.BaseColumn.NullType;
-import org.teiid.metadata.*;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
+import org.teiid.metadata.MetadataException;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Table;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
@@ -83,10 +85,10 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 		}
 		table = mf.addTable(tableName);
 		table.setSupportsUpdate(this.isUpdatable);
-		table.setNameInSource(cacheName); 
+//		table.setNameInSource(cacheName); 
 		
 		String columnName = tableName + OBJECT_COL_SUFFIX;
-		addColumn(mf, entity, entity, columnName, "this", SearchType.Unsearchable, table, true); //$NON-NLS-1$
+		addColumn(mf, entity, entity, columnName, "this", SearchType.Unsearchable, table, false, NullType.Unknown); //$NON-NLS-1$
 		Map<String, Method> methods;
 		try {
 			
@@ -99,10 +101,10 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
         if (pkField != null) {
                 pkMethod = methods.get(pkField);
                 if (pkMethod != null) {
-                    addColumn(mf, entity, pkMethod.getReturnType(), pkField, pkField, SearchType.Searchable, table, true);
+                    addColumn(mf, entity, pkMethod.getReturnType(), pkField, pkField, SearchType.Searchable, table, true, NullType.No_Nulls);
                 } else {
                 	// add a column so the PKey can be created, but make it not selectable
-                    addColumn(mf, entity, java.lang.String.class, pkField, pkField, SearchType.Searchable, table, false);
+                    addColumn(mf, entity, java.lang.String.class, pkField, pkField, SearchType.Searchable, table, false, NullType.Unknown);
 
                 }
                              
@@ -133,38 +135,72 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 				methodsToAdd.put(entry.getValue(), entry.getKey());
 			}
 		}
-
-        // determine if class is indexed
-        boolean isIndexed = false;
-		if (useAnnotations) {
-			isIndexed = isIndexed(entity.getAnnotations());
-		}
 		
 		for (Map.Entry<Method, String> entry : methodsToAdd.entrySet()) {
 			Method m = (Method) entry.getKey();
 	
 				SearchType st = SearchType.Unsearchable;
+				
+				NullType nt = NullType.Nullable;
 
 				// default for Hibernate index = true, so setting based on finding false
-				if (isIndexed) {
-					// first check the method if its indexed
-					if (!isFieldIndexed(m.getDeclaredAnnotations())) {
-						st = SearchType.Unsearchable;
+				if (useAnnotations) {
+					if (isMethodSearchable(entity,m)) {
+						st = SearchType.Searchable;
+						
+						if (isValueRequired(m)) {
+							nt =NullType.No_Nulls;
+						}
 					} else {
 						// then check if there's an attribute that's indexed
 						Field f = findClassField(entity, m);
-						if (f != null && !isFieldIndexed(f.getDeclaredAnnotations())) {
-							st = SearchType.Unsearchable;
-						} else {
+						if (isFieldSearchable(entity,f)) {
 							st = SearchType.Searchable;
-						}
-					} 
+							if (isValueRequired(f)) {
+								nt =NullType.No_Nulls;			
+							}
+
+						} 
+					}					
+					
 				}
 				
-				addColumn(mf, entity, m.getReturnType(), entry.getValue(), entry.getValue(), st, table, true);			
+				addColumn(mf, entity, m.getReturnType(), entry.getValue(), entry.getValue(), st, table, true, nt);			
 		}
 				
 		return table;
+	}
+		
+	protected boolean isMethodSearchable(Class<?> entity, Method m) {
+		Object ma = m.getAnnotation(org.hibernate.search.annotations.Field.class);
+		if (ma != null) return true;
+		
+		return false;
+		
+	}
+	
+	protected boolean isValueRequired(Method m) {
+		return false;
+	}
+	
+	protected boolean isFieldSearchable(Class<?> entity, Field f) {
+		
+		if (f != null) {
+			Object fa = f.getAnnotation(org.hibernate.search.annotations.Field.class);
+			if (fa != null) {
+				org.hibernate.search.annotations.Field hfa = (org.hibernate.search.annotations.Field) fa;
+				if (hfa.index() == org.hibernate.search.annotations.Index.NO) {
+					return false;
+				}
+				return true;
+			}
+		} 
+		return false;
+		
+	}	
+	
+	protected boolean isValueRequired(Field f) {
+		return false;
 	}
 	
 	private Field findClassField(Class<?> clzz, Method m) {
@@ -182,27 +218,6 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 		return null;
 		
 	}
-
-	private boolean isIndexed(Annotation[] ai) {
-		for (Annotation a : ai) {
-			if (a.annotationType().getName().equals("org.hibernate.search.annotations.Indexed")) {
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	private boolean isFieldIndexed(Annotation[] ai) {
-		for (Annotation a : ai) {
-			if (a instanceof org.hibernate.search.annotations.Field) {
-				org.hibernate.search.annotations.Field f = (org.hibernate.search.annotations.Field) a;
-				if (f.index() == org.hibernate.search.annotations.Index.NO) {
-					return false;
-				}
-			}
-		}
-		return true;
-	}
 	
 	/**
 	 * Call to get the name of table based on the <code>Class</code> entity
@@ -217,7 +232,7 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 		this.isUpdatable = isUpdateable;
 	}
 	
-	protected Column addColumn(MetadataFactory mf, Class<?> entity, Class<?> type, String attributeName, String nis, SearchType searchType, Table entityTable, boolean selectable) {
+	protected Column addColumn(MetadataFactory mf, Class<?> entity, Class<?> type, String attributeName, String nis, SearchType searchType, Table entityTable, boolean selectable, NullType nt) {
 		Column c = entityTable.getColumnByName(attributeName);
 		if (c != null) {
 			//TODO: there should be a log here
@@ -237,12 +252,11 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 			c.setNativeType(type.getName());
 		}
 		
+
 		c.setUpdatable(this.isUpdatable);
 		c.setSearchType(searchType);
 		c.setSelectable(selectable);
-		if (type.isPrimitive()) {
-			c.setNullType(NullType.No_Nulls);
-		}
+		c.setNullType(nt);
 		return c;
 	}
 	

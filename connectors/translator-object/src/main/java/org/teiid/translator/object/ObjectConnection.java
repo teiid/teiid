@@ -142,6 +142,13 @@ public interface ObjectConnection {
 	public Collection<Object> getAll() throws TranslatorException;
 	
 	
+	/** 
+	 * Returns the <code>SearchType</code> that will be used to perform
+	 * dynamic searching of the cache.
+	 * @return SearchType
+	 */
+	public SearchType getSearchType();
+	
 	/**
 	 * Called to clear the cache and delete all objects.
 	 * @param cacheName 

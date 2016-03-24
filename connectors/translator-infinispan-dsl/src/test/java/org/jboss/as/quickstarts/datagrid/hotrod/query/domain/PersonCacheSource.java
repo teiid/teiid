@@ -116,7 +116,7 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 			p.setName("Person " + i);
 			p.setPhones(pns);
 				
-			cache.put(i, p);
+			cache.put(new Integer(i), p);
 
 		}
 	}
@@ -869,6 +869,18 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 	public void removeClientListener(Object arg0) {
 	}
 
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.infinispan.client.hotrod.RemoteCache#execute(java.lang.String, java.util.Map)
+	 */
+	@Override
+	public <T> T execute(String arg0, Map<String, ?> arg1) {
+		return null;
+	}
+	
+
 	/**
 	 * {@inheritDoc}
 	 *
@@ -878,12 +890,6 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 	public Map<K, V> getAll(Set<? extends K> keys) {
 		return null;
 	}
-
-    @Override
-    public <T> T execute(String arg0, Map<String, ?> arg1) {
-        // TODO Auto-generated method stub
-        return null;
-    }
 	
 	
 	

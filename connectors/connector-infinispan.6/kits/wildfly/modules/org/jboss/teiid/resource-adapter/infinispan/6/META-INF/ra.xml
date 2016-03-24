@@ -55,7 +55,7 @@
             </config-property>  
             
             <config-property>
-               <description>{$display:"[Deprecated] Config File for Local Cache",$description:"[Deprecated] Infinispan Configuration File for configuring local cache"}</description>
+               <description>{$display:"Config File for Local Cache",$description:"Infinispan Configuration File for configuring local cache"}</description>
                <config-property-name>ConfigurationFileNameForLocalCache</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
             </config-property>      

@@ -1,46 +1,60 @@
-package org.teiid.translator.infinispan.cache;
+package org.teiid.resource.adapter.infinispan;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+
+import java.util.Map;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockito.Mock;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.language.Command;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.infinispan.cache.InfinispanCacheExecutionFactory;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectUpdateExecution;
 import org.teiid.translator.object.testdata.annotated.Trade;
+import org.teiid.translator.object.testdata.annotated.TradesAnnotatedCacheSource;
 import org.teiid.translator.object.testdata.trades.VDBUtility;
 
 @SuppressWarnings("nls")
 public class TestInfinispanUpdateExecution {
-	private static ObjectConnection CONNECTION;
 	private static TranslationUtility translationUtility = VDBUtility.TRANSLATION_UTILITY;
 
-	private static InfinispanCacheExecutionFactory factory;
-	
-	@Mock
+    private static InfinispanManagedConnectionFactory factory = null;
 	private static ExecutionContext context;
+	private static ObjectConnection CONNECTION;
+	
+	private static InfinispanCacheExecutionFactory TRANS_FACTORY = null;
 
 	@BeforeClass
-    public static void beforeClass() throws Exception {  
-		 
+    public static void beforeEachClass() throws Exception {  
 		context = mock(ExecutionContext.class);
 
-		factory = new InfinispanCacheExecutionFactory();
-		factory.setSupportsDSLSearching(true);
-		factory.start();
+		factory = new InfinispanManagedConnectionFactory();
+
+		factory.setConfigurationFileNameForLocalCache("./src/test/resources/infinispan_persistent_config.xml");
+		factory.setCacheTypeMap(InfinispanTestHelper.TRADE_CACHE_NAME + ":" + "org.teiid.translator.object.testdata.annotated.Trade;longValue:long");
+
 		
-		CONNECTION = TestInfinispanConnection.createConnection(false);
-    }
+		TRANS_FACTORY = new InfinispanCacheExecutionFactory();
+		TRANS_FACTORY.start();
+		
+		CONNECTION = factory.createConnectionFactory().getConnection();
+		
+		TradesAnnotatedCacheSource.loadCache(  (Map<Object,Object>)CONNECTION.getCache(InfinispanTestHelper.TRADE_CACHE_NAME ));
+
+	}
 	
 	@AfterClass
 	public static void afterClass() {
 		CONNECTION.cleanUp();
+		factory.shutDown();
 	}
 
 	
@@ -51,7 +65,6 @@ public class TestInfinispanUpdateExecution {
 	 * the behavior when multiple changes are made.
 	 * @throws Exception
 	 */
-
 	@Test
 	public void testScenarios() throws Exception {
 		
@@ -62,7 +75,6 @@ public class TestInfinispanUpdateExecution {
 		testDeleteRootByValue();
 
 	}
-
 
 	public void testInsertRootClass() throws Exception {
 
@@ -112,7 +124,6 @@ public class TestInfinispanUpdateExecution {
 //		assertTrue(found);
 //	}
 //	
-
 
 	public void testUpdateByKey() throws Exception {
 		
@@ -244,7 +255,7 @@ public class TestInfinispanUpdateExecution {
 //	
 	protected ObjectUpdateExecution createExecution(Command command) throws TranslatorException {
 
-		return (ObjectUpdateExecution) factory.createUpdateExecution(
+		return (ObjectUpdateExecution) TRANS_FACTORY.createUpdateExecution(
 				command,
 				context,
 				VDBUtility.RUNTIME_METADATA, CONNECTION);

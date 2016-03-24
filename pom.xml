@@ -33,12 +33,15 @@
         <version.dom4j>1.6.1</version.dom4j>
          
         <version.org.hibernate.search>5.2.0.Final</version.org.hibernate.search>
-        <version.org.infinispan.6>7.2.3.Final</version.org.infinispan.6>  
+        
+        <version.org.infinispan.hibernate.search>4.6.3.Final-redhat-1</version.org.infinispan.hibernate.search> 
+
+        <!-- JDG module slot to use  -->
+        <jdg.slot>jdg-6.6</jdg.slot>  
+        <version.org.infinispan.6>7.2.3.Final</version.org.infinispan.6> 
         <version.org.apache.lucene.infinispan>7.2.3.Final</version.org.apache.lucene.infinispan>
         <version.com.squareup.protoparser>3.1.5</version.com.squareup.protoparser>
-        <version.org.infinispan.protostream>3.0.4.Final</version.org.infinispan.protostream>        
-        <!-- JDG module slot to use  -->
-        <jdg.slot>jdg-6.5</jdg.slot>  
+        <version.org.infinispan.protostream>3.0.5.Final</version.org.infinispan.protostream>        
         
 
         <!-- Teiid specific properties -->

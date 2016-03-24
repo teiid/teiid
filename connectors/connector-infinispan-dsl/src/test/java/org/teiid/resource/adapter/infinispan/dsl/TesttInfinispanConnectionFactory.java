@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.translator.infinispan.dsl;
+package org.teiid.resource.adapter.infinispan.dsl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -33,21 +33,21 @@ import org.infinispan.protostream.SerializationContext;
 import org.jboss.teiid.jdg_remote.pojo.AllTypes;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
-import org.teiid.resource.adapter.infinispan.dsl.base.AbstractInfinispanManagedConnectionFactory;
 
 
 @SuppressWarnings("nls")
-public class TestAbstractInfinispanConnectionFactory  {
+public class TesttInfinispanConnectionFactory  {
 	protected static final String JNDI_NAME = "java/MyCacheManager";
 
 
-	private static AbstractInfinispanManagedConnectionFactory afactory;
+	private static InfinispanManagedConnectionFactory afactory;
 	
 	@Before
     public void beforeEach() throws Exception {  
   
-        afactory = new AbstractInfinispanManagedConnectionFactory() {
+        afactory = new InfinispanManagedConnectionFactory() {
 			/**
 			 */
 			private static final long serialVersionUID = 1L;
@@ -59,19 +59,23 @@ public class TestAbstractInfinispanConnectionFactory  {
 			}
 
 			@Override
-			protected RemoteCacheManager createRemoteCacheWrapperFromProperties(
+			protected RemoteCacheManager createRemoteCacheFromProperties(
 					ClassLoader classLoader) throws ResourceException {
 				// TODO Auto-generated method stub
 				return null;
 			}
 
 			@Override
-			protected RemoteCacheManager createRemoteCacheWrapperFromServerList(
+			protected RemoteCacheManager createRemoteCacheFromServerList(
 					ClassLoader classLoader) throws ResourceException {
 				// TODO Auto-generated method stub
 				return null;
 			}
 			
+			@Override
+			protected void registerWithCacheManager(SerializationContext ctx, RemoteCacheManager cc, ClassLoader cl, boolean useAnnotations) throws ResourceException {
+				// don't call JDG
+			}			
 
 		};
 		
@@ -93,7 +97,7 @@ public class TestAbstractInfinispanConnectionFactory  {
      */
 	@Test public void testtCacheTypeMap1() throws Exception {
 		afactory.setProtobufDefinitionFile("allTypes.proto");
-		afactory.setMessageMarshallers("");
+		afactory.setMessageMarshallers("org.jboss.teiid.jdg_remote.pojo.AllTypes:org.jboss.teiid.jdg_remote.pojo.marshaller.AllTypesMarshaller");
 		afactory.setMessageDescriptor("org.jboss.teiid.jdg_remote.pojo.AllTypes");
 		afactory.setCacheTypeMap("AllTypesCache:org.jboss.teiid.jdg_remote.pojo.AllTypes;intKey:" + Integer.class.getName());
 		afactory.setHotRodClientPropertiesFile("");
@@ -115,7 +119,7 @@ public class TestAbstractInfinispanConnectionFactory  {
      */
 	@Test public void testCacheTypeMap2() throws Exception {
 		afactory.setProtobufDefinitionFile("allTypes.proto");
-		afactory.setMessageMarshallers("");
+		afactory.setMessageMarshallers("org.jboss.teiid.jdg_remote.pojo.AllTypes:org.jboss.teiid.jdg_remote.pojo.marshaller.AllTypesMarshaller");
 		afactory.setMessageDescriptor("org.jboss.teiid.jdg_remote.pojo.AllTypes");
 		afactory.setCacheTypeMap("AllTypesCache:org.jboss.teiid.jdg_remote.pojo.AllTypes;intKey:" + String.class.getName());
 		afactory.setHotRodClientPropertiesFile("");
@@ -139,7 +143,7 @@ public class TestAbstractInfinispanConnectionFactory  {
 	//  @Test( expected = SQLException.class )
 	@Test public void testCacheTypeMap3() throws Exception {
 		afactory.setProtobufDefinitionFile("allTypes.proto");
-		afactory.setMessageMarshallers("");
+		afactory.setMessageMarshallers("org.jboss.teiid.jdg_remote.pojo.AllTypes:org.jboss.teiid.jdg_remote.pojo.marshaller.AllTypesMarshaller");
 		afactory.setMessageDescriptor("org.jboss.teiid.jdg_remote.pojo.AllTypes");
 		afactory.setCacheTypeMap("AllTypesCache:org.jboss.teiid.jdg_remote.pojo.AllTypes");
 		afactory.setHotRodClientPropertiesFile("");
@@ -160,7 +164,7 @@ public class TestAbstractInfinispanConnectionFactory  {
      */
 	@Test public void testCacheTypeMapNoCacheKeytype() throws Exception {
 		afactory.setProtobufDefinitionFile("allTypes.proto");
-		afactory.setMessageMarshallers("");
+		afactory.setMessageMarshallers("org.jboss.teiid.jdg_remote.pojo.AllTypes:org.jboss.teiid.jdg_remote.pojo.marshaller.AllTypesMarshaller");
 		afactory.setMessageDescriptor("org.jboss.teiid.jdg_remote.pojo.AllTypes");
 		afactory.setCacheTypeMap("AllTypesCache:org.jboss.teiid.jdg_remote.pojo.AllTypes;intKey");
 		afactory.setHotRodClientPropertiesFile("");
