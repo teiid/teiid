@@ -106,7 +106,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 		String pkField = conn.getPkField();
 		boolean updatable = (pkField != null ? true : false);
 		
-		Table rootTable = addTable(mf, entity, updatable, descriptor);
+		Table rootTable = addTable(mf, entity, updatable);
 		
 	    // add column for cache Object, set to non-selectable by default so that select * queries don't fail by default
 		addRootColumn(mf, Object.class, entity, null, null, SearchType.Unsearchable, rootTable.getName(), rootTable, false, false, NullType.Nullable); //$NON-NLS-1$	
@@ -131,7 +131,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 				NullType nt = NullType.Nullable;
 				SearchType st = isSearchable(fd);
 				Class<?> returnType = getJavaType( fd,entity, conn);
-				String j = fd.getJavaType().name();
+//				String j = fd.getJavaType().name();
 				if (fd.getName().equalsIgnoreCase(pkField)) {
 					addKey = true;
 					st = SearchType.Searchable;
@@ -163,9 +163,8 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 		return rootTable;
 	}
 	
-	private Table addTable(MetadataFactory mf, Class<?> entity, boolean updatable, Descriptor descriptor) {
+	private Table addTable(MetadataFactory mf, Class<?> entity, boolean updatable) {
 		String tName = entity.getSimpleName();
-				//getTableName(descriptor);
 		Table t = mf.getSchema().getTable(tName);
 		if (t != null) {
 			//already loaded
@@ -173,8 +172,6 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 		}
 		t = mf.addTable(tName);
 		t.setSupportsUpdate(updatable);
-		
-//		t.setProperty(ENTITYCLASS, entity.getName());
 
 		return t;
 		
@@ -216,7 +213,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25060, new Object[] { fd.getName() }));
 		}
 		
-		Table t = addTable(mf, c, true, d);
+		Table t = addTable(mf, c, true);
 		
 		// do not use getSourceName, the NameInSource has to be defined as the cache name
 		t.setNameInSource(rootTable.getNameInSource()); 

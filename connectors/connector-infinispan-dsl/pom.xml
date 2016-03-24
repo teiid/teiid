@@ -18,12 +18,22 @@
               <groupId>org.infinispan</groupId>
               <artifactId>infinispan-client-hotrod</artifactId>
               <version>${version.org.infinispan.6}</version>
-            </dependency>      
+            </dependency>
+            <dependency>
+                <groupId>org.infinispan</groupId>
+                <artifactId>infinispan-server-hotrod</artifactId>
+                <version>${version.org.infinispan.6}</version>
+            </dependency>       
             <dependency>
                 <groupId>org.infinispan</groupId>
                 <artifactId>infinispan-commons</artifactId>
                 <version>${version.org.infinispan.6}</version>
-            </dependency> 
+            </dependency>
+           <dependency>
+                <groupId>org.infinispan</groupId>
+                <artifactId>infinispan-core</artifactId>
+                <version>${version.org.infinispan.6}</version>
+            </dependency>   
              <dependency>
                 <groupId>org.infinispan</groupId>
                 <artifactId>infinispan-remote-query-client</artifactId>
@@ -44,8 +54,25 @@
     
     <dependencies>
         <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr-runtime</artifactId>
+        </dependency>    
+        <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>translator-infinispan-dsl</artifactId>
+        </dependency>
+	    <dependency>
+			<groupId>org.jboss.teiid.connectors</groupId>
+			<artifactId>translator-infinispan-dsl</artifactId>
+			<type>test-jar</type> 
+		</dependency>       
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>translator-object</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>translator-object</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
@@ -62,11 +89,20 @@
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-client-hotrod</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-server-hotrod</artifactId>
+            <scope>test</scope>
         </dependency>     
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-commons</artifactId>
-        </dependency> 
+        </dependency>
+        <dependency>
+             <groupId>org.infinispan</groupId>
+             <artifactId>infinispan-core</artifactId>
+         </dependency> 
         <dependency>
           <groupId>org.infinispan</groupId>
           <artifactId>infinispan-remote-query-client</artifactId>
@@ -78,7 +114,11 @@
         <dependency>
             <groupId>org.infinispan.protostream</groupId>
             <artifactId>protostream</artifactId>
-        </dependency>            
+        </dependency>    
+	     <dependency>
+	         <groupId>org.hibernate.hql</groupId>
+	         <artifactId>hibernate-hql-parser</artifactId>
+	      </dependency>                
         <dependency>
             <groupId>org.jboss.modules</groupId>
             <artifactId>jboss-modules</artifactId>

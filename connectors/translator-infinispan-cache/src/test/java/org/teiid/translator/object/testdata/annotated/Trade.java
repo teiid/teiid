@@ -27,8 +27,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-import javax.persistence.Entity;
-
 import org.hibernate.search.annotations.Analyze;
 import org.hibernate.search.annotations.DateBridge;
 import org.hibernate.search.annotations.Field;
@@ -39,7 +37,7 @@ import org.hibernate.search.annotations.NumericField;
 import org.hibernate.search.annotations.ProvidedId;
 import org.hibernate.search.annotations.Resolution;
 
-@Entity
+
 @Indexed @ProvidedId
 public class Trade  implements Serializable {
 	

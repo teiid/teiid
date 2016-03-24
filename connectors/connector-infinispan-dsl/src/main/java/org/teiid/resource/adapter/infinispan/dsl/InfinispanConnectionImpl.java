@@ -20,13 +20,15 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.resource.adapter.infinispan.dsl.base;
+package org.teiid.resource.adapter.infinispan.dsl;
 
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+
+import javax.resource.ResourceException;
 
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.Search;
@@ -39,6 +41,7 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.infinispan.dsl.InfinispanDSLConnection;
 import org.teiid.translator.infinispan.dsl.InfinispanPlugin;
 import org.teiid.translator.object.ObjectMaterializeLifeCycle;
+import org.teiid.translator.object.SearchType;
 
 /** 
  * Represents a connection to an Infinispan cache container. The <code>cacheName</code> that is specified will dictate the
@@ -49,9 +52,11 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	
 	AbstractInfinispanManagedConnectionFactory config = null;
 
-	public InfinispanConnectionImpl(AbstractInfinispanManagedConnectionFactory config)   {
+	public InfinispanConnectionImpl(AbstractInfinispanManagedConnectionFactory config)  throws ResourceException {
 		this.config = config;
 
+		this.config.createCacheContainer();
+		
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Infinispan Connection has been newly created "); //$NON-NLS-1$
 	}
 	
@@ -246,5 +251,16 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 		config.getCache(cacheName).clear();
 	}
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#getSearchType()
+	 */
+	@Override
+	public SearchType getSearchType() {
+		return new DSLSearch(this);
+	}
+
+	
 
 }

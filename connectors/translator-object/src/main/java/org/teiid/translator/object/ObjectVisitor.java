@@ -24,21 +24,27 @@ package org.teiid.translator.object;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.language.AndOr;
 import org.teiid.language.BaseLanguageObject;
 import org.teiid.language.ColumnReference;
+import org.teiid.language.Comparison;
 import org.teiid.language.Condition;
 import org.teiid.language.Delete;
 import org.teiid.language.DerivedColumn;
 import org.teiid.language.Expression;
 import org.teiid.language.ExpressionValueSource;
+import org.teiid.language.In;
 import org.teiid.language.Insert;
 import org.teiid.language.LanguageObject;
 import org.teiid.language.Limit;
+import org.teiid.language.Literal;
 import org.teiid.language.NamedTable;
 import org.teiid.language.OrderBy;
 import org.teiid.language.Select;
 import org.teiid.language.Update;
 import org.teiid.language.visitor.HierarchyVisitor;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.translator.TranslatorException;
@@ -53,6 +59,9 @@ public class ObjectVisitor extends HierarchyVisitor {
 
 	private List<DerivedColumn> projectedColumns = new ArrayList<DerivedColumn>();
 	protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
+	
+	private ArrayList<Object> values = new ArrayList<Object>();
+
 	
 	private NamedTable table;
 	
@@ -251,7 +260,91 @@ public class ObjectVisitor extends HierarchyVisitor {
 		super.visit(obj);
 		this.condition = obj.getWhere();
 		this.update = obj;
-	}		
+	}	
+	
+	public List<Object> getCriteriaValues() {
+		return values;
+	}
+	
+
+	@Override
+    public void visit(AndOr obj) {
+        visitNode(obj.getLeftCondition());
+        visitNode(obj.getRightCondition());
+    }
+	
+	@Override
+	public void visit(Comparison obj) {
+		super.visit(obj);
+		
+		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
+		"Parsing Comparison criteria."); //$NON-NLS-1$
+
+		Expression lhs = obj.getLeftExpression();
+		Expression rhs = obj.getRightExpression();
+
+		// joins between the objects is assumed as if no criteria, and therefore, return all
+		if (lhs instanceof ColumnReference && rhs instanceof ColumnReference) {
+			return;
+		} else if (lhs instanceof Literal && rhs instanceof Literal) {
+			return;
+		}
+
+		Object value=null;
+		Column mdIDElement = null;
+		Literal literal = null;
+		if (lhs instanceof ColumnReference) {
+
+			mdIDElement = ((ColumnReference) lhs).getMetadataObject();
+			literal = (Literal) rhs;
+			value = literal.getValue();
+
+		} else if (rhs instanceof ColumnReference ){
+			mdIDElement = ((ColumnReference) rhs).getMetadataObject();
+			literal = (Literal) lhs;
+			value = literal.getValue();
+		}	
+		
+		Object criteria;
+		try {
+			criteria = ObjectUtil.convertValueToObjectType(value, mdIDElement);
+			values.add(criteria);
+		} catch (TranslatorException e) {
+			exceptions.add(e);
+		}
+
+	}
+	
+	@Override
+	public void visit(In obj) {
+		super.visit(obj);
+		if (obj.isNegated()) {
+			this.addException(new TranslatorException("ObjectQueryVisitor: Not In criteria is not supported"));
+			return;
+		}
+
+		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Parsing IN criteria."); //$NON-NLS-1$
+		
+		Expression lhs = obj.getLeftExpression();
+		Column col = ((ColumnReference) lhs).getMetadataObject();
+		
+		List<Expression> rhsList = obj.getRightExpressions();
+		
+		for (Expression expr : rhsList) {
+
+			Literal literal = (Literal) expr;
+			
+			Object criteria;
+			try {
+				criteria = ObjectUtil.convertValueToObjectType(literal.getValue(), col);
+				values.add(criteria);
+			} catch (TranslatorException e) {
+				exceptions.add(e);
+			}
+			
+		}				
+	
+	}	
 	
 	protected String getForeignKeyNIS(NamedTable table, ForeignKey fk)  {
 

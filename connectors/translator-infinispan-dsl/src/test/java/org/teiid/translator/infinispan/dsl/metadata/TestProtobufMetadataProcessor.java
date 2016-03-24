@@ -29,6 +29,7 @@ public class TestProtobufMetadataProcessor {
 	@Before public void beforeEach() throws Exception{	
 		 
 		TRANSLATOR = new InfinispanExecutionFactory();
+		TRANSLATOR.setSupportsSearchabilityUsingAnnotations(false);
 		TRANSLATOR.start();
     }
 

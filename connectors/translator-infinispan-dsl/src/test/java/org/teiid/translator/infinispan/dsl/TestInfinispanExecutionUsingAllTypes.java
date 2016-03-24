@@ -37,10 +37,8 @@ import org.teiid.language.Select;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.infinispan.dsl.util.AllTypesSchemaVDBUtility;
-import org.teiid.translator.object.testdata.person.PersonSchemaVDBUtility;
-import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectExecution;
-import org.teiid.translator.object.ObjectVisitor;
+import org.teiid.translator.object.testdata.person.PersonSchemaVDBUtility;
 
 /**
  * NOTES: 
@@ -149,12 +147,12 @@ public class TestInfinispanExecutionUsingAllTypes {
 
 	protected ObjectExecution createExecution(Select command, int rowCount, int colCount) throws TranslatorException {
 		InfinispanExecutionFactory translator = new InfinispanExecutionFactory() {
-			@Override
-			public List<Object> search(ObjectVisitor visitor, ObjectConnection connection, ExecutionContext executionContext)
-					throws TranslatorException {
-				List<Object> rows = new ArrayList<Object>(DATA.values());
-    			return rows;
-			}
+//			@Override
+//			public List<Object> search(ObjectVisitor visitor, ObjectConnection connection, ExecutionContext executionContext)
+//					throws TranslatorException {
+//				List<Object> rows = new ArrayList<Object>(DATA.values());
+//    			return rows;
+//			}
 
         };
         translator.start();

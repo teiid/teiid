@@ -256,7 +256,8 @@ public class ObjectExecution extends ObjectBaseExecution implements ResultSetExe
 		}
 	    
 		// column NIS for a column will be used to query the cache
-	    List<Object> objResults = env.search(visitor, connection, executionContext);
+	    List<Object> objResults = connection.getSearchType().performSearch(visitor, executionContext); 
+	    		//env.search(visitor, connection, executionContext);
 	    
 		if (objResults == null) {
 			objResults = Collections.emptyList();

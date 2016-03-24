@@ -26,18 +26,31 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
+import org.junit.Before;
+import org.junit.After;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.testdata.trades.Trade;
 
 @SuppressWarnings("nls")
 public class TestInfinispanManagedConnectionFactory {
 	
+	InfinispanManagedConnectionFactory factory;
+	
+	@Before
+	public void before() {
+		factory = new InfinispanManagedConnectionFactory();
+		factory.setConfigurationFileNameForLocalCache("./src/test/resources/infinispan_persistent_config.xml");
+	}
+	
+	
+	@After
+	public void after() {
+		factory.getCacheWrapper().shutDownCacheManager();
+	}
+	
     @Test
     public void testCacheTypeMap1() throws Exception {
-    	InfinispanManagedConnectionFactory factory = new InfinispanManagedConnectionFactory();
- 
-		factory.setConfigurationFileNameForLocalCache("./src/test/resources/infinispan_persistent_config.xml");
-		factory.setCacheTypeMap(RemoteInfinispanTestHelper.TRADE_CACHE_NAME + ":" + "org.teiid.translator.object.testdata.trades.Trade");
+ 		factory.setCacheTypeMap(InfinispanTestHelper.TRADE_CACHE_NAME + ":" + "org.teiid.translator.object.testdata.trades.Trade");
     	   	
     		ObjectConnection conn = factory.createConnectionFactory().getConnection();
     		Class<?> clz = conn.getCacheClassType();
@@ -48,7 +61,7 @@ public class TestInfinispanManagedConnectionFactory {
     		
     		assertNull(conn.getPkField());
     		
-    		assertEquals(RemoteInfinispanTestHelper.TRADE_CACHE_NAME, conn.getCacheName());
+    		assertEquals(InfinispanTestHelper.TRADE_CACHE_NAME, conn.getCacheName());
     		assertNotNull(conn.getClassRegistry());
      		
     		factory.cleanUp();
@@ -56,15 +69,13 @@ public class TestInfinispanManagedConnectionFactory {
     
     @Test
     public void testCacheTypeMap2() throws Exception {
-    	InfinispanManagedConnectionFactory factory = new InfinispanManagedConnectionFactory();
  
-		factory.setConfigurationFileNameForLocalCache("./src/test/resources/infinispan_persistent_config.xml");
-		factory.setCacheTypeMap(RemoteInfinispanTestHelper.TEST_CACHE_NAME + ":" + "org.teiid.translator.object.testdata.trades.Trade;longValue");
+		factory.setCacheTypeMap(InfinispanTestHelper.TRADE_CACHE_NAME + ":" + "org.teiid.translator.object.testdata.trades.Trade;longValue");
     	
     	
     		ObjectConnection conn = factory.createConnectionFactory().getConnection();
     		
-    		assertEquals(conn.getCacheName(), RemoteInfinispanTestHelper.TEST_CACHE_NAME);
+    		assertEquals(conn.getCacheName(), InfinispanTestHelper.TRADE_CACHE_NAME);
 
     		Class<?> clz = conn.getCacheClassType();
     		
@@ -79,13 +90,11 @@ public class TestInfinispanManagedConnectionFactory {
     
     @Test
     public void testCacheTypeMap3() throws Exception {
-    	InfinispanManagedConnectionFactory factory = new InfinispanManagedConnectionFactory();
  
-		factory.setConfigurationFileNameForLocalCache("./src/test/resources/infinispan_persistent_config.xml");
-		factory.setCacheTypeMap(RemoteInfinispanTestHelper.TEST_CACHE_NAME + ":" + "org.teiid.translator.object.testdata.trades.Trade;longValue:long");
+		factory.setCacheTypeMap(InfinispanTestHelper.TRADE_CACHE_NAME + ":" + "org.teiid.translator.object.testdata.trades.Trade;longValue:long");
     	
     		ObjectConnection conn = factory.createConnectionFactory().getConnection();
-    		assertEquals(conn.getCacheName(), RemoteInfinispanTestHelper.TEST_CACHE_NAME);
+    		assertEquals(conn.getCacheName(), InfinispanTestHelper.TRADE_CACHE_NAME);
 
     		Class<?> clz = conn.getCacheClassType();
     		
@@ -102,15 +111,13 @@ public class TestInfinispanManagedConnectionFactory {
     
     @Test
     public void testCacheTypeMap4() throws Exception {
-    	InfinispanManagedConnectionFactory factory = new InfinispanManagedConnectionFactory();
  
-		factory.setConfigurationFileNameForLocalCache("./src/test/resources/infinispan_persistent_config.xml");
-		factory.setCacheTypeMap(RemoteInfinispanTestHelper.TEST_CACHE_NAME + ":" + "org.teiid.translator.object.testdata.trades.Trade;longValue:java.lang.Long");
+		factory.setCacheTypeMap(InfinispanTestHelper.TRADE_CACHE_NAME + ":" + "org.teiid.translator.object.testdata.trades.Trade;longValue:java.lang.Long");
     	
     	
     		ObjectConnection conn = factory.createConnectionFactory().getConnection();
     		
-    		assertEquals(conn.getCacheName(), RemoteInfinispanTestHelper.TEST_CACHE_NAME);
+    		assertEquals(conn.getCacheName(), InfinispanTestHelper.TRADE_CACHE_NAME);
     		
     		Class<?> clz = conn.getCacheClassType();
     		

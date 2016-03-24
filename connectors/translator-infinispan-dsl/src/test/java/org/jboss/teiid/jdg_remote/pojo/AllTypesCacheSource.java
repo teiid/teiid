@@ -963,6 +963,7 @@ public class AllTypesCacheSource<K, V>  implements RemoteCache<K, V>{
 	public void removeClientListener(Object arg0) {
 	}
 
+
 	/**
 	 * {@inheritDoc}
 	 *
@@ -974,8 +975,16 @@ public class AllTypesCacheSource<K, V>  implements RemoteCache<K, V>{
 	}
 
 
-    @Override
-    public <T> T execute(String arg0, Map<String, ?> arg1) {
-        return null;
-    }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.infinispan.client.hotrod.RemoteCache#execute(java.lang.String, java.util.Map)
+	 */
+	@Override
+	public <T> T execute(String arg0, Map<String, ?> arg1) {
+		return null;
+	}
+	
+	
+	
 }

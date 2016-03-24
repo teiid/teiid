@@ -31,6 +31,7 @@ import org.teiid.language.Select;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.infinispan.cache.InfinispanCacheExecutionFactory;
 import org.teiid.translator.object.BasicSearchTest;
+import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectExecution;
 import org.teiid.translator.object.testdata.trades.Trade;
 import org.teiid.translator.object.testdata.trades.TradesCacheSource;
@@ -46,6 +47,9 @@ public class TestInfinispanJndiNameKeyOnlySearch extends BasicSearchTest {
     private static InfinispanManagedConnectionFactory factory = null;
     
     private static InfinispanCacheExecutionFactory tfactory;
+    
+	private static ObjectConnection CONNECTION;
+
 	
 	@BeforeClass
     public static void beforeEachClass() throws Exception {  
@@ -53,9 +57,8 @@ public class TestInfinispanJndiNameKeyOnlySearch extends BasicSearchTest {
 		context = mock(ExecutionContext.class);
         
 		final DefaultCacheManager container = new DefaultCacheManager("./src/test/resources/infinispan_persistent_config.xml", true);
-        
-        TradesCacheSource.loadCache(container.getCache(TradesCacheSource.TRADES_CACHE_NAME));
-        
+		TradesCacheSource.loadCache( container.getCache(TradesCacheSource.TRADES_CACHE_NAME ));
+              
 		factory = new InfinispanManagedConnectionFactory() {
 			
 			/**
@@ -71,10 +74,14 @@ public class TestInfinispanJndiNameKeyOnlySearch extends BasicSearchTest {
 
 		
 		factory.setCacheJndiName(JNDI_NAME);
-		factory.setCacheTypeMap(RemoteInfinispanTestHelper.TRADE_CACHE_NAME + ":" + Trade.class.getName());
+		factory.setCacheTypeMap(TradesCacheSource.TRADES_CACHE_NAME + ":" + Trade.class.getName());
+
+		CONNECTION = factory.createConnectionFactory().getConnection();
+		
 
 		tfactory = new InfinispanCacheExecutionFactory();
-
+		tfactory.setSupportsDSLSearching(false);
+		tfactory.setSupportsLuceneSearching(false);
 		tfactory.start();
 
 	}
@@ -82,12 +89,13 @@ public class TestInfinispanJndiNameKeyOnlySearch extends BasicSearchTest {
 	@AfterClass
     public static void closeConnection() throws Exception {
     	
- //       RemoteInfinispanTestHelper.releaseServer();
+	    CONNECTION.cleanUp();
+	    factory.shutDown();
     }
     
 	@Override
 	protected ObjectExecution createExecution(Select command) throws Exception {
-		return (ObjectExecution) tfactory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, factory.createConnectionFactory().getConnection());
+		return (ObjectExecution) tfactory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, CONNECTION);
 	}
 
 }

@@ -15,9 +15,10 @@
         <module name="org.jboss.teiid.common-core"/>
         <module name="org.jboss.teiid.api"/>
         <module name="org.jboss.teiid.translator.object"/>
-        <module name="org.jboss.teiid.translator.infinispan.cache"/>   
+        <module name="org.jboss.teiid.translator.infinispan.cache" export=true/>      
         <module name="org.jboss.modules"/>
-        
+               
 		<module name="org.infinispan" slot="${jdg.slot}" optional="true" services="export"  export="true" />
+		<module name="org.infinispan.query" slot="${jdg.slot}" optional="true"  services="export" export="true"  />
     </dependencies>
 </module>

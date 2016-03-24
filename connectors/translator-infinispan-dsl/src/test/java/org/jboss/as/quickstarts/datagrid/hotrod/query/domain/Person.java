@@ -18,18 +18,24 @@ package org.jboss.as.quickstarts.datagrid.hotrod.query.domain;
 
 import java.util.List;
 
+import org.infinispan.protostream.annotations.ProtoDoc;
+import org.infinispan.protostream.annotations.ProtoField;
+
 /**
  * Copied from JDG quickstart - remote-query
  * 
  * @author Adrian Nistor
  */
+@ProtoDoc("@Indexed")
 public class Person {
 
-   private String name;
-   private int id;
-   private String email;
-   private List<PhoneNumber> phones;
+   public String name;
+   public int id;
+   public String email;
 
+	public List<PhoneNumber> phones;
+
+	@ProtoField(number = 2, required = true)
    public String getName() {
       return name;
    }
@@ -38,6 +44,7 @@ public class Person {
       this.name = name;
    }
 
+	@ProtoField(number = 1, required = true)
    public int getId() {
       return id;
    }
@@ -46,6 +53,8 @@ public class Person {
       this.id = id;
    }
 
+   
+	@ProtoField(number = 3)
    public String getEmail() {
       return email;
    }

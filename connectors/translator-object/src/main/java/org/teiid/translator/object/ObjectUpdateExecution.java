@@ -228,7 +228,8 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 		
 		// don't perform a search when doing inserts for materialization, its assume a cleared cache
 		if (!useForMat) {
-			Object rootObject = env.performKeySearch(ObjectUtil.getRecordName(keyCol), keyValue, connection, executionContext);
+			Object rootObject = connection.getSearchType().performKeySearch(ObjectUtil.getRecordName(keyCol), keyValue, executionContext) ;
+					//env.performKeySearch(ObjectUtil.getRecordName(keyCol), keyValue, connection, executionContext);
 	
 			if (rootObject != null) {
 				throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21007, new Object[] {insert.getTable().getName(), keyValue}));
@@ -283,7 +284,8 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 		String fk_nis = fk.getNameInSource();
 		// don't perform a search when doing inserts for materialization
 						
-		Object rootObject = env.performKeySearch(fkeyColNIS, fkeyValue, connection, executionContext);
+		Object rootObject = connection.getSearchType().performKeySearch(fkeyColNIS, fkeyValue, executionContext) ; 
+				//env.performKeySearch(fkeyColNIS, fkeyValue, connection, executionContext);
 
 		if (rootObject == null) {
 			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21015, new Object[] {fkeyValue, rootTable.getName()}));
@@ -337,7 +339,8 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 		}
 
 		// Find all the objects that meet the criteria for deletion
-		List<Object> toDelete = env.search(visitor, connection, executionContext);
+		List<Object> toDelete = connection.getSearchType().performSearch(visitor, executionContext) ;
+				//env.search(visitor, connection, executionContext);
 		if (toDelete == null || toDelete.isEmpty()) {
 			LogManager.logWarning(LogConstants.CTX_CONNECTOR, ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21013, new Object[] {rootTable.getName(), visitor.getWhereCriteria()}));
 			return 0;
@@ -443,7 +446,8 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 		NamedTable rootTable = visitor.getTable();
 		
 		// Find all the objects that meet the criteria for updating
-		List<Object> toUpdate = env.search(visitor, connection, executionContext);
+		List<Object> toUpdate = connection.getSearchType().performSearch(visitor, executionContext) ;
+				//env.search(visitor, connection, executionContext);
 		
 		if (toUpdate == null || toUpdate.size() == 0){
 			LogManager.logTrace(LogConstants.CTX_CONNECTOR,

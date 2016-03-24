@@ -61,8 +61,6 @@ public class SimpleMapCacheExecutionFactory extends ObjectExecutionFactory {
 		setSupportsFullOuterJoins(false);
 		setSupportsOuterJoins(false);
 		
-		setSearchType(new SearchByKey());
-		
 	}
 	
 	@Override

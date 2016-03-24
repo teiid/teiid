@@ -50,7 +50,6 @@ public abstract class ObjectExecutionFactory extends
 		ExecutionFactory<ConnectionFactory, ObjectConnection> {
 
 	public static final int MAX_SET_SIZE = 10000;
-	private SearchType searchType=null;
 	private boolean searchabilityBasedOnAnnotations = true;
 	
 	public ObjectExecutionFactory() {
@@ -73,7 +72,6 @@ public abstract class ObjectExecutionFactory extends
 	 */
 	@Override
 	public void start() throws TranslatorException {
-		if (searchType == null) throw new TranslatorException("Programming Error: Search Type was not set");
 		super.start();
 	}
 
@@ -125,36 +123,9 @@ public abstract class ObjectExecutionFactory extends
 		return true;
 	}
 	
-	public void setSearchType(SearchType type) {
-		this.searchType = type;
-	}
-	
-	public SearchType getSearchType() {
-		return this.searchType;
-	}
-	
 	@Override
     public MetadataProcessor<ObjectConnection> getMetadataProcessor(){
 	    return new JavaBeanMetadataProcessor(searchabilityBasedOnAnnotations);
-	}
-	
-	public List<Object> search(ObjectVisitor visitor, ObjectConnection connection, ExecutionContext executionContext)
-			throws TranslatorException {
-		return searchType.performSearch(visitor,connection);
-	}
-	
-	/**
-	 * The searchByKey is used by update operations that need to obtain a specific object, but don't need
-	 * to create a Select command in order to find a single object.
-	 * @param columnName
-	 * @param value
-	 * @param connection
-	 * @param executionContext
-	 * @return Object
-	 * @throws TranslatorException
-	 */
-	public Object performKeySearch(String columnName, Object value, ObjectConnection connection, ExecutionContext executionContext) throws TranslatorException {
-		return searchType.performKeySearch(columnName, value, connection);
 	}
 
 	/**
