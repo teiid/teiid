@@ -167,7 +167,7 @@ public class TestODataSQLBuilder {
         OData odata = OData4Impl.newInstance();
         org.teiid.metadata.Schema teiidSchema = store.getSchema("PM1");
         CsdlSchema schema = ODataSchemaBuilder.buildMetadata("vdb", teiidSchema);
-        TeiidEdmProvider edmProvider = new TeiidEdmProvider(schema);
+        TeiidEdmProvider edmProvider = new TeiidEdmProvider("baseuri", schema, "x");
         
         ServiceMetadata serviceMetadata = odata.createServiceMetadata(edmProvider, Collections.<EdmxReference> emptyList());
         ODataHttpHandler handler = odata.createHandler(serviceMetadata);
@@ -273,7 +273,7 @@ public class TestODataSQLBuilder {
 
     @Test
     public void testSimpleEntityID() throws Exception {
-        helpTest("/odata4/vdb/PM1/$entity?$id=http://host/odata4/vdb/PM1/G1(1)", 
+        helpTest("/odata4/vdb/PM1/$entity?$id="+Encoder.encode("http://host/odata4/vdb/PM1/G1(1)"), 
                 "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 WHERE g0.e2 = 1 ORDER BY g0.e2");
     }
 

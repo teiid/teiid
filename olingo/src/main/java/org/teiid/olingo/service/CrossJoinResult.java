@@ -31,15 +31,13 @@ import org.teiid.odata.api.QueryResponse;
 import org.teiid.olingo.ComplexReturnType;
 
 public class CrossJoinResult implements QueryResponse {
-    private final String invalidCharacterReplacement;
     private String nextToken;
     private CrossJoinNode documentNode;
     private List<List<ComplexReturnType>> out = new ArrayList<List<ComplexReturnType>>();
     private String baseURL;
     
-    public CrossJoinResult(String baseURL, String invalidCharacterReplacement, CrossJoinNode context) {
+    public CrossJoinResult(String baseURL, CrossJoinNode context) {
         this.baseURL = baseURL;
-        this.invalidCharacterReplacement = invalidCharacterReplacement;
         this.documentNode = context;
     }
 
@@ -49,17 +47,17 @@ public class CrossJoinResult implements QueryResponse {
         ArrayList<ComplexReturnType> row = new ArrayList<ComplexReturnType>();
         
         Entity entity = EntityCollectionResponse.createEntity(rs,
-                this.documentNode, this.invalidCharacterReplacement, this.baseURL, null);
+                this.documentNode, this.baseURL, null);
         
-        row.add(new ComplexReturnType(this.documentNode.getTable().getName(),
+        row.add(new ComplexReturnType(this.documentNode.getName(),
                 this.documentNode.getEdmEntityType(), entity, this.documentNode
                         .hasExpand()));
         
         for (DocumentNode node : this.documentNode.getSibilings()) {
             Entity sibiling = EntityCollectionResponse.createEntity(rs, node,
-                    this.invalidCharacterReplacement, this.baseURL, null);
+                    this.baseURL, null);
             
-            row.add(new ComplexReturnType(node.getTable().getName(),
+            row.add(new ComplexReturnType(node.getName(),
                     this.documentNode.getEdmEntityType(), sibiling,
                     ((CrossJoinNode) node).hasExpand()));
         }

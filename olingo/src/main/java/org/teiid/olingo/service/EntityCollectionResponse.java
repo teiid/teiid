@@ -54,7 +54,6 @@ import org.apache.olingo.commons.core.edm.primitivetype.EdmBinary;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmDate;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmDateTimeOffset;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmStream;
-import org.apache.olingo.commons.core.edm.primitivetype.EdmString;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmTimeOfDay;
 import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
 import org.apache.olingo.server.core.responses.EntityResponse;
@@ -74,7 +73,6 @@ import org.teiid.olingo.common.ODataTypeManager;
 import org.teiid.query.sql.symbol.Symbol;
 
 public class EntityCollectionResponse extends EntityCollection implements QueryResponse {
-    private final String invalidCharacterReplacement;
     private String nextToken;
     private Entity currentEntity;
     private DocumentNode documentNode;
@@ -82,13 +80,10 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
     private Map<String, Object> streams;
 
     private EntityCollectionResponse() {
-        this.invalidCharacterReplacement = null;
     }
     
-    public EntityCollectionResponse(String baseURL, String invalidCharacterReplacement,
-            DocumentNode resource) {
+    public EntityCollectionResponse(String baseURL, DocumentNode resource) {
         this.baseURL = baseURL;
-        this.invalidCharacterReplacement = invalidCharacterReplacement;
         this.documentNode = resource;
     }
     
@@ -98,14 +93,14 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
         boolean add = true;
         
         if (this.currentEntity == null) {
-            entity = createEntity(rs, this.documentNode, this.invalidCharacterReplacement, this.baseURL, this);
+            entity = createEntity(rs, this.documentNode, this.baseURL, this);
             this.currentEntity = entity;
         } else {
             if(sameEntity) {
                 entity = this.currentEntity;
                 add = false;
             } else {
-                entity = createEntity(rs, this.documentNode, this.invalidCharacterReplacement, this.baseURL, this);
+                entity = createEntity(rs, this.documentNode, this.baseURL, this);
                 this.currentEntity = entity;            
             }
         }
@@ -115,7 +110,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
             // need to be re-done.
             for (DocumentNode resource : this.documentNode.getExpands()) {
                 ExpandDocumentNode expandNode = (ExpandDocumentNode)resource;
-                Entity expandEntity = createEntity(rs, expandNode, this.invalidCharacterReplacement, this.baseURL, this);
+                Entity expandEntity = createEntity(rs, expandNode, this.baseURL, this);
                 
                 // make sure the expanded entity has valid key, otherwise it is just nulls on right side
                 boolean valid = true;
@@ -154,22 +149,20 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
             getEntities().add(entity);
         } else {
             // this is property update incase of collection return 
-            updateEntity(rs, entity, this.documentNode, this.invalidCharacterReplacement);            
+            updateEntity(rs, entity, this.documentNode);            
         }
     }
     
     @Override
     public boolean isSameEntity(ResultSet rs) throws SQLException {
         if (this.currentEntity == null) {
-            this.currentEntity = createEntity(rs, this.documentNode,
-                    this.invalidCharacterReplacement, this.baseURL, this);
+            this.currentEntity = createEntity(rs, this.documentNode,this.baseURL, this);
             return false;
         } else {
             if (isSameRow(rs, this.documentNode, this.currentEntity)) {
                 return true;
             } else {
-                this.currentEntity = createEntity(rs, this.documentNode,
-                        this.invalidCharacterReplacement, this.baseURL, this);
+                this.currentEntity = createEntity(rs, this.documentNode,this.baseURL, this);
                 return false;
             }
         }
@@ -178,12 +171,10 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
     @Override
     public void advanceRow(ResultSet rs, boolean sameEntity) throws SQLException {
         if (this.currentEntity == null) {
-            this.currentEntity = createEntity(rs, this.documentNode,
-                    this.invalidCharacterReplacement, this.baseURL, this);
+            this.currentEntity = createEntity(rs, this.documentNode, this.baseURL, this);
         } else {
             if (!sameEntity) {
-                this.currentEntity = createEntity(rs, this.documentNode,
-                        this.invalidCharacterReplacement, this.baseURL, this);
+                this.currentEntity = createEntity(rs, this.documentNode, this.baseURL, this);
             }
         }
     }
@@ -211,7 +202,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
         return null;
     }
 
-    static Entity createEntity(ResultSet rs, DocumentNode node, String invalidChar, String baseURL, EntityCollectionResponse response)
+    static Entity createEntity(ResultSet rs, DocumentNode node, String baseURL, EntityCollectionResponse response)
             throws SQLException {
         
         List<ProjectedColumn> projected = node.getAllProjectedColumns();
@@ -243,8 +234,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                 }
                 else {
                     Property property = buildPropery(propertyName, type,
-                            column.isCollection(), value,
-                            invalidChar);
+                            column.isCollection(), value);
                     entity.addProperty(property);
                 }
             } catch (IOException e) {
@@ -304,7 +294,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
     	return streams.get(propertyName);
     }
 
-	private static void updateEntity(ResultSet rs, Entity entity, DocumentNode node, String invalidChar)
+	private static void updateEntity(ResultSet rs, Entity entity, DocumentNode node)
             throws SQLException {
         
         List<ProjectedColumn> projected = node.getAllProjectedColumns();
@@ -325,8 +315,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                 if (column.isCollection()) {
                     Property previousProperty = entity.getProperty(propertyName);
                     Property property = buildPropery(propertyName, type,
-                            column.isCollection(), value,
-                            invalidChar);
+                            column.isCollection(), value);
                     
                     property = mergeProperties(propertyName, type, previousProperty, property);
                     entity.getProperties().remove(previousProperty);
@@ -369,8 +358,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
     }
 
     static Property buildPropery(String propName,
-            SingletonPrimitiveType type, boolean isArray, Object value,
-            String invalidCharacterReplacement) throws TeiidProcessingException,
+            SingletonPrimitiveType type, boolean isArray, Object value) throws TeiidProcessingException,
             SQLException, IOException {
 
         if (value instanceof Array) {
@@ -384,17 +372,17 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                     throw new TeiidNotImplementedException(ODataPlugin.Event.TEIID16029, 
                             ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16029, propName));
                 }
-                Object p = getPropertyValue(type, isArray,  o, invalidCharacterReplacement);
+                Object p = getPropertyValue(type, isArray,  o);
                 values.add(p);
             }
             return createCollection(propName, type, values);
         }
         if (isArray) {
             ArrayList<Object> values = new ArrayList<Object>();
-            values.add(getPropertyValue(type, isArray, value, invalidCharacterReplacement));
+            values.add(getPropertyValue(type, isArray, value));
             return createCollection(propName, type, values);
         }
-        return createPrimitive(propName, type, getPropertyValue(type, isArray, value, invalidCharacterReplacement));
+        return createPrimitive(propName, type, getPropertyValue(type, isArray, value));
     }
 
     private static Property createPrimitive(final String name,
@@ -438,7 +426,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
 */
     
     static Object getPropertyValue(SingletonPrimitiveType expectedType, boolean isArray,
-            Object value, String invalidCharacterReplacement)
+            Object value)
             throws TransformationException, SQLException, IOException {
         if (value == null) {
             return null;
@@ -446,7 +434,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                 
         Class<?> sourceType = DataTypeManager.getRuntimeType(value.getClass());
         if (sourceType.isAssignableFrom(expectedType.getDefaultType())) {
-            return replaceInvalidCharacters(expectedType, value, invalidCharacterReplacement);
+            return value;
         }
         
         if (expectedType instanceof EdmDate && sourceType == Date.class) {
@@ -482,36 +470,8 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
             Transform t = DataTypeManager.getTransform(sourceType, targetType);
             value = t != null ? t.transform(value, targetType) : value;
         }
-        value = replaceInvalidCharacters(expectedType, value, invalidCharacterReplacement);
         return value;
     }    
-    static Object replaceInvalidCharacters(EdmPrimitiveType expectedType,
-            Object value, String invalidCharacterReplacement) {
-        if (!(expectedType instanceof EdmString)  || invalidCharacterReplacement == null) {
-            return value;
-        }
-        if (value instanceof Character) {
-            value = value.toString();
-        }
-        String s = (String) value;
-        StringBuilder result = null;
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
-            if (c <= 0x0020 && c != ' ' && c != '\n' && c != '\t' && c != '\r') {
-                if (result == null) {
-                    result = new StringBuilder();
-                    result.append(s.substring(0, i));
-                }
-                result.append(invalidCharacterReplacement);
-            } else if (result != null) {
-                result.append(c);
-            }
-        }
-        if (result == null) {
-            return value;
-        }
-        return result.toString();
-    }
 
     @Override
     public long size() {

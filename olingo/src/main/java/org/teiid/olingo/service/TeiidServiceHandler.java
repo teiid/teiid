@@ -44,6 +44,7 @@ import org.apache.olingo.commons.api.data.Link;
 import org.apache.olingo.commons.api.data.Property;
 import org.apache.olingo.commons.api.edm.EdmEntityType;
 import org.apache.olingo.commons.api.edm.EdmNavigationProperty;
+import org.apache.olingo.commons.api.edm.EdmParameter;
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeException;
 import org.apache.olingo.commons.api.edm.EdmProperty;
 import org.apache.olingo.commons.api.format.ContentType;
@@ -61,6 +62,7 @@ import org.apache.olingo.server.api.uri.UriInfo;
 import org.apache.olingo.server.api.uri.UriInfoResource;
 import org.apache.olingo.server.api.uri.UriParameter;
 import org.apache.olingo.server.core.ServiceHandler;
+import org.apache.olingo.server.core.ServiceRequest;
 import org.apache.olingo.server.core.requests.ActionRequest;
 import org.apache.olingo.server.core.requests.DataRequest;
 import org.apache.olingo.server.core.requests.FunctionRequest;
@@ -80,13 +82,14 @@ import org.teiid.core.util.ReaderInputStream;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.metadata.MetadataStore;
 import org.teiid.odata.api.BaseResponse;
 import org.teiid.odata.api.Client;
 import org.teiid.odata.api.QueryResponse;
 import org.teiid.odata.api.UpdateResponse;
 import org.teiid.olingo.EdmComplexResponse;
 import org.teiid.olingo.ODataPlugin;
+import org.teiid.olingo.service.ProcedureSQLBuilder.ActionParameterValueProvider;
+import org.teiid.olingo.service.ProcedureSQLBuilder.FunctionParameterValueProvider;
 import org.teiid.olingo.service.ProcedureSQLBuilder.ProcedureReturn;
 import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.query.sql.lang.Delete;
@@ -166,7 +169,7 @@ public class TeiidServiceHandler implements ServiceHandler {
         final BaseResponse queryResponse;
         try {
             Query query = visitor.selectQuery();
-            queryResponse = executeQuery(request, visitor, query);
+            queryResponse = executeQuery(request, request.isCountRequest(), visitor, query);
         } catch (Throwable e) {
             throw new ODataApplicationException(e.getMessage(),
                     HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
@@ -323,33 +326,26 @@ public class TeiidServiceHandler implements ServiceHandler {
         response.writeComplexType(result, next);
     }    
 
-    private BaseResponse executeQuery(final DataRequest request,
+    private BaseResponse executeQuery(final ServiceRequest request, boolean countRequest, 
             final ODataSQLBuilder visitor, Query query) throws SQLException {
-        if (request.isCountRequest()) {
+        if (countRequest) {
             return getClient().executeCount(query, visitor.getParameters());
         }
         else {
-            String pageSize = request.getPreference(ODATA_MAXPAGESIZE);
-            if (pageSize == null) {
-                if (getClient().getProperty(Client.BATCH_SIZE) == null) {
-                    pageSize = String.valueOf(BufferManagerImpl.DEFAULT_PROCESSOR_BATCH_SIZE);
-                }
-                else {
-                    pageSize = getClient().getProperty(Client.BATCH_SIZE);
-                }
-            }
+            String pageSize = getPageSize(request);
 
             QueryResponse result = new EntityCollectionResponse(request
-                    .getODataRequest().getRawBaseUri(), getClient()
-                    .getProperty(Client.INVALID_CHARACTER_REPLACEMENT),
+                    .getODataRequest().getRawBaseUri(),
                     visitor.getContext());
             
             if (visitor.getContext() instanceof CrossJoinNode) {
                 result = new CrossJoinResult(request.getODataRequest().getRawBaseUri(), 
-                        getClient().getProperty(Client.INVALID_CHARACTER_REPLACEMENT),
                         (CrossJoinNode) visitor.getContext());
+            } else if (visitor.getContext() instanceof ComplexDocumentNode) {
+                ComplexDocumentNode cdn = (ComplexDocumentNode)visitor.getContext();
+                result = new OperationResponseImpl(cdn.getProcedureReturn());
             }
-
+            
             getClient().executeSQL(query, visitor.getParameters(),
                     visitor.includeTotalSize(), visitor.getSkip(),
                     visitor.getTop(), visitor.getNextToken(), Integer.parseInt(pageSize), result, 
@@ -357,6 +353,19 @@ public class TeiidServiceHandler implements ServiceHandler {
             
             return result;
         }
+    }
+
+    private String getPageSize(final ServiceRequest request) {
+        String pageSize = request.getPreference(ODATA_MAXPAGESIZE);
+        if (pageSize == null) {
+            if (getClient().getProperty(Client.BATCH_SIZE) == null) {
+                pageSize = String.valueOf(BufferManagerImpl.DEFAULT_PROCESSOR_BATCH_SIZE);
+            }
+            else {
+                pageSize = getClient().getProperty(Client.BATCH_SIZE);
+            }
+        }
+        return pageSize;
     }
 
     private void checkExpand(UriInfoResource queryInfo) {
@@ -446,8 +455,7 @@ public class TeiidServiceHandler implements ServiceHandler {
                 LogManager.logDetail(LogConstants.CTX_ODATA, null, "created entity = ", entityType.getName(), " with key=", query.getCriteria().toString()); //$NON-NLS-1$ //$NON-NLS-2$
                 
                 EntityCollectionResponse result = new EntityCollectionResponse(
-                        request.getODataRequest().getRawBaseUri(), getClient()
-                                .getProperty(Client.INVALID_CHARACTER_REPLACEMENT),
+                        request.getODataRequest().getRawBaseUri(),
                         visitor.getContext());
                 
                 getClient().executeSQL(query, visitor.getParameters(), false, null, null, null, 1, result, false);
@@ -606,7 +614,7 @@ public class TeiidServiceHandler implements ServiceHandler {
      * since Teiid only deals with primitive types, merge does not apply
      */
     @Override
-    public void updateProperty(DataRequest request, Property property,
+    public void updateProperty(DataRequest request, Property property, boolean rawValue,
             boolean merge, String entityETag, PropertyResponse response)
             throws ODataLibraryException, ODataApplicationException {
 
@@ -620,7 +628,7 @@ public class TeiidServiceHandler implements ServiceHandler {
                     getClient().getMetadataStore(), this.prepared, false,
                     request.getODataRequest().getRawBaseUri(),this.serviceMetadata, this.nameGenerator);
             visitor.visit(request.getUriInfo());
-            Update update = visitor.updateProperty(edmProperty, property, this.prepared);
+            Update update = visitor.updateProperty(edmProperty, property, this.prepared, rawValue);
             updateResponse = getClient().executeUpdate(update, visitor.getParameters());
         } catch (SQLException e) {
             throw new ODataApplicationException(e.getMessage(),
@@ -664,33 +672,61 @@ public class TeiidServiceHandler implements ServiceHandler {
         }        
     }
 
+    interface OperationParameterValueProvider {
+        Object getValue(EdmParameter parameter, Class<?> runtimeType) throws TeiidProcessingException;
+    }
+    
     @Override
     public <T extends ServiceResponse> void invoke(final FunctionRequest request,
             HttpMethod method, T response) throws ODataLibraryException,
             ODataApplicationException {
-        invokeOperation(request, response);
+        invokeOperation(request, new FunctionParameterValueProvider(request.getParameters()), response);
     }
     
     @Override
     public <T extends ServiceResponse> void invoke(final ActionRequest request,
             String eTag, T response) throws ODataLibraryException, ODataApplicationException {
         checkETag(eTag);        
-        invokeOperation(request, response);
+        invokeOperation(request, new ActionParameterValueProvider(request.getPayload(), request), response);
     }    
         
-    private <T extends ServiceResponse> void invokeOperation(final OperationRequest request,
-            T response) throws ODataApplicationException, ODataLibraryException {
+    private <T extends ServiceResponse> void invokeOperation(
+            final OperationRequest request,
+            OperationParameterValueProvider parameters, T response)
+            throws ODataApplicationException, ODataLibraryException {
         
         checkExpand(request.getUriInfo().asUriInfoResource());
         
-        OperationResponseImpl result = null;
+        final ODataSQLBuilder visitor = new ODataSQLBuilder(odata,
+                getClient().getMetadataStore(), this.prepared, true, 
+                request.getODataRequest().getRawBaseUri(), this.serviceMetadata, this.nameGenerator);
+        visitor.setOperationParameterValueProvider(parameters);
+        visitor.visit(request.getUriInfo());
+        
+        final OperationResponseImpl queryResponse;
+        try {
+            if (visitor.getContext() instanceof NoDocumentNode) {
+                NoDocumentNode cdn = (NoDocumentNode)visitor.getContext();
+                ProcedureReturn procReturn = cdn.getProcedureReturn();                
+                queryResponse = new OperationResponseImpl(procReturn);
+                getClient().executeCall(cdn.getQuery(), visitor.getParameters(), procReturn, queryResponse);
+                
+            } else {
+                Query query = visitor.selectQuery();
+                queryResponse = (OperationResponseImpl)executeQuery(request, request.isCountRequest(), visitor, query);            
+            }
+        } catch (Throwable e) {
+            throw new ODataApplicationException(e.getMessage(),
+                    HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
+                    Locale.getDefault(), e);
+        }         
+        
+        /*
         try {
             MetadataStore store = getClient().getMetadataStore();
             ProcedureSQLBuilder builder = new ProcedureSQLBuilder(store.getSchema(schemaName), request);
             ProcedureReturn procedureReturn = builder.getReturn();
-            result = new OperationResponseImpl(
-                    getClient().getProperty(Client.INVALID_CHARACTER_REPLACEMENT), 
-                    procedureReturn);
+            result = new OperationResponseImpl(procedureReturn);
             
             getClient().executeCall(builder.buildProcedureSQL(), builder.getSqlParameters(), procedureReturn, result);
         } catch (SQLException e) {
@@ -702,8 +738,8 @@ public class TeiidServiceHandler implements ServiceHandler {
                     HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
                     Locale.getDefault(), e);
         } 
-        
-        final OperationResponseImpl operationResult = result;
+        */
+        final OperationResponseImpl operationResult = queryResponse;
         response.accepts(new ServiceResponseVisior() {
             @Override
             public void visit(PropertyResponse response)
@@ -837,7 +873,7 @@ public class TeiidServiceHandler implements ServiceHandler {
 
         try {
             Query query = visitor.selectQuery();
-            BaseResponse queryResponse = executeQuery(request, visitor, query);
+            BaseResponse queryResponse = executeQuery(request, request.isCountRequest(), visitor, query);
             ContextURL.Builder builder = new ContextURL.Builder()
                 .asCollection()
                 .entitySetOrSingletonOrType("Edm.ComplexType");
@@ -908,7 +944,7 @@ public class TeiidServiceHandler implements ServiceHandler {
         final EntityCollectionResponse queryResponse;
         try {
             Query query = visitor.selectQuery();
-            queryResponse = (EntityCollectionResponse)executeQuery(request, visitor, query);
+            queryResponse = (EntityCollectionResponse)executeQuery(request, request.isCountRequest(), visitor, query);
         } catch (Exception e) {
             throw new ODataApplicationException(e.getMessage(),
                     HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
