@@ -45,6 +45,7 @@ import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.commons.core.Encoder;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
+import org.eclipse.jetty.client.util.BytesContentProvider;
 import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
@@ -252,7 +253,7 @@ public class TestODataIntegration {
         ContentResponse response = http.GET(baseURL + "/loopy/vm1/$metadata");
         assertEquals(200, response.getStatus());
         assertEquals(ObjectConverterUtil.convertFileToString(
-                UnitTestUtil.getTestDataFile("loopy-edmx-metadata.xml")),
+                UnitTestUtil.getTestDataFile("loopy-edmx-metadata.xml")).replace("${baseurl}", baseURL),
                 response.getContentAsString());        
     }
     @Test
@@ -605,11 +606,31 @@ public class TestODataIntegration {
         ContentResponse response = http.GET(baseURL + "/loopy/vm1/procResultSet(x='foo''bar',y=1)");
         assertEquals(200, response.getStatus());
         assertEquals("{\"@odata.context\":\"$metadata#Collection(Loopy.VM1.procResultSet_RSParam)\","
-                + "\"value\":[{\"x\":\"foo'bar\",\"y\":1}]}", 
+                + "\"value\":[{\"x\":\"foo'bar\",\"y\":1},"
+                + "{\"x\":\"second\",\"y\":2},"
+                + "{\"x\":\"third\",\"y\":3}]}", 
                 response.getContentAsString());
         
         response = http.GET(baseURL + "/loopy/vm1/procResultSet(x='foo',y='1'");
         assertEquals(400, response.getStatus());
+        
+        response = http.GET(baseURL + "/loopy/vm1/procResultSet(x='foo''bar',y=1)?$filter="+Encoder.encode("y eq 3"));
+        assertEquals(200, response.getStatus());
+        assertEquals("{\"@odata.context\":\"$metadata#Collection(Loopy.VM1.procResultSet_RSParam)\","
+                + "\"value\":[{\"x\":\"third\",\"y\":3}]}", response.getContentAsString());        
+
+        response = http.GET(baseURL + "/loopy/vm1/procResultSet(x='foo''bar',y=1)?$skip=1&$top=1");
+        assertEquals(200, response.getStatus());
+        assertEquals("{\"@odata.context\":\"$metadata#Collection(Loopy.VM1.procResultSet_RSParam)\","
+                + "\"value\":[{\"x\":\"second\",\"y\":2}]}", response.getContentAsString());        
+
+        response = http.GET(baseURL + "/loopy/vm1/procResultSet(x='foo''bar',y=1)?$orderby=y%20desc");
+        assertEquals(200, response.getStatus());
+        assertEquals("{\"@odata.context\":\"$metadata#Collection(Loopy.VM1.procResultSet_RSParam)\","
+                + "\"value\":[{\"x\":\"third\",\"y\":3},"
+                + "{\"x\":\"second\",\"y\":2},"
+                + "{\"x\":\"foo'bar\",\"y\":1}]}", 
+                response.getContentAsString());                
     }
     
     @Test
@@ -746,10 +767,31 @@ public class TestODataIntegration {
             Properties props = new Properties();
             props.setProperty(LocalClient.INVALID_CHARACTER_REPLACEMENT, " ");
             localClient = getClient(teiid.getDriver(), "northwind", 1, props);
-
-            ContentResponse response = http.GET(baseURL + "/northwind/vw/x");
+            ContentResponse response = null;
+            response = http.newRequest(baseURL + "/northwind/vw/x")
+                    .method("GET")
+                    .header("Accept", "application/xml")
+                    .send(); 
+            
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"ab cd \",\"b\":\" \",\"c\":[\"a 1\",\"b1\"],\"d\":1}]}", 
+            String payload = 
+                    "<a:content type=\"application/xml\">"
+                        + "<m:properties><d:a>ab cd </d:a>"
+                            + "<d:b> </d:b>"
+                            + "<d:c m:type=\"#Collection(String)\">"
+                                + "<m:element>a 1</m:element>"
+                                + "<m:element>b1</m:element>"
+                            + "</d:c>"
+                            + "<d:d m:type=\"Int32\">1</d:d>"
+                        + "</m:properties>"
+                    + "</a:content>";
+            
+            assertTrue(response.getContentAsString().contains(payload));
+
+            response = http.GET(baseURL + "/northwind/vw/x");
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":["
+                    + "{\"a\":\"ab\\u0000cd\\u0001\",\"b\":\"\\u0016\",\"c\":[\"a\\u00021\",\"b1\"],\"d\":1}]}", 
                     response.getContentAsString());
         } finally {
             localClient = null;
@@ -1186,6 +1228,69 @@ public class TestODataIntegration {
             teiid.undeployVDB("northwind");
         }
     }
+
+    @Test 
+    public void testPutRawValue() throws Exception {
+        HardCodedExecutionFactory hc = buildHardCodedExecutionFactory(); 
+        hc.addUpdate("UPDATE x SET c = 6 WHERE x.a = 'a'", new int[] {1});
+        hc.addUpdate("UPDATE x SET b = '6' WHERE x.a = 'a'", new int[] {1});
+        teiid.addTranslator("x1", hc);
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("m");
+            mmd.addSourceMetadata("ddl", "create foreign table x (a string, b string, c integer, "
+                    + "primary key (a)) options (updatable true);");
+            mmd.addSourceMapping("x1", "x1", null);
+            teiid.deployVDB("northwind", mmd);
+
+            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+
+            ContentResponse response = http.newRequest(baseURL + "/northwind/m/x('a')/c/$value")
+                    .method("PUT")
+                    .content(new BytesContentProvider("6".getBytes()))
+                    .send();                        
+            assertEquals(204, response.getStatus());
+            
+            response = http.newRequest(baseURL + "/northwind/m/x('a')/b/$value")
+                    .method("PUT")
+                    .content(new BytesContentProvider("6".getBytes()))
+                    .send();                        
+            assertEquals(204, response.getStatus());            
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }
+    
+    @Test 
+    public void testEntityId() throws Exception {
+        HardCodedExecutionFactory hc = buildHardCodedExecutionFactory(); 
+        hc.addUpdate("UPDATE x SET c = 6 WHERE x.a = 'a'", new int[] {1});
+        hc.addUpdate("UPDATE x SET b = '6' WHERE x.a = 'a'", new int[] {1});
+        teiid.addTranslator("x1", hc);
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("m");
+            mmd.addSourceMetadata("ddl", "create foreign table x (a string, b string, c integer, "
+                    + "primary key (a)) options (updatable true);");
+            mmd.addSourceMapping("x1", "x1", null);
+            teiid.deployVDB("northwind", mmd);
+
+            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+
+            ContentResponse response = http.newRequest(baseURL + "/northwind/m/$entity?$id="+baseURL+"/northwind/m/x('a')&$select=b")
+                    .method("GET")
+                    .send();                        
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#x(b)/$entity\","
+                    + "\"@odata.id\":\""+baseURL+"/northwind/m/x('ABCDEFG')\","
+                    + "\"b\":\"ABCDEFG\"}", response.getContentAsString());
+            
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }    
     
     @Test 
     public void testCrossJoin() throws Exception {
@@ -2005,22 +2110,26 @@ public class TestODataIntegration {
             assertEquals("{\"@odata.context\":\"$metadata#Customers\","
                     + "\"@odata.count\":4,\""
                     + "value\":["
-                    + "{\"id\":1,\"name\":\"customer1\","
+                        + "{\"id\":1,\"name\":\"customer1\","
+                            + "\"Orders_FK0@odata.count\":4,"
+                            + "\"Orders_FK0\":["
+                                + "{\"id\":1,\"customerid\":1,\"place\":\"town\"},"
+                                + "{\"id\":2,\"customerid\":1,\"place\":\"state\"}"
+                            + "]},"
+                        + "{\"id\":2,\"name\":\"customer2\","
+                        + "\"Orders_FK0@odata.count\":2,"
                         + "\"Orders_FK0\":["
-                        + "{\"id\":1,\"customerid\":1,\"place\":\"town\"},"
-                        + "{\"id\":2,\"customerid\":1,\"place\":\"state\"}"
-                    + "]},"
-                    + "{\"id\":2,\"name\":\"customer2\","
-                        + "\"Orders_FK0\":["
-                        + "{\"id\":5,\"customerid\":2,\"place\":\"state\"},"
-                        + "{\"id\":6,\"customerid\":2,\"place\":\"country\"}"                    
-                    + "]},"
-                    + "{\"id\":3,\"name\":\"customer3\","
+                            + "{\"id\":5,\"customerid\":2,\"place\":\"state\"},"
+                            + "{\"id\":6,\"customerid\":2,\"place\":\"country\"}"
+                        + "]},"
+                        + "{\"id\":3,\"name\":\"customer3\","
+                        + "\"Orders_FK0@odata.count\":2,"
                         + "\"Orders_FK0\":["
                         + "{\"id\":7,\"customerid\":3,\"place\":\"town\"},"
-                        + "{\"id\":8,\"customerid\":3,\"place\":\"town\"}"                    
-                    + "]},"
-                    + "{\"id\":4,\"name\":\"customer4\","
+                        + "{\"id\":8,\"customerid\":3,\"place\":\"town\"}"
+                        + "]},"
+                        + "{\"id\":4,\"name\":\"customer4\","
+                        + "\"Orders_FK0@odata.count\":0,"
                         + "\"Orders_FK0\":["
                         + "]}]}", 
                     response.getContentAsString());     
@@ -2034,20 +2143,20 @@ public class TestODataIntegration {
                     + "value\":["
                     + "{\"id\":1,\"name\":\"customer1\","
                         + "\"Orders_FK0\":["
-                        + "{\"place\":\"town\"}"
+                        + "{\"@odata.id\":\""+baseURL+"/northwind/m/Orders(1)\",\"place\":\"town\"}"
                     + "]},"
                     + "{\"id\":2,\"name\":\"customer2\","
                         + "\"Orders_FK0\":["
-                        + "{\"place\":\"state\"}"
+                        + "{\"@odata.id\":\""+baseURL+"/northwind/m/Orders(5)\",\"place\":\"state\"}"
                     + "]},"
                     + "{\"id\":3,\"name\":\"customer3\","
                         + "\"Orders_FK0\":["
-                        + "{\"place\":\"town\"}"
+                        + "{\"@odata.id\":\""+baseURL+"/northwind/m/Orders(7)\",\"place\":\"town\"}"
                     + "]},"
                     + "{\"id\":4,\"name\":\"customer4\","
                         + "\"Orders_FK0\":["
                         + "]}]}", 
-                    response.getContentAsString());        
+                    response.getContentAsString());      
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");

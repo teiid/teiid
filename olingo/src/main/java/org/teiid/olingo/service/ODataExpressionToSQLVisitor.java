@@ -499,7 +499,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
         }
         
         // hack to resolve the property type.
-        Column c = this.ctxExpression.getTable().getColumnByName(info.getProperty().getName());
+        Column c = this.ctxExpression.getColumnByName(info.getProperty().getName());
         this.lastPropertyType = c.getRuntimeType();
     }
     
@@ -521,10 +521,10 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             Criteria criteria = null;
             ForeignKey fk = null;
             if (info.isCollection()) {
-                fk = DocumentNode.joinFK(navigationResource.getTable(), this.ctxQuery.getTable());    
+                fk = DocumentNode.joinFK(navigationResource, this.ctxQuery);    
             }
             else {
-                fk = DocumentNode.joinFK(this.ctxQuery.getTable(), navigationResource.getTable());
+                fk = DocumentNode.joinFK(this.ctxQuery, navigationResource);
             }
             
             if (fk != null) {
@@ -578,7 +578,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
                     (EdmEntityType) resource.getType(), null, this.metadata, this.odata,
                     this.nameGenerator, false, this.uriInfo,
                     this.parseService);
-            lambda.setGroupSymbol(new GroupSymbol(resource.getVariableName(), lambda.getTable().getFullName()));
+            lambda.setGroupSymbol(new GroupSymbol(resource.getVariableName(), lambda.getFullName()));
             
             if (this.exprType == ExpressionType.LAMBDAALL) {
                 // ALL - needs to modeled as subquery
@@ -588,7 +588,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
                 //ANY - Needs to be joined to resource.
                 this.ctxQuery.joinTable(
                         lambda, 
-                        (DocumentNode.joinFK(this.ctxQuery.getTable(), lambda.getTable()) == null), 
+                        (DocumentNode.joinFK(this.ctxQuery, lambda) == null), 
                         JoinType.JOIN_INNER);
                 lambda.addCriteria(this.ctxQuery.getCriteria());
                 lambda.setDistinct(true);

@@ -134,13 +134,15 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
         String modelName = null;
 
         String uri = ((HttpServletRequest) request).getRequestURI().toString();
-        
-        if (uri.endsWith("auth") || uri.endsWith("token")){ //$NON-NLS-1$ //$NON-NLS-2$
+        String fullURL = ((HttpServletRequest) request).getRequestURL().toString();
+        if (uri.startsWith("/odata4/static/") || uri.startsWith("/odata4/keycloak/")){ //$NON-NLS-1$ //$NON-NLS-2$
             chain.doFilter(httpRequest, response);
             return;
         }
         
         String contextPath = httpRequest.getContextPath();
+        String baseURI = fullURL.substring(0, fullURL.indexOf(contextPath));
+        
         int endIdx = uri.indexOf('/', contextPath.length() + 1);
         int beginIdx = contextPath.length() + 1;
         
@@ -148,7 +150,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
             if (endIdx == -1) {
                 throw new TeiidProcessingException(ODataPlugin.Event.TEIID16020, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16020));
             }
-
+            baseURI = baseURI+"/odata4";
             vdbName = uri.substring(beginIdx, endIdx);
             int modelIdx = uri.indexOf('/', endIdx + 1);
             if (modelIdx == -1) {
@@ -224,7 +226,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
         try {
             Connection connection = client.open();
             registerVDBListener(client, connection);
-            ODataHttpHandler handler = context.getHandler(client, modelName);
+            ODataHttpHandler handler = context.getHandler(baseURI, client, modelName);
             httpRequest.setAttribute(ODataHttpHandler.class.getName(), handler);
             httpRequest.setAttribute(Client.class.getName(), client);
             chain.doFilter(httpRequest, response);

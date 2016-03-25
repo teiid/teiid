@@ -187,10 +187,22 @@ public class DocumentNode {
         this.edmEntityType = type;        
     }
     
-    public Table getTable() {
+    private Table getTable() {
         return table;
     }
         
+    public String getName() {
+        return table.getName();
+    }
+    
+    public Column getColumnByName(String name) {
+        return this.table.getColumnByName(name);
+    }
+
+    public String getFullName() {
+        return table.getFullName();
+    }
+    
     public GroupSymbol getGroupSymbol() {
         return groupSymbol;
     }
@@ -227,7 +239,7 @@ public class DocumentNode {
         this.edmEntityType = edmEntityType;
     }
     
-    void addAllColumns(boolean onlyPK) {
+    protected void addAllColumns(boolean onlyPK) {
         if (onlyPK) {
             for (final Column column : getTable().getPrimaryKey().getColumns()) {
                 if (column.isSelectable()) {
@@ -244,18 +256,18 @@ public class DocumentNode {
         }
     }
 
-    void addVisibleColumn(final String columnName, final Expression expr) {
+    protected void addVisibleColumn(final String columnName, final Expression expr) {
         addProjectedColumn(columnName, expr, true);
     }
     
-    void addProjectedColumn(final String columnName,
+    protected void addProjectedColumn(final String columnName,
             final Expression expr, boolean visibility) {
         EdmPropertyImpl edmProperty = (EdmPropertyImpl) this.edmEntityType.getProperty(columnName);
         addProjectedColumn(expr, visibility, edmProperty.getType(),
                 edmProperty.isCollection());
     }
 
-    void addProjectedColumn(final Expression expr, final boolean visibility,
+    protected void addProjectedColumn(final Expression expr, final boolean visibility,
             final EdmType type, final boolean collection) {
         int i = 0;
         for (i = 0; i < this.projectedColumns.size(); i++) {
@@ -280,6 +292,9 @@ public class DocumentNode {
     }    
     
     OrderBy addDefaultOrderBy() {
+        if (this.table == null) {
+            return null;
+        }
         OrderBy orderBy = new OrderBy();
         // provide implicit ordering for cursor logic
         KeyRecord record = this.table.getPrimaryKey();
@@ -317,6 +332,10 @@ public class DocumentNode {
         return keyPredicates;
     }
 
+    public List<String> getKeyColumnNames(){
+        return this.edmEntityType.getKeyPredicateNames();
+    }
+    
     public void setKeyPredicates(List<UriParameter> keyPredicates) {
         this.keyPredicates = keyPredicates;
     }
@@ -399,7 +418,13 @@ public class DocumentNode {
         return joinResource;
     }
     
-    static ForeignKey joinFK(Table currentTable, Table referenceTable) {
+    static ForeignKey joinFK(DocumentNode current, DocumentNode reference) {
+        Table currentTable = current.getTable();
+        Table referenceTable = reference.getTable();
+        if (currentTable ==  null || referenceTable == null) {
+            return null;
+        }
+        
         for (ForeignKey fk : currentTable.getForeignKeys()) {
             String refSchemaName = fk.getReferenceKey().getParent().getParent().getName();
             if (referenceTable.getParent().getName().equals(refSchemaName)
@@ -410,6 +435,17 @@ public class DocumentNode {
         return null;
     }    
 
+    private static ForeignKey joinFK(Table currentTable, Table referenceTable) {
+        for (ForeignKey fk : currentTable.getForeignKeys()) {
+            String refSchemaName = fk.getReferenceKey().getParent().getParent().getName();
+            if (referenceTable.getParent().getName().equals(refSchemaName)
+                    && referenceTable.getName().equals(fk.getReferenceTableName())) {
+                return fk;
+            }
+        }
+        return null;
+    }
+    
     private static FromClause addJoinTable(final JoinType joinType, DocumentNode from, DocumentNode to) {
         Criteria crit = null;
         if (!joinType.equals(JoinType.JOIN_CROSS)) {

@@ -19,30 +19,39 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.olingo.web;
+package org.teiid.olingo.service;
 
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import org.teiid.olingo.service.ProcedureSQLBuilder.ProcedureReturn;
 
-import org.apache.olingo.server.api.ODataHttpHandler;
-import org.teiid.odata.api.Client;
-import org.teiid.olingo.service.TeiidServiceHandler;
-
-@SuppressWarnings("serial")
-public class ODataServlet extends HttpServlet {
+public class NoDocumentNode extends DocumentNode {
+    private ProcedureReturn procedureReturn;
+    private String query;
+    
     @Override
-    public void service(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        ODataHttpHandler handler = (ODataHttpHandler) request.getAttribute(ODataHttpHandler.class.getName());
-        Client client = (Client) request.getAttribute(Client.class.getName());
-        try {
-            TeiidServiceHandler.setClient(client);
-            handler.process(request, response);
-        } finally {
-            TeiidServiceHandler.setClient(null);    
-        }
+    public List<String> getKeyColumnNames(){
+        return new ArrayList<String>();
     }
+    
+    public void setProcedureReturn(ProcedureReturn pp) {
+        this.procedureReturn = pp;
+    }
+
+    public ProcedureReturn getProcedureReturn() {
+        return procedureReturn;
+    }
+
+    public void setQuery(String query) {
+        this.query = query;
+    }
+
+    public String getQuery() {
+        return query;
+    }
+    
+    @Override
+    protected void addAllColumns(boolean onlyPK) {
+    }    
 }
