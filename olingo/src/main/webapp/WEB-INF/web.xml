@@ -48,11 +48,12 @@
             <param-name>charset</param-name>
             <param-value>UTF-8</param-value>       
        </init-param>
-       --> 
+       
        <init-param>
             <param-name>invalid-xml10-character-replacement</param-name>
-            <param-value>x</param-value>       
+            <param-value>?</param-value>       
        </init-param>
+       --> 
     </filter>
     
     <filter-mapping>
