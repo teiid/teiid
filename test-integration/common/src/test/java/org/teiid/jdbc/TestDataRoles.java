@@ -126,7 +126,7 @@ public class TestDataRoles {
 				+ "<model name=\"s1\" type=\"virtual\">"
 				+ "<metadata type = \"DDL\"><![CDATA["
 				+ "CREATE VIEW t2 (col string primary key) options (x 'y') as select 'a' as col;\n"
-				+ "CREATE VIEW t1 (col string, col_hidden string, foreign key (col) references t2) options (x 'y1') as select col, 'b' as col_hidden from t2;\n"
+				+ "CREATE VIEW t1 (col string, col_hidden string, primary key (col, col_hidden), foreign key (col) references t2) options (x 'y1') as select col, 'b' as col_hidden from t2;\n"
 				+ "CREATE virtual procedure proc1 (param1 string) returns table (proc_col string) as begin end;\n"
 				+ "]]></metadata></model>"
 				+ "<model name=\"s2\" type=\"virtual\">"
@@ -177,11 +177,7 @@ public class TestDataRoles {
     	assertTrue(rs.next());
     	assertEquals("proc_col", rs.getString("name"));
     	assertFalse(rs.next());
-    	
-    	rs = s.executeQuery("select * from sys.keys where name = 'x'");
-    	//nothing should be visible
-    	assertFalse(rs.next());
-    	
+    	    	
     	rs = s.executeQuery("select * from sysadmin.usage where schemaname like 's_'");
     	//nothing should be visible
     	assertFalse(rs.next());
@@ -189,6 +185,14 @@ public class TestDataRoles {
     	rs = s.executeQuery("select * from sys.properties where name = 'x'");
     	assertTrue(rs.next());
     	assertEquals("y1", rs.getString("Value"));
+    	assertFalse(rs.next());
+    	
+    	rs = s.executeQuery("select * from sys.keycolumns where tablename = 't1'");
+    	//nothing should be visible
+    	assertFalse(rs.next());
+    	
+    	rs = s.executeQuery("select * from sys.keys where tablename = 't1'");
+    	//nothing should be visible
     	assertFalse(rs.next());
 	}
 	

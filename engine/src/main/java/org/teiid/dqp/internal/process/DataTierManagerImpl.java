@@ -494,7 +494,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	}
         	
         	@Override
-        	protected Collection<? extends BaseColumn> getChildren(final Procedure parent) {
+        	protected Collection<? extends BaseColumn> getChildren(final Procedure parent, CommandContext cc) {
         		Collection<ProcedureParameter> params = parent.getParameters();
         		if (parent.getResultSet() == null) {
         			return params;
@@ -538,7 +538,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	}
         	
         	@Override
-        	protected Collection<? extends FunctionParameter> getChildren(final FunctionMethod parent) {
+        	protected Collection<? extends FunctionParameter> getChildren(final FunctionMethod parent, CommandContext cc) {
         		ArrayList<FunctionParameter> result = new ArrayList<FunctionParameter>(parent.getInputParameters().size() + 1);
         		result.addAll(parent.getInputParameters());
         		result.add(parent.getOutputParameter());
@@ -586,7 +586,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	}
         	
         	@Override
-        	protected Collection<Map.Entry<String,String>> getChildren(AbstractMetadataRecord parent) {
+        	protected Collection<Map.Entry<String,String>> getChildren(AbstractMetadataRecord parent, CommandContext cc) {
         		return parent.getProperties().entrySet();
         	}
 		});
@@ -612,7 +612,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	}
         	
         	@Override
-        	protected Collection<Trigger> getChildren(Table table) {
+        	protected Collection<Trigger> getChildren(Table table, CommandContext cc) {
         		ArrayList<Trigger> cols = new ArrayList<Trigger>();
         		if (table .isVirtual()) {
         			if (table.getInsertPlan() != null) {
@@ -719,7 +719,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	}
         	
         	@Override
-        	protected Collection<Column> getChildren(Table parent) {
+        	protected Collection<Column> getChildren(Table parent, CommandContext cc) {
         		return parent.getColumns();
         	}
         	
@@ -744,7 +744,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	}
         	
         	@Override
-        	protected Collection<KeyRecord> getChildren(Table parent) {
+        	protected Collection<KeyRecord> getChildren(Table parent, CommandContext cc) {
         		return parent.getAllKeys();
         	}
         	
@@ -753,11 +753,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         		if (!super.isValid(result, cc)) {
         			return false;
         		}
-        		//the referenced table must be accessible also
-        		if (result instanceof ForeignKey) {
-        			return cc.getDQPWorkContext().isAdmin() || cc.getAuthorizationValidator().isAccessible(((ForeignKey)result).getReferenceKey(), cc);
-        		}
-        		return true;
+        		return isKeyVisible(result, cc);
         	}
         	
         });
@@ -785,10 +781,13 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	}
         	
         	@Override
-        	protected Collection<List<?>> getChildren(Table parent) {
+        	protected Collection<List<?>> getChildren(Table parent, CommandContext cc) {
         		ArrayList<List<?>> cols = new ArrayList<List<?>>();
         		
         		for (KeyRecord record : parent.getAllKeys()) {
+        			if (!cc.getDQPWorkContext().isAdmin() && !isKeyVisible(record, cc)) {
+        				continue;
+        			}
         			int i = 1;
         			for (Column col : record.getColumns()) {
         				cols.add(Arrays.asList(record, col, i++));
@@ -827,10 +826,13 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	}
         	
         	@Override
-        	protected Collection<List<?>> getChildren(Table parent) {
+        	protected Collection<List<?>> getChildren(Table parent, CommandContext cc) {
         		ArrayList<List<?>> cols = new ArrayList<List<?>>();
         		
         		for (KeyRecord record : parent.getForeignKeys()) {
+        			if (!cc.getDQPWorkContext().isAdmin() && !isKeyVisible(record, cc)) {
+        				continue;
+        			}
         			short i = 1;
         			for (Column col : record.getColumns()) {
         				cols.add(Arrays.asList(record, col, i++));
@@ -910,11 +912,23 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	}
         	
         	@Override
-        	protected Collection<AbstractMetadataRecord> getChildren(AbstractMetadataRecord parent) {
+        	protected Collection<AbstractMetadataRecord> getChildren(AbstractMetadataRecord parent, CommandContext cc) {
         		return parent.getIncomingObjects();
         	}
 		});
-    }        
+    }   
+    
+    private boolean isKeyVisible(KeyRecord record, CommandContext cc) {
+    	if (record instanceof ForeignKey && !cc.getAuthorizationValidator().isAccessible(((ForeignKey)record).getReferenceKey(), cc)) {
+			return false;
+		}
+    	for (Column c : record.getColumns()) {
+    		if (!cc.getAuthorizationValidator().isAccessible(c, cc)) {
+    			return false;
+    		}
+		}
+    	return true;
+    }
 
 	private List<ElementSymbol> getColumns(TransformationMetadata tm,
 			String name) {

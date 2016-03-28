@@ -166,7 +166,7 @@ abstract class ChildRecordExtractionTable<P extends AbstractMetadataRecord, T> e
 			};
 			
 			protected RecordTable.SimpleIterator<T> getChildIterator(P parent) {
-				Collection<? extends T> children = getChildren(parent);
+				Collection<? extends T> children = getChildren(parent, cc);
 				if (children.isEmpty()) {
 					return RecordTable.emptyIterator();
 				}
@@ -177,6 +177,6 @@ abstract class ChildRecordExtractionTable<P extends AbstractMetadataRecord, T> e
 		}, cc, vdb, metadata, this);
 	}
 	
-	protected abstract Collection<? extends T> getChildren(P parent);
+	protected abstract Collection<? extends T> getChildren(P parent, CommandContext cc);
 	
 }
