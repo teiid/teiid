@@ -21,16 +21,16 @@
  */
 package org.teiid.olingo.service;
 
-import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.ServletException;
+import javax.xml.stream.XMLStreamException;
 
 import org.apache.olingo.commons.api.edm.provider.CsdlSchema;
+import org.apache.olingo.commons.api.ex.ODataException;
 import org.apache.olingo.server.api.OData;
 import org.apache.olingo.server.api.ODataHttpHandler;
 import org.apache.olingo.server.api.ServiceMetadata;
-import org.apache.olingo.server.api.edmx.EdmxReference;
 import org.apache.olingo.server.core.OData4Impl;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -41,22 +41,29 @@ public class OlingoBridge {
     
     private ConcurrentHashMap<String, ODataHttpHandler> handlers = new ConcurrentHashMap<String, ODataHttpHandler>();
     
-    public ODataHttpHandler getHandler(Client client, String schemaName) throws ServletException {
+    public ODataHttpHandler getHandler(String baseUri, Client client, String schemaName) throws ServletException {
         if (this.handlers.get(schemaName) == null) {
             org.teiid.metadata.Schema teiidSchema = client.getMetadataStore().getSchema(schemaName);
             if (teiidSchema == null || !isVisible(client.getVDB(), teiidSchema)) {
                 throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16022));
             }
     
-            OData odata = OData4Impl.newInstance();
-            VDBMetaData vdb = client.getVDB();
-            CsdlSchema schema = ODataSchemaBuilder.buildMetadata(vdb.getFullName(), teiidSchema);
-            TeiidEdmProvider edmProvider = new TeiidEdmProvider(schema);
-            ServiceMetadata metadata = odata.createServiceMetadata(edmProvider, Collections.<EdmxReference> emptyList());
-            ODataHttpHandler handler = odata.createHandler(metadata);
-            
-            handler.register(new TeiidServiceHandler(schemaName));
-            this.handlers.put(schemaName, handler);
+            try {
+                OData odata = OData4Impl.newInstance();
+                VDBMetaData vdb = client.getVDB();
+                CsdlSchema schema = ODataSchemaBuilder.buildMetadata(vdb.getFullName(), teiidSchema);
+                TeiidEdmProvider edmProvider = new TeiidEdmProvider(baseUri, schema, 
+                        client.getProperty(Client.INVALID_CHARACTER_REPLACEMENT));
+                ServiceMetadata metadata = odata.createServiceMetadata(edmProvider, edmProvider.getReferences());
+                ODataHttpHandler handler = odata.createHandler(metadata);
+                
+                handler.register(new TeiidServiceHandler(schemaName));
+                this.handlers.put(schemaName, handler);
+            } catch (XMLStreamException e) {
+                throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16054));
+            } catch (ODataException e) {
+                throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16054));
+            }
         }
         return this.handlers.get(schemaName);
     }

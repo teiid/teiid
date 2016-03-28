@@ -22,27 +22,27 @@
 package org.teiid.olingo.web;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.olingo.server.api.ODataHttpHandler;
-import org.teiid.odata.api.Client;
-import org.teiid.olingo.service.TeiidServiceHandler;
+import org.teiid.core.util.ObjectConverterUtil;
 
 @SuppressWarnings("serial")
-public class ODataServlet extends HttpServlet {
+public class StaticContentServlet extends HttpServlet {
     @Override
-    public void service(HttpServletRequest request, HttpServletResponse response)
+    public void doGet(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-        ODataHttpHandler handler = (ODataHttpHandler) request.getAttribute(ODataHttpHandler.class.getName());
-        Client client = (Client) request.getAttribute(Client.class.getName());
-        try {
-            TeiidServiceHandler.setClient(client);
-            handler.process(request, response);
-        } finally {
-            TeiidServiceHandler.setClient(null);    
-        }
+        String pathInfo = request.getPathInfo();
+        
+        InputStream contents = getClass().getResourceAsStream(pathInfo);
+        writeContent(response, contents);
+        response.flushBuffer();
     }
+    
+    private void writeContent(HttpServletResponse response, InputStream contents) throws IOException {
+        ObjectConverterUtil.write(response.getOutputStream(), contents, -1);
+    }    
 }

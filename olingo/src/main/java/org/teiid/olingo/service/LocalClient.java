@@ -190,9 +190,11 @@ public class LocalClient implements Client {
         
         boolean getCount = false; 
         getCount = calculateTotalSize;
+        boolean skipAndTopApplied = false;
         if (!getCount && !expand && (topOption != null || skipOption != null)) {
             query.setLimit(new Limit(skipOption!=null?new Constant(skipOption):null, 
                     topOption!=null?new Constant(topOption):null));
+            skipAndTopApplied=true;
         }
 
         String sessionId = getConnection().getServerConnection().getLogonResult().getSessionID();
@@ -232,7 +234,7 @@ public class LocalClient implements Client {
         int skipSize = 0;
         
         //skip based upon the skip value
-        if (nextToken == null && skipOption != null) {            
+        if (nextToken == null && skipOption != null && !skipAndTopApplied) {            
             if (skipOption > 0) {                
                 int[] s = skipEntities(response, rs, skipOption);
                 count += s[0];

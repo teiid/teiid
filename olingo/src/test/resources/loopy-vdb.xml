@@ -44,7 +44,7 @@
             END
             CREATE VIRTUAL PROCEDURE procResultSet(x string, y integer) returns TABLE(x string, y integer) OPTIONS (UPDATECOUNT 0) AS
             BEGIN
-                select x, y;
+                select x, y union all select 'second', 2 union all select 'third', 3;
             END            
             CREATE VIRTUAL PROCEDURE procXML (x string) returns XML OPTIONS (UPDATECOUNT 0) AS
             BEGIN

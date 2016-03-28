@@ -21,12 +21,48 @@
  */
 package org.teiid.olingo.service;
 
+import java.io.InputStreamReader;
+import java.net.URI;
+
+import javax.xml.stream.XMLStreamException;
+
+import org.apache.olingo.commons.api.edm.provider.CsdlAnnotation;
 import org.apache.olingo.commons.api.edm.provider.CsdlSchema;
+import org.apache.olingo.commons.api.edm.provider.annotation.CsdlConstantExpression;
+import org.apache.olingo.commons.api.edm.provider.annotation.CsdlConstantExpression.ConstantExpressionType;
+import org.apache.olingo.commons.api.ex.ODataException;
+import org.apache.olingo.server.api.edmx.EdmxReference;
+import org.apache.olingo.server.api.edmx.EdmxReferenceInclude;
+import org.apache.olingo.server.core.MetadataParser;
 import org.apache.olingo.server.core.SchemaBasedEdmProvider;
 
 public class TeiidEdmProvider extends SchemaBasedEdmProvider {
-    public TeiidEdmProvider(CsdlSchema schema) {
-        addSchema(schema);
+    public TeiidEdmProvider(String baseUri, CsdlSchema schema,
+            String invalidXmlReplacementChar) throws XMLStreamException,
+            ODataException {
+        
+        EdmxReference olingoRef = new EdmxReference(URI.create(baseUri+"/static/org.apache.olingo.v1.xml"));
+        EdmxReferenceInclude include = new EdmxReferenceInclude("org.apache.olingo.v1", "olingo-extensions");
+        olingoRef.addInclude(include);
+        addReference(olingoRef);
+        
+        MetadataParser parser = new MetadataParser();
+        parser.parseAnnotations(true);
+        parser.useLocalCoreVocabularies(true);
+        parser.implicitlyLoadCoreVocabularies(true);
+        SchemaBasedEdmProvider provider = parser.buildEdmProvider(new InputStreamReader(
+                getClass().getClassLoader().getResourceAsStream("org.apache.olingo.v1.xml")));
+        addVocabularySchema("org.apache.olingo.v1", provider);
+        
+        // <Annotation Term="org.apache.olingo.v1.xml10-incompatible-char-replacement" String="xxx"/>
+        if (invalidXmlReplacementChar != null) {
+            CsdlAnnotation xmlCharReplacement = new CsdlAnnotation();
+            xmlCharReplacement.setTerm("org.apache.olingo.v1.xml10-incompatible-char-replacement");
+            xmlCharReplacement.setExpression(new CsdlConstantExpression(
+                    ConstantExpressionType.String, invalidXmlReplacementChar));
+            schema.getAnnotations().add(xmlCharReplacement);
+        }
+        addSchema(schema);        
     }
 }
 

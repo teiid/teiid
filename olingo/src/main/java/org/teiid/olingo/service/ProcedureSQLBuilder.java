@@ -30,12 +30,11 @@ import org.apache.olingo.commons.api.data.Parameter;
 import org.apache.olingo.commons.api.edm.EdmOperation;
 import org.apache.olingo.commons.api.edm.EdmParameter;
 import org.apache.olingo.commons.api.edm.EdmReturnType;
+import org.apache.olingo.commons.api.edm.FullQualifiedName;
 import org.apache.olingo.server.api.deserializer.DeserializerException;
 import org.apache.olingo.server.api.uri.UriParameter;
 import org.apache.olingo.server.core.requests.ActionRequest;
-import org.apache.olingo.server.core.requests.FunctionRequest;
-import org.apache.olingo.server.core.requests.OperationRequest;
-import org.teiid.core.TeiidException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
@@ -45,22 +44,21 @@ import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.XMLType;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.ColumnSet;
+import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.Schema;
 import org.teiid.odata.api.ProcedureReturnType;
 import org.teiid.odata.api.SQLParameter;
 import org.teiid.olingo.common.ODataTypeManager;
+import org.teiid.olingo.service.TeiidServiceHandler.OperationParameterValueProvider;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public class ProcedureSQLBuilder {
-    private List<SQLParameter> sqlParameters = new ArrayList<SQLParameter>();
-    private Schema teiidSchema;
+    final private List<SQLParameter> sqlParameters;
     private Procedure procedure;
     private ProcedureReturn procedureReturn;
-    private ParameterValueProvider parameterValueProvider;
+    private OperationParameterValueProvider parameterValueProvider;
     
     static class ProcedureReturn implements ProcedureReturnType {
         private EdmReturnType type;
@@ -86,32 +84,24 @@ public class ProcedureSQLBuilder {
         }        
     }
     
-    interface ParameterValueProvider {
-        Object getValue(EdmParameter parameter, Class<?> runtimeType) throws TeiidException;
-    }    
-    
-    public ProcedureSQLBuilder(Schema schema, OperationRequest request) throws TeiidException {
-        this.teiidSchema = schema;
-        
-        if (request instanceof FunctionRequest) {
-            FunctionRequest functionRequest = (FunctionRequest)request;
-            this.parameterValueProvider = new FunctionParameterValueProvider(functionRequest.getParameters());
-            visit(functionRequest.getFunction());
-        }
-        else {
-            ActionRequest actionRequest = (ActionRequest)request;
-            this.parameterValueProvider = new ActionParameterValueProvider(actionRequest.getPayload(), actionRequest);
-            visit(actionRequest.getAction());
-        }        
+    public ProcedureSQLBuilder(MetadataStore metadata, EdmOperation edmOperation,
+            OperationParameterValueProvider parameterProvider, ArrayList<SQLParameter> params)
+            throws TeiidProcessingException {
+        FullQualifiedName fqn = edmOperation.getFullQualifiedName();
+        String withoutVDB = fqn.getNamespace().substring(fqn.getNamespace().lastIndexOf('.')+1);
+        Schema schema = metadata.getSchema(withoutVDB);
+
+        this.procedure =  schema.getProcedure(edmOperation.getName());
+        this.parameterValueProvider = parameterProvider;
+        this.sqlParameters = params;
+        visit(edmOperation);
     }
     
     public ProcedureReturn getReturn() {
         return this.procedureReturn;
     }
     
-    public void visit(EdmOperation edmOperation) throws TeiidException {
-        this.procedure =  this.teiidSchema.getProcedure(edmOperation.getName());
-        
+    private void visit(EdmOperation edmOperation) throws TeiidProcessingException {
         if (edmOperation.getReturnType() != null) {
             visit(edmOperation.getReturnType());
         }
@@ -147,19 +137,8 @@ public class ProcedureSQLBuilder {
         }
         return null;
     }
-    
-    private Column getResultSetLobColumn() {
-        ColumnSet<Procedure> returnColumns = this.procedure.getResultSet();
-        if (returnColumns != null) {
-            List<Column> columns = returnColumns.getColumns();
-            if (columns.size() == 1 && DataTypeManager.isLOB(columns.get(0).getJavaType())) {
-                return columns.get(0);
-            }
-        }
-        return null;
-    }
 
-    private void visit(EdmParameter edmParameter) throws TeiidException {
+    private void visit(EdmParameter edmParameter) throws TeiidProcessingException {
         Class<?> runtimeType = resolveParameterType(this.procedure.getName(), edmParameter.getName());
         Integer sqlType = JDBCSQLTypeInfo.getSQLType(DataTypeManager.getDataTypeName(runtimeType));
         Object value = this.parameterValueProvider.getValue(edmParameter, runtimeType);
@@ -195,7 +174,7 @@ public class ProcedureSQLBuilder {
         return sql.toString();
     }
     
-    public Class<?> resolveParameterType(String procedureName, String parameterName) {
+    private Class<?> resolveParameterType(String procedureName, String parameterName) {
         for (ProcedureParameter pp : this.procedure.getParameters()) {
             if (pp.getName().equalsIgnoreCase(parameterName)) {
                 return DataTypeManager.getDataTypeClass(pp.getRuntimeType());
@@ -203,12 +182,8 @@ public class ProcedureSQLBuilder {
         }
         return null;
     }
-
-    public List<SQLParameter> getSqlParameters() {
-        return this.sqlParameters;
-    }
     
-    static class ActionParameterValueProvider implements ParameterValueProvider {
+    static class ActionParameterValueProvider implements OperationParameterValueProvider {
         private InputStream payload;
         private boolean alreadyConsumed;
         private ActionRequest actionRequest;
@@ -220,7 +195,8 @@ public class ProcedureSQLBuilder {
         }
 
         @Override
-        public Object getValue(EdmParameter edmParameter, Class<?> runtimeType) throws TeiidException {
+        public Object getValue(EdmParameter edmParameter, Class<?> runtimeType)
+                throws TeiidProcessingException {
             if (!this.alreadyConsumed) {
                 this.alreadyConsumed = true;
                 if (DataTypeManager.isLOB(runtimeType)) {
@@ -241,7 +217,7 @@ public class ProcedureSQLBuilder {
                     try {
                         this.parameters = this.actionRequest.getParameters();
                     } catch (DeserializerException e) {
-                        throw new TeiidException(e);
+                        throw new TeiidProcessingException(e);
                     }
                 }
             }
@@ -260,7 +236,7 @@ public class ProcedureSQLBuilder {
         }
     }  
     
-    static class FunctionParameterValueProvider implements ParameterValueProvider {
+    static class FunctionParameterValueProvider implements OperationParameterValueProvider {
         private List<UriParameter> parameters;
         
         public FunctionParameterValueProvider(List<UriParameter> parameters) {
@@ -268,7 +244,8 @@ public class ProcedureSQLBuilder {
         }
         
         @Override
-        public Object getValue(EdmParameter edmParameter, Class<?> runtimeType) throws TeiidException {                
+        public Object getValue(EdmParameter edmParameter, Class<?> runtimeType)
+                throws TeiidProcessingException {                
             for (UriParameter parameter : this.parameters) {
                 if (parameter.getName().equals(edmParameter.getName())) {
                     // In Teiid one can only pass simple literal values, not complex
