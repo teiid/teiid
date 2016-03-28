@@ -230,4 +230,9 @@ public class HsqlExecutionFactory extends JDBCExecutionFactory {
 		}
 		return super.translateCommand(command, context);
 	}
+    
+    @Override
+    public boolean useParensForJoins() {
+    	return true;
+    }
 }
