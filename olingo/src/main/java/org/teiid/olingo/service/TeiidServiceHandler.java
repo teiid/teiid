@@ -79,6 +79,7 @@ import org.teiid.core.types.XMLType;
 import org.teiid.core.util.ReaderInputStream;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.odata.api.BaseResponse;
 import org.teiid.odata.api.Client;
@@ -928,26 +929,44 @@ public class TeiidServiceHandler implements ServiceHandler {
 
     @Override
     public void processError(ODataServerError error, ErrorResponse response) {
-        LogManager.logDetail(LogConstants.CTX_ODATA, error.getException());
-        error.getException().printStackTrace();
+        int logLevel = error.getStatusCode() >= 500?MessageLevel.ERROR:MessageLevel.WARNING;
         Throwable ex = getRoot(error.getException());
+        //many exceptions in TeiidServiceHandler default as INTERNAL_SERVER_ERROR
+        //so we make a better check for codes here
         if (ex instanceof TeiidNotImplementedException) {
             error.setException((TeiidNotImplementedException)ex);
             error.setCode(((TeiidNotImplementedException)ex).getCode());
-            error.setStatusCode(501);            
-        }
-        else if (ex instanceof TeiidProcessingException) {
+            error.setStatusCode(501);
+            logLevel = MessageLevel.DETAIL;
+        } else if (ex instanceof TeiidProcessingException) {
             error.setException((TeiidProcessingException)ex);
             error.setCode(((TeiidProcessingException)ex).getCode());
             error.setStatusCode(400);
+            logLevel = MessageLevel.WARNING;
         } else if (ex instanceof TeiidException) {
             error.setException((TeiidException)ex);
             error.setCode(((TeiidException)ex).getCode());
-            error.setStatusCode(500);            
+            error.setStatusCode(500);
+            logLevel = MessageLevel.ERROR;
         } else if (ex instanceof TeiidRuntimeException) {
             error.setException((TeiidRuntimeException)ex);
             error.setCode(((TeiidRuntimeException)ex).getCode());
-            error.setStatusCode(500);            
+            error.setStatusCode(500);
+            logLevel = MessageLevel.ERROR;
+        }
+        
+        if (ex != error.getException() && ex.getMessage() != null) {
+	        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_ODATA, MessageLevel.DETAIL) || logLevel <= MessageLevel.ERROR) {
+	    		LogManager.log(logLevel, LogConstants.CTX_ODATA, error.getException(), ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16050, error.getMessage(), ex.getMessage()));
+	    	} else {
+	    		LogManager.log(logLevel, LogConstants.CTX_DQP, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16051, error.getMessage(), ex.getMessage())); 		    		
+	    	}
+        } else {
+        	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_ODATA, MessageLevel.DETAIL) || logLevel <= MessageLevel.ERROR) {
+	    		LogManager.log(logLevel, LogConstants.CTX_ODATA, error.getException(), ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16052, error.getMessage()));
+	    	} else {
+	    		LogManager.log(logLevel, LogConstants.CTX_DQP, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16053, error.getMessage())); 		    		
+	    	}
         }
         response.writeError(error);
     }
@@ -955,12 +974,7 @@ public class TeiidServiceHandler implements ServiceHandler {
     private Throwable getRoot(Throwable t) {
         if (t.getCause() != null && t.getCause() != t) {
             if (t.getCause() instanceof TeiidException || t.getCause() instanceof TeiidRuntimeException) {
-                t = t.getCause();
-                if (t.getCause() == null || 
-                        !(t.getCause() instanceof TeiidException) || 
-                        !(t.getCause() instanceof TeiidRuntimeException)) {
-                    return t;
-                }
+                return t.getCause();
             }
             return getRoot(t.getCause());
         }
