@@ -37,6 +37,7 @@ import org.apache.olingo.commons.api.data.Property;
 import org.apache.olingo.commons.api.edm.EdmEntitySet;
 import org.apache.olingo.commons.api.edm.EdmEntityType;
 import org.apache.olingo.commons.api.edm.EdmNavigationProperty;
+import org.apache.olingo.commons.api.edm.EdmOperation;
 import org.apache.olingo.commons.api.edm.EdmProperty;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmInt32;
 import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
@@ -68,6 +69,8 @@ import org.teiid.metadata.Table;
 import org.teiid.odata.api.SQLParameter;
 import org.teiid.olingo.ODataPlugin;
 import org.teiid.olingo.common.ODataTypeManager;
+import org.teiid.olingo.service.ProcedureSQLBuilder.ProcedureReturn;
+import org.teiid.olingo.service.TeiidServiceHandler.OperationParameterValueProvider;
 import org.teiid.olingo.service.TeiidServiceHandler.UniqueNameGenerator;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.symbol.AggregateSymbol;
@@ -100,6 +103,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
     private URLParseService parseService;
     private OData odata;
     private boolean navigation = false;
+    private OperationParameterValueProvider parameters;
         
     class URLParseService {
         public Query parse(String rawPath) throws TeiidException {
@@ -305,7 +309,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         }
         else {
             boolean addkeys = true;
-            ArrayList<String> keys = new ArrayList<String>(resource.getEdmEntityType().getKeyPredicateNames());
+            ArrayList<String> keys = new ArrayList<String>(resource.getKeyColumnNames());
             for (SelectItem si:option.getSelectItems()) {
                 if (si.isStar()) {
                     resource.addAllColumns(onlyReference);
@@ -481,13 +485,23 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         }
         return insert;
     }
-    
     static SQLParameter asParam(EdmProperty edmProp, Object value) throws TeiidException {
+        return asParam(edmProp, value, false);
+    }    
+    
+    static SQLParameter asParam(EdmProperty edmProp, Object value, boolean rawValue) throws TeiidException {
         String teiidType = ODataTypeManager.teiidType((SingletonPrimitiveType)edmProp.getType(), edmProp.isCollection());
         int sqlType = JDBCSQLTypeInfo.getSQLType(teiidType);
         if (value == null) {
             return new SQLParameter(null, sqlType);
         }
+        
+        if (rawValue) {
+            return new SQLParameter(ODataTypeManager.convertByteArrayToTeiidRuntimeType(
+                    DataTypeManager.getDataTypeClass(teiidType), (byte[])value, 
+                    ((SingletonPrimitiveType)edmProp.getType()).getFullQualifiedName().getFullQualifiedNameAsString()), 
+                    sqlType);            
+        }        
         return new SQLParameter(ODataTypeManager.convertToTeiidRuntimeType(
                 DataTypeManager.getDataTypeClass(teiidType), value, 
                 ((SingletonPrimitiveType)edmProp.getType()).getFullQualifiedName().getFullQualifiedNameAsString()), 
@@ -579,11 +593,11 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         int i = 0;
         for (Property property : entity.getProperties()) {
             EdmProperty edmProperty = (EdmProperty)entityType.getProperty(property.getName());
-            Column column = this.context.getTable().getColumnByName(edmProperty.getName());
+            Column column = this.context.getColumnByName(edmProperty.getName());
             ElementSymbol symbol = new ElementSymbol(column.getName(), this.context.getGroupSymbol());
             boolean add = true;
-            for (Column c : this.context.getTable().getPrimaryKey().getColumns()) {
-                if (c.getName().equals(column.getName())) {
+            for (String c : this.context.getKeyColumnNames()) {
+                if (c.equals(column.getName())) {
                     add = false;
                     break;
                 }
@@ -603,16 +617,16 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
     }
     
     public Update updateProperty(EdmProperty edmProperty, Property property,
-            boolean prepared) throws TeiidException {
+            boolean prepared, boolean rawValue) throws TeiidException {
         Update update = new Update();
         update.setGroup(this.context.getGroupSymbol());
 
-        Column column = this.context.getTable().getColumnByName(edmProperty.getName());
+        Column column = this.context.getColumnByName(edmProperty.getName());
         ElementSymbol symbol = new ElementSymbol(column.getName(), this.context.getGroupSymbol());
         
         if (prepared) {
             update.addChange(symbol, new Reference(0));
-            this.params.add(asParam(edmProperty, property.getValue()));
+            this.params.add(asParam(edmProperty, property.getValue(), rawValue));
         }
         else {
             update.addChange(symbol, new Constant(asParam(edmProperty, property.getValue()).getValue()));
@@ -626,7 +640,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         Update update = new Update();
         update.setGroup(this.context.getGroupSymbol());
 
-        Column column = this.context.getTable().getColumnByName(edmProperty.getName());
+        Column column = this.context.getColumnByName(edmProperty.getName());
         ElementSymbol symbol = new ElementSymbol(column.getName(), this.context.getGroupSymbol());
         
         update.addChange(symbol, new Reference(0));
@@ -804,14 +818,38 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
 
     @Override
     public void visit(UriResourceAction info) {
-        this.exceptions.add(new TeiidException("UriResourceAction NotSupported"));
+        visitOperation(info.getAction());      
     }
 
     @Override
     public void visit(UriResourceFunction info) {
-        this.exceptions.add(new TeiidException("UriResourceFunction NotSupported"));
+        visitOperation(info.getFunction());                
     }
 
+    private void visitOperation(EdmOperation operation) {
+        try {            
+            ProcedureSQLBuilder builder = new ProcedureSQLBuilder(
+                    this.metadata, operation, this.parameters,
+                    this.params);
+            ProcedureReturn pp = builder.getReturn();
+            if (!pp.hasResultSet()) {
+                NoDocumentNode ndn = new NoDocumentNode();
+                ndn.setProcedureReturn(pp);
+                ndn.setQuery(builder.buildProcedureSQL());
+                this.context = ndn;
+            } else {
+                ComplexDocumentNode cdn = ComplexDocumentNode.buildComplexDocumentNode(
+                        operation, this.metadata,
+                        this.odata, this.nameGenerator, this.aliasedGroups,
+                        getUriInfo(), this.parseService);
+                cdn.setProcedureReturn(pp);
+                this.context = cdn;
+            }
+        } catch (TeiidProcessingException e) {
+            this.exceptions.add(e);
+        }
+    }
+    
     @Override
     public void visit(UriResourceIt info) {
         this.exceptions.add(new TeiidException("UriResourceIt NotSupported"));
@@ -840,5 +878,10 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
     @Override
     public void visit(UriResourceComplexProperty info) {
         this.exceptions.add(new TeiidException("UriResourceComplexProperty NotSupported"));
+    }
+
+    public void setOperationParameterValueProvider(
+            OperationParameterValueProvider parameters) {
+        this.parameters = parameters;
     }
 }

@@ -42,7 +42,6 @@ import org.apache.olingo.server.core.uri.validator.UriValidationException;
 import org.teiid.core.TeiidException;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ForeignKey;
-import org.teiid.metadata.KeyRecord;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Table;
 import org.teiid.odata.api.SQLParameter;
@@ -107,7 +106,7 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
                 info.getKeyPredicates());
         
         if (property.isCollection()) {
-            ForeignKey fk = DocumentNode.joinFK(referenceTable.getTable(), this.updateTable.getTable());
+            ForeignKey fk = DocumentNode.joinFK(referenceTable, this.updateTable);
             referenceTable.setFk(fk);
             
             ScopedTable temp = this.updateTable;
@@ -116,7 +115,7 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
             this.collection = true;
         }
         else {
-            ForeignKey fk = DocumentNode.joinFK(this.updateTable.getTable(), referenceTable.getTable());
+            ForeignKey fk = DocumentNode.joinFK(this.updateTable, referenceTable);
             this.updateTable.setFk(fk);
         }
     }    
@@ -170,11 +169,6 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
                 else {
                     update.addChange(symbol, new Constant(ODataSQLBuilder.asParam(edmProperty, value).getValue()));
                 }
-            }
-            
-            KeyRecord pk = this.updateTable.getTable().getPrimaryKey();
-            if (pk == null) {
-                pk = this.updateTable.getTable().getUniqueKeys().get(0);
             }
             
             Criteria criteria = DocumentNode.buildEntityKeyCriteria(

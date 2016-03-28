@@ -18,19 +18,16 @@ import org.apache.olingo.commons.api.edm.EdmReturnType;
 import org.apache.olingo.commons.core.edm.EdmPropertyImpl;
 import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.core.types.TransformationException;
 import org.teiid.odata.api.OperationResponse;
 import org.teiid.olingo.ODataPlugin;
 import org.teiid.olingo.service.ProcedureSQLBuilder.ProcedureReturn;
 
 public class OperationResponseImpl implements OperationResponse {
-    private final String invalidCharacterReplacement;
     private List<ComplexValue> complexValues = new ArrayList<ComplexValue>();
     private Property returnValue;
     private ProcedureReturn procedureReturn;
     
-    public OperationResponseImpl(String invalidCharacterReplacement, ProcedureReturn procedureReturn) {
-        this.invalidCharacterReplacement = invalidCharacterReplacement;
+    public OperationResponseImpl(ProcedureReturn procedureReturn) {
         this.procedureReturn = procedureReturn;
     }
     
@@ -61,8 +58,7 @@ public class OperationResponseImpl implements OperationResponse {
             Property property;
             try {
                 property = EntityCollectionResponse.buildPropery(propName,
-                        (SingletonPrimitiveType) edmProperty.getType(), edmProperty.isCollection(), value,
-                        invalidCharacterReplacement);
+                        (SingletonPrimitiveType) edmProperty.getType(), edmProperty.isCollection(), value);
                 properties.put(i, property);
             } catch (IOException e) {
                 throw new SQLException(e);
@@ -120,10 +116,9 @@ public class OperationResponseImpl implements OperationResponse {
     public void setReturnValue(Object returnValue) throws SQLException {
         try {
 			EdmReturnType returnType = this.procedureReturn.getReturnType();
-            this.returnValue = EntityCollectionResponse.buildPropery("return", 
-                    (SingletonPrimitiveType) returnType.getType(), 
-                    returnType.isCollection(), returnValue, 
-                    invalidCharacterReplacement); //$NON-NLS-1$
+            this.returnValue = EntityCollectionResponse.buildPropery("return",
+                    (SingletonPrimitiveType) returnType.getType(),
+                    returnType.isCollection(), returnValue); //$NON-NLS-1$
 		} catch (TeiidProcessingException e) {
 		    throw new SQLException(e);
         } catch (IOException e) {

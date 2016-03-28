@@ -21,12 +21,15 @@
  */
 package org.teiid.olingo.common;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.lang.reflect.Array;
 import java.sql.Date;
+import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
@@ -54,11 +57,9 @@ import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
 import org.teiid.GeometryInputSource;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.GeometryType;
-import org.teiid.core.types.Transform;
-import org.teiid.core.types.TransformationException;
+import org.teiid.core.types.*;
 import org.teiid.query.function.GeometryUtils;
 import org.teiid.translator.TranslatorException;
 
@@ -249,8 +250,36 @@ public class ODataTypeManager {
         return value;
     }
     
+    public static Object convertByteArrayToTeiidRuntimeType(final Class<?> type, final byte[] contents,
+            final String odataType) throws TeiidException {
+        if (contents == null) {
+            return null;
+        }
+        Object value = null;
+        if (DataTypeManager.isLOB(type)) {            
+            InputStreamFactory isf = new InputStreamFactory() {
+                @Override
+                public InputStream getInputStream() throws IOException {
+                    return new ByteArrayInputStream(contents);
+                }
+            };            
+            if (type.isAssignableFrom(SQLXML.class)) {
+                value = new SQLXMLImpl(isf);    
+            } else if (type.isAssignableFrom(ClobType.class)) {
+                value = new ClobImpl(isf, -1);
+            } else if (type.isAssignableFrom(BlobType.class)) {
+                value = new BlobImpl(isf);
+            }            
+        } else if (DataTypeManager.DefaultDataClasses.VARBINARY.equals(type)) {
+            value = contents;
+        } else {
+            value = convertToTeiidRuntimeType(type, new String(contents), odataType);
+        }
+        return value;
+    }    
+    
     public static Object parseLiteral(EdmParameter edmParameter, Class<?> runtimeType, String value)
-            throws TeiidException {
+            throws TeiidProcessingException {
         EdmPrimitiveType primitiveType = EdmPrimitiveTypeFactory.getInstance(EdmPrimitiveTypeKind
                 .valueOf(edmParameter.getType()
                         .getFullQualifiedName()
@@ -269,7 +298,7 @@ public class ODataTypeManager {
                     runtimeType);        
             return converted;
         } catch (EdmPrimitiveTypeException e) {
-            throw new TeiidException(e);
+            throw new TeiidProcessingException(e);
         }
     }
     
