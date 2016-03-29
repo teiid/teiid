@@ -32,7 +32,7 @@ import org.teiid.net.socket.ObjectChannel;
 
 public class ODBCSocketListener extends SocketListener {
 	private int maxBufferSize = PropertiesUtils.getIntProperty(System.getProperties(), "org.teiid.ODBCPacketSize", 307200); //$NON-NLS-1$
-	private boolean requireSecure = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.ODBCRequireSecure", true); //$NON-NLS-1$
+	private boolean requireSecure = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.ODBCRequireSecure", false); //$NON-NLS-1$
 	private int maxLobSize;
 	private TeiidDriver driver;
 	private LogonImpl logonService;
