@@ -164,6 +164,8 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 			server.start(ec, false);
 			LogonImpl logon = Mockito.mock(LogonImpl.class);
 			odbcTransport = new ODBCSocketListener(addr, config, Mockito.mock(ClientServiceRegistryImpl.class), BufferManagerFactory.getStandaloneBufferManager(), 100000, logon, server.getDriver());
+			// acount for differences in upstream behavior where requireSecure is true by default
+			odbcTransport.setRequireSecure(true);
 			odbcTransport.setMaxBufferSize(1000); //set to a small size to ensure buffering over the limit works
 			if (mode == Mode.LEGACY) {
 				odbcTransport.setRequireSecure(false);
