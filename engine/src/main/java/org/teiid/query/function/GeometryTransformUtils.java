@@ -98,7 +98,7 @@ public class GeometryTransformUtils {
         
         try {
             TeiidConnection conn = ctx.getConnection();
-            pstmt = conn.prepareStatement("select proj4text from spatial_ref_sys where srid = ?"); //$NON-NLS-1$
+            pstmt = conn.prepareStatement("select proj4text from SYS.spatial_ref_sys where srid = ?"); //$NON-NLS-1$
             pstmt.setInt(1, srid);
             rs = pstmt.executeQuery();
             if (!rs.next()) {
