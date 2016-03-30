@@ -40,6 +40,7 @@ import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.Version;
 
+
 @Translator(name="impala", description="A translator for Coludera's Impala based database on HDFS")
 public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
     
@@ -60,15 +61,14 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
         convert.addTypeMapping("float", FunctionModifier.FLOAT); //$NON-NLS-1$
         convert.addTypeMapping("string", FunctionModifier.STRING); //$NON-NLS-1$
         convert.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
-        
+
         registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.CURDATE, new AliasModifier("unix_timestamp")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("isnull")); //$NON-NLS-1$
-        
-        
+
         addPushDownFunction(IMPALA, "lower", STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "upper", STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "positive", INTEGER, INTEGER); //$NON-NLS-1$
@@ -81,17 +81,70 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
         addPushDownFunction(IMPALA, "hex", STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "unhex", STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "bin", STRING, BIG_INTEGER); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "day", INTEGER, STRING); //$NON-NLS-1$
+
+        //date functions
+        addPushDownFunction(IMPALA, "add_months", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "adddate", TIMESTAMP, TIMESTAMP, INTEGER ); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "date_add", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "date_part", INTEGER, STRING, TIMESTAMP); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "date_sub", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "datediff", INTEGER, STRING, STRING); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "date_add", INTEGER, STRING, INTEGER); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "date_sub", INTEGER, STRING, INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "day", INTEGER, STRING); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "dayofyear", INTEGER, TIMESTAMP); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "days_add", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "days_add", TIMESTAMP, TIMESTAMP , BIG_INTEGER ); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "days_sub", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "days_sub", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "extract", INTEGER, TIMESTAMP, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "from_unixtime", STRING, BIG_INTEGER); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "from_unixtime", STRING, BIG_INTEGER, STRING); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "from_utc_timestamp", TIMESTAMP, TIMESTAMP, STRING); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "hour",INTEGER, STRING); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "hours_add", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "hours_add", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "hours_sub", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "hours_sub", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "microseconds_sub", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "microseconds_sub", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "milliseconds_add", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "milliseconds_add", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "milliseconds_sub", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "milliseconds_sub", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "minute", INTEGER, STRING); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "minutes_add", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "minutes_add", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "minutes_sub", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "minutes_sub", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "month", INTEGER, STRING); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "months_add", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "months_add", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "months_sub", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "months_sub", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "nanoseconds_add", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "nanoseconds_add", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "nanoseconds_sub", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "nanoseconds_sub", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "second", INTEGER, STRING); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "seconds_add", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "seconds_add", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "seconds_sub", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "seconds_sub", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "subdate", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "to_date", STRING, TIMESTAMP); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "to_utc_timestamp", TIMESTAMP, TIMESTAMP, STRING); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "trunc", TIMESTAMP, TIMESTAMP, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "unix_timestamp", BIG_INTEGER, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "unix_timestamp", BIG_INTEGER, STRING, STRING); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "to_date", STRING, STRING); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "from_utc_timestamp", TIMESTAMP, TIMESTAMP, STRING); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "to_utc_timestamp", TIMESTAMP, TIMESTAMP, STRING); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "weekofyear", INTEGER, STRING); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "weeks_add", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "weeks_add", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "weeks_sub", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "weeks_sub", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "years_add", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "years_add", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "years_sub", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "years_sub", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+
         addPushDownFunction(IMPALA, "conv", STRING, BIG_INTEGER, INTEGER, INTEGER); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "greatest", STRING, STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "greatest", TIMESTAMP, TIMESTAMP, TIMESTAMP); //$NON-NLS-1$
@@ -104,13 +157,14 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
         addPushDownFunction(IMPALA, "quotient", INTEGER, INTEGER, INTEGER); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "radians", DOUBLE, DOUBLE); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "sign", INTEGER, DOUBLE); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "weekofyear", INTEGER, STRING); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "initcap", STRING, STRING); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "instr", INTEGER, STRING, STRING); //$NON-NLS-1$
+
+
         addPushDownFunction(IMPALA, "parse_url", STRING, STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "regexp_extract", STRING, STRING, STRING, INTEGER); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "regexp_replace", STRING, STRING, STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "group_concat", STRING, STRING, STRING); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "initcap", STRING, STRING); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "instr", INTEGER, STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "find_in_set", INTEGER, STRING, STRING); //$NON-NLS-1$
     }
     
@@ -118,9 +172,12 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
     public void initCapabilities(Connection connection)
     		throws TranslatorException {
     	super.initCapabilities(connection);
-    	if (getVersion().compareTo(TWO_0) >= 0) {
-    		convert.addTypeMapping("decimal", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
-    	}
+        //supported data types post-Impala v2
+        if (getVersion().compareTo(TWO_0) >= 0) {
+            convert.addTypeMapping("decimal", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
+            convert.addTypeMapping("char", FunctionModifier.CHAR); //$NON-NLS-1$
+            convert.addTypeMapping("varchar", FunctionModifier.STRING); //$NON-NLS-1$
+        }
     }
     
     @Override
