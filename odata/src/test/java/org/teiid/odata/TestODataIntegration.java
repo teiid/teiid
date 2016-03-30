@@ -1578,5 +1578,71 @@ public class TestODataIntegration extends BaseResourceTest {
         } finally {
             es.stop();
         }
-    }    
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Test 
+    public void testMultipleNavigationsBetweenSameEntities() throws Exception {
+        EmbeddedServer es = new EmbeddedServer();
+        HardCodedExecutionFactory hc = new HardCodedExecutionFactory() {
+            @Override
+            public boolean supportsCompareCriteriaEquals() {
+                return true;
+            }
+            public boolean supportsInnerJoins() {
+                return true;
+            }
+            public boolean supportsOuterJoins() {
+                return true;
+            }            
+        };
+        hc.addData("SELECT x.a, x.b, y.a1, y.b1 FROM x, y WHERE x.a = y.a1", 
+                Arrays.asList(Arrays.asList("xa", "xb", "xa", "yb"), 
+                        Arrays.asList("xa1", "xb1", "xa1", "yb1"),
+                        Arrays.asList("xa2", "xb2", "xa2", "yb2")
+                        ));
+        hc.addData("SELECT x.a, x.b, z.a1, z.b1 FROM x, z WHERE x.a = z.a1", 
+                Arrays.asList(Arrays.asList("xa", "xb", "xa", "zb"), 
+                        Arrays.asList("xa", "xb", "xa", "zb1"),
+                        Arrays.asList("xa", "xb", "xa", "zb2")
+                        ));
+
+        es.addTranslator("x", hc);
+        es.start(new EmbeddedConfiguration());
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("m");
+            mmd.addSourceMetadata("ddl", 
+                    "create foreign table x ("
+                    + "a string primary key, "
+                    + "b string);"
+                    +"\n"
+                    + "create foreign table y ("
+                    + "a1 string primary key, "
+                    + "b1 string, "
+                    + "foreign key (a1) references x (a),"
+                    + "foreign key (b1) references x (a));");
+            
+            mmd.addSourceMapping("x", "x", null);
+            es.deployVDB("northwind", mmd);
+            
+            TeiidDriver td = es.getDriver();
+            Properties props = new Properties();
+            LocalClient lc = new LocalClient("northwind", 1, props);
+            lc.setDriver(td);
+            MockProvider.CLIENT = lc;
+
+            // in one-2-one
+            String payload = "<NavigationProperty Name=\"y\" Relationship=\"m.y_FK0\" FromRole=\"x\" ToRole=\"y\">"
+                    + "</NavigationProperty><NavigationProperty Name=\"y1\" Relationship=\"m.y_FK1\" FromRole=\"x\" ToRole=\"y\">";
+            String url = TestPortProvider.generateURL("/odata/northwind/$metadata");
+            ClientRequest request = new ClientRequest(url);
+            ClientResponse<String> response = request.get(String.class);
+            assertEquals(200, response.getStatus());
+            assertTrue(response.getEntity().contains(payload));
+            
+        } finally {
+            es.stop();
+        }
+    }     
 }
