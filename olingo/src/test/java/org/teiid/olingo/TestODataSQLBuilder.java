@@ -1010,6 +1010,14 @@ public class TestODataSQLBuilder {
                 "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 WHERE g0.e2 = FLOOR(4.2) ORDER BY g0.e2");   
     }
     
+    @Test
+    public void testMonthWithDatetimeoffser() throws Exception {
+        helpTest("/odata4/vdb/PM1/SimpleTable?$filter="+Encoder.encode("month(2001-01-01T00:01:01.01Z) eq intkey"),
+                "SELECT g0.intkey, g0.intnum, g0.stringkey, g0.stringval, g0.booleanval, g0.decimalval, "
+                + "g0.timeval, g0.dateval, g0.timestampval, g0.clobval FROM "
+                + "PM1.SimpleTable AS g0 WHERE MONTH({ts'2001-01-01 00:01:01.01'}) = g0.intkey ORDER BY g0.intkey");   
+    }
+    
     @BeforeClass public static void oneTimeSetup() {
     	TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT"));
     }
