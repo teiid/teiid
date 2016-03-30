@@ -327,7 +327,8 @@ public class ODataEntitySchemaBuilder {
 				
 				if (!fk.getReferenceTableName().equalsIgnoreCase(table.getName())) {
 				    // Add EdmNavigationProperty to entity type
-    				EdmNavigationProperty.Builder nav = EdmNavigationProperty.newBuilder(fk.getReferenceTableName());
+				    String navigationName = getNavigationName(entityType, fk.getReferenceTableName());
+    				EdmNavigationProperty.Builder nav = EdmNavigationProperty.newBuilder(navigationName);
     				nav.setRelationshipName(fk.getName());
     				nav.setFromToName(table.getName(), fk.getReferenceTableName());
     				nav.setRelationship(association);
@@ -336,7 +337,8 @@ public class ODataEntitySchemaBuilder {
 				}
 				
 				// Add EdmNavigationProperty to Reference entity type
-				EdmNavigationProperty.Builder refNav = EdmNavigationProperty.newBuilder(table.getName());
+				String navigationName = getNavigationName(refEntityType, table.getName());
+				EdmNavigationProperty.Builder refNav = EdmNavigationProperty.newBuilder(navigationName);
 				refNav.setRelationshipName(fk.getName());
 				refNav.setFromToName(fk.getReferenceTableName(), table.getName());
 				refNav.setRelationship(association);
@@ -368,7 +370,27 @@ public class ODataEntitySchemaBuilder {
 		odataSchema.addAssociations(assosiations);
 	}	
 	
-	public static void buildFunctionImports(Schema schema, List<Builder> edmSchemas, boolean preserveEntityTypeName) {
+	private static String getNavigationName(
+            org.odata4j.edm.EdmEntityType.Builder entityType,
+            String tableName) {
+
+	    String navigationName = tableName;
+	    int i = 1;
+	    while(true) {
+    	    for (EdmNavigationProperty.Builder b:entityType.getNavigationProperties()) {
+    	        if (b.getName().equals(navigationName)) {
+    	            navigationName = null;
+    	            break;
+    	        }
+    	    }
+    	    if (navigationName != null) {
+    	        return navigationName;
+    	    }
+    	    navigationName = tableName+(i++);
+	    }
+    }
+
+    public static void buildFunctionImports(Schema schema, List<Builder> edmSchemas, boolean preserveEntityTypeName) {
 		EdmSchema.Builder odataSchema = findSchema(edmSchemas, schema.getName());
 		EdmEntityContainer.Builder entityContainer = findEntityContainer(edmSchemas, schema.getName());
 		
