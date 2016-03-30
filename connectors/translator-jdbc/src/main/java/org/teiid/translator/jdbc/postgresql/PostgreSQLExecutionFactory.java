@@ -38,7 +38,6 @@ import java.util.List;
 
 import org.teiid.GeometryInputSource;
 import org.teiid.core.types.BinaryType;
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.*;
 import org.teiid.language.Like.MatchMode;
 import org.teiid.language.SQLConstants.NonReserved;
@@ -797,15 +796,22 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     		}
     		
     		/**
-    		 * String literals in the select need a cast to prevent being seen as the unknown type
+    		 * Some literals in the select need a cast to prevent being seen as the unknown/string type
     		 */
     		@Override
     		public void visit(DerivedColumn obj) {
-    			if (obj.getExpression().getType() == DataTypeManager.DefaultDataClasses.STRING
-    					&& obj.getExpression() instanceof Literal) {
-    				obj.setExpression(getLanguageFactory().createFunction("cast", //$NON-NLS-1$ 
-    						new Expression[] {obj.getExpression(),  getLanguageFactory().createLiteral("bpchar", TypeFacility.RUNTIME_TYPES.STRING)}, //$NON-NLS-1$
-    						TypeFacility.RUNTIME_TYPES.STRING));
+    			if (obj.getExpression() instanceof Literal) {
+    				String castType = null;
+	    			if (obj.getExpression().getType() == TypeFacility.RUNTIME_TYPES.STRING) {
+	    				castType = "bpchar"; //$NON-NLS-1$
+	    			} else if (obj.getExpression().getType() == TypeFacility.RUNTIME_TYPES.VARBINARY) {
+	    				castType = "bytea"; //$NON-NLS-1$
+	    			}
+	    			if (castType != null) {
+	    				obj.setExpression(getLanguageFactory().createFunction("cast", //$NON-NLS-1$ 
+	    						new Expression[] {obj.getExpression(),  getLanguageFactory().createLiteral(castType, TypeFacility.RUNTIME_TYPES.STRING)}, //$NON-NLS-1$
+	    						TypeFacility.RUNTIME_TYPES.STRING));
+	    			}
     			}
     			super.visit(obj);
     		}
