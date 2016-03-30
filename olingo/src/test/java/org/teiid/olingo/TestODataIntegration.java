@@ -2210,4 +2210,39 @@ public class TestODataIntegration {
             teiid.undeployVDB("northwind");
         }
     }    
+    
+    @Test 
+    public void testMonthFunctions() throws Exception {
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("vw");
+            mmd.addSourceMetadata("ddl", "CREATE VIEW SimpleTable(\n" + 
+                    "    intkey integer PRIMARY KEY,\n" + 
+                    "    intnum integer,\n" + 
+                    "    stringkey varchar(20),\n" + 
+                    "    stringval varchar(20),\n" + 
+                    "    booleanval boolean,\n" + 
+                    "    decimalval decimal(20, 10),\n" + 
+                    "    timeval time,\n" + 
+                    "    dateval date,\n" + 
+                    "    timestampval timestamp,\n" + 
+                    "    clobval clob) as select 1,1, '1','1',true,1.0,{t '00:01:01'}, "
+                    + "{d '2001-01-01'},{ts '2001-01-01 00:01:01.01'},null;");
+            mmd.setModelType(Model.Type.VIRTUAL);
+            teiid.deployVDB("northwind", mmd);
+
+            Properties props = new Properties();
+            localClient = getClient(teiid.getDriver(), "northwind", 1, props);
+            
+            ContentResponse response = http.GET(baseURL + "/northwind/vw/SimpleTable?$filter="
+                    +Encoder.encode("month(2001-01-01T00:01:01.01Z) eq intkey")+"&$select=intkey");
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#SimpleTable(intkey)\",\"value\":[{\"intkey\":1}]}", 
+                    response.getContentAsString());
+            
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }       
 }
