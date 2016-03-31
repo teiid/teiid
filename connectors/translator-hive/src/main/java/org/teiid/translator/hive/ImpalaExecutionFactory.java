@@ -40,7 +40,6 @@ import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.Version;
 
-
 @Translator(name="impala", description="A translator for Coludera's Impala based database on HDFS")
 public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
     
@@ -61,7 +60,7 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
         convert.addTypeMapping("float", FunctionModifier.FLOAT); //$NON-NLS-1$
         convert.addTypeMapping("string", FunctionModifier.STRING); //$NON-NLS-1$
         convert.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
-
+        
         registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$
@@ -92,9 +91,9 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
         addPushDownFunction(IMPALA, "day", INTEGER, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "dayofyear", INTEGER, TIMESTAMP); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "days_add", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "days_add", TIMESTAMP, TIMESTAMP , BIG_INTEGER ); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "days_add", TIMESTAMP, TIMESTAMP , LONG ); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "days_sub", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "days_sub", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "days_sub", TIMESTAMP, TIMESTAMP, LONG); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "extract", INTEGER, TIMESTAMP, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "from_unixtime", STRING, BIG_INTEGER); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "from_unixtime", STRING, BIG_INTEGER, STRING); //$NON-NLS-1$
@@ -137,13 +136,13 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
         addPushDownFunction(IMPALA, "unix_timestamp", BIG_INTEGER, STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "weekofyear", INTEGER, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "weeks_add", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "weeks_add", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "weeks_add", TIMESTAMP, TIMESTAMP, LONG); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "weeks_sub", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "weeks_sub", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "weeks_sub", TIMESTAMP, TIMESTAMP, LONG); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "years_add", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "years_add", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "years_add", TIMESTAMP, TIMESTAMP, LONG); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "years_sub", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "years_sub", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "years_sub", TIMESTAMP, TIMESTAMP, LONG); //$NON-NLS-1$
 
         addPushDownFunction(IMPALA, "conv", STRING, BIG_INTEGER, INTEGER, INTEGER); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "greatest", STRING, STRING, STRING); //$NON-NLS-1$
@@ -157,7 +156,6 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
         addPushDownFunction(IMPALA, "quotient", INTEGER, INTEGER, INTEGER); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "radians", DOUBLE, DOUBLE); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "sign", INTEGER, DOUBLE); //$NON-NLS-1$
-
 
         addPushDownFunction(IMPALA, "parse_url", STRING, STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "regexp_extract", STRING, STRING, STRING, INTEGER); //$NON-NLS-1$
@@ -175,7 +173,7 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
         //supported data types post-Impala v2
         if (getVersion().compareTo(TWO_0) >= 0) {
             convert.addTypeMapping("decimal", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
-            convert.addTypeMapping("char", FunctionModifier.CHAR); //$NON-NLS-1$
+            convert.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
             convert.addTypeMapping("varchar", FunctionModifier.STRING); //$NON-NLS-1$
         }
     }
