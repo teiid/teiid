@@ -30,9 +30,9 @@ import org.apache.olingo.commons.api.edm.provider.CsdlAnnotation;
 import org.apache.olingo.commons.api.edm.provider.CsdlSchema;
 import org.apache.olingo.commons.api.edm.provider.annotation.CsdlConstantExpression;
 import org.apache.olingo.commons.api.edm.provider.annotation.CsdlConstantExpression.ConstantExpressionType;
+import org.apache.olingo.commons.api.edmx.EdmxReference;
+import org.apache.olingo.commons.api.edmx.EdmxReferenceInclude;
 import org.apache.olingo.commons.api.ex.ODataException;
-import org.apache.olingo.server.api.edmx.EdmxReference;
-import org.apache.olingo.server.api.edmx.EdmxReferenceInclude;
 import org.apache.olingo.server.core.MetadataParser;
 import org.apache.olingo.server.core.SchemaBasedEdmProvider;
 
