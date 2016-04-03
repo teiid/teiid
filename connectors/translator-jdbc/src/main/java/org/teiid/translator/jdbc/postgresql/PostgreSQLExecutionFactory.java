@@ -70,8 +70,8 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 	
 	private static final class PostgreSQLFormatFunctionModifier extends
 			OracleFormatFunctionModifier {
-		private PostgreSQLFormatFunctionModifier(String prefix) {
-			super(prefix);
+		private PostgreSQLFormatFunctionModifier(String prefix, boolean parse) {
+			super(prefix, parse);
 		}
 
 		protected Object convertToken(String group) {
@@ -94,7 +94,16 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 	public static final Version EIGHT_3 = Version.getVersion("8.3"); //$NON-NLS-1$
 	public static final Version EIGHT_4 = Version.getVersion("8.4"); //$NON-NLS-1$
 	public static final Version NINE_0 = Version.getVersion("9.0"); //$NON-NLS-1$
-	private OracleFormatFunctionModifier formatModifier = new PostgreSQLFormatFunctionModifier("TO_TIMESTAMP("); //$NON-NLS-1$
+	private OracleFormatFunctionModifier parseModifier = new PostgreSQLFormatFunctionModifier("TO_TIMESTAMP(", true); //$NON-NLS-1$
+	
+	//postgis versions
+	public static final Version ONE_3 = Version.getVersion("1.3"); //$NON-NLS-1$
+	public static final Version ONE_4 = Version.getVersion("1.4"); //$NON-NLS-1$
+	public static final Version ONE_5 = Version.getVersion("1.5"); //$NON-NLS-1$
+	public static final Version TWO_0 = Version.getVersion("2.0"); //$NON-NLS-1$
+	
+	private Version postGisVersion = Version.DEFAULT_VERSION;
+	private boolean projSupported = false;
     
 	public PostgreSQLExecutionFactory() {
 		setMaxDependentInPredicates(1);
@@ -134,8 +143,8 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory()));
         registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$
         
-		registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, formatModifier);
-        registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new PostgreSQLFormatFunctionModifier("TO_CHAR(")); //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, parseModifier);
+        registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new PostgreSQLFormatFunctionModifier("TO_CHAR(", false)); //$NON-NLS-1$
         
         registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier("%", getLanguageFactory(), Arrays.asList(TypeFacility.RUNTIME_TYPES.BIG_INTEGER, TypeFacility.RUNTIME_TYPES.BIG_DECIMAL))); //$NON-NLS-1$ 
 
@@ -588,7 +597,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     	if (format == Format.NUMBER) {
     		return false;
     	}
-    	return formatModifier.supportsLiteral(literal);
+    	return parseModifier.supportsLiteral(literal);
     }
     
     @Override

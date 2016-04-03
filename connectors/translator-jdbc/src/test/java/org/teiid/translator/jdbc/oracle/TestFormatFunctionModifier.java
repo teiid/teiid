@@ -29,7 +29,7 @@ import org.junit.Test;
 @SuppressWarnings("nls")
 public class TestFormatFunctionModifier {
 
-	OracleFormatFunctionModifier offm = new OracleFormatFunctionModifier("TO_CHAR(");
+	OracleFormatFunctionModifier offm = new OracleFormatFunctionModifier("TO_CHAR(", false);
     
     public void helpTest(String expected, String format) {
     	assertTrue(offm.supportsLiteral(format));
@@ -39,6 +39,14 @@ public class TestFormatFunctionModifier {
     @Test public void testQuoting() {
     	helpTest("'\"a\"\"123\"'", "'a'123");
     	helpTest("'\"a''\"\"123\"'", "'a'''123");
+    }
+    
+    @Test public void testParseHour() {
+    	OracleFormatFunctionModifier offmFormat = new OracleFormatFunctionModifier("TO_TIMESTAMP(", true);
+    	String format = "hh:mm:ss";
+    	String expected = "'HH24:MI:SS'";
+    	assertTrue(offmFormat.supportsLiteral(format));
+        assertEquals(expected, offmFormat.translateFormat(format));
     }
     
     @Test public void testDay() {

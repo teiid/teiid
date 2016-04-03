@@ -115,7 +115,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 
 	private boolean oracleSuppliedDriver = true;
 	
-	private OracleFormatFunctionModifier formatModifier = new OracleFormatFunctionModifier("TO_TIMESTAMP("); //$NON-NLS-1$
+	private OracleFormatFunctionModifier parseModifier = new OracleFormatFunctionModifier("TO_TIMESTAMP(", true); //$NON-NLS-1$
 	
 	public OracleExecutionFactory() {
 	}
@@ -162,8 +162,8 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(OracleExecutionFactory.FILTER, new OracleSpatialFunctionModifier());
         registerFunctionModifier(OracleExecutionFactory.WITHIN_DISTANCE, new OracleSpatialFunctionModifier());
         
-        registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, formatModifier);
-        registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new OracleFormatFunctionModifier("TO_CHAR(")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, parseModifier);
+        registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new OracleFormatFunctionModifier("TO_CHAR(", false)); //$NON-NLS-1$
         
         //add in type conversion
         ConvertModifier convertModifier = new ConvertModifier();
@@ -871,7 +871,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	if (format == Format.NUMBER) {
     		return false;
     	}
-    	return formatModifier.supportsLiteral(literal);
+    	return parseModifier.supportsLiteral(literal);
     }
     
     @Override

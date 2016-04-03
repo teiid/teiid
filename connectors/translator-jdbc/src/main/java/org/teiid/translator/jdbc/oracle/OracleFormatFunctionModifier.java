@@ -33,8 +33,11 @@ public class OracleFormatFunctionModifier extends
 
 	static final Pattern tokenPattern = Pattern.compile("(G+|y{1,4}|M{2,4}|DD|dd|E+|a+|HH|hh|mm|ss|S+|Z+|[\\- /,.;:]+|(?:'[^'\"]*')+|[^'\"a-zA-Z]+)"); //$NON-NLS-1$
 
-	public OracleFormatFunctionModifier(String prefix) {
+	private boolean parse;
+	
+	public OracleFormatFunctionModifier(String prefix, boolean parse) {
 		super(prefix);
+		this.parse = parse;
 	}
 	
 	public boolean supportsLiteral(String literal) {
@@ -110,6 +113,9 @@ public class OracleFormatFunctionModifier extends
 		case 'H':
 			return "HH24"; //$NON-NLS-1$
 		case 'h':
+			if (parse) {
+				return "HH24"; //$NON-NLS-1$
+			}
 			return "HH"; //$NON-NLS-1$
 		case 'm':
 			return "MI"; //$NON-NLS-1$
