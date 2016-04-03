@@ -42,7 +42,7 @@ public abstract class ParseFormatFunctionModifier extends FunctionModifier {
 			return null; //shouldn't happen
 		}
 		Literal l = (Literal)function.getParameters().get(1);
-		return Arrays.asList(prefix, function.getParameters().get(0), ", ", translateFormat((String) l.getValue()), ")" ); //$NON-NLS-1$ //$NON-NLS-2$
+		return Arrays.asList(prefix, function.getParameters().get(0), ", ", translateFormat((String) l.getValue()), ")" ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
 	abstract protected Object translateFormat(String format);
