@@ -22,7 +22,7 @@
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-jdbc</artifactId>
         </dependency>
-    	<dependency>
+    	<dependency>@deprecated
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
         </dependency>

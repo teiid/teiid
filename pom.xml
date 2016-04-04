@@ -611,12 +611,12 @@
 			</dependency>
 			<dependency>
 				<groupId>org.jboss.teiid.connectors</groupId>
-				<artifactId>translator-infinispan-dsl</artifactId>
+				<artifactId>translator-infinispan-hotrod</artifactId>
                 <version>${project.version}</version>
 			</dependency>        
 			<dependency>
 				<groupId>org.jboss.teiid.connectors</groupId>
-				<artifactId>translator-infinispan-dsl</artifactId>
+				<artifactId>translator-infinispan-hotrod</artifactId>
 				<type>test-jar</type>
                 <version>${project.version}</version>
 			</dependency>
