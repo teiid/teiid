@@ -32,29 +32,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+
 import org.teiid.core.types.BinaryType;
-import org.teiid.language.AggregateFunction;
-import org.teiid.language.Expression;
-import org.teiid.language.Function;
-import org.teiid.language.LanguageObject;
-import org.teiid.language.Like;
+import org.teiid.language.*;
 import org.teiid.language.Like.MatchMode;
-import org.teiid.language.Limit;
-import org.teiid.language.Literal;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
-import org.teiid.translator.jdbc.AliasModifier;
-import org.teiid.translator.jdbc.ConvertModifier;
-import org.teiid.translator.jdbc.EscapeSyntaxModifier;
-import org.teiid.translator.jdbc.ExtractFunctionModifier;
-import org.teiid.translator.jdbc.FunctionModifier;
-import org.teiid.translator.jdbc.JDBCExecutionFactory;
-import org.teiid.translator.jdbc.ModFunctionModifier;
-import org.teiid.translator.jdbc.Version;
+import org.teiid.translator.jdbc.*;
 import org.teiid.translator.jdbc.oracle.LeftOrRightFunctionModifier;
 import org.teiid.translator.jdbc.oracle.MonthOrDayNameFunctionModifier;
 import org.teiid.translator.jdbc.oracle.OracleFormatFunctionModifier;
@@ -654,6 +642,31 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     	}
     }
     
+    public SQLConversionVisitor getSQLConversionVisitor() {
+    	return new SQLConversionVisitor(this) {
+    		/**
+    		 * Some literals in the select need a cast to prevent being seen as the unknown/string type
+    		 */
+    		@Override
+    		public void visit(DerivedColumn obj) {
+    			if (obj.getExpression() instanceof Literal) {
+    				String castType = null;
+	    			if (obj.getExpression().getType() == TypeFacility.RUNTIME_TYPES.STRING) {
+	    				castType = "bpchar"; //$NON-NLS-1$
+	    			} else if (obj.getExpression().getType() == TypeFacility.RUNTIME_TYPES.VARBINARY) {
+	    				castType = "bytea"; //$NON-NLS-1$
+	    			}
+	    			if (castType != null) {
+	    				obj.setExpression(getLanguageFactory().createFunction("cast", //$NON-NLS-1$ 
+	    						new Expression[] {obj.getExpression(),  getLanguageFactory().createLiteral(castType, TypeFacility.RUNTIME_TYPES.STRING)}, //$NON-NLS-1$
+	    						TypeFacility.RUNTIME_TYPES.STRING));
+	    			}
+    			}
+    			super.visit(obj);
+    		}
+    	};
+    }
+
     @Override
     public String translateLiteralBinaryType(BinaryType obj) {
     	return "E'\\\\x" + obj + '\''; //$NON-NLS-1$ 

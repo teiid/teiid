@@ -573,9 +573,18 @@ public class TestPostgreSQLTranslator {
             output);
     }
     
+    @Test public void testSelectStringLiteral() throws Exception {
+        String input = "SELECT 'a' FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT cast('a' AS bpchar) FROM PARTS";  //$NON-NLS-1$
+
+        helpTestVisitor(getTestVDB(),
+            input, 
+            output);
+    }
+    
     @Test public void testBinaryLiteral() throws TranslatorException {
         helpTestVisitor(TranslationHelper.BQT_VDB,
                 "SELECT X'abcd1234'", //$NON-NLS-1$
-                "SELECT E'\\\\xABCD1234'"); //$NON-NLS-1$
+                "SELECT cast(E'\\\\xABCD1234' AS bytea)"); //$NON-NLS-1$
     }
 }
