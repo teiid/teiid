@@ -1232,6 +1232,13 @@ public class QueryRewriter {
         	return rewriteCriteria(((NotCriteria)innerCrit).getCriteria());
         }
         innerCrit = rewriteCriteria(innerCrit);
+        if (innerCrit instanceof Negatable) {
+        	((Negatable) innerCrit).negate();
+        	return rewriteCriteria(innerCrit);
+        }
+        if (innerCrit instanceof NotCriteria) {
+        	return rewriteCriteria(((NotCriteria)innerCrit).getCriteria());
+        }
         if(innerCrit == TRUE_CRITERIA) {
             return FALSE_CRITERIA;
         } else if(innerCrit == FALSE_CRITERIA) {

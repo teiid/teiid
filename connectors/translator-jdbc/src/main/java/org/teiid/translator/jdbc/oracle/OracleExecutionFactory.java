@@ -36,6 +36,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.teiid.GeometryInputSource;
 import org.teiid.core.types.BinaryType;
@@ -88,6 +90,15 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	public static final String WITHIN_DISTANCE = "sdo_within_distance"; //$NON-NLS-1$
 	public static final String NEAREST_NEIGHBOR_DISTANCE = "sdo_nn_distance"; //$NON-NLS-1$
 	public static final String ORACLE_SDO = "Oracle-SDO"; //$NON-NLS-1$
+	
+	private static final Set<String> STRING_BOOLEAN_FUNCTIONS = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+	static {
+		STRING_BOOLEAN_FUNCTIONS.addAll(
+				Arrays.asList(SourceSystemFunctions.ST_DISJOINT, SourceSystemFunctions.ST_CONTAINS, 
+						SourceSystemFunctions.ST_CROSSES, SourceSystemFunctions.ST_INTERSECTS, 
+						SourceSystemFunctions.ST_OVERLAPS, SourceSystemFunctions.ST_TOUCHES, 
+						SourceSystemFunctions.ST_EQUALS));
+	}
 
 	private final class DateAwareExtract extends ExtractFunctionModifier {
 		@Override
@@ -601,6 +612,15 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     				} else if (obj.getRightExpression() instanceof Parameter) {
     					Parameter p = (Parameter)obj.getRightExpression();
 	    				p.setType(FixedCharType.class);
+    				}
+    			}
+    			if (obj.getLeftExpression().getType() == TypeFacility.RUNTIME_TYPES.BOOLEAN 
+    					&& (obj.getLeftExpression() instanceof Function)
+    					&& obj.getRightExpression() instanceof Literal) {
+    				Function f = (Function)obj.getLeftExpression();
+    				if (STRING_BOOLEAN_FUNCTIONS.contains(f.getName())) {
+	    				Boolean b = (Boolean)((Literal)obj.getRightExpression()).getValue();
+	    				obj.setRightExpression(new Literal(b!=null?(b?"TRUE":"FALSE"):null, TypeFacility.RUNTIME_TYPES.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
     				}
     			}
     			super.visit(obj);
