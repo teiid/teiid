@@ -326,19 +326,17 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 						tuple.add(value);
 						continue;
 					}
-					Item next = pathIter.next();
-					if (next != null) {
-						if (proColumn.getSymbol().getType().isArray()) {
-							ArrayList<Object> vals = new ArrayList<Object>();
-							vals.add(getValue(proColumn.getSymbol().getType().getComponentType(), colItem, this.table.getXQueryExpression().getConfig(), getContext()));
+					if (proColumn.getSymbol().getType().isArray()) {
+						ArrayList<Object> vals = new ArrayList<Object>();
+						vals.add(getValue(proColumn.getSymbol().getType().getComponentType(), colItem, this.table.getXQueryExpression().getConfig(), getContext()));
+						Item next = null;
+						while ((next = pathIter.next()) != null) {
 							vals.add(getValue(proColumn.getSymbol().getType().getComponentType(), next, this.table.getXQueryExpression().getConfig(), getContext()));
-							while ((next = pathIter.next()) != null) {
-								vals.add(getValue(proColumn.getSymbol().getType().getComponentType(), next, this.table.getXQueryExpression().getConfig(), getContext()));
-							}
-							Object value = new ArrayImpl(vals.toArray((Object[]) Array.newInstance(proColumn.getSymbol().getType().getComponentType(), vals.size())));
-							tuple.add(value);
-							continue;
 						}
+						Object value = new ArrayImpl(vals.toArray((Object[]) Array.newInstance(proColumn.getSymbol().getType().getComponentType(), vals.size())));
+						tuple.add(value);
+						continue;
+					} else if (pathIter.next() != null) {
 						throw new TeiidProcessingException(QueryPlugin.Event.TEIID30171, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30171, proColumn.getName()));
 					}
 					Object value = getValue(proColumn.getSymbol().getType(), colItem, this.table.getXQueryExpression().getConfig(), getContext());
