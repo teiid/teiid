@@ -351,6 +351,30 @@ public class TestSQLXMLProcessing {
         process(sql, expected);
     }
     
+    @Test public void testXmlTableSequenceArraySingle() throws Exception {
+        String sql = "select * from xmltable('/a' passing convert('<a><b>first</b></a>', xml) columns x string[] path 'b') as x"; //$NON-NLS-1$
+        
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList(new ArrayImpl("first")),
+        }; 
+        process(sql, expected);
+    }
+    
+    /**
+     * TODO: we should allow explicit null on empty / empty on empty behavior with array values
+     * @throws Exception
+     */
+    @Test public void testXmlTableSequenceArrayEmpty() throws Exception {
+        String sql = "select * from xmltable('/a' passing convert('<a></a>', xml) columns x string[] path 'b') as x"; //$NON-NLS-1$
+        
+        
+        List<?>[] expected = new List<?>[] {
+        		Collections.singletonList(null)
+        }; 
+        process(sql, expected);
+    }
+    
     @Test public void testXmlTableBinary() throws Exception {
         String sql = "select * from xmltable('/a/b' passing convert('<a xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><b xsi:type=\"xs:hexBinary\">0FAB</b><b>1F1C</b></a>', xml) columns val varbinary path '/.') as x"; //$NON-NLS-1$
         
