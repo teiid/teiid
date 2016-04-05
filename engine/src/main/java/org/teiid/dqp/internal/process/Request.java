@@ -186,8 +186,12 @@ public class Request {
         	return;
         }
     	// Prepare dependencies for running the optimizer        
-        this.capabilitiesFinder = new CachedFinder(this.connectorManagerRepo, workContext.getVDB());        
-        this.capabilitiesFinder = new TempCapabilitiesFinder(this.capabilitiesFinder);
+        this.capabilitiesFinder = new CachedFinder(this.connectorManagerRepo, workContext.getVDB());
+        if (this.bufferManager.getOptions() != null) {
+        	this.capabilitiesFinder = new TempCapabilitiesFinder(this.capabilitiesFinder, this.bufferManager.getOptions().getDefaultNullOrder());
+        } else {
+        	this.capabilitiesFinder = new TempCapabilitiesFinder(this.capabilitiesFinder);
+        }
 
         VDBMetaData vdbMetadata = workContext.getVDB();
         metadata = vdbMetadata.getAttachment(QueryMetadataInterface.class);
