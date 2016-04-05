@@ -1729,5 +1729,10 @@ public class TestQueryRewriter {
         
 		helpTestRewriteCommand(sql, "SELECT UNKNOWN");
     }
+	
+	@Test public void testRewriteCritBooleanExpression() {
+        helpTestRewriteCriteria("not (pm1.g1.e3)", //$NON-NLS-1$
+                                "pm1.g1.e3 <> TRUE" );         //$NON-NLS-1$
+    }
 
 }

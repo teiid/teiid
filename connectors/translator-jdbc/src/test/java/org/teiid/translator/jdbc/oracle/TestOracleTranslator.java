@@ -1218,6 +1218,13 @@ public class TestOracleTranslator {
     }
     
     @Test
+    public void testGeometryComparison() throws Exception {
+        String input = "select shape from cola_markets where ST_Contains(shape, shape) and NOT ST_Intersects(shape, shape)"; //$NON-NLS-1$
+        String output = "SELECT SDO_UTIL.TO_GMLGEOMETRY(COLA_MARKETS.SHAPE) FROM COLA_MARKETS WHERE SDO_RELATE(COLA_MARKETS.SHAPE, COLA_MARKETS.SHAPE, 'mask=contains') = 'TRUE' AND SDO_RELATE(COLA_MARKETS.SHAPE, COLA_MARKETS.SHAPE, 'mask=anyinteract') <> 'TRUE'"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
+    @Test
     public void testGeometryInsert() throws Exception {
         String input = "insert into cola_markets(name,shape) values('foo124', ST_GeomFromText('POINT (300 100)', 8307))"; //$NON-NLS-1$
         String output = "INSERT INTO COLA_MARKETS (NAME, SHAPE) VALUES ('foo124', SDO_GEOMETRY(TO_BLOB(?), 8307))"; //$NON-NLS-1$
