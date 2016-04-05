@@ -21,8 +21,11 @@
  */
 package org.teiid.dqp.internal.process;
 
+import java.util.Properties;
+
 import org.teiid.PreParser;
 import org.teiid.client.RequestMessage;
+import org.teiid.query.util.Options;
 
 
 public class DQPConfiguration{
@@ -53,6 +56,8 @@ public class DQPConfiguration{
     
     private transient AuthorizationValidator authorizationValidator;
     private transient PreParser preParser;
+    
+    private Properties properties = System.getProperties();
 
 	public int getMaxActivePlans() {
 		return maxActivePlans;
@@ -177,6 +182,22 @@ public class DQPConfiguration{
 	
 	public PreParser getPreParser() {
 		return preParser;
+	}
+
+	/**
+	 * Get the properties used to initialize the engine {@link Options}.  Defaults to the System properties.
+	 * @param properties
+	 */
+	public Properties getProperties() {
+		return this.properties;
+	}
+	
+	/**
+	 * Set the properties used to initialize the engine {@link Options}
+	 * @param properties
+	 */
+	public void setProperties(Properties properties) {
+		this.properties = properties;
 	}
 
 }
