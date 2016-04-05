@@ -1765,4 +1765,9 @@ public class TestQueryRewriter {
 		helpTestRewriteCommand(sql, "SELECT (SELECT e1 FROM (SELECT e1 FROM pm1.g1) AS a LIMIT 2) FROM pm1.g2");
 	}
 
+	@Test public void testRewriteCritBooleanExpression() {
+        helpTestRewriteCriteria("not (pm1.g1.e3)", //$NON-NLS-1$
+                                "pm1.g1.e3 <> TRUE" );         //$NON-NLS-1$
+    }
+
 }
