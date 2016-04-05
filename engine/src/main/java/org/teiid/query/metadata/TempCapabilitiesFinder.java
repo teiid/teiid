@@ -27,13 +27,14 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
+import org.teiid.translator.ExecutionFactory.NullOrder;
 import org.teiid.translator.ExecutionFactory.TransactionSupport;
 
 public class TempCapabilitiesFinder implements CapabilitiesFinder {
 
-	private final static BasicSourceCapabilities tempCaps;
-	static {
-		tempCaps = new BasicSourceCapabilities();
+	private final static BasicSourceCapabilities cachedTempCaps = defaultCapabilities();
+	static BasicSourceCapabilities defaultCapabilities() {
+		BasicSourceCapabilities tempCaps = new BasicSourceCapabilities();
 		tempCaps.setCapabilitySupport(Capability.INSERT_WITH_ITERATOR, true);
 		tempCaps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
 		tempCaps.setCapabilitySupport(Capability.CRITERIA_IN, true);
@@ -51,12 +52,23 @@ public class TempCapabilitiesFinder implements CapabilitiesFinder {
 		tempCaps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 100000);
 		tempCaps.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, 1);
 		tempCaps.setSourceProperty(Capability.TRANSACTION_SUPPORT, TransactionSupport.XA);
+		tempCaps.setSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER, NullOrder.LOW);
+		return tempCaps;
 	}
 	
 	private final CapabilitiesFinder delegate;
+	private BasicSourceCapabilities tempCaps = cachedTempCaps;
 	
 	public TempCapabilitiesFinder(CapabilitiesFinder delegate) {
+		this(delegate, NullOrder.LOW);
+	}
+	
+	public TempCapabilitiesFinder(CapabilitiesFinder delegate, NullOrder nullOrder) {
 		this.delegate = delegate;
+		if (nullOrder != NullOrder.LOW) {
+			tempCaps = defaultCapabilities();
+			tempCaps.setSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER, nullOrder);
+		}
 	}
 
 	@Override
