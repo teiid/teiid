@@ -458,6 +458,21 @@ public class TestMatViews {
 
 	}
 	
+	@Test public void testMatViewStatusInternal() throws Exception {
+		ModelMetaData mmd = new ModelMetaData();
+    	mmd.setName("x");
+    	mmd.setModelType(Type.VIRTUAL);
+    	mmd.addSourceMetadata("DDL", "create view T options (materialized true) as select 1");
+    	server.deployVDB("test", mmd);
+		
+		Connection c = server.getDriver().connect("jdbc:teiid:test", null);
+		Statement s = c.createStatement();
+		ResultSet rs = s.executeQuery("call sysadmin.matviewstatus('x', 'T')");
+		rs.next();
+		assertNull(rs.getString("TargetSchemaName"));
+		assertEquals("NEEDS_LOADING", rs.getString("LoadState"));
+	}
+	
 	@Test public void testInternalWithManagement() throws Exception {
 		ModelMetaData mmd2 = new ModelMetaData();
 		mmd2.setName("view1");
