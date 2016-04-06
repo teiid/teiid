@@ -1,7 +1,7 @@
 integer      string                                                           
 oid          nspname                                                          
 55           PartsSupplier                                                    
-521          pg_catalog                                                       
+531          pg_catalog                                                       
 95           SYS                                                              
 389          SYSADMIN                                                         
 Row Count : 4
