@@ -89,6 +89,24 @@ OPTIONS (UPDATECOUNT 0)
 CREATE FOREIGN PROCEDURE setTableStats(IN tableName string NOT NULL, IN cardinality long NOT NULL)
 OPTIONS (UPDATECOUNT 0)
 
+CREATE VIRTUAL PROCEDURE matViewsStatus() RETURNS TABLE (VDBName varchar(255), SchemaName varchar(255), Name varchar(255), TargetSchemaName varchar(255), TargetName varchar(255), Valid boolean, LoadState varchar(255), Updated timestamp, Cardinality long) AS
+BEGIN
+    DECLARE string vdbName = (SELECT Name FROM VirtualDatabases);
+    DECLARE integer vdbVersion = (SELECT convert(Version, integer) FROM VirtualDatabases);
+        
+    /*
+      In current design, status table on the physical database, and used in any one of the source models
+    */
+    DECLARE string statusTable = (SELECT "Value" from SYS.Properties WHERE Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_STATUS_TABLE' LIMIT 1);
+		
+    IF (statusTable IS NULL)
+    BEGIN
+        EXECUTE IMMEDIATE 'SELECT VDBName, SchemaName, Name, TargetSchemaName, TargetName, Valid, LoadState, Updated, Cardinality FROM MatViews' AS VDBName string, SchemaName string, Name string, TargetSchemaName string, TargetName string, Valid boolean, LoadState string, Updated timestamp, Cardinality long USING vdbName = VARIABLES.vdbName;
+    END ELSE
+    BEGIN
+        EXECUTE IMMEDIATE 'SELECT VDBName, SchemaName, Name, TargetSchemaName, TargetName, Valid, LoadState, Updated, Cardinality FROM ' || VARIABLES.statusTable AS VDBName string, SchemaName string, Name string, TargetSchemaName string, TargetName string, Valid boolean, LoadState string, Updated timestamp, Cardinality long USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion;
+    END
+END
 
 CREATE VIRTUAL PROCEDURE matViewStatus(IN schemaName string NOT NULL, IN viewName string NOT NULL) RETURNS TABLE (TargetSchemaName varchar(50), TargetName varchar(50), Valid boolean, LoadState varchar(25), Updated timestamp, Cardinality long, LoadNumber long, OnErrorAction varchar(25)) AS
 BEGIN

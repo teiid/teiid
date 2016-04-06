@@ -310,7 +310,7 @@ public class TestODBCSocketTransport {
 			while (rs.next()) {
 				rowCount++;
 			}
-			assertEquals(8, rowCount);
+			assertEquals(9, rowCount);
 			stmt.execute("close \"foo\"");
 		} finally {
 			ExtendedQueryExectutorImpl.simplePortal = null;
