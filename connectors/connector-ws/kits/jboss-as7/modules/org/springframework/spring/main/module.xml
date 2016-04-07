@@ -14,6 +14,7 @@
     <resource-root path="spring-tx-${version.org.springframework}.jar"/>    
   </resources>
   <dependencies>
-    <module name="javax.api"/>
+	<module name="javax.api"/>
+	<module name="org.apache.commons.logging"/>
   </dependencies>
 </module>
