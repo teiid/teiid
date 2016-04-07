@@ -1142,10 +1142,12 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			info.type = meta.getColumnType(i);
 			info.type = convertType(info.type);
 			info.precision = meta.getColumnDisplaySize(i);
-			if (info.type == PG_TYPE_NUMERIC || info.type == PG_TYPE_FLOAT4 || info.type == PG_TYPE_FLOAT8) {
+			if (info.type == PG_TYPE_NUMERIC) {
 				info.mod = (int) Math.min(Integer.MAX_VALUE, (4+(65536*(long)meta.getPrecision(i))+meta.getScale(i)));
-			} else {
+			} else if (info.type == PG_TYPE_BPCHAR || info.type == PG_TYPE_VARCHAR){
 				info.mod = (int) Math.min(Integer.MAX_VALUE, 4+(long)meta.getColumnDisplaySize(i));
+			} else {
+				info.mod = -1;
 			}
 			String name = meta.getColumnName(i);
 			String table = meta.getTableName(i);
