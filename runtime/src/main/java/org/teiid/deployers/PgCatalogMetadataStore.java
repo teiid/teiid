@@ -173,8 +173,8 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"pt.oid as atttypid," + //$NON-NLS-1$
 				"pt.typlen as attlen, " + //$NON-NLS-1$
 				"convert(t1.Position, short) as attnum, " + //$NON-NLS-1$
-				"(CASE WHEN (t1.DataType = 'bigdecimal' OR t1.DataType = 'biginteger' OR t1.DataType = 'float' OR t1.DataType='double') THEN (CASE WHEN (4+(cast(65536 as float)*t1.Precision)+t1.Scale) > 2147483647 THEN 2147483647 ELSE (4+(65536*t1.Precision)+t1.Scale) END) " + //$NON-NLS-1$
-				"ELSE (CASE WHEN (t1.Length <= 2147483643) THEN 4+ t1.Length ELSE 2147483647 END) END) as atttypmod, " + //$NON-NLS-1$
+				"(CASE WHEN (t1.DataType = 'bigdecimal' OR t1.DataType = 'biginteger') THEN (CASE WHEN (4+(cast(65536 as float)*t1.Precision)+t1.Scale) > 2147483647 THEN 2147483647 ELSE (4+(65536*t1.Precision)+t1.Scale) END) " + //$NON-NLS-1$
+				"WHEN (t1.DataType = 'string' OR t1.DataType = 'char') THEN (CASE WHEN (t1.Length <= 2147483643) THEN 4+ t1.Length ELSE 2147483647 END) ELSE -1 END) as atttypmod, " + //$NON-NLS-1$
 				"CASE WHEN (t1.NullType = 'No Nulls') THEN true ELSE false END as attnotnull, " + //$NON-NLS-1$
 				"false as attisdropped, " + //$NON-NLS-1$
 				"false as atthasdef " + //$NON-NLS-1$
@@ -187,8 +187,8 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"pt.oid as atttypid," + //$NON-NLS-1$
 				"pt.typlen as attlen, " + //$NON-NLS-1$
 				"convert(kc.Position, short) as attnum, " + //$NON-NLS-1$
-				"(CASE WHEN (t1.DataType = 'bigdecimal' OR t1.DataType = 'biginteger' OR t1.DataType = 'float' OR t1.DataType='double') THEN (CASE WHEN (4+(cast(65536 as float)*t1.Precision)+t1.Scale) > 2147483647 THEN 2147483647 ELSE (4+(65536*t1.Precision)+t1.Scale) END) " + //$NON-NLS-1$
-				"ELSE (CASE WHEN (t1.Length <= 2147483643) THEN 4+ t1.Length ELSE 2147483647 END) END) as atttypmod, " + //$NON-NLS-1$
+				"(CASE WHEN (t1.DataType = 'bigdecimal' OR t1.DataType = 'biginteger') THEN (CASE WHEN (4+(cast(65536 as float)*t1.Precision)+t1.Scale) > 2147483647 THEN 2147483647 ELSE (4+(65536*t1.Precision)+t1.Scale) END) " + //$NON-NLS-1$
+				"WHEN (t1.DataType = 'string' OR t1.DataType = 'char') THEN (CASE WHEN (t1.Length <= 2147483643) THEN 4+ t1.Length ELSE 2147483647 END) ELSE -1 END) as atttypmod, " + //$NON-NLS-1$
 				"CASE WHEN (t1.NullType = 'No Nulls') THEN true ELSE false END as attnotnull, " + //$NON-NLS-1$
 				"false as attisdropped, " + //$NON-NLS-1$
 				"false as atthasdef " + //$NON-NLS-1$
@@ -440,6 +440,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		String transformation =
 			"select oid, typname, (SELECT pg_catalog.getOid(uid) FROM SYS.Schemas where Name = 'SYS') as typnamespace, typlen, typtype, false as typnotnull, typbasetype, typtypmod, cast(',' as char) as typdelim, typrelid, typelem, null as typeinput from texttable('" + //$NON-NLS-1$
 			"16,boolean,1,b,0,-1,0,0\n" + //$NON-NLS-1$
+			"17,varbinary,-1,b,0,-1,0,0\n" + //$NON-NLS-1$
 			"1043,string,-1,b,0,-1,0,0\n" + //$NON-NLS-1$
 			"25,text,-1,b,0,-1,0,0\n" + //$NON-NLS-1$
 			"1042,char,1,b,0,-1,0,0\n" + //$NON-NLS-1$
@@ -461,6 +462,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 			"2249,record,-1,p,0,-1,0,0\n" + //$NON-NLS-1$
 			"30,oidvector,-1,b,0,-1,0,26\n" + //$NON-NLS-1$
 			"1000,_bool,-1,b,0,-1,0,16\n" + //$NON-NLS-1$
+			"1001,_bytea,-1,b,0,-1,0,17\n" + //$NON-NLS-1$
 			"1002,_char,-1,b,0,-1,0,18\n" + //$NON-NLS-1$
 			"1005,_int2,-1,b,0,-1,0,21\n" + //$NON-NLS-1$
 			"1007,_int4,-1,b,0,-1,0,23\n" + //$NON-NLS-1$
