@@ -66,12 +66,39 @@ import org.teiid.translator.jdbc.oracle.ConcatFunctionModifier;
 @Translator(name="sybase", description="A translator for Sybase Database")
 public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 
+	private final class SybaseFormatFunctionModifier extends
+			ParseFormatFunctionModifier {
+		private SybaseFormatFunctionModifier(String prefix) {
+			super(prefix);
+		}
+
+		@Override
+		protected void translateFormat(List<Object> result,
+				Expression expression, String value) {
+			Object format = translateFormat(value);
+			if (format instanceof String) {
+				result.add("convert("); //$NON-NLS-1$
+				result.add(format);
+				result.add(", "); //$NON-NLS-1$
+				result.add(expression);
+				result.add(")"); //$NON-NLS-1$
+			} else {
+				super.translateFormat(result, expression, value);
+			}
+		}
+
+		@Override
+		protected Object translateFormat(String format) {
+			return formatMap.get(format);
+		}
+	}
+
 	public static final Version TWELVE_5_3 = Version.getVersion("12.5.3"); //$NON-NLS-1$
 	public static final Version TWELVE_5 = Version.getVersion("12.5"); //$NON-NLS-1$
 	public static final Version FIFTEEN_0_2 = Version.getVersion("15.0.2"); //$NON-NLS-1$
 	public static final Version FIFTEEN_5 = Version.getVersion("15.5"); //$NON-NLS-1$
 	
-	protected Map<String, Integer> formatMap = new HashMap<String, Integer>();
+	protected Map<String, Object> formatMap = new HashMap<String, Object>();
 	protected boolean jtdsDriver;
 	protected ConvertModifier convertModifier = new ConvertModifier();
 	
@@ -97,8 +124,8 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 		formatMap.put("MM/yy/dd", 14); //$NON-NLS-1$
 		formatMap.put("dd/yy/MM", 15); //$NON-NLS-1$
 		formatMap.put("MMM dd yy HH:mm:ss", 16); //$NON-NLS-1$
-		for (Map.Entry<String, Integer> entry : new HashSet<Map.Entry<String, Integer>>(formatMap.entrySet())) {
-			formatMap.put(entry.getKey().replace("yy", "yyyy"), entry.getValue() + 100); //$NON-NLS-1$ //$NON-NLS-2$
+		for (Map.Entry<String, Object> entry : new HashSet<Map.Entry<String, Object>>(formatMap.entrySet())) {
+			formatMap.put(entry.getKey().replace("yy", "yyyy"), (Integer)entry.getValue() + 100); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 
 		formatMap.put("MMM d yyyy hh:mma", 100); //$NON-NLS-1$
@@ -214,18 +241,8 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 		});
     	convertModifier.addNumericBooleanConversions();
     	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
-		registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, new ParseFormatFunctionModifier("CONVERT(DATETIME, ") { //$NON-NLS-1$
-			@Override
-			protected Object translateFormat(String format) {
-				return formatMap.get(format);
-			}
-		}); 
-		registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new ParseFormatFunctionModifier("CONVERT(VARCHAR, ")  { //$NON-NLS-1$
-			@Override
-			protected Object translateFormat(String format) {
-				return formatMap.get(format);
-			}
-		}); 
+		registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, new SybaseFormatFunctionModifier("CONVERT(DATETIME, ")); //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new SybaseFormatFunctionModifier("CONVERT(VARCHAR, ")); //$NON-NLS-1$
     }
 
 	private void handleTimeConversions() {
