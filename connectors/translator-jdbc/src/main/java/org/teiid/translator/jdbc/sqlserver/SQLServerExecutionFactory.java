@@ -102,6 +102,7 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 			throws TranslatorException {
 		super.initCapabilities(connection);
 		if (getVersion().compareTo(TEN_0) >= 0) {
+			convertModifier.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
 			formatMap.put("yyyy-MM-dd", "DATE"); //$NON-NLS-1$ //$NON-NLS-2$
 			convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.DATE, new FunctionModifier() {
 				@Override
