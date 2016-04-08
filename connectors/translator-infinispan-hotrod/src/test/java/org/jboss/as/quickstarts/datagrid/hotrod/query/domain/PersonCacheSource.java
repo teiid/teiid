@@ -46,8 +46,8 @@ import org.infinispan.protostream.descriptors.FileDescriptor;
 import org.infinispan.protostream.impl.parser.SquareProtoParser;
 import org.jboss.teiid.jdg_remote.pojo.AllTypeCacheConnection;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.infinispan.hotrod.InfinispanDSLConnection;
-import org.teiid.translator.infinispan.hotrod.TestInfinispanDSLConnection;
+import org.teiid.translator.infinispan.hotrod.InfinispanHotRodConnection;
+import org.teiid.translator.infinispan.hotrod.TestInfinispanHotRodConnection;
 import org.teiid.translator.object.ClassRegistry;
 import org.teiid.translator.object.ObjectMaterializeLifeCycle;
 
@@ -90,7 +90,7 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 	}
 	
 	
-	public static InfinispanDSLConnection createConnection(final boolean useKeyClass) {
+	public static InfinispanHotRodConnection createConnection(final boolean useKeyClass) {
 		final RemoteCache objects = PersonCacheSource.loadCache();
 
 		return PersonCacheConnection.createConnection(objects, useKeyClass, DESCRIPTOR);

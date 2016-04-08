@@ -50,7 +50,7 @@ import org.infinispan.protostream.config.Configuration;
 import org.infinispan.protostream.descriptors.Descriptor;
 import org.infinispan.protostream.descriptors.FileDescriptor;
 import org.infinispan.protostream.impl.parser.SquareProtoParser;
-import org.teiid.translator.infinispan.hotrod.InfinispanDSLConnection;
+import org.teiid.translator.infinispan.hotrod.InfinispanHotRodConnection;
 import org.teiid.translator.object.ClassRegistry;
 
 /**
@@ -89,13 +89,13 @@ public class AllTypesCacheSource<K, V>  implements RemoteCache<K, V>{
 	}
 	
 	
-	public static InfinispanDSLConnection createConnection() {
+	public static InfinispanHotRodConnection createConnection() {
 		return createConnection(true);
 		
 	}
 
 		
-	public static InfinispanDSLConnection createConnection(final boolean useKeyClassType) {
+	public static InfinispanHotRodConnection createConnection(final boolean useKeyClassType) {
 
 		final RemoteCache objects = AllTypesCacheSource.loadCache();
 		

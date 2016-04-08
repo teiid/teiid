@@ -1,0 +1,6 @@
+/subsystem=resource-adapters/resource-adapter=ispnHotrod:add(module=org.jboss.teiid.resource-adapter.infinispan.hotrod)
+/subsystem=resource-adapters/resource-adapter=ispnHotrod/connection-definitions=infinispanHotRodDS:add(jndi-name="${jndi.name}", class-name=org.teiid.resource.adapter.infinispan.hotrod.InfinispanManagedConnectionFactory, enabled=true, use-java-context=true)
+/subsystem=resource-adapters/resource-adapter=ispnHotrod/connection-definitions=infinispanHotRodDS/config-properties=CacheTypeMap:add(value="${cache.type.map}")
+/subsystem=resource-adapters/resource-adapter=ispnHotrod/connection-definitions=infinispanHotRodDS/config-properties=Module:add(value="${module.name}")
+/subsystem=resource-adapters/resource-adapter=ispnHotrod/connection-definitions=infinispanHotRodDS/config-properties=RemoteServerList:add(value="${remote.server.list}")
+/subsystem=resource-adapters/resource-adapter=ispnHotrod:activate

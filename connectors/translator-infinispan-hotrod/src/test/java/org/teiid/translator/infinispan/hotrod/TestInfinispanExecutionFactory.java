@@ -48,7 +48,7 @@ public class TestInfinispanExecutionFactory {
 	private Select command;
 	
 	
-	private InfinispanDSLConnection connection = PersonCacheSource.createConnection(true);
+	private InfinispanHotRodConnection connection = PersonCacheSource.createConnection(true);
 	
     @BeforeClass
     public static void setUp() throws TranslatorException {

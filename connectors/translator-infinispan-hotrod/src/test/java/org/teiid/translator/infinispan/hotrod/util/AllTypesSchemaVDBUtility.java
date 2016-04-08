@@ -35,7 +35,7 @@ import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.infinispan.hotrod.InfinispanDSLConnection;
+import org.teiid.translator.infinispan.hotrod.InfinispanHotRodConnection;
 import org.teiid.translator.infinispan.hotrod.InfinispanExecutionFactory;
 
 /**
@@ -66,7 +66,7 @@ public class AllTypesSchemaVDBUtility {
 					SystemMetadata.getInstance().getRuntimeTypeMap(),
 					new Properties(), null);
 	
-			InfinispanDSLConnection conn = AllTypesCacheSource.createConnection();
+			InfinispanHotRodConnection conn = AllTypesCacheSource.createConnection();
 	
 			translator.getMetadataProcessor().process(mf, conn);
 		
