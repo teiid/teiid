@@ -48,7 +48,9 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
+import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.JDBCMetdataProcessor;
 import org.teiid.translator.jdbc.Version;
@@ -76,6 +78,26 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 		setMaxInCriteriaSize(JDBCExecutionFactory.DEFAULT_MAX_IN_CRITERIA);
 		setMaxDependentInPredicates(2);
 	}
+	
+	@Override
+	public void initCapabilities(Connection connection)
+			throws TranslatorException {
+		super.initCapabilities(connection);
+		if (getVersion().compareTo(TEN_0) >= 0) {
+			convertModifier.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
+			formatMap.put("yyyy-MM-dd", "DATE"); //$NON-NLS-1$ //$NON-NLS-2$
+			convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.DATE, new FunctionModifier() {
+				@Override
+				public List<?> translate(Function function) {
+					List<Object> result = new ArrayList<Object>();
+					result.add("cast("); //$NON-NLS-1$
+					result.add(function.getParameters().get(0));
+					result.add(" AS DATE)"); //$NON-NLS-1$
+					return result;
+				}
+			});
+		}
+	}
 
 	@Override
 	protected void populateDateFormats() {
@@ -89,8 +111,8 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 		formatMap.put("MM-dd-yy", 10); //$NON-NLS-1$
 		formatMap.put("yy/MM/dd", 11); //$NON-NLS-1$
 		formatMap.put("yyMMdd", 12); //$NON-NLS-1$
-		for (Map.Entry<String, Integer> entry : new HashSet<Map.Entry<String, Integer>>(formatMap.entrySet())) {
-			formatMap.put(entry.getKey().replace("yy", "yyyy"), entry.getValue() + 100); //$NON-NLS-1$ //$NON-NLS-2$
+		for (Map.Entry<String, Object> entry : new HashSet<Map.Entry<String, Object>>(formatMap.entrySet())) {
+			formatMap.put(entry.getKey().replace("yy", "yyyy"), (Integer)entry.getValue() + 100); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 
 		formatMap.put("MMM d yyyy hh:mma", 100); //$NON-NLS-1$
@@ -106,6 +128,9 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 	
 	@Override
 	protected List<Object> convertDateToString(Function function) {
+		if (getVersion().compareTo(TEN_0) >= 0) {
+			return Arrays.asList("convert(varchar, ", function.getParameters().get(0), ")"); //$NON-NLS-1$ //$NON-NLS-2$
+		}
 		return Arrays.asList("replace(convert(varchar, ", function.getParameters().get(0), ", 102), '.', '-')"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
     

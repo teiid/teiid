@@ -22,9 +22,10 @@
 
 package org.teiid.translator.jdbc;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.Literal;
 
@@ -42,7 +43,18 @@ public abstract class ParseFormatFunctionModifier extends FunctionModifier {
 			return null; //shouldn't happen
 		}
 		Literal l = (Literal)function.getParameters().get(1);
-		return Arrays.asList(prefix, function.getParameters().get(0), ", ", translateFormat((String) l.getValue()), ")" ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		List<Object> result = new ArrayList<Object>();
+		result.add(prefix);
+		translateFormat(result, function.getParameters().get(0), (String)l.getValue());
+		result.add(")"); //$NON-NLS-1$
+		return result; 
+	}
+
+	protected void translateFormat(List<Object> result, Expression expression,
+			String value) {
+		result.add(expression);
+		result.add(", "); //$NON-NLS-1$
+		result.add(translateFormat(value));
 	}
 
 	abstract protected Object translateFormat(String format);
