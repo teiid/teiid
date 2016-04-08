@@ -30,8 +30,8 @@ import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.descriptors.Descriptor;
 import org.infinispan.query.dsl.QueryFactory;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.infinispan.hotrod.InfinispanDSLConnection;
-import org.teiid.translator.infinispan.hotrod.TestInfinispanDSLConnection;
+import org.teiid.translator.infinispan.hotrod.InfinispanHotRodConnection;
+import org.teiid.translator.infinispan.hotrod.TestInfinispanHotRodConnection;
 import org.teiid.translator.object.CacheNameProxy;
 import org.teiid.translator.object.ClassRegistry;
 
@@ -39,12 +39,12 @@ import org.teiid.translator.object.ClassRegistry;
  * @author vanhalbert
  *
  */
-public class PersonCacheConnection extends TestInfinispanDSLConnection {
+public class PersonCacheConnection extends TestInfinispanHotRodConnection {
 	
 	protected Descriptor descriptor;
 	
 
-	public static InfinispanDSLConnection createConnection(RemoteCache map, boolean useKeyClassType, Descriptor descriptor) {
+	public static InfinispanHotRodConnection createConnection(RemoteCache map, boolean useKeyClassType, Descriptor descriptor) {
 		CacheNameProxy proxy = new CacheNameProxy(PersonCacheSource.PERSON_CACHE_NAME);
 
 		return new PersonCacheConnection(map, PersonCacheSource.CLASS_REGISTRY, proxy, useKeyClassType, descriptor);

@@ -1,0 +1,4 @@
+org.teiid.translator.infinispan.libmode.InfinispanCacheExecutionFactory
+org.teiid.translator.infinispan.libmode.InfinispanLibModeExecutionFactory
+
+

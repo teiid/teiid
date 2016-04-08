@@ -41,122 +41,20 @@ import org.teiid.translator.object.ObjectExecutionFactory;
 
 
 /**
- * InfinispanExecutionFactory is the translator that will be use to translate  a remote Infinispan cache and issue queries
- * using hotrod client to query the cache.  
+ * InfinispanExecutionFactory (deprecated, @see InfinispanExecutionFactory) is the translator that will be use to translate  a remote Infinispan cache and issue queries
+ * using DSL to query the cache.  
  * 
  * @author vhalbert
  * 
  * @since 8.7
  *
  */
-@Translator(name = "infinispan-cache-hotrod", description = "The Infinispan Translator Using Hotrod Client to query cache")
-public class InfinispanExecutionFactory extends ObjectExecutionFactory {
-
-	public static final int MAX_SET_SIZE = 10000;
-	
-	private boolean supportsCompareCriteriaOrdered = false;
+@Deprecated
+@Translator(name = "infinispan-cache-dsl", description = "(Deprecated) The Infinispan Translator Using DSL to Query Cache")
+public class InfinispanExecutionFactory extends InfinispanHotRodExecutionFactory {
 	
 	public InfinispanExecutionFactory() {
 		super();
-		setSourceRequiredForMetadata(true);
-		setMaxInCriteriaSize(MAX_SET_SIZE);
-		setMaxDependentInPredicates(1);
-
-		setSupportsOrderBy(true);
-		setSupportsSelectDistinct(false);
-		setSupportsInnerJoins(true);
-		setSupportsFullOuterJoins(false);
-		setSupportsOuterJoins(true);
-		
-		setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
-	}
-
-	@Override
-	public int getMaxFromGroups() {
-		return 2;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.teiid.translator.object.ObjectExecutionFactory#createDirectExecution(java.util.List, org.teiid.language.Command, org.teiid.translator.ExecutionContext, org.teiid.metadata.RuntimeMetadata, org.teiid.translator.object.ObjectConnection)
-	 */
-	@Override
-	public ProcedureExecution createDirectExecution(List<Argument> arguments,
-			Command command, ExecutionContext executionContext,
-			RuntimeMetadata metadata, ObjectConnection connection)
-			throws TranslatorException {
-		return super.createDirectExecution(arguments, command, executionContext,
-				metadata, connection);
-	}
-    
-
-	@Override
-    public boolean supportsAliasedTable() {
-        return true;
-    }
-
-	@Override
-    public boolean supportsInCriteria() {
-		return Boolean.TRUE.booleanValue();
-	}
-
-	/**
-	 * Discusses issue with trying to support IS NULL and IS NOT NULL;
-	 * @return boolean
-	 */
-	 // "https://issues.jboss.org/browse/TEIID-3573"
-	@Override
-    public boolean supportsIsNullCriteria() {
-		return Boolean.FALSE.booleanValue();
-	}
-	
-	@Override
-	public boolean supportsOrCriteria() {
-		return Boolean.TRUE.booleanValue();
-	}
-
-	@Override
-    public boolean supportsCompareCriteriaEquals() {
-		return Boolean.TRUE.booleanValue();
-	}
-
-	@TranslatorProperty(display="CompareCriteriaOrdered", description="If true, translator can support comparison criteria with the operator '=>' or '<=' ",advanced=true)
-	@Override
-	public boolean supportsCompareCriteriaOrdered() {
-		return supportsCompareCriteriaOrdered;
-	}
-	
-	public boolean setSupportsCompareCriteriaOrdered(boolean supports) {
-		return supportsCompareCriteriaOrdered = supports;
-	}
-	
-	@Override
-	public boolean supportsLikeCriteria() {
-		return Boolean.TRUE.booleanValue();
-	}	
-
-	@Override
-	public boolean supportsLikeCriteriaEscapeCharacter() {
-		return Boolean.TRUE.booleanValue();
-	}	
-	
-	/**
-	 * Discusses issue with trying to support NOT;
-	 */
-	// https://issues.jboss.org/browse/TEIID-3573
-
-	@Override
-	public boolean supportsNotCriteria() {
-		return Boolean.FALSE.booleanValue();
-	}
-
-	@Override
-    public MetadataProcessor<ObjectConnection> getMetadataProcessor(){
-		if (this.supportsSearchabilityUsingAnnotations()) {
-			return new AnnotationMetadataProcessor(true);
-		}
-	    return new ProtobufMetadataProcessor();
 	}
 
 }

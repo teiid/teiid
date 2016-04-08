@@ -1,2 +1,3 @@
+org.teiid.translator.infinispan.hotrod.InfinispanHotrodExecutionFactory
 org.teiid.translator.infinispan.hotrod.InfinispanExecutionFactory
 

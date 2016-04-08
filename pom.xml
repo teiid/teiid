@@ -622,12 +622,12 @@
 			</dependency>
              <dependency>
                 <groupId>org.jboss.teiid.connectors</groupId>
-                <artifactId>translator-infinispan-cache</artifactId>
+                <artifactId>translator-infinispan-libmode</artifactId>
                 <version>${project.version}</version>
             </dependency>   			
 	         <dependency>
 	            <groupId>org.jboss.teiid.connectors</groupId>
-	            <artifactId>translator-infinispan-cache</artifactId>
+	            <artifactId>translator-infinispan-libmode</artifactId>
                 <type>test-jar</type>
                 <version>${project.version}</version>
 	        </dependency>			

@@ -38,7 +38,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnection;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.infinispan.hotrod.InfinispanDSLConnection;
+import org.teiid.translator.infinispan.hotrod.InfinispanHotRodConnection;
 import org.teiid.translator.infinispan.hotrod.InfinispanPlugin;
 import org.teiid.translator.object.ObjectMaterializeLifeCycle;
 import org.teiid.translator.object.SearchType;
@@ -48,7 +48,7 @@ import org.teiid.translator.object.SearchType;
  * cache to be accessed in the container.
  * 
  */
-public class InfinispanConnectionImpl extends BasicConnection implements InfinispanDSLConnection { 
+public class InfinispanConnectionImpl extends BasicConnection implements InfinispanHotRodConnection { 
 	
 	AbstractInfinispanManagedConnectionFactory config = null;
 
@@ -62,7 +62,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	
 	/** 
 	 * Close the connection, if a connection requires closing.
-	 * (non-Javadoc)
+	 * (non-Javadoc
 	 */
 	@Override
     public void close() {

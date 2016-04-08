@@ -29,7 +29,7 @@ import org.teiid.translator.object.ObjectUpdateExecution;
 @Ignore
 public class TestInfinispanUpdateUsingAllTypes {
 	
-	private static InfinispanDSLConnection CONNECTION;
+	private static InfinispanHotRodConnection CONNECTION;
 	private static TranslationUtility translationUtility = AllTypesSchemaVDBUtility.TRANSLATION_UTILITY;
 
 	private static RemoteCache DATA = AllTypesCacheSource.loadCache();
