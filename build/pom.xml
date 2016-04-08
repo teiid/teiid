@@ -18,10 +18,6 @@
   </properties>
   
     <dependencies>
-        <dependency>
-            <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-jdbc</artifactId>
-        </dependency>
     	<dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
@@ -123,33 +119,15 @@
                             </artifactItems>
                         </configuration>
                     </execution>
-                    <execution>
-						<id>copy-jdbc-jar</id>
-						<phase>package</phase>
-						<goals>
-							<goal>copy</goal>
-						</goals>
-						<configuration>
-							<artifactItems>
-								<artifactItem>
-									<groupId>org.jboss.teiid</groupId>
-									<artifactId>teiid-jdbc</artifactId>
-									<overWrite>true</overWrite>
-									<type>jar</type>
-									<destFileName>teiid-${project.version}-jdbc.jar</destFileName>
-								</artifactItem>
-							</artifactItems>
-							<outputDirectory>${project.build.directory}</outputDirectory>
-						</configuration>
-					</execution>
                 </executions>
             </plugin>
-                       
+            
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
                     <descriptors>
                         <descriptor>assembly/src.xml</descriptor>
+                        <descriptor>assembly/client-jar.xml</descriptor>
                         <descriptor>assembly/wildfly-dist.xml</descriptor>
                         <descriptor>assembly/adminshell-dist.xml</descriptor>
                         <descriptor>assembly/wildfly-server.xml</descriptor>
@@ -205,6 +183,7 @@
                         <configuration>
                             <descriptors>
                                 <descriptor>assembly/src.xml</descriptor>
+                                <descriptor>assembly/client-jar.xml</descriptor>
                                 <descriptor>assembly/wildfly-dist.xml</descriptor>
                                 <descriptor>assembly/adminshell-dist.xml</descriptor>
                                 <descriptor>assembly/wildfly-server.xml</descriptor>
