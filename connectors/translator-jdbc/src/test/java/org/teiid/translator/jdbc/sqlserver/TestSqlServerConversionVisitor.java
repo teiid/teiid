@@ -24,10 +24,13 @@ package org.teiid.translator.jdbc.sqlserver;
 
 import static org.junit.Assert.*;
 
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.teiid.cdk.CommandBuilder;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.types.DataTypeManager;
@@ -299,6 +302,22 @@ public class TestSqlServerConversionVisitor {
 		CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
         Command obj = commandBuilder.getCommand(input, true, true);
         TranslationHelper.helpTestVisitor(output, trans, obj);
+    }
+    
+    @Test public void testDateFormat() throws Exception {
+    	trans = new SQLServerExecutionFactory();
+    	trans.setDatabaseVersion(SQLServerExecutionFactory.V_2008);
+    	trans.start();
+    	Connection c = Mockito.mock(Connection.class);
+    	Mockito.stub(c.getMetaData()).toReturn(Mockito.mock(DatabaseMetaData.class));
+    	trans.initCapabilities(c);
+    	
+    	String input = "select formatdate(smalla.datevalue, 'yyyy-MM-dd'), parsedate(smalla.stringkey, 'yyyy-MM-dd') from bqt1.smalla"; //$NON-NLS-1$
+        String output = "SELECT CONVERT(VARCHAR, convert(DATE, SmallA.DateValue)), cast(CONVERT(DATETIME, convert(DATE, SmallA.StringKey)) AS DATE) FROM SmallA"; //$NON-NLS-1$
+               
+        helpTestVisitor(getBQTVDB(),
+            input, 
+            output);        
     }
        
 }
