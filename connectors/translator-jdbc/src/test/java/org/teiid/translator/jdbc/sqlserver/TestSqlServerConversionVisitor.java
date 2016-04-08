@@ -312,8 +312,8 @@ public class TestSqlServerConversionVisitor {
     	Mockito.stub(c.getMetaData()).toReturn(Mockito.mock(DatabaseMetaData.class));
     	trans.initCapabilities(c);
     	
-    	String input = "select formatdate(smalla.datevalue, 'yyyy-MM-dd'), parsedate(smalla.stringkey, 'yyyy-MM-dd') from bqt1.smalla"; //$NON-NLS-1$
-        String output = "SELECT CONVERT(VARCHAR, convert(DATE, SmallA.DateValue)), cast(CONVERT(DATETIME, convert(DATE, SmallA.StringKey)) AS DATE) FROM SmallA"; //$NON-NLS-1$
+    	String input = "select cast(smalla.stringkey as date), formatdate(smalla.datevalue, 'yyyy-MM-dd'), parsedate(smalla.stringkey, 'yyyy-MM-dd') from bqt1.smalla where smalla.datevalue = {d'2000-01-01'}"; //$NON-NLS-1$
+        String output = "SELECT cast(SmallA.StringKey AS date), CONVERT(VARCHAR, convert(DATE, cast(SmallA.DateValue AS datetime))), cast(CONVERT(DATETIME, convert(DATE, SmallA.StringKey)) AS DATE) FROM SmallA WHERE SmallA.DateValue = CAST('2000-01-01' AS DATE)"; //$NON-NLS-1$
                
         helpTestVisitor(getBQTVDB(),
             input, 
