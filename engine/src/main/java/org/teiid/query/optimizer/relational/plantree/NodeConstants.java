@@ -81,7 +81,7 @@ public final class NodeConstants {
         SUB_PLANS,
         
         // Set operation properties 
-        SET_OPERATION,      // SetOperation
+        SET_OPERATION,      // SetQuery.Operation
         USE_ALL,            // Boolean
 
         // Join node properties
