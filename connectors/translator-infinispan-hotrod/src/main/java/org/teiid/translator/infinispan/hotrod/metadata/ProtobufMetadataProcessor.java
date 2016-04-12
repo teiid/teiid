@@ -40,7 +40,7 @@ import org.teiid.metadata.Table;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
-import org.teiid.translator.infinispan.hotrod.InfinispanDSLConnection;
+import org.teiid.translator.infinispan.hotrod.InfinispanHotRodConnection;
 import org.teiid.translator.infinispan.hotrod.InfinispanPlugin;
 import org.teiid.translator.object.ObjectConnection;
 
@@ -97,7 +97,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 			String cacheName = conn.getCacheName();			
 
 			Class<?> type = conn.getCacheClassType();
-			createRootTable(metadataFactory, type, ((InfinispanDSLConnection) conn).getDescriptor(), cacheName,conn);
+			createRootTable(metadataFactory, type, ((InfinispanHotRodConnection) conn).getDescriptor(), cacheName,conn);
 	}
 
 

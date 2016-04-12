@@ -1,0 +1,2 @@
+/subsystem=teiid/translator=ispn-hotrod:add(module=org.jboss.teiid.translator.infinispan.hotrod)
+

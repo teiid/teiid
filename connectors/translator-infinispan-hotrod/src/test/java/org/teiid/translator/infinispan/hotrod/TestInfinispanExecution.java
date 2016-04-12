@@ -52,7 +52,7 @@ import org.teiid.translator.object.testdata.person.PersonSchemaVDBUtility;
 @SuppressWarnings("nls")
 public class TestInfinispanExecution {
 	
-	private static InfinispanDSLConnection CONNECTION;
+	private static InfinispanHotRodConnection CONNECTION;
 	
 	private static TranslationUtility translationUtility = PersonSchemaVDBUtility.TRANSLATION_UTILITY;
 	

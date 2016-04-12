@@ -31,7 +31,7 @@ import org.teiid.translator.object.testdata.person.PersonSchemaVDBUtility;
 
 @Ignore
 public class TestInfinispanUpdateExecution {
-	private static InfinispanDSLConnection CONNECTION;
+	private static InfinispanHotRodConnection CONNECTION;
 	private static TranslationUtility translationUtility = PersonSchemaVDBUtility.TRANSLATION_UTILITY;
 
 	@SuppressWarnings("unchecked")
