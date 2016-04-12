@@ -88,6 +88,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
     private int schemaSize;
     private Command processingCommand;
     private boolean shouldExecute = true;
+    private boolean open;
     
     private Object[] projection;
     private List<Expression> originalSelect;
@@ -125,6 +126,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
         processingCommand = null;
         shouldExecute = true;
         this.evaluatedPlans = null;
+        open = false;
     }
 
 	public void setCommand(Command command) {
@@ -159,8 +161,18 @@ public class AccessNode extends SubqueryAwareRelationalNode {
     	}
         this.shouldEvaluate = shouldEvaluate;
     }
+    
+    @Override
+    public void open() throws TeiidComponentException, TeiidProcessingException {
+    	try {
+    		openInternal();
+    		open = true;
+    	} catch (BlockedException e) {
+    		//we don't want to let blocked exceptions bubble up during open
+    	}
+    }
 
-	public void open()
+	private void openInternal()
 		throws TeiidComponentException, TeiidProcessingException {
 		
 		//TODO: support a partitioning concept with multi-source and full dependent join pushdown
@@ -354,6 +366,11 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 
 	public TupleBatch nextBatchDirect()
 		throws BlockedException, TeiidComponentException, TeiidProcessingException {
+		
+		if (!open) {
+			openInternal(); //-- blocked during actual open
+			open = true;
+		}
 		
 		if (multiSource && connectorBindingExpression == null) {
 			return this.getChildren()[0].nextBatch();
