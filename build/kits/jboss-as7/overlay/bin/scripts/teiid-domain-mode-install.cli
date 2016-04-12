@@ -84,7 +84,7 @@
 /profile=full-ha/subsystem=teiid/transport=embedded:add()
 /profile=full-ha/subsystem=teiid/transport=odata:add(authentication-security-domain=teiid-security)
 /profile=full-ha/subsystem=teiid/transport=jdbc:add(protocol=teiid, socket-binding=teiid-jdbc, authentication-security-domain=teiid-security)
-/profile=full-ha/subsystem=teiid/transport=odbc:add(protocol=pg, socket-binding=teiid-odbc, authentication-security-domain=teiid-security) 
+/profile=full-ha/subsystem=teiid/transport=odbc:add(protocol=pg, socket-binding=teiid-odbc, authentication-security-domain=teiid-security, ssl-mode=disabled)
 
 
 /profile=ha/subsystem=teiid/translator=jdbc-simple:add(module=org.jboss.teiid.translator.jdbc)
