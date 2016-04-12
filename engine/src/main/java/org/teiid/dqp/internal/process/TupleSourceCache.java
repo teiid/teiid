@@ -120,6 +120,7 @@ public class TupleSourceCache {
 	
 	private class SharedTupleSource extends CopyOnReadTupleSource {
 		private SharedState state;
+		private boolean closed = false;
 		
 		public SharedTupleSource(SharedState state) {
 			super(state.tb, state.ts);
@@ -128,11 +129,13 @@ public class TupleSourceCache {
 		
 		@Override
 		public void closeSource() {
-			if (--state.expectedReaders == 0 && sharedStates != null && sharedStates.containsKey(state.id)) {
+			if (!closed && --state.expectedReaders == 0 && sharedStates != null && sharedStates.containsKey(state.id)) {
 				state.remove();
 				sharedStates.remove(state.id);
 			}
-		}		
+			closed = true;
+		}	
+		
 	}
 	
     private Map<Integer, SharedState> sharedStates;

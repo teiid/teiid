@@ -24,6 +24,9 @@ package org.teiid.dqp.internal.process;
 
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.common.buffer.BufferManagerFactory;
@@ -31,10 +34,12 @@ import org.teiid.common.buffer.TupleSource;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.processor.HardcodedDataManager;
+import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Insert;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
 @SuppressWarnings("nls")
@@ -59,6 +64,22 @@ public class TestTupleSourceCache {
 		parameterObject.info = new RegisterRequestParameter.SharedAccessInfo();
 		
 		tsc.getSharedTupleSource(context, command, "x", parameterObject, bufferMgr, pdm);
+	}
+	
+	@Test public void testJoinProcessingWithNestedSubquery() throws Exception {
+		HardcodedDataManager pdm = new HardcodedDataManager();
+		pdm.setBlockOnce(true);
+		
+		String sql = "select e1 from (select e1, e2 from pm1.g1 where (select e3 from pm2.g1) = true) x inner join (select e2 from pm1.g2) y on x.e2 = y.e2 "
+				+ "union all "
+				+ "select e1 from (select e1, e2 from pm1.g1 where (select e3 from pm2.g1) = true) x inner join (select e2 from pm1.g2) y on x.e2 = y.e2";
+		
+		pdm.addData("SELECT pm1.g1.e2, pm1.g1.e1 FROM pm1.g1", Arrays.asList(1, "a"));
+		pdm.addData("SELECT pm1.g2.e2 FROM pm1.g2", Arrays.asList(1));
+		pdm.addData("SELECT pm2.g1.e3 FROM pm2.g1", Arrays.asList(true)); 
+		
+		ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
+		TestProcessor.helpProcess(plan, pdm, new List<?>[] {Arrays.asList("a"), Arrays.asList("a")});
 	}
 	
 }
