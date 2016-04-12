@@ -155,7 +155,7 @@ public class HardcodedDataManager implements
         	commandString = cmd.toString();
         }
         
-        List<?>[] rows = data.get(commandString);
+        List<?>[] rows = getData(commandString);
         if(rows == null) {
             if (mustRegisterCommands) {
                 throw new TeiidComponentException("Unknown command: " + commandString);  //$NON-NLS-1$
@@ -191,5 +191,9 @@ public class HardcodedDataManager implements
 	
 	public void setFullBatchedUpdate(boolean fullBatchedUpdate) {
 		this.fullBatchedUpdate = fullBatchedUpdate;
+	}
+
+	protected List<?>[] getData(String commandString) {
+		return data.get(commandString);
 	}
 }
