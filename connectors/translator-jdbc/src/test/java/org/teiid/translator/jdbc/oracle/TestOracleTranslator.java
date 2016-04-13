@@ -1089,6 +1089,14 @@ public class TestOracleTranslator {
                 TRANSLATOR);
     }
     
+    @Test public void testRecursiveCte() throws Exception {
+        String input = "with a (intkey, lvl) as (select intkey, 0 as lvl from bqt1.smallb where intkey = 1 UNION ALL select n.intkey, rcte.lvl + 1 as lvl from bqt1.smallb n inner join a rcte on rcte.intkey = n.intkey + 1) select * from a"; //$NON-NLS-1$
+        String output = "WITH a (intkey, lvl) AS (SELECT SmallB.IntKey AS intkey, 0 AS lvl FROM SmallB WHERE SmallB.IntKey = 1 UNION ALL SELECT n.IntKey, (rcte.lvl + 1) AS lvl FROM SmallB n INNER JOIN a rcte ON rcte.intkey = (n.IntKey + 1)) SELECT a.intkey, a.lvl FROM a"; //$NON-NLS-1$
+               
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, null,
+                input, output, 
+                TRANSLATOR);
+    }
     @Test public void testVersionedCapabilities() throws Exception {
     	OracleExecutionFactory oef = new OracleExecutionFactory();
     	oef.setDatabaseVersion("10.0");
