@@ -185,8 +185,16 @@ public class RelationalPlan extends ProcessorPlan {
 			sb.append(SQLConstants.Reserved.WITH);
 			for (WithQueryCommand withCommand : this.with) {
 				sb.append("\n"); //$NON-NLS-1$
-				sb.append(withCommand.getCommand().getProcessorPlan());
+				sb.append(withCommand.getGroupSymbol());
+				if (withCommand.isRecursive()) {
+					sb.append(" anchor\n").append(((SetQuery)withCommand.getCommand()).getLeftQuery().getProcessorPlan()); //$NON-NLS-1$
+					sb.append("recursive\n").append(((SetQuery)withCommand.getCommand()).getRightQuery().getProcessorPlan()); //$NON-NLS-1$
+				} else {
+					sb.append("\n"); //$NON-NLS-1$
+					sb.append(withCommand.getCommand().getProcessorPlan());
+				}
 			}
+			sb.append("body\n"); //$NON-NLS-1$
 		}
 		sb.append(this.root.toString());
 		return sb.toString();

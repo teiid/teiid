@@ -708,5 +708,40 @@ public class TestWithClauseProcessing {
 	    TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("a", 1, 2.0, true)});
 	}
 	
+	@Test public void testRecursiveWithPushdownNotFullyPushed() throws Exception {
+		FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+       
+	    String sql = "WITH t(n, i) AS ( select 1,2 from pm1.g2 UNION ALL SELECT n+1, e2 FROM t, pm1.g1 WHERE n < 64 and pm1.g1.e2 = t.n ) SELECT * FROM t;"; //$NON-NLS-1$
+	    
+	    HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+
+	    dataManager.addData("SELECT g_0.e2 AS c_0 FROM g1 AS g_0 WHERE g_0.e2 < 64 AND g_0.e2 = 1 ORDER BY c_0", Arrays.asList(1));
+	    dataManager.addData("SELECT g_0.e2 AS c_0 FROM g1 AS g_0 WHERE g_0.e2 < 64 AND g_0.e2 = 2 ORDER BY c_0");
+	    dataManager.addData("SELECT 2 FROM g2 AS g_0", Arrays.asList(2));
+	    
+	    ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, new String[] {"SELECT t.n, t.i FROM t"}, ComparisonMode.EXACT_COMMAND_STRING);
+	    
+	    CommandContext cc = createCommandContext();
+	    cc.setSession(new SessionMetadata());
+	    
+	    helpProcess(plan, cc, dataManager, new List[] { 
+		        Arrays.asList(1, 2),Arrays.asList(2, 1),
+		    });
+	    
+	    caps.setCapabilitySupport(Capability.RECURSIVE_COMMON_TABLE_EXPRESSIONS, true);
+	    
+	    plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, new String[] {"SELECT t.n, t.i FROM t"}, ComparisonMode.EXACT_COMMAND_STRING);
+	    
+	    cc = createCommandContext();
+	    cc.setSession(new SessionMetadata());
+	    
+	    helpProcess(plan, cc, dataManager, new List[] { 
+		        Arrays.asList(1, 2),Arrays.asList(2, 1),
+		    });
+	}
+	
 }
 
