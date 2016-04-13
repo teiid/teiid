@@ -746,7 +746,9 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     		public void visit(WithItem obj) {
     			if (obj.getColumns() != null) {
     				List<ColumnReference> cols = obj.getColumns();
-    				obj.setColumns(null);
+    				if(!obj.isRecusive()) {
+    				    obj.setColumns(null);
+    				}
     				Select select = obj.getSubquery().getProjectedQuery();
     				List<DerivedColumn> selectClause = select.getDerivedColumns();
     				for (int i = 0; i < cols.size(); i++) {
