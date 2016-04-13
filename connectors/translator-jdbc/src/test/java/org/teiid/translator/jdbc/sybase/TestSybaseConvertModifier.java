@@ -220,7 +220,7 @@ public class TestSybaseConvertModifier {
                 LANG_FACTORY.createLiteral("string", String.class)}, //$NON-NLS-1$
             String.class);
         
-        helpGetString1(func,  "cast(-123124534.3 AS varchar(40))");  //$NON-NLS-1$
+        helpGetString1(func,  "cast(-123124534.3 AS varchar(4000))");  //$NON-NLS-1$
     }
     /***************** End of cast(string AS input)******************/
     
@@ -789,7 +789,7 @@ public class TestSybaseConvertModifier {
     // Source = BYTE
     
     @Test public void testByteToString() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "string", "cast(1 AS varchar(40))"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "string", "cast(1 AS varchar(4000))"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testByteToLong() throws Exception {
@@ -815,7 +815,7 @@ public class TestSybaseConvertModifier {
     // Source = SHORT
     
     @Test public void testShortToString() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Short((short)1), Short.class), "string", "cast(1 AS varchar(40))"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Short((short)1), Short.class), "string", "cast(1 AS varchar(4000))"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testShortToLong() throws Exception {
@@ -841,7 +841,7 @@ public class TestSybaseConvertModifier {
     // Source = INTEGER
     
     @Test public void testIntegerToString() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Integer(1), Integer.class), "string", "cast(1 AS varchar(40))"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Integer(1), Integer.class), "string", "cast(1 AS varchar(4000))"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testIntegerToLong() throws Exception {
@@ -867,7 +867,7 @@ public class TestSybaseConvertModifier {
     // Source = LONG
     
     @Test public void testLongToString() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Long(1), Long.class), "string", "cast(1 AS varchar(40))"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Long(1), Long.class), "string", "cast(1 AS varchar(4000))"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testLongToBigInteger() throws Exception {
@@ -889,7 +889,7 @@ public class TestSybaseConvertModifier {
     // Source = BIGINTEGER
     
     @Test public void testBigIntegerToString() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new BigInteger("1"), BigInteger.class), "string", "cast(1 AS varchar(40))"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpTest(LANG_FACTORY.createLiteral(new BigInteger("1"), BigInteger.class), "string", "cast(1 AS varchar(4000))"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     @Test public void testBigIntegerToLong() throws Exception {
@@ -911,7 +911,7 @@ public class TestSybaseConvertModifier {
     // Source = FLOAT
     
     @Test public void testFloatToString() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Float(1.2f), Float.class), "string", "cast(1.2 AS varchar(40))"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Float(1.2f), Float.class), "string", "cast(1.2 AS varchar(4000))"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testFloatToLong() throws Exception {
@@ -933,7 +933,7 @@ public class TestSybaseConvertModifier {
     // Source = DOUBLE
     
     @Test public void testDoubleToString() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Double(1.2), Double.class), "string", "cast(1.2 AS varchar(40))"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Double(1.2), Double.class), "string", "cast(1.2 AS varchar(4000))"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testDoubleToLong() throws Exception {
