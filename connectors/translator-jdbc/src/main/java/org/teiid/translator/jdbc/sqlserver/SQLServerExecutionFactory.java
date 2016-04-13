@@ -37,14 +37,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.teiid.core.util.StringUtil;
-import org.teiid.language.AggregateFunction;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Command;
-import org.teiid.language.Function;
-import org.teiid.language.Insert;
-import org.teiid.language.LanguageObject;
-import org.teiid.language.QueryExpression;
-import org.teiid.language.With;
+import org.teiid.language.*;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
@@ -55,6 +48,7 @@ import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
+import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.JDBCMetdataProcessor;
@@ -175,9 +169,62 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     		} else if (af.getName().equals(AggregateFunction.VAR_SAMP)) {
     			af.setName("VAR"); //$NON-NLS-1$
     		}
+    	} else if (obj instanceof WithItem) {
+    		WithItem withItem = (WithItem)obj;
+    		//unlike normal unions, recursive cte require additional type handling
+    		if (withItem.isRecusive()) {
+    			List<DerivedColumn> derivedColumns = withItem.getSubquery().getProjectedQuery().getDerivedColumns();
+    			List<DerivedColumn> derivedColumnsRecurse = ((SetQuery)withItem.getSubquery()).getRightQuery().getProjectedQuery().getDerivedColumns();
+    			for (int i = 0; i < derivedColumns.size(); i++) {
+    				String nativeType = null;
+    				boolean castLeft = true;
+    				boolean castRight = true;
+    				DerivedColumn dc = derivedColumns.get(i);
+    				if (dc.getExpression() instanceof ColumnReference) {
+    					Column c = ((ColumnReference)dc.getExpression()).getMetadataObject();
+						if (c != null && c.getNativeType() != null) {
+    						nativeType = c.getNativeType();
+    						castLeft = false;
+						}
+    				}
+    				DerivedColumn dcR = derivedColumnsRecurse.get(i);
+    				if (dcR.getExpression() instanceof ColumnReference) {
+    					Column c = ((ColumnReference)dcR.getExpression()).getMetadataObject();
+						if (c != null) {
+	    					if (nativeType == null) {
+	    						if (c.getNativeType() != null) {
+		    						nativeType = c.getNativeType();
+		    						castRight = false;
+	    						}
+	    					} else {
+	    						if (nativeType.equals(c.getNativeType())) {
+	    							continue; //it matches
+	    						}
+	    						//we won't gracefully handle this case, we'll just assume the first type
+	    					}
+						}
+    				}
+    				if (castLeft) {
+    					addCast(nativeType, dc);
+    				}
+    				if (castRight) {
+    					addCast(nativeType, dcR);
+    				}
+    			}
+    		}
     	}
     	return super.translate(obj, context);
     }
+
+	private void addCast(String nativeType, DerivedColumn dc) {
+		if (nativeType != null) {
+			Function cast = ConvertModifier.createConvertFunction(getLanguageFactory(), dc.getExpression(), nativeType);
+			cast.setName("cast"); //$NON-NLS-1$
+			dc.setExpression(cast);
+		} else {
+			dc.setExpression(ConvertModifier.createConvertFunction(getLanguageFactory(), dc.getExpression(), TypeFacility.getDataTypeName(dc.getExpression().getType())));
+		}
+	}
     
     @Override
     public List<String> getSupportedFunctions() {
