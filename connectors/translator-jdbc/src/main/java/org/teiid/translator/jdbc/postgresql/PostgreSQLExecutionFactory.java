@@ -688,6 +688,11 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     }
     
     @Override
+    public boolean supportsRecursiveCommonTableExpressions() {
+    	return supportsCommonTableExpressions();
+    }
+    
+    @Override
     public boolean supportsArrayAgg() {
     	return getVersion().compareTo(EIGHT_4) >= 0;
     }
