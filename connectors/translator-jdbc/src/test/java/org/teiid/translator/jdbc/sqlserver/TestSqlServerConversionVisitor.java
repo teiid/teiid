@@ -319,5 +319,17 @@ public class TestSqlServerConversionVisitor {
             input, 
             output);        
     }
+    
+    @Test public void testRecursiveCTEWithTypeMatching() throws Exception {
+    	String input = "with a (intkey, stringkey, bigintegervalue) as (select intkey, NULL as stringkey, bigintegervalue from bqt1.smalla where intkey = 1 "
+    			+ "union all "
+    			+ " select n.intkey, n.stringkey, 1 from bqt1.smalla n inner join a rcte on n.intkey = rcte.intkey + 1) "
+    			+ "select * from a";
+    	String output = "WITH a (intkey, stringkey, bigintegervalue) AS (SELECT cast(SmallA.IntKey AS int), cast(NULL AS char) AS stringkey, cast(SmallA.BigIntegerValue AS numeric(38, 0)) FROM SmallA WHERE SmallA.IntKey = 1 UNION ALL SELECT cast(n.IntKey AS int), n.StringKey, cast(1 AS numeric(38, 0)) AS expr3 FROM SmallA n INNER JOIN a rcte ON n.IntKey = (rcte.intkey + 1)) SELECT g_0.intkey, g_0.stringkey, g_0.bigintegervalue FROM a g_0";
+    	
+    	CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
+        Command obj = commandBuilder.getCommand(input, true, true);
+        TranslationHelper.helpTestVisitor(output, trans, obj);
+    }
        
 }
