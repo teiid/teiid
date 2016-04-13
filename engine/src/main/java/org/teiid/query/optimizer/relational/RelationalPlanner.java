@@ -317,40 +317,31 @@ public class RelationalPlanner {
 			    
 			    AccessNode aNode = CriteriaCapabilityValidatorVisitor.getAccessNode(subPlan);
 			    Object modelID = null;
+			    QueryCommand withCommand = null;
 			    if (aNode != null) {
 					modelID = CriteriaCapabilityValidatorVisitor.validateCommandPushdown(null, metadata, capFinder, aNode, false);
-					((TempMetadataID)with.getGroupSymbol().getMetadataID()).getTableData().setModel(modelID);
+					if (modelID != null) {
+						if (!CapabilitiesUtil.supports(Capability.RECURSIVE_COMMON_TABLE_EXPRESSIONS, modelID, metadata, capFinder)) {
+							modelID = null;
+						} else {
+							withCommand = CriteriaCapabilityValidatorVisitor.getQueryCommand(aNode);
+							if (withCommand != null) {
+								//provisionally set the source
+								((TempMetadataID)with.getGroupSymbol().getMetadataID()).getTableData().setModel(modelID);
+							}
+						}
+					}
 			    }
 			    //now that we possibly have a model id, plan the recursive part
 				QueryCommand qc1 = setQuery.getRightQuery();
-				RelationalPlan subPlan1 = optimize(qc1);
+				RelationalPlan subPlan1 = optimize((Command) qc1.clone());
 			    qc1.setProcessorPlan(subPlan1);
 			    
-				QueryCommand withCommand = CriteriaCapabilityValidatorVisitor.getQueryCommand(aNode);
-			    if (modelID == null || withCommand == null) {
-			    	continue;
-			    }
-			    
-				if (!CapabilitiesUtil.supports(Capability.RECURSIVE_COMMON_TABLE_EXPRESSIONS, modelID, metadata, capFinder)) {
-					continue;
-				}
-		    	
-			    AccessNode aNode1 = CriteriaCapabilityValidatorVisitor.getAccessNode(subPlan1);
-			    if (aNode1 == null) {
-			    	continue;
-			    }
-				Object modelID1 = CriteriaCapabilityValidatorVisitor.validateCommandPushdown(null, metadata, capFinder, aNode1, false);
-				QueryCommand withCommand1 = CriteriaCapabilityValidatorVisitor.getQueryCommand(aNode1);
-			    if (modelID1 == null || withCommand1 == null) {
-			    	continue;
-			    }
-			    
-			    //if we are the same connector for each, then we should be good to proceed
-			    if (CapabilitiesUtil.isSameConnector(modelID, modelID1, metadata, capFinder)) {
-			    	SetQuery pushdownSetQuery = new SetQuery(Operation.UNION, setQuery.isAll(), withCommand, withCommand1);
-					WithQueryCommand wqc = new WithQueryCommand(with.getGroupSymbol(), with.getColumns(), pushdownSetQuery);
-					wqc.setRecursive(true);
-					this.withPlanningState.pushdownWith.put(with.getGroupSymbol().getName(), wqc);
+			    if (!isPushdownValid(with, setQuery, modelID, withCommand, subPlan1) && withCommand != null) {
+				    //reset the source to null and replan
+				    ((TempMetadataID)with.getGroupSymbol().getMetadataID()).getTableData().setModel(null);
+					subPlan1 = optimize(qc1);
+				    qc1.setProcessorPlan(subPlan1);
 			    }
 			    continue;
 			}
@@ -378,6 +369,31 @@ public class RelationalPlanner {
 			((TempMetadataID)with.getGroupSymbol().getMetadataID()).getTableData().setModel(modelID);
 			this.withPlanningState.pushdownWith.put(with.getGroupSymbol().getName(), wqc);
 		}
+	}
+
+	private boolean isPushdownValid(WithQueryCommand with, SetQuery setQuery,
+			Object modelID, QueryCommand withCommand, RelationalPlan subPlan1)
+			throws QueryMetadataException, TeiidComponentException {
+		AccessNode aNode1 = CriteriaCapabilityValidatorVisitor.getAccessNode(subPlan1);
+		if (aNode1 == null) {
+			return false;
+		}
+		Object modelID1 = CriteriaCapabilityValidatorVisitor.validateCommandPushdown(null, metadata, capFinder, aNode1, false);
+		QueryCommand withCommand1 = CriteriaCapabilityValidatorVisitor.getQueryCommand(aNode1);
+		if (modelID1 == null || withCommand1 == null) {
+			return false;
+		}
+		
+		//if we are the same connector for each, then we should be good to proceed
+		if (CapabilitiesUtil.isSameConnector(modelID, modelID1, metadata, capFinder)) {
+			SetQuery pushdownSetQuery = new SetQuery(Operation.UNION, setQuery.isAll(), withCommand, withCommand1);
+			WithQueryCommand wqc = new WithQueryCommand(with.getGroupSymbol(), with.getColumns(), pushdownSetQuery);
+			wqc.setRecursive(true);
+			this.withPlanningState.pushdownWith.put(with.getGroupSymbol().getName(), wqc);
+			return true;
+		}
+		
+		return false;
 	}
 
 	private void processWith(final QueryCommand command, List<WithQueryCommand> withList)
