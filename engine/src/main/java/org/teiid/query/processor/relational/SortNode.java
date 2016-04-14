@@ -98,7 +98,7 @@ public class SortNode extends RelationalNode {
     	if (this.sortUtility == null) {
     		TupleSource ts = null;
     		TupleBuffer working = null;
-    		if (!getChildren()[0].hasBuffer(true)) {
+    		if (!getChildren()[0].hasBuffer()) {
     			ts = new BatchIterator(getChildren()[0]);
     		} else {
     			working = getChildren()[0].getBuffer(-1);
@@ -196,7 +196,7 @@ public class SortNode extends RelationalNode {
     }
     
     @Override
-    public TupleBuffer getBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
+    public TupleBuffer getBufferDirect(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
     	if (this.isClosed()) {
     		throw new AssertionError("called after close"); //$NON-NLS-1$
     	}
@@ -215,7 +215,7 @@ public class SortNode extends RelationalNode {
     }
     
     @Override
-    public boolean hasBuffer(boolean requireFinal) {
+    public boolean hasBuffer() {
     	if (this.getElements().size() == this.getChildren()[0].getElements().size()) {
     		return true;
     	}

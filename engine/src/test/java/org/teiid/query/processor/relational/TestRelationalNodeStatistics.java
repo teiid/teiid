@@ -25,7 +25,6 @@ package org.teiid.query.processor.relational;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
@@ -62,7 +61,29 @@ public class TestRelationalNodeStatistics {
         
         int actualNodeBlocks = fakeNode.getNodeStatistics().getNodeBlocks();
         int actualNodeNextBatchCalls = fakeNode.getNodeStatistics().getNodeNextBatchCalls();
-        int actualNodeOutputRows = fakeNode.getNodeStatistics().getNodeOutputRows();
+        long actualNodeOutputRows = fakeNode.getNodeStatistics().getNodeOutputRows();
+        
+        assertEquals("The NodeOutputRows was Inccorrect. Correct: 1000 Actual: "+ actualNodeOutputRows, 1000, actualNodeOutputRows); //$NON-NLS-1$
+        assertEquals("The NodeNextBatchCalls was Inccorrect. Correct: 10 Actual: "+ actualNodeNextBatchCalls, 10, actualNodeNextBatchCalls); //$NON-NLS-1$
+        assertEquals("The NodeBlocks was Inccorrect. Correct: 0 Actual: "+ actualNodeBlocks, 0, actualNodeBlocks); //$NON-NLS-1$
+    }
+    
+    @Test public void testStatsCollectionBuffer() throws TeiidComponentException, TeiidProcessingException {
+        List[] data = createData(1000);
+        FakeRelationalNode fakeNode = createFakeNode(data);
+        fakeNode.setUseBuffer(true);
+        
+        // read from fake node
+        while(true) {
+            TupleBatch batch = fakeNode.nextBatch();
+            if(batch.getTerminationFlag()) {
+                break;
+            } 
+        }
+        
+        int actualNodeBlocks = fakeNode.getNodeStatistics().getNodeBlocks();
+        int actualNodeNextBatchCalls = fakeNode.getNodeStatistics().getNodeNextBatchCalls();
+        long actualNodeOutputRows = fakeNode.getNodeStatistics().getNodeOutputRows();
         
         assertEquals("The NodeOutputRows was Inccorrect. Correct: 1000 Actual: "+ actualNodeOutputRows, 1000, actualNodeOutputRows); //$NON-NLS-1$
         assertEquals("The NodeNextBatchCalls was Inccorrect. Correct: 10 Actual: "+ actualNodeNextBatchCalls, 10, actualNodeNextBatchCalls); //$NON-NLS-1$
@@ -74,10 +95,10 @@ public class TestRelationalNodeStatistics {
     	children[0] = createFakeNode(createData(1));
     	children[1] = createFakeNode(createData(1));
     	children[0].getNodeStatistics().setBatchEndTime(100);
-    	children[0].getNodeStatistics().collectCumulativeNodeStats(new TupleBatch(1, Collections.EMPTY_LIST), RelationalNodeStatistics.BATCHCOMPLETE_STOP);
+    	children[0].getNodeStatistics().collectCumulativeNodeStats(0, RelationalNodeStatistics.BATCHCOMPLETE_STOP);
     	children[0].getNodeStatistics().collectNodeStats(new RelationalNode[0]);
     	children[1].getNodeStatistics().setBatchEndTime(200);
-    	children[1].getNodeStatistics().collectCumulativeNodeStats(new TupleBatch(1, Collections.EMPTY_LIST), RelationalNodeStatistics.BATCHCOMPLETE_STOP);
+    	children[1].getNodeStatistics().collectCumulativeNodeStats(0, RelationalNodeStatistics.BATCHCOMPLETE_STOP);
     	children[1].getNodeStatistics().collectNodeStats(new RelationalNode[0]);
     	RelationalNodeStatistics stats = new RelationalNodeStatistics();
     	stats.setBatchEndTime(1000);

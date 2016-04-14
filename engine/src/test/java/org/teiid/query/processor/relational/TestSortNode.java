@@ -82,7 +82,7 @@ public class TestSortNode {
         sortNode.initialize(context, mgr, null);    
         
         sortNode.open();
-    	assertTrue(sortNode.hasBuffer(true));
+    	assertTrue(sortNode.hasBuffer());
         int currentRow = 1;
         while(true) {
         	try {

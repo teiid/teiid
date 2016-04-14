@@ -198,7 +198,7 @@ class SourceState {
     			((BatchIterator)this.iterator).readAhead(limit);
     			return;
     		}
-    		if (source.hasBuffer(true)) {
+    		if (source.hasBuffer()) {
     			this.buffer = source.getBuffer(-1);
     			return;
     		}
@@ -237,7 +237,7 @@ class SourceState {
         	if (this.iterator instanceof BatchIterator) {
         		throw new AssertionError("cannot buffer the source"); //$NON-NLS-1$
         	}
-    		if (source.hasBuffer(true)) {
+    		if (source.hasBuffer()) {
     			this.buffer = source.getBuffer(-1);
     			Assertion.assertTrue(this.buffer.isFinal());
     			return this.buffer;
@@ -267,7 +267,7 @@ class SourceState {
     	}
     	if (this.sortUtility == null) {
     		TupleSource ts = null;
-    		if (source.hasBuffer(true)) {
+    		if (source.hasBuffer()) {
     			this.buffer = getTupleBuffer();
     		} else if (this.buffer == null && this.collector != null) {
     			if (sortOption == SortOption.NOT_SORTED) {
@@ -315,7 +315,7 @@ class SourceState {
     }
     
     public boolean hasBuffer() {
-    	return this.buffer != null || this.source.hasBuffer(true);
+    	return this.buffer != null || this.source.hasBuffer();
     }
     
     public boolean nextBuffer() throws TeiidComponentException, TeiidProcessingException {

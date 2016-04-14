@@ -26,8 +26,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.mockito.Mockito;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleBatch;
+import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
@@ -46,6 +48,8 @@ public class FakeRelationalNode extends RelationalNode {
     
     // State    
     private int currentRow;
+    
+    private boolean useBuffer;
 
     /**
      * Constructor for FakeRelationalNode.
@@ -124,6 +128,18 @@ public class FakeRelationalNode extends RelationalNode {
     }        
 
     
+    @Override
+    public boolean hasBuffer() {
+    	return useBuffer;
+    }
+    
+    @Override
+    protected TupleBuffer getBufferDirect(int maxRows) throws BlockedException,
+    		TeiidComponentException, TeiidProcessingException {
+    	TupleBuffer tb = Mockito.mock(TupleBuffer.class);
+    	Mockito.stub(tb.getRowCount()).toReturn(maxRows != -1 ? Math.min(maxRows, data.length) : data.length);
+    	return tb;
+    }
     
     /** 
      * @see org.teiid.query.processor.relational.RelationalNode#getBatchSize()
@@ -138,5 +154,9 @@ public class FakeRelationalNode extends RelationalNode {
     
 	public Object clone(){
 		throw new UnsupportedOperationException();
+	}
+	
+	public void setUseBuffer(boolean useBuffer) {
+		this.useBuffer = useBuffer;
 	}
 }
