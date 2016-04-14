@@ -42,6 +42,25 @@
             BEGIN
                 WITH t(n) AS ( VALUES (1) UNION ALL SELECT n+1 FROM t WHERE n < 10000 ) SELECT xmlelement(root, xmlagg(xmlelement(name "row", xmlforest(n, n)))) FROM t;
             END
+            
+            CREATE VIRTUAL PROCEDURE blobPost(IN p1 blob) RETURNS TABLE (xml_out xml) OPTIONS (UPDATECOUNT 0, "REST:METHOD" 'POST', "REST:URI" 'blobpost')
+            AS
+            BEGIN
+                SELECT xmlparse(document p1);
+            END
+            
+            CREATE VIRTUAL PROCEDURE clobPost(IN p1 clob) RETURNS TABLE (xml_out xml) OPTIONS (UPDATECOUNT 0, "REST:METHOD" 'POST', "REST:URI" 'clobpost')
+            AS
+            BEGIN
+                SELECT xmlparse(document p1);
+            END
+            
+            CREATE VIRTUAL PROCEDURE binaryPost(IN p1 varbinary) RETURNS TABLE (xml_out xml) OPTIONS (UPDATECOUNT 0, "REST:METHOD" 'POST', "REST:URI" 'binarypost')
+            AS
+            BEGIN
+                SELECT xmlparse(document p1);
+            END
+            
             ]]> </metadata>
     </model>
 

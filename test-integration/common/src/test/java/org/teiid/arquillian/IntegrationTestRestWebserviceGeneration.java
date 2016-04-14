@@ -53,6 +53,7 @@ import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.jboss.AdminFactory;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.Base64;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.ReaderInputStream;
 import org.teiid.core.util.UnitTestUtil;
@@ -208,6 +209,32 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		params = URLEncoder.encode("sql", "UTF-8") + "=" + URLEncoder.encode("SELECT XMLELEMENT(NAME \"rows\", XMLAGG(XMLELEMENT(NAME \"row\", XMLFOREST(e1, e2)))) AS xml_out FROM Txns.G1", "UTF-8");
 		response = httpCall("http://localhost:8080/sample_1/View/query", "POST", params);
 		assertEquals("response did not match expected", "<rows><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
+		
+		// blob multipost
+		entity = MultipartEntityBuilder.create()
+                .addBinaryBody("p1", "<root><p4>bar</p4></root>".getBytes("UTF-8"), ContentType.create("application/xml", "UTF-8"), "foo.xml")
+                .build();		
+		response = httpMultipartPost(entity, "http://localhost:8080/sample_1/View/blobpost");
+		assertEquals("response did not match expected", "<root><p4>bar</p4></root>", response);
+		
+		// clob multipost
+		entity = MultipartEntityBuilder.create()
+                .addBinaryBody("p1", "<root><p4>bar</p4></root>".getBytes("UTF-8"), ContentType.create("application/xml", "UTF-8"), "foo.xml")
+                .build();		
+		response = httpMultipartPost(entity, "http://localhost:8080/sample_1/View/clobpost");
+		assertEquals("response did not match expected", "<root><p4>bar</p4></root>", response);
+		
+		// varbinary multipost -- doesn't work as multipart is not expected
+		entity = MultipartEntityBuilder.create()
+                .addBinaryBody("p1", Base64.encodeBytes("<root><p4>bar</p4></root>".getBytes("UTF-8")).getBytes("UTF-8"), ContentType.create("application/xml", "UTF-8"), "foo.xml")
+                .build();		
+		response = httpMultipartPost(entity, "http://localhost:8080/sample_1/View/binarypost");
+		assertEquals("response did not match expected", "", response);
+
+		params = URLEncoder.encode("p1", "UTF-8") + "=" + URLEncoder.encode(Base64.encodeBytes("<root><p4>bar</p4></root>".getBytes("UTF-8")), "UTF-8");
+		response = httpCall("http://localhost:8080/sample_1/View/binarypost", "POST", params);
+		assertEquals("response did not match expected", "<root><p4>bar</p4></root>", response);
+		
 		admin.undeploy("sample-vdb.xml");
 		Thread.sleep(2000);
     }	
