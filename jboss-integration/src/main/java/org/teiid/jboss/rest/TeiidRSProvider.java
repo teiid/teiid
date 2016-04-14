@@ -170,27 +170,29 @@ public abstract class TeiidRSProvider {
     private LinkedHashMap<String, Object> convertParameters(Connection conn, String vdbName, String procedureName,
             LinkedHashMap<String, String> inputParameters) throws SQLException {
         
-        Map<String, Class> expectedTypes = getParameterTypes(conn, vdbName, procedureName);
+        Map<String, Class<?>> expectedTypes = getParameterTypes(conn, vdbName, procedureName);
         LinkedHashMap<String, Object> expectedValues = new LinkedHashMap<String, Object>();
         try {
             for (String columnName : inputParameters.keySet()) {
-                Class runtimeType = expectedTypes.get(columnName);
+                Class<?> runtimeType = expectedTypes.get(columnName);
                 if (runtimeType == null) {
                     throw new SQLException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50105, columnName,
                             procedureName));
                 }                
                 Object value = inputParameters.get(columnName);
-                if (runtimeType.isAssignableFrom(Array.class)) {
-                    List<String> array = StringUtil.split((String)value, ","); //$NON-NLS-1$
-                    value = array.toArray(new String[array.size()]);
-                }
-                else if (runtimeType.isAssignableFrom(DataTypeManager.DefaultDataClasses.VARBINARY)) {
-                    value = Base64.decode((String)value);
-                }
-                else {
-                    if (value != null && DataTypeManager.isTransformable(String.class, runtimeType)) {
-                        Transform t = DataTypeManager.getTransform(String.class, runtimeType);
-                        value = t.transform(value, runtimeType);
+                if (value != null) {
+                    if (Array.class.isAssignableFrom(runtimeType)) {
+                        List<String> array = StringUtil.split((String)value, ","); //$NON-NLS-1$
+                        value = array.toArray(new String[array.size()]);
+                    }
+                    else if (DataTypeManager.DefaultDataClasses.VARBINARY.isAssignableFrom(runtimeType)) {
+                        value = Base64.decode((String)value);
+                    }
+                    else {
+                        if (DataTypeManager.isTransformable(String.class, runtimeType)) {
+                            Transform t = DataTypeManager.getTransform(String.class, runtimeType);
+                            value = t.transform(value, runtimeType);
+                        }
                     }
                 }
                 expectedValues.put(columnName, value);
@@ -204,18 +206,18 @@ public abstract class TeiidRSProvider {
     private LinkedHashMap<String, Object> convertParameters(Connection conn, String vdbName, String procedureName,
             MultipartFormDataInput form) throws SQLException {
         
-        Map<String, Class> runtimeTypes = getParameterTypes(conn, vdbName, procedureName);
+        Map<String, Class<?>> runtimeTypes = getParameterTypes(conn, vdbName, procedureName);
         LinkedHashMap<String, Object> expectedValues = new LinkedHashMap<String, Object>();
         Map<String, List<InputPart>> inputParameters = form.getFormDataMap();
         
         for (String columnName : inputParameters.keySet()) {
-            Class runtimeType = runtimeTypes.get(columnName);
+            Class<?> runtimeType = runtimeTypes.get(columnName);
             if (runtimeType == null) {
                 throw new SQLException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50105, columnName, procedureName));
             }
             if (runtimeType.isAssignableFrom(Array.class)) {
                 List<InputPart> valueStreams = inputParameters.get(columnName);
-                ArrayList array = new ArrayList();
+                ArrayList<Object> array = new ArrayList<Object>();
                 try {
                     for (InputPart part : valueStreams) {
                         array.add(part.getBodyAsString());
@@ -236,9 +238,9 @@ public abstract class TeiidRSProvider {
         return expectedValues;
     }
 
-    private Object convertToRuntimeType(Class runtimeType, final InputPart part) throws IOException,
+    private Object convertToRuntimeType(Class<?> runtimeType, final InputPart part) throws IOException,
             SQLException {
-        if (runtimeType.isAssignableFrom(SQLXML.class)) {
+        if (SQLXML.class.isAssignableFrom(runtimeType)) {
             SQLXMLImpl xml = new SQLXMLImpl(new InputStreamFactory() {
                 @Override
                 public InputStream getInputStream() throws IOException {
@@ -250,7 +252,7 @@ public abstract class TeiidRSProvider {
             }
             return xml;
         }
-        else if (runtimeType.isAssignableFrom(Blob.class)) {
+        else if (Blob.class.isAssignableFrom(runtimeType)) {
             return new BlobImpl(new InputStreamFactory() {
                 @Override
                 public InputStream getInputStream() throws IOException {
@@ -258,7 +260,7 @@ public abstract class TeiidRSProvider {
                 }
             });
         }
-        else if (runtimeType.isAssignableFrom(Clob.class)) {
+        else if (Clob.class.isAssignableFrom(runtimeType)) {
             ClobImpl clob = new ClobImpl(new InputStreamFactory() {
                 @Override
                 public InputStream getInputStream() throws IOException {
@@ -270,7 +272,7 @@ public abstract class TeiidRSProvider {
             }            
             return clob;
         }
-        else if (runtimeType.isAssignableFrom(DataTypeManager.DefaultDataClasses.VARBINARY)) {
+        else if (DataTypeManager.DefaultDataClasses.VARBINARY.isAssignableFrom(runtimeType)) {
             return Base64.decode(part.getBodyAsString());
         }
         else if (DataTypeManager.isTransformable(String.class, runtimeType)) {
@@ -287,17 +289,17 @@ public abstract class TeiidRSProvider {
         return part.getMediaType().getParameters().get("charset"); //$NON-NLS-1$
     }    
     
-    private LinkedHashMap<String, Class> getParameterTypes(Connection conn, String vdbName, String procedureName)
+    private LinkedHashMap<String, Class<?>> getParameterTypes(Connection conn, String vdbName, String procedureName)
             throws SQLException {
         String schemaName = procedureName.substring(0, procedureName.lastIndexOf('.')).replace('\"', ' ').trim();
         String procName = procedureName.substring(procedureName.lastIndexOf('.')+1).replace('\"', ' ').trim();	    
-        LinkedHashMap<String, Class> expectedTypes = new LinkedHashMap<String, Class>();
+        LinkedHashMap<String, Class<?>> expectedTypes = new LinkedHashMap<String, Class<?>>();
         try {
             ResultSet rs = conn.getMetaData().getProcedureColumns(vdbName, schemaName, procName, "%"); //$NON-NLS-1$
             while(rs.next()) {
                 String columnName = rs.getString(4);
                 int columnDataType = rs.getInt(6);
-                Class runtimeType = DataTypeManager
+                Class<?> runtimeType = DataTypeManager
                         .getRuntimeType(Class.forName(JDBCSQLTypeInfo.getJavaClassName(columnDataType)));
                 expectedTypes.put(columnName, runtimeType);
             }
