@@ -188,12 +188,12 @@ public class TestJoinNode {
         rightElements.add(es2);
         rightNode = new BlockingFakeRelationalNode(2, rightTuples) {
         	@Override
-        	public boolean hasBuffer(boolean requireFinal) {
+        	public boolean hasBuffer() {
         		return false;
         	}
 
         	@Override
-        	public TupleBuffer getBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
+        	public TupleBuffer getBufferDirect(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
         		fail();
         		throw new AssertionError();
         	};
@@ -1008,12 +1008,12 @@ public class TestJoinNode {
 
         rightNode = new BlockingFakeRelationalNode(2, rightTuples) {
         	@Override
-        	public boolean hasBuffer(boolean requireFinal) {
+        	public boolean hasBuffer() {
         		return false;
         	}
 
         	@Override
-        	public TupleBuffer getBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
+        	public TupleBuffer getBufferDirect(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
         		fail();
         		throw new AssertionError();
         	};

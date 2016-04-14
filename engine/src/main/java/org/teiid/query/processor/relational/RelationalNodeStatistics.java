@@ -25,9 +25,6 @@ package org.teiid.query.processor.relational;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.common.buffer.TupleBatch;
-
-
 
 /** 
  * @since 4.2
@@ -41,7 +38,7 @@ public class RelationalNodeStatistics {
     private boolean setNodeStartTime;
     
     // The total amount of rows output by this node
-    private int nodeOutputRows;
+    private long nodeOutputRows;
     
     // Start and End system time for the node
     private long nodeStartTime;
@@ -86,7 +83,7 @@ public class RelationalNodeStatistics {
 		this.batchEndTime = batchEndTime;
 	}
     
-    public void collectCumulativeNodeStats(TupleBatch batch, int stopType) {
+    public void collectCumulativeNodeStats(Long rowCount, int stopType) {
         this.nodeNextBatchCalls++;
         if(!this.setNodeStartTime) {
             this.nodeStartTime = this.batchStartTime;
@@ -95,7 +92,7 @@ public class RelationalNodeStatistics {
         this.nodeCumulativeNextBatchProcessingTime += (this.batchEndTime - this.batchStartTime);
         switch (stopType) {
             case BATCHCOMPLETE_STOP:
-                this.nodeOutputRows += batch.getRowCount();
+                this.nodeOutputRows += rowCount;
                 break;
             case BLOCKEDEXCEPTION_STOP:
                 this.nodeBlocks++;
@@ -166,7 +163,7 @@ public class RelationalNodeStatistics {
      * @return Returns the nodeOutputRows.
      * @since 4.2
      */
-    public int getNodeOutputRows() {
+    public Long getNodeOutputRows() {
         return this.nodeOutputRows;
     }
     /** 

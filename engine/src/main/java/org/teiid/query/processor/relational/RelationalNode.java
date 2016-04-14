@@ -283,7 +283,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
                 if (recordStats) {
                     // stop timer for this batch (normal)
                     this.getProcessingState().nodeStatistics.stopBatchTimer();
-                    this.getProcessingState().nodeStatistics.collectCumulativeNodeStats(batch, RelationalNodeStatistics.BATCHCOMPLETE_STOP);
+                    this.getProcessingState().nodeStatistics.collectCumulativeNodeStats((long)batch.getRowCount(), RelationalNodeStatistics.BATCHCOMPLETE_STOP);
                     if (batch.getTerminationFlag()) {
                         this.getProcessingState().nodeStatistics.collectNodeStats(this.getChildren());
                         //this.nodeStatistics.dumpProperties(this.getClassName());
@@ -606,7 +606,10 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 		return processingState;
 	}
 	
-	public boolean hasBuffer(boolean requireFinal) {
+	/**
+	 * Return true if the node provides a final buffer via getBuffer
+	 */
+	public boolean hasBuffer() {
 		return false;
 	}
 	
@@ -617,7 +620,58 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 	 * @throws TeiidComponentException 
 	 * @throws BlockedException 
      */
-	public TupleBuffer getBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
+	public final TupleBuffer getBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
+		CommandContext context = this.getContext();
+		if (context != null && context.isCancelled()) {
+        	throw new TeiidProcessingException(QueryPlugin.Event.TEIID30160, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30160, getContext().getRequestId()));
+        }
+        boolean recordStats = context != null && context.getCollectNodeStatistics() && !isLastBatch();
+        try {
+        	//start timer for this batch
+            if(recordStats) {
+                this.getProcessingState().nodeStatistics.startBatchTimer();
+            }
+            TupleBuffer buffer = getBufferDirect(maxRows);
+            terminateBatches();
+            if (recordStats) {
+                // stop timer for this batch (normal)
+                this.getProcessingState().nodeStatistics.stopBatchTimer();
+                this.getProcessingState().nodeStatistics.collectCumulativeNodeStats(buffer.getRowCount(), RelationalNodeStatistics.BATCHCOMPLETE_STOP);
+                this.getProcessingState().nodeStatistics.collectNodeStats(this.getChildren());
+                if (LogManager.isMessageToBeRecorded(org.teiid.logging.LogConstants.CTX_DQP, MessageLevel.TRACE) && !buffer.isForwardOnly()) {
+                	for (long i = 1; i <= buffer.getRowCount(); i+=buffer.getBatchSize()) {
+                		TupleBatch tb = buffer.getBatch(i);
+                		recordBatch(tb);
+                	}
+                }
+
+                recordStats = false;
+            }
+            return buffer;
+        } catch (BlockedException e) {
+            if(recordStats) {
+                // stop timer for this batch (BlockedException)
+                this.getProcessingState().nodeStatistics.stopBatchTimer();
+                this.getProcessingState().nodeStatistics.collectCumulativeNodeStats(null, RelationalNodeStatistics.BLOCKEDEXCEPTION_STOP);
+                recordStats = false;
+            }
+            throw e;
+        } finally {
+            if(recordStats) {
+                this.getProcessingState().nodeStatistics.stopBatchTimer();
+            }
+        }
+	}
+	
+	/**
+	 * For subclasses to override if they wish to return a buffer rather than batches.
+	 * @param maxRows
+	 * @return
+	 * @throws BlockedException
+	 * @throws TeiidComponentException
+	 * @throws TeiidProcessingException
+	 */
+	protected TupleBuffer getBufferDirect(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
 		return null;
 	}
 	

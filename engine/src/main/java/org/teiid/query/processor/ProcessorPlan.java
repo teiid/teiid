@@ -153,7 +153,10 @@ public abstract class ProcessorPlan implements Cloneable, BatchProducer {
     	return null;
     }
     
-    public boolean hasBuffer(boolean requireFinal) {
+    /**
+	 * Return true if the plan provides a final buffer via getBuffer
+	 */
+    public boolean hasBuffer() {
     	return false;
     }
     

@@ -676,7 +676,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 						return;
 					}
 					super.flushBatchDirect(batch, add);
-					if (!add && !processor.hasBuffer(false)) {
+					if (!add && !processor.hasBuffer()) {
 						resultsBuffer.setRowCount(batch.getEndRow());
 					}
 					if (transactionState != TransactionState.ACTIVE && (requestMsg.getRequestOptions().isContinuous() || (useCallingThread && isForwardOnly()))) {
@@ -697,7 +697,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 
 			private void flowControl(TupleBatch batch)
 					throws BlockedException {
-				if (processor.hasBuffer(false)
+				if (processor.hasBuffer()
 						|| batch.getTerminationFlag() 
 						|| transactionState == TransactionState.ACTIVE) {
 					return;

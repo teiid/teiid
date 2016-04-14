@@ -308,8 +308,8 @@ public class RelationalPlan extends ProcessorPlan {
     }
     
     @Override
-    public boolean hasBuffer(boolean requireFinal) {
-    	return root.hasBuffer(requireFinal);
+    public boolean hasBuffer() {
+    	return root.hasBuffer();
     }
 	
 }
