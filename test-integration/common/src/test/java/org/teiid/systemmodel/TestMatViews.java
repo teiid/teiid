@@ -481,7 +481,12 @@ public class TestMatViews {
 				+ "OPTIONS (MATERIALIZED true, \"teiid_rel:ALLOW_MATVIEW_MANAGEMENT\" true, \"teiid_rel:MATVIEW_TTL\" 200) AS select 1, current_database(); "
 				+ "CREATE VIEW v2 ( col integer, col1 string, primary key (col, col1) ) "
 				+ "OPTIONS (MATERIALIZED true, \"teiid_rel:ALLOW_MATVIEW_MANAGEMENT\" true) AS select 1, current_database()");
-		server.deployVDB("comp", mmd2);
+		VDBMetaData vdb = new VDBMetaData();
+		vdb.setXmlDeployment(true);
+		vdb.setName("comp");
+		vdb.setModels(Arrays.asList(mmd2));
+		vdb.addProperty("lazy-invalidate", "true");
+		server.deployVDB(vdb);
 		
 		Connection c = server.getDriver().connect("jdbc:teiid:comp", null);
 		Statement s = c.createStatement();
