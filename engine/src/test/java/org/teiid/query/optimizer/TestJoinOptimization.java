@@ -1099,4 +1099,21 @@ public class TestJoinOptimization {
         
         TestProcessor.helpProcess(plan, hdm, new List<?>[] {});
     }
+    
+    @Test public void testOutputColumnsWithMergeJoinAndNonPushedSelect1() throws TeiidComponentException, TeiidProcessingException {
+        String sql = "select bqt1.smalla.intkey, bqt2.smalla.intkey "
+        		+ "from bqt1.smalla inner join bqt2.smalla on (bqt2.smalla.intkey = case when bqt1.smalla.intkey = 1 then 2 else 3 end) where right(bqt1.smalla.stringkey, 1) = 'a'"; //$NON-NLS-1$
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
+        bsc.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
+        // Plan query
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), 
+        		new String[] {"SELECT g_0.IntKey FROM BQT2.SmallA AS g_0", "SELECT g_0.StringKey, g_0.IntKey FROM BQT1.SmallA AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT g_0.StringKey, g_0.IntKey FROM BQT1.SmallA AS g_0", Arrays.asList("aa", 1));
+        hdm.addData("SELECT g_0.IntKey FROM BQT2.SmallA AS g_0", Arrays.asList(1));
+        
+        TestProcessor.helpProcess(plan, hdm, new List<?>[] {});
+    }
 }

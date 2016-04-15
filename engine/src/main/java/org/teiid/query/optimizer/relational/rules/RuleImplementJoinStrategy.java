@@ -233,6 +233,8 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
         
         outputSymbols.addAll(expressions);
         
+        //TODO: generally we're compensating for expressions used in predicates
+        //and end up pulling redundant values
         boolean needsCorrection = outputSymbols.size() > oldSize;
                 
         PlanNode sortNode = createSortNode(new ArrayList<Expression>(orderSymbols), outputSymbols);
@@ -280,7 +282,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
             PlanNode projectNode = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
             projectNode.setProperty(NodeConstants.Info.PROJECT_COLS, new ArrayList<Expression>(outputSymbols));
             projectNode.setProperty(NodeConstants.Info.OUTPUT_COLS, new ArrayList<Expression>(outputSymbols));
-            childNode.addAsParent(projectNode);
+            sourceNode.addAsParent(projectNode);
             correctOutputElements(joinNode, expressions, projectNode.getParent());
         }        
         return false;
