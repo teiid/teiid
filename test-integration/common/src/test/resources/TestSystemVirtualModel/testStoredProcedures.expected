@@ -1,6 +1,6 @@
 string                                                             clob                                                             
 Name                                                               Body                                                             
-loadMatView                                                        Clob[8353]                                                       
+loadMatView                                                        Clob[8613]                                                       
 matViewStatus                                                      Clob[2347]                                                       
 updateMatView                                                      Clob[3039]                                                       
 Row Count : 3

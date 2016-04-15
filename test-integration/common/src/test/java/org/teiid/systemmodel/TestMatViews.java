@@ -24,6 +24,7 @@ package org.teiid.systemmodel;
 
 import static org.junit.Assert.*;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -471,6 +472,20 @@ public class TestMatViews {
 		rs.next();
 		assertNull(rs.getString("TargetSchemaName"));
 		assertEquals("NEEDS_LOADING", rs.getString("LoadState"));
+	}
+	
+	@Test
+	public void testloadMatViewInternal() throws Exception {
+	    ModelMetaData mmd = new ModelMetaData();
+        mmd.setName("x");
+        mmd.setModelType(Type.VIRTUAL);
+        mmd.addSourceMetadata("DDL", "create view T options (materialized true) as select 1");
+        server.deployVDB("test", mmd);
+        
+        Connection c = server.getDriver().connect("jdbc:teiid:test", null);
+        CallableStatement s = c.prepareCall("call sysadmin.loadMatView('x', 'T', true)");
+        assertFalse(s.execute());
+        assertEquals(1, s.getInt(1));
 	}
 	
 	@Test public void testInternalWithManagement() throws Exception {
