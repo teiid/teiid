@@ -69,7 +69,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	
 	public static final Version NINE_0 = Version.getVersion("9.0"); //$NON-NLS-1$
 	public static final Version NINE_2 = Version.getVersion("9.2"); //$NON-NLS-1$
-	public static final Version ELEVEN_2 = Version.getVersion("11.2"); //$NON-NLS-1$
+	public static final Version ELEVEN_2_0_4 = Version.getVersion("11.2.0.4"); //$NON-NLS-1$
 	
 	private static final String TIME_FORMAT = "HH24:MI:SS"; //$NON-NLS-1$
 	private static final String DATE_FORMAT = "YYYY-MM-DD"; //$NON-NLS-1$
@@ -747,12 +747,13 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     			if (obj.getColumns() != null) {
     				List<ColumnReference> cols = obj.getColumns();
     				if(!obj.isRecusive()) {
+    					//oracle 10 does not support recursion nor a column list
     				    obj.setColumns(null);
-    				}
-    				Select select = obj.getSubquery().getProjectedQuery();
-    				List<DerivedColumn> selectClause = select.getDerivedColumns();
-    				for (int i = 0; i < cols.size(); i++) {
-    					selectClause.get(i).setAlias(cols.get(i).getName());
+	    				Select select = obj.getSubquery().getProjectedQuery();
+	    				List<DerivedColumn> selectClause = select.getDerivedColumns();
+	    				for (int i = 0; i < cols.size(); i++) {
+	    					selectClause.get(i).setAlias(cols.get(i).getName());
+	    				}
     				}
     			}
     			super.visit(obj);
@@ -984,7 +985,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     public boolean supportsRecursiveCommonTableExpressions() {
-    	return getVersion().compareTo(ELEVEN_2) >= 0;
+    	return getVersion().compareTo(ELEVEN_2_0_4) >= 0;
     }
     
     @Override
