@@ -88,7 +88,7 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 //		table.setNameInSource(cacheName); 
 		
 		String columnName = tableName + OBJECT_COL_SUFFIX;
-		addColumn(mf, entity, entity, columnName, "this", SearchType.Unsearchable, table, false, NullType.Unknown); //$NON-NLS-1$
+		addColumn(mf, entity, entity, columnName, "this", SearchType.Unsearchable, table, false, NullType.Nullable, false); //$NON-NLS-1$
 		Map<String, Method> methods;
 		try {
 			
@@ -101,10 +101,10 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
         if (pkField != null) {
                 pkMethod = methods.get(pkField);
                 if (pkMethod != null) {
-                    addColumn(mf, entity, pkMethod.getReturnType(), pkField, pkField, SearchType.Searchable, table, true, NullType.No_Nulls);
+                    addColumn(mf, entity, pkMethod.getReturnType(), pkField, pkField, SearchType.Searchable, table, true, NullType.No_Nulls, this.isUpdatable);
                 } else {
                 	// add a column so the PKey can be created, but make it not selectable
-                    addColumn(mf, entity, java.lang.String.class, pkField, pkField, SearchType.Searchable, table, false, NullType.Unknown);
+                    addColumn(mf, entity, java.lang.String.class, pkField, pkField, SearchType.Searchable, table, false, NullType.Unknown, this.isUpdatable);
 
                 }
                              
@@ -165,7 +165,7 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 					
 				}
 				
-				addColumn(mf, entity, m.getReturnType(), entry.getValue(), entry.getValue(), st, table, true, nt);			
+				addColumn(mf, entity, m.getReturnType(), entry.getValue(), entry.getValue(), st, table, true, nt, this.isUpdatable);			
 		}
 				
 		return table;
@@ -232,7 +232,7 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 		this.isUpdatable = isUpdateable;
 	}
 	
-	protected Column addColumn(MetadataFactory mf, Class<?> entity, Class<?> type, String attributeName, String nis, SearchType searchType, Table entityTable, boolean selectable, NullType nt) {
+	protected Column addColumn(MetadataFactory mf, Class<?> entity, Class<?> type, String attributeName, String nis, SearchType searchType, Table entityTable, boolean selectable, NullType nt, boolean updatable) {
 		Column c = entityTable.getColumnByName(attributeName);
 		if (c != null) {
 			//TODO: there should be a log here
@@ -253,7 +253,7 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 		}
 		
 
-		c.setUpdatable(this.isUpdatable);
+		c.setUpdatable(updatable);
 		c.setSearchType(searchType);
 		c.setSelectable(selectable);
 		c.setNullType(nt);
