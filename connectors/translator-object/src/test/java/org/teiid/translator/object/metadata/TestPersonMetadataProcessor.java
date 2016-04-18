@@ -42,7 +42,7 @@ public class TestPersonMetadataProcessor {
 
 		System.out.println("Schema: " + metadataDDL);
 		String expected =  "CREATE FOREIGN TABLE Person (\n"
-				+ "\tPersonObject object OPTIONS (NAMEINSOURCE 'this', SELECTABLE FALSE, SEARCHABLE 'Unsearchable', NATIVE_TYPE 'org.teiid.translator.object.testdata.person.Person'),\n"
+				+ "\tPersonObject object OPTIONS (NAMEINSOURCE 'this', SELECTABLE FALSE, UPDATABLE FALSE, SEARCHABLE 'Unsearchable', NATIVE_TYPE 'org.teiid.translator.object.testdata.person.Person'),\n"
 				+ "\tid integer NOT NULL OPTIONS (NAMEINSOURCE 'id', SEARCHABLE 'Searchable', NATIVE_TYPE 'int'),\n"
 				+ "\temail string OPTIONS (NAMEINSOURCE 'email', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'java.lang.String'),\n"
 				+ "\tname string OPTIONS (NAMEINSOURCE 'name', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'java.lang.String'),\n"
