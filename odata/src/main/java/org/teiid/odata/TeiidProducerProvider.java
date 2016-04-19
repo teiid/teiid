@@ -77,9 +77,14 @@ public class TeiidProducerProvider implements ContextResolver<ODataProducer>, VD
 
 		VDBKey key = new VDBKey(vdbName, null);
 
-		if (vdbName == null || !vdbName.matches("[\\w-\\.]+") || (key.isAtMost())) { //$NON-NLS-1$
+		if (vdbName == null || !vdbName.matches("[\\w-\\.]+") || (key.isAtMost() && key.getVersion() != null)) { //$NON-NLS-1$
 			//simply invalid don't bother caching
 			return new TeiidProducer(new LocalClient(vdbName, key.getVersion(), getInitParameters()));
+		}
+		
+		if (key.getVersion() == null) {
+			//legacy behavior default to version "1"
+			key = new VDBKey(vdbName, "1"); //$NON-NLS-1$ 
 		}
 		
 		SoftReference<LocalClient> ref = this.clientMap.get(key);
