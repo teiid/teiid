@@ -49,7 +49,6 @@ public class PersonSchemaVDBUtility {
 	
 	static {
 		File f = new File(UnitTestUtil.getTestDataPath() + File.separatorChar + "PersonProject" + File.separatorChar + "Person.vdb");
-		System.out.println("TestDataPath " + f.getAbsolutePath());
 		try {
 			TRANSLATION_UTILITY = new TranslationUtility("Person.vdb", f.toURI().toURL());
 		} catch (Throwable e) {
