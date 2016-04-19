@@ -133,7 +133,7 @@ public class IntegrationTestDeployment {
 		
 		admin.deploy("bqt.2.vdb",new FileInputStream(UnitTestUtil.getTestDataFile("bqt.vdb")));
 		vdb = admin.getVDB("bqt", 2);
-		assertEquals(2, vdb.getVersion());
+		assertEquals("2", vdb.getVersion());
 	}
 	
 	@Test
@@ -313,7 +313,7 @@ public class IntegrationTestDeployment {
 		assertEquals("user@teiid-security", s.getUserName());
 		assertEquals("test", s.getApplicationName());
 		assertEquals("bqt", s.getVDBName());
-		assertEquals(1, s.getVDBVersion());
+		assertEquals("1", s.getVDBVersion());
 		assertNotNull(s.getSessionId());
 		
 		conn.close();

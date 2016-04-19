@@ -65,7 +65,7 @@ public abstract class MetadataRepository<F,C> {
 	 * @param table
 	 * @param viewDefinition
 	 */
-	public void setViewDefinition(String vdbName, int vdbVersion, Table table, String viewDefinition) {}
+	public void setViewDefinition(String vdbName, String vdbVersion, Table table, String viewDefinition) {}
 	
 	/**
 	 * Call back function, when "alter trigger" is called 
@@ -75,7 +75,7 @@ public abstract class MetadataRepository<F,C> {
 	 * @param triggerOperation
 	 * @param triggerDefinition
 	 */
-	public void setInsteadOfTriggerDefinition(String vdbName, int vdbVersion, Table table, Table.TriggerEvent triggerOperation, String triggerDefinition) {}
+	public void setInsteadOfTriggerDefinition(String vdbName, String vdbVersion, Table table, Table.TriggerEvent triggerOperation, String triggerDefinition) {}
 	
 	/**
 	 * Callback function, when "alter trigger" is called to enable or disable a trigger
@@ -85,7 +85,7 @@ public abstract class MetadataRepository<F,C> {
 	 * @param triggerOperation
 	 * @param enabled
 	 */
-	public void setInsteadOfTriggerEnabled(String vdbName, int vdbVersion, Table table, Table.TriggerEvent triggerOperation, boolean enabled) {}
+	public void setInsteadOfTriggerEnabled(String vdbName, String vdbVersion, Table table, Table.TriggerEvent triggerOperation, boolean enabled) {}
 	
 	
 	/**
@@ -95,7 +95,7 @@ public abstract class MetadataRepository<F,C> {
 	 * @param procedure
 	 * @param procedureDefinition
 	 */
-	public void setProcedureDefinition(String vdbName, int vdbVersion, Procedure procedure, String procedureDefinition) {}
+	public void setProcedureDefinition(String vdbName, String vdbVersion, Procedure procedure, String procedureDefinition) {}
 		
 	/**
 	 * Set the {@link TableStats} for the given table
@@ -104,7 +104,7 @@ public abstract class MetadataRepository<F,C> {
 	 * @param table
 	 * @param tableStats
 	 */
-	public void setTableStats(String vdbName, int vdbVersion, Table table, TableStats tableStats) {}
+	public void setTableStats(String vdbName, String vdbVersion, Table table, TableStats tableStats) {}
 	
 	
 	/**
@@ -114,7 +114,7 @@ public abstract class MetadataRepository<F,C> {
 	 * @param column
 	 * @param columnStats
 	 */
-	public void setColumnStats(String vdbName, int vdbVersion, Column column, ColumnStats columnStats) {}
+	public void setColumnStats(String vdbName, String vdbVersion, Column column, ColumnStats columnStats) {}
 	
 	/**
 	 * Set an extension metadata property for a given record.
@@ -124,6 +124,6 @@ public abstract class MetadataRepository<F,C> {
 	 * @param name
 	 * @param value
 	 */
-	public void setProperty(String vdbName, int vdbVersion, AbstractMetadataRecord record, String name, String value) {}
+	public void setProperty(String vdbName, String vdbVersion, AbstractMetadataRecord record, String name, String value) {}
 	
 }

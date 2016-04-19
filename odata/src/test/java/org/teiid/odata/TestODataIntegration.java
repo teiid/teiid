@@ -443,7 +443,7 @@ public class TestODataIntegration extends BaseResourceTest {
 			
 			TeiidDriver td = es.getDriver();
 			Properties props = new Properties();
-			LocalClient lc = new LocalClient("northwind", 1, props);
+			LocalClient lc = new LocalClient("northwind", "1", props);
 			lc.setDriver(td);
 			MockProvider.CLIENT = lc;
 			
@@ -587,7 +587,7 @@ public class TestODataIntegration extends BaseResourceTest {
 			
 			TeiidDriver td = es.getDriver();
 			Properties props = new Properties();
-			LocalClient lc = new LocalClient("northwind", 1, props);
+			LocalClient lc = new LocalClient("northwind", "1", props);
 			lc.setDriver(td);
 			MockProvider.CLIENT = lc;
 			
@@ -647,7 +647,7 @@ public class TestODataIntegration extends BaseResourceTest {
 			TeiidDriver td = es.getDriver();
 			Properties props = new Properties();
 			props.setProperty(LocalClient.INVALID_CHARACTER_REPLACEMENT, " ");
-			LocalClient lc = new LocalClient("northwind", 1, props);
+			LocalClient lc = new LocalClient("northwind", "1", props);
 			lc.setDriver(td);
 			MockProvider.CLIENT = lc;
 			
@@ -673,7 +673,7 @@ public class TestODataIntegration extends BaseResourceTest {
 			
 			TeiidDriver td = es.getDriver();
 			Properties props = new Properties();
-			LocalClient lc = new LocalClient("northwind", 1, props);
+			LocalClient lc = new LocalClient("northwind", "1", props);
 			lc.setDriver(td);
 			MockProvider.CLIENT = lc;
 			
@@ -731,7 +731,7 @@ public class TestODataIntegration extends BaseResourceTest {
             
             TeiidDriver td = es.getDriver();
             Properties props = new Properties();
-            LocalClient lc = new LocalClient("northwind", 1, props);
+            LocalClient lc = new LocalClient("northwind", "1", props);
             lc.setDriver(td);
             MockProvider.CLIENT = lc;
             
@@ -791,7 +791,7 @@ public class TestODataIntegration extends BaseResourceTest {
 			TeiidDriver td = es.getDriver();
 			Properties props = new Properties();
 			props.setProperty("batch-size", "1");
-			LocalClient lc = new LocalClient("northwind", 1, props);
+			LocalClient lc = new LocalClient("northwind", "1", props);
 			lc.setDriver(td);
 			MockProvider.CLIENT = lc;
 			
@@ -856,7 +856,7 @@ public class TestODataIntegration extends BaseResourceTest {
             TeiidDriver td = es.getDriver();
             Properties props = new Properties();
             props.setProperty("batch-size", "0");
-            LocalClient lc = new LocalClient("northwind", 1, props);
+            LocalClient lc = new LocalClient("northwind", "1", props);
             lc.setDriver(td);
             MockProvider.CLIENT = lc;
             
@@ -889,7 +889,7 @@ public class TestODataIntegration extends BaseResourceTest {
 			TeiidDriver td = es.getDriver();
 			Properties props = new Properties();
 			props.setProperty("batch-size", "1");
-			LocalClient lc = new LocalClient("northwind", 1, props);
+			LocalClient lc = new LocalClient("northwind", "1", props);
 			lc.setDriver(td);
 			MockProvider.CLIENT = lc;
 			
@@ -953,7 +953,7 @@ public class TestODataIntegration extends BaseResourceTest {
 			
 			TeiidDriver td = es.getDriver();
 			Properties props = new Properties();
-			LocalClient lc = new LocalClient("northwind", 1, props);
+			LocalClient lc = new LocalClient("northwind", "1", props);
 			lc.setDriver(td);
 			MockProvider.CLIENT = lc;
 			
@@ -1006,7 +1006,7 @@ public class TestODataIntegration extends BaseResourceTest {
             
             TeiidDriver td = es.getDriver();
             Properties props = new Properties();
-            LocalClient lc = new LocalClient("northwind", 1, props);
+            LocalClient lc = new LocalClient("northwind", "1", props);
             lc.setDriver(td);
             MockProvider.CLIENT = lc;
             
@@ -1047,7 +1047,7 @@ public class TestODataIntegration extends BaseResourceTest {
 			
 			TeiidDriver td = es.getDriver();
 			Properties props = new Properties();
-			LocalClient lc = new LocalClient("northwind", 1, props);
+			LocalClient lc = new LocalClient("northwind", "1", props);
 			lc.setDriver(td);
 			MockProvider.CLIENT = lc;
 			
@@ -1082,7 +1082,7 @@ public class TestODataIntegration extends BaseResourceTest {
 			
 			TeiidDriver td = es.getDriver();
 			Properties props = new Properties();
-			LocalClient lc = new LocalClient("northwind", 1, props);
+			LocalClient lc = new LocalClient("northwind", "1", props);
 			lc.setDriver(td);
 			MockProvider.CLIENT = lc;
 			
@@ -1144,7 +1144,7 @@ public class TestODataIntegration extends BaseResourceTest {
 			
 			TeiidDriver td = es.getDriver();
 			Properties props = new Properties();
-			LocalClient lc = new LocalClient("northwind", 1, props);
+			LocalClient lc = new LocalClient("northwind", "1", props);
 			lc.setDriver(td);
 			MockProvider.CLIENT = lc;
 			
@@ -1172,7 +1172,7 @@ public class TestODataIntegration extends BaseResourceTest {
 			
 			TeiidDriver td = es.getDriver();
 			
-			LocalClient lc = new LocalClient("northwind", 1, props);
+			LocalClient lc = new LocalClient("northwind", "1", props);
 			lc.setDriver(td);
 			ConnectionImpl impl = lc.getConnection();
 			
@@ -1201,7 +1201,7 @@ public class TestODataIntegration extends BaseResourceTest {
 			
 			TeiidDriver td = es.getDriver();
 			Properties props = new Properties();
-			LocalClient lc = new LocalClient("northwind", 1, props);
+			LocalClient lc = new LocalClient("northwind", "1", props);
 			lc.setDriver(td);
 			MockProvider.CLIENT = lc;
 			
@@ -1239,7 +1239,7 @@ public class TestODataIntegration extends BaseResourceTest {
 			
 			TeiidDriver td = es.getDriver();
 			Properties props = new Properties();
-			LocalClient lc = new LocalClient("northwind", 1, props);
+			LocalClient lc = new LocalClient("northwind", "1", props);
 			lc.setDriver(td);
 			MockProvider.CLIENT = lc;
 			
@@ -1268,7 +1268,7 @@ public class TestODataIntegration extends BaseResourceTest {
 			
 			TeiidDriver td = es.getDriver();
 			Properties props = new Properties();
-			LocalClient lc = new LocalClient("northwind", 1, props);
+			LocalClient lc = new LocalClient("northwind", "1", props);
 			lc.setDriver(td);
 			MockProvider.CLIENT = lc;
 			
@@ -1321,7 +1321,7 @@ public class TestODataIntegration extends BaseResourceTest {
             
             TeiidDriver td = es.getDriver();
             Properties props = new Properties();
-            LocalClient lc = new LocalClient("northwind", 1, props);
+            LocalClient lc = new LocalClient("northwind", "1", props);
             lc.setDriver(td);
             MockProvider.CLIENT = lc;
             
@@ -1404,7 +1404,7 @@ public class TestODataIntegration extends BaseResourceTest {
             
             TeiidDriver td = es.getDriver();
             Properties props = new Properties();
-            LocalClient lc = new LocalClient("northwind", 1, props);
+            LocalClient lc = new LocalClient("northwind", "1", props);
             lc.setDriver(td);
             MockProvider.CLIENT = lc;
 
@@ -1552,7 +1552,7 @@ public class TestODataIntegration extends BaseResourceTest {
             
             TeiidDriver td = es.getDriver();
             Properties props = new Properties();
-            LocalClient lc = new LocalClient("northwind", 1, props);
+            LocalClient lc = new LocalClient("northwind", "1", props);
             lc.setDriver(td);
             MockProvider.CLIENT = lc;
 
@@ -1628,7 +1628,7 @@ public class TestODataIntegration extends BaseResourceTest {
             
             TeiidDriver td = es.getDriver();
             Properties props = new Properties();
-            LocalClient lc = new LocalClient("northwind", 1, props);
+            LocalClient lc = new LocalClient("northwind", "1", props);
             lc.setDriver(td);
             MockProvider.CLIENT = lc;
 

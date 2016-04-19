@@ -75,16 +75,16 @@ public class MetaDataProcessor {
     private SessionAwareCache<PreparedPlan> planCache;
         
     private String vdbName;
-    private int vdbVersion;
+    private String vdbVersion;
     private RequestID requestID;
     
     private boolean labelAsName;
     
-    public MetaDataProcessor(DQPCore requestManager, SessionAwareCache<PreparedPlan> planCache, String vdbName, int vdbVersion) {
+    public MetaDataProcessor(DQPCore requestManager, SessionAwareCache<PreparedPlan> planCache, String vdbName, Object vdbVersion) {
         this.requestManager = requestManager;
         this.planCache = planCache;
         this.vdbName = vdbName;
-        this.vdbVersion = vdbVersion;
+        this.vdbVersion = vdbVersion.toString();
     }
         
     /**

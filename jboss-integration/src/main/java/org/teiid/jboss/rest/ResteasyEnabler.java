@@ -35,6 +35,7 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.jboss.AdminFactory;
 import org.teiid.adminapi.jboss.AdminFactory.AdminImpl;
+import org.teiid.core.util.StringUtil;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.ContainerLifeCycleListener;
 import org.teiid.deployers.VDBLifeCycleListener;
@@ -45,34 +46,33 @@ import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Schema;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.vdb.runtime.VDBKey;
 
 public class ResteasyEnabler implements VDBLifeCycleListener {
 	static final String REST_NAMESPACE = "{http://teiid.org/rest}"; //$NON-NLS-1$
 	private AdminImpl admin;
 	private Executor executor;
-	private String vdbName;
-	private int vdbVersion;
+	private VDBKey vdbKey;
 	private AtomicBoolean deployed = new AtomicBoolean(false);
 	
-	public ResteasyEnabler(String vdbName, int version, ModelController deployer, Executor executor, ContainerLifeCycleListener shutdownListener) {
+	public ResteasyEnabler(String vdbName, String version, ModelController deployer, Executor executor, ContainerLifeCycleListener shutdownListener) {
 		this.admin = (AdminImpl)AdminFactory.getInstance().createAdmin(deployer.createClient(executor));
 		this.executor = executor;
-		this.vdbName = vdbName;
-		this.vdbVersion = version;
+		vdbKey = new VDBKey(vdbName, version);
 	}
 	
 	@Override
-	public synchronized void added(String name, int version, CompositeVDB vdb) {
+	public synchronized void added(String name, CompositeVDB vdb) {
 	}
 	
 	@Override
-	public void beforeRemove(String name, int version, CompositeVDB cvdb) {
+	public void beforeRemove(String name, CompositeVDB cvdb) {
     	this.deployed.set(false);
 	}	
 	
 	@Override
-	public synchronized void finishedDeployment(String name, int version, CompositeVDB cvdb) {
-		if (this.vdbName.equals(name) && this.vdbVersion == version) {
+	public synchronized void finishedDeployment(String name, CompositeVDB cvdb) {
+		if (cvdb.getVDBKey().equals(this.vdbKey)) {
 
 			final VDBMetaData vdb = cvdb.getVDB();
 			
@@ -82,7 +82,7 @@ public class ResteasyEnabler implements VDBLifeCycleListener {
 			
 			String generate = vdb.getPropertyValue(ResteasyEnabler.REST_NAMESPACE+"auto-generate"); //$NON-NLS-1$
 	
-			final String warName = buildName(name, version);
+			final String warName = buildName(name, cvdb.getVDB().getVersion());
 			if (generate != null && Boolean.parseBoolean(generate)
 					&& hasRestMetadata(vdb)
 					&& this.deployed.compareAndSet(false, true)) {
@@ -114,12 +114,12 @@ public class ResteasyEnabler implements VDBLifeCycleListener {
 	}
 	
 	@Override
-	public synchronized void removed(String name, int version, CompositeVDB cvdb) {
+	public synchronized void removed(String name, CompositeVDB cvdb) {
 
 	}
 	
-	private String buildName(String name, int version) {
-		return name+"_"+version+".war"; //$NON-NLS-1$ //$NON-NLS-2$
+	private String buildName(String name, String version) {
+		return name+"_"+StringUtil.replaceAll(version, ".", "_") +".war"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 	}
 	
 	private boolean hasRestMetadata(VDBMetaData vdb) {

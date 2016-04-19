@@ -29,7 +29,7 @@ public class VDBImportMetadata extends AdminObjectImpl implements VDBImport {
 	private static final long serialVersionUID = 8827106139518843217L;
 	
 	private String name;
-	private int version = 1;
+	private String version;
 	private boolean importDataPolicies = true;
 	
 	public String getName() {
@@ -40,11 +40,11 @@ public class VDBImportMetadata extends AdminObjectImpl implements VDBImport {
 		this.name = name;
 	}
 	
-	public int getVersion() {
+	public String getVersion() {
 		return version;
 	}
 	
-	public void setVersion(int version) {
+	public void setVersion(String version) {
 		this.version = version;
 	}
 	

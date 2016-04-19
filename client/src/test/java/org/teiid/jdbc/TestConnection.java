@@ -101,7 +101,7 @@ public class TestConnection {
 		
     	stub(mock.getService(DQP.class)).toReturn(dqp);
     	
-    	stub(mock.getLogonResult()).toReturn(new LogonResult(new SessionToken(1, "admin"), STD_DATABASE_NAME,STD_DATABASE_VERSION , "fake")); //$NON-NLS-1$
+    	stub(mock.getLogonResult()).toReturn(new LogonResult(new SessionToken(1, "admin"), STD_DATABASE_NAME, "fake")); //$NON-NLS-1$
     	return new ConnectionImpl(mock, props, url);
     }
 

@@ -51,6 +51,7 @@ public class TestVDBMerge extends AbstractMMQueryTestCase {
        DeployVDBParameter param = new DeployVDBParameter(null, null);
        VDBImportMetadata vdbImport = new VDBImportMetadata();
        vdbImport.setName(VDB2);
+       vdbImport.setVersion("1");
        param.vdbImports = Arrays.asList(vdbImport);
        server.removeVDB(VDB1);
        server.deployVDB(VDB1, UnitTestUtil.getTestDataPath()+"/PartsSupplier.vdb", param);
@@ -74,6 +75,7 @@ public class TestVDBMerge extends AbstractMMQueryTestCase {
         DeployVDBParameter param = new DeployVDBParameter(null, null);
         VDBImportMetadata vdbImport = new VDBImportMetadata();
         vdbImport.setName(VDB2);
+        vdbImport.setVersion("1");
         param.vdbImports = Arrays.asList(vdbImport);
         server.undeployVDB("empty");
         server.deployVDB("empty", UnitTestUtil.getTestDataPath() + "/empty.vdb", param);

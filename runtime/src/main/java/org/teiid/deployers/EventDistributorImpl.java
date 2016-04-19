@@ -56,13 +56,13 @@ public abstract class EventDistributorImpl implements EventDistributor {
 	public EventDistributorImpl() {
 		getVdbRepository().addListener(new VDBLifeCycleListener() {
 			@Override
-			public void removed(String name, int version, CompositeVDB vdb) {
+			public void removed(String name, CompositeVDB vdb) {
 				for(EventListener el:EventDistributorImpl.this.listeners) {
-					el.vdbUndeployed(name, version);
+					el.vdbUndeployed(name, vdb.getVDB().getVersion());
 				}
 			}
 			@Override
-			public void finishedDeployment(String name, int version, CompositeVDB vdb) {
+			public void finishedDeployment(String name, CompositeVDB vdb) {
 				for(EventListener el:EventDistributorImpl.this.listeners) {
 					if (vdb.getVDB().getStatus().equals(Status.ACTIVE)) {
 						el.vdbLoaded(vdb.getVDB());
@@ -73,19 +73,25 @@ public abstract class EventDistributorImpl implements EventDistributor {
 				}
 			}
 			@Override
-			public void added(String name, int version, CompositeVDB vdb) {
+			public void added(String name, CompositeVDB vdb) {
 				for(EventListener el:EventDistributorImpl.this.listeners) {
-					el.vdbDeployed(name, version);
+					el.vdbDeployed(name, vdb.getVDB().getVersion());
 				}
 			}
 			@Override
-			public void beforeRemove(String name, int version, CompositeVDB vdb) {
+			public void beforeRemove(String name, CompositeVDB vdb) {
 			}			
 		});
 	}
 	
 	@Override
 	public void updateMatViewRow(String vdbName, int vdbVersion, String schema,
+			String viewName, List<?> tuple, boolean delete) {
+		updateMatViewRow(vdbName, String.valueOf(vdbVersion), schema, viewName, tuple, delete);
+	}
+	
+	@Override
+	public void updateMatViewRow(String vdbName, String vdbVersion, String schema,
 			String viewName, List<?> tuple, boolean delete) {
 		VDBMetaData metadata = getVdbRepository().getLiveVDB(vdbName, vdbVersion);
 		if (metadata != null) {
@@ -101,11 +107,17 @@ public abstract class EventDistributorImpl implements EventDistributor {
 	}
 	
 	@Override
-	public void dataModification(String vdbName, int vdbVersion, String schema,	String... tableNames) {
+	public void dataModification(String vdbName, int vdbVersion, String schema,
+			String... tableNames) {
+		dataModification(vdbName, String.valueOf(vdbVersion), schema, tableNames);
+	}
+	
+	@Override
+	public void dataModification(String vdbName, String vdbVersion, String schema,	String... tableNames) {
 		updateModified(true, vdbName, vdbVersion, schema, tableNames);
 	}
 	
-	private void updateModified(boolean data, String vdbName, int vdbVersion, String schema,
+	private void updateModified(boolean data, String vdbName, String vdbVersion, String schema,
 			String... objectNames) {
 		Schema s = getSchema(vdbName, vdbVersion, schema);
 		if (s == null) {
@@ -129,6 +141,13 @@ public abstract class EventDistributorImpl implements EventDistributor {
 	public void setColumnStats(String vdbName, int vdbVersion,
 			String schemaName, String tableName, String columnName,
 			ColumnStats stats) {
+		setColumnStats(vdbName, String.valueOf(vdbVersion), schemaName, tableName, columnName, stats);
+	}
+	
+	@Override
+	public void setColumnStats(String vdbName, String vdbVersion,
+			String schemaName, String tableName, String columnName,
+			ColumnStats stats) {
 		Table t = getTable(vdbName, vdbVersion, schemaName, tableName);
 		if (t == null) {
 			return;
@@ -143,6 +162,12 @@ public abstract class EventDistributorImpl implements EventDistributor {
 	@Override
 	public void setTableStats(String vdbName, int vdbVersion,
 			String schemaName, String tableName, TableStats stats) {
+		setTableStats(vdbName, String.valueOf(vdbVersion), schemaName, tableName, stats);
+	}
+	
+	@Override
+	public void setTableStats(String vdbName, String vdbVersion,
+			String schemaName, String tableName, TableStats stats) {
 		Table t = getTable(vdbName, vdbVersion, schemaName, tableName);
 		if (t == null) {
 			return;
@@ -151,7 +176,7 @@ public abstract class EventDistributorImpl implements EventDistributor {
 		t.setLastModified(System.currentTimeMillis());
 	}
 
-	private Table getTable(String vdbName, int vdbVersion, String schemaName,
+	private Table getTable(String vdbName, String vdbVersion, String schemaName,
 			String tableName) {
 		Schema s = getSchema(vdbName, vdbVersion, schemaName);
 		if (s == null) {
@@ -160,7 +185,7 @@ public abstract class EventDistributorImpl implements EventDistributor {
 		return s.getTables().get(tableName);
 	}
 
-	private Schema getSchema(String vdbName, int vdbVersion, String schemaName) {
+	private Schema getSchema(String vdbName, String vdbVersion, String schemaName) {
 		VDBMetaData vdb = getVdbRepository().getLiveVDB(vdbName, vdbVersion);
 		if (vdb == null) {
 			return null;
@@ -176,6 +201,13 @@ public abstract class EventDistributorImpl implements EventDistributor {
 	public void setInsteadOfTriggerDefinition(String vdbName, int vdbVersion,
 			String schema, String viewName, TriggerEvent triggerEvent,
 			String triggerDefinition, Boolean enabled) {
+		setInsteadOfTriggerDefinition(vdbName, String.valueOf(vdbVersion), schema, viewName, triggerEvent, triggerDefinition, enabled);
+	}
+	
+	@Override
+	public void setInsteadOfTriggerDefinition(String vdbName, String vdbVersion,
+			String schema, String viewName, TriggerEvent triggerEvent,
+			String triggerDefinition, Boolean enabled) {
 		Table t = getTable(vdbName, vdbVersion, schema, viewName);
 		if (t == null) {
 			return;
@@ -184,7 +216,13 @@ public abstract class EventDistributorImpl implements EventDistributor {
 	}
 	
 	@Override
-	public void setProcedureDefinition(String vdbName, int vdbVersion,String schema, String procName, String definition) {
+	public void setProcedureDefinition(String vdbName, int vdbVersion,
+			String schema, String procName, String definition) {
+		setProcedureDefinition(vdbName, String.valueOf(vdbVersion), schema, procName, definition);
+	}
+	
+	@Override
+	public void setProcedureDefinition(String vdbName, String vdbVersion,String schema, String procName, String definition) {
 		Schema s = getSchema(vdbName, vdbVersion, schema);
 		if (s == null) {
 			return;
@@ -197,7 +235,13 @@ public abstract class EventDistributorImpl implements EventDistributor {
 	}
 	
 	@Override
-	public void setViewDefinition(String vdbName, int vdbVersion, String schema, String viewName, String definition) {
+	public void setViewDefinition(String vdbName, int vdbVersion,
+			String schema, String viewName, String definition) {
+		setViewDefinition(vdbName, String.valueOf(vdbVersion), schema, viewName, definition);
+	}
+	
+	@Override
+	public void setViewDefinition(String vdbName, String vdbVersion, String schema, String viewName, String definition) {
 		Table t = getTable(vdbName, vdbVersion, schema, viewName);
 		if (t == null) {
 			return;
@@ -207,6 +251,12 @@ public abstract class EventDistributorImpl implements EventDistributor {
 	
 	@Override
 	public void setProperty(String vdbName, int vdbVersion, String uuid,
+			String name, String value) {
+		setProperty(vdbName, String.valueOf(vdbVersion), uuid, name, value);
+	}
+	
+	@Override
+	public void setProperty(String vdbName, String vdbVersion, String uuid,
 			String name, String value) {
 		VDBMetaData vdb = getVdbRepository().getLiveVDB(vdbName, vdbVersion);
 		if (vdb == null) {

@@ -105,7 +105,7 @@ public class TestAdminObjectBuilder {
 		
 		assertEquals("myVDB", vdb.getName()); 
 		assertEquals("vdb description", vdb.getDescription()); 
-		assertEquals(1, vdb.getVersion());
+		assertEquals("1", vdb.getVersion());
 		assertEquals("vdb-value", vdb.getPropertyValue("vdb-property"));  
 		
 		assertNotNull(vdb.getModel("model-one")); 

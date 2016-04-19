@@ -80,51 +80,51 @@ public class TestMetadataUpdates {
 		DefaultMetadataRepository repo = new DefaultMetadataRepository() {
 
 			@Override
-			public void setColumnStats(String vdbName, int vdbVersion,
+			public void setColumnStats(String vdbName, String vdbVersion,
 					Column column, ColumnStats columnStats) {
 				
 			}
 
 			@Override
 			public void setInsteadOfTriggerDefinition(String vdbName,
-					int vdbVersion, Table table, TriggerEvent triggerOperation,
+					String vdbVersion, Table table, TriggerEvent triggerOperation,
 					String triggerDefinition) {
 				
 			}
 
 			@Override
 			public void setInsteadOfTriggerEnabled(String vdbName,
-					int vdbVersion, Table table, TriggerEvent triggerOperation,
+					String vdbVersion, Table table, TriggerEvent triggerOperation,
 					boolean enabled) {
 				
 			}
 
 			@Override
-			public void setProcedureDefinition(String vdbName, int vdbVersion,
+			public void setProcedureDefinition(String vdbName, String vdbVersion,
 					Procedure procedure, String procedureDefinition) {
 				
 			}
 
 			@Override
-			public void setProperty(String vdbName, int vdbVersion,
+			public void setProperty(String vdbName, String vdbVersion,
 					AbstractMetadataRecord record, String name, String value) {
 				
 			}
 
 			@Override
-			public void setTableStats(String vdbName, int vdbVersion,
+			public void setTableStats(String vdbName, String vdbVersion,
 					Table table, TableStats tableStats) {
 				
 			}
 
 			@Override
-			public void setViewDefinition(String vdbName, int vdbVersion,
+			public void setViewDefinition(String vdbName, String vdbVersion,
 					Table table, String viewDefinition) {
 				
 			}
 			
 			@Override
-			public String getViewDefinition(String vdbName, int vdbVersion,
+			public String getViewDefinition(String vdbName, String vdbVersion,
 					Table table) {
 				if (table.getName().equals("vw")) {
     				return "select '2011'";
@@ -134,7 +134,7 @@ public class TestMetadataUpdates {
 			
 			@Override
 			public String getProcedureDefinition(String vdbName,
-					int vdbVersion, Procedure procedure) {
+					String vdbVersion, Procedure procedure) {
     			if (procedure.getName().equals("proc")) {
     				return "create virtual procedure begin select '2011'; if ((call isLoggable())) call logMsg(msg=>'hello'); end";
     			}
@@ -143,13 +143,13 @@ public class TestMetadataUpdates {
 			
 			@Override
 			public String getInsteadOfTriggerDefinition(String vdbName,
-					int vdbVersion, Table table, TriggerEvent triggerOperation) {
+					String vdbVersion, Table table, TriggerEvent triggerOperation) {
 				return "for each row select 1/0;";
 			}
 			
 			@Override
 			public Boolean isInsteadOfTriggerEnabled(String vdbName,
-					int vdbVersion, Table table, TriggerEvent triggerOperation) {
+					String vdbVersion, Table table, TriggerEvent triggerOperation) {
 				return Boolean.TRUE;
 			}
 		};

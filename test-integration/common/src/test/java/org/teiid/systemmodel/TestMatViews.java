@@ -281,7 +281,7 @@ public class TestMatViews {
 		vdbMetaData.setXmlDeployment(true);
 		VDBImportMetadata importVDB = new VDBImportMetadata();
 		importVDB.setName("base");
-		importVDB.setVersion(1);
+		importVDB.setVersion("1");
 		vdbMetaData.getVDBImports().add(importVDB);
 		vdbMetaData.setName("importing");
 		
@@ -304,7 +304,7 @@ public class TestMatViews {
 		vdbMetaData.setXmlDeployment(true);
 		VDBImportMetadata importVDB = new VDBImportMetadata();
 		importVDB.setName("base");
-		importVDB.setVersion(1);
+		importVDB.setVersion("1");
 		vdbMetaData.getVDBImports().add(importVDB);
 		vdbMetaData.setName("importing");
 		

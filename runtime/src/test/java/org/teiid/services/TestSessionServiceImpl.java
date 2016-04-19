@@ -71,13 +71,13 @@ public class TestSessionServiceImpl {
 		vdb.setStatus(Status.ACTIVE);
 		
 		
-		Mockito.stub(repo.getLiveVDB("name", 1)).toReturn(vdb);
+		Mockito.stub(repo.getLiveVDB("name", "1")).toReturn(vdb);
 		
 		ssi.setVDBRepository(repo);
 		
 		ssi.getActiveVDB("name", "1");
 		
-		Mockito.verify(repo, Mockito.times(1)).getLiveVDB("name", 1);
+		Mockito.verify(repo, Mockito.times(1)).getLiveVDB("name", "1");
 	}
 	
 	
@@ -90,13 +90,13 @@ public class TestSessionServiceImpl {
 		vdb.setStatus(Status.ACTIVE);
 		
 		
-		Mockito.stub(repo.getLiveVDB("name", 1)).toReturn(vdb);
+		Mockito.stub(repo.getLiveVDB("name", "1")).toReturn(vdb);
 		
 		ssi.setVDBRepository(repo);
 		
-		ssi.getActiveVDB("name.1", null);
+		ssi.getActiveVDB("name", "1");
 		
-		Mockito.verify(repo, Mockito.times(1)).getLiveVDB("name", 1);
+		Mockito.verify(repo, Mockito.times(1)).getLiveVDB("name", "1");
 	}
 	
 	@Test
@@ -153,7 +153,7 @@ public class TestSessionServiceImpl {
 		vdb.setStatus(Status.ACTIVE);
 		vdb.addProperty(SessionServiceImpl.SECURITY_DOMAIN_PROPERTY, "domain");
 		
-		Mockito.stub(repo.getLiveVDB("name", 1)).toReturn(vdb);
+		Mockito.stub(repo.getLiveVDB("name", "1")).toReturn(vdb);
 		
 		ssi.setVDBRepository(repo);
 		
@@ -170,7 +170,7 @@ public class TestSessionServiceImpl {
 		vdb.setVersion(1);
 		vdb.setStatus(Status.ACTIVE);
 		
-		Mockito.stub(repo.getLiveVDB("name", 1)).toReturn(vdb);
+		Mockito.stub(repo.getLiveVDB("name", "1")).toReturn(vdb);
 		
 		ssi.setVDBRepository(repo);
 		ssi.setSecurityDomain("sd1,sd");
@@ -212,7 +212,7 @@ public class TestSessionServiceImpl {
 		vdb.setStatus(Status.ACTIVE);
 		vdb.addProperty(SessionServiceImpl.SECURITY_DOMAIN_PROPERTY, "domain");
 		vdb.addProperty(SessionServiceImpl.GSS_PATTERN_PROPERTY, "x");
-		Mockito.stub(repo.getLiveVDB("name", 1)).toReturn(vdb);
+		Mockito.stub(repo.getLiveVDB("name", "1")).toReturn(vdb);
 		
 		ssi.setVDBRepository(repo);
 		ssi.setAuthenticationType(AuthenticationType.USERPASSWORD); // this is transport default
@@ -228,7 +228,7 @@ public class TestSessionServiceImpl {
 		vdb.setStatus(Status.ACTIVE);
 		vdb.addProperty(SessionServiceImpl.SECURITY_DOMAIN_PROPERTY, "domain");
 		vdb.addProperty(SessionServiceImpl.AUTHENTICATION_TYPE_PROPERTY, "GSS");
-		Mockito.stub(repo.getLiveVDB("name1", 1)).toReturn(vdb);
+		Mockito.stub(repo.getLiveVDB("name1", "1")).toReturn(vdb);
 
 		assertEquals(AuthenticationType.GSS, ssi.getAuthenticationType("name1", "1", "x"));
 		assertEquals(AuthenticationType.GSS, ssi.getAuthenticationType("name1", "1", "y"));
@@ -239,7 +239,7 @@ public class TestSessionServiceImpl {
 		vdb.setVersion(1);
 		vdb.setStatus(Status.ACTIVE);
 		
-		Mockito.stub(repo.getLiveVDB("name2", 1)).toReturn(vdb);
+		Mockito.stub(repo.getLiveVDB("name2", "1")).toReturn(vdb);
 
 		assertEquals(AuthenticationType.USERPASSWORD, ssi.getAuthenticationType("name2", "1", "x"));
 		assertEquals(AuthenticationType.USERPASSWORD, ssi.getAuthenticationType("name2", "1", "y"));		

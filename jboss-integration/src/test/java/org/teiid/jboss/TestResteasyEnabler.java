@@ -39,7 +39,7 @@ import org.teiid.metadata.MetadataStore;
 public class TestResteasyEnabler {
 
 	@Test public void testOtherModels() throws VirtualDatabaseException {
-		ResteasyEnabler resteasyEnabler = new ResteasyEnabler("x", 1, Mockito.mock(ModelController.class), ExecutorUtils.getDirectExecutor(), Mockito.mock(ContainerLifeCycleListener.class));
+		ResteasyEnabler resteasyEnabler = new ResteasyEnabler("x", "1", Mockito.mock(ModelController.class), ExecutorUtils.getDirectExecutor(), Mockito.mock(ContainerLifeCycleListener.class));
 		
 		MetadataStore ms = new MetadataStore();
 		
@@ -50,7 +50,7 @@ public class TestResteasyEnabler {
 		model.setModelType(Type.OTHER);
 		vdb.getVDB().addModel(model);
 		
-		resteasyEnabler.finishedDeployment("x", 1, vdb);
+		resteasyEnabler.finishedDeployment("x", vdb);
 	}
 	
 }

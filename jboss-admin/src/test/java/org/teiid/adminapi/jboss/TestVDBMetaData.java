@@ -89,7 +89,7 @@ public class TestVDBMetaData {
 		vdb.setXmlDeployment(true);
 		VDBMetaData clone = vdb.clone();
 		assertTrue(clone.isXmlDeployment());
-		assertEquals(2, vdb.getVDBImports().size());
+		assertEquals(1, vdb.getVDBImports().size());
 		assertNotSame(clone.getModelMetaDatas(), vdb.getModelMetaDatas());
 		//assertNotSame(clone.getDataPolicyMap(), vdb.getDataPolicyMap());
 	}

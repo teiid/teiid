@@ -162,11 +162,11 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		
 		for (VDBImport vdbImport : deployment.getVDBImports()) {
 			VDBKey vdbKey = new VDBKey(vdbImport.getName(), vdbImport.getVersion());
-			if (vdbKey.isSemantic() && (!vdbKey.isFullySpecified() || vdbKey.isAtMost() || vdbKey.getVersion() != 1)) {
+			if (vdbKey.isAtMost()) {
 				//TODO: could allow partial versions here if we canonicalize
 				throw new DeploymentUnitProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40144, deployment, vdbKey));
 			}
-			vdbService.addDependency(TeiidServiceNames.vdbFinishedServiceName(vdbImport.getName(), vdbImport.getVersion()));
+			vdbService.addDependency(TeiidServiceNames.vdbFinishedServiceName(vdbImport.getName(), vdbKey.getVersion()));
 		}
 		
 		// adding the translator services is redundant, however if one is removed then it is an issue.

@@ -254,7 +254,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	public void fillRow(List<Object> row, Schema model,
         			VDBMetaData vdb, TransformationMetadata metadata,
         			CommandContext cc, SimpleIterator<Schema> iter) {
-        		row.add(vdb.getBaseName());
+        		row.add(vdb.getName());
         		row.add(model.getName());
         		row.add(model.isPhysical());
         		row.add(model.getUUID());
@@ -449,12 +449,8 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         			VDBMetaData vdb, TransformationMetadata metadata,
         			CommandContext cc, SimpleIterator<VDBMetaData> iter) {
         		VDBKey key = new VDBKey(record.getName(), 0);
-        		row.add(key.getBaseName());
-        		if (key.getBaseName().equals(record.getName())) {
-        			row.add(String.valueOf(record.getVersion()));
-        		} else {
-        			row.add(record.getName().substring(key.getBaseName().length() + 2));
-        		}
+        		row.add(key.getName());
+    			row.add(record.getVersion());
         	}
 		});
         name = SystemTables.PROCEDUREPARAMS.name();
@@ -465,7 +461,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         			VDBMetaData vdb, TransformationMetadata metadata,
         			CommandContext cc, SimpleIterator<BaseColumn> iter) {
 				Datatype dt = param.getDatatype();
-				row.add(vdb.getBaseName());
+				row.add(vdb.getName());
 				String type = "ResultSet"; //$NON-NLS-1$
 				AbstractMetadataRecord proc = param.getParent();
 				boolean isOptional = false;
@@ -515,7 +511,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	public void fillRow(List<Object> row, FunctionParameter param,
         			VDBMetaData vdb, TransformationMetadata metadata,
         			CommandContext cc, SimpleIterator<FunctionParameter> iter) {
-				row.add(vdb.getBaseName());
+				row.add(vdb.getName());
 				FunctionMethod parent = ((ExpandingSimpleIterator<FunctionMethod, FunctionParameter>)iter).getCurrentParent();
 				if (parent.getParent() == null) {
 					row.add(CoreConstants.SYSTEM_MODEL);
@@ -600,7 +596,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 					clobValue = new ClobType(new ClobImpl(record.body));
 				}
 				AbstractMetadataRecord table = ((ExpandingSimpleIterator<AbstractMetadataRecord, Trigger>)iter).getCurrentParent();				
-				row.add(vdb.getBaseName());
+				row.add(vdb.getName());
 				row.add(table.getParent().getName());
 				row.add(table.getName());
 				row.add(record.name);
@@ -685,7 +681,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         			VDBMetaData vdb, TransformationMetadata metadata,
         			CommandContext cc, SimpleIterator<Column> iter) {
         		Datatype dt = column.getDatatype();
-        		row.add(vdb.getBaseName());
+        		row.add(vdb.getName());
         		row.add(column.getParent().getParent().getName());
         		row.add(column.getParent().getName());
         		row.add(column.getName());
@@ -731,7 +727,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	protected void fillRow(List<Object> row, KeyRecord key,
         			VDBMetaData vdb, TransformationMetadata metadata,
         			CommandContext cc, SimpleIterator<KeyRecord> iter) {
-        		row.add(vdb.getBaseName());
+        		row.add(vdb.getName());
         		row.add(key.getParent().getParent().getName());
         		row.add(key.getParent().getName());
         		row.add(key.getName());
@@ -765,7 +761,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	protected void fillRow(List<Object> row, List<?> record,
         			VDBMetaData vdb, TransformationMetadata metadata,
         			CommandContext cc, SimpleIterator<List<?>> iter) {
-        		row.add(vdb.getBaseName());
+        		row.add(vdb.getName());
         		KeyRecord key = (KeyRecord) record.get(0);
         		Column column = (Column) record.get(1);
         		Integer pos = (Integer) record.get(2);
@@ -805,7 +801,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	protected void fillRow(List<Object> row, List<?> record,
         			VDBMetaData vdb, TransformationMetadata metadata,
         			CommandContext cc, SimpleIterator<List<?>> iter) {
-        		row.add(vdb.getBaseName());
+        		row.add(vdb.getName());
         		ForeignKey key = (ForeignKey) record.get(0);
         		Table pkTable = key.getReferenceKey().getParent();
         		Column column = (Column) record.get(1);
@@ -813,7 +809,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				row.add(pkTable.getParent().getName());
 				row.add(pkTable.getName());
 				row.add(key.getReferenceKey().getColumns().get(pos-1).getName());
-				row.add(vdb.getBaseName());
+				row.add(vdb.getName());
 				row.add(key.getParent().getParent().getName());
 				row.add(key.getParent().getName());
 				row.add(column.getName());
@@ -870,7 +866,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	@Override
         	public void fillRow(List<Object> row, AbstractMetadataRecord entry, VDBMetaData vdb, TransformationMetadata metadata, CommandContext cc, SimpleIterator<AbstractMetadataRecord> iter) {
 				AbstractMetadataRecord currentParent = ((ExpandingSimpleIterator<AbstractMetadataRecord, AbstractMetadataRecord>)iter).getCurrentParent();
-				row.add(vdb.getBaseName());
+				row.add(vdb.getName());
 				row.add(currentParent.getUUID());
 				row.add(getType(currentParent));
 				row.add(currentParent.getParent().getName());
@@ -1179,7 +1175,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 	private TupleSource processSystemQuery(CommandContext context, Command command,
 			DQPWorkContext workContext) throws TeiidComponentException, TeiidProcessingException {
 		String vdbName = workContext.getVdbName();
-		int vdbVersion = workContext.getVdbVersion();
+		String vdbVersion = workContext.getVdbVersion();
 		VDBMetaData vdb = workContext.getVDB();
 		TransformationMetadata indexMetadata = vdb.getAttachment(TransformationMetadata.class);
 		CompositeMetadataStore metadata = indexMetadata.getMetadataStore();

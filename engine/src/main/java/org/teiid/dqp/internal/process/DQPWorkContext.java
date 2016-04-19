@@ -195,7 +195,7 @@ public class DQPWorkContext implements Serializable {
     /**
      * @return
      */
-    public int getVdbVersion() {
+    public String getVdbVersion() {
         return session.getVDBVersion();
     }
 

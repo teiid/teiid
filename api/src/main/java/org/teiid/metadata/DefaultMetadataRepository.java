@@ -46,7 +46,7 @@ public abstract class DefaultMetadataRepository<F, C> extends MetadataRepository
 	 */
 	public void loadMetadata(MetadataFactory factory, ExecutionFactory<F,C> executionFactory, F connectionFactory) throws TranslatorException {
 		String vdbName = factory.getVdbName();
-		int vdbVersion = factory.getVdbVersion();
+		String vdbVersion = factory.getVdbVersion();
 		Collection<AbstractMetadataRecord> records = new LinkedHashSet<AbstractMetadataRecord>();
 						
 		this.startLoadVdb(vdbName, vdbVersion);
@@ -129,7 +129,7 @@ public abstract class DefaultMetadataRepository<F, C> extends MetadataRepository
 	 * @param vdbName
 	 * @param vdbVersion
 	 */
-	public void startLoadVdb(String vdbName, int vdbVersion) {
+	public void startLoadVdb(String vdbName, String vdbVersion) {
 	}
 	
 	/**
@@ -138,7 +138,7 @@ public abstract class DefaultMetadataRepository<F, C> extends MetadataRepository
 	 * @param vdbName
 	 * @param vdbVersion
 	 */
-	public void endLoadVdb(String vdbName, int vdbVersion) {
+	public void endLoadVdb(String vdbName, String vdbVersion) {
 	}
 	
 	/**
@@ -148,7 +148,7 @@ public abstract class DefaultMetadataRepository<F, C> extends MetadataRepository
 	 * @param column
 	 * @return the stats.  a null result or a null stat indicates that the default should be used
 	 */
-	public ColumnStats getColumnStats(String vdbName, int vdbVersion, Column column) {
+	public ColumnStats getColumnStats(String vdbName, String vdbVersion, Column column) {
 		return null;
 	}
 	
@@ -156,7 +156,7 @@ public abstract class DefaultMetadataRepository<F, C> extends MetadataRepository
 	 * Returns an updated trigger definition (FOR EACH ROW ...) or null if the current view definition should be used
 	 * should be used.
 	 */
-	public String getInsteadOfTriggerDefinition(String vdbName, int vdbVersion, Table table, Table.TriggerEvent triggerOperation) {
+	public String getInsteadOfTriggerDefinition(String vdbName, String vdbVersion, Table table, Table.TriggerEvent triggerOperation) {
 		return null;
 	}
 	
@@ -164,7 +164,7 @@ public abstract class DefaultMetadataRepository<F, C> extends MetadataRepository
 	 * Returns an updated procedure definition (CREATE PROCEDURE ...) or null if the current procedure definition should be used
 	 * should be used.
 	 */
-	public String getProcedureDefinition(String vdbName, int vdbVersion, Procedure procedure) {
+	public String getProcedureDefinition(String vdbName, String vdbVersion, Procedure procedure) {
 		return null;
 	}
 	
@@ -175,7 +175,7 @@ public abstract class DefaultMetadataRepository<F, C> extends MetadataRepository
 	 * @param table
 	 * @return the stats.  a null result or a null stat indicates that the current value should be used
 	 */
-	public TableStats getTableStats(String vdbName, int vdbVersion, Table table) {
+	public TableStats getTableStats(String vdbName, String vdbVersion, Table table) {
 		return null;
 	}
 	
@@ -183,7 +183,7 @@ public abstract class DefaultMetadataRepository<F, C> extends MetadataRepository
 	 * Returns an updated view definition (AS SQL only) or null if the current view definition should be used
 	 * should be used.
 	 */
-	public String getViewDefinition(String vdbName, int vdbVersion, Table table) {
+	public String getViewDefinition(String vdbName, String vdbVersion, Table table) {
 		return null;
 	}
 	
@@ -194,7 +194,7 @@ public abstract class DefaultMetadataRepository<F, C> extends MetadataRepository
 	 * @param record
 	 * @return
 	 */
-	public LinkedHashMap<String, String> getProperties(String vdbName, int vdbVersion, AbstractMetadataRecord record){
+	public LinkedHashMap<String, String> getProperties(String vdbName, String vdbVersion, AbstractMetadataRecord record){
 		return null;
 	}
 	
@@ -206,7 +206,7 @@ public abstract class DefaultMetadataRepository<F, C> extends MetadataRepository
 	 * @param triggerOperation
 	 * @return
 	 */
-	public Boolean isInsteadOfTriggerEnabled(String vdbName, int vdbVersion, Table table, Table.TriggerEvent triggerOperation) {
+	public Boolean isInsteadOfTriggerEnabled(String vdbName, String vdbVersion, Table table, Table.TriggerEvent triggerOperation) {
 		return null;
 	}
 }

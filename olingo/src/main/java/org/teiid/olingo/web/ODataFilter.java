@@ -130,7 +130,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
 
         VDBKey key = null;
         String vdbName = null;
-        Integer version = null;
+        String version = null;
         String modelName = null;
 
         String uri = ((HttpServletRequest) request).getRequestURI().toString();
@@ -150,7 +150,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
             if (endIdx == -1) {
                 throw new TeiidProcessingException(ODataPlugin.Event.TEIID16020, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16020));
             }
-            baseURI = baseURI+"/odata4";
+            baseURI = baseURI+"/odata4"; //$NON-NLS-1$
             vdbName = uri.substring(beginIdx, endIdx);
             int modelIdx = uri.indexOf('/', endIdx + 1);
             if (modelIdx == -1) {
@@ -164,35 +164,23 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
 
             contextPath = contextPath + "/" + vdbName + "/" + modelName; //$NON-NLS-1$ //$NON-NLS-2$
 
-            int versionIdx = vdbName.indexOf('.');
-            if (versionIdx != -1) {
-            	try {
-	                version = Integer.parseInt(vdbName.substring(versionIdx + 1));
-	                vdbName = vdbName.substring(0, versionIdx);
-            	} catch (NumberFormatException e) {
-            		//semantic version
-            	}
-            }
-
             vdbName = vdbName.trim();
             if (vdbName.isEmpty()) {
                 throw new TeiidProcessingException(ODataPlugin.Event.TEIID16008, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16008));
             }
 
         } else {
-            if (this.initProperties.getProperty("vdb-name") == null) { //$NON-NLS-1$ 
+        	if (this.initProperties.getProperty("vdb-name") == null) { //$NON-NLS-1$ 
                 throw new TeiidProcessingException(ODataPlugin.Event.TEIID16018, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16018));
             }
             
             vdbName = this.initProperties.getProperty("vdb-name"); //$NON-NLS-1$
-            String versionString = this.initProperties.getProperty("vdb-version"); //$NON-NLS-1$
-            if (versionString != null) {
-            	version = Integer.parseInt(versionString); 
-            }
+            version = this.initProperties.getProperty("vdb-version"); //$NON-NLS-1$
+            
             if (endIdx == -1) {
 			    modelName = uri.substring(beginIdx).trim();
 			    if (modelName.isEmpty()) {
-			        throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16021));
+			        throw new TeiidProcessingException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16021));
 			    }
 			} else {
 			    modelName = uri.substring(beginIdx, endIdx);
@@ -205,9 +193,12 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
         contextAwareRequest.setContextPath(contextPath);
         httpRequest = contextAwareRequest;
         
-        key = new VDBKey(vdbName, version==null?1:version);
-        if (key.isSemantic() && (!key.isFullySpecified() || key.isAtMost() || key.getVersion() != 1)) {
-        	throw new TeiidProcessingException(ODataPlugin.Event.TEIID16044, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16044, key));
+        key = new VDBKey(vdbName, version);
+        if (key.isAtMost()) {
+        	if (key.getVersion() != null) {
+        		throw new TeiidProcessingException(ODataPlugin.Event.TEIID16044, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16044, key));
+        	}
+        	key = new VDBKey(vdbName, "1"); //$NON-NLS-1$ //legacy behavior, default to version 1
         }
         
         SoftReference<OlingoBridge> ref = this.contextMap.get(key);
@@ -222,7 +213,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
             this.contextMap.put(key, ref);
         }
         
-        Client client = buildClient(vdbName, version, this.initProperties);
+        Client client = buildClient(key.getName(), key.getVersion(), this.initProperties);
         try {
             Connection connection = client.open();
             registerVDBListener(client, connection);
@@ -260,7 +251,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
         }
     }
     
-    public Client buildClient(String vdbName, Integer version, Properties props) {
+    public Client buildClient(String vdbName, String version, Properties props) {
         return new LocalClient(vdbName, version, props);        
     }
         
@@ -270,20 +261,20 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
     }
 
     @Override
-    public void removed(String name, int version, CompositeVDB vdb) {
+    public void removed(String name, CompositeVDB vdb) {
         this.contextMap.remove(vdb.getVDBKey());
     }
 
     @Override
-    public void finishedDeployment(String name, int version, CompositeVDB vdb) {
+    public void finishedDeployment(String name, CompositeVDB vdb) {
         this.contextMap.remove(vdb.getVDBKey());
     }
 
     @Override
-    public void beforeRemove(String name, int version, CompositeVDB vdb) {
+    public void beforeRemove(String name, CompositeVDB vdb) {
     }
 
     @Override
-    public void added(String name, int version, CompositeVDB vdb) {
+    public void added(String name, CompositeVDB vdb) {
     }
 }

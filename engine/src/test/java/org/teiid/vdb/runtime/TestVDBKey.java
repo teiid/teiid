@@ -25,8 +25,10 @@ package org.teiid.vdb.runtime;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.UnitTestUtil;
 
+@SuppressWarnings("nls")
 public class TestVDBKey {
     
     @Test public void testCaseInsensitive() {
@@ -54,10 +56,8 @@ public class TestVDBKey {
     }
     
     @Test public void testSemanticVersion() {
-        VDBKey key = new VDBKey("a.v1.2.3", 1);  //$NON-NLS-1$ 
-        VDBKey key1 = new VDBKey("a.v1.11.3", 1); //$NON-NLS-1$
-        assertTrue(key.isSemantic());
-        assertTrue(key.isFullySpecified());
+        VDBKey key = new VDBKey("a.1.2.3", null);  //$NON-NLS-1$ 
+        VDBKey key1 = new VDBKey("a.1.11.3", null); //$NON-NLS-1$
         assertFalse(key.isAtMost());
         assertFalse(key.equals(key1));
         assertEquals(-1, key.compareTo(key1));
@@ -65,17 +65,24 @@ public class TestVDBKey {
     }
     
     @Test public void testShortSemanticVersion() {
-        VDBKey key = new VDBKey("a.v1.3", 1);  //$NON-NLS-1$ 
-        VDBKey key1 = new VDBKey("a.v1.2.", 1); //$NON-NLS-1$
-        assertTrue(key.isSemantic());
-        assertFalse(key.isFullySpecified());
+        VDBKey key = new VDBKey("a.1.3", null);  //$NON-NLS-1$ 
+        VDBKey key1 = new VDBKey("a", "1.2."); //$NON-NLS-1$
         assertFalse(key.isAtMost());
-        assertTrue(key1.isSemantic());
-        assertFalse(key1.isFullySpecified());
         assertTrue(key1.isAtMost());
         assertFalse(key.equals(key1));
         assertEquals(1, key.compareTo(key1));
         assertEquals(-1, key1.compareTo(key));
+    }
+    
+    @Test(expected=TeiidRuntimeException.class) public void testInvalid() {
+    	new VDBKey("a", "abc");  //$NON-NLS-1$ 
+    }
+    
+    @Test public void testPossiblyInvalid() {
+    	VDBKey key = new VDBKey("a.abc", null);  //$NON-NLS-1$
+    	assertEquals("a.abc", key.getName());
+    	assertTrue(key.isAtMost());
+    	assertEquals("a.abc.latest", key.toString());
     }
     
 }

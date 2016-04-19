@@ -153,7 +153,7 @@ public class LogonImpl implements ILogon {
 	        	//TODO: we should be smarter about disassociating the old sessions from the client.  we'll just rely on 
 	        	//ping based clean up
 	        //}
-			LogonResult result = new LogonResult(sessionInfo.getSessionToken(), sessionInfo.getVDBName(), sessionInfo.getVDBVersion(), clusterName);
+			LogonResult result = new LogonResult(sessionInfo.getSessionToken(), sessionInfo.getVDBName(), clusterName);
 			if (krb5ServiceTicket != null) {
 				result.addProperty(ILogon.KRB5TOKEN, krb5ServiceTicket);
 			}
@@ -181,7 +181,7 @@ public class LogonImpl implements ILogon {
 		GSSResult result = neogitiateGssLogin(serviceTicket, vdbName, vdbVersion, user);
 					
 		if (!result.isAuthenticated() || !createSession) {
-			LogonResult logonResult = new LogonResult(new SessionToken(0, "temp"), "internal", 0, "internal"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			LogonResult logonResult = new LogonResult(new SessionToken(0, "temp"), "internal", "internal"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			logonResult.addProperty(ILogon.KRB5TOKEN, result.getServiceToken());
 			logonResult.addProperty(ILogon.KRB5_ESTABLISHED, new Boolean(result.isAuthenticated()));
 			if (result.isAuthenticated()) {

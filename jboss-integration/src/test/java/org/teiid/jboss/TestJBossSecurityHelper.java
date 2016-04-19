@@ -45,6 +45,7 @@ import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.security.Credentials;
 import org.teiid.services.SessionServiceImpl;
+import org.teiid.vdb.runtime.VDBKey;
 
 @SuppressWarnings("nls")
 public class TestJBossSecurityHelper extends TestCase {
@@ -153,7 +154,7 @@ public class TestJBossSecurityHelper extends TestCase {
 		jss.validateSession(id1);
 		
 		assertEquals(1, jss.getActiveSessionsCount());
-		assertEquals(0, jss.getSessionsLoggedInToVDB("a", 1).size()); //$NON-NLS-1$ 
+		assertEquals(0, jss.getSessionsLoggedInToVDB(new VDBKey("a", 1)).size()); //$NON-NLS-1$ 
 		
 		jss.closeSession(id1);
 		

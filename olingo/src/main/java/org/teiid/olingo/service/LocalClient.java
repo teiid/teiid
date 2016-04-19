@@ -69,11 +69,11 @@ public class LocalClient implements Client {
 
     private volatile VDBMetaData vdb;
     private final String vdbName;
-    private final Integer vdbVersion;
+    private final String vdbVersion;
     private ConnectionImpl connection;
     private Properties properties;
 
-    public LocalClient(String vdbName, Integer vdbVersion, Properties properties) {
+    public LocalClient(String vdbName, String vdbVersion, Properties properties) {
         this.vdbName = vdbName;
         this.vdbVersion = vdbVersion;
         this.properties = properties;
@@ -102,7 +102,7 @@ public class LocalClient implements Client {
         return this.connection;
     }
     
-    public static ConnectionImpl buildConnection(TeiidDriver driver, String vdbName, Integer version, Properties props) throws SQLException {
+    public static ConnectionImpl buildConnection(TeiidDriver driver, String vdbName, String version, Properties props) throws SQLException {
         StringBuilder sb = new StringBuilder();
         sb.append("jdbc:teiid:").append(vdbName); //$NON-NLS-1$ 
         if (version != null) {

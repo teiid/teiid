@@ -232,7 +232,7 @@ public class FakeServer extends EmbeddedServer {
 	}
 	
 	public void removeVDB(String vdbName) {
-		this.repo.removeVDB(vdbName, 1);
+		undeployVDB(vdbName);
 	}
 
 	private ModelMetaData addModel(VDBMetaData vdbMetaData, Schema schema) {
@@ -245,7 +245,7 @@ public class FakeServer extends EmbeddedServer {
 	}
 	
 	public VDBMetaData getVDB(String vdbName) {
-		return this.repo.getLiveVDB(vdbName, 1);
+		return this.repo.getLiveVDB(vdbName);
 	}
 	
 	public ConnectionImpl createConnection(String embeddedURL) throws Exception {

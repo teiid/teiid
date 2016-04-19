@@ -225,10 +225,10 @@ public class AdminFactory {
 		}
 
 		@Override
-		public void clearCache(String cacheType, String vdbName, int vdbVersion) throws AdminException {
+		public void clearCache(String cacheType, String vdbName, String vdbVersion) throws AdminException {
 			cliCall("clear-cache",
 					new String[] { "subsystem", "teiid" },
-					new String[] { "cache-type", cacheType, "vdb-name",vdbName, "vdb-version", String.valueOf(vdbVersion) },
+					new String[] { "cache-type", cacheType, "vdb-name",vdbName, "vdb-version", vdbVersion },
 					new ResultCallback());
 		}
 
@@ -1622,12 +1622,10 @@ public class AdminFactory {
 	        }
 	        return list;
 	    }
-
-
-
+	    
 		@Override
-		public VDB getVDB(String vdbName, int vdbVersion) throws AdminException {
-			final ModelNode request = buildRequest("teiid", "get-vdb", "vdb-name", vdbName, "vdb-version", String.valueOf(vdbVersion));//$NON-NLS-1$
+		public VDB getVDB(String vdbName, String vdbVersion) throws AdminException {
+			final ModelNode request = buildRequest("teiid", "get-vdb", "vdb-name", vdbName, "vdb-version", vdbVersion);//$NON-NLS-1$
 			if (request == null) {
 				return null;
 			}
@@ -1667,12 +1665,12 @@ public class AdminFactory {
 
 	        return Collections.emptyList();
 		}
-
+		
 		@Override
-		public void addDataRoleMapping(String vdbName, int vdbVersion, String dataRole, String mappedRoleName) throws AdminException {
+		public void addDataRoleMapping(String vdbName, String vdbVersion, String dataRole, String mappedRoleName) throws AdminException {
 	        final ModelNode request = buildRequest("teiid", "add-data-role",
 	        		"vdb-name", vdbName,
-	        		"vdb-version", String.valueOf(vdbVersion),
+	        		"vdb-version", vdbVersion,
 	        		"data-role", dataRole,
 	        		"mapped-role", mappedRoleName);//$NON-NLS-1$ 
 	        try {
@@ -1684,12 +1682,81 @@ public class AdminFactory {
 	        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70040, e);
 	        }
 		}
+		
+		@Override
+		public void clearCache(String cacheType, String vdbName, int vdbVersion)
+				throws AdminException {
+			clearCache(cacheType, vdbName, String.valueOf(vdbVersion));
+		}
+		
+		@Override
+		public void addDataRoleMapping(String vdbName, int vdbVersion,
+				String dataRole, String mappedRoleName) throws AdminException {
+			addDataRoleMapping(vdbName, String.valueOf(vdbVersion), dataRole, mappedRoleName);
+		}
+		
+		@Override
+		public void removeDataRoleMapping(String vdbName, int vdbVersion,
+				String dataRole, String mappedRoleName) throws AdminException {
+			removeDataRoleMapping(vdbName, String.valueOf(vdbVersion), dataRole, mappedRoleName);
+		}
+		
+		@Override
+		public void setAnyAuthenticatedForDataRole(String vdbName,
+				int vdbVersion, String dataRole, boolean anyAuthenticated)
+				throws AdminException {
+			setAnyAuthenticatedForDataRole(vdbName, String.valueOf(vdbVersion), dataRole, anyAuthenticated);
+		}
+		
+		@Override
+		public void changeVDBConnectionType(String vdbName, int vdbVersion,
+				ConnectionType type) throws AdminException {
+			changeVDBConnectionType(vdbName, String.valueOf(vdbVersion), type);
+		}
+		
+		@Override
+		public void updateSource(String vdbName, int vdbVersion,
+				String sourceName, String translatorName, String dsName)
+				throws AdminException {
+			updateSource(vdbName, String.valueOf(vdbVersion), sourceName, translatorName, dsName);
+		}
+		
+		@Override
+		public void addSource(String vdbName, int vdbVersion, String modelName,
+				String sourceName, String translatorName, String dsName)
+				throws AdminException {
+			addSource(vdbName, String.valueOf(vdbVersion), modelName, sourceName, translatorName, dsName);
+		}
 
 		@Override
-		public void removeDataRoleMapping(String vdbName, int vdbVersion, String dataRole, String mappedRoleName) throws AdminException {
+		public VDB getVDB(String vdbName, int vdbVersion) throws AdminException {
+			return getVDB(vdbName, String.valueOf(vdbVersion));
+		}
+		
+		@Override
+		public void removeSource(String vdbName, int vdbVersion,
+				String modelName, String sourceName) throws AdminException {
+			removeSource(vdbName, String.valueOf(vdbVersion), modelName, sourceName);
+		}
+
+		@Override
+		public void restartVDB(String vdbName, int vdbVersion, String... models)
+				throws AdminException {
+			restartVDB(vdbName, String.valueOf(vdbVersion), models);
+		}
+		
+		@Override
+		public String getSchema(String vdbName, int vdbVersion,
+				String modelName, EnumSet<SchemaObjectType> allowedTypes,
+				String typeNamePattern) throws AdminException {
+			return getSchema(vdbName, String.valueOf(vdbVersion), modelName, allowedTypes, typeNamePattern);
+		}
+
+		@Override
+		public void removeDataRoleMapping(String vdbName, String vdbVersion, String dataRole, String mappedRoleName) throws AdminException {
 	        final ModelNode request = buildRequest("teiid", "remove-data-role",
 	        		"vdb-name", vdbName,
-	        		"vdb-version", String.valueOf(vdbVersion),
+	        		"vdb-version", vdbVersion,
 	        		"data-role", dataRole,
 	        		"mapped-role", mappedRoleName);//$NON-NLS-1$ 
 	        try {
@@ -1703,16 +1770,16 @@ public class AdminFactory {
 		}
 
 		@Override
-		public void setAnyAuthenticatedForDataRole(String vdbName, int vdbVersion, String dataRole, boolean anyAuthenticated) throws AdminException {
+		public void setAnyAuthenticatedForDataRole(String vdbName, String vdbVersion, String dataRole, boolean anyAuthenticated) throws AdminException {
 	        ModelNode request = buildRequest("teiid", "add-anyauthenticated-role",
 	        		"vdb-name", vdbName,
-	        		"vdb-version", String.valueOf(vdbVersion),
+	        		"vdb-version", vdbVersion,
 	        		"data-role", dataRole); //$NON-NLS-1$ 
 
 	        if (!anyAuthenticated) {
 	        	request = buildRequest("teiid", "remove-anyauthenticated-role",
 		        		"vdb-name", vdbName,
-		        		"vdb-version", String.valueOf(vdbVersion),
+		        		"vdb-version", vdbVersion,
 		        		"data-role", dataRole); //$NON-NLS-1$ 
 	        }
 	        try {
@@ -1724,12 +1791,12 @@ public class AdminFactory {
 	        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70044, e);
 	        }
 		}
-
+		
 		@Override
-		public void changeVDBConnectionType(String vdbName, int vdbVersion, ConnectionType type) throws AdminException {
+		public void changeVDBConnectionType(String vdbName, String vdbVersion, ConnectionType type) throws AdminException {
 	        final ModelNode request = buildRequest("teiid", "change-vdb-connection-type",
 	        		"vdb-name", vdbName,
-	        		"vdb-version", String.valueOf(vdbVersion),
+	        		"vdb-version", vdbVersion,
 	        		"connection-type", type.name());//$NON-NLS-1$ 
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
@@ -1740,13 +1807,14 @@ public class AdminFactory {
 	        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70046, e);
 	        }
 		}
+		
 
 		@Override
-		public void updateSource(String vdbName, int vdbVersion, String sourceName, String translatorName,
+		public void updateSource(String vdbName, String vdbVersion, String sourceName, String translatorName,
 				String dsName) throws AdminException {
 	        final ModelNode request = buildRequest("teiid", "update-source",
 	        		"vdb-name", vdbName,
-	        		"vdb-version", String.valueOf(vdbVersion),
+	        		"vdb-version", vdbVersion,
 	        		"source-name", sourceName,
 	        		"translator-name", translatorName,
 	        		"ds-name", dsName);//$NON-NLS-1$ 
@@ -1761,11 +1829,11 @@ public class AdminFactory {
 		}
 		
 		@Override
-		public void addSource(String vdbName, int vdbVersion, String modelName, String sourceName, String translatorName,
+		public void addSource(String vdbName, String vdbVersion, String modelName, String sourceName, String translatorName,
 				String dsName) throws AdminException {
 	        final ModelNode request = buildRequest("teiid", "add-source",
 	        		"vdb-name", vdbName,
-	        		"vdb-version", String.valueOf(vdbVersion),
+	        		"vdb-version", vdbVersion,
 	        		"model-name", modelName,
 	        		"source-name", sourceName,
 	        		"translator-name", translatorName,
@@ -1781,10 +1849,10 @@ public class AdminFactory {
 		}
 		
 		@Override
-		public void removeSource(String vdbName, int vdbVersion, String modelName, String sourceName) throws AdminException {
+		public void removeSource(String vdbName, String vdbVersion, String modelName, String sourceName) throws AdminException {
 	        final ModelNode request = buildRequest("teiid", "remove-source",
 	        		"vdb-name", vdbName,
-	        		"vdb-version", String.valueOf(vdbVersion),
+	        		"vdb-version", vdbVersion,
 	        		"model-name", modelName,
 	        		"source-name", sourceName);//$NON-NLS-1$ 
 	        try {
@@ -1811,7 +1879,7 @@ public class AdminFactory {
 	    }
 
 		@Override
-		public void restartVDB(String vdbName, int vdbVersion, String... models) throws AdminException {
+		public void restartVDB(String vdbName, String vdbVersion, String... models) throws AdminException {
 			ModelNode request = null;
 			String modelNames = null;
 
@@ -1827,13 +1895,13 @@ public class AdminFactory {
 			if (modelNames != null) {
 				request = buildRequest("teiid", "restart-vdb",
 		        		"vdb-name", vdbName,
-		        		"vdb-version", String.valueOf(vdbVersion),
+		        		"vdb-version", vdbVersion,
 		        		"model-names", modelNames);//$NON-NLS-1$ 
 			}
 			else {
 				request = buildRequest("teiid", "restart-vdb",
 		        		"vdb-name", vdbName,
-		        		"vdb-version", String.valueOf(vdbVersion));//$NON-NLS-1$
+		        		"vdb-version", vdbVersion);//$NON-NLS-1$
 			}
 
 	        try {
@@ -1847,7 +1915,7 @@ public class AdminFactory {
 		}
 
 		@Override
-		public String getSchema(String vdbName, int vdbVersion,
+		public String getSchema(String vdbName, String vdbVersion,
 				String modelName, EnumSet<SchemaObjectType> allowedTypes,
 				String typeNamePattern) throws AdminException {
 			ModelNode request = null;
@@ -1856,7 +1924,7 @@ public class AdminFactory {
 			params.add("vdb-name");
 			params.add(vdbName);
 			params.add("vdb-version");
-			params.add(String.valueOf(vdbVersion));
+			params.add(vdbVersion);
 			params.add("model-name");
 			params.add(modelName);
 

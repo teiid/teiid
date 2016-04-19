@@ -60,7 +60,6 @@ public class TeiidProducerProvider implements ContextResolver<ODataProducer>, VD
 		}
 		
 		String vdbName = null;
-		Integer version = null;
 		String uri = uriInfo.getBaseUri().getRawPath();
 		int idx = uri.indexOf("/odata/"); //$NON-NLS-1$
 		if (idx != -1) {
@@ -75,27 +74,12 @@ public class TeiidProducerProvider implements ContextResolver<ODataProducer>, VD
 		else {
 			vdbName = getInitParameters().getProperty("allow-vdb"); //$NON-NLS-1$		
 		}
-		
-		if (vdbName != null) {
-			int versionIdx = vdbName.indexOf('.');
-			if (versionIdx != -1) {
-				String versionString = vdbName.substring(versionIdx+1);
-				try {
-					version = Integer.parseInt(versionString);
-					vdbName = vdbName.substring(0, versionIdx);
-				} catch (NumberFormatException e) {
-					//semantic version
-				}
-			}
-			
-			vdbName = vdbName.trim();
-		}
 
-		VDBKey key = new VDBKey(vdbName, version==null?1:version);
+		VDBKey key = new VDBKey(vdbName, null);
 
-		if (vdbName == null || !vdbName.matches("[\\w-\\.]+") || (key.isSemantic() && (!key.isFullySpecified() || key.isAtMost() || key.getVersion() != 1))) { //$NON-NLS-1$
+		if (vdbName == null || !vdbName.matches("[\\w-\\.]+") || (key.isAtMost())) { //$NON-NLS-1$
 			//simply invalid don't bother caching
-			return new TeiidProducer(new LocalClient(vdbName, version, getInitParameters()));
+			return new TeiidProducer(new LocalClient(vdbName, key.getVersion(), getInitParameters()));
 		}
 		
 		SoftReference<LocalClient> ref = this.clientMap.get(key);
@@ -104,7 +88,7 @@ public class TeiidProducerProvider implements ContextResolver<ODataProducer>, VD
 			client = ref.get();
 		}
 		if (client == null) {
-			client = new LocalClient(vdbName, version, getInitParameters());
+			client = new LocalClient(key.getName(), key.getVersion(), getInitParameters());
 			if (!this.listenerRegistered) {
 				synchronized(this) {
 					if (!this.listenerRegistered) {
@@ -144,20 +128,20 @@ public class TeiidProducerProvider implements ContextResolver<ODataProducer>, VD
 	}
 	
 	@Override
-	public void removed(String name, int version, CompositeVDB vdb) {
+	public void removed(String name, CompositeVDB vdb) {
 		this.clientMap.remove(vdb.getVDBKey());
 	}
 	
 	@Override
-	public void finishedDeployment(String name, int version, CompositeVDB vdb) {
+	public void finishedDeployment(String name, CompositeVDB vdb) {
 		this.clientMap.remove(vdb.getVDBKey());		
 	}
 	
 	@Override
-	public void beforeRemove(String name, int version, CompositeVDB vdb) {
+	public void beforeRemove(String name, CompositeVDB vdb) {
 	}
 	
 	@Override
-	public void added(String name, int version, CompositeVDB vdb) {
+	public void added(String name, CompositeVDB vdb) {
 	}
 }

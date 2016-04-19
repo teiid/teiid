@@ -25,7 +25,6 @@ package org.teiid.dqp.service;
 import java.util.Collection;
 import java.util.Properties;
 
-import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
 import org.teiid.adminapi.impl.SessionMetadata;
@@ -36,6 +35,7 @@ import org.teiid.net.socket.AuthenticationType;
 import org.teiid.security.Credentials;
 import org.teiid.security.GSSResult;
 import org.teiid.security.SecurityHelper;
+import org.teiid.vdb.runtime.VDBKey;
 
 
 /**
@@ -103,10 +103,9 @@ public interface SessionService {
     /**
      * Get all Sessions that are in the ACTIVE state
      * and currently logged in to a VDB.
-     * @param VDBName The name of the VDB.
-     * @param VDBVersion The version of the VDB.
+     * @param vdbKey
      */
-    Collection<SessionMetadata> getSessionsLoggedInToVDB(String VDBName, int VDBVersion);
+    Collection<SessionMetadata> getSessionsLoggedInToVDB(VDBKey vdbKey);
 
     /**
      * Periodically called by the client to indicate the client is still alive.

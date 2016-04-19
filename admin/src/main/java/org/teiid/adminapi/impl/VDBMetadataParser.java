@@ -71,7 +71,7 @@ public class VDBMetadataParser {
 					vdb.setName(props.getProperty(Element.NAME.getLocalName()));
 					String version = props.getProperty(Element.VERSION.getLocalName());
 					if (version != null) {
-						vdb.setVersion(Integer.parseInt(version));
+						vdb.setVersion(version);
 					}
 					parseVDB(reader, vdb);
 					return vdb;
@@ -134,7 +134,7 @@ public class VDBMetadataParser {
 				vdbImport.setName(props.getProperty(Element.NAME.getLocalName()));
 				String version = props.getProperty(Element.VERSION.getLocalName());
 				if (version != null) {
-					vdbImport.setVersion(Integer.parseInt(version));
+					vdbImport.setVersion(version);
 				}
 				vdbImport.setImportDataPolicies(Boolean.parseBoolean(props.getProperty(Element.IMPORT_POLICIES.getLocalName(), "true")));
 				vdb.getVDBImports().add(vdbImport);

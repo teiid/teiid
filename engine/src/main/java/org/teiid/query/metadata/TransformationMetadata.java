@@ -760,13 +760,6 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     	return vdbMetaData.getName();
     }
 
-    public int getVirtualDatabaseVersion() {
-    	if (vdbMetaData == null) {
-    		return 0;
-    	}
-    	return vdbMetaData.getVersion();
-    }
-    
     public VDBMetaData getVdbMetaData() {
 		return vdbMetaData;
 	}

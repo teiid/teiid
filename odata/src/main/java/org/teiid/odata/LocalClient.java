@@ -102,7 +102,7 @@ public class LocalClient implements Client {
 	
 	private volatile VDBMetaData vdb;
 	private String vdbName;
-	private Integer vdbVersion;
+	private String vdbVersion;
 	private int batchSize;
 	private long cacheTime;
 	private String connectionString;
@@ -111,7 +111,7 @@ public class LocalClient implements Client {
 	private TeiidDriver driver = TeiidDriver.getInstance();
 	private String invalidCharacterReplacement;
 
-	public LocalClient(String vdbName, Integer vdbVersion, Properties props) {
+	public LocalClient(String vdbName, String vdbVersion, Properties props) {
 		this.vdbName = vdbName;
 		this.vdbVersion = vdbVersion;
 		this.batchSize = PropertiesUtils.getIntProperty(props, BATCH_SIZE, BufferManagerImpl.DEFAULT_PROCESSOR_BATCH_SIZE);
@@ -128,7 +128,7 @@ public class LocalClient implements Client {
 		    this.initProperties.put(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "true"); //$NON-NLS-1$    
 		}
 		if (this.initProperties.getProperty(LocalProfile.TRANSPORT_NAME) == null) {
-		    this.initProperties.setProperty(LocalProfile.TRANSPORT_NAME, "odata");    
+		    this.initProperties.setProperty(LocalProfile.TRANSPORT_NAME, "odata");  //$NON-NLS-1$  
 		}		 
 		if (this.initProperties.getProperty(LocalProfile.WAIT_FOR_LOAD) == null) {
 		    this.initProperties.put(LocalProfile.WAIT_FOR_LOAD, "0"); //$NON-NLS-1$
@@ -173,8 +173,8 @@ public class LocalClient implements Client {
 			if (vdbName == null || !vdbName.matches("[\\w-\\.]+")) { //$NON-NLS-1$
 				throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16008));			
 			}
-			VDBKey key = new VDBKey(vdbName, vdbVersion==null?0:vdbVersion);
-			if (key.isSemantic() && (!key.isFullySpecified() || key.isAtMost() || key.getVersion() != 1)) {
+			VDBKey key = new VDBKey(vdbName, vdbVersion);
+			if (key.isAtMost()) {
 				throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16021, key));
 			}
 		}

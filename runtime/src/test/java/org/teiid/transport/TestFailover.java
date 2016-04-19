@@ -101,7 +101,7 @@ public class TestFailover {
 			public LogonResult logon(Properties connProps)
 					throws LogonException {
 				logonAttempts++;
-				return new LogonResult(new SessionToken("dummy"), "x", 1, "z");
+				return new LogonResult(new SessionToken("dummy"), "x", "z");
 			}
 			
 			@Override

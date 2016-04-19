@@ -115,7 +115,7 @@ public abstract class VDBStatusChecker {
 		}
 	}	
 	
-	public boolean dataSourceReplaced(String vdbName, int vdbVersion,
+	public boolean dataSourceReplaced(String vdbName, String vdbVersion,
 			String modelName, String sourceName, String translatorName,
 			String dsName) throws AdminProcessingException {
 		return updateSource(vdbName, vdbVersion, new SourceMappingMetadata(sourceName, translatorName, dsName), true);
@@ -125,7 +125,7 @@ public abstract class VDBStatusChecker {
 	 * @return true if the datasource is new to the vdb
 	 * @throws AdminProcessingException
 	 */
-	public boolean updateSource(String vdbName, int vdbVersion, SourceMappingMetadata mapping, boolean replace) throws AdminProcessingException {
+	public boolean updateSource(String vdbName, String vdbVersion, SourceMappingMetadata mapping, boolean replace) throws AdminProcessingException {
 		String dsName = stripContext(mapping.getConnectionJndiName());		
 		
 		VDBMetaData vdb = getVDBRepository().getLiveVDB(vdbName, vdbVersion);

@@ -57,7 +57,7 @@ public class ChainingMetadataRepository extends MetadataRepository<Object, Objec
 	}
 
 	@Override
-	public void setColumnStats(String vdbName, int vdbVersion, Column column,
+	public void setColumnStats(String vdbName, String vdbVersion, Column column,
 			ColumnStats columnStats) {
 		for (MetadataRepository<Object, Object> repo : repositories) {
 			repo.setColumnStats(vdbName, vdbVersion, column, columnStats);
@@ -65,7 +65,7 @@ public class ChainingMetadataRepository extends MetadataRepository<Object, Objec
 	}
 
 	@Override
-	public void setInsteadOfTriggerDefinition(String vdbName, int vdbVersion,
+	public void setInsteadOfTriggerDefinition(String vdbName, String vdbVersion,
 			Table table, TriggerEvent triggerOperation, String triggerDefinition) {
 		for (MetadataRepository<Object, Object> repo : repositories) {
 			repo.setInsteadOfTriggerDefinition(vdbName, vdbVersion, table, triggerOperation, triggerDefinition);
@@ -73,7 +73,7 @@ public class ChainingMetadataRepository extends MetadataRepository<Object, Objec
 	}
 
 	@Override
-	public void setInsteadOfTriggerEnabled(String vdbName, int vdbVersion,
+	public void setInsteadOfTriggerEnabled(String vdbName, String vdbVersion,
 			Table table, TriggerEvent triggerOperation, boolean enabled) {
 		for (MetadataRepository<Object, Object> repo : repositories) {
 			repo.setInsteadOfTriggerEnabled(vdbName, vdbVersion, table, triggerOperation, enabled);
@@ -81,7 +81,7 @@ public class ChainingMetadataRepository extends MetadataRepository<Object, Objec
 	}
 
 	@Override
-	public void setProcedureDefinition(String vdbName, int vdbVersion,
+	public void setProcedureDefinition(String vdbName, String vdbVersion,
 			Procedure procedure, String procedureDefinition) {
 		for (MetadataRepository<Object, Object> repo : repositories) {
 			repo.setProcedureDefinition(vdbName, vdbVersion, procedure, procedureDefinition);
@@ -89,7 +89,7 @@ public class ChainingMetadataRepository extends MetadataRepository<Object, Objec
 	}
 
 	@Override
-	public void setProperty(String vdbName, int vdbVersion,
+	public void setProperty(String vdbName, String vdbVersion,
 			AbstractMetadataRecord record, String name, String value) {
 		for (MetadataRepository<Object, Object> repo : repositories) {
 			repo.setProperty(vdbName, vdbVersion, record, name, value);
@@ -97,7 +97,7 @@ public class ChainingMetadataRepository extends MetadataRepository<Object, Objec
 	}
 
 	@Override
-	public void setTableStats(String vdbName, int vdbVersion, Table table,
+	public void setTableStats(String vdbName, String vdbVersion, Table table,
 			TableStats tableStats) {
 		for (MetadataRepository<Object, Object> repo : repositories) {
 			repo.setTableStats(vdbName, vdbVersion, table, tableStats);
@@ -105,7 +105,7 @@ public class ChainingMetadataRepository extends MetadataRepository<Object, Objec
 	}
 
 	@Override
-	public void setViewDefinition(String vdbName, int vdbVersion, Table table,
+	public void setViewDefinition(String vdbName, String vdbVersion, Table table,
 			String viewDefinition) {
 		for (MetadataRepository<Object, Object> repo : repositories) {
 			repo.setViewDefinition(vdbName, vdbVersion, table, viewDefinition);

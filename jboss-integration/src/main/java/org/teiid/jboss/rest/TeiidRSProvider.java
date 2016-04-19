@@ -58,7 +58,7 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public abstract class TeiidRSProvider {
 
-    public StreamingOutput execute(final String vdbName, final int version, final String procedureName, final LinkedHashMap<String, String> parameters,
+    public StreamingOutput execute(final String vdbName, final String version, final String procedureName, final LinkedHashMap<String, String> parameters,
     		final String charSet, final boolean passthroughAuth, final boolean usingReturn) throws SQLException {
     	return new StreamingOutput() {
 			
@@ -85,7 +85,7 @@ public abstract class TeiidRSProvider {
 		};
     }
 	
-    public StreamingOutput executePost(final String vdbName, final int version, final String procedureName, final MultipartFormDataInput parameters,
+    public StreamingOutput executePost(final String vdbName, final String version, final String procedureName, final MultipartFormDataInput parameters,
             final String charSet, final boolean passthroughAuth, final boolean usingReturn) throws SQLException {
     	return new StreamingOutput() {
 			
@@ -339,7 +339,7 @@ public abstract class TeiidRSProvider {
 		return new ByteArrayInputStream(result.toString().getBytes(charSet==null?Charset.defaultCharset():Charset.forName(charSet)));
 	}
 
-	public StreamingOutput executeQuery(final String vdbName, final int vdbVersion, final String sql, boolean json, final boolean passthroughAuth) 
+	public StreamingOutput executeQuery(final String vdbName, final String vdbVersion, final String sql, boolean json, final boolean passthroughAuth) 
 	        throws SQLException {
 		return new StreamingOutput() {
 			
@@ -376,7 +376,7 @@ public abstract class TeiidRSProvider {
 		};
 	}
 
-	private Connection getConnection(String vdbName, int version, boolean passthough) throws SQLException {
+	private Connection getConnection(String vdbName, String version, boolean passthough) throws SQLException {
 		TeiidDriver driver = new TeiidDriver();
 		return driver.connect("jdbc:teiid:"+vdbName+"."+version+";"+(passthough?"PassthroughAuthentication=true;":""), null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 	}

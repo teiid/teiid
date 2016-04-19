@@ -54,7 +54,7 @@ public class CommandLogMessage {
     private String applicationName;
     private String principal;
     private String vdbName;
-    private int vdbVersion;
+    private String vdbVersion;
     
     // RequestInfo
     private String requestID;
@@ -76,7 +76,7 @@ public class CommandLogMessage {
                                 String applicationName,
                                 String principal,
                                 String vdbName,
-                                int vdbVersion,
+                                String vdbVersion,
                                 String sql,
                                 Long cpuTime) {
         // userCommandStart
@@ -91,7 +91,7 @@ public class CommandLogMessage {
                                 String sessionID,
                                 String principal,
                                 String vdbName,
-                                int vdbVersion, 
+                                String vdbVersion, 
                                 Long finalRowCount,
                                 Event event, PlanNode plan) {
         // userCommandEnd
@@ -180,7 +180,7 @@ public class CommandLogMessage {
 	public String getVdbName() {
 		return vdbName;
 	}
-	public int getVdbVersion() {
+	public String getVdbVersion() {
 		return vdbVersion;
 	}
 	public String getRequestID() {

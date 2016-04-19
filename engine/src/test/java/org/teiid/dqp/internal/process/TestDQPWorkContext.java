@@ -59,7 +59,7 @@ public class TestDQPWorkContext {
 		assertEquals("5", copy.getSessionId()); //$NON-NLS-1$
 		assertEquals("userName", copy.getUserName()); //$NON-NLS-1$
 		assertEquals("vdbName", copy.getVdbName()); //$NON-NLS-1$
-		assertEquals(1, copy.getVdbVersion());
+		assertEquals("1", copy.getVdbVersion()); //$NON-NLS-1$
 		assertEquals("querybuilder", copy.getAppName()); //$NON-NLS-1$
 	}
 	

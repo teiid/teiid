@@ -25,10 +25,7 @@
  */
 package org.teiid.net.socket;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -87,7 +84,7 @@ public class TestSocketServerConnection {
 				Properties connectionProperties)
 				throws LogonException,
 				TeiidComponentException {
-			return new LogonResult(new SessionToken(1, connectionProperties.getProperty(TeiidURL.CONNECTION.USER_NAME, "fooUser")), "foo", 1, "fake"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			return new LogonResult(new SessionToken(1, connectionProperties.getProperty(TeiidURL.CONNECTION.USER_NAME, "fooUser")), "foo", "fake"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 
 		@Override

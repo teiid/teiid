@@ -31,6 +31,7 @@ import org.teiid.net.ConnectionException;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.security.SecurityHelper;
+import org.teiid.vdb.runtime.VDBKey;
 
 
 public abstract class ClientServiceRegistryImpl implements ClientServiceRegistry {
@@ -108,7 +109,7 @@ public abstract class ClientServiceRegistryImpl implements ClientServiceRegistry
 	}
 	
 	@Override
-	public void waitForFinished(String vdbName, int vdbVersion,
+	public void waitForFinished(VDBKey vdbKey,
 			int timeOutMillis) throws ConnectionException {
 		
 	}

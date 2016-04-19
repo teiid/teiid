@@ -64,6 +64,7 @@ import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.metadata.Schema;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.vdb.runtime.VDBKey;
 
 
 
@@ -75,10 +76,13 @@ public class RestASMBasedWebArchiveBuilder {
 		MetadataStore metadataStore = vdb.getAttachment(TransformationMetadata.class).getMetadataStore();
 		
 		Properties props = new Properties();
-		props.setProperty("${context-name}", vdb.getName() + "_" + vdb.getVersion());
+		String fullName = vdb.getFullName();
+		fullName = StringUtil.replaceAll(fullName,	".", "_");
+				
+		props.setProperty("${context-name}", fullName);
 		props.setProperty("${vdb-name}", vdb.getName());
 		props.setProperty("${vdb-version}", String.valueOf(vdb.getVersion()));
-		props.setProperty("${api-page-title}", vdb.getName() + "_" + vdb.getVersion() + " API");
+		props.setProperty("${api-page-title}", fullName + " API");
 		
 		String securityType = vdb.getPropertyValue(ResteasyEnabler.REST_NAMESPACE+"security-type");
 		String securityDomain = vdb.getPropertyValue(ResteasyEnabler.REST_NAMESPACE+"security-domain");
@@ -106,10 +110,13 @@ public class RestASMBasedWebArchiveBuilder {
 		
 		writeDirectoryEntry(out, "swagger-ui-2.1.1.zip");
 		
+		String version = vdb.getVersion();
+		VDBKey vdbKey = new VDBKey(vdb.getName(), vdb.getVersion());
+		
 		ArrayList<String> applicationViews = new ArrayList<String>();
 		for (ModelMetaData model:vdb.getModelMetaDatas().values()) {
 			Schema schema = metadataStore.getSchema(model.getName());
-			byte[] viewContents = getViewClass(vdb.getName(), vdb.getVersion(), model.getName(), schema, true);
+			byte[] viewContents = getViewClass(vdb.getName(), version, model.getName(), schema, true);
 			if (viewContents != null) {
 				writeEntry("WEB-INF/classes/org/teiid/jboss/rest/"+model.getName()+".class", out, viewContents);
 				applicationViews.add(schema.getName());
@@ -118,7 +125,7 @@ public class RestASMBasedWebArchiveBuilder {
 		writeEntry("WEB-INF/classes/org/teiid/jboss/rest/TeiidRestApplication.class", out, getApplicationClass(applicationViews));
 		writeEntry("META-INF/MANIFEST.MF", out, getFileContents("rest-war/MANIFEST.MF").getBytes());
 		
-		byte[] bytes = getBootstrapServletClass(vdb.getName(), vdb.getDescription() == null ? vdb.getName() : vdb.getDescription(), vdb.getVersion() + ".0", new String[]{"http"}, File.separator + props.getProperty("${context-name}"), "org.teiid.jboss.rest", true);
+		byte[] bytes = getBootstrapServletClass(vdb.getName(), vdb.getDescription() == null ? vdb.getName() : vdb.getDescription(), vdbKey.getSemanticVersion(), new String[]{"http"}, File.separator + props.getProperty("${context-name}"), "org.teiid.jboss.rest", true);
 		writeEntry("WEB-INF/classes/org/teiid/jboss/rest/Bootstrap.class", out, bytes);
 		
 		out.close();
@@ -339,7 +346,7 @@ public class RestASMBasedWebArchiveBuilder {
     	return cw.toByteArray();
     }
     
-    protected byte[] getViewClass(String vdbName, int vdbVersion, String modelName, Schema schema, boolean passthroughAuth) {
+    protected byte[] getViewClass(String vdbName, String vdbVersion, String modelName, Schema schema, boolean passthroughAuth) {
     	ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
     	MethodVisitor mv;
     	AnnotationVisitor av0;
@@ -438,7 +445,7 @@ public class RestASMBasedWebArchiveBuilder {
 		return contentType;
 	}
 
-	private void buildRestService(String vdbName, int vdbVersion, String modelName, Procedure procedure,
+	private void buildRestService(String vdbName, String vdbVersion, String modelName, Procedure procedure,
 			String method, String uri, ClassWriter cw, String contentType,
 			String charSet, boolean passthroughAuth) {
 		
@@ -576,15 +583,14 @@ public class RestASMBasedWebArchiveBuilder {
         	}
         	mv.visitVarInsn(ALOAD, 0);
         	mv.visitLdcInsn(vdbName);
-        	mv.visitIntInsn(BIPUSH, vdbVersion);
-        	
+        	mv.visitLdcInsn(vdbVersion);
         	mv.visitLdcInsn(procedure.getSQLString());
         	
         	mv.visitVarInsn(ALOAD, paramsSize+1);
         	mv.visitLdcInsn(charSet==null?"":charSet);
         	mv.visitInsn(passthroughAuth?ICONST_1:ICONST_0);
         	mv.visitInsn(usingReturn?ICONST_1:ICONST_0);
-        	mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/"+modelName, "execute", "(Ljava/lang/String;ILjava/lang/String;Ljava/util/LinkedHashMap;Ljava/lang/String;ZZ)Ljavax/ws/rs/core/StreamingOutput;");
+        	mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/"+modelName, "execute", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/LinkedHashMap;Ljava/lang/String;ZZ)Ljavax/ws/rs/core/StreamingOutput;");
         	mv.visitLabel(l1);
         	mv.visitInsn(ARETURN);
         	mv.visitLabel(l2);
@@ -602,13 +608,13 @@ public class RestASMBasedWebArchiveBuilder {
     	else {
     	    mv.visitVarInsn(ALOAD, 0);
     	    mv.visitLdcInsn(vdbName);
-    	    mv.visitIntInsn(BIPUSH, vdbVersion);
+    	    mv.visitLdcInsn(vdbVersion);
     	    mv.visitLdcInsn(procedure.getSQLString());
     	    mv.visitVarInsn(ALOAD, 1);
     	    mv.visitLdcInsn(charSet==null?"":charSet);
     	    mv.visitInsn(passthroughAuth?ICONST_1:ICONST_0);
     	    mv.visitInsn(usingReturn?ICONST_1:ICONST_0);
-    	    mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/"+modelName, "executePost", "(Ljava/lang/String;ILjava/lang/String;Lorg/jboss/resteasy/plugins/providers/multipart/MultipartFormDataInput;Ljava/lang/String;ZZ)Ljavax/ws/rs/core/StreamingOutput;");
+    	    mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/"+modelName, "executePost", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lorg/jboss/resteasy/plugins/providers/multipart/MultipartFormDataInput;Ljava/lang/String;ZZ)Ljavax/ws/rs/core/StreamingOutput;");
     	    mv.visitLabel(l1);
     	    mv.visitInsn(ARETURN);
     	    mv.visitLabel(l2);
@@ -626,7 +632,7 @@ public class RestASMBasedWebArchiveBuilder {
     	}
 	}
 	
-	private void buildQueryProcedure(String vdbName, int vdbVersion, String modelName, String context, ClassWriter cw, boolean passthroughAuth) {
+	private void buildQueryProcedure(String vdbName, String vdbVersion, String modelName, String context, ClassWriter cw, boolean passthroughAuth) {
 		MethodVisitor mv;
 		{
 			AnnotationVisitor av0;
@@ -686,11 +692,11 @@ public class RestASMBasedWebArchiveBuilder {
 			mv.visitLabel(l0);
 			mv.visitVarInsn(ALOAD, 0);
 			mv.visitLdcInsn(vdbName);
-			mv.visitIntInsn(BIPUSH, vdbVersion);
+			mv.visitLdcInsn(vdbVersion);
 			mv.visitVarInsn(ALOAD, 1);
 			mv.visitInsn(context.equals("xml")?ICONST_0:ICONST_1);
 			mv.visitInsn(passthroughAuth?ICONST_1:ICONST_0);
-			mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/"+modelName, "executeQuery", "(Ljava/lang/String;ILjava/lang/String;ZZ)Ljavax/ws/rs/core/StreamingOutput;");
+			mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/"+modelName, "executeQuery", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZZ)Ljavax/ws/rs/core/StreamingOutput;");
 			mv.visitLabel(l1);
 			mv.visitInsn(ARETURN);
 			mv.visitLabel(l2);

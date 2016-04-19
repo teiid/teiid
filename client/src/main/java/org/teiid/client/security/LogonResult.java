@@ -55,11 +55,10 @@ public class LogonResult implements Externalizable {
 	public LogonResult() {
 	}
     
-    public LogonResult(SessionToken token, String vdbName, int vdbVersion, String clusterName) {
+    public LogonResult(SessionToken token, String vdbName, String clusterName) {
 		this.clusterName = clusterName;
 		this.sessionToken = token;
 		this.vdbName = vdbName;
-		this.vdbVersion = vdbVersion;
 	}
 
 	/**

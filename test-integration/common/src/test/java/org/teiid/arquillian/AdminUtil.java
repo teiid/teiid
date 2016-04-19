@@ -57,7 +57,7 @@ public class AdminUtil {
 		return true;
 	}
 
-	static boolean waitForVDBLoad(Admin admin, String vdbName, int vdbVersion,
+	static boolean waitForVDBLoad(Admin admin, String vdbName, Object vdbVersion,
 			int timeoutInSecs) throws AdminException {
 		long waitUntil = System.currentTimeMillis() + timeoutInSecs*1000;
 		if (timeoutInSecs < 0) {
@@ -74,7 +74,7 @@ public class AdminUtil {
 			} else {
 				first = false;
 			}
-			VDB vdb = admin.getVDB(vdbName, vdbVersion);
+			VDB vdb = admin.getVDB(vdbName, vdbVersion!=null?vdbVersion.toString():null);
 			if (vdb != null && vdb.getStatus() != Status.LOADING) {
 				return true;
 			}

@@ -33,6 +33,7 @@ import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDBImport;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 
+@SuppressWarnings("nls")
 public class TestVDBUtility {
     public static void validateVDB(VDBMetaData vdb) {
         ModelMetaData modelOne;
@@ -40,7 +41,7 @@ public class TestVDBUtility {
         assertEquals("myVDB", vdb.getName()); //$NON-NLS-1$
         assertEquals("vdb description", vdb.getDescription()); //$NON-NLS-1$
         assertEquals("connection-type", "NONE", vdb.getConnectionType().name());
-        assertEquals(1, vdb.getVersion());
+        assertEquals("1", vdb.getVersion());
         assertEquals("vdb-value", vdb.getPropertyValue("vdb-property")); //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals("vdb-value2", vdb.getPropertyValue("vdb-property2")); //$NON-NLS-1$ //$NON-NLS-2$
         
@@ -48,14 +49,10 @@ public class TestVDBUtility {
         assertNotNull(vdb.getModel("model-two")); //$NON-NLS-1$
         assertNull(vdb.getModel("model-unknown")); //$NON-NLS-1$
         
-        assertEquals(2, vdb.getVDBImports().size());
+        assertEquals(1, vdb.getVDBImports().size());
         VDBImport vdbImport = vdb.getVDBImports().get(0);
         assertEquals("x", vdbImport.getName());
-        assertEquals(2, vdbImport.getVersion());
-        
-        vdbImport = vdb.getVDBImports().get(1);
-        assertEquals("y", vdbImport.getName());
-        assertEquals(1, vdbImport.getVersion());
+        assertEquals("2", vdbImport.getVersion());
         
         modelOne = vdb.getModel("model-one"); //$NON-NLS-1$
         assertEquals("model-one", modelOne.getName()); //$NON-NLS-1$
@@ -141,11 +138,7 @@ public class TestVDBUtility {
         
         VDBImportMetadata vdbImport = new VDBImportMetadata();
         vdbImport.setName("x");
-        vdbImport.setVersion(2);
-        vdb.getVDBImports().add(vdbImport);
-        
-        vdbImport = new VDBImportMetadata();
-        vdbImport.setName("y");
+        vdbImport.setVersion("2");
         vdb.getVDBImports().add(vdbImport);
         
         ModelMetaData modelOne = new ModelMetaData();
