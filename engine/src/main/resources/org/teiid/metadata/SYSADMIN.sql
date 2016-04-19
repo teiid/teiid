@@ -150,6 +150,15 @@ BEGIN
 	END		  
 
 	DECLARE string statusTable = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_STATUS_TABLE');
+
+        /* statusTable is null hints View is Internal Mat View*/
+        IF (statusTable IS NULL)
+        BEGIN
+                DECLARE string interViewName = loadMatView.schemaName || '.' || loadMatView.viewName;
+                rowsUpdated = (EXECUTE SYSADMIN.refreshMatView(VARIABLES.interViewName, loadMatView.invalidate));
+                RETURN rowsUpdated;
+        END
+
 	DECLARE string beforeLoadScript = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_BEFORE_LOAD_SCRIPT');
 	DECLARE string loadScript = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_LOAD_SCRIPT');
 	DECLARE string afterLoadScript = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_AFTER_LOAD_SCRIPT');
