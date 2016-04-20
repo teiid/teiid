@@ -11,12 +11,10 @@
         <module name="javax.api"/>
         <module name="javax.xml.stream.api"/>
         <module name="org.apache.commons.lang" slot="3.3.2"/>
-         <module name="com.fasterxml.jackson.core.jackson-core"/>
-        <module name="com.fasterxml.jackson.core.jackson-databind"/>
-        <module name="com.fasterxml.jackson.core.jackson-annotations"/>
+         <module name="com.fasterxml.jackson.core"/>
         <module name="com.fasterxml.aalto-xml"/>
         <module name="org.codehaus.woodstox"/>
-        <module name="com.fasterxml.jackson.dataformat.xml"/>
+        <module name="com.fasterxml.jackson.dataformat"/>
         <module name="org.slf4j"/>
         <module name="org.apache.httpcomponents"/>
         <module name="org.apache.olingo.commons"/>

@@ -266,7 +266,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
         }       
         getVDBRepository().removeVDB(this.vdb.getName(), this.vdb.getVersion());
         getVDBRepository().removeListener(this.vdbListener);
-        getVDBRepository().removeListener(this.restEasyListener);
+        //getVDBRepository().removeListener(this.restEasyListener);
         final ServiceController<?> controller = context.getController().getServiceContainer().getService(TeiidServiceNames.vdbFinishedServiceName(vdb.getName(), vdb.getVersion()));
         if (controller != null) {
             controller.setMode(ServiceController.Mode.REMOVE);

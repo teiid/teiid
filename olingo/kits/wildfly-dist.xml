@@ -57,7 +57,9 @@
       <outputDirectory>${wildfly-module-root}/com/fasterxml/jackson/core/main</outputDirectory>
       <useTransitiveDependencies>false</useTransitiveDependencies>
       <includes>
-        <include>com.fasterxml.jackson.core:jackson-core</include>
+          <include>com.fasterxml.jackson.core:jackson-core</include>
+          <include>com.fasterxml.jackson.core:jackson-databind</include>
+          <include>com.fasterxml.jackson.core:jackson-annotations</include>
       </includes>
       <useProjectArtifact>true</useProjectArtifact>
     </dependencySet>         
