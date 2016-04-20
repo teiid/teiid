@@ -45,12 +45,16 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.metadata.Table.Type;
 import org.teiid.odbc.ODBCServerRemoteImpl;
+import org.teiid.query.metadata.MaterializationMetadataRepository;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.transport.PgBackendProtocol;
 
 public class PgCatalogMetadataStore extends MetadataFactory {
 	private static final long serialVersionUID = 2158418324376966987L;
+	
+	public static final String TYPMOD = "(CASE WHEN (t1.DataType = 'bigdecimal' OR t1.DataType = 'biginteger') THEN (CASE WHEN (4+(cast(65536 as float)*t1.Precision)+t1.Scale) > 2147483647 THEN 2147483647 ELSE (4+(65536*t1.Precision)+t1.Scale) END) " + //$NON-NLS-1$
+				"WHEN (t1.DataType = 'string' OR t1.DataType = 'char') THEN (CASE WHEN (t1.Length <= 2147483643) THEN 4+ t1.Length ELSE 2147483647 END) ELSE -1 END)"; //$NON-NLS-1$
 
 	public PgCatalogMetadataStore(String modelName, Map<String, Datatype> dataTypes) {
 		super(modelName, 1, modelName, dataTypes, new Properties(), null); 
@@ -172,8 +176,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"pt.oid as atttypid," + //$NON-NLS-1$
 				"pt.typlen as attlen, " + //$NON-NLS-1$
 				"convert(t1.Position, short) as attnum, " + //$NON-NLS-1$
-				"(CASE WHEN (t1.DataType = 'bigdecimal' OR t1.DataType = 'biginteger') THEN (CASE WHEN (4+(cast(65536 as float)*t1.Precision)+t1.Scale) > 2147483647 THEN 2147483647 ELSE (4+(65536*t1.Precision)+t1.Scale) END) " + //$NON-NLS-1$
-				"WHEN (t1.DataType = 'string' OR t1.DataType = 'char') THEN (CASE WHEN (t1.Length <= 2147483643) THEN 4+ t1.Length ELSE 2147483647 END) ELSE -1 END) as atttypmod, " + //$NON-NLS-1$
+				TYPMOD +" as atttypmod, " + //$NON-NLS-1$
 				"CASE WHEN (t1.NullType = 'No Nulls') THEN true ELSE false END as attnotnull, " + //$NON-NLS-1$
 				"false as attisdropped, " + //$NON-NLS-1$
 				"false as atthasdef " + //$NON-NLS-1$
@@ -185,8 +188,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"pt.oid as atttypid," + //$NON-NLS-1$
 				"pt.typlen as attlen, " + //$NON-NLS-1$
 				"convert(kc.Position, short) as attnum, " + //$NON-NLS-1$
-				"(CASE WHEN (t1.DataType = 'bigdecimal' OR t1.DataType = 'biginteger') THEN (CASE WHEN (4+(cast(65536 as float)*t1.Precision)+t1.Scale) > 2147483647 THEN 2147483647 ELSE (4+(65536*t1.Precision)+t1.Scale) END) " + //$NON-NLS-1$
-				"WHEN (t1.DataType = 'string' OR t1.DataType = 'char') THEN (CASE WHEN (t1.Length <= 2147483643) THEN 4+ t1.Length ELSE 2147483647 END) ELSE -1 END) as atttypmod, " + //$NON-NLS-1$
+				TYPMOD +" as atttypmod, " + //$NON-NLS-1$
 				"CASE WHEN (t1.NullType = 'No Nulls') THEN true ELSE false END as attnotnull, " + //$NON-NLS-1$
 				"false as attisdropped, " + //$NON-NLS-1$
 				"false as atthasdef " + //$NON-NLS-1$
@@ -226,7 +228,10 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addColumn("relhasrules", DataTypeManager.DefaultDataTypes.BOOLEAN, t); //$NON-NLS-1$ 
 		
 		// 	True if we generate an OID for each row of the relation
-		addColumn("relhasoids", DataTypeManager.DefaultDataTypes.BOOLEAN, t); //$NON-NLS-1$ 
+		addColumn("relhasoids", DataTypeManager.DefaultDataTypes.BOOLEAN, t); //$NON-NLS-1$
+		
+		//additional column not present in pg metadata - for column metadata query
+		addColumn("relnspname", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
 
 		addPrimaryKey("pk_pg_class", Arrays.asList("oid"), t); //$NON-NLS-1$ //$NON-NLS-2$
 
@@ -237,7 +242,8 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"convert(0, float) as reltuples, " + //$NON-NLS-1$
 				"0 as relpages, " + //$NON-NLS-1$
 				"false as relhasrules, " + //$NON-NLS-1$
-				"false as relhasoids " + //$NON-NLS-1$
+				"false as relhasoids, " + //$NON-NLS-1$
+				"t1.SchemaName as relnspname " + //$NON-NLS-1$
 				"FROM SYS.Tables t1 UNION ALL SELECT pg_catalog.getOid(t1.uid) as oid, t1.name as relname, " +  //$NON-NLS-1$
 				"pg_catalog.getOid(uid) as relnamespace, " + //$NON-NLS-1$
 				"convert('i', char) as relkind," + //$NON-NLS-1$
@@ -245,7 +251,8 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"convert(0, float) as reltuples, " + //$NON-NLS-1$
 				"0 as relpages, " + //$NON-NLS-1$
 				"false as relhasrules, " + //$NON-NLS-1$
-				"false as relhasoids " + //$NON-NLS-1$
+				"false as relhasoids, " + //$NON-NLS-1$
+				"t1.SchemaName as relnspname " + //$NON-NLS-1$
 				"FROM SYS.Keys t1 WHERE t1.type in ('Primary', 'Unique', 'Index')"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
 		return t;		
@@ -476,6 +483,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 			"' columns oid integer, typname string, typlen short, typtype char, typbasetype integer, typtypmod integer, typrelid integer, typelem integer) AS t"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);		
 		t.setMaterialized(true);
+		t.setProperty(MaterializationMetadataRepository.ALLOW_MATVIEW_MANAGEMENT, "true"); //$NON-NLS-1$
 		return t;		
 	}
 	
@@ -527,10 +535,13 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addColumn("name", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
 		addColumn("uid", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
 		addColumn("typlen", DataTypeManager.DefaultDataTypes.SHORT, t); //$NON-NLS-1$
+		addColumn("typtype", DataTypeManager.DefaultDataTypes.CHAR, t); //$NON-NLS-1$
+		addColumn("typbasetype", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+		addColumn("typtypmod", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
 		
 		addPrimaryKey("matpg_datatype_names", Arrays.asList("oid", "name"), t); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
 		addIndex("matpg_datatype_ids", true, Arrays.asList("typname", "oid"), t); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
-		String transformation = "select pt.oid as oid, pt.typname as typname, t.Name name, t.UID, pt.typlen from pg_catalog.pg_type pt JOIN (select (CASE "+//$NON-NLS-1$
+		String transformation = "select pt.oid as oid, pt.typname as typname, t.Name name, t.UID, pt.typlen, pt.typtype, pt.typbasetype, pt.typtypmod from pg_catalog.pg_type pt JOIN (select (CASE "+//$NON-NLS-1$
 		"WHEN (Name = 'clob' OR Name = 'blob') THEN 'lo' " +//$NON-NLS-1$
 		"WHEN (Name = 'byte' ) THEN 'short' " +//$NON-NLS-1$
 		"WHEN (Name = 'time' ) THEN 'datetime' " + //$NON-NLS-1$
@@ -540,6 +551,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		"ELSE Name END) as pg_name, Name, UID from SYS.DataTypes) as t ON t.pg_name = pt.typname";  //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
 		t.setMaterialized(true);
+		t.setProperty(MaterializationMetadataRepository.ALLOW_MATVIEW_MANAGEMENT, "true"); //$NON-NLS-1$
 		return t;
 	}	
 	

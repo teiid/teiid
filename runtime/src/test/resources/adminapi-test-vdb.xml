@@ -3,6 +3,8 @@
 
 	<description>The adminapi test VDB</description>
 	
+	<property name="include-pg-metadata" value="false"/>
+	
 	<model name="TestModel">
         <property name="supports-multi-source-bindings" value="true"/>
         <source name="text-connector" translator-name="file" connection-jndi-name="java:/test-file"/>
