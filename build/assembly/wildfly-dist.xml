@@ -64,6 +64,7 @@
             <include>org.jboss.teiid:teiid-olingo-common</include>
             <include>org.jboss.teiid:teiid-olingo</include>
             <include>org.jboss.teiid:teiid-jboss-security</include>
+            <include>org.jboss.teiid:rest-service</include>
         </includes>
         <binaries> 
           <includeDependencies>false</includeDependencies>

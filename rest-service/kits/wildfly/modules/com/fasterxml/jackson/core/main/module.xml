@@ -1,14 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module xmlns="urn:jboss:module:1.0" name="com.fasterxml.jackson.core">
+
     <properties>
         <property name="jboss.api" value="private"/>
     </properties>
-    <resources>        
+    
+    <resources>
         <resource-root path="jackson-core-${version.com.fasterxml.jackson.core}.jar" />
         <resource-root path="jackson-databind-${version.com.fasterxml.jackson.core}.jar" />
         <resource-root path="jackson-annotations-${version.com.fasterxml.jackson.core}.jar" />
     </resources>
+    
     <dependencies>
         <module name="javax.api"/>
-    </dependencies>    
+    </dependencies>
+    
 </module>
