@@ -10,8 +10,10 @@
     </resources>
     
     <dependencies>
+        <module name="javax.api"/>
+        <module name="javax.xml.stream.api"/>
         <module name="com.fasterxml.jackson.core"/>
         <module name="org.yaml.snakeyaml" />
-        <module name="org.codehaus.woodstox"/>
+        <module name="org.codehaus.woodstox"/>        
     </dependencies>
 </module>

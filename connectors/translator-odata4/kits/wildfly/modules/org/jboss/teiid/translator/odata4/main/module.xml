@@ -17,7 +17,8 @@
         <module name="org.jboss.teiid.olingo.common"/>    
         <module name="org.apache.olingo.client"/>
         <module name="org.jboss.teiid.common-core" />
-        <module name="org.jboss.teiid.api" />
+        <module name="org.jboss.teiid.api"/>
+        <module name="org.jboss.teiid.translator.document.api"/>
         <module name="org.jboss.teiid.translator.ws"/>
         <module name="org.jboss.teiid.translator.jdbc"/>
     </dependencies>
