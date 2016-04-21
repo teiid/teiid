@@ -17,5 +17,7 @@
         <module name="org.jboss.teiid.api" />
         <module name="org.jboss.teiid.admin" />
         <module name="org.hibernate" />
+
+        <module name="org.modeshape.jdbc" optional="true"  export="true" />
     </dependencies>
 </module>
