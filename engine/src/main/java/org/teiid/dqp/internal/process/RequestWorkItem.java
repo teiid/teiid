@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.teiid.client.RequestMessage;
 import org.teiid.client.RequestMessage.ShowPlan;
@@ -41,6 +42,7 @@ import org.teiid.client.ResizingArrayList;
 import org.teiid.client.ResultsMessage;
 import org.teiid.client.lob.LobChunk;
 import org.teiid.client.metadata.ParameterInfo;
+import org.teiid.client.plan.PlanNode;
 import org.teiid.client.util.ExceptionUtil;
 import org.teiid.client.util.ResultsReceiver;
 import org.teiid.client.xa.XATransactionException;
@@ -208,6 +210,10 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 
 	private boolean explicitSourceClose;
 	private int schemaSize;
+	
+	AtomicLong dataBytes = new AtomicLong();
+	private long planningStart;
+	private long planningEnd;
     
     public RequestWorkItem(DQPCore dqpCore, RequestMessage requestMsg, Request request, ResultsReceiver<ResultsMessage> receiver, RequestID requestID, DQPWorkContext workContext) {
         this.requestMsg = requestMsg;
@@ -568,6 +574,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	}
 
 	protected void processNew() throws TeiidProcessingException, TeiidComponentException {
+		planningStart = System.currentTimeMillis();
 		SessionAwareCache<CachedResults> rsCache = dqpCore.getRsCache();
 				
 		boolean cachable = false;
@@ -622,6 +629,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         }
         request.processor.getContext().setWorkItem(this);
 		processor = request.processor;
+		planningEnd = System.currentTimeMillis();
 		this.dqpCore.logMMCommand(this, Event.PLAN, null);
 		collector = new BatchCollector(processor, processor.getBufferManager(), this.request.context, isForwardOnly()) {
 			
@@ -961,7 +969,12 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		if(analysisRecord != null) {
         	if (requestMsg.getShowPlan() != ShowPlan.OFF) {
         		if (processor != null) {
-            		response.setPlanDescription(processor.getProcessorPlan().getDescriptionProperties());
+        			PlanNode node = processor.getProcessorPlan().getDescriptionProperties();
+        			node.addProperty(AnalysisRecord.PROP_DATA_BYTES_SENT, String.valueOf(dataBytes.get()));
+        			if (planningEnd != 0) {
+        				node.addProperty(AnalysisRecord.PROP_PLANNING_TIME, String.valueOf(planningEnd - planningStart));
+        			}
+            		response.setPlanDescription(node);
         		}
         		if (analysisRecord.getAnnotations() != null && !analysisRecord.getAnnotations().isEmpty()) {
 		            response.setAnnotations(analysisRecord.getAnnotations());

@@ -437,7 +437,18 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     
     @Override
     public String getName() {
-    	return "ENHANCED SORT JOIN" + (semiDep?" [SEMI]":""); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+    	StringBuilder result = new StringBuilder("ENHANCED SORT JOIN"); //$NON-NLS-1$ 
+    	if (semiDep) {
+    		result.append(" [SEMI]"); //$NON-NLS-1$  
+    	}
+    	if (this.processingSortLeft != null) {
+	    	if (this.processingSortLeft != SortOption.NOT_SORTED && this.processingSortRight != SortOption.NOT_SORTED) {
+	    		result.append(" RAN AS SORT MERGE"); //$NON-NLS-1$
+	    	} else if (repeatedMerge) {
+	    		result.append(" RAN AS REPEATED SORT MERGE"); //$NON-NLS-1$
+	    	}
+    	}
+    	return result.toString();
     }
     
     public void setSemiDep(boolean semiDep) {

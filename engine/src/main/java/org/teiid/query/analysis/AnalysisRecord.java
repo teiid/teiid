@@ -61,6 +61,7 @@ public class AnalysisRecord {
 
 	// Common 
     public static final String PROP_OUTPUT_COLS = "Output Columns"; //$NON-NLS-1$
+    public static final String PROP_DATA_BYTES_SENT = "Data Bytes Sent"; //$NON-NLS-1$
     
     // Relational
     public static final String PROP_CRITERIA = "Criteria"; //$NON-NLS-1$
@@ -108,6 +109,8 @@ public class AnalysisRecord {
     public static final String PROP_VARIABLE = "Variable"; //$NON-NLS-1$
     public static final String PROP_THEN = "Then"; //$NON-NLS-1$
     public static final String PROP_ELSE = "Else"; //$NON-NLS-1$
+
+	public static final String PROP_PLANNING_TIME = "Planning Time"; //$NON-NLS-1$
 
     // Flags regarding what should be recorded
     private boolean recordQueryPlan;
