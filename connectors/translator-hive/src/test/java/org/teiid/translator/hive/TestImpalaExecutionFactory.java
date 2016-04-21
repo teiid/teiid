@@ -27,10 +27,13 @@ import java.util.Arrays;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.teiid.cdk.CommandBuilder;
+import org.teiid.language.Command;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageFactory;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.FunctionModifier;
@@ -66,5 +69,13 @@ public class TestImpalaExecutionFactory {
     @Test public void testConversionSupport() {
     	assertFalse(impalaTranslator.supportsConvert(FunctionModifier.TIMESTAMP, FunctionModifier.TIME));
     	assertTrue(impalaTranslator.supportsConvert(FunctionModifier.STRING, FunctionModifier.TIMESTAMP));
+    }
+    
+    @Test public void testOrderedUnion() {
+    	CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
+        Command obj = commandBuilder.getCommand("SELECT g_1.StringNum AS c_0 FROM bqt1.SmallA AS g_1 WHERE g_1.IntKey <= 50 UNION ALL SELECT g_0.StringNum AS c_0 FROM bqt1.SmallB AS g_0 WHERE g_0.IntKey > 50 ORDER BY c_0 limit 10");
+        SQLConversionVisitor sqlVisitor = impalaTranslator.getSQLConversionVisitor(); 
+        sqlVisitor.append(obj);
+        assertEquals("SELECT c_0 FROM (SELECT g_1.StringNum AS c_0 FROM SmallA g_1 WHERE g_1.IntKey <= 50 UNION ALL SELECT g_0.StringNum AS c_0 FROM SmallB g_0 WHERE g_0.IntKey > 50) X__ ORDER BY c_0 LIMIT 10", sqlVisitor.toString());
     }
 }
