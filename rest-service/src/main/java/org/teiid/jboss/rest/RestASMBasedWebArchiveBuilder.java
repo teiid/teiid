@@ -76,8 +76,7 @@ public class RestASMBasedWebArchiveBuilder {
 		MetadataStore metadataStore = vdb.getAttachment(TransformationMetadata.class).getMetadataStore();
 		
 		Properties props = new Properties();
-		String fullName = vdb.getFullName();
-		fullName = StringUtil.replaceAll(fullName,	".", "_");
+		String fullName = vdb.getName() + "_" + vdb.getVersion();
 				
 		props.setProperty("${context-name}", fullName);
 		props.setProperty("${vdb-name}", vdb.getName());
