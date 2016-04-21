@@ -35,17 +35,24 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.teiid.translator.ExecutionContext;
 
 
 @SuppressWarnings("nls")
 public class TesttInfinispanConnectionFactory  {
 	protected static final String JNDI_NAME = "java/MyCacheManager";
 
-
+	@Mock
+	private static RemoteCacheManager REMOTE_CACHE_MGR;
+	
 	private static InfinispanManagedConnectionFactory afactory;
 	
 	@Before
-    public void beforeEach() throws Exception {  
+    public void beforeEach() throws Exception {  		
+			 
+		MockitoAnnotations.initMocks(this);
   
         afactory = new InfinispanManagedConnectionFactory() {
 			/**
@@ -62,14 +69,14 @@ public class TesttInfinispanConnectionFactory  {
 			protected RemoteCacheManager createRemoteCacheFromProperties(
 					ClassLoader classLoader) throws ResourceException {
 				// TODO Auto-generated method stub
-				return null;
+				return REMOTE_CACHE_MGR;
 			}
 
 			@Override
 			protected RemoteCacheManager createRemoteCacheFromServerList(
 					ClassLoader classLoader) throws ResourceException {
 				// TODO Auto-generated method stub
-				return null;
+				return REMOTE_CACHE_MGR;
 			}
 			
 			@Override
