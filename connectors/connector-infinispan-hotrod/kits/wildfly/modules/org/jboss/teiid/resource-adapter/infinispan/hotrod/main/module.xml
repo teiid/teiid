@@ -15,9 +15,20 @@
         <module name="javax.resource.api" />
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.api" />    
-		<module name="org.jboss.teiid.translator.infinispan.hotrod" />
+	<module name="org.jboss.teiid.translator.infinispan.hotrod" export="true" />
 		
-		<!--  the JDG dependencies can be found in the translator-infinispan-hotrod module -->
+	<!--  additional JDG dependencies can be found in the translator-infinispan-hotrod module -->
 		
+ 	<module name="org.infinispan.commons" slot="${jdg.slot}" optional="true" services="export"/>
+        <module name="org.infinispan.client.hotrod" slot="${jdg.slot}" optional="true" services="export"/>
+   	<module name="org.jboss.remoting3"  />   
+
+      <!--
+        When using pojo annotations, "your.pojo.module" name needs to be replaced with the 
+        module name that has the java class(s) that's being stored in the JDG cache         
+        -->
+    
+        <module name="your.pojo.module"  optional="true"  export="true" />
+      
     </dependencies>
 </module>
