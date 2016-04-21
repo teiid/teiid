@@ -916,10 +916,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
 
     protected void appendSetQuery(SetQuery parent, QueryExpression obj, boolean right) {
-        if((!(obj instanceof SetQuery) && useParensForSetQueries()) 
-        		|| (!useSelectLimit() && (obj.getLimit() != null || obj.getOrderBy() != null)) || (right && ((obj instanceof SetQuery 
-        				&& ((parent.isAll() && !((SetQuery)obj).isAll()) 
-        						|| parent.getOperation() != ((SetQuery)obj).getOperation())) || obj.getLimit() != null || obj.getOrderBy() != null))) {
+        if(shouldNestSetChild(parent, obj, right)) {
             buffer.append(Tokens.LPAREN);
             append(obj);
             buffer.append(Tokens.RPAREN);
@@ -930,6 +927,14 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
             append(obj);
         }
     }
+
+	protected boolean shouldNestSetChild(SetQuery parent, QueryExpression obj,
+			boolean right) {
+		return (!(obj instanceof SetQuery) && useParensForSetQueries()) 
+        		|| (!useSelectLimit() && (obj.getLimit() != null || obj.getOrderBy() != null)) || (right && ((obj instanceof SetQuery 
+        				&& ((parent.isAll() && !((SetQuery)obj).isAll()) 
+        						|| parent.getOperation() != ((SetQuery)obj).getOperation())) || obj.getLimit() != null || obj.getOrderBy() != null));
+	}
     
     @Override
     public void visit(With obj) {
