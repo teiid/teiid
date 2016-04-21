@@ -257,13 +257,13 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		execute("SELECT * FROM Txns.G1"); //$NON-NLS-1$
 		this.internalResultSet.next();
 		
-		assertTrue("sample_2_1_1.war not found", AdminUtil.waitForDeployment(admin, "sample_2_1_1.war", 5));
+		assertTrue("sample_2.1.1.war not found", AdminUtil.waitForDeployment(admin, "sample_2.1.1.war", 5));
 		
 		HttpEntity entity = MultipartEntityBuilder.create()
                 .addTextBody("p1", "456")
                 .build();
 		
-		String response = httpMultipartPost(entity, "http://localhost:8080/sample_2_1_1/View/g1post");
+		String response = httpMultipartPost(entity, "http://localhost:8080/sample_2.1.1/View/g1post");
 		assertEquals("response did not match expected", "<rows p1=\"456\" p2=\"1\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
 		
 		admin.undeploy("sample-vdb.xml");

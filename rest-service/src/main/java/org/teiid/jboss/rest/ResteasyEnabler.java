@@ -35,7 +35,6 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.jboss.AdminFactory;
 import org.teiid.adminapi.jboss.AdminFactory.AdminImpl;
-import org.teiid.core.util.StringUtil;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.ContainerLifeCycleListener;
 import org.teiid.deployers.VDBLifeCycleListener;
@@ -99,13 +98,13 @@ public class ResteasyEnabler implements VDBLifeCycleListener {
 							admin.deploy(warName, new ByteArrayInputStream(warContents), false);
 						} catch (FileNotFoundException e) {
 							LogManager.logWarning(LogConstants.CTX_RUNTIME, e, 
-							        RestServicePlugin.Util.gs(RestServicePlugin.Event.TEIID28004, warName)); //$NON-NLS-1$
+							        RestServicePlugin.Util.gs(RestServicePlugin.Event.TEIID28004, warName)); 
 						} catch (IOException e) {
 							LogManager.logWarning(LogConstants.CTX_RUNTIME, e, 
-							        RestServicePlugin.Util.gs(RestServicePlugin.Event.TEIID28004, warName)); //$NON-NLS-1$;
+							        RestServicePlugin.Util.gs(RestServicePlugin.Event.TEIID28004, warName)); 
 						} catch (AdminException e) {
 							LogManager.logWarning(LogConstants.CTX_RUNTIME, e, 
-							        RestServicePlugin.Util.gs(RestServicePlugin.Event.TEIID28004, warName)); //$NON-NLS-1$
+							        RestServicePlugin.Util.gs(RestServicePlugin.Event.TEIID28004, warName)); 
 						}
 					}
 				};
@@ -121,7 +120,7 @@ public class ResteasyEnabler implements VDBLifeCycleListener {
 	}
 	
 	private String buildName(String name, String version) {
-		return name+"_"+StringUtil.replaceAll(version, ".", "_") +".war"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		return name+"_"+version +".war"; //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
 	private boolean hasRestMetadata(VDBMetaData vdb) {
