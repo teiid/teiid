@@ -705,8 +705,7 @@ public class LanguageBridgeFactory {
 					baseType = DataTypeManager.DefaultDataClasses.OBJECT;
 				}
     		}
-    		return new org.teiid.language.Array(baseType, translateExpressionList(vals));
-    		
+    		return new org.teiid.language.Array(baseType, translateExpressionList(vals));   		
     	}
         Literal result = new Literal(constant.getValue(), constant.getType());
         result.setBindEligible(constant.isBindEligible());
@@ -959,7 +958,7 @@ public class LanguageBridgeFactory {
             
             ProcedureParameter metadataParam = metadataFactory.getParameter(param);
             //we can assume for now that all arguments will be literals, which may be multivalued
-            Literal value = null;
+            org.teiid.language.Expression value = null;
             if (direction != Direction.OUT) {
             	if (param.isVarArg()) {
             		ArrayImpl av = (ArrayImpl) ((Constant)param.getExpression()).getValue();
@@ -971,7 +970,7 @@ public class LanguageBridgeFactory {
             		}
             		break;
             	}
-            	value = (Literal)translate(param.getExpression());
+            	value = translate(param.getExpression());
             }
             Argument arg = new Argument(direction, value, param.getClassType(), metadataParam);
             translatedParameters.add(arg);

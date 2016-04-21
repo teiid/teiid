@@ -7,7 +7,7 @@ import java.util.Map;
 
 import org.teiid.language.Join.JoinType;
 
-public class DocumentJoinNode extends DocumentNode {
+class DocumentJoinNode extends DocumentNode {
     private DocumentNode left;
     private DocumentNode right;
     private JoinType type;
@@ -19,9 +19,9 @@ public class DocumentJoinNode extends DocumentNode {
     }
 
     public List<Map<String, Object>> mergeTuples(List<Map<String, Object>> leftRows,
-             ODataDocument parentDocument) {
+             Document parentDocument) {
         List<Map<String, Object>> joinedRows = new ArrayList<Map<String,Object>>();
-        List<ODataDocument> rightDocuments = parentDocument
+        List<? extends Document> rightDocuments = parentDocument
                 .getChildDocuments(this.right.getName());        
         if (rightDocuments == null) {
             if (this.type.equals(JoinType.LEFT_OUTER_JOIN)) {
@@ -38,7 +38,7 @@ public class DocumentJoinNode extends DocumentNode {
             }
         } else {
             for (Map<String, Object> leftRow:leftRows) {
-                for (ODataDocument rightDocument : rightDocuments) {
+                for (Document rightDocument : rightDocuments) {
                     Map<String, Object> rightRow = rightDocument.getProperties();
                     LinkedHashMap<String, Object> row = new LinkedHashMap<String, Object>();
                     if (this.type.equals(JoinType.INNER_JOIN)) {
@@ -57,7 +57,7 @@ public class DocumentJoinNode extends DocumentNode {
 
                 if (this.joinNode != null) {
                     // do further joins, only span up to sibiling or child                
-                    for (ODataDocument rightDocument : rightDocuments) {
+                    for (Document rightDocument : rightDocuments) {
                         joinedRows = this.joinNode.mergeTuples(joinedRows, rightDocument);
                     }
                 }

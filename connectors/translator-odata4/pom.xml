@@ -26,6 +26,10 @@
             <artifactId>teiid-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>document-api</artifactId>
+        </dependency>        
+        <dependency>
             <groupId>org.jboss.spec.javax.resource</groupId>
             <artifactId>jboss-connector-api_1.7_spec</artifactId>
         </dependency>
@@ -40,7 +44,6 @@
         <dependency>
             <groupId>org.apache.olingo</groupId>
             <artifactId>odata-commons-api</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.olingo</groupId>

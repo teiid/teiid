@@ -84,6 +84,15 @@ public class Procedure extends AbstractMetadataRecord implements Modifiable {
 	public List<ProcedureParameter> getParameters() {
 		return parameters;
 	}
+	
+    public ProcedureParameter getParameterByName(String param) {
+        for(ProcedureParameter p: this.parameters) {
+            if (p.getName().equals(param)) {
+                return p;
+            }
+        }
+        return null;
+    }	
 
 	public void setParameters(List<ProcedureParameter> parameters) {
 		this.parameters = parameters;
