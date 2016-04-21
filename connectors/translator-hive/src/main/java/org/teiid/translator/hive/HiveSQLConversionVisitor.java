@@ -151,11 +151,13 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
     
     @Override
     public void visit(SetQuery obj) {
+    	//TODO: with hive 1.2, this handling is not necessary
+    	//even with hive 0.13 it's only partially necessary - for distinct
     	if (obj.getWith() != null) {
     		append(obj.getWith());
     	}
     	
-    	Select select =  (Select)obj.getLeftQuery();
+    	Select select =  obj.getProjectedQuery();
     	buffer.append(SELECT).append(Tokens.SPACE);
     	if(!obj.isAll()) {
     		buffer.append(DISTINCT).append(Tokens.SPACE);
@@ -164,20 +166,13 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
     	buffer.append(Tokens.SPACE);
     	buffer.append(FROM).append(Tokens.SPACE);
     	buffer.append(Tokens.LPAREN);
-    	 
-        appendSetQuery(obj, obj.getLeftQuery(), false);
+    	
+    	appendSetChild(obj, obj.getLeftQuery(), false);
         
-        buffer.append(Tokens.SPACE);
+        appendSetOp(obj);
         
-        appendSetOperation(obj.getOperation());
+        appendSetChild(obj, obj.getRightQuery(), true);
 
-        // UNION "ALL" always
-        buffer.append(Tokens.SPACE);
-        buffer.append(ALL);                
-        buffer.append(Tokens.SPACE);
-
-        appendSetQuery(obj, obj.getRightQuery(), true);
-        
         OrderBy orderBy = obj.getOrderBy();
         if(orderBy != null) {
             buffer.append(Tokens.SPACE);
@@ -193,6 +188,32 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
         buffer.append(Tokens.SPACE);
         buffer.append("X__"); //$NON-NLS-1$
     }
+
+	private void appendSetOp(SetQuery obj) {
+		buffer.append(Tokens.SPACE);
+        
+        appendSetOperation(obj.getOperation());
+
+        // UNION "ALL" always
+        buffer.append(Tokens.SPACE);
+        buffer.append(ALL);                
+        buffer.append(Tokens.SPACE);
+	}
+
+	private void appendSetChild(SetQuery obj, QueryExpression child, boolean right) {
+		if (child instanceof Select || shouldNestSetChild(obj, child, right)) {
+    		appendSetQuery(obj, child, right);
+    	} else {
+    		//non-nested set op
+    		SetQuery setQuery = (SetQuery)child;
+    		
+            append(setQuery.getLeftQuery());
+
+            appendSetOp(setQuery);
+            
+            appendSetChild(setQuery, setQuery.getRightQuery(), true);
+    	}
+	}
     
     @Override
     public void visit(Select obj) {
