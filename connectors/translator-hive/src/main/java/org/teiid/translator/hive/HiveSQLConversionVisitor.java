@@ -158,14 +158,7 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
     	}
     	
     	Select select =  obj.getProjectedQuery();
-    	buffer.append(SELECT).append(Tokens.SPACE);
-    	if(!obj.isAll()) {
-    		buffer.append(DISTINCT).append(Tokens.SPACE);
-    	}
-    	addColumns(select.getDerivedColumns());
-    	buffer.append(Tokens.SPACE);
-    	buffer.append(FROM).append(Tokens.SPACE);
-    	buffer.append(Tokens.LPAREN);
+    	startInlineView(select, !obj.isAll());
     	
     	appendSetChild(obj, obj.getLeftQuery(), false);
         
@@ -173,7 +166,11 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
         
         appendSetChild(obj, obj.getRightQuery(), true);
 
-        buffer.append(Tokens.RPAREN);
+        endInlineView(obj);
+    }
+
+	private void endInlineView(QueryExpression obj) {
+		buffer.append(Tokens.RPAREN);
         buffer.append(Tokens.SPACE);
         buffer.append("X__"); //$NON-NLS-1$
         
@@ -188,7 +185,18 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
             buffer.append(Tokens.SPACE);
             append(limit);
         }
-    }
+	}
+
+	private void startInlineView(Select select, boolean distinct) {
+		buffer.append(SELECT).append(Tokens.SPACE);
+    	if(distinct) {
+    		buffer.append(DISTINCT).append(Tokens.SPACE);
+    	}
+    	addColumns(select.getDerivedColumns());
+    	buffer.append(Tokens.SPACE);
+    	buffer.append(FROM).append(Tokens.SPACE);
+    	buffer.append(Tokens.LPAREN);
+	}
 
 	private void appendSetOp(SetQuery obj) {
 		buffer.append(Tokens.SPACE);
@@ -227,6 +235,34 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
 					cr.setTable(null);
 				}
 			}
+    	}
+    	if (obj.isDistinct() && obj.getGroupBy() != null) {
+    		if (obj.getWith() != null) {
+        		append(obj.getWith());
+        	}
+    		if (obj.getOrderBy() == null) {
+    			boolean needsAliasing = false;
+    			List<DerivedColumn> derivedColumns = obj.getDerivedColumns();
+				for (int i = 0; i < derivedColumns.size(); i++) {
+    				DerivedColumn dc = derivedColumns.get(i);
+    				if (dc.getAlias() == null) {
+    					needsAliasing = true;
+    					break;
+    				}
+    			}
+				if (needsAliasing) {
+					for (int i = 0; i < derivedColumns.size(); i++) {
+	    				DerivedColumn dc = derivedColumns.get(i);
+	    				dc.setAlias("c_" + i); //$NON-NLS-1$
+	    			}	
+				}
+    		}
+    		startInlineView(obj, obj.isDistinct());
+    		//remove the distinct from the inline view
+    		obj.setDistinct(false);
+    		super.visit(obj);
+    		endInlineView(obj);
+    		return;
     	}
     	super.visit(obj);
     }

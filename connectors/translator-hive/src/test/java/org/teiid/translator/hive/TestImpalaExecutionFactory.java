@@ -120,4 +120,12 @@ public class TestImpalaExecutionFactory {
         sqlVisitor.append(obj);
         assertEquals("SELECT c_0 FROM (SELECT g_1.StringNum AS c_0 FROM SmallA g_1 WHERE g_1.IntKey <= 50 UNION ALL SELECT g_0.StringNum AS c_0 FROM SmallB g_0 WHERE g_0.IntKey > 50) X__ ORDER BY c_0 LIMIT 10", sqlVisitor.toString());
     }
+    
+    @Test public void testDistinctAggregate() {
+    	CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
+        Command obj = commandBuilder.getCommand("SELECT distinct max(StringNum) FROM bqt1.SmallA group by stringkey");
+        SQLConversionVisitor sqlVisitor = impalaTranslator.getSQLConversionVisitor(); 
+        sqlVisitor.append(obj);
+        assertEquals("SELECT DISTINCT c_0 FROM (SELECT MAX(SmallA.StringNum) AS c_0 FROM SmallA GROUP BY SmallA.StringKey) X__", sqlVisitor.toString());
+    }
 }
