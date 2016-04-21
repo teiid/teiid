@@ -173,6 +173,10 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
         
         appendSetChild(obj, obj.getRightQuery(), true);
 
+        buffer.append(Tokens.RPAREN);
+        buffer.append(Tokens.SPACE);
+        buffer.append("X__"); //$NON-NLS-1$
+        
         OrderBy orderBy = obj.getOrderBy();
         if(orderBy != null) {
             buffer.append(Tokens.SPACE);
@@ -184,9 +188,6 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
             buffer.append(Tokens.SPACE);
             append(limit);
         }
-        buffer.append(Tokens.RPAREN);
-        buffer.append(Tokens.SPACE);
-        buffer.append("X__"); //$NON-NLS-1$
     }
 
 	private void appendSetOp(SetQuery obj) {
