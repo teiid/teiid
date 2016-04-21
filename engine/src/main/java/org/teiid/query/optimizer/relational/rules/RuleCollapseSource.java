@@ -655,7 +655,15 @@ public final class RuleCollapseSource implements OptimizerRule {
             }
             case NodeConstants.Types.DUP_REMOVE: 
             {
-                query.getSelect().setDistinct(true);
+            	boolean distinct = true;
+            	PlanNode grouping = NodeEditor.findNodePreOrder(node.getFirstChild(), NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE);
+            	if (grouping != null) {
+        		   List groups = (List) grouping.getProperty(NodeConstants.Info.GROUP_COLS);
+                   if(groups == null || groups.isEmpty()) {
+                	   distinct = false;
+                   }
+            	}
+                query.getSelect().setDistinct(distinct);
                 break;    
             }
             case NodeConstants.Types.GROUP: 
