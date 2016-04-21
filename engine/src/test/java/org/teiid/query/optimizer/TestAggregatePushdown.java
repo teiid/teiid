@@ -1488,4 +1488,12 @@ public class TestAggregatePushdown {
         TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
             new String[]{"SELECT g_0.StringKey, SUM(g_0.IntNum), COUNT(DISTINCT CASE WHEN g_0.FloatNum >= 0.0 THEN 1 END) FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey = 6 GROUP BY g_0.StringKey HAVING (SUM(g_0.IntNum) > 100) AND (COUNT(DISTINCT CASE WHEN g_0.FloatNum >= 0.0 THEN 1 END) = 0)"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); 
     }
+
+    @Test public void testRemoveRedundantDistinct() throws Exception {
+    	String sql = "SELECT distinct count(*) from bqt1.smalla";
+    			
+        BasicSourceCapabilities caps = getAggregateCapabilities();
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
+            new String[]{"SELECT COUNT(*) FROM BQT1.SmallA AS g_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); 
+    }
 }
