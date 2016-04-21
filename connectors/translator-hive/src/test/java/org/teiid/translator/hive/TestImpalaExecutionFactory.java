@@ -99,4 +99,12 @@ public class TestImpalaExecutionFactory {
         sqlVisitor.append(obj);
         assertEquals("SELECT v0.c0, v0.c1, v1.c2, v2.c3 FROM (SELECT COUNT(DISTINCT g1.e1) AS c0, 1 AS c1 FROM g1 WHERE g1.e3 = true) v0 CROSS JOIN (SELECT COUNT(DISTINCT g1.e2) AS c2 FROM g1 WHERE g1.e3 = true) v1 CROSS JOIN (SELECT AVG(DISTINCT g1.e4) AS c3 FROM g1 WHERE g1.e3 = true) v2", sqlVisitor.toString());
     }
+    
+    @Test public void testOrderedUnion() {
+    	CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
+        Command obj = commandBuilder.getCommand("SELECT g_1.StringNum AS c_0 FROM bqt1.SmallA AS g_1 WHERE g_1.IntKey <= 50 UNION ALL SELECT g_0.StringNum AS c_0 FROM bqt1.SmallB AS g_0 WHERE g_0.IntKey > 50 ORDER BY c_0 limit 10");
+        SQLConversionVisitor sqlVisitor = impalaTranslator.getSQLConversionVisitor(); 
+        sqlVisitor.append(obj);
+        assertEquals("SELECT c_0 FROM (SELECT g_1.StringNum AS c_0 FROM SmallA g_1 WHERE g_1.IntKey <= 50 UNION ALL SELECT g_0.StringNum AS c_0 FROM SmallB g_0 WHERE g_0.IntKey > 50) X__ ORDER BY c_0 LIMIT 10", sqlVisitor.toString());
+    }
 }
