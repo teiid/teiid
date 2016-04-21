@@ -29,10 +29,6 @@ public class DocumentNode {
         return this.joinNode;
     }    
     
-    public DocumentJoinNode getJoinNode() {
-        return this.joinNode;
-    }
-    
     public Table getTable() {
         return this.table;
     }
@@ -59,7 +55,7 @@ public class DocumentNode {
         return keys;
     }
 
-    public List<Map<String, Object>> tuples(ODataDocument document) {
+    public List<Map<String, Object>> tuples(Document document) {
         List<Map<String, Object>> joined = new ArrayList<Map<String, Object>>();
 
         Map<String, Object> row = new LinkedHashMap<String, Object>();

@@ -88,8 +88,8 @@
         <version.jts>1.13</version.jts>
         <version.jts2geojson>0.7.0</version.jts2geojson>
         <version.proj4j>0.1.0</version.proj4j>
-        <version.swagger-parser>1.0.10</version.swagger-parser>
-	    <version.io.swagger>1.5.2</version.io.swagger>
+	    <version.swagger-parser>1.0.10</version.swagger-parser>
+	    <version.io.swagger>1.5.8</version.io.swagger>
         <version.org.apache.phoenix.phoenix-core>4.2.1</version.org.apache.phoenix.phoenix-core>
         <version.net.sf.retrotranslator>1.2.9</version.net.sf.retrotranslator>
         <version.org.apache.cxf>3.0.5</version.org.apache.cxf>
@@ -105,6 +105,7 @@
         <version.org.apache.ant>1.8.2</version.org.apache.ant>
         <version.com.fasterxml.jackson.dataformat>2.4.5</version.com.fasterxml.jackson.dataformat>	 
         <version.javax.validation>1.1.0.Final</version.javax.validation>   	    
+        <version.com.fasterxml.jackson.dataformat>2.4.5</version.com.fasterxml.jackson.dataformat>	    	    
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -486,7 +487,11 @@
             	<artifactId>simpledb-api</artifactId>
   	        	<version>${project.version}</version>
         	</dependency>         	       	
-
+            <dependency>
+                <groupId>org.jboss.teiid.connectors</groupId>
+                <artifactId>document-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         	<dependency>
            	 	<groupId>org.jboss.teiid.connectors</groupId>
             	<artifactId>translator-jdbc</artifactId>    
@@ -1585,7 +1590,17 @@
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-annotations</artifactId>
                 <version>${version.com.fasterxml.jackson.core}</version>
-            </dependency>  
+            </dependency>
+			<dependency>
+				<groupId>com.fasterxml.jackson.dataformat</groupId>
+				<artifactId>jackson-dataformat-yaml</artifactId>
+				<version>${version.com.fasterxml.jackson.dataformat}</version>
+			</dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.dataformat</groupId>
+                <artifactId>jackson-dataformat-xml</artifactId>
+                <version>${version.com.fasterxml.jackson.dataformat}</version>                
+            </dependency>             
     	    <dependency>
         		<groupId>org.eclipse.persistence</groupId>
         		<artifactId>eclipselink</artifactId>
@@ -1662,6 +1677,11 @@
                     </exclusion>
                 </exclusions>
             </dependency>
+		    <dependency>
+				<groupId>io.swagger</groupId>
+				<artifactId>swagger-parser</artifactId>
+				<version>${version.swagger-parser}</version>
+		    </dependency> 
             <dependency>
                 <groupId>io.swagger</groupId>
                 <artifactId>swagger-parser</artifactId>
@@ -1672,11 +1692,6 @@
                 <artifactId>narayana-jta</artifactId>
                 <version>${version.org.jboss.narayana}</version>
             </dependency>
-<!-- 	        <dependency>
-	            <groupId>org.picketbox</groupId>
-	            <artifactId>picketbox</artifactId>
-	            <version>${version.org.picketbox}</version>
-	        </dependency>  -->
 			<dependency>
 			    <groupId>com.fasterxml</groupId>
 			    <artifactId>aalto-xml</artifactId>

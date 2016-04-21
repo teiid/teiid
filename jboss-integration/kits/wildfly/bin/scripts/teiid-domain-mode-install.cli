@@ -102,6 +102,7 @@ connect
 /profile=ha/subsystem=teiid/translator=jpa2:add(module=org.jboss.teiid.translator.jpa)
 /profile=ha/subsystem=teiid/translator=ucanaccess:add(module=org.jboss.teiid.translator.jdbc)
 /profile=ha/subsystem=teiid/translator=simpledb:add(module=org.jboss.teiid.translator.simpledb)
+/profile=ha/subsystem=teiid/translator=swagger:add(module=org.jboss.teiid.translator.swagger)
 
 /profile=ha/subsystem=datasources/jdbc-driver=teiid:add(driver-name=teiid, driver-module-name=org.jboss.teiid.client, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)
 /profile=ha/subsystem=datasources/jdbc-driver=teiid-local:add(driver-name=teiid-local, driver-module-name=org.jboss.teiid, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)

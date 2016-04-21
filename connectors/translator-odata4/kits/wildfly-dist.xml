@@ -31,6 +31,14 @@
 
 	<dependencySets>
 		<dependencySet>
+			<includes>
+				<include>org.jboss.teiid.connectors:document-api</include>
+			</includes>
+			<outputDirectory>${wildfly-module-root}/org/jboss/teiid/translator/document/api/main
+			</outputDirectory>
+			<useTransitiveDependencies>true</useTransitiveDependencies>
+		</dependencySet>	
+		<dependencySet>
 			<outputDirectory>${wildfly-module-root}/org/apache/olingo/client/main</outputDirectory>
 			<useTransitiveDependencies>false</useTransitiveDependencies>
 			<includes>

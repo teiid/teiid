@@ -22,37 +22,38 @@
 package org.teiid.translator.document;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.olingo.commons.api.data.ComplexValue;
-import org.apache.olingo.commons.api.data.Entity;
-import org.apache.olingo.commons.api.data.Property;
 
 /**
  * TODO: need to back this up with something like MapDB, to avoid OOM
  * Also need to write our own JSONPaser that returns this object directly.
  */
-public class ODataDocument {
+public class Document {
     private String name;
-    private Map<String, Object> properties;
-    private Map<String, List<ODataDocument>> children;
-    private ODataDocument parent;
+    private Map<String, Object> properties = new LinkedHashMap<String, Object>();
+    private Map<String, List<Document>> children = new LinkedHashMap<String, List<Document>>();
+    private boolean array;
+    private Document parent;
     
-    public ODataDocument() {
+    public Document() {
     }
     
-    ODataDocument(String name, ODataDocument parent) {
+    public Document(String name, boolean array, Document parent) {
         this.name = name;
         this.parent = parent;
+        this.array = array;
     }    
     
+    public boolean isArray() {
+        return array;
+    }
+
     static List<Map<String, Object>> crossjoinWith(
-            List<Map<String, Object>> left, List<ODataDocument> rightDocuments) {
+            List<Map<String, Object>> left, List<? extends Document> rightDocuments) {
         ArrayList<Map<String, Object>> joined = new ArrayList<Map<String,Object>>();
-        for (ODataDocument right : rightDocuments) {
+        for (Document right : rightDocuments) {
             List<Map<String,Object>> rightRows = right.flatten();            
             for (Map<String, Object> outer : left) {
                 for (Map<String, Object> inner : rightRows) {
@@ -74,18 +75,22 @@ public class ODataDocument {
         }
         joined.add(row);            
         if (this.children != null && !this.children.isEmpty()) {
-            for (List<ODataDocument> childDoc:this.children.values()) {
+            for (List<? extends Document> childDoc:this.children.values()) {
                 joined = crossjoinWith(joined, childDoc);
             }
         }
         return joined;
     }
     
-    Map<String, Object> getProperties(){
+    public Map<String, Object> getProperties(){
         return this.properties;
     }
     
-    List<ODataDocument> getChildDocuments(String path) {
+    public Map<String, List<Document>> getChildren() {
+        return children;
+    }
+
+    public List<? extends Document> getChildDocuments(String path) {
         if (this.children != null) {
             int index = path.indexOf('/');
             if (index != -1) {
@@ -97,7 +102,7 @@ public class ODataDocument {
                     return this.parent.getChildDocuments(parentName);
                 }
             }
-            List<ODataDocument> children =  this.children.get(path);
+            List<? extends Document> children =  this.children.get(path);
             if (children == null && this.parent != null) {
                 children = this.parent.getChildDocuments(path);
             }
@@ -124,9 +129,6 @@ public class ODataDocument {
     }
 
     public void addProperty(String key, Object value) {
-        if (this.properties == null) {
-            this.properties = new LinkedHashMap<String, Object>();
-        }
         if (this.parent == null) {
             this.properties.put(key, value);
         } else {
@@ -134,70 +136,44 @@ public class ODataDocument {
         }
     }
 
-    public void addChildDocuments(String path, List<ODataDocument> child) {
-        if (this.children == null) {
-            this.children = new LinkedHashMap<String, List<ODataDocument>>();
+    public void addArrayProperty(String key, Object value) {
+        if (this.properties == null) {
+            this.properties = new LinkedHashMap<String, Object>();
         }
+        
+        String propkey = this.parent == null?key:name(getName(), key);
+        @SuppressWarnings("unchecked")
+        List<Object> propValue = (List<Object>)this.properties.get(propkey);
+        
+        if (propValue == null) {
+            propValue = new ArrayList<Object>();
+            propValue.add(value);
+        } else {
+            propValue.add(value);
+        }
+        this.properties.put(propkey, propValue);
+    }    
+    
+    public void addChildDocuments(String path, List<Document> child) {
         this.children.put(path, child);
     }
     
-    
-    public static ODataDocument createDocument(Entity entity) {
-        ODataDocument document = new ODataDocument();
-        List<Property> properties = entity.getProperties();
-        for (Property property : properties) {
-            populateDocument(property, document);
+    public List<Document> addChildDocument(String path, Document child) {
+        if (this.children == null) {
+            this.children = new LinkedHashMap<String, List<Document>>();
         }
-        return document;
-    }
-    
-    public static ODataDocument createDocument(ComplexValue complex) {
-        ODataDocument document = new ODataDocument();
-        List<Property> properties = complex.getValue();
-        for (Property property : properties) {
-            populateDocument(property, document);
+        if (children.get(path) == null) {
+            children.put(path, new ArrayList<Document>());
         }
-        return document;
+        this.children.get(path).add(child);
+        return this.children.get(path);
     }    
-    
-    private static ODataDocument createDocument(String name,
-            ComplexValue complex, ODataDocument parent) {
-        ODataDocument document = new ODataDocument(name, parent);
-        List<Property> properties = complex.getValue();
-        for (Property property : properties) {
-            populateDocument(property, document);
-        }
-        return document;
-    }
-    
-    @SuppressWarnings("unchecked")
-    private static void populateDocument(Property property, ODataDocument document) {
-        if (property.isCollection()) {
-            if (property.isPrimitive()) {
-                document.addProperty(property.getName(), property.asCollection());
-            } else {
-                List<ComplexValue> complexRows = (List<ComplexValue>)property.asCollection();
-                ArrayList<ODataDocument> rows = new ArrayList<ODataDocument>();
-                for (ComplexValue complexRow : complexRows) {
-                    rows.add(createDocument(property.getName(), complexRow, document));
-                }
-                document.addChildDocuments(property.getName(), rows);
-            }
-        } else {
-            if (property.isPrimitive()) {
-                document.addProperty(property.getName(), property.asPrimitive());
-            } else if (property.isComplex()) {
-                document.addChildDocuments(property.getName(), Arrays.asList(createDocument(
-                        property.getName(), property.asComplex(), document)));
-            } else if (property.isGeospatial()) {
-                document.addProperty(property.getName(), property.asGeospatial());
-            } else {
-            	throw new AssertionError(property.getType() + " not supported"); //$NON-NLS-1$
-            }
-        }
-    }
-    
+           
     public String toString() {
         return this.name;
+    }
+    
+    public Document getParent() {
+        return this.parent;
     }
 }
