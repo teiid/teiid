@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.StringTokenizer;
 
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.TeiidRuntimeException;
@@ -65,7 +66,7 @@ import org.teiid.translator.CacheDirective;
 import org.teiid.transport.LocalServerConnection;
 
 public class LocalClient implements Client {
-    static final String DELIMITER = "--" ; //$NON-NLS-1$
+    static final String DELIMITER = "," ; //$NON-NLS-1$
 
     private volatile VDBMetaData vdb;
     private final String vdbName;
@@ -203,15 +204,19 @@ public class LocalClient implements Client {
 
         String sessionId = getConnection().getServerConnection().getLogonResult().getSessionID();
         
-        String nextToken = null;            
+        String nextToken = null;
+        Integer savedEntityCount = null;
         if (nextOption != null) {
             nextToken = nextOption;
             if (cache) {
-                int idx = nextOption.indexOf(DELIMITER);
-                sessionId = nextOption.substring(0, idx);
-                nextToken = nextOption.substring(idx+2);
-                
+                StringTokenizer st = new StringTokenizer(nextOption, DELIMITER);
+                sessionId = st.nextToken();
+                nextToken = st.nextToken();
+                if (st.hasMoreTokens()) {
+                    savedEntityCount = Integer.parseInt(st.nextToken());
+                }
             }
+            getCount = false; // the URL might have $count=true, but ignore it.
         }
         String sql = query.toString();
         if (cache) {
@@ -279,10 +284,10 @@ public class LocalClient implements Client {
             boolean same = response.isSameEntity(rs);
             if (!same) {
                 i++;
+                entityCount++;
                 if (i > size) {
                     break;
                 }
-                entityCount++;
             }
             nextCount++;
             response.addRow(rs, same);
@@ -297,26 +302,34 @@ public class LocalClient implements Client {
                 }
             }
         }
-        response.setCount(entityCount);
+        if (savedEntityCount != null) {
+            response.setCount(savedEntityCount);
+        } else {
+            response.setCount(entityCount);
+        }
         
         //set the skipToken if needed
         if (cache && response.size() == pageSize) {
             long end = nextCount;
             if (getCount) {
                 if (end < Math.min(top, count)) {
-                    response.setNextToken(nextToken(cache, sessionId, end));
+                    response.setNextToken(nextToken(cache, sessionId, end, entityCount));
                 }
             } else if (count != nextCount){
-                response.setNextToken(nextToken(cache, sessionId, end));
+                response.setNextToken(nextToken(cache, sessionId, end, null));
                 //will force the entry to cache or is effectively a no-op when already cached
                 rs.last();    
             }
         }
     }
     
-    private String nextToken(boolean cache, String sessionid, long skip) {
+    private String nextToken(boolean cache, String sessionid, long skip, Integer entityCount) {
         if (cache) {
-            return sessionid+DELIMITER+String.valueOf(skip);
+            String token = sessionid+DELIMITER+String.valueOf(skip);
+            if (entityCount != null) {
+                token = token+DELIMITER+String.valueOf(entityCount);
+            }
+            return token;
         }
         return String.valueOf(skip);
     }
