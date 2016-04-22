@@ -38,7 +38,7 @@ import org.junit.Test;
 
 
 @SuppressWarnings("nls")
-public class TesttInfinispanConnectionFactory  {
+public class TestInfinispanConnectionFactory  {
 	protected static final String JNDI_NAME = "java/MyCacheManager";
 
 
