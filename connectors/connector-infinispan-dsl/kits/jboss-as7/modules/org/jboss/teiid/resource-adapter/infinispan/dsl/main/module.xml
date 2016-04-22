@@ -15,13 +15,13 @@
         <module name="javax.resource.api" />
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.api" />    
-		<module name="org.jboss.teiid.translator.infinispan.dsl" />
+		<module name="org.jboss.teiid.translator.infinispan.dsl" export="true" />
 		
 		<!--  the JDG dependencies can be found in the translator-infinispan-dsl module -->
 		
- 	  	<module name="org.infinispan.commons" slot="${jdg.slot}" optional="true" export="true" />
-   		<module name="org.infinispan.client.hotrod" slot="${jdg.slot}" optional="true" export="true" />
-   		<module name="org.infinispan.query" slot="${jdg.slot}" optional="true" export="true" services="true" />   
+ 	  	<module name="org.infinispan.commons" slot="${jdg.slot}" optional="true" services="export"/>
+   		<module name="org.infinispan.client.hotrod" slot="${jdg.slot}" optional="true" services="export"/>
+   		<module name="org.jboss.remoting3"  />   
 
       <!--
         The "your.pojo.module" name needs to be replaced with the module name that has
