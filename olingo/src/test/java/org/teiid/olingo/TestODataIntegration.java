@@ -381,6 +381,7 @@ public class TestODataIntegration {
                 .method("POST")
                 .content(new StringContentProvider(payload))
                 .header("Content-Type", "application/json")
+                .header("Prefer", "return=minimal")
                 .send();
             assertEquals(204, response.getStatus());
             assertTrue(response.getHeaders().get("OData-EntityId").endsWith("northwind/m/x('ABCDEFG')"));
@@ -468,6 +469,7 @@ public class TestODataIntegration {
                 .method("POST")
                 .content(new StringContentProvider(payload))
                 .header("Content-Type", "application/xml")
+                .header("Prefer", "return=minimal")
                 .send();
             assertEquals(204, response.getStatus());
             assertTrue(response.getHeaders().get("OData-EntityId"), 
@@ -732,7 +734,7 @@ public class TestODataIntegration {
                     .method("POST")
                     .content(new StringContentProvider("{\"b\":\"b\", \"c\":5}"), "application/json")
                     .send();                        
-            assertEquals(204, response.getStatus());
+            assertEquals(201, response.getStatus());
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");
@@ -878,7 +880,7 @@ public class TestODataIntegration {
                     .method("POST")
                     .content(new StringContentProvider("{\"a\":\"x\",\"b\":[1,2,3]}"), "application/json")
                     .send();                        
-            assertEquals(204, response.getStatus());
+            assertEquals(201, response.getStatus());
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");
@@ -932,9 +934,9 @@ public class TestODataIntegration {
             assertEquals(200, response.getStatus());
             String starts = "{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"abc\",\"b\":456}],"
                     + "\"@odata.nextLink\":\""+baseURL+"/northwind/vw/x?$format=json&$skiptoken=";
-            String ends = "--1\"}";
+            String ends = ",1\"}";
             assertTrue(response.getContentAsString(), response.getContentAsString().startsWith(starts));
-            assertTrue(response.getContentAsString().endsWith(ends));
+            assertTrue(response.getContentAsString(), response.getContentAsString().endsWith(ends));
             
             JsonNode node = getJSONNode(response);
             String nextLink = node.get("@odata.nextLink").asText();
@@ -1075,9 +1077,9 @@ public class TestODataIntegration {
             assertEquals(200, response.getStatus());
             String starts = "{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"abc\",\"b\":456}],"
                     + "\"@odata.nextLink\":\""+baseURL+"/northwind/vw/x?$format=json&$skiptoken=";
-            String ends = "--1\"}";
-            assertTrue(response.getContentAsString().startsWith(starts));
-            assertTrue(response.getContentAsString().endsWith(ends));
+            String ends = ",1\"}";
+            assertTrue(response.getContentAsString(), response.getContentAsString().startsWith(starts));
+            assertTrue(response.getContentAsString(), response.getContentAsString().endsWith(ends));
             assertEquals("odata.maxpagesize=1", getHeader(response, "Preference-Applied"));
             
             JsonNode node = getJSONNode(response);
@@ -1101,7 +1103,10 @@ public class TestODataIntegration {
             ModelMetaData mmd = new ModelMetaData();
             mmd.setName("vw");
             mmd.addSourceMetadata("ddl", "create view x (a string primary key, b integer) "
-                    + "as select 'xyz', 123 union all select 'abc', 456;");
+                    + "as select 'a', 123 "
+                    + "union all select 'b', 456 "
+                    + "union all select 'c', 789 "
+                    + "union all select 'd', 012;");
             mmd.setModelType(Model.Type.VIRTUAL);
             teiid.deployVDB("northwind", mmd);
 
@@ -1111,24 +1116,47 @@ public class TestODataIntegration {
 
             ContentResponse response = http.GET(baseURL + "/northwind/vw/x?$format=json&$count=true&$top=1&$skip=1");
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x\",\"@odata.count\":2,\"value\":[{\"a\":\"xyz\",\"b\":123}]}", 
+            assertEquals("{\"@odata.context\":\"$metadata#x\",\"@odata.count\":4,\"value\":[{\"a\":\"b\",\"b\":456}]}", 
+                    response.getContentAsString());
+            
+            response = http.GET(baseURL + "/northwind/vw/x?$format=json&$count=true&$filter="+Encoder.encode("a eq 'a'"));
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#x\",\"@odata.count\":1,\"value\":[{\"a\":\"a\",\"b\":123}]}", 
                     response.getContentAsString());
             
             //effectively the same as above
             response = http.GET(baseURL + "/northwind/vw/x?$format=json&$count=true&$skip=1");
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x\",\"@odata.count\":2,\"value\":[{\"a\":\"xyz\",\"b\":123}]}", 
-                    response.getContentAsString());
+            String r = "{\"@odata.context\":\"$metadata#x\",\"@odata.count\":4,"
+                    + "\"value\":[{\"a\":\"b\",\"b\":456}],\"@odata.nextLink\":";
+            assertTrue(response.getContentAsString(), response.getContentAsString().startsWith(r));
             
             //now there should be a next
             response = http.GET(baseURL + "/northwind/vw/x?$format=json&$count=true");
             assertEquals(200, response.getStatus());
-            String ends = "--1\"}";
-            assertTrue(response.getContentAsString(), response.getContentAsString().endsWith(ends));
+            String ends = ",1,4\"}";
+            String responseStr = response.getContentAsString();
+            assertTrue(responseStr, responseStr.endsWith(ends));
 
+            //Next string
+            JsonParser parser = new JsonFactory(new ObjectMapper()
+                    .configure(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true))
+                    .createParser(responseStr);
+            JsonNode node = parser.getCodec().readTree(parser);
+            
+            response = http.newRequest(node.get("@odata.nextLink").asText())
+                    .method("GET")
+                    .send();
+            assertEquals(200, response.getStatus());
+            responseStr = response.getContentAsString();
+            assertTrue(responseStr, responseStr.startsWith("{\"@odata.context\":\"$metadata#x\","
+                    + "\"@odata.count\":4,"
+                    + "\"value\":[{\"a\":\"b\",\"b\":456}],"
+                    + "\"@odata.nextLink\":\""+baseURL+"/northwind/vw/x?$format=json&$count=true&$skiptoken="));
+        
             response = http.GET(baseURL + "/northwind/vw/x/$count");
             assertEquals(200, response.getStatus());            
-            assertEquals("2", response.getContentAsString());
+            assertEquals("4", response.getContentAsString());
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");
@@ -1181,7 +1209,7 @@ public class TestODataIntegration {
                     .method("POST")
                     .content(new StringContentProvider("{\"a\":\"a\", \"b\":\"b\", \"c\":5}"), "application/json")
                     .send();                        
-            assertEquals(204, response.getStatus());
+            assertEquals(201, response.getStatus());
             
             response = http.newRequest(baseURL + "/northwind/m/x(a='a',b='b')")
                     .method("PATCH")
@@ -1742,7 +1770,7 @@ public class TestODataIntegration {
                     .content(new StringContentProvider("{\"a\":\"b\", \"b\":\"2000-02-02T22:22:22Z\"}"), 
                             "application/json")
                     .send();                        
-            assertEquals(204, response.getStatus());
+            assertEquals(201, response.getStatus());
             
             response = http.newRequest(baseURL + "/northwind/m/x(a='a',b=2011-09-11T00:00:00Z)")
                     .method("GET")
@@ -2061,7 +2089,8 @@ public class TestODataIntegration {
                     + "{\"id\":8,\"customerid\":3,\"place\":\"town\"}"
                     + "]}],"
                     + "\"@odata.nextLink\":\"http://localhost:"));
-            assertTrue(response.getContentAsString(), response.getContentAsString().endsWith("--8\"}"));
+            assertTrue(response.getContentAsString(), 
+                    response.getContentAsString().endsWith(",8\"}"));
             
             JsonParser parser = new JsonFactory(new ObjectMapper()
                 .configure(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true))

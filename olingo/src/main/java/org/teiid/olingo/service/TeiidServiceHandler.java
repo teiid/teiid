@@ -445,7 +445,7 @@ public class TeiidServiceHandler implements ServiceHandler {
                     .getODataRequest().getRawBaseUri(), request.getUriInfo(),
                     entityType, entity);
             
-            if (updateResponse.getUpdateCount()  == 1) {
+            if (updateResponse != null && updateResponse.getUpdateCount()  == 1) {
                 ODataSQLBuilder visitor = new ODataSQLBuilder(this.odata,
                         getClient().getMetadataStore(), true, false, 
                         request.getODataRequest().getRawBaseUri(), this.serviceMetadata, this.nameGenerator);
