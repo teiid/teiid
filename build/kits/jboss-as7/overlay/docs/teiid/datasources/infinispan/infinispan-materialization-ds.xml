@@ -17,9 +17,12 @@
                             <config-property name="CacheTypeMap">
                                 local-quickstart-mat-cache:com.client.quickstart.pojo.Stock;productId
                             </config-property>
-                            <config-property name="CacheJndiName">
+                   <config-property name="ConfigurationFileNameForLocalCache">
+                        ${jboss.home.dir}/standalone/configuration/infinispan_persistent_mat_config.xml
+                    </config-property>	
+                            <!--config-property name="CacheJndiName">
                                 java:jboss/teiid/jdg-quickstart
-                            </config-property>
+                            </config-property-->
                             <config-property name="AliasCacheName">
                                 aliasCache
                             </config-property>
