@@ -121,6 +121,8 @@ public class ExecutionFactory<F, C> {
 	private String nativeProcedureName = "native"; //$NON-NLS-1$
 	private String collationLocale;
 	
+	private String excluedCommonTableExpressionName;
+	
 	/**
 	 * Initialize the connector with supplied configuration
 	 */
@@ -1228,5 +1230,15 @@ public class ExecutionFactory<F, C> {
 	
 	public void setThreadBound(boolean threadBound) {
 		this.threadBound = threadBound;
+	}
+	
+	@TranslatorProperty(display="Excluded Common Table Expression Name", description="Set if the source won't support the given common table expression name.", advanced=true)
+	public String getExcludedCommonTableExpressionName() {
+		return excluedCommonTableExpressionName;
+	}
+	
+	public void setExcluedCommonTableExpressionName(
+			String excluedCommonTableExpressionName) {
+		this.excluedCommonTableExpressionName = excluedCommonTableExpressionName;
 	}
 }

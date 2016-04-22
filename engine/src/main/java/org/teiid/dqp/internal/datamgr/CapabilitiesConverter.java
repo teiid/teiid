@@ -144,6 +144,7 @@ public class CapabilitiesConverter {
         tgtCaps.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, srcCaps.getSupportedJoinCriteria());
         tgtCaps.setSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER, srcCaps.getDefaultNullOrder());
         tgtCaps.setSourceProperty(Capability.COLLATION_LOCALE, srcCaps.getCollationLocale());
+        tgtCaps.setSourceProperty(Capability.EXCLUDE_COMMON_TABLE_EXPRESSION_NAME, srcCaps.getExcludedCommonTableExpressionName());
         return tgtCaps;
     }
 

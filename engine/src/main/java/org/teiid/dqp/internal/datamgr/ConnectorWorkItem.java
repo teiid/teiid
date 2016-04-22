@@ -70,6 +70,8 @@ import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataStore;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SourceHint;
@@ -149,10 +151,13 @@ public class ConnectorWorkItem implements ConnectorWork {
         this.securityContext.setRuntimeMetadata(this.queryMetadata);
 		this.securityContext.setTransactional(requestMsg.isTransactional());
         LanguageBridgeFactory factory = new LanguageBridgeFactory(this.queryMetadata);
-        factory.setConvertIn(!this.connector.supportsInCriteria());
-        factory.setMaxInPredicateSize(this.connector.getMaxInCriteriaSize());
         try {
-			factory.setSupportsConcat2(manager.getCapabilities().supportsFunction(SourceSystemFunctions.CONCAT2));
+			SourceCapabilities capabilities = manager.getCapabilities();
+			factory.setSupportsConcat2(capabilities.supportsFunction(SourceSystemFunctions.CONCAT2));
+	        factory.setConvertIn(!capabilities.supportsCapability(Capability.CRITERIA_IN));
+	        factory.setMaxInPredicateSize((Integer) capabilities.getSourceProperty(Capability.MAX_IN_CRITERIA_SIZE));
+	        factory.setCommandContext(requestMsg.getCommandContext());
+	        factory.setExcludeWithName((String) capabilities.getSourceProperty(Capability.EXCLUDE_COMMON_TABLE_EXPRESSION_NAME));
 		} catch (TranslatorException e) {
 			throw new TeiidComponentException(e);
 		}
