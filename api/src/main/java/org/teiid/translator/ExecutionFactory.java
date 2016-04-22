@@ -128,6 +128,7 @@ public class ExecutionFactory<F, C> {
 	private String collationLocale;
 	
 	private TransactionSupport transactionSupport = TransactionSupport.XA;
+	private String excluedCommonTableExpressionName;
 	
 	/**
 	 * Initialize the connector with supplied configuration
@@ -1333,5 +1334,15 @@ public class ExecutionFactory<F, C> {
 	
 	public void setTransactionSupport(TransactionSupport transactionSupport) {
 		this.transactionSupport = transactionSupport;
+	}
+	
+	@TranslatorProperty(display="Excluded Common Table Expression Name", description="Set if the source won't support the given common table expression name.", advanced=true)
+	public String getExcludedCommonTableExpressionName() {
+		return excluedCommonTableExpressionName;
+	}
+	
+	public void setExcluedCommonTableExpressionName(
+			String excluedCommonTableExpressionName) {
+		this.excluedCommonTableExpressionName = excluedCommonTableExpressionName;
 	}
 }

@@ -540,4 +540,8 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public org.teiid.translator.ExecutionFactory.TransactionSupport getTransactionSupport() {
 		return delegate.getTransactionSupport();
 	}
+	@Override
+	public String getExcludedCommonTableExpressionName() {
+		return delegate.getExcludedCommonTableExpressionName();
+	}
 }

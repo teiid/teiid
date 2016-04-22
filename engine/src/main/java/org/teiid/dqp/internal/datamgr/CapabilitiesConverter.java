@@ -165,6 +165,7 @@ public class CapabilitiesConverter {
         tgtCaps.setSourceProperty(Capability.COLLATION_LOCALE, srcCaps.getCollationLocale());
         tgtCaps.setSourceProperty(Capability.REQUIRED_LIKE_ESCAPE, srcCaps.getRequiredLikeEscape());
         tgtCaps.setSourceProperty(Capability.TRANSACTION_SUPPORT, srcCaps.getTransactionSupport());
+        tgtCaps.setSourceProperty(Capability.EXCLUDE_COMMON_TABLE_EXPRESSION_NAME, srcCaps.getExcludedCommonTableExpressionName());
         return tgtCaps;
     }
 
