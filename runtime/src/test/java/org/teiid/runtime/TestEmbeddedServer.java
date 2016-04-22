@@ -1608,5 +1608,66 @@ public class TestEmbeddedServer {
 		rs.next();
 		assertEquals(42, rs.getInt(1));
 	}
+	
+	@Test public void testWithPushdownChangeName() throws Exception {
+		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		ec.setUseDisk(false);
+		es.start(ec);
+		
+		HardCodedExecutionFactory hcef = new HardCodedExecutionFactory() {
+			@Override
+			public boolean supportsCommonTableExpressions() {
+				return true;
+			}
+			
+			@Override
+			public boolean supportsSelfJoins() {
+				return true;
+			}
+			
+			@Override
+			public boolean supportsCompareCriteriaEquals() {
+				return true;
+			}
+			
+			@Override
+			public boolean supportsAliasedTable() {
+				return true;
+			}
+			
+			@Override
+			public boolean isSourceRequired() {
+				return false;
+			}
+			
+			@Override
+			public String getExcludedCommonTableExpressionName() {
+				return "a";
+			}
+			
+			@Override
+			public boolean supportsInnerJoins() {
+				return true;
+			}
+		};
+		
+		es.addTranslator("y", hcef);
+		
+		hcef.addData("WITH a__2 (x) AS (SELECT g_0.e1 FROM pm1.g1 AS g_0) SELECT g_0.x FROM a__2 AS g_0, a__2 AS g_1", Arrays.asList(Arrays.asList("a")));
+		
+		ModelMetaData mmd = new ModelMetaData();
+		mmd.setName("my-schema");
+		mmd.addSourceMapping("x", "y", null);
+		mmd.addSourceMetadata("ddl", "create foreign table pm1.g1 (e1 string)");
+
+		es.deployVDB("test", mmd);
+		
+		TeiidDriver td = es.getDriver();
+		Connection c = td.connect("jdbc:teiid:test", null);
+		Statement s = c.createStatement();
+		
+		//see the correct pushdown in hcef.addData above
+		s.execute("with a (x) as (select e1 from pm1.g1) SELECT a.x from a, a z"); //$NON-NLS-1$
+	}
 
 }

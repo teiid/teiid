@@ -536,4 +536,8 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public boolean supportsScalarSubqueryProjection() {
 		return delegate.supportsScalarSubqueryProjection();
 	}
+	@Override
+	public String getExcludedCommonTableExpressionName() {
+		return delegate.getExcludedCommonTableExpressionName();
+	}
 }

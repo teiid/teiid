@@ -230,10 +230,10 @@ public class TestEmbeddedServerAdmin {
 	@Test
 	public void testGetTranslatorPropertyDefinitions() throws AdminException {
 		List<PropertyDefinition> list = (List<PropertyDefinition>) admin.getTranslatorPropertyDefinitions("file", TranlatorPropertyType.OVERRIDE);
-		assertEquals(19, list.size());
+		assertEquals(20, list.size());
 		
 		list = (List<PropertyDefinition>) admin.getTranslatorPropertyDefinitions("file", TranlatorPropertyType.ALL);
-        assertEquals(19, list.size());		
+        assertEquals(20, list.size());		
 	}
 	
 	@Test
