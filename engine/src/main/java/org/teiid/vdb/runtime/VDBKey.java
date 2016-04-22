@@ -59,6 +59,16 @@ public class VDBKey implements Serializable, Comparable<VDBKey>{
         	}
         } else {
         	this.version = version.toString();
+        	
+        	//double check that the vdb is not ambiguous
+        	int index = name.indexOf("."); //$NON-NLS-1$
+        	if (index > 0 && index < name.length() - 1) {
+        		String possibleVersion = name.substring(index + 1);
+        		Matcher m  = NAME_PATTERN.matcher(possibleVersion);
+    	        if (m.matches()) {
+	        		throw new TeiidRuntimeException(QueryPlugin.Event.TEIID31191, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31191, this.name));
+    	        }
+        	}
         }
         
         if (this.version != null) {

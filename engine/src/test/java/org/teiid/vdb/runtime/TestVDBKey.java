@@ -85,4 +85,8 @@ public class TestVDBKey {
     	assertEquals("a.abc.latest", key.toString());
     }
     
+    @Test(expected=TeiidRuntimeException.class) public void testInvalidName() {
+    	new VDBKey("a.1", "1");  //$NON-NLS-1$
+    }
+    
 }
