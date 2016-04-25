@@ -623,4 +623,12 @@ public class TestTempTables extends TempTableTestHarness {
 		execute("delete from #tmp_dates where datum < (select cast(starttime as date) from #tmp_params)", new List[] {Arrays.asList(1)});
 	}
 	
+	@Test public void testImplicitResolvingWithoutColumns() throws Exception {
+		execute("insert into #tmp_dates "
+				+ "select cast(parsetimestamp('2016-03-20','yyyy-MM-dd') as date) as datum, 'somevalue' as somevalue "
+				+ "UNION select cast(parsetimestamp('2016-04-02','yyyy-MM-dd') as date) as datum, 'somevalue' as somevalue "
+				+ "UNION select cast(parsetimestamp('2016-04-20','yyyy-MM-dd') as date) as datum, 'somevalue' as somevalue", new List[] {Arrays.asList(3)});
+		execute("insert into #tmp_dates select DATE '2016-05-01', somevalue from #tmp_dates", new List[] {Arrays.asList(3)});
+	}
+	
 }

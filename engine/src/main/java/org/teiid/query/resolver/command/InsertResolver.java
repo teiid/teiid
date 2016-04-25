@@ -98,6 +98,13 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
         }
         
         if (insert.getVariables().isEmpty()) {
+        	if (insert.getGroup().isImplicitTempGroupSymbol()) {
+        		try {
+        			ResolverUtil.resolveGroup(insert.getGroup(), metadata);
+        		} catch (QueryResolverException e) {
+        			//not defined yet
+        		}
+            }
             if (insert.getGroup().isResolved()) {
                 List<ElementSymbol> variables = ResolverUtil.resolveElementsInGroup(insert.getGroup(), metadata);
                 for (Iterator<ElementSymbol> i = variables.iterator(); i.hasNext();) {
