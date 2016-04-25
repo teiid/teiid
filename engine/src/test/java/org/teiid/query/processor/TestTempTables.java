@@ -609,4 +609,18 @@ public class TestTempTables extends TempTableTestHarness {
 		
 	}
 	
+	@Test public void testDeleteRemovingPage() throws Exception {
+		execute("insert into #tmp_params "
+				+ "select parsetimestamp('2016-04-01','yyyy-MM-dd') as starttime, parsetimestamp('2016-04-15','yyyy-MM-dd') as endtime", new List[] {Arrays.asList(1)});
+		execute("insert into #tmp_dates "
+				+ "select cast(parsetimestamp('2016-03-20','yyyy-MM-dd') as date) as datum, 'somevalue' as somevalue "
+				+ "UNION select cast(parsetimestamp('2016-04-02','yyyy-MM-dd') as date) as datum, 'somevalue' as somevalue "
+				+ "UNION select cast(parsetimestamp('2016-04-20','yyyy-MM-dd') as date) as datum, 'somevalue' as somevalue", new List[] {Arrays.asList(3)});
+		for (int i = 0; i < 1277; i++) {
+			execute("insert into #tmp_dates select DATE '2016-05-01' as datum, 'somevalue' as somevalue", new List[] {Arrays.asList(1)});
+		}
+		execute("delete from #tmp_dates where datum > (select cast(endtime as date) from #tmp_params)", new List[] {Arrays.asList(1024)});
+		execute("delete from #tmp_dates where datum < (select cast(starttime as date) from #tmp_params)", new List[] {Arrays.asList(1)});
+	}
+	
 }
