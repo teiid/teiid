@@ -78,20 +78,22 @@ public final class PureZipFileSystem implements FileSystem {
 				root = VFS.getChild(fileName);
 			}
 		}
-    	if (!root.exists()) {
-			final Closeable c = VFS.mount(root, new PureZipFileSystem(f));
-			//in theory we don't need to track the closable as we're not using any resources
-			AutoCleanupUtil.setCleanupReference(root, new Removable() {
-				
-				@Override
-				public void remove() {
-					try {
-						c.close();
-					} catch (IOException e) {
+		synchronized (PureZipFileSystem.class) {
+	    	if (!root.exists()) {
+				final Closeable c = VFS.mount(root, new PureZipFileSystem(f));
+				//in theory we don't need to track the closable as we're not using any resources
+				AutoCleanupUtil.setCleanupReference(root, new Removable() {
+					
+					@Override
+					public void remove() {
+						try {
+							c.close();
+						} catch (IOException e) {
+						}
 					}
-				}
-			});
-    	}
+				});
+	    	}
+		}
     	return root;
 	}
 	
