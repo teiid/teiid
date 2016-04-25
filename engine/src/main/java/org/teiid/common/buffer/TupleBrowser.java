@@ -282,6 +282,15 @@ public class TupleBrowser implements TupleSource {
 	 */
 	public void removed() {
 		index-=getOffset();
+		//check if the page has been removed
+		if (index == 0 && page != null && page.managedBatch == null && page.values == null) {
+			values = null;
+			if (direction) {
+				page = page.next;
+			} else {
+				page = page.prev;
+			} 
+		}
 	}
 	
 	@Override
