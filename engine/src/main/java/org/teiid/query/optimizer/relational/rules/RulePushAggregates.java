@@ -232,17 +232,31 @@ public class RulePushAggregates implements
 		 */
 		if (aggregates.isEmpty()) {
 			if (!groupingExpressions.isEmpty()) {
-				setOp.setProperty(NodeConstants.Info.USE_ALL, Boolean.FALSE);
+				Set<Expression> expressions = new HashSet<Expression>();
 				boolean allCols = true;
 				for (Expression ex : groupingExpressions) {
 					if (!(ex instanceof ElementSymbol)) {
 						allCols = false;
 						break;
 					}
+					Expression mapped = parentMap.getMappedExpression((ElementSymbol)ex);
+					expressions.add(mapped);
 				}
+				
 				if (allCols) {
-					//since there are no expressions in the grouping cols, we know the grouping node is now not needed.
-					RuleAssignOutputElements.removeGroupBy(groupNode, metadata);
+					PlanNode project = NodeEditor.findNodePreOrder(unionSourceParent, NodeConstants.Types.PROJECT);
+					boolean projectsGrouping = true;
+					for (Expression ex :(List<Expression>)project.getProperty(Info.PROJECT_COLS)) {
+						if (!expressions.contains(SymbolMap.getExpression(ex))) {
+							projectsGrouping = false;
+							break;
+						}
+					}	
+					if (projectsGrouping) {
+						//since there are no expressions in the grouping cols, we know the grouping node is now not needed.
+						RuleAssignOutputElements.removeGroupBy(groupNode, metadata);
+						setOp.setProperty(NodeConstants.Info.USE_ALL, Boolean.FALSE);
+					}
 				}
 			}
 			return;
