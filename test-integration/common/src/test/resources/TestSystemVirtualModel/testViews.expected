@@ -1,7 +1,7 @@
 string                                                             clob                                                             
 Name                                                               Body                                                             
 GEOMETRY_COLUMNS                                                   Clob[551]                                                        
-matpg_datatype                                                     Clob[496]                                                        
+matpg_datatype                                                     Clob[1562]                                                       
 pg_am                                                              Clob[34]                                                         
 pg_attrdef                                                         Clob[273]                                                        
 pg_attribute                                                       Clob[1722]                                                       
@@ -12,7 +12,7 @@ pg_index                                                           Clob[651]
 pg_namespace                                                       Clob[79]                                                         
 pg_proc                                                            Clob[3007]                                                       
 pg_trigger                                                         Clob[188]                                                        
-pg_type                                                            Clob[1472]                                                       
+pg_type                                                            Clob[1793]                                                       
 pg_user                                                            Clob[74]                                                         
 spatial_ref_sys                                                    Clob[209]                                                        
 Row Count : 15
