@@ -176,8 +176,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"pt.oid as atttypid," + //$NON-NLS-1$
 				"pt.typlen as attlen, " + //$NON-NLS-1$
 				"convert(t1.Position, short) as attnum, " + //$NON-NLS-1$
-				"(CASE WHEN (t1.DataType = 'bigdecimal' OR t1.DataType = 'biginteger') THEN (CASE WHEN (4+(cast(65536 as float)*t1.Precision)+t1.Scale) > 2147483647 THEN 2147483647 ELSE (4+(65536*t1.Precision)+t1.Scale) END) " + //$NON-NLS-1$
-				"WHEN (t1.DataType = 'string' OR t1.DataType = 'char') THEN (CASE WHEN (t1.Length <= 2147483643) THEN 4+ t1.Length ELSE 2147483647 END) ELSE -1 END) as atttypmod, " + //$NON-NLS-1$
+				TYPMOD +" as atttypmod, " + //$NON-NLS-1$
 				"CASE WHEN (t1.NullType = 'No Nulls') THEN true ELSE false END as attnotnull, " + //$NON-NLS-1$
 				"false as attisdropped, " + //$NON-NLS-1$
 				"false as atthasdef " + //$NON-NLS-1$
@@ -190,8 +189,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"pt.oid as atttypid," + //$NON-NLS-1$
 				"pt.typlen as attlen, " + //$NON-NLS-1$
 				"convert(kc.Position, short) as attnum, " + //$NON-NLS-1$
-				"(CASE WHEN (t1.DataType = 'bigdecimal' OR t1.DataType = 'biginteger') THEN (CASE WHEN (4+(cast(65536 as float)*t1.Precision)+t1.Scale) > 2147483647 THEN 2147483647 ELSE (4+(65536*t1.Precision)+t1.Scale) END) " + //$NON-NLS-1$
-				"WHEN (t1.DataType = 'string' OR t1.DataType = 'char') THEN (CASE WHEN (t1.Length <= 2147483643) THEN 4+ t1.Length ELSE 2147483647 END) ELSE -1 END) as atttypmod, " + //$NON-NLS-1$
+				TYPMOD +" as atttypmod, " + //$NON-NLS-1$
 				"CASE WHEN (t1.NullType = 'No Nulls') THEN true ELSE false END as attnotnull, " + //$NON-NLS-1$
 				"false as attisdropped, " + //$NON-NLS-1$
 				"false as atthasdef " + //$NON-NLS-1$
@@ -440,50 +438,57 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addColumn("typrelid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
 		addColumn("typelem", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
 		addColumn("typinput", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+		
+		//non-pg column to associate the teiid type name - this is expected to be unique.
+		//aliases are handled by matpg_datatype
+		addColumn("teiid_name", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+		
 		String transformation =
-			"select oid, typname, (SELECT pg_catalog.getOid(uid) FROM SYS.Schemas where Name = 'SYS') as typnamespace, typlen, typtype, false as typnotnull, typbasetype, typtypmod, cast(',' as char) as typdelim, typrelid, typelem, null as typeinput from texttable('" + //$NON-NLS-1$
-			"16,boolean,1,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"17,varbinary,-1,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"1043,string,-1,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"25,text,-1,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"1042,char,1,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"21,short,2,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"20,long,8,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"23,integer,4,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"26,oid,4,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"700,float,4,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"701,double,8,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"705,unknown,-2,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"1082,date,4,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"1083,datetime,8,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"1114,timestamp,8,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"1700,decimal,-1,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"142,xml,-1,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"14939,lo,-1,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"32816,geometry,-1,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"2278,void,4,p,0,-1,0,0\n" + //$NON-NLS-1$
-			"2249,record,-1,p,0,-1,0,0\n" + //$NON-NLS-1$
-			"30,oidvector,-1,b,0,-1,0,26\n" + //$NON-NLS-1$
-			"1000,_bool,-1,b,0,-1,0,16\n" + //$NON-NLS-1$
-			"1001,_bytea,-1,b,0,-1,0,17\n" + //$NON-NLS-1$
-			"1002,_char,-1,b,0,-1,0,18\n" + //$NON-NLS-1$
-			"1005,_int2,-1,b,0,-1,0,21\n" + //$NON-NLS-1$
-			"1007,_int4,-1,b,0,-1,0,23\n" + //$NON-NLS-1$
-			"1009,_text,-1,b,0,-1,0,25\n" + //$NON-NLS-1$
-			"1028,_oid,-1,b,0,-1,0,26\n" + //$NON-NLS-1$
-			"1014,_bpchar,-1,b,0,-1,0,1042\n" + //$NON-NLS-1$
-			"1015,_varchar,-1,b,0,-1,0,1043\n" + //$NON-NLS-1$
-			"1016,_int8,-1,b,0,-1,0,20\n" + //$NON-NLS-1$
-			"1021,_float4,-1,b,0,-1,0,700\n" + //$NON-NLS-1$
-			"1022,_float8,-1,b,0,-1,0,701\n" + //$NON-NLS-1$
-			"1115,_timestamp,-1,b,0,-1,0,1114\n" + //$NON-NLS-1$
-			"1182,_date,-1,b,0,-1,0,1082\n" + //$NON-NLS-1$
-			"1183,_time,-1,b,0,-1,0,1083\n" + //$NON-NLS-1$
-			"32824,_geometry,-1,b,0,-1,0,32816\n" + //$NON-NLS-1$
-			"2287,_record,-1,b,0,-1,0,2249\n" + //$NON-NLS-1$
-			"2283,anyelement,4,p,0,-1,0,0\n" + //$NON-NLS-1$
-			"22,int2vector,-1,b,0,-1,0,0" + //$NON-NLS-1$
-			"' columns oid integer, typname string, typlen short, typtype char, typbasetype integer, typtypmod integer, typrelid integer, typelem integer) AS t"; //$NON-NLS-1$
+			"select oid, typname, (SELECT pg_catalog.getOid(uid) FROM SYS.Schemas where Name = 'SYS') as typnamespace, typlen, typtype, false as typnotnull, typbasetype, typtypmod, cast(',' as char) as typdelim, typrelid, typelem, null as typeinput, teiid_name from texttable('" + //$NON-NLS-1$
+			"16,bool,1,b,0,-1,0,0,boolean\n" + //$NON-NLS-1$
+			"17,bytea,-1,b,0,-1,0,0,blob\n" + //$NON-NLS-1$
+			"1043,varchar,-1,b,0,-1,0,0,string\n" + //$NON-NLS-1$
+			"25,text,-1,b,0,-1,0,0,clob\n" + //$NON-NLS-1$
+			"1042,char,1,b,0,-1,0,0,\n" + //$NON-NLS-1$
+			"21,int2,2,b,0,-1,0,0,short\n" + //$NON-NLS-1$
+			"20,int8,8,b,0,-1,0,0,long\n" + //$NON-NLS-1$
+			"23,int4,4,b,0,-1,0,0,integer\n" + //$NON-NLS-1$
+			"26,oid,4,b,0,-1,0,0,\n" + //$NON-NLS-1$
+			"700,float4,4,b,0,-1,0,0,float\n" + //$NON-NLS-1$
+			"701,float8,8,b,0,-1,0,0,double\n" + //$NON-NLS-1$
+			"705,unknown,-2,b,0,-1,0,0,object\n" + //$NON-NLS-1$
+			"1082,date,4,b,0,-1,0,0,date\n" + //$NON-NLS-1$
+			"1083,time,8,b,0,-1,0,0,time\n" + //$NON-NLS-1$
+			"1114,timestamp,8,b,0,-1,0,0,timestamp\n" + //$NON-NLS-1$
+			"1700,numeric,-1,b,0,-1,0,0,bigdecimal\n" + //$NON-NLS-1$
+			"142,xml,-1,b,0,-1,0,0,xml\n" + //$NON-NLS-1$
+			"14939,lo,-1,b,0,-1,0,0,\n" + //$NON-NLS-1$
+			"32816,geometry,-1,b,0,-1,0,0,geometry\n" + //$NON-NLS-1$
+			"2278,void,4,p,0,-1,0,0,\n" + //$NON-NLS-1$
+			"2249,record,-1,p,0,-1,0,0,\n" + //$NON-NLS-1$
+			"30,oidvector,-1,b,0,-1,0,26,\n" + //$NON-NLS-1$
+			"1000,_bool,-1,b,0,-1,0,16,boolean[]\n" + //$NON-NLS-1$
+			"1001,_bytea,-1,b,0,-1,0,17,blob[]\n" + //$NON-NLS-1$
+			"1002,_char,-1,b,0,-1,0,18,\n" + //$NON-NLS-1$
+			"1005,_int2,-1,b,0,-1,0,21,short[]\n" + //$NON-NLS-1$
+			"1007,_int4,-1,b,0,-1,0,23,integer[]\n" + //$NON-NLS-1$
+			"1009,_text,-1,b,0,-1,0,25,clob[]\n" + //$NON-NLS-1$
+			"1028,_oid,-1,b,0,-1,0,26,\n" + //$NON-NLS-1$
+			"1014,_bpchar,-1,b,0,-1,0,1042,\n" + //$NON-NLS-1$
+			"1015,_varchar,-1,b,0,-1,0,1043,string[]\n" + //$NON-NLS-1$
+			"1016,_int8,-1,b,0,-1,0,20,long[]\n" + //$NON-NLS-1$
+			"1021,_float4,-1,b,0,-1,0,700,float[]\n" + //$NON-NLS-1$
+			"1022,_float8,-1,b,0,-1,0,701,double[]\n" + //$NON-NLS-1$
+			"1031,_numeric,-1,b,0,-1,0,1700,double[]\n" + //$NON-NLS-1$
+			"1115,_timestamp,-1,b,0,-1,0,1114,timestamp[]\n" + //$NON-NLS-1$
+			"1182,_date,-1,b,0,-1,0,1082,date[]\n" + //$NON-NLS-1$
+			"1183,_time,-1,b,0,-1,0,1083,time[]\n" + //$NON-NLS-1$
+			"32824,_geometry,-1,b,0,-1,0,32816,geometry[]\n" + //$NON-NLS-1$
+			"143,_xml,-1,b,0,-1,0,142,xml[]\n" + //$NON-NLS-1$
+			"2287,_record,-1,b,0,-1,0,2249,\n" + //$NON-NLS-1$
+			"2283,anyelement,4,p,0,-1,0,0,\n" + //$NON-NLS-1$
+			"22,int2vector,-1,b,0,-1,0,0," + //$NON-NLS-1$
+			"' columns oid integer, typname string, typlen short, typtype char, typbasetype integer, typtypmod integer, typrelid integer, typelem integer, teiid_name string) AS t"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);		
 		t.setMaterialized(true);
 		return t;		
@@ -556,19 +561,22 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addColumn("oid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
 		addColumn("typname", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
 		addColumn("name", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
-		addColumn("uid", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
 		addColumn("typlen", DataTypeManager.DefaultDataTypes.SHORT, t); //$NON-NLS-1$
+		addColumn("typtype", DataTypeManager.DefaultDataTypes.CHAR, t); //$NON-NLS-1$
+		addColumn("typbasetype", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+		addColumn("typtypmod", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
 		
 		addPrimaryKey("matpg_datatype_names", Arrays.asList("oid", "name"), t); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
 		addIndex("matpg_datatype_ids", true, Arrays.asList("typname", "oid"), t); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
-		String transformation = "select pt.oid as oid, pt.typname as typname, t.Name name, t.UID, pt.typlen from pg_catalog.pg_type pt JOIN (select (CASE "+//$NON-NLS-1$
-		"WHEN (Name = 'clob' OR Name = 'blob') THEN 'lo' " +//$NON-NLS-1$
-		"WHEN (Name = 'byte' ) THEN 'short' " +//$NON-NLS-1$
-		"WHEN (Name = 'time' ) THEN 'datetime' " + //$NON-NLS-1$
-		"WHEN (Name = 'biginteger' ) THEN 'decimal' " +//$NON-NLS-1$
-		"WHEN (Name = 'bigdecimal' ) THEN 'decimal' " +//$NON-NLS-1$
-		"WHEN (Name = 'object' ) THEN 'unknown' " +//$NON-NLS-1$
-		"ELSE Name END) as pg_name, Name, UID from SYS.DataTypes) as t ON t.pg_name = pt.typname";  //$NON-NLS-1$
+		String transformation = "select pt.oid as oid, pt.typname as typname, pt.teiid_name as name, pt.typlen, pt.typtype, pt.typbasetype, pt.typtypmod from pg_catalog.pg_type pt" //$NON-NLS-1$
+				+ " UNION ALL select pt.oid as oid, pt.typname as typname, 'char' as name, pt.typlen, pt.typtype, pt.typbasetype, pt.typtypmod from pg_catalog.pg_type pt where typname='varchar'" //$NON-NLS-1$
+				+ " UNION ALL select pt.oid as oid, pt.typname as typname, 'byte' as name, pt.typlen, pt.typtype, pt.typbasetype, pt.typtypmod from pg_catalog.pg_type pt where typname='int2'" //$NON-NLS-1$
+				+ " UNION ALL select pt.oid as oid, pt.typname as typname, 'biginteger' as name, pt.typlen, pt.typtype, pt.typbasetype, pt.typtypmod from pg_catalog.pg_type pt where typname='numeric'"  //$NON-NLS-1$
+				+ " UNION ALL select pt.oid as oid, pt.typname as typname, 'varbinary' as name, pt.typlen, pt.typtype, pt.typbasetype, pt.typtypmod from pg_catalog.pg_type pt where typname='bytea'"  //$NON-NLS-1$
+				+ " UNION ALL select pt.oid as oid, pt.typname as typname, 'byte[]' as name, pt.typlen, pt.typtype, pt.typbasetype, pt.typtypmod from pg_catalog.pg_type pt where typname='_int2'" //$NON-NLS-1$
+				+ " UNION ALL select pt.oid as oid, pt.typname as typname, 'biginteger[]' as name, pt.typlen, pt.typtype, pt.typbasetype, pt.typtypmod from pg_catalog.pg_type pt where typname='_numeric'"  //$NON-NLS-1$
+				+ " UNION ALL select pt.oid as oid, pt.typname as typname, 'varbinary[]' as name, pt.typlen, pt.typtype, pt.typbasetype, pt.typtypmod from pg_catalog.pg_type pt where typname='_bytea'"  //$NON-NLS-1$
+				+ " UNION ALL select pt.oid as oid, pt.typname as typname, 'char[]' as name, pt.typlen, pt.typtype, pt.typbasetype, pt.typtypmod from pg_catalog.pg_type pt where typname='_varchar'"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
 		t.setMaterialized(true);
 		return t;

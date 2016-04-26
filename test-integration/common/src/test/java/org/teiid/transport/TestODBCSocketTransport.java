@@ -759,5 +759,16 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		ResultSet rs = s.getResultSet();
 		assertTrue(rs.next());
 	}
+	
+	@Test public void testTypeMetadata() throws Exception {
+		Statement s = conn.createStatement();
+		s.execute("select null, cast(null as boolean), cast(null as byte), cast(null as short), cast(null as integer), cast(null as long),"
+				+ " cast(null as float), cast(null as double), cast(null as bigdecimal), cast(null as biginteger), cast(null as time), cast(null as date), cast(null as timestamp), cast(null as varbinary), "
+				+ " cast(null as char), cast(null as string), cast(null as clob), cast(null as blob), "
+				+ " cast(null as boolean[]), cast(null as byte[]), cast(null as short[]), cast(null as integer[]), cast(null as long[]), cast(null as bigdecimal[]), cast(null as biginteger[]), "
+				+ " cast(null as float[]), cast(null as double[]), cast(null as time[]), cast(null as date[]), cast(null as timestamp[]), cast(null as varbinary[]), "
+				+ " cast(null as char[]), cast(null as string[]), cast(null as clob[]), cast(null as blob[])");
+		TestMMDatabaseMetaData.compareResultSet(s.getResultSet());
+	}
 
 }
