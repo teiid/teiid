@@ -1398,4 +1398,30 @@ public class TestDependentJoins {
 	    helpProcess(plan, dataManager, expected);
 	}
     
+    @Test public void testNestedLeftDependent() {
+	    String sql = "SELECT pm1.g1.e1, pm1.g2.e2 from /*+ makeind */ pm1.g1 inner join /*+ preserve */ (/*+ makeind */ pm1.g2 inner join pm1.g3 on pm1.g2.e2 = pm1.g3.e2) on pm1.g1.e1 = pm1.g2.e1"; //$NON-NLS-1$
+	    
+	    List<?>[] expected = new List[] { 
+	    		Arrays.asList("c", 0),
+		        Arrays.asList("a", 1),
+		        Arrays.asList("b", 2),
+	    };    
+	    
+	    HardcodedDataManager hdm = new HardcodedDataManager();
+	    hdm.addData("SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0", Arrays.asList("a"), Arrays.asList("b"), Arrays.asList("c"));
+	    hdm.addData("SELECT g_0.e2 AS c_0, g_0.e1 AS c_1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN ('a', 'b')", Arrays.asList(1, "a"), Arrays.asList(2, "b"));
+	    hdm.addData("SELECT g_0.e2 AS c_0, g_0.e1 AS c_1 FROM pm1.g2 AS g_0 WHERE g_0.e1 = 'c'", Arrays.asList(0, "c"));
+	    hdm.addData("SELECT g_0.e2 AS c_0 FROM pm1.g3 AS g_0 WHERE g_0.e2 IN (0, 1)", Arrays.asList(1), Arrays.asList(0));
+	    hdm.addData("SELECT g_0.e2 AS c_0 FROM pm1.g3 AS g_0 WHERE g_0.e2 = 2", Arrays.asList(2));
+	    
+	    BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+	    bsc.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 2);
+	    bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, false);
+	    bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, false);
+	    
+	    ProcessorPlan plan = TestProcessor.helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc));
+	    
+	    helpProcess(plan, hdm, expected);
+	}
+    
 }
