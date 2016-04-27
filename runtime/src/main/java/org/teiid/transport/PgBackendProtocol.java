@@ -580,7 +580,11 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		    	break;
 		    	
 		    default:
-		    	throw new TeiidSQLException("unknown datatype failed to convert"); 
+		    	Object obj = rs.getObject(column);
+		    	if (obj != null) {
+		    		throw new TeiidSQLException("unknown datatype failed to convert");
+		    	}
+		    	break;
 		}
 	}
 	
