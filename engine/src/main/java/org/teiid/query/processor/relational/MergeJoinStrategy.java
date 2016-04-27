@@ -365,6 +365,12 @@ public class MergeJoinStrategy extends JoinStrategy {
     	}
     }
     
+    public void setProcessingSortLeft(boolean processingSortLeft) {
+    	if (processingSortLeft && this.processingSortLeft == SortOption.ALREADY_SORTED) {
+    		this.processingSortLeft = SortOption.SORT;
+    	}
+    }
+    
     public String getName() {
     	return "MERGE JOIN"; //$NON-NLS-1$
     }
