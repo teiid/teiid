@@ -22,6 +22,7 @@
 package org.teiid.rhq.plugin.adapter.impl;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import org.jboss.metatype.api.types.MetaType;
@@ -37,6 +38,7 @@ import org.rhq.core.domain.configuration.definition.PropertyDefinitionMap;
 import org.teiid.rhq.plugin.adapter.api.AbstractPropertyMapAdapter;
 import org.teiid.rhq.plugin.adapter.api.PropertyAdapter;
 import org.teiid.rhq.plugin.adapter.api.PropertyAdapterFactory;
+import org.teiid.rhq.plugin.util.ProfileServiceUtil;
 
 /**
  * 
@@ -51,19 +53,19 @@ public class PropertyMapToTableValueAdapter extends AbstractPropertyMapAdapter i
     }
 
     //@todo need to implement this like the other Map to Composite, but not until there is an actual property that needs this
-    public void populateMetaValueFromProperty(PropertyMap property, MetaValue metaValue, PropertyDefinitionMap propertyDefinition)
+    public void populateMetaValueFromProperty(PropertyMap property, MetaValue metaValue, PropertyDefinitionMap propertyDefinitionMap)
     {
         if (metaValue != null)
         {
             TableValueSupport tableValueSupport = (TableValueSupport)metaValue;
-            Map<String, PropertyDefinition> map = propertyDefinition.getPropertyDefinitions();
-            Map<String, Property> properties = property.getMap();
-            for (String key : map.keySet())
-            {
-                PropertyDefinition definition = map.get(key);
-                MetaValue[] getKey = new MetaValue[]{SimpleValueSupport.wrap(key)};
+            //Need to handle RHQ 4.4 and 4.2.
+            List<PropertyDefinition> propDefList =ProfileServiceUtil.reflectivelyInvokeGetMapMethod(propertyDefinitionMap);
+    	
+			Map<String, Property> properties = property.getMap();
+			for  (PropertyDefinition definition : propDefList) {
+			    MetaValue[] getKey = new MetaValue[]{SimpleValueSupport.wrap(definition.getName())};
                 MetaValue value = tableValueSupport.get(getKey);
-                Property innerProperty = properties.get(key);
+                Property innerProperty = properties.get(definition.getName());
                 PropertyAdapter adapter = PropertyAdapterFactory.getPropertyAdapter(value);
                 adapter.populateMetaValueFromProperty(innerProperty, value, definition);
             }

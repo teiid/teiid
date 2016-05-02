@@ -22,7 +22,6 @@
 
 package org.teiid.common.buffer.impl;
 
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInput;
@@ -43,6 +42,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -59,6 +59,7 @@ import org.teiid.common.buffer.StorageManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.ExecutorUtils;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
@@ -101,8 +102,10 @@ import org.teiid.query.QueryPlugin;
  */
 public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, StorageManager {
 	
+	private static final int FULL_DEFRAG_TRUNCATE_TIMEOUT = 10000;
+	private static final long TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(120);
 	private static final int DEFAULT_MIN_DEFRAG = 1 << 26;
-	private static final byte[] HEADER_SKIP_BUFFER = new byte[16];
+	private static final int HEADER_BYTES = 16;
 	private static final int EVICTION_SCANS = 2;
 
 	public static final int DEFAuLT_MAX_OBJECT_SIZE = 1 << 23;
@@ -373,106 +376,161 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 
 	private ExecutorService asynchPool = ExecutorUtils.newFixedThreadPool(2, "FileStore Worker"); //$NON-NLS-1$
 	private AtomicBoolean defragRunning = new AtomicBoolean();
+	private AtomicInteger freedCounter = new AtomicInteger();
+	
+	private boolean compactBufferFiles = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.compactBufferFiles", false); //$NON-NLS-1$
+	
+	private int truncateInterval = 4;
 	//defrag to release freespace held by storage files
-	private final Runnable defragTask = new Runnable() {
+	final class DefragTask implements Runnable {
+		private AtomicInteger runs = new AtomicInteger();
 		
 		@Override
 		public void run() {
+			int count = runs.incrementAndGet();
 			try {
-				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
-					LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Running defrag"); //$NON-NLS-1$ 
+				defrag(false);
+				if ((count%truncateInterval)==0) {
+					truncate(false);
 				}
-				for (int i = 0; i < sizeBasedStores.length; i++) {
-					BlockStore blockStore = sizeBasedStores[i];
-					for (int segment = 0; segment < blockStore.stores.length; segment++) {
-						if (!shouldDefrag(blockStore, segment)) {
-							continue;
-						}
-						try {
-							boolean sleep = false;
-							do {
-								if (sleep) {
-									Thread.sleep(100); //let the file activity quite down
-								}
-								sleep = true;
-								int relativeBlockToMove = blockStore.blocksInUse.compactHighestBitSet(segment);
-								if (!shouldDefrag(blockStore, segment)) {
-									truncate(blockStore, segment);
-									break;
-								}
-								//move the block if possible
-								InputStream is = blockStore.stores[segment].createInputStream(relativeBlockToMove * blockStore.blockSize, blockStore.blockSize);
-								DataInputStream dis = new DataInputStream(is);
-								Long gid = null;
-								Long oid = null;
-								try {
-									gid = dis.readLong();
-									oid = dis.readLong();
-								} catch (IOException e) {
-									continue; //can happen the bit was set and no data exists
-								}
-								dis.reset(); //move back to the beginning
-								Map<Long, PhysicalInfo> map = physicalMapping.get(gid);
-								if (map == null) {
-									continue;
-								}
-								PhysicalInfo info = map.get(oid);
-								if (info == null) {
-									continue;
-								}
-								int bitIndex = relativeBlockToMove + (segment * blockStore.blocksInUse.getBitsPerSegment());
-								synchronized (info) {
-									info.await(true, false);
-									if (info.block == EMPTY_ADDRESS) {
-										continue;
-									}
-									if (info.block != bitIndex) {
-										//we've marked a bit in use, but haven't yet written new data
-										continue;
-									}
-								}
-								int newBlock = blockStore.writeToStorageBlock(info, dis);
-								synchronized (info) {
-									info.await(true, true);
-									if (info.block == EMPTY_ADDRESS) {
-										//already removed;
-										if (newBlock != EMPTY_ADDRESS) {
-											blockStore.blocksInUse.clear(newBlock);
-										}
-										continue;
-									}
-									info.block = newBlock;
-									blockStore.blocksInUse.clear(bitIndex);
-								}
-								sleep = false;
-							} while (shouldDefrag(blockStore, segment));
-						} catch (IOException e) {
-							LogManager.logWarning(LogConstants.CTX_BUFFER_MGR, e, "Error performing defrag"); //$NON-NLS-1$
-						} catch (InterruptedException e) {
-							throw new TeiidRuntimeException(e);
-						}
-					}
-				}
+			} catch (Throwable t) {
+				LogManager.logWarning(LogConstants.CTX_BUFFER_MGR, t, "Uncaught exception durring defrag");
 			} finally {
 				defragRunning.set(false);
 			}
 		}
+		
+		private long truncate(boolean anySpace) {
+			anySpace |= compactBufferFiles;
+			long freed = 0;
+			for (int i = 0; i < sizeBasedStores.length; i++) {
+				BlockStore blockStore = sizeBasedStores[i];
+				for (int segment = 0; segment < blockStore.stores.length; segment++) {
+					freed += truncate(blockStore, segment, anySpace);
+				}
+			}
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+				LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Finished truncate reclaimed", freed); //$NON-NLS-1$ 
+			}
+			return freed;
+		}
 
-		private void truncate(BlockStore blockStore, int segment) {
+		private void defrag(boolean all) {
+			all |= compactBufferFiles;
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+				LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Running defrag"); //$NON-NLS-1$ 
+			}
+			for (int i = 0; i < sizeBasedStores.length; i++) {
+				BlockStore blockStore = sizeBasedStores[i];
+				for (int segment = 0; segment < blockStore.stores.length; segment++) {
+					if (!shouldDefrag(blockStore, segment, all)) {
+						continue;
+					}
+					if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+						LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Defraging store", i, "segment", segment, "length", blockStore.stores[segment].getLength()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+					}
+					try {
+						for (int retries = 0; retries < 10; retries++) {
+							int relativeBlockToMove = blockStore.blocksInUse.compactHighestBitSet(segment);
+							if (!shouldDefrag(blockStore, segment, all) || relativeBlockToMove == -1) {
+								break;
+							}
+							//move the block if possible
+							InputStream is = blockStore.stores[segment].createInputStream(relativeBlockToMove * blockStore.blockSize, blockStore.blockSize);
+							Long gid = null;
+							Long oid = null;
+							try {
+								gid = readLong(is);
+								oid = readLong(is);
+							} catch (IOException e) {
+								continue; //can happen the bit was set and no data exists
+							}
+							is.reset(); //move back to the beginning
+							Map<Long, PhysicalInfo> map = physicalMapping.get(gid);
+							if (map == null) {
+								continue;
+							}
+							PhysicalInfo info = map.get(oid);
+							if (info == null) {
+								continue;
+							}
+							int bitIndex = relativeBlockToMove + (segment * blockStore.blocksInUse.getBitsPerSegment());
+							synchronized (info) {
+								info.await(true, false);
+								if (info.block == EMPTY_ADDRESS) {
+									continue;
+								}
+								if (info.block != bitIndex) {
+									//we've marked a bit in use, but haven't yet written new data
+									continue;
+								}
+							}
+							int newBlock = blockStore.writeToStorageBlock(info, is);
+							synchronized (info) {
+								info.await(true, true);
+								if (info.block == EMPTY_ADDRESS) {
+									//already removed;
+									if (newBlock != EMPTY_ADDRESS) {
+										blockStore.blocksInUse.clear(newBlock);
+									}
+									continue;
+								}
+								info.block = newBlock;
+								blockStore.blocksInUse.clear(bitIndex);
+							}
+						}
+					} catch (IOException e) {
+						LogManager.logWarning(LogConstants.CTX_BUFFER_MGR, e, "Error performing defrag");
+					}
+				}
+			}
+		}
+
+		private long readLong(InputStream is) throws IOException {
+			long val = 0;
+			for (int k = 0; k < 8; k++) {
+				val += ((is.read() & 255) << (56-k*8));
+			}
+			return val;
+		}
+
+		private long truncate(BlockStore blockStore, int segment, boolean anySpace) {
 			//truncate the file
 			blockStore.locks[segment].writeLock().lock();
 			try {
-				int endBlock = blockStore.blocksInUse.getHighestBitSet(segment);
-				long newLength = (endBlock + 1) * blockStore.blockSize; 
-				blockStore.stores[segment].setLength(newLength);
+				int endBlock = blockStore.blocksInUse.compactHighestBitSet(segment);
+				long newLength = (endBlock + 1) * blockStore.blockSize;
+				long oldLength = blockStore.stores[segment].getLength();
+				if (anySpace) {
+					if (newLength < oldLength) {
+						blockStore.stores[segment].setLength(newLength);
+						if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+							LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Truncating segment", segment, "to", newLength); //$NON-NLS-1$ //$NON-NLS-2$ 
+						}
+						return oldLength - newLength;
+					}
+				} else {
+					long desiredLength = ((oldLength/blockStore.blockSize)/2)*blockStore.blockSize;
+					if (newLength < oldLength && newLength <= desiredLength && oldLength - desiredLength >= 2*minDefrag) {
+						blockStore.stores[segment].setLength(desiredLength);
+						if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+							LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Truncating segment", segment, "to", desiredLength); //$NON-NLS-1$ //$NON-NLS-2$ 
+						}
+					}
+					return oldLength - desiredLength;
+				}
 			} catch (IOException e) {
 				LogManager.logWarning(LogConstants.CTX_BUFFER_MGR, e, "Error performing defrag truncate"); //$NON-NLS-1$
 			} finally {
 				blockStore.locks[segment].writeLock().unlock();
 			}
+			return 0;
 		}
 	};
-	private AtomicBoolean cleanerRunning = new AtomicBoolean();
+	final DefragTask defragTask = new DefragTask();
+	private long lastFullRun;
+	
+	AtomicBoolean cleanerRunning = new AtomicBoolean();
 	private final Runnable cleaningTask = new Runnable() {
 		
 		@Override
@@ -495,6 +553,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 	private AtomicLong storageReads = new AtomicLong();
 	
 	private long minDefrag = DEFAULT_MIN_DEFRAG;
+	private BufferManagerImpl bufferManager;
 	
 	@Override
 	public void initialize() throws TeiidComponentException {
@@ -531,6 +590,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 			}
 		} while ((size>>1) < maxStorageObjectSize);
 		this.sizeBasedStores = stores.toArray(new BlockStore[stores.size()]);
+		this.truncateInterval = compactBufferFiles?1:8;
 	}
 	
 	boolean lowBlocks(boolean critical) {
@@ -593,9 +653,9 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 			hasPermit = true;
 			blockManager = getBlockManager(s.getId(), entry.getId(), EMPTY_ADDRESS);
 			BlockOutputStream bos = new BlockOutputStream(blockManager, memoryBlocks);
+			bos.writeLong(s.getId());
+			bos.writeLong(entry.getId());
 			ObjectOutput dos = new ObjectOutputStream(bos);
-			dos.writeLong(s.getId());
-			dos.writeLong(entry.getId());
 			dos.writeInt(entry.getSizeEstimate());
             s.serialize(entry.getObject(), dos);
             dos.close();
@@ -612,13 +672,13 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
             	}
 			}
 		} catch (Throwable e) {
-			if ((e == BlockOutputStream.exceededMax && newEntry) || e == PhysicalInfo.sizeChanged) {
+			if (e == PhysicalInfo.sizeChanged) {
 				//entries are mutable after adding, the original should be removed shortly so just ignore
 				LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Object "+ entry.getId() +" changed size since first persistence, keeping the original."); //$NON-NLS-1$ //$NON-NLS-2$
 			} else if (e == BlockOutputStream.exceededMax){
-				LogManager.logError(LogConstants.CTX_BUFFER_MGR, "Max block number exceeded.  Increase the maxStorageObjectSize to support larger storage objects.  Alternatively you could make the processor batch size smaller."); //$NON-NLS-1$
+				LogManager.logError(LogConstants.CTX_BUFFER_MGR, "Max block number exceeded " + s.getId() + " " + entry.getId() + " Increase the maxStorageObjectSize to support larger storage objects.  Alternatively you could make the processor batch size smaller."); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			} else {
-				LogManager.logError(LogConstants.CTX_BUFFER_MGR, e, "Error persisting, attempts to read "+ entry.getId() +" later will result in an exception."); //$NON-NLS-1$ //$NON-NLS-2$
+				LogManager.logError(LogConstants.CTX_BUFFER_MGR, e, "Error persisting, attempts to read " + s.getId() + " " + entry.getId() +" later will result in an exception."); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			}
 		} finally {
 			if (hasPermit) {
@@ -721,15 +781,17 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 			if (lock != null) {
 				is = readIntoMemory(info, is, lock, memoryBlocks);
 			}
+			for (int i = 0; i < HEADER_BYTES; i++) {
+				is.read();
+			}
 			ObjectInput dis = new ObjectInputStream(is);
-			dis.readFully(HEADER_SKIP_BUFFER);
 			int sizeEstimate = dis.readInt();
 			CacheEntry ce = new CacheEntry(new CacheKey(oid, 1, 1), sizeEstimate, serializer.deserialize(dis), ref, true);
 			return ce;
         } catch(IOException e) {
-        	throw new TeiidComponentException(e, QueryPlugin.Util.getString("FileStoreageManager.error_reading", oid)); //$NON-NLS-1$
+        	throw new TeiidComponentException(e, QueryPlugin.Util.getString("FileStoreageManager.error_reading", info.gid, oid)); //$NON-NLS-1$
         } catch (ClassNotFoundException e) {
-        	throw new TeiidComponentException(e, QueryPlugin.Util.getString("FileStoreageManager.error_reading", oid)); //$NON-NLS-1$
+        	throw new TeiidComponentException(e, QueryPlugin.Util.getString("FileStoreageManager.error_reading", info.gid, oid)); //$NON-NLS-1$
         } catch (InterruptedException e) {
         	throw new TeiidRuntimeException(e);
 		} finally {
@@ -815,12 +877,13 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 	}
 	
 	@Override
-	public void addToCacheGroup(Long gid, Long oid) {
+	public boolean addToCacheGroup(Long gid, Long oid) {
 		Map<Long, PhysicalInfo> map = physicalMapping.get(gid);
 		if (map == null) {
-			return;
+			return false;
 		}
 		map.put(oid, null);
+		return true;
 	}
 	
 	@Override
@@ -902,10 +965,38 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 				storageWrites.getAndIncrement();
 				BlockInputStream is = new BlockInputStream(bm, memoryBlockCount); 
 				BlockStore blockStore = sizeBasedStores[sizeIndex];
-				block = blockStore.writeToStorageBlock(info, is);
+				for (int i = 0; i < 3; i++) {
+					try {
+						block = blockStore.writeToStorageBlock(info, is);
+						break;
+					} catch (OutOfDiskException e) {
+						switch (i) {
+						case 0:
+							//the first attempt is to trim the existing files
+							defragTask.truncate(true);
+							break;
+						case 1:
+							synchronized (this) {
+								if (System.currentTimeMillis() - lastFullRun > FULL_DEFRAG_TRUNCATE_TIMEOUT) {
+									defragTask.defrag(true);
+									defragTask.truncate(true);
+									lastFullRun = System.currentTimeMillis();
+								}
+							}
+							break;
+						case 2:
+							//give up, there isn't enough memory available
+							throw e;
+						}
+					}
+				}
 			}
 		} catch (IOException e) {
-			LogManager.logError(LogConstants.CTX_BUFFER_MGR, e, "Error transferring block to storage " + oid); //$NON-NLS-1$
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+				LogManager.logError(LogConstants.CTX_BUFFER_MGR, e, "Error transferring block to storage " + oid + " " + info.gid); //$NON-NLS-1$ //$NON-NLS-2$
+			} else {
+				LogManager.logError(LogConstants.CTX_BUFFER_MGR, "Error transferring block to storage " + oid + " " + info.gid + " " + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			}
 		} finally {
 			//ensure post conditions
 			synchronized (info) {
@@ -932,9 +1023,8 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 						if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
 							LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Freed storage data block", info.block, "of size", blockStore.blockSize); //$NON-NLS-1$ //$NON-NLS-2$
 						}
-						int segment = info.block/blockStore.blocksInUse.getBitsPerSegment();
 						if (!defragRunning.get() 
-								&& shouldDefrag(blockStore, segment) 
+								&& (freedCounter.getAndIncrement()&0x3fff)==0x3fff //should be several hundred megs of turn over
 								&& defragRunning.compareAndSet(false, true)) {
 							this.asynchPool.execute(defragTask);
 						}
@@ -950,12 +1040,16 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 						freedLock.unlock();
 					}
 				}
+				if (block == EMPTY_ADDRESS && demote && this.bufferManager != null) {
+					//failed to demote
+					this.bufferManager.invalidCacheGroup(info.gid);
+				}
 			}
 		}
 		return result;
 	}
 
-	boolean shouldDefrag(BlockStore blockStore, int segment) {
+	boolean shouldDefrag(BlockStore blockStore, int segment, boolean all) {
 		int highestBitSet = blockStore.blocksInUse.getHighestBitSet(segment);
 		int bitsSet = blockStore.blocksInUse.getBitsSet(segment);
 		highestBitSet = Math.max(bitsSet, Math.max(0, highestBitSet));
@@ -963,7 +1057,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 			return false;
 		}
 		int freeBlocks = highestBitSet-bitsSet;
-		return freeBlocks > (highestBitSet>>2) && freeBlocks*blockStore.blockSize > minDefrag;
+		return freeBlocks > (highestBitSet>>(all?3:1)) && freeBlocks*blockStore.blockSize > minDefrag;
 	}
 
 	/**
@@ -1083,5 +1177,33 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 	public int getMaxMemoryBlocks() {
 		return maxMemoryBlocks;
 	}
+	
+	public void setBufferManager(BufferManagerImpl bufferManager) {
+		this.bufferManager = bufferManager;
+	}
+	
+	public void setTruncateInterval(int truncateInterval) {
+		this.truncateInterval = truncateInterval;
+	}
 
+	public long getDiskUsage() {
+		long result = 0;
+		for (int i = 0; i < sizeBasedStores.length; i++) {
+			BlockStore blockStore = sizeBasedStores[i];
+			for (int segment = 0; segment < blockStore.stores.length; segment++) {
+				result += blockStore.stores[segment].getLength();
+			}
+		}
+		return result;
+	}
+
+	@Override
+	public void shutdown() {
+		this.asynchPool.shutdownNow();
+	}
+	
+	public void setCompactBufferFiles(boolean compactBufferFiles) {
+		this.compactBufferFiles = compactBufferFiles;
+	}
+	
 }

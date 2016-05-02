@@ -285,7 +285,24 @@ public class TestTextTable {
 	
 	@Test public void testTextTableJoin() throws Exception {
 		String sql = "select z.* from (select x.* from (select * from pm1.g1 where e1 = 'c') y, texttable(e1 || '\n' || e2 || '\n' || e3 COLUMNS x string) x) as z, " +
-				"(select x.* from (select * from pm1.g1 where e1 = 'c') y, texttable(e1 || '\n' || e2 || '\n' || e3 COLUMNS x string) x) as z1 where z.x = z1.x";
+				"(select x.* from (select * from pm1.g1 where e1 = 'c') y, texttable(e1 || '\n' || e2 || '\n' || e3 COLUMNS x string) x) as z1 where z.x = z1.x order by z.x";
+    	
+        List[] expected = new List[] {
+        		Arrays.asList("1"),
+        		Arrays.asList("c"),
+        		Arrays.asList("true"),
+        };    
+
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        RelationalPlan plan = (RelationalPlan)helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
+        JoinNode join = (JoinNode) plan.getRootNode().getChildren()[0].getChildren()[0];
+        assertTrue(!(join.getJoinStrategy() instanceof NestedTableJoinStrategy));
+        helpProcess(plan, createCommandContext(), dataManager, expected);
+    } 
+    
+    	@Test public void testTextTableJoinPrefetch() throws Exception {
+		String sql = "select z.* from (select x.* from (select * from pm1.g1 where e1 = 'c') y, texttable(e1 || '\n' || e2 || '\n' || e3 COLUMNS x string) x) as z";
     	
         List[] expected = new List[] {
         		Arrays.asList("c"),
@@ -294,10 +311,9 @@ public class TestTextTable {
         };    
 
         FakeDataManager dataManager = new FakeDataManager();
+        dataManager.setBlockOnce();
         sampleData1(dataManager);
         RelationalPlan plan = (RelationalPlan)helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
-        JoinNode join = (JoinNode) plan.getRootNode().getChildren()[0];
-        assertTrue(!(join.getJoinStrategy() instanceof NestedTableJoinStrategy));
         helpProcess(plan, createCommandContext(), dataManager, expected);
     } 
 	

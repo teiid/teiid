@@ -30,6 +30,7 @@ import java.util.TreeMap;
 import org.teiid.client.ResizingArrayList;
 import org.teiid.common.buffer.LobManager.ReferenceMode;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.Streamable;
 import org.teiid.core.util.Assertion;
@@ -42,6 +43,73 @@ import org.teiid.query.sql.symbol.Expression;
 
 public class TupleBuffer {
 	
+	public interface RowSource {
+		void finalRow() throws TeiidComponentException, TeiidProcessingException;
+	}
+	
+	public final class TupleBufferTupleSource extends
+			AbstractTupleSource {
+		private final boolean singleUse;
+		private boolean noBlocking;
+		private boolean reverse;
+
+		private TupleBufferTupleSource(boolean singleUse) {
+			this.singleUse = singleUse;
+		}
+
+		@Override
+		protected List<?> finalRow() throws TeiidComponentException, TeiidProcessingException {
+			if(isFinal || noBlocking || reverse) {
+		        return null;
+		    } 
+			if (rowSourceLock == null) { 
+				throw BlockedException.blockWithTrace("Blocking on non-final TupleBuffer", tupleSourceID, "size", getRowCount()); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+			synchronized (rowSourceLock) {
+				rowSourceLock.finalRow();
+				return getCurrentTuple();
+			}
+		}
+
+		@Override
+		public int available() {
+			if (!reverse) {
+				return rowCount - getCurrentIndex() + 1;
+			}
+			return getCurrentIndex();
+		}
+
+		@Override
+		protected TupleBatch getBatch(int row) throws TeiidComponentException {
+			return TupleBuffer.this.getBatch(row);
+		}
+
+		@Override
+		public void closeSource() {
+			super.closeSource();
+			if (singleUse) {
+				remove();
+			}
+		}
+		
+		public void setNoBlocking(boolean noBlocking) {
+			this.noBlocking = noBlocking;
+		}
+		
+		public void setReverse(boolean reverse) {
+			this.reverse = reverse;
+		}
+		
+		@Override
+		public int getCurrentIndex() {
+			if (!reverse) {
+				return super.getCurrentIndex();
+			}
+			return getRowCount() - super.getCurrentIndex() + 1;
+		}
+		
+	}
+
 	/**
      * Gets the data type names for each of the input expressions, in order.
      * @param expressions List of Expressions
@@ -75,6 +143,7 @@ public class TupleBuffer {
 
 	private LobManager lobManager;
 	private String uuid;
+	private RowSource rowSourceLock;
 	
 	public TupleBuffer(BatchManager manager, String id, List<? extends Expression> schema, LobManager lobManager, int batchSize) {
 		this.manager = manager;
@@ -82,6 +151,10 @@ public class TupleBuffer {
 		this.schema = schema;
 		this.lobManager = lobManager;
 		this.batchSize = batchSize;		
+	}
+	
+	public void setRowSourceLock(RowSource rowSourceLock) {
+		this.rowSourceLock = rowSourceLock;
 	}
 	
 	public void setInlineLobs(boolean inline) {
@@ -311,34 +384,7 @@ public class TupleBuffer {
 		if (singleUse) {
 			setForwardOnly(true);
 		}
-		return new AbstractTupleSource() {
-			
-			@Override
-			protected List<?> finalRow() throws BlockedException {
-				if(isFinal) {
-		            return null;
-		        } 
-		        throw BlockedException.blockWithTrace("Blocking on non-final TupleBuffer", tupleSourceID, "size", getRowCount()); //$NON-NLS-1$ //$NON-NLS-2$
-			}
-			
-			@Override
-			public int available() {
-				return rowCount - getCurrentIndex() + 1;
-			}
-			
-			@Override
-			protected TupleBatch getBatch(int row) throws TeiidComponentException {
-				return TupleBuffer.this.getBatch(row);
-			}
-			
-			@Override
-			public void closeSource() {
-				super.closeSource();
-				if (singleUse) {
-					remove();
-				}
-			}
-		};
+		return new TupleBufferTupleSource(singleUse);
 	}
 	
 	@Override

@@ -46,6 +46,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.id.IDGenerator;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.process.AuthorizationValidator.CommandType;
 import org.teiid.dqp.internal.process.multisource.MultiSourceCapabilitiesFinder;
@@ -89,6 +90,7 @@ import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.util.ContextProperties;
+import org.teiid.query.util.Options;
 import org.teiid.query.validator.AbstractValidationVisitor;
 import org.teiid.query.validator.ValidationVisitor;
 import org.teiid.query.validator.Validator;
@@ -222,10 +224,10 @@ public class Request implements SecurityFunctionEvaluator {
 
         RequestID reqID = workContext.getRequestID(this.requestMsg.getExecutionId());
         
-        Properties props = new Properties();
-        props.setProperty(ContextProperties.SESSION_ID, workContext.getSessionId());
+       Properties props = new Properties();
+       props.setProperty(ContextProperties.SESSION_ID, workContext.getSessionId());
         
-        this.context =
+       this.context =
             new CommandContext(
                 reqID,
                 groupName,
@@ -233,7 +235,6 @@ public class Request implements SecurityFunctionEvaluator {
                 requestMsg.getExecutionPayload(), 
                 workContext.getVdbName(), 
                 workContext.getVdbVersion(),
-                props,
                 this.requestMsg.getShowPlan() != ShowPlan.OFF);
         this.context.setProcessorBatchSize(bufferManager.getProcessorBatchSize());
         this.context.setGlobalTableStore(this.globalTables);
@@ -243,6 +244,7 @@ public class Request implements SecurityFunctionEvaluator {
 					multiSourceModels, workContext, context);
             context.setPlanToProcessConverter(modifier);
         }
+        
         context.setExecutor(this.executor);
         context.setSecurityFunctionEvaluator(this);
         context.setTempTableStore(tempTableStore);
@@ -253,11 +255,17 @@ public class Request implements SecurityFunctionEvaluator {
         context.setResultSetCacheEnabled(this.resultSetCacheEnabled);
         context.setUserRequestSourceConcurrency(this.userRequestConcurrency);
         context.setSubject(workContext.getSubject());
+        context.setEnvironmentProperties(props);
+        
+        Options options = new Options();
+        options.setProperties(System.getProperties());
+        PropertiesUtils.setBeanProperties(options, options.getProperties(), "org.teiid", true); //$NON-NLS-1$
+        this.context.setOptions(options);
+        this.context.setConnectionID(workContext.getSessionId());
         this.context.setSession(workContext.getSession());
         this.context.setRequestId(this.requestId);
         this.context.setDQPWorkContext(this.workContext);
         this.context.setTransactionService(this.transactionService);
-        this.context.setTransactionContext(this.transactionContext);
     }
     
     @Override
@@ -365,6 +373,7 @@ public class Request implements SecurityFunctionEvaluator {
         
         tc.setIsolationLevel(requestMsg.getTransactionIsolation());
         this.transactionContext = tc;
+        this.context.setTransactionContext(tc);
         this.processor = new QueryProcessor(processPlan, context, bufferManager, processorDataManager);
     }
 

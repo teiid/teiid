@@ -310,7 +310,7 @@ public class XMLQueryPlanner {
             updateSymbolMap(symbolMap, childRsInfo.getResultSetName(), inlineViewName, planEnv.getGlobalMetadata());
             
             // check if the criteria has been raised, if it is then we can update this as a join.
-            if (!rsInfo.isCritNullDependent() && childRsInfo.hasInputSet() && childRsInfo.isCriteriaRaised()) {
+            if (childRsInfo.hasInputSet() && childRsInfo.isCriteriaRaised()) {
                 Query transformationQuery = (Query) command;
                 SubqueryFromClause sfc = (SubqueryFromClause)transformationQuery.getFrom().getClauses().get(0);
                 

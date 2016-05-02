@@ -24,15 +24,19 @@ package org.teiid.rhq.plugin.util;
 
 import java.io.File;
 import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -537,15 +541,24 @@ public class ProfileServiceUtil {
 			// at all common)
 			memberMetaType = null;
 		} else if (propDef instanceof PropertyDefinitionMap) {
-			Map<String, PropertyDefinition> memberPropDefs = ((PropertyDefinitionMap) propDef)
-					.getPropertyDefinitions();
-			if (memberPropDefs.isEmpty())
+			//Need to handle RHQ 4.4 and 4.2. Return types changed for PropertyDefinitionMap.getPropertyDefinitions()
+            //so we need to check types.
+            Object object = ((PropertyDefinitionMap) propDef).getPropertyDefinitions();
+            Iterable<PropertyDefinition> propDefIter = null;
+            List<PropertyDefinition> propDefList = null;
+            
+            if (object instanceof Map){
+            	propDefIter = (Iterable<PropertyDefinition>) ((Map)object).values().iterator();
+            }else{
+            	propDefList =  (List<PropertyDefinition>)object;
+            }
+    	
+			if ((propDefIter != null &! propDefIter.iterator().hasNext()) || (propDefList != null && propDefList.isEmpty())) 
 				throw new IllegalStateException(
 						"PropertyDefinitionMap doesn't contain any member PropertyDefinitions."); //$NON-NLS-1$
 			// NOTE: We assume member prop defs are all of the same type, since
 			// for MapCompositeMetaTypes, they have to be.
-			PropertyDefinition mapMemberPropDef = memberPropDefs.values()
-					.iterator().next();
+			PropertyDefinition mapMemberPropDef = propDefIter != null?propDefIter.iterator().next():propDefList.listIterator().next();
 			MetaType mapMemberMetaType = convertPropertyDefinitionToMetaType(mapMemberPropDef);
 			memberMetaType = new MapCompositeMetaType(mapMemberMetaType);
 		} else {
@@ -640,6 +653,52 @@ public class ProfileServiceUtil {
 			}
 		}
 		throw new Exception("Failed to convert value to SimpleValue"); //$NON-NLS-1$
+	}
+	
+	/**
+	 * @return
+	 */
+	public static List<PropertyDefinition> reflectivelyInvokeGetMapMethod(PropertyDefinition propertyDefinitionMap) {
+		//Need to handle RHQ 4.4 and 4.2. Return types changed for PropertyDefinitionMap.getPropertyDefinitions()
+		//so we need to check method availability. getMap() was added for 4.4, so if we can find it via reflection, invoke it.
+		//Otherwise it is less than 4.4 so we will invoke getPropertyDefinitions which returned a map in 4.2.
+		Method method = null;
+		Object object = null;
+		    
+		try {
+			method = PropertyDefinitionMap.class.getMethod("getMap", null);
+		} catch (SecurityException e) {
+			//Nothing to do here
+		} catch (NoSuchMethodException e) {
+			//This will happen if we are running a version of RHQ less that 4.4
+		}
+		  
+		try {
+			if (method == null){
+				method = PropertyDefinitionMap.class.getMethod("getPropertyDefinitions", null);
+			}
+			object = method.invoke(propertyDefinitionMap, null);
+		} catch (IllegalArgumentException e) {
+			throwReflectionException(e);
+		} catch (IllegalAccessException e) {
+			throwReflectionException(e);
+		} catch (InvocationTargetException e) {
+			throwReflectionException(e);
+		} catch (SecurityException e) {
+			throwReflectionException(e);
+		} catch (NoSuchMethodException e) {
+			throwReflectionException(e);
+		}
+		
+		
+		return new ArrayList<PropertyDefinition>(((Map)object).values());
+	}
+
+	/**
+	 * @param object
+	 */
+	private static void throwReflectionException(Exception e) {
+		throw new RuntimeException("Error reflectively returning PropertyDefinition map: " + e.getLocalizedMessage());
 	}
 
 }

@@ -79,6 +79,12 @@ class BlockStore {
 			//TODO: there is still an extra buffer being created here, we could FileChannels to do better
 			byte[] b = new byte[BufferFrontedFileStoreCache.BLOCK_SIZE];
 			int read = 0;
+			long newLength = blockOffset+blockSize;
+			if (fs.getLength() < newLength) {
+				//grow by whole blocks
+				//TODO: could pad the growth
+				fs.setLength(newLength); 
+			}
 			while ((read = is.read(b, 0, b.length)) != -1) {
 				fs.write(blockOffset, b, 0, read);
 				blockOffset+=read;

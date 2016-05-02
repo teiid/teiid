@@ -103,7 +103,10 @@ public class CompareCriteria extends AbstractCompareCriteria {
      * @param isOptional
      */
     public void setOptional(Boolean isOptional) {
-		this.isOptional = isOptional;
+    	if (isOptional == null && Boolean.TRUE.equals(this.isOptional)) {
+    		return;
+    	}
+    	this.isOptional = isOptional;
 	}
     
     /**

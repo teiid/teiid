@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>teiid-parent</artifactId>
 		<groupId>org.jboss.teiid</groupId>
-		<version>7.7.2</version>
+		<version>7.7.12</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
@@ -15,14 +15,15 @@
 		<!--
 			<org.jboss.jopr.as4.version>1.2.0.GA</org.jboss.jopr.as4.version>
 		-->
-		<org.jboss.jopr.as5.version>1.2.0.GA</org.jboss.jopr.as5.version>
-		<jopr.jboss.as5.plugin.version>1.4.0.B01</jopr.jboss.as5.plugin.version>
-		<org.rhq.version>1.3.0.GA</org.rhq.version>
+		<jopr.jboss.as5.plugin.version>4.4.0</jopr.jboss.as5.plugin.version>
+		<org.rhq.version>4.4.0</org.rhq.version>
 		<apache.ant.version>1.7.0</apache.ant.version>
 		<teiid.version>${project.version}</teiid.version>
 
 
 	</properties>
+	
+	
 
 	<dependencies>
 		<!--
@@ -128,17 +129,11 @@
 			<artifactId>teiid-common-core</artifactId>
 			<type>test-jar</type>
 		</dependency>
-		<dependency>
-			<groupId>org.jboss.jopr</groupId>
-			<artifactId>jopr-embedded-jbas5</artifactId>
-			<type>war</type>
-			<version>${org.jboss.jopr.as5.version}</version>
-		</dependency>
-
-		<dependency>
+	 	
+	 	<dependency>
 			<groupId>org.jboss.integration</groupId>
 			<artifactId>jboss-profileservice-spi</artifactId>
-			<version>5.1.0.CR2</version>
+			<version>5.1.0.SP1</version>
 		</dependency>
 
 		<dependency>

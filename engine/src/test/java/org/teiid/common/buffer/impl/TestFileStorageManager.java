@@ -40,7 +40,7 @@ import org.teiid.core.util.UnitTestUtil;
 @SuppressWarnings("nls")
 public class TestFileStorageManager {
 		
-	public FileStorageManager getStorageManager(Integer openFiles, String dir) throws TeiidComponentException {
+	public static FileStorageManager getStorageManager(Integer openFiles, String dir) throws TeiidComponentException {
         FileStorageManager sm = new FileStorageManager();
         sm.setStorageDirectory(UnitTestUtil.getTestScratchPath() + (dir != null ? File.separator + dir : "")); //$NON-NLS-1$
         if (openFiles != null) {
@@ -93,6 +93,35 @@ public class TestFileStorageManager {
         // Add one batch
         FileStore store = sm.createFileStore(tsID);
         writeBytes(store);
+    }
+    
+    @Test(expected=IOException.class) public void testMaxSpaceSplit() throws Exception {
+    	FileStorageManager sm = getStorageManager(null, null); 
+    	sm.setMaxBufferSpace(1);
+        String tsID = "0";     //$NON-NLS-1$
+        
+        SplittableStorageManager ssm = new SplittableStorageManager(sm);
+        FileStore store = ssm.createFileStore(tsID);
+        try {
+        	writeBytes(store);
+        } finally {
+        	assertEquals(0, sm.getUsedBufferSpace());
+        }
+    }
+    
+    @Test public void testSetLength() throws Exception {
+    	FileStorageManager sm = getStorageManager(null, null); 
+        
+    	String tsID = "0";     //$NON-NLS-1$
+        FileStore store = sm.createFileStore(tsID);
+        store.setLength(1000);
+        assertEquals(1000, sm.getUsedBufferSpace());
+        
+        store.setLength(200);
+        assertEquals(200, sm.getUsedBufferSpace());
+        
+        store.setLength(1000);
+        assertEquals(1000, sm.getUsedBufferSpace());
     }
     
     @Test public void testFlush() throws Exception {

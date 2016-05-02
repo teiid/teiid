@@ -22,20 +22,15 @@
 
 package org.teiid.query.sql.lang;
 
+import static org.junit.Assert.*;
+
+import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
-import org.teiid.query.sql.lang.MatchCriteria;
-import org.teiid.query.sql.symbol.*;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.ElementSymbol;
 
-import junit.framework.*;
+public class TestMatchCriteria {
 
-public class TestMatchCriteria extends TestCase {
-
-	// ################################## FRAMEWORK ################################
-	
-	public TestMatchCriteria(String name) { 
-		super(name);
-	}	
-	
 	// ################################## TEST HELPERS ################################	
 		
 	public static MatchCriteria example(String element, String str) {
@@ -62,13 +57,13 @@ public class TestMatchCriteria extends TestCase {
 		
 	// ################################## ACTUAL TESTS ################################
 	
-	public void testEquals1() {    
+	@Test public void testEquals1() {    
 		MatchCriteria c1 = example("abc"); //$NON-NLS-1$
 		MatchCriteria c2 = example("abc"); //$NON-NLS-1$
 		assertTrue("Equivalent match criteria don't compare as equal: " + c1 + ", " + c2, c1.equals(c2));				 //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	public void testEquals2() {    
+	@Test public void testEquals2() {    
 		MatchCriteria c1 = example("abc", '#'); //$NON-NLS-1$
         c1.setNegated(true);
 		MatchCriteria c2 = example("abc", '#'); //$NON-NLS-1$
@@ -76,46 +71,46 @@ public class TestMatchCriteria extends TestCase {
 		assertTrue("Equivalent match criteria don't compare as equal: " + c1 + ", " + c2, c1.equals(c2));				 //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	public void testEquals3() {    
+	@Test public void testEquals3() {    
 		MatchCriteria c1 = example("abc", '#'); //$NON-NLS-1$
         c1.setNegated(true);
 		MatchCriteria c2 = (MatchCriteria) c1.clone();
 		assertTrue("Equivalent match criteria don't compare as equal: " + c1 + ", " + c2, c1.equals(c2));				 //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	public void testEquals4() {    
+	@Test public void testEquals4() {    
 		MatchCriteria c1 = example("abc"); //$NON-NLS-1$
 		MatchCriteria c2 = example("abc", '#'); //$NON-NLS-1$
 		assertTrue("Different match criteria compare as equal: " + c1 + ", " + c2, ! c1.equals(c2));				 //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	public void testEquals5() {    
+	@Test public void testEquals5() {    
 		MatchCriteria c1 = example("e1", "abc"); //$NON-NLS-1$ //$NON-NLS-2$
 		MatchCriteria c2 = example("e2", "abc"); //$NON-NLS-1$ //$NON-NLS-2$
 		assertTrue("Different match criteria compare as equal: " + c1 + ", " + c2, ! c1.equals(c2));				 //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	public void testSelfEquivalence(){
+	@Test public void testSelfEquivalence(){
 		MatchCriteria c1 = example("abc"); //$NON-NLS-1$
 		int equals = 0;
 		UnitTestUtil.helpTestEquivalence(equals, c1, c1);
 	}
 
-	public void testEquivalence(){
+	@Test public void testEquivalence(){
 		MatchCriteria c1 = example("abc"); //$NON-NLS-1$
 		MatchCriteria c2 = example("abc"); //$NON-NLS-1$
 		int equals = 0;
 		UnitTestUtil.helpTestEquivalence(equals, c1, c2);
 	}
 	
-	public void testCloneEquivalence(){
+	@Test public void testCloneEquivalence(){
 		MatchCriteria c1 = example("abc"); //$NON-NLS-1$
 		MatchCriteria c2 = (MatchCriteria)c1.clone();
 		int equals = 0;
 		UnitTestUtil.helpTestEquivalence(equals, c1, c2);
 	}	
 	
-    public void testNonEquivalence1(){
+    @Test public void testNonEquivalence1(){
         //test transitivity with two nonequal Objects
         MatchCriteria c1 = example("e1", "abc"); //$NON-NLS-1$ //$NON-NLS-2$
         MatchCriteria c2 = example("ozzy", '#'); //$NON-NLS-1$
@@ -123,7 +118,7 @@ public class TestMatchCriteria extends TestCase {
         UnitTestUtil.helpTestEquivalence(equals, c1, c2);
     }
     
-    public void testNonEquivalence2(){
+    @Test public void testNonEquivalence2(){
         MatchCriteria c1 = example("abc", '#'); //$NON-NLS-1$
         c1.setNegated(true);
         MatchCriteria c2 = example("abc", '#'); //$NON-NLS-1$

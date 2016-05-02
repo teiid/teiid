@@ -31,11 +31,11 @@ import java.util.TreeSet;
 
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.BufferManager.BufferReserveMode;
+import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.common.buffer.IndexedTupleSource;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
-import org.teiid.common.buffer.BufferManager.BufferReserveMode;
-import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.Assertion;
@@ -117,6 +117,7 @@ public class SortUtility {
         List<Expression> sortElements = null;
         List<Boolean> sortTypes = null;
         List<NullOrdering> nullOrderings = null;
+        int distinctIndex = -1;
         if (items == null) {
     		sortElements = (List<Expression>) schema;
     		sortTypes = Collections.nCopies(sortElements.size(), OrderBy.ASC);
@@ -135,6 +136,9 @@ public class SortUtility {
 	        	sortElements.addAll(toAdd);
 	        	sortTypes.addAll(Collections.nCopies(sortElements.size() - sortTypes.size(), OrderBy.ASC));
 	        	nullOrderings.addAll(Collections.nCopies(sortElements.size() - nullOrderings.size(), (NullOrdering)null));
+	        	//this path should be for join processing, which can check the isDistinct flag.
+	        	//that needs the proper index based upon the original sort columns, not based upon making the whole set distinct
+	        	distinctIndex = items.size() - 1;
             }
         }
         
@@ -147,6 +151,9 @@ public class SortUtility {
         }
         init(sourceID, mode, bufferMgr, groupName, schema, sortTypes,
 				nullOrderings, cols);
+        if (distinctIndex != -1) {
+        	this.comparator.setDistinctIndex(distinctIndex);
+        }
     }
     
     public SortUtility(TupleSource sourceID, Mode mode, BufferManager bufferMgr,
@@ -301,7 +308,7 @@ public class SortUtility {
             
             TupleBuffer merged = createTupleBuffer();
 
-            int desiredSpace = activeTupleBuffers.size() * schemaSize;
+            int desiredSpace = (int)(activeTupleBuffers.size() * (long)schemaSize);
             int reserved = Math.min(desiredSpace, Math.max(2*schemaSize, this.bufferManager.getMaxProcessingSize()));
             bufferManager.reserveBuffers(reserved, BufferReserveMode.FORCE);
             if (desiredSpace > reserved) {

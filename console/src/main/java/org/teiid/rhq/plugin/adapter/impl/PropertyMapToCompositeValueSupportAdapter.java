@@ -21,6 +21,8 @@
  */
 package org.teiid.rhq.plugin.adapter.impl;
 
+import java.util.List;
+
 import org.jboss.metatype.api.types.MetaType;
 import org.jboss.metatype.api.values.CompositeValue;
 import org.jboss.metatype.api.values.CompositeValueSupport;
@@ -47,7 +49,7 @@ public class PropertyMapToCompositeValueSupportAdapter extends AbstractPropertyM
         compositeValueSupport.set(key, value);
     }
 
-    protected CompositeValue createCompositeValue(PropertyDefinitionMap propDefMap, MetaType metaType)
+    protected CompositeValue createCompositeValue(PropertyDefinitionMap propertyDefinitionMap, MetaType metaType)
     {
         MutableCompositeMetaType compositeMetaType;
         if (metaType != null)
@@ -55,16 +57,20 @@ public class PropertyMapToCompositeValueSupportAdapter extends AbstractPropertyM
         else
         {
             // TODO: See if this else block is actually necessary (I think it is needed for creates).
-            String name = (propDefMap != null) ?
-                    propDefMap.getName() : "CompositeMetaType";
-            String desc = (propDefMap != null && propDefMap.getDescription() != null) ?
-                    propDefMap.getDescription() : "none";
+            String name = (propertyDefinitionMap != null) ?
+            		propertyDefinitionMap.getName() : "CompositeMetaType";
+            String desc = (propertyDefinitionMap != null && propertyDefinitionMap.getDescription() != null) ?
+            		propertyDefinitionMap.getDescription() : "none";
             compositeMetaType = new MutableCompositeMetaType(name, desc);
-            if (propDefMap != null)
+            
+            //Need to handle RHQ 4.4 and 4.2.
+            List<PropertyDefinition> propDefList =ProfileServiceUtil.reflectivelyInvokeGetMapMethod(propertyDefinitionMap);
+            
+            if (propertyDefinitionMap != null)
             {
-                for (PropertyDefinition mapMemberPropDef : propDefMap.getPropertyDefinitions().values())
+                for (PropertyDefinition mapMemberPropDef : propDefList)
                 {
-                    String mapMemberDesc = (propDefMap.getDescription() != null) ? propDefMap.getDescription() : "none";
+                    String mapMemberDesc = (propertyDefinitionMap.getDescription() != null) ? propertyDefinitionMap.getDescription() : "none";
                     MetaType mapMemberMetaType = ProfileServiceUtil.convertPropertyDefinitionToMetaType(mapMemberPropDef);
                     compositeMetaType.addItem(mapMemberPropDef.getName(), mapMemberDesc, mapMemberMetaType);
                 }
@@ -72,4 +78,6 @@ public class PropertyMapToCompositeValueSupportAdapter extends AbstractPropertyM
         }
         return new CompositeValueSupport(compositeMetaType);
     }
+   
 }
+

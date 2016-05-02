@@ -43,7 +43,6 @@ import org.mockito.stubbing.Answer;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.core.util.ExecutorUtils;
 import org.teiid.dqp.internal.process.CachedResults;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.service.TransactionContext;
@@ -94,7 +93,7 @@ public class TestTempTables {
 	    BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
 	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>();
 	    cache.setBufferManager(bm);
-		dataManager = new TempTableDataManager(fdm, bm, ExecutorUtils.getDirectExecutor(), cache);
+		dataManager = new TempTableDataManager(fdm, bm, cache);
 	}
 	
 	@Test public void testRollbackNoExisting() throws Exception {

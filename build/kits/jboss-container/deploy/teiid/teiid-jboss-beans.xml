@@ -198,7 +198,7 @@
         <property name="keystorePassword">passwd</property>
         <property name="keystoreType">JKS</property>
         <property name="sslProtocol">SSLv3</property>
-        <property name="keymanagementAlgorithm">false</property>
+        <!-- property name="keymanagementAlgorithm">SunX509</property -->
         <property name="truststoreFilename">cert.truststore</property>
         <property name="truststorePassword">passwd</property>
         <!--  1-way, 2-way, anonymous -->
@@ -234,7 +234,7 @@
         <property name="keystorePassword">passwd</property>
         <property name="keystoreType">JKS</property>
         <property name="sslProtocol">SSLv3</property>
-        <property name="keymanagementAlgorithm">false</property>
+        <!-- property name="keymanagementAlgorithm">SunX509</property -->
         <property name="truststoreFilename">cert.truststore</property>
         <property name="truststorePassword">passwd</property>
         <!--  1-way, 2-way, anonymous -->
@@ -270,7 +270,7 @@
         <property name="keystorePassword">passwd</property>
         <property name="keystoreType">JKS</property>
         <property name="sslProtocol">SSLv3</property>
-        <property name="keymanagementAlgorithm">false</property>
+        <!-- property name="keymanagementAlgorithm">SunX509</property -->
         <property name="truststoreFilename">cert.truststore</property>
         <property name="truststorePassword">passwd</property>
         <!--  1-way, 2-way, anonymous -->

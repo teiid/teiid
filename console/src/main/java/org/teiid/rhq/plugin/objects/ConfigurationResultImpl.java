@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -32,9 +33,9 @@ import java.util.Set;
 import org.rhq.core.domain.configuration.PropertySimple;
 import org.rhq.core.domain.configuration.definition.PropertyDefinition;
 import org.rhq.core.domain.configuration.definition.PropertyDefinitionList;
-import org.rhq.core.domain.configuration.definition.PropertyDefinitionMap;
 import org.rhq.core.domain.configuration.definition.PropertyDefinitionSimple;
 import org.rhq.core.pluginapi.inventory.ResourceDiscoveryContext;
+import org.teiid.rhq.plugin.util.ProfileServiceUtil;
 
 
 public class ConfigurationResultImpl  {
@@ -60,20 +61,16 @@ public class ConfigurationResultImpl  {
 					properties.add(new PropertySimple(key, values.get(fieldName)));
 				}
 			} else if (pdef instanceof PropertyDefinitionList) {
+				
 				PropertyDefinition propertyDefinitionMap = ((PropertyDefinitionList) pdef)
 						.getMemberDefinition();
-				Map simpleProperties = ((PropertyDefinitionMap) propertyDefinitionMap)
-						.getPropertyDefinitions();
-				Iterator simplePropertiesIter = simpleProperties.values()
-						.iterator();
-		
-				while (simplePropertiesIter.hasNext()) {
-					PropertyDefinition simpleProp = (PropertyDefinition) simplePropertiesIter
-							.next();
-					String fieldName = ((PropertyDefinitionSimple) simpleProp)
-							.getName();
+				
+				  //Need to handle RHQ 4.4 and 4.2.
+	            List<PropertyDefinition> propDefList =ProfileServiceUtil.reflectivelyInvokeGetMapMethod(propertyDefinitionMap);
+	    	
+				for  (PropertyDefinition definition : propDefList) {
+					String fieldName = definition.getName();
 					if (values.contains(fieldName)) {
-						
 						properties.add(new PropertySimple(key, values.get(fieldName)));
 					}
 				}

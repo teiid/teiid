@@ -29,7 +29,15 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.StringTokenizer;
 
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryPlannerException;
@@ -46,7 +54,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.XMLType;
-import org.teiid.core.util.ExecutorUtils;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.dqp.internal.process.CachedResults;
 import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.QueryProcessorFactoryImpl;
@@ -66,8 +74,8 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.FakeFunctionMetadataSource;
 import org.teiid.query.optimizer.QueryOptimizer;
 import org.teiid.query.optimizer.TestOptimizer;
-import org.teiid.query.optimizer.TestRuleRaiseNull;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
+import org.teiid.query.optimizer.TestRuleRaiseNull;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
@@ -92,6 +100,7 @@ import org.teiid.query.tempdata.TempTableStore.TransactionMode;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.query.util.CommandContext;
+import org.teiid.query.util.Options;
 import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorReport;
 import org.teiid.translator.SourceSystemFunctions;
@@ -247,7 +256,7 @@ public class TestProcessor {
         if (!(dataManager instanceof TempTableDataManager)) {
     	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>();
     	    cache.setBufferManager(bufferMgr);
-        	dataManager = new TempTableDataManager(dataManager, bufferMgr, ExecutorUtils.getDirectExecutor(), cache);
+        	dataManager = new TempTableDataManager(dataManager, bufferMgr, cache);
         }        
         if (context.getQueryProcessorFactory() == null) {
         	context.setQueryProcessorFactory(new QueryProcessorFactoryImpl(bufferMgr, dataManager, new DefaultCapabilitiesFinder(), null, context.getMetadata()));
@@ -350,10 +359,14 @@ public class TestProcessor {
 	}
 
 	public static CommandContext createCommandContext() {
-		Properties props = new Properties();
-		props.setProperty("soap_host", "my.host.com"); //$NON-NLS-1$ //$NON-NLS-2$
-		props.setProperty("soap_port", "12345"); //$NON-NLS-1$ //$NON-NLS-2$
-		CommandContext context = new CommandContext("0", "test", "user", null, "myvdb", 1, props, DEBUG); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		
+		Options options = new Options();
+        options.setProperties(System.getProperties());
+        options.getProperties().setProperty("soap_host", "my.host.com"); //$NON-NLS-1$ //$NON-NLS-2$
+        options.getProperties().setProperty("soap_port", "12345"); //$NON-NLS-1$ //$NON-NLS-2$
+        PropertiesUtils.setBeanProperties(options, options.getProperties(), "org.teiid", true); //$NON-NLS-1$
+
+		CommandContext context = new CommandContext("0", "test", "user", null, "myvdb", 1, DEBUG); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         context.setProcessorBatchSize(BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE);
         context.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
         context.setPreparedPlanCache(new SessionAwareCache<PreparedPlan>());
@@ -2778,6 +2791,7 @@ public class TestProcessor {
 
         // Create expected results
         List[] expected = new List[] {
+            Arrays.asList(new Object[] { null }), //$NON-NLS-1$
             Arrays.asList(new Object[] { "0" }), //$NON-NLS-1$
             Arrays.asList(new Object[] { "0" }), //$NON-NLS-1$
             Arrays.asList(new Object[] { "1" }), //$NON-NLS-1$
@@ -2976,6 +2990,7 @@ public class TestProcessor {
 
         // Create expected results
         List[] expected = new List[]{
+        	Arrays.asList(new Object[] { null }), //$NON-NLS-1$
             Arrays.asList(new Object[] { "0" }), //$NON-NLS-1$
             Arrays.asList(new Object[] { "0" }), //$NON-NLS-1$
             Arrays.asList(new Object[] { "1" }), //$NON-NLS-1$

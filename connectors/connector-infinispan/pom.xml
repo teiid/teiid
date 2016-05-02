@@ -1,243 +1,279 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <parent>
-        <artifactId>connectors</artifactId>
-        <groupId>org.jboss.teiid</groupId>
-        <version>7.7.2</version>
-    </parent>
-    <modelVersion>4.0.0</modelVersion>
-    <artifactId>connector-infinispan</artifactId>
-    <groupId>org.jboss.teiid.connectors</groupId>
-    <packaging>ear</packaging>
-    <name>Infinispan Connector</name>
-    <description>This connector reads data from a Infinispan cache</description>
-    <properties>
-       <version.infinispan>5.1.2.FINAL</version.infinispan>
-       <version.hibernate.search>3.1.0.GA</version.hibernate.search>
-    </properties>
-    <dependencies>
- 
-        <dependency>
-            <groupId>org.jboss.teiid.connectors</groupId>
-            <artifactId>translator-object</artifactId>
-            <version>${project.version}</version>
-            <scope>compile</scope>
-        </dependency>
-         
-        <dependency>
-            <groupId>javax.resource</groupId>
-            <artifactId>connector-api</artifactId>
-             <version>1.5</version>
-              <scope>provided</scope>
-        </dependency>   
- 
-        <dependency>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-core</artifactId>
-            <version>${version.infinispan}</version>
-        </dependency> 
-        <dependency>
-          <groupId>org.infinispan</groupId>
-          <artifactId>infinispan-client-hotrod</artifactId>
-          <version>${version.infinispan}</version>
-        </dependency>  
-         
-        <dependency>
-          <groupId>org.jboss.logging</groupId>
-          <artifactId>jboss-logging</artifactId>
-          <version>3.1.0.GA</version>
-        </dependency>      
-         
-        <dependency>
-          <groupId>org.jboss.logmanager</groupId>
-          <artifactId>jboss-logmanager</artifactId>
-          <version>1.2.2.GA</version>
-        </dependency>  
-                 
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>      
-            <version>4.4</version>
-            <scope>test</scope>
-        </dependency>      
-         
-              
-         
-    </dependencies>
-    <build>
- 
-        <plugins>     
-            <plugin>
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <outputDirectory>target/connector-infinispan-7.7.2/connector-infinispan.rar</outputDirectory>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>build_jar</id>
-                        <phase>process-classes</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin> 
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-ear-plugin</artifactId>
-            <version>2.4</version>
-            <configuration>
-               <!-- uri>./target/connector-infinispan-${project.version}</uri-->
-               <defaultJavaBundleDir></defaultJavaBundleDir>
-               <generateApplicationXml>false</generateApplicationXml>
-               <modules>                   
-                 <javaModule>
-                    <groupId>org.infinispan</groupId>
-                    <artifactId>infinispan-core</artifactId>
-                    <bundleDir>connector-infinispan.rar</bundleDir>
-                    <!--includeInApplicationXml>true</includeInApplicationXml-->
-                 </javaModule>
-                 <javaModule>
-                    <groupId>org.infinispan</groupId>
-                    <artifactId>infinispan-client-hotrod</artifactId>
-                    <bundleDir>connector-infinispan.rar</bundleDir>
-                 </javaModule> 
-                 <javaModule>
-                    <groupId>org.jboss.marshalling</groupId>
-                    <artifactId>jboss-marshalling-river</artifactId>
-                    <bundleDir>connector-infinispan.rar</bundleDir>
-                 </javaModule>
-                 <javaModule>
-                    <groupId>org.jboss.marshalling</groupId>
-                    <artifactId>jboss-marshalling</artifactId>
-                    <bundleDir>connector-infinispan.rar</bundleDir>
-                 </javaModule>    
-                  <javaModule>
-                    <groupId>org.jboss.logging</groupId>
-                    <artifactId>jboss-logging</artifactId>
-                    <bundleDir>connector-infinispan.rar</bundleDir>
-                 </javaModule>
-                 <javaModule>
-                    <groupId>org.jboss.logmanager</groupId>
-                    <artifactId>jboss-logmanager</artifactId>
-                    <bundleDir>connector-infinispan.rar</bundleDir>
-                 </javaModule>    
-                   <javaModule>
-                    <groupId>commons-pool</groupId>
-                    <artifactId>commons-pool</artifactId>
-                    <bundleDir>connector-infinispan.rar</bundleDir>
-                 </javaModule>                          
-                    <jarModule>
-                       <groupId>antlr</groupId>
-                       <artifactId>antlr</artifactId>
-                       <excluded>true</excluded>
-                    </jarModule> 
-        
-                    <jarModule>
-                       <groupId>antlr</groupId>
-                       <artifactId>antlr</artifactId>
-                       <excluded>true</excluded>
-                    </jarModule>
-                     <jarModule>
-                       <groupId>org.hibernate</groupId>
-                       <artifactId>hibernate-search</artifactId>
-                       <excluded>true</excluded>
-                    </jarModule>
-                    <jarModule>
-                       <groupId>org.hibernate</groupId>
-                       <artifactId>hibernate-commons-annotations</artifactId>
-                       <excluded>true</excluded>
-                    </jarModule>
-                     <jarModule>
-                       <groupId>org.hibernate</groupId>
-                       <artifactId>ejb3-persistence</artifactId>
-                       <excluded>true</excluded>
-                    </jarModule>   
-                     <jarModule>
-                       <groupId>org.hibernate</groupId>
-                       <artifactId>hibernate-core </artifactId>
-                       <excluded>true</excluded>
-                    </jarModule>                 
-                     <jarModule>
-                       <groupId>org.codehaus.woodstox</groupId>
-                       <artifactId>woodstox-core-asl</artifactId>
-                       <excluded>true</excluded>
-                    </jarModule>
-                     <jarModule>
-                       <groupId>org.codehaus.woodstox</groupId>
-                       <artifactId>stax2-api </artifactId>
-                       <excluded>true</excluded>
-                    </jarModule>                                 
-                     <jarModule>
-                       <groupId>commons-collections</groupId>
-                       <artifactId>commons-collections</artifactId>
-                       <excluded>true</excluded>
-                    </jarModule>
-                     <jarModule>
-                       <groupId>dom4j</groupId>
-                       <artifactId>dom4j</artifactId>
-                       <excluded>true</excluded>
-                    </jarModule>
-                     <jarModule>
-                       <groupId>xml-apis</groupId>
-                       <artifactId>xml-apis</artifactId>
-                       <excluded>true</excluded>
-                    </jarModule>
-                     <jarModule>
-                       <groupId>org.apache.lucene</groupId>
-                       <artifactId>lucene-core</artifactId>
-                       <excluded>true</excluded>
-                    </jarModule>
-                     <jarModule>
-                       <groupId>org.slf4j</groupId>
-                       <artifactId>slf4j-api</artifactId>
-                       <excluded>true</excluded>
-                    </jarModule>
-                     <jarModule>
-                       <groupId>hsqldb</groupId>
-                       <artifactId>hsqldb</artifactId>
-                       <excluded>true</excluded>
-                    </jarModule>
-                     <jarModule>
-                       <groupId>org.jgroups</groupId>
-                       <artifactId>jgroups</artifactId>
-                       <excluded>true</excluded>
-                    </jarModule>
-       
-                     <jarModule>
-                       <groupId>org.jboss.spec.javax.transaction</groupId>
-                       <artifactId>jboss-transaction-api_1.1_spec</artifactId>
-                       <excluded>true</excluded>
-                    </jarModule>
-                     <jarModule>
-                       <groupId>org.rhq.helpers</groupId>
-                       <artifactId>rhq-pluginAnnotations</artifactId>
-                       <excluded>true</excluded>
-                    </jarModule>
-                     <jarModule>
-                        <groupId>org.jboss.teiid.connectors</groupId>
-                        <artifactId>translator-object</artifactId>
-                       <excluded>true</excluded>
-                    </jarModule>                
-              </modules>
-               
-              <jboss>
-                <data-sources>
-                  <data-source>infinispan-ds.xml</data-source>
-                </data-sources>
-                 
-                <loader-repository>
-                      org.teiid.resource.adapter:loader=teiid-infinispan.ear
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<parent>
+		<artifactId>connectors</artifactId>
+		<groupId>org.jboss.teiid</groupId>
+		<version>7.7.12</version>
+	</parent>
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>connector-infinispan</artifactId>
+	<groupId>org.jboss.teiid.connectors</groupId>
+	<packaging>ear</packaging>
+	<name>Infinispan Connector</name>
+	<description>This connector reads data from a Infinispan cache</description>
+	<properties>
+		<version.infinispan>5.1.2.FINAL</version.infinispan>
+		<version.hibernate.search>3.1.0.GA</version.hibernate.search>
+	</properties>
+	<dependencies>
+
+		<dependency>
+			<groupId>org.jboss.teiid.connectors</groupId>
+			<artifactId>translator-object</artifactId>
+			<version>${project.version}</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>javax.resource</groupId>
+			<artifactId>connector-api</artifactId>
+			<version>1.5</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.infinispan</groupId>
+			<artifactId>infinispan-core</artifactId>
+			<version>${version.infinispan}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.infinispan</groupId>
+			<artifactId>infinispan-client-hotrod</artifactId>
+			<version>${version.infinispan}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jboss.logging</groupId>
+			<artifactId>jboss-logging</artifactId>
+			<version>3.1.0.GA</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jboss.logmanager</groupId>
+			<artifactId>jboss-logmanager</artifactId>
+			<version>1.2.2.GA</version>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.4</version>
+			<scope>test</scope>
+		</dependency>
+
+
+
+	</dependencies>
+	<build>
+
+		<plugins>
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.7</version>
+				<executions>
+					<execution>
+						<phase>compile</phase>
+						<configuration>
+							<target>
+
+								<javac fork="true" executable="${env.JAVA_HOME}/bin/javac"
+									srcdir="${basedir}/src/main/java" destdir="${basedir}/target/classes">
+									<classpath refid="maven.dependency.classpath" />
+								</javac>
+
+							</target>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+
+					<includes>
+						<include>org/**</include>
+					</includes>
+					<outputDirectory>target/connector-infinispan-7.7.4/connector-infinispan.rar</outputDirectory>
+				</configuration>
+				<executions>
+					<execution>
+						<id>build_jar</id>
+						<phase>process-classes</phase>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-ear-plugin</artifactId>
+				<version>2.4</version>
+				<configuration>
+					<!-- uri>./target/connector-infinispan-${project.version}</uri -->
+					<defaultJavaBundleDir></defaultJavaBundleDir>
+					<generateApplicationXml>false</generateApplicationXml>
+					<modules>
+						<javaModule>
+							<groupId>org.infinispan</groupId>
+							<artifactId>infinispan-core</artifactId>
+							<bundleDir>connector-infinispan.rar</bundleDir>
+							<!--includeInApplicationXml>true</includeInApplicationXml -->
+						</javaModule>
+						<javaModule>
+							<groupId>org.infinispan</groupId>
+							<artifactId>infinispan-client-hotrod</artifactId>
+							<bundleDir>connector-infinispan.rar</bundleDir>
+						</javaModule>
+						<javaModule>
+							<groupId>org.jboss.marshalling</groupId>
+							<artifactId>jboss-marshalling-river</artifactId>
+							<bundleDir>connector-infinispan.rar</bundleDir>
+						</javaModule>
+						<javaModule>
+							<groupId>org.jboss.marshalling</groupId>
+							<artifactId>jboss-marshalling</artifactId>
+							<bundleDir>connector-infinispan.rar</bundleDir>
+						</javaModule>
+						<javaModule>
+							<groupId>org.jboss.logging</groupId>
+							<artifactId>jboss-logging</artifactId>
+							<bundleDir>connector-infinispan.rar</bundleDir>
+						</javaModule>
+						<javaModule>
+							<groupId>org.jboss.logmanager</groupId>
+							<artifactId>jboss-logmanager</artifactId>
+							<bundleDir>connector-infinispan.rar</bundleDir>
+						</javaModule>
+						<javaModule>
+							<groupId>commons-pool</groupId>
+							<artifactId>commons-pool</artifactId>
+							<bundleDir>connector-infinispan.rar</bundleDir>
+						</javaModule>
+						<!--
+						<jarModule>
+							<groupId>antlr</groupId>
+							<artifactId>antlr</artifactId>
+							<excluded>true</excluded>
+						</jarModule>
+
+						<jarModule>
+							<groupId>antlr</groupId>
+							<artifactId>antlr</artifactId>
+							<excluded>true</excluded>
+						</jarModule>
+						-->
+						<jarModule>
+							<groupId>org.hibernate</groupId>
+							<artifactId>hibernate-search</artifactId>
+							<excluded>true</excluded>
+						</jarModule>
+						<!--
+						<jarModule>
+							<groupId>org.hibernate</groupId>
+							<artifactId>hibernate-commons-annotations</artifactId>
+							<excluded>true</excluded>
+						</jarModule>
+						<jarModule>
+							<groupId>org.hibernate</groupId>
+							<artifactId>ejb3-persistence</artifactId>
+							<excluded>true</excluded>
+						</jarModule>
+						<jarModule>
+							<groupId>org.hibernate</groupId>
+							<artifactId>hibernate-core </artifactId>
+							<excluded>true</excluded>
+						</jarModule>
+						-->
+						<jarModule>
+							<groupId>org.codehaus.woodstox</groupId>
+							<artifactId>woodstox-core-asl</artifactId>
+							<excluded>true</excluded>
+						</jarModule>
+						<jarModule>
+							<groupId>org.codehaus.woodstox</groupId>
+							<artifactId>stax2-api </artifactId>
+							<excluded>true</excluded>
+						</jarModule>
+						<!--
+						<jarModule>
+							<groupId>commons-collections</groupId>
+							<artifactId>commons-collections</artifactId>
+							<excluded>true</excluded>
+						</jarModule>
+						
+						<jarModule>
+							<groupId>dom4j</groupId>
+							<artifactId>dom4j</artifactId>
+							<excluded>true</excluded>
+						</jarModule>
+						
+						<jarModule>
+							<groupId>xml-apis</groupId>
+							<artifactId>xml-apis</artifactId>
+							<excluded>true</excluded>
+						</jarModule>
+						
+						<jarModule>
+							<groupId>org.apache.lucene</groupId>
+							<artifactId>lucene-core</artifactId>
+							<excluded>true</excluded>
+						</jarModule>
+						<jarModule>
+							<groupId>org.slf4j</groupId>
+							<artifactId>slf4j-api</artifactId>
+							<excluded>true</excluded>
+						</jarModule>
+						<jarModule>
+							<groupId>hsqldb</groupId>
+							<artifactId>hsqldb</artifactId>
+							<excluded>true</excluded>
+						</jarModule>
+						-->
+						<jarModule>
+							<groupId>org.jgroups</groupId>
+							<artifactId>jgroups</artifactId>
+							<excluded>true</excluded>
+						</jarModule>
+
+						<jarModule>
+							<groupId>org.jboss.spec.javax.transaction</groupId>
+							<artifactId>jboss-transaction-api_1.1_spec</artifactId>
+							<excluded>true</excluded>
+						</jarModule>
+						<jarModule>
+							<groupId>org.rhq.helpers</groupId>
+							<artifactId>rhq-pluginAnnotations</artifactId>
+							<excluded>true</excluded>
+						</jarModule>
+						<jarModule>
+							<groupId>org.jboss.teiid.connectors</groupId>
+							<artifactId>translator-object</artifactId>
+							<excluded>true</excluded>
+						</jarModule>
+					</modules>
+
+					<jboss>
+						<data-sources>
+							<data-source>infinispan-ds.xml</data-source>
+						</data-sources>
+
+						<loader-repository>
+							org.teiid.resource.adapter:loader=teiid-infinispan.ear
                       </loader-repository>
-                      <loader-repository-config> 
-                         java2ParentDelegation=false 
-                     </loader-repository-config> 
-                 
-              </jboss>          
-            </configuration>
-          </plugin>   
-        </plugins>
-    </build>
-   
+						<loader-repository-config>
+							java2ParentDelegation=false 
+                     </loader-repository-config>
+
+					</jboss>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
 </project>
  

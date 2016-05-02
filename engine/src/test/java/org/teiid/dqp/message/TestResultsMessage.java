@@ -114,11 +114,11 @@ public class TestResultsMessage extends TestCase {
         
         assertNotNull(copy.getPlanDescription());
         assertEquals(4, copy.getPlanDescription().getProperties().size());
-        
-        assertNotNull(copy.getResults());
-        assertEquals(1, copy.getResults().length);
-        assertNotNull(copy.getResults()[0]);
-        assertEquals(4, copy.getResults()[0].size());
+        List<?>[] results = copy.getResults();
+        assertNotNull(results);
+        assertEquals(1, results.length);
+        assertNotNull(results[0]);
+        assertEquals(4, results[0].size());
         assertEquals(new BigInteger("100"), copy.getResults()[0].get(0)); //$NON-NLS-1$
         assertEquals(new BigInteger("200"), copy.getResults()[0].get(1)); //$NON-NLS-1$
         assertEquals(new BigInteger("300"), copy.getResults()[0].get(2)); //$NON-NLS-1$
@@ -130,7 +130,16 @@ public class TestResultsMessage extends TestCase {
         assertEquals("warning1", ((Exception)copy.getWarnings().get(0)).getMessage()); //$NON-NLS-1$
         assertEquals(Exception.class, copy.getWarnings().get(1).getClass());
         assertEquals("warning2", ((Exception)copy.getWarnings().get(1)).getMessage()); //$NON-NLS-1$
+    }
+	
+    public void testDelayedDeserialization() throws Exception {
+        ResultsMessage message = example();
+        message.setDelayDeserialization(true);
+        ResultsMessage copy = UnitTestUtil.helpSerialize(message);
         
+        assertNull(copy.getResultsList());
+        copy.processResults();
+        assertNotNull(copy.getResultsList());
     }
 
 }

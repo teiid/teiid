@@ -140,7 +140,7 @@ public class TestSTree {
 		ElementSymbol e1 = new ElementSymbol("x");
 		e1.setType(Integer.class);
 		ElementSymbol e2 = new ElementSymbol("x");
-		e1.setType(Integer.class);
+		e2.setType(Integer.class);
 		List elements = Arrays.asList(e1, e2);
 		STree map = bm.createSTree(elements, "1", 2);
 		

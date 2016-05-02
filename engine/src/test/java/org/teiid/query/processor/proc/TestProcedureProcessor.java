@@ -2523,7 +2523,7 @@ public class TestProcedureProcessor {
         	
         }
     	Mockito.verify(ts).begin(tc);
-    	Mockito.verify(ts).resume(tc);
+    	Mockito.verify(ts, Mockito.times(2)).resume(tc);
     	Mockito.verify(ts, Mockito.times(0)).commit(tc);
     	Mockito.verify(ts).rollback(tc);
     }

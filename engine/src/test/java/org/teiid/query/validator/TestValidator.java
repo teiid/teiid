@@ -34,6 +34,7 @@ import java.util.Set;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryMetadataException;
+import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.client.metadata.ParameterInfo;
@@ -42,15 +43,15 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
+import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
+import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.ColumnSet;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
-import org.teiid.metadata.BaseColumn.NullType;
-import org.teiid.metadata.Column.SearchType;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingDocument;
@@ -58,6 +59,7 @@ import org.teiid.query.mapping.xml.MappingElement;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.parser.QueryParser;
+import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Command;
@@ -1961,4 +1963,16 @@ public class TestValidator {
 		helpValidate("SELECT XMLELEMENT(NAME metadata, XMLFOREST(e1 AS objectName), (SELECT XMLAGG(XMLELEMENT(NAME subTypes, XMLFOREST(e1))) FROM pm1.g2 AS b WHERE b.e2 = a.e2)) FROM pm1.g1 AS a GROUP BY e1", new String[] {"a.e2"}, RealMetadataFactory.example1Cached());
 	}
 	
+	@Test public void testInsertIntoVirtualWithQueryExpression() throws QueryParserException, QueryResolverException, TeiidComponentException { 
+		TransformationMetadata metadata = TestUpdateValidator.example1();
+        TestUpdateValidator.createView("select * from pm1.g1", metadata, "gx");
+        
+        String sql = "select * from gx as x"; //$NON-NLS-1$
+        
+        TestProcessor.helpGetPlan(sql, metadata);
+        
+        sql = "insert into gx (e1, e2, e3, e4) select * from pm1.g1"; //$NON-NLS-1$
+        
+        TestValidator.helpValidate(sql, new String[] {},  metadata);
+    }	
 }

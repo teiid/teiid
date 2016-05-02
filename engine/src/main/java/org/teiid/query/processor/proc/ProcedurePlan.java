@@ -140,7 +140,6 @@ public class ProcedurePlan extends ProcessorPlan {
     private boolean requiresTransaction = true;
     
     private TransactionContext blockContext;
-    private boolean inTxn;
     /**
      * Resources cannot be held open across the txn boundary.  This list is a hack at ensuring the resources are closed.
      */
@@ -219,7 +218,6 @@ public class ProcedurePlan extends ProcessorPlan {
         beginBatch = 1;
         batchRows = null;
         lastBatch = false;
-        inTxn = false;
         //reset program stack
         programs.clear();
 		LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, "ProcedurePlan reset"); //$NON-NLS-1$
@@ -277,15 +275,13 @@ public class ProcedurePlan extends ProcessorPlan {
 	@Override
 	public TupleBatch nextBatch() throws BlockedException,
 			TeiidComponentException, TeiidProcessingException {
-		if (blockContext != null && !this.inTxn) {
+		if (blockContext != null) {
 			this.getContext().getTransactionServer().resume(blockContext);
-			this.inTxn = true;
 		} 
 		try {
 			return nextBatchDirect();
 		} finally {
 			if (blockContext != null) {
-				this.inTxn = false;
 				this.getContext().getTransactionServer().suspend(blockContext);
 			}
 		}
@@ -606,9 +602,7 @@ public class ProcedurePlan extends ProcessorPlan {
     		TransactionContext tc = this.blockContext;
     		this.blockContext = null;
     		try {
-	    		if (!inTxn) {
-	    			this.getContext().getTransactionServer().resume(tc);
-	    		}
+    			this.getContext().getTransactionServer().resume(tc);
 	    		for (WeakReference<DataTierTupleSource> ref : txnTupleSources) {
 	    			DataTierTupleSource dtts = ref.get();
 	    			if (dtts != null) {
@@ -642,9 +636,8 @@ public class ProcedurePlan extends ProcessorPlan {
         	if (tc != null && tc.getTransactionType() == Scope.NONE) {
         		//start a transaction
         		this.getContext().getTransactionServer().begin(tc);
-        		this.inTxn = true;
         		this.blockContext = tc;
-        		this.peek().setStartedTxn(true);
+        		program.setStartedTxn(true);
         	}
         }
     }

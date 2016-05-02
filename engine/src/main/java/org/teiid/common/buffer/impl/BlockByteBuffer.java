@@ -73,7 +73,7 @@ public class BlockByteBuffer {
 		}
 		buffers = new ThreadLocal[segments];
 		for (int i = 0; i < fullSegments; i++) {
-			buffers[i] = new ThreadLocalByteBuffer(allocate(lastSegmentSize, direct));
+			buffers[i] = new ThreadLocalByteBuffer(allocate(segmentSize, direct));
 		}
 		if (lastSegmentSize > 0) {
 			buffers[fullSegments] = new ThreadLocalByteBuffer(allocate(lastSegmentSize, direct));

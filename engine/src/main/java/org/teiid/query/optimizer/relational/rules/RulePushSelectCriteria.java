@@ -40,11 +40,13 @@ import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
-import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.resolver.util.AccessPattern;
+import org.teiid.query.sql.LanguageObject;
+import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.CompoundCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.JoinType;
@@ -52,9 +54,10 @@ import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.symbol.WindowFunction;
+import org.teiid.query.sql.symbol.WindowSpecification;
 import org.teiid.query.sql.util.SymbolMap;
-import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
@@ -332,6 +335,29 @@ public final class RulePushSelectCriteria implements OptimizerRule {
                     if (critNode.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET) 
                     		&& NodeEditor.findNodePreOrder(currentNode.getFirstChild(), NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE) == null) {
                         markDependent(critNode, currentNode);
+                        
+                        //if the source does not support array comparison and we have a dependent join, then we need to check
+                        //if the transitive condition is needed.
+                        Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements((LanguageObject)critNode.getProperty(Info.SELECT_CRITERIA), true);
+                        for (PlanNode joinNode : NodeEditor.findAllNodes(currentNode, NodeConstants.Types.JOIN, NodeConstants.Types.SOURCE)) {
+                        	List<Criteria> joinCriteria = (List<Criteria>) joinNode.getProperty(Info.JOIN_CRITERIA);
+                            if (joinCriteria == null) {
+                            	continue;
+                            }
+                            for (Criteria crit : joinCriteria) {
+                            	if (!(crit instanceof CompareCriteria)) {
+                            		continue;
+                            	}
+                        		CompareCriteria cc = (CompareCriteria)crit;
+                        		if (!cc.isOptional()) {
+                        			continue;
+                        		}
+                        		if (!Collections.disjoint(elements, ElementCollectorVisitor.getElements(cc, false))) {
+                        			cc.setOptional(false);
+                        		}
+                            }
+                        }
+                        
                         return currentNode.getFirstChild();
                     } 
 				} catch(QueryMetadataException e) {
@@ -590,23 +616,36 @@ public final class RulePushSelectCriteria implements OptimizerRule {
         if(projectNode.getChildCount() == 0) {
             return false;
         }
-        List<WindowFunction> windowFunctions = null;
-        if (projectNode.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)) {
-        	windowFunctions = new LinkedList<WindowFunction>();
-        }
 
         Criteria crit = (Criteria) critNode.getProperty(NodeConstants.Info.SELECT_CRITERIA);
-
-        Boolean conversionResult = checkConversion(symbolMap, ElementCollectorVisitor.getElements(crit, true), windowFunctions);
+        Collection<ElementSymbol> cols = ElementCollectorVisitor.getElements(crit, true);
         
-        if (conversionResult == Boolean.FALSE) {
-        	return false; //not convertable
-        }
-        
-        if (!critNode.getSubqueryContainers().isEmpty() 
-        		&& checkConversion(symbolMap, critNode.getCorrelatedReferenceElements(), windowFunctions) != null) {
-    		return false; //not convertable, or has an aggregate for a correlated reference
-        }
+         if (projectNode.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)) {
+        	//we can push iff the predicate is against partitioning columns in all projected window functions
+        	Set<WindowFunction> windowFunctions = RuleAssignOutputElements.getWindowFunctions((List<SingleElementSymbol>) projectNode.getProperty(Info.PROJECT_COLS));
+        	for (WindowFunction windowFunction : windowFunctions) {
+				WindowSpecification spec = windowFunction.getWindowSpecification();
+				if (spec.getOrderBy() != null || spec.getPartition() == null) {
+					return false;
+				}
+				for (ElementSymbol col : cols) {
+					if (!spec.getPartition().contains(symbolMap.getMappedExpression(col))) {
+						return false;
+					}
+				}
+			}
+         }
+ 
+        Boolean conversionResult = checkConversion(symbolMap, cols);
+         
+         if (conversionResult == Boolean.FALSE) {
+         	return false; //not convertable
+         }
+         
+         if (!critNode.getSubqueryContainers().isEmpty() 
+        		&& checkConversion(symbolMap, critNode.getCorrelatedReferenceElements()) != null) {
+     		return false; //not convertable, or has an aggregate for a correlated reference
+         }
         
         PlanNode copyNode = copyNode(critNode);
 
@@ -634,7 +673,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
     }
 
 	private Boolean checkConversion(SymbolMap symbolMap,
-			Collection<ElementSymbol> elements, List<WindowFunction> windowFunctions) {
+			Collection<ElementSymbol> elements) {
 		Boolean result = null;
         
         for (ElementSymbol element : elements) {
@@ -651,13 +690,6 @@ public final class RulePushSelectCriteria implements OptimizerRule {
             
             if (!ElementCollectorVisitor.getAggregates(converted, false).isEmpty()) {
                 result = Boolean.TRUE;
-            }
-            
-            if (windowFunctions != null) {
-            	AggregateSymbolCollectorVisitor.getAggregates(converted, null, null, null, windowFunctions, null);
-            	if (!windowFunctions.isEmpty()) {
-            		return false;
-            	}
             }
         }
 		return result;

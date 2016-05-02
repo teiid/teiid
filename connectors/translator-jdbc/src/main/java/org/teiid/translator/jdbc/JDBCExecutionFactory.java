@@ -125,7 +125,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	private String databaseTimeZone;
 	private boolean trimStrings;
 	private boolean useCommentsInSourceQuery;
-	private String version;
+	private Version version;
 	private int maxInsertBatchSize = 2048;
 	private DatbaseCalender databaseCalender;
 
@@ -149,12 +149,31 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	
     @TranslatorProperty(display="Database Version", description= "Database Version")
     public String getDatabaseVersion() {
-    	return this.version;
+    	return this.version.toString();
     }    
     
-    public void setDatabaseVersion(String version) {
-    	this.version = version;
-    }
+    /**
+      * Sets the database version.  See also {@link #getVersion()}
+      * @param version
+      */
+     public void setDatabaseVersion(String version) {
+     	this.version = Version.getVersion(version);
+     }
+     
+     public void setDatabaseVersion(Version version) {
+ 		this.version = version;
+     }
+     
+     /**
+      * Get the database version as a comparable object
+      * @return
+      */
+     protected Version getVersion() {
+     	if (version == null) {
+     		return Version.DEFAULT_VERSION;
+     	}
+     	return this.version;
+     }
     
 	@TranslatorProperty(display="Use Bind Variables", description="Use prepared statements and bind variables",advanced=true)
 	public boolean useBindVariables() {
@@ -1151,5 +1170,12 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	public String getLikeRegexString() {
 		return SQLConstants.Reserved.LIKE_REGEX;
 	}
+	
+	/**
+ 	 * @return true if the N prefix should be used for strings containing non-ascii characters
+ 	 */
+ 	public boolean useUnicodePrefix() {
+ 		return false;
+ 	}
 	
 }

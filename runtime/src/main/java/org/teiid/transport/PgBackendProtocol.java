@@ -266,7 +266,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		sendParameterStatus("server_encoding", "SQL_ASCII");
 		sendParameterStatus("server_version", "8.1.4");
 		sendParameterStatus("session_authorization", this.props.getProperty("user"));
-		sendParameterStatus("standard_conforming_strings", "off");
+		sendParameterStatus("standard_conforming_strings", "on");
 		sendParameterStatus("application_name", this.props.getProperty("application_name", "ODBCClient"));
 		
 		// TODO PostgreSQL TimeZone
@@ -662,16 +662,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		writeString("08P01");
 		write('M');
 		writeString(message);
-		sendMessage();
-	}
-	
-	private void sendNoticeResponse(String message) {
-		trace("notice:", message);
-		startMessage('N');
-		write('S');
-		writeString("ERROR");
-		write('M');
-		writeString(message);
+		write(0);
 		sendMessage();
 	}
 

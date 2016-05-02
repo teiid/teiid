@@ -42,9 +42,8 @@ import org.teiid.core.util.Assertion;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.processor.ProcessorDataManager;
-import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.processor.BatchCollector.BatchProducer;
+import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
@@ -284,11 +283,12 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
                         this.getProcessingState().nodeStatistics.stopBatchTimer();
                         this.getProcessingState().nodeStatistics.collectCumulativeNodeStats(batch, RelationalNodeStatistics.BATCHCOMPLETE_STOP);
                         if (batch.getTerminationFlag()) {
-                            this.getProcessingState().nodeStatistics.collectNodeStats(this.getChildren(), this.getClassName());
+                            this.getProcessingState().nodeStatistics.collectNodeStats(this.getChildren());
                             //this.nodeStatistics.dumpProperties(this.getClassName());
                         }
                     }
                     this.recordBatch(batch);
+                    recordStats = false;
                 }
                 //24663: only return non-zero batches. 
                 //there have been several instances in the code that have not correctly accounted for non-terminal zero length batches
@@ -305,20 +305,14 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
                 // stop timer for this batch (BlockedException)
                 this.getProcessingState().nodeStatistics.stopBatchTimer();
                 this.getProcessingState().nodeStatistics.collectCumulativeNodeStats(null, RelationalNodeStatistics.BLOCKEDEXCEPTION_STOP);
+                recordStats = false;
             }
             throw e;
-        } catch (QueryProcessor.ExpiredTimeSliceException e) {
-        	if(recordStats && this.getProcessingState().context.getCollectNodeStatistics()) {
-                this.getProcessingState().nodeStatistics.stopBatchTimer();
-            }
-            throw e;
-        } catch (TeiidComponentException e) {
-            // stop timer for this batch (MetaMatrixComponentException)
-            if(recordStats &&  this.getProcessingState().context.getCollectNodeStatistics()) {
-                this.getProcessingState().nodeStatistics.stopBatchTimer();
-            }
-            throw e;
-        }
+         } finally {
+             if(recordStats &&  this.getProcessingState().context.getCollectNodeStatistics()) {
+                 this.getProcessingState().nodeStatistics.stopBatchTimer();
+             }
+         }
     }
 
     /**
@@ -637,5 +631,5 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 		}
 		throw e;
 	}
-	
+
 }

@@ -412,6 +412,17 @@ public class TestCriteriaEvaluator {
         SubqueryCompareCriteria crit = helpGetCompareSubqueryCriteria(SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.ALL);
         helpTestCompareSubqueryCriteria(crit, true, Collections.emptyList()); 
     }
+    
+    /**
+      * The check for empty rows should happen before the check for a null left expression
+      * @throws Exception
+      */
+     @Test public void testCompareSubqueryCriteriaNoRows1() throws Exception {
+         SubqueryCompareCriteria crit = helpGetCompareSubqueryCriteria(SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.ANY);
+         crit.setLeftExpression(new Constant(null));
+         crit.negate();
+         helpTestCompareSubqueryCriteria(crit, true, Collections.emptyList()); 
+     }
 
     /**
      * Special case: if ANY/SOME is specified and the subquery returns no rows,

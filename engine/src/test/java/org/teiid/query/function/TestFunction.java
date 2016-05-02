@@ -176,7 +176,7 @@ public class TestFunction {
                      expected, actual.toString()); 
     }
 
-    public static void helpTestTimestampDiff(String intervalType, Timestamp timeStamp1, Timestamp timeStamp2, Long expected) {
+    public static void helpTestTimestampDiff(String intervalType, Timestamp timeStamp1, Timestamp timeStamp2, Long expected) throws FunctionExecutionException {
         Object actual = FunctionMethods.timestampDiff(intervalType, timeStamp1, timeStamp2);
         assertEquals("timestampDiff(" + intervalType + ", " + timeStamp1 + ", " + timeStamp2 + ") failed", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                      expected, actual); 
@@ -919,21 +919,21 @@ public class TestFunction {
         helpTestTimestampDiff(NonReserved.SQL_TSI_MINUTE,
                               TimestampUtil.createTimestamp((2001-1900), 0, 0, 2, 0, 0, 0),
                               TimestampUtil.createTimestamp((2001-1900), 0, 0, 0, 33, 12, 0),
-                              new Long(-86));
+                              new Long(-87));
     }
 
     @Test public void testTimestampDiffTimeStamp_Min_3() throws Exception {
         helpTestTimestampDiff(NonReserved.SQL_TSI_MINUTE,
                               TimestampUtil.createTimestamp((2001-1900), 8, 26, 12, 07, 58, 65497),
                               TimestampUtil.createTimestamp((2001-1900), 8, 29, 11, 25, 42, 483219),
-                              new Long(4277));
+                              new Long(4278));
     }
 
     @Test public void testTimestampDiffTimeStamp_Min_4() throws Exception {
         helpTestTimestampDiff(NonReserved.SQL_TSI_MINUTE,
                               TimestampUtil.createTimestamp((2001-1900), 8, 26, 12, 07, 58, 0),
                               TimestampUtil.createTimestamp((2001-1900), 8, 29, 11, 25, 42, 0),
-                              new Long(4277));
+                              new Long(4278));
     }
 
     @Test public void testTimestampDiffTimeStamp_Min_5() throws Exception {
@@ -1024,7 +1024,7 @@ public class TestFunction {
 	@Test public void testTimestampDiffTime_Hour_2() throws Exception {
 		helpTestTimestampDiff(NonReserved.SQL_TSI_HOUR, new Timestamp(
 				TimestampUtil.createTime(5, 0, 30).getTime()), new Timestamp(
-				TimestampUtil.createTime(3, 0, 31).getTime()), new Long(-1));
+				TimestampUtil.createTime(3, 0, 31).getTime()), new Long(-2));
 	}
 
     @Test public void testParseTimestamp1() throws Exception {

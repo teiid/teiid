@@ -35,6 +35,7 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.id.IDGenerator;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -57,6 +58,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
+import org.teiid.query.util.Options;
 import org.teiid.translator.SourceSystemFunctions;
 
 /** 
@@ -126,8 +128,11 @@ public class TestMultiSourcePlanToProcessConverter {
         finder = new TempCapabilitiesFinder(finder);
         IDGenerator idGenerator = new IDGenerator();
         
-        Properties props = new Properties();
-        CommandContext context = new CommandContext("0", "test", "user", null, vdb.getName(), vdb.getVersion(), props, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        Options options = new Options();
+        options.setProperties(System.getProperties());
+        PropertiesUtils.setBeanProperties(options, options.getProperties(), "org.teiid", true); //$NON-NLS-1$
+        
+        CommandContext context = new CommandContext("0", "test", "user", null, vdb.getName(), vdb.getVersion(), false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         context.setPlanToProcessConverter(new MultiSourcePlanToProcessConverter(wrapper, idGenerator, analysis, finder, multiSourceModels, dqpContext, context));
 
         ProcessorPlan plan = QueryOptimizer.optimizePlan(command, wrapper, idGenerator, finder, analysis, context);

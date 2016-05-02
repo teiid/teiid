@@ -38,6 +38,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.language.SortSpecification.NullOrdering;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.SupportConstants;
@@ -71,7 +72,7 @@ import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
-
+import org.teiid.translator.ExecutionFactory.NullOrder;
 
 public final class RuleCollapseSource implements OptimizerRule {
 
@@ -96,7 +97,7 @@ public final class RuleCollapseSource implements OptimizerRule {
             		commandRoot = NodeEditor.findNodePreOrder(accessNode, NodeConstants.Types.SOURCE).getFirstChild();
             	}
                 plan = removeUnnecessaryInlineView(plan, commandRoot);
-                QueryCommand queryCommand = createQuery(metadata, capFinder, accessNode, commandRoot);
+                QueryCommand queryCommand = createQuery(context, capFinder, accessNode, commandRoot);
             	addDistinct(metadata, capFinder, accessNode, queryCommand);
                 command = queryCommand;
                 if (intoGroup != null) {
@@ -193,8 +194,10 @@ public final class RuleCollapseSource implements OptimizerRule {
         return root;
     }
 
-	private QueryCommand createQuery(QueryMetadataInterface metadata, CapabilitiesFinder capFinder, PlanNode accessRoot, PlanNode node) throws QueryMetadataException, TeiidComponentException, QueryPlannerException {
+    private QueryCommand createQuery(CommandContext context, CapabilitiesFinder capFinder, PlanNode accessRoot, PlanNode node) throws QueryMetadataException, TeiidComponentException, QueryPlannerException {
+    	QueryMetadataInterface metadata = context.getMetadata();
 		PlanNode setOpNode = NodeEditor.findNodePreOrder(node, NodeConstants.Types.SET_OP, NodeConstants.Types.SOURCE);
+		Object modelID = RuleRaiseAccess.getModelIDFromAccess(accessRoot, metadata);
 		if (setOpNode != null) {
             Operation setOp = (Operation)setOpNode.getProperty(NodeConstants.Info.SET_OPERATION);
             SetQuery unionCommand = new SetQuery(setOp);
@@ -202,7 +205,7 @@ public final class RuleCollapseSource implements OptimizerRule {
             unionCommand.setAll(unionAll);
             PlanNode sort = NodeEditor.findNodePreOrder(node, NodeConstants.Types.SORT, NodeConstants.Types.SET_OP);
             if (sort != null) {
-                processOrderBy(sort, unionCommand);
+                processOrderBy(sort, unionCommand, modelID, context, capFinder);
             }
             PlanNode limit = NodeEditor.findNodePreOrder(node, NodeConstants.Types.TUPLE_LIMIT, NodeConstants.Types.SET_OP);
             if (limit != null) {
@@ -210,7 +213,7 @@ public final class RuleCollapseSource implements OptimizerRule {
             }
             int count = 0;
             for (PlanNode child : setOpNode.getChildren()) {
-                QueryCommand command = createQuery(metadata, capFinder, accessRoot, child);
+                QueryCommand command = createQuery(context, capFinder, accessRoot, child);
                 if (count == 0) {
                     unionCommand.setLeftQuery(command);
                 } else if (count == 1) {
@@ -229,11 +232,10 @@ public final class RuleCollapseSource implements OptimizerRule {
         select.addSymbols(columns);
         query.setSelect(select);
 		query.setFrom(new From());
-		buildQuery(accessRoot, node, query, metadata, capFinder);
+		buildQuery(accessRoot, node, query, context, capFinder);
 		if (query.getCriteria() instanceof CompoundCriteria) {
             query.setCriteria(QueryRewriter.optimizeCriteria((CompoundCriteria)query.getCriteria(), metadata));
         }
-		Object modelID = RuleRaiseAccess.getModelIDFromAccess(accessRoot, metadata);
 		if (!CapabilitiesUtil.useAnsiJoin(modelID, metadata, capFinder)) {
 			simplifyFromClause(query);
         }
@@ -297,8 +299,8 @@ public final class RuleCollapseSource implements OptimizerRule {
         return null;
     }
 
-    void buildQuery(PlanNode accessRoot, PlanNode node, Query query, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) throws QueryMetadataException, TeiidComponentException, QueryPlannerException {
-        
+    void buildQuery(PlanNode accessRoot, PlanNode node, Query query, CommandContext context, CapabilitiesFinder capFinder) throws QueryMetadataException, TeiidComponentException, QueryPlannerException {
+    	QueryMetadataInterface metadata = context.getMetadata();    
     	//visit source and join nodes as they appear
         switch(node.getType()) {
             case NodeConstants.Types.JOIN:
@@ -310,7 +312,7 @@ public final class RuleCollapseSource implements OptimizerRule {
                 if (crits == null || crits.isEmpty()) {
                     crits = new ArrayList<Criteria>();
                 } else {
-                	RuleChooseJoinStrategy.filterOptionalCriteria(crits);
+                	RuleChooseJoinStrategy.filterOptionalCriteria(crits, false);
                 	if (crits.isEmpty() && joinType == JoinType.JOIN_INNER) {
                 		joinType = JoinType.JOIN_CROSS;
                 	}
@@ -324,12 +326,12 @@ public final class RuleCollapseSource implements OptimizerRule {
                  * if the join is a left outer join, criteria from the right side will be added to the on clause
                  */
                 Criteria savedCriteria = null;
-                buildQuery(accessRoot, left, query, metadata, capFinder);
+                buildQuery(accessRoot, left, query, context, capFinder);
                 if (joinType == JoinType.JOIN_LEFT_OUTER) {
                     savedCriteria = query.getCriteria();
                     query.setCriteria(null);
                 } 
-                buildQuery(accessRoot, right, query, metadata, capFinder);
+                buildQuery(accessRoot, right, query, context, capFinder);
                 if (joinType == JoinType.JOIN_LEFT_OUTER) {
                     moveWhereClauseIntoOnClause(query, crits);
                     query.setCriteria(savedCriteria);
@@ -360,7 +362,7 @@ public final class RuleCollapseSource implements OptimizerRule {
             {
             	if (Boolean.TRUE.equals(node.getProperty(NodeConstants.Info.INLINE_VIEW))) {
                     PlanNode child = node.getFirstChild();
-                    QueryCommand newQuery = createQuery(metadata, capFinder, accessRoot, child);
+                    QueryCommand newQuery = createQuery(context, capFinder, accessRoot, child);
                     
                     //ensure that the group is consistent
                     GroupSymbol symbol = node.getGroups().iterator().next();
@@ -374,7 +376,7 @@ public final class RuleCollapseSource implements OptimizerRule {
     	}
             
         for (PlanNode childNode : node.getChildren()) {
-            buildQuery(accessRoot, childNode, query, metadata, capFinder);              
+            buildQuery(accessRoot, childNode, query, context, capFinder);              
         }
             
         switch(node.getType()) {
@@ -391,7 +393,7 @@ public final class RuleCollapseSource implements OptimizerRule {
             }
             case NodeConstants.Types.SORT: 
             {
-                processOrderBy(node, query);
+                processOrderBy(node, query, RuleRaiseAccess.getModelIDFromAccess(accessRoot, metadata), context, capFinder);
                 break;
             }
             case NodeConstants.Types.DUP_REMOVE: 
@@ -486,8 +488,9 @@ public final class RuleCollapseSource implements OptimizerRule {
         query.setCriteria(null);
     }
     
-	private void processOrderBy(PlanNode node, QueryCommand query) {
-		OrderBy orderBy = (OrderBy)node.getProperty(NodeConstants.Info.SORT_ORDER);
+    private void processOrderBy(PlanNode node, QueryCommand query, Object modelID, CommandContext context, CapabilitiesFinder capFinder) throws QueryMetadataException, TeiidComponentException {
+    	boolean userOrdering = NodeEditor.findParent(node, NodeConstants.Types.JOIN|NodeConstants.Types.SOURCE) == null;
+    	OrderBy orderBy = (OrderBy)node.getProperty(NodeConstants.Info.SORT_ORDER);
 		query.setOrderBy(orderBy);
 		if (query instanceof Query) {
 			List<SingleElementSymbol> cols = query.getProjectedSymbols();
@@ -495,6 +498,24 @@ public final class RuleCollapseSource implements OptimizerRule {
 				item.setExpressionPosition(cols.indexOf(item.getSymbol()));
 			}
 			QueryRewriter.rewriteOrderBy(query, orderBy, query.getProjectedSymbols(), new LinkedList<OrderByItem>());
+		}
+		boolean supportsNullOrdering = CapabilitiesUtil.supports(Capability.QUERY_ORDERBY_NULL_ORDERING, modelID, context.getMetadata(), capFinder);
+		NullOrder defaultNullOrder = CapabilitiesUtil.getDefaultNullOrder(modelID, context.getMetadata(), capFinder);
+		for (OrderByItem item : orderBy.getOrderByItems()) {
+			if (item.getNullOrdering() != null) {
+				if (!supportsNullOrdering) {
+					item.setNullOrdering(null);
+				}
+			} else if (userOrdering && supportsNullOrdering && defaultNullOrder != NullOrder.LOW &&  context.getOptions().isPushdownDefaultNullOrder()) {
+				//try to match the expected default of low
+				if (item.isAscending()) {
+					if (defaultNullOrder != NullOrder.FIRST) {
+						item.setNullOrdering(NullOrdering.FIRST);
+					}
+				} else if (defaultNullOrder != NullOrder.LAST) {
+					item.setNullOrdering(NullOrdering.LAST);
+				}
+			}
 		}
 	}
 

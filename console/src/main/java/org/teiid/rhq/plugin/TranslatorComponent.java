@@ -63,7 +63,6 @@ public class TranslatorComponent extends Facet {
 		String RESOURCE_NAME = "resourceName";
 	}
 
-	@Override
 	public void start(ResourceContext context) {
 		this.setComponentName(context.getPluginConfiguration().getSimpleValue(	"name", null));
 		this.resourceConfiguration=context.getPluginConfiguration();
@@ -184,6 +183,12 @@ public class TranslatorComponent extends Facet {
 	public EmsConnection getEmsConnection() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public ResourceContext getResourceContext() {
+		// TODO Auto-generated method stub
+		return this.getResourceContext();
 	}
 	
 }

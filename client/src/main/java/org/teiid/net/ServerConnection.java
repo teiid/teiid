@@ -42,4 +42,6 @@ public interface ServerConnection {
 	
 	void authenticate() throws ConnectionException, CommunicationException;
 	
+	boolean isLocal();
+	
 }

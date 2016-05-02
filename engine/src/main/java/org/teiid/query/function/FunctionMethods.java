@@ -55,6 +55,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
 import org.teiid.core.types.InputStreamFactory.BlobInputStreamFactory;
 import org.teiid.core.types.InputStreamFactory.ClobInputStreamFactory;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
@@ -65,6 +66,8 @@ import org.teiid.query.util.CommandContext;
  * Static method hooks for most of the function library.
  */
 public final class FunctionMethods {
+	
+	private static final boolean CALENDAR_TIMESTAMPDIFF = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.calendarTimestampDiff", true); //$NON-NLS-1$
 
 	// ================== Function = plus =====================
 
@@ -390,8 +393,14 @@ public final class FunctionMethods {
 
 	// ================== Function = dayofweek =====================
 
-	public static Object dayOfWeek(Date x) {
-		return Integer.valueOf(getField(x, Calendar.DAY_OF_WEEK));
+	public static int dayOfWeek(Date x) {
+		int result = getField(x, Calendar.DAY_OF_WEEK);
+		if (TimestampWithTimezone.ISO8601_WEEK) {
+			//technically this is just pg indexing
+			//iso would use sunday = 7 rather than 0
+			return (result + 6) % 7;
+		}
+		return result;
 	}
 
 	// ================== Function = dayofyear =====================
@@ -529,44 +538,110 @@ public final class FunctionMethods {
 
 	//	================== Function = timestampdiff =====================
 
-	/**
-     * This method truncates (ignores) figures
-     * @param interval
-     * @param timestamp1
-     * @param timestamp2
-     * @return
-     * @throws FunctionExecutionException
-     */
-    public static Object timestampDiff(String intervalType, Timestamp ts1Obj, Timestamp ts2Obj)  {
-        long ts1 = ts1Obj.getTime() / 1000 * 1000000000 + ts1Obj.getNanos();
-        long ts2 = ts2Obj.getTime() / 1000 * 1000000000 + ts2Obj.getNanos();
+	public static Long timestampDiff(String intervalType, Timestamp ts1Obj, Timestamp ts2Obj) throws FunctionExecutionException  {
+		return timestampDiff(intervalType, ts1Obj, ts2Obj, CALENDAR_TIMESTAMPDIFF);
+	}
+			
+    public static Long timestampDiff(String intervalType, Timestamp ts1Obj, Timestamp ts2Obj, boolean calendarBased) throws FunctionExecutionException  {
+        long ts1 = ts1Obj.getTime() / 1000;
+        long ts2 = ts2Obj.getTime() / 1000;
         
         long tsDiff = ts2 - ts1;
 
         long count = 0;
         if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_FRAC_SECOND)) {
-            count = tsDiff;
+        	if (Math.abs(tsDiff) > Integer.MAX_VALUE) {
+        		 throw new FunctionExecutionException("TEIID31136", "Value is out of range for timestampdiff");
+        	}
+            count = tsDiff * 1000000000 + ts2Obj.getNanos() - ts1Obj.getNanos();
         } else { 
-        	tsDiff = tsDiff / 1000000; //convert to milliseconds
             if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_SECOND)) {
-                count = tsDiff / 1000;
+                count = tsDiff;
+            } else if (calendarBased) {
+            	//alternative logic is needed to compute calendar differences 
+            	//which looks at elapsed date parts, not total time between
+            	if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_MINUTE)) {
+            		count = ts2 / 60 - ts1 / 60;
+            	} else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_HOUR)) {
+            		TimeZone tz = TimestampWithTimezone.getCalendar().getTimeZone();
+            		if (tz.getDSTSavings() > 0) {
+            			ts1 += tz.getOffset(ts1Obj.getTime())/1000;
+            			ts2 += tz.getOffset(ts2Obj.getTime())/1000;
+            		}
+            		count = ts2 / (60*60) - ts1 / (60*60);	
+            	} else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_DAY) || intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_WEEK)) {
+            		TimeZone tz = TimestampWithTimezone.getCalendar().getTimeZone();
+            		if (tz.getDSTSavings() > 0) {
+            			ts1 += tz.getOffset(ts1Obj.getTime())/1000;
+            			ts2 += tz.getOffset(ts2Obj.getTime())/1000;
+            		}
+            		//since we are no effectively using GMT we can simply divide since the unix epoch starts at midnight.
+            		count = ts2 / (60*60*24) - ts1 / (60*60*24);
+                	if (intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_WEEK)) {
+                    	//TODO:  this behavior matches SQL Server - but not Derby which expects only whole week
+                		
+                    	long days = count;
+                    	//whole weeks between the two dates
+                		count = count/7;
+                    	//check for calendar difference assuming sunday as the first week day
+                		if (days%7!=0) {
+	                    	int day1 = dayOfWeek(ts1Obj);
+	                    	int day2 = dayOfWeek(ts2Obj);
+	                    	int diff = Integer.signum(day2 - day1);
+	                    	if (diff > 0) {
+	                    		if (tsDiff < 0) {
+	                    			count--;
+	                    		}
+	                    	} else if (diff < 0) {
+	                    		if (tsDiff > 0) {
+	                    			count++; 
+	                    		}
+	                    	}
+                		}
+                	}
+                } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_MONTH)) {
+                	Calendar cal = TimestampWithTimezone.getCalendar();
+                	cal.setTimeInMillis(ts1Obj.getTime());
+                	int months1 = cal.get(Calendar.YEAR) * 12 + cal.get(Calendar.MONTH);
+                	cal.setTimeInMillis(ts2Obj.getTime());
+                	int months2 = cal.get(Calendar.YEAR) * 12 + cal.get(Calendar.MONTH);
+                    count = months2 - months1;
+                } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_QUARTER)) {
+                	Calendar cal = TimestampWithTimezone.getCalendar();
+                	cal.setTimeInMillis(ts1Obj.getTime());
+                	int quarters1 = cal.get(Calendar.YEAR) * 4 + cal.get(Calendar.MONTH)/3;
+                	cal.setTimeInMillis(ts2Obj.getTime());
+                	int quarters2 = cal.get(Calendar.YEAR) * 4 + cal.get(Calendar.MONTH)/3;
+                    count = quarters2 - quarters1;
+                } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_YEAR)) {
+                	Calendar cal = TimestampWithTimezone.getCalendar();
+                	cal.setTimeInMillis(ts1Obj.getTime());
+                	int years1 = cal.get(Calendar.YEAR);
+                	cal.setTimeInMillis(ts2Obj.getTime());
+                	int years2 = cal.get(Calendar.YEAR);
+                    count = years2 - years1;
+                }
             } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_MINUTE)) {
-                count = (tsDiff / 1000) / 60;
+                count = tsDiff / 60;
             } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_HOUR)) {
-                count = (tsDiff / 1000) / (60*60);
+                count = tsDiff / (60*60);	
             } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_DAY)) {
-                count = (tsDiff / 1000) / (60*60*24);
+                count = tsDiff / (60*60*24);
             } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_WEEK)) {
-                count = (tsDiff / 1000) / (60*60*24*7);
+                count = tsDiff / (60*60*24*7);
             } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_MONTH)) {
-                count = (tsDiff / 1000) / (60*60*24*30);
+                count = tsDiff / (60*60*24*30);
             } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_QUARTER)) {
-                count = (tsDiff / 1000) / (60*60*24*91);
+                count = tsDiff / (60*60*24*91);
             } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_YEAR)) {
-                count = (tsDiff / 1000) / (60*60*24*365);
+                count = tsDiff / (60*60*24*365);
             }    
         }
-        return new Long(count);
+        //TODO: long results are not consistent with other sources
+    	/*if (calendarBased && ((count > 0 && count > Integer.MAX_VALUE) || (count < 0 && count < Integer.MIN_VALUE))) {
+    		throw new FunctionExecutionException(QueryPlugin.Event.TEIID31136, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31136));
+    	}*/
+        return Long.valueOf(count);
 	}
 
     //  ================== Function = timestampcreate =====================

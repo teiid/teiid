@@ -40,13 +40,13 @@ import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
-import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
-import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
 import org.teiid.query.processor.relational.MergeJoinStrategy.SortOption;
+import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.JoinType;
@@ -101,22 +101,13 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
             if (!JoinStrategyType.MERGE.equals(stype)) {
             	continue;
             } 
-            
+            JoinType joinType = (JoinType) joinNode.getProperty(NodeConstants.Info.JOIN_TYPE);
+       
             /**
              * Don't push sorts for unbalanced inner joins, we prefer to use a processing time cost based decision 
              */
             boolean pushLeft = true;
             boolean pushRight = true;
-            if (joinNode.getProperty(NodeConstants.Info.JOIN_TYPE) == JoinType.JOIN_INNER && context != null) {
-            	float leftCost = NewCalculateCostUtil.computeCostForTree(joinNode.getFirstChild(), metadata);
-            	float rightCost = NewCalculateCostUtil.computeCostForTree(joinNode.getLastChild(), metadata);
-            	if (leftCost != NewCalculateCostUtil.UNKNOWN_VALUE && rightCost != NewCalculateCostUtil.UNKNOWN_VALUE 
-            			&& (leftCost > context.getProcessorBatchSize() || rightCost > context.getProcessorBatchSize())) {
-            		//we use a larger constant here to ensure that we don't unwisely prevent pushdown
-            		pushLeft = leftCost < context.getProcessorBatchSize() || leftCost / rightCost < 8;
-            		pushRight = rightCost < context.getProcessorBatchSize() || rightCost / leftCost < 8 || joinNode.getProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE) != null;
-            	}
-            }
 
             List<SingleElementSymbol> leftExpressions = (List<SingleElementSymbol>) joinNode.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS);
             List<SingleElementSymbol> rightExpressions = (List<SingleElementSymbol>) joinNode.getProperty(NodeConstants.Info.RIGHT_EXPRESSIONS);
@@ -134,6 +125,18 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
             	key = NewCalculateCostUtil.getKeyUsed(leftExpressions, null, metadata, null);
             	right = false;
             }
+            
+            if ((joinType == JoinType.JOIN_INNER || joinType == JoinType.JOIN_LEFT_OUTER) && context != null) {
+            	float leftCost = NewCalculateCostUtil.computeCostForTree(joinNode.getFirstChild(), metadata);
+            	float rightCost = NewCalculateCostUtil.computeCostForTree(joinNode.getLastChild(), metadata);
+            	if (leftCost != NewCalculateCostUtil.UNKNOWN_VALUE && rightCost != NewCalculateCostUtil.UNKNOWN_VALUE 
+            			&& (leftCost > context.getProcessorBatchSize() || rightCost > context.getProcessorBatchSize())) {
+            		//we use a larger constant here to ensure that we don't unwisely prevent pushdown
+            		pushLeft = leftCost < context.getProcessorBatchSize() || leftCost / rightCost < 8 || (key != null && !right);
+            		pushRight = rightCost < context.getProcessorBatchSize() || rightCost / leftCost < 8 || joinType == JoinType.JOIN_LEFT_OUTER || (key != null && right);
+            	}
+            }
+
             if (key != null && joinNode.getProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE) == null) {
              	//redo the join predicates based upon the key alone
              	List<Object> keyCols = metadata.getElementIDsInKey(key);
@@ -196,8 +199,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
 			}
 
 			boolean pushedRight = insertSort(joinNode.getLastChild(), rightExpressions, joinNode, metadata, capabilitiesFinder, pushRight);
-			
-        	if (joinNode.getProperty(NodeConstants.Info.JOIN_TYPE) == JoinType.JOIN_INNER && (!pushedRight || !pushedLeft)) {
+        	if ((!pushedRight || !pushedLeft) && (joinType == JoinType.JOIN_INNER || (joinType == JoinType.JOIN_LEFT_OUTER && !pushedLeft))) {
         		joinNode.setProperty(NodeConstants.Info.JOIN_STRATEGY, JoinStrategyType.ENHANCED_SORT);
         	}
         }
@@ -249,14 +251,14 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
         	if (distinct || NewCalculateCostUtil.usesKey(sourceNode, expressions, metadata)) {
                 joinNode.setProperty(joinNode.getFirstChild() == childNode ? NodeConstants.Info.IS_LEFT_DISTINCT : NodeConstants.Info.IS_RIGHT_DISTINCT, true);
         	}
-	        if (attemptPush && RuleRaiseAccess.canRaiseOverSort(sourceNode, metadata, capFinder, sortNode, null, false)) {
-	            sourceNode.getFirstChild().addAsParent(sortNode);
-	            
-	            if (needsCorrection) {
-	                correctOutputElements(joinNode, outputSymbols, sortNode);
-	            }
-	            return true;
-	        }
+        	if (attemptPush && RuleRaiseAccess.canRaiseOverSort(sourceNode, metadata, capFinder, sortNode, null, false)) {
+        		sourceNode.getFirstChild().addAsParent(sortNode);
+        		
+        		if (needsCorrection) {
+        			correctOutputElements(joinNode, outputSymbols, sortNode);
+        		}
+        		return true;
+        	}
         } else if (sourceNode.getType() == NodeConstants.Types.GROUP) {
         	sourceNode.addAsParent(sortNode);
         	sort = false; // the grouping columns must contain all of the ordering columns

@@ -38,6 +38,7 @@ import org.teiid.client.DQP;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
 import org.teiid.client.util.ResultsFuture;
+import org.teiid.net.ServerConnection;
 
 @SuppressWarnings("nls")
 public class TestStatement {
@@ -112,6 +113,23 @@ public class TestStatement {
 		assertFalse(statement.execute("start transaction")); //$NON-NLS-1$
 		assertFalse(statement.execute("rollback")); //$NON-NLS-1$
 		Mockito.verify(conn).rollback(false);
+	}
+	
+	@Test public void testDisableLocalTransations() throws Exception {
+		ServerConnection mock = Mockito.mock(ServerConnection.class);
+		Mockito.stub(mock.getService(DQP.class)).toReturn(Mockito.mock(DQP.class));
+		ConnectionImpl conn = new ConnectionImpl(mock, new Properties(), "x");
+		StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		assertTrue(conn.getAutoCommit());
+		statement.execute("set disablelocaltxn true");
+		assertFalse(statement.execute("start transaction")); //$NON-NLS-1$
+		conn.beginLocalTxnIfNeeded();
+		assertFalse(conn.isInLocalTxn());
+		
+		statement.execute("set disablelocaltxn false");
+		assertFalse(statement.execute("start transaction")); //$NON-NLS-1$
+		conn.beginLocalTxnIfNeeded();
+		assertTrue(conn.isInLocalTxn());
 	}
 
 	@SuppressWarnings("unchecked")

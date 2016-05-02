@@ -71,5 +71,4 @@ public class TestDerbySQLTranslator {
         
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }    
-    
 }

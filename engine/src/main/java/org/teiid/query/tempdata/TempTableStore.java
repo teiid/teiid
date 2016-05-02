@@ -36,6 +36,7 @@ import javax.transaction.Status;
 import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
 
+import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
@@ -47,6 +48,9 @@ import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
+import org.teiid.query.processor.BatchCollector;
+import org.teiid.query.processor.BatchIterator;
+import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.resolver.command.TempTableResolver;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Create;
@@ -77,6 +81,23 @@ public class TempTableStore {
     	ISOLATE_READS, //for matviews that have atomic updates
     	ISOLATE_WRITES, //for session/procedure stores that need rollback support - this is effectively READ_UNCOMMITTED
     	NONE
+    }
+    
+    public static class TableProcessor {
+		QueryProcessor queryProcessor;
+    	List<ElementSymbol> columns;
+    	BatchIterator iterator;
+
+    	public TableProcessor(QueryProcessor queryProcessor,
+				List<ElementSymbol> columns) {
+			this.queryProcessor = queryProcessor;
+			this.columns = columns;
+			this.iterator = new BatchIterator(queryProcessor);			
+		}
+    	
+    	public QueryProcessor getQueryProcessor() {
+			return queryProcessor;
+		}
     }
     
     public class TempTableSynchronization implements Synchronization {
@@ -180,6 +201,8 @@ public class TempTableStore {
     private String sessionID;
     private TempTableStore parentTempTableStore;
     
+    private Map<String, TableProcessor> processors;
+    
     public TempTableStore(String sessionID, TransactionMode transactionMode) {
         this.sessionID = sessionID;
         this.transactionMode = transactionMode;
@@ -192,6 +215,10 @@ public class TempTableStore {
     public boolean hasTempTable(String tempTableName) {
     	return tempTables.containsKey(tempTableName);
     }
+    
+    public void setProcessors(Map<String, TableProcessor> plans) {
+		this.processors = plans;
+	}
 
     TempTable addTempTable(final String tempTableName, Create create, BufferManager buffer, boolean add, CommandContext context) throws TeiidProcessingException {
     	List<ElementSymbol> columns = create.getColumnSymbols();
@@ -284,9 +311,19 @@ public class TempTableStore {
         return this.tempTables.get(tempTableID);
     }
     
-    TempTable getOrCreateTempTable(String tempTableID, Command command, BufferManager buffer, boolean delegate, boolean forUpdate, CommandContext context) throws TeiidProcessingException{
+    public Map<String, TableProcessor> getProcessors() {
+		return processors;
+	}
+    
+    TempTable getOrCreateTempTable(String tempTableID, Command command, BufferManager buffer, boolean delegate, boolean forUpdate, CommandContext context) throws TeiidProcessingException, TeiidComponentException{
     	TempTable tempTable = getTempTable(tempTableID, command, buffer, delegate, forUpdate, context);
     	if (tempTable != null) {
+    		if (processors != null) {
+    			TableProcessor withProcessor = processors.get(tempTableID);
+    			if (withProcessor != null) {
+    				buildWithTable(tempTableID, withProcessor, tempTable);
+    			}
+    		}
     		return tempTable;
     	}
         //allow implicit temp group definition
@@ -299,6 +336,18 @@ public class TempTableStore {
             }
         }
         if (columns == null) {
+        	if (processors != null) {
+        		TableProcessor withProcessor = processors.get(tempTableID);
+        		if (withProcessor != null) {
+        	        LogManager.logDetail(LogConstants.CTX_DQP, "Creating temporary table for with clause", tempTableID); //$NON-NLS-1$
+        	        Create create = new Create();
+        	        create.setTable(new GroupSymbol(tempTableID));
+        	        create.setElementSymbolsAsColumns(withProcessor.columns);
+        			tempTable = addTempTable(tempTableID, create, buffer, true, context);
+    				buildWithTable(tempTableID, withProcessor, tempTable);
+    				return tempTable;
+        		}
+        	}
         	throw new QueryProcessingException(QueryPlugin.Util.getString("TempTableStore.table_doesnt_exist_error", tempTableID)); //$NON-NLS-1$
         }
         LogManager.logDetail(LogConstants.CTX_DQP, "Creating temporary table", tempTableID); //$NON-NLS-1$
@@ -307,6 +356,15 @@ public class TempTableStore {
         create.setElementSymbolsAsColumns(columns);
         return addTempTable(tempTableID, create, buffer, true, context);       
     }
+    
+	private void buildWithTable(String tempTableID,
+			TableProcessor withProcessor, TempTable tempTable)
+			throws TeiidComponentException, ExpressionEvaluationException,
+			TeiidProcessingException {
+		tempTable.insert(withProcessor.iterator, withProcessor.columns, false);
+		tempTable.setUpdatable(false);
+		processors.remove(tempTableID);
+	}
 
 	private TempTable getTempTable(String tempTableID, Command command,
 			BufferManager buffer, boolean delegate, boolean forUpdate, CommandContext context)

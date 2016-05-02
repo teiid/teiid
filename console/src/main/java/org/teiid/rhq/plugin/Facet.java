@@ -95,7 +95,7 @@ import org.teiid.rhq.plugin.util.PluginConstants.Operation;
  * by all MetaMatrix components.
  */
 public abstract class Facet implements
-		ProfileServiceComponent<ResourceComponent>, MeasurementFacet,
+		ProfileServiceComponent, MeasurementFacet,
 		OperationFacet, ConfigurationFacet, ContentFacet, DeleteResourceFacet,
 		CreateChildResourceFacet {
 
@@ -112,7 +112,7 @@ public abstract class Facet implements
 	 * All AMPS plugins are stateful - this context contains information that
 	 * your resource component can use when performing its processing.
 	 */
-	protected ResourceContext<?> resourceContext;
+	protected ResourceContext resourceContext;
 
 	protected String name;
 

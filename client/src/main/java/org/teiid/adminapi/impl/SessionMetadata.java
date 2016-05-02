@@ -44,7 +44,7 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 
 	private static final long serialVersionUID = 918638989081830034L;
 	private String applicationName;
-	private long lastPingTime = System.currentTimeMillis();
+	private volatile long lastPingTime = System.currentTimeMillis();
     private long createdTime;
     private String ipAddress;
     private String clientHostName;    
@@ -61,6 +61,7 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
     private transient LoginContext loginContext;
     private transient Object securityContext;
     private transient boolean embedded;
+    private transient Subject subject;
 
 	@Override
 	@ManagementProperty(description="Application associated with Session", readOnly=true)
@@ -200,6 +201,9 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 	}
 
 	public void setLoginContext(LoginContext loginContext) {
+		if (loginContext != null) {
+			this.subject = loginContext.getSubject();
+		}
 		this.loginContext = loginContext;
 	}
 
@@ -212,7 +216,7 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 	}	
 	
 	public Subject getSubject() {
-		return this.loginContext.getSubject();
+		return this.subject;
 	}
 	
 	public void setEmbedded(boolean embedded) {
@@ -231,6 +235,10 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 	
 	public void setClientHardwareAddress(String clientHardwareAddress) {
 		this.clientHardwareAddress = clientHardwareAddress;
+	}
+
+	public void setSubject(Subject subject) {
+		this.subject = subject;
 	}
 	
 }

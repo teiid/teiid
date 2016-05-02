@@ -110,6 +110,7 @@ public class DQPWorkContext implements Serializable {
     private HashMap<String, DataPolicy> policies;
     private boolean useCallingThread;
     private Version clientVersion = Version.SEVEN_4;
+    private boolean admin;
     
     public DQPWorkContext() {
 	}
@@ -303,5 +304,13 @@ public class DQPWorkContext implements Serializable {
 	
 	public void setClientVersion(Version clientVersion) {
 		this.clientVersion = clientVersion;
+	}
+	
+	public void setAdmin(boolean admin) {
+		this.admin = admin;
+	}
+	
+	public boolean isAdmin() {
+		return admin;
 	}
 }

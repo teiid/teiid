@@ -304,6 +304,8 @@ public class PlanToProcessConverter {
                         aNode = new AccessNode(getID());
                         processNode = aNode;
                                                 
+                        aNode.setShouldEvaluateExpressions(EvaluatableVisitor.needsProcessingEvaluation(command));
+                        
                         //-- special handling for temp tables. currently they cannot perform projection
                         try {
                             if (command instanceof Query) {
@@ -311,8 +313,7 @@ public class PlanToProcessConverter {
                             }
                         } catch (QueryMetadataException err) {
                             throw new TeiidComponentException(err);
-                        }
-                        aNode.setShouldEvaluateExpressions(EvaluatableVisitor.needsProcessingEvaluation(command));
+                        }                        
                     }
                     
                     if (command instanceof QueryCommand) {
@@ -461,6 +462,7 @@ public class PlanToProcessConverter {
                 } else {
                     JoinNode joinAsSet = new JoinNode(getID());
                     joinAsSet.setJoinStrategy(new MergeJoinStrategy(SortOption.SORT_DISTINCT, SortOption.SORT_DISTINCT, true));
+                    //If we push these sorts, we will have to enforce null order, since nulls are equal here
                     List leftExpressions = (List) node.getFirstChild().getProperty(NodeConstants.Info.OUTPUT_COLS);
                     List rightExpressions = (List) node.getLastChild().getProperty(NodeConstants.Info.OUTPUT_COLS);
                     joinAsSet.setJoinType(setOp == Operation.EXCEPT ? JoinType.JOIN_ANTI_SEMI : JoinType.JOIN_SEMI);

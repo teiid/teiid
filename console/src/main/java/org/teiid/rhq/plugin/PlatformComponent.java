@@ -48,9 +48,9 @@ import org.rhq.plugins.jbossas5.ApplicationServerComponent;
 import org.rhq.plugins.jbossas5.connection.ProfileServiceConnection;
 import org.teiid.rhq.admin.DQPManagementView;
 import org.teiid.rhq.plugin.util.PluginConstants;
-import org.teiid.rhq.plugin.util.ProfileServiceUtil;
-import org.teiid.rhq.plugin.util.PluginConstants.Operation;
 import org.teiid.rhq.plugin.util.PluginConstants.ComponentType.Platform;
+import org.teiid.rhq.plugin.util.PluginConstants.Operation;
+import org.teiid.rhq.plugin.util.ProfileServiceUtil;
 
 /**
  * 
@@ -58,7 +58,6 @@ import org.teiid.rhq.plugin.util.PluginConstants.ComponentType.Platform;
 public class PlatformComponent extends Facet {
 	private final Log LOG = LogFactory.getLog(PluginConstants.DEFAULT_LOGGER_CATEGORY);
 
-	@Override
 	public void start(ResourceContext context) {
 		this.setComponentName(context.getPluginConfiguration().getSimpleValue(	"name", null)); //$NON-NLS-1$
 		this.resourceConfiguration = context.getPluginConfiguration();
@@ -266,5 +265,11 @@ public class PlatformComponent extends Facet {
 	public EmsConnection getEmsConnection() {
 		return null;
 	}
+
+	@Override
+	public ResourceContext getResourceContext() {
+		return this.getResourceContext();
+	}
+
 
 }

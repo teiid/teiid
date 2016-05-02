@@ -364,7 +364,7 @@ public class TestGroupingNode {
         // Set grouping elements to null 
         if (groupBy) {
             List groupingElements = new ArrayList();
-            groupingElements.add(new ElementSymbol("col1")); //$NON-NLS-1$
+            groupingElements.add(col1.clone()); //$NON-NLS-1$
             node.setOrderBy(new OrderBy(groupingElements).getOrderByItems());
         }
         CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$

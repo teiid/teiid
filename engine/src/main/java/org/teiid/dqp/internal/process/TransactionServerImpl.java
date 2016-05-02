@@ -60,6 +60,10 @@ import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.query.QueryPlugin;
 
 
+/**
+ * Note that the begin methods do not leave the transaction associated with the
+ * calling thread.  This is by design and requires explicit resumes for association.
+ */
 public class TransactionServerImpl implements TransactionService {
 
     private static class TransactionMapping {
@@ -425,8 +429,17 @@ public class TransactionServerImpl implements TransactionService {
 	}
 	
 	public void resume(TransactionContext context) throws XATransactionException {
-		try {
-			this.transactionManager.resume(context.getTransaction());
+        try {
+            //if we're already associated, just return
+            if (this.transactionManager.getTransaction() == context.getTransaction()) {
+                    return;
+            }
+	    } catch (SystemException e) {
+	    }
+	    try {
+            this.transactionManager.resume(context.getTransaction());
+	    } catch (IllegalStateException e) {
+	    	throw new XATransactionException(e);
 		} catch (InvalidTransactionException e) {
 			throw new XATransactionException(e);
 		} catch (SystemException e) {

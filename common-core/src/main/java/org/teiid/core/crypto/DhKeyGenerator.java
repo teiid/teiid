@@ -119,7 +119,13 @@ public class DhKeyGenerator {
 			ka.init(privateKey);
 			ka.doPhase(publicKey, true);
 			byte[] secret = ka.generateSecret();
-
+			//we expect a 1024-bit DH key, but vms handle leading zeros differently
+			if (secret.length < 128) {
+				byte[] temp = new byte[128];
+				System.arraycopy(secret, 0, temp, 128-secret.length, secret.length);
+				secret = temp;
+			}
+			//convert to expected bit length for AES
 			MessageDigest sha = MessageDigest.getInstance(DIGEST);
 			byte[] hash = sha.digest(secret);
 			byte[] symKey = new byte[keySize / 8];

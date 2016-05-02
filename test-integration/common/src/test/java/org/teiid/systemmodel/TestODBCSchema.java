@@ -31,7 +31,7 @@ public class TestODBCSchema extends AbstractMMQueryTestCase {
 	}
 	
 	@Test public void test_PG_ATTRDEF()  throws Exception {
-		execute("select * FROM pg_attrdef"); //$NON-NLS-1$
+		execute("select * FROM pg_attrdef order by adrelid, adnum"); //$NON-NLS-1$
 		TestMMDatabaseMetaData.compareResultSet(this.internalResultSet);
 	}
 

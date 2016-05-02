@@ -50,6 +50,7 @@ import org.teiid.translator.jdbc.ExtractFunctionModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.ModFunctionModifier;
+import org.teiid.translator.jdbc.Version;
 import org.teiid.translator.jdbc.oracle.LeftOrRightFunctionModifier;
 import org.teiid.translator.jdbc.oracle.MonthOrDayNameFunctionModifier;
 import org.teiid.translator.jdbc.oracle.OracleFormatFunctionModifier;
@@ -63,14 +64,13 @@ import org.teiid.translator.jdbc.oracle.OracleFormatFunctionModifier;
 @Translator(name="postgresql", description="A translator for postgreSQL Database")
 public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 	
-	public static final String EIGHT_0 = "8.0"; //$NON-NLS-1$
-	public static final String EIGHT_1 = "8.1"; //$NON-NLS-1$
-	public static final String EIGHT_2 = "8.2"; //$NON-NLS-1$
-	public static final String EIGHT_3 = "8.3"; //$NON-NLS-1$
-	public static final String EIGHT_4 = "8.4"; //$NON-NLS-1$
+	public static final Version EIGHT_0 = Version.getVersion("8.0"); //$NON-NLS-1$
+ 	public static final Version EIGHT_1 = Version.getVersion("8.1"); //$NON-NLS-1$
+ 	public static final Version EIGHT_2 = Version.getVersion("8.2"); //$NON-NLS-1$
+ 	public static final Version EIGHT_3 = Version.getVersion("8.3"); //$NON-NLS-1$
+ 	public static final Version EIGHT_4 = Version.getVersion("8.4"); //$NON-NLS-1$
     
 	public PostgreSQLExecutionFactory() {
-		setDatabaseVersion(EIGHT_0);
 		setMaxDependentInPredicates(1);
 		setMaxInCriteriaSize(Short.MAX_VALUE - 50); //set a value that is safely smaller than the max in case there are other parameters
 	}
@@ -254,7 +254,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     public boolean supportsOrderByNullOrdering() {
-    	return getDatabaseVersion().compareTo(EIGHT_4) >= 0;
+    	return getVersion().compareTo(EIGHT_4) >= 0;
     }
     
     @Override
@@ -341,7 +341,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 //        supportedFunctions.add("PARSETIMESTAMP"); //$NON-NLS-1$
         supportedFunctions.add("QUARTER"); //$NON-NLS-1$
         supportedFunctions.add("SECOND"); //$NON-NLS-1$
-        if (this.getDatabaseVersion().compareTo(EIGHT_2) >= 0) {
+        if (this.getVersion().compareTo(EIGHT_2) >= 0) {
         	supportedFunctions.add("TIMESTAMPADD"); //$NON-NLS-1$
         	supportedFunctions.add("TIMESTAMPDIFF"); //$NON-NLS-1$
         }
@@ -495,22 +495,22 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     public boolean supportsAggregatesEnhancedNumeric() {
-    	return getDatabaseVersion().compareTo(EIGHT_2) >= 0;
+    	return getVersion().compareTo(EIGHT_2) >= 0;
     }
     
     @Override
     public boolean supportsCommonTableExpressions() {
-    	return getDatabaseVersion().compareTo(EIGHT_4) >= 0;
+    	return getVersion().compareTo(EIGHT_4) >= 0;
     }
     
     @Override
     public boolean supportsArrayAgg() {
-    	return getDatabaseVersion().compareTo(EIGHT_4) >= 0;
+    	return getVersion().compareTo(EIGHT_4) >= 0;
     }
     
     @Override
     public boolean supportsElementaryOlapOperations() {
-    	return getDatabaseVersion().compareTo(EIGHT_4) >= 0;
+    	return getVersion().compareTo(EIGHT_4) >= 0;
     }
     
     @Override

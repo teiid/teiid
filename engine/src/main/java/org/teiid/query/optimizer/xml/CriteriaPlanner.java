@@ -37,7 +37,6 @@ import org.teiid.query.mapping.xml.MappingNode;
 import org.teiid.query.mapping.xml.MappingSourceNode;
 import org.teiid.query.mapping.xml.ResultSetInfo;
 import org.teiid.query.metadata.QueryMetadataInterface;
-import org.teiid.query.optimizer.relational.rules.JoinUtil;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.symbol.Constant;
@@ -45,7 +44,6 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
-import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 
 
 public class CriteriaPlanner {
@@ -108,13 +106,8 @@ public class CriteriaPlanner {
             //TODO: this can be replaced with method on the source node?
             MappingSourceNode criteriaRs = findRootResultSetNode(context, sourceNodes, criteria);
             
-            Collection<GroupSymbol> groups = GroupsUsedByElementsVisitor.getGroups(conjunct);
-            boolean userCritNullDependent = JoinUtil.isNullDependent(planEnv.getGlobalMetadata(), groups, conjunct);
             ResultSetInfo rs = criteriaRs.getResultSetInfo();
-            if(userCritNullDependent){
-            	rs.setCritNullDependent(true);
-            }
-            
+           
             Criteria convertedCrit = XMLNodeMappingVisitor.convertCriteria(conjunct, planEnv.mappingDoc, planEnv.getGlobalMetadata());
             
             rs.setCriteria(Criteria.combineCriteria(rs.getCriteria(), convertedCrit));

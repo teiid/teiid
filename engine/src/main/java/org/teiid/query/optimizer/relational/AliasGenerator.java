@@ -75,10 +75,14 @@ public class AliasGenerator extends PreOrderNavigator {
             public SQLNamingContext(SQLNamingContext parent) {
                 this.parent = parent;
             }
-            
+
             public String getElementName(SingleElementSymbol symbol, boolean renameGroup) {
+            	return getElementName(symbol, renameGroup, false);
+            }
+            
+            public String getElementName(SingleElementSymbol symbol, boolean renameGroup, boolean ignoreCurrent) {
             	String name = null;
-            	if (currentSymbols != null) {
+            	if (currentSymbols != null && !ignoreCurrent) {
             		name = currentSymbols.get(symbol);
                 	if (name != null) {
                 		if (renameGroup && symbol instanceof ElementSymbol) {
@@ -255,7 +259,7 @@ public class AliasGenerator extends PreOrderNavigator {
 
     private boolean needsAlias(String newAlias,
                                ElementSymbol symbol) {
-        return !(symbol.getMetadataID() instanceof TempMetadataID) || !newAlias.equalsIgnoreCase(visitor.namingContext.getElementName(symbol, false));
+        return !(symbol.getMetadataID() instanceof TempMetadataID) || !newAlias.equalsIgnoreCase(visitor.namingContext.getElementName(symbol, false, true));
     }
     
     /**

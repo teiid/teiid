@@ -98,6 +98,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     
     protected StringBuilder buffer = new StringBuilder();
     private boolean appendedSourceComment;
+    private boolean shortNameOnly = false;
                 
     /**
      * Gets the name of a group or element from the RuntimeMetadata
@@ -276,7 +277,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
     
     public void visit(ColumnReference obj) {
-        buffer.append(getElementName(obj, true));
+    	buffer.append(getElementName(obj, !shortNameOnly));
     }
 
 	private String getElementName(ColumnReference obj, boolean qualify) {
@@ -520,14 +521,9 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
 		append(obj.getTable());
 		buffer.append(Tokens.SPACE).append(Tokens.LPAREN);
 
-		int elementCount = obj.getColumns().size();
-		for (int i = 0; i < elementCount; i++) {
-			buffer.append(getElementName(obj.getColumns().get(i), false));
-			if (i < elementCount - 1) {
-				buffer.append(Tokens.COMMA);
-				buffer.append(Tokens.SPACE);
-			}
-		}
+		this.shortNameOnly = true;
+		append(obj.getColumns());
+		this.shortNameOnly = false;
 
 		buffer.append(Tokens.RPAREN);
         buffer.append(Tokens.SPACE);
@@ -953,7 +949,9 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     	buffer.append(Tokens.SPACE);
     	if (obj.getColumns() != null) {
     		buffer.append(Tokens.LPAREN);
+    		shortNameOnly = true;
     		append(obj.getColumns());
+    		shortNameOnly = false;
     		buffer.append(Tokens.RPAREN);
     		buffer.append(Tokens.SPACE);
     	}

@@ -20,9 +20,6 @@
  * 02110-1301 USA.
  */
 
-/**
- * 
- */
 package org.teiid.net.socket;
 
 import java.io.IOException;
@@ -339,6 +336,15 @@ public class SocketServerConnection implements ServerConnection {
 	}
 	
 	public void cleanUp() {
+		if (this.serverInstance != null && this.logonResult != null && "8.2".compareTo(this.serverInstance.getServerVersion()) <= 0) { //$NON-NLS-1$
+			ILogon newLogon = this.serverInstance.getService(ILogon.class);
+			try {
+				newLogon.assertIdentity(null);
+			} catch (InvalidSessionException e) {
+			} catch (TeiidComponentException e) {
+			} catch (CommunicationException e) {
+			}
+		}
 		closeServerInstance();
 	}
 	
@@ -365,5 +371,10 @@ public class SocketServerConnection implements ServerConnection {
 				throw new CommunicationException(e);
 			}
 		}
+	}
+	
+	@Override
+	public boolean isLocal() {
+		return false;
 	}
 }

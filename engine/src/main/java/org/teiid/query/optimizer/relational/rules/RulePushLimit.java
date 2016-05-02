@@ -170,7 +170,7 @@ public class RulePushLimit implements OptimizerRule {
             }
             case NodeConstants.Types.PROJECT:
             {
-                return child.getProperty(NodeConstants.Info.INTO_GROUP) == null;
+                return child.getProperty(NodeConstants.Info.INTO_GROUP) == null && !child.hasProperty(Info.HAS_WINDOW_FUNCTIONS);
             }
             case NodeConstants.Types.SOURCE:
             {

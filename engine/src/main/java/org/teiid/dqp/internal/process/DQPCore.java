@@ -51,6 +51,7 @@ import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.CacheFactory;
 import org.teiid.client.DQP;
 import org.teiid.client.RequestMessage;
+import org.teiid.client.RequestMessage.StatementType;
 import org.teiid.client.ResultsMessage;
 import org.teiid.client.lob.LobChunk;
 import org.teiid.client.metadata.MetadataResult;
@@ -70,15 +71,15 @@ import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.BufferService;
 import org.teiid.dqp.service.TransactionContext;
-import org.teiid.dqp.service.TransactionService;
 import org.teiid.dqp.service.TransactionContext.Scope;
+import org.teiid.dqp.service.TransactionService;
 import org.teiid.events.EventDistributor;
 import org.teiid.jdbc.EnhancedTimer;
 import org.teiid.logging.CommandLogMessage;
+import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.processor.QueryProcessor;
@@ -206,7 +207,7 @@ public class DQPCore implements DQP {
     private int currentlyActivePlans;
     private int userRequestSourceConcurrency;
     private LinkedList<RequestWorkItem> waitingPlans = new LinkedList<RequestWorkItem>();
-    private LinkedHashSet<RequestWorkItem> bufferFullPlans = new LinkedHashSet<RequestWorkItem>();
+    LinkedHashSet<RequestWorkItem> bufferFullPlans = new LinkedHashSet<RequestWorkItem>();
     private CacheFactory cacheFactory;
 
 	private AuthorizationValidator authorizationValidator;
@@ -424,22 +425,25 @@ public class DQPCore implements DQP {
         	}
         	workItem.active = false;
     		currentlyActivePlans--;
-    		bufferFullPlans.remove(workItem.requestID);
+    		bufferFullPlans.remove(workItem);
 			if (!waitingPlans.isEmpty()) {
 				startActivePlan(waitingPlans.remove(), true);
 			}
 		}
     }
     
-    public boolean hasWaitingPlans(RequestWorkItem item) {
-    	synchronized (waitingPlans) {
-    		if (!waitingPlans.isEmpty()) {
-    			return true;
-    		}
-    		this.bufferFullPlans.add(item);
-		}
-    	return false;
-    }
+    public boolean blockOnOutputBuffer(RequestWorkItem item) {
+     	synchronized (waitingPlans) {
+     		if (!waitingPlans.isEmpty()) {
+     			return false;
+     		}
+     		if (item.useCallingThread || item.getDqpWorkContext().getSession().isEmbedded()) {
+     			return false;
+     		}
+     		this.bufferFullPlans.add(item);
+ 		}
+     	return true;
+     }
     
     void removeRequest(final RequestWorkItem workItem) {
     	finishProcessing(workItem);
@@ -691,7 +695,7 @@ public class DQPCore implements DQP {
 	
     void logMMCommand(RequestWorkItem workItem, Event status, Integer rowCount) {
     	if ((status != Event.PLAN && !LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.DETAIL))
-    			|| !LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.TRACE)) {
+    			|| (status == Event.PLAN && !LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.TRACE))) {
     		return;
     	}
     	
@@ -791,7 +795,27 @@ public class DQPCore implements DQP {
         DataTierManagerImpl processorDataManager = new DataTierManagerImpl(this,this.bufferService, this.config.isDetectingChangeEvents());
         processorDataManager.setEventDistributor(eventDistributor);
         processorDataManager.setMetadataRepository(metadataRepository);
-		dataTierMgr = new TempTableDataManager(processorDataManager, this.bufferManager, this.processWorkerPool, this.rsCache);
+		dataTierMgr = new TempTableDataManager(processorDataManager, this.bufferManager, this.rsCache);
+		dataTierMgr.setExecutor(new TempTableDataManager.RequestExecutor() {
+			
+			@Override
+			public void execute(String command, List<?> parameters) {
+				final String sessionId = DQPWorkContext.getWorkContext().getSessionId();
+				RequestMessage request = new RequestMessage(command);
+				request.setParameterValues(parameters);
+				request.setStatementType(StatementType.PREPARED);
+				ResultsFuture<ResultsMessage> result = executeRequest(0, request);
+				result.addCompletionListener(new ResultsFuture.CompletionListener<ResultsMessage>() {
+
+					@Override
+					public void onCompletion(
+							ResultsFuture<ResultsMessage> future) {
+						terminateSession(sessionId);
+					}
+					
+				});
+			}
+		});
         dataTierMgr.setEventDistributor(eventDistributor);
                 
         LogManager.logDetail(LogConstants.CTX_DQP, "DQPCore started maxThreads", this.config.getMaxThreads(), "maxActivePlans", this.maxActivePlans, "source concurrency", this.userRequestSourceConcurrency); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$

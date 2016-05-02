@@ -40,10 +40,10 @@ import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
-import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.JoinType;
@@ -541,14 +541,15 @@ public final class RuleRaiseAccess implements OptimizerRule {
 			}
 		}
         
-        return canRaiseOverJoin(joinNode.getChildren(), metadata, capFinder, crits, type, record);		
+		//jrl introducing context
+        return canRaiseOverJoin(joinNode.getChildren(), metadata, capFinder, crits, type, record, afterJoinPlanning);			
 	}
 
     static Object canRaiseOverJoin(List<PlanNode> children,
                                            QueryMetadataInterface metadata,
                                            CapabilitiesFinder capFinder,
                                            List<Criteria> crits,
-                                           JoinType type, AnalysisRecord record) throws QueryMetadataException,
+                                           JoinType type, AnalysisRecord record, boolean considerOptional) throws QueryMetadataException,
                                                          TeiidComponentException {
         //we only want to consider binary joins
         if (children.size() != 2) {
@@ -614,6 +615,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
 				    				continue;
 				    			}
 				    		}
+				    		//TODO: plan based upon a predicate subset when possible
 				        	return null;
 				        } else if (crit instanceof CompareCriteria) {
 				        	thetaCriteria.add((CompareCriteria)crit);
@@ -650,7 +652,8 @@ public final class RuleRaiseAccess implements OptimizerRule {
 							return null;
 						}
 					} 
-                } else if (sjc != SupportedJoinCriteria.ANY) {
+                }
+				if (sjc != SupportedJoinCriteria.ANY && thetaCriteria.isEmpty()) {
                 	return null; //cross join not supported
                 }
 				
@@ -667,20 +670,24 @@ public final class RuleRaiseAccess implements OptimizerRule {
 		    return null;
 		}
 		
-		if (sjc == SupportedJoinCriteria.KEY) {
-			for (CompareCriteria criteria : thetaCriteria) {
-				criteria.setOptional(false);
-			}
-		} else {
-			//TODO: this should be done in a less arbitrary way, and what about composite keys?
-			boolean hasCriteria = false;
-			for (CompareCriteria criteria : thetaCriteria) {
-				if (criteria.getIsOptional() == null || (!hasCriteria && criteria.getIsOptional())) {
-					criteria.setOptional(false);
+		if (crits != null && !crits.isEmpty()) {
+			if (considerOptional) {
+				for (CompareCriteria criteria : thetaCriteria) {
+ 					criteria.setOptional(false);
+ 				}
+			} else {
+				boolean hasCriteria = false;
+				for (CompareCriteria criteria : thetaCriteria) {
+					if (criteria.getIsOptional() == null || !criteria.isOptional()) {
+						hasCriteria = true;
+						break;
+					}
+				}	
+				if (!hasCriteria) {
+					return null;
 				}
-				hasCriteria = true;
-			}
-		}
+ 			}
+ 		}
 		
 		return modelID;
     }

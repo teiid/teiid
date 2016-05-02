@@ -35,6 +35,7 @@ import org.junit.Test;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.TupleBatch;
+import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
@@ -51,7 +52,7 @@ import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class TestJoinNode {
     private static final int NO_CRITERIA = 0;
     private static final int EQUAL_CRITERIA = 1;
@@ -69,7 +70,7 @@ public class TestJoinNode {
     
     protected JoinNode join;
     protected JoinStrategy joinStrategy;
-    private RelationalNode leftNode;
+    private BlockingFakeRelationalNode leftNode;
     private RelationalNode rightNode;
     
     private FakeDataManager dataMgr;
@@ -174,12 +175,21 @@ public class TestJoinNode {
         
         List leftElements = new ArrayList();
         leftElements.add(es1);
-        leftNode = new FakeRelationalNode(1, leftTuples);
+        leftNode = new BlockingFakeRelationalNode(1, leftTuples);
         leftNode.setElements(leftElements);
         
         List rightElements = new ArrayList();
         rightElements.add(es2);
-        rightNode = new FakeRelationalNode(2, rightTuples);
+        rightNode = new BlockingFakeRelationalNode(2, rightTuples) {
+        	public boolean hasBuffer(boolean requireFinal) {
+        		return false;
+        	}
+
+        	public TupleBuffer getBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
+        		fail();
+        		throw new AssertionError();
+        	};
+        };
         rightNode.setElements(rightElements);
         
         List joinElements = new ArrayList();
@@ -600,10 +610,10 @@ public class TestJoinNode {
     }
     
     @Test public void testMergeJoinOptimization() throws Exception {
-        helpTestEnhancedSortMergeJoin(99);
+        helpTestEnhancedSortMergeJoin(99, false);
     }
 
-	private void helpTestEnhancedSortMergeJoin(int batchSize)
+	private void helpTestEnhancedSortMergeJoin(int batchSize, boolean repeated)
 			throws TeiidComponentException, TeiidProcessingException {
 		this.joinType = JoinType.JOIN_INNER;
         int rows = 100;
@@ -615,34 +625,132 @@ public class TestJoinNode {
         }
         this.leftTuples = data;
         this.rightTuples = createTuples2();
-        expected = new List[] {
-           Arrays.asList(new Object[] { 4, 4 }),
-           Arrays.asList(new Object[] { 4, 4 }),
-           Arrays.asList(new Object[] { 7, 7 }),
-           Arrays.asList(new Object[] { 7, 7 }),
-           Arrays.asList(new Object[] { 2, 2 }),
-           Arrays.asList(new Object[] { 2, 2 }),
-           Arrays.asList(new Object[] { 6, 6 }),
-           Arrays.asList(new Object[] { 1, 1 }),  
-           Arrays.asList(new Object[] { 4, 4 }),
-           Arrays.asList(new Object[] { 4, 4 }),
-           Arrays.asList(new Object[] { 7, 7 }),
-           Arrays.asList(new Object[] { 7, 7 }),
-           Arrays.asList(new Object[] { 2, 2 }),
-           Arrays.asList(new Object[] { 2, 2 }),
-           Arrays.asList(new Object[] { 6, 6 }),
-           Arrays.asList(new Object[] { 1, 1 }),
-           Arrays.asList(new Object[] { 4, 4 }),
-           Arrays.asList(new Object[] { 4, 4 }),
-        };
+        if (!repeated) {
+        	expected = new List[] {
+                Arrays.asList(new Object[] { 4, 4 }),
+                Arrays.asList(new Object[] { 4, 4 }),
+                Arrays.asList(new Object[] { 7, 7 }),
+                Arrays.asList(new Object[] { 7, 7 }),
+                Arrays.asList(new Object[] { 2, 2 }),
+                Arrays.asList(new Object[] { 2, 2 }),
+                Arrays.asList(new Object[] { 6, 6 }),
+                Arrays.asList(new Object[] { 1, 1 }),  
+                Arrays.asList(new Object[] { 4, 4 }),
+                Arrays.asList(new Object[] { 4, 4 }),
+                Arrays.asList(new Object[] { 7, 7 }),
+                Arrays.asList(new Object[] { 7, 7 }),
+                Arrays.asList(new Object[] { 2, 2 }),
+                Arrays.asList(new Object[] { 2, 2 }),
+                Arrays.asList(new Object[] { 6, 6 }),
+                Arrays.asList(new Object[] { 1, 1 }),
+                Arrays.asList(new Object[] { 4, 4 }),
+                Arrays.asList(new Object[] { 4, 4 }),
+             };
+        } else {
+	        expected = new List[] {
+	           Arrays.asList(new Object[] { 4, 4 }),
+	           Arrays.asList(new Object[] { 4, 4 }),
+	           Arrays.asList(new Object[] { 1, 1 }),  
+	           Arrays.asList(new Object[] { 6, 6 }),
+	           Arrays.asList(new Object[] { 2, 2 }),
+	           Arrays.asList(new Object[] { 2, 2 }),
+	           Arrays.asList(new Object[] { 7, 7 }),
+	           Arrays.asList(new Object[] { 7, 7 }),
+	           Arrays.asList(new Object[] { 4, 4 }),
+	           Arrays.asList(new Object[] { 4, 4 }),
+	           Arrays.asList(new Object[] { 1, 1 }),
+	           Arrays.asList(new Object[] { 6, 6 }),
+	           Arrays.asList(new Object[] { 2, 2 }),
+	           Arrays.asList(new Object[] { 2, 2 }),
+	           Arrays.asList(new Object[] { 7, 7 }),
+	           Arrays.asList(new Object[] { 7, 7 }),
+	           Arrays.asList(new Object[] { 4, 4 }),
+	           Arrays.asList(new Object[] { 4, 4 }),
+	        };
+        }
         helpCreateJoin();               
         this.joinStrategy = new EnhancedSortMergeJoinStrategy(SortOption.SORT, SortOption.SORT);
         this.join.setJoinStrategy(joinStrategy);
         helpTestJoinDirect(expected, batchSize, 1);
 	}
+	
+	@Test public void testMergeJoinOptimizationLeftOuter() throws Exception {
+		this.joinType = JoinType.JOIN_LEFT_OUTER;
+        int rows = 12;
+        List[] data = new List[rows];
+        for(int i=0; i<rows; i++) { 
+            data[i] = new ArrayList();
+            Integer value = new Integer((i*17) % 45);
+            data[i].add(value);
+        }
+        this.leftTuples = data;
+        this.rightTuples = createTuples2();
+        expected = new List[] {
+           Arrays.asList(new Object[] { 0, null }),
+           Arrays.asList(new Object[] {17, null }),
+           Arrays.asList(new Object[] {34, null }),
+           Arrays.asList(new Object[] { 6, 6 }),
+           Arrays.asList(new Object[] {23, null }),
+           Arrays.asList(new Object[] {40, null }),
+           Arrays.asList(new Object[] {12, null }),
+           Arrays.asList(new Object[] {29, null }),
+           Arrays.asList(new Object[] { 1, 1 }),  
+           Arrays.asList(new Object[] {18, null }),
+           Arrays.asList(new Object[] {35, null }),
+           Arrays.asList(new Object[] { 7, 7 }),
+           Arrays.asList(new Object[] { 7, 7 }),
+        };
+        
+        System.out.println(Arrays.toString(this.leftTuples));
+        helpCreateJoin();
+        EnhancedSortMergeJoinStrategy esmjs = new EnhancedSortMergeJoinStrategy(SortOption.NOT_SORTED, SortOption.SORT);
+        this.joinStrategy = esmjs;
+        this.join.setJoinStrategy(joinStrategy);
+        
+        helpTestJoinDirect(expected, 10, 1);
+	}
+	
+	@Test public void testMergeJoinOptimizationLeftOuterEmpty() throws Exception {
+		this.joinType = JoinType.JOIN_LEFT_OUTER;
+        int rows = 12;
+        List[] data = new List[rows];
+        for(int i=0; i<rows; i++) { 
+            data[i] = new ArrayList();
+            Integer value = new Integer((i*17) % 45);
+            data[i].add(value);
+        }
+        this.leftTuples = data;
+        this.rightTuples = new List[0];
+        expected = new List[] {
+           Arrays.asList(new Object[] { 0, null }),
+           Arrays.asList(new Object[] {17, null }),
+           Arrays.asList(new Object[] {34, null }),
+           Arrays.asList(new Object[] { 6, null }),
+           Arrays.asList(new Object[] {23, null }),
+           Arrays.asList(new Object[] {40, null }),
+           Arrays.asList(new Object[] {12, null }),
+           Arrays.asList(new Object[] {29, null }),
+           Arrays.asList(new Object[] { 1, null }),  
+           Arrays.asList(new Object[] {18, null }),
+           Arrays.asList(new Object[] {35, null }),
+           Arrays.asList(new Object[] { 7, null }),
+        };
+        
+        System.out.println(Arrays.toString(this.leftTuples));
+        helpCreateJoin();
+        EnhancedSortMergeJoinStrategy esmjs = new EnhancedSortMergeJoinStrategy(SortOption.NOT_SORTED, SortOption.SORT);
+        this.joinStrategy = esmjs;
+        this.join.setJoinStrategy(joinStrategy);
+        
+        helpTestJoinDirect(expected, 10, 1);
+	}
     
     @Test public void testMergeJoinOptimizationMultiBatch() throws Exception {
-    	helpTestEnhancedSortMergeJoin(10);
+    	helpTestEnhancedSortMergeJoin(10, false);
+    }
+    
+    @Test public void testMergeJoinOptimizationMultiBatch1() throws Exception {
+    	helpTestEnhancedSortMergeJoin(1, true);
     }
     
     @Test public void testMergeJoinOptimizationNoRows() throws Exception {
@@ -720,7 +828,7 @@ public class TestJoinNode {
         this.join.setJoinStrategy(joinStrategy);
         helpTestJoinDirect(expected, 40, 1);
     }
-
+    
     @Test public void testRepeatedMerge() throws Exception {
     	helpTestRepeatedMerge(false);
     }
@@ -772,5 +880,62 @@ public class TestJoinNode {
         this.join.setJoinStrategy(joinStrategy);
         helpTestJoinDirect(expected, 4, 1000);
     }
+    
+    @Test public void testSortMergeWithDistinct() throws TeiidComponentException, TeiidProcessingException {
+    	this.leftTuples = new List[] {Arrays.asList(1, 2), Arrays.asList(1, 3)};
+        this.rightTuples = new List[] {Arrays.asList(1, 4), Arrays.asList(1, 5)};
+        
+        expected = new List[] {
+                Arrays.asList(1, 2, 1, 4),
+                Arrays.asList(1, 2, 1, 5),
+                Arrays.asList(1, 3, 1, 4),
+                Arrays.asList(1, 3, 1, 5),
+        };
 
+    	ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
+        es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        
+        ElementSymbol es2 = new ElementSymbol("e2"); //$NON-NLS-1$
+        es2.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        
+        List leftElements = Arrays.asList(es1, es2);
+        leftNode = new BlockingFakeRelationalNode(1, leftTuples);
+        leftNode.setElements(leftElements);
+        
+        ElementSymbol es3 = new ElementSymbol("e3"); //$NON-NLS-1$
+        es3.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        
+        ElementSymbol es4 = new ElementSymbol("e4"); //$NON-NLS-1$
+        es4.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        
+        List rightElements = Arrays.asList(es3, es4);
+
+        rightNode = new BlockingFakeRelationalNode(2, rightTuples) {
+        	public boolean hasBuffer(boolean requireFinal) {
+        		return false;
+        	}
+
+        	public TupleBuffer getBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
+        		fail();
+        		throw new AssertionError();
+        	};
+        };
+        rightNode.setElements(rightElements);
+        
+        List joinElements = new ArrayList();
+        joinElements.addAll(leftElements);
+        joinElements.addAll(rightElements);
+        
+        joinType = JoinType.JOIN_INNER;
+        joinStrategy = new MergeJoinStrategy(SortOption.SORT_DISTINCT, SortOption.SORT_DISTINCT, false);
+        
+        join = new JoinNode(3);
+        join.setElements(joinElements);
+        join.setJoinType(joinType);
+        
+        join.setJoinExpressions(Arrays.asList(es1), Arrays.asList(es3));
+        join.setJoinStrategy(joinStrategy);
+        
+        helpTestJoinDirect(expected, 100, 100000);
+    }
 }

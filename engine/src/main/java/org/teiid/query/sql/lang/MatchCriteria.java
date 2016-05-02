@@ -31,6 +31,7 @@ import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.core.util.LRUCache;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.language.Like.MatchMode;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageVisitor;
@@ -62,8 +63,10 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
 	/** The internal null escape character */
 	public static final char NULL_ESCAPE_CHAR = 0;
 
+	static char DEFAULT_ESCAPE_CHAR = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.backslashDefaultMatchEscape", false)?'\\':NULL_ESCAPE_CHAR; //$NON-NLS-1$
+	
 	/** The escape character or '' if there is none */
-	private char escapeChar = NULL_ESCAPE_CHAR;
+	private char escapeChar = DEFAULT_ESCAPE_CHAR;
 	
     /** Negation flag. Indicates whether the criteria expression contains a NOT. */
     private boolean negated;

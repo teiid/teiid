@@ -25,7 +25,6 @@ package org.teiid.query.processor.relational;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -46,9 +45,9 @@ import net.sf.saxon.value.Value;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.common.buffer.BlockedException;
+import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
-import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
@@ -60,9 +59,9 @@ import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
-import org.teiid.query.xquery.saxon.XQueryEvaluator;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression.Result;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression.RowProcessor;
+import org.teiid.query.xquery.saxon.XQueryEvaluator;
 
 /**
  * Handles xml table processing.
@@ -70,7 +69,7 @@ import org.teiid.query.xquery.saxon.SaxonXQueryExpression.RowProcessor;
  * When streaming the results will be fully built and stored in a buffer
  * before being returned
  */
-public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProcessor {
+public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProcessor, TupleBuffer.RowSource {
 
 	private static Map<Class<?>, BuiltInAtomicType> typeMapping = new HashMap<Class<?>, BuiltInAtomicType>();
 	
@@ -232,12 +231,20 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 						}
 					} finally {
 						synchronized (XMLTableNode.this) {
+							if (buffer != null && asynchException == null) {
+								try {
+									buffer.close();
+								} catch (TeiidComponentException e) {
+									asynchException = new TeiidRuntimeException(e);
+								}
+							}
 							state = State.DONE;
 							XMLTableNode.this.notifyAll();
 						}
 					}
 				}
 			};
+			this.buffer.setRowSourceLock(this);
 			this.getContext().getExecutor().execute(r);
 			return;
 		}
@@ -245,6 +252,21 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 			result = XQueryEvaluator.evaluateXQuery(this.table.getXQueryExpression(), contextItem, parameters, null, this.getContext());
 		} catch (TeiidRuntimeException e) {
 			unwrapException(e);
+		}
+	}
+	
+	@Override
+	public synchronized void finalRow() throws TeiidComponentException,
+			TeiidProcessingException {
+		while (state == State.BUILDING) {
+			try {
+				this.wait();
+			} catch (InterruptedException e) {
+				throw new TeiidRuntimeException(e);
+			}
+		}
+		if (this.asynchException != null) {
+			unwrapException(this.asynchException);
 		}
 	}
 
@@ -320,7 +342,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 	
 	@Override
 	public boolean hasFinalBuffer() {
-		return this.table.getXQueryExpression().isStreaming();
+		return false;
 	}
 	
 	@Override

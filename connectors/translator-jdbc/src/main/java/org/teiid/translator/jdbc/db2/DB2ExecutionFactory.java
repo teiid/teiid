@@ -33,12 +33,13 @@ import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.FunctionModifier;
+import org.teiid.translator.jdbc.Version;
 
 @Translator(name="db2", description="A translator for IBM DB2 Database")
 public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {
 	
-	public static final String EIGHT_0 = "8.0"; //$NON-NLS-1$
-	public static final String NINE_1 = "9.1"; //$NON-NLS-1$
+ 	public static final Version EIGHT_0 = Version.getVersion("8.0"); //$NON-NLS-1$
+	public static final Version NINE_1 = Version.getVersion("9.1"); //$NON-NLS-1$
 	
 	public DB2ExecutionFactory() {
 		setDatabaseVersion(EIGHT_0);
@@ -135,7 +136,7 @@ public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {
 	
 	@Override
 	public boolean supportsElementaryOlapOperations() {
-		return getDatabaseVersion().compareTo(NINE_1) >= 0;
+		return getVersion().compareTo(NINE_1) >= 0;
 	}
 	
 	@Override
@@ -150,5 +151,4 @@ public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {
 			}
 		});
 	}
-	
 }

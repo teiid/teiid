@@ -633,7 +633,7 @@ public class TestDependentJoins {
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,  
             null, capFinder,
-            new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0", "SELECT g_0.e1 AS c_0 FROM pm1.g3 AS g_0 ORDER BY c_0", "SELECT g_0.e1 AS c_0 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g3 AS g_0 ORDER BY c_0", "SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
             1,      // DependentAccess
@@ -672,7 +672,7 @@ public class TestDependentJoins {
     
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,  
             null, capFinder,
-            new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0", "SELECT g_0.e1 AS c_0 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
+            new String[] { "SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             1,      // Access
             1,      // DependentAccess
@@ -802,7 +802,7 @@ public class TestDependentJoins {
             "SELECT max(a.stringkey) from bqt1.smalla a, bqt2.smalla a2, bqt1.smalla a1 where a.intnum = a2.intnum and a1.stringnum = a2.stringnum and a.floatnum = a1.floatnum",  //$NON-NLS-1$
             metadata,
             null, capFinder,
-            new String[] {"SELECT g_1.stringnum AS c_0, g_0.intnum AS c_1, MAX(g_0.stringkey) AS c_2 FROM bqt1.smalla AS g_0, bqt1.smalla AS g_1 WHERE g_0.floatnum = g_1.floatnum GROUP BY g_1.stringnum, g_0.intnum ORDER BY c_0, c_1", "SELECT DISTINCT g_0.stringnum AS c_0, g_0.intnum AS c_1 FROM bqt2.smalla AS g_0 WHERE (g_0.stringnum IN (<dependent values>)) AND (g_0.intnum IN (<dependent values>)) ORDER BY c_0, c_1"},
+            new String[] {"SELECT g_1.stringnum AS c_0, g_0.intnum AS c_1, MAX(g_0.stringkey) AS c_2 FROM bqt1.smalla AS g_0, bqt1.smalla AS g_1 WHERE g_0.floatnum = g_1.floatnum GROUP BY g_1.stringnum, g_0.intnum ORDER BY c_0, c_1", "SELECT g_0.stringnum, g_0.intnum FROM bqt2.smalla AS g_0 WHERE (g_0.stringnum IN (<dependent values>)) AND (g_0.intnum IN (<dependent values>))"},
             TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING );
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -824,4 +824,40 @@ public class TestDependentJoins {
 
     } 
     
+     @Test public void testPlanningOverJoin() throws Exception {
+         // Create query
+         String sql = "SELECT pm1.g1.e1 FROM pm1.g1, (select pm2.g2.e1, pm2.g3.e2 from pm2.g2 left outer join pm2.g3 on pm2.g2.e1 = pm2.g3.e1) as x where pm1.g1.e1 = x.e1";//$NON-NLS-1$
+ 
+         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+         BasicSourceCapabilities caps = new BasicSourceCapabilities();
+         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
+         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+         capFinder.addCapabilities("pm2", TestOptimizer.getTypicalCapabilities()); //$NON-NLS-1$
+ 
+         QueryMetadataInterface metadata = RealMetadataFactory.example1();
+         RealMetadataFactory.setCardinality("pm1.g1", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY, metadata);
+         RealMetadataFactory.setCardinality("pm2.g2", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1, metadata);
+         RealMetadataFactory.setCardinality("pm2.g3", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1, metadata);
+     
+         ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,  
+             null, capFinder,
+             new String[] { "SELECT g_0.e1 AS c_0 FROM pm2.g2 AS g_0 LEFT OUTER JOIN pm2.g3 AS g_1 ON g_0.e1 = g_1.e1 ORDER BY c_0", "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+         TestOptimizer.checkNodeTypes(plan, new int[] {
+             2,      // Access
+             0,      // DependentAccess
+             0,      // DependentSelect
+             0,      // DependentProject
+             0,      // DupRemove
+             0,      // Grouping
+             0,      // NestedLoopJoinStrategy
+             1,      // MergeJoinStrategy
+             0,      // Null
+             0,      // PlanExecution
+             1,      // Project
+             0,      // Select
+             0,      // Sort
+             0       // UnionAll
+         });         
+     }       
 }

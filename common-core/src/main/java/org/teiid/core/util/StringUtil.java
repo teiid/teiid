@@ -179,6 +179,32 @@ public final class StringUtil {
     }
     
     /**
+     * Return a stringified version of the array. 
+     * @param array the array
+     * @param delim the delimiter to use between array components
+     * @return the string form of the array
+   */
+    public static String toString( final Object[] array, final String delim, boolean includeBrackets) {
+        if ( array == null ) {
+            return ""; //$NON-NLS-1$
+        }
+        final StringBuffer sb = new StringBuffer();
+        if (includeBrackets) {
+         sb.append('[');
+        }
+        for (int i = 0; i < array.length; ++i) {
+            if ( i != 0 ) {
+                sb.append(delim);
+            }
+            sb.append(array[i]);
+        }
+        if (includeBrackets) {
+         sb.append(']');
+        }
+        return sb.toString();
+    }
+    
+    /**
      * Return a stringified version of the array, using a ',' as a delimiter
      * @param array the array
      * @return the string form of the array

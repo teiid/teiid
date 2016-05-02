@@ -33,10 +33,9 @@ import org.rhq.core.domain.configuration.PropertyMap;
 import org.rhq.core.domain.configuration.PropertySimple;
 import org.rhq.core.domain.configuration.definition.PropertyDefinition;
 import org.rhq.core.domain.configuration.definition.PropertyDefinitionList;
-import org.rhq.core.domain.configuration.definition.PropertyDefinitionMap;
-import org.rhq.core.domain.configuration.definition.PropertyDefinitionSimple;
 import org.rhq.core.domain.operation.OperationDefinition;
 import org.rhq.core.pluginapi.operation.OperationResult;
+import org.teiid.rhq.plugin.util.ProfileServiceUtil;
 
 
 public class ExecutedOperationResultImpl implements ExecutedResult {
@@ -130,27 +129,19 @@ public class ExecutedOperationResultImpl implements ExecutedResult {
 			if (opDef.getName().equals(operationName)) {
 				if (opDef.getResultsConfigurationDefinition()==null) break;
 					
-				Map propDefs = opDef.getResultsConfigurationDefinition()
-						.getPropertyDefinitions();
-				PropertyDefinition listPropDefinition = (PropertyDefinition) propDefs
-						.get(LISTNAME);
+				PropertyDefinitionList listPropDefinition = opDef.getResultsConfigurationDefinition()
+						.getPropertyDefinitionList(LISTNAME);
 				
 				if (listPropDefinition == null) {
 					continue;
 				}
-
-				PropertyDefinition propertyDefinitionMap = ((PropertyDefinitionList) listPropDefinition)
-						.getMemberDefinition();
-				Map simpleProperties = ((PropertyDefinitionMap) propertyDefinitionMap)
-						.getPropertyDefinitions();
-				Iterator simplePropertiesIter = simpleProperties.values()
-						.iterator();
 				
-				while (simplePropertiesIter.hasNext()) {
-					PropertyDefinition simpleProp = (PropertyDefinition) simplePropertiesIter
-							.next();
-					String fieldName = ((PropertyDefinitionSimple) simpleProp)
-							.getName();
+				PropertyDefinition propertyDefinitionMap = listPropDefinition.getMemberDefinition();
+				
+				List<PropertyDefinition> propDefList = ProfileServiceUtil.reflectivelyInvokeGetMapMethod(propertyDefinitionMap);
+				
+				for  (PropertyDefinition definition : propDefList) {
+					String fieldName = definition.getName();
 					fieldNameList.add(fieldName);
 				}
 				
@@ -158,4 +149,6 @@ public class ExecutedOperationResultImpl implements ExecutedResult {
 			}
 		}
 	}
+
+	
 }

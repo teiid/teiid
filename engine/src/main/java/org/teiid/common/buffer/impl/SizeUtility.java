@@ -47,7 +47,7 @@ public final class SizeUtility {
 	private static Map<Class<?>, int[]> SIZE_ESTIMATES = new HashMap<Class<?>, int[]>(128);
 	private static Set<Class<?>> VARIABLE_SIZE_TYPES = new HashSet<Class<?>>();
 	static {
-		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.STRING, new int[] {100, 256});
+		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.STRING, new int[] {100, DataTypeManager.nextPowOf2(DataTypeManager.MAX_STRING_LENGTH/16)});
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.DATE, new int[] {20, 28});
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.TIME, new int[] {20, 28});
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.TIMESTAMP, new int[] {20, 28});

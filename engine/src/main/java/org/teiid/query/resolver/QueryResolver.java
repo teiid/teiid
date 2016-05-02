@@ -466,6 +466,13 @@ public class QueryResolver {
 		        String updatePlan = qmi.getUpdatePlan(virtualGroup.getMetadataID());
 				String deletePlan = qmi.getDeletePlan(virtualGroup.getMetadataID());
 				String insertPlan = qmi.getInsertPlan(virtualGroup.getMetadataID());
+				
+				//the elements must be against the view and not the alias
+				if (virtualGroup.getDefinition() != null) {
+					GroupSymbol group = new GroupSymbol(virtualGroup.getNonCorrelationName());
+					group.setMetadataID(virtualGroup.getMetadataID());
+					virtualGroup = group;
+				}
 
 	            List<ElementSymbol> elements = ResolverUtil.resolveElementsInGroup(virtualGroup, qmi);
 	    		UpdateValidator validator = new UpdateValidator(qmi, determineType(insertPlan), determineType(updatePlan), determineType(deletePlan));

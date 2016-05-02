@@ -52,7 +52,7 @@ public class RelationalNodeStatistics {
     private long batchEndTime;
      
     // The processing time for the node (does not include child processing)
-    private long nodeProcessingTime;
+    private long nodeNextBatchProcessingTime;
     
     // the total processing time for the node (indcludes child processing (lastEndTime - firstStartTime)
     private long nodeCumulativeProcessingTime;
@@ -74,8 +74,16 @@ public class RelationalNodeStatistics {
         this.batchStartTime = System.currentTimeMillis();
     }
     
+    void setBatchStartTime(long batchStartTime) {
+	this.batchStartTime = batchStartTime;
+    }
+    
     public void stopBatchTimer() {
         this.batchEndTime = System.currentTimeMillis();
+    }
+    
+    void setBatchEndTime(long batchEndTime) {
+	this.batchEndTime = batchEndTime;
     }
     
     public void collectCumulativeNodeStats(TupleBatch batch, int stopType) {
@@ -95,32 +103,25 @@ public class RelationalNodeStatistics {
         }
     }
     
-    public void collectNodeStats(RelationalNode[] relationalNodes, String className) {
-        // set nodeEndTime to the time gathered at the end of the last batch
-        this.nodeEndTime = this.batchEndTime;
-        this.nodeCumulativeProcessingTime = this.nodeEndTime - this.nodeStartTime;
-        if(relationalNodes[0] != null) {
-            long maxUnionChildCumulativeProcessingTime = 0;
-            for (int i = 0; i < relationalNodes.length; i++) {
-                if(relationalNodes[i] != null) {
-                    maxUnionChildCumulativeProcessingTime = Math.max(maxUnionChildCumulativeProcessingTime, relationalNodes[i].getNodeStatistics().getNodeCumulativeProcessingTime());
-                    this.nodeProcessingTime = this.nodeCumulativeProcessingTime - relationalNodes[i].getNodeStatistics().getNodeCumulativeProcessingTime();                      
-                }
-            }
-            if(className.equals("UnionAllNode")){ //$NON-NLS-1$
-                this.nodeProcessingTime = this.nodeCumulativeProcessingTime - maxUnionChildCumulativeProcessingTime;
-            }
-        }else {
-            this.nodeProcessingTime = this.nodeCumulativeProcessingTime;
-        }
-    }
+     public void collectNodeStats(RelationalNode[] relationalNodes) {
+         // set nodeEndTime to the time gathered at the end of the last batch
+         this.nodeEndTime = this.batchEndTime;
+         this.nodeCumulativeProcessingTime = this.nodeEndTime - this.nodeStartTime;
+         this.nodeNextBatchProcessingTime = this.nodeCumulativeProcessingTime;
+         for (int i = 0; i < relationalNodes.length; i++) {
+         	if (relationalNodes[i] == null) {
+         		break;
+         	}
+             this.nodeNextBatchProcessingTime -= relationalNodes[i].getNodeStatistics().getNodeCumulativeNextBatchProcessingTime();                       
+         }
+     }
     
     public List<String> getStatisticsList() {
     	ArrayList<String> statisticsList = new ArrayList<String>(6);
     	statisticsList.add("Node Output Rows: " + this.nodeOutputRows); //$NON-NLS-1$
-        statisticsList.add("Node Process Time: " + this.nodeProcessingTime); //$NON-NLS-1$
-        statisticsList.add("Node Cumulative Process Time: " + this.nodeCumulativeProcessingTime); //$NON-NLS-1$
+        statisticsList.add("Node Next Batch Process Time: " + this.nodeNextBatchProcessingTime); //$NON-NLS-1$
         statisticsList.add("Node Cumulative Next Batch Process Time: " + this.nodeCumulativeNextBatchProcessingTime); //$NON-NLS-1$
+        statisticsList.add("Node Cumulative Process Time: " + this.nodeCumulativeProcessingTime); //$NON-NLS-1$
         statisticsList.add("Node Next Batch Calls: " + this.nodeNextBatchCalls); //$NON-NLS-1$
         statisticsList.add("Node Blocks: " + this.nodeBlocks); //$NON-NLS-1$
         return statisticsList;
@@ -169,12 +170,12 @@ public class RelationalNodeStatistics {
         return this.nodeOutputRows;
     }
     /** 
-     * @return Returns the nodeProcessingTime.
+     * @return Returns the nodeNextBatchProcessingTime.
      * @since 4.2
      */
-    public long getNodeProcessingTime() {
-        return this.nodeProcessingTime;
-    }
+    public long getNodeNextBatchProcessingTime() {
+        return this.nodeNextBatchProcessingTime;
+     }
     /** 
      * @return Returns the nodeStartTime.
      * @since 4.2

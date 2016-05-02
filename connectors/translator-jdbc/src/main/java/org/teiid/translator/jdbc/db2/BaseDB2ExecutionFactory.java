@@ -22,19 +22,22 @@
 
 package org.teiid.translator.jdbc.db2;
 
+import java.sql.CallableStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.language.Comparison.Operator;
 import org.teiid.language.DerivedColumn;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.Join;
+import org.teiid.language.Join.JoinType;
 import org.teiid.language.LanguageFactory;
 import org.teiid.language.LanguageObject;
 import org.teiid.language.Limit;
 import org.teiid.language.Literal;
-import org.teiid.language.Comparison.Operator;
-import org.teiid.language.Join.JoinType;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TranslatorException;
@@ -178,4 +181,25 @@ public class BaseDB2ExecutionFactory extends JDBCExecutionFactory {
 		return false;
 	}
 	
+	@Override
+	public Object retrieveValue(ResultSet results, int columnIndex,
+			Class<?> expectedType) throws SQLException {
+		if (expectedType == TypeFacility.RUNTIME_TYPES.XML || expectedType == TypeFacility.RUNTIME_TYPES.CLOB) {
+			return results.getString(columnIndex);
+		} else if (expectedType == TypeFacility.RUNTIME_TYPES.BLOB ){
+			return results.getBytes(columnIndex);
+		}
+		return super.retrieveValue(results, columnIndex, expectedType);
+	}
+	
+	@Override
+	public Object retrieveValue(CallableStatement results, int parameterIndex,
+			Class<?> expectedType) throws SQLException {
+		if (expectedType == TypeFacility.RUNTIME_TYPES.XML || expectedType == TypeFacility.RUNTIME_TYPES.CLOB) {
+			return results.getString(parameterIndex);
+		} else if (expectedType == TypeFacility.RUNTIME_TYPES.BLOB){
+			return results.getBytes(parameterIndex);
+		}
+		return super.retrieveValue(results, parameterIndex, expectedType);
+	}
 }

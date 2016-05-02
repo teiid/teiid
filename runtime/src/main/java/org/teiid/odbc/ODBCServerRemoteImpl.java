@@ -70,6 +70,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	private static final String UNNAMED = "UNNAMED"; //$NON-NLS-1$
 	private static Pattern pgToastLiteral = Pattern.compile("'pg_toast'");//$NON-NLS-1$
 	private static Pattern pgCast = Pattern.compile("(\\s[^']+)::[A-Za-z0-9]*"); //$NON-NLS-1$
+	private static Pattern pgCastLiterals = Pattern.compile("\\s((?:'[^']*')+|[^']+)::([A-Za-z0-9]*)"); //$NON-NLS-1$
 	private static Pattern setPattern = Pattern.compile("set\\s+(\\w+)\\s+to\\s+((?:'[^']*')+)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE);//$NON-NLS-1$
 	
 	private static Pattern pkPattern = Pattern.compile("select ta.attname, ia.attnum, ic.relname, n.nspname, tc.relname " +//$NON-NLS-1$
@@ -149,7 +150,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	private static Pattern preparedAutoIncrement = Pattern.compile("select 1 \\s*from pg_catalog.pg_attrdef \\s*where adrelid = \\$1 AND adnum = \\$2 " + //$NON-NLS-1$
 			"\\s*and pg_catalog.pg_get_expr\\(adbin, adrelid\\) \\s*like '%nextval\\(%'", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	
-	private static Pattern cursorSelectPattern = Pattern.compile("DECLARE \"(\\w+)\" CURSOR(\\s(WITH HOLD|SCROLL))? FOR (.*)", Pattern.CASE_INSENSITIVE|Pattern.DOTALL); //$NON-NLS-1$
+	private static Pattern cursorSelectPattern = Pattern.compile("DECLARE\\s+\"(\\w+)\"(?:\\s+INSENSITIVE)?(\\s+(NO\\s+)?SCROLL)?\\s+CURSOR\\s+(?:WITH(?:OUT)? HOLD\\s+)?FOR\\s+(.*)", Pattern.CASE_INSENSITIVE|Pattern.DOTALL); //$NON-NLS-1$
 	private static Pattern fetchPattern = Pattern.compile("FETCH (\\d+) IN \"(\\w+)\".*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	private static Pattern movePattern = Pattern.compile("MOVE (\\d+) IN \"(\\w+)\".*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	private static Pattern closePattern = Pattern.compile("CLOSE \"(\\w+)\"", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
@@ -433,6 +434,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			}
 		} catch (SQLException e) {
 			errorOccurred(e);
+			return;
 		}
 		
 		this.portalMap.put(bindName, new Portal(bindName, prepareName, previous.sql, previous.stmt, resultColumnFormat));
@@ -628,6 +630,8 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		}		
 		//these are somewhat dangerous
 		modified = pgCast.matcher(modified).replaceAll("$1"); //$NON-NLS-1$
+		modified = pgCastLiterals.matcher(modified).replaceAll(" cast($1 as $2)"); //$NON-NLS-1$
+		
 		//TODO: use an appropriate cast
 		modified = pgToastLiteral.matcher(modified).replaceAll("'SYS'"); //$NON-NLS-1$
 		return modified;

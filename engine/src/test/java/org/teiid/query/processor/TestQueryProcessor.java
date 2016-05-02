@@ -38,6 +38,7 @@ import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.util.CommandContext;
 
@@ -78,14 +79,14 @@ public class TestQueryProcessor {
     
     @Test public void testNoResults() throws Exception {
         List elements = new ArrayList();
-        elements.add(new ElementSymbol("a")); //$NON-NLS-1$
+        elements.add(new ElementSymbol("x", null, DataTypeManager.DefaultDataClasses.INTEGER)); //$NON-NLS-1$
         FakeProcessorPlan plan = new FakeProcessorPlan(elements, null);
         helpTestProcessor(plan, new List[0]);    
     }
 
     @Test public void testBlockNoResults() throws Exception {
         List elements = new ArrayList();
-        elements.add(new ElementSymbol("a")); //$NON-NLS-1$
+        elements.add(new ElementSymbol("x", null, DataTypeManager.DefaultDataClasses.INTEGER)); //$NON-NLS-1$
         
         List batches = new ArrayList();
         batches.add(BlockedException.INSTANCE);
@@ -99,7 +100,7 @@ public class TestQueryProcessor {
     
     @Test public void testProcessWithOccasionalBlocks() throws Exception {
         List elements = new ArrayList();
-        elements.add(new ElementSymbol("a")); //$NON-NLS-1$
+        elements.add(new ElementSymbol("x", null, DataTypeManager.DefaultDataClasses.INTEGER)); //$NON-NLS-1$
                 
         HashSet blocked = new HashSet(Arrays.asList(new Integer[] { new Integer(0), new Integer(2), new Integer(7) }));
         int numBatches = 10;

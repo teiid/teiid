@@ -188,4 +188,9 @@ public class LocalServerConnection implements ServerConnection {
 	public void cleanUp() {
 		
 	}
+	
+	@Override
+	public boolean isLocal() {
+		return true;
+	}
 }

@@ -22,6 +22,7 @@
 
 package org.teiid.query.processor;
 
+import static org.junit.Assert.*;
 import static org.teiid.query.processor.TestProcessor.*;
 
 import java.io.FileInputStream;
@@ -32,10 +33,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.TimeZone;
 
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
+import org.teiid.client.util.ResultsFuture;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.DataTypeManager;
@@ -49,8 +55,10 @@ import org.teiid.metadata.Table;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.unittest.TimestampUtil;
+import org.teiid.query.util.CommandContext;
 
 @SuppressWarnings({"nls", "unchecked"})
 public class TestSQLXMLProcessing {
@@ -301,6 +309,8 @@ public class TestSQLXMLProcessing {
         };    
     
         process(sql, expected);
+        ProcessorPlan plan = process(sql, expected);
+        assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, ((Expression)plan.getOutputElements().get(0)).getType());
     }
     
     @Test public void testXmlTableDescendantPath() throws Exception {
@@ -352,6 +362,66 @@ public class TestSQLXMLProcessing {
     
         process(sql, expected);
     }
+    
+    @Test public void testXmlTableStreamingTiming() throws Throwable {
+    	String sql = "select xmlserialize(x.object_value as string), y.x from xmltable('/a/b' passing xmlparse(document '<a><b x=''1''/><b x=''2''/></a>')) as x, (select 1 as x) as y"; //$NON-NLS-1$
+        
+        final List<?>[] expected = new List<?>[] {
+        		Arrays.asList("<b xmlns=\"\" x=\"1\"/>", 1),
+        		Arrays.asList("<b xmlns=\"\" x=\"2\"/>", 1)
+        };    
+    
+        executeStreaming(sql, expected);
+    }
+    
+    @Test(expected=TeiidProcessingException.class) public void testXmlTableStreamingTimingWithError() throws Throwable {
+    	String sql = "select x.x, y.x from xmltable('/a/b' passing xmlparse(document '<a><b x=''1''/><b x=''2''/></a>') columns x integer path '1 div (@x - 1)') as x, (select 1 as x) as y"; //$NON-NLS-1$
+        
+        final List<?>[] expected = new List<?>[] {
+        		Arrays.asList(1, 1),
+        		Arrays.asList(2, 1)
+        };    
+    
+        executeStreaming(sql, expected);
+    }
+
+	private void executeStreaming(String sql, final List<?>[] expected)
+			throws Throwable {
+		final CommandContext cc = createCommandContext();
+        final ResultsFuture<Runnable> r = new ResultsFuture<Runnable>();
+        Executor ex = new Executor() {
+        	
+			@Override
+			public void execute(Runnable command) {
+				r.getResultsReceiver().receiveResults(command);
+			}
+		};
+        cc.setExecutor(ex);
+		final ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), cc);
+		final ResultsFuture<Void> result = new ResultsFuture<Void>();
+		Thread t = new Thread() {
+			@Override
+			public void run() {
+				try {
+					doProcess(plan, dataManager, expected, cc);
+					result.getResultsReceiver().receiveResults(null);
+				} catch (Throwable e) {
+					result.getResultsReceiver().exceptionOccurred(e);
+				}
+			}
+		};
+		t.start();
+		Runnable runnable = r.get();
+		runnable.run();
+		try {
+			result.get();
+		} catch (ExecutionException e) {
+			if (e.getCause() != null) {
+				throw e.getCause();
+			}
+			throw e;
+		}
+	}
     
     @Test public void testXmlNameEscaping() throws Exception {
     	String sql = "select xmlforest(\"xml\") from (select 1 as \"xml\") x"; //$NON-NLS-1$
@@ -494,10 +564,11 @@ public class TestSQLXMLProcessing {
     	TimestampWithTimezone.resetCalendar(null); //$NON-NLS-1$
     }
     
-	private void process(String sql, List<?>[] expected) throws Exception {
+	private ProcessorPlan process(String sql, List<?>[] expected) throws Exception {
         ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), createCommandContext());
         
         helpProcess(plan, createCommandContext(), dataManager, expected);
+        return plan;
 	}
 	
 	public static BlobType blobFromFile(final String file) {

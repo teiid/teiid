@@ -53,6 +53,7 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.security.InvalidSessionException;
 import org.teiid.client.security.SessionToken;
 import org.teiid.core.util.ArgCheck;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.service.SessionService;
@@ -81,7 +82,7 @@ public class SessionServiceImpl implements SessionService {
 	private long sessionExpirationTimeLimit = DEFAULT_SESSION_EXPIRATION;
 	private String authenticationType = AuthenticationType.CLEARTEXT.name();
 	private String gssSecurityDomain;
-	
+	private static boolean CHECK_PING = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.checkPing", true);
 	/*
 	 * Injected state
 	 */
@@ -104,13 +105,13 @@ public class SessionServiceImpl implements SessionService {
 		long currentTime = System.currentTimeMillis();
 		for (SessionMetadata info : sessionCache.values()) {
 			try {
-    			if (!info.isEmbedded() && currentTime - info.getLastPingTime() > ServerConnection.PING_INTERVAL * 5) {
-    				LogManager.logInfo(LogConstants.CTX_SECURITY, RuntimePlugin.Util.getString( "SessionServiceImpl.keepaliveFailed", info.getSessionId())); //$NON-NLS-1$
-    				closeSession(info.getSessionId());
-    			} else if (sessionExpirationTimeLimit > 0 && currentTime - info.getCreatedTime() > sessionExpirationTimeLimit) {
-    				LogManager.logInfo(LogConstants.CTX_SECURITY, RuntimePlugin.Util.getString( "SessionServiceImpl.expireSession", info.getSessionId())); //$NON-NLS-1$
-    				closeSession(info.getSessionId());
-    			}
+				if (CHECK_PING && !info.isEmbedded() && currentTime - info.getLastPingTime() > ServerConnection.PING_INTERVAL * 5) {
+					LogManager.logInfo(LogConstants.CTX_SECURITY, RuntimePlugin.Util.getString("SessionServiceImpl.keepaliveFailed", info.getSessionId()));
+					closeSession(info.getSessionId());
+				} else if (sessionExpirationTimeLimit > 0 && currentTime - info.getCreatedTime() > sessionExpirationTimeLimit) {
+					LogManager.logInfo(LogConstants.CTX_SECURITY, RuntimePlugin.Util.getString( "SessionServiceImpl.expireSession", info.getSessionId())); //$NON-NLS-1$
+					closeSession(info.getSessionId());
+				}
 			} catch (Exception e) {
 				LogManager.logDetail(LogConstants.CTX_SECURITY, e, "error running session monitor, unable to monitor:", info.getSessionId()); //$NON-NLS-1$
 			}
@@ -401,7 +402,7 @@ public class SessionServiceImpl implements SessionService {
         	public void run() {
         		monitorSessions();
         	}
-        }, 0, ServerConnection.PING_INTERVAL * 5);
+        }, ServerConnection.PING_INTERVAL * 3, ServerConnection.PING_INTERVAL * 2);
 	}
 
 	public void stop(){

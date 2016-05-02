@@ -34,6 +34,8 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.util.CommandContext;
+import org.teiid.query.util.Options; 
 import org.teiid.translator.ExecutionFactory.NullOrder;
 
 @SuppressWarnings({"nls", "unchecked"})
@@ -146,57 +148,81 @@ public class TestOrderByProcessing {
 
         ProcessorPlan plan = TestOptimizer.helpPlan("select e1 from pm1.g1 order by e1 desc, e2 asc", //$NON-NLS-1$ 
         		RealMetadataFactory.example1Cached(), null, capFinder, 
-    			new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0 DESC NULLS LAST, g_0.e2 NULLS FIRST"},  //$NON-NLS-1$
+        		new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0 DESC NULLS LAST, g_0.e2 NULLS FIRST"},  //$NON-NLS-1$
     			TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING);
         
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
 
-	@Test public void testNullOrdering1() throws Exception { 
-        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_ORDERBY_NULL_ORDERING, true);
-        caps.setSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER, NullOrder.LAST);
-        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-
-        ProcessorPlan plan = TestOptimizer.helpPlan("select e1 from pm1.g1 order by e1 desc, e2 asc", //$NON-NLS-1$ 
-        		RealMetadataFactory.example1Cached(), null, capFinder, 
-    			new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0 DESC, g_0.e2 NULLS FIRST"},  //$NON-NLS-1$
-    			TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING);
-        
-        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
-    }
-	
+		
 	@Test public void testNullOrdering2() throws Exception { 
-        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_ORDERBY_NULL_ORDERING, true);
-        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-
-        ProcessorPlan plan = TestOptimizer.helpPlan("select e1 from pm1.g1 order by e1 desc NULLS FIRST, e2 asc NULLS LAST", //$NON-NLS-1$ 
-        		RealMetadataFactory.example1Cached(), null, capFinder, 
-    			new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0 DESC NULLS FIRST, g_0.e2 NULLS LAST"},  //$NON-NLS-1$
-    			TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING);
-        
-        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
-    }
-	
+	         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+	         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+	         caps.setCapabilitySupport(Capability.QUERY_ORDERBY_NULL_ORDERING, true);
+	         caps.setSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER, NullOrder.FIRST);
+	         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+	        
+	         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+	         CommandContext cc = new CommandContext();
+	         cc.setOptions(new Options().pushdownDefaultNullOrder(true));
+	         ProcessorPlan plan = TestOptimizer.getPlan(TestOptimizer.helpGetCommand("select e1 from pm1.g1 order by e1 desc, e2 asc NULLS LAST", metadata, null), metadata, capFinder, null, true, cc);
+	         TestOptimizer.checkAtomicQueries(new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0 DESC NULLS LAST, g_0.e2 NULLS LAST"}, plan);  //$NON-NLS-1$
+	                  TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+	     }
+	 	
 	/**
 	 * The engine will remove the null ordering if it's not needed
 	 * @throws Exception
 	 */
 	@Test public void testNullOrdering3() throws Exception { 
+	         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+	         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+	         caps.setSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER, NullOrder.HIGH);
+	         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+	        
+	         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+	         CommandContext cc = new CommandContext();
+	         //cc.setOptions(new Options().pushdownDefaultNullOrder(true));
+	         ProcessorPlan plan = TestOptimizer.getPlan(TestOptimizer.helpGetCommand("select e1 from pm1.g1 order by e1 desc, e2 asc NULLS LAST", metadata, null), metadata, capFinder, null, true, cc);
+	         TestOptimizer.checkAtomicQueries(new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0 DESC, g_0.e2"}, plan);  //$NON-NLS-1$
+	         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+	     }
+	 	
+	 	/**
+	 	 * turns on virtualization
+	 	 * @throws Exception
+	 	 */
+	@Test public void testNullOrdering4() throws Exception { 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        caps.setSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER, NullOrder.HIGH);
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY_NULL_ORDERING, true);
+        caps.setSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER, NullOrder.UNKNOWN);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-
-        ProcessorPlan plan = TestOptimizer.helpPlan("select e1 from pm1.g1 order by e1 desc, e2 asc NULLS LAST", //$NON-NLS-1$ 
-        		RealMetadataFactory.example1Cached(), null, capFinder, 
-    			new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0 DESC, g_0.e2"},  //$NON-NLS-1$
-    			TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING);
         
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        CommandContext cc = new CommandContext();
+        cc.setOptions(new Options().pushdownDefaultNullOrder(true));
+        ProcessorPlan plan = TestOptimizer.getPlan(TestOptimizer.helpGetCommand("select e1 from pm1.g1 order by e1 desc, e2 asc", metadata, null), metadata, capFinder, null, true, cc);
+        TestOptimizer.checkAtomicQueries(new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0 DESC NULLS LAST, g_0.e2 NULLS FIRST"}, plan);  //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+    }
+    
+    @Test public void testSortFunctionOverView() {
+    	String sql = "select * from (select * from pm1.g1) as x order by cast(e2 as string) limit 1"; //$NON-NLS-1$
+
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        FakeDataManager fdm = new FakeDataManager();
+        sampleData1(fdm);
+        helpProcess(plan, fdm, new List[] {Arrays.asList("a", 0, false, 2.0d)});
+    }
+    
+    @Test public void testSortFunctionOverView1() {
+    	String sql = "select e1 from (select * from pm1.g1) as x order by cast(e3 as string) desc, cast(e2 as string) limit 1"; //$NON-NLS-1$
+
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        FakeDataManager fdm = new FakeDataManager();
+        sampleData1(fdm);
+        helpProcess(plan, fdm, new List[] {Arrays.asList("c")});
     }
 
 }

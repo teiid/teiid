@@ -53,7 +53,7 @@ import org.teiid.query.unittest.TimestampUtil;
 
 public class TestAllResultsImpl {
 
-	private static final long REQUEST_ID = 0;
+    static final long REQUEST_ID = 0;
 	private static final int TYPE_FORWARD_ONLY = ResultSet.TYPE_FORWARD_ONLY;
 	private static final int TYPE_SCROLL_SENSITIVE = ResultSet.TYPE_SCROLL_SENSITIVE;
 
@@ -710,6 +710,11 @@ public class TestAllResultsImpl {
 	
 	static ResultSetImpl helpTestBatching(StatementImpl statement, final int fetchSize, final int batchLength,
 			final int totalLength) throws TeiidProcessingException, SQLException {
+		return helpTestBatching(statement, fetchSize, batchLength, totalLength, false);
+	}
+	
+	static ResultSetImpl helpTestBatching(StatementImpl statement, final int fetchSize, final int batchLength,
+			final int totalLength, final boolean partial) throws TeiidProcessingException, SQLException {
 		DQP dqp = statement.getDQP();
 		if (dqp == null) {
 			dqp = mock(DQP.class);
@@ -722,13 +727,17 @@ public class TestAllResultsImpl {
 					InvocationOnMock invocation) throws Throwable {
 				ResultsFuture<ResultsMessage> nextBatch = new ResultsFuture<ResultsMessage>();
 				int begin = Math.min(totalLength, (Integer)invocation.getArguments()[1]);
-				int length = Math.min(totalLength - begin + 1, batchLength);
+				if (partial && begin == fetchSize + 1) {
+					begin = begin -5;
+				}
+				int length = Math.min(fetchSize, Math.min(totalLength - begin + 1, batchLength));
 				nextBatch.getResultsReceiver().receiveResults(exampleResultsMsg4(begin, length, begin + length - 1>= totalLength));
 				return nextBatch;
 			}
 		});
 		
-		ResultsMessage msg = exampleResultsMsg4(1, batchLength, batchLength == totalLength);
+		int initial = Math.min(fetchSize, batchLength);
+		ResultsMessage msg = exampleResultsMsg4(1, initial, initial == totalLength);
 		return new ResultSetImpl(msg, statement, new ResultSetMetaDataImpl(new MetadataProvider(DeferredMetadataProvider.loadPartialMetadata(msg.getColumnNames(), msg.getDataTypes())), null), 0);
 	}
 
@@ -831,7 +840,7 @@ public class TestAllResultsImpl {
 		return exampleMessage(new List[0], new String[] { "IntNum", "StringNum" }, new String[] { JDBCSQLTypeInfo.INTEGER, JDBCSQLTypeInfo.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
-	private static ResultsMessage exampleResultsMsg4(int begin, int length, boolean lastBatch) {
+	static ResultsMessage exampleResultsMsg4(int begin, int length, boolean lastBatch) {
 		RequestMessage request = new RequestMessage();
 		request.setExecutionId(REQUEST_ID);
 		ResultsMessage resultsMsg = new ResultsMessage();

@@ -242,6 +242,177 @@ The following components have been updated:
 </h2>
 <h4>From ${project.version}</h4>
 <ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-3168'>TEIID-3168</a>] - SQL Server requires N prefix for unicode literals
+</li>
+</ul>
+<h4>From 7.7.11</h4>
+<ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2448'>TEIID-2448</a>] - Oracle driver translation error
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2930'>TEIID-2930</a>] - SCROLL keyword for DECLARE CURSOR not being parsed correctly
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2985'>TEIID-2985/a>] - odbc script reader does not handle extra statement delimiters
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2996'>TEIID-2996</a>] - Ability to disable keepAlive
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-3049'>TEIID-3049</a>] - odbc still commits with disableLocalTxn
+</li>
+</ul>
+<h4>From 7.7.10</h4>
+<ul>
+<li>[<a href='https://bugzilla.redhat.com/show_bug.cgi?id=1084108'>BZ1084108</a>] - SQL_TSI_SECOND always returns zero with new implementation of calendar for TIMESTAMPDIFF function
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1896'>TEIID-1896</a>] - fix for nested json array xml conversion
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2477'>TEIID-2477/a>] - Standardize and correct jdbc database version comparisons
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2636'>TEIID-2636</a>] - Stream corruption errors when doing big query, logging changes only
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2921'>TEIID-2921</a>] - Allow the projection raising (or order pushing) logic to work with non-simple ordering expressions
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2931'>TEIID-2931</a>] - Perform equi-join full outer joins in a streaming manner
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2945'>TEIID-2945</a>] - disableLocalTxn only works at connection time
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2952'>TEIID-2952</a>] - Crypto exception with client/server running on different java versions
+</li>
+</ul>
+<h4>From 7.7.9</h4>
+<ul>
+<li>[<a href='https://bugzilla.redhat.com/show_bug.cgi?id=1029532'>BZ1029532</a>] -  determine if transitive condition is needed
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1560'>TEIID-1560</a>] - (partial)  modified instanceof check in FrameUtil
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1956'>TEIID-1956</a>] - WHERE clause throws org.teiid.jdbc.TeiidSQLException: Index: 2, Size: 1 (missed 2nd commit)
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2138'>TEIID-2138</a>] - adding an emulation option to match criteria & changing the pg standard_conforming_strings default
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2363'>TEIID-2363</a>] - (modified) backout of prefetch logic introducing Assertion error
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2422'>TEIID-2422</a>] - Offer support for a timestampdiff based upon calendar fields
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2482'>TEIID-2482</a>] - Backport: Allow the use of the enhanced join for left outer joins
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2626'>TEIID-2626</a>] - If a column type is not set, null values will be written into persisted batches
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2669'>TEIID-2669</a>] - In subquery with no values returns wrong result
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2688'>TEIID-2688</a>] - NPE determining dependent join cost
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2690'>TEIID-2690</a>] - Tuples lost in a with clause item
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2701'>TEIID-2701</a>] - Do not proactively close source executions under a transaction scope higher than request
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2704'>TEIID-2704</a>] - DB2 sql/xml values must be read inline
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2707'>TEIID-2707</a>] - proactive buffering on an enhanced sort merge left outer join results in an assertionerror [1]
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2721'>TEIID-2721</a>] - Resolving an aliased view prevents inherent update from working
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2732'>TEIID-2732</a>] - (adapted backport) Improve repeated string serialization performance 
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2745'>TEIID-2745</a>] - Evaluatable subquery in ON clause produces invalid query
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2747'>TEIID-2747</a>] - Wrong results with merge join SORT_DISTINCT with a full sort that is distinct beyond the join columns
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2795'>TEIID-2795</a>] - TTL Snapshot Refresh does not fully reload Internal MV if the user query contains LIMIT
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2797'>TEIID-2797</a>] - buffer full requests is not cleaned up properly
+</li>
+</ul>
+
+<h4>From 7.7.8</h4>
+<ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2475'>TEIID-2475</a>] -  The RelationalNode.collectNodeStats is only subtracting out the last node
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2500'>TEIID-2500</a>] -  Rewrite of case with true condition is not correct
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2501'>TEIID-2501</a>] -  window functions in view return incorrect results
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2568'>TEIID-2568</a>] -  Order by is omitted when projection is raised above ordering with grouping
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2591'>TEIID-2591</a>] -  Incorrect values returned from system table on dependent side of join
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2598'>TEIID-2598</a>] -  7.4 compatibility
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2604'>TEIID-2604</a>] -  ODBC string error response message is incorrect
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2611'>TEIID-2611</a>] -  Client forwards compatibility issue
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2633'>TEIID-2633</a>] -  Criteria is assumed needed when no other predicates determined during RuleRaiseAccess
+</li>
+</ul>
+
+<h4>From 7.7.7</h4>
+<ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2271'>TEIID-2271</a>] -  Timing issue when processing data from an XML stream
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2361'>TEIID-2361</a>] -  The current MAX String size is 4000, add the ability to configure when larger sizes are used
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2363'>TEIID-2363</a>] -  proactive buffering not occurring for the inner side of an outer join on "MERGE JOIN (SORT/ALREADY_SORTED)"
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2455'>TEIID-2455</a>] -  fix for unrelated sort of view
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2460'>TEIID-2460</a>] -  Weird behavior when Max buffer space restriction is hit
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2478'>TEIID-2478</a>] -  incomplete with pushdown. (required supporting changes)
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2482'>TEIID-2482</a>] -  Allow the use of the enhanced join for left outer joins
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2491'>TEIID-2491</a>] -  Issue with date format parsing using ODBC Driver (EDS Specific BZ961071)
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2504'>TEIID-2504</a>] -  Improve socket results processing
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2525'>TEIID-2525</a>] -  Prefetch exception with small fetch size
+</li>
+</ul>
+
+<h4>From 7.7.6</h4>
+<ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2205'>TEIID-2205</a>] -  fix for procedure/block/local connection txn issues
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2349'>TEIID-2349</a>] -  cloning the multi-source update flag
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2352'>TEIID-2352</a>] -  START USER COMMAND and END USER COMMAND are not shown with loglevel=DEBUG
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2360'>TEIID-2360</a>] -  Memory buffer sizes over 1GB are not correctly handled
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2363'>TEIID-2363</a>] -  proactive buffering not occurring for the inner side of an outer join on "MERGE JOIN (SORT/ALREADY_SORTED)"
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2366'>TEIID-2366</a>] -  If where clause contains both equal and greater then conditions then query may return no results
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2374'>TEIID-2374</a>] -  OracleExecutionFactory should indicate support of common table expressions for 9.2 or later
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2383'>TEIID-2383</a>] -  InputStreamReader throws MalformedInputException when handling multi-byte characters
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2392'>TEIID-2392</a>] -  Pushdown common table query invalid
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2410'>TEIID-2410</a>] -  issues with output buffer blocking
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2457'>TEIID-2457</a>] -  Assertion error with INTERSECT  
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2460'>TEIID-2460</a>] -  Weird behavior when Max buffer space restriction is hit 
+</li>
+</ul>
+
+<h4>From 7.7.5</h4>
+<ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-669'>TEIID-669</a>] -  Support "pass though" SQL commands to sources - fix
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2172'>TEIID-2172</a>] - Load balancing configuration can result in premature session termination/updating the logic to not prematurely terminiate
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2220'>TEIID-2220</a>] - Invalid aggregate pushing
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2240'>TEIID-2240</a>] - Upgraded RHQ plugin code to support RHQ 4.2 (JON 3.0) and RHQ 4.4 (JON 3.1)
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2246'>TEIID-2246</a>] - Incorrect results with TIMESTAMPDIFF
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2245'>TEIID-2245</a>] - Limit pushdown of nulls first/last
+</li>
+</ul>
+
+<h4>From 7.1.2</h4>
+<ul>
 <li>[<a href='https://issues.jboss.org/browse/TEIID-2197'>TEIID-2197</a>] - fix for ordering with an in predicate
 </li>
 <li>[<a href='https://issues.jboss.org/browse/TEIID-2190'>TEIID-2190</a>] - Key usage can remove predicates

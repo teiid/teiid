@@ -35,7 +35,6 @@ import org.junit.Test;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.core.util.ExecutorUtils;
 import org.teiid.dqp.internal.process.CachedResults;
 import org.teiid.dqp.internal.process.QueryProcessorFactoryImpl;
 import org.teiid.dqp.internal.process.SessionAwareCache;
@@ -45,9 +44,9 @@ import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.tempdata.GlobalTableStoreImpl;
+import org.teiid.query.tempdata.GlobalTableStoreImpl.MatTableInfo;
 import org.teiid.query.tempdata.TempTableDataManager;
 import org.teiid.query.tempdata.TempTableStore;
-import org.teiid.query.tempdata.GlobalTableStoreImpl.MatTableInfo;
 import org.teiid.query.tempdata.TempTableStore.TransactionMode;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
@@ -66,6 +65,7 @@ public class TestMaterialization {
 		tempStore = new TempTableStore("1", TransactionMode.ISOLATE_WRITES); //$NON-NLS-1$
 	    BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
 	    QueryMetadataInterface actualMetadata = RealMetadataFactory.exampleMaterializedView();
+	    
 	    globalStore = new GlobalTableStoreImpl(bm, actualMetadata);
 		metadata = new TempMetadataAdapter(actualMetadata, tempStore.getMetadataStore());
 		hdm = new HardcodedDataManager();
@@ -75,7 +75,7 @@ public class TestMaterialization {
 		
 	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>();
 	    cache.setBufferManager(bm);
-		dataManager = new TempTableDataManager(hdm, bm, ExecutorUtils.getDirectExecutor(), cache);
+		dataManager = new TempTableDataManager(hdm, bm, cache);
 	}
 	
 	private void execute(String sql, List<?>... expectedResults) throws Exception {
@@ -83,6 +83,7 @@ public class TestMaterialization {
 		cc.setTempTableStore(tempStore);
 		cc.setGlobalTableStore(globalStore);
 		cc.setMetadata(metadata);
+		
 		CapabilitiesFinder finder = new DefaultCapabilitiesFinder();
 		previousPlan = TestProcessor.helpGetPlan(TestProcessor.helpParse(sql), metadata, finder, cc);
 		cc.setQueryProcessorFactory(new QueryProcessorFactoryImpl(BufferManagerFactory.getStandaloneBufferManager(), dataManager, finder, null, metadata));
@@ -128,6 +129,7 @@ public class TestMaterialization {
     }
     
 	@Test public void testTtl() throws Exception {
+		
 		execute("SELECT * from vgroup4 where x = 'one'", Arrays.asList("one"));
 		assertEquals(1, hdm.getCommandHistory().size());
 		execute("SELECT * from vgroup4 where x is null", Arrays.asList((String)null));

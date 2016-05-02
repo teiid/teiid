@@ -389,7 +389,7 @@ public class TestSQLConversionVisitor {
     }    
     
     @Test public void testVisitIProcedureWithComment() throws Exception {
-        String expected = "{ /*teiid sessionid:ConnectionID, requestid:RequestID.PartID*/  call sq3(?,?)}"; //$NON-NLS-1$
+        String expected = "/*teiid sessionid:ConnectionID, requestid:RequestID.PartID*/ {call sq3(?,?)}"; //$NON-NLS-1$
         assertEquals(expected, getStringWithContext(TestProcedureImpl.example()));
     }  
     

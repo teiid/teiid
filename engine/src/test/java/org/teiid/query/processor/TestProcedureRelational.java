@@ -73,6 +73,21 @@ public class TestProcedureRelational {
         TestProcessor.helpProcess(plan, dataManager, expected);
     }
     
+    @Test public void testProcTableFunction() throws Exception {
+        String sql = "select param1, param2, e1, e2 from pm1.vsp26 as x, texttable('abc' columns a string) as y where param1=1 and param2='a'"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List[] { 
+            Arrays.asList(new Object[] { new Integer(1), "a", "a", new Integer(3)}), //$NON-NLS-1$  //$NON-NLS-2$
+        };       
+        
+        FakeDataManager dataManager = new FakeDataManager();
+        TestProcessor.sampleData1(dataManager);
+        
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        
+        TestProcessor.helpProcess(plan, dataManager, expected);
+    }        
+    
     @Test public void testProcInSelectScalarSubquery() throws Exception {
         String sql = "select (EXEC pm1.vsp36(pm1.g1.e2)) from pm1.g1 where pm1.g1.e1 = 'a'"; //$NON-NLS-1$
 

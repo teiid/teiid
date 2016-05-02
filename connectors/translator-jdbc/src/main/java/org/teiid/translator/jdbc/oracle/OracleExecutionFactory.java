@@ -60,10 +60,14 @@ import org.teiid.translator.jdbc.JDBCPlugin;
 import org.teiid.translator.jdbc.LocateFunctionModifier;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
 import org.teiid.translator.jdbc.TranslatedCommand;
+import org.teiid.translator.jdbc.Version;
 
 
 @Translator(name="oracle", description="A translator for Oracle 9i Database or later")
 public class OracleExecutionFactory extends JDBCExecutionFactory {
+	
+ 	public static final Version NINE_0 = Version.getVersion("9.0"); //$NON-NLS-1$
+ 	public static final Version NINE_2 = Version.getVersion("9.2"); //$NON-NLS-1$
 	
 	private static final String TIME_FORMAT = "HH24:MI:SS"; //$NON-NLS-1$
 	private static final String DATE_FORMAT = "YYYY-MM-DD"; //$NON-NLS-1$
@@ -98,6 +102,10 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	static int FIXED_CHAR_TYPE = 999;
 
 	private boolean oracleSuppliedDriver = true;
+	
+	public OracleExecutionFactory() {
+		setDatabaseVersion(NINE_0);
+	}
     
     public void start() throws TranslatorException {
         super.start();
@@ -548,6 +556,20 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     			super.visit(obj);
     		}
     		
+    		@Override
+ 	 	public void visit(WithItem obj) {
+                       if (obj.getColumns() != null) {
+ 				List<ColumnReference> cols = obj.getColumns();
+ 	 	 	 	obj.setColumns(null);
+ 	 	 	 	Select select = obj.getSubquery().getProjectedQuery();
+ 	 	 	 	List<DerivedColumn> selectClause = select.getDerivedColumns();
+ 	 	 	 	for (int i = 0; i < cols.size(); i++) {
+ 	 	 	 		selectClause.get(i).setAlias(cols.get(i).getName());
+ 	 	 	 	}
+ 	 	 	 }
+ 	 	 	 super.visit(obj);
+		}
+    		
     	};
     }
     
@@ -686,7 +708,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 		this.oracleSuppliedDriver = oracleNative;
 	}
     
-	@TranslatorProperty(display="Oracle Native Driver", description="True if the driver is an Oracle supplied driver",advanced=true)
+    @TranslatorProperty(display="Oracle Supplied Driver", description="True if the driver is an Oracle supplied driver",advanced=true)
     public boolean isOracleSuppliedDriver() {
 		return oracleSuppliedDriver;
 	}
@@ -695,7 +717,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
     	if (oracleSuppliedDriver && obj instanceof Call) {
     		Call call = (Call)obj;
-    		if (call.getReturnType() == null && call.getMetadataObject() != null && call.getMetadataObject().getProperty(SQLConversionVisitor.TEIID_NATIVE_QUERY, false) == null) { 
+    		if (call.getReturnType() == null && call.getResultSetColumnTypes().length > 0 && call.getMetadataObject() != null && call.getMetadataObject().getProperty(SQLConversionVisitor.TEIID_NATIVE_QUERY, false) == null) {  
     			//oracle returns the resultset as a parameter
     			call.setReturnType(RefCursorType.class);
     		}
@@ -736,6 +758,11 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     		return false;
     	}
     	return OracleFormatFunctionModifier.supportsLiteral(literal);
+    }
+    
+    @Override
+    public boolean supportsCommonTableExpressions() {
+    	return getVersion().compareTo(NINE_2) >= 0;
     }
     
 }

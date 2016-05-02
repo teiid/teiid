@@ -357,4 +357,13 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		assertTrue(rs.next());
 		assertEquals("Columns", rs.getString(1));
 	}
+	
+	@Test public void testPGCastLiteralDate() throws Exception {
+		Statement s = conn.createStatement();
+		//make sure that we aren't mishandling the ::
+		ResultSet rs = s.executeQuery("select '2011-01-01'::date as mydate");
+		assertTrue(rs.next());
+		assertEquals("2011-01-01", rs.getString(1));
+		
+	}
 }

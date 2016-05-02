@@ -40,6 +40,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.parser.QueryParser;
@@ -64,6 +65,7 @@ import org.teiid.query.sql.symbol.TestSearchedCaseExpression;
 import org.teiid.query.sql.util.ValueIterator;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
+import org.teiid.query.util.Options;
 
 @SuppressWarnings("nls")
 public class TestExpressionEvaluator {
@@ -333,10 +335,13 @@ public class TestExpressionEvaluator {
         
         FakeDataManager dataMgr = new FakeDataManager();
         
-        Properties props = new Properties();
-        props.setProperty("http_host", "testHostName"); //$NON-NLS-1$ //$NON-NLS-2$
-        props.setProperty("http_port", "8000"); //$NON-NLS-1$ //$NON-NLS-2$
-        CommandContext context = new CommandContext(new Long(1), null, null, null, null, 0, props, false);
+        Options options = new Options();
+        options.setProperties(System.getProperties());
+        options.getProperties().setProperty("http_host", "testHostName"); //$NON-NLS-1$ //$NON-NLS-2$
+        options.getProperties().setProperty("http_port", "8000"); //$NON-NLS-1$ //$NON-NLS-2$
+        PropertiesUtils.setBeanProperties(options, options.getProperties(), "org.teiid", true); //$NON-NLS-1$
+        
+        CommandContext context = new CommandContext(new Long(1), null, null, null, null, 0, false);
         
         func.setArgs(new Expression[] {new Constant("http_host")}); //$NON-NLS-1$
         assertEquals("testHostName", new Evaluator(Collections.emptyMap(), dataMgr, context).evaluate(func, Collections.emptyList())); //$NON-NLS-1$
@@ -358,7 +363,7 @@ public class TestExpressionEvaluator {
         func.setFunctionDescriptor(desc);
         
         FakeDataManager dataMgr = new FakeDataManager();       
-        CommandContext context = new CommandContext(new Long(-1), null, "user", payload, "vdb", 1, null, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+        CommandContext context = new CommandContext(new Long(-1), null, "user", payload, "vdb", 1, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
 
         if(property != null) {
             func.setArgs(new Expression[] {new Constant(property)}); 

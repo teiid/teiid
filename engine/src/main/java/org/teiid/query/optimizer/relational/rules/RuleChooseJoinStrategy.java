@@ -98,7 +98,7 @@ public class RuleChooseJoinStrategy implements OptimizerRule {
         // no more than one group on each side
         List<Criteria> crits = (List<Criteria>) joinNode.getProperty(NodeConstants.Info.JOIN_CRITERIA);
         
-        filterOptionalCriteria(crits);
+        filterOptionalCriteria(crits, true);
         
         if (crits.isEmpty() && jtype == JoinType.JOIN_INNER) {
     		joinNode.setProperty(NodeConstants.Info.JOIN_TYPE, JoinType.JOIN_CROSS);
@@ -179,12 +179,12 @@ public class RuleChooseJoinStrategy implements OptimizerRule {
         return result;
     }
     
-	static void filterOptionalCriteria(List<Criteria> crits) {
+	static void filterOptionalCriteria(List<Criteria> crits, boolean all) {
 		for (Iterator<Criteria> iter = crits.iterator(); iter.hasNext();) {
 			Criteria crit = iter.next();
 			if (crit instanceof CompareCriteria) {
 				CompareCriteria cc = (CompareCriteria) crit;
-				if (cc.isOptional()) {
+				if (Boolean.TRUE.equals(cc.getIsOptional()) || (all && cc.isOptional())) {
 					iter.remove();
 				}
 			}

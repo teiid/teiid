@@ -84,8 +84,8 @@ public class LogonImpl implements ILogon {
 	
 	
 	private LogonResult logon(Properties connProps, byte[] krb5ServiceTicket) throws LogonException {
-		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-		String oldSessionId = workContext.getSessionId();
+		//DQPWorkContext workContext = DQPWorkContext.getWorkContext();
+		//String oldSessionId = workContext.getSessionId();
         String applicationName = connProps.getProperty(TeiidURL.CONNECTION.APP_NAME);
         // user may be null if using trustedToken to log on
         String user = connProps.getProperty(TeiidURL.CONNECTION.USER_NAME, CoreConstants.DEFAULT_ANON_USERNAME);
@@ -103,12 +103,10 @@ public class LogonImpl implements ILogon {
 	        if (DQPWorkContext.getWorkContext().getClientAddress() == null) {
 				sessionInfo.setEmbedded(true);
 	        }
-	        if (oldSessionId != null) {
-	        	try {
-					this.service.closeSession(oldSessionId);
-				} catch (InvalidSessionException e) {
-				}
-	        }
+	        //if (oldSessionId != null) {
+	        	//TODO: we should be smarter about disassociating the old sessions from the client.  we'll just rely on 
+	        	//ping based clean up
+	        //}
 			LogonResult result = new LogonResult(sessionInfo.getSessionToken(), sessionInfo.getVDBName(), sessionInfo.getVDBVersion(), clusterName);
 			if (krb5ServiceTicket != null) {
 				result.addProperty(ILogon.KRB5TOKEN, krb5ServiceTicket);
@@ -248,6 +246,11 @@ public class LogonImpl implements ILogon {
 
 	@Override
 	public void assertIdentity(SessionToken checkSession) throws InvalidSessionException, TeiidComponentException {
+		if (checkSession == null) {
+			//disassociate
+			this.updateDQPContext(new SessionMetadata());
+			return;
+		}
 		SessionMetadata sessionInfo = null;
 		try {
 			sessionInfo = this.service.validateSession(checkSession.getSessionID());

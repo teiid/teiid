@@ -42,8 +42,8 @@ import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.RequestMessage;
-import org.teiid.client.ResultsMessage;
 import org.teiid.client.RequestMessage.StatementType;
+import org.teiid.client.ResultsMessage;
 import org.teiid.client.lob.LobChunk;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.common.buffer.BufferManager;
@@ -232,6 +232,7 @@ public class TestDQPCore {
     }
 
     @Test public void testEnvSessionId() throws Exception {
+    	System.out.println("testEnvSessionId--------------------");
         String sql = "SELECT env('sessionid') as SessionID"; //$NON-NLS-1$
         String userName = "1"; //$NON-NLS-1$
         ResultsMessage rm = helpExecute(sql, userName);
@@ -331,15 +332,44 @@ public class TestDQPCore {
         assertEquals(ThreadState.IDLE, item.getThreadState());
         assertTrue(item.resultsBuffer.getManagedRowCount() <= rowsPerBatch*23);
         //pull the rest of the results
-        for (int j = 0; j < 48; j++) {
-            item = core.getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(reqMsg.getExecutionId()));
-
-	        message = core.processCursorRequest(reqMsg.getExecutionId(), (j + 2) * rowsPerBatch + 1, rowsPerBatch);
-	        rm = message.get(5000, TimeUnit.MILLISECONDS);
-	        assertNull(rm.getException());
-	        assertEquals(rowsPerBatch, rm.getResultsList().size());
+        int start = 17;
+        while (true) {
+        	item = core.getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(reqMsg.getExecutionId()));
+        	 
+        	message = core.processCursorRequest(reqMsg.getExecutionId(), start, rowsPerBatch);
+        	rm = message.get(5000, TimeUnit.MILLISECONDS);
+        	assertNull(rm.getException());
+        	assertTrue(rowsPerBatch >= rm.getResultsList().size());
+        	start += rm.getResultsList().size();
+        	if (rm.getFinalRow() == rm.getLastRow()) {
+        		break;
+        	}
         }
+        
+        assertTrue(this.core.bufferFullPlans.isEmpty());
+    
+	    //insensitive should not block
+	    reqMsg.setCursorType(ResultSet.TYPE_SCROLL_INSENSITIVE);
+	    
+	    message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
+	    rm = message.get(500000, TimeUnit.MILLISECONDS);
+	    assertNull(rm.getException());
+	    		
+	    assertEquals(rowsPerBatch, rm.getResultsList().size());
+	    item = core.getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(reqMsg.getExecutionId()));
+	    		
+	    message = core.processCursorRequest(reqMsg.getExecutionId(), 9, rowsPerBatch);
+	    rm = message.get(500000, TimeUnit.MILLISECONDS);
+	    assertNull(rm.getException());
+	    assertEquals(rowsPerBatch, rm.getResultsList().size());
+	    //ensure that we are idle
+	    for (int i = 0; i < 10 && item.getThreadState() != ThreadState.IDLE; i++) {
+	    	Thread.sleep(100);
+	    }
+	    assertEquals(ThreadState.IDLE, item.getThreadState());
+	    assertEquals(item.resultsBuffer.getManagedRowCount(), 400); //should have the full results
     }
+    
     
     @Test public void testBufferReuse() throws Exception {
     	//the sql should return 100 rows

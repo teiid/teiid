@@ -37,6 +37,7 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.TestAggregatePushdown;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.RealMetadataFactory;
@@ -427,7 +428,6 @@ public class TestAggregateProcessing {
 		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 		CommandContext cc = TestProcessor.createCommandContext();
 		BufferManagerImpl impl = BufferManagerFactory.getTestBufferManager(0, 2);
-		impl.setUseWeakReferences(false);
 		cc.setBufferManager(impl);
 		// Run query
 		helpProcess(plan, cc, dataManager, expected);
@@ -469,5 +469,26 @@ public class TestAggregateProcessing {
 		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 		helpProcess(plan, dataManager, expected);
 	}
+	
+	 	
+ 	@Test public void testAggregatePushdownWithFunction() throws Exception {
+        String sql = "select count(x.e2), nvl(x.e1, '') from pm1.g1 x makedep, pm2.g2 where x.e3 = pm2.g2.e3 group by nvl(x.e1, '')"; //$NON-NLS-1$
+ 
+        List[] expected = new List[] {
+        		Arrays.asList(1, "a"),
+		};
 
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+		dataManager.addData("SELECT g_0.e3 AS c_0 FROM pm2.g2 AS g_0 ORDER BY c_0", new List[] {
+				Arrays.asList(1.0),
+		});
+		dataManager.addData("SELECT v_0.c_2, v_0.c_1, COUNT(v_0.c_0) FROM (SELECT g_0.e2 AS c_0, ifnull(g_0.e1, '') AS c_1, g_0.e3 AS c_2 FROM pm1.g1 AS g_0 WHERE g_0.e3 IN (<dependent values>)) AS v_0 GROUP BY v_0.c_2, v_0.c_1", new List[] {
+				Arrays.asList(1.0, "a", 1)
+		});
+		BasicSourceCapabilities capabilities = TestAggregatePushdown.getAggregateCapabilities();
+		capabilities.setFunctionSupport("ifnull", true);
+		CommandContext cc = createCommandContext();
+		ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(capabilities), cc);
+		helpProcess(plan, cc, dataManager, expected);
+	}	
 }

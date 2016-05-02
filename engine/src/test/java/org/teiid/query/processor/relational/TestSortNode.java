@@ -316,6 +316,21 @@ public class TestSortNode {
     	assertEquals(Arrays.asList(2), ts.nextTuple());
     }
     
+    @Test public void testDistinct() throws Exception {
+    	ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
+        es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        ElementSymbol es2 = new ElementSymbol("e2"); //$NON-NLS-1$
+        es2.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
+        TupleBuffer tsid = bm.createTupleBuffer(Arrays.asList(es1, es2), "test", TupleSourceType.PROCESSOR); //$NON-NLS-1$
+        tsid.addTuple(Arrays.asList(1, 1));
+        tsid.addTuple(Arrays.asList(1, 2));
+        tsid.close();
+    	SortUtility su = new SortUtility(tsid.createIndexedTupleSource(), Arrays.asList(es1), Arrays.asList(Boolean.TRUE), Mode.DUP_REMOVE_SORT, bm, "test", tsid.getSchema()); //$NON-NLS-1$
+    	su.sort();
+    	assertFalse(su.isDistinct());
+    }
+    
     @Test public void testDupRemoveLowMemory() throws Exception {
     	ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);

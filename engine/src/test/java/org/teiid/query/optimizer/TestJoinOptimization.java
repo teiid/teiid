@@ -32,14 +32,16 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.metadata.Column;
-import org.teiid.metadata.Table;
 import org.teiid.metadata.KeyRecord.Type;
+import org.teiid.metadata.Table;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.rules.JoinUtil;
@@ -51,6 +53,7 @@ import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.translator.ExecutionFactory.SupportedJoinCriteria;
 import org.teiid.translator.SourceSystemFunctions;
 
 @SuppressWarnings("nls")
@@ -260,7 +263,21 @@ public class TestJoinOptimization {
             0       // UnionAll
         });
     }
-    
+
+    @Test public void testCopyCriteriaWithFunction3() throws TeiidComponentException, TeiidProcessingException {
+        String sql = "select bqt1.smalla.intkey, bqt1.smallb.intkey from bqt1.smalla, bqt1.smallb where bqt1.smalla.stringkey = bqt1.smallb.intkey and bqt1.smallb.intkey = 1"; //$NON-NLS-1$
+
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        
+        // Plan query
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), new String[] {"SELECT g_0.intkey, g_1.intkey FROM bqt1.smalla AS g_0, bqt1.smallb AS g_1 WHERE (g_0.stringkey = '1') AND (g_1.intkey = 1)"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+        
+        caps.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, SupportedJoinCriteria.THETA);
+        
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), new String[] {"SELECT g_0.intkey FROM bqt1.smallb AS g_0 WHERE g_0.intkey = 1", "SELECT g_0.intkey FROM bqt1.smalla AS g_0 WHERE g_0.stringkey = '1'"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+    } 
     /**
      * The intkey criteria should not be copied above to bqt1.smalla since the criteria is coming from the inner side in the join below 
      */

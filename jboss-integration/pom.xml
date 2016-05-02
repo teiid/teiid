@@ -2,7 +2,7 @@
   <parent>
     <artifactId>teiid-parent</artifactId>
     <groupId>org.jboss.teiid</groupId>
-    <version>7.7.2</version>
+    <version>7.7.12</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jboss.teiid</groupId>
@@ -132,6 +132,12 @@
         <artifactId>jboss-as-server</artifactId>
         <version>5.1.0.GA</version>
         <scope>test</scope>
+        <exclusions>
+                    <exclusion>
+                      <groupId>org.jboss.javaee</groupId>
+                      <artifactId>jboss-ejb-api-3.0_spec</artifactId>
+                    </exclusion>
+        </exclusions>
     </dependency>    
     
     <dependency>            

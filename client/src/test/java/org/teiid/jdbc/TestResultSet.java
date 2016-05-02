@@ -676,14 +676,33 @@ public class TestResultSet {
     }
  
     @Test public void testForwardOnly() throws Exception {
-        ResultSetImpl cs = helpExecuteQuery(400, 1000, ResultSet.TYPE_FORWARD_ONLY);
-        
+        ResultSetImpl cs = helpExecuteQuery(400, 1300, ResultSet.TYPE_FORWARD_ONLY);
+        int i = 0;
         while (cs.next()) {
+        	i++;
+        	if (i <= 1200) {
+        		assertNotNull(cs.getPrefetch());
+        	} else {
+        		assertNull(cs.getPrefetch());
+        	}
             cs.getObject(1);
         }
         
         assertTrue(cs.isAfterLast());
         cs.close();      
+    }
+    
+    @Test public void testForwardOnlyPrefetchSmallFetchSize() throws Exception {
+    	StatementImpl statement = createMockStatement(ResultSet.TYPE_FORWARD_ONLY);
+    	ResultSetImpl cs = TestAllResultsImpl.helpTestBatching(statement, 10, 128, 256, true);
+    	for (int i = 0; i < 256; i++) {
+    		cs.next();
+    		cs.getObject(1);
+    	}
+    	Mockito.verify(statement.getDQP(), Mockito.times(1)).processCursorRequest(TestAllResultsImpl.REQUEST_ID, 11, 10);
+    	assertFalse(cs.next());
+    	assertTrue(cs.isAfterLast());
+    	cs.close();      
     }
     
     @Test public void testOutputParameter() throws Exception {

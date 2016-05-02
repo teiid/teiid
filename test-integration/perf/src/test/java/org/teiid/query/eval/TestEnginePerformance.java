@@ -44,7 +44,9 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamWriter;
 
 import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.client.BatchSerializer;
 import org.teiid.common.buffer.BlockedException;
@@ -86,6 +88,7 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
+@FixMethodOrder(MethodSorters.JVM)
 @SuppressWarnings("nls")
 public class TestEnginePerformance {
 	
@@ -345,6 +348,10 @@ public class TestEnginePerformance {
 
 	@Test public void runInnerMergeJoin_1_100_100() throws Exception {
 		helpTestEquiJoin(bm, 100, 100, 10000, 1, new MergeJoinStrategy(SortOption.SORT, SortOption.SORT, false), JoinType.JOIN_INNER, 100);
+	}
+	
+	@Test public void runOuterMergeJoin_1_1000_1000() throws Exception {
+		helpTestEquiJoin(bm, 1000, 1000, 10000, 1, new MergeJoinStrategy(SortOption.SORT, SortOption.SORT, false), JoinType.JOIN_FULL_OUTER, 1000);
 	}
 	
 	@Test public void runInnerMergeJoin_4_4000_4000() throws Exception {

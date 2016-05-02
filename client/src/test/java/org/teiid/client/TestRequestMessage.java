@@ -22,27 +22,24 @@
 
 package org.teiid.client;
 
+import static org.junit.Assert.*;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.client.RequestMessage;
+import org.junit.Test;
 import org.teiid.client.RequestMessage.ShowPlan;
 import org.teiid.client.RequestMessage.StatementType;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.netty.handler.codec.serialization.CompactObjectInputStream;
 
-import junit.framework.TestCase;
 
-
-public class TestRequestMessage extends TestCase {
-
-    /**
-     * Constructor for TestRequestMessage.
-     * @param name
-     */
-    public TestRequestMessage(String name) {
-        super(name);
-    }
+@SuppressWarnings("nls")
+public class TestRequestMessage {
 
     public static RequestMessage example() {
         RequestMessage message = new RequestMessage();
@@ -68,10 +65,11 @@ public class TestRequestMessage extends TestCase {
         message.setXMLFormat("xMLFormat"); //$NON-NLS-1$
         message.setShowPlan(ShowPlan.ON);
         message.setRowLimit(1313);
+        message.setDelaySerialization(true);
         return message;
     }
 
-    public void testSerialize() throws Exception {
+    @Test public void testSerialize() throws Exception {
         RequestMessage copy = UnitTestUtil.helpSerialize(example());
 
         assertTrue(copy.isCallableStatement());
@@ -91,10 +89,10 @@ public class TestRequestMessage extends TestCase {
         assertEquals("xMLFormat", copy.getXMLFormat()); //$NON-NLS-1$
         assertEquals(ShowPlan.ON, copy.getShowPlan());
         assertEquals(1313, copy.getRowLimit());
-        
+        assertTrue(copy.isDelaySerialization());
     }
     
-    public void testInvalidTxnAutoWrap() {
+    @Test public void testInvalidTxnAutoWrap() {
 		RequestMessage rm = new RequestMessage();
 		try {
 			rm.setTxnAutoWrapMode("foo"); //$NON-NLS-1$
@@ -103,5 +101,12 @@ public class TestRequestMessage extends TestCase {
 			assertEquals("'FOO' is an invalid transaction autowrap mode.", e.getMessage()); //$NON-NLS-1$
 		}
 	}
+    
+    @Test public void test83() throws FileNotFoundException, IOException, ClassNotFoundException {
+    	CompactObjectInputStream ois = new CompactObjectInputStream(new FileInputStream(UnitTestUtil.getTestDataFile("req.ser")), RequestMessage.class.getClassLoader());
+    	RequestMessage rm = (RequestMessage) ois.readObject();
+    	ois.close();
+    	assertFalse(rm.isDelaySerialization());
+    }
 
 }

@@ -242,13 +242,17 @@ public class TestQueryRewriter {
     @Test public void testRewriteInCriteriaWithNoValues() throws Exception {
     	ElementSymbol e1 = new ElementSymbol("e1");
     	e1.setGroupSymbol(new GroupSymbol("g1"));
-        Criteria crit = new SetCriteria(e1, Collections.EMPTY_LIST); //$NON-NLS-1$
+        SetCriteria crit = new SetCriteria(e1, Collections.EMPTY_LIST); //$NON-NLS-1$
         
         Criteria actual = QueryRewriter.rewriteCriteria(crit, null, null, null);
         
-        IsNullCriteria inc = new IsNullCriteria(e1);
-        inc.setNegated(true);
-        assertEquals(inc, actual);
+        assertEquals(QueryRewriter.FALSE_CRITERIA, actual);
+         
+        crit.setNegated(true);
+        
+        actual = QueryRewriter.rewriteCriteria(crit, null, null, null);
+        
+        assertEquals(QueryRewriter.TRUE_CRITERIA, actual);
     }
         
     @Test public void testRewriteBetweenCriteria1() {
@@ -820,7 +824,7 @@ public class TestQueryRewriter {
     
     @Test public void testCompareSubqueryUnknown() {
         helpTestRewriteCommand("SELECT e1 FROM pm1.g1 WHERE null = SOME (SELECT e1 FROM pm1.g2)", //$NON-NLS-1$
-                                "SELECT e1 FROM pm1.g1 WHERE 1 = 0"); //$NON-NLS-1$
+                                "SELECT e1 FROM pm1.g1 WHERE null IN (SELECT e1 FROM pm1.g2 LIMIT 1)"); //$NON-NLS-1$
     }
 
     @Test public void testINClauseSubquery() {
@@ -1669,6 +1673,10 @@ public class TestQueryRewriter {
     @Test public void testRewriteCaseExpr1() {
         helpTestRewriteCriteria("case when 0=0 then 1 else 2 end = 1", "1 = 1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
+    
+    @Test public void testRewriteCaseExpr1a() {
+        helpTestRewriteCriteria("case when pm1.g1.e1 = 'a' then 3 when 0=0 then 1 when 1=1 then 4 else 2 end = 1", "CASE WHEN pm1.g1.e1 = 'a' THEN 3 WHEN 1 = 1 THEN 1 ELSE 2 END = 1"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
 
     // First WHEN always false, so rewrite as ELSE expression
     @Test public void testRewriteCaseExpr2() {
@@ -2410,6 +2418,18 @@ public class TestQueryRewriter {
     	helpTestRewriteCriteria("pm1.g1.e2 > 5 and pm1.g1.e2 < 2", "1 = 0");
     }
     
+    @Test public void testRewritePredicateOptimization8() throws Exception {
+    	helpTestRewriteCriteria("pm1.g1.e2 = 2 and pm1.g1.e2 > 1", "pm1.g1.e2 = 2");
+    }
+    
+    @Test public void testRewritePredicateOptimization8a() throws Exception {
+    	helpTestRewriteCriteria("pm1.g1.e2 in (0, 2) and pm1.g1.e2 > 1", "pm1.g1.e2 = 2");
+    }
+    
+    @Test public void testRewritePredicateOptimization9() throws Exception {
+    	helpTestRewriteCriteria("not(pm1.g1.e2 = 2 and pm1.g1.e2 = 3)", "(pm1.g1.e2 <> 2) OR (pm1.g1.e2 <> 3)");
+    }
+    
     @Test public void testRewritePredicateOptimizationOr() throws Exception {
     	helpTestRewriteCriteria("pm1.g1.e2 in (5, 6) or pm1.g1.e2 = 2", "pm1.g1.e2 IN (2, 5, 6)");
     }
@@ -2423,11 +2443,15 @@ public class TestQueryRewriter {
     }
     
     @Test public void testRewriteCritSubqueryFalse1() {
-        helpTestRewriteCriteria("not(pm1.g1.e1 > SOME (select 'a' from pm1.g1 where 1=0))", "pm1.g1.e1 IS NOT NULL"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("not(pm1.g1.e1 > SOME (select 'a' from pm1.g1 where 1=0))", "1 = 1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testRewriteCritSubqueryFalse2() {
-        helpTestRewriteCriteria("pm1.g1.e1 < ALL (select 'a' from pm1.g1 where 1=0)", "pm1.g1.e1 IS NOT NULL"); //$NON-NLS-1$ //$NON-NLS-2$
+         helpTestRewriteCriteria("pm1.g1.e1 < ALL (select 'a' from pm1.g1 where 1=0)", "1 = 1"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testRewriteCritSubqueryFalse3() {
+        helpTestRewriteCriteria("pm1.g1.e1 not in (select 'a' from pm1.g1 where 1=0)", "1 = 1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
 	@Test public void testUDFParse() throws Exception {     

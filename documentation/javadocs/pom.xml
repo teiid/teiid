@@ -2,7 +2,7 @@
   <parent>
     <groupId>org.jboss.teiid</groupId>
     <artifactId>documentation</artifactId>
-    <version>7.7.2</version>
+    <version>7.7.12</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>javadocs</artifactId>
@@ -214,6 +214,20 @@
       <groupId>org.olap4j</groupId>
       <artifactId>olap4j</artifactId>
       <version>0.9.8.343</version>
+      <exclusions>
+          <exclusion>
+               <groupId>javacup</groupId>
+              <artifactId>javacup</artifactId>
+          </exclusion>
+         <exclusion>
+              <groupId>retroweaver</groupId>
+              <artifactId>retroweaver</artifactId>
+         </exclusion>
+          <exclusion>
+              <groupId>retroweaver</groupId>
+              <artifactId>retroweaver-rt</artifactId>
+          </exclusion>
+       </exclusions>
     </dependency>
     <dependency>
       <groupId>log4j</groupId>
@@ -351,6 +365,12 @@
       <groupId>org.jboss.jbossas</groupId>
       <artifactId>jboss-as-server</artifactId>
       <version>5.1.0.GA</version>
+      <exclusions>
+      	<exclusion>
+        	<groupId>org.jboss.javaee</groupId>
+            <artifactId>jboss-ejb-api-3.0_spec</artifactId>
+        </exclusion>
+      </exclusions>                    
     </dependency>
     <dependency>
       <groupId>org.jboss.jbossas</groupId>
@@ -453,13 +473,13 @@
   <properties>
     <org.jboss.jopr.as5.version>1.2.0.GA</org.jboss.jopr.as5.version>
     <mysql.connector.version>5.1.5</mysql.connector.version>
-    <org.rhq.version>1.3.0.GA</org.rhq.version>
+    <org.rhq.version>4.4.0</org.rhq.version>
     <postgresql.version>8.4-702.jdbc4</postgresql.version>
     <derby.version>10.2.1.6</derby.version>
     <teiid.version>${project.version}</teiid.version>
     <site.url>http://www.jboss.org/teiid</site.url>
     <ant.version>1.7.0</ant.version>
     <apache.ant.version>1.7.0</apache.ant.version>
-    <jopr.jboss.as5.plugin.version>1.4.0.B01</jopr.jboss.as5.plugin.version>
+    <jopr.jboss.as5.plugin.version>4.4.0</jopr.jboss.as5.plugin.version>
   </properties>
 </project>

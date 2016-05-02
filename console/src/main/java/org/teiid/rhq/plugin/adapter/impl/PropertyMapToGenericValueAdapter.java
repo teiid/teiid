@@ -21,6 +21,9 @@
  */
 package org.teiid.rhq.plugin.adapter.impl;
 
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.managed.api.ManagedObject;
@@ -84,31 +87,49 @@ public class PropertyMapToGenericValueAdapter extends AbstractPropertyMapAdapter
         }
     }
 
-    public MetaValue convertToMetaValue(PropertyMap propMap, PropertyDefinitionMap propDefMap, MetaType metaType)
+    public MetaValue convertToMetaValue(PropertyMap propMap, PropertyDefinitionMap propertyDefinitionMap, MetaType metaType)
     {
         //GenericMetaType genericMetaType = (GenericMetaType)metaType;
-        ManagedObjectImpl managedObject = new ManagedObjectImpl(propDefMap.getName());
-        for (PropertyDefinition mapMemberPropDef : propDefMap.getPropertyDefinitions().values())
-        {
-            ManagedPropertyImpl managedProp = new ManagedPropertyImpl(mapMemberPropDef.getName());
-            MetaType managedPropMetaType = ProfileServiceUtil.convertPropertyDefinitionToMetaType(mapMemberPropDef);
+        ManagedObjectImpl managedObject = new ManagedObjectImpl(propertyDefinitionMap.getName());
+      //Need to handle RHQ 4.4 and 4.2. Return types changed for PropertyDefinitionMap.getPropertyDefinitions()
+        //so we need to check types.
+        Object object = ((PropertyDefinitionMap) propertyDefinitionMap).getPropertyDefinitions();
+        Iterable<PropertyDefinition> propDefIter = null;
+        List<PropertyDefinition> propDefList = null;
+        
+        if (object instanceof Map){
+        	propDefIter = (Iterable<PropertyDefinition>) ((Map)object).values().iterator();
+        }else{
+        	propDefList =  (List<PropertyDefinition>)object;
+        }
+	
+		for  (PropertyDefinition definition : propDefIter != null?propDefIter:propDefList) {
+            ManagedPropertyImpl managedProp = new ManagedPropertyImpl(definition.getName());
+            MetaType managedPropMetaType = ProfileServiceUtil.convertPropertyDefinitionToMetaType(definition);
             managedProp.setMetaType(managedPropMetaType);
             managedProp.setManagedObject(managedObject);
             managedObject.getProperties().put(managedProp.getName(), managedProp);
         }
-        GenericValue genericValue = new GenericValueSupport(new GenericMetaType(propDefMap.getName(),
-                propDefMap.getDescription()), managedObject);
-        populateMetaValueFromProperty(propMap, genericValue, propDefMap);
+        GenericValue genericValue = new GenericValueSupport(new GenericMetaType(propertyDefinitionMap.getName(),
+        		propertyDefinitionMap.getDescription()), managedObject);
+        populateMetaValueFromProperty(propMap, genericValue, propertyDefinitionMap);
         return genericValue;
     }
 
-    public void populatePropertyFromMetaValue(PropertyMap propMap, MetaValue metaValue, PropertyDefinitionMap propDefMap)
+    public void populatePropertyFromMetaValue(PropertyMap propMap, MetaValue metaValue, PropertyDefinitionMap propertyDefinitionMap)
     {
         GenericValue genericValue = (GenericValue)metaValue;
         ManagedObject managedObject = (ManagedObject)genericValue.getValue();
-        for (String propName : propDefMap.getPropertyDefinitions().keySet())
-        {
-            ManagedProperty managedProp = managedObject.getProperty(propName);
+    	//Need to handle RHQ 4.4 and 4.2. Return types changed for PropertyDefinitionMap.getPropertyDefinitions()
+        //so we need to check types.
+        Object object = ((PropertyDefinitionMap) propertyDefinitionMap).getPropertyDefinitions();
+        Iterable<PropertyDefinition> propDefIter = null;
+      
+        //Need to handle RHQ 4.4 and 4.2.
+        List<PropertyDefinition> propDefList =ProfileServiceUtil.reflectivelyInvokeGetMapMethod(propertyDefinitionMap);
+      
+        for  (PropertyDefinition definition : propDefList) {
+            ManagedProperty managedProp = managedObject.getProperty(definition.getName());
             if (managedProp != null)
             {
                 MetaType metaType = managedProp.getMetaType();
@@ -129,7 +150,7 @@ public class PropertyMapToGenericValueAdapter extends AbstractPropertyMapAdapter
                             + "] is not a SimpleValue or EnumValue - unsupported!");
                     continue;
                 }
-                propMap.put(new PropertySimple(propName, value));
+                propMap.put(new PropertySimple(definition.getName(), value));
             }
         }
     }

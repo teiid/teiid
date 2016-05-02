@@ -69,9 +69,20 @@ public class ElementSymbol extends SingleElementSymbol {
         super(name);		
     }
     
-    public ElementSymbol(String shortName, String shortCanonical, GroupSymbol group) {
-    	super(shortName, shortCanonical);
+    public ElementSymbol(String shortName, GroupSymbol group) {
+    	this(shortName, group, null);
+    }
+    
+    public ElementSymbol(String elementName, String canonicalString,
+			GroupSymbol group) {
+    	this(elementName,group,null);
+	}
+    
+    public ElementSymbol(String shortName, GroupSymbol group, Class<?> type) {
+    	super(shortName);
+    	this.setShortName(shortName);
     	this.groupSymbol = group;
+    	this.type = type;
     }
     
     /**
@@ -83,8 +94,8 @@ public class ElementSymbol extends SingleElementSymbol {
         super(name);
 		setDisplayFullyQualified(displayFullyQualified);
     }
-    
-    @Override
+
+	@Override
     public String getName() {
     	if (this.groupSymbol != null) {
     		return this.groupSymbol.getName() + SingleElementSymbol.SEPARATOR + this.getShortName();

@@ -121,7 +121,7 @@ public class TestTPCR extends BaseQueryTest {
             new List[] { Arrays.asList(new Object[] { new Long(5), "Bill", "101 Fake St.", "392839283", "21.12" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                          Arrays.asList(new Object[] { new Long(6), "Stu", "102 Fake St.", "385729385", "51.50" } )}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
-        dataMgr.addData("SELECT g_0.C_CUSTKEY AS c_0, g_0.C_NAME AS c_1, g_0.C_ADDRESS AS c_2, g_0.C_PHONE AS c_3, g_0.C_ACCTBAL AS c_4 FROM TPCR_Ora.CUSTOMER AS g_0 WHERE g_0.C_ACCTBAL > 50 ORDER BY c_0 NULLS FIRST", //$NON-NLS-1$
+        dataMgr.addData("SELECT g_0.C_CUSTKEY AS c_0, g_0.C_NAME AS c_1, g_0.C_ADDRESS AS c_2, g_0.C_PHONE AS c_3, g_0.C_ACCTBAL AS c_4 FROM TPCR_Ora.CUSTOMER AS g_0 WHERE g_0.C_ACCTBAL > 50 ORDER BY c_0", //$NON-NLS-1$
                         oracleExpected);
 
         List[] sqlServerExpected =
@@ -161,7 +161,7 @@ public class TestTPCR extends BaseQueryTest {
             new List[] { Arrays.asList(new Object[] { new Long(5), "Bill", "101 Fake St.", "392839283", "51.12" } ), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                          Arrays.asList(new Object[] { new Long(6), "Stu", "102 Fake St.", "385729385", "51.50" } )}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
-        dataMgr.addData("SELECT g_0.C_CUSTKEY AS c_0, g_0.C_NAME AS c_1, g_0.C_ADDRESS AS c_2, g_0.C_PHONE AS c_3, g_0.C_ACCTBAL AS c_4 FROM TPCR_Ora.CUSTOMER AS g_0 WHERE g_0.C_ACCTBAL > 50 ORDER BY c_0 NULLS FIRST", //$NON-NLS-1$
+        dataMgr.addData("SELECT g_0.C_CUSTKEY AS c_0, g_0.C_NAME AS c_1, g_0.C_ADDRESS AS c_2, g_0.C_PHONE AS c_3, g_0.C_ACCTBAL AS c_4 FROM TPCR_Ora.CUSTOMER AS g_0 WHERE g_0.C_ACCTBAL > 50 ORDER BY c_0", //$NON-NLS-1$
                         oracleExpected);
 
         List[] sqlServerExpected =

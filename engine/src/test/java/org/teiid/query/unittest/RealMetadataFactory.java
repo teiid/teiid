@@ -27,6 +27,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -307,6 +308,9 @@ public class RealMetadataFactory {
         QueryNode vspqn9 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN if (p1 = 1) begin\n r = 1; end\n p2 = 10; select 'hello'; END"); //$NON-NLS-1$ //$NON-NLS-2$
         Procedure vsp9 = createVirtualProcedure("TEIIDSP9", mmspTest1, Arrays.asList(vsp9p1, vsp9p2, vsp9p3), vspqn9); //$NON-NLS-1$
         vsp9.setResultSet(vsprs9);
+        
+        createStoredProcedure("sp_noreturn", pm4, Collections.EMPTY_LIST); //$NON-NLS-1$ //$NON-NLS-2$
+        
         
         // this is for the source added function
         bqt1.addFunction(new FunctionMethod("reverse", "reverse", "misc", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 

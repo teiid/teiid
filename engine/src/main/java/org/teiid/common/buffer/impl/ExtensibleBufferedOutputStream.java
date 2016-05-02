@@ -39,6 +39,11 @@ public abstract class ExtensibleBufferedOutputStream extends OutputStream {
     	ensureBuffer();
 		buf.put((byte)b);
     }
+    
+    public void write(byte b) throws IOException {
+    	ensureBuffer();
+		buf.put(b);
+    }
 
 	private void ensureBuffer() throws IOException {
 		if (buf != null) {

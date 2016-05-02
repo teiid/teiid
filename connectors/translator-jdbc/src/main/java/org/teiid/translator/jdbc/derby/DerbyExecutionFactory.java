@@ -23,12 +23,18 @@
 package org.teiid.translator.jdbc.derby;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.LanguageObject;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.EscapeSyntaxModifier;
+import org.teiid.translator.jdbc.Version;
 import org.teiid.translator.jdbc.db2.BaseDB2ExecutionFactory;
 import org.teiid.translator.jdbc.oracle.LeftOrRightFunctionModifier;
 
@@ -38,11 +44,11 @@ import org.teiid.translator.jdbc.oracle.LeftOrRightFunctionModifier;
 @Translator(name="derby", description="A translator for Apache Derby Database")
 public class DerbyExecutionFactory extends BaseDB2ExecutionFactory {
 	
-	public static final String TEN_1 = "10.1"; //$NON-NLS-1$
-	public static final String TEN_2 = "10.2"; //$NON-NLS-1$
-	public static final String TEN_3 = "10.3"; //$NON-NLS-1$
-	public static final String TEN_4 = "10.4"; //$NON-NLS-1$
-	public static final String TEN_5 = "10.5"; //$NON-NLS-1$
+ 	public static final Version TEN_1 = Version.getVersion("10.1"); //$NON-NLS-1$
+ 	public static final Version TEN_2 = Version.getVersion("10.2"); //$NON-NLS-1$
+ 	public static final Version TEN_3 = Version.getVersion("10.3"); //$NON-NLS-1$
+ 	public static final Version TEN_4 = Version.getVersion("10.4"); //$NON-NLS-1$
+ 	public static final Version TEN_5 = Version.getVersion("10.5"); //$NON-NLS-1$
 	
 	public DerbyExecutionFactory() {
 		setSupportsFullOuterJoins(false); //Derby supports only left and right outer joins.
@@ -68,7 +74,7 @@ public class DerbyExecutionFactory extends BaseDB2ExecutionFactory {
     
     @Override
     public boolean supportsOrderByNullOrdering() {
-    	return getDatabaseVersion().compareTo(TEN_4) >= 0;
+    	return getVersion().compareTo(TEN_4) >= 0;
     }
     
     @Override
@@ -77,12 +83,12 @@ public class DerbyExecutionFactory extends BaseDB2ExecutionFactory {
         supportedFunctions.addAll(super.getDefaultSupportedFunctions());
 
         supportedFunctions.add("ABS"); //$NON-NLS-1$
-        if (getDatabaseVersion().compareTo(TEN_2) >= 0) {
+        if (getVersion().compareTo(TEN_2) >= 0) {
         	supportedFunctions.add("ACOS"); //$NON-NLS-1$
         	supportedFunctions.add("ASIN"); //$NON-NLS-1$
         	supportedFunctions.add("ATAN"); //$NON-NLS-1$
         }
-        if (getDatabaseVersion().compareTo(TEN_4) >= 0) {
+        if (getVersion().compareTo(TEN_4) >= 0) {
         	supportedFunctions.add("ATAN2"); //$NON-NLS-1$
         }
         // These are executed within the server and never pushed down
@@ -90,7 +96,7 @@ public class DerbyExecutionFactory extends BaseDB2ExecutionFactory {
         //supportedFunctions.add("BITNOT"); //$NON-NLS-1$
         //supportedFunctions.add("BITOR"); //$NON-NLS-1$
         //supportedFunctions.add("BITXOR"); //$NON-NLS-1$
-        if (getDatabaseVersion().compareTo(TEN_2) >= 0) {
+        if (getVersion().compareTo(TEN_2) >= 0) {
 	        supportedFunctions.add("CEILING"); //$NON-NLS-1$
 	        supportedFunctions.add("COS"); //$NON-NLS-1$
 	        supportedFunctions.add("COT"); //$NON-NLS-1$
@@ -101,12 +107,12 @@ public class DerbyExecutionFactory extends BaseDB2ExecutionFactory {
 	        supportedFunctions.add("LOG10"); //$NON-NLS-1$
         }
         supportedFunctions.add("MOD"); //$NON-NLS-1$
-        if (getDatabaseVersion().compareTo(TEN_2) >= 0) {
+        if (getVersion().compareTo(TEN_2) >= 0) {
         	supportedFunctions.add("PI"); //$NON-NLS-1$
         	//supportedFunctions.add("POWER"); //$NON-NLS-1$
         	supportedFunctions.add("RADIANS"); //$NON-NLS-1$
         	//supportedFunctions.add("ROUND"); //$NON-NLS-1$
-        	if (getDatabaseVersion().compareTo(TEN_4) >= 0) {
+        	if (getVersion().compareTo(TEN_4) >= 0) {
         		supportedFunctions.add("SIGN"); //$NON-NLS-1$
         	}
         	supportedFunctions.add("SIN"); //$NON-NLS-1$
@@ -131,7 +137,7 @@ public class DerbyExecutionFactory extends BaseDB2ExecutionFactory {
         //supportedFunctions.add("RPAD"); //$NON-NLS-1$
         supportedFunctions.add("RTRIM"); //$NON-NLS-1$
         supportedFunctions.add("SUBSTRING"); //$NON-NLS-1$
-        if (getDatabaseVersion().compareTo(TEN_3) >= 0) {
+        if (getVersion().compareTo(TEN_3) >= 0) {
         	supportedFunctions.add(SourceSystemFunctions.TRIM);
         }
         supportedFunctions.add("UCASE"); //$NON-NLS-1$
@@ -182,7 +188,22 @@ public class DerbyExecutionFactory extends BaseDB2ExecutionFactory {
     
     @Override
     public boolean supportsRowLimit() {
-    	return this.getDatabaseVersion().compareTo(TEN_5) >= 0;
+    	return this.getVersion().compareTo(TEN_5) >= 0;
     }
-    
+	
+	@Override
+	public List<?> translate(LanguageObject obj, ExecutionContext context) {
+		if (obj instanceof DerivedColumn) {
+			DerivedColumn selectSymbol = (DerivedColumn)obj;
+			
+			if (selectSymbol.getExpression().getType() == TypeFacility.RUNTIME_TYPES.XML) {
+				if (selectSymbol.getAlias() == null) {
+					return Arrays.asList("XMLSERIALIZE(", selectSymbol.getExpression(), " AS CLOB)"); //$NON-NLS-1$//$NON-NLS-2$
+				}
+				//we're assuming that alias quoting shouldn't be needed
+				return Arrays.asList("XMLSERIALIZE(", selectSymbol.getExpression(), " AS CLOB) AS ", selectSymbol.getAlias());  //$NON-NLS-1$//$NON-NLS-2$
+			}
+		}
+		return super.translate(obj, context);
+	}    
 }

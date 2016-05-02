@@ -212,7 +212,7 @@ public class MergeJoinStrategy extends JoinStrategy {
                         outerMatched = false;
                         innerState.reset();
                         loopState = LoopState.LOAD_INNER;
-                    } else if (matchState == MatchState.MATCH_LEFT && joinNode.getJoinType() == JoinType.JOIN_FULL_OUTER) {
+                    } else if (matchState == MatchState.MATCH_LEFT && joinNode.getJoinType() == JoinType.JOIN_FULL_OUTER && this.joinNode.getJoinCriteria() != null) {
                         // on a full outer join, we need to determine the outer right values as well
                         matchState = MatchState.MATCH_RIGHT;
                         outerState = this.rightSource;
@@ -342,10 +342,10 @@ public class MergeJoinStrategy extends JoinStrategy {
     @Override
     protected void loadRight() throws TeiidComponentException,
     		TeiidProcessingException {
-		this.rightSource.sort(this.processingSortRight);
-		if (this.joinNode.getJoinType() != JoinType.JOIN_FULL_OUTER) {
+    	if (this.joinNode.getJoinType() != JoinType.JOIN_FULL_OUTER || this.joinNode.getJoinCriteria() == null) {
 			this.rightSource.setImplicitBuffer(ImplicitBuffer.ON_MARK);
 		}
+    	this.rightSource.sort(this.processingSortRight);
 	}
         
     public void setProcessingSortRight(boolean processingSortRight) {

@@ -32,8 +32,7 @@ import org.rhq.core.domain.configuration.PropertyMap;
 import org.rhq.core.domain.configuration.PropertySimple;
 import org.rhq.core.domain.configuration.definition.PropertyDefinition;
 import org.rhq.core.domain.configuration.definition.PropertyDefinitionList;
-import org.rhq.core.domain.configuration.definition.PropertyDefinitionMap;
-import org.rhq.core.domain.configuration.definition.PropertyDefinitionSimple;
+import org.teiid.rhq.plugin.util.ProfileServiceUtil;
 
 
 public class ExecutedResourceConfigurationResultImpl implements ExecutedResult {
@@ -122,16 +121,11 @@ public class ExecutedResourceConfigurationResultImpl implements ExecutedResult {
 
 		PropertyDefinition propertyDefinitionMap = ((PropertyDefinitionList) listPropDefinition)
 				.getMemberDefinition();
-		Map simpleProperties = ((PropertyDefinitionMap) propertyDefinitionMap)
-				.getPropertyDefinitions();
-		Iterator simplePropertiesIter = simpleProperties.values()
-				.iterator();
-
-		while (simplePropertiesIter.hasNext()) {
-			PropertyDefinition simpleProp = (PropertyDefinition) simplePropertiesIter
-					.next();
-			String fieldName = ((PropertyDefinitionSimple) simpleProp)
-					.getName();
+		  //Need to handle RHQ 4.4 and 4.2.
+        List<PropertyDefinition> propDefList =ProfileServiceUtil.reflectivelyInvokeGetMapMethod(propertyDefinitionMap);
+      
+		for  (PropertyDefinition definition : propDefList) {
+			String fieldName = definition.getName();
 			fieldNameList.add(fieldName);
 		}
 				

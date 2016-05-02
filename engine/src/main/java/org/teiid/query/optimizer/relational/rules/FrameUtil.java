@@ -311,7 +311,7 @@ public class FrameUtil {
             return expression;
         }
         
-        if(expression instanceof SingleElementSymbol) { 
+        if(expression instanceof Expression) { 
             Expression mappedSymbol = (Expression) symbolMap.get(expression);
             if (mappedSymbol != null) {
                 return mappedSymbol;
@@ -515,7 +515,7 @@ public class FrameUtil {
     }
     
     static boolean isProcedure(PlanNode projectNode) {
-        if(projectNode.getType() == NodeConstants.Types.PROJECT && projectNode.getChildCount() > 0) {
+        if(projectNode != null && projectNode.getType() == NodeConstants.Types.PROJECT && projectNode.getChildCount() > 0) {
             PlanNode accessNode = projectNode.getFirstChild();
             Command command = getNonQueryCommand(accessNode);
             return command instanceof StoredProcedure;

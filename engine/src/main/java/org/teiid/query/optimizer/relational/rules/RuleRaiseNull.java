@@ -36,6 +36,7 @@ import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
@@ -220,13 +221,21 @@ public final class RuleRaiseNull implements OptimizerRule {
 			case NodeConstants.Types.PROJECT: 
 			{
 				// check for project into
-				PlanNode upperProject = NodeEditor.findParent(parentNode.getParent(), NodeConstants.Types.PROJECT);	
+				PlanNode upperProject = NodeEditor.findParent(parentNode.getParent(), NodeConstants.Types.PROJECT, NodeConstants.Types.SOURCE);	
 				
 				if (upperProject == null
 						|| upperProject.getProperty(NodeConstants.Info.INTO_GROUP) == null) {
 	                return raiseNullNode(rootNode, parentNode, nullNode, nodes);
 				}
 				break;
+			}
+			case NodeConstants.Types.SOURCE:
+			{
+				PlanNode upperProject = parentNode.getParent();
+				if (upperProject != null && upperProject.getType() == NodeConstants.Types.PROJECT && upperProject.hasProperty(Info.INTO_GROUP)) {
+					break; //an insert plan
+				}
+                return raiseNullNode(rootNode, parentNode, nullNode, nodes);
 			}
             default:
             {

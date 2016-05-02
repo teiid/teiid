@@ -330,7 +330,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 					ElementSymbol key = new ElementSymbol("rowId"); //$NON-NLS-1$
 					key.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 					ElementSymbol value = new ElementSymbol("partitionId"); //$NON-NLS-1$
-					key.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+					value.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 					List<ElementSymbol> elements = Arrays.asList(key, value);
 					partitionMapping[specIndex] = this.getBufferManager().createSTree(elements, this.getConnectionID(), 1);
 				}

@@ -871,7 +871,16 @@ public class TestOracleTranslator {
     
     @Test public void testCallWithResultSet() throws Exception {
         String input = "call spTest5(1)"; //$NON-NLS-1$
-        String output = "{ ?= call spTest5(?)}";  //$NON-NLS-1$
+        String output = "{?= call spTest5(?)}";  //$NON-NLS-1$
+
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+                input, output, 
+                TRANSLATOR);
+    }
+    
+    @Test public void testCallWithoutResultSet() throws Exception {
+        String input = "call sp_noreturn()"; //$NON-NLS-1$
+        String output = "{call sp_noreturn()}";  //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
@@ -886,7 +895,7 @@ public class TestOracleTranslator {
 		ResultSet rs = Mockito.mock(ResultSet.class);
 		Mockito.stub(cs.getObject(1)).toReturn(rs);
 		Mockito.stub(cs.getInt(3)).toReturn(4);
-		Mockito.stub(connection.prepareCall("{ ?= call spTest8(?,?)}")).toReturn(cs); //$NON-NLS-1$
+		Mockito.stub(connection.prepareCall("{?= call spTest8(?,?)}")).toReturn(cs); //$NON-NLS-1$
 		OracleExecutionFactory ef = new OracleExecutionFactory();
 		
 		JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class),  ef);
@@ -896,12 +905,20 @@ public class TestOracleTranslator {
 		Mockito.verify(cs, Mockito.times(1)).getObject(1);
 	}
 	
-	@Test public void testNativeQuery() throws Exception {
+	@Test (expected=IllegalArgumentException.class)public void testNativeQueryWithNoCorrelationName() throws Exception {
 		String input = "SELECT (DoubleNum * 1.0) FROM x"; //$NON-NLS-1$
         String output = "SELECT (x.DoubleNum * 1.0) FROM (select c from d) x"; //$NON-NLS-1$
 
         QueryMetadataInterface metadata = getOracleSpecificMetadata();
 
+        helpTestVisitor(metadata, input, EMPTY_CONTEXT, null, output);
+	}
+	
+	@Test public void testNativeQuery() throws Exception {
+		String input = "SELECT (DoubleNum * 1.0) FROM x as y"; //$NON-NLS-1$
+		String output = "SELECT (y.DoubleNum * 1.0) FROM (select c from d) y"; //$NON-NLS-1$
+		
+		QueryMetadataInterface metadata = getOracleSpecificMetadata();
         helpTestVisitor(metadata, input, EMPTY_CONTEXT, null, output);
 	}
 	
@@ -954,6 +971,20 @@ public class TestOracleTranslator {
 		CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
         Command obj = commandBuilder.getCommand(input, true, true);
         TranslationHelper.helpTestVisitor(output, TRANSLATOR, obj);
+    }
+    
+    @Test public void testWith() throws Exception {
+ 	String input = "with a (col) as (select intkey from bqt1.smallb) select intkey, col from bqt1.smalla, a where intkey = 5"; //$NON-NLS-1$
+ 	String output = "WITH a AS (SELECT SmallB.IntKey AS col FROM SmallB) SELECT SmallA.IntKey, a.col FROM SmallA, a WHERE SmallA.IntKey = 5"; //$NON-NLS-1$
+ 	             
+ 	TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, null, input, output, TRANSLATOR);
+    }
+    
+    @Test public void testVersionedCapabilities() throws Exception {
+     	OracleExecutionFactory oef = new OracleExecutionFactory();
+     	oef.setDatabaseVersion("10.0");
+     	oef.start();
+     	assertTrue(oef.supportsCommonTableExpressions());
     }
 
 }

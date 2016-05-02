@@ -22,10 +22,12 @@
 
 package org.teiid.client;
 
+import java.io.EOFException;
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.io.OptionalDataException;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
@@ -90,6 +92,8 @@ public class RequestMessage implements Externalizable {
     private int transactionIsolation;
     private boolean noExec;
     private transient boolean sync;
+
+	private boolean delaySerialization;
     
     public RequestMessage() {
     }
@@ -378,6 +382,13 @@ public class RequestMessage implements Externalizable {
 		this.executionId = in.readLong();
 		this.transactionIsolation = in.readInt();
 		this.noExec = in.readBoolean();
+ 		try {
+			byte options = in.readByte();
+			//8.4 property
+			this.delaySerialization = (options & 2) == 2;
+ 		} catch (OptionalDataException e) {
+ 		} catch (EOFException e) {
+ 		}
 	}
 	
 	@Override
@@ -402,6 +413,19 @@ public class RequestMessage implements Externalizable {
 		out.writeLong(executionId);
 		out.writeInt(transactionIsolation);
 		out.writeBoolean(noExec);
+		byte options = 0;
+		if (delaySerialization) {
+			options |= 2;
+		}
+		out.writeByte(options);
+	}
+	
+	public boolean isDelaySerialization() {
+		return delaySerialization;
+	}
+	
+	public void setDelaySerialization(boolean delaySerialization) {
+		this.delaySerialization = delaySerialization;
 	}
 	
 }

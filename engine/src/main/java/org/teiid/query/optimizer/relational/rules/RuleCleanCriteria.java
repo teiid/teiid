@@ -54,7 +54,7 @@ public final class RuleCleanCriteria implements OptimizerRule {
 
         boolean pushRaiseNull = false;
         
-        pushRaiseNull = clean(plan);
+        pushRaiseNull = clean(plan, !rules.contains(RuleConstants.COPY_CRITERIA));
         
         if (pushRaiseNull) {
             rules.push(RuleConstants.RAISE_NULL);
@@ -63,24 +63,25 @@ public final class RuleCleanCriteria implements OptimizerRule {
         return plan;        
     }
 
-	private boolean clean(PlanNode plan)
+	private boolean clean(PlanNode plan, boolean removeAllPhantom)
 			throws TeiidComponentException {
 		boolean pushRaiseNull = false;
 		plan.setProperty(Info.OUTPUT_COLS, null);
         for (PlanNode node : plan.getChildren()) {
-        	pushRaiseNull |= clean(node);
+        	pushRaiseNull |= clean(node, removeAllPhantom);
         }
         if (plan.getType() == NodeConstants.Types.SELECT) {
-        	pushRaiseNull |= cleanCriteria(plan);
+        	pushRaiseNull |= cleanCriteria(plan, removeAllPhantom);
         }
 		return pushRaiseNull;
 	}
     
-    boolean cleanCriteria(PlanNode critNode) throws TeiidComponentException {
-        if (critNode.hasBooleanProperty(NodeConstants.Info.IS_PHANTOM)) {
-            NodeEditor.removeChildNode(critNode.getParent(), critNode);
-            return false;
-        }
+    boolean cleanCriteria(PlanNode critNode, boolean removeAllPhantom) throws TeiidComponentException {
+        if (critNode.hasBooleanProperty(NodeConstants.Info.IS_PHANTOM) 
+        		&& (removeAllPhantom || critNode.hasBooleanProperty(Info.IS_COPIED))) {
+	        NodeEditor.removeChildNode(critNode.getParent(), critNode);
+	        return false;
+         }
         
         //TODO: remove dependent set criteria that has not been meaningfully pushed from its parent join
         

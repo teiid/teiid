@@ -38,6 +38,7 @@ import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.processor.relational.ProjectNode;
 import org.teiid.query.processor.relational.WindowFunctionProjectNode;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.translator.ExecutionFactory.NullOrder;
 
 @SuppressWarnings({"nls", "unchecked"})
 public class TestWindowFunctions {
@@ -99,6 +100,7 @@ public class TestWindowFunctions {
     	caps.setCapabilitySupport(Capability.ELEMENTARY_OLAP, true);
     	caps.setCapabilitySupport(Capability.WINDOW_FUNCTION_ORDER_BY_AGGREGATES, true);
     	caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
+    	caps.setSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER, NullOrder.UNKNOWN);
         ProcessorPlan plan = TestOptimizer.helpPlan("select max(e1) over (order by e1 nulls first) as y from pm1.g1", //$NON-NLS-1$
                                       RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
                                       new String[] {
@@ -146,6 +148,22 @@ public class TestWindowFunctions {
         		Arrays.asList("a", 3, 2, 1),
         		Arrays.asList("c", 6, 6, 3),
         		Arrays.asList("b", 5, 5, 2),
+        		Arrays.asList("a", 4, 2, 1),
+        };
+    	
+    	FakeDataManager dataManager = new FakeDataManager();
+    	sampleData1(dataManager);
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+        
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testRankingView() throws Exception {
+    	String sql = "select * from (select e1, row_number() over (order by e1) as rn, rank() over (order by e1) as r, dense_rank() over (order by e1 nulls last) as dr from pm1.g1) as x where e1 = 'a'";
+        
+    	List<?>[] expected = new List[] {
+        		Arrays.asList("a", 2, 2, 1),
+        		Arrays.asList("a", 3, 2, 1),
         		Arrays.asList("a", 4, 2, 1),
         };
     	
@@ -301,5 +319,57 @@ public class TestWindowFunctions {
         helpProcess(plan, dataManager, expected);
     }
 
+    @Test public void testViewCriteria() throws Exception {
+    	BasicSourceCapabilities caps = getTypicalCapabilities();
+    	caps.setCapabilitySupport(Capability.ELEMENTARY_OLAP, true);
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT * FROM (select e1, e3, count(distinct e1) over (partition by e3) as r from pm1.g1) as x where x.e1 = 'a'", //$NON-NLS-1$
+                                      RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
+                                      new String[] {
+                                          "SELECT g_0.e1, g_0.e3 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    
+        FakeDataManager dataManager = new FakeDataManager();
+    	sampleData1(dataManager);
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList("a", Boolean.FALSE, 2),
+        		Arrays.asList("a", Boolean.TRUE, 2),
+        		Arrays.asList("a", Boolean.FALSE, 2),
+        }; 
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testViewCriteriaPushdown() throws Exception {
+    	BasicSourceCapabilities caps = getTypicalCapabilities();
+    	caps.setCapabilitySupport(Capability.ELEMENTARY_OLAP, true);
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT * FROM (select e1, e3, count(distinct e1) over (partition by e3) as r from pm1.g1) as x where x.e3 = false", //$NON-NLS-1$
+                                      RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
+                                      new String[] {
+                                          "SELECT g_0.e1, g_0.e3 FROM pm1.g1 AS g_0 WHERE g_0.e3 = FALSE"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    
+        FakeDataManager dataManager = new FakeDataManager();
+    	sampleData1(dataManager);
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList("a", Boolean.FALSE, 2),
+        		Arrays.asList(null, Boolean.FALSE, 2),
+        		Arrays.asList("b", Boolean.FALSE, 2),
+        		Arrays.asList("a", Boolean.FALSE, 2),
+        }; 
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testViewLimit() throws Exception {
+    	BasicSourceCapabilities caps = getTypicalCapabilities();
+    	caps.setCapabilitySupport(Capability.ELEMENTARY_OLAP, true);
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT * FROM (select e1, e3, count(distinct e1) over (partition by e3) as r from pm1.g1) as x limit 1", //$NON-NLS-1$
+                                      RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
+                                      new String[] {
+                                          "SELECT g_0.e1, g_0.e3 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    
+        FakeDataManager dataManager = new FakeDataManager();
+    	sampleData1(dataManager);
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList("a", Boolean.FALSE, 2),
+        }; 
+        helpProcess(plan, dataManager, expected);
+    }
     
 }

@@ -22,6 +22,7 @@
 
 package org.teiid.client;
 
+import java.io.ByteArrayInputStream;
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -35,7 +36,11 @@ import org.teiid.client.plan.Annotation;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.client.util.ExceptionHolder;
 import org.teiid.core.TeiidException;
+import org.teiid.core.util.AccessibleByteArrayOutputStream;
 import org.teiid.core.util.ExternalizeUtil;
+import org.teiid.jdbc.TeiidSQLException;
+import org.teiid.netty.handler.codec.serialization.CompactObjectInputStream;
+import org.teiid.netty.handler.codec.serialization.CompactObjectOutputStream;
 
 
 /**
@@ -83,6 +88,9 @@ public class ResultsMessage implements Externalizable {
     private Collection<Annotation> annotations;
     
     private boolean isUpdateResult;
+    
+    private boolean delayDeserialization;
+    byte[] resultBytes;
 
     public ResultsMessage(){
     }
@@ -106,6 +114,21 @@ public class ResultsMessage implements Externalizable {
 	 */
 	public List<?>[] getResults() {
 		return results.toArray(new List[results.size()]);
+	}
+	
+	public void processResults() throws TeiidSQLException {
+		if (results == null && resultBytes != null) {
+			try {
+		        CompactObjectInputStream ois = new CompactObjectInputStream(new ByteArrayInputStream(resultBytes), ResultsMessage.class.getClassLoader());
+		        results = BatchSerializer.readBatch(ois, dataTypes, (byte)0);
+			} catch (IOException e) {
+				throw TeiidSQLException.create(e);
+			} catch (ClassNotFoundException e) {
+				throw TeiidSQLException.create(e);
+			} finally {
+				resultBytes = null;
+			}
+		}
 	}
 
     public void setResults(List<?>[] results) {
@@ -251,6 +274,14 @@ public class ResultsMessage implements Externalizable {
         if (holder != null) {
         	this.exception = (TeiidException)holder.getException();
         }
+        
+        //delayed deserialization
+        if (results == null && this.exception == null) {
+        	int length = in.readInt();
+            resultBytes = new byte[length];
+            in.readFully(resultBytes);
+        }
+        
         List<ExceptionHolder> holderList = (List<ExceptionHolder>)in.readObject();
         if (holderList != null) {
         	this.warnings = ExceptionHolder.toThrowables(holderList);
@@ -274,7 +305,11 @@ public class ResultsMessage implements Externalizable {
         ExternalizeUtil.writeArray(out, dataTypes);
 
         // Results data
-        BatchSerializer.writeBatch(out, dataTypes, results, (byte)0);
+        if (delayDeserialization) {
+        	BatchSerializer.writeBatch(out, dataTypes, null, (byte)0);
+        } else {
+          	BatchSerializer.writeBatch(out, dataTypes, results, (byte)0);
+        }
 
         // Plan descriptions
         out.writeObject(this.planDescription);
@@ -284,6 +319,16 @@ public class ResultsMessage implements Externalizable {
         } else {
         	out.writeObject(exception);
         }
+        
+        if (delayDeserialization && results != null) {
+            AccessibleByteArrayOutputStream baos = new AccessibleByteArrayOutputStream(1 << 13);
+            CompactObjectOutputStream oos = new CompactObjectOutputStream(baos);
+            BatchSerializer.writeBatch(oos, dataTypes, results, (byte)0);
+            oos.close();
+            out.writeInt(baos.getCount());
+            out.write(baos.getBuffer(), 0, baos.getCount());
+        }
+        
         if (this.warnings != null) {
         	out.writeObject(ExceptionHolder.toExceptionHolders(this.warnings));
         } else {
@@ -356,6 +401,10 @@ public class ResultsMessage implements Externalizable {
 	
 	public void setClientSerializationVersion(byte clientSerializationVersion) {
 		this.clientSerializationVersion = clientSerializationVersion;
+	}
+	
+	public void setDelayDeserialization(boolean delayDeserialization) {
+		this.delayDeserialization = delayDeserialization;
 	}
 }
 

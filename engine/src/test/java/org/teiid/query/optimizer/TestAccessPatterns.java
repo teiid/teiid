@@ -286,7 +286,7 @@ public class TestAccessPatterns {
         
         TestOptimizer.helpPlan(sql, metadata,
 						new String[] {
-								"SELECT g_0.e2, g_0.e1 FROM pm5.g1 AS g_0 WHERE (g_0.e1 IN (<dependent values>)) AND (g_0.e1 IN (<dependent values>))", //$NON-NLS-1$ 
+								"SELECT g_0.e2, g_0.e1 FROM pm5.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)", //$NON-NLS-1$ 
 								"SELECT g_0.e1, g_0.e2, g_0.e3, g_0.e4 FROM pm1.g1 AS g_0", //$NON-NLS-1$
 								"SELECT g_0.e1 FROM pm4.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)" }, TestOptimizer.getGenericFinder(false), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$   
     }

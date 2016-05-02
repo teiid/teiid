@@ -40,12 +40,12 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.Transform;
 import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
+import org.teiid.core.types.Transform;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.TimestampWithTimezone;
-import org.teiid.language.SQLConstants;
 import org.teiid.language.Like.MatchMode;
+import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
@@ -57,16 +57,16 @@ import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria;
-import org.teiid.query.optimizer.relational.rules.RulePlaceAccess;
 import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria.PlannedResult;
+import org.teiid.query.optimizer.relational.rules.RulePlaceAccess;
 import org.teiid.query.processor.relational.RelationalNodeUtil;
 import org.teiid.query.resolver.ProcedureContainerResolver;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.LanguageObject;
-import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.LanguageObject.Util;
+import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.PredicateCriteria.Negatable;
 import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
@@ -80,10 +80,10 @@ import org.teiid.query.sql.visitor.CorrelatedReferenceCollectorVisitor;
 import org.teiid.query.sql.visitor.CriteriaTranslatorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
+import org.teiid.query.sql.visitor.EvaluatableVisitor.EvaluationLevel;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
-import org.teiid.query.sql.visitor.EvaluatableVisitor.EvaluationLevel;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
 import org.teiid.query.validator.UpdateValidator.UpdateMapping;
@@ -96,9 +96,14 @@ import org.teiid.translator.SourceSystemFunctions;
  */
 public class QueryRewriter {
 
-    public static final CompareCriteria TRUE_CRITERIA = new CompareCriteria(new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER), CompareCriteria.EQ, new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER));
-    public static final CompareCriteria FALSE_CRITERIA = new CompareCriteria(new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER), CompareCriteria.EQ, new Constant(0, DataTypeManager.DefaultDataClasses.INTEGER));
-    public static final CompareCriteria UNKNOWN_CRITERIA = new CompareCriteria(new Constant(null, DataTypeManager.DefaultDataClasses.STRING), CompareCriteria.NE, new Constant(null, DataTypeManager.DefaultDataClasses.STRING));
+    private static final Constant ZERO_CONSTANT = new Constant(0, DataTypeManager.DefaultDataClasses.INTEGER);
+	public static final CompareCriteria TRUE_CRITERIA = new CompareCriteria(new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER), CompareCriteria.EQ, new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER));
+    public static final CompareCriteria FALSE_CRITERIA = new CompareCriteria(new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER), CompareCriteria.EQ, ZERO_CONSTANT) {
+    	public void setOptional(Boolean isOptional) {};
+    };
+    public static final CompareCriteria UNKNOWN_CRITERIA = new CompareCriteria(new Constant(null, DataTypeManager.DefaultDataClasses.STRING), CompareCriteria.NE, new Constant(null, DataTypeManager.DefaultDataClasses.STRING)) {
+    	public void setOptional(Boolean isOptional) {};
+    };
     
     private static final Map<String, String> ALIASED_FUNCTIONS = new HashMap<String, String>();
     
@@ -884,8 +889,8 @@ public class QueryRewriter {
 		if(joinCrits != null && joinCrits.size() > 0) {
 			//rewrite join crits by rewriting a compound criteria
 			Criteria criteria = new CompoundCriteria(new ArrayList(joinCrits));
-            joinCrits.clear();
             criteria = rewriteCriteria(criteria);
+            joinCrits.clear();
             if (criteria instanceof CompoundCriteria && ((CompoundCriteria)criteria).getOperator() == CompoundCriteria.AND) {
                 joinCrits.addAll(((CompoundCriteria)criteria).getCriteria());
             } else {
@@ -971,13 +976,13 @@ public class QueryRewriter {
 		    }
 		} else if (criteria instanceof SubquerySetCriteria) {
 		    SubquerySetCriteria sub = (SubquerySetCriteria)criteria;
-		    if (rewriteLeftExpression(sub)) {
-		    	return UNKNOWN_CRITERIA;
-		    }
 		    rewriteSubqueryContainer(sub, true);
 		    if (!RelationalNodeUtil.shouldExecute(sub.getCommand(), false, true)) {
-		    	return getSimpliedCriteria(criteria, sub.getExpression(), !sub.isNegated(), true);
+		    	return sub.isNegated()?TRUE_CRITERIA:FALSE_CRITERIA;
 		    }
+		    if (rewriteLeftExpression(sub)) {
+ 		    	addImplicitLimit(sub, 1);
+ 		    }
         } else if (criteria instanceof DependentSetCriteria) {
             criteria = rewriteDependentSetCriteria((DependentSetCriteria)criteria);
         } else if (criteria instanceof ExpressionCriteria) {
@@ -1231,8 +1236,14 @@ public class QueryRewriter {
             		if (cc.getOperator() == CompareCriteria.EQ) {
                 		exprMap.put(cc.getLeftExpression(), cc);
             		} else if (modified) {
-            			newCrits.add(sc);
-            			exprMap.put(sc.getExpression(), sc);
+            			if (sc.getNumberOfValues() == 1) {
+            				CompareCriteria comp = new CompareCriteria(sc.getExpression(), CompareCriteria.EQ, (Expression)sc.getValues().iterator().next());
+            				newCrits.add(comp);
+	            			exprMap.put(sc.getExpression(), comp);
+            			} else {
+	            			newCrits.add(sc);
+	            			exprMap.put(sc.getExpression(), sc);
+            			}
                 		return null;
             		}
             	} else {
@@ -1240,7 +1251,7 @@ public class QueryRewriter {
             		if (cc1.getOperator() == CompareCriteria.NE) {
                 		exprMap.put(cc.getLeftExpression(), cc);
             		} else if (cc1.getOperator() == CompareCriteria.EQ) {
-            			if (!Evaluator.compare(cc1, ((Constant)cc1.getRightExpression()).getValue(), ((Constant)cc.getRightExpression()).getValue())) {
+            			if (!Evaluator.compare(cc, ((Constant)cc1.getRightExpression()).getValue(), ((Constant)cc.getRightExpression()).getValue())) {
 							return FALSE_CRITERIA;
 						}
             			return null;
@@ -1425,7 +1436,7 @@ public class QueryRewriter {
         Expression leftExpr = rewriteExpressionDirect(criteria.getLeftExpression());
         
         if (isNull(leftExpr)) {
-            return UNKNOWN_CRITERIA;
+            addImplicitLimit(criteria, 1);
         }
         
         criteria.setLeftExpression(leftExpr);
@@ -1437,7 +1448,12 @@ public class QueryRewriter {
         rewriteSubqueryContainer(criteria, true);
         
         if (!RelationalNodeUtil.shouldExecute(criteria.getCommand(), false, true)) {
-	    	return getSimpliedCriteria(criteria, criteria.getLeftExpression(), criteria.getPredicateQuantifier()==SubqueryCompareCriteria.ALL, true);
+	       	//TODO: this is not interpretted the same way in all databases
+         	//for example H2 treat both cases as false - however the spec and all major vendors support the following: 
+         	if (criteria.getPredicateQuantifier()==SubqueryCompareCriteria.SOME) {
+         		return FALSE_CRITERIA;
+         	}
+         	return TRUE_CRITERIA;
 	    }
 
         return criteria;
@@ -1719,9 +1735,6 @@ public class QueryRewriter {
         		return crit; //just return as is
         	}
         } else {
-        	if (newValues.isEmpty()) {
-        		return getSimpliedCriteria(crit, leftExpr, !crit.isNegated(), true);
-        	}
 	        crit.setExpression(leftExpr);
 	        crit.setValues(newValues);
         }
@@ -2011,7 +2024,7 @@ public class QueryRewriter {
 		
 		criteria.setExpression(rewriteExpressionDirect(criteria.getExpression()));
         
-        if (rewriteLeftExpression(criteria)) {
+        if (rewriteLeftExpression(criteria) && !criteria.getValues().isEmpty()) {
             return UNKNOWN_CRITERIA;
         }
 
@@ -2046,7 +2059,7 @@ public class QueryRewriter {
         	if (hasNull) {
         		return UNKNOWN_CRITERIA;
         	}
-        	return getSimpliedCriteria(criteria, criteria.getExpression(), !criteria.isNegated(), true);
+        	return criteria.isNegated()?TRUE_CRITERIA:FALSE_CRITERIA;
         }
         
         if(criteria.getExpression() instanceof Function ) {
@@ -2562,16 +2575,20 @@ public class QueryRewriter {
             
             // Check the when to see if this CASE can be rewritten due to an always true/false when
             Criteria rewrittenWhen = rewriteCriteria(expr.getWhenCriteria(i));
-            if(rewrittenWhen == TRUE_CRITERIA) {
-                // WHEN is always true, so just return the THEN
-                return rewriteExpressionDirect(expr.getThenExpression(i));
-            }
             if (rewrittenWhen == FALSE_CRITERIA || rewrittenWhen == UNKNOWN_CRITERIA) {
             	continue;
             }
             
             whens.add(rewrittenWhen);
             thens.add(rewriteExpressionDirect(expr.getThenExpression(i)));
+            
+            if(rewrittenWhen == TRUE_CRITERIA) {
+             	if (i == 0) {
+	                // WHEN is always true, so just return the THEN
+ 	                return rewriteExpressionDirect(expr.getThenExpression(i));
+             	}
+            	break;
+            }
         }
 
         if (expr.getElseExpression() != null) {

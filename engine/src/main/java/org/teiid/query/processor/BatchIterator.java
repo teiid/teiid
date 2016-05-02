@@ -69,9 +69,12 @@ public class BatchIterator extends AbstractTupleSource {
 			}
 			batch = source.nextBatch();
 			done = batch.getTerminationFlag();
-			if (buffer != null && (!saveOnMark || mark)) {
+			if (buffer != null && (!saveOnMark || mark) && !buffer.isForwardOnly()) {
             	buffer.addTupleBatch(batch, true);
             }
+			if (done && buffer != null) {
+				this.buffer.close();
+			}
 		}
 		return getCurrentTuple();
 	}
@@ -139,4 +142,48 @@ public class BatchIterator extends AbstractTupleSource {
     	super.setPosition(position);
     }
     
+    /**
+     * non-destructive method to set the mark
+     * @return true if the mark was set
+     */
+	public boolean ensureSave() {
+		if (!saveOnMark || mark) {
+			return false;
+		}
+		mark = true;
+		return true;
+	}
+	
+	public void disableSave() {
+		if (buffer != null) {
+			this.saveOnMark = true;
+			this.mark = false;
+			if (batch != null && batch.getEndRow() <= this.buffer.getRowCount()) {
+				this.batch = null;
+			}
+		}
+	}
+	
+	public void readAhead(long limit) throws TeiidComponentException, TeiidProcessingException {
+		if (buffer == null || done) {
+			return;
+		}
+		if (this.buffer.getManagedRowCount() >= limit) {
+			return;
+		}
+		if (this.batch != null && this.buffer.getRowCount() < this.batch.getEndRow() && !this.buffer.isForwardOnly()) {
+			//haven't saved already
+			this.buffer.addTupleBatch(this.batch, true);
+		}
+		TupleBatch tb = source.nextBatch();
+		done = tb.getTerminationFlag();
+		this.buffer.addTupleBatch(tb, true);
+		if (done) {
+			this.buffer.close();
+		}
+	}
+	
+	public TupleBuffer getBuffer() {
+		return buffer;
+	}    
 }

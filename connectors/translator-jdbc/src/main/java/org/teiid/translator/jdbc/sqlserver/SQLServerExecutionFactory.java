@@ -42,6 +42,7 @@ import org.teiid.translator.Translator;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.sybase.SybaseExecutionFactory;
+import org.teiid.translator.jdbc.Version;
 
 /**
  * Updated to assume the use of the DataDirect, 2005 driver, or later.
@@ -49,8 +50,15 @@ import org.teiid.translator.jdbc.sybase.SybaseExecutionFactory;
 @Translator(name="sqlserver", description="A translator for Microsoft SQL Server Database")
 public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 	
-	public static final String V_2005 = "2005"; //$NON-NLS-1$
-	public static final String V_2008 = "2008"; //$NON-NLS-1$
+	public static final String V_2000 = "2000"; //$NON-NLS-1$
+ 	public static final String V_2005 = "2005"; //$NON-NLS-1$
+ 	public static final String V_2008 = "2008"; //$NON-NLS-1$
+ 	public static final String V_2012 = "2012"; //$NON-NLS-1$
+ 	
+ 	public static final Version SEVEN_0 = Version.getVersion("7.0"); //$NON-NLS-1$
+ 	public static final Version NINE_0 = Version.getVersion("9.0"); //$NON-NLS-1$
+ 	public static final Version TEN_0 = Version.getVersion("10.0"); //$NON-NLS-1$
+ 	public static final Version ELEVEN_0 = Version.getVersion("11.0"); //$NON-NLS-1$
 	
 	//TEIID-31 remove mod modifier for SQL Server 2008
 	public SQLServerExecutionFactory() {
@@ -235,9 +243,32 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     	return true;
     }
     
+     /**
+      * Overriden to allow for year based versions
+      */
+     @Override
+     public void setDatabaseVersion(String version) {
+     	if (version != null) {
+     		if (version.equals(V_2000)) {
+     			setDatabaseVersion(SEVEN_0);
+     			return;
+     		} else if (version.equals(V_2005)) {
+     			setDatabaseVersion(NINE_0);
+     			return;
+     		} else if (version.equals(V_2008)) {
+     			setDatabaseVersion(TEN_0);
+     			return;
+     		} else if (version.equals(V_2012)) {
+     			setDatabaseVersion(ELEVEN_0);
+     			return;
+     		}
+     	}
+    	super.setDatabaseVersion(version);
+    }    
+    
     @Override
     public String translateLiteralDate(Date dateValue) {
-    	if (getDatabaseVersion().compareTo(V_2008) >= 0) {
+    	if (getVersion().compareTo(TEN_0) >= 0) {
     		return super.translateLiteralDate(dateValue);
     	}
     	return super.translateLiteralTimestamp(new Timestamp(dateValue.getTime()));
@@ -245,7 +276,7 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     
     @Override
     public boolean hasTimeType() {
-    	return getDatabaseVersion().compareTo(V_2008) >= 0;
+    	return getVersion().compareTo(TEN_0) >= 0;
     }
     
     @Override

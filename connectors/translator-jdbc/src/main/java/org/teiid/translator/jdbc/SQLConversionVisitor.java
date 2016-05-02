@@ -166,12 +166,25 @@ public class SQLConversionVisitor extends SQLStringVisitor{
                 valuesbuffer.append(executionFactory.translateLiteralDate((java.sql.Date)obj));
             } else {
                 // If obj is string, toSting() will not create a new String 
-                // object, it returns it self, so new object creation. 
+                // object, it returns it self, so new object creation.
+            	String val = obj.toString();
+            	if (useUnicodePrefix()) {
+	            	for (int i = 0; i < val.length(); i++) {
+	    				if (val.charAt(i) > 127) {
+	    					buffer.append("N"); //$NON-NLS-1$
+	    					break;
+	    				}
+	    			}
+            	}
                 valuesbuffer.append(Tokens.QUOTE)
-                      .append(escapeString(obj.toString(), Tokens.QUOTE))
+                      .append(escapeString(val, Tokens.QUOTE))
                       .append(Tokens.QUOTE);
             }
         }        
+    }
+    
+    protected boolean useUnicodePrefix() {
+       return this.executionFactory.useUnicodePrefix();
     }
 
     /**
@@ -328,20 +341,19 @@ public class SQLConversionVisitor extends SQLStringVisitor{
      */
     protected String generateSqlForStoredProcedure(Call exec) {
         StringBuffer prepareCallBuffer = new StringBuffer();
-        prepareCallBuffer.append("{ "); //$NON-NLS-1$
+        prepareCallBuffer.append(getSourceComment(exec));
+        prepareCallBuffer.append("{"); //$NON-NLS-1$
 
         List<Argument> params = exec.getArguments();
 
         //check whether a "?" is needed if there are returns
         boolean needQuestionMark = exec.getReturnType() != null;
         
-        prepareCallBuffer.append(getSourceComment(exec));
-        
         if(needQuestionMark){
-            prepareCallBuffer.append("?="); //$NON-NLS-1$
+            prepareCallBuffer.append("?= "); //$NON-NLS-1$
         }
 
-        prepareCallBuffer.append(" call ");//$NON-NLS-1$
+        prepareCallBuffer.append("call ");//$NON-NLS-1$
         prepareCallBuffer.append(exec.getMetadataObject() != null ? getName(exec.getMetadataObject()) : exec.getProcedureName());
         prepareCallBuffer.append("("); //$NON-NLS-1$
 
@@ -414,6 +426,9 @@ public class SQLConversionVisitor extends SQLStringVisitor{
 		if (obj.getMetadataObject() != null) {
 			String nativeQuery = obj.getMetadataObject().getProperty(TEIID_NATIVE_QUERY, false);
 	    	if (nativeQuery != null) {
+	    		if (obj.getCorrelationName() == null) {
+	    			throw new IllegalArgumentException("alias needed. When native query is being used, then alias name must be defined for table in the query.");
+	    		}
 	    		buffer.append(Tokens.LPAREN).append(nativeQuery).append(Tokens.RPAREN);
 	    		if (obj.getCorrelationName() == null) {
 	                buffer.append(Tokens.SPACE);
@@ -421,6 +436,7 @@ public class SQLConversionVisitor extends SQLStringVisitor{
 	                    buffer.append(AS).append(Tokens.SPACE);
 	                }
 	    		}
+	    		return;
 	    	}
 		}
 		super.appendBaseName(obj);

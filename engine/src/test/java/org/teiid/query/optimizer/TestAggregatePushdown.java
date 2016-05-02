@@ -718,11 +718,10 @@ public class TestAggregatePushdown {
         ProcessorPlan plan = helpPlan(sql,  
                                       metadata,
                                       null, capFinder,
-                                      new String[] {"SELECT g_0.\"MONTH\" AS c_0, g_0.\"YEAR\" AS c_1 FROM msModel.\"TIME\" AS g_0 WHERE g_0.\"YEAR\" = '1999' ORDER BY c_0", //$NON-NLS-1$
-                                                    "SELECT g_0.\"MONTH\" AS c_0, g_0.CITY AS c_1, SUM(g_0.SALES) AS c_2 FROM db2model.SALES AS g_0 WHERE (g_0.\"MONTH\" IN (<dependent values>)) AND (g_0.CITY IN (<dependent values>)) GROUP BY g_0.\"MONTH\", g_0.CITY ORDER BY c_0", //$NON-NLS-1$ 
-                                                    "SELECT g_0.CITY AS c_0, g_0.REGION AS c_1 FROM oraclemodel.GEOGRAPHY AS g_0 WHERE g_0.REGION IN ('BORDEAUX', 'POLINESIA') ORDER BY c_0"},  //$NON-NLS-1$
-                                      ComparisonMode.EXACT_COMMAND_STRING );
-
+                                      new String[] {"SELECT g_0.\"MONTH\", g_0.CITY, SUM(g_0.SALES) FROM db2model.SALES AS g_0 WHERE (g_0.\"MONTH\" IN (<dependent values>)) AND (g_0.CITY IN (<dependent values>)) GROUP BY g_0.\"MONTH\", g_0.CITY", 
+        		                                    "SELECT g_0.CITY AS c_0, g_0.REGION AS c_1 FROM oraclemodel.GEOGRAPHY AS g_0 WHERE g_0.REGION IN ('BORDEAUX', 'POLINESIA') ORDER BY c_0", 
+        		                                    "SELECT g_0.\"MONTH\" AS c_0, g_0.\"YEAR\" AS c_1 FROM msModel.\"TIME\" AS g_0 WHERE g_0.\"YEAR\" = '1999' ORDER BY c_0"},  //$NON-NLS-1$
+        		                                    ComparisonMode.EXACT_COMMAND_STRING );
         checkNodeTypes(plan, new int[] {
                                         2,      // Access
                                         1,      // DependentAccess
@@ -766,9 +765,9 @@ public class TestAggregatePushdown {
         ProcessorPlan plan = helpPlan(sql,  
                                       metadata,
                                       null, capFinder,
-                                      new String[] {"SELECT g_0.\"MONTH\" AS c_0, g_0.\"YEAR\" AS c_1 FROM msModel.\"TIME\" AS g_0 WHERE g_0.\"YEAR\" = '1999' ORDER BY c_0", //$NON-NLS-1$
-                                          "SELECT g_0.\"MONTH\" AS c_0, g_0.CITY AS c_1, SUM(g_0.SALES) AS c_2 FROM db2model.SALES AS g_0 WHERE (g_0.\"MONTH\" IN (<dependent values>)) AND (g_0.CITY IN (<dependent values>)) GROUP BY g_0.\"MONTH\", g_0.CITY ORDER BY c_0", //$NON-NLS-1$ 
-                                          "SELECT g_0.CITY AS c_0, g_0.REGION AS c_1 FROM oraclemodel.GEOGRAPHY AS g_0 WHERE g_0.REGION IN ('BORDEAUX', 'POLINESIA') ORDER BY c_0"},  //$NON-NLS-1$
+                                      new String[] {"SELECT g_0.\"MONTH\", g_0.CITY, SUM(g_0.SALES) FROM db2model.SALES AS g_0 WHERE (g_0.\"MONTH\" IN (<dependent values>)) AND (g_0.CITY IN (<dependent values>)) GROUP BY g_0.\"MONTH\", g_0.CITY", 
+        											"SELECT g_0.CITY AS c_0, g_0.REGION AS c_1 FROM oraclemodel.GEOGRAPHY AS g_0 WHERE g_0.REGION IN ('BORDEAUX', 'POLINESIA') ORDER BY c_0", 
+        											"SELECT g_0.\"MONTH\" AS c_0, g_0.\"YEAR\" AS c_1 FROM msModel.\"TIME\" AS g_0 WHERE g_0.\"YEAR\" = '1999' ORDER BY c_0"},  //$NON-NLS-1$
                                       ComparisonMode.EXACT_COMMAND_STRING );
 
         checkNodeTypes(plan, new int[] {
@@ -814,10 +813,9 @@ public class TestAggregatePushdown {
         ProcessorPlan plan = helpPlan(sql,  
                                       metadata,
                                       null, capFinder,
-                                      new String[] {"SELECT g_0.\"MONTH\" AS c_0, g_1.REGION AS c_1, SUM(g_0.SALES) AS c_2 FROM db2model.SALES AS g_0, db2model.GEOGRAPHY2 AS g_1 WHERE (g_0.CITY = g_1.CITY) AND (g_1.REGION IN ('BORDEAUX', 'POLINESIA')) AND (g_0.\"MONTH\" IN (<dependent values>)) GROUP BY g_0.\"MONTH\", g_1.REGION ORDER BY c_0", //$NON-NLS-1$ 
-                                                    "SELECT g_0.\"MONTH\" AS c_0, g_0.\"YEAR\" AS c_1 FROM msModel.\"TIME\" AS g_0 WHERE g_0.\"YEAR\" = '1999' ORDER BY c_0"},  //$NON-NLS-1$
+                                      new String[] {"SELECT g_0.\"MONTH\", g_1.REGION, SUM(g_0.SALES) FROM db2model.SALES AS g_0, db2model.GEOGRAPHY2 AS g_1 WHERE (g_0.CITY = g_1.CITY) AND (g_1.REGION IN ('BORDEAUX', 'POLINESIA')) AND (g_0.\"MONTH\" IN (<dependent values>)) GROUP BY g_0.\"MONTH\", g_1.REGION", 
+        											"SELECT g_0.\"MONTH\" AS c_0, g_0.\"YEAR\" AS c_1 FROM msModel.\"TIME\" AS g_0 WHERE g_0.\"YEAR\" = '1999' ORDER BY c_0"},  //$NON-NLS-1$
                                                     ComparisonMode.EXACT_COMMAND_STRING );
-
         checkNodeTypes(plan, new int[] {
                                         1,      // Access
                                         1,      // DependentAccess

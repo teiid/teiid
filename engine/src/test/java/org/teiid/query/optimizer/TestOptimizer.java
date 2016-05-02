@@ -2649,10 +2649,9 @@ public class TestOptimizer {
      */
     @Test public void testCopyCriteriaWithOuterJoin5_defect10050(){
         
-        ProcessorPlan plan = helpPlan(
-            "select pm2.g1.e1, pm2.g2.e1, pm2.g3.e1 from ( (pm2.g1 right outer join pm2.g2 on pm2.g1.e1=pm2.g2.e1) right outer join pm2.g3 on pm2.g2.e1=pm2.g3.e1) where pm2.g3.e1 = 'a'", example1(), //$NON-NLS-1$
-            new String[] { "SELECT g_2.e1, g_1.e1, g_0.e1 FROM pm2.g3 AS g_0 LEFT OUTER JOIN (pm2.g2 AS g_1 LEFT OUTER JOIN pm2.g1 AS g_2 ON g_2.e1 = g_1.e1 AND g_2.e1 = 'a') ON g_1.e1 = g_0.e1 AND g_1.e1 = 'a' WHERE g_0.e1 = 'a'" }); //$NON-NLS-1$
-        checkNodeTypes(plan, FULL_PUSHDOWN);         
+    	helpPlan("select pm2.g1.e1, pm1.g2.e1, pm2.g3.e1 from ( (pm2.g1 right outer join pm1.g2 on pm2.g1.e1=pm1.g2.e1) right outer join pm2.g3 on pm1.g2.e1=pm2.g3.e1) where pm2.g3.e1 = 'a'", example1(), //$NON-NLS-1$
+                new String[] { "SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 = 'a'", "SELECT g_0.e1 FROM pm2.g1 AS g_0 WHERE g_0.e1 = 'a'", "SELECT g_0.e1 FROM pm2.g3 AS g_0 WHERE g_0.e1 = 'a'" }); //$NON-NLS-1$         
+   
     } 
     
     /**
@@ -2673,7 +2672,34 @@ public class TestOptimizer {
         ProcessorPlan plan = helpPlan("select pm2.g1.e1, pm2.g2.e1 from pm2.g1 right outer join pm2.g2 on pm2.g2.e1=pm2.g1.e1 where pm2.g2.e1 IN ('a', 'b')", example1(), //$NON-NLS-1$
             new String[] { "SELECT pm2.g1.e1, pm2.g2.e1 FROM pm2.g2 LEFT OUTER JOIN pm2.g1 ON pm2.g2.e1 = pm2.g1.e1 AND pm2.g1.e1 IN ('a', 'b') WHERE pm2.g2.e1 IN ('a', 'b')" }); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN);         
-    }         
+    }     
+
+    @Test public void testCopyCriteriaWithTransitivePushdown(){
+        ProcessorPlan plan = helpPlan("select pm2.g1.e1, pm2.g2.e1 from pm2.g1, pm2.g2, pm2.g3 where pm2.g1.e1 = pm2.g2.e1 and pm2.g2.e1 = pm2.g3.e1", example1(), //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1, g_1.e1 FROM pm2.g1 AS g_0, pm2.g2 AS g_1, pm2.g3 AS g_2 WHERE (g_0.e1 = g_1.e1) AND (g_1.e1 = g_2.e1)" }); //$NON-NLS-1$
+        checkNodeTypes(plan, FULL_PUSHDOWN);         
+    }
+    
+    @Test public void testCopyCriteriaWithTransitivePushdown1(){
+        ProcessorPlan plan = helpPlan("select pm2.g1.e1, pm2.g2.e1 from pm2.g1, pm2.g2, pm2.g3 where pm2.g1.e1 = pm2.g2.e1 and pm2.g2.e1 = pm2.g3.e1 and pm2.g1.e1 = 'a'", example1(), //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1, g_1.e1 FROM pm2.g1 AS g_0, pm2.g2 AS g_1, pm2.g3 AS g_2 WHERE (g_0.e1 = g_1.e1) AND (g_1.e1 = g_2.e1) AND (g_0.e1 = 'a') AND (g_1.e1 = 'a') AND (g_2.e1 = 'a')" }); //$NON-NLS-1$
+        checkNodeTypes(plan, FULL_PUSHDOWN);         
+    } 
+    
+    @Test public void testCopyCriteriaWithTransitivePushdown2(){
+        ProcessorPlan plan = helpPlan("select pm1.g1.e1, pm1.g2.e1 from pm1.g1, pm1.g4, pm1.g2, pm1.g3 where pm1.g1.e1 = pm1.g2.e1 and pm1.g2.e1 = pm1.g3.e1 and pm1.g1.e1 = 'a'", example1(), //$NON-NLS-1$
+            new String[] { "SELECT g_1.e1, g_2.e1 FROM pm1.g4 AS g_0, pm1.g1 AS g_1, pm1.g2 AS g_2, pm1.g3 AS g_3 WHERE (g_2.e1 = g_3.e1) AND (g_1.e1 = g_2.e1) AND (g_1.e1 = 'a') AND (g_2.e1 = 'a') AND (g_3.e1 = 'a')" }); //$NON-NLS-1$
+        checkNodeTypes(plan, FULL_PUSHDOWN);         
+    }
+    
+    @Test public void testCopyCriteriaWithTransitivePushdown3() throws TeiidComponentException, TeiidProcessingException{
+    	BasicSourceCapabilities caps = getTypicalCapabilities();
+    	caps.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
+        ProcessorPlan plan = helpPlan("select pm1.g1.e1 from pm1.g1, pm1.g2, pm1.g3 where pm1.g1.e1 = pm1.g2.e1 and pm1.g1.e1 = pm1.g3.e2 and pm1.g3.e2 = pm1.g2.e1", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1, pm1.g3 AS g_2 WHERE (g_0.e1 = g_1.e1) AND (g_0.e1 = g_2.e2) AND (g_2.e2 = g_1.e1)" }
+        , new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        checkNodeTypes(plan, FULL_PUSHDOWN);         
+    }
     
     @Test public void testCleanCriteria(){
         
@@ -3253,7 +3279,7 @@ public class TestOptimizer {
     
         ProcessorPlan plan = helpPlan(sql, metadata,  
             null, capFinder,
-            new String[] { "SELECT pm1.g1.e1 FROM pm1.g1 ORDER BY pm1.g1.e1", "SELECT pm1.g2.e1 FROM pm1.g2 ORDER BY pm1.g2.e1"}, SHOULD_SUCCEED); //$NON-NLS-1$  //$NON-NLS-2$ 
+            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 ORDER BY g_0.e1", "SELECT g_0.e1 FROM pm1.g2 AS g_0"}, SHOULD_SUCCEED); //$NON-NLS-1$  //$NON-NLS-2$ 
         checkNodeTypes(plan, new int[] {
             2,      // Access
             0,      // DependentAccess

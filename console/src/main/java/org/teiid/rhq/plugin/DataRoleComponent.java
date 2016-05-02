@@ -59,6 +59,8 @@ import org.rhq.core.domain.measurement.MeasurementScheduleRequest;
 import org.rhq.core.pluginapi.configuration.ConfigurationFacet;
 import org.rhq.core.pluginapi.configuration.ConfigurationUpdateReport;
 import org.rhq.core.pluginapi.inventory.CreateResourceReport;
+import org.rhq.core.pluginapi.inventory.InvalidPluginConfigurationException;
+import org.rhq.core.pluginapi.inventory.ResourceComponent;
 import org.rhq.core.pluginapi.inventory.ResourceContext;
 import org.rhq.plugins.jbossas5.connection.ProfileServiceConnection;
 import org.teiid.rhq.plugin.adapter.api.PropertyAdapter;
@@ -80,7 +82,6 @@ public class DataRoleComponent extends Facet {
 	 * @seeorg.teiid.rhq.plugin.Facet#start(org.rhq.core.pluginapi.inventory.
 	 * ResourceContext)
 	 */
-	@Override
 	public void start(ResourceContext context) {
 		this.resourceConfiguration = context.getPluginConfiguration();
 		this.componentType = PluginConstants.ComponentType.DATA_ROLE.NAME;
@@ -306,5 +307,12 @@ public class DataRoleComponent extends Facet {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	public ResourceContext getResourceContext() {
+		// TODO Auto-generated method stub
+		return this.getResourceContext();
+	}
+
 
 }

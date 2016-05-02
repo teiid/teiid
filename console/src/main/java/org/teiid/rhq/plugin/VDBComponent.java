@@ -68,10 +68,10 @@ import org.rhq.core.pluginapi.inventory.ResourceContext;
 import org.rhq.plugins.jbossas5.connection.ProfileServiceConnection;
 import org.teiid.rhq.admin.DQPManagementView;
 import org.teiid.rhq.plugin.util.PluginConstants;
-import org.teiid.rhq.plugin.util.ProfileServiceUtil;
-import org.teiid.rhq.plugin.util.PluginConstants.Operation;
 import org.teiid.rhq.plugin.util.PluginConstants.ComponentType.Platform;
 import org.teiid.rhq.plugin.util.PluginConstants.ComponentType.VDB;
+import org.teiid.rhq.plugin.util.PluginConstants.Operation;
+import org.teiid.rhq.plugin.util.ProfileServiceUtil;
 
 /**
  * Component class for a Teiid VDB
@@ -87,7 +87,6 @@ public class VDBComponent extends Facet {
 	 * @seeorg.teiid.rhq.plugin.Facet#start(org.rhq.core.pluginapi.inventory.
 	 * ResourceContext)
 	 */
-	@Override
 	public void start(ResourceContext context) {
 		this.setComponentName(context.getPluginConfiguration().getSimpleValue(
 				"fullName", null));
@@ -693,8 +692,12 @@ public class VDBComponent extends Facet {
 
 	@Override
 	public EmsConnection getEmsConnection() {
-		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public ResourceContext getResourceContext() {
+		return this.getResourceContext();
 	}
 
 }

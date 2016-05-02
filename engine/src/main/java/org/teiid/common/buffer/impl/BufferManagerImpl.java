@@ -48,18 +48,21 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.teiid.client.BatchSerializer;
 import org.teiid.client.ResizingArrayList;
+import org.teiid.client.util.ExceptionUtil;
 import org.teiid.common.buffer.*;
 import org.teiid.common.buffer.AutoCleanupUtil.Removable;
 import org.teiid.common.buffer.LobManager.ReferenceMode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.Streamable;
 import org.teiid.core.types.DataTypeManager.WeakReferenceHashedValueCache;
+import org.teiid.core.types.Streamable;
+import org.teiid.core.util.Assertion;
 import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.processor.relational.ListNestedSortComparator;
 import org.teiid.query.sql.symbol.Expression;
 
@@ -114,7 +117,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
 					LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Asynch eviction run", impl.reserveBatchBytes.get(), impl.maxReserveBytes.get(), impl.activeBatchBytes.get()); //$NON-NLS-1$
 				}
-				impl.doEvictions(0, false);
+				impl.doEvictions(0, !agingOut);
 				if (!agingOut) {
 					try {
 						Thread.sleep(100); //we don't want to evict too fast, because the processing threads are more than capable of evicting
@@ -126,6 +129,8 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		}
 	}
 
+	private Cleaner cleaner;
+	
 	/**
 	 * This estimate is based upon adding the value to 2/3 maps and having CacheEntry/PhysicalInfo keys
 	 */
@@ -201,11 +206,14 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 			CacheKey key = new CacheKey(oid, (int)readAttempts.get(), old!=null?old.getKey().getOrderingValue():0);
 			CacheEntry ce = new CacheEntry(key, sizeEstimate, batch, this.ref, false);
 			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
-				LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Add batch to BufferManager", ce.getId(), "with size estimate", ce.getSizeEstimate()); //$NON-NLS-1$ //$NON-NLS-2$
+				LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Add batch to BufferManager", this.id, ce.getId(), "with size estimate", ce.getSizeEstimate()); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			maxReserveBytes.addAndGet(-BATCH_OVERHEAD);
 			reserveBatchBytes.addAndGet(-BATCH_OVERHEAD);
-			cache.addToCacheGroup(id, ce.getId());
+			if (!cache.addToCacheGroup(id, ce.getId())) {
+				this.remove();
+				throw new TeiidComponentException(QueryPlugin.Util.getString("TEIID31138", id));
+			}
 			addMemoryEntry(ce, true);
 			return oid;
 		}
@@ -229,7 +237,6 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		@Override
 		public void serialize(List<? extends List<?>> obj,
 				ObjectOutput oos) throws IOException {
-			int expectedModCount = 0;
 			ResizingArrayList<?> list = null;
 			if (obj instanceof ResizingArrayList<?>) {
 				list = (ResizingArrayList<?>)obj;
@@ -238,11 +245,15 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 				//it's expected that the containing structure has updated the lob manager
 				BatchSerializer.writeBatch(oos, types, obj);
 			} catch (RuntimeException e) {
-				//there is a chance of a concurrent persist while modifying 
-				//in which case we want to swallow this exception
-				if (list == null || list.getModCount() == expectedModCount) {
+				if (ExceptionUtil.getExceptionOfType(e, ClassCastException.class) != null) {
 					throw e;
 				}
+				//there is a chance of a concurrent persist while modifying 
+				//in which case we want to swallow this exception
+				if (list == null) {
+					throw e;
+				}
+				LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, e, "Possible Concurrent Modification", id); //$NON-NLS-1$
 			}
 		}
 		
@@ -382,7 +393,8 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	private static final Timer timer = new Timer("BufferManager Cleaner", true); //$NON-NLS-1$
 	
 	public BufferManagerImpl() {
-		timer.schedule(new Cleaner(this), 15000, 15000);
+		this.cleaner = new Cleaner(this);
+		timer.schedule(cleaner, 15000, 15000);
 	}
 	
 	void clearSoftReference(BatchSoftReference bsr) {
@@ -506,7 +518,9 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		Class<?>[] types = new Class[elements.size()];
         for (ListIterator<? extends Expression> i = elements.listIterator(); i.hasNext();) {
             Expression expr = i.next();
-            types[i.previousIndex()] = expr.getType();
+            Class<?> type = expr.getType();
+            Assertion.isNotNull(type);
+            types[i.previousIndex()] = type;
         }
 		return types;
 	}
@@ -618,7 +632,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
     	lock.lock();
     	try {
 			//don't wait for more than is available
-			int waitCount = Math.min(additional, this.getMaxReserveKB() - reservedByThread.get());
+			int waitCount = Math.min(additional, this.getMaxReserveKB()<<10 - reservedByThread.get());
 			int committed = 0;
 	    	while (waitCount > 0 && waitCount > this.reserveBatchBytes.get() && committed < additional) {
 	    		long reserveBatchSample = this.reserveBatchBytes.get();
@@ -635,6 +649,8 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		    	int result = noWaitReserve(additional - committed, false);
 		    	committed += result;
 	    	}	
+	    	int result = noWaitReserve(additional - committed, false);
+	    	committed += result;
 	    	return committed;
     	} finally {
     		lock.unlock();
@@ -691,13 +707,13 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 			}
 			return;
 		}
-		long maxToFree = Math.max(maxProcessingBytes>>1, reserveBatch>>3);
+		long maxToFree = Math.min(maxProcessingBytes, (activeBatch - reserveBatch)<<1);
 		doEvictions(maxToFree, true);
 	}
 
 	void doEvictions(long maxToFree, boolean checkActiveBatch) {
 		int freed = 0;
-		while (freed <= maxToFree && (!checkActiveBatch || activeBatchBytes.get() > reserveBatchBytes.get() * .8)) {
+		while (freed <= maxToFree && (!checkActiveBatch || (maxToFree == 0 && activeBatchBytes.get() > reserveBatchBytes.get() * .7) || (maxToFree > 0 && activeBatchBytes.get() > reserveBatchBytes.get() * .8))) {
 			CacheEntry ce = evictionQueue.firstEntry(true);
 			if (ce == null) {
 				break;
@@ -715,9 +731,14 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 			} finally {
 				synchronized (ce) {
 					if (evicted && memoryEntries.remove(ce.getId()) != null) {
-						freed += ce.getSizeEstimate();
+						if (maxToFree > 0) {
+							freed += ce.getSizeEstimate();
+						}
 						activeBatchBytes.addAndGet(-ce.getSizeEstimate());
 						evictionQueue.remove(ce); //ensures that an intervening get will still be cleaned
+						if (!checkActiveBatch) {
+							break;
+						}
 					}
 				}
 			}
@@ -739,7 +760,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		if (persist) {
 			long count = writeCount.incrementAndGet();
 			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
-				LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, ce.getId(), "writing batch to storage, total writes: ", count); //$NON-NLS-1$
+				LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, s.getId(), ce.getId(), "writing batch to storage, total writes: ", count); //$NON-NLS-1$
 			}
 		}
 		boolean result = cache.add(ce, s);
@@ -764,7 +785,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	/**
 	 * Get a CacheEntry without hitting storage
 	 */
-	CacheEntry fastGet(Long batch, boolean prefersMemory, boolean retain) {
+	CacheEntry fastGet(Long batch, Boolean prefersMemory, boolean retain) {
 		CacheEntry ce = null;
 		if (retain) {
 			ce = memoryEntries.get(batch);
@@ -788,7 +809,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 			}
 			return ce;
 		}
-		if (prefersMemory) {
+		if (prefersMemory == null || prefersMemory) {
 			BatchSoftReference bsr = softCache.remove(batch);
 			if (bsr != null) {
 				ce = bsr.get();
@@ -796,7 +817,8 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 					clearSoftReference(bsr);
 				}
 			}
-		} else if (useWeakReferences) {
+		}
+		if (ce == null && (prefersMemory == null || !prefersMemory) && useWeakReferences) {
 			ce = weakReferenceCache.getByHash(batch);
 			if (ce == null || !ce.getId().equals(batch)) {
 				return null;
@@ -816,9 +838,10 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	
 	AtomicInteger removed = new AtomicInteger();
 	
+	
 	CacheEntry remove(Long gid, Long batch, boolean prefersMemory) {
 		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
-			LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Removing batch from BufferManager", batch); //$NON-NLS-1$
+			LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Removing batch from BufferManager", gid, batch); //$NON-NLS-1$
 		}
 		cleanSoftReferences();
 		CacheEntry ce = fastGet(batch, prefersMemory, false);
@@ -856,7 +879,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 		activeBatchBytes.getAndAdd(ce.getSizeEstimate());
 	}
 	
-	void removeCacheGroup(Long id, boolean prefersMemory) {
+	void removeCacheGroup(Long id, Boolean prefersMemory) {
 		cleanSoftReferences();
 		Collection<Long> vals = cache.removeCacheGroup(id);
 		long overhead = vals.size() * BATCH_OVERHEAD;
@@ -927,6 +950,12 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	}
 
 	public void shutdown() {
+		this.cache.shutdown();
+		this.cache = null;
+		this.memoryEntries.clear();
+		this.evictionQueue.getEvictionQueue().clear();
+		//this.initialEvictionQueue.getEvictionQueue().clear();
+		this.cleaner.cancel();
 	}
 
 	@Override
@@ -987,6 +1016,10 @@ public class BufferManagerImpl implements BufferManager, StorageManager {
 	public Streamable<?> persistLob(Streamable<?> lob, FileStore store,
 			byte[] bytes) throws TeiidComponentException {
 		return LobManager.persistLob(lob, store, bytes, inlineLobs, DataTypeManager.MAX_LOB_MEMORY_BYTES);
+	}
+
+	public void invalidCacheGroup(Long gid) {
+		removeCacheGroup(gid, null);
 	}
 	
 }

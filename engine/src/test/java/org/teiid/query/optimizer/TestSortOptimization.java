@@ -25,18 +25,25 @@ package org.teiid.query.optimizer;
 import static org.junit.Assert.*;
 import static org.teiid.query.optimizer.TestOptimizer.*;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.Test;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.TestOptimizer.DupRemoveSortNode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
+import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.processor.relational.LimitNode;
 import org.teiid.query.processor.relational.ProjectNode;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.translator.SourceSystemFunctions;
 
 
 public class TestSortOptimization {
@@ -237,6 +244,19 @@ public class TestSortOptimization {
                                       new String[] {"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
     
+    @Test public void testProjectionRaisingWithAccess1() throws Exception { 
+        // Create query 
+        String sql = "select e1, 1 as z from pm1.g1 as x group by e1 order by e1"; //$NON-NLS-1$
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, false);
+        RelationalPlan plan = (RelationalPlan)helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps), 
+                                      new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0 GROUP BY g_0.e1 ORDER BY g_0.e1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        assertTrue(plan.getRootNode() instanceof ProjectNode);
+        
+    }
+    
     @Test public void testProjectionRaisingWithAccessAndLimit() throws Exception { 
         // Create query 
         String sql = "select e1, (select e1 from pm2.g1 where e2 = x.e2) as z from pm1.g1 as x order by e1 limit 1"; //$NON-NLS-1$
@@ -287,6 +307,33 @@ public class TestSortOptimization {
                                       new String[] {"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0 LIMIT 1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
     
+    @Test public void testProjectionRaisingWithComplexOrdering() { 
+        String sql = "select e1 || 1, e2 / 2 from pm1.g1 as x order by e1 || 1 limit 2"; //$NON-NLS-1$
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setFunctionSupport(SourceSystemFunctions.CONCAT, true);
+        bsc.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        CapabilitiesFinder finder = new DefaultCapabilitiesFinder(bsc);
+        RelationalPlan plan = (RelationalPlan)helpPlan(sql, RealMetadataFactory.example1Cached(), null, finder, 
+                                      new String[] {"SELECT concat(g_0.e1, '1') AS c_0, g_0.e1 AS c_1, g_0.e2 AS c_2 FROM pm1.g1 AS g_0 ORDER BY c_0 LIMIT 2"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
+        
+        assertTrue(plan.getRootNode() instanceof ProjectNode);
+    }
+    
+    @Test public void testProjectionRaisingWithComplexOrdering1() { 
+        String sql = "select e1 || 1 as a, e2 / 2 from pm1.g1 as x order by a, e2 limit 2"; //$NON-NLS-1$
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setFunctionSupport(SourceSystemFunctions.CONCAT, true);
+        bsc.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        CapabilitiesFinder finder = new DefaultCapabilitiesFinder(bsc);
+        RelationalPlan plan = (RelationalPlan)helpPlan(sql, RealMetadataFactory.example1Cached(), null, finder, 
+                                      new String[] {"SELECT concat(g_0.e1, '1') AS c_0, g_0.e1 AS c_1, g_0.e2 AS c_2 FROM pm1.g1 AS g_0 ORDER BY c_0, c_2 LIMIT 2"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
+        
+        assertTrue(plan.getRootNode() instanceof ProjectNode);
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT concat(g_0.e1, '1') AS c_0, g_0.e1 AS c_1, g_0.e2 AS c_2 FROM pm1.g1 AS g_0 ORDER BY c_0, c_2 LIMIT 2", new List<?>[] {Arrays.asList("c1", "c", 2), Arrays.asList("d1", "d", 3)});
+        TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("c1", 1), Arrays.asList("d1", 1)});
+    }
+    
     //TODO this should trigger another view removal and thus the combination of the grouping/dup operation
     @Test public void testGroupDupCombination1Pushdown() { 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -301,7 +348,7 @@ public class TestSortOptimization {
         String sql = "select e1, (select e1 from pm2.g1 where e2 = x.e2) as z from (select distinct e1, e2 from pm1.g1) as x group by e1, e2 order by e1"; //$NON-NLS-1$
 
         ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
-                                      new String[] {"SELECT v_0.c_0, v_0.c_1 FROM (SELECT DISTINCT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0) AS v_0 GROUP BY v_0.c_0, v_0.c_1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$ 
+                                      new String[] {"SELECT v_0.c_0, v_0.c_1 FROM (SELECT DISTINCT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0) AS v_0 GROUP BY v_0.c_0, v_0.c_1 ORDER BY c_0"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$ 
         
         checkNodeTypes(plan, new int[] {
                 1,      // Access
