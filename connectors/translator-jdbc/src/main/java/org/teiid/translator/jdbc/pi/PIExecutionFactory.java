@@ -24,6 +24,9 @@ package org.teiid.translator.jdbc.pi;
 
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -187,4 +190,20 @@ public class PIExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.YEAR);        
         return supportedFunctions;
     }
+    
+    @Override
+    public String translateLiteralDate(Date dateValue) {
+    	return "'" + formatDateValue(dateValue) + "'"; //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Override
+    public String translateLiteralTime(Time timeValue) {
+    	return "'" + formatDateValue(timeValue) + "'"; //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Override
+    public String translateLiteralTimestamp(Timestamp timestampValue) {
+    	return "'" + formatDateValue(timestampValue) + "'"; //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
 }
