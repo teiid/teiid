@@ -313,7 +313,33 @@ temporary table access.
 
 <h4>from ${project.version}</h4>
 <ul>
-<li>[<a href='https://issues.jboss.org/browse/TEIID-3177'>TEIID-3177</a>] -  Enforce SSL connections over ODBC when Encryption Mode is enabled
+<li>[<a href='https://issues.jboss.org/browse/TEIID-3119'>TEIID-3119</a>] - updating dup removal to use tree logic
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-3357'>TEIID-3357</a>] - Add the final processor plan to the command log
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-3696'>TEIID-3696</a>] - correcting the removal of the grouping nodecates are not always removed when UNION and GROUP BY clauses are used in a subquery (correcting the removal of the grouping node)
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-4093'>TEIID-4093</a>] - OData authentication fails with NPE when gss-pattern related properties are included in VDB (accounting for a null username)
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-4112'>TEIID-4112</a>] - ORA-32039: recursive WITH clause must have column alias list (preventing the use of a specific common table expression name)
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-4130'>TEIID-4130</a>] - preventing blocked exception from being thrown
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-4186'>TEIID-4186</a>] - Prevent partial aggregate pushdown based upon type (preventing aggregate pushdown based upon type)
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-4124'>TEIID-4124</a>] - add literal date format YYYY-MM-DD to the SQL Server translator (adding the yyyy-MM-dd format)
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-4144'>TEIID-4144</a>] - Mismanagement of output columns in ruleimplementjoinstrategy (adding the project node to the source)
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-4160'>TEIID-4160</a>] - Impala - result set is not sorted if ORDER BY is defined in query (fix for order by limit positioning)
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-4175'>TEIID-4175</a>] - Certain nested dependent join structure will cause fewer results than expected
+</li>
+</ul>	
+
+<h4>from 8.7.5.6_2</h4>
+<ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-3177'>TEIID-3177</a>] -  Enforce SSL connections over ODBC when Encryption Mode is enabled (-Dorg.teiid.ODBCRequireSecure=true (turn on new behavior) forces all ODBC connections to use SSL.  Set ssl mode="disabled" on the non-SSL ODBC transport(s) if needed).
 </li>
 <li>[<a href='https://issues.jboss.org/browse/TEIID-3803'>TEIID-3803</a>] -  Kerberos with ODBC with MutualAuth fails
 </li>
