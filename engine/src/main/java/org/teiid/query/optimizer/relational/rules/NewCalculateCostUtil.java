@@ -645,6 +645,17 @@ public class NewCalculateCostUtil {
 	    	}
 	    	float[] stats = colStats.get(expression);
 			if (stats == null || stats[stat.ordinal()] == UNKNOWN_VALUE) {
+				if (stat == Stat.NDV) {
+					//use type information
+					if (expression.getType() == DataTypeManager.DefaultDataClasses.BOOLEAN) {
+						result = Math.max(result, 2);
+						continue;
+					}
+					if (expression.getType() == DataTypeManager.DefaultDataClasses.BYTE) {
+						result = Math.max(result, 256);
+						continue;
+					}
+				}
 				return UNKNOWN_VALUE;
 			}
 			result = Math.max(result, stats[stat.ordinal()]);
