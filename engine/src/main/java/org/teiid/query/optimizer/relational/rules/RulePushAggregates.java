@@ -995,7 +995,9 @@ public class RulePushAggregates implements
 			Set<Expression> subExpressions = new HashSet<Expression>();
 			filterExpressions(subExpressions, groups, criteria, false);
 			for (Expression ses : subExpressions) {
-				if (DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(ses.getType()))) {
+				if (ses.getType() == DataTypeManager.DefaultDataClasses.BOOLEAN ||
+						ses.getType() == DataTypeManager.DefaultDataClasses.BYTE ||
+						DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(ses.getType()))) {
 					return false; //need better subexpression logic, as just the element symbol is non-comparable
 				}
 			}
