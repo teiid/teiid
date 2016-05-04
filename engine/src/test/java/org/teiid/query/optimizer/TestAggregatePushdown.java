@@ -1364,4 +1364,15 @@ public class TestAggregatePushdown {
         TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[]{"SELECT g_0.e1 FROM pm1.g1 AS g_0 LEFT OUTER JOIN (SELECT g_1.e1 AS c_0 FROM pm1.g2 AS g_1 GROUP BY g_1.e1 ORDER BY AVG(g_1.e2) LIMIT 2) AS v_0 ON g_0.e1 = v_0.c_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); 
     }
+
+    @Test public void testPushdownAvoidance() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = getAggregateCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, false);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, false);
+        capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
+        String sql = "SELECT max(bqt1.smallb.stringkey) from bqt1.smalla, bqt1.smallb where bqt1.smalla.intkey=bqt1.smallb.intkey and bqt1.smallb.bytenum <> bqt1.smalla.doublenum GROUP BY bqt1.smallb.stringnum";
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
+            new String[]{"SELECT DISTINCT g_0.IntKey AS c_0, g_0.DoubleNum AS c_1 FROM BQT1.SmallA AS g_0 ORDER BY c_0", "SELECT DISTINCT g_0.IntKey AS c_0, g_0.ByteNum AS c_1, g_0.StringNum AS c_2, g_0.StringKey AS c_3 FROM BQT1.SmallB AS g_0 ORDER BY c_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); 
+    }
 }
