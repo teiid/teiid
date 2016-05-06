@@ -165,12 +165,11 @@ public class TextLine implements Expression {
 		for (Iterator<T> iterator = values.iterator(); iterator.hasNext();) {
 			T t = iterator.next();
 			String text = (String)DataTypeManager.transformValue(valueExtractor.getValue(t), DataTypeManager.DefaultDataClasses.STRING);
-			if (text == null) {
-				continue;
+			if (text != null) {
+				result.add(quoteStr);
+				result.add(StringUtil.replaceAll(text, quoteStr, doubleQuote));
+				result.add(quoteStr);
 			}
-			result.add(quoteStr);
-			result.add(StringUtil.replaceAll(text, quoteStr, doubleQuote));
-			result.add(quoteStr);
 			if (iterator.hasNext()) {
 				result.add(delim);
 			}			
