@@ -42,5 +42,12 @@ public class TestInformixExecutionFactory {
         
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
 	}
+    
+    @Test public void testTimeLiteral() throws Exception {
+		String input = "SELECT {t '12:11:01'} FROM BQT1.SmallA"; //$NON-NLS-1$       
+        String output = "SELECT {t '12:11:01'} FROM SmallA";  //$NON-NLS-1$
+        
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+	}
 	
 }
