@@ -33,12 +33,15 @@ import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.login.LoginException;
 
+import org.ietf.jgss.GSSCredential;
+import org.ietf.jgss.GSSException;
+import org.ietf.jgss.GSSName;
+import org.ietf.jgss.Oid;
 import org.jboss.security.SecurityContextAssociation;
 import org.jboss.security.SimplePrincipal;
 import org.jboss.security.vault.SecurityVaultException;
 import org.jboss.security.vault.SecurityVaultUtil;
 import org.picketbox.datasource.security.AbstractPasswordCredentialLoginModule;
-import org.teiid.OAuthCredential;
 import org.teiid.OAuthCredentialContext;
 
 /**
@@ -49,17 +52,28 @@ import org.teiid.OAuthCredentialContext;
 
 @SuppressWarnings("unchecked")
 public class PassthroughIdentityLoginModule extends AbstractPasswordCredentialLoginModule {
+   /**
+    * Module option to specify if any {@link GSSCredential} being added to the
+    * {@link Subject} should be wrapped to prevent disposal.
+    *
+    * Has no effect if a {@link GSSCredential} is not being added to the
+    * {@link Subject}.
+    *
+    * Defaults to false.
+    */
+   private static final String WRAP_GSS_CREDENTIAL = "wrapGSSCredential";    
    private String userName;
    private char[] password;
    private Subject callerSubject;
    private boolean addPrincipal = true;
    private HashMap<String, Object> properties = new HashMap<String, Object>();
+   private boolean wrapGssCredential;
 
    @Override
    public void initialize(Subject subject, CallbackHandler handler, Map<String, ?> sharedState, Map<String, ?> options) {
       super.initialize(subject, handler, sharedState, options);
 
-      userName = (String) options.get("username"); //$NON-NLS-1$
+      this.userName = (String) options.get("username"); //$NON-NLS-1$
 
       String pass = (String) options.get("password");//$NON-NLS-1$
         if (pass != null) {
@@ -69,12 +83,14 @@ public class PassthroughIdentityLoginModule extends AbstractPasswordCredentialLo
                 } catch (SecurityVaultException e) {
                     throw new RuntimeException(e);
                 }
-                password = pass.toCharArray();
+                this.password = pass.toCharArray();
             } else {
-                password = pass.toCharArray();
+                this.password = pass.toCharArray();
             }
         }
         this.properties.putAll(options);
+        this.wrapGssCredential = Boolean.parseBoolean((String) options.get(WRAP_GSS_CREDENTIAL));
+        log.tracef("wrapGssCredential=%b", wrapGssCredential);        
    }
 
     @Override
@@ -121,7 +137,7 @@ public class PassthroughIdentityLoginModule extends AbstractPasswordCredentialLo
       }
             
       if (this.callerSubject != null) {
-          makeCopy(this.callerSubject, this.subject);
+          makeCopy(this.callerSubject, this.subject, this.wrapGssCredential);
       }
       addPrivateCredential(this.subject, this.properties);
       
@@ -167,26 +183,31 @@ public class PassthroughIdentityLoginModule extends AbstractPasswordCredentialLo
        });        
    }    
    
-   static Object makeCopy(final Subject from, final Subject to) {
+   static Object makeCopy(final Subject from, final Subject to, final boolean wrapGssCredential) {
        if (System.getSecurityManager() == null) {
-           copy(from, to);
+           copy(from, to, wrapGssCredential);
            return null;
        }
        
        return AccessController.doPrivileged(new PrivilegedAction<Object>() { 
            public Object run() {
-               copy(from, to);
+               copy(from, to, wrapGssCredential);
                return null;
            }
        });        
    }   
    
-   static void copy (final Subject from, final Subject to) {
+   static void copy (final Subject from, final Subject to, final boolean wrapGssCredential) {
        for(Principal p:from.getPrincipals()) {
            to.getPrincipals().add(p);
        }
        
        for (Object obj: from.getPrivateCredentials()) {
+           if (obj instanceof GSSCredential) {
+               if (wrapGssCredential) {
+                   obj = wrapCredential((GSSCredential)obj);
+               }
+           }
            to.getPrivateCredentials().add(obj);
        }
        
@@ -208,4 +229,59 @@ public class PassthroughIdentityLoginModule extends AbstractPasswordCredentialLo
        });   
        }
    }
+   
+   private static GSSCredential wrapCredential(final GSSCredential credential) {
+       return new GSSCredential() {
+
+           @Override
+           public int getUsage(Oid mech) throws GSSException {
+               return credential.getUsage(mech);
+           }
+
+           @Override
+           public int getUsage() throws GSSException {
+               return credential.getUsage();
+           }
+
+           @Override
+           public int getRemainingLifetime() throws GSSException {
+               return credential.getRemainingLifetime();
+           }
+
+           @Override
+           public int getRemainingInitLifetime(Oid mech) throws GSSException {
+               return credential.getRemainingInitLifetime(mech);
+           }
+
+           @Override
+           public int getRemainingAcceptLifetime(Oid mech) throws GSSException {
+               return credential.getRemainingAcceptLifetime(mech);
+           }
+
+           @Override
+           public GSSName getName(Oid mech) throws GSSException {
+               return credential.getName(mech);
+           }
+
+           @Override
+           public GSSName getName() throws GSSException {
+               return credential.getName();
+           }
+
+           @Override
+           public Oid[] getMechs() throws GSSException {
+               return credential.getMechs();
+           }
+
+           @Override
+           public void dispose() throws GSSException {
+               // Prevent disposal of our credential.
+           }
+
+           @Override
+           public void add(GSSName name, int initLifetime, int acceptLifetime, Oid mech, int usage) throws GSSException {
+               credential.add(name, initLifetime, acceptLifetime, mech, usage);
+           }
+       };
+   }   
 }
