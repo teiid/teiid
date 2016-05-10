@@ -25,11 +25,17 @@
 package org.teiid.translator.jdbc.informix;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.language.AggregateFunction;
+import org.teiid.language.LanguageObject;
+import org.teiid.language.SQLConstants.NonReserved;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
@@ -85,5 +91,21 @@ public class InformixExecutionFactory extends JDBCExecutionFactory {
     	}
     	return false;
 	}
+	
+	/**
+     * Informix doesn't provide min/max(boolean)
+     */
+    @Override
+    public List<?> translate(LanguageObject obj, ExecutionContext context) {
+    	if (obj instanceof AggregateFunction) {
+    		AggregateFunction agg = (AggregateFunction)obj;
+    		if (agg.getParameters().size() == 1 
+    				&& (agg.getName().equalsIgnoreCase(NonReserved.MIN) || agg.getName().equalsIgnoreCase(NonReserved.MAX)) 
+    				&& TypeFacility.RUNTIME_TYPES.BOOLEAN.equals(agg.getParameters().get(0).getType())) {
+        		return Arrays.asList("cast(", agg.getName(), "(cast(", agg.getParameters().get(0), " as char)) as boolean)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            }
+    	}
+    	return super.translate(obj, context);
+    }
 	
 }
