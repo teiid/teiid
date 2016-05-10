@@ -21,8 +21,11 @@
  */
 package org.teiid.translator.jdbc.redshift;
 
+import static org.junit.Assert.*;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.teiid.translator.ExecutionFactory.Format;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
 
@@ -45,5 +48,15 @@ public class TestRedshiftTranslator {
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
     
+    @Test public void testParseDate() throws Exception {
+        String input = "SELECT INTKEY FROM bqt1.SmallA WHERE parsedate(stringkey, 'yyyy-MM-dd') = {d '1999-12-01'}"; 
+        String output = "SELECT SmallA.IntKey FROM SmallA WHERE cast(TO_DATE(SmallA.StringKey, 'YYYY-MM-DD') AS date) = DATE '1999-12-01'"; 
+
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
+    @Test public void testTimezoneFormat() throws Exception {
+    	assertFalse(TRANSLATOR.supportsFormatLiteral("hh:MM:ss Z", Format.DATE));
+    }
 
 }

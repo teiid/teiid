@@ -76,23 +76,18 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 		}
 	}
 
-	private static final class PostgreSQLFormatFunctionModifier extends
+	private final class PostgreSQLFormatFunctionModifier extends
 			OracleFormatFunctionModifier {
 		private PostgreSQLFormatFunctionModifier(String prefix, boolean parse) {
 			super(prefix, parse);
 		}
 
 		protected Object convertToken(String group) {
-			switch (group.charAt(0)) {
-			case 'Z':
-				return "TZ"; //$NON-NLS-1$
-			case 'S':
-				if (group.length() > 3) {
-					return "US"; //$NON-NLS-1$
-				}
-				return "MS"; //$NON-NLS-1$
+			Object result = PostgreSQLExecutionFactory.this.convertToken(group);
+			if (result == null) {
+				return super.convertToken(group);
 			}
-			return super.convertToken(group);
+			return result;
 		}
 	}
 
@@ -102,7 +97,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 	public static final Version EIGHT_3 = Version.getVersion("8.3"); //$NON-NLS-1$
 	public static final Version EIGHT_4 = Version.getVersion("8.4"); //$NON-NLS-1$
 	public static final Version NINE_0 = Version.getVersion("9.0"); //$NON-NLS-1$
-	private OracleFormatFunctionModifier parseModifier = new PostgreSQLFormatFunctionModifier("TO_TIMESTAMP(", true); //$NON-NLS-1$
+	protected OracleFormatFunctionModifier parseModifier = new PostgreSQLFormatFunctionModifier("TO_TIMESTAMP(", true); //$NON-NLS-1$
 	
 	//postgis versions
 	public static final Version ONE_3 = Version.getVersion("1.3"); //$NON-NLS-1$
@@ -118,7 +113,25 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 		setMaxInCriteriaSize(Short.MAX_VALUE - 50); //set a value that is safely smaller than the max in case there are other parameters
 	}
 	
-    public void start() throws TranslatorException {
+	/**
+	 * Convert to a new parsing token or return null if not possible
+	 * @param group
+	 * @return
+	 */
+    public Object convertToken(String group) {
+    	switch (group.charAt(0)) {
+		case 'Z':
+			return "TZ"; //$NON-NLS-1$
+		case 'S':
+			if (group.length() > 3) {
+				return "US"; //$NON-NLS-1$
+			}
+			return "MS"; //$NON-NLS-1$
+		}
+		return null;
+	}
+
+	public void start() throws TranslatorException {
         //TODO: all of the functions (except for convert) can be handled through just the escape syntax
         super.start();
         
