@@ -45,6 +45,8 @@ public class RedshiftExecutionFactory extends PostgreSQLExecutionFactory {
 	public void start() throws TranslatorException {
 		super.start();
 		getFunctionModifiers().remove(SourceSystemFunctions.SUBSTRING); //redshift doesn't use substr
+		//to_timestamp is not supported
+		this.parseModifier.setPrefix("TO_DATE("); //$NON-NLS-1$
 	}
 	
 	@Override
@@ -87,6 +89,16 @@ public class RedshiftExecutionFactory extends PostgreSQLExecutionFactory {
 	@Override
 	public boolean supportsQuantifiedCompareCriteriaSome() {
 		return false;
+	}
+	
+	@Override
+	public Object convertToken(String group) {
+		//timezone not supported
+		if (group.charAt(0) == 'Z') {
+			throw new IllegalArgumentException();
+		}
+		//TODO: time fields are probably not supported for parsing
+		return super.convertToken(group);
 	}
 	
 }
