@@ -493,7 +493,7 @@ public class TestPostgreSQLTranslator {
     
     @Test public void testLocate5a() throws Exception {
         String input = "SELECT locate(STRINGNUM, 'chimp', 2) FROM BQT1.SMALLA"; //$NON-NLS-1$
-        String output = "SELECT (position(SmallA.StringNum in substr('chimp', 2)) + 1) FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT (position(SmallA.StringNum in substring('chimp' from 2)) + 1) FROM SmallA";  //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
@@ -510,7 +510,7 @@ public class TestPostgreSQLTranslator {
      */
     @Test public void testLocate6() throws Exception {
         String input = "SELECT locate(STRINGNUM, 'chimp', INTNUM) FROM BQT1.SMALLA"; //$NON-NLS-1$
-        String output = "SELECT (position(SmallA.StringNum in substr('chimp', CASE WHEN SmallA.IntNum < 1 THEN 1 ELSE SmallA.IntNum END)) + CASE WHEN SmallA.IntNum < 1 THEN 1 ELSE SmallA.IntNum END - 1) FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT (position(SmallA.StringNum in substring('chimp' from CASE WHEN SmallA.IntNum < 1 THEN 1 ELSE SmallA.IntNum END)) + CASE WHEN SmallA.IntNum < 1 THEN 1 ELSE SmallA.IntNum END - 1) FROM SmallA";  //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
@@ -527,7 +527,7 @@ public class TestPostgreSQLTranslator {
      */
     @Test public void testLocate7() throws Exception {
         String input = "SELECT locate(STRINGNUM, 'chimp', LOCATE(STRINGNUM, 'chimp') + 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
-        String output = "SELECT (position(SmallA.StringNum in substr('chimp', CASE WHEN (position(SmallA.StringNum in 'chimp') + 1) < 1 THEN 1 ELSE (position(SmallA.StringNum in 'chimp') + 1) END)) + CASE WHEN (position(SmallA.StringNum in 'chimp') + 1) < 1 THEN 1 ELSE (position(SmallA.StringNum in 'chimp') + 1) END - 1) FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT (position(SmallA.StringNum in substring('chimp' from CASE WHEN (position(SmallA.StringNum in 'chimp') + 1) < 1 THEN 1 ELSE (position(SmallA.StringNum in 'chimp') + 1) END)) + CASE WHEN (position(SmallA.StringNum in 'chimp') + 1) < 1 THEN 1 ELSE (position(SmallA.StringNum in 'chimp') + 1) END - 1) FROM SmallA";  //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
