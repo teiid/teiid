@@ -49,5 +49,12 @@ public class TestInformixExecutionFactory {
         
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
 	}
+    
+    @Test public void testMinMaxBoolean() throws Exception {
+    	String input = "SELECT min(booleanvalue), max(booleanvalue) FROM BQT1.SmallA"; //$NON-NLS-1$       
+        String output = "SELECT cast(MIN(cast(SmallA.BooleanValue as char)) as boolean), cast(MAX(cast(SmallA.BooleanValue as char)) as boolean) FROM SmallA";  //$NON-NLS-1$
+        
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
 	
 }
