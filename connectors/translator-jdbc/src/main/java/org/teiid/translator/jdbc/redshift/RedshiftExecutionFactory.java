@@ -79,4 +79,14 @@ public class RedshiftExecutionFactory extends PostgreSQLExecutionFactory {
 		return functions;
 	}
 	
+	@Override
+	public boolean supportsQuantifiedCompareCriteriaAll() {
+		return false;
+	}
+	
+	@Override
+	public boolean supportsQuantifiedCompareCriteriaSome() {
+		return false;
+	}
+	
 }
