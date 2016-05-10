@@ -54,7 +54,8 @@ public class InformixExecutionFactory extends JDBCExecutionFactory {
         convertModifier.addTypeMapping("smallfloat", FunctionModifier.FLOAT); //$NON-NLS-1$
         convertModifier.addTypeMapping("float", FunctionModifier.DOUBLE); //$NON-NLS-1$
         convertModifier.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("datetime", FunctionModifier.TIME, FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("datetime", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("datetime hour to second", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
     	convertModifier.addTypeMapping("varchar(255)", FunctionModifier.STRING); //$NON-NLS-1$
     	convertModifier.addTypeMapping("varchar(1)", FunctionModifier.CHAR); //$NON-NLS-1$
     	convertModifier.addTypeMapping("byte", FunctionModifier.VARBINARY); //$NON-NLS-1$
@@ -85,8 +86,4 @@ public class InformixExecutionFactory extends JDBCExecutionFactory {
     	return false;
 	}
 	
-	@Override
-	public boolean hasTimeType() {
-		return false;
-	}
 }
