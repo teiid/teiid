@@ -192,6 +192,7 @@
                             <goal>java</goal>
                         </goals>
                         <configuration>
+                            <classpathScope>compile</classpathScope>
                             <mainClass>net.sf.retrotranslator.transformer.Retrotranslator</mainClass>
                             <arguments>                     
                                 <argument>-srcjar</argument>
@@ -212,6 +213,7 @@
                             <goal>java</goal>
                         </goals>
                         <configuration>
+                            <classpathScope>compile</classpathScope>
                             <mainClass>net.sf.retrotranslator.transformer.Retrotranslator</mainClass>
                             <arguments>                     
                                 <argument>-srcjar</argument>
