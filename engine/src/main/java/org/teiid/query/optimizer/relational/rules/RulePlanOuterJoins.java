@@ -120,7 +120,7 @@ public class RulePlanOuterJoins implements OptimizerRule {
 				if (bSource.getType() != NodeConstants.Types.ACCESS) {
     				continue;
     			}
-    			Object modelId = RuleRaiseAccess.canRaiseOverJoin(childJoin == left?Arrays.asList(bSource, cSource):Arrays.asList(cSource, bSource), metadata, capabilitiesFinder, joinCriteria, JoinType.JOIN_LEFT_OUTER, analysisRecord, context, false);
+    			Object modelId = RuleRaiseAccess.canRaiseOverJoin(childJoin == left?Arrays.asList(bSource, cSource):Arrays.asList(cSource, bSource), metadata, capabilitiesFinder, joinCriteria, JoinType.JOIN_LEFT_OUTER, analysisRecord, context, false, false);
     			if (modelId == null) {
     				continue;
     			}
@@ -164,7 +164,7 @@ public class RulePlanOuterJoins implements OptimizerRule {
         			//TODO: we are not really checking that specifically
     				continue;
     			}
-    			Object modelId = RuleRaiseAccess.canRaiseOverJoin(childJoin == left?Arrays.asList(aSource, cSource):Arrays.asList(cSource, aSource), metadata, capabilitiesFinder, joinCriteria, JoinType.JOIN_LEFT_OUTER, analysisRecord, context, false);
+    			Object modelId = RuleRaiseAccess.canRaiseOverJoin(childJoin == left?Arrays.asList(aSource, cSource):Arrays.asList(cSource, aSource), metadata, capabilitiesFinder, joinCriteria, JoinType.JOIN_LEFT_OUTER, analysisRecord, context, false, false);
     			if (modelId == null) {
     				continue;
     			}

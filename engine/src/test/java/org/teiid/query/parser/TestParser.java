@@ -4990,9 +4990,9 @@ public class TestParser {
         StoredProcedure sp = new StoredProcedure();
         sp.setProcedureName("foo");
         SubqueryFromClause sfc = new SubqueryFromClause("x", sp);
-        sfc.setTable(true);
+        sfc.setLateral(true);
         query.setFrom(new From(Arrays.asList(sfc)));
-        helpTest(sql, "SELECT * FROM TABLE(EXEC foo()) AS x", query);
+        helpTest(sql, "SELECT * FROM LATERAL(EXEC foo()) AS x", query);
     }
     
     @Test public void testTextTable() throws Exception {

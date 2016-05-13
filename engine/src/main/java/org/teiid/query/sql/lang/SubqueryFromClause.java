@@ -36,7 +36,7 @@ public class SubqueryFromClause extends FromClause implements SubqueryContainer{
 
     private GroupSymbol symbol;
     private Command command;
-    private boolean table;
+    private boolean lateral;
 	
 	/**
 	 * Construct default object
@@ -60,12 +60,12 @@ public class SubqueryFromClause extends FromClause implements SubqueryContainer{
         this.command = command;
     }
     
-    public boolean isTable() {
-		return table;
+    public boolean isLateral() {
+		return lateral;
 	}
     
-    public void setTable(boolean table) {
-		this.table = table;
+    public void setLateral(boolean table) {
+		this.lateral = table;
 	}
 
     /** 
@@ -144,7 +144,7 @@ public class SubqueryFromClause extends FromClause implements SubqueryContainer{
 		
         return this.getName().equalsIgnoreCase(sfc.getName()) &&
             sfc.isOptional() == this.isOptional() && this.command.equals(sfc.command)
-            && this.table == sfc.table;
+            && this.lateral == sfc.lateral;
 	}
 	
 	/**
@@ -166,7 +166,7 @@ public class SubqueryFromClause extends FromClause implements SubqueryContainer{
         }
         
         SubqueryFromClause clause = new SubqueryFromClause(this.symbol.clone(), commandCopy);
-        clause.setTable(this.isTable());
+        clause.setLateral(this.isLateral());
         return clause;
 	}
 

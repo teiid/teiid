@@ -449,7 +449,7 @@ public class SimpleQueryResolver implements CommandResolver {
         
         public void visit(SubqueryFromClause obj) {
         	Collection<GroupSymbol> externalGroups = this.currentGroups;
-        	if (obj.isTable() && allowImplicit) {
+        	if (obj.isLateral() && allowImplicit) {
         		externalGroups = new ArrayList<GroupSymbol>(externalGroups);
         		externalGroups.addAll(this.implicitGroups);
         	}

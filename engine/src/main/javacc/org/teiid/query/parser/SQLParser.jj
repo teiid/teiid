@@ -3008,7 +3008,7 @@ SubqueryFromClause subqueryFromClause(ParseInfo info) :
 	{
 		SubqueryFromClause clause = new SubqueryFromClause(aliasID, command);
         setFromClauseOptions(lparen, clause);
-        clause.setTable(table);
+        clause.setLateral(table);
         return clause;
     }	
 }	

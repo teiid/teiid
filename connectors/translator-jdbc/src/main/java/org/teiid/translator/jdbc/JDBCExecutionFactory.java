@@ -1566,4 +1566,8 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 		return false;
 	}
 
+	public String getLateralKeyword() {
+		return SQLConstants.Reserved.LATERAL;
+	}
+
 }

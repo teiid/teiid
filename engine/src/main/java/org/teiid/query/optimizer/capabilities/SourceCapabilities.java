@@ -350,7 +350,11 @@ public interface SourceCapabilities {
         SUBQUERY_CORRELATED_LIMIT,
         NO_PROJECTION, 
         REQUIRED_LIKE_ESCAPE, 
-        QUERY_SUBQUERIES_SCALAR_PROJECTION;
+        QUERY_SUBQUERIES_SCALAR_PROJECTION,
+        TRANSACTION_SUPPORT,
+        QUERY_FROM_JOIN_LATERAL, 
+        QUERY_FROM_JOIN_LATERAL_CONDITION, 
+        QUERY_FROM_PROCEDURE_TABLE;
         
         private final String toString;
         

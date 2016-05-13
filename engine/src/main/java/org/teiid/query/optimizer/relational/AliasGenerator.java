@@ -241,6 +241,23 @@ public class AliasGenerator extends PreOrderNavigator {
         
         visitor.namingContext.currentSymbols = symbols; 
     }
+    
+    @Override
+    public void visit(StoredProcedure obj) {
+    	if (!obj.isPushedInQuery()) {
+    		return;
+    	}
+    	List<ElementSymbol> selectSymbols = obj.getProjectedSymbols();
+        LinkedHashMap<Expression, String> symbols = new LinkedHashMap<Expression, String>(selectSymbols.size());
+        for (int i = 0; i < selectSymbols.size(); i++) {
+        	ElementSymbol symbol = selectSymbols.get(i);
+            symbols.put(symbol, symbol.getShortName());
+        }
+        for (SPParameter param : obj.getParameters()) {
+            visitNode(param.getExpression());
+        }
+    	visitor.namingContext.currentSymbols = symbols;
+    }
 
     private boolean needsAlias(String newAlias,
                                ElementSymbol symbol) {

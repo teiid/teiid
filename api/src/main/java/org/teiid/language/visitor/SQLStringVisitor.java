@@ -303,8 +303,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
     
     public void visit(Call obj) {              
-        buffer.append(EXEC)
-              .append(Tokens.SPACE);
+        appendCallStart(obj);
         
         if(obj.getMetadataObject() != null) {
             buffer.append(getName(obj.getMetadataObject()));                         
@@ -329,6 +328,11 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         }
         buffer.append(Tokens.RPAREN);
     }
+
+	protected void appendCallStart(Call call) {
+		buffer.append(EXEC)
+              .append(Tokens.SPACE);
+	}
 
     public void visit(Exists obj) {
         buffer.append(EXISTS)
@@ -479,8 +483,32 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
 
     public void visit(DerivedTable obj) {
+    	if (obj.isLateral()) {
+    		appendLateralKeyword();
+    		buffer.append(Tokens.SPACE);
+    	}
         buffer.append(Tokens.LPAREN);
     	append(obj.getQuery());
+        buffer.append(Tokens.RPAREN);
+        buffer.append(Tokens.SPACE);
+        if(useAsInGroupAlias()) {
+            buffer.append(AS);
+            buffer.append(Tokens.SPACE);
+        }
+        buffer.append(obj.getCorrelationName());
+    }
+
+	protected void appendLateralKeyword() {
+		buffer.append(LATERAL);
+	}
+    
+    public void visit(NamedProcedureCall obj) {
+    	if (obj.isLateral()) {
+    		appendLateralKeyword();
+    		buffer.append(Tokens.SPACE);
+    	}
+        buffer.append(Tokens.LPAREN);
+    	append(obj.getCall());
         buffer.append(Tokens.RPAREN);
         buffer.append(Tokens.SPACE);
         if(useAsInGroupAlias()) {

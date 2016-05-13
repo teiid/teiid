@@ -1424,7 +1424,7 @@ public class RelationalPlanner {
             GroupSymbol group = sfc.getGroupSymbol();
             Command nestedCommand = sfc.getCommand();
             node = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
-            if (sfc.isTable()) {
+            if (sfc.isLateral()) {
     		    sfc.getCommand().setCorrelatedReferences(getCorrelatedReferences(parent, node, sfc));
             }
             if (sfc.isNoUnnest()) {
@@ -1481,7 +1481,7 @@ public class RelationalPlanner {
 		            		select.addSymbol(new AliasSymbol(es.getShortName(), ex));
 		            	}
 		            	SubqueryFromClause sfc = new SubqueryFromClause(at.getGroupSymbol(), query);
-		            	sfc.setTable(true);
+		            	sfc.setLateral(true);
 		            	buildTree(sfc, parent);
 		            	if (!jt.isOuter()) {
 		            		//insert is null criteria
