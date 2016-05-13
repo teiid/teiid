@@ -34,12 +34,13 @@ import org.teiid.metadata.ProcedureParameter.Type;
 /**
  * Represents a procedural execution (such as a stored procedure).  
  */
-public class Call extends BaseLanguageObject implements Command, MetadataReference<Procedure> {
+public class Call extends BaseLanguageObject implements Command, MetadataReference<Procedure>, TableReference {
 
     private String name;
     private List<Argument> arguments;
     private Procedure metadataObject;
     private Class<?> returnType;
+    private boolean tableReference;
     
     public Call(String name, List<Argument> parameters, Procedure metadataObject) {
         this.name = name;
@@ -109,5 +110,13 @@ public class Call extends BaseLanguageObject implements Command, MetadataReferen
         }
         return coulmnDTs;
     }
+    
+    public boolean isTableReference() {
+		return tableReference;
+	}
+    
+    public void setTableReference(boolean tableReference) {
+		this.tableReference = tableReference;
+	}
 
 }

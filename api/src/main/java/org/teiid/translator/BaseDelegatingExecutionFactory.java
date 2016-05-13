@@ -544,4 +544,16 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public String getExcludedCommonTableExpressionName() {
 		return delegate.getExcludedCommonTableExpressionName();
 	}
+	@Override
+	public boolean supportsLateralJoin() {
+		return delegate.supportsLateralJoin();
+	}
+	@Override
+	public boolean supportsLateralJoinCondition() {
+		return delegate.supportsLateralJoinCondition();
+	}
+	@Override
+	public boolean supportsProcedureTable() {
+		return delegate.supportsProcedureTable();
+	}
 }

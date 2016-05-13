@@ -1201,4 +1201,85 @@ public class TestJoinOptimization {
         TestProcessor.helpProcess(plan, hdm, new List<?>[] {});
     }
     
+    @Test public void testLateralPushdown() throws TeiidComponentException, TeiidProcessingException {
+        String sql = "select bqt1.smallb.intkey, x.stringkey, x.intkey "
+        		+ "from bqt1.smallb left outer join lateral (select bqt1.smalla.intkey, bqt1.smalla.stringkey from bqt1.smalla where bqt1.smalla.intnum = bqt1.smallb.intnum order by bqt1.smalla.intkey limit 1) as x on true"; //$NON-NLS-1$
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_LATERAL, true);
+        bsc.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
+        // Plan query
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), 
+        		new String[] {"SELECT g_0.IntKey, v_0.c_0, v_0.c_1 FROM BQT1.SmallB AS g_0 LEFT OUTER JOIN LATERAL(SELECT g_1.StringKey AS c_0, g_1.IntKey AS c_1 FROM BQT1.SmallA AS g_1 WHERE g_1.IntNum = g_0.IntNum ORDER BY c_1 LIMIT 1) AS v_0 ON 1 = 1"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+
+        HardcodedDataManager hdm = new HardcodedDataManager(RealMetadataFactory.exampleBQTCached());
+        hdm.addData("SELECT g_0.IntKey, v_0.c_0, v_0.c_1 FROM SmallB AS g_0 LEFT OUTER JOIN LATERAL (SELECT g_1.StringKey AS c_0, g_1.IntKey AS c_1 FROM SmallA AS g_1 WHERE g_1.IntNum = g_0.IntNum ORDER BY c_1 LIMIT 1) AS v_0 ON 1 = 1");
+        
+        TestProcessor.helpProcess(plan, hdm, new List<?>[] {});
+    }
+    
+    @Test public void testLateralPushdownCondition() throws TeiidComponentException, TeiidProcessingException {
+        String sql = "select bqt1.smallb.intkey, x.stringkey, x.intkey "
+        		+ "from bqt1.smallb left outer join lateral (select bqt1.smalla.intkey, bqt1.smalla.stringkey from bqt1.smalla where bqt1.smalla.intnum = bqt1.smallb.intnum order by bqt1.smalla.intkey limit 1) as x on (bqt1.smallb.intkey = 1)"; //$NON-NLS-1$
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_LATERAL, true);
+        bsc.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), 
+        		new String[] {"SELECT g_0.StringKey AS c_0, g_0.IntKey AS c_1 FROM BQT1.SmallA AS g_0 WHERE g_0.IntNum = BQT1.SmallB.IntNum ORDER BY c_1 LIMIT 1", "SELECT g_0.IntKey, g_0.IntNum FROM BQT1.SmallB AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+
+        HardcodedDataManager hdm = new HardcodedDataManager(RealMetadataFactory.exampleBQTCached());
+        hdm.addData("SELECT g_0.IntKey, g_0.IntNum FROM SmallB AS g_0", Arrays.asList(1, 2));
+        hdm.addData("SELECT g_0.StringKey AS c_0, g_0.IntKey AS c_1 FROM SmallA AS g_0 WHERE g_0.IntNum = 2 ORDER BY c_1 LIMIT 1", Arrays.asList("a", 2));
+        
+        TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList(1, "a", 2)});
+        
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_LATERAL_CONDITION, true);
+        
+        plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), 
+        		new String[] {"SELECT g_0.IntKey, v_0.c_0, v_0.c_1 FROM BQT1.SmallB AS g_0 LEFT OUTER JOIN LATERAL(SELECT g_1.StringKey AS c_0, g_1.IntKey AS c_1 FROM BQT1.SmallA AS g_1 WHERE g_1.IntNum = g_0.IntNum ORDER BY c_1 LIMIT 1) AS v_0 ON g_0.IntKey = 1"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+
+        hdm.clearData();
+        hdm.addData("SELECT g_0.IntKey, v_0.c_0, v_0.c_1 FROM SmallB AS g_0 LEFT OUTER JOIN LATERAL (SELECT g_1.StringKey AS c_0, g_1.IntKey AS c_1 FROM SmallA AS g_1 WHERE g_1.IntNum = g_0.IntNum ORDER BY c_1 LIMIT 1) AS v_0 ON g_0.IntKey = 1");
+        
+        TestProcessor.helpProcess(plan, hdm, new List<?>[] {});
+    }
+    
+    @Test public void testLateralProcedurePushdown() throws Exception {
+        String sql = "select smallb.intkey, x.stringkey, x.intkey "
+        		+ "from smallb left outer join lateral (exec spTest5(smallb.intkey)) as x on (true)"; //$NON-NLS-1$
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_LATERAL, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_PROCEDURE_TABLE, true);
+        bsc.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
+        
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table smallb (intkey integer, stringkey string); "
+        		+ "create foreign procedure spTest5 (param integer) returns table(stringkey string, intkey integer)", "x", "y");
+		ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata, 
+        		new String[] {"SELECT g_0.intkey, v_0.stringkey, v_0.intkey FROM y.smallb AS g_0 LEFT OUTER JOIN LATERAL(EXEC spTest5(g_0.intkey)) AS v_0 ON 1 = 1"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+
+        HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+        hdm.addData("SELECT g_0.intkey, v_0.stringkey, v_0.intkey FROM smallb AS g_0 LEFT OUTER JOIN LATERAL (EXEC spTest5(g_0.intkey)) AS v_0 ON 1 = 1", Arrays.asList(1, "2", 1));
+        
+        TestProcessor.helpProcess(plan, hdm, new List<?>[] { Arrays.asList(1, "2", 1)});
+        
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        
+        //with an extra inline view, should result in same plan - but is not currently as we can't remove the intermediate view without
+        //a lot of work
+        sql = "SELECT g_0.intkey, v_1.c_0, v_1.c_1 FROM y.smallb AS g_0 LEFT OUTER JOIN LATERAL(SELECT v_0.stringkey AS c_0, v_0.intkey AS c_1 FROM (EXEC spTest5(g_0.intkey)) AS v_0 limit 1) AS v_1 ON 1 = 1";
+        
+        plan = TestOptimizer.helpPlan(sql, metadata, 
+        		new String[] {"SELECT g_0.intkey FROM y.smallb AS g_0", "EXEC spTest5(g_0.intkey)"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        hdm.addData("SELECT g_0.intkey FROM smallb AS g_0", Arrays.asList(1));
+        hdm.addData("EXEC spTest5(1)", Arrays.asList("2", 1));
+        
+        TestProcessor.helpProcess(plan, hdm, new List<?>[] { Arrays.asList(1, "2", 1)});
+    }
 }

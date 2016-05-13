@@ -369,7 +369,7 @@ public class TestODataIntegration extends BaseResourceTest {
         ClientResponse<String> response = request.get(String.class);
         verify(client).executeSQL(sql.capture(), params.capture(),  any(QueryInfo.class),any(EntityCollector.class));
         
-        Assert.assertEquals("SELECT g0.* FROM TABLE(EXEC nw.getSuppliers(p3 => ?)) AS g0 WHERE g0.SupplierID = ?", 
+        Assert.assertEquals("SELECT g0.* FROM LATERAL(EXEC nw.getSuppliers(p3 => ?)) AS g0 WHERE g0.SupplierID = ?", 
                 sql.getValue().toString());        
         Assert.assertEquals(Integer.valueOf(2), ((SQLParam)params.getValue().get(0)).value);
         Assert.assertEquals(Integer.valueOf(1), ((SQLParam)params.getValue().get(1)).value);
@@ -401,7 +401,7 @@ public class TestODataIntegration extends BaseResourceTest {
         ClientResponse<String> response = request.get(String.class);
         verify(client).executeSQL(sql.capture(), params.capture(),  queryInfo.capture(),any(EntityCollector.class));
         
-        Assert.assertEquals("SELECT g0.SupplierID FROM TABLE(EXEC nw.getSuppliers(p3 => ?)) AS g0 ORDER BY g0.SupplierID", 
+        Assert.assertEquals("SELECT g0.SupplierID FROM LATERAL(EXEC nw.getSuppliers(p3 => ?)) AS g0 ORDER BY g0.SupplierID", 
                 sql.getValue().toString());        
         Assert.assertEquals(Integer.valueOf(2), ((SQLParam)params.getValue().get(0)).value);
         Assert.assertEquals(Integer.valueOf(10), queryInfo.getValue().top);

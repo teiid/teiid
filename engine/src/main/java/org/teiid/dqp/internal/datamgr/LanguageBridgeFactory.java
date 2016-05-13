@@ -46,6 +46,7 @@ import org.teiid.metadata.BaseColumn;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
+import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -375,8 +376,16 @@ public class LanguageBridgeFactory {
                             translate(crit));
     }
 
-    TableReference translate(SubqueryFromClause clause) {        
-        return new DerivedTable(translate((QueryCommand)clause.getCommand()), clause.getOutputName());
+    TableReference translate(SubqueryFromClause clause) {    
+    	if (clause.getCommand() instanceof StoredProcedure) {
+    		NamedProcedureCall result = new NamedProcedureCall(translate((StoredProcedure)clause.getCommand()), clause.getOutputName());
+            result.setLateral(clause.isLateral());
+            result.getCall().setTableReference(true);
+            return result;
+    	}
+        DerivedTable result = new DerivedTable(translate((QueryCommand)clause.getCommand()), clause.getOutputName());
+        result.setLateral(clause.isLateral());
+        return result;
     }
 
     NamedTable translate(UnaryFromClause clause) {
@@ -820,6 +829,13 @@ public class LanguageBridgeFactory {
     ColumnReference translate(ElementSymbol symbol) {
         ColumnReference element = new ColumnReference(translate(symbol.getGroupSymbol()), Symbol.getShortName(symbol.getOutputName()), null, symbol.getType());
         if (element.getTable().getMetadataObject() == null) {
+        	//handle procedure resultset columns
+        	if (symbol.getMetadataID() instanceof TempMetadataID) {
+        		TempMetadataID tid = (TempMetadataID)symbol.getMetadataID();
+        		if (tid.getOriginalMetadataID() instanceof Column && !(((Column)tid.getOriginalMetadataID()).getParent() instanceof Table)) {
+        			element.setMetadataObject(metadataFactory.getElement(tid.getOriginalMetadataID()));
+        		}
+        	}
             return element;
         }
 

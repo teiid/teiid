@@ -201,6 +201,13 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
     }
     
     @Override
+    public void visit(NamedProcedureCall namedProcedureCall) {
+    	if (visitSubcommands) {
+    		visitNode(namedProcedureCall.getCall());
+    	}
+    }
+    
+    @Override
     public void visit(SetClause obj) {
     	visitNode(obj.getSymbol());
     	visitNode(obj.getValue());

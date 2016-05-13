@@ -97,6 +97,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 	public static final Version EIGHT_3 = Version.getVersion("8.3"); //$NON-NLS-1$
 	public static final Version EIGHT_4 = Version.getVersion("8.4"); //$NON-NLS-1$
 	public static final Version NINE_0 = Version.getVersion("9.0"); //$NON-NLS-1$
+	public static final Version NINE_3 = Version.getVersion("9.3"); //$NON-NLS-1$
 	protected OracleFormatFunctionModifier parseModifier = new PostgreSQLFormatFunctionModifier("TO_TIMESTAMP(", true); //$NON-NLS-1$
 	
 	//postgis versions
@@ -934,6 +935,11 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     @Override
     public String translateLiteralBinaryType(BinaryType obj) {
     	return "E'\\\\x" + obj + '\''; //$NON-NLS-1$ 
+    }
+    
+    @Override
+    public boolean supportsLateralJoin() {
+    	return getVersion().compareTo(NINE_3) >= 0;
     }
     
 }

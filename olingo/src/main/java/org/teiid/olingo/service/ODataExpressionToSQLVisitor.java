@@ -637,7 +637,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             procedure.setParameter(param);
             
             SubqueryFromClause fromClause = new SubqueryFromClause(group, procedure);
-            fromClause.setTable(true);
+            fromClause.setLateral(true);
             
             DocumentNode itResource = new DocumentNode();
             AliasSymbol expression = new AliasSymbol(projectedEs.getShortName(), castFunction);

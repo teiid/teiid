@@ -296,7 +296,7 @@ public class ODataSQLBuilder extends ODataExpressionVisitor {
         // create a inline view from procedure
         StoredProcedure procedure = storedProcedure(procedureName, function, inputParams);
         SubqueryFromClause sfc = new SubqueryFromClause(gs, procedure);
-        sfc.setTable(true);        
+        sfc.setLateral(true);        
         
         // handle $filter
         if (info.filter != null) {

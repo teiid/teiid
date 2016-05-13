@@ -1345,4 +1345,28 @@ public class ExecutionFactory<F, C> {
 			String excluedCommonTableExpressionName) {
 		this.excluedCommonTableExpressionName = excluedCommonTableExpressionName;
 	}
+	
+	/**
+	 * 
+	 * @return true if the source supports lateral join
+	 */
+	public boolean supportsLateralJoin() {
+		return false;
+	}
+	
+	/**
+	 * 
+	 * @return true if the source supports lateral join conditions
+	 */
+	public boolean supportsLateralJoinCondition() {
+		return supportsLateralJoin();
+	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public boolean supportsProcedureTable() {
+		return false;
+	}
 }

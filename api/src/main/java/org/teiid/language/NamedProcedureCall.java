@@ -25,16 +25,16 @@ package org.teiid.language;
 import org.teiid.language.visitor.LanguageObjectVisitor;
 
 /**
- * Represents a derived table or inline view in the from clause.
+ * Represents a procedure call that returns a table.
  */
-public class DerivedTable extends BaseLanguageObject implements TableReference {
+public class NamedProcedureCall extends BaseLanguageObject implements TableReference {
 
     private String correlationName;
-    private QueryExpression query;
+    private Call call;
     private boolean lateral;
 
-    public DerivedTable(QueryExpression query, String name) {        
-        this.query = query;
+    public NamedProcedureCall(Call call, String name) {        
+        this.call = call;
         this.correlationName = name;
     }
 
@@ -46,12 +46,12 @@ public class DerivedTable extends BaseLanguageObject implements TableReference {
         this.correlationName = name;
     }
 
-    public QueryExpression getQuery() {
-        return this.query;
+    public Call getCall() {
+        return this.call;
     }
 
-    public void setQuery(QueryExpression query) {
-        this.query = query;
+    public void setCall(Call call) {
+        this.call = call;
     }
 
     public void acceptVisitor(LanguageObjectVisitor visitor) {

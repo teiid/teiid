@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.core.types.JDBCSQLTypeInfo;
+import org.teiid.language.SQLConstants;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
@@ -58,6 +59,7 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
 	public static final Version SEVEN_4 = Version.getVersion("7.4"); //$NON-NLS-1$
 	public static final Version SEVEN_5 = Version.getVersion("7.5"); //$NON-NLS-1$
 	public static final Version SEVEN_6 = Version.getVersion("7.6"); //$NON-NLS-1$
+	public static final Version EIGHT_1 = Version.getVersion("8.1"); //$NON-NLS-1$
 	public static final Version EIGHT_3 = Version.getVersion("8.3"); //$NON-NLS-1$
 	public static final Version EIGHT_4 = Version.getVersion("8.4"); //$NON-NLS-1$
 	public static final Version EIGHT_5 = Version.getVersion("8.5"); //$NON-NLS-1$
@@ -440,6 +442,24 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
             	}
             }
     	};
+    }
+    
+    @Override
+    public boolean supportsLateralJoin() {
+    	return true;
+    }
+    
+    @Override
+    public String getLateralKeyword() {
+        if (getVersion().compareTo(EIGHT_1) < 0) {
+        	return SQLConstants.Reserved.TABLE;
+        }
+    	return super.getLateralKeyword();
+    }
+    
+    @Override
+    public boolean supportsProcedureTable() {
+    	return true;
     }
     
 }

@@ -34,6 +34,7 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.Assertion;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -49,15 +50,8 @@ import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.AccessNode;
-import org.teiid.query.sql.lang.CompareCriteria;
-import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.ExistsCriteria;
-import org.teiid.query.sql.lang.JoinType;
-import org.teiid.query.sql.lang.OrderBy;
-import org.teiid.query.sql.lang.OrderByItem;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.SetQuery.Operation;
-import org.teiid.query.sql.lang.SourceHint;
-import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -653,14 +647,14 @@ public final class RuleRaiseAccess implements OptimizerRule {
 			}
 		}
         
-        return canRaiseOverJoin(joinNode.getChildren(), metadata, capFinder, crits, type, record, context, afterJoinPlanning);		
+        return canRaiseOverJoin(joinNode.getChildren(), metadata, capFinder, crits, type, record, context, afterJoinPlanning, true);		
 	}
 
     static Object canRaiseOverJoin(List<PlanNode> children,
                                            QueryMetadataInterface metadata,
                                            CapabilitiesFinder capFinder,
                                            List<Criteria> crits,
-                                           JoinType type, AnalysisRecord record, CommandContext context, boolean considerOptional) throws QueryMetadataException,
+                                           JoinType type, AnalysisRecord record, CommandContext context, boolean considerOptional, boolean considerLateral) throws QueryMetadataException,
                                                          TeiidComponentException {
         //we only want to consider binary joins
         if (children.size() != 2) {
@@ -675,6 +669,33 @@ public final class RuleRaiseAccess implements OptimizerRule {
 		SupportedJoinCriteria sjc = null;
 
 		for (PlanNode childNode : children) {
+			boolean lateral = false;
+			if (considerLateral && childNode.getType() == NodeConstants.Types.SOURCE
+					&& childNode.getFirstChild() != null
+					&& childNode.getProperty(Info.CORRELATED_REFERENCES) != null) {
+						
+                if (FrameUtil.getNestedPlan(childNode.getFirstChild()) != null) {
+                	return null;
+                }
+                Command command = FrameUtil.getNonQueryCommand(childNode.getFirstChild());
+                
+                if (command instanceof StoredProcedure) {
+                	if (!CapabilitiesUtil.supports(Capability.QUERY_FROM_PROCEDURE_TABLE, modelID, metadata, capFinder)) {
+                		return null;
+                	}
+                	//this should look like source/project/access - if not, then back out
+                	if (childNode.getFirstChild().getType() == NodeConstants.Types.PROJECT) {
+                		childNode = childNode.getFirstChild();
+                	}
+                }
+                if (childNode.getFirstChild().getType() == NodeConstants.Types.ACCESS) {
+    				childNode = childNode.getFirstChild();
+                } else {
+                	return null;
+                }
+
+				lateral = true;
+			}
 			if(childNode.getType() != NodeConstants.Types.ACCESS 
 					|| childNode.hasCollectionProperty(NodeConstants.Info.ACCESS_PATTERNS)) {
                 return null;
@@ -804,7 +825,6 @@ public final class RuleRaiseAccess implements OptimizerRule {
 				
 				modelID = accessModelID;
 				multiSource = childNode.hasBooleanProperty(Info.IS_MULTI_SOURCE);
-				
 			} else if(!CapabilitiesUtil.isSameConnector(modelID, accessModelID, metadata, capFinder) 
 					&& !isConformed(metadata, capFinder, (Set<Object>) childNode.getProperty(Info.CONFORMED_SOURCES), modelID, (Set<Object>) children.get(0).getProperty(Info.CONFORMED_SOURCES), accessModelID)) { 
 				return null;
@@ -831,7 +851,10 @@ public final class RuleRaiseAccess implements OptimizerRule {
 					return null;
 				}
 			}
-			
+			if (lateral && (!CapabilitiesUtil.supports(Capability.QUERY_FROM_JOIN_LATERAL, modelID, metadata, capFinder) 
+					|| (crits != null && !crits.isEmpty() && !CapabilitiesUtil.supports(Capability.QUERY_FROM_JOIN_LATERAL_CONDITION, accessModelID, metadata, capFinder)))) {
+				return null;
+			}
 		} // end walking through join node's children
 
 		int maxGroups = CapabilitiesUtil.getMaxFromGroups(modelID, metadata, capFinder);
@@ -940,7 +963,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
 		return false;
 	}
     
-    static PlanNode raiseAccessOverJoin(PlanNode joinNode, PlanNode accessNode, Object modelID, CapabilitiesFinder capFinder, QueryMetadataInterface metadata, boolean insert) 
+	static PlanNode raiseAccessOverJoin(PlanNode joinNode, PlanNode accessNode, Object modelID, CapabilitiesFinder capFinder, QueryMetadataInterface metadata, boolean insert) 
     		throws QueryMetadataException, TeiidComponentException {
 		PlanNode leftAccess = joinNode.getFirstChild();
 		PlanNode rightAccess = joinNode.getLastChild();
@@ -953,8 +976,20 @@ public final class RuleRaiseAccess implements OptimizerRule {
 
 		// Remove old access nodes - this will automatically add children of access nodes to join node
 		NodeEditor.removeChildNode(joinNode, leftAccess);
-		NodeEditor.removeChildNode(joinNode, rightAccess);
-		
+		if (rightAccess.getType() == NodeConstants.Types.SOURCE) {
+			rightAccess.setProperty(NodeConstants.Info.INLINE_VIEW, Boolean.TRUE);
+			//handle lateral join
+			if (FrameUtil.getNonQueryCommand(rightAccess.getFirstChild()) != null) {
+				//procedure case
+				PlanNode access = NodeEditor.findNodePreOrder(rightAccess, NodeConstants.Types.ACCESS);
+				NodeEditor.removeChildNode(access.getParent(), access);
+			} else {
+				Assertion.assertTrue(rightAccess.getFirstChild().getType() == NodeConstants.Types.ACCESS);
+				NodeEditor.removeChildNode(rightAccess, rightAccess.getFirstChild());
+			}
+		} else {
+			NodeEditor.removeChildNode(joinNode, rightAccess);
+		}
 		combineConformedSources(accessNode, other);
         
         //Set for later possible use, even though this isn't an access node

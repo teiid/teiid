@@ -584,6 +584,7 @@ public final class RuleCollapseSource implements OptimizerRule {
             }
             case NodeConstants.Types.SOURCE:
             {
+            	boolean pushedTableProcedure = false;
             	GroupSymbol symbol = node.getGroups().iterator().next();
             	if (node.hasBooleanProperty(Info.INLINE_VIEW)) {
                     PlanNode child = node.getFirstChild();
@@ -591,6 +592,14 @@ public final class RuleCollapseSource implements OptimizerRule {
                     
                     //ensure that the group is consistent
                     SubqueryFromClause sfc = new SubqueryFromClause(symbol, newQuery);
+                    
+                    SymbolMap map = (SymbolMap)node.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
+                    if (map != null) {
+            			ExpressionMappingVisitor visitor = new RuleMergeCriteria.ReferenceReplacementVisitor(map);
+            			DeepPostOrderNavigator.doVisit(newQuery, visitor);
+                    	sfc.setLateral(true);
+                    }
+                    
                     query.getFrom().addClause(sfc);
                     //ensure that the column names are consistent
                     Query q = newQuery.getProjectedQuery();
@@ -615,8 +624,33 @@ public final class RuleCollapseSource implements OptimizerRule {
                     		}
                     	}
                     }
+                    
+                    //there is effectively an unnecessary inline view that can be removed in the procedure case
+                    //so we'll unwrap that here
+                    if (newQuery instanceof Query) {
+                    	q = (Query)newQuery;
+                    	if (q.getFrom() != null && q.getFrom().getClauses().size() == 1 && q.getFrom().getClauses().get(0) instanceof SubqueryFromClause) {
+                    		SubqueryFromClause nested = (SubqueryFromClause)q.getFrom().getClauses().get(0);
+                    		if (nested.getCommand() instanceof StoredProcedure) {
+                    			sfc.setCommand(nested.getCommand());
+                    		}
+                    	}
+                    }
+                    
                     return;
+                } 
+            	//handle lateral join of a procedure
+            	Command command = (Command) node.getProperty(NodeConstants.Info.VIRTUAL_COMMAND);
+            	if (command instanceof StoredProcedure) {
+            		StoredProcedure storedProcedure = (StoredProcedure)command;
+            		storedProcedure.setPushedInQuery(true);
+            		SubqueryFromClause subqueryFromClause = new SubqueryFromClause(symbol, storedProcedure);
+            		
+            		//TODO: it would be better to directly add
+					query.getFrom().addClause(subqueryFromClause);
+					pushedTableProcedure=true;
                 }
+            	
             	PlanNode subPlan = (PlanNode) node.getProperty(Info.SUB_PLAN);
             	if (subPlan != null) {
             		Map<GroupSymbol, PlanNode> subPlans = (Map<GroupSymbol, PlanNode>) accessRoot.getProperty(Info.SUB_PLANS);
@@ -626,7 +660,9 @@ public final class RuleCollapseSource implements OptimizerRule {
             		}
             		subPlans.put(symbol, subPlan);
             	}
-                query.getFrom().addGroup(symbol);
+            	if (!pushedTableProcedure) {
+            		query.getFrom().addGroup(symbol);
+            	}
                 break;
             }
     	}
@@ -895,7 +931,13 @@ public final class RuleCollapseSource implements OptimizerRule {
      * @return True if tree has outer joins, false otherwise
      */
     static boolean hasOuterJoins(FromClause clause) {
-        if(clause instanceof UnaryFromClause || clause instanceof SubqueryFromClause) {
+    	if (clause instanceof SubqueryFromClause) {
+    		if (((SubqueryFromClause)clause).isLateral()) { 
+    			return true;
+    		}
+    		return false;
+    	}
+        if(clause instanceof UnaryFromClause) {
             return false;
         }
         JoinPredicate jp = (JoinPredicate) clause;
