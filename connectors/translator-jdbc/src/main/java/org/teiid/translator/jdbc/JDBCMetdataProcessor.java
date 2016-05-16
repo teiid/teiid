@@ -826,7 +826,7 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 		this.importForeignKeys = importForeignKeys;
 	}
 	
-	protected void setColumnNamePattern(String columnNamePattern) {
+	public void setColumnNamePattern(String columnNamePattern) {
 		this.columnNamePattern = columnNamePattern;
 	}
 
@@ -920,7 +920,7 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
         return importStatistics;
     }
     
-    @TranslatorProperty(display="Column Name Pattern", category=PropertyType.IMPORT, description="a column name pattern; must match the column name as it is stored in the database. Used to import columns of tables")
+    @TranslatorProperty(display="Column Name Pattern", category=PropertyType.IMPORT, description="a column name pattern; must match the column name as it is stored in the database. Used to import columns of tables.  Leave unset to import all columns.", advanced=true)
     public String getColumnNamePattern() {
         return columnNamePattern;
     }

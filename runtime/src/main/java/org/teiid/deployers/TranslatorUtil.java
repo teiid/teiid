@@ -370,7 +370,7 @@ public class TranslatorUtil {
 		Class<?> type = method.getReturnType();
 		String[] allowedValues = null;
 		Method getter = null;
-		boolean readOnly = false;
+		boolean readOnly = prop.readOnly();
 		if (type == Void.TYPE) { //check for setter
 			Class<?>[] types = method.getParameterTypes();
 			if (types.length != 1) {
@@ -393,7 +393,9 @@ public class TranslatorUtil {
 			try {
 				TranslatorUtil.getSetter(instance.getClass(), method);
 			} catch (Exception e) {
-				readOnly = true;
+				if (!readOnly) {
+					throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40146, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40146, method));
+				}
 			}
 		}
 		Object defaultValue = null;

@@ -21,6 +21,29 @@
  */
 package org.teiid.translator.swagger;
 
+import io.swagger.models.HttpMethod;
+import io.swagger.models.Model;
+import io.swagger.models.Operation;
+import io.swagger.models.Path;
+import io.swagger.models.RefModel;
+import io.swagger.models.Response;
+import io.swagger.models.Scheme;
+import io.swagger.models.Swagger;
+import io.swagger.models.parameters.BodyParameter;
+import io.swagger.models.parameters.CookieParameter;
+import io.swagger.models.parameters.FormParameter;
+import io.swagger.models.parameters.HeaderParameter;
+import io.swagger.models.parameters.Parameter;
+import io.swagger.models.parameters.PathParameter;
+import io.swagger.models.parameters.QueryParameter;
+import io.swagger.models.properties.ArrayProperty;
+import io.swagger.models.properties.FileProperty;
+import io.swagger.models.properties.MapProperty;
+import io.swagger.models.properties.ObjectProperty;
+import io.swagger.models.properties.Property;
+import io.swagger.models.properties.RefProperty;
+import io.swagger.parser.SwaggerParser;
+
 import java.sql.Blob;
 import java.util.HashMap;
 import java.util.List;
@@ -45,29 +68,6 @@ import org.teiid.translator.ws.BinaryWSProcedureExecution;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import io.swagger.models.HttpMethod;
-import io.swagger.models.Model;
-import io.swagger.models.Operation;
-import io.swagger.models.Path;
-import io.swagger.models.RefModel;
-import io.swagger.models.Response;
-import io.swagger.models.Scheme;
-import io.swagger.models.Swagger;
-import io.swagger.models.parameters.BodyParameter;
-import io.swagger.models.parameters.CookieParameter;
-import io.swagger.models.parameters.FormParameter;
-import io.swagger.models.parameters.HeaderParameter;
-import io.swagger.models.parameters.Parameter;
-import io.swagger.models.parameters.PathParameter;
-import io.swagger.models.parameters.QueryParameter;
-import io.swagger.models.properties.ArrayProperty;
-import io.swagger.models.properties.FileProperty;
-import io.swagger.models.properties.MapProperty;
-import io.swagger.models.properties.ObjectProperty;
-import io.swagger.models.properties.Property;
-import io.swagger.models.properties.RefProperty;
-import io.swagger.parser.SwaggerParser;
 
 public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>{
     public static final String KEY_NAME = "key_name";
@@ -125,7 +125,7 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
         return this.useDefaultHost;
     }
     
-    public void setIsUseDefaultHost(boolean useDefault) {
+    public void setUseDefaultHost(boolean useDefault) {
         this.useDefaultHost = useDefault;
     }
 
