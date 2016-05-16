@@ -1210,8 +1210,8 @@ public class SQLStringVisitor extends LanguageVisitor {
     @Override
     public void visit( SubqueryFromClause obj ) {
         addHintComment(obj);
-        if (obj.isTable()) {
-            append(TABLE);
+        if (obj.isLateral()) {
+            append(LATERAL);
         }
         append("(");//$NON-NLS-1$
         visitNode(obj.getCommand());

@@ -126,19 +126,10 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 			} else {
 				String name = deploymentUnit.getName();
 				String fileName = StringUtil.getLastToken(name, "/"); //$NON-NLS-1$
-				if (fileName.startsWith(vdb.getName() + VDBMetaData.VERSION_DELIM)) { 
-					String suffix = fileName.substring(vdb.getName().length() + 1);
-					int index = suffix.lastIndexOf(VDBMetaData.VERSION_DELIM);
-					if (index > 0) {	
-						String version = suffix.substring(0, index);
-						try {
-							int fileVersion = Integer.parseInt(version);
-							vdb.setVersion(fileVersion);
-						} catch (NumberFormatException e) {
-							//should be a semantic version
-							vdb.setName(name + VDBMetaData.VERSION_DELIM + version);
-						}
-					}
+				int index = fileName.indexOf('.');
+				int lastIndex = fileName.lastIndexOf('.');
+				if (index > 0 && index != lastIndex && fileName.substring(0, index).equals(vdb.getName())) {
+					vdb.setVersion(name.substring(index+1, lastIndex));
 				}
 			}
 			deploymentUnit.putAttachment(TeiidAttachments.VDB_METADATA, vdb);

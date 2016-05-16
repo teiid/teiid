@@ -72,7 +72,7 @@ public interface Session extends AdminObject, DomainAware {
      * 
      * @return String name/number of the VDB Version
      */
-    public int getVDBVersion();
+    public String getVDBVersion();
     
     /**
      * Get the IPAddress for this Session.  Note this value is reported from the client.

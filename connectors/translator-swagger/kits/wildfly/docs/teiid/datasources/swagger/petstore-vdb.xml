@@ -1,0 +1,21 @@
+<vdb name="petstore" version="1">
+    <!-- example VDB -->
+    <model visible="true" name="m">
+        <source name="s" translator-name="swagger" connection-jndi-name="java:/swagger"/> 
+    </model>
+</vdb>
+
+<!--sample resource adapter configuration in standalone-teiid.xml in resource adapters subsystem. 
+
+<resource-adapter id="swagger">
+    <module slot="main" id="org.jboss.teiid.resource-adapter.webservice"/>
+    <transaction-support>NoTransaction</transaction-support>
+    <connection-definitions>
+        <connection-definition class-name="org.teiid.resource.adapter.ws.WSManagedConnectionFactory" jndi-name="java:/swagger" enabled="true" use-java-context="true" pool-name="teiid-swagger-ds">
+            <config-property name="EndPoint">
+                http://petstore.swagger.io/v2
+            </config-property>
+        </connection-definition>
+    </connection-definitions>
+</resource-adapter>
+ -->

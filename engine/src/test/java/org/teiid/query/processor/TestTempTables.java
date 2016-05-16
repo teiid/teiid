@@ -450,7 +450,7 @@ public class TestTempTables extends TempTableTestHarness {
 	@Test public void testCompositeKeyJoinUsesKeyOrder() throws Exception {
 		execute("create local temporary table x (e1 string, e2 integer, primary key (e1, e2))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
 		execute("create local temporary table x1 (e1 string, e2 integer)", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
-		TestOptimizer.helpPlan("select * from x, x1 where x.e2 = x1.e2 and x.e1 = x1.e1", this.metadata, new String[] {"SELECT x1.e2, x1.e1 FROM x1 ORDER BY x1.e1, x1.e2", "SELECT x.e2, x.e1 FROM x ORDER BY x.e1, x.e2"}, ComparisonMode.EXACT_COMMAND_STRING);
+		TestOptimizer.helpPlan("select * from /*+ makenotdep */ x, /*+ makenotdep */ x1 where x.e2 = x1.e2 and x.e1 = x1.e1", this.metadata, new String[] {"SELECT x1.e2, x1.e1 FROM x1 ORDER BY x1.e1, x1.e2", "SELECT x.e2, x.e1 FROM x ORDER BY x.e1, x.e2"}, ComparisonMode.EXACT_COMMAND_STRING);
 	}
 	
 	@Test public void testUnneededMergePredicate() throws Exception {
@@ -607,6 +607,28 @@ public class TestTempTables extends TempTableTestHarness {
 
 		execute("select e2, e1 from x where e1 in ('2000', '1')", new List[] {Arrays.asList(1, "1"), Arrays.asList(2000, "2000")}); //$NON-NLS-1$
 		
+	}
+	
+	@Test public void testDeleteRemovingPage() throws Exception {
+		execute("insert into #tmp_params "
+				+ "select parsetimestamp('2016-04-01','yyyy-MM-dd') as starttime, parsetimestamp('2016-04-15','yyyy-MM-dd') as endtime", new List[] {Arrays.asList(1)});
+		execute("insert into #tmp_dates "
+				+ "select cast(parsetimestamp('2016-03-20','yyyy-MM-dd') as date) as datum, 'somevalue' as somevalue "
+				+ "UNION select cast(parsetimestamp('2016-04-02','yyyy-MM-dd') as date) as datum, 'somevalue' as somevalue "
+				+ "UNION select cast(parsetimestamp('2016-04-20','yyyy-MM-dd') as date) as datum, 'somevalue' as somevalue", new List[] {Arrays.asList(3)});
+		for (int i = 0; i < 1277; i++) {
+			execute("insert into #tmp_dates select DATE '2016-05-01' as datum, 'somevalue' as somevalue", new List[] {Arrays.asList(1)});
+		}
+		execute("delete from #tmp_dates where datum > (select cast(endtime as date) from #tmp_params)", new List[] {Arrays.asList(1024)});
+		execute("delete from #tmp_dates where datum < (select cast(starttime as date) from #tmp_params)", new List[] {Arrays.asList(1)});
+	}
+	
+	@Test public void testImplicitResolvingWithoutColumns() throws Exception {
+		execute("insert into #tmp_dates "
+				+ "select cast(parsetimestamp('2016-03-20','yyyy-MM-dd') as date) as datum, 'somevalue' as somevalue "
+				+ "UNION select cast(parsetimestamp('2016-04-02','yyyy-MM-dd') as date) as datum, 'somevalue' as somevalue "
+				+ "UNION select cast(parsetimestamp('2016-04-20','yyyy-MM-dd') as date) as datum, 'somevalue' as somevalue", new List[] {Arrays.asList(3)});
+		execute("insert into #tmp_dates select DATE '2016-05-01', somevalue from #tmp_dates", new List[] {Arrays.asList(3)});
 	}
 	
 }

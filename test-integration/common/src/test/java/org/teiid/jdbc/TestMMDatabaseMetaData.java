@@ -49,6 +49,7 @@ import org.junit.Test;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.util.ApplicationInfo;
 import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.util.ResultSetUtil;
 
@@ -58,7 +59,7 @@ import org.teiid.jdbc.util.ResultSetUtil;
 @SuppressWarnings("nls")
 public class TestMMDatabaseMetaData {
     
-    private static final boolean REPLACE_EXPECTED = false;
+    private static final boolean REPLACE_EXPECTED = PropertiesUtils.getBooleanProperty(System.getProperties(), "replace_expected", false);
     private static final boolean WRITE_ACTUAL_RESULTS_TO_FILE = false;
     private static final boolean PRINT_RESULTSETS_TO_CONSOLE = false;
     

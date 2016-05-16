@@ -289,9 +289,9 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	protected boolean waitForLoad;
 	protected ClientServiceRegistryImpl services = new ClientServiceRegistryImpl() {
 		@Override
-		public void waitForFinished(String vdbName, int vdbVersion, int timeOutMillis) throws ConnectionException {
+		public void waitForFinished(VDBKey vdbKey, int timeOutMillis) throws ConnectionException {
 			if (waitForLoad) {
-				repo.waitForFinished(vdbName, vdbVersion, timeOutMillis);
+				repo.waitForFinished(vdbKey, timeOutMillis);
 			}
 		}
 		@Override
@@ -494,18 +494,18 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		this.repo.addListener(new VDBLifeCycleListener() {
 
 			@Override
-			public void added(String name, int version, CompositeVDB vdb) {
+			public void added(String name, CompositeVDB vdb) {
 
 			}
 
 			@Override
-			public void removed(String name, int version, CompositeVDB vdb) {
+			public void removed(String name, CompositeVDB vdb) {
 				if (replicator != null) {
 					replicator.stop(vdb.getVDB().getAttachment(GlobalTableStore.class));
 				}
-				rs.clearForVDB(name, 1);
-				ppc.clearForVDB(name, 1);
-				for (SessionMetadata session : sessionService.getSessionsLoggedInToVDB(name, version)) {
+				rs.clearForVDB(vdb.getVDBKey()); 
+				ppc.clearForVDB(vdb.getVDBKey()); 
+				for (SessionMetadata session : sessionService.getSessionsLoggedInToVDB(vdb.getVDBKey())) { 
 					try {
 						sessionService.closeSession(session.getSessionId());
 					} catch (InvalidSessionException e) {
@@ -514,7 +514,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			}
 
 			@Override
-			public void finishedDeployment(String name, int version, CompositeVDB vdb) {
+			public void finishedDeployment(String name, CompositeVDB vdb) {
 				if (!vdb.getVDB().getStatus().equals(Status.ACTIVE)) {
 					return;
 				}
@@ -524,7 +524,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			}
 
 			@Override
-			public void beforeRemove(String name, int version, CompositeVDB vdb) {
+			public void beforeRemove(String name, CompositeVDB vdb) {
 			}
 		});
 		this.repo.setSystemFunctionManager(new SystemFunctionManager());
@@ -637,7 +637,17 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			throws ConnectorManagerException, VirtualDatabaseException, TranslatorException {
 		VDBMetaData vdb = new VDBMetaData();
 		vdb.setXmlDeployment(true);
-		vdb.setName(name);
+		VDBKey key = new VDBKey(name, null);
+		vdb.setName(key.getName());
+		if (key.isAtMost()) {
+			if (name.endsWith(".")) {
+				//error
+			} else {
+				vdb.setVersion("1"); //$NON-NLS-1$
+			}
+		} else {
+			vdb.setVersion(key.getVersion());
+		}
 		vdb.setModels(Arrays.asList(models));
 		//TODO: the api should be hardened to prevent the creation of invalid metadata
 		//missing source/translator names will cause issues
@@ -800,7 +810,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	
 	public void undeployVDB(String vdbName) {
 		checkStarted();
-		this.repo.removeVDB(vdbName, 1);
+		this.repo.removeVDB(vdbName, "1"); //$NON-NLS-1$
 	}
 
 	/**
@@ -873,7 +883,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	 * @return the ddl or null if the vdb/schema does not exist
 	 */
 	public String getSchemaDdl(String vdbName, String schemaName) {
-		VDBMetaData vdb = repo.getVDB(vdbName, 1);
+		VDBMetaData vdb = repo.getVDB(vdbName, "1"); //$NON-NLS-1$
 		if (vdb == null) {
 			return null;
 		}

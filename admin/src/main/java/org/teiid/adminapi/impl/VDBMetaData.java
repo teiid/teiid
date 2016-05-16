@@ -52,8 +52,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 	private List<VDBImportMetadata> imports = new ArrayList<VDBImportMetadata>(2);
 	private List<EntryMetaData> entries = new ArrayList<EntryMetaData>(2);
 	
-	private int version = 1;
-	private volatile String baseName;
+	private String version = "1"; //$NON-NLS-1$
 	private String description;
 	private boolean xmlDeployment = false;
 	private volatile VDB.Status status = VDB.Status.ACTIVE;
@@ -63,9 +62,6 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 	private Map<String, Boolean> visibilityOverrides = new HashMap<String, Boolean>(2);
 
 	public String getFullName() {
-		if (this.version == 1) {
-			return getName();
-		}
 		return getName() + VERSION_DELIM + getVersion(); 
 	}
 	
@@ -97,11 +93,15 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 	}
 	
 	@Override
-	public int getVersion() {
+	public String getVersion() {
 		return this.version;
 	}
 	
 	public void setVersion(int version) {
+		this.version = String.valueOf(version);
+	}
+	
+	public void setVersion(String version) {
 		this.version = version;
 	}	
 		
@@ -313,14 +313,4 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 		return visibilityOverrides;
 	}
 
-	/**
-	 * @return the base name without the version.  Will be null for non live vdbs.
-	 */
-	public String getBaseName() {
-		return baseName;
-	}
-	
-	public void setBaseName(String baseName) {
-		this.baseName = baseName;
-	}
 }

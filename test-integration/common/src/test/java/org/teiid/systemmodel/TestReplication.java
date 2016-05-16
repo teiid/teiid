@@ -146,6 +146,21 @@ public class TestReplication {
 		assertEquals(d1, d2, 0);
     }
     
+    @Test(timeout=180000) public void testReplicationStartTimeout() throws Exception {
+		server1 = createServer("infinispan-replicated-config.xml", "tcp-shared.xml");
+		server2 = createServer("infinispan-replicated-config-1.xml", "tcp-shared.xml");
+
+    	deployMatViewVDB(server1);    	
+
+		Connection c1 = server1.createConnection("jdbc:teiid:matviews");
+		Statement stmt = c1.createStatement();
+		stmt.execute("select * from TEST.RANDOMVIEW");
+		ResultSet rs = stmt.getResultSet();
+		assertTrue(rs.next());
+		
+    	deployMatViewVDB(server2);    	
+    }
+    
     @Test public void testLargeReplicationFailedTransfer() throws Exception {
     	server1 = createServer("infinispan-replicated-config.xml", "tcp-shared.xml");
     	deployLargeVDB(server1);    	

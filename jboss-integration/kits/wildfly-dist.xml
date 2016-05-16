@@ -130,52 +130,12 @@
 			<useProjectArtifact>false</useProjectArtifact>
 		</dependencySet>
 		<dependencySet>
-			<useTransitiveDependencies>true</useTransitiveDependencies>
-			<includes>
-				<include>io.swagger:swagger-jaxrs</include>
-				<include>io.swagger:swagger-core</include>
-				<include>io.swagger:swagger-models</include>
-				<include>io.swagger:swagger-annotations</include>
-			</includes>
-			<outputDirectory>${wildfly-module-root}/io/swagger/main</outputDirectory>
-			<useProjectArtifact>false</useProjectArtifact>
-		</dependencySet>
-		<dependencySet>
-			<includes>
-				<include>com.fasterxml.jackson.dataformat:jackson-dataformat-yaml</include>
-			</includes>
-			<outputDirectory>${wildfly-module-root}/com/fasterxml/jackson/dataformat/yaml/main</outputDirectory>
-			<useProjectArtifact>false</useProjectArtifact>
-		</dependencySet>
-		<dependencySet>
-			<includes>
-				<include>com.fasterxml.jackson.dataformat:jackson-dataformat-xml</include>
-			</includes>
-			<outputDirectory>${wildfly-module-root}/com/fasterxml/jackson/dataformat/xml/main</outputDirectory>
-			<useProjectArtifact>false</useProjectArtifact>
-		</dependencySet>
-		<dependencySet>
-			<includes>
-				<include>com.fasterxml.jackson.datatype:jackson-datatype-joda</include>
-			</includes>
-			<outputDirectory>${wildfly-module-root}/com/fasterxml/jackson/datatype/main</outputDirectory>
-			<useProjectArtifact>false</useProjectArtifact>
-		</dependencySet>
-		<dependencySet>
 			<includes>
 				<include>com.google.code.findbugs:annotations</include>
 			</includes>
 			<outputDirectory>${wildfly-module-root}/com/google/code/findbugs/main</outputDirectory>
 			<useProjectArtifact>false</useProjectArtifact>
 		</dependencySet>
-		<dependencySet>
-			<includes>
-				<include>org.reflections:reflections</include>
-			</includes>
-			<outputDirectory>${wildfly-module-root}/org/reflections/main</outputDirectory>
-			<useProjectArtifact>false</useProjectArtifact>
-		</dependencySet>
-
 
 		<!-- These are Teiid internal dependencies; to make JCA work -->
 		<dependencySet>

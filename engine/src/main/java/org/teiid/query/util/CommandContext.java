@@ -104,7 +104,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	
 	private static class VDBState {
 	    private String vdbName = ""; //$NON-NLS-1$
-	    private int vdbVersion;
+	    private String vdbVersion = ""; //$NON-NLS-1$
 	    private QueryMetadataInterface metadata; 
 	    private GlobalTableStore globalTables;
 		private SessionMetadata session;
@@ -218,12 +218,12 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
      * Construct a new context.
      */
     public CommandContext(String connectionID, String userName, Serializable commandPayload, 
-        String vdbName, int vdbVersion, boolean collectNodeStatistics) {
+        String vdbName, Object vdbVersion, boolean collectNodeStatistics) {
         setConnectionID(connectionID);
         setUserName(userName);
         setCommandPayload(commandPayload);
         setVdbName(vdbName);
-        setVdbVersion(vdbVersion);  
+        setVdbVersion(vdbVersion.toString());  
         setCollectNodeStatistics(collectNodeStatistics);
     }
 
@@ -231,7 +231,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
      * Construct a new context.
      */
     public CommandContext(Object processorID, String connectionID, String userName, 
-        String vdbName, int vdbVersion) {
+        String vdbName, Object vdbVersion) {
 
         this(connectionID, userName, null, vdbName, vdbVersion, 
             false);            
@@ -342,7 +342,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
         return vdbState.vdbName;
     }
 
-    public int getVdbVersion() {
+    public String getVdbVersion() {
         return vdbState.vdbVersion;
     }
 
@@ -374,8 +374,8 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
      * Sets the vdbVersion.
      * @param vdbVersion The vdbVersion to set
      */
-    public void setVdbVersion(int vdbVersion) {
-        this.vdbState.vdbVersion = vdbVersion;
+    public void setVdbVersion(Object vdbVersion) {
+        this.vdbState.vdbVersion = vdbVersion.toString();
     }
 
     public Serializable getCommandPayload() {

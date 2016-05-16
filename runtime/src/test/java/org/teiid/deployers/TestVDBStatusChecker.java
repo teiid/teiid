@@ -22,11 +22,7 @@
 
 package org.teiid.deployers;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.concurrent.Executor;
 
@@ -64,7 +60,7 @@ public class TestVDBStatusChecker {
 		VDBTranslatorMetaData factory = new VDBTranslatorMetaData();
 		factory.setExecutionFactoryClass(ExecutionFactory.class);
 		
-		assertFalse(vsc.dataSourceReplaced("x", 1, "y", "z", "t", "dsName"));
+		assertFalse(vsc.dataSourceReplaced("x", "1", "y", "z", "t", "dsName"));
 		
 		MetadataStore metadataStore = RealMetadataFactory.exampleBQTCached().getMetadataStore();
 		VDBMetaData vdb = TestCompositeVDB.createVDBMetadata(metadataStore, "bqt");
@@ -83,14 +79,14 @@ public class TestVDBStatusChecker {
 		cmr.addConnectorManager("BQT1", mgr);
 		repo.addVDB(vdb, metadataStore, null, null, cmr);
 		
-		assertTrue(vsc.dataSourceReplaced("bqt", 1, "BQT1", "BQT1", "oracle", "dsName1"));
+		assertTrue(vsc.dataSourceReplaced("bqt", "1", "BQT1", "BQT1", "oracle", "dsName1"));
 		ExecutionFactory ef = cmr.getConnectorManager("BQT1").getExecutionFactory();
 		assertSame(ef, ef1);
-		assertFalse(vsc.dataSourceReplaced("bqt", 1, "BQT1", "BQT1", "sqlserver", "dsName1"));
+		assertFalse(vsc.dataSourceReplaced("bqt", "1", "BQT1", "BQT1", "sqlserver", "dsName1"));
 		ExecutionFactory ef2 = cmr.getConnectorManager("BQT1").getExecutionFactory();
 		assertNotNull(ef2);
 		assertNotSame(ef, ef2);
-		assertTrue(vsc.dataSourceReplaced("bqt", 1, "BQT1", "BQT1", "oracle", "dsName2"));
+		assertTrue(vsc.dataSourceReplaced("bqt", "1", "BQT1", "BQT1", "oracle", "dsName2"));
 		ef = cmr.getConnectorManager("BQT1").getExecutionFactory();
 		assertNotNull(ef);
 		assertNotSame(ef, ef2);

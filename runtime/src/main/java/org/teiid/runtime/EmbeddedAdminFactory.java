@@ -62,6 +62,7 @@ import org.teiid.query.metadata.VDBResources;
 import org.teiid.services.BufferServiceImpl;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorProperty.PropertyType;
+import org.teiid.vdb.runtime.VDBKey;
 
 public class EmbeddedAdminFactory {
 	
@@ -106,7 +107,76 @@ public class EmbeddedAdminFactory {
 		}
 		
 		@Override
-		public void removeSource(String vdbName, int vdbVersion, String modelName, String sourceName) throws AdminException {
+		public void clearCache(String cacheType, String vdbName, int vdbVersion)
+				throws AdminException {
+			clearCache(cacheType, vdbName, String.valueOf(vdbVersion));
+		}
+		
+		@Override
+		public void addDataRoleMapping(String vdbName, int vdbVersion,
+				String dataRole, String mappedRoleName) throws AdminException {
+			addDataRoleMapping(vdbName, String.valueOf(vdbVersion), dataRole, mappedRoleName);
+		}
+		
+		@Override
+		public void removeDataRoleMapping(String vdbName, int vdbVersion,
+				String dataRole, String mappedRoleName) throws AdminException {
+			removeDataRoleMapping(vdbName, String.valueOf(vdbVersion), dataRole, mappedRoleName);
+		}
+		
+		@Override
+		public void setAnyAuthenticatedForDataRole(String vdbName,
+				int vdbVersion, String dataRole, boolean anyAuthenticated)
+				throws AdminException {
+			setAnyAuthenticatedForDataRole(vdbName, String.valueOf(vdbVersion), dataRole, anyAuthenticated);
+		}
+		
+		@Override
+		public void changeVDBConnectionType(String vdbName, int vdbVersion,
+				ConnectionType type) throws AdminException {
+			changeVDBConnectionType(vdbName, String.valueOf(vdbVersion), type);
+		}
+		
+		@Override
+		public void updateSource(String vdbName, int vdbVersion,
+				String sourceName, String translatorName, String dsName)
+				throws AdminException {
+			updateSource(vdbName, String.valueOf(vdbVersion), sourceName, translatorName, dsName);
+		}
+		
+		@Override
+		public void addSource(String vdbName, int vdbVersion, String modelName,
+				String sourceName, String translatorName, String dsName)
+				throws AdminException {
+			addSource(vdbName, String.valueOf(vdbVersion), modelName, sourceName, translatorName, dsName);
+		}
+
+		@Override
+		public VDB getVDB(String vdbName, int vdbVersion) throws AdminException {
+			return getVDB(vdbName, String.valueOf(vdbVersion));
+		}
+		
+		@Override
+		public void removeSource(String vdbName, int vdbVersion,
+				String modelName, String sourceName) throws AdminException {
+			removeSource(vdbName, String.valueOf(vdbVersion), modelName, sourceName);
+		}
+
+		@Override
+		public void restartVDB(String vdbName, int vdbVersion, String... models)
+				throws AdminException {
+			restartVDB(vdbName, String.valueOf(vdbVersion), models);
+		}
+		
+		@Override
+		public String getSchema(String vdbName, int vdbVersion,
+				String modelName, EnumSet<SchemaObjectType> allowedTypes,
+				String typeNamePattern) throws AdminException {
+			return getSchema(vdbName, String.valueOf(vdbVersion), modelName, allowedTypes, typeNamePattern);
+		}
+		
+		@Override
+		public void removeSource(String vdbName, String vdbVersion, String modelName, String sourceName) throws AdminException {
 
 			VDBMetaData vdb = checkVDB(vdbName, vdbVersion);
 			synchronized(vdb) {
@@ -134,7 +204,7 @@ public class EmbeddedAdminFactory {
 			return vdb;
 		}
 		
-		private VDBMetaData checkVDB(String vdbName, int vdbVersion) throws AdminProcessingException {
+		private VDBMetaData checkVDB(String vdbName, String vdbVersion) throws AdminProcessingException {
 			VDBMetaData vdb = this.embeddedServer.repo.getLiveVDB(vdbName, vdbVersion);
 			if (vdb == null){
 				throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40131, vdbName, vdbVersion));
@@ -147,7 +217,7 @@ public class EmbeddedAdminFactory {
 		}
 
 		@Override
-		public void addSource(String vdbName, int vdbVersion, String modelName, String sourceName, String translatorName, String dsName) throws AdminException {
+		public void addSource(String vdbName, String vdbVersion, String modelName, String sourceName, String translatorName, String dsName) throws AdminException {
 			VDBMetaData vdb = checkVDB(vdbName, vdbVersion);
 			synchronized(vdb) {
 				ModelMetaData model = vdb.getModel(modelName);
@@ -171,7 +241,7 @@ public class EmbeddedAdminFactory {
 		}
 
 		@Override
-		public void updateSource(String vdbName, int vdbVersion, String sourceName, String translatorName, String dsName) throws AdminException {
+		public void updateSource(String vdbName, String vdbVersion, String sourceName, String translatorName, String dsName) throws AdminException {
 			VDBMetaData vdb = checkVDB(vdbName, vdbVersion);
 			synchronized(vdb) {
 				
@@ -186,7 +256,7 @@ public class EmbeddedAdminFactory {
 		}
 		
 		@Override
-		public void changeVDBConnectionType(String vdbName, int vdbVersion, ConnectionType type) throws AdminException {
+		public void changeVDBConnectionType(String vdbName, String vdbVersion, ConnectionType type) throws AdminException {
 			VDBMetaData vdb = checkVDB(vdbName, vdbVersion);
 			synchronized(vdb) {
 				vdb.setConnectionType(type);
@@ -234,12 +304,12 @@ public class EmbeddedAdminFactory {
 		}
 
 		@Override
-		public VDB getVDB(String vdbName, int vdbVersion) throws AdminException {
+		public VDB getVDB(String vdbName, String vdbVersion) throws AdminException {
 			return this.embeddedServer.repo.getVDB(vdbName, vdbVersion);
 		}
 
 		@Override
-		public void restartVDB(String vdbName, int vdbVersion, String... models) throws AdminException {
+		public void restartVDB(String vdbName, String vdbVersion, String... models) throws AdminException {
 
 			VDBMetaData vdb = checkVDB(vdbName, vdbVersion);
 			synchronized(vdb) {
@@ -397,14 +467,14 @@ public class EmbeddedAdminFactory {
 		}
 
 		@Override
-		public void clearCache(String cacheType, String vdbName, int vdbVersion) throws AdminException {
+		public void clearCache(String cacheType, String vdbName, String vdbVersion) throws AdminException {
 			
 			checkVDB(vdbName, vdbVersion);
 
 			if(cacheType.equals(Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE.name())){
-				this.embeddedServer.getRsCache().clearForVDB(vdbName, vdbVersion);
+				this.embeddedServer.getRsCache().clearForVDB(new VDBKey(vdbName, vdbVersion));
 			} else if(cacheType.equals(Admin.Cache.PREPARED_PLAN_CACHE.name())) {
-				this.embeddedServer.getPpcCache().clearForVDB(vdbName, vdbVersion);
+				this.embeddedServer.getPpcCache().clearForVDB(new VDBKey(vdbName, vdbVersion));
 			} else {
 				throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40139, cacheType, Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE, Admin.Cache.PREPARED_PLAN_CACHE));
 			}
@@ -461,7 +531,7 @@ public class EmbeddedAdminFactory {
 		}
 
 		@Override
-		public void addDataRoleMapping(String vdbName, int vdbVersion, String dataRole, String mappedRoleName) throws AdminException {
+		public void addDataRoleMapping(String vdbName, String vdbVersion, String dataRole, String mappedRoleName) throws AdminException {
 			VDBMetaData vdb = checkVDB(vdbName, vdbVersion);
 			synchronized(vdb) {
 				DataPolicyMetadata policy = getPolicy(vdb, dataRole);
@@ -478,7 +548,7 @@ public class EmbeddedAdminFactory {
 		}	
 
 		@Override
-		public void removeDataRoleMapping(String vdbName, int vdbVersion, String dataRole, String mappedRoleName) throws AdminException {
+		public void removeDataRoleMapping(String vdbName, String vdbVersion, String dataRole, String mappedRoleName) throws AdminException {
 			VDBMetaData vdb = checkVDB(vdbName, vdbVersion);
 			synchronized(vdb) {
 				DataPolicyMetadata policy = getPolicy(vdb, dataRole);
@@ -487,7 +557,7 @@ public class EmbeddedAdminFactory {
 		}
 
 		@Override
-		public void setAnyAuthenticatedForDataRole(String vdbName, int vdbVersion, String dataRole, boolean anyAuthenticated) throws AdminException {
+		public void setAnyAuthenticatedForDataRole(String vdbName, String vdbVersion, String dataRole, boolean anyAuthenticated) throws AdminException {
 			VDBMetaData vdb = checkVDB(vdbName, vdbVersion);
 			synchronized(vdb) {
 				DataPolicyMetadata policy = getPolicy(vdb, dataRole);
@@ -526,7 +596,7 @@ public class EmbeddedAdminFactory {
 		}
 
 		@Override
-		public String getSchema(String vdbName, int vdbVersion, String modelName, EnumSet<SchemaObjectType> allowedTypes, String typeNamePattern) throws AdminException {
+		public String getSchema(String vdbName, String vdbVersion, String modelName, EnumSet<SchemaObjectType> allowedTypes, String typeNamePattern) throws AdminException {
 			
 			VDBMetaData vdb = checkVDB(vdbName, vdbVersion);
 			

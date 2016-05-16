@@ -35,14 +35,14 @@ public interface EventListener {
 	 * @param vdbName
 	 * @param vdbVersion
 	 */
-	void vdbDeployed(String vdbName, int vdbVersion);
+	void vdbDeployed(String vdbName, String vdbVersion);
 	
 	/**
 	 * Invoked when VDB undeployed
 	 * @param vdbName
 	 * @param vdbVersion
 	 */
-	void vdbUndeployed(String vdbName, int vdbVersion);
+	void vdbUndeployed(String vdbName, String vdbVersion);
 	
 	/**
 	 * VDB and all its metadata has been loaded and in ACTIVE state.

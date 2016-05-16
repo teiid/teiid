@@ -71,11 +71,11 @@ public class ExecutionContextImpl implements ExecutionContext {
 	private ConnectorWorkItem workItem;
 	private Scope scope;
 	
-	public ExecutionContextImpl(String vdbName, int vdbVersion,  Serializable executionPayload, 
+	public ExecutionContextImpl(String vdbName, Object vdbVersion,  Serializable executionPayload, 
             String originalConnectionID, String connectorName, long requestId, String partId, String execCount) {
 		commandContext = new CommandContext();
 		commandContext.setVdbName(vdbName);
-		commandContext.setVdbVersion(vdbVersion);
+		commandContext.setVdbVersion(vdbVersion.toString());
 		commandContext.setCommandPayload(executionPayload);
 		commandContext.setConnectionID(originalConnectionID);
 		commandContext.setRequestId(new RequestID(originalConnectionID, requestId));
@@ -120,7 +120,7 @@ public class ExecutionContextImpl implements ExecutionContext {
         return this.commandContext.getVdbName();
     }
     @Override
-    public int getVdbVersion() {
+    public String getVdbVersion() {
         return this.commandContext.getVdbVersion();
     }
     @Override
@@ -274,16 +274,6 @@ public class ExecutionContextImpl implements ExecutionContext {
 		return getRequestId();
 	}
 
-	@Override
-	public String getVirtualDatabaseName() {
-		return getVdbName();
-	}
-
-	@Override
-	public int getVirtualDatabaseVersion() {
-		return getVdbVersion();
-	}
-	
 	@Override
 	public CacheDirective getCacheDirective() {
 		return cacheDirective;

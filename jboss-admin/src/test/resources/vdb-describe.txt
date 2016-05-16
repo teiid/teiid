@@ -33,7 +33,7 @@
     },
     "vdb-version" : {
         "type" : {
-            "TYPE_MODEL_VALUE" : "INT"
+            "TYPE_MODEL_VALUE" : "STRING"
         },
         "description" : "The Virtual Database Version",
         "required" : true
@@ -88,7 +88,7 @@
             },
             "import-vdb-version" : {
                 "type" : {
-                    "TYPE_MODEL_VALUE" : "INT"
+                    "TYPE_MODEL_VALUE" : "STRING"
                 },
                 "description" : "Version of the Virtual Database to import",
                 "required" : true

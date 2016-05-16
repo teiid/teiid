@@ -143,6 +143,20 @@ public class TestHiveExecutionFactory {
     }
     
     @Test
+    public void testUnionAllRewriteNested() throws Exception {
+        String input = "SELECT intkey, stringkey FROM BQT1.SmallA union all SELECT intkey, stringkey FROM BQT1.Smallb union all SELECT intkey, stringkey FROM BQT1.Smallb"; 
+        String output = "SELECT intkey, stringkey FROM (SELECT SmallA.IntKey, SmallA.StringKey FROM SmallA UNION ALL SELECT SmallB.IntKey, SmallB.StringKey FROM SmallB UNION ALL SELECT SmallB.IntKey, SmallB.StringKey FROM SmallB) X__"; 
+        helpTestVisitor(bqt, input, output);    	
+    }
+    
+    @Test
+    public void testUnionAllRewriteNested1() throws Exception {
+        String input = "SELECT intkey, stringkey FROM BQT1.SmallA union all (SELECT intkey, stringkey FROM BQT1.Smallb union SELECT intkey, stringkey FROM BQT1.Smallb)"; 
+        String output = "SELECT intkey, stringkey FROM (SELECT SmallA.IntKey, SmallA.StringKey FROM SmallA UNION ALL (SELECT DISTINCT intkey, stringkey FROM (SELECT SmallB.IntKey, SmallB.StringKey FROM SmallB UNION ALL SELECT SmallB.IntKey, SmallB.StringKey FROM SmallB) X__)) X__"; 
+        helpTestVisitor(bqt, input, output);    	
+    }
+    
+    @Test
     public void testUnionAllExprRewrite() throws Exception {
         String input = "SELECT count(*) as key, stringkey FROM BQT1.SmallA union all SELECT intkey, stringkey FROM BQT1.Smallb"; 
         String output = "SELECT key, stringkey FROM (SELECT COUNT(*) AS key, SmallA.StringKey FROM SmallA UNION ALL SELECT SmallB.IntKey, SmallB.StringKey FROM SmallB) X__"; 

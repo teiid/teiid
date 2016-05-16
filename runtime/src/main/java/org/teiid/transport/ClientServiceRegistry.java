@@ -27,6 +27,7 @@ import org.teiid.deployers.VDBRepository;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.security.SecurityHelper;
+import org.teiid.vdb.runtime.VDBKey;
 
 
 public interface ClientServiceRegistry {
@@ -47,7 +48,7 @@ public interface ClientServiceRegistry {
 	@Deprecated()
 	AuthenticationType getAuthenticationType();
 	
-	void waitForFinished(String vdbName, int vdbVersion, int timeOutMillis) throws ConnectionException;
+	void waitForFinished(VDBKey vdbKey, int timeOutMillis) throws ConnectionException;
 	
 	ClassLoader getCallerClassloader();
 	

@@ -162,6 +162,7 @@ public class TestCompositeVDB {
 		vdb.addProperty("BQT1.visible", "false");
 		VDBImportMetadata vdbImport = new VDBImportMetadata();
 		vdbImport.setName("bqt");
+		vdbImport.setVersion("1");
 		vdb.getVDBImports().add(vdbImport);
 		
 		repo.addVDB(vdb, metadataStore, null, null, new ConnectorManagerRepository());
@@ -189,10 +190,11 @@ public class TestCompositeVDB {
 		vdb = createVDBMetadata(metadataStore, "ex");
 		VDBImportMetadata vdbImport = new VDBImportMetadata();
 		vdbImport.setName("bqt");
+		vdbImport.setVersion("1");
 		vdb.getVDBImports().add(vdbImport);
 		repo.addVDB(vdb, metadataStore, null, null, new ConnectorManagerRepository());
 		
-		VDBMetaData vdbInstance = repo.getVDB("ex", 1);
+		VDBMetaData vdbInstance = repo.getVDB("ex", "1");
 		assertTrue(!vdbInstance.getAttachment(ConnectorManagerRepository.class).getConnectorManagers().isEmpty());
 		
 		metadataStore = new MetadataStore();
@@ -200,10 +202,11 @@ public class TestCompositeVDB {
 		vdb = createVDBMetadata(metadataStore, "ex1");
 		vdbImport = new VDBImportMetadata();
 		vdbImport.setName("ex");
+		vdbImport.setVersion("1");
 		vdb.getVDBImports().add(vdbImport);
 		repo.addVDB(vdb, metadataStore, null, null, new ConnectorManagerRepository());
 		
-		vdbInstance = repo.getVDB("ex1", 1);
+		vdbInstance = repo.getVDB("ex1", "1");
 		assertTrue(!vdbInstance.getAttachment(ConnectorManagerRepository.class).getConnectorManagers().isEmpty());
 	}
 	
@@ -257,6 +260,7 @@ public class TestCompositeVDB {
 		vdb = createVDBMetadata(metadataStore, "ex");
 		VDBImportMetadata vdbImport = new VDBImportMetadata();
 		vdbImport.setName("bqt");
+		vdbImport.setVersion("1");
 		vdbImport.setImportDataPolicies(true);
 		vdb.getVDBImports().add(vdbImport);
 		repo.addVDB(vdb, metadataStore, null, null, new ConnectorManagerRepository());

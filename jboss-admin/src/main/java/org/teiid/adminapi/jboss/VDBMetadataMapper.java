@@ -40,20 +40,7 @@ import org.teiid.adminapi.Request.ThreadState;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.VDB.Status;
-import org.teiid.adminapi.impl.AdminObjectImpl;
-import org.teiid.adminapi.impl.CacheStatisticsMetadata;
-import org.teiid.adminapi.impl.DataPolicyMetadata;
-import org.teiid.adminapi.impl.EngineStatisticsMetadata;
-import org.teiid.adminapi.impl.EntryMetaData;
-import org.teiid.adminapi.impl.ModelMetaData;
-import org.teiid.adminapi.impl.RequestMetadata;
-import org.teiid.adminapi.impl.SessionMetadata;
-import org.teiid.adminapi.impl.SourceMappingMetadata;
-import org.teiid.adminapi.impl.TransactionMetadata;
-import org.teiid.adminapi.impl.VDBImportMetadata;
-import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.adminapi.impl.VDBTranslatorMetaData;
-import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
+import org.teiid.adminapi.impl.*;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.adminapi.impl.ModelMetaData.Message;
 import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
@@ -156,7 +143,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			vdb.setStatus(node.get(STATUS).asString());
 		}
 		if (node.has(VERSION)) {
-			vdb.setVersion(node.get(VERSION).asInt());
+			vdb.setVersion(node.get(VERSION).asString());
 		}
 		if(node.has(VDB_DESCRIPTION)) {
 			vdb.setDescription(node.get(VDB_DESCRIPTION).asString());
@@ -253,7 +240,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		addAttribute(node, STATUS, ModelType.STRING, true);
 		node.get(STATUS).get(ALLOWED).set(statusAllowed);
 		
-		addAttribute(node, VERSION, ModelType.INT, true);
+		addAttribute(node, VERSION, ModelType.STRING, true);
 		addAttribute(node, VDB_DESCRIPTION, ModelType.STRING, false);
 		addAttribute(node, XML_DEPLOYMENT, ModelType.BOOLEAN, false);
 		
@@ -296,7 +283,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 				new SimpleAttributeDefinition(VDBNAME, ModelType.STRING, false),
 				new SimpleAttributeDefinition(CONNECTIONTYPE, ModelType.INT, false),
 				new SimpleAttributeDefinition(STATUS, ModelType.BOOLEAN, false),
-				new SimpleAttributeDefinition(VERSION, ModelType.BOOLEAN, false),
+				new SimpleAttributeDefinition(VERSION, ModelType.STRING, false),
 				new SimpleAttributeDefinition(VDB_DESCRIPTION, ModelType.BOOLEAN, true),
 				new SimpleAttributeDefinition(XML_DEPLOYMENT, ModelType.BOOLEAN, true),
 				properties,
@@ -549,7 +536,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 				vdbImport.setName(node.get(VDB_NAME).asString());
 			}
 			if (node.has(VDB_VERSION)) {
-				vdbImport.setVersion(node.get(VDB_VERSION).asInt());
+				vdbImport.setVersion(node.get(VDB_VERSION).asString());
 			}
 			if (node.has(IMPORT_POLICIES)) {
 				vdbImport.setImportDataPolicies(node.get(IMPORT_POLICIES).asBoolean());
@@ -559,7 +546,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		
 		public ModelNode describe(ModelNode node) {
 			addAttribute(node, VDB_NAME, ModelType.STRING, true);
-			addAttribute(node, VDB_VERSION, ModelType.INT, true);
+			addAttribute(node, VDB_VERSION, ModelType.STRING, true);
 			addAttribute(node, IMPORT_POLICIES, ModelType.BOOLEAN, false);
 			return node; 
 		}
@@ -568,7 +555,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			return ObjectTypeAttributeDefinition.Builder.of("VDBImportMapper", //$NON-NLS-1$
 				new AttributeDefinition[] {
 					new SimpleAttributeDefinition(VDB_NAME, ModelType.STRING, false),
-					new SimpleAttributeDefinition(VDB_VERSION, ModelType.INT, false),
+					new SimpleAttributeDefinition(VDB_VERSION, ModelType.STRING, false),
 					new SimpleAttributeDefinition(IMPORT_POLICIES, ModelType.BOOLEAN, true)
 			}).build();
 		}

@@ -74,9 +74,9 @@ public interface VDB extends AdminObject, DomainAware {
     public ConnectionType getConnectionType();
 
     /**
-     * @return the VDB version.  Will be 1 if a semantic version is being used.
+     * @return the VDB version. 
      */
-    public int getVersion();
+    public String getVersion();
     
     /**
      * Get the description of the VDB

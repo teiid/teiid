@@ -21,7 +21,6 @@
  */
 package org.teiid.jboss;
 
-import org.jboss.as.threads.ThreadsServices;
 import org.jboss.msc.service.ServiceName;
 import org.teiid.core.BundleUtil;
 import org.teiid.core.TeiidException;
@@ -70,16 +69,16 @@ public class TeiidServiceNames {
 		return ServiceName.of(TRANSLATOR_BASE, name);
 	}
 	
-	public static ServiceName vdbServiceName(String vdbName, int version) {
-		return VDB_SVC_BASE.append(vdbName, String.valueOf(version)); 
+	public static ServiceName vdbServiceName(String vdbName, String version) {
+		return VDB_SVC_BASE.append(vdbName, version); 
 	}
 	
-	public static ServiceName vdbFinishedServiceName(String vdbName, int version) {
-		return VDB_FINISHED_SVC_BASE.append(vdbName, String.valueOf(version)); 
+	public static ServiceName vdbFinishedServiceName(String vdbName, String version) {
+		return VDB_FINISHED_SVC_BASE.append(vdbName, version); 
 	}
 	
-	public static ServiceName vdbSwitchServiceName(String vdbName, int version) {
-		return VDB_SWITCH_SVC_BASE.append(vdbName, String.valueOf(version)); 
+	public static ServiceName vdbSwitchServiceName(String vdbName, String version) {
+		return VDB_SWITCH_SVC_BASE.append(vdbName, version); 
 	}	
 	
 	public static ServiceName transportServiceName(String name) {
@@ -90,9 +89,9 @@ public class TeiidServiceNames {
 		return LOCAL_TRANSPORT_BASE.append(name);
 	}	
 	
-	public static ServiceName dsListenerServiceName(String vdbName, int version, String name) throws InvalidServiceNameException {
+	public static ServiceName dsListenerServiceName(String vdbName, String version, String name) throws InvalidServiceNameException {
 		try {
-			return ServiceName.of(DS_LISTENER_BASE, vdbName, String.valueOf(version), VDBStatusChecker.stripContext(name));
+			return ServiceName.of(DS_LISTENER_BASE, vdbName, version, VDBStatusChecker.stripContext(name));
 		} catch (RuntimeException e) {
 			throw new InvalidServiceNameException(IntegrationPlugin.Event.TEIID50099, e, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50099, name, vdbName, version));
 		}

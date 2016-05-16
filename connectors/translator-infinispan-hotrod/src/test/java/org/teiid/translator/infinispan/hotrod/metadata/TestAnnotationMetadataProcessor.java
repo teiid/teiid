@@ -1,6 +1,6 @@
 package org.teiid.translator.infinispan.hotrod.metadata;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.Properties;
 
@@ -42,7 +42,7 @@ public class TestAnnotationMetadataProcessor {
 
 		System.out.println("Schema: " + metadataDDL);
 		String expected = "CREATE FOREIGN TABLE Person (\n"
-	    + "\tPersonObject object OPTIONS (NAMEINSOURCE 'this', SELECTABLE FALSE, SEARCHABLE 'Unsearchable', NATIVE_TYPE 'org.jboss.as.quickstarts.datagrid.hotrod.query.domain.Person'),\n"
+	    + "\tPersonObject object OPTIONS (NAMEINSOURCE 'this', SELECTABLE FALSE, UPDATABLE FALSE, SEARCHABLE 'Unsearchable', NATIVE_TYPE 'org.jboss.as.quickstarts.datagrid.hotrod.query.domain.Person'),\n"
 	    + "\tid integer NOT NULL OPTIONS (NAMEINSOURCE 'id', SEARCHABLE 'Searchable', NATIVE_TYPE 'int'),\n"
 	    + "\temail string OPTIONS (NAMEINSOURCE 'email', SEARCHABLE 'Searchable', NATIVE_TYPE 'java.lang.String'),\n"
 	    + "\tname string NOT NULL OPTIONS (NAMEINSOURCE 'name', SEARCHABLE 'Searchable', NATIVE_TYPE 'java.lang.String'),\n"	    

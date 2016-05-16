@@ -1,0 +1,2 @@
+Manifest-Version: 1.0
+Dependencies: org.jboss.teiid.common-core,org.jboss.teiid.client,org.jboss.teiid.rest-service,io.swagger.core

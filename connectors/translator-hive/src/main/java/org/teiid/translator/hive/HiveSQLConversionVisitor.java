@@ -151,32 +151,28 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
     
     @Override
     public void visit(SetQuery obj) {
+    	//TODO: with hive 1.2, this handling is not necessary
+    	//even with hive 0.13 it's only partially necessary - for distinct
     	if (obj.getWith() != null) {
     		append(obj.getWith());
     	}
     	
-    	Select select =  (Select)obj.getLeftQuery();
-    	buffer.append(SELECT).append(Tokens.SPACE);
-    	if(!obj.isAll()) {
-    		buffer.append(DISTINCT).append(Tokens.SPACE);
-    	}
-    	addColumns(select.getDerivedColumns());
-    	buffer.append(Tokens.SPACE);
-    	buffer.append(FROM).append(Tokens.SPACE);
-    	buffer.append(Tokens.LPAREN);
-    	 
-        appendSetQuery(obj, obj.getLeftQuery(), false);
+    	Select select =  obj.getProjectedQuery();
+    	startInlineView(select, !obj.isAll());
+    	
+    	appendSetChild(obj, obj.getLeftQuery(), false);
         
-        buffer.append(Tokens.SPACE);
+        appendSetOp(obj);
         
-        appendSetOperation(obj.getOperation());
+        appendSetChild(obj, obj.getRightQuery(), true);
 
-        // UNION "ALL" always
-        buffer.append(Tokens.SPACE);
-        buffer.append(ALL);                
-        buffer.append(Tokens.SPACE);
+        endInlineView(obj);
+    }
 
-        appendSetQuery(obj, obj.getRightQuery(), true);
+	private void endInlineView(QueryExpression obj) {
+		buffer.append(Tokens.RPAREN);
+        buffer.append(Tokens.SPACE);
+        buffer.append("X__"); //$NON-NLS-1$
         
         OrderBy orderBy = obj.getOrderBy();
         if(orderBy != null) {
@@ -189,10 +185,44 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
             buffer.append(Tokens.SPACE);
             append(limit);
         }
-        buffer.append(Tokens.RPAREN);
+	}
+
+	private void startInlineView(Select select, boolean distinct) {
+		buffer.append(SELECT).append(Tokens.SPACE);
+    	if(distinct) {
+    		buffer.append(DISTINCT).append(Tokens.SPACE);
+    	}
+    	addColumns(select.getDerivedColumns());
+    	buffer.append(Tokens.SPACE);
+    	buffer.append(FROM).append(Tokens.SPACE);
+    	buffer.append(Tokens.LPAREN);
+	}
+
+	private void appendSetOp(SetQuery obj) {
+		buffer.append(Tokens.SPACE);
+        
+        appendSetOperation(obj.getOperation());
+
+        // UNION "ALL" always
         buffer.append(Tokens.SPACE);
-        buffer.append("X__"); //$NON-NLS-1$
-    }
+        buffer.append(ALL);                
+        buffer.append(Tokens.SPACE);
+	}
+
+	private void appendSetChild(SetQuery obj, QueryExpression child, boolean right) {
+		if (child instanceof Select || shouldNestSetChild(obj, child, right)) {
+    		appendSetQuery(obj, child, right);
+    	} else {
+    		//non-nested set op
+    		SetQuery setQuery = (SetQuery)child;
+    		
+            append(setQuery.getLeftQuery());
+
+            appendSetOp(setQuery);
+            
+            appendSetChild(setQuery, setQuery.getRightQuery(), true);
+    	}
+	}
     
     @Override
     public void visit(Select obj) {
@@ -205,6 +235,34 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
 					cr.setTable(null);
 				}
 			}
+    	}
+    	if (obj.isDistinct() && obj.getGroupBy() != null) {
+    		if (obj.getWith() != null) {
+        		append(obj.getWith());
+        	}
+    		if (obj.getOrderBy() == null) {
+    			boolean needsAliasing = false;
+    			List<DerivedColumn> derivedColumns = obj.getDerivedColumns();
+				for (int i = 0; i < derivedColumns.size(); i++) {
+    				DerivedColumn dc = derivedColumns.get(i);
+    				if (dc.getAlias() == null) {
+    					needsAliasing = true;
+    					break;
+    				}
+    			}
+				if (needsAliasing) {
+					for (int i = 0; i < derivedColumns.size(); i++) {
+	    				DerivedColumn dc = derivedColumns.get(i);
+	    				dc.setAlias("c_" + i); //$NON-NLS-1$
+	    			}	
+				}
+    		}
+    		startInlineView(obj, obj.isDistinct());
+    		//remove the distinct from the inline view
+    		obj.setDistinct(false);
+    		super.visit(obj);
+    		endInlineView(obj);
+    		return;
     	}
     	super.visit(obj);
     }

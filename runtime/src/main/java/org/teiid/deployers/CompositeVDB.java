@@ -156,7 +156,7 @@ public class CompositeVDB {
 		int i = 1;
 		for (VDBImport vdbImport : vdb.getVDBImports()) {
 			VDBKey key = new VDBKey(vdbImport.getName(), vdbImport.getVersion());
-			if (key.isSemantic() && (!key.isFullySpecified() || key.isAtMost() || key.getVersion() != 1)) {
+			if (key.isAtMost()) {
 				//TODO: could allow partial versions
 				throw new VirtualDatabaseException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40144, vdbKey, key));
 			}

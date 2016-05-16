@@ -67,11 +67,11 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 	}
 	
 	@Override
-	public void added(String name, int version, CompositeVDB cvdb) {
+	public void added(String name, CompositeVDB cvdb) {
 	}
 
 	@Override
-	public void beforeRemove(String name, int version, CompositeVDB cvdb) {
+	public void beforeRemove(String name, CompositeVDB cvdb) {
 		if (cvdb == null) {
 			return;
 		}
@@ -110,11 +110,11 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 	}
 
 	@Override
-	public void removed(String name, int version, CompositeVDB cvdb) {
+	public void removed(String name, CompositeVDB cvdb) {
 	}
 
 	@Override
-	public void finishedDeployment(String name, int version, final CompositeVDB cvdb) {
+	public void finishedDeployment(String name, final CompositeVDB cvdb) {
 
 		// execute start triggers
 		final VDBMetaData vdb = cvdb.getVDB();

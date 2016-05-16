@@ -341,7 +341,8 @@ public interface SourceCapabilities {
         QUERY_ORDERBY_EXTENDED_GROUPING, 
         INVALID_EXCEPTION, //property saying why the capabilities are invalid
         COLLATION_LOCALE, 
-        RECURSIVE_COMMON_TABLE_EXPRESSIONS, 
+        RECURSIVE_COMMON_TABLE_EXPRESSIONS,
+        EXCLUDE_COMMON_TABLE_EXPRESSION_NAME,
         CRITERIA_COMPARE_ORDERED_EXCLUSIVE,
         PARTIAL_FILTERS, 
         DEPENDENT_JOIN_BINDINGS,
@@ -350,7 +351,10 @@ public interface SourceCapabilities {
         NO_PROJECTION, 
         REQUIRED_LIKE_ESCAPE, 
         QUERY_SUBQUERIES_SCALAR_PROJECTION,
-        TRANSACTION_SUPPORT;
+        TRANSACTION_SUPPORT,
+        QUERY_FROM_JOIN_LATERAL, 
+        QUERY_FROM_JOIN_LATERAL_CONDITION, 
+        QUERY_FROM_PROCEDURE_TABLE;
         
         private final String toString;
         

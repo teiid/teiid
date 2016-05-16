@@ -58,7 +58,7 @@ public interface CommandContext {
 	 * Get the current vdb version
 	 * @return
 	 */
-	int getVdbVersion();
+	String getVdbVersion();
 	
 	/**
 	 * Get the connection id

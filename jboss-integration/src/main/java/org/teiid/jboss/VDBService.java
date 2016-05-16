@@ -77,6 +77,7 @@ import org.teiid.runtime.AbstractVDBDeployer;
 import org.teiid.translator.DelegatingExecutionFactory;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
+import org.teiid.vdb.runtime.VDBKey;
 
 class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 	private VDBMetaData vdb;
@@ -96,9 +97,11 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 	private VDBLifeCycleListener restEasyListener;
 	private VDBResources vdbResources;
 	private ContainerLifeCycleListener shutdownListener;
+	private VDBKey vdbKey;
 	
 	public VDBService(VDBMetaData metadata, VDBResources vdbResources, ContainerLifeCycleListener shutdownListener) {
 		this.vdb = metadata;
+		this.vdbKey = new VDBKey(metadata.getName(), metadata.getVersion());
 		this.vdbResources = vdbResources;
 		this.shutdownListener = shutdownListener;
 	}
@@ -130,18 +133,18 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		final ServiceBuilder<Void> vdbService = addVDBFinishedService(context);
 		this.vdbListener = new VDBLifeCycleListener() {
 			@Override
-			public void added(String name, int version, CompositeVDB cvdb) {
+			public void added(String name, CompositeVDB cvdb) {
 			}
 			@Override
-			public void beforeRemove(String name, int version, CompositeVDB cvdb) {
+			public void beforeRemove(String name, CompositeVDB cvdb) {
 			}
 			@Override
-			public void removed(String name, int version, CompositeVDB cvdb) {
+			public void removed(String name, CompositeVDB cvdb) {
 			}
 
 			@Override
-			public void finishedDeployment(String name, int version, CompositeVDB cvdb) {
-				if (!name.equals(VDBService.this.vdb.getName()) || version != VDBService.this.vdb.getVersion()) {
+			public void finishedDeployment(String name, CompositeVDB cvdb) {
+				if (!VDBService.this.vdbKey.equals(cvdb.getVDBKey())) {
 					return;
 				}
 				//clear out the indexmetadatarepository as it holds state that is no longer necessary
@@ -263,7 +266,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
         }       
         getVDBRepository().removeVDB(this.vdb.getName(), this.vdb.getVersion());
         getVDBRepository().removeListener(this.vdbListener);
-        getVDBRepository().removeListener(this.restEasyListener);
+        //getVDBRepository().removeListener(this.restEasyListener);
         final ServiceController<?> controller = context.getController().getServiceContainer().getService(TeiidServiceNames.vdbFinishedServiceName(vdb.getName(), vdb.getVersion()));
         if (controller != null) {
             controller.setMode(ServiceController.Mode.REMOVE);

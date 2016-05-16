@@ -92,7 +92,7 @@ OPTIONS (UPDATECOUNT 0)
 CREATE VIRTUAL PROCEDURE matViewStatus(IN schemaName string NOT NULL, IN viewName string NOT NULL) RETURNS TABLE (TargetSchemaName varchar(50), TargetName varchar(50), Valid boolean, LoadState varchar(25), Updated timestamp, Cardinality long, LoadNumber long, OnErrorAction varchar(25)) AS
 BEGIN
 	DECLARE string vdbName = (SELECT Name FROM VirtualDatabases);
-	DECLARE integer vdbVersion = (SELECT convert(Version, integer) FROM VirtualDatabases);
+	DECLARE string vdbVersion = (SELECT Version FROM VirtualDatabases);
 	DECLARE string uid = (SELECT UID FROM Sys.Tables WHERE VDBName = VARIABLES.vdbName AND SchemaName = matViewStatus.schemaName AND Name = matViewStatus.viewName);
 	
 	IF (uid IS NULL)
@@ -129,7 +129,7 @@ CREATE VIRTUAL PROCEDURE loadMatView(IN schemaName string NOT NULL, IN viewName 
 AS
 BEGIN
 	DECLARE string vdbName = (SELECT Name FROM VirtualDatabases);
-	DECLARE integer vdbVersion = (SELECT convert(Version, integer) FROM VirtualDatabases);
+	DECLARE string vdbVersion = (SELECT Version FROM VirtualDatabases);
 	DECLARE string uid = (SELECT UID FROM Sys.Tables WHERE VDBName = VARIABLES.vdbName AND SchemaName = loadMatView.schemaName AND Name = loadMatView.viewName);
 	DECLARE string status = 'CHECK';
 	DECLARE integer rowsUpdated = 0;
@@ -298,7 +298,7 @@ CREATE VIRTUAL PROCEDURE updateMatView(IN schemaName string NOT NULL, IN viewNam
 AS
 BEGIN
 	DECLARE string vdbName = (SELECT Name FROM VirtualDatabases);
-	DECLARE integer vdbVersion = (SELECT convert(Version, integer) FROM VirtualDatabases);
+	DECLARE string vdbVersion = (SELECT Version  FROM VirtualDatabases);
 	DECLARE string uid = (SELECT UID FROM Sys.Tables WHERE VDBName = VARIABLES.vdbName AND SchemaName = updateMatView.schemaName AND Name = updateMatView.viewName);
 	DECLARE integer rowsUpdated = 0;
 	DECLARE string crit;

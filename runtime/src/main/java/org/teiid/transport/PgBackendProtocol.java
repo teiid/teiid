@@ -20,25 +20,7 @@
  * 02110-1301 USA.
  */package org.teiid.transport;
 
-import static org.teiid.odbc.PGUtil.PG_TYPE_BOOL;
-import static org.teiid.odbc.PGUtil.PG_TYPE_BPCHAR;
-import static org.teiid.odbc.PGUtil.PG_TYPE_BYTEA;
-import static org.teiid.odbc.PGUtil.PG_TYPE_CHARARRAY;
-import static org.teiid.odbc.PGUtil.PG_TYPE_DATE;
-import static org.teiid.odbc.PGUtil.PG_TYPE_FLOAT4;
-import static org.teiid.odbc.PGUtil.PG_TYPE_FLOAT8;
-import static org.teiid.odbc.PGUtil.PG_TYPE_INT2;
-import static org.teiid.odbc.PGUtil.PG_TYPE_INT2VECTOR;
-import static org.teiid.odbc.PGUtil.PG_TYPE_INT4;
-import static org.teiid.odbc.PGUtil.PG_TYPE_INT8;
-import static org.teiid.odbc.PGUtil.PG_TYPE_NUMERIC;
-import static org.teiid.odbc.PGUtil.PG_TYPE_OIDARRAY;
-import static org.teiid.odbc.PGUtil.PG_TYPE_OIDVECTOR;
-import static org.teiid.odbc.PGUtil.PG_TYPE_TEXT;
-import static org.teiid.odbc.PGUtil.PG_TYPE_TEXTARRAY;
-import static org.teiid.odbc.PGUtil.PG_TYPE_TIME;
-import static org.teiid.odbc.PGUtil.PG_TYPE_TIMESTAMP_NO_TMZONE;
-import static org.teiid.odbc.PGUtil.PG_TYPE_VARCHAR;
+import static org.teiid.odbc.PGUtil.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.Unpooled;
@@ -417,10 +399,16 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 	@Override
 	public void sendCommandComplete(String sql, Integer count) {
 		startMessage('C');
+		String tag = getCompletionTag(sql, count);
+		writeString(tag);
+		sendMessage();
+	}
+
+	public static String getCompletionTag(String sql, Integer count) {
 		String tag;
 		if (StringUtil.startsWithIgnoreCase(sql, "BEGIN") || StringUtil.startsWithIgnoreCase(sql, "START TRANSACTION")) {
 			tag = "BEGIN";
-		} else if (sql.indexOf(' ') == -1) {
+		} else if (sql.indexOf(' ') == -1 || sql.equals("CLOSE CURSOR")) {
 			//should already be a completion tag
 			tag = sql.toUpperCase();
 			if (count != null) {
@@ -433,12 +421,11 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 			if (tag.equals("EXEC") || tag.equals("CALL")) {
 				tag = "SELECT"; 
 			}
-			if (count != null) {
+			if (count != null && !(tag.equalsIgnoreCase("SAVEPOINT") || tag.equalsIgnoreCase("RELEASE"))) {
 				tag += " " + count;
 			}
 		}
-		writeString(tag);
-		sendMessage();
+		return tag;
 	}
 
 	private void sendDataRow(ResultSet rs, List<PgColInfo> cols) throws SQLException, IOException {
@@ -556,7 +543,11 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 		    	break;
 		    	
 		    default:
-		    	throw new TeiidSQLException("unknown datatype failed to convert"); 
+		    	Object obj = rs.getObject(column);
+		    	if (obj != null) {
+		    		throw new TeiidSQLException("unknown datatype failed to convert");
+		    	}
+		    	break;
 		}
 	}
 	

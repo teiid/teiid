@@ -24,6 +24,7 @@ package org.teiid.arquillian;
 
 import static org.junit.Assert.*;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -47,6 +48,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.jboss.arquillian.junit.Arquillian;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.teiid.adminapi.Admin;
@@ -56,6 +58,7 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.Base64;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.ReaderInputStream;
+import org.teiid.core.util.StringUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
 import org.teiid.jdbc.TeiidDriver;
@@ -78,6 +81,7 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		admin.close();
 	}
 	
+	@Ignore
 	@Test
     public void testGetOperation() throws Exception {
 		Properties p = new Properties();
@@ -131,6 +135,7 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		Thread.sleep(2000);
     }
 	
+	@Ignore
     @Test
     public void testPostOperation() throws Exception {
     	deployVDB();
@@ -173,6 +178,7 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
         assertTrue(AdminUtil.waitForVDBLoad(admin, "sample", 1, 3));
 	}
     
+	@Ignore
 	@Test
     public void testMultipartPostOperation() throws Exception {
 		deployVDB();
@@ -237,7 +243,32 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		
 		admin.undeploy("sample-vdb.xml");
 		Thread.sleep(2000);
-    }	
+    }
+	
+	@Test
+    public void testSemanticVersion() throws Exception {
+		String vdb = ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("sample-vdb.xml"));
+		vdb = StringUtil.replace(vdb, "name=\"sample\" version=\"1\"", "name=\"sample\" version=\"2.1.1\"");
+		admin.deploy("sample-vdb.xml", new ByteArrayInputStream(vdb.getBytes("UTF-8")));
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "sample", "2.1.1", 3));
+		
+		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:sample@mm://localhost:31000;user=user;password=user", null);
+		
+		execute("SELECT * FROM Txns.G1"); //$NON-NLS-1$
+		this.internalResultSet.next();
+		
+		assertTrue("sample_2.1.1.war not found", AdminUtil.waitForDeployment(admin, "sample_2.1.1.war", 5));
+		
+		HttpEntity entity = MultipartEntityBuilder.create()
+                .addTextBody("p1", "456")
+                .build();
+		
+		String response = httpMultipartPost(entity, "http://localhost:8080/sample_2.1.1/View/g1post");
+		assertEquals("response did not match expected", "<rows p1=\"456\" p2=\"1\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
+		
+		admin.undeploy("sample-vdb.xml");
+		Thread.sleep(2000);
+    }
 	
 	private String httpMultipartPost(HttpEntity entity, String url ) throws ClientProtocolException, IOException {
         HttpPost httpPost = new HttpPost(url);

@@ -70,6 +70,8 @@ public class StoredProcedure extends ProcedureContainer {
     private boolean calledWithReturn;
     private boolean isCallableStatement;
     private boolean isProcedureRelational;
+
+	private boolean pushedInQuery;
     
     /**
      * Constructs a default instance of this class.
@@ -222,6 +224,7 @@ public class StoredProcedure extends ProcedureContainer {
         copy.displayNamedParameters = displayNamedParameters;
         copy.isCallableStatement = isCallableStatement;
         copy.isProcedureRelational = isProcedureRelational;
+        copy.pushedInQuery = pushedInQuery;
         return copy;
     }
 
@@ -303,7 +306,8 @@ public class StoredProcedure extends ProcedureContainer {
     	
 		return sameOptionAndHint(other) && 
 		this.getGroup().equals(other.getGroup()) &&
-		this.mapOfParameters.equals(other.mapOfParameters);
+		this.mapOfParameters.equals(other.mapOfParameters) &&
+		this.pushedInQuery == other.pushedInQuery;
     }
 
     public void clearParameters(){
@@ -395,6 +399,14 @@ public class StoredProcedure extends ProcedureContainer {
 
 	public boolean isCalledWithReturn() {
 		return calledWithReturn;
+	}
+
+	public boolean isPushedInQuery() {
+		return pushedInQuery;
+	}
+	
+	public void setPushedInQuery(boolean pushedInQuery) {
+		this.pushedInQuery = pushedInQuery;
 	}
 
 }

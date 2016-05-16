@@ -68,6 +68,7 @@ import org.teiid.runtime.RuntimePlugin;
 public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 
 	private static final int IO_TIMEOUT = 15000;
+	private static final int STATE_TIMEOUT = 5000;
 
 	private final class ReplicatorRpcDispatcher<S> extends RpcDispatcher {
 		private final S object;
@@ -369,7 +370,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 				return result;
 			}
 			long timeout = annotation.timeout();
-			return pullState(method, args, stateId, timeout);
+			return pullState(method, args, stateId, timeout, timeout);
 		}
 
 		/**
@@ -377,7 +378,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 		 * to determine if the state has been made available.
 		 */
 		Object pullState(Method method, Object[] args, Serializable stateId,
-				long timeout) throws Throwable {
+				long timeout, long stateDetectTimeout) throws Throwable {
 			Object result = null;
 			for (int i = 0; i < PULL_RETRIES; i++) {
 				Promise<Boolean> p = null;
@@ -406,7 +407,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 				}
 				try {
 					LogManager.logDetail(LogConstants.CTX_RUNTIME, object, "pulling state", stateId); //$NON-NLS-1$
-					Address addr = whereIsState(stateId, timeout);
+					Address addr = whereIsState(stateId, stateDetectTimeout);
 					if (addr == null) {
 						LogManager.logDetail(LogConstants.CTX_RUNTIME, object, "timeout exceeded or first member"); //$NON-NLS-1$	
 						break;
@@ -557,7 +558,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 			channel.connect(mux_id);
 			if (object instanceof ReplicatedObject) {
 				((ReplicatedObject)object).setAddress(channel.getAddress());
-				proxy.pullState(null, null, null, startTimeout);
+				proxy.pullState(null, null, null, startTimeout, startTimeout != 0?STATE_TIMEOUT:0);
 			}
 			success = true;
 			return replicatedProxy;

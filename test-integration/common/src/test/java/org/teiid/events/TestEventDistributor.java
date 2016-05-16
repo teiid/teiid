@@ -41,14 +41,14 @@ public class TestEventDistributor {
 			
 	    	server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
 	    	
-	    	Mockito.verify(events).vdbDeployed(VDB, 1);
+	    	Mockito.verify(events).vdbDeployed(VDB, "1");
 	    	Mockito.verify(events).vdbLoaded((VDB)Mockito.any());
 	    	
 	    	server.undeployVDB(VDB);
 
-	    	Mockito.verify(events).vdbDeployed(VDB, 1);
+	    	Mockito.verify(events).vdbDeployed(VDB, "1");
 	    	Mockito.verify(events).vdbLoaded((VDB)Mockito.any());
-	    	Mockito.verify(events).vdbUndeployed(VDB, 1);
+	    	Mockito.verify(events).vdbUndeployed(VDB, "1");
 		} finally { 
 			if (server != null) {
 				server.stop();

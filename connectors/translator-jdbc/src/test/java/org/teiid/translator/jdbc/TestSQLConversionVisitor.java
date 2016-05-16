@@ -545,4 +545,13 @@ public class TestSQLConversionVisitor {
                         true);
     }
     
+    @Test public void testProcedureTable() {
+        helpTestVisitor("create foreign table smallb (intkey integer, stringkey string); "
+        		+ "create foreign procedure spTest5 (param integer) returns table(stringkey string options (nameinsource 'other'), intkey integer)",
+        		"select smallb.intkey, x.stringkey, x.intkey "
+                		+ "from smallb left outer join lateral (exec spTest5(smallb.intkey)) as x on (true)", 
+                        "SELECT smallb.intkey, x.other, x.intkey FROM smallb LEFT OUTER JOIN LATERAL (EXEC spTest5(smallb.intkey)) AS x ON 1 = 1", //$NON-NLS-1$
+                        true);
+    }
+    
 }

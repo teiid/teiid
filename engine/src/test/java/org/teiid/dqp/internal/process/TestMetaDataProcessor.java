@@ -231,7 +231,7 @@ public class TestMetaDataProcessor {
         verifyAttribute(column, ResultsMetadataConstants.SIGNED, false, Boolean.class, dataType);
 
         verifyAttribute(column, ResultsMetadataConstants.VIRTUAL_DATABASE_NAME, false, String.class, dataType);
-        verifyAttribute(column, ResultsMetadataConstants.VIRTUAL_DATABASE_VERSION, false, Integer.class, dataType);
+        verifyAttribute(column, ResultsMetadataConstants.VIRTUAL_DATABASE_VERSION, false, String.class, dataType);
         verifyAttribute(column, ResultsMetadataConstants.WRITABLE, false, Boolean.class, dataType);
     }
     

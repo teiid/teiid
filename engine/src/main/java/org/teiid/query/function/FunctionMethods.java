@@ -1361,10 +1361,6 @@ public final class FunctionMethods {
     }
     
     public static Object current_database(CommandContext context) {
-    	if (context.getVdb() != null) {
-    		//vdb can be null in unit tests
-    		return context.getVdb().getBaseName();
-    	}
     	return context.getVdbName();
     }
 
@@ -1567,7 +1563,7 @@ public final class FunctionMethods {
 				Connection c = context.getConnection();
 				ps = c.prepareStatement("SELECT Valid, LoadState FROM "+statusTable+" WHERE VDBName = ? AND VDBVersion = ? AND SchemaName = ? AND Name = ?"); //$NON-NLS-1$ //$NON-NLS-2$
 				ps.setString(1, context.getVdbName());
-				ps.setInt(2, context.getVdbVersion());
+				ps.setString(2, context.getVdbVersion());
 				ps.setString(3, schemaName);
 				ps.setString(4, viewName);
 				ResultSet rs = ps.executeQuery();

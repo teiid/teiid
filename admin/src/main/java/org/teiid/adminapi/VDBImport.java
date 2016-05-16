@@ -26,7 +26,7 @@ public interface VDBImport {
 
 	String getName();
 
-	int getVersion();
+	String getVersion();
 
 	boolean isImportDataPolicies();
 

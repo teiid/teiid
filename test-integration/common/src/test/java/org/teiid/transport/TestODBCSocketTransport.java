@@ -560,12 +560,20 @@ public class TestODBCSocketTransport {
 	}
 	
 	@Test public void testImplicitPortalClosing() throws Exception {
+		Statement statement = conn.createStatement();
+		ResultSet rs = statement.executeQuery("select session_id()");
+		rs.next();
+		String id = rs.getString(1);
+		statement.close();
+		
 		PreparedStatement s = conn.prepareStatement("select 1");
 		s.executeQuery();
 		
+		assertEquals(1, odbcServer.server.getDqp().getRequestsForSession(id).size());
+		
 		s.executeQuery();
 		
-		assertEquals(1, odbcServer.server.getDqp().getRequests().size());
+		assertEquals(1, odbcServer.server.getDqp().getRequestsForSession(id).size());
 	}
 	
 	@Test public void testExportedKey() throws Exception {
@@ -578,5 +586,5 @@ public class TestODBCSocketTransport {
 		assertEquals("STATUS_ID", rs.getString(4));
 		assertFalse(rs.next());
 	}
-
+	
 }

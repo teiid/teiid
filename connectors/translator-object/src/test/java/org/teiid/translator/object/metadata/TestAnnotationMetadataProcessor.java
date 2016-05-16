@@ -1,6 +1,6 @@
 package org.teiid.translator.object.metadata;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.Properties;
 
@@ -40,9 +40,8 @@ public class TestAnnotationMetadataProcessor {
 		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
 				null, null);
 
-		System.out.println("Schema: " + metadataDDL);
 		String expected = "CREATE FOREIGN TABLE Trade (\n"
-	    + "\tTradeObject object OPTIONS (NAMEINSOURCE 'this', SELECTABLE FALSE, SEARCHABLE 'Unsearchable', NATIVE_TYPE 'org.teiid.translator.object.testdata.annotated.Trade'),\n"
+	    + "\tTradeObject object OPTIONS (NAMEINSOURCE 'this', SELECTABLE FALSE, UPDATABLE FALSE, SEARCHABLE 'Unsearchable', NATIVE_TYPE 'org.teiid.translator.object.testdata.annotated.Trade'),\n"
 	    + "\ttradeId long NOT NULL OPTIONS (NAMEINSOURCE 'tradeId', SEARCHABLE 'Searchable', NATIVE_TYPE 'long'),\n"	    
 	    + "\tdescription string OPTIONS (NAMEINSOURCE 'description', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'java.lang.String'),\n"
 	    + "\tname string OPTIONS (NAMEINSOURCE 'name', SEARCHABLE 'Searchable', NATIVE_TYPE 'java.lang.String'),\n"

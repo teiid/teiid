@@ -79,7 +79,7 @@ public class TestEmbeddedServerAdmin {
 	public void testGetVdbs() throws AdminException {
 		for(VDB vdb : admin.getVDBs()) {
 			assertEquals(vdb.getName(), "AdminAPITestVDB");
-			assertEquals(vdb.getVersion(), 1);
+			assertEquals(vdb.getVersion(), "1");
 			assertEquals(vdb.getDescription(), "The adminapi test VDB");
 			assertEquals(vdb.getModels().size(), 1);
 		}
@@ -181,7 +181,7 @@ public class TestEmbeddedServerAdmin {
 		List<Session> sessions = (List<Session>) admin.getSessions();
 		assertEquals(1, sessions.size());
 		assertEquals("AdminAPITestVDB", sessions.get(0).getVDBName());
-		assertEquals(1, sessions.get(0).getVDBVersion());
+		assertEquals("1", sessions.get(0).getVDBVersion());
 		assertEquals("JDBC", sessions.get(0).getApplicationName());
 		assertNotNull(sessions.get(0).getSessionId());
 		conn.close();
@@ -230,10 +230,10 @@ public class TestEmbeddedServerAdmin {
 	@Test
 	public void testGetTranslatorPropertyDefinitions() throws AdminException {
 		List<PropertyDefinition> list = (List<PropertyDefinition>) admin.getTranslatorPropertyDefinitions("file", TranlatorPropertyType.OVERRIDE);
-		assertEquals(20, list.size());
+		assertEquals(21, list.size());
 		
 		list = (List<PropertyDefinition>) admin.getTranslatorPropertyDefinitions("file", TranlatorPropertyType.ALL);
-        assertEquals(20, list.size());		
+        assertEquals(21, list.size());		
 	}
 	
 	@Test

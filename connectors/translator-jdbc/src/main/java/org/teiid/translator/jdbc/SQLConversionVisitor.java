@@ -221,6 +221,11 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
 	    		return;
 	    	}
     	}
+    	if (obj.isTableReference()) {
+    		usingBinding = false;
+    		super.visit(obj);
+    		return;
+    	}
 		this.prepared = true;
 		/*
          * preparedValues is now a list of procedure params instead of just values
@@ -463,6 +468,11 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
 			return;
 		}
 		super.visit(obj);
+	}
+	
+	@Override
+	protected void appendLateralKeyword() {
+		buffer.append(this.executionFactory.getLateralKeyword());
 	}
 	
 }

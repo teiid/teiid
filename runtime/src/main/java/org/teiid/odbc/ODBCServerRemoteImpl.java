@@ -84,6 +84,12 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	private static final String UNNAMED = ""; //$NON-NLS-1$
 	private static Pattern setPattern = Pattern.compile("set\\s+(\\w+)\\s+to\\s+((?:'[^']*')+)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE);//$NON-NLS-1$
 	
+	private static Pattern columnMetadataPattern = Pattern.compile("select n.nspname, c.relname, a.attname, a.atttypid, t.typname, a.attnum, a.attlen, a.atttypmod, a.attnotnull, " //$NON-NLS-1$
+			+ "c.relhasrules, c.relkind, c.oid, pg_get_expr\\(d.adbin, d.adrelid\\), case t.typtype when 'd' then t.typbasetype else 0 end, t.typtypmod, c.relhasoids " //$NON-NLS-1$
+			+ "from \\(\\(\\(pg_catalog.pg_class c inner join pg_catalog.pg_namespace n on n.oid = c.relnamespace and c.oid = (\\d+)\\) inner join pg_catalog.pg_attribute a " //$NON-NLS-1$
+			+ "on \\(not a.attisdropped\\) and a.attnum > 0 and a.attrelid = c.oid\\) inner join pg_catalog.pg_type t on t.oid = a.atttypid\\) left outer join pg_attrdef d " //$NON-NLS-1$
+			+ "on a.atthasdef and d.adrelid = a.attrelid and d.adnum = a.attnum order by n.nspname, c.relname, attnum"); //$NON-NLS-1$
+	
 	private static Pattern pkPattern = Pattern.compile("select ta.attname, ia.attnum, ic.relname, n.nspname, tc.relname " +//$NON-NLS-1$
 			"from pg_catalog.pg_attribute ta, pg_catalog.pg_attribute ia, pg_catalog.pg_class tc, pg_catalog.pg_index i, " +//$NON-NLS-1$
 			"pg_catalog.pg_namespace n, pg_catalog.pg_class ic where tc.relname = (E?(?:'[^']*')+) AND n.nspname = (E?(?:'[^']*')+).*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE);//$NON-NLS-1$
@@ -463,7 +469,8 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
     			try {
 	                if (future.get()) {
                 		List<PgColInfo> cols = getPgColInfo(stmt.getResultSet().getMetaData());
-                        client.sendResults(sql, stmt.getResultSet(), cols, completion, -1, true);
+                		String tag = PgBackendProtocol.getCompletionTag(sql, null);
+                        client.sendResults(sql, stmt.getResultSet(), cols, completion, -1, tag.equals("SELECT") || tag.equals("SHOW") ); //$NON-NLS-1$ //$NON-NLS-2$
 	                } else {
 	                	client.sendUpdateCount(sql, stmt.getUpdateCount());
 	                	setEncoding();
@@ -778,6 +785,14 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			else if (sql.equals("SELECT typinput='array_in'::regproc, typtype FROM pg_catalog.pg_type WHERE typname = $1")) { //$NON-NLS-1$
 				return "SELECT substring(typname,1,1) = '_', typtype FROM pg_catalog.pg_type WHERE typname = ?"; //$NON-NLS-1$
 			}
+			if ((m = columnMetadataPattern.matcher(modified)).matches()) {
+				return "select t1.schemaname as nspname, c.relname, t1.name as attname, t.oid as attypid, t.typname, convert(t1.Position, short) as attnum, t.typlen as attlen," //$NON-NLS-1$
+				        + PgCatalogMetadataStore.TYPMOD + " as atttypmod, "  //$NON-NLS-1$
+						+ "CASE WHEN (t1.NullType = 'No Nulls') THEN true ELSE false END as attnotnull, c.relhasrules, c.relkind, c.oid, pg_get_expr(case when t1.IsAutoIncremented then 'nextval(' else t1.DefaultValue end, c.oid), " //$NON-NLS-1$
+						+ " case t.typtype when 'd' then t.typbasetype else 0 end, t.typtypmod, c.relhasoids from sys.columns as t1, pg_catalog.matpg_datatype as t, pg_catalog.pg_class c where c.relnspname=t1.schemaname and c.relname=t1.tablename and t1.DataType = t.Name and c.oid = " //$NON-NLS-1$
+						+ m.group(1)
+						+ " order by nspname, relname, attnum"; //$NON-NLS-1$
+			}
 		}
 		else if (sql.equalsIgnoreCase("show max_identifier_length")){ //$NON-NLS-1$
 			return "select 63"; //$NON-NLS-1$
@@ -792,10 +807,10 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			return "ROLLBACK"; //$NON-NLS-1$
 		}					
 		else if ((m = savepointPattern.matcher(sql)).matches()) {
-			return "SELECT 0"; //$NON-NLS-1$
+			return "SELECT 0 from (select 1) x where 1=0"; //$NON-NLS-1$
 		}
 		else if ((m = releasePattern.matcher(sql)).matches()) {
-			return "SELECT 0"; //$NON-NLS-1$
+			return "SELECT 0 from (select 1) x where 1=0"; //$NON-NLS-1$
 		} 
 		for (int i = 0; i < modified.length(); i++) {
 			switch (modified.charAt(i)) {

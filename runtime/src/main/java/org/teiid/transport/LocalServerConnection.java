@@ -83,22 +83,9 @@ public class LocalServerConnection implements ServerConnection {
 		if (context == null) {
 			String vdbVersion = connectionProperties.getProperty(TeiidURL.JDBC.VDB_VERSION);
 			String vdbName = connectionProperties.getProperty(TeiidURL.JDBC.VDB_NAME);
-			Integer version = null;
-			int firstIndex = vdbName.indexOf('.');
-			if (vdbVersion == null && firstIndex != -1) {
-				vdbVersion = vdbName.substring(firstIndex+1);
-				try {
-					version = Integer.valueOf(vdbVersion);
-					vdbName = vdbName.substring(0, firstIndex);
-				} catch (NumberFormatException e) {
-					VDBKey key = new VDBKey(vdbName, 0);
-					if (key.isSemantic() && !key.isAtMost()) {
-						//semantic version
-						version = 1;
-					}
-				}
-			}
-			if (version != null) {
+			VDBKey key = new VDBKey(vdbName, vdbVersion);
+			
+			if (!key.isAtMost()) {
 				int waitForLoad = PropertiesUtils.getIntProperty(connectionProperties, TeiidURL.CONNECTION.LOGIN_TIMEOUT, -1);
 				if (waitForLoad == -1) {
 					waitForLoad = PropertiesUtils.getIntProperty(connectionProperties, LocalProfile.WAIT_FOR_LOAD, -1);
@@ -106,7 +93,7 @@ public class LocalServerConnection implements ServerConnection {
 					waitForLoad *= 1000; //seconds to milliseconds
 				}
 				if (waitForLoad != 0) {
-					this.csr.waitForFinished(vdbName, version, waitForLoad);
+					this.csr.waitForFinished(key, waitForLoad);
 				}
 			}
 			
@@ -118,7 +105,7 @@ public class LocalServerConnection implements ServerConnection {
 		} else {
 			derived = true;
 			workContext = context;
-			this.result = new LogonResult(context.getSessionToken(), context.getVdbName(), context.getVdbVersion(), null);
+			this.result = new LogonResult(context.getSessionToken(), context.getVdbName(), null);
 			passthrough = true;
 		}
 		

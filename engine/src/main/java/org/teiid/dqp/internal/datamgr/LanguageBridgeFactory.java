@@ -46,10 +46,12 @@ import org.teiid.metadata.BaseColumn;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
+import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
+import org.teiid.query.optimizer.relational.rules.RulePlaceAccess;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Delete;
@@ -66,6 +68,7 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.WindowFunction;
+import org.teiid.query.util.CommandContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TranslatorException;
 
@@ -144,6 +147,11 @@ public class LanguageBridgeFactory {
     private boolean convertIn;
     private boolean supportsConcat2;
 	private int maxInCriteriaSize;
+	
+	//state to handle with name exclusion
+    private IdentityHashMap<Object, GroupSymbol> remappedGroups;
+	private String excludeWithName;
+	private CommandContext commandContext;
 
     public LanguageBridgeFactory(QueryMetadataInterface metadata) {
         if (metadata != null) {
@@ -161,6 +169,10 @@ public class LanguageBridgeFactory {
     
     public void setSupportsConcat2(boolean supportsConcat2) {
 		this.supportsConcat2 = supportsConcat2;
+	}
+    
+    public void setExcludeWithName(String excludeWithName) {
+		this.excludeWithName = excludeWithName;
 	}
 
     public org.teiid.language.Command translate(Command command) {
@@ -218,6 +230,7 @@ public class LanguageBridgeFactory {
 
     org.teiid.language.SetQuery translate(SetQuery union) {
         org.teiid.language.SetQuery result = new org.teiid.language.SetQuery();
+        result.setWith(translate(union.getWith()));
         result.setAll(union.isAll());
         switch (union.getOperation()) {
             case UNION:
@@ -234,12 +247,12 @@ public class LanguageBridgeFactory {
         result.setRightQuery(translate(union.getRightQuery()));
         result.setOrderBy(translate(union.getOrderBy(), true));
         result.setLimit(translate(union.getLimit()));
-        result.setWith(translate(union.getWith()));
-        return result;
+		return result;
     }
 
     /* Query */
     Select translate(Query query) {
+    	With with = translate(query.getWith());
         List<Expression> symbols = query.getSelect().getSymbols();
         List<DerivedColumn> translatedSymbols = new ArrayList<DerivedColumn>(symbols.size());
         for (Iterator<Expression> i = symbols.iterator(); i.hasNext();) {
@@ -268,7 +281,7 @@ public class LanguageBridgeFactory {
 				translate(query.getCriteria()), translate(query.getGroupBy()),
 				translate(query.getHaving()), translate(query.getOrderBy(), false));
         q.setLimit(translate(query.getLimit()));
-        q.setWith(translate(query.getWith()));
+        q.setWith(with);
         return q;
     }
     
@@ -280,7 +293,16 @@ public class LanguageBridgeFactory {
     	ArrayList<WithItem> items = new ArrayList<WithItem>(with.size());
     	for (WithQueryCommand withQueryCommand : with) {
 			WithItem item = new WithItem();
-			item.setTable(translate(withQueryCommand.getGroupSymbol()));
+			GroupSymbol group = withQueryCommand.getGroupSymbol();
+			if (withQueryCommand.getCommand() != null && excludeWithName != null && excludeWithName.equalsIgnoreCase(group.getName())) {
+				group = RulePlaceAccess.recontextSymbol(withQueryCommand.getGroupSymbol(), commandContext.getGroups());
+				group.setDefinition(null);
+				if (remappedGroups == null) {
+					remappedGroups = new IdentityHashMap<Object, GroupSymbol>();
+				}
+				this.remappedGroups.put(group.getMetadataID(), group);
+			}
+			item.setTable(translate(group));
 			if (withQueryCommand.getColumns() != null) {
 				List<ColumnReference> translatedElements = new ArrayList<ColumnReference>(withQueryCommand.getColumns().size());
 		        for (ElementSymbol es: withQueryCommand.getColumns()) {
@@ -354,8 +376,16 @@ public class LanguageBridgeFactory {
                             translate(crit));
     }
 
-    TableReference translate(SubqueryFromClause clause) {        
-        return new DerivedTable(translate((QueryCommand)clause.getCommand()), clause.getOutputName());
+    TableReference translate(SubqueryFromClause clause) {    
+    	if (clause.getCommand() instanceof StoredProcedure) {
+    		NamedProcedureCall result = new NamedProcedureCall(translate((StoredProcedure)clause.getCommand()), clause.getOutputName());
+            result.setLateral(clause.isLateral());
+            result.getCall().setTableReference(true);
+            return result;
+    	}
+        DerivedTable result = new DerivedTable(translate((QueryCommand)clause.getCommand()), clause.getOutputName());
+        result.setLateral(clause.isLateral());
+        return result;
     }
 
     NamedTable translate(UnaryFromClause clause) {
@@ -705,8 +735,7 @@ public class LanguageBridgeFactory {
 					baseType = DataTypeManager.DefaultDataClasses.OBJECT;
 				}
     		}
-    		return new org.teiid.language.Array(baseType, translateExpressionList(vals));
-    		
+    		return new org.teiid.language.Array(baseType, translateExpressionList(vals));   		
     	}
         Literal result = new Literal(constant.getValue(), constant.getType());
         result.setBindEligible(constant.isBindEligible());
@@ -800,6 +829,13 @@ public class LanguageBridgeFactory {
     ColumnReference translate(ElementSymbol symbol) {
         ColumnReference element = new ColumnReference(translate(symbol.getGroupSymbol()), Symbol.getShortName(symbol.getOutputName()), null, symbol.getType());
         if (element.getTable().getMetadataObject() == null) {
+        	//handle procedure resultset columns
+        	if (symbol.getMetadataID() instanceof TempMetadataID) {
+        		TempMetadataID tid = (TempMetadataID)symbol.getMetadataID();
+        		if (tid.getOriginalMetadataID() instanceof Column && !(((Column)tid.getOriginalMetadataID()).getParent() instanceof Table)) {
+        			element.setMetadataObject(metadataFactory.getElement(tid.getOriginalMetadataID()));
+        		}
+        	}
             return element;
         }
 
@@ -959,7 +995,7 @@ public class LanguageBridgeFactory {
             
             ProcedureParameter metadataParam = metadataFactory.getParameter(param);
             //we can assume for now that all arguments will be literals, which may be multivalued
-            Literal value = null;
+            org.teiid.language.Expression value = null;
             if (direction != Direction.OUT) {
             	if (param.isVarArg()) {
             		ArrayImpl av = (ArrayImpl) ((Constant)param.getExpression()).getValue();
@@ -971,7 +1007,7 @@ public class LanguageBridgeFactory {
             		}
             		break;
             	}
-            	value = (Literal)translate(param.getExpression());
+            	value = translate(param.getExpression());
             }
             Argument arg = new Argument(direction, value, param.getClassType(), metadataParam);
             translatedParameters.add(arg);
@@ -988,6 +1024,12 @@ public class LanguageBridgeFactory {
         if(symbol.getOutputDefinition() != null) {
             alias = symbol.getOutputName();
             fullGroup = symbol.getOutputDefinition();
+            if (remappedGroups != null) {
+        		GroupSymbol remappedGroup = remappedGroups.get(symbol.getMetadataID());
+        		if (remappedGroup != null && remappedGroup != symbol) {
+        			fullGroup = remappedGroup.getName();
+        		}
+        	}
         }
         fullGroup = removeSchemaName(fullGroup);
         NamedTable group = new NamedTable(fullGroup, alias, null);
@@ -1039,5 +1081,9 @@ public class LanguageBridgeFactory {
 
 	public void setMaxInPredicateSize(int maxInCriteriaSize) {
 		this.maxInCriteriaSize = maxInCriteriaSize;
+	}
+
+	public void setCommandContext(CommandContext commandContext) {
+		this.commandContext = commandContext;
 	}
 }

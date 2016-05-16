@@ -102,43 +102,43 @@ public class AdminShell {
 	@Doc(text = "Adds a mapped role to the specified data role")
 	public static void addDataRoleMapping(
 			@Doc(text = "vdb name") String vdbName,
-			@Doc(text = "vdb version") int vdbVersion,
+			@Doc(text = "vdb version") Object vdbVersion,
 			@Doc(text = "dataRole name") String policyName,
 			@Doc(text = "mapped role name") String role) throws AdminException {
-		getAdmin().addDataRoleMapping(vdbName, vdbVersion, policyName, role);
+		getAdmin().addDataRoleMapping(vdbName, vdbVersion!=null?vdbVersion.toString():null, policyName, role);
 	}
 
 	@Doc(text = "Update a translator and data source for a given source")
 	public static void updateSource(
 			@Doc(text = "vdb name") String vdbName,
-			@Doc(text = "vdb version") int vdbVersion,
+			@Doc(text = "vdb version") Object vdbVersion,
 			@Doc(text = "source name") String sourceName,
 			@Doc(text = "translator name") String translatorName,
 			@Doc(text = "jndi name") String jndiName)
 			throws AdminException {
-		getAdmin().updateSource(vdbName, vdbVersion, sourceName, translatorName, jndiName);
+		getAdmin().updateSource(vdbName, vdbVersion!=null?vdbVersion.toString():null, sourceName, translatorName, jndiName);
 	}
 	
 	@Doc(text = "Add a source to a model")
 	public static void addSource(
 			@Doc(text = "vdb name") String vdbName,
-			@Doc(text = "vdb version") int vdbVersion,
+			@Doc(text = "vdb version") Object vdbVersion,
 			@Doc(text = "model name") String modelName,
 			@Doc(text = "source name") String sourceName,
 			@Doc(text = "translator name") String translatorName,
 			@Doc(text = "jndi name") String jndiName)
 			throws AdminException {
-		getAdmin().addSource(vdbName, vdbVersion, modelName, sourceName, translatorName, jndiName);
+		getAdmin().addSource(vdbName, vdbVersion!=null?vdbVersion.toString():null, modelName, sourceName, translatorName, jndiName);
 	}
 	
 	@Doc(text = "Remove a source from a model")
 	public static void removeSource(
 			@Doc(text = "vdb name") String vdbName,
-			@Doc(text = "vdb version") int vdbVersion,
+			@Doc(text = "vdb version") Object vdbVersion,
 			@Doc(text = "model name") String modelName,
 			@Doc(text = "source name") String sourceName)
 			throws AdminException {
-		getAdmin().removeSource(vdbName, vdbVersion, modelName, sourceName);
+		getAdmin().removeSource(vdbName, vdbVersion!=null?vdbVersion.toString():null, modelName, sourceName);
 	}
 
 	@Doc(text = "Cancel a request")
@@ -158,9 +158,9 @@ public class AdminShell {
 	@Doc(text = "Clear the given cache for a VDB")
 	public static void clearCache(
 			@Doc(text = "cache type") String cacheType, @Doc(text = "vdb name") String vdbName,
-			@Doc(text = "vdb version") int vdbVersion
+			@Doc(text = "vdb version") Object vdbVersion
 			) throws AdminException {
-		getAdmin().clearCache(cacheType, vdbName, vdbVersion);
+		getAdmin().clearCache(cacheType, vdbName, vdbVersion!=null?vdbVersion.toString():null);
 	}
 
 	@Doc(text = "Undeploy a artifact (JAR, RAR, VDB)")
@@ -176,10 +176,10 @@ public class AdminShell {
 	@Doc(text = "Change a VDB Connection Type")
 	public static void changeVDBConnectionType(
 			@Doc(text = "vdb name") String vdbName,
-			@Doc(text = "vdb version") int vdbVersion,
+			@Doc(text = "vdb version") Object vdbVersion,
 			@Doc(text = "Connection Type (NONE, BY_VERSION, or ANY") String type)
 			throws AdminException {
-		getAdmin().changeVDBConnectionType(vdbName, vdbVersion, ConnectionType.valueOf(type));
+		getAdmin().changeVDBConnectionType(vdbName, vdbVersion!=null?vdbVersion.toString():null, ConnectionType.valueOf(type));
 	}
 
 	@Doc(text = "Get all translator instances")
@@ -238,8 +238,8 @@ public class AdminShell {
 	@Doc(text = "Get a specific VDB")
 	public static VDB getVDB(
 			@Doc(text = "vdb name") String vdbName,
-			@Doc(text = "vdb version") int vbdVersion) throws AdminException {
-		return getAdmin().getVDB(vdbName, vbdVersion);
+			@Doc(text = "vdb version") Object vdbVersion) throws AdminException {
+		return getAdmin().getVDB(vdbName, vdbVersion!=null?vdbVersion.toString():null);
 	}
 
 	@Doc(text = "Get all VDB instances")
@@ -268,20 +268,20 @@ public class AdminShell {
 	@Doc(text = "Remove a mapped role for the data role")
 	public static void removeDataRoleMapping(
 			@Doc(text = "vdb name") String vdbName,
-			@Doc(text = "vdb version") int vdbVersion,
+			@Doc(text = "vdb version") Object vdbVersion,
 			@Doc(text = "dataRole name") String policyName,
 			@Doc(text = "mapped role name") String role) throws AdminException {
 		getAdmin()
-				.removeDataRoleMapping(vdbName, vdbVersion, policyName, role);
+				.removeDataRoleMapping(vdbName, vdbVersion!=null?vdbVersion.toString():null, policyName, role);
 	}
 
 	@Doc(text = "Set the any authenticated flag for the data role")
     public static void setAnyAuthenticatedForDataRole(
     		@Doc(text = "vdb name")String vdbName,
-    		@Doc(text = "vdb version")int vdbVersion,
+    		@Doc(text = "vdb version")Object vdbVersion,
     		@Doc(text = "dataRole name")String dataRole,
     		@Doc(text = "any authenticated") boolean anyAuthenticated) throws AdminException {
-    	getAdmin().setAnyAuthenticatedForDataRole(vdbName, vdbVersion, dataRole, anyAuthenticated);
+    	getAdmin().setAnyAuthenticatedForDataRole(vdbName, vdbVersion!=null?vdbVersion.toString():null, dataRole, anyAuthenticated);
     }
 
 	@Doc(text = "Terminate a session and associated requests")
@@ -324,10 +324,10 @@ public class AdminShell {
 	@Doc(text = "Checks if a specific VDB version exists")
 	public static boolean hasVDB(
 			@Doc(text = "vdb name") String vdbName,
-			@Doc(text = "vdb version") int version) throws AdminException {
+			@Doc(text = "vdb version") Object vdbVersion) throws AdminException {
 	    Collection<? extends VDB> vdbs = getAdmin().getVDBs();
 	    for (VDB vdb:vdbs) {
-	        if (vdb.getName().equals(vdbName) && vdb.getVersion() == version) {
+	        if (vdb.getName().equals(vdbName) && vdb.getVersion().equals(vdbVersion)) {
 	            return true;
 	        }
 	    }
@@ -382,10 +382,10 @@ public class AdminShell {
 	@Doc(text = "Restart the VDB")
 	public static void restartVDB(
 			@Doc(text = "vdb name") String vdbName,
-			@Doc(text = "vdb version") int vdbVersion,
+			@Doc(text = "vdb version") Object vdbVersion,
 			@Doc(text = "models") String... models)
 			throws AdminException {
-		getAdmin().restartVDB(vdbName, vdbVersion, models);
+		getAdmin().restartVDB(vdbName, vdbVersion!=null?vdbVersion.toString():null, models);
 	}
 
 	@Doc(text = "Get query execution plan for the given execution id")
@@ -398,9 +398,9 @@ public class AdminShell {
 
 	@Doc(text = "Get schema for the model")
 	public static String getSchema(@Doc(text = "vdb name") String vdbName,
-			@Doc(text = "vdb version") int vdbVersion,
+			@Doc(text = "vdb version") Object vdbVersion,
 			@Doc(text = "models") String modelName) throws AdminException {
-		return getAdmin().getSchema(vdbName, vdbVersion, modelName, null, null);
+		return getAdmin().getSchema(vdbName, vdbVersion!=null?vdbVersion.toString():null, modelName, null, null);
 	}
 
 	@Doc(text = "Restart the server")

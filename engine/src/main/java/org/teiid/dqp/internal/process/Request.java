@@ -102,7 +102,7 @@ public class Request {
 	// init state
     protected RequestMessage requestMsg;
     private String vdbName;
-    private int vdbVersion;
+    private String vdbVersion;
     private BufferManager bufferManager;
     private ProcessorDataManager processorDataManager;
     private TransactionService transactionService;

@@ -150,16 +150,23 @@ public class DependentAccessNode extends AccessNode {
         
         query.setCriteria(dependentCrit);
         
+        //walk up the tree and notify the parent join it is responsible for the sort
         if (sort && query.getOrderBy() != null && criteriaProcessor.hasNextCommand()) {
             RelationalNode parent = this.getParent();
+            RelationalNode child = this;
             while (parent != null && !(parent instanceof JoinNode)) {
+            	child = parent;
                 parent = parent.getParent();
             }
             if (parent != null) {
                 JoinNode joinNode = (JoinNode)parent;
                 if (joinNode.getJoinStrategy() instanceof MergeJoinStrategy) {
                     MergeJoinStrategy mjs = (MergeJoinStrategy)joinNode.getJoinStrategy();
-                    mjs.setProcessingSortRight(true);
+                    if (joinNode.getChildren()[0] == child) {
+                    	mjs.setProcessingSortLeft(true);
+                    } else {
+                    	mjs.setProcessingSortRight(true);
+                    }
                 }
             }
             sort = false;

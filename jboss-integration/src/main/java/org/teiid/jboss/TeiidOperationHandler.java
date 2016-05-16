@@ -117,7 +117,7 @@ abstract class TeiidOperationHandler extends BaseOperationHandler<DQPCore> {
     }
 	
 	static VDBMetaData checkVDB(OperationContext context, String vdbName,
-			int vdbVersion) throws OperationFailedException {
+			String vdbVersion) throws OperationFailedException {
 		ServiceController<?> sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.VDB_REPO);
 	    VDBRepository repo = VDBRepository.class.cast(sc.getValue());	
 		VDBMetaData vdb = repo.getLiveVDB(vdbName, vdbVersion);
@@ -326,12 +326,12 @@ class ListSessions extends TeiidOperationHandler{
 	@Override
 	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException{
 		String vdbName = null;
-		int version = -1;
+		String version = null;
 		boolean filter = false;
 
 		if (operation.hasDefined(OperationsConstants.OPTIONAL_VDB_VERSION.getName()) && operation.hasDefined(OperationsConstants.OPTIONAL_VDB_NAME.getName())) {
 			vdbName = operation.get(OperationsConstants.OPTIONAL_VDB_NAME.getName()).asString();
-			version = operation.get(OperationsConstants.OPTIONAL_VDB_VERSION.getName()).asInt();
+			version = operation.get(OperationsConstants.OPTIONAL_VDB_VERSION.getName()).asString();
 			checkVDB(context, vdbName, version);
 			filter = true;
 		}
@@ -447,12 +447,12 @@ class ListRequestsPerVDB extends TeiidOperationHandler{
 
 		ModelNode result = context.getResult();
 		String vdbName = operation.get(OperationsConstants.VDB_NAME.getName()).asString();
-		int vdbVersion = operation.get(OperationsConstants.VDB_VERSION.getName()).asInt();
+		String vdbVersion = operation.get(OperationsConstants.VDB_VERSION.getName()).asString();
 		checkVDB(context, vdbName, vdbVersion);
 		List<RequestMetadata> requests = new ArrayList<RequestMetadata>();
 		Collection<SessionMetadata> sessions = getSessionService(context).getActiveSessions();
 		for (SessionMetadata session:sessions) {
-			if (vdbName.equals(session.getVDBName()) && session.getVDBVersion() == vdbVersion) {
+			if (vdbName.equals(session.getVDBName()) && session.getVDBVersion().equals(vdbVersion)) {
 				requests.addAll(engine.getRequestsForSession(session.getSessionId()));
 			}
 		}
@@ -648,7 +648,7 @@ class ClearCache extends BaseCachehandler {
 
 		if (operation.hasDefined(OperationsConstants.VDB_NAME.getName()) && operation.hasDefined(OperationsConstants.VDB_VERSION.getName())) {
 			String vdbName = operation.get(OperationsConstants.VDB_NAME.getName()).asString();
-			int vdbVersion = operation.get(OperationsConstants.VDB_VERSION.getName()).asInt();
+			String vdbVersion = operation.get(OperationsConstants.VDB_VERSION.getName()).asString();
 			TeiidOperationHandler.checkVDB(context, vdbName, vdbVersion);
 			LogManager.logInfo(LogConstants.CTX_DQP, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50005, cacheType, vdbName, vdbVersion));
 			cache.clearForVDB(vdbName, vdbVersion);
@@ -806,7 +806,7 @@ class ExecuteQuery extends TeiidOperationHandler{
 
 		ModelNode result = context.getResult();
 		String vdbName = operation.get(OperationsConstants.VDB_NAME.getName()).asString();
-		int vdbVersion = operation.get(OperationsConstants.VDB_VERSION.getName()).asInt();
+		String vdbVersion = operation.get(OperationsConstants.VDB_VERSION.getName()).asString();
 		String sql = operation.get(OperationsConstants.SQL_QUERY.getName()).asString();
 		int timeout = operation.get(OperationsConstants.TIMEOUT_IN_MILLI.getName()).asInt();
 
@@ -850,7 +850,7 @@ class GetVDB extends BaseOperationHandler<VDBRepository>{
 
 		ModelNode result = context.getResult();
 		String vdbName = operation.get(OperationsConstants.VDB_NAME.getName()).asString();
-		int vdbVersion = operation.get(OperationsConstants.VDB_VERSION.getName()).asInt();
+		String vdbVersion = operation.get(OperationsConstants.VDB_VERSION.getName()).asString();
 
 		VDBMetaData vdb = repo.getVDB(vdbName, vdbVersion);
 		if (vdb != null) {
@@ -908,7 +908,7 @@ class GetSchema extends BaseOperationHandler<VDBRepository>{
 
 		ModelNode result = context.getResult();
 		String vdbName = operation.get(OperationsConstants.VDB_NAME.getName()).asString();
-		int vdbVersion = operation.get(OperationsConstants.VDB_VERSION.getName()).asInt();
+		String vdbVersion = operation.get(OperationsConstants.VDB_VERSION.getName()).asString();
 		String modelName = operation.get(OperationsConstants.MODEL_NAME.getName()).asString();
 
 		VDBMetaData vdb = repo.getLiveVDB(vdbName, vdbVersion);
@@ -1067,7 +1067,7 @@ abstract class VDBOperations extends BaseOperationHandler<RuntimeVDB>{
 		}
 
 		String vdbName = operation.get(OperationsConstants.VDB_NAME.getName()).asString();
-		int vdbVersion = operation.get(OperationsConstants.VDB_VERSION.getName()).asInt();
+		String vdbVersion = operation.get(OperationsConstants.VDB_VERSION.getName()).asString();
 
 		TeiidOperationHandler.checkVDB(context, vdbName, vdbVersion);
 

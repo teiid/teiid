@@ -40,6 +40,7 @@ import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
+import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.Reference;
@@ -87,7 +88,10 @@ public class CommandBuilder {
                 command.acceptVisitor(new AliasGenerator(supportsGroupAlias));
             }
             //the language bridge doesn't expect References
-            for (SubqueryContainer<?> container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(command)) {
+            ValueIteratorProviderCollectorVisitor v = new ValueIteratorProviderCollectorVisitor();
+            v.setCollectLateral(true);
+            PreOrderNavigator.doVisit(command, v);
+            for (SubqueryContainer<?> container : v.getValueIteratorProviders()) {
         			ExpressionMappingVisitor visitor = new ExpressionMappingVisitor(null) {
         				@Override
         				public Expression replaceExpression(Expression element) {

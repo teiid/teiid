@@ -1,6 +1,6 @@
 package org.teiid.translator.object.metadata;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.Properties;
 
@@ -40,9 +40,8 @@ public class TestTradesMetadataProcessor {
 		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
 				null, null);
 
-		System.out.println("Schema: " + metadataDDL);
 		String expected =  "CREATE FOREIGN TABLE Trade (\n"
-				+ "\tTradeObject object OPTIONS (NAMEINSOURCE 'this', SELECTABLE FALSE, SEARCHABLE 'Unsearchable', NATIVE_TYPE 'org.teiid.translator.object.testdata.trades.Trade'),\n"
+				+ "\tTradeObject object OPTIONS (NAMEINSOURCE 'this', SELECTABLE FALSE, UPDATABLE FALSE, SEARCHABLE 'Unsearchable', NATIVE_TYPE 'org.teiid.translator.object.testdata.trades.Trade'),\n"
 				+ "\ttradeId long NOT NULL OPTIONS (NAMEINSOURCE 'tradeId', SEARCHABLE 'Searchable', NATIVE_TYPE 'long'),\n"
 				+ "\tname string OPTIONS (NAMEINSOURCE 'name', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'java.lang.String'),\n"
 				+ "\tsettled boolean OPTIONS (NAMEINSOURCE 'settled', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'boolean'),\n"
@@ -68,7 +67,6 @@ public class TestTradesMetadataProcessor {
 		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
 				null, null);
 
-		System.out.println("Schema: " + metadataDDL);
 		String expected =  "CREATE FOREIGN TABLE Trade (\n"
 				+ "\tTradeObject object OPTIONS (NAMEINSOURCE 'this', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'org.teiid.translator.object.testdata.trades.Trade'),\n"
 				+ "\ttradeId long NOT NULL OPTIONS (NAMEINSOURCE 'tradeId', SEARCHABLE 'Searchable', NATIVE_TYPE 'long'),\n"

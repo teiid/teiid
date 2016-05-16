@@ -126,6 +126,9 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.SUBQUERY_COMMON_TABLE_EXPRESSIONS, srcCaps.supportsSubqueryCommonTableExpressions());
         tgtCaps.setCapabilitySupport(Capability.SUBQUERY_CORRELATED_LIMIT, srcCaps.supportsCorrelatedSubqueryLimit());
         tgtCaps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, srcCaps.supportsScalarSubqueryProjection());
+        tgtCaps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_LATERAL, srcCaps.supportsLateralJoin());
+        tgtCaps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_LATERAL_CONDITION, srcCaps.supportsLateralJoin() && srcCaps.supportsLateralJoinCondition());
+        tgtCaps.setCapabilitySupport(Capability.QUERY_FROM_PROCEDURE_TABLE, srcCaps.supportsProcedureTable());
         if (srcCaps.supportsPartialFiltering()) {
         	//disable supports that could end up being not filterable
         	tgtCaps.setCapabilitySupport(Capability.PARTIAL_FILTERS, true);
@@ -165,6 +168,7 @@ public class CapabilitiesConverter {
         tgtCaps.setSourceProperty(Capability.COLLATION_LOCALE, srcCaps.getCollationLocale());
         tgtCaps.setSourceProperty(Capability.REQUIRED_LIKE_ESCAPE, srcCaps.getRequiredLikeEscape());
         tgtCaps.setSourceProperty(Capability.TRANSACTION_SUPPORT, srcCaps.getTransactionSupport());
+        tgtCaps.setSourceProperty(Capability.EXCLUDE_COMMON_TABLE_EXPRESSION_NAME, srcCaps.getExcludedCommonTableExpressionName());
         return tgtCaps;
     }
 

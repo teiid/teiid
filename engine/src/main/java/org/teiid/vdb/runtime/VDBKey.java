@@ -26,48 +26,82 @@ import java.io.Serializable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.HashCodeUtil;
+import org.teiid.query.QueryPlugin;
 
-
+/**
+ * Encapsulates the name/versioning rules for VDBs
+ */
 public class VDBKey implements Serializable, Comparable<VDBKey>{
-	private static final Integer[] EMPTY_PARTS = new Integer[3];
-
+	
 	private static final long serialVersionUID = -7249750823144856081L;
 	
 	private String name;
-	private String baseName;
-	private Integer[] versionParts;
-    private int version;
+	private Integer[] versionParts = new Integer[3];
+    private String version;
     private int hashCode;
-    private boolean fullySpecified = true;
     private boolean atMost;
     
-    public static Pattern NAME_PATTERN = Pattern.compile("([^.]*)\\.v(?:(0|(?:[1-9]\\d{0,8})))(?:\\.(0|(?:[1-9]\\d{0,8})))?(?:\\.(0|(?:[1-9]\\d{0,8})))?(\\.)?$"); //$NON-NLS-1$
+    public static Pattern NAME_PATTERN = Pattern.compile("(?:(0|(?:[1-9]\\d{0,8})))(?:\\.(0|(?:[1-9]\\d{0,8})))?(?:\\.(0|(?:[1-9]\\d{0,8})))?(\\.)?$"); //$NON-NLS-1$
     
-    public VDBKey(String name, int version) {
+    public VDBKey(String name, Object version) {
         this.name = name;
-        Matcher m  = NAME_PATTERN.matcher(name);
-        if (!m.matches()) {
-        	this.baseName = name;
-        	versionParts = EMPTY_PARTS;
-        	fullySpecified = true;
+        if (version == null) {
+        	//check for combination name
+        	int index = name.indexOf("."); //$NON-NLS-1$
+        	if (index > 0 && index < name.length() - 1) {
+        		this.name = name.substring(0, index);
+        		this.version = name.substring(index + 1);
+        	} else {
+        		//latest
+        		this.atMost = true;
+        	}
         } else {
-        	this.baseName = m.group(1);
-        	versionParts = new Integer[3];
-        	getPart(m, 0);
-        	getPart(m, 1);
-        	getPart(m, 2);
-        	atMost = name.endsWith("."); //$NON-NLS-1$
+        	this.version = version.toString();
+        	
+        	//double check that the vdb is not ambiguous
+        	int index = name.indexOf("."); //$NON-NLS-1$
+        	if (index > 0 && index < name.length() - 1) {
+        		String possibleVersion = name.substring(index + 1);
+        		Matcher m  = NAME_PATTERN.matcher(possibleVersion);
+    	        if (m.matches()) {
+	        		throw new TeiidRuntimeException(QueryPlugin.Event.TEIID31191, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31191, this.name));
+    	        }
+        	}
         }
-        this.version = version;
+        
+        if (this.version != null) {
+	        Matcher m  = NAME_PATTERN.matcher(this.version);
+	        if (!m.matches()) {
+	        	if (version != null) {
+	        		throw new TeiidRuntimeException(QueryPlugin.Event.TEIID31190, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31190, this.version));
+	        	}
+	        	//not a version
+	        	this.name = name; 
+	        	this.version = null;
+	        	this.atMost = true;
+	        } else {
+	        	getPart(m, 0);
+	        	getPart(m, 1);
+	        	getPart(m, 2);
+	        	atMost = this.version.endsWith("."); //$NON-NLS-1$
+	        }
+        }
+        
+        //set the version string
+        //TODO we may want to canonicalize to drop all .0
+        if (this.versionParts[1] != null) {
+        	this.version = getSemanticVersion();
+        } else if (this.versionParts[0] != null){
+        	this.version = this.versionParts[0].toString();
+        }
     }
 
 	private void getPart(Matcher m, int part) {
-		String val = m.group(part+2);
+		String val = m.group(part+1);
 		if (val != null) {
 			versionParts[part] = Integer.parseInt(val);
-		} else {
-			fullySpecified = false;
 		}
 	}    
     
@@ -75,11 +109,17 @@ public class VDBKey implements Serializable, Comparable<VDBKey>{
 		return name;
 	}
     
-    public String getBaseName() {
-		return baseName;
-	}
-    
-    public int getVersion() {
+    /**
+     * Get the version string - not including the at most designation.
+     * <br/>
+     * Will be the full semantic version if more than 1 part is specified.
+     * <br/>
+     * Will be the first integer part if only it is specified.
+     * <br/>
+     * Will be null if no version is present.
+     * @return
+     */
+    public String getVersion() {
 		return version;
 	}
     
@@ -88,7 +128,7 @@ public class VDBKey implements Serializable, Comparable<VDBKey>{
      */
     public int hashCode() {
     	if (hashCode == 0) {
-    		hashCode = HashCodeUtil.hashCode(HashCodeUtil.expHashCode(name, false), version); 
+    		hashCode = HashCodeUtil.hashCode(HashCodeUtil.expHashCode(name.toLowerCase(), false), getSemanticVersion()); 
     	}
         return hashCode;
     }
@@ -107,20 +147,27 @@ public class VDBKey implements Serializable, Comparable<VDBKey>{
         
         VDBKey other = (VDBKey)obj;
         
-        return version == other.version 
-        && other.name.equalsIgnoreCase(this.name);
+        return other.atMost == this.atMost 
+        		&& this.compareTo(other) == 0;
     }
     
     public String toString() {
-    	if (version == 1) {
-    		return name;
+    	StringBuilder sb = new StringBuilder(name);
+    	sb.append("."); //$NON-NLS-1$
+    	if (version != null) {
+    		sb.append(version);
+    		if (atMost) {
+    			sb.append("."); //$NON-NLS-1$
+    		}
+    	} else {
+    		sb.append("latest"); //$NON-NLS-1$
     	}
-        return name + " " + version; //$NON-NLS-1$
+    	return sb.toString();
     }
 
 	@Override
 	public int compareTo(VDBKey o) {
-		int compare = String.CASE_INSENSITIVE_ORDER.compare(baseName, o.baseName);
+		int compare = String.CASE_INSENSITIVE_ORDER.compare(name, o.name);
 		if (compare != 0) {
 			return compare;
 		}
@@ -130,29 +177,7 @@ public class VDBKey implements Serializable, Comparable<VDBKey>{
 				return compare;
 			}
 		}
-		compare = Integer.compare(versionParts.length, o.versionParts.length);
-		if (compare != 0) {
-			return compare;
-		}
-		compare = Integer.compare(version, o.version);
-		if (compare != 0) {
-			return compare;
-		}
 		return 0;
-	}
-	
-	/**
-	 * @return true if the vdb name was specified with a semantic version
-	 */
-	public boolean isSemantic() {
-		return this.versionParts != EMPTY_PARTS;
-	}
-	
-	/**
-	 * @return true if all parts of the semantic version are specified
-	 */
-	public boolean isFullySpecified() {
-		return fullySpecified;
 	}
 	
 	/**
@@ -167,15 +192,37 @@ public class VDBKey implements Serializable, Comparable<VDBKey>{
 	 * @return true if the key version >= the current version
 	 */
 	public boolean acceptsVerion(VDBKey key) {
+		if (!key.getName().equalsIgnoreCase(getName())) {
+			return false;
+		}
 		for (int i = 0; i < versionParts.length; i++) {
 			if (versionParts[i] == null) {
 				break;
 			}
-			if (versionParts[i] != (key.versionParts[i]==null?0:key.versionParts[i])) {
+			if (versionParts[i].intValue() != (key.versionParts[i]==null?0:key.versionParts[i].intValue())) {
 				return false;
 			}
 		}
-		return version <= key.version;
+		return true;
+	}
+	
+	/**
+	 * Get the full three part semantic version
+	 * @return
+	 */
+	public String getSemanticVersion() {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < versionParts.length; i++) {
+			if (i > 0) {
+				sb.append("."); //$NON-NLS-1$
+			}
+			if (versionParts[i] == null) {
+				sb.append(0);
+			} else {
+				sb.append(versionParts[i]);
+			}
+		}
+		return sb.toString();
 	}
 
 }

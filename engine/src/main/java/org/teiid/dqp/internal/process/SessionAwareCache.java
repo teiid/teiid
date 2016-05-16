@@ -286,14 +286,18 @@ public class SessionAwareCache<T> {
 		this.cachePuts.set(0);
 	}	
 	
-	public void clearForVDB(String vdbName, int version) {
-		clearCache(this.localCache, vdbName, version);
-		clearCache(this.distributedCache, vdbName, version);
+	public void clearForVDB(String vdbName, String version) {
+		VDBKey vdbKey = new VDBKey(vdbName, version);
+		clearForVDB(vdbKey);
+	}
+
+	public void clearForVDB(VDBKey vdbKey) {
+		clearCache(this.localCache, vdbKey);
+		clearCache(this.distributedCache, vdbKey);
 	}
 	
-	private void clearCache(Cache<CacheID, T> cache, String vdbName, int version) {
+	private void clearCache(Cache<CacheID, T> cache, VDBKey vdbKey) {
 		Set<CacheID> keys = cache.keySet();
-		VDBKey vdbKey = new VDBKey(vdbName, version);
 		for (CacheID key:keys) {
 			if (key.vdbInfo.equals(vdbKey)) {
 				cache.remove(key);
@@ -316,7 +320,7 @@ public class SessionAwareCache<T> {
 			this(pi, sql, context.getVdbName(), context.getVdbVersion(), context.getSessionId(), context.getUserName());
 		}
 		
-		public CacheID(ParseInfo pi, String sql, String vdbName, int vdbVersion, String sessionId, String userName){
+		public CacheID(ParseInfo pi, String sql, String vdbName, String vdbVersion, String sessionId, String userName){
 			Assertion.isNotNull(sql);
 			this.sql = sql;
 			this.vdbInfo = new VDBKey(vdbName, vdbVersion);

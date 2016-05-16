@@ -31,6 +31,7 @@ import java.sql.SQLException;
 import java.sql.SQLXML;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -252,8 +253,11 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
     	return this.responseContext.get(name);
     }
 
+    public Map<String, Object> getResponseHeaders(){
+        return new HashMap<String, Object>(this.responseContext) ;
+    }
+    
     public int getResponseCode() {
     	return this.responseCode;
     }
-
 }

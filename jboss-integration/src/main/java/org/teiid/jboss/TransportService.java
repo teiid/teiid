@@ -64,6 +64,7 @@ import org.teiid.transport.ODBCSocketListener;
 import org.teiid.transport.SocketConfiguration;
 import org.teiid.transport.SocketListener;
 import org.teiid.transport.WireProtocol;
+import org.teiid.vdb.runtime.VDBKey;
 
 public class TransportService extends ClientServiceRegistryImpl implements Service<ClientServiceRegistry> {
 	private transient LogonImpl logon;
@@ -92,10 +93,10 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
 	}
 	
 	@Override
-	public void waitForFinished(String vdbName, int vdbVersion,
+	public void waitForFinished(VDBKey vdbKey,
 			int timeOutMillis) throws ConnectionException {
 		VDBRepository repo = this.vdbRepositoryInjector.getValue();
-		repo.waitForFinished(vdbName, vdbVersion, timeOutMillis);
+		repo.waitForFinished(vdbKey, timeOutMillis);
 	}
 	
 	@Override

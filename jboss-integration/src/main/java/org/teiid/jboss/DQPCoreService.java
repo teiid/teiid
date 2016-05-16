@@ -93,33 +93,33 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
     	getVdbRepository().addListener(new VDBLifeCycleListener() {
 			
 			@Override
-			public void removed(String name, int version, CompositeVDB vdb) {
+			public void removed(String name, CompositeVDB vdb) {
 				// terminate all the previous sessions
 				SessionService sessionService = (SessionService) context.getController().getServiceContainer().getService(TeiidServiceNames.SESSION).getValue();
-    			Collection<SessionMetadata> sessions = sessionService.getSessionsLoggedInToVDB(name, version);
+    			Collection<SessionMetadata> sessions = sessionService.getSessionsLoggedInToVDB(vdb.getVDBKey());
 				for (SessionMetadata session:sessions) {
 					sessionService.terminateSession(session.getSessionId(), null);
 				}
 			        
 				// dump the caches. 
 		        if (getResultSetCacheInjector().getValue() != null) {
-		        	getResultSetCacheInjector().getValue().clearForVDB(name, version);
+		        	getResultSetCacheInjector().getValue().clearForVDB(vdb.getVDBKey());
 		        }
 		        if (getPreparedPlanCacheInjector().getValue() != null) {
-		        	getPreparedPlanCacheInjector().getValue().clearForVDB(name, version);
+		        	getPreparedPlanCacheInjector().getValue().clearForVDB(vdb.getVDBKey());
 		        }
 			}
 			
 			@Override
-			public void added(String name, int version, CompositeVDB vdb) {
+			public void added(String name, CompositeVDB vdb) {
 			}
 
 			@Override
-			public void finishedDeployment(String name, int version, CompositeVDB cvdb) {
+			public void finishedDeployment(String name, CompositeVDB cvdb) {
 			}			
 			
 			@Override
-			public void beforeRemove(String name, int version, CompositeVDB cvdb) {
+			public void beforeRemove(String name, CompositeVDB cvdb) {
 			}
 		}); 		
 

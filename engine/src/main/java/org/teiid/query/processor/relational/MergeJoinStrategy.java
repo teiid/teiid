@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.util.Assertion;
 import org.teiid.query.processor.relational.SourceState.ImplicitBuffer;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.symbol.Constant;
@@ -361,7 +362,19 @@ public class MergeJoinStrategy extends JoinStrategy {
         
     public void setProcessingSortRight(boolean processingSortRight) {
     	if (processingSortRight && this.processingSortRight == SortOption.ALREADY_SORTED) {
+    		//it is possible that a delayed open will be called after the parent open
+    		//for now we'll just throw an assertion
+    		Assertion.assertTrue(!this.rightSource.open);
     		this.processingSortRight = SortOption.SORT;
+    	}
+    }
+    
+    public void setProcessingSortLeft(boolean processingSortLeft) {
+    	if (processingSortLeft && this.processingSortLeft == SortOption.ALREADY_SORTED) {
+    		//it is possible that a delayed open will be called after the parent open
+    		//for now we'll just throw an assertion
+    		Assertion.assertTrue(!this.leftSource.open);
+    		this.processingSortLeft = SortOption.SORT;
     	}
     }
     

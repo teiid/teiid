@@ -450,6 +450,12 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
         return this.serverConn.getLogonResult().getVdbName();
     }
     
+    @Deprecated
+    /**
+     * Will return 0 for Teiid 9.0+ servers
+     * @return
+     * @throws SQLException
+     */
     public int getVDBVersion() throws SQLException {
     	checkConnection();
         return this.serverConn.getLogonResult().getVdbVersion();

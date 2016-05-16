@@ -21,8 +21,7 @@
  */
 package org.teiid.olingo;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -115,7 +114,7 @@ public class TestODataIntegration {
 		private boolean throwUpdateException;
 		private boolean rollback;
 
-		private UnitTestLocalClient(String vdbName, Integer vdbVersion,
+		private UnitTestLocalClient(String vdbName, String vdbVersion,
 				Properties properties, Properties properties2,
 				TeiidDriver driver, String vdb) {
 			super(vdbName, vdbVersion, properties);
@@ -139,7 +138,7 @@ public class TestODataIntegration {
 		@Override
 		public Connection open() throws SQLException {
 		    try {
-		        conn = LocalClient.buildConnection(driver, vdb, 1, properties);
+		        conn = LocalClient.buildConnection(driver, vdb, "1", properties);
 		        return conn;
 		    } catch (SQLException e) {
 		        e.printStackTrace();
@@ -213,11 +212,11 @@ public class TestODataIntegration {
         context.addServlet(new ServletHolder(new ODataServlet()), "/*");
         context.addFilter(new FilterHolder(new ODataFilter() {
             @Override
-            public Client buildClient(String vdbName, Integer version, Properties props) {
+            public Client buildClient(String vdbName, String version, Properties props) {
                 if (localClient != null) {
                     return localClient;
                 }
-                return getClient(teiid.getDriver(), vdbName, version, props);       
+                return getClient(teiid.getDriver(), vdbName, props);       
             }
         }), "/*", EnumSet.allOf(DispatcherType.class));
         server.setHandler(context);
@@ -372,7 +371,7 @@ public class TestODataIntegration {
             mmd.addSourceMapping("x10", "x10", null);
             teiid.deployVDB("northwind", mmd);
 
-            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+            localClient = getClient(teiid.getDriver(), "northwind", new Properties());
             
             String payload = "{\n" +
                     "  \"a\":\"teiid\",\n" +
@@ -382,6 +381,7 @@ public class TestODataIntegration {
                 .method("POST")
                 .content(new StringContentProvider(payload))
                 .header("Content-Type", "application/json")
+                .header("Prefer", "return=minimal")
                 .send();
             assertEquals(204, response.getStatus());
             assertTrue(response.getHeaders().get("OData-EntityId").endsWith("northwind/m/x('ABCDEFG')"));
@@ -444,7 +444,7 @@ public class TestODataIntegration {
             mmd.addSourceMapping("x11", "x11", null);
             teiid.deployVDB("northwind", mmd);
 
-            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+            localClient = getClient(teiid.getDriver(), "northwind", new Properties());
             String payload = "\n" +  
                     "<entry xmlns=\"http://www.w3.org/2005/Atom\" xmlns:d=\"http://docs.oasis-open.org/odata/ns/data\" "
                     + "xmlns:georss=\"http://www.georss.org/georss\" "
@@ -469,6 +469,7 @@ public class TestODataIntegration {
                 .method("POST")
                 .content(new StringContentProvider(payload))
                 .header("Content-Type", "application/xml")
+                .header("Prefer", "return=minimal")
                 .send();
             assertEquals(204, response.getStatus());
             assertTrue(response.getHeaders().get("OData-EntityId"), 
@@ -551,7 +552,7 @@ public class TestODataIntegration {
             mmd.addSourceMapping("x10", "x10", null);
             teiid.deployVDB("northwind", mmd);
 
-            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+            localClient = getClient(teiid.getDriver(), "northwind", new Properties());
             
             // update to collection based reference
             String payload = "{\n" +
@@ -605,7 +606,7 @@ public class TestODataIntegration {
     public void testFunctionReturningResultSet() throws Exception {
         ContentResponse response = http.GET(baseURL + "/loopy/vm1/procResultSet(x='foo''bar',y=1)");
         assertEquals(200, response.getStatus());
-        assertEquals("{\"@odata.context\":\"$metadata#Collection(Loopy.VM1.procResultSet_RSParam)\","
+        assertEquals("{\"@odata.context\":\"$metadata#Collection(Loopy.1.VM1.procResultSet_RSParam)\","
                 + "\"value\":[{\"x\":\"foo'bar\",\"y\":1},"
                 + "{\"x\":\"second\",\"y\":2},"
                 + "{\"x\":\"third\",\"y\":3}]}", 
@@ -616,17 +617,17 @@ public class TestODataIntegration {
         
         response = http.GET(baseURL + "/loopy/vm1/procResultSet(x='foo''bar',y=1)?$filter="+Encoder.encode("y eq 3"));
         assertEquals(200, response.getStatus());
-        assertEquals("{\"@odata.context\":\"$metadata#Collection(Loopy.VM1.procResultSet_RSParam)\","
+        assertEquals("{\"@odata.context\":\"$metadata#Collection(Loopy.1.VM1.procResultSet_RSParam)\","
                 + "\"value\":[{\"x\":\"third\",\"y\":3}]}", response.getContentAsString());        
 
         response = http.GET(baseURL + "/loopy/vm1/procResultSet(x='foo''bar',y=1)?$skip=1&$top=1");
         assertEquals(200, response.getStatus());
-        assertEquals("{\"@odata.context\":\"$metadata#Collection(Loopy.VM1.procResultSet_RSParam)\","
+        assertEquals("{\"@odata.context\":\"$metadata#Collection(Loopy.1.VM1.procResultSet_RSParam)\","
                 + "\"value\":[{\"x\":\"second\",\"y\":2}]}", response.getContentAsString());        
 
         response = http.GET(baseURL + "/loopy/vm1/procResultSet(x='foo''bar',y=1)?$orderby=y%20desc");
         assertEquals(200, response.getStatus());
-        assertEquals("{\"@odata.context\":\"$metadata#Collection(Loopy.VM1.procResultSet_RSParam)\","
+        assertEquals("{\"@odata.context\":\"$metadata#Collection(Loopy.1.VM1.procResultSet_RSParam)\","
                 + "\"value\":[{\"x\":\"third\",\"y\":3},"
                 + "{\"x\":\"second\",\"y\":2},"
                 + "{\"x\":\"foo'bar\",\"y\":1}]}", 
@@ -727,21 +728,21 @@ public class TestODataIntegration {
             mmd.addSourceMapping("x", "x", null);
             teiid.deployVDB("northwind", mmd);
 
-            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+            localClient = getClient(teiid.getDriver(), "northwind", new Properties());
 
             ContentResponse response = http.newRequest(baseURL + "/northwind/m/x")
                     .method("POST")
                     .content(new StringContentProvider("{\"b\":\"b\", \"c\":5}"), "application/json")
                     .send();                        
-            assertEquals(204, response.getStatus());
+            assertEquals(201, response.getStatus());
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");
         }
     }    
     
-    private UnitTestLocalClient getClient(final TeiidDriver driver, final String vdb, final Integer version, final Properties properties) {
-        return new UnitTestLocalClient(vdb, 1, properties, properties, driver, vdb);
+    private UnitTestLocalClient getClient(final TeiidDriver driver, final String vdb, final Properties properties) {
+        return new UnitTestLocalClient(vdb, "1", properties, properties, driver, vdb);
     }
     
     @Test
@@ -766,7 +767,7 @@ public class TestODataIntegration {
 
             Properties props = new Properties();
             props.setProperty(LocalClient.INVALID_CHARACTER_REPLACEMENT, " ");
-            localClient = getClient(teiid.getDriver(), "northwind", 1, props);
+            localClient = getClient(teiid.getDriver(), "northwind", props);
             ContentResponse response = null;
             response = http.newRequest(baseURL + "/northwind/vw/x")
                     .method("GET")
@@ -810,7 +811,7 @@ public class TestODataIntegration {
             mmd.setModelType(Model.Type.VIRTUAL);
             teiid.deployVDB("northwind", mmd);
 
-            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+            localClient = getClient(teiid.getDriver(), "northwind", new Properties());
 
             ContentResponse response = http.GET(baseURL + "/northwind/vw/x?$format=json&$select=a,b");
             assertEquals(200, response.getStatus());
@@ -844,7 +845,7 @@ public class TestODataIntegration {
             mmd.addSourceMapping("x8", "x8", null);
             teiid.deployVDB("northwind", mmd);
 
-            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+            localClient = getClient(teiid.getDriver(), "northwind", new Properties());
 
             ContentResponse response = http.GET(baseURL + "/northwind/vw/x('x')/c?$filter=endswith($it,'com')");
             assertEquals(200, response.getStatus());
@@ -873,13 +874,13 @@ public class TestODataIntegration {
             mmd.addSourceMapping("x5", "x5", null);
             teiid.deployVDB("northwind", mmd);
 
-            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+            localClient = getClient(teiid.getDriver(), "northwind", new Properties());
 
             ContentResponse response = http.newRequest(baseURL + "/northwind/m/x")
                     .method("POST")
                     .content(new StringContentProvider("{\"a\":\"x\",\"b\":[1,2,3]}"), "application/json")
                     .send();                        
-            assertEquals(204, response.getStatus());
+            assertEquals(201, response.getStatus());
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");
@@ -900,7 +901,7 @@ public class TestODataIntegration {
             mmd.addSourceMapping("x6", "x6", null);
             teiid.deployVDB("northwind", mmd);
 
-            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+            localClient = getClient(teiid.getDriver(), "northwind", new Properties());
             
             ContentResponse response = http.newRequest(baseURL + "/northwind/m/x('x')")
                     .method("PATCH")
@@ -927,15 +928,15 @@ public class TestODataIntegration {
 
             Properties props = new Properties();
             props.setProperty("batch-size", "1");
-            localClient = getClient(teiid.getDriver(), "northwind", 1, props);
+            localClient = getClient(teiid.getDriver(), "northwind", props);
             
             ContentResponse response = http.GET(baseURL + "/northwind/vw/x?$format=json");
             assertEquals(200, response.getStatus());
             String starts = "{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"abc\",\"b\":456}],"
                     + "\"@odata.nextLink\":\""+baseURL+"/northwind/vw/x?$format=json&$skiptoken=";
-            String ends = "--1\"}";
+            String ends = ",1\"}";
             assertTrue(response.getContentAsString(), response.getContentAsString().startsWith(starts));
-            assertTrue(response.getContentAsString().endsWith(ends));
+            assertTrue(response.getContentAsString(), response.getContentAsString().endsWith(ends));
             
             JsonNode node = getJSONNode(response);
             String nextLink = node.get("@odata.nextLink").asText();
@@ -961,7 +962,7 @@ public class TestODataIntegration {
 
             Properties props = new Properties();
             props.setProperty("batch-size", "1");
-            localClient = getClient(teiid.getDriver(), "northwind", 1, props);
+            localClient = getClient(teiid.getDriver(), "northwind", props);
             
             ContentResponse response = http.GET(baseURL + "/northwind/vw/x");
             assertEquals(200, response.getStatus());
@@ -982,7 +983,7 @@ public class TestODataIntegration {
             teiid.deployVDB("northwind", mmd);
 
             Properties props = new Properties();
-            localClient = getClient(teiid.getDriver(), "northwind", 1, props);
+            localClient = getClient(teiid.getDriver(), "northwind", props);
             
             ContentResponse response = http.GET(baseURL + "/northwind/vw/x?$skip=-1");
             assertEquals(400, response.getStatus());
@@ -1003,7 +1004,7 @@ public class TestODataIntegration {
             teiid.deployVDB("northwind", mmd);
 
             Properties props = new Properties();
-            localClient = getClient(teiid.getDriver(), "northwind", 1, props);
+            localClient = getClient(teiid.getDriver(), "northwind", props);
             
             ContentResponse response = http.GET(baseURL
                     + "/northwind/vw/x?$filter=" + Encoder.encode("a eq @a")
@@ -1028,7 +1029,7 @@ public class TestODataIntegration {
             teiid.deployVDB("northwind", mmd);
 
             Properties props = new Properties();
-            localClient = getClient(teiid.getDriver(), "northwind", 1, props);
+            localClient = getClient(teiid.getDriver(), "northwind", props);
             
             ContentResponse response = http.GET(baseURL+ "/northwind/vw/x?$top=-1");
             assertEquals(400, response.getStatus());
@@ -1049,7 +1050,7 @@ public class TestODataIntegration {
             teiid.deployVDB("northwind", mmd);
 
             Properties props = new Properties();
-            localClient = getClient(teiid.getDriver(), "northwind", 1, props);
+            localClient = getClient(teiid.getDriver(), "northwind", props);
             
             ContentResponse response = http.GET(baseURL + "/northwind/vw/x?$filter="+Encoder.encode("a eq @a"));
             assertEquals(400, response.getStatus());
@@ -1076,9 +1077,9 @@ public class TestODataIntegration {
             assertEquals(200, response.getStatus());
             String starts = "{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"abc\",\"b\":456}],"
                     + "\"@odata.nextLink\":\""+baseURL+"/northwind/vw/x?$format=json&$skiptoken=";
-            String ends = "--1\"}";
-            assertTrue(response.getContentAsString().startsWith(starts));
-            assertTrue(response.getContentAsString().endsWith(ends));
+            String ends = ",1\"}";
+            assertTrue(response.getContentAsString(), response.getContentAsString().startsWith(starts));
+            assertTrue(response.getContentAsString(), response.getContentAsString().endsWith(ends));
             assertEquals("odata.maxpagesize=1", getHeader(response, "Preference-Applied"));
             
             JsonNode node = getJSONNode(response);
@@ -1102,34 +1103,60 @@ public class TestODataIntegration {
             ModelMetaData mmd = new ModelMetaData();
             mmd.setName("vw");
             mmd.addSourceMetadata("ddl", "create view x (a string primary key, b integer) "
-                    + "as select 'xyz', 123 union all select 'abc', 456;");
+                    + "as select 'a', 123 "
+                    + "union all select 'b', 456 "
+                    + "union all select 'c', 789 "
+                    + "union all select 'd', 012;");
             mmd.setModelType(Model.Type.VIRTUAL);
             teiid.deployVDB("northwind", mmd);
 
             Properties props = new Properties();
             props.setProperty("batch-size", "1");
-            localClient = getClient(teiid.getDriver(), "northwind", 1, props);
+            localClient = getClient(teiid.getDriver(), "northwind", props);
 
             ContentResponse response = http.GET(baseURL + "/northwind/vw/x?$format=json&$count=true&$top=1&$skip=1");
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x\",\"@odata.count\":2,\"value\":[{\"a\":\"xyz\",\"b\":123}]}", 
+            assertEquals("{\"@odata.context\":\"$metadata#x\",\"@odata.count\":4,\"value\":[{\"a\":\"b\",\"b\":456}]}", 
+                    response.getContentAsString());
+            
+            response = http.GET(baseURL + "/northwind/vw/x?$format=json&$count=true&$filter="+Encoder.encode("a eq 'a'"));
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#x\",\"@odata.count\":1,\"value\":[{\"a\":\"a\",\"b\":123}]}", 
                     response.getContentAsString());
             
             //effectively the same as above
             response = http.GET(baseURL + "/northwind/vw/x?$format=json&$count=true&$skip=1");
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x\",\"@odata.count\":2,\"value\":[{\"a\":\"xyz\",\"b\":123}]}", 
-                    response.getContentAsString());
+            String r = "{\"@odata.context\":\"$metadata#x\",\"@odata.count\":4,"
+                    + "\"value\":[{\"a\":\"b\",\"b\":456}],\"@odata.nextLink\":";
+            assertTrue(response.getContentAsString(), response.getContentAsString().startsWith(r));
             
             //now there should be a next
             response = http.GET(baseURL + "/northwind/vw/x?$format=json&$count=true");
             assertEquals(200, response.getStatus());
-            String ends = "--1\"}";
-            assertTrue(response.getContentAsString(), response.getContentAsString().endsWith(ends));
+            String ends = ",1,4\"}";
+            String responseStr = response.getContentAsString();
+            assertTrue(responseStr, responseStr.endsWith(ends));
 
+            //Next string
+            JsonParser parser = new JsonFactory(new ObjectMapper()
+                    .configure(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true))
+                    .createParser(responseStr);
+            JsonNode node = parser.getCodec().readTree(parser);
+            
+            response = http.newRequest(node.get("@odata.nextLink").asText())
+                    .method("GET")
+                    .send();
+            assertEquals(200, response.getStatus());
+            responseStr = response.getContentAsString();
+            assertTrue(responseStr, responseStr.startsWith("{\"@odata.context\":\"$metadata#x\","
+                    + "\"@odata.count\":4,"
+                    + "\"value\":[{\"a\":\"b\",\"b\":456}],"
+                    + "\"@odata.nextLink\":\""+baseURL+"/northwind/vw/x?$format=json&$count=true&$skiptoken="));
+        
             response = http.GET(baseURL + "/northwind/vw/x/$count");
             assertEquals(200, response.getStatus());            
-            assertEquals("2", response.getContentAsString());
+            assertEquals("4", response.getContentAsString());
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");
@@ -1154,7 +1181,7 @@ public class TestODataIntegration {
             mmd.addSourceMapping("x1", "x1", null);
             teiid.deployVDB("northwind", mmd);
 
-            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+            localClient = getClient(teiid.getDriver(), "northwind", new Properties());
 
             ContentResponse response = http.newRequest(baseURL + "/northwind/m/x(a='a',b='b')")
                     .method("DELETE")
@@ -1182,7 +1209,7 @@ public class TestODataIntegration {
                     .method("POST")
                     .content(new StringContentProvider("{\"a\":\"a\", \"b\":\"b\", \"c\":5}"), "application/json")
                     .send();                        
-            assertEquals(204, response.getStatus());
+            assertEquals(201, response.getStatus());
             
             response = http.newRequest(baseURL + "/northwind/m/x(a='a',b='b')")
                     .method("PATCH")
@@ -1214,7 +1241,7 @@ public class TestODataIntegration {
             mmd.addSourceMapping("x1", "x1", null);
             teiid.deployVDB("northwind", mmd);
 
-            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+            localClient = getClient(teiid.getDriver(), "northwind", new Properties());
             localClient.setThrowUpdateException(true);
 
             ContentResponse response = http.newRequest(baseURL + "/northwind/m/x(a='a',b='b')")
@@ -1243,7 +1270,7 @@ public class TestODataIntegration {
             mmd.addSourceMapping("x1", "x1", null);
             teiid.deployVDB("northwind", mmd);
 
-            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+            localClient = getClient(teiid.getDriver(), "northwind", new Properties());
 
             ContentResponse response = http.newRequest(baseURL + "/northwind/m/x('a')/c/$value")
                     .method("PUT")
@@ -1276,7 +1303,7 @@ public class TestODataIntegration {
             mmd.addSourceMapping("x1", "x1", null);
             teiid.deployVDB("northwind", mmd);
 
-            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+            localClient = getClient(teiid.getDriver(), "northwind", new Properties());
 
             ContentResponse response = http.newRequest(baseURL + "/northwind/m/$entity?$id="+baseURL+"/northwind/m/x('a')&$select=b")
                     .method("GET")
@@ -1314,7 +1341,7 @@ public class TestODataIntegration {
             mmd.addSourceMapping("x9", "x9", null);
             teiid.deployVDB("northwind", mmd);
 
-            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+            localClient = getClient(teiid.getDriver(), "northwind", new Properties());
 
             ContentResponse response = http.newRequest(baseURL + "/northwind/m/$crossjoin(x,y)")
                     .method("GET")
@@ -1364,7 +1391,7 @@ public class TestODataIntegration {
             mmd.addSourceMapping("x4", "x4", null);
             teiid.deployVDB("northwind", mmd);
 
-            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+            localClient = getClient(teiid.getDriver(), "northwind", new Properties());
 
             ContentResponse response = http.newRequest(baseURL + "/northwind/m/x('a')/y_FKX/$ref")
                     .method("GET")
@@ -1433,7 +1460,7 @@ public class TestODataIntegration {
             mmd.addSourceMapping("x7", "x7", null);
             teiid.deployVDB("northwind", mmd);
 
-            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+            localClient = getClient(teiid.getDriver(), "northwind", new Properties());
 
             ContentResponse response = null;
             
@@ -1487,7 +1514,7 @@ public class TestODataIntegration {
             mmd.addSourceMapping("x7", "x7", null);
             teiid.deployVDB("northwind", mmd);
 
-            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+            localClient = getClient(teiid.getDriver(), "northwind", new Properties());
 
             ContentResponse response = null;
             
@@ -1569,7 +1596,7 @@ public class TestODataIntegration {
             mmd.addSourceMapping("x", "x", null);
             teiid.deployVDB("northwind", mmd);
 
-            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+            localClient = getClient(teiid.getDriver(), "northwind", new Properties());
 
             final String batch = ""
                     + "--batch_8194-cf13-1f56" + CRLF
@@ -1675,11 +1702,11 @@ public class TestODataIntegration {
         mmd.addSourceMapping("x2", "x2", null);
         teiid.deployVDB("northwind", mmd);
 
-        localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+        localClient = getClient(teiid.getDriver(), "northwind", new Properties());
 
         ContentResponse response =  http.GET(baseURL + "/northwind/m/x()?$format=json");
         assertEquals(200, response.getStatus());
-        assertEquals("{\"@odata.context\":\"$metadata#Collection(northwind.m.x_RSParam)\","
+        assertEquals("{\"@odata.context\":\"$metadata#Collection(northwind.1.m.x_RSParam)\","
                 + "\"value\":[{\"y\":\"x\"},{\"y\":\"y\"}]}", response.getContentAsString());
         } finally {
             localClient = null;
@@ -1709,7 +1736,7 @@ public class TestODataIntegration {
         teiid.addTranslator("x3", hc);
         teiid.deployVDB("northwind", mmd);
 
-        localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+        localClient = getClient(teiid.getDriver(), "northwind", new Properties());
 
         ContentResponse response= http.GET(baseURL + "/northwind/m/SmallA?$format=json&$select=TimeValue");
         assertEquals(200, response.getStatus());
@@ -1736,14 +1763,14 @@ public class TestODataIntegration {
             mmd.addSourceMapping("x1", "x1", null);
             teiid.deployVDB("northwind", mmd);
 
-            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+            localClient = getClient(teiid.getDriver(), "northwind", new Properties());
 
             ContentResponse response = http.newRequest(baseURL + "/northwind/m/x")
                     .method("POST")
                     .content(new StringContentProvider("{\"a\":\"b\", \"b\":\"2000-02-02T22:22:22Z\"}"), 
                             "application/json")
                     .send();                        
-            assertEquals(204, response.getStatus());
+            assertEquals(201, response.getStatus());
             
             response = http.newRequest(baseURL + "/northwind/m/x(a='a',b=2011-09-11T00:00:00Z)")
                     .method("GET")
@@ -1806,7 +1833,7 @@ public class TestODataIntegration {
             mmd.addSourceMapping("x1", "x1", null);
             teiid.deployVDB("northwind", mmd);
 
-            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+            localClient = getClient(teiid.getDriver(), "northwind", new Properties());
 
             ContentResponse response = http.newRequest(baseURL + "/northwind/m/x('b')")
                     .method("GET")
@@ -1894,7 +1921,7 @@ public class TestODataIntegration {
             mmd.addSourceMapping("x1", "x1", null);
             teiid.deployVDB("northwind", mmd);
 
-            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+            localClient = getClient(teiid.getDriver(), "northwind", new Properties());
 
             ContentResponse response = http.newRequest(baseURL + "/northwind/m/x")
                     .method("GET")
@@ -1933,7 +1960,7 @@ public class TestODataIntegration {
             teiid.deployVDB("northwind", mmd);
 
             Properties props = new Properties();
-            localClient = getClient(teiid.getDriver(), "northwind", 1, props);
+            localClient = getClient(teiid.getDriver(), "northwind", props);
             
             ContentResponse response = http.GET(baseURL + "/northwind/vw/x?$filter="+Encoder.encode("b eq null"));
             assertEquals(200, response.getStatus());
@@ -2007,7 +2034,7 @@ public class TestODataIntegration {
             mmd.addSourceMapping("x12", "x12", null);
             teiid.deployVDB("northwind", mmd);
 
-            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+            localClient = getClient(teiid.getDriver(), "northwind", new Properties());
 
             ContentResponse response = null;
             
@@ -2062,7 +2089,8 @@ public class TestODataIntegration {
                     + "{\"id\":8,\"customerid\":3,\"place\":\"town\"}"
                     + "]}],"
                     + "\"@odata.nextLink\":\"http://localhost:"));
-            assertTrue(response.getContentAsString(), response.getContentAsString().endsWith("--8\"}"));
+            assertTrue(response.getContentAsString(), 
+                    response.getContentAsString().endsWith(",8\"}"));
             
             JsonParser parser = new JsonFactory(new ObjectMapper()
                 .configure(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY, true))
@@ -2174,7 +2202,7 @@ public class TestODataIntegration {
             teiid.deployVDB("northwind", mmd);
 
             Properties props = new Properties();
-            localClient = getClient(teiid.getDriver(), "northwind", 1, props);
+            localClient = getClient(teiid.getDriver(), "northwind", props);
             
             ContentResponse response = http.GET(baseURL + "/northwind/vw/x?$filter="
                     +Encoder.encode("indexof(a,'y') eq 1"));
@@ -2232,7 +2260,7 @@ public class TestODataIntegration {
             teiid.deployVDB("northwind", mmd);
 
             Properties props = new Properties();
-            localClient = getClient(teiid.getDriver(), "northwind", 1, props);
+            localClient = getClient(teiid.getDriver(), "northwind", props);
             
             ContentResponse response = http.GET(baseURL + "/northwind/vw/SimpleTable?$filter="
                     +Encoder.encode("month(2001-01-01T00:01:01.01Z) eq intkey")+"&$select=intkey");

@@ -50,7 +50,7 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
     private String clientHardwareAddress;
     private String userName;
     private String vdbName;
-    private int vdbVersion;
+    private String vdbVersion;
     private String sessionId;
     private String securityDomain;
     
@@ -136,12 +136,12 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 	}
 
 	@Override
-	public int getVDBVersion() {
+	public String getVDBVersion() {
 		return this.vdbVersion;
 	}
 
-	public void setVDBVersion(int vdbVersion) {
-		this.vdbVersion = vdbVersion;
+	public void setVDBVersion(Object vdbVersion) {
+		this.vdbVersion = vdbVersion!=null?vdbVersion.toString():null;
 	}
 
 	@Override

@@ -25,7 +25,15 @@ package org.teiid.services;
 
 import java.security.Principal;
 import java.security.acl.Group;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
@@ -57,6 +65,7 @@ import org.teiid.runtime.RuntimePlugin;
 import org.teiid.security.Credentials;
 import org.teiid.security.GSSResult;
 import org.teiid.security.SecurityHelper;
+import org.teiid.vdb.runtime.VDBKey;
 
 
 /**
@@ -248,29 +257,13 @@ public class SessionServiceImpl implements SessionService {
 	protected VDBMetaData getActiveVDB(String vdbName, String vdbVersion) throws SessionServiceException {
 		VDBMetaData vdb = null;
 		
-		// handle the situation when the version is part of the vdb name.
-		
-		if (vdbVersion == null) {
-			int firstIndex = vdbName.indexOf('.');
-			if (firstIndex > 0) {
-				vdbVersion = vdbName.substring(firstIndex+1);
-				try {
-					Integer.parseInt(vdbVersion);
-					vdbName = vdbName.substring(0, firstIndex);
-				} catch (NumberFormatException e) {
-					//not a revision
-					vdbVersion = null;
-				}
-			}
-		}
-		
 		try {
 			if (vdbVersion == null) {
 				vdbVersion = "latest"; //$NON-NLS-1$
 				vdb = this.vdbRepository.getLiveVDB(vdbName);
 			}
 			else {
-				vdb = this.vdbRepository.getLiveVDB(vdbName, Integer.parseInt(vdbVersion));
+				vdb = this.vdbRepository.getLiveVDB(vdbName, vdbVersion);
 			}         
 		} catch (NumberFormatException e) {
 			 throw new SessionServiceException(RuntimePlugin.Event.TEIID40045, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40045, vdbVersion));
@@ -300,13 +293,10 @@ public class SessionServiceImpl implements SessionService {
 	}
 
 	@Override
-	public Collection<SessionMetadata> getSessionsLoggedInToVDB(String VDBName, int vdbVersion) {
-		if (VDBName == null || vdbVersion <= 0) {
-			return Collections.emptyList();
-		}
+	public Collection<SessionMetadata> getSessionsLoggedInToVDB(VDBKey key) {
 		ArrayList<SessionMetadata> results = new ArrayList<SessionMetadata>();
 		for (SessionMetadata info : this.sessionCache.values()) {
-			if (VDBName.equalsIgnoreCase(info.getVDBName()) && vdbVersion == info.getVDBVersion()) {
+			if (info.getVdb() != null && key.equals(info.getVdb().getAttachment(VDBKey.class))) {
 				results.add(info);
 			}
 		}

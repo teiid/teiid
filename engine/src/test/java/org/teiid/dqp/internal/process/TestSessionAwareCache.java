@@ -135,7 +135,7 @@ public class TestSessionAwareCache {
 		
 		assertTrue(result==c);
 		
-		cache.clearForVDB("vdb-name", 1);
+		cache.clearForVDB("vdb-name", "1");
 		
 		assertNull(cache.get(id));
 	}

@@ -103,7 +103,7 @@ public class TestLogonImpl {
 		vdb.setName("name");
 		vdb.setVersion(1);
 		vdb.setStatus(Status.ACTIVE);
-		Mockito.stub(repo.getLiveVDB("name", 1)).toReturn(vdb);
+		Mockito.stub(repo.getLiveVDB("name", "1")).toReturn(vdb);
 		
 		ssi.setVDBRepository(repo);
 		ssi.setSecurityDomain("SC");
@@ -225,7 +225,7 @@ public class TestLogonImpl {
 		vdb.setName(name);
 		vdb.setVersion(1);
 		vdb.setStatus(Status.ACTIVE);
-		Mockito.stub(repo.getLiveVDB(name, 1)).toReturn(vdb);
+		Mockito.stub(repo.getLiveVDB(name, "1")).toReturn(vdb);
 		vdb.addProperty(SessionServiceImpl.SECURITY_DOMAIN_PROPERTY, sc);
 		vdb.addProperty(SessionServiceImpl.AUTHENTICATION_TYPE_PROPERTY, authenticationType);
 		return vdb;

@@ -88,24 +88,12 @@ public interface ExecutionContext {
     String getVdbName();
     
     /**
-     * @deprecated see {@link #getVdbName()}
-     * @return
-     */
-    String getVirtualDatabaseName();
-
-    /**
      * Get the version of the VDB this query is being run against.
      * shortcut for {@link #getCommandContext()}.getVdbVersion()
      * @return VDB version
      */
-    int getVdbVersion();
+    String getVdbVersion();
     
-    /**
-     * @deprecated see {@link #getVdbVersion()}
-     * @return
-     */
-    int getVirtualDatabaseVersion();
-
     /**
      * Get the user for the user running this query.
      * @return User, never null

@@ -70,11 +70,12 @@ public class MetadataFactory implements Serializable {
 	private static final String TEIID_HBASE = "teiid_hbase"; //$NON-NLS-1$
 	private static final String TEIID_SPATIAL = "teiid_spatial"; //$NON-NLS-1$
 	private static final String TEIID_LDAP = "teiid_ldap"; //$NON-NLS-1$
+	private static final String TEIID_REST = "teiid_rest"; //$NON-NLS-1$
 
 	private static final long serialVersionUID = 8590341087771685630L;
 
 	private String vdbName;
-	private int vdbVersion;
+	private String vdbVersion;
 	private Map<String, Datatype> enterpriseTypes;
 	private Map<String, Datatype> dataTypes;
 	private Map<String, Datatype> builtinDataTypes;
@@ -100,7 +101,7 @@ public class MetadataFactory implements Serializable {
 	public static final String HBASE_URI = "{http://www.teiid.org/translator/hbase/2014}"; //$NON-NLS-1$
 	public static final String SPATIAL_URI = "{http://www.teiid.org/translator/spatial/2015}"; //$NON-NLS-1$
 	public static final String LDAP_URI = "{http://www.teiid.org/translator/ldap/2015}"; //$NON-NLS-1$
-	
+	public static final String REST_URI = "{http://teiid.org/rest}"; //$NON-NLS-1$
 
 	public static final Map<String, String> BUILTIN_NAMESPACES;
 	static {
@@ -116,22 +117,29 @@ public class MetadataFactory implements Serializable {
 		map.put(TEIID_HBASE, HBASE_URI.substring(1, HBASE_URI.length()-1));
 		map.put(TEIID_SPATIAL, SPATIAL_URI.substring(1, SPATIAL_URI.length()-1));
 		map.put(TEIID_LDAP, LDAP_URI.substring(1, LDAP_URI.length()-1));
+		map.put(TEIID_REST, REST_URI.substring(1, REST_URI.length()-1));
 		BUILTIN_NAMESPACES = Collections.unmodifiableMap(map);
 	}
 
-	public MetadataFactory(String vdbName, int vdbVersion, Map<String, Datatype> runtimeTypes, ModelMetaData model) {
+	public MetadataFactory(String vdbName, Object vdbVersion, Map<String, Datatype> runtimeTypes, ModelMetaData model) {
 		this(vdbName, vdbVersion, model.getName(), runtimeTypes, model.getProperties(), model.getSchemaText());
 		this.model = model;
 	}
 
-	public MetadataFactory(String vdbName, int vdbVersion, String schemaName, Map<String, Datatype> runtimeTypes, Properties modelProperties, String rawMetadata) {
+	public MetadataFactory(String vdbName, Object vdbVersion, String schemaName, Map<String, Datatype> runtimeTypes, Properties modelProperties, String rawMetadata) {
 		this.vdbName = vdbName;
-		this.vdbVersion = vdbVersion;
+		this.vdbVersion = vdbVersion.toString();
 		this.dataTypes = runtimeTypes;
 		this.builtinDataTypes = runtimeTypes;
 		this.schema.setName(schemaName);
 		long msb = longHash(vdbName, 0);
-		msb = 31*msb + vdbVersion;
+		try {
+			//if this is just an int, we'll use the old style hash
+			int val = Integer.parseInt(this.vdbVersion);
+			msb = 31*msb + val;
+		} catch (NumberFormatException e) {
+			msb = 31*msb + vdbVersion.hashCode();
+		}
 		msb = longHash(schemaName, msb);
 		this.idPrefix = "tid:" + hex(msb, 12); //$NON-NLS-1$
 		setUUID(this.schema);
@@ -729,7 +737,7 @@ public class MetadataFactory implements Serializable {
 		return this.vdbName;
 	}
 
-	public int getVdbVersion() {
+	public String getVdbVersion() {
 		return this.vdbVersion;
 	}
 

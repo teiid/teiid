@@ -31,7 +31,7 @@ import org.teiid.language.Literal;
 
 public abstract class ParseFormatFunctionModifier extends FunctionModifier {
 	
-	private String prefix;
+	protected String prefix;
 	
 	public ParseFormatFunctionModifier(String prefix) {
 		this.prefix = prefix;

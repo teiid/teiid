@@ -109,13 +109,14 @@ public class VDBRepository implements Serializable{
 		lock.lock();
 		try {
 			VDBKey vdbKey = cvdb.getVDBKey();
-			cvdb.getVDB().setBaseName(vdbKey.getBaseName());
-			if (vdbKey.isSemantic() && (!vdbKey.isFullySpecified() || vdbKey.isAtMost() || vdbKey.getVersion() != 1)) {
+			if (vdbKey.isAtMost()) {
 				throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40145, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40145, vdbKey));
 			}
 			if (vdbRepo.containsKey(vdbKey)) {
 				throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40035, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40035, vdb.getName(), vdb.getVersion()));
 			}
+			vdb.setVersion(vdbKey.getVersion()); //canonicalize the version
+			vdb.addAttchment(VDBKey.class, vdbKey); //save the key for comparisons
 			this.vdbRepo.put(vdbKey, cvdb);
 			this.pendingDeployments.remove(vdbKey);
 			vdbAdded.signalAll();
@@ -125,9 +126,8 @@ public class VDBRepository implements Serializable{
 		notifyAdd(vdb.getName(), vdb.getVersion(), cvdb);
 	}
 	
-	public void waitForFinished(String vdbName, int vdbVersion, int timeOutMillis) throws ConnectionException {
+	public void waitForFinished(VDBKey key, int timeOutMillis) throws ConnectionException {
 		CompositeVDB cvdb = null;
-		VDBKey key = new VDBKey(vdbName, vdbVersion);
 		if (timeOutMillis < 0) {
 			timeOutMillis = DEFAULT_TIMEOUT_MILLIS;
 		}
@@ -136,7 +136,7 @@ public class VDBRepository implements Serializable{
 		try {
 			while ((cvdb = this.vdbRepo.get(key)) == null) {
 				if (timeOutNanos <= 0) {
-					throw new ConnectionException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40096, timeOutMillis, vdbName, vdbVersion)); 
+					throw new ConnectionException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40096, timeOutMillis, key.getName(), key.getVersion())); 
 				}
 				timeOutNanos = this.vdbAdded.awaitNanos(timeOutNanos);
 				
@@ -151,7 +151,7 @@ public class VDBRepository implements Serializable{
 		synchronized (vdb) {
 			while (vdb.getStatus() != Status.ACTIVE) {
 				if (timeOutNanos <= 0) {
-					throw new ConnectionException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40097, timeOutMillis, vdbName, vdbVersion, vdb.getValidityErrors())); 
+					throw new ConnectionException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40097, timeOutMillis, key.getName(), key.getVersion(), vdb.getValidityErrors())); 
 				}
 				try {
 					vdb.wait(timeOutNanos);
@@ -173,7 +173,7 @@ public class VDBRepository implements Serializable{
 	 * @param version
 	 * @return
 	 */
-	public VDBMetaData getLiveVDB(String name, int version) {
+	public VDBMetaData getLiveVDB(String name, Object version) {
 		CompositeVDB v = this.vdbRepo.get(new VDBKey(name, version));
 		if (v != null) {
 			return v.getVDB();
@@ -203,8 +203,8 @@ public class VDBRepository implements Serializable{
      */
 	public VDBMetaData getLiveVDB(String vdbName) {
     	VDBMetaData result = null;
-    	VDBKey key = new VDBKey(vdbName, 1);
-    	if (key.isSemantic() && !key.isAtMost()) {
+    	VDBKey key = new VDBKey(vdbName, null);
+    	if (!key.isAtMost()) {
     		CompositeVDB v = this.vdbRepo.get(key);
     		if (v != null) {
     			return v.getVDB();
@@ -212,7 +212,7 @@ public class VDBRepository implements Serializable{
     		return null;
     	}
         for (Map.Entry<VDBKey, CompositeVDB> entry:this.vdbRepo.tailMap(key).entrySet()) {
-        	if(!key.getBaseName().equalsIgnoreCase(entry.getKey().getBaseName()) || !key.acceptsVerion(entry.getKey())) {
+        	if(!key.acceptsVerion(entry.getKey())) {
             	break;
             }
         	VDBMetaData vdb = entry.getValue().getVDB();
@@ -257,7 +257,7 @@ public class VDBRepository implements Serializable{
 		return null;
 	}
 	
-	public VDBMetaData removeVDB(String vdbName, int vdbVersion) {
+	public VDBMetaData removeVDB(String vdbName, Object vdbVersion) {
 		VDBKey key = new VDBKey(vdbName, vdbVersion);
 		return removeVDB(key);
 	}
@@ -283,7 +283,7 @@ public class VDBRepository implements Serializable{
 	    this.odbcStore = getODBCMetadataStore();
 	}
 	
-	public void finishDeployment(String name, int version) {
+	public void finishDeployment(String name, String version) {
 		VDBKey key = new VDBKey(name, version);
 		CompositeVDB v = this.vdbRepo.get(key);
 		if (v == null) {
@@ -353,7 +353,7 @@ public class VDBRepository implements Serializable{
 	}
 	
 	
-	private void notifyFinished(String name, int version, CompositeVDB v) {
+	private void notifyFinished(String name, String version, CompositeVDB v) {
 		LogManager.logInfo(LIFECYCLE_CONTEXT, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,name, version, v.getVDB().getStatus()));
 		VDBLifeCycleListener mm = null;
 		for(VDBLifeCycleListener l:this.listeners) {
@@ -361,10 +361,10 @@ public class VDBRepository implements Serializable{
 				mm = l;
 				continue; //defer to last
 			}
-			l.finishedDeployment(name, version, v);
+			l.finishedDeployment(name, v);
 		}
 		if (mm != null) {
-			mm.finishedDeployment(name, version, v);
+			mm.finishedDeployment(name, v);
 		}
 	}
 	
@@ -376,24 +376,24 @@ public class VDBRepository implements Serializable{
 		this.listeners.remove(listener);
 	}
 	
-	private void notifyAdd(String name, int version, CompositeVDB vdb) {
+	private void notifyAdd(String name, String version, CompositeVDB vdb) {
 		LogManager.logInfo(LIFECYCLE_CONTEXT, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40118,name, version));
 		for(VDBLifeCycleListener l:this.listeners) {
-			l.added(name, version, vdb);
+			l.added(name, vdb);
 		}
 	}
 	
-	private void notifyRemove(String name, int version, CompositeVDB vdb) {
+	private void notifyRemove(String name, String version, CompositeVDB vdb) {
 		LogManager.logInfo(LIFECYCLE_CONTEXT, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40119,name, version));
 		for(VDBLifeCycleListener l:this.listeners) {
-			l.removed(name, version, vdb);
+			l.removed(name, vdb);
 		}
 	}
 	
-	private void notifyBeforeRemove(String name, int version, CompositeVDB vdb) {
+	private void notifyBeforeRemove(String name, String version, CompositeVDB vdb) {
 		LogManager.logInfo(LIFECYCLE_CONTEXT, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40120,name, version));
 		for(VDBLifeCycleListener l:this.listeners) {
-			l.beforeRemove(name, version, vdb);
+			l.beforeRemove(name, vdb);
 		}
 	}
 	
@@ -407,7 +407,7 @@ public class VDBRepository implements Serializable{
 		this.pendingDeployments.put(key, deployment);
 	}
 
-	public VDBMetaData getVDB(String vdbName, int vdbVersion) {
+	public VDBMetaData getVDB(String vdbName, Object vdbVersion) {
 		VDBKey key = new VDBKey(vdbName, vdbVersion);
 		CompositeVDB cvdb = this.vdbRepo.get(key);
 		if (cvdb != null) {

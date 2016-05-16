@@ -47,7 +47,21 @@ public interface Admin {
      * @param sourceName source name
      * @throws AdminException
      */
+	@Deprecated
 	void removeSource(String vdbName, int vdbVersion, String modelName,
+			String sourceName)
+			throws AdminException;
+	
+    /**
+     * Removes a {@link Translator} and Data source from a {@link VDB}'s Model
+     *
+     * @param vdbName Name of the VDB
+     * @param vdbVersion Version of the VDB
+     * @param modelName  Name of the Model
+     * @param sourceName source name
+     * @throws AdminException
+     */
+	void removeSource(String vdbName, String vdbVersion, String modelName,
 			String sourceName)
 			throws AdminException;
 
@@ -62,7 +76,23 @@ public interface Admin {
      * @param dsName data source name that can found in the JNDI map.
      * @throws AdminException
      */
+	@Deprecated
 	void addSource(String vdbName, int vdbVersion, String modelName,
+			String sourceName, String translatorName, String dsName)
+			throws AdminException;
+	
+    /**
+     * Adds a {@link Translator} and Data source to a {@link VDB}'s Model
+     *
+     * @param vdbName Name of the VDB
+     * @param vdbVersion Version of the VDB
+     * @param modelName  Name of the Model
+     * @param sourceName source name
+     * @param translatorName
+     * @param dsName data source name that can found in the JNDI map.
+     * @throws AdminException
+     */
+	void addSource(String vdbName, String vdbVersion, String modelName,
 			String sourceName, String translatorName, String dsName)
 			throws AdminException;
 
@@ -76,8 +106,32 @@ public interface Admin {
      * @param dsName data source name that can found in the JNDI map.
      * @throws AdminException
      */
+	@Deprecated
 	void updateSource(String vdbName, int vdbVersion, String sourceName,
 			String translatorName, String dsName) throws AdminException;
+
+    /**
+     * Update a source's {@link Translator} and Data source
+     *
+     * @param vdbName Name of the VDB
+     * @param vdbVersion Version of the VDB
+     * @param sourceName source name
+     * @param translatorName
+     * @param dsName data source name that can found in the JNDI map.
+     * @throws AdminException
+     */
+	void updateSource(String vdbName, String vdbVersion, String sourceName,
+			String translatorName, String dsName) throws AdminException;
+	
+    /**
+     * Change the {@link ConnectionType} of the {@link VDB}.
+     * @param vdbName Name of the VDB
+     * @param vdbVersion Version of the VDB
+     * @param type
+     * @throws AdminException
+     */
+	@Deprecated
+    void changeVDBConnectionType(String vdbName, int vdbVersion, ConnectionType type) throws AdminException;
 
     /**
      * Change the {@link ConnectionType} of the {@link VDB}.
@@ -86,7 +140,7 @@ public interface Admin {
      * @param type
      * @throws AdminException
      */
-    void changeVDBConnectionType(String vdbName, int vdbVersion, ConnectionType type) throws AdminException;
+    void changeVDBConnectionType(String vdbName, String vdbVersion, ConnectionType type) throws AdminException;
 
     /**
      * Deploy a artifact (VDB, JAR, RAR files)
@@ -120,7 +174,17 @@ public interface Admin {
      * @throws AdminException
      * @return
      */
+    @Deprecated
     VDB getVDB(String vdbName, int vdbVersion) throws AdminException;
+    
+    /**
+     * Get the VDB
+     * @param vdbName
+     * @param vbdVersion
+     * @throws AdminException
+     * @return
+     */
+    VDB getVDB(String vdbName, String vdbVersion) throws AdminException;
 
     /**
      * Restart the VDB. This issues reload of the metadata.
@@ -130,7 +194,18 @@ public interface Admin {
      * @throws AdminException
      * @return
      */
+    @Deprecated
     void restartVDB(String vdbName, int vdbVersion, String... models) throws AdminException;
+
+    /**
+     * Restart the VDB. This issues reload of the metadata.
+     * @param vdbName
+     * @param vbdVersion
+     * @param models names for which metadata needs to be reloaded, if null or not supplied all models reloaded
+     * @throws AdminException
+     * @return
+     */
+    void restartVDB(String vdbName, String vdbVersion, String... models) throws AdminException;
 
     /**
      * Get the translators that are available in the configuration
@@ -237,8 +312,18 @@ public interface Admin {
      * @param vdbVersion - VDB version
      * @throws AdminException
      */
+    @Deprecated
     void clearCache(String cacheType, String vdbName, int vdbVersion) throws AdminException;
-
+    
+    /**
+     * Clear the cache of the given VDB for provided cache type
+     * @param cacheType Cache Type
+     * No wild cards currently supported, must be explicit
+     * @param vdbName - Name of the VDB
+     * @param vdbVersion - VDB version
+     * @throws AdminException
+     */
+    void clearCache(String cacheType, String vdbName, String vdbVersion) throws AdminException;
 
     /**
      * Get the Cache Statistics for the given type
@@ -294,7 +379,18 @@ public interface Admin {
      * @param dataRole
      * @param mappedRoleName
      */
+    @Deprecated
     void addDataRoleMapping(String vdbName, int vdbVersion, String dataRole, String mappedRoleName) throws AdminException;
+
+    /**
+     * Assign a Role name to the Data Role in a given VDB
+     *
+     * @param vdbName
+     * @param vdbVersion
+     * @param dataRole
+     * @param mappedRoleName
+     */
+    void addDataRoleMapping(String vdbName, String vdbVersion, String dataRole, String mappedRoleName) throws AdminException;
 
     /**
      * Remove a Role name to the Data Role in a given VDB
@@ -304,7 +400,18 @@ public interface Admin {
      * @param dataRole
      * @param mappedRoleName
      */
+    @Deprecated
     void removeDataRoleMapping(String vdbName, int vdbVersion, String dataRole, String mappedRoleName) throws AdminException;
+
+    /**
+     * Remove a Role name to the Data Role in a given VDB
+     *
+     * @param vdbName
+     * @param vdbVersion
+     * @param dataRole
+     * @param mappedRoleName
+     */
+    void removeDataRoleMapping(String vdbName, String vdbVersion, String dataRole, String mappedRoleName) throws AdminException;
 
     /**
      * Set the any authenticated flag on the Data Role in a given VDB
@@ -314,7 +421,18 @@ public interface Admin {
      * @param dataRole
      * @param anyAuthenticated
      */
+    @Deprecated
     void setAnyAuthenticatedForDataRole(String vdbName, int vdbVersion, String dataRole, boolean anyAuthenticated) throws AdminException;
+
+    /**
+     * Set the any authenticated flag on the Data Role in a given VDB
+     *
+     * @param vdbName
+     * @param vdbVersion
+     * @param dataRole
+     * @param anyAuthenticated
+     */
+    void setAnyAuthenticatedForDataRole(String vdbName, String vdbVersion, String dataRole, boolean anyAuthenticated) throws AdminException;
 
     /**
      * Creates a JCA data source
@@ -369,7 +487,19 @@ public interface Admin {
      * @param EnumSet<SchemaObjectType> Type of schema objects to retrieve, null means ALL the schema object types
      * @param typeNamePattern RegEx pattern to filter to names of tables, procedures that are being read. Null means no filter.
      */
+    @Deprecated
     String getSchema(String vdbName, int vdbVersion, String modelName, EnumSet<SchemaObjectType> allowedTypes, String typeNamePattern) throws AdminException;
+
+    /**
+     * Retrieve the schema of the given model
+     *
+     * @param vdbName
+     * @param vdbVersion
+     * @param modelName
+     * @param EnumSet<SchemaObjectType> Type of schema objects to retrieve, null means ALL the schema object types
+     * @param typeNamePattern RegEx pattern to filter to names of tables, procedures that are being read. Null means no filter.
+     */
+    String getSchema(String vdbName, String vdbVersion, String modelName, EnumSet<SchemaObjectType> allowedTypes, String typeNamePattern) throws AdminException;
 
     /**
      * Get the Query Plan for the given session with provided execution id.

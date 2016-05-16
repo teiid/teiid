@@ -3,7 +3,7 @@
   <parent>
     <artifactId>teiid-parent</artifactId>
     <groupId>org.jboss.teiid</groupId>
-    <version>9.0.0.Beta2-SNAPSHOT</version>
+    <version>9.0.0.Beta3-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>connectors</artifactId>
@@ -80,7 +80,8 @@
     <module>google-api</module>
     <module>mongodb-api</module>
     <module>simpledb-api</module>
-      
+    <module>document-api</module>      
+    
     <module>translator-jdbc</module>
     <module>translator-google</module>
     <module>translator-ldap</module>
@@ -118,6 +119,7 @@
     <module>connector-infinispan-libmode.6</module>
     <module>translator-prestodb</module>
     <module>sandbox</module>
+    <module>translator-swagger</module>
     <module>translator-hbase</module>
   </modules>
 </project>
