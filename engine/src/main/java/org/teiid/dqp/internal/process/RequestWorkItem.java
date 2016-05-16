@@ -549,6 +549,8 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	
 			if (this.transactionState == TransactionState.ACTIVE) { 
 				this.transactionState = TransactionState.DONE;
+				//per the JDBC spec: 
+				//A statement is completed when all of its result sets and update counts have been retrieved.
 	            if (transactionContext.getTransactionType() == TransactionContext.Scope.REQUEST) {
 					try {
 		        		this.transactionService.rollback(transactionContext);
@@ -698,8 +700,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 			private void flowControl(TupleBatch batch)
 					throws BlockedException {
 				if (processor.hasBuffer()
-						|| batch.getTerminationFlag() 
-						|| transactionState == TransactionState.ACTIVE) {
+						|| batch.getTerminationFlag()) {
 					return;
 				}
 				if (!isForwardOnly() && resultsReceiver != null && begin > resultsBuffer.getRowCount()) {
@@ -847,7 +848,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 			}
 			if (!this.requestMsg.getRequestOptions().isContinuous()) {
 				if ((this.begin > (batch != null?batch.getEndRow():this.resultsBuffer.getRowCount()) && !doneProducingBatches)
-						|| (this.transactionState == TransactionState.ACTIVE) || (returnsUpdateCount && !doneProducingBatches)) {
+						|| (returnsUpdateCount && !doneProducingBatches)) {
 					return result;
 				}
 			
