@@ -291,15 +291,21 @@ public class TestAccumuloQueryExecution {
         executeCmd("insert into smalla (ROWID, LONGNUM, DOUBLENUM, BIGINTEGERVALUE) values (2, 2, 2.99, 2)");
         executeCmd("insert into smalla (ROWID, LONGNUM, DOUBLENUM, BIGINTEGERVALUE) values (3, 3, 3.99, 3)");
         executeCmd("insert into smalla (ROWID, LONGNUM, DOUBLENUM, BIGINTEGERVALUE) values (4, 4, 4.99, 4)");
+        executeCmd("insert into smalla (ROWID, LONGNUM, DOUBLENUM, BIGINTEGERVALUE) values (15, 15, 15.99, 15)");
+        executeCmd("insert into smalla (ROWID, LONGNUM, DOUBLENUM, BIGINTEGERVALUE) values (16, 16, 16.99, 16)");
         
         AccumuloQueryExecution exec = (AccumuloQueryExecution) executeCmd("select ROWID, LONGNUM from smalla "
                 + "where ROWID > 2");
+        assertEquals(Arrays.asList(new Integer(15), new Long(15)), exec.next());
+        assertEquals(Arrays.asList(new Integer(16), new Long(16)), exec.next());
         assertEquals(Arrays.asList(new Integer(3), new Long(3)), exec.next());
         assertEquals(Arrays.asList(new Integer(4), new Long(4)), exec.next());
         assertNull(exec.next());
         
         exec = (AccumuloQueryExecution) executeCmd("select ROWID, LONGNUM from smalla "
                 + "where ROWID >= 2");
+        assertEquals(Arrays.asList(new Integer(15), new Long(15)), exec.next());
+        assertEquals(Arrays.asList(new Integer(16), new Long(16)), exec.next());
         assertEquals(Arrays.asList(new Integer(2), new Long(2)), exec.next());
         assertEquals(Arrays.asList(new Integer(3), new Long(3)), exec.next());
         assertEquals(Arrays.asList(new Integer(4), new Long(4)), exec.next());
@@ -322,6 +328,8 @@ public class TestAccumuloQueryExecution {
         exec = (AccumuloQueryExecution) executeCmd("select ROWID, LONGNUM from smalla "
                 + "where ROWID != 3");
         assertEquals(Arrays.asList(new Integer(1), new Long(1)), exec.next());
+        assertEquals(Arrays.asList(new Integer(15), new Long(15)), exec.next());
+        assertEquals(Arrays.asList(new Integer(16), new Long(16)), exec.next());        
         assertEquals(Arrays.asList(new Integer(2), new Long(2)), exec.next());
         assertEquals(Arrays.asList(new Integer(4), new Long(4)), exec.next());
         assertNull(exec.next());        
