@@ -62,6 +62,12 @@ import org.teiid.translator.TypeFacility.RUNTIME_NAMES;
  */
 public class ExecutionFactory<F, C> {
 	
+	public enum TransactionSupport {
+		XA,
+		LOCAL,
+		NONE
+	}
+	
 	public enum SupportedJoinCriteria {
 		/**
 		 * Indicates that any supported criteria is allowed.
@@ -121,7 +127,7 @@ public class ExecutionFactory<F, C> {
 	private String nativeProcedureName = "native"; //$NON-NLS-1$
 	private String collationLocale;
 	
-	private String excluedCommonTableExpressionName;
+	private String excludedCommonTableExpressionName;
 	
 	/**
 	 * Initialize the connector with supplied configuration
@@ -1234,11 +1240,11 @@ public class ExecutionFactory<F, C> {
 	
 	@TranslatorProperty(display="Excluded Common Table Expression Name", description="Set if the source won't support the given common table expression name.", advanced=true)
 	public String getExcludedCommonTableExpressionName() {
-		return excluedCommonTableExpressionName;
+		return excludedCommonTableExpressionName;
 	}
 	
-	public void setExcluedCommonTableExpressionName(
-			String excluedCommonTableExpressionName) {
-		this.excluedCommonTableExpressionName = excluedCommonTableExpressionName;
+	public void setExcludedCommonTableExpressionName(
+			String excludedCommonTableExpressionName) {
+		this.excludedCommonTableExpressionName = excludedCommonTableExpressionName;
 	}
 }
