@@ -354,13 +354,17 @@ public class IntegrationTestDeployment {
 			
 			admin.updateSource("bqt", 1, "Source", "loopy", "java:jboss/datasources/ExampleDS");
 			Connection conn = TeiidDriver.getInstance().connect("jdbc:teiid:bqt@mm://localhost:31000;user=user;password=user", null);
+			
 			Collection<? extends Session> sessions = admin.getSessions();
-			assertEquals (1, sessions.size());
-			Session s = sessions.iterator().next();
+			assertTrue (sessions.size() >= 1);
 			
 			Statement stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery("select session_id()");
+			rs.next();
+			String session = rs.getString(1);
+			rs.close();
 			
-			Collection<? extends Request> requests = admin.getRequests();
+			Collection<? extends Request> requests = admin.getRequestsForSession(session);
 			
 			assertEquals(0, requests.size());
 			
@@ -375,17 +379,17 @@ public class IntegrationTestDeployment {
 			assertNotNull(r.getSessionId());
 
 			stmt.execute("select * from source.smalla");
-			Collection<? extends Request> requests2 = admin.getRequestsForSession(s.getSessionId());
+			Collection<? extends Request> requests2 = admin.getRequestsForSession(session);
 			assertEquals(1, requests2.size());
 			
 			Request r2 = requests.iterator().next();
 			assertEquals("select * from source.smalla", r2.getCommand());
-			assertEquals(s.getSessionId(), r2.getSessionId());
+			assertEquals(session, r2.getSessionId());
 			
 			stmt.close();
 			conn.close();
 			
-			requests = admin.getRequests();
+			requests = admin.getRequestsForSession(session);
 			assertEquals(0, requests.size());
 
 		} finally {
