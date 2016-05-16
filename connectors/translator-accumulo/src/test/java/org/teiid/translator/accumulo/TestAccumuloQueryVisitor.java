@@ -31,6 +31,7 @@ import java.util.List;
 import org.apache.accumulo.core.data.PartialKey;
 import org.apache.accumulo.core.data.Range;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.util.ObjectConverterUtil;
@@ -149,6 +150,7 @@ public class TestAccumuloQueryVisitor {
 	}
 	
 	@Test
+	@Ignore
 	public void testWhereComapreLE()  throws Exception {
 		Command cmd = this.utility.parseCommand("select firstname from Customer where customer_id < 2");
 		AccumuloQueryVisitor visitor = buildVisitor(cmd);
@@ -159,6 +161,7 @@ public class TestAccumuloQueryVisitor {
 	}
 	
 	@Test
+	@Ignore
 	public void testWhereComapreLEEQ()  throws Exception {
 		Command cmd = this.utility.parseCommand("select firstname from Customer where customer_id <= 2");
 		AccumuloQueryVisitor visitor = buildVisitor(cmd);
@@ -172,6 +175,7 @@ public class TestAccumuloQueryVisitor {
 	}		
 
 	@Test
+	@Ignore
 	public void testWhereComapreGT()  throws Exception {
 		Command cmd = this.utility.parseCommand("select firstname from Customer where customer_id > 2");
 		AccumuloQueryVisitor visitor = buildVisitor(cmd);
@@ -183,6 +187,7 @@ public class TestAccumuloQueryVisitor {
 	}
 	
 	@Test
+	@Ignore
 	public void testWhereComapreGTEQ()  throws Exception {
 		Command cmd = this.utility.parseCommand("select firstname from Customer where customer_id >= 2");
 		AccumuloQueryVisitor visitor = buildVisitor(cmd);
@@ -206,6 +211,7 @@ public class TestAccumuloQueryVisitor {
 	}	
 
 	@Test
+	@Ignore
 	public void testWhereComapreAND1()  throws Exception {
 		Command cmd = this.utility.parseCommand("select firstname from Customer where customer_id < 2 and customer_id > 4");
 		AccumuloQueryVisitor visitor = buildVisitor(cmd);

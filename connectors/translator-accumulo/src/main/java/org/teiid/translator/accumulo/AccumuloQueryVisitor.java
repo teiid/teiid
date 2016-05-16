@@ -30,18 +30,10 @@ import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.PartialKey;
 import org.apache.accumulo.core.data.Range;
-import org.teiid.language.AggregateFunction;
-import org.teiid.language.AndOr;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Comparison;
-import org.teiid.language.DerivedColumn;
-import org.teiid.language.In;
-import org.teiid.language.IsNull;
-import org.teiid.language.Literal;
-import org.teiid.language.NamedTable;
-import org.teiid.language.Select;
+import org.teiid.language.*;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.language.visitor.SQLStringVisitor;
+import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.KeyRecord;
 import org.teiid.metadata.Table;
@@ -100,7 +92,15 @@ public class AccumuloQueryVisitor extends HierarchyVisitor {
         
         if (this.doScanEvaluation) {
         	HashMap<String, String> options = buildEvaluatorOptions(this.scanTable, this.ef.getEncoding());
-        	options.put(EvaluatorIterator.QUERYSTRING, SQLStringVisitor.getSQLString(obj.getWhere()));
+        	SQLStringVisitor visitor = new SQLStringVisitor() {
+        	    @Override
+        	    public String getName(AbstractMetadataRecord object) {
+        	        return object.getName();
+        	    }        	    
+        	};
+        	visitor.append(obj.getWhere());
+        	
+        	options.put(EvaluatorIterator.QUERYSTRING, visitor.toString());
         	IteratorSetting it = new IteratorSetting(1, EvaluatorIterator.class, options);
         	this.scanIterators.add(it);
         }
@@ -169,6 +169,7 @@ public class AccumuloQueryVisitor extends HierarchyVisitor {
 	        	this.ranges.add(new Range(null, true, rightKey, false));
 	        	this.ranges.add(new Range(rightKey.followingKey(PartialKey.ROW), null, false, true, false, true));
 	        	break;
+	        /*	
 	        case LT:
 	        	this.ranges.add(new Range(null, true, rightKey, false));        	
 	        	break;
@@ -182,7 +183,9 @@ public class AccumuloQueryVisitor extends HierarchyVisitor {
 	        case GE:
 	        	this.ranges.add(new Range(rightKey, true, null, true));
 	        	break;
+	        */
 	        }
+	    	this.doScanEvaluation = true;
 		}
 		else {
 			this.doScanEvaluation = true;
@@ -190,7 +193,7 @@ public class AccumuloQueryVisitor extends HierarchyVisitor {
 	}
 
     static Key buildKey(Object value) {
-        byte[] row = AccumuloDataTypeManager.toLexiCode(value);
+        byte[] row = AccumuloDataTypeManager.serialize(value);
 		Key rangeKey = new Key(row, AccumuloDataTypeManager.EMPTY_BYTES, 
 		        AccumuloDataTypeManager.EMPTY_BYTES, 
 		        AccumuloDataTypeManager.EMPTY_BYTES,

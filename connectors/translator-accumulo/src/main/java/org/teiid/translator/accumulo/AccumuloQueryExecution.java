@@ -189,12 +189,7 @@ public class AccumuloQueryExecution implements ResultSetExecution {
 				Column column = this.visitor.projectedColumns().get(i);
 				String colName = SQLStringVisitor.getRecordName(column);
 				byte[] value = values.get(colName);
-				if (colName.equals(AccumuloMetadataProcessor.ROWID)) {
-					list.add(AccumuloDataTypeManager.fromLexiCode(value, this.expectedColumnTypes[i]));
-				}
-				else {
-					list.add(AccumuloDataTypeManager.deserialize(value, this.expectedColumnTypes[i]));
-				}
+				list.add(AccumuloDataTypeManager.deserialize(value, this.expectedColumnTypes[i]));
 			}
 			return list;
 		}

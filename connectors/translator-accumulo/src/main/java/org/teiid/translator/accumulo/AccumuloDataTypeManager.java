@@ -29,10 +29,14 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.nio.charset.Charset;
 import java.sql.Blob;
 import java.sql.Clob;
+import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.SQLXML;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.Arrays;
 
 import org.apache.accumulo.core.client.lexicoder.BigIntegerLexicoder;
@@ -63,7 +67,7 @@ public class AccumuloDataTypeManager {
 	private static IntegerLexicoder integerLexicoder = new IntegerLexicoder();
 	private static LongLexicoder longLexicoder = new LongLexicoder();
 	private static StringLexicoder stringLexicoder = new StringLexicoder();
-	
+	private static Charset UTF_8 = Charset.forName("UTF-8");
 	public static byte[] serialize(Object value) {
         if (value == null) {
             return EMPTY_BYTES;
@@ -103,7 +107,24 @@ public class AccumuloDataTypeManager {
             else if (value instanceof Object[] ) {
                 throw new TeiidRuntimeException(AccumuloPlugin.Event.TEIID19003, 
                         AccumuloPlugin.Util.gs(AccumuloPlugin.Event.TEIID19003));
-            } else {
+            }            
+            else if (value instanceof String ||
+                        value instanceof Boolean ||
+                        value instanceof Byte ||
+                        value instanceof Short ||
+                        value instanceof Character ||
+                        value instanceof Integer ||
+                        value instanceof Long ||
+                        value instanceof BigInteger ||
+                        value instanceof BigDecimal ||
+                        value instanceof Float ||
+                        value instanceof Double ||
+                        value instanceof Date ||
+                        value instanceof Time ||
+                        value instanceof Timestamp) {
+                return ((String)DataTypeManager.transformValue(value, String.class)).getBytes(UTF_8);
+            }
+            else {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 ObjectOutputStream oos = new ObjectOutputStream(baos);
                 oos.writeObject(value);
@@ -114,6 +135,8 @@ public class AccumuloDataTypeManager {
         } catch (IOException e) {
             throw new TeiidRuntimeException(e);
         } catch (SQLException e) {
+            throw new TeiidRuntimeException(e);
+        } catch (TransformationException e) {
             throw new TeiidRuntimeException(e);
         }        
 	}
@@ -137,7 +160,6 @@ public class AccumuloDataTypeManager {
                     public InputStream getInputStream() throws IOException {
                         return ObjectConverterUtil.convertToInputStream(value);
                     }
-                    
                 }));            
             } else if (expectedType.isAssignableFrom(SQLXML.class)) {
                 return new SQLXMLImpl(new InputStreamFactory() {
@@ -159,6 +181,22 @@ public class AccumuloDataTypeManager {
                 return result;
             } else if (expectedType.isAssignableFrom(byte[].class)) {
                 return value;
+            } else if (expectedType.isAssignableFrom(String.class)
+                    || expectedType.isAssignableFrom(Boolean.class)
+                    || expectedType.isAssignableFrom(Boolean.class)
+                    || expectedType.isAssignableFrom(Byte.class)
+                    || expectedType.isAssignableFrom(Short.class)
+                    || expectedType.isAssignableFrom(Character.class)
+                    || expectedType.isAssignableFrom(Integer.class)
+                    || expectedType.isAssignableFrom(Long.class)
+                    || expectedType.isAssignableFrom(BigInteger.class)
+                    || expectedType.isAssignableFrom(BigDecimal.class)
+                    || expectedType.isAssignableFrom(Float.class)
+                    || expectedType.isAssignableFrom(Double.class)
+                    || expectedType.isAssignableFrom(Date.class)
+                    || expectedType.isAssignableFrom(Time.class)
+                    || expectedType.isAssignableFrom(Timestamp.class)) {
+                return DataTypeManager.transformValue(new String(value, UTF_8), expectedType);
             }
             else {
                 ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(value));
@@ -170,10 +208,12 @@ public class AccumuloDataTypeManager {
             throw new TeiidRuntimeException(e);
         } catch (IOException e) {
             throw new TeiidRuntimeException(e);
+        } catch (TransformationException e) {
+            throw new TeiidRuntimeException(e);
         }
     }	
 	
-	public static byte[] toLexiCode(Object value) {
+	private static byte[] toLexiCode(Object value) {
 		if (value == null) {
 			return EMPTY_BYTES;
 		}
@@ -234,7 +274,7 @@ public class AccumuloDataTypeManager {
 		}
 	}
 		
-	public static Object fromLexiCode(final byte[] value, final Class<?> expectedType) {
+	private static Object fromLexiCode(final byte[] value, final Class<?> expectedType) {
 		if (value == null || Arrays.equals(value, EMPTY_BYTES)) {
 			return null;
 		}
