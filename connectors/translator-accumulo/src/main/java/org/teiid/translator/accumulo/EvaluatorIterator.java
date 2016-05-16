@@ -394,14 +394,13 @@ public class EvaluatorIterator extends WrappingIterator {
 						tuple[info.pos] = convert(v.get(), info.es, this.encoding);
 					}					
 				}
+				info = this.columnMap.get(new ColumnSet(new Text(AccumuloMetadataProcessor.ROWID)));
+				tuple[info.pos] = convert(kv.key.getRow().getBytes(), info.es, this.encoding);
 			}
 			return Arrays.asList(tuple);
 		}
 		
 		private Object convert(byte[] content, ElementSymbol es, Charset enc) {
-		    if (es.getName().equals(AccumuloMetadataProcessor.ROWID)) {
-		        return AccumuloDataTypeManager.fromLexiCode(content, es.getType());
-		    }
 			return AccumuloDataTypeManager.deserialize(content, es.getType());			
 		}
 		

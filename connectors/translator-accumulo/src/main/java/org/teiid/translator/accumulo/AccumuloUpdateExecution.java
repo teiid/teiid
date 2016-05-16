@@ -38,6 +38,7 @@ import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Value;
 import org.apache.hadoop.io.Text;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Command;
 import org.teiid.language.Delete;
@@ -270,7 +271,7 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 			if (rowId.equalsIgnoreCase(AccumuloMetadataProcessor.ROWID) || AccumuloQueryVisitor.isPartOfPrimaryKey(column)) {
 				Object value = values.get(i);
 				if (value instanceof Literal) {
-					return AccumuloDataTypeManager.toLexiCode(((Literal)value).getValue());
+					return AccumuloDataTypeManager.serialize(((Literal)value).getValue());
 				}
 				throw new TranslatorException(AccumuloPlugin.Event.TEIID19006, 
 				        AccumuloPlugin.Util.gs(AccumuloPlugin.Event.TEIID19006));
