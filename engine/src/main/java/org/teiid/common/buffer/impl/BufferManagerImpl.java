@@ -422,6 +422,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
     });
     
     private Cache cache;
+    private StorageManager storageManager;
     
 	private Map<String, TupleReference> tupleBufferMap = new ConcurrentHashMap<String, TupleReference>();
 	private ReferenceQueue<TupleBuffer> tupleBufferQueue = new ReferenceQueue<TupleBuffer>();
@@ -560,7 +561,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
     	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
     		LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Creating FileStore:", name); //$NON-NLS-1$
     	}
-    	return this.cache.createFileStore(name);
+    	return this.storageManager.createFileStore(name);
     }
     
     public Cache getCache() {
@@ -1269,6 +1270,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	
 	public void setCache(Cache cache) {
 		this.cache = cache;
+		this.storageManager = cache;
 	}
 	
 	public int getMemoryCacheEntries() {
@@ -1309,6 +1311,10 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			options = new Options();
 		}
 		return options;
+	}
+
+	public void setStorageManager(StorageManager ssm) {
+		this.storageManager = ssm;
 	}
 	
 }
