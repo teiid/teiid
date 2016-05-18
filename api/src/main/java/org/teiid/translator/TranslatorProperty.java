@@ -21,7 +21,12 @@
  */
 package org.teiid.translator;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * Annotates a property that can be externally configured.  
@@ -69,6 +74,12 @@ public @interface TranslatorProperty {
 	 * @return
 	 */
 	boolean required() default false;
+	
+	/**
+	 * True if the property has no setter
+	 * @return
+	 */
+	boolean readOnly() default false;
 
 	/**
 	 * True if this property should be shown in an advanced panel of properties.

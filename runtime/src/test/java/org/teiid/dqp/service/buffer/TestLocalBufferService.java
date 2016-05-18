@@ -32,9 +32,10 @@ import java.util.List;
 
 import org.junit.Test;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.BufferManager.TupleSourceType;
+import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
-import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.common.buffer.impl.BufferFrontedFileStoreCache;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.common.buffer.impl.FileStorageManager;
@@ -164,5 +165,16 @@ public class TestLocalBufferService {
 			}
 		}
 		svc2.stop();
+    }
+    
+    @Test public void testUseDiskFalse() throws Exception {
+        BufferServiceImpl svc = new BufferServiceImpl();
+        svc.setDiskDirectory(UnitTestUtil.getTestScratchPath()+"/teiid/1");
+        svc.setUseDisk(false);
+        svc.start();
+        // all the properties are set
+        BufferManagerImpl mgr = svc.getBufferManager();
+        FileStore f = mgr.getCache().createFileStore("x");
+        f.write(new byte[1234], 0, 1234);
     }
 }

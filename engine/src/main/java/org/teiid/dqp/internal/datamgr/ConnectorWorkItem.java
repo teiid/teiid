@@ -87,6 +87,7 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.util.CommandContext;
 import org.teiid.resource.spi.WrappedConnection;
 import org.teiid.translator.*;
+import org.teiid.translator.ExecutionFactory.TransactionSupport;
 import org.teiid.util.XMLInputStream;
 
 public class ConnectorWorkItem implements ConnectorWork {
@@ -561,7 +562,8 @@ public class ConnectorWorkItem implements ConnectorWork {
 
 	@Override
 	public boolean isForkable() {
-		return this.connector.isForkable();
+		return this.connector.isForkable() 
+				&& (!this.requestMsg.isTransactional() || this.connector.getTransactionSupport() != TransactionSupport.XA);
 	}
 	
 	@Override

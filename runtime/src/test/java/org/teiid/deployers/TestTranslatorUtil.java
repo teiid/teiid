@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.Logger;
@@ -183,6 +184,10 @@ public class TestTranslatorUtil {
 		assertEquals("correctly-assigned", my.getSomeProperty());
 	}
 	
+	@Test(expected=TeiidRuntimeException.class) public void testReadOnly() throws Exception {
+		TranslatorUtil.buildTranslatorMetadata(new MyTranslatorInvalid(), "x");
+	}
+	
 	@Translator(name="my-translator")
 	public static class MyTranslator extends ExecutionFactory<Object, Object> {
 	    @ExtensionMetadataProperty(applicable=Column.class, datatype=String.class, description="description", required=true)
@@ -217,7 +222,7 @@ public class TestTranslatorUtil {
                 public void process(MetadataFactory metadataFactory,Object connection) throws TranslatorException {
                 }
 
-                @TranslatorProperty(display="Import Property", category=PropertyType.IMPORT)
+                @TranslatorProperty(display="Import Property", category=PropertyType.IMPORT, readOnly=true)
                 public String getImportProperty() {
                     return "default-import-property";
                 }
@@ -253,6 +258,16 @@ public class TestTranslatorUtil {
 		@Override
 		public void setSomeProperty(String value) {
 			this.someProperty = value;
+		}
+		
+	}
+	
+	@Translator(name="my-translator-invalid")
+	public static class MyTranslatorInvalid extends ExecutionFactory<Object, Object> {
+		
+		@TranslatorProperty(display="my-property")
+		public String getMyProperty() {
+			return "x";
 		}
 		
 	}

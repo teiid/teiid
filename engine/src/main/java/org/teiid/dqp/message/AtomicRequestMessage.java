@@ -137,7 +137,7 @@ public class AtomicRequestMessage {
     }
     
     public boolean isSerial() {
-    	return serial || isTransactional();
+    	return serial;
     }
     
     public void setSerial(boolean serial) {
