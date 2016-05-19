@@ -51,6 +51,7 @@ import org.teiid.client.security.LogonException;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.ApplicationInfo;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
 import org.teiid.deployers.PgCatalogMetadataStore;
 import org.teiid.dqp.service.SessionService;
@@ -79,6 +80,8 @@ import org.teiid.transport.PgFrontendProtocol.NullTerminatedStringDataInputStrea
  * http://pgfoundry.org/tracker/?func=detail&atid=538&aid=1007690&group_id=1000125
  */
 public class ODBCServerRemoteImpl implements ODBCServerRemote {
+	
+	private static final boolean HONOR_DECLARE_FETCH_TXN = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.honorDeclareFetchTxn", false); //$NON-NLS-1$
 
 	public static final String CONNECTION_PROPERTY_PREFIX = "connection."; //$NON-NLS-1$
 	private static final String UNNAMED = ""; //$NON-NLS-1$
@@ -1046,6 +1049,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
     private final class QueryWorkItem implements Runnable {
 		private final ScriptReader reader;
 		String sql;
+		private String next;
 
 		private QueryWorkItem(String query) {
 			this.reader = new ScriptReader(query);		
@@ -1074,7 +1078,12 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		                	public void onCompletion(ResultsFuture<Integer> future) {
 		                		try {		                			
 		    						future.get();
-		    		                sql = reader.readStatement();
+		    						if (next != null) {
+		    							sql = next;
+		    							next = null;
+		    						} else {
+		    							sql = reader.readStatement();
+		    						}
 		    					} catch (InterruptedException e) {
 		    						throw new AssertionError(e);
 		    					} catch (IOException e) {
@@ -1098,7 +1107,14 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		    				}
 		    				break;
 		    			}
-		    			
+		    			if (!HONOR_DECLARE_FETCH_TXN && sql.equalsIgnoreCase("BEGIN") && connection.getAutoCommit()) { //$NON-NLS-1$
+    						next = reader.readStatement();
+    						if (next != null && (cursorSelectPattern.matcher(next)).matches()) { 
+    							sql = next;
+    							next = null;
+    							LogManager.logDetail(LogConstants.CTX_ODBC, "not honoring the transaction for declare/fetch"); //$NON-NLS-1$
+    						}
+			    		}
 		            	Matcher m = null;
 		    	        if ((m = cursorSelectPattern.matcher(sql)).matches()){
 		    	        	boolean scroll = false;
