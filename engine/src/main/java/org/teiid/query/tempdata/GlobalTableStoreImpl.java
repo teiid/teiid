@@ -139,7 +139,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 					return true;
 				}
 				//other nodes may still need to load
-				return !localAddress.equals(possibleLoadingAddress);
+				return localAddress == null || !localAddress.equals(possibleLoadingAddress);
     		}
 			throw new AssertionError();
 		}
@@ -205,7 +205,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 	private TempTableStore tableStore = new TempTableStore("SYSTEM", TransactionMode.ISOLATE_READS); //$NON-NLS-1$
 	private BufferManager bufferManager;
 	private QueryMetadataInterface metadata;
-	private Serializable localAddress;
+	private volatile Serializable localAddress;
 	private VDBMetaData vdbMetaData;
 	
 	public GlobalTableStoreImpl(BufferManager bufferManager, VDBMetaData vdbMetaData, QueryMetadataInterface metadata) {
