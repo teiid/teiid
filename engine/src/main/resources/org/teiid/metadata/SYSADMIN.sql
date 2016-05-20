@@ -318,18 +318,19 @@ BEGIN
 	
 	DECLARE string statusTable = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_STATUS_TABLE');
 
-	DECLARE string KeyUID = (SELECT UID FROM SYS.Keys WHERE SchemaName = updateMatView.schemaName  AND TableName = updateMatView.viewName AND Type = 'Primary');
-	DECLARE string pkcolums ;
-        DECLARE boolean isFirstPKCol = true;
-	DECLARE string interViewName = updateMatView.schemaName || '.' || updateMatView.viewName;
-
         /* statusTable is null hints View is Internal Mat View*/
         IF (statusTable IS NULL)
         BEGIN
+	    DECLARE string KeyUID = (SELECT UID FROM SYS.Keys WHERE SchemaName = updateMatView.schemaName  AND TableName = updateMatView.viewName AND Type = 'Primary');
+
 	    IF (KeyUID IS NULL)
 	    BEGIN
 	        RAISE SQLEXCEPTION 'no primary key defined';
 	    END
+
+	    DECLARE string pkcolums ;
+            DECLARE boolean isFirstPKCol = true;
+            DECLARE string interViewName = updateMatView.schemaName || '.' || updateMatView.viewName;
     
 	    LOOP ON (SELECT Name FROM SYS.KeyColumns WHERE SchemaName = updateMatView.schemaName  AND TableName = updateMatView.viewName AND UID = VARIABLES.KeyUID) AS colname
 	    BEGIN
@@ -351,10 +352,19 @@ BEGIN
 	    pkcolums = '(' || pkcolums || ')';
     
 	    EXECUTE IMMEDIATE 'SELECT ' || VARIABLES.pkcolums || ' FROM ' || VARIABLES.interViewName || ' WHERE ' || updateMatView.refreshCriteria AS PrimaryKey object[] INTO #pklist;
-    
+
+   	    DECLARE integer interrowUpdated = 0;
+ 
 	    LOOP ON (SELECT PrimaryKey FROM #pklist) AS pkrow
 	    BEGIN
-	        rowsUpdated = (EXECUTE SYSADMIN.refreshMatViewRows(VARIABLES.interViewName, pkrow.PrimaryKey));
+	        interrowUpdated = (EXECUTE SYSADMIN.refreshMatViewRows(VARIABLES.interViewName, pkrow.PrimaryKey));
+		IF (interrowUpdated > 0)
+                BEGIN
+                    rowsUpdated = rowsUpdated + interrowUpdated;
+                END ELSE
+                BEGIN
+                    rowsUpdated = interrowUpdated;
+                END
 	    END  
 	    
 	    RETURN rowsUpdated;
