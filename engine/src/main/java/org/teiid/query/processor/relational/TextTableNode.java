@@ -85,8 +85,8 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 	private boolean cr;
 	private boolean eof;
 	
-	private boolean running;
-	private TeiidProcessingException asynchException;
+	private volatile boolean running;
+	private volatile TeiidRuntimeException asynchException;
 
 	private int limit = -1;
 
@@ -228,9 +228,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 			return result;
 		}
 		
-		if (asynchException != null) {
-			throw asynchException;
-		}
+		unwrapException(asynchException);
 		
 		processAsynch();
 		
@@ -258,8 +256,10 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 				public void run() {
 					try {
 						process();
-					} catch (TeiidProcessingException e) {
+					} catch (TeiidRuntimeException e) {
 						asynchException = e;
+					} catch (Throwable e) {
+						asynchException = new TeiidRuntimeException(e);
 					} finally {
 						running = false;
 						RequestWorkItem workItem = TextTableNode.this.getContext().getWorkItem();

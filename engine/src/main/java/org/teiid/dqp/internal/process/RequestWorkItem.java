@@ -461,9 +461,11 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 			}
 			this.processor.getContext().setTimeSliceEnd(System.currentTimeMillis() + this.processorTimeslice);
 			sendResultsIfNeeded(null);
-			if (resultsReceiver == null && cursorRequestExpected()) {
-				//if we proceed we'll possibly violate the precondition of sendResultsIfNeeded, so wait until results are asked for
-				return; 
+			synchronized (this) {
+				if (resultsReceiver == null && cursorRequestExpected()) {
+					//if we proceed we'll possibly violate the precondition of sendResultsIfNeeded, so wait until results are asked for
+					return; 
+				}
 			}
 			try {
 				CommandContext.pushThreadLocalContext(this.processor.getContext());
@@ -702,8 +704,10 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 						|| transactionState == TransactionState.ACTIVE) {
 					return;
 				}
-				if (!isForwardOnly() && resultsReceiver != null && begin > resultsBuffer.getRowCount()) {
-					return; //a valid request beyond the processed range
+				synchronized (this) {
+					if (!isForwardOnly() && resultsReceiver != null && begin > resultsBuffer.getRowCount()) {
+						return; //a valid request beyond the processed range
+					}
 				}
 				
 				if (resultsBuffer.getManagedRowCount() < maxRows) {

@@ -98,10 +98,6 @@ public abstract class AbstractWorkItem implements Work, WorkListener {
     	}
     }
     
-    protected boolean isIdle() {
-    	return this.threadState == ThreadState.IDLE;
-    }
-    
     public void moreWork() {
     	moreWork(true);
     }
