@@ -109,15 +109,9 @@ public class SortNode extends RelationalNode {
 	        	this.sortUtility.setWorkingBuffer(working);
 	        }
 		}
-		this.output = this.sortUtility.sort();
+		this.output = this.sortUtility.sort(rowLimit);
 		if (this.outputTs == null) {
 			this.outputTs = this.output.createIndexedTupleSource();
-		}
-    	if (rowLimit >= 0) {
-			this.output.truncateTo(rowLimit);
-			if (!this.output.isFinal() && this.output.getRowCount() == rowLimit) {
-				this.output.close();
-			}
 		}
         this.phase = OUTPUT;
     }
@@ -201,7 +195,6 @@ public class SortNode extends RelationalNode {
     		throw new AssertionError("called after close"); //$NON-NLS-1$
     	}
     	this.rowLimit = maxRows;
-    	//TODO: push limiting into the sort logic
     	if (this.output == null) {
     		sortPhase();
     	}
@@ -221,5 +214,9 @@ public class SortNode extends RelationalNode {
     	}
     	return false;
     }
+    
+    public void setRowLimit(int rowLimit) {
+		this.rowLimit = rowLimit;
+	}
     
 }
