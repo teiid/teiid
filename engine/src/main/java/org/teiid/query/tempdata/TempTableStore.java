@@ -119,7 +119,11 @@ public class TempTableStore {
     	 * @throws TeiidComponentException
     	 * @throws TeiidProcessingException
     	 */
-    	public TempTable process(TempTable tempTable) throws TeiidComponentException, TeiidProcessingException {			
+    	public TempTable process(TempTable tempTable) throws TeiidComponentException, TeiidProcessingException {
+    		if (!tempTable.getColumnMap().keySet().containsAll(columns)) {
+    			//sanity check to make sure that we haven't inappropriately redefined the common table
+    			throw new TeiidComponentException("failed to plan common table appropriately " + columns + " " + tempTable.getColumns()); //$NON-NLS-1$ //$NON-NLS-2$
+    		}
     		tempTable.insert(iterator, columns, false, null);
     		tempTable.setUpdatable(false);
     		close();
@@ -560,6 +564,10 @@ public class TempTableStore {
         			processors.remove(tempTableID);
     				return tempTable;
         		}
+        	}
+        	if (delegate && this.parentTempTableStore != null) {
+        		//may be a cte from a higher scope that needs to have creation triggered
+        		return parentTempTableStore.getOrCreateTempTable(tempTableID, command, buffer, delegate, forUpdate, context, group);
         	}
         	 throw new QueryProcessingException(QueryPlugin.Event.TEIID30226, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30226, tempTableID));
         }
