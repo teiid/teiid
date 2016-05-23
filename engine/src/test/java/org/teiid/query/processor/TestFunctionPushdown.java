@@ -50,6 +50,7 @@ import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.unittest.RealMetadataFactory.DDLHolder;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.query.util.CommandContext;
+import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.SourceSystemFunctions;
 
 @SuppressWarnings({"nls", "unchecked"})
@@ -527,5 +528,39 @@ public class TestFunctionPushdown {
         dm.addData("SELECT v_0.c_0, g_0.e1, (SELECT g_2.e1 FROM g1 AS g_2 WHERE g_2.e1 = g_0.e1) FROM g2 AS g_0, (SELECT MAX(g_1.e1) AS c_0 FROM g2 AS g_1) AS v_0 WHERE v_0.c_0 = g_0.e1", new List[] {Arrays.asList("a", "a", "a")});
         TestProcessor.helpProcess(plan, dm, new List[] {Arrays.asList("a", 0, "a")});
 	}
+	
+    @Test public void testParseFormatNameCase() throws Exception {
+    	BasicSourceCapabilities caps = getTypicalCapabilities();
+    	caps.setCapabilitySupport(Capability.ONLY_FORMAT_LITERALS, true);
+    	caps.setFunctionSupport(SourceSystemFunctions.FORMATTIMESTAMP, true);
+    	caps.setTranslator(new ExecutionFactory<Object, Object> () {
+    		@Override
+    		public boolean supportsFormatLiteral(String literal,
+    				org.teiid.translator.ExecutionFactory.Format format) {
+    			return literal.equals("yyyy");
+    		}
+    	});
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT stringkey from bqt1.smalla where formatTimestamp(timestampvalue, 'yyyy') = '1921' and parsebigdecimal(stringkey, 'yyyy') = 1 and formatTimestamp(timestampvalue, stringkey) = '19'", //$NON-NLS-1$
+                                      RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(caps),
+                                      new String[] {
+                                          "SELECT g_0.TimestampValue, g_0.StringKey FROM BQT1.SmallA AS g_0 WHERE formatTimestamp(g_0.TimestampValue, 'yyyy') = '1921'"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    
+        checkNodeTypes(plan, new int[] {
+                1,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                0,      // NestedLoopJoinStrategy
+                0,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                1,      // Project
+                1,      // Select
+                0,      // Sort
+                0       // UnionAll
+            });                                    
+    }
 	
 }
