@@ -439,7 +439,7 @@ public class PlanNode {
 		if (record != null && record.recordAnnotations()) {
 			boolean current = this.modified;
 			this.modified = true;
-			record.addAnnotation(Annotation.RELATIONAL_PLANNER, annotation + (modelID != null?" " + metadata.getName(modelID):""), resolution + " " + this.nodeToString(false), Priority.LOW); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			record.addAnnotation(Annotation.RELATIONAL_PLANNER, annotation + (modelID != null?" " + (metadata!=null?metadata.getName(modelID):modelID):""), resolution + " " + this.nodeToString(false), Priority.LOW); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			this.modified = current;
 		}
 	}
