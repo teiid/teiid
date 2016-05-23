@@ -27,6 +27,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -52,6 +53,7 @@ import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.hibernate.cfg.annotations.ResultsetMappingSecondPass;
 import org.infinispan.transaction.tm.DummyBaseTransactionManager;
 import org.junit.After;
 import org.junit.Before;
@@ -1053,7 +1055,7 @@ public class TestODataIntegration {
             localClient = getClient(teiid.getDriver(), "northwind", props);
             
             ContentResponse response = http.GET(baseURL + "/northwind/vw/x?$filter="+Encoder.encode("a eq @a"));
-            assertEquals(400, response.getStatus());
+            assertEquals(200, response.getStatus());
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");
@@ -1485,11 +1487,8 @@ public class TestODataIntegration {
     @Test 
     public void testExpandSimple() throws Exception {
         HardCodedExecutionFactory hc = buildHardCodedExecutionFactory();
-        hc.addData("SELECT x.a, x.b FROM x WHERE x.a = 'xa1'", Arrays.asList(Arrays.asList("xa1", "xb")));
-        hc.addData("SELECT y.a, y.b FROM y WHERE y.b = 'xa1'", Arrays.asList(Arrays.asList("ya1", "xa1"), 
-                Arrays.asList("ya2", "xa1")));
         teiid.addTranslator("x7", hc);
-        
+
         try {
             ModelMetaData mmd = new ModelMetaData();
             mmd.setName("m");
@@ -1517,7 +1516,6 @@ public class TestODataIntegration {
             localClient = getClient(teiid.getDriver(), "northwind", new Properties());
 
             ContentResponse response = null;
-            
             response = http.newRequest(baseURL + "/northwind/m/x?$expand=y_FKX")
                     .method("GET")
                     .send();
@@ -1548,15 +1546,6 @@ public class TestODataIntegration {
             assertEquals(200, response.getStatus());
             assertEquals("{\"@odata.context\":\"$metadata#z(FKX(a))\",\"value\":[{\"a\":\"ABCDEFG\","
                     + "\"b\":\"ABCDEFG\",\"FKX\":{\"a\":\"ABCDEFG\"}}]}", response.getContentAsString());
-            
-            response = http.newRequest(baseURL + "/northwind/m/x?$expand="+Encoder.encode("y_FKX($filter=b eq 'xa1')"))
-                    .method("GET")
-                    .send();
-            assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":[{\"a\":\"xa1\","
-                    + "\"b\":\"xb\",\"y_FKX\":[{\"a\":\"ya1\",\"b\":\"xa1\"},{\"a\":\"ya2\",\"b\":\"xa1\"}]}]}", 
-                    response.getContentAsString());
-            
 
             response = http.newRequest(baseURL + "/northwind/m/z?$expand=FKX")
                     .method("GET")
@@ -1582,6 +1571,62 @@ public class TestODataIntegration {
             teiid.undeployVDB("northwind");
         }
     }    
+    
+    @SuppressWarnings("unchecked")
+    @Test 
+    public void testExpandSimple2() throws Exception {
+        HardCodedExecutionFactory hc = buildHardCodedExecutionFactory();
+        hc.addData("SELECT x.a, x.b FROM x", Arrays.asList(Arrays.asList("xa1", "xb"),
+                Arrays.asList("xa2", "xb2")));
+        hc.addData("SELECT y.a, y.b FROM y WHERE y.b = 'xa1'", Arrays.asList(Arrays.asList("ya1", "xa1"), 
+                Arrays.asList("ya2", "xa1")));
+        teiid.addTranslator("x7", hc);
+
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("m");
+            mmd.addSourceMetadata("ddl", "create foreign table x ("
+                    + " a string, "
+                    + " b string, "
+                    + " primary key (a)"
+                    + ") options (updatable true);"
+                    + "create foreign table y ("
+                    + " a string, "
+                    + " b string, "
+                    + " primary key (a),"
+                    + " CONSTRAINT FKX FOREIGN KEY (b) REFERENCES x(a)"                    
+                    + ") options (updatable true);"
+                    + "create foreign table z ("
+                    + " a string, "
+                    + " b string, "
+                    + " primary key (a),"
+                    + " CONSTRAINT FKX FOREIGN KEY (a) REFERENCES x(a)"                    
+                    + ") options (updatable true);");
+            
+            mmd.addSourceMapping("x7", "x7", null);
+            teiid.deployVDB("northwind", mmd);
+
+            localClient = getClient(teiid.getDriver(), "northwind", new Properties());
+
+            ContentResponse response = null;
+            response = http.newRequest(baseURL + "/northwind/m/x?$expand="+Encoder.encode("y_FKX($filter=b eq 'xa1')"))
+                    .method("GET")
+                    .send();
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#x\","
+                    + "\"value\":["
+                    + "{\"a\":\"xa1\",\"b\":\"xb\","
+                    + "\"y_FKX\":[{\"a\":\"ya1\",\"b\":\"xa1\"},"
+                    + "{\"a\":\"ya2\",\"b\":\"xa1\"}]},"
+                    + "{\"a\":\"xa2\",\"b\":\"xb2\","
+                    + "\"y_FKX\":[]}]}", 
+                    response.getContentAsString());
+
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }     
     
     @Test
     public void testBatch() throws Exception {
@@ -2014,6 +2059,11 @@ public class TestODataIntegration {
                 Arrays.asList(1, "country",3), Arrays.asList(1,"abroad", 4),
                 Arrays.asList(2, "state", 5), Arrays.asList(2, "country", 6),
                 Arrays.asList(3,"town", 7), Arrays.asList(3, "town", 8)));
+        hc.addData("SELECT Orders.place, Orders.customerid, Orders.id FROM Orders", 
+                Arrays.asList(Arrays.asList("town",1, 1), Arrays.asList("state", 1, 2),
+                Arrays.asList("country",1, 3), Arrays.asList("abroad", 1, 4),
+                Arrays.asList("state", 2, 5), Arrays.asList("country", 2, 6),
+                Arrays.asList("town", 3, 7), Arrays.asList("town", 3, 8)));
         
         
         teiid.addTranslator("x12", hc);
@@ -2184,7 +2234,21 @@ public class TestODataIntegration {
                     + "{\"id\":4,\"name\":\"customer4\","
                         + "\"Orders_FK0\":["
                         + "]}]}", 
-                    response.getContentAsString());      
+                    response.getContentAsString());
+            
+            response = http.newRequest(baseURL + "/northwind/m/Customers?$expand=Orders_FK0($filter="+Encoder.encode("place eq ")+"'town')")
+                    .method("GET")
+                    .send();
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#Customers\","
+                    + "\"value\":[{\"id\":1,\"name\":\"customer1\","
+                    +   "\"Orders_FK0\":[{\"id\":1,\"customerid\":1,\"place\":\"town\"}]},"
+                    + "{\"id\":2,\"name\":\"customer2\",\"Orders_FK0\":[]},"
+                    + "{\"id\":3,\"name\":\"customer3\","
+                    +  "\"Orders_FK0\":[{\"id\":7,\"customerid\":3,\"place\":\"town\"},"
+                    + "{\"id\":8,\"customerid\":3,\"place\":\"town\"}]},"
+                    + "{\"id\":4,\"name\":\"customer4\",\"Orders_FK0\":[]}]}", 
+                    response.getContentAsString());                  
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");
