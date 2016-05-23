@@ -40,6 +40,7 @@ import org.teiid.language.Comparison;
 import org.teiid.language.Literal;
 import org.teiid.language.Parameter;
 import org.teiid.language.Select;
+import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
@@ -1264,8 +1265,10 @@ public class TestDependentJoins {
     	caps.setCapabilitySupport(Capability.FULL_DEPENDENT_JOIN, true);
     	String sql = "select pm1.g1.e1, pm1.g1.e2, pm2.g1.e2 FROM pm1.g1, pm2.g1 where (pm1.g1.e1 = pm2.g1.e1) option makedep pm1.g1(no join)";
 		assertEquals("SELECT pm1.g1.e1, pm1.g1.e2, pm2.g1.e2 FROM pm1.g1, pm2.g1 WHERE pm1.g1.e1 = pm2.g1.e1 OPTION MAKEDEP pm1.g1(NO JOIN)", QueryParser.getQueryParser().parseCommand(sql).toString());
-		ProcessorPlan plan = TestOptimizer.helpPlan(sql, TestOptimizer.example1(), //$NON-NLS-1$
-            new String[] { "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g1 AS g_0 ORDER BY c_0", "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0" }, new DefaultCapabilitiesFinder(caps), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$
+		//pass a debug analysisrecord to test debug annotations
+		TestOptimizer.helpPlanCommand(TestOptimizer.helpGetCommand(sql, TestOptimizer.example1(), null), TestOptimizer.example1(), 
+				new DefaultCapabilitiesFinder(caps), new AnalysisRecord(true, true), 
+				new String[] { "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g1 AS g_0 ORDER BY c_0", "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testBindings() throws Exception {
