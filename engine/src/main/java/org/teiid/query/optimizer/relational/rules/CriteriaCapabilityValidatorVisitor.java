@@ -24,7 +24,7 @@ package org.teiid.query.optimizer.relational.rules;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.TreeSet;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.client.plan.Annotation;
@@ -374,7 +374,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         }
     }
     
-    static HashSet<String> parseFormat = new HashSet<String>();
+    static TreeSet<String> parseFormat = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
     
     static {
     	parseFormat.add(SourceSystemFunctions.PARSEBIGDECIMAL);
