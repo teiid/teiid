@@ -411,7 +411,9 @@ public class RelationalPlanner {
 				final GroupSymbol gs = RulePlaceAccess.recontextSymbol(old, context.getGroups());
 				Map<ElementSymbol, Expression> replacementSymbols = FrameUtil.buildSymbolMap(old, gs, metadata);
 				gs.setDefinition(null);
+				//update the with clause with the new group name / columns
 				with.setGroupSymbol(gs);
+				with.setColumns(new ArrayList(replacementSymbols.values()));
 				//we use equality checks here because there may be a similarly named at lower scopes
 				ExpressionMappingVisitor emv = new ExpressionMappingVisitor(replacementSymbols) {
 					@Override
