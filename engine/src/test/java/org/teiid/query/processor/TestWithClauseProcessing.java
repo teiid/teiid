@@ -702,5 +702,32 @@ public class TestWithClauseProcessing {
 	    TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList(1)});
 	}
 	
+	@Test public void testNestedWith1() throws Exception {
+	    CommandContext cc = TestProcessor.createCommandContext();
+	    BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+		bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+		
+	    String sql = "WITH cte1 as (SELECT 1 as a), cte3 as  /*+ no_inline */ (with cte3_1 as /*+ no_inline */ (select cte1.a from cte1 join pm1.g1 t1 on cte1.a=t1.e2) select * from cte3_1) SELECT * FROM cte3";
+	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), cc);
+	    HardcodedDataManager hdm = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+	    
+	    hdm.addData("SELECT g_0.e2 AS c_0 FROM g1 AS g_0 WHERE g_0.e2 = 1 ORDER BY c_0", Arrays.asList(1));
+	    TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList(1)});
+	}
+	
+	@Test public void testNestedWithRepeated() throws Exception {
+	    CommandContext cc = TestProcessor.createCommandContext();
+	    BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+		bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+		
+		String sql = "begin WITH cte1 as (SELECT 1 as a), cte3 as (with cte3_1 as /*+ no_inline */ (select cte1.a from cte1 join pm1.g1 t1 on cte1.a=t1.e2) select * from cte3_1) SELECT * FROM cte3;"
+				+ " WITH cte1 as (SELECT 1 as a), cte3 as (with cte3_1 as /*+ no_inline */ (select cte1.a from cte1 join pm1.g1 t1 on cte1.a=t1.e2) select * from cte3_1) SELECT * FROM cte3; end";
+	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), cc);
+	    HardcodedDataManager hdm = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+	    
+	    hdm.addData("SELECT g_0.e2 AS c_0 FROM g1 AS g_0 WHERE g_0.e2 = 1 ORDER BY c_0", Arrays.asList(1));
+	    TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList(1)});
+	}
+	
 }
 
