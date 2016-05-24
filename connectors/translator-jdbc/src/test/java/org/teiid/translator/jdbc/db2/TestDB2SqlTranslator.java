@@ -253,8 +253,8 @@ public class TestDB2SqlTranslator {
     }
     
     @Test public void testSubstring() throws Exception {
-        String input = "SELECT substring(STRINGNUM, 2, 10) FROM BQT1.SMALLA"; //$NON-NLS-1$
-        String output = "SELECT substr(SmallA.StringNum, CASE WHEN 2 > 10 THEN 10 ELSE 2 END, CASE WHEN 10 > (length(SmallA.StringNum) - (CASE WHEN 2 > 10 THEN 10 ELSE 2 END - 1)) THEN (length(SmallA.StringNum) - (CASE WHEN 2 > 10 THEN 10 ELSE 2 END - 1)) ELSE 10 END) FROM SmallA";  //$NON-NLS-1$
+        String input = "SELECT substring(STRINGNUM, 12, 10) FROM BQT1.SMALLA"; //$NON-NLS-1$
+        String output = "SELECT substr(SmallA.StringNum, CASE WHEN 12 > length(SmallA.StringNum) THEN (length(SmallA.StringNum) + 1) ELSE 12 END, CASE WHEN 10 > (length(SmallA.StringNum) - (CASE WHEN 12 > length(SmallA.StringNum) THEN (length(SmallA.StringNum) + 1) ELSE 12 END - 1)) THEN (length(SmallA.StringNum) - (CASE WHEN 12 > length(SmallA.StringNum) THEN (length(SmallA.StringNum) + 1) ELSE 12 END - 1)) ELSE 10 END) FROM SmallA";  //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
@@ -263,7 +263,7 @@ public class TestDB2SqlTranslator {
     
     @Test public void testSubstring1() throws Exception {
         String input = "SELECT substring(STRINGNUM, 2, intnum) FROM BQT1.SMALLA"; //$NON-NLS-1$
-        String output = "SELECT substr(SmallA.StringNum, CASE WHEN 2 > SmallA.IntNum THEN SmallA.IntNum ELSE 2 END, CASE WHEN SmallA.IntNum > (length(SmallA.StringNum) - (CASE WHEN 2 > SmallA.IntNum THEN SmallA.IntNum ELSE 2 END - 1)) THEN (length(SmallA.StringNum) - (CASE WHEN 2 > SmallA.IntNum THEN SmallA.IntNum ELSE 2 END - 1)) WHEN SmallA.IntNum > 0 THEN SmallA.IntNum END) FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT substr(SmallA.StringNum, CASE WHEN 2 > length(SmallA.StringNum) THEN (length(SmallA.StringNum) + 1) ELSE 2 END, CASE WHEN SmallA.IntNum > (length(SmallA.StringNum) - (CASE WHEN 2 > length(SmallA.StringNum) THEN (length(SmallA.StringNum) + 1) ELSE 2 END - 1)) THEN (length(SmallA.StringNum) - (CASE WHEN 2 > length(SmallA.StringNum) THEN (length(SmallA.StringNum) + 1) ELSE 2 END - 1)) WHEN SmallA.IntNum > 0 THEN SmallA.IntNum END) FROM SmallA";  //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
