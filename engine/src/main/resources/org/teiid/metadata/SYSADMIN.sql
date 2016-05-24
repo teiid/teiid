@@ -354,7 +354,8 @@ BEGIN
 	    EXECUTE IMMEDIATE 'SELECT ' || VARIABLES.pkcolums || ' FROM ' || VARIABLES.interViewName || ' WHERE ' || updateMatView.refreshCriteria AS PrimaryKey object[] INTO #pklist;
 
    	    DECLARE integer interrowUpdated = 0;
- 
+
+	    BEGIN ATOMIC 
 	    LOOP ON (SELECT PrimaryKey FROM #pklist) AS pkrow
 	    BEGIN
 	        interrowUpdated = (EXECUTE SYSADMIN.refreshMatViewRows(VARIABLES.interViewName, pkrow.PrimaryKey));
@@ -365,8 +366,11 @@ BEGIN
                 BEGIN
                     rowsUpdated = interrowUpdated;
                 END
+	    END
+	    EXCEPTION e
+	    VARIABLES.rowsUpdated = -3;
+	    EXECUTE logMsg(context=>'org.teiid.MATVIEWS', level=>'WARN', msg=>e.exception);
 	    END  
-	    
 	    RETURN rowsUpdated;
         END
 
