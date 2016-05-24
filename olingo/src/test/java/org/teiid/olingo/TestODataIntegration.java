@@ -28,7 +28,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -54,7 +53,6 @@ import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.hibernate.cfg.annotations.ResultsetMappingSecondPass;
 import org.infinispan.transaction.tm.DummyBaseTransactionManager;
 import org.junit.After;
 import org.junit.Before;
@@ -1606,8 +1604,6 @@ public class TestODataIntegration {
             
             mmd.addSourceMapping("x7", "x7", null);
             teiid.deployVDB("northwind", mmd);
-
-            localClient = getClient(teiid.getDriver(), "northwind", new Properties());
 
             ContentResponse response = null;
             response = http.newRequest(baseURL + "/northwind/m/x?$expand="+Encoder.encode("y_FKX($filter=b eq 'xa1')"))
