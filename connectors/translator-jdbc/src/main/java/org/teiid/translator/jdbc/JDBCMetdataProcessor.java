@@ -492,7 +492,7 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 			String pkName = null;
 			while (pks.next()) {
 				String columnName = pks.getString(4);
-				short seqNum = pks.getShort(5);
+				short seqNum = safeGetShort(pks, 5);
 				if (keyColumns == null) {
 					keyColumns = new TreeMap<Short, String>();
 				}
@@ -510,6 +510,27 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 			pks.close();
 		}
 	}
+
+	/**
+	 * some sources, such as PI, don't consistently support getShort
+	 * @param rs
+	 * @param pos
+	 * @return
+	 * @throws SQLException
+	 */
+	private short safeGetShort(ResultSet rs, int pos) throws SQLException {
+		short val;
+		try {
+			val = rs.getShort(pos);
+		} catch (SQLException e) {
+			int valInt = rs.getInt(pos);
+			if (valInt > Short.MAX_VALUE) {
+				throw new SQLException("invalid short value " + valInt); //$NON-NLS-1$
+			}
+			val = (short)valInt;
+		}
+		return val;
+	}
 	
 	private class FKInfo {
 		TableInfo pkTable;
@@ -526,7 +547,7 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 			HashMap<String, FKInfo> allKeys = new HashMap<String, FKInfo>();
 			while (fks.next()) {
 				String columnName = fks.getString(8);
-				short seqNum = fks.getShort(9);
+				short seqNum = safeGetShort(fks, 9);
 				String pkColumnName = fks.getString(4);
 				
 				String fkName = fks.getString(12);
