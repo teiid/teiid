@@ -128,7 +128,10 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
     public void visit(Alias expr) {
         String strValue = this.uriInfo.getValueForAlias(expr.getParameterName());
         try {
-            if (strValue.startsWith("$root")) {
+            if (strValue == null) {
+                this.stack.add(new Constant(null));
+            }
+            else if (strValue.startsWith("$root")) {
                 this.stack.add(new ScalarSubquery(this.parseService.parse(strValue)));
             }
             else {

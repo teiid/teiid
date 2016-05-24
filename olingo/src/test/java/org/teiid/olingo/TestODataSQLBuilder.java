@@ -422,6 +422,18 @@ public class TestODataSQLBuilder {
     }
     
     @Test
+    public void testNoAlias() throws Exception {
+        helpTest("/odata4/vdb/PM1/G1?$filter=e1 eq @p1",
+                "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 WHERE g0.e1 is NULL ORDER BY g0.e2");
+    }    
+    
+    @Test
+    public void testNoAlias2() throws Exception {
+        helpTest("/odata4/vdb/PM1/G1?$filter=e2 eq @p1",
+                "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 WHERE g0.e2 is NULL ORDER BY g0.e2");
+    }    
+    
+    @Test
     public void testAliasWithExpression() throws Exception {
         helpTest("/odata4/vdb/PM1/G1?$filter=e1 eq @p1&@p1=$root/G2(1)/e1",
                 "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 WHERE g0.e1 = (SELECT g1.e1 FROM PM1.G2 AS g1 WHERE g1.e2 = 1) ORDER BY g0.e2");
@@ -873,7 +885,7 @@ public class TestODataSQLBuilder {
                 + "FROM PM1.G1 AS g0 "
                 + "LEFT OUTER JOIN PM1.G4 AS g1 "
                 + "ON g0.e2 = g1.e2 "
-                + "WHERE g1.e2 = 100 "
+                + "AND g1.e2 = 100 "
                 + "ORDER BY g0.e2");        
     }
     
@@ -884,7 +896,7 @@ public class TestODataSQLBuilder {
                 + "FROM PM1.G1 AS g0 "
                 + "LEFT OUTER JOIN PM1.G4 AS g1 "
                 + "ON g0.e2 = g1.e2 "
-                + "WHERE g1.e2 = 1 "
+                + "AND g1.e2 = 1 "
                 + "ORDER BY g0.e2");        
     }    
     
@@ -895,7 +907,8 @@ public class TestODataSQLBuilder {
                 + "FROM PM1.G1 AS g0 "
                 + "LEFT OUTER JOIN PM1.G4 AS g1 "
                 + "ON g0.e2 = g1.e2 "
-                + "WHERE g0.e2 != 100 AND g1.e2 = 100 "
+                + "AND g1.e2 = 100 "
+                + "WHERE g0.e2 != 100 "
                 + "ORDER BY g0.e2");        
     }
     
