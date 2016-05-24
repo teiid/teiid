@@ -114,16 +114,6 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                 
                 // make sure the expanded entity has valid key, otherwise it is just nulls on right side
                 boolean valid = (expandEntity != null);
-                if (valid) {
-                    for (String key:resource.getEdmEntityType().getKeyPredicateNames()) {
-                        Property p = expandEntity.getProperty(key);
-                        if (p.getValue() == null) {
-                            valid = false;
-                            break;
-                        }
-                    }
-                }
-                
                 if (!valid) {
                     continue;
                 }
