@@ -104,7 +104,7 @@ enum Element {
 	AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE("max-sessions-allowed", "authentication-max-sessions-allowed"),
 	AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE("sessions-expiration-timelimit", "authentication-sessions-expiration-timelimit"),
 	AUTHENTICATION_TYPE_ATTRIBUTE("type", "authentication-type"),
-	AUTHENTICATION_TRUST_ALL_LOCAL("authentication-trust-all-local", "authentication-trust-all-local"),
+	AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE("trust-all-local", "authentication-trust-all-local"),
 	
 	PG_ELEMENT("pg"), //$NON-NLS-1$
 	PG_MAX_LOB_SIZE_ALLOWED_ELEMENT("max-lob-size-in-bytes", "pg-max-lob-size-in-bytes"), //$NON-NLS-1$ //$NON-NLS-2$

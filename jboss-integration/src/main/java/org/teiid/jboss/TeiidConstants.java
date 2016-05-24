@@ -407,8 +407,8 @@ public class TeiidConstants {
         .setDefaultValue(new ModelNode(AuthenticationType.USERPASSWORD.name()))
         .build();	
 	
-	public static SimpleAttributeDefinition AUTHENTICATION_TRUST_ALL_LOCAL = new SimpleAttributeDefinitionBuilder(Element.AUTHENTICATION_TRUST_ALL_LOCAL.getModelName(), ModelType.BOOLEAN)
-    	.setXmlName(Element.AUTHENTICATION_TRUST_ALL_LOCAL.getXMLName())
+	public static SimpleAttributeDefinition AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE.getModelName(), ModelType.BOOLEAN)
+    	.setXmlName(Element.AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE.getXMLName())
     	.setAllowNull(true)
     	.setAllowExpression(false)
     	.setDefaultValue(new ModelNode(true))
