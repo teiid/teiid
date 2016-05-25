@@ -317,6 +317,63 @@ BEGIN
 	END		
 	
 	DECLARE string statusTable = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_STATUS_TABLE');
+
+        /* statusTable is null hints View is Internal Mat View*/
+        IF (statusTable IS NULL)
+        BEGIN
+	    DECLARE string KeyUID = (SELECT UID FROM SYS.Keys WHERE SchemaName = updateMatView.schemaName  AND TableName = updateMatView.viewName AND Type = 'Primary');
+
+	    IF (KeyUID IS NULL)
+	    BEGIN
+	        RAISE SQLEXCEPTION 'no primary key defined';
+	    END
+
+	    DECLARE string pkcolums ;
+            DECLARE boolean isFirstPKCol = true;
+            DECLARE string interViewName = updateMatView.schemaName || '.' || updateMatView.viewName;
+    
+	    LOOP ON (SELECT Name FROM SYS.KeyColumns WHERE SchemaName = updateMatView.schemaName  AND TableName = updateMatView.viewName AND UID = VARIABLES.KeyUID) AS colname
+	    BEGIN
+	        IF (isFirstPKCol)
+	        BEGIN
+	            isFirstPKCol = false;
+	            pkcolums = updateMatView.viewName || '.' || colname.Name;
+	        END ELSE
+	        BEGIN
+        	    pkcolums = pkcolums || ', ' || updateMatView.viewName || '.' || colname.Name;
+	        END
+	    END
+
+	    IF (LOCATE(', ', pkcolums) <= 0)
+	    BEGIN
+	        pkcolums = pkcolums || ','; 
+	    END 
+    
+	    pkcolums = '(' || pkcolums || ')';
+    
+	    EXECUTE IMMEDIATE 'SELECT ' || VARIABLES.pkcolums || ' FROM ' || VARIABLES.interViewName || ' WHERE ' || updateMatView.refreshCriteria AS PrimaryKey object[] INTO #pklist;
+
+   	    DECLARE integer interrowUpdated = 0;
+
+	    BEGIN ATOMIC 
+	    LOOP ON (SELECT PrimaryKey FROM #pklist) AS pkrow
+	    BEGIN
+	        interrowUpdated = (EXECUTE SYSADMIN.refreshMatViewRows(VARIABLES.interViewName, pkrow.PrimaryKey));
+		IF (interrowUpdated > 0)
+                BEGIN
+                    rowsUpdated = rowsUpdated + interrowUpdated;
+                END ELSE
+                BEGIN
+                    rowsUpdated = interrowUpdated;
+                END
+	    END
+	    EXCEPTION e
+	    VARIABLES.rowsUpdated = -3;
+	    EXECUTE logMsg(context=>'org.teiid.MATVIEWS', level=>'WARN', msg=>e.exception);
+	    END  
+	    RETURN rowsUpdated;
+        END
+
 	DECLARE string[] targets = (SELECT (TargetName, TargetSchemaName) from SYSADMIN.MatViews WHERE VDBName = VARIABLES.vdbName AND SchemaName = updateMatView.schemaName AND Name = updateMatView.viewName);
     DECLARE string matViewTable = array_get(targets, 1);
     DECLARE string targetSchemaName = array_get(targets, 2);

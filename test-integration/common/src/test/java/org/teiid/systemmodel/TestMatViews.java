@@ -143,7 +143,7 @@ public class TestMatViews {
 		assertTrue(key1 != key);
 	}
 	
-	@Test public void testSystemManViewsWithExplictRefreshAndInvalidate() throws Exception {
+	@Test public void testSystemMatViewsWithExplictRefreshAndInvalidate() throws Exception {
 		Statement s = conn.createStatement();
 		ResultSet rs = s.executeQuery("select * from (call refreshMatView('TEST.MATVIEW', false)) p");
 		assertTrue(rs.next());
@@ -487,6 +487,91 @@ public class TestMatViews {
         assertFalse(s.execute());
         assertEquals(1, s.getInt(1));
 	}
+	
+	@Test
+	public void testupdateMatViewInternal() throws Exception {
+	    
+	    ModelMetaData mmd2 = new ModelMetaData();
+        mmd2.setName("view1");
+        mmd2.setModelType(Type.VIRTUAL);
+        mmd2.addSourceMetadata("DDL", "CREATE VIEW v1 ( col integer, col1 string, col2 double, primary key (col) ) OPTIONS (MATERIALIZED true) AS /*+ cache(updatable) */ select 1, current_database(), rand()");
+        
+        server.deployVDB("comp", mmd2);
+        
+        Connection c = server.getDriver().connect("jdbc:teiid:comp", null);
+        
+        Statement s = c.createStatement();
+        ResultSet rs = s.executeQuery("select * from v1");
+        rs.next();
+        assertEquals(1, rs.getInt(1));
+        assertEquals("comp", rs.getString(2));
+        double previous = rs.getDouble(3);
+      
+        rs = s.executeQuery("select * from (call sysadmin.updateMatView('view1', 'v1', 'col = 0')) p");
+        rs.next();
+        assertEquals(0, rs.getInt(1));
+        
+        rs = s.executeQuery("select * from (call sysadmin.updateMatView('view1', 'v1', 'col = 1')) p");
+        rs.next();
+        assertEquals(1, rs.getInt(1));  
+        
+        rs = s.executeQuery("select * from v1");
+        rs.next();
+        assertNotEquals(previous, rs.getDouble(3));        
+	}
+	
+	@Test
+    public void testCompositeupdateMatViewInternal() throws Exception {
+	    
+	    ModelMetaData mmd2 = new ModelMetaData();
+        mmd2.setName("view1");
+        mmd2.setModelType(Type.VIRTUAL);
+        mmd2.addSourceMetadata("DDL", "CREATE VIEW v1 ( col integer, col1 string, col2 double, primary key (col, col1) ) OPTIONS (MATERIALIZED true) AS /*+ cache(updatable) */ select 1, current_database(), rand()");
+        
+        server.deployVDB("comp", mmd2);
+        
+        Connection c = server.getDriver().connect("jdbc:teiid:comp", null);
+        
+        Statement s = c.createStatement();
+        ResultSet rs = s.executeQuery("select * from v1");
+        rs.next();
+        assertEquals(1, rs.getInt(1));
+        assertEquals("comp", rs.getString(2));
+        double previous = rs.getDouble(3);
+        
+        rs = s.executeQuery("select * from (call sysadmin.updateMatView('view1', 'v1', 'col = 0 AND col1 = ''comp''')) p");
+        rs.next();
+        assertEquals(0, rs.getInt(1));
+        
+        rs = s.executeQuery("select * from (call sysadmin.updateMatView('view1', 'v1', 'col = 1 AND col1 = ''comp''')) p");
+        rs.next();
+        assertEquals(1, rs.getInt(1));
+	    
+        rs = s.executeQuery("select * from v1");
+        rs.next();
+        assertNotEquals(previous, rs.getDouble(3));  
+	}
+	
+	@Test(expected=TeiidSQLException.class)
+    public void testupdateMatViewInternalNoPK() throws Exception {
+        
+        ModelMetaData mmd2 = new ModelMetaData();
+        mmd2.setName("view1");
+        mmd2.setModelType(Type.VIRTUAL);
+        mmd2.addSourceMetadata("DDL", "CREATE VIEW v1 ( col integer, col1 string, col2 double ) OPTIONS (MATERIALIZED true) AS /*+ cache(updatable) */ select 1, current_database(), rand()");
+        
+        server.deployVDB("comp", mmd2);
+        
+        Connection c = server.getDriver().connect("jdbc:teiid:comp", null);
+        
+        Statement s = c.createStatement();
+        ResultSet rs = s.executeQuery("select * from v1");
+        rs.next();
+        assertEquals(1, rs.getInt(1));
+        assertEquals("comp", rs.getString(2));
+        
+        s.execute("call sysadmin.updateMatView('view1', 'v1', 'col = 1')"); 
+    }
 	
 	@Test public void testInternalWithManagement() throws Exception {
 		ModelMetaData mmd2 = new ModelMetaData();
