@@ -49,6 +49,7 @@ import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.LocateFunctionModifier;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
+import org.teiid.translator.jdbc.TemplateFunctionModifier;
 import org.teiid.translator.jdbc.Version;
 
 @Translator(name = "hana", description = "SAP HANA translator")
@@ -133,8 +134,11 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
         	
     	});
         registerFunctionModifier(SourceSystemFunctions.CURDATE, new AliasModifier("current_date")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.CURTIME, new AliasModifier("current_time")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new AliasModifier("dayname")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.CURTIME, new AliasModifier("current_time")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.WEEK, new TemplateFunctionModifier("cast(substring(isoweek(",0,"), 7, 2) as integer)")); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new TemplateFunctionModifier("(MOD((WEEKDAY(",0,")+1),7)+1)")); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.DAYNAME, new TemplateFunctionModifier("initcap(lower(dayname(", 0, ")))")); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.QUARTER, new TemplateFunctionModifier("((month(",0,")+2)/3)")); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier(SourceSystemFunctions.NOW, new AliasModifier("current_timestamp")); //$NON-NLS-1$ 
         
         //spatial functions
@@ -188,6 +192,13 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
         convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIMESTAMP, new ConvertModifier.FormatModifier("to_timestamp", DATETIME_FORMAT));  //$NON-NLS-1$ 
         
     	convertModifier.setWideningNumericImplicit(true);
+    	convertModifier.addConvert(FunctionModifier.BOOLEAN, FunctionModifier.STRING, new FunctionModifier() {
+			@Override
+			public List<?> translate(Function function) {
+				Expression stringValue = function.getParameters().get(0);
+				return Arrays.asList("CASE WHEN ", stringValue, " THEN 'true' WHEN not(", stringValue, ") THEN 'false' END"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			}
+		});
     	convertModifier.addSourceConversion(new FunctionModifier() {
 			@Override
 			public List<?> translate(Function function) {
