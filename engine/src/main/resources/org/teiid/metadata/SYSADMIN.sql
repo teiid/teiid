@@ -328,48 +328,35 @@ BEGIN
 	        RAISE SQLEXCEPTION 'no primary key defined';
 	    END
 
-	    DECLARE string pkcolums ;
-            DECLARE boolean isFirstPKCol = true;
-            DECLARE string interViewName = updateMatView.schemaName || '.' || updateMatView.viewName;
+	    DECLARE string pkcolums = '(';
+        DECLARE string interViewName = updateMatView.schemaName || '.' || updateMatView.viewName;
     
 	    LOOP ON (SELECT Name FROM SYS.KeyColumns WHERE SchemaName = updateMatView.schemaName  AND TableName = updateMatView.viewName AND UID = VARIABLES.KeyUID) AS colname
 	    BEGIN
-	        IF (isFirstPKCol)
-	        BEGIN
-	            isFirstPKCol = false;
-	            pkcolums = updateMatView.viewName || '.' || colname.Name;
-	        END ELSE
-	        BEGIN
-        	    pkcolums = pkcolums || ', ' || updateMatView.viewName || '.' || colname.Name;
-	        END
+       	    pkcolums = pkcolums || updateMatView.viewName || '.' || colname.Name || ', ';
 	    END
-
-	    IF (LOCATE(', ', pkcolums) <= 0)
-	    BEGIN
-	        pkcolums = pkcolums || ','; 
-	    END 
     
-	    pkcolums = '(' || pkcolums || ')';
-    
-	    EXECUTE IMMEDIATE 'SELECT ' || VARIABLES.pkcolums || ' FROM ' || VARIABLES.interViewName || ' WHERE ' || updateMatView.refreshCriteria AS PrimaryKey object[] INTO #pklist;
+	    pkcolums = pkcolums || ')';
 
-   	    DECLARE integer interrowUpdated = 0;
+        BEGIN ATOMIC 
+            EXECUTE IMMEDIATE 'SELECT ' || VARIABLES.pkcolums || ' FROM ' || VARIABLES.interViewName || ' WHERE ' || updateMatView.refreshCriteria AS PrimaryKey object[] INTO #pklist;
 
-	    BEGIN ATOMIC 
-	    LOOP ON (SELECT PrimaryKey FROM #pklist) AS pkrow
-	    BEGIN
-	        interrowUpdated = (EXECUTE SYSADMIN.refreshMatViewRows(VARIABLES.interViewName, pkrow.PrimaryKey));
-		IF (interrowUpdated > 0)
+   	        DECLARE integer interrowUpdated = 0;
+
+	        LOOP ON (SELECT PrimaryKey FROM #pklist) AS pkrow
+	        BEGIN
+	            interrowUpdated = (EXECUTE SYSADMIN.refreshMatViewRows(VARIABLES.interViewName, pkrow.PrimaryKey));
+		        IF (interrowUpdated > 0)
                 BEGIN
                     rowsUpdated = rowsUpdated + interrowUpdated;
                 END ELSE
                 BEGIN
                     rowsUpdated = interrowUpdated;
                 END
-	    END
+	       END
 	    EXCEPTION e
-	    VARIABLES.rowsUpdated = -3;
-	    EXECUTE logMsg(context=>'org.teiid.MATVIEWS', level=>'WARN', msg=>e.exception);
+	       VARIABLES.rowsUpdated = -3;
+	       EXECUTE logMsg(context=>'org.teiid.MATVIEWS', level=>'WARN', msg=>e.exception);
 	    END  
 	    RETURN rowsUpdated;
         END
