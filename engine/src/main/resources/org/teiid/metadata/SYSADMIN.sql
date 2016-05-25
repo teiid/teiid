@@ -337,10 +337,10 @@ BEGIN
 	        IF (isFirstPKCol)
 	        BEGIN
 	            isFirstPKCol = false;
-	            pkcolums = colname.Name;
+	            pkcolums = updateMatView.viewName || '.' || colname.Name;
 	        END ELSE
 	        BEGIN
-        	    pkcolums = pkcolums || ', ' || colname.Name;
+        	    pkcolums = pkcolums || ', ' || updateMatView.viewName || '.' || colname.Name;
 	        END
 	    END
 
