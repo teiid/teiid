@@ -26,10 +26,24 @@ import java.util.List;
 
 import javax.resource.cci.ConnectionFactory;
 
-import org.teiid.language.*;
+import org.teiid.language.Argument;
+import org.teiid.language.Command;
+import org.teiid.language.Delete;
+import org.teiid.language.Insert;
+import org.teiid.language.QueryExpression;
+import org.teiid.language.Select;
+import org.teiid.language.Update;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.resource.adpter.simpledb.SimpleDBConnection;
-import org.teiid.translator.*;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.MetadataProcessor;
+import org.teiid.translator.ProcedureExecution;
+import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.Translator;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TypeFacility;
+import org.teiid.translator.UpdateExecution;
 
 @Translator(name = "simpledb", description = "Translator for Amazon SimpleDB")
 public class SimpleDBExecutionFactory extends ExecutionFactory<ConnectionFactory, SimpleDBConnection> {
@@ -111,7 +125,7 @@ public class SimpleDBExecutionFactory extends ExecutionFactory<ConnectionFactory
 
     @Override
     public boolean supportsRowLimit() {
-        return true;
+        return false; //the simpledb limit clause is a paging hint
     }
 
     @Override

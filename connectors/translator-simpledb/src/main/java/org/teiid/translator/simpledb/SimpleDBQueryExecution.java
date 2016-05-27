@@ -42,7 +42,8 @@ import com.amazonaws.services.simpledb.model.Item;
 import com.amazonaws.services.simpledb.model.SelectResult;
 
 public class SimpleDBQueryExecution implements ResultSetExecution {
-    private Class<?>[] expectedColumnTypes;
+    private static final int MAX_PAGE_SIZE = 2500;
+	private Class<?>[] expectedColumnTypes;
     @SuppressWarnings("unused")
     private ExecutionContext executionContext;
     @SuppressWarnings("unused")
@@ -73,7 +74,7 @@ public class SimpleDBQueryExecution implements ResultSetExecution {
     }
     
     protected String getSQL() {
-        return this.visitor.toString();
+        return this.visitor.toString() + " LIMIT " + Math.min(this.executionContext.getBatchSize(), MAX_PAGE_SIZE); //$NON-NLS-1$
     }
     
     protected void executeDirect(String sql, String next) throws TranslatorException {
