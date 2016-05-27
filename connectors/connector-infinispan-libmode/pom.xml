@@ -6,9 +6,9 @@
         <version>9.0.0.CR2-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>connector-infinispan-libmode.6</artifactId>
+    <artifactId>connector-infinispan-libmode</artifactId>
     <groupId>org.jboss.teiid.connectors</groupId>
-    <name>Infinispan Library Mode Connector 6</name>
+    <name>Infinispan Library Mode Connector</name>
     <description>This connector creates the connection to the Infinispan Cache running in library mode</description>
     <packaging>bundle</packaging>
         	

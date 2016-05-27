@@ -116,7 +116,7 @@
     <module>connector-accumulo</module>
     <module>connector-solr</module>
     <module>connector-infinispan-hotrod</module>
-    <module>connector-infinispan-libmode.6</module>
+    <module>connector-infinispan-libmode</module>
     <module>translator-prestodb</module>
     <module>sandbox</module>
     <module>translator-swagger</module>
