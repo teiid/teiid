@@ -111,7 +111,7 @@ public class SimpleDBExecutionFactory extends ExecutionFactory<ConnectionFactory
 
     @Override
     public boolean supportsRowLimit() {
-        return true;
+        return false; //the simpledb limit clause is a paging hint
     }
 
     @Override
