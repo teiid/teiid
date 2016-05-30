@@ -29,7 +29,7 @@
     
     <distributed-cache jgroups-stack="stack"/>
     
-    <authentication security-domain="teiid-security,teiid-security2" max-sessions-allowed="5" sessions-expiration-timelimit="2" type="GSS"/>
+    <authentication security-domain="teiid-security,teiid-security2" max-sessions-allowed="5" sessions-expiration-timelimit="2" type="GSS" trust-all-local="false"/>
     
     <transport name="jdbc" protocol="teiid" socket-binding="teiid-jdbc" max-socket-threads="1" input-buffer-size="2" output-buffer-size="3"/>
 

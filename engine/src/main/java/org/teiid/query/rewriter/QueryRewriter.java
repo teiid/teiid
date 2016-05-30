@@ -201,23 +201,23 @@ public class QueryRewriter {
 				List<WithQueryCommand> withList = queryCommand.getWith();
 				if (withList != null) {
 					queryCommand.setWith(null);
-					Collection<UnaryFromClause> clauses = getUnaryFromClauses(queryCommand);
+					List<UnaryFromClause> clauses = getUnaryFromClauses(queryCommand);
 					queryCommand.setWith(withList);
-					WithQueryCommand previous = null;
             		outer: for (int i = withList.size() - 1; i >= 0; i--) {
-            			if (previous != null) {
-    						clauses.addAll(getUnaryFromClauses(previous.getCommand()));
-            			}
                     	WithQueryCommand withQueryCommand = withList.get(i);
-                    	previous = withQueryCommand;
                     	if (withQueryCommand.getColumns() == null) {
             				List<ElementSymbol> columns = ResolverUtil.resolveElementsInGroup(withQueryCommand.getGroupSymbol(), metadata);
             				withQueryCommand.setColumns(LanguageObject.Util.deepClone(columns, ElementSymbol.class));
             			}
+                    	Collection<UnaryFromClause> all = new ArrayList<UnaryFromClause>(clauses);
+                    	List<UnaryFromClause> current = getUnaryFromClauses(withQueryCommand.getCommand()); 
+						clauses.addAll(current);
 						rewriteSubqueryContainer(withQueryCommand, true);
 						
 						//can't inline with a hint or once it's planned
-            			if (withQueryCommand.isNoInline() || withQueryCommand.getCommand().getProcessorPlan() != null) {
+            			if (withQueryCommand.isNoInline() || withQueryCommand.getCommand().getProcessorPlan() != null || processing) {
+            				//TODO: in the processing case we may want to remove unneeded cte declarations, rather than
+            				//pushing them down
     						continue;
                     	}
             			
@@ -226,7 +226,7 @@ public class QueryRewriter {
             			boolean replaceScalar = replaceScalar(withQueryCommand);
 						if (!replaceScalar) {
 							int referenceCount = 0;
-							for (UnaryFromClause ufc : clauses) {
+							for (UnaryFromClause ufc : all) {
 								if (ufc.getGroup().getMetadataID() != withQueryCommand.getGroupSymbol().getMetadataID()) {
 									continue;
 								}
@@ -246,10 +246,10 @@ public class QueryRewriter {
 							queryCommand.setWith(null);
 						}
 						if (removeOnly) {
-							previous = null; //no need to collect clauses
+							clauses = clauses.subList(0, clauses.size() - current.size());
 							continue;
 						}
-						for (UnaryFromClause clause : clauses) {
+						for (UnaryFromClause clause : all) {
 							//we match on equality as the name can be redefined
 							if (clause.getGroup().getMetadataID() != withQueryCommand.getGroupSymbol().getMetadataID()) {
 								continue;

@@ -113,15 +113,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                 Entity expandEntity = createEntity(rs, expandNode, this.baseURL, this);
                 
                 // make sure the expanded entity has valid key, otherwise it is just nulls on right side
-                boolean valid = true;
-                for (String key:resource.getEdmEntityType().getKeyPredicateNames()) {
-                    Property p = expandEntity.getProperty(key);
-                    if (p.getValue() == null) {
-                        valid = false;
-                        break;
-                    }
-                }
-                
+                boolean valid = (expandEntity != null);
                 if (!valid) {
                     continue;
                 }
@@ -212,7 +204,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
         
         Entity entity = new Entity();
         entity.setType(entityType.getFullQualifiedName().getFullQualifiedNameAsString());
-        
+        boolean allNulls = true;
         for (ProjectedColumn column: projected) {
 
             /*
@@ -222,7 +214,9 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
             
             String propertyName = Symbol.getShortName(column.getExpression());
             Object value = rs.getObject(column.getOrdinal());
-            
+            if (value != null) {
+                allNulls = false;
+            }
             try {
                 SingletonPrimitiveType type = (SingletonPrimitiveType) column.getEdmType();
                 if (type instanceof EdmStream) {
@@ -242,6 +236,10 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
             } catch (TeiidProcessingException e) {
                 throw new SQLException(e);
             }
+        }
+        
+        if (allNulls) {
+            return null;
         }
             
         // Build the navigation and Stream Links

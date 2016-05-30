@@ -159,6 +159,7 @@ class TeiidAdd extends AbstractAddStepHandler {
 		TeiidConstants.AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE,
 		TeiidConstants.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE,
 		TeiidConstants.AUTHENTICATION_TYPE_ATTRIBUTE,
+		TeiidConstants.AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE
 	};
 	
 	@Override
@@ -522,8 +523,8 @@ class TeiidAdd extends AbstractAddStepHandler {
    			sessionServiceImpl.setAuthenticationType(AuthenticationType.USERPASSWORD);
    		}
    		
-   		if (isDefined(AUTHENTICATION_TRUST_ALL_LOCAL, operation, context)) {
-   			boolean allowUnauthenticated = asBoolean(AUTHENTICATION_TRUST_ALL_LOCAL, operation, context);
+   		if (isDefined(AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE, operation, context)) {
+   			boolean allowUnauthenticated = asBoolean(AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE, operation, context);
    			sessionServiceImpl.setTrustAllLocal(allowUnauthenticated);
 		}
    		

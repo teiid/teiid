@@ -42,6 +42,7 @@
     "authentication-max-sessions-allowed" : 5,
     "authentication-security-domain" : "teiid-security,teiid-security2",
     "authentication-type" : "GSS",
+    "authentication-trust-all-local" : false,
     "transport" : {
         "jdbc" : {
             "input-buffer-size" : 2,

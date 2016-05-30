@@ -109,7 +109,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 			AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE.marshallAsAttribute(node, false, writer);
 			AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE.marshallAsAttribute(node, false, writer);
 			AUTHENTICATION_TYPE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
-			AUTHENTICATION_TRUST_ALL_LOCAL.marshallAsAttribute(node, false, writer);
+			AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE.marshallAsAttribute(node, false, writer);
 			writer.writeEndElement();
     	}
     	   	
@@ -474,6 +474,10 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     			case AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE:
     				node.get(element.getModelName()).set(Integer.parseInt(attrValue));
     				break;
+
+    			case AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE:
+                    node.get(element.getModelName()).set(Boolean.parseBoolean(attrValue));
+                    break;
 
     			default:
     				throw ParseUtils.unexpectedAttribute(reader, i);    			

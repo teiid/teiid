@@ -336,5 +336,33 @@ public class TestSortNode {
     	assertEquals(Arrays.asList(1,3), ts.nextTuple());
     	assertNull(ts.nextTuple());
     }
+    
+    @Test public void testSortLimit() throws Exception {
+    	ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
+        es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
+        TupleBuffer tsid = bm.createTupleBuffer(Arrays.asList(es1, es1), "test", TupleSourceType.PROCESSOR); //$NON-NLS-1$
+        tsid.addTuple(Arrays.asList(4));
+    	tsid.addTuple(Arrays.asList(3));
+    	tsid.addTuple(Arrays.asList(2));
+    	tsid.addTuple(Arrays.asList(1));
+    	tsid.close();
+    	SortUtility su = new SortUtility(tsid.createIndexedTupleSource(), Arrays.asList(es1), Arrays.asList(Boolean.TRUE), Mode.SORT, bm, "test", tsid.getSchema()); //$NON-NLS-1$
+    	su.setBatchSize(2);
+    	TupleBuffer out = su.sort(2);
+    	TupleSource ts = out.createIndexedTupleSource();
+    	assertEquals(Arrays.asList(1), ts.nextTuple());
+    	assertEquals(Arrays.asList(2), ts.nextTuple());
+    	assertNull(ts.nextTuple());
+    	
+    	
+    	su = new SortUtility(tsid.createIndexedTupleSource(), Arrays.asList(es1), Arrays.asList(Boolean.TRUE), Mode.SORT, bm, "test", tsid.getSchema()); //$NON-NLS-1$
+    	su.setBatchSize(10);
+    	out = su.sort(2);
+    	ts = out.createIndexedTupleSource();
+    	assertEquals(Arrays.asList(1), ts.nextTuple());
+    	assertEquals(Arrays.asList(2), ts.nextTuple());
+    	assertNull(ts.nextTuple());
+    }
 
 }

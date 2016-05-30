@@ -247,7 +247,7 @@ public class TestHanaTranslator {
     
     @Test public void testDayOfWeek() throws Exception {
         String input = "SELECT dayofweek(convert(PART_WEIGHT, date)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT dayname(to_date(PARTS.PART_WEIGHT, 'YYYY-MM-DD')) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT (MOD((WEEKDAY(to_date(PARTS.PART_WEIGHT, 'YYYY-MM-DD'))+1),7)+1) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
@@ -295,7 +295,7 @@ public class TestHanaTranslator {
     }
     @Test public void testQuarter() throws Exception {
         String input = "SELECT quarter(convert(PART_WEIGHT, date)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT quarter(to_date(PARTS.PART_WEIGHT, 'YYYY-MM-DD')) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT ((month(to_date(PARTS.PART_WEIGHT, 'YYYY-MM-DD'))+2)/3) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
@@ -311,7 +311,7 @@ public class TestHanaTranslator {
     }
     @Test public void testWeek() throws Exception {
         String input = "SELECT week(convert(PART_WEIGHT, date)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT week(to_date(PARTS.PART_WEIGHT, 'YYYY-MM-DD')) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT cast(substring(isoweek(to_date(PARTS.PART_WEIGHT, 'YYYY-MM-DD')), 7, 2) as integer) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
@@ -327,7 +327,7 @@ public class TestHanaTranslator {
     }
     @Test public void testDayName() throws Exception {
         String input = "SELECT dayname(convert(PART_WEIGHT, date)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT dayname(to_date(PARTS.PART_WEIGHT, 'YYYY-MM-DD')) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT initcap(lower(dayname(to_date(PARTS.PART_WEIGHT, 'YYYY-MM-DD')))) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
@@ -782,6 +782,15 @@ public class TestHanaTranslator {
     @Test public void testCountBoolean() throws Exception {
         String input = "SELECT count(booleanvalue) FROM bqt1.smalla"; //$NON-NLS-1$
         String output = "SELECT COUNT(SmallA.BooleanValue) FROM SmallA";  //$NON-NLS-1$
+
+        helpTestVisitor(getTestBQTVDB(),
+                input, 
+                output);
+    }
+    
+    @Test public void testBooleanCastString() throws Exception {
+        String input = "SELECT cast(booleanvalue as string) FROM bqt1.smalla"; //$NON-NLS-1$
+        String output = "SELECT CASE WHEN SmallA.BooleanValue THEN 'true' WHEN not(SmallA.BooleanValue) THEN 'false' END FROM SmallA";  //$NON-NLS-1$
 
         helpTestVisitor(getTestBQTVDB(),
                 input, 

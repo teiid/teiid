@@ -118,6 +118,8 @@ public class RelationalPlanner {
 	private SourceHint sourceHint;
 	private WithPlanningState withPlanningState;
 	private Set<GroupSymbol> withGroups;
+
+	private boolean processWith = true;
 	
 	private static final Comparator<GroupSymbol> nonCorrelatedComparator = new Comparator<GroupSymbol>() {
 		@Override
@@ -257,7 +259,11 @@ public class RelationalPlanner {
 		if (hints.hasRowBasedSecurity) {
 			stack.push(new RuleApplySecurity());
 		}
-		executeRules(stack, plan);
+		//use a temporary planner to run just the assign output elements
+		RelationalPlanner planner = new RelationalPlanner();
+		planner.processWith = false; //we don't want to trigger the with processing for just projection
+		planner.initialize(command, idGenerator, metadata, capFinder, analysisRecord, context);
+		planner.executeRules(stack, plan);
 		//discover all of the usage
 		List<Command> commands = CommandCollectorVisitor.getCommands(command);
 		while (!commands.isEmpty()) {
@@ -267,15 +273,15 @@ public class RelationalPlanner {
 				//skip xml commands as they cannot be planned here and cannot directly reference with tables,
 				//but their subqueries still can
 				if (!(cmd instanceof Query) || !((Query)cmd).getIsXML()) {
-					PlanNode temp = generatePlan((Command) cmd.clone());
+					PlanNode temp = planner.generatePlan((Command) cmd.clone());
 					stack.push(new RuleAssignOutputElements(false));
-					executeRules(stack, temp);
+					planner.executeRules(stack, temp);
 				}
 			} catch (TeiidProcessingException e) {
 				throw new QueryPlannerException(e);
 			}
 		}
-		//plan an minimize projection
+		//plan and minimize projection
 		for (WithQueryCommand with : this.withPlanningState.withList) {
 			QueryCommand subCommand = with.getCommand();
 			
@@ -405,7 +411,9 @@ public class RelationalPlanner {
 				final GroupSymbol gs = RulePlaceAccess.recontextSymbol(old, context.getGroups());
 				Map<ElementSymbol, Expression> replacementSymbols = FrameUtil.buildSymbolMap(old, gs, metadata);
 				gs.setDefinition(null);
+				//update the with clause with the new group name / columns
 				with.setGroupSymbol(gs);
+				with.setColumns(new ArrayList(replacementSymbols.values()));
 				//we use equality checks here because there may be a similarly named at lower scopes
 				ExpressionMappingVisitor emv = new ExpressionMappingVisitor(replacementSymbols) {
 					@Override
@@ -525,6 +533,7 @@ public class RelationalPlanner {
 			temp.removeAll(this.withGroups);
 			discoverWith(pushdownWith, command, with, temp);
 			with.add(clause.clone());
+			this.withGroups.add(clause.getGroupSymbol());
 			command.setSourceHint(SourceHint.combine(command.getSourceHint(), clause.getCommand().getSourceHint()));
 		}
 	}
@@ -1135,11 +1144,13 @@ public class RelationalPlanner {
 
 	PlanNode createQueryPlan(QueryCommand command, List<OrderBy> parentOrderBys)
 		throws TeiidComponentException, TeiidProcessingException {
-		//plan with
-		List<WithQueryCommand> withList = command.getWith();
-		if (withList != null) {
-			processWith(command, withList);
-        }
+		if (this.processWith) {
+			//plan with
+			List<WithQueryCommand> withList = command.getWith();
+			if (withList != null) {
+				processWith(command, withList);
+	        }
+		}
 		
         // Build canonical plan
     	PlanNode node = null;
