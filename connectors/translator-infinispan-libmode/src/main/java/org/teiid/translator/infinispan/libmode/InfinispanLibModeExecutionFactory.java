@@ -51,6 +51,7 @@ import org.teiid.translator.object.simpleMap.SimpleKeyVisitor;
 @Translator(name = "ispn-lib-mode", description = "(Deprecated) Translator used for accessing Infinispan cache running in Library Mode ")
 public class InfinispanLibModeExecutionFactory extends ObjectExecutionFactory {
 
+
 	// max available without having to try to override 
 	// BooleanQuery.setMaxClauseCount(), and
 	// infinispan doesn't currently support that option.

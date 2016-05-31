@@ -1,0 +1,1 @@
+Dependencies: org.jboss.teiid.common-core,org.jboss.teiid.api,javax.api,org.jboss.teiid.translator.infinispan.cache, org.infinispan:jdg-6.5 services, org.infinispan.query:jdg-6.5 services,org.jboss.modules	
