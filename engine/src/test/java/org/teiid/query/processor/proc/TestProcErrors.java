@@ -259,5 +259,24 @@ public class TestProcErrors {
         
     	helpTestProcess(plan, new List[] {Arrays.asList(2)}, dataManager, tm);
     }
+    
+    @Test public void testExceptionHandlingDynamicError() throws Exception {
+    	String ddl = 
+    			"create virtual procedure vproc (x integer) returns integer as begin " +
+    			"execute immediate 'select x/0';" +
+    			"exception e " +
+    			"execute immediate 'select x' as x integer into #temp; " +
+    			"\"return\" = (select x from #temp);"+
+    			"end;";
+    	TransformationMetadata tm = TestProcedureResolving.createMetadata(ddl);    	
+
+    	String sql = "call vproc(1)"; //$NON-NLS-1$
+
+        ProcessorPlan plan = getProcedurePlan(sql, tm);
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        
+    	helpTestProcess(plan, new List[] {Arrays.asList(1)}, dataManager, tm);
+    }
 	
 }
