@@ -34,7 +34,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
+import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.jdbc.ConnectionImpl;
@@ -54,6 +56,7 @@ import org.teiid.odata.api.SQLParameter;
 import org.teiid.odata.api.UpdateResponse;
 import org.teiid.odbc.ODBCServerRemoteImpl;
 import org.teiid.olingo.ODataPlugin;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
@@ -85,10 +88,11 @@ public class LocalClient implements Client {
     }
     
     @Override
-    public Connection open() throws SQLException {
+    public Connection open() throws SQLException, TeiidProcessingException {
         this.connection = buildConnection(TeiidDriver.getInstance(), this.vdbName, this.vdbVersion, this.properties);
         ODBCServerRemoteImpl.setConnectionProperties(connection);
         ODBCServerRemoteImpl.setConnectionProperties(connection, this.properties);
+        getVDBInternal();
         return this.connection;
     }
 
@@ -122,22 +126,31 @@ public class LocalClient implements Client {
     
     @Override
     public VDBMetaData getVDB() {
-        if (this.vdb == null) {
-            try {
-                LocalServerConnection lsc = (LocalServerConnection) getConnection().getServerConnection();
-                VDBMetaData vdb = lsc.getWorkContext().getVDB();
-                if (vdb == null) {
-                    throw new TeiidRuntimeException(ODataPlugin.Util.gs(
-                            ODataPlugin.Event.TEIID16001, this.vdbName,
-                            this.vdbVersion));
-                }
-                this.vdb = vdb;
-            } catch (SQLException e) {
-                throw new TeiidRuntimeException(e);
-            }
-        }
-        return this.vdb;
+        try {
+			return getVDBInternal();
+        } catch (TeiidProcessingException e) {
+        	throw new TeiidRuntimeException(e);
+		} catch (SQLException e) {
+			throw new TeiidRuntimeException(e);
+		}
     }
+
+	private VDBMetaData getVDBInternal() throws SQLException, TeiidProcessingException {
+		if (this.vdb == null) {
+            LocalServerConnection lsc = (LocalServerConnection) getConnection().getServerConnection();
+            vdb = lsc.getWorkContext().getVDB();
+            if (vdb == null) {
+                throw new TeiidRuntimeException(ODataPlugin.Util.gs(
+                        ODataPlugin.Event.TEIID16001, this.vdbName,
+                        this.vdbVersion));
+            }
+            this.vdb = vdb;
+        }
+		if (vdb.getStatus() != Status.ACTIVE) {
+			throw new TeiidProcessingException(QueryPlugin.Event.TEIID31099, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31099, vdb, vdb.getStatus()));
+		}
+        return this.vdb;
+	}
 
     @Override
     public void executeCall(String sql, List<SQLParameter> parameters, ProcedureReturnType returnType, 
