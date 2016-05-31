@@ -68,6 +68,7 @@ public class MaterializationMetadataRepository extends MetadataRepository {
 					if (!Boolean.valueOf(manage)) {
 						continue;
 					}
+					
 					String statusTable = table.getProperty(MATVIEW_STATUS_TABLE, false); 
 					String beforeScript = table.getProperty(MATVIEW_BEFORE_LOAD_SCRIPT, false);		
 					String afterScript = table.getProperty(MATVIEW_AFTER_LOAD_SCRIPT, false);
@@ -89,4 +90,5 @@ public class MaterializationMetadataRepository extends MetadataRepository {
 			}
 		}
 	}
+
 }
