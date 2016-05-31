@@ -213,8 +213,17 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 				public void process(ProcedurePlan procEnv)
 						throws BlockedException, TeiidComponentException,
 						TeiidProcessingException {
-					super.process(procEnv);
-					procEnv.getContext().popCall();
+					boolean done = true;
+					try {
+						super.process(procEnv);
+					} catch (BlockedException e) {
+						done = false;
+						throw e;
+					} finally {
+						if (done) {
+							procEnv.getContext().popCall();
+						}
+					}
 				}
 			};
 
@@ -251,6 +260,16 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
                 	ts.closeSource();
                 }
             }
+            
+            // do a recursion check
+    		// Add group to recursion stack
+    		if (parentProcCommand.getUpdateType() != Command.TYPE_UNKNOWN) {
+    			procEnv.getContext().pushCall(Command.getCommandToken(parentProcCommand.getUpdateType()) + " " + parentProcCommand.getVirtualGroup()); //$NON-NLS-1$
+    		} else {
+    			if (parentProcCommand.getVirtualGroup() != null) {
+    				procEnv.getContext().pushCall(parentProcCommand.getVirtualGroup().toString());
+    			}
+    		}
 
             procEnv.push(dynamicProgram);
 		} catch (TeiidProcessingException e) {
@@ -357,16 +376,6 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 		
 		if (procEnv.isValidateAccess() && !context.getDQPWorkContext().isAdmin() && context.getAuthorizationValidator() != null) {
 			context.getAuthorizationValidator().validate(new String[] {commandString}, command, metadata, context, CommandType.USER);
-		}
-
-		// do a recursion check
-		// Add group to recursion stack
-		if (parentProcCommand.getUpdateType() != Command.TYPE_UNKNOWN) {
-			context.pushCall(Command.getCommandToken(parentProcCommand.getUpdateType()) + " " + parentProcCommand.getVirtualGroup()); //$NON-NLS-1$
-		} else {
-			if (parentProcCommand.getVirtualGroup() != null) {
-				context.pushCall(parentProcCommand.getVirtualGroup().toString());
-			}
 		}
 	}
 
