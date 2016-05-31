@@ -21,18 +21,9 @@
  */
 package org.teiid.query.metadata;
 
-import static org.teiid.query.metadata.MaterializationMetadataRepository.MATVIEW_STAGE_TABLE;
-import static org.teiid.query.metadata.MaterializationMetadataRepository.MATVIEW_STATUS_TABLE;
+import static org.teiid.query.metadata.MaterializationMetadataRepository.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
@@ -287,6 +278,7 @@ public class MetadataValidator {
 	
 	static class MatViewPropertiesValidator implements MetadataRule {
 
+		
         @Override
         public void execute(VDBMetaData vdb, MetadataStore store, ValidatorReport report, MetadataValidator metadataValidator) {
 
@@ -300,46 +292,51 @@ public class MetadataValidator {
                     if (t.isVirtual() && t.isMaterialized() && t.getMaterializedTable() != null) {
                         Table matTable = t.getMaterializedTable();
                         Table stageTable = t.getMaterializedStageTable();
-                        Table statusTable = findTableByName(store, t.getProperty(MATVIEW_STATUS_TABLE, false));
                         
                         verifyTableColumns(model, report, metadataValidator, t, matTable);
                         if(stageTable != null) {
                             verifyTableColumns(model, report, metadataValidator, t, stageTable);
                         }
-                        
+
+                        String status = t.getProperty(MATVIEW_STATUS_TABLE, false);
+                        if (status == null) {
+                        	continue; //status table check is performed in the materialization metadata repository
+                        }
+						Table statusTable = findTableByName(store, status);
+						if (statusTable == null) {
+							metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31197, t.getFullName(), status));
+							continue;
+                        }
+						
+                		Map<String, Class<?>> statusTypeMap = new TreeMap<String, Class<?>>(String.CASE_INSENSITIVE_ORDER);
+            			statusTypeMap.put("VDBNAME", DataTypeManager.DefaultDataClasses.STRING); //$NON-NLS-1$
+            			statusTypeMap.put("VDBVERSION", DataTypeManager.DefaultDataClasses.STRING); //$NON-NLS-1$
+            			statusTypeMap.put("SCHEMANAME", DataTypeManager.DefaultDataClasses.STRING); //$NON-NLS-1$
+            			statusTypeMap.put("NAME", DataTypeManager.DefaultDataClasses.STRING); //$NON-NLS-1$
+            			statusTypeMap.put("TARGETSCHEMANAME", DataTypeManager.DefaultDataClasses.STRING); //$NON-NLS-1$
+            			statusTypeMap.put("TARGETNAME", DataTypeManager.DefaultDataClasses.STRING); //$NON-NLS-1$
+            			statusTypeMap.put("VALID", DataTypeManager.DefaultDataClasses.BOOLEAN); //$NON-NLS-1$
+            			statusTypeMap.put("LOADSTATE", DataTypeManager.DefaultDataClasses.STRING); //$NON-NLS-1$
+            			statusTypeMap.put("CARDINALITY", DataTypeManager.DefaultDataClasses.LONG); //$NON-NLS-1$
+            			statusTypeMap.put("UPDATED", DataTypeManager.DefaultDataClasses.TIMESTAMP); //$NON-NLS-1$
+            			statusTypeMap.put("LOADNUMBER", DataTypeManager.DefaultDataClasses.LONG); //$NON-NLS-1$
+                                                
                         List<Column> statusColumns = statusTable.getColumns();
-                        boolean isValidType = true;
                         for(int i = 0 ; i < statusColumns.size() ; i ++) {
                             String name = statusColumns.get(i).getName();
-                            String type = statusColumns.get(i).getDatatype().getName();
-                            if(name.equals("VDBNAME") && !type.equals(DataTypeManager.DefaultDataTypes.STRING)){
-                                isValidType = false;
-                            } else if(name.equals("VDBVERSION") && !type.equals(DataTypeManager.DefaultDataTypes.STRING)){
-                                isValidType = false;
-                            } else if(name.equals("SCHEMANAME") && !type.equals(DataTypeManager.DefaultDataTypes.STRING)){
-                                isValidType = false;
-                            } else if(name.equals("NAME") && !type.equals(DataTypeManager.DefaultDataTypes.STRING)){
-                                isValidType = false;
-                            } else if(name.equals("TARGETSCHEMANAME") && !type.equals(DataTypeManager.DefaultDataTypes.STRING)){
-                                isValidType = false;
-                            } else if(name.equals("TARGETNAME") && !type.equals(DataTypeManager.DefaultDataTypes.STRING)){
-                                isValidType = false;
-                            } else if(name.equals("VALID") && !type.equals(DataTypeManager.DefaultDataTypes.BOOLEAN)){
-                                isValidType = false;
-                            } else if(name.equals("LOADSTATE") && !type.equals(DataTypeManager.DefaultDataTypes.STRING)){
-                                isValidType = false;
-                            } else if(name.equals("CARDINALITY") && !type.equals(DataTypeManager.DefaultDataTypes.LONG)){
-                                isValidType = false;
-                            } else if(name.equals("UPDATED") && !type.equals("dateTime")){
-                                isValidType = false;
-                            } else if(name.equals("LOADNUMBER") && !type.equals(DataTypeManager.DefaultDataTypes.LONG)){
-                                isValidType = false;
+                            Class<?> expectedType = statusTypeMap.remove(name);
+                            if (expectedType == null) {
+                            	continue; //unknown column
                             }
+                            Class<?> type = statusColumns.get(i).getJavaType();
                             
-                            if(!isValidType) {
-                                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31195, t.getName(), statusTable.getName(), name, type));
-                                break;
+                            if(type != expectedType) {
+                                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31195, t.getName(), statusTable.getFullName(), name, type, expectedType));
                             }
+                        }
+                        
+                        if (!statusTypeMap.isEmpty()) {
+                            metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31196, t.getName(), statusTable.getFullName(), statusTypeMap.keySet()));
                         }
                     }
                 }
