@@ -207,7 +207,7 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
 		
 		admin.deploy("loopy-vdb.xml", new ReaderInputStream(new StringReader(vdb), Charset.forName("UTF-8")));
 		
-		Thread.sleep(2000);
+		assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1, 3));
 		
 		WebClient client = WebClient.create("http://localhost:8080/odata4/loopy.1/MarketData/$metadata");
 		client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
@@ -232,7 +232,7 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
         
         admin.deploy("loopy-vdb.xml", new ReaderInputStream(new StringReader(vdb), Charset.forName("UTF-8")));
         
-        Thread.sleep(2000);
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1, 3));
         
         WebClient client = WebClient.create("http://localhost:8080/odata4/loopy.1/MarketData/$metadata");
         Response response = client.invoke("OPTIONS", null);

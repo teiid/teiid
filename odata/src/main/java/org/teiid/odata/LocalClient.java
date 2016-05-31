@@ -62,6 +62,7 @@ import org.odata4j.producer.InlineCount;
 import org.odata4j.producer.QueryInfo;
 import org.odata4j.producer.Responses;
 import org.teiid.adminapi.Model;
+import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.TeiidRuntimeException;
@@ -84,6 +85,7 @@ import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.net.TeiidURL;
 import org.teiid.odbc.ODBCServerRemoteImpl;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
@@ -158,6 +160,9 @@ public class LocalClient implements Client {
                 if (vdb == null) {
                     throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16001, this.vdbName, this.vdbVersion));
                 }
+                if (vdb.getStatus() != Status.ACTIVE) {
+        			throw new ServerErrorException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31099, vdb, vdb.getStatus()));
+        		}
                 this.vdb = vdb;
             } catch (SQLException e) {
                 throw new ServerErrorException(e.getMessage(),e);
