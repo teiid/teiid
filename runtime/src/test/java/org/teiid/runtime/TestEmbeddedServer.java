@@ -1197,7 +1197,7 @@ public class TestEmbeddedServer {
                 c.setUpdatable(true);
                 c = metadataFactory.addColumn("LoadState", TypeFacility.RUNTIME_NAMES.STRING, t);
                 c.setUpdatable(true);
-                c = metadataFactory.addColumn("Cardinality", TypeFacility.RUNTIME_NAMES.LONG, t);
+                c = metadataFactory.addColumn("Cardinality", TypeFacility.RUNTIME_NAMES.INTEGER, t);
                 c.setUpdatable(true);
                 c = metadataFactory.addColumn("Updated", TypeFacility.RUNTIME_NAMES.TIMESTAMP, t);
                 c.setUpdatable(true);
@@ -1317,7 +1317,6 @@ public class TestEmbeddedServer {
                 "\"teiid_rel:MATVIEW_STATUS_TABLE\" 'my_schema.status', \n" + 
                 "\"teiid_rel:MATVIEW_SHARE_SCOPE\" 'NONE',\n" + 
                 "\"teiid_rel:MATVIEW_ONERROR_ACTION\" 'THROW_EXCEPTION',\n" + 
-                "\"teiid_rel:MATVIEW_LOAD_SCRIPT\" 'execute accounts.native(''insert into SampleTable_mat select * from SAMPLEMATVIEW option nocache SAMPLEMATVIEW'')', \n" +
                 "\"teiid_rel:MATVIEW_TTL\" 100000)" +
                 "as select * from \"my_table\";"
                 + " create view mat_table as select 'I conflict';");
