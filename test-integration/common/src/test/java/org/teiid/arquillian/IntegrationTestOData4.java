@@ -189,4 +189,29 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
         admin.undeploy("loopy-vdb.xml");
     }
     
+	@Test
+	public void testOdataMetadataError() throws Exception {
+		String vdb = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" + 
+				"<vdb name=\"Loopy\" version=\"1\">\n" + 
+				"    <model name=\"MarketData\">\n" + 
+				"        <source name=\"text-connector2\" translator-name=\"loopback\" />\n" + 
+				"         <metadata type=\"DDL\"><![CDATA[\n" + 
+				"                CREATE FOREIGN TABLE G1 (e1 string, e2 integer PRIMARY KEY);\n" + 
+				"                CREATE FOREIGN TABLE G1 (e1 string, e2 integer PRIMARY KEY) OPTIONS (UPDATABLE 'true');\n" + 
+				"        ]]> </metadata>\n" + 
+				"    </model>\n" + 
+				"</vdb>";
+		
+		admin.deploy("loopy-vdb.xml", new ReaderInputStream(new StringReader(vdb), Charset.forName("UTF-8")));
+		
+		Thread.sleep(2000);
+		
+		WebClient client = WebClient.create("http://localhost:8080/odata4/loopy.1/MarketData/$metadata");
+		client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
+		Response response = client.invoke("GET", null);
+		
+		int statusCode = response.getStatus();
+		assertEquals(404, statusCode);
+	}
+    
 }

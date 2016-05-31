@@ -26,6 +26,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
@@ -59,7 +60,7 @@ public interface Client {
     
     String getProperty(String name);
     
-    Connection open() throws SQLException;
+    Connection open() throws SQLException, TeiidProcessingException;
     
     void close() throws SQLException;
 }
