@@ -1197,7 +1197,7 @@ public class TestEmbeddedServer {
                 c.setUpdatable(true);
                 c = metadataFactory.addColumn("LoadState", TypeFacility.RUNTIME_NAMES.STRING, t);
                 c.setUpdatable(true);
-                c = metadataFactory.addColumn("Cardinality", TypeFacility.RUNTIME_NAMES.INTEGER, t);
+                c = metadataFactory.addColumn("Cardinality", TypeFacility.RUNTIME_NAMES.LONG, t);
                 c.setUpdatable(true);
                 c = metadataFactory.addColumn("Updated", TypeFacility.RUNTIME_NAMES.TIMESTAMP, t);
                 c.setUpdatable(true);

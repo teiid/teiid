@@ -1302,8 +1302,13 @@ public class RelationalPlanner {
             if (metadata.getFunctionBasedExpressions(group.getMetadataID()) != null) {
             	hints.hasFunctionBasedColumns = true;
             }
+            boolean planningStackEntry = true;
             Command nestedCommand = ufc.getExpandedCommand();
-            if (nestedCommand == null && !group.isProcedure()) {
+            if (nestedCommand != null) {
+            	//only proc relational counts toward the planning stack
+            	//other paths are inlining, so there isn't a proper virtual layer
+            	planningStackEntry = group.isProcedure();
+            } else if (!group.isProcedure()) {
             	Object id = getTrackableGroup(group, metadata);
             	if (id != null) {
             		context.accessedPlanningObject(id);
@@ -1326,7 +1331,7 @@ public class RelationalPlanner {
             	if (nestedCommand.getSourceHint() != null) {
             		this.sourceHint = SourceHint.combine(previous, nestedCommand.getSourceHint());
             	}
-            	addNestedCommand(node, group, nestedCommand, nestedCommand, true, true);
+            	addNestedCommand(node, group, nestedCommand, nestedCommand, true, planningStackEntry);
             	this.sourceHint = previous;
             } else if (this.sourceHint != null) {
             	node.setProperty(Info.SOURCE_HINT, this.sourceHint);
@@ -1594,8 +1599,7 @@ public class RelationalPlanner {
 			Command nestedCommand, boolean isUpdateProcedure,
 			Set<PlanningStackEntry> entries) throws TeiidComponentException,
 			QueryMetadataException, QueryPlannerException {
-		PlanningStackEntry entry;
-		entry = new PlanningStackEntry(nestedCommand, group);
+		PlanningStackEntry entry = new PlanningStackEntry(nestedCommand, group);
 		if (!entries.add(entry)) {
 			if (isUpdateProcedure && !metadata.isVirtualGroup(group.getMetadataID())) {
 				//must be a compensating update/delete

@@ -109,11 +109,6 @@ public class SimpleDBSQLVisitor extends SQLStringVisitor {
             buffer.append(Tokens.SPACE);
             append(obj.getOrderBy());
         }
-        if (!useSelectLimit() && obj.getLimit() != null) {
-            buffer.append(Tokens.SPACE);
-            append(obj.getLimit());
-        }
-        
     }
 
     // SORT is only supported when a criteria is available    

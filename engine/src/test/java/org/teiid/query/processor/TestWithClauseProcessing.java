@@ -815,5 +815,21 @@ public class TestWithClauseProcessing {
 	    TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList(1)});
 	}
 	
+	@Test public void testViewPlanning() throws Exception {
+	    CommandContext cc = TestProcessor.createCommandContext();
+	    BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+		bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+		
+		TransformationMetadata metadata = RealMetadataFactory.fromDDL("create view v1 as WITH mycte as (SELECT 1 as col1) SELECT col1 FROM mycte;", "x", "y");
+		
+		String sql = "WITH mycte as (SELECT * FROM y.v1) SELECT * from mycte;";
+	    ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
+	    HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+	    
+	    TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList(1)});
+	}
+	
+	
+	
 }
 
