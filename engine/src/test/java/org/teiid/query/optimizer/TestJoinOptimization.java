@@ -24,6 +24,7 @@ package org.teiid.query.optimizer;
 
 import static org.junit.Assert.*;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -37,6 +38,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.KeyRecord.Type;
 import org.teiid.metadata.Table;
+import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
@@ -1116,4 +1118,32 @@ public class TestJoinOptimization {
         
         TestProcessor.helpProcess(plan, hdm, new List<?>[] {});
     }
+
+	@Test public void testDistinctDetectionWithUnionAll() throws Exception {
+		String sql = "select avg(t1.a) from (select 3 as a, 3 as b union all "
+				+ "select 1 as a, 1 as b union all select 3 as a, 3 as b) as t1 "
+				+ "join (select 1 as a, 1 as b union all select 1 as a, 1 as b union all "
+				+ "select 2 as a, 2 as b union all select 2 as a, 2 as b union all "
+				+ "select 3 as a, 3 as b union all select 3 as a, 3 as b) as t2 on t1.a=t2.a";
+		
+		TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+		HardcodedDataManager hdm = new HardcodedDataManager();
+		ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata);
+		
+		TestProcessor.helpProcess(plan, TestProcessor.createCommandContext(), hdm, new List<?>[] { Arrays.asList(FunctionMethods.divide(BigDecimal.valueOf(14), BigDecimal.valueOf(6))) });
+	}
+	
+	@Test public void testDistinctDetectionWithUnion() throws Exception {
+		String sql = "select avg(t1.a) from (select 3 as a, 3 as b union "
+				+ "select 1 as a, 1 as b union select 3 as a, 3 as b) as t1 "
+				+ "join (select 1 as a, 1 as b union all select 1 as a, 1 as b union all "
+				+ "select 2 as a, 2 as b union all select 2 as a, 2 as b union all "
+				+ "select 3 as a, 3 as b union all select 3 as a, 3 as b) as t2 on t1.a=t2.a";
+		
+		TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+		HardcodedDataManager hdm = new HardcodedDataManager();
+		ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata);
+		
+		TestProcessor.helpProcess(plan, TestProcessor.createCommandContext(), hdm, new List<?>[] { Arrays.asList(BigDecimal.valueOf(2)) });
+	}
 }
