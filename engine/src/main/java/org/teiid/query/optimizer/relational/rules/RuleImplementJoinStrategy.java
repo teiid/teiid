@@ -241,7 +241,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
         if (sourceNode.getFirstChild() != null && sourceNode.getType() == NodeConstants.Types.SOURCE && outputSymbols.size() == expressions.size() && outputSymbols.containsAll(expressions)) {
         	PlanNode setOp = NodeEditor.findNodePreOrder(sourceNode.getFirstChild(), NodeConstants.Types.SET_OP, NodeConstants.Types.SOURCE);
         	if (setOp != null) {
-        		if (setOp.hasBooleanProperty(NodeConstants.Info.USE_ALL)) {
+        		if (!setOp.hasBooleanProperty(NodeConstants.Info.USE_ALL)) {
         			distinct = true;
         		}
         	} else if (NodeEditor.findNodePreOrder(sourceNode.getFirstChild(), NodeConstants.Types.DUP_REMOVE, NodeConstants.Types.PROJECT) != null) {
