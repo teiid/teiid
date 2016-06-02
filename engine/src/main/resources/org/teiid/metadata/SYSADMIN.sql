@@ -240,24 +240,10 @@ BEGIN
     	
     	IF (VARIABLES.beforeLoadScript IS NOT null)
     	BEGIN
-    	   VARIABLES.index = 1;
-    	   declare string[] strings = tokenize(VARIABLES.beforeLoadScript, ';');
-    	   VARIABLES.lineCount = array_length(strings);
-    	    WHILE (index <= lineCount)
-    	    BEGIN 
-        	   EXECUTE IMMEDIATE array_get(strings, index);
-        	   index = index +1;
-        	END
+            EXECUTE IMMEDIATE VARIABLES.beforeLoadScript;
         END
 
-        VARIABLES.index = 1;
-        declare string[] strings = tokenize(VARIABLES.loadScript, ';');
-        VARIABLES.lineCount = array_length(strings);
-        WHILE (index <= lineCount)
-        BEGIN 
-           EXECUTE IMMEDIATE array_get(strings, index);
-           index = index +1;
-        END        
+        EXECUTE IMMEDIATE VARIABLES.loadScript;
         
         IF (VARIABLES.implicitLoadScript)
         BEGIN
@@ -271,14 +257,7 @@ BEGIN
     	
     	IF (VARIABLES.afterLoadScript IS NOT null)
     	BEGIN
-            VARIABLES.index = 1;
-            strings = tokenize(VARIABLES.afterLoadScript, ';');
-            VARIABLES.lineCount = array_length(strings);
-            WHILE (index <= lineCount)
-            BEGIN 
-               EXECUTE IMMEDIATE array_get(strings, index);
-               index = index +1;
-            END        
+	    	EXECUTE IMMEDIATE VARIABLES.afterLoadScript;
         END
         
         EXECUTE IMMEDIATE updateStmt || ' AND loadNumber = DVARS.loadNumber' USING  loadNumber = VARIABLES.loadNumber, vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = loadMatView.viewName, updated = now(), LoadState = 'LOADED', valid = true, cardinality = VARIABLES.rowsUpdated;        			

@@ -317,9 +317,11 @@ public class TestMetadataValidator {
 	
 	@Test
 	public void testExternalMaterializationValidate() throws Exception {
-		// note here the unique here does not matter for non-existent reference columns, only primary key counted.
-		String ddl = "CREATE FOREIGN TABLE G1(e1 integer, e2 varchar);";
-		String ddl2 = "CREATE VIEW G2 OPTIONS (MATERIALIZED 'true', MATERIALIZED_TABLE 'pm1.G1') AS SELECT * FROM pm1.G1";		
+		String ddl = "CREATE FOREIGN TABLE G1(e1 integer, e2 varchar);"
+				+ "create foreign table status (VDBNAME STRING, VDBVERSION STRING, "
+				+ " SCHEMANAME STRING, NAME STRING, TARGETSCHEMANAME STRING, TARGETNAME STRING, "
+				+ " VALID BOOLEAN, LOADSTATE STRING, CARDINALITY LONG, UPDATED TIMESTAMP, LOADNUMBER LONG)";
+		String ddl2 = "CREATE VIEW G2 OPTIONS (MATERIALIZED 'true', MATERIALIZED_TABLE 'pm1.G1', \"teiid_rel:MATVIEW_STATUS_TABLE\" 'pm1.status', \"teiid_rel:MATVIEW_LOAD_SCRIPT\" 'begin end') AS SELECT * FROM pm1.G1";		
 		
 		buildModel("pm1", true, this.vdb, this.store, ddl);
 		buildModel("vm1", false, this.vdb, this.store, ddl2);
