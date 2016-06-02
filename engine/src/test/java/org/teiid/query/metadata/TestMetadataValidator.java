@@ -364,6 +364,22 @@ public class TestMetadataValidator {
 	}
 	
 	@Test
+    public void testExternalMaterializationValidateLoadScripts() throws Exception {
+	    String ddl = "CREATE FOREIGN TABLE G1(e1 integer, e2 varchar); CREATE FOREIGN TABLE status(e1 integer, e2 varchar);";
+        String ddl2 = "CREATE VIEW G2 OPTIONS (MATERIALIZED 'true', MATERIALIZED_TABLE 'pm1.G1', \"teiid_rel:MATVIEW_STATUS_TABLE\" 'status' , \"teiid_rel:MATVIEW_BEFORE_LOAD_SCRIPT\" '----') AS SELECT * FROM pm1.G1";     
+        
+        
+        buildModel("pm1", true, this.vdb, this.store, ddl);
+        buildModel("vm1", false, this.vdb, this.store, ddl2);
+        
+        buildTransformationMetadata();
+        
+        ValidatorReport report = new ValidatorReport();
+        report = new MetadataValidator().validate(this.vdb, this.store);
+        assertTrue(printError(report), report.hasItems());
+	}
+	
+	@Test
 	public void testSkipDocumentModel() throws Exception {
 		ModelMetaData model = new ModelMetaData();
 		model.setName("xmlstuff"); 	
