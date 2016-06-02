@@ -30,6 +30,7 @@ import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.types.DataTypeManager;
@@ -62,6 +63,8 @@ import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
+import org.teiid.query.validator.AbstractValidationVisitor;
+import org.teiid.query.validator.ValidationVisitor;
 import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorFailure;
 import org.teiid.query.validator.ValidatorReport;
@@ -346,11 +349,42 @@ public class MetadataValidator {
                         if (!statusTypeMap.isEmpty()) {
                             metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31196, t.getName(), statusTable.getFullName(), statusTypeMap.keySet()));
                         }
+                        
+                        // validate the load scripts
+                        loadScriptsValidation(vdb, report, metadataValidator, model, t, t.getProperty(ON_VDB_START_SCRIPT, false), "ON_VDB_START_SCRIPT");//$NON-NLS-1$
+                        loadScriptsValidation(vdb, report, metadataValidator, model, t, t.getProperty(ON_VDB_DROP_SCRIPT, false), "ON_VDB_DROP_SCRIPT");//$NON-NLS-1$
+                        loadScriptsValidation(vdb, report, metadataValidator, model, t, t.getProperty(MATVIEW_BEFORE_LOAD_SCRIPT, false), "MATVIEW_BEFORE_LOAD_SCRIPT");//$NON-NLS-1$
+                        loadScriptsValidation(vdb, report, metadataValidator, model, t, t.getProperty(MATVIEW_LOAD_SCRIPT, false), "MATVIEW_LOAD_SCRIPT");//$NON-NLS-1$
+                        loadScriptsValidation(vdb, report, metadataValidator, model, t, t.getProperty(MATVIEW_AFTER_LOAD_SCRIPT, false), "MATVIEW_AFTER_LOAD_SCRIPT");//$NON-NLS-1$
                     }
                 }
             }
         }
         
+        private void loadScriptsValidation(VDBMetaData vdb, ValidatorReport report, MetadataValidator metadataValidator, ModelMetaData model, Table matView, String script, String option) {
+            
+            QueryMetadataInterface metadata = vdb.getAttachment(QueryMetadataInterface.class);
+            QueryParser queryParser = QueryParser.getQueryParser();
+            if(script != null) {
+                try {
+                    for(String commandStr : script.split(";")){ //$NON-NLS-1$
+                        Command command = queryParser.parseCommand(commandStr);
+                        QueryResolver.resolveCommand(command, metadata);        
+                        AbstractValidationVisitor visitor = new ValidationVisitor();
+                        ValidatorReport subReport = Validator.validate(command, metadata, visitor);
+                        if (subReport.hasItems()){
+                            ValidatorFailure firstFailure = report.getItems().iterator().next();
+                            throw new QueryValidatorException(firstFailure.getMessage());
+                        }
+                        
+                    }
+                } catch (QueryParserException | QueryResolverException | TeiidComponentException | QueryValidatorException e) {
+                    metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31198, matView.getName(), option, script, e));
+                } 
+            }
+            
+        }
+
         private void verifyTableColumns(ModelMetaData model, ValidatorReport report, MetadataValidator metadataValidator, Table matTable , Table table) {
             
             List<Column> matViewColumns = matTable.getColumns();
