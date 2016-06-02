@@ -30,32 +30,6 @@
             <groupId>net.sf.retrotranslator</groupId>
             <artifactId>retrotranslator-transformer</artifactId>
         </dependency>
-    	<dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency> 
-       
-		<dependency>
-		    <groupId>org.jboss.narayana.jta</groupId>
-		    <artifactId>narayana-jta</artifactId>
-		</dependency> 
-		<dependency>
-		    <groupId>org.jboss.ironjacamar</groupId>
-		    <artifactId>ironjacamar-jdbc</artifactId>
-		</dependency>
-		<dependency>
-		    <groupId>org.jboss.ironjacamar</groupId>
-		    <artifactId>ironjacamar-core-api</artifactId>
-		</dependency>
-		<dependency>
-		    <groupId>org.jboss.ironjacamar</groupId>
-		    <artifactId>ironjacamar-core-impl</artifactId>
-		</dependency>
-
     </dependencies>   
       
     <build>
