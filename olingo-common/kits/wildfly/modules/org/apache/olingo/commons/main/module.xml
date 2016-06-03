@@ -14,12 +14,8 @@
         <module name="javax.servlet.api"/>
         <module name="javax.xml.stream.api"/>
         <module name="org.apache.httpcomponents"/>
-        <module name="com.fasterxml.jackson.core"/>
         <module name="org.slf4j"/>
-        <module name="org.codehaus.woodstox"/>
         <module name="org.apache.commons.codec"/>
-        <module name="org.apache.commons.lang" slot="3.3.2"/>
-        <module name="org.antlr" slot="4.5"/>
     </dependencies>
 
 </module>
