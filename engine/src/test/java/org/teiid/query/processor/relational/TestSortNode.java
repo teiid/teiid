@@ -297,6 +297,22 @@ public class TestSortNode {
     	assertFalse(su.isDistinct());
     }
     
+    @Test public void testOnePass() throws Exception {
+    	ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
+        es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        ElementSymbol es2 = new ElementSymbol("e2"); //$NON-NLS-1$
+        es2.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
+        TupleBuffer tsid = bm.createTupleBuffer(Arrays.asList(es1, es2), "test", TupleSourceType.PROCESSOR); //$NON-NLS-1$
+        tsid.addTuple(Arrays.asList(1, 1));
+        tsid.addTuple(Arrays.asList(1, 2));
+        tsid.close();
+    	SortUtility su = new SortUtility(tsid.createIndexedTupleSource(), Arrays.asList(es1), Arrays.asList(Boolean.TRUE), Mode.SORT, bm, "test", tsid.getSchema()); //$NON-NLS-1$
+    	List<TupleBuffer> buffers = su.onePassSort(true);
+    	assertEquals(1, buffers.size());
+    	assertTrue(!buffers.get(0).isForwardOnly());
+    }
+    
     @Test public void testSortUsingWorkingBuffer() throws TeiidException { 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
