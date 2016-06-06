@@ -1312,4 +1312,17 @@ public class TestJoinOptimization {
 		
 		TestProcessor.helpProcess(plan, TestProcessor.createCommandContext(), hdm, new List<?>[] { Arrays.asList(BigDecimal.valueOf(2)) });
 	}
+	
+	@Test public void testEnhancedJoinWithLeftDuplicates() throws Exception {
+		String sql = "select * from (select 3 as a, 3 as b union all select 1 as a, 1 as b union all select 3 as a, 3 as b) as t1 join test_a t2 on t1.a=t2.a limit 10";
+		
+		TransformationMetadata metadata = RealMetadataFactory.fromDDL("CREATE foreign TABLE test_a (  a integer,  b integer );", "x", "y");
+		HardcodedDataManager hdm = new HardcodedDataManager();
+		hdm.addData("SELECT g_0.a AS c_0, g_0.b AS c_1 FROM y.test_a AS g_0 WHERE g_0.a IN (1, 3) ORDER BY c_0", Arrays.asList(1, 1), Arrays.asList(1, 2), Arrays.asList(3, 2), Arrays.asList(3, 10));
+		ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata, TestOptimizer.getGenericFinder());
+		
+		TestProcessor.helpProcess(plan, TestProcessor.createCommandContext(), hdm, new List<?>[] { Arrays.asList(1, 1, 1, 1), Arrays.asList(1, 2, 1, 1), 
+			Arrays.asList(3, 2, 3, 3), Arrays.asList(3, 10, 3, 3), 
+			Arrays.asList(3, 2, 3, 3), Arrays.asList(3, 10, 3, 3) });
+	}
 }
