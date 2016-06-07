@@ -22,6 +22,7 @@
 
 package org.teiid.query.processor;
 
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -32,9 +33,11 @@ import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.util.VariableContext;
 import org.teiid.query.util.CommandContext;
+import org.teiid.translator.TranslatorBatchException;
 
 
 
@@ -68,7 +71,7 @@ public class BatchedUpdatePlan extends ProcessorPlan {
      * @param childPlans the child update plans for this batch
      * @param commandsInBatch The total number of commands in this batch. This does not always equal the number of plans if some
      * commands have been batched together.
-     * @param singleResult 
+     * @param singleResult indicates only a single update count is expected - non-single result plans are required to be top level
      * @since 4.2
      */
     public BatchedUpdatePlan(List<? extends ProcessorPlan> childPlans, int commandsInBatch, List<VariableContext> contexts, boolean singleResult) {
@@ -125,9 +128,30 @@ public class BatchedUpdatePlan extends ProcessorPlan {
      * @since 4.2
      */
     public void open() throws TeiidComponentException, TeiidProcessingException {
-        // It's ok to open() the first plan, as it is not dependent on any prior commands.
-        // See note for defect 16166 in the nextBatch() method.
-       openPlan();
+    	try {
+	        // It's ok to open() the first plan, as it is not dependent on any prior commands.
+	        // See note for defect 16166 in the nextBatch() method.
+	    	openPlan();
+		} catch (BlockedException e){
+			//should not happen
+			throw e;
+		} catch (TeiidComponentException | TeiidProcessingException e) {
+			if (singleResult) {
+				throw e;
+			}
+    		Throwable cause = e;
+    		if (e.getCause() instanceof TranslatorBatchException) {
+    			TranslatorBatchException tbe = (TranslatorBatchException)e.getCause();
+    			for (int i = 0; i < tbe.getUpdateCounts().length; i++) {
+    				updateCounts[commandIndex++] = Arrays.asList(updateCounts[i]);
+    			}
+    			cause = e.getCause();
+    		} else {
+    			updateCounts[commandIndex++] = Arrays.asList(Statement.EXECUTE_FAILED);
+    		}
+    		updateCounts = Arrays.copyOf(updateCounts, commandIndex);
+    		getContext().setBatchUpdateException(cause);
+		}
     }
 
     /** 
@@ -135,33 +159,68 @@ public class BatchedUpdatePlan extends ProcessorPlan {
      * @since 4.2
      */
     public TupleBatch nextBatch() throws BlockedException, TeiidComponentException, TeiidProcessingException {
-        for (;planIndex < updatePlans.length; planIndex++) {
-            if (!planOpened[planIndex]) { // Open the plan only once
-                /* Defect 16166
-                 * Some commands in a batch may depend on updates by previous commands in the same batch. A call
-                 * to open() usually submits an atomic command, so calling open() on all the child plans at the same time
-                 * will mean that the datasource may not be in the state expected by a later command within the batch. So,
-                 * for a batch of commands, we only open() a later plan when we are finished with the previous plan to
-                 * guarantee that the commands in the previous plan are completed before the commands in any subsequent
-                 * plans are executed.
-                 */
-            	openPlan();
-            }
-            // Execute nextBatch() on each plan in sequence
-            List<List<?>> currentBatch = updatePlans[planIndex].nextBatch().getTuples(); // Can throw BlockedException
-            for (int i = 0; i < currentBatch.size(); i++, commandIndex++) {
-                updateCounts[commandIndex] = currentBatch.get(i);
-            }
-            
-            // since we are done with the plan explicitly close it.
-            updatePlans[planIndex].close();
+        for (;planIndex < updatePlans.length && (getContext() == null || getContext().getBatchUpdateException() == null);) {
+        	try {
+	            if (!planOpened[planIndex]) { // Open the plan only once
+	                /* Defect 16166
+	                 * Some commands in a batch may depend on updates by previous commands in the same batch. A call
+	                 * to open() usually submits an atomic command, so calling open() on all the child plans at the same time
+	                 * will mean that the datasource may not be in the state expected by a later command within the batch. So,
+	                 * for a batch of commands, we only open() a later plan when we are finished with the previous plan to
+	                 * guarantee that the commands in the previous plan are completed before the commands in any subsequent
+	                 * plans are executed.
+	                 */
+	            	openPlan();
+	            }
+	            // Execute nextBatch() on each plan in sequence
+	            
+	            TupleBatch nextBatch = null;
+	            do {
+	        		nextBatch = updatePlans[planIndex].nextBatch(); // Can throw BlockedException
+					List<List<?>> currentBatch = nextBatch.getTuples(); 
+		            for (int i = 0; i < currentBatch.size(); i++, commandIndex++) {
+		                updateCounts[commandIndex] = currentBatch.get(i);
+		            }
+	            } while (!nextBatch.getTerminationFlag());
+	            
+	            // since we are done with the plan explicitly close it.
+	            updatePlans[planIndex++].close();
+        	} catch (BlockedException e){
+        		throw e;
+        	} catch (TeiidComponentException | TeiidProcessingException e) {
+        		if (singleResult) {
+        			throw e;
+        		}
+        		Throwable cause = e;
+        		if (e.getCause() instanceof TranslatorBatchException) {
+        			TranslatorBatchException tbe = (TranslatorBatchException)e.getCause();
+        			for (int i = 0; i < tbe.getUpdateCounts().length; i++) {
+        				updateCounts[commandIndex++] = Arrays.asList(tbe.getUpdateCounts()[i]);
+        			}
+        			if (e.getCause() != null) {
+        				cause = e.getCause();
+        			}
+        		} else {
+        			updateCounts[commandIndex++] = Arrays.asList(Statement.EXECUTE_FAILED);
+        		}
+        		updateCounts = Arrays.copyOf(updateCounts, commandIndex);
+        		getContext().setBatchUpdateException(cause);
+        	}
         }
         if (singleResult) {
-        	int result = 0;
+        	long result = 0;
         	for (int i = 0; i < updateCounts.length; i++) {
-        		result += (Integer)updateCounts[i].get(0);
+        		int value = (Integer)updateCounts[i].get(0);
+        		if (value == Statement.EXECUTE_FAILED) {
+        			//this should not happen, but is possible should a translator return
+        			//the batch results rather than throwing an exception
+        			throw new TeiidProcessingException(QueryPlugin.Event.TEIID31199, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31198));
+        		} 
+        		if (value > 0) {
+        			result += value;
+        		}
         	}
-        	TupleBatch batch = new TupleBatch(1, new List<?>[] {Arrays.asList(result) });
+        	TupleBatch batch = new TupleBatch(1, new List<?>[] {Arrays.asList((int)Math.min(Integer.MAX_VALUE, result)) });
         	batch.setTerminationFlag(true);
         	return batch;
         }
@@ -173,6 +232,9 @@ public class BatchedUpdatePlan extends ProcessorPlan {
 
 	private void openPlan() throws TeiidComponentException,
 			TeiidProcessingException {
+		//we don't worry about controlling transactions around each command
+		//it should be something that doesn't require a wrapping transaction
+		
 		//reset prior to updating the context
 		updatePlans[planIndex].reset();
 		if (this.contexts != null && !this.contexts.isEmpty()) {
@@ -253,6 +315,10 @@ public class BatchedUpdatePlan extends ProcessorPlan {
     
     @Override
     public Boolean requiresTransaction(boolean transactionalReads) {
+    	if (!singleResult) {
+    		//the transaction boundary should be around each command
+    		return false;
+    	}
     	boolean possible = false;
     	for (int i = 0; i < updatePlans.length; i++) {
 			Boolean requires = updatePlans[0].requiresTransaction(transactionalReads);

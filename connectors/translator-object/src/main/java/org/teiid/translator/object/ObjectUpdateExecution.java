@@ -38,17 +38,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
-import org.teiid.language.BatchedUpdates;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Command;
-import org.teiid.language.Delete;
-import org.teiid.language.Expression;
-import org.teiid.language.ExpressionValueSource;
-import org.teiid.language.Insert;
-import org.teiid.language.Literal;
-import org.teiid.language.NamedTable;
-import org.teiid.language.SetClause;
-import org.teiid.language.Update;
+import org.teiid.language.*;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
@@ -100,19 +90,8 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 
 		int index = 0;
 
-		if (command instanceof BatchedUpdates) {
-			BatchedUpdates updates = (BatchedUpdates)this.command;
-			result = new int[updates.getUpdateCommands().size()];
-			for (Command cmd:updates.getUpdateCommands()) {
-				
-				this.result[index++] = executeUpdate(cmd, classRegistry);
-			}		
-			
-		} else {
-			result = new int[1];
-			this.result[index] = executeUpdate(command, classRegistry);
-		}
-	
+		result = new int[1];
+		this.result[index] = executeUpdate(command, classRegistry);
 	}
 
 	@Override

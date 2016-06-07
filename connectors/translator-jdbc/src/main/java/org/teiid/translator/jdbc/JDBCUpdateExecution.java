@@ -22,6 +22,7 @@
 
 package org.teiid.translator.jdbc;
 
+import java.sql.BatchUpdateException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -44,6 +45,7 @@ import org.teiid.metadata.Column;
 import org.teiid.metadata.KeyRecord;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.TranslatorBatchException;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.UpdateExecution;
@@ -88,12 +90,16 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
     public int[] execute(BatchedUpdates batchedCommand) throws TranslatorException {
         boolean succeeded = false;
 
-        boolean commitType = getAutoCommit(null);
+        boolean commitType = false;
+        if (batchedCommand.isSingleResult()) {
+        	commitType = getAutoCommit(null);
+        }
         Command[] commands = batchedCommand.getUpdateCommands().toArray(new Command[batchedCommand.getUpdateCommands().size()]);
         result = new int[commands.length];
 
         TranslatedCommand tCommand = null;
-        
+        int batchStart = 0;
+        int i = 0;
         try {
             // temporarily turn the auto commit off, and set it back to what it was
             // before at the end of the command execution.
@@ -105,7 +111,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
 
             TranslatedCommand previousCommand = null;
             
-            for (int i = 0; i < commands.length; i++) {
+            for (; i < commands.length; i++) {
             	tCommand = translateCommand(commands[i]);
                 if (tCommand.isPrepared()) {
                     PreparedStatement pstmt = null;
@@ -114,6 +120,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
                     } else {
                         if (!executedCmds.isEmpty()) {
                             executeBatch(i, result, executedCmds);
+                            batchStart = i;
                         }
                         pstmt = getPreparedStatement(tCommand.getSql());
                     }
@@ -122,6 +129,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
                 } else {
                     if (previousCommand != null && previousCommand.isPrepared()) {
                         executeBatch(i, result, executedCmds);
+                        batchStart = i;
                         getStatement();
                     }
                     if (statement == null) {
@@ -136,8 +144,37 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
                 executeBatch(commands.length, result, executedCmds);
             }
             succeeded = true;
+        } catch (TranslatorException e) {
+        	if (batchedCommand.isSingleResult()) {
+        		throw e;
+        	}
+        	int size = i + 1;
+        	//if there is a BatchUpdateException, there are more update counts to accumulate
+        	if (e.getCause() instanceof BatchUpdateException) {
+	        	BatchUpdateException bue = (BatchUpdateException)e.getCause();
+	        	int[] batchResults = bue.getUpdateCounts();
+	        	for (int j = 0; j < batchResults.length; j++) {
+	        		result[batchStart + j] = batchResults[j];
+	            }
+	        	size = batchStart + batchResults.length; 
+        	} else {
+        		//it's not clear who to blame
+        		for (int j = batchStart; j <= i; j++) {
+            		result[j] = Statement.EXECUTE_FAILED;
+	            }
+        	}
+        	//resize the result and throw exception
+        	throw new TranslatorBatchException(e, Arrays.copyOf(result, size));
         } catch (SQLException e) {
-        	 throw new JDBCExecutionException(JDBCPlugin.Event.TEIID11011, e, tCommand);
+        	if (batchedCommand.isSingleResult()) {
+        		throw new JDBCExecutionException(JDBCPlugin.Event.TEIID11011, e, tCommand);
+        	}
+        	//it's not clear who to blame
+    		for (int j = batchStart; j <= i; j++) {
+        		result[j] = Statement.EXECUTE_FAILED;
+            }
+        	//resize the result and throw exception
+        	throw new TranslatorBatchException(e, Arrays.copyOf(result, i + 1));
         } finally {
             if (commitType) {
                 restoreAutoCommit(!succeeded, null);

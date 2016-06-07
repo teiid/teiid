@@ -1,8 +1,6 @@
 package org.teiid.translator.object;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,7 +12,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.teiid.cdk.api.TranslationUtility;
-import org.teiid.language.BatchedUpdates;
 import org.teiid.language.Command;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
@@ -24,6 +21,7 @@ import org.teiid.translator.object.testdata.trades.Trade;
 import org.teiid.translator.object.testdata.trades.TradesCacheSource;
 import org.teiid.translator.object.testdata.trades.VDBUtility;
 
+@SuppressWarnings("nls")
 public class TestObjectUpdateExecution {
 	private static ObjectConnection CONNECTION;
 	private static TranslationUtility translationUtility = VDBUtility.TRANSLATION_UTILITY;
@@ -84,68 +82,6 @@ public class TestObjectUpdateExecution {
 		assertTrue(p.getTradeId() == 99);
 		assertTrue(p.isSettled());
 	
-	}
-	
-	@Test
-	public void testInsertBatch() throws Exception {
-		List<Command> commands = new ArrayList<Command>();
-		
-		Command c = translationUtility
-				.parseCommand("Insert into Trade_Object.Trade (tradeId, TradeName, settled) VALUES (901, 'TestName_901', 'true')");
-		commands.add(c);
-		c = translationUtility
-				.parseCommand("Insert into Trade_Object.Trade (tradeId, TradeName, settled) VALUES (902, 'TestName_902', 'true')");
-		commands.add(c);
-		c = translationUtility
-				.parseCommand("Insert into Trade_Object.Trade (tradeId, TradeName, settled) VALUES (903, 'TestName_903', 'true')");
-		commands.add(c);
-		c = translationUtility
-				.parseCommand("Insert into Trade_Object.Trade (tradeId, TradeName, settled) VALUES (904, 'TestName_904', 'true')");
-		commands.add(c);
-		
-		
-		BatchedUpdates bu = new BatchedUpdates(commands);
-		
-		// no search required by the UpdateExecution logic
-		@SuppressWarnings("unchecked")
-		ObjectUpdateExecution ie = createExecution(bu, Collections.EMPTY_LIST);
-
-		ie.execute();
-		
-		int[] results = ie.getUpdateCounts();
-		
-		assertTrue(results[0] == 1);
-		assertTrue(results[1] == 1);
-		assertTrue(results[1] == 1);
-		assertTrue(results[1] == 1);
-
-		Trade p = (Trade) CONNECTION.get((new Long(901).longValue()));
-
-		assertNotNull(p);
-		assertTrue(p.getName().equals("TestName_901"));
-		assertTrue(p.getTradeId() == 901);
-		assertTrue(p.isSettled());
-		
-		p = (Trade) CONNECTION.get((new Long(902).longValue()));
-
-		assertNotNull(p);
-		assertTrue(p.getName().equals("TestName_902"));
-		assertTrue(p.getTradeId() == 902);
-		assertTrue(p.isSettled());
-		
-		p = (Trade) CONNECTION.get((new Long(903).longValue()));
-
-		assertNotNull(p);
-		assertTrue(p.getName().equals("TestName_903"));
-		assertTrue(p.getTradeId() == 903);
-		assertTrue(p.isSettled());
-		
-		p = (Trade) CONNECTION.get((new Long(904).longValue()));
-
-		assertNotNull(p);
-		assertTrue(p.getName().equals("TestName_904"));
-		assertTrue(p.getTradeId() == 904);
-		assertTrue(p.isSettled());
 	}
 	
 	@Test

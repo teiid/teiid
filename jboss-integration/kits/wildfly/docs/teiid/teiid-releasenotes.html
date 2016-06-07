@@ -9,7 +9,7 @@
 <P><A HREF="http://www.teiid.org/"><IMG SRC="https://www.jboss.org/dms/teiid/images/teiid-banner.png" NAME="graphics1" ALT="Teiid" ALIGN=BOTTOM WIDTH=800></A>
 
 <H1>Teiid ${project.version} Release Notes</H1>
-<P>Teiid ${project.version} adds performance and integration features. 
+<P>Teiid ${project.version} adds performance, integration features, and WildFly 10 support. 
 
 <H2>Overview</H2>
 <UL>
@@ -25,18 +25,7 @@
 </UL>
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <ul>
-    <li><a href="https://issues.jboss.org/browse/TEIID-3601">TEIID-3601</a> <b>Large row counts</b> internal tables and source queries are no longer limited to max integer rows.  However update counts, count aggregate values, user result sets, etc. are still limited to max integer.
-    <li><a href="https://issues.jboss.org/browse/TEIID-3792">TEIID-3792</a> <b>Array Quantified Comparisons</b> can be used to search array values - for example expression = SOME (array_expression)
-    <li><a href="https://issues.jboss.org/browse/TEIID-3462">TEIID-3462</a> <b>Semantic VDB Versioning</b> can be used in the VDB name and connection string, rather than the simple integer version.  See the Reference for more.
-    <li><a href="https://issues.jboss.org/browse/TEIID-3849">TEIID-3849</a> <b>Cassandra Update Improvements</b> for bulk/batch updates and asynch processing.</li>
-    <li><a href="https://issues.jboss.org/browse/TEIID-3869">TEIID-3869</a> <b>Additional geospatial support</b> for Geoserver integration with Teiid.</li>
-    <li><a href="https://issues.jboss.org/browse/TEIID-2476">TEIID-2476</a> <b>Data role metadata filtering</b> to omit non-accessible objects from system tables.</li>
-    <li><a href="https://issues.jboss.org/browse/TEIID-4076">TEIID-4076</a> <b>Improved autoCommitTxn detect</b> to prevent unnecessary transactions.</li>
-    <li><a href="https://issues.jboss.org/browse/TEIID-4084">TEIID-4084</a> <b>Allowing for with clause inlining</b> to improve performance.</li>
-    <li><a href="https://issues.jboss.org/browse/TEIID-3725">TEIID-3725</a> <b>JDG Cache/DSL Translator</b> added cache swapping feature to support external materialization.</li>
-    <li><a href="https://issues.jboss.org/browse/TEIID-3810">TEIID-3810</a> <b>JDG Cache/DSL Translator</b> upgraded support for JDG 6.6</li>
-    <li><a href="https://issues.jboss.org/browse/TEIID-3520">TEIID-3520</a> <b>Swagger Translator</b> for calling REST services defined by Swagger.</li>
-    <li><a href="https://issues.jboss.org/browse/TEIID-4202">TEIID-4202</a> <b>Lateral join and procedure pushdown</b> support for targeted sources.</li>
+    <li><a href="https://issues.jboss.org/browse/TEIID-4243">TEIID-4243</a> <b>BatchUpdateException</b> support in JDBC to indicate what part of batch succeeds when a failure occurs.
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>

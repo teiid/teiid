@@ -198,6 +198,8 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		private Set<InputStreamFactory> created = Collections.newSetFromMap(new WeakHashMap<InputStreamFactory, Boolean>());
 
 		private LRUCache<AbstractMetadataRecord, Boolean> accessible;
+
+		private Throwable batchUpdateException;
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -1165,6 +1167,14 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 			this.globalState.accessible = new LRUCache<>(1000);
 		}
 		this.globalState.accessible.put(record, result);
+	}
+
+	public Throwable getBatchUpdateException() {
+		return this.globalState.batchUpdateException;
+	}
+	
+	public void setBatchUpdateException(Throwable t) {
+		this.globalState.batchUpdateException = t;
 	}
 	
 }
