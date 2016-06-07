@@ -51,6 +51,7 @@
 		<fileSet>
             <directory>kits/wildfly/docs/teiid</directory>
             <outputDirectory>docs/teiid</outputDirectory>
+            <filtered>true</filtered>
         </fileSet>
 		
         <fileSet>
