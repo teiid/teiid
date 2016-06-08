@@ -21,11 +21,7 @@
  */
 package org.teiid.translator.odata;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.FileReader;
 import java.io.StringReader;
@@ -36,17 +32,7 @@ import java.util.List;
 
 import org.core4j.Enumerable;
 import org.junit.Test;
-import org.odata4j.edm.EdmAssociation;
-import org.odata4j.edm.EdmAssociationEnd;
-import org.odata4j.edm.EdmAssociationSet;
-import org.odata4j.edm.EdmAssociationSetEnd;
-import org.odata4j.edm.EdmDataServices;
-import org.odata4j.edm.EdmEntityContainer;
-import org.odata4j.edm.EdmEntitySet;
-import org.odata4j.edm.EdmEntityType;
-import org.odata4j.edm.EdmNavigationProperty;
-import org.odata4j.edm.EdmProperty;
-import org.odata4j.edm.EdmSchema;
+import org.odata4j.edm.*;
 import org.odata4j.format.xml.EdmxFormatParser;
 import org.odata4j.format.xml.EdmxFormatWriter;
 import org.odata4j.stax2.util.StaxUtil;
@@ -300,6 +286,9 @@ public class TestDataEntitySchemaBuilder {
 		assertTrue(edm.findEdmFunctionImport("nw.TopCustomers")!=null);
 		assertEquals("Collection(nw.NorthwindModel.Customer)", edm.findEdmFunctionImport("nw.TopCustomers").getReturnType().getFullyQualifiedTypeName());
 		assertTrue(edm.findEdmEntityType("nw.NorthwindModel.Category")!=null);
+		
+		EdmComplexType complexType = edm.findEdmComplexType("nw.NorthwindModel.Address");
+		assertEquals("Address", complexType.getProperties().first().getName());
 		
 		edm = new TeiidEdmMetadata("nw", edm);
 		assertTrue(edm.findEdmEntitySet("Categories")!=null);
