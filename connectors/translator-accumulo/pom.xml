@@ -58,7 +58,6 @@
         <dependency>
             <groupId>commons-configuration</groupId>
             <artifactId>commons-configuration</artifactId>
-            <scope>test</scope>
         </dependency>
     </dependencies>
     
