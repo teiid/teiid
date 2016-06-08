@@ -104,12 +104,6 @@ public class AccumuloQueryVisitor extends HierarchyVisitor {
         	IteratorSetting it = new IteratorSetting(1, EvaluatorIterator.class, options);
         	this.scanIterators.add(it);
         }
-        
-        if (this.selectColumns.size() < this.scanTable.getColumns().size()) {
-            HashMap<String, String> options = buildLimitProjectionOptions(this.selectColumns);
-        	IteratorSetting it = new IteratorSetting(iteratorPriority++, LimitProjectionIterator.class, options);
-        	this.scanIterators.add(it);
-        }
     }
 
     @Override
@@ -316,20 +310,5 @@ public class AccumuloQueryVisitor extends HierarchyVisitor {
         String ddl = DDLStringVisitor.getDDLString(table.getParent(), null, table.getName());
         options.put(EvaluatorIterator.DDL, ddl);
 		return options;
-	}
-	
-    private static HashMap<String, String> buildLimitProjectionOptions(List<Column> columns) {
-        HashMap<String, String> options = new HashMap<String, String>();
-        options.put(LimitProjectionIterator.COLUMNS_COUNT, String.valueOf(columns.size()));
-        for (int i = 0; i < columns.size(); i++) {
-            Column column = columns.get(i);
-            if (column.getProperty(AccumuloMetadataProcessor.CF, false) != null) {
-                options.put(LimitProjectionIterator.createColumnName(LimitProjectionIterator.CF, i), column.getProperty(AccumuloMetadataProcessor.CF, false));
-            }
-            if (column.getProperty(AccumuloMetadataProcessor.CQ, false) != null) {
-                options.put(LimitProjectionIterator.createColumnName(LimitProjectionIterator.CQ, i), column.getProperty(AccumuloMetadataProcessor.CQ, false));
-            }
-        }
-        return options;
-    }	
+	}	
 }
