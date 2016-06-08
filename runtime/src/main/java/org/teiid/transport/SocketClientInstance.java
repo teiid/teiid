@@ -76,7 +76,13 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
         if (address instanceof InetSocketAddress) {
         	InetSocketAddress addr = (InetSocketAddress)address;
         	this.workContext.setClientAddress(addr.getAddress().getHostAddress());
-        	this.workContext.setClientHostname(addr.getHostString());
+        	try {
+        		this.workContext.setClientHostname(addr.getHostString());
+        	} catch (IllegalAccessError e) {
+        		//this method exists on 1.6, but is package private
+        		//use the older logic instead
+        		this.workContext.setClientHostname(addr.getHostName());
+        	}
         }
     }
     

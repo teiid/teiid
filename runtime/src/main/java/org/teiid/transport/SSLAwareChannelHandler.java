@@ -46,6 +46,7 @@ import org.teiid.common.buffer.StorageManager;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 import org.teiid.net.socket.ObjectChannel;
 import org.teiid.runtime.RuntimePlugin;
 
@@ -199,6 +200,9 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 		if (listener != null) {
 			listener.exceptionOccurred(e.getCause());
 		} else {
+			Throwable t = e.getCause();
+			int level = SocketClientInstance.getLevel(t);
+			LogManager.log(level, LogConstants.CTX_TRANSPORT, LogManager.isMessageToBeRecorded(LogConstants.CTX_TRANSPORT, MessageLevel.DETAIL)||level<MessageLevel.WARNING?t:null, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40114, t.getMessage()));
 			e.getChannel().close();
 		}
 	}
