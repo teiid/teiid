@@ -554,23 +554,25 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 				}
 			}
 	
-			boolean active = false;
+			boolean isActive = false;
 			if (this.transactionState == TransactionState.ACTIVE) {
-				active = true;
+				isActive = true;
 				this.transactionState = TransactionState.DONE;
 			}
 			
-			if (transactionContext.getTransactionType() == TransactionContext.Scope.REQUEST) {
-				if (active) {
-					LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31200, transactionContext.getTransactionId()));
+			if (transactionContext != null) {
+				if (transactionContext.getTransactionType() == TransactionContext.Scope.REQUEST) {
+					if (!isActive) {
+						LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31200, transactionContext.getTransactionId()));
+					}
+					try {
+		        		this.transactionService.rollback(transactionContext);
+		            } catch (XATransactionException e1) {
+		                LogManager.logWarning(LogConstants.CTX_DQP, e1, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30028));
+		            } 
+				} else if (transactionContext.getTransactionType() != TransactionContext.Scope.NONE) {
+					suspend();
 				}
-				try {
-	        		this.transactionService.rollback(transactionContext);
-	            } catch (XATransactionException e1) {
-	                LogManager.logWarning(LogConstants.CTX_DQP, e1, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30028));
-	            } 
-			} else if (transactionContext.getTransactionType() != TransactionContext.Scope.NONE) {
-				suspend();
 			}
 			
 	        synchronized (this) {
