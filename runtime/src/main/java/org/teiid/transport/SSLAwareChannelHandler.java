@@ -48,6 +48,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 import org.teiid.net.socket.ObjectChannel;
 import org.teiid.runtime.RuntimePlugin;
 
@@ -194,6 +195,8 @@ public class SSLAwareChannelHandler extends ChannelDuplexHandler {
 		if (listener != null) {
 			listener.exceptionOccurred(cause);
 		} else {
+			int level = SocketClientInstance.getLevel(cause);
+			LogManager.log(level, LogConstants.CTX_TRANSPORT, LogManager.isMessageToBeRecorded(LogConstants.CTX_TRANSPORT, MessageLevel.DETAIL)||level<MessageLevel.WARNING?cause:null, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40114, cause.getMessage()));
 			channel.close();
 		}
 	}
