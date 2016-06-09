@@ -109,9 +109,27 @@ public class TestHiveExecutionFactory {
     
     @Test public void testTimeLiterals() throws Exception {
         String input = "SELECT {ts '1999-01-01 11:11:11'}, {d '2000-02-02'}, {t '00:00:00'} FROM BQT1.SMALLA A"; 
-        String output = "SELECT cast('1999-01-01 11:11:11.0' as timestamp), '2000-02-02', cast('1970-01-01 00:00:00.0' as timestamp) FROM SmallA A"; 
+        String output = "SELECT {ts '1999-01-01 11:11:11.0'}, {d '2000-02-02'}, {ts '1970-01-01 00:00:00.0'} FROM SmallA A"; 
         helpTestVisitor(bqt, input, output);
     }
+    
+    @Test public void testTimeLiteralsINClause() throws Exception {
+        String input = "SELECT intkey FROM BQT1.SMALLA A WHERE A.TimestampValue IN ({ts '1999-01-01 11:11:11'},"
+                + "{ts '1999-02-22 22:22:22'})"; 
+        String output = "SELECT A.IntKey FROM SmallA A WHERE A.TimestampValue IN ({ts '1999-01-01 11:11:11.0'},"
+                + " {ts '1999-02-22 22:22:22.0'})"; 
+        helpTestVisitor(bqt, input, output);
+
+        input = "SELECT intkey FROM BQT1.SMALLA A WHERE A.DateValue IN ("
+                + "{d '1999-01-01'}, {d '1999-02-22'})"; 
+        output = "SELECT A.IntKey FROM SmallA A WHERE A.DateValue IN ({d '1999-01-01'}, {d '1999-02-22'})"; 
+        helpTestVisitor(bqt, input, output);
+        
+        input = "SELECT intkey FROM BQT1.SMALLA A WHERE A.DateValue IN ("
+                + "convert('1999-01-01',date), convert('1999-02-22', date))"; 
+        output = "SELECT A.IntKey FROM SmallA A WHERE A.DateValue IN ({d '1999-01-01'}, {d '1999-02-22'})"; 
+        helpTestVisitor(bqt, input, output);        
+    }    
     
     @Test
     public void testEqualityJoinCriteria() throws Exception {
@@ -197,7 +215,7 @@ public class TestHiveExecutionFactory {
                 DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, 
                 DataTypeManager.DefaultDataTypes.FLOAT, DataTypeManager.DefaultDataTypes.BIG_INTEGER, 
                 DataTypeManager.DefaultDataTypes.DOUBLE, DataTypeManager.DefaultDataTypes.BYTE, 
-                DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, 
+                DataTypeManager.DefaultDataTypes.DATE, DataTypeManager.DefaultDataTypes.STRING, 
                 DataTypeManager.DefaultDataTypes.TIMESTAMP, DataTypeManager.DefaultDataTypes.BOOLEAN, 
                 DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.SHORT, 
                 DataTypeManager.DefaultDataTypes.BIG_INTEGER, DataTypeManager.DefaultDataTypes.BIG_INTEGER, 
