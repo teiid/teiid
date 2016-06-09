@@ -210,6 +210,12 @@ public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
     	return '\'' + formatDateValue(timeValue) + '\'';
     }
 
+    @Override
+    public String translateLiteralTimestamp(Timestamp timestampValue) {
+        return "cast('" + formatDateValue(timestampValue) + "' as timestamp)"; //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+
     @Deprecated
     @Override
     protected JDBCMetdataProcessor createMetadataProcessor() {
