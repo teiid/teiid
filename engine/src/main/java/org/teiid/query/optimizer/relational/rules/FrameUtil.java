@@ -241,7 +241,7 @@ public class FrameUtil {
             if(joinCrits != null && !joinCrits.isEmpty()) {
             	Criteria crit = new CompoundCriteria(joinCrits);
             	crit = convertCriteria(crit, symbolMap, metadata, rewrite);
-            	if (crit instanceof CompoundCriteria) {
+            	if (crit instanceof CompoundCriteria && ((CompoundCriteria)crit).getOperator() == CompoundCriteria.AND) {
             		node.setProperty(NodeConstants.Info.JOIN_CRITERIA, ((CompoundCriteria)crit).getCriteria());
             	} else {
             		joinCrits = new ArrayList<Criteria>();
