@@ -29,12 +29,14 @@ import java.math.BigInteger;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.util.TimeZone;
 
 import org.junit.Test;
 import org.teiid.core.CorePlugin;
 import org.teiid.core.types.*;
 import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.core.types.DataTypeManager.DefaultDataTypes;
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.query.unittest.TimestampUtil;
 
 
@@ -228,6 +230,16 @@ public class TestTransforms {
     
     @Test public void testStringToTimestampFails() throws Exception {
     	helpTransformException("2005-12-01 11:88:60", Timestamp.class, "TEIID10060 The string representation '2005-12-01 11:88:60' of a Timestamp value is not valid."); //$NON-NLS-1$ //$NON-NLS-2$ 
+    }
+    
+    @Test public void testStringToTimestampDSTTransition() throws Exception {
+    	//use a DST time zone
+    	TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("America/New_York")); //$NON-NLS-1$
+    	try {
+    		helpTestTransform("2016-03-13 02:00:00", TimestampUtil.createTimestamp(116, 2, 13, 3, 0, 0, 0)); //$NON-NLS-1$
+    	} finally {
+        	TimestampWithTimezone.resetCalendar(null);
+    	}
     }
     
     @Test public void testStringToLongWithWS() throws Exception {
