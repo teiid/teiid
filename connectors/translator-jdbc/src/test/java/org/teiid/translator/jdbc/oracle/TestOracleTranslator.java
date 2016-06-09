@@ -880,7 +880,7 @@ public class TestOracleTranslator {
     
     @Test public void testOffsetWithNoLimit() throws Exception {
         String input = "select intkey, stringkey from bqt1.smalla order by intkey offset 100 rows"; //$NON-NLS-1$
-        String output = "SELECT * FROM (SELECT SmallA.IntKey, SmallA.StringKey FROM SmallA ORDER BY SmallA.IntKey) WHERE ROWNUM > 100"; //$NON-NLS-1$
+        String output = "SELECT * FROM (SELECT VIEW_FOR_LIMIT.*, ROWNUM ROWNUM_ FROM (SELECT SmallA.IntKey, SmallA.StringKey FROM SmallA ORDER BY SmallA.IntKey) VIEW_FOR_LIMIT) WHERE ROWNUM_ > 100"; //$NON-NLS-1$
                
         helpTestVisitor(RealMetadataFactory.exampleBQTCached(),
                 input, 
