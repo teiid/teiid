@@ -303,6 +303,7 @@ public class TestODBCSocketTransport {
 		ExtendedQueryExectutorImpl.simplePortal = "foo";
 		try {
 			assertFalse(stmt.execute("declare \"foo\" cursor for select * from pg_proc;"));
+			stmt.execute("fetch \"foo\"");
 			assertFalse(stmt.execute("move 5 in \"foo\""));
 			stmt.execute("fetch 10 in \"foo\"");
 			ResultSet rs = stmt.getResultSet();
@@ -310,8 +311,17 @@ public class TestODBCSocketTransport {
 			while (rs.next()) {
 				rowCount++;
 			}
-			assertEquals(8, rowCount);
+			assertEquals(7, rowCount);
 			stmt.execute("close \"foo\"");
+			
+			//start a new cursor and check failure
+			assertFalse(stmt.execute("declare \"foo\" cursor for select * from pg_proc;"));
+			try {
+				stmt.execute("fetch 9999999999 in \"foo\"");
+				fail();
+			} catch (SQLException e) {
+				
+			}
 		} finally {
 			ExtendedQueryExectutorImpl.simplePortal = null;
 		}
