@@ -60,6 +60,7 @@ import org.teiid.jdbc.PreparedStatementImpl;
 import org.teiid.jdbc.ResultSetImpl;
 import org.teiid.jdbc.StatementImpl;
 import org.teiid.jdbc.TeiidDriver;
+import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.net.TeiidURL;
@@ -162,10 +163,9 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			"\\s+order by ref.oid, ref.i", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 		
 	private static Pattern cursorSelectPattern = Pattern.compile("DECLARE\\s+\"(\\w+)\"(?:\\s+INSENSITIVE)?(\\s+(NO\\s+)?SCROLL)?\\s+CURSOR\\s+(?:WITH(?:OUT)? HOLD\\s+)?FOR\\s+(.*)", Pattern.CASE_INSENSITIVE|Pattern.DOTALL); //$NON-NLS-1$
-	private static Pattern fetchPattern = Pattern.compile("FETCH (\\d+) IN \"(\\w+)\".*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+	private static Pattern fetchPattern = Pattern.compile("FETCH(?:(?:\\s+FORWARD)?\\s+(\\d+)\\s+(?:IN|FROM))?\\s+\"(\\w+)\"\\s*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	private static Pattern movePattern = Pattern.compile("MOVE (\\d+) IN \"(\\w+)\".*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	private static Pattern closePattern = Pattern.compile("CLOSE \"(\\w+)\"", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-	
 	private static Pattern deallocatePattern = Pattern.compile("DEALLOCATE(?:\\s+PREPARE)?\\s+(.*)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	private static Pattern releasePattern = Pattern.compile("RELEASE (\\w+\\d?_*)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	private static Pattern savepointPattern = Pattern.compile("SAVEPOINT (\\w+\\d?_*)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
@@ -1100,7 +1100,12 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		    				cursorExecute(m.group(1), fixSQL(m.group(4)), results, scroll);
 		    			}
 		    			else if ((m = fetchPattern.matcher(sql)).matches()){
-		    				cursorFetch(m.group(2), Integer.parseInt(m.group(1)), results);
+		    				String rows = m.group(1);
+		    				int rowCount = 1;
+		    				if (rows != null) {
+		    					rowCount = Integer.parseInt(rows);
+		    				}
+		    				cursorFetch(m.group(2), rowCount, results);
 		    			}
 		    			else if ((m = movePattern.matcher(sql)).matches()){
 		    				cursorMove(m.group(2), Integer.parseInt(m.group(1)), results);
@@ -1125,7 +1130,11 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		            	return;
 		            } 
 		        }
-			} catch(IOException e) {
+			} catch (NumberFormatException e) {
+				//create a sqlexception so that the logic doesn't over log this
+				done(TeiidSQLException.create(e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40147, e.getMessage())));
+				return;
+			} catch(Exception e) {
 				done(e);
 				return;
 			}

@@ -150,6 +150,10 @@ public class RuntimePlugin {
         TEIID40140,
         TEIID40141, 
         TEIID40142, 
-        TEIID40143, //data roles required
+        TEIID40143,  //data roles required
+        TEIID40144,
+        TEIID40145, 
+        TEIID40146, 
+        TEIID40147
     }
 }
