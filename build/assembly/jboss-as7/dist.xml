@@ -131,11 +131,6 @@
           <include>teiid-*-adminshell-dist.zip</include>
         </includes>      
     </fileSet>
-
-	<fileSet>
-        <directory>target/kits/jboss-as7/overlay/vdb</directory>
-        <outputDirectory>${vdb.loc}</outputDirectory>         
-    </fileSet>  
     
         
   </fileSets>
