@@ -302,16 +302,29 @@ public class TestODBCSocketTransport {
 		Statement stmt = conn.createStatement();
 		ExtendedQueryExectutorImpl.simplePortal = "foo";
 		try {
-			assertFalse(stmt.execute("declare \"foo\" cursor for select * from pg_proc;"));
+			assertFalse(stmt.execute("declare \"foo\" cursor for select * from pg_proc limit 13;"));
+			
+			//should get a single row
 			stmt.execute("fetch \"foo\"");
-			assertFalse(stmt.execute("move 5 in \"foo\""));
-			stmt.execute("fetch 10 in \"foo\"");
 			ResultSet rs = stmt.getResultSet();
 			int rowCount = 0;
 			while (rs.next()) {
 				rowCount++;
 			}
+			assertEquals(1, rowCount);
+			
+			//move 5
+			assertFalse(stmt.execute("move 5 in \"foo\""));
+			
+			//fetch 10, but only 7 are left
+			stmt.execute("fetch 10 in \"foo\"");
+			rs = stmt.getResultSet();
+			rowCount = 0;
+			while (rs.next()) {
+				rowCount++;
+			}
 			assertEquals(7, rowCount);
+			
 			stmt.execute("close \"foo\"");
 			
 			//start a new cursor and check failure
@@ -327,6 +340,40 @@ public class TestODBCSocketTransport {
 		}
 		
 	}	
+	
+	@Test public void testCursorUnquoted() throws Exception {
+		Statement stmt = conn.createStatement();
+		ExtendedQueryExectutorImpl.simplePortal = "foo";
+		try {
+			assertFalse(stmt.execute("declare foo cursor for select * from pg_proc limit 13;"));
+			
+			//should get a single row
+			stmt.execute("fetch foo");
+			ResultSet rs = stmt.getResultSet();
+			int rowCount = 0;
+			while (rs.next()) {
+				rowCount++;
+			}
+			assertEquals(1, rowCount);
+			
+			//move 5
+			assertFalse(stmt.execute("move 5 in foo"));
+			
+			//fetch 10, but only 7 are left
+			stmt.execute("fetch 10 in \"foo\"");
+			rs = stmt.getResultSet();
+			rowCount = 0;
+			while (rs.next()) {
+				rowCount++;
+			}
+			assertEquals(7, rowCount);
+			
+			stmt.execute("close foo");			
+		} finally {
+			ExtendedQueryExectutorImpl.simplePortal = null;
+		}
+		
+	}
 	
 	@Test public void testScrollCursor() throws Exception {
 		Statement stmt = conn.createStatement();
