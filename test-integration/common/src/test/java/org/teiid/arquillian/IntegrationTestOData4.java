@@ -191,5 +191,28 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
         
         admin.undeploy("loopy-vdb.xml");
     }
-    
+        
+	@Test
+    public void testStaticServlet() throws Exception {
+        WebClient client = WebClient.create("http://localhost:8080/odata4/static/org.apache.olingo.v1.xml");
+        client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
+        Response response = client.invoke("GET", null);
+        
+        int statusCode = response.getStatus();
+        assertEquals(200, statusCode);
+        
+        client = WebClient.create("http://localhost:8080/odata4/static/pom.xml");
+        client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
+        response = client.invoke("GET", null);
+        
+        statusCode = response.getStatus();
+        assertEquals(404, statusCode);        
+
+        client = WebClient.create("http://localhost:8080/odata4/static/META-INF/keycloak.json");
+        client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
+        response = client.invoke("GET", null);
+        
+        statusCode = response.getStatus();
+        assertEquals(404, statusCode);        
+    }
 }
