@@ -28,18 +28,35 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.olingo.ODataPlugin;
 
 @SuppressWarnings("serial")
+/**
+ * static servlet is used for serving static documents, especially annotation documents.
+ */
 public class StaticContentServlet extends HttpServlet {
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         String pathInfo = request.getPathInfo();
         
-        InputStream contents = getClass().getResourceAsStream(pathInfo);
-        writeContent(response, contents);
-        response.flushBuffer();
+        try {
+            if (pathInfo.endsWith(".xml")
+                    && !pathInfo.endsWith("pom.xml")
+                    && !pathInfo.contains("META-INF")
+                    && !pathInfo.contains("WEB-INF")
+                    && !pathInfo.substring(1).contains("/")) {
+                InputStream contents = getClass().getResourceAsStream(pathInfo);
+                writeContent(response, contents);
+                response.flushBuffer();
+            } else {
+                throw new TeiidProcessingException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16055, pathInfo));
+            }
+        } catch (TeiidProcessingException e) {
+            ODataFilter.writeError(request, e, response);
+        }
     }
     
     private void writeContent(HttpServletResponse response, InputStream contents) throws IOException {

@@ -78,7 +78,7 @@
 
     <servlet-mapping>
         <servlet-name>static</servlet-name>
-        <url-pattern>/static/*</url-pattern>
+        <url-pattern>static/*</url-pattern>
     </servlet-mapping>
              
     <security-role>
