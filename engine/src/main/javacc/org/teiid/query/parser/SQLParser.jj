@@ -2168,8 +2168,9 @@ AggregateSymbol textAgg(ParseInfo info) :
 	  delimiter = charVal(info, "DELMITER")
 	]
 	[
-	  <QUOTE>
-	  quote = charVal(info, "QUOTE")
+	  (<QUOTE>
+	  quote = charVal(info, "QUOTE")) |
+	  (<NO> <QUOTE> {quote = (char)0;})
 	]
 	[
 	  <HEADER>

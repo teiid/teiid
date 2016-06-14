@@ -1956,9 +1956,15 @@ public class SQLStringVisitor extends LanguageVisitor {
         }
         if (obj.getQuote() != null) {
             append(SPACE);
-            append(NonReserved.QUOTE);
-            append(SPACE);
-            visitNode(new Constant(obj.getQuote()));
+            if (obj.getQuote().charValue() == TextLine.NO_QUOTE_CHAR) {
+            	append(NO);
+            	append(SPACE);
+            	append(NonReserved.QUOTE);
+            } else {
+	            append(NonReserved.QUOTE);
+	            append(SPACE);
+	            visitNode(new Constant(obj.getQuote()));
+            }
         }
         if (obj.isIncludeHeader()) {
             append(SPACE);
