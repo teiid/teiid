@@ -314,6 +314,7 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
 		supportedFunctions.add(SourceSystemFunctions.DAYOFMONTH); 
 		supportedFunctions.add(SourceSystemFunctions.DAYOFYEAR);
 		supportedFunctions.add(SourceSystemFunctions.DAYOFWEEK);
+		supportedFunctions.add(SourceSystemFunctions.DAYNAME);
 		supportedFunctions.add(SourceSystemFunctions.HOUR); 
 		supportedFunctions.add(SourceSystemFunctions.MINUTE); 
 		supportedFunctions.add(SourceSystemFunctions.MONTH);
