@@ -612,7 +612,10 @@ public class RelationalPlanner {
 			    	for (int i = 0; i < containers.size(); i++) {
 			    		Command c = containers.get(i).getCommand();
 			    		Command clone = cloneContainers.get(i).getCommand();
-			    		c.setCorrelatedReferences(clone.getCorrelatedReferences());
+			    		List<Reference> refs = new ArrayList<Reference>();
+			    		//re-detect the correlated references
+			    		CorrelatedReferenceCollectorVisitor.collectReferences(c, localGroupSymbols, refs, metadata);
+			    		setCorrelatedReferences(containers.get(i), refs);
 			    		c.setProcessorPlan(clone.getProcessorPlan());
 			    	}
 			    }
