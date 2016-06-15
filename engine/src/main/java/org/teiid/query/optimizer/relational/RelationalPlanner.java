@@ -511,9 +511,9 @@ public class RelationalPlanner {
 				QueryCommand qc = (QueryCommand)subquery.getCommand();
 				if (qc.getWith() != null) {
 					qc.getWith().removeAll(with);
-				}
-				if (qc.getWith().isEmpty()) {
-					qc.setWith(null);
+					if (qc.getWith().isEmpty()) {
+						qc.setWith(null);
+					}
 				}
 				pullupWith(with, ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(qc));
 			}

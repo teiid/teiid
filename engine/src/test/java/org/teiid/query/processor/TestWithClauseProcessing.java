@@ -763,6 +763,20 @@ public class TestWithClauseProcessing {
 	    hdm.addData("SELECT g_0.e2 AS c_0 FROM g1 AS g_0 WHERE g_0.e2 = 1 ORDER BY c_0", Arrays.asList(1));
 	    TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList(1)});
 	}
+		
+	@Test public void testSubqueryPushedWithCTE() throws TeiidComponentException, TeiidProcessingException {
+		String sql = "WITH qry_0 as /*+ no_inline */ (SELECT e2 AS a1, e1 as str FROM pm1.g1 AS t) select (select e1 from pm1.g1) as x, a1 from qry_0";
+		
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+	    dataManager.addData("SELECT g_0.e2, g_0.e1 FROM pm1.g1 AS g_0", Arrays.asList(1, "a"));
+		
+	    BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+	    bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+	    bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+	    bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, true);
+	    
+	    TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"WITH qry_0 (a1, str) AS (SELECT g_0.e2, null FROM pm1.g1 AS g_0) SELECT (SELECT g_1.e1 FROM pm1.g1 AS g_1), g_0.a1 FROM qry_0 AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+	}
 	
 }
 
