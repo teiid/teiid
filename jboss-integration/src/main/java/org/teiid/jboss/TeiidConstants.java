@@ -390,7 +390,7 @@ public class TeiidConstants {
         .setXmlName(Element.AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE.getXMLName())
         .setAllowNull(true)
         .setAllowExpression(false)
-        .setDefaultValue(new ModelNode(5000))
+        .setDefaultValue(new ModelNode(10000))
         .build();   
 
     public static SimpleAttributeDefinition AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE.getModelName(), ModelType.INT)
