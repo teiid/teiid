@@ -832,15 +832,28 @@ public class TestWithClauseProcessing {
 	@Test public void testSubqueryPushedWithCTE() throws TeiidComponentException, TeiidProcessingException {
 		String sql = "WITH qry_0 as /*+ no_inline */ (SELECT e2 AS a1, e1 as str FROM pm1.g1 AS t) select (select e1 from pm1.g1) as x, a1 from qry_0";
 		
-		HardcodedDataManager dataManager = new HardcodedDataManager();
-	    dataManager.addData("SELECT g_0.e2, g_0.e1 FROM pm1.g1 AS g_0", Arrays.asList(1, "a"));
-		
 	    BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
 	    bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
 	    bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
 	    bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, true);
 	    
 	    TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"WITH qry_0 (a1, str) AS /*+ no_inline */ (SELECT g_0.e2, null FROM pm1.g1 AS g_0) SELECT (SELECT g_1.e1 FROM pm1.g1 AS g_1), g_0.a1 FROM qry_0 AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+	}
+	
+	@Test public void testEvaluatableSubqueryPushedWithCTE() throws TeiidComponentException, TeiidProcessingException {
+		String sql = "WITH qry_0 as /*+ no_inline */ (SELECT e2 AS a1, e1 as str FROM pm1.g1 AS t), qry_1 as /*+ no_inline */ (SELECT 'b' AS a1) select (select a1 || 'a' from qry_1) as x, a1 from qry_0";
+		
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+	    dataManager.addData("WITH qry_0 (a1, str) AS /*+ no_inline */ (SELECT g_0.e2, null FROM pm1.g1 AS g_0) SELECT g_0.a1 FROM qry_0 AS g_0", Arrays.asList(1));
+		
+	    BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+	    bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+	    bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, true);
+	    
+	    ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"WITH qry_0 (a1, str) AS /*+ no_inline */ (SELECT g_0.e2, null FROM pm1.g1 AS g_0) SELECT (SELECT concat(a1, 'a') FROM qry_1 LIMIT 2), g_0.a1 FROM qry_0 AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+	    
+	    
+	    TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList("ba", 1)});
 	}
 	
 }
