@@ -74,6 +74,7 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageObject.Util;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.lang.SubqueryContainer.Evaluatable;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.proc.TriggerAction;
@@ -263,6 +264,13 @@ public class RelationalPlanner {
          		QueryCommand queryCommand = CriteriaCapabilityValidatorVisitor.getQueryCommand(aNode);
          		if (queryCommand != null) {
          			fullPushdown = true;
+         			for (SubqueryContainer<?> container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(queryCommand)) {
+         				if (container instanceof Evaluatable<?> && ((Evaluatable<?>)container).shouldEvaluate()) {
+         					//we could more deeply check, but we'll just assume that the references are needed
+                 			fullPushdown = false;
+                 			break;
+         				}
+         			}
          		}
          	}
      		//distribute the appropriate clauses to the pushdowns

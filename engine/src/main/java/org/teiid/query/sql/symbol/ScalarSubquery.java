@@ -38,7 +38,7 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  * of this could be used wherever an Expression is legal, but it is
  * specifically needed for the SELECT clause.
  */
-public class ScalarSubquery implements Expression, SubqueryContainer<QueryCommand>, ContextReference {
+public class ScalarSubquery implements Expression, SubqueryContainer.Evaluatable<QueryCommand>, ContextReference {
 
 	private static AtomicInteger ID = new AtomicInteger();
 	
