@@ -273,6 +273,7 @@ public class TestDynamicImportedMetaData {
     	
     	ProcedureParameter pp = p.getParameters().get(0);
     	assertEquals("pathAndPattern", pp.getName());
+    	assertEquals("\"pathAndPattern\"", pp.getNameInSource());
     	assertEquals(ProcedureParameter.Type.In, pp.getType());
     	//assertEquals("string", pp.getDatatype().getName());
     	

@@ -253,6 +253,7 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 				default:
 					continue; //shouldn't happen
 				}
+				record.setNameInSource(quoteName(columnName));
 				record.setNativeType(typeName);
 				record.setPrecision(precision);
 				record.setLength(columns.getInt(9));
