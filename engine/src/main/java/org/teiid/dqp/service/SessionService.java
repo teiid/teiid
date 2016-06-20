@@ -23,6 +23,7 @@
 package org.teiid.dqp.service;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.security.auth.login.LoginException;
@@ -77,6 +78,10 @@ public interface SessionService {
      * @param adminSessionID The session id identifying session of administrator
      */
     boolean terminateSession(String terminatedSessionID, String adminSessionID);
+    
+    void addMaxSessionPerUser(String user, long maxSesson);
+    void removeMaxSessionPerUser(String user);
+    Map<String, Long> getMaxSessionPerUser();
 
     /**
      * Get the collection of active user sessions on the system.

@@ -46,6 +46,9 @@ class TransportResourceDefinition extends SimpleResourceDefinition {
     public void registerOperations(ManagementResourceRegistration resourceRegistration) {
         super.registerOperations(resourceRegistration);
         resourceRegistration.registerOperationHandler(GenericSubsystemDescribeHandler.DEFINITION,  GenericSubsystemDescribeHandler.INSTANCE);
+        new AddMaxSessionPerUser().register(resourceRegistration);
+        new RemoveMaxSessionPerUser().register(resourceRegistration);
+        new MaxSessionPerUser().register(resourceRegistration);
     }
 
     @Override

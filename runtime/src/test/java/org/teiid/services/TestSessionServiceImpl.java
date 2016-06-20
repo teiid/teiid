@@ -2,6 +2,8 @@ package org.teiid.services;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import javax.security.auth.login.LoginException;
@@ -259,5 +261,42 @@ public class TestSessionServiceImpl {
         assertEquals(null, SessionServiceImpl.getDomainName("@")); //$NON-NLS-1$
         
         assertEquals("@", SessionServiceImpl.getBaseUsername("@")); //$NON-NLS-1$ //$NON-NLS-2$
-    }	
+    }
+    
+    @Test 
+    public void testMaxSessionPerUser() throws Exception {
+        VDBRepository repo = Mockito.mock(VDBRepository.class);
+        VDBMetaData vdb = new VDBMetaData();
+        vdb.setName("name");
+        vdb.setVersion(1);
+        vdb.setStatus(Status.ACTIVE);
+        vdb.addProperty(SessionServiceImpl.SECURITY_DOMAIN_PROPERTY, "domain");
+        
+        Mockito.stub(repo.getLiveVDB("name", "1")).toReturn(vdb);
+        
+        ssi.setVDBRepository(repo);
+        
+        ssi.addMaxSessionPerUser("x", 3);
+        ssi.addMaxSessionPerUser("x1", 2);
+        
+        Properties properties = new Properties();
+        properties.setProperty(TeiidURL.JDBC.VDB_NAME, "name.1");
+        List<String> sessions = new ArrayList<>();
+        sessions.add(ssi.createSession("name", "1", AuthenticationType.USERPASSWORD, "x", new Credentials(new char[] {'y'}), "z", properties).getSessionId());
+        sessions.add(ssi.createSession("name", "1", AuthenticationType.USERPASSWORD, "x", new Credentials(new char[] {'y'}), "z", properties).getSessionId());
+        sessions.add(ssi.createSession("name", "1", AuthenticationType.USERPASSWORD, "x", new Credentials(new char[] {'y'}), "z", properties).getSessionId());
+        
+        try {
+            sessions.add(ssi.createSession("name", "1", AuthenticationType.USERPASSWORD, "x", new Credentials(new char[] {'y'}), "z", properties).getSessionId());
+        } catch (SessionServiceException e) {
+        }
+        
+        sessions.add(ssi.createSession("name", "1", AuthenticationType.USERPASSWORD, "x1", new Credentials(new char[] {'y'}), "z", properties).getSessionId());
+        sessions.add(ssi.createSession("name", "1", AuthenticationType.USERPASSWORD, "x1", new Credentials(new char[] {'y'}), "z", properties).getSessionId());
+        
+        try {
+            sessions.add(ssi.createSession("name", "1", AuthenticationType.USERPASSWORD, "x1", new Credentials(new char[] {'y'}), "z", properties).getSessionId());
+        } catch (SessionServiceException e) {
+        }
+    }   
 }

@@ -34,6 +34,7 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.concurrent.Future;
 
@@ -42,6 +43,7 @@ import org.jboss.as.connector.services.resourceadapters.deployment.InactiveResou
 import org.jboss.as.connector.util.ConnectorServices;
 import org.jboss.as.controller.AbstractWriteAttributeHandler;
 import org.jboss.as.controller.AttributeDefinition;
+import org.jboss.as.controller.ObjectListAttributeDefinition;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationDefinition;
 import org.jboss.as.controller.OperationFailedException;
@@ -78,6 +80,7 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.adminapi.jboss.VDBMetadataMapper;
+import org.teiid.adminapi.jboss.VDBMetadataMapper.PropertyMetaDataMapper;
 import org.teiid.adminapi.jboss.VDBMetadataMapper.TransactionMetadataMapper;
 import org.teiid.adminapi.jboss.VDBMetadataMapper.VDBTranslatorMetaDataMapper;
 import org.teiid.client.plan.PlanNode;
@@ -516,6 +519,84 @@ class TerminateSession extends TeiidOperationHandler{
 		builder.addParameter(OperationsConstants.SESSION);
 	}
 }
+
+//TEIID-3617
+class AddMaxSessionPerUser extends TeiidOperationHandler {
+
+  protected AddMaxSessionPerUser() {
+      super("add-max-session-per-user"); //$NON-NLS-1$
+  }
+
+  @Override
+  protected void executeOperation(OperationContext context, DQPCore service, ModelNode operation) throws OperationFailedException {
+      if (!operation.hasDefined(OperationsConstants.USER_NAME.getName())) {
+          throw new OperationFailedException(IntegrationPlugin.Util.getString(OperationsConstants.USER_NAME.getName()+MISSING));
+      }
+      if (!operation.hasDefined(OperationsConstants.USER_MAX_SESSION.getName())) {
+          throw new OperationFailedException(IntegrationPlugin.Util.getString(OperationsConstants.USER_MAX_SESSION.getName()+MISSING));
+      }
+      getSessionService(context).addMaxSessionPerUser(operation.get(OperationsConstants.USER_NAME.getName()).asString(), operation.get(OperationsConstants.USER_MAX_SESSION.getName()).asLong()); 
+  }
+  
+  @Override
+  protected void describeParameters(SimpleOperationDefinitionBuilder builder) {
+      builder.addParameter(OperationsConstants.USER_NAME);
+      builder.addParameter(OperationsConstants.USER_MAX_SESSION);
+  }
+}
+
+class RemoveMaxSessionPerUser extends TeiidOperationHandler {
+
+    protected RemoveMaxSessionPerUser() {
+        super("remove-max-session-per-user"); //$NON-NLS-1$
+    }
+
+    @Override
+    protected void executeOperation(OperationContext context, DQPCore service, ModelNode operation) throws OperationFailedException {
+        if (!operation.hasDefined(OperationsConstants.USER_NAME.getName())) {
+            throw new OperationFailedException(IntegrationPlugin.Util.getString(OperationsConstants.USER_NAME.getName()+MISSING));
+        }
+        getSessionService(context).removeMaxSessionPerUser(operation.get(OperationsConstants.USER_NAME.getName()).asString()); 
+    }
+    
+    @Override
+    protected void describeParameters(SimpleOperationDefinitionBuilder builder) {
+        builder.addParameter(OperationsConstants.USER_NAME);
+    }
+  }
+
+class MaxSessionPerUser extends TeiidOperationHandler {
+
+    protected MaxSessionPerUser() {
+        super("max-session-per-user"); //$NON-NLS-1$
+    }
+
+    @Override
+    protected void executeOperation(OperationContext context, DQPCore service, ModelNode operation) throws OperationFailedException {
+        Map<String, Long> settingMap = getSessionService(context).getMaxSessionPerUser();
+        ModelNode node = new ModelNode();
+        if (settingMap!= null && !settingMap.isEmpty()) {
+            ModelNode propsNode = node.get(OperationsConstants.USER_PROPERTIES); 
+            for (Map.Entry<String, Long> entry : settingMap.entrySet()) {
+                ModelNode props = new ModelNode();
+                props.get(OperationsConstants.USER_NAME.getName()).set(entry.getKey());
+                props.get(OperationsConstants.USER_MAX_SESSION.getName()).set(entry.getValue());
+                propsNode.add(props);
+            }
+        }
+        context.getResult().add(node);
+    }
+    
+    @Override
+    protected void describeParameters(SimpleOperationDefinitionBuilder builder) {
+        builder.setReplyType(ModelType.PROPERTY);
+        builder.setReplyParameters(OperationsConstants.USER_PROPERTIES_DEF);
+    }
+   
+  }
+
+//Map<String, Long> getMaxSessionPerUser()
+
 
 class CancelRequest extends TeiidOperationHandler{
 	protected CancelRequest() {

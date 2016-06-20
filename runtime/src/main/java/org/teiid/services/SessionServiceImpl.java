@@ -92,6 +92,9 @@ public class SessionServiceImpl implements SessionService {
     protected SecurityHelper securityHelper;
 
     private DQPCore dqp;
+    
+    private Map<String, Long> maxSessionPerUser;
+    private Map<String, Long> maxSessionPerUserCount;
 
     private Map<String, SessionMetadata> sessionCache = new ConcurrentHashMap<String, SessionMetadata>();
     private Timer sessionMonitor = null;    
@@ -147,6 +150,7 @@ public class SessionServiceImpl implements SessionService {
 		info.setSecurityContext(null);
 		info.setClosed();
 		info.getSessionVariables().clear();
+		this.decreaseSessionCount(getBaseUsername(info.getUserName()));
 	}
 	
 	@Override
@@ -181,6 +185,10 @@ public class SessionServiceImpl implements SessionService {
 	
 	        if (sessionMaxLimit > 0 && getActiveSessionsCount() >= sessionMaxLimit) {
 	             throw new SessionServiceException(RuntimePlugin.Event.TEIID40043, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40043, new Long(sessionMaxLimit)));
+	        }
+	        
+	        if(this.getSessionCount(userName) >= this.getMaxSessionCount(userName)){
+	            throw new SessionServiceException(RuntimePlugin.Event.TEIID40044, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40044, userName, this.getMaxSessionCount(userName)));
 	        }
 	        
 	        String securityDomain = getSecurityDomain(userName, vdbName, vdbVersion, vdb);
@@ -237,6 +245,7 @@ public class SessionServiceImpl implements SessionService {
 	        	LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful, created", newSession }); //$NON-NLS-1$
 	        }
 	        this.sessionCache.put(newSession.getSessionId(), newSession);
+	        this.increaseSessionCount(getBaseUsername(userName));
 	        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_AUDITLOGGING, MessageLevel.DETAIL)) {
 	        	LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, new AuditMessage("session", "logon-success", newSession)); //$NON-NLS-1$ //$NON-NLS-2$
 	        }
@@ -350,7 +359,61 @@ public class SessionServiceImpl implements SessionService {
 		this.sessionMaxLimit = limit;
 	}
 	
-	public long getSessionExpirationTimeLimit() {
+	public long getMaxSessionCount(String user) {
+	    if(this.maxSessionPerUser != null) {
+	        return this.maxSessionPerUser.get(user) == null ? sessionMaxLimit : this.maxSessionPerUser.get(user);
+	    } else {
+	        return sessionMaxLimit;
+	    }
+    }
+
+	@Override
+    public void addMaxSessionPerUser(String user, long maxSesson) {
+        if(this.maxSessionPerUser == null) {
+            this.maxSessionPerUser =  new ConcurrentHashMap<>();
+        }
+        this.maxSessionPerUser.put(user, maxSesson);
+    }
+
+    @Override
+    public void removeMaxSessionPerUser(String user) {
+        if(this.maxSessionPerUser != null){
+            this.maxSessionPerUser.remove(user);
+        }
+    }
+    
+    public Map<String, Long> getMaxSessionPerUser(){
+        return this.maxSessionPerUser;
+    }
+
+    public long getSessionCount(String user) {
+        if(this.maxSessionPerUserCount != null){
+            return this.maxSessionPerUserCount.get(user) == null ? 0 : this.maxSessionPerUserCount.get(user);
+        } else {
+            return 0;
+        }
+    }
+
+    public void increaseSessionCount(String user) {
+        if(this.maxSessionPerUserCount == null) {
+            this.maxSessionPerUserCount =  new ConcurrentHashMap<>();
+            this.maxSessionPerUserCount.put(user, 1L);
+        } else {
+            long count = this.maxSessionPerUserCount.get(user) == null ? 0 : this.maxSessionPerUserCount.get(user);
+            count++;
+            this.maxSessionPerUserCount.put(user, count);
+        }    
+    }
+    
+    public void decreaseSessionCount(String user) {
+        if(this.maxSessionPerUserCount != null && this.maxSessionPerUserCount.get(user) != null) {
+            long count = this.maxSessionPerUserCount.get(user);
+            count--;
+            this.maxSessionPerUserCount.put(user, count);
+        } 
+    }
+
+    public long getSessionExpirationTimeLimit() {
 		return this.sessionExpirationTimeLimit;
 	}
 	

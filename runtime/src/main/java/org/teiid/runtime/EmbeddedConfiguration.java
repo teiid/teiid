@@ -24,7 +24,9 @@ package org.teiid.runtime;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.resource.spi.work.WorkManager;
 import javax.transaction.TransactionManager;
@@ -61,6 +63,7 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	private String infinispanConfigFile = "infinispan-config.xml"; //$NON-NLS-1$
 	private String jgroupsConfigFile; // from infinispan-core
 	private List<SocketConfiguration> transports;
+	private Map<String, Long> maxSessionPerUser;
 	private int maxODBCLobSizeAllowed = 5*1024*1024; // 5 MB
 	private int maxAsyncThreads = DEFAULT_MAX_ASYNC_WORKERS;
 	
@@ -236,6 +239,17 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	public List<SocketConfiguration> getTransports(){
 		return this.transports;
 	}
+	
+	public void addMaxSessionPerUser(String user, long maxSession) {
+        if(this.maxSessionPerUser == null) {
+            this.maxSessionPerUser = new HashMap<>();
+        }
+        this.maxSessionPerUser.put(user, maxSession);
+    }
+    
+    public Map<String, Long> getMaxSessionPerUser(){
+        return this.maxSessionPerUser;
+    }
 	
 	public int getMaxODBCLobSizeAllowed() {
 		return this.maxODBCLobSizeAllowed;
