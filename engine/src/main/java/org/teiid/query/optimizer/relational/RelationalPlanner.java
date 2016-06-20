@@ -399,11 +399,19 @@ public class RelationalPlanner {
 				with.setGroupSymbol(gs);
 				with.setColumns(new ArrayList(replacementSymbols.values()));
 				//we use equality checks here because there may be a similarly named at lower scopes
-				ExpressionMappingVisitor emv = new ExpressionMappingVisitor(replacementSymbols) {
+				ExpressionMappingVisitor emv = new ExpressionMappingVisitor(null) {
 					@Override
 					public void visit(UnaryFromClause obj) {
 						if (old.getMetadataID() == obj.getGroup().getMetadataID()) {
-							obj.setGroup(gs);
+							String def = obj.getGroup().getDefinition();
+							if (def != null) {
+								String name = obj.getGroup().getName();
+								obj.setGroup(gs.clone());
+								obj.getGroup().setDefinition(gs.getName());
+								obj.getGroup().setName(name);
+							} else {
+								obj.setGroup(gs);
+							}
 						}
 					}
 					
@@ -412,7 +420,15 @@ public class RelationalPlanner {
 						if (element instanceof ElementSymbol) {
 							ElementSymbol es = (ElementSymbol)element;
 							if (es.getGroupSymbol().getMetadataID() == old.getMetadataID()) {
-								return super.replaceExpression(element);
+								String def = es.getGroupSymbol().getDefinition();
+								if (def != null) {
+									String name = es.getGroupSymbol().getName();
+									es.setGroupSymbol(gs.clone());
+									es.getGroupSymbol().setDefinition(gs.getName());
+									es.getGroupSymbol().setName(name);
+								} else {
+									es.setGroupSymbol(gs);
+								}	
 							}
 						}
 						return element;
@@ -466,6 +482,16 @@ public class RelationalPlanner {
             				return order.get(o1.getGroupSymbol()).compareTo(order.get(o2.getGroupSymbol()));
             			}
 					});
+            		//pull up the with from the subqueries
+            		for (int i = 0; i < with.size(); i++) {
+            			WithQueryCommand wqc = with.get(i);
+            			List<WithQueryCommand> with2 = wqc.getCommand().getWith();
+						if (with2 != null) {
+            				with.addAll(i, with2);
+							i += with2.size();
+            				wqc.getCommand().setWith(null);
+            			}
+            		}
             		QueryCommand query = (QueryCommand)command;
             		List<SubqueryContainer<?>> subqueries = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(query);
             		pullupWith(with, subqueries);

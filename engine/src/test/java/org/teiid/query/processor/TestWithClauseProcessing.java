@@ -729,5 +729,24 @@ public class TestWithClauseProcessing {
 	    TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList(1)});
 	}
 	
+	@Test public void testViewPlanningDeeplyNested() throws Exception {
+	    CommandContext cc = TestProcessor.createCommandContext();
+	    BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+		bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+		
+		TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table test_a (a varchar); "
+				+ "create view tv1 as WITH alias as /*+ no_inline */ (SELECT a from test_a) "
+				+ ",alias2 as /*+ no_inline */ (select t2.a as a1, t1.a from alias t1 join (SELECT a from test_a) t2 on t1.a=t2.a) "
+				+ ",alias3 as /*+ no_inline */ (select t2.a as a1, t1.a from alias t1 join alias2 t2 on t1.a=t2.a) "
+				+ "SELECT alias.a as a1 FROM alias;", "x", "y");
+		
+		String sql = "with CTE1 as /*+ no_inline */ (  select a1 from tv1), CTE2 as /*+ no_inline */ ( select a1 from tv1) select * from CTE1 as T1 join CTE1 as T2 on T1.a1=T2.a1";
+	    ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
+	    HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+	    hdm.addData("WITH alias (a) AS (SELECT g_0.a FROM test_a AS g_0), CTE1 (a1) AS (SELECT g_0.a FROM alias AS g_0) SELECT g_0.a1 AS c_0 FROM CTE1 AS g_0 ORDER BY c_0", Arrays.asList("a"));
+	    
+	    TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("a", "a")});
+	}
+	
 }
 
