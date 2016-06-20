@@ -160,4 +160,9 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
     	return true;
     }
     
+    @Override
+    public boolean supportsAggregatesDistinct() {
+        return true;
+    }
+        
 }
