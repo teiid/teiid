@@ -25,11 +25,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.core.util.StringUtil;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
@@ -40,7 +41,8 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  */
 public class TextLine implements Expression {
 	public static final String nl = System.getProperty("line.separator"); //$NON-NLS-1$
-
+	public static final char NO_QUOTE_CHAR = 0;
+	
 	private Character delimiter;
 	private Character quote;
 	private boolean includeHeader;
@@ -147,7 +149,7 @@ public class TextLine implements Expression {
 		Object getValue(T t);
 	}
 	
-	public static <T> String[] evaluate(final List<T> values, ValueExtractor<T> valueExtractor, TextLine textLine) throws TransformationException {
+	public static <T> String[] evaluate(final List<T> values, ValueExtractor<T> valueExtractor, TextLine textLine) throws TeiidProcessingException {
 		Character delimeter = textLine.getDelimiter();
 		if (delimeter == null) {
 			delimeter = Character.valueOf(',');
@@ -157,18 +159,28 @@ public class TextLine implements Expression {
 		String quoteStr = null;		
 		if (quote == null) {
 			quoteStr = "\""; //$NON-NLS-1$
-		} else {
+		} else if (quote.charValue() != NO_QUOTE_CHAR) {
 			quoteStr = String.valueOf(quote);
 		}
-		String doubleQuote = quoteStr + quoteStr;
+		String doubleQuote = null;
+		if (quoteStr != null) {
+			doubleQuote = quoteStr + quoteStr;
+		}
 		ArrayList<String> result = new ArrayList<String>();
 		for (Iterator<T> iterator = values.iterator(); iterator.hasNext();) {
 			T t = iterator.next();
 			String text = (String)DataTypeManager.transformValue(valueExtractor.getValue(t), DataTypeManager.DefaultDataClasses.STRING);
 			if (text != null) {
-				result.add(quoteStr);
-				result.add(StringUtil.replaceAll(text, quoteStr, doubleQuote));
-				result.add(quoteStr);
+				if (quoteStr != null) {
+					result.add(quoteStr);
+					result.add(StringUtil.replaceAll(text, quoteStr, doubleQuote));
+					result.add(quoteStr);
+				} else {
+					if (text.indexOf(delimeter) > -1 || text.indexOf(textLine.getLineEnding()) > -1) {
+						throw new TeiidProcessingException(QueryPlugin.Event.TEIID31201, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31201, text));
+					}
+					result.add(text);
+				}
 			}
 			if (iterator.hasNext()) {
 				result.add(delim);

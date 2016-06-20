@@ -1461,6 +1461,51 @@ public class TestSubqueryPushdown {
         
     }
     
+    /**
+     * Similar to the above, but uses a view for the most outer reference, which was
+     * causing the middle table reference to be inappropriately replaced.
+     * @throws Exception
+     */
+    @Test public void testNestedSubquerySemiJoin1() throws Exception {
+        String sql = "SELECT intkey FROM (select * from bqt1.smalla) AS A WHERE INTKEY IN /*+ mj */ (SELECT CONVERT(STRINGKEY, INTEGER) FROM bqt1.smalla AS A WHERE STRINGKEY IN (SELECT CONVERT(INTKEY, STRING) FROM BQT1.SMALLA AS B WHERE A.INTNUM = B.INTNUM))";
+
+    	BasicSourceCapabilities bsc = getTypicalCapabilities();
+
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, 
+                RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(bsc),
+                new String[] {
+                    "SELECT g_0.IntKey AS c_0 FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey IN (<dependent values>) ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT g_0.StringKey, g_0.IntNum FROM BQT1.SmallA AS g_0", Arrays.asList("1", 1), Arrays.asList("2", 2));
+        hdm.addData("SELECT g_0.IntKey AS c_0 FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey IN (1, 2) ORDER BY c_0", Arrays.asList(1));
+        hdm.addData("SELECT g_0.IntKey FROM BQT1.SmallA AS g_0 WHERE g_0.IntNum = 1", Arrays.asList(1));
+        hdm.addData("SELECT g_0.IntKey FROM BQT1.SmallA AS g_0 WHERE g_0.IntNum = 2", Arrays.asList(2));
+        
+        TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(1)} );
+        
+    }
+    
+    @Test public void testNestedSubquerySemiJoin2() throws Exception {
+        String sql = "SELECT intkey FROM bqt1.smalla AS A WHERE INTKEY IN /*+ mj */ (SELECT CONVERT(STRINGKEY, INTEGER) FROM (select * from bqt1.smalla) AS A WHERE STRINGKEY IN (SELECT CONVERT(INTKEY, STRING) FROM BQT1.SMALLA AS B WHERE A.INTNUM = B.INTNUM))";
+
+    	BasicSourceCapabilities bsc = getTypicalCapabilities();
+
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, 
+                RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(bsc),
+                new String[] {
+                    "SELECT g_0.IntKey AS c_0 FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey IN (<dependent values>) ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT g_0.StringKey, g_0.IntNum FROM BQT1.SmallA AS g_0", Arrays.asList("1", 1), Arrays.asList("2", 2));
+        hdm.addData("SELECT g_0.IntKey AS c_0 FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey IN (1, 2) ORDER BY c_0", Arrays.asList(1));
+        hdm.addData("SELECT g_0.IntKey FROM BQT1.SmallA AS g_0 WHERE g_0.IntNum = 1", Arrays.asList(1));
+        hdm.addData("SELECT g_0.IntKey FROM BQT1.SmallA AS g_0 WHERE g_0.IntNum = 2", Arrays.asList(2));
+        
+        TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(1)} );
+        
+    }
+    
     @Test public void testAliasConflict() throws Exception {
     	String sql = "select * from ( SELECT ( SELECT x.e1 FROM pm1.g1 AS x WHERE x.e2 = g_0.e2 ) AS c_2 FROM pm1.g2 AS g_0 ) AS v_0";
     	

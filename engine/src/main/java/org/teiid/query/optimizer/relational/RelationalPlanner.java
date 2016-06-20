@@ -76,6 +76,7 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageObject.Util;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.SetQuery.Operation;
+import org.teiid.query.sql.lang.SubqueryContainer.Evaluatable;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.proc.CreateProcedureCommand;
@@ -232,6 +233,13 @@ public class RelationalPlanner {
          		QueryCommand queryCommand = CriteriaCapabilityValidatorVisitor.getQueryCommand(aNode);
          		if (queryCommand != null) {
          			fullPushdown = true;
+         			for (SubqueryContainer<?> container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(queryCommand)) {
+         				if (container instanceof Evaluatable<?> && ((Evaluatable<?>)container).shouldEvaluate()) {
+         					//we could more deeply check, but we'll just assume that the references are needed
+                 			fullPushdown = false;
+                 			break;
+         				}
+         			}
          		}
          	}
      		//distribute the appropriate clauses to the pushdowns
@@ -511,9 +519,9 @@ public class RelationalPlanner {
 				QueryCommand qc = (QueryCommand)subquery.getCommand();
 				if (qc.getWith() != null) {
 					qc.getWith().removeAll(with);
-				}
-				if (qc.getWith().isEmpty()) {
-					qc.setWith(null);
+					if (qc.getWith().isEmpty()) {
+						qc.setWith(null);
+					}
 				}
 				pullupWith(with, ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(qc));
 			}
@@ -612,7 +620,10 @@ public class RelationalPlanner {
 			    	for (int i = 0; i < containers.size(); i++) {
 			    		Command c = containers.get(i).getCommand();
 			    		Command clone = cloneContainers.get(i).getCommand();
-			    		c.setCorrelatedReferences(clone.getCorrelatedReferences());
+			    		List<Reference> refs = new ArrayList<Reference>();
+			    		//re-detect the correlated references
+			    		CorrelatedReferenceCollectorVisitor.collectReferences(c, localGroupSymbols, refs, metadata);
+			    		setCorrelatedReferences(containers.get(i), refs);
 			    		c.setProcessorPlan(clone.getProcessorPlan());
 			    	}
 			    }

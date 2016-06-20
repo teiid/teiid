@@ -790,7 +790,16 @@ public class TestHanaTranslator {
     
     @Test public void testBooleanCastString() throws Exception {
         String input = "SELECT cast(booleanvalue as string) FROM bqt1.smalla"; //$NON-NLS-1$
-        String output = "SELECT CASE WHEN SmallA.BooleanValue THEN 'true' WHEN not(SmallA.BooleanValue) THEN 'false' END FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT CASE WHEN SmallA.BooleanValue = true THEN 'true' WHEN SmallA.BooleanValue IS NOT NULL THEN 'false' END FROM SmallA";  //$NON-NLS-1$
+
+        helpTestVisitor(getTestBQTVDB(),
+                input, 
+                output);
+    }
+    
+    @Test public void testBooleanExpression() throws Exception {
+    	String input = "SELECT (CASE WHEN BooleanValue THEN 'a' ELSE 'b' END) FROM BQT1.smalla"; //$NON-NLS-1$
+        String output = "SELECT CASE WHEN SmallA.BooleanValue = true THEN 'a' ELSE 'b' END FROM SmallA";  //$NON-NLS-1$
 
         helpTestVisitor(getTestBQTVDB(),
                 input, 

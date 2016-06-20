@@ -24,6 +24,7 @@ package org.teiid.translator.jdbc;
 
 import static org.junit.Assert.*;
 
+import java.sql.BatchUpdateException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -44,6 +45,7 @@ import org.teiid.language.ExpressionValueSource;
 import org.teiid.language.Insert;
 import org.teiid.language.Literal;
 import org.teiid.language.Parameter;
+import org.teiid.translator.TranslatorBatchException;
 
 @SuppressWarnings("nls")
 public class TestJDBCUpdateExecution {
@@ -219,5 +221,32 @@ public class TestJDBCUpdateExecution {
 		JDBCUpdateExecution updateExecution = new JDBCUpdateExecution(new BatchedUpdates(Arrays.asList((Command)command, command1)), connection, context, config);
 		updateExecution.execute();
 		assertArrayEquals(new int[] {1, 1}, updateExecution.getUpdateCounts());
+	}
+	
+	@Test public void testBatchedUpdateFailed() throws Exception {
+		Insert command = (Insert)TranslationHelper.helpTranslate(TranslationHelper.BQT_VDB, "insert into BQT1.SmallA (IntKey) values (1)"); //$NON-NLS-1$
+		Insert command1 = (Insert)TranslationHelper.helpTranslate(TranslationHelper.BQT_VDB, "insert into BQT1.SmallA (StringKey) values ('1')"); //$NON-NLS-1$
+		Connection connection = Mockito.mock(Connection.class);
+		Statement s = Mockito.mock(Statement.class);
+		Mockito.stub(s.executeBatch()).toThrow(new BatchUpdateException(new int[] {Statement.EXECUTE_FAILED}));
+		Mockito.stub(connection.createStatement()).toReturn(s); 
+		
+		JDBCExecutionFactory config = new JDBCExecutionFactory();
+		ResultSet r = Mockito.mock(ResultSet.class);
+		ResultSetMetaData rs = Mockito.mock(ResultSetMetaData.class);
+		Mockito.stub(r.getMetaData()).toReturn(rs);
+		
+		Mockito.stub(s.getGeneratedKeys()).toReturn(r);
+		
+		FakeExecutionContextImpl context = new FakeExecutionContextImpl();
+		
+		JDBCUpdateExecution updateExecution = new JDBCUpdateExecution(new BatchedUpdates(Arrays.asList((Command)command, command1)), connection, context, config);
+		try {
+			updateExecution.execute();
+			fail();
+		} catch (TranslatorBatchException e) {
+			int[] counts = e.getUpdateCounts();
+			assertArrayEquals(new int[] {-3}, counts);
+		}
 	}
 }

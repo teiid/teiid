@@ -2,7 +2,7 @@
     <parent>
         <artifactId>teiid-parent</artifactId>
         <groupId>org.jboss.teiid</groupId>
-        <version>9.0.0.CR2-SNAPSHOT</version>
+        <version>9.1.0.Alpha1-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -71,20 +71,10 @@
         </dependency>
         
         <dependency>
-            <groupId>org.antlr</groupId>
-            <artifactId>antlr4-runtime</artifactId>
-        </dependency>
-        
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-        </dependency>
-        
-        <dependency>
-            <groupId>com.fasterxml</groupId>
-            <artifactId>aalto-xml</artifactId>
-        </dependency>
-
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+        </dependency> 
+                
     </dependencies>
 
 </project>

@@ -24,6 +24,7 @@ package org.teiid.translator.jdbc.pi;
 
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 
+import java.sql.Connection;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -31,24 +32,35 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.language.ColumnReference;
+import org.teiid.language.DerivedColumn;
 import org.teiid.language.Function;
+import org.teiid.language.LanguageObject;
 import org.teiid.language.Limit;
+import org.teiid.metadata.MetadataFactory;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
+import org.teiid.translator.jdbc.SQLConversionVisitor;
 
 @Translator(name="osisoft-pi", description="A translator for OsiSoft PI database")
 public class PIExecutionFactory extends JDBCExecutionFactory {
     public static String PI = "pi"; //$NON-NLS-1$
     protected ConvertModifier convert = new ConvertModifier();
+
+
+
     
     public PIExecutionFactory() {
         setUseBindVariables(false);
+        setSupportsFullOuterJoins(false);
     }
     
     @Override
@@ -96,6 +108,15 @@ public class PIExecutionFactory extends JDBCExecutionFactory {
         addPushDownFunction(PI, "DIGSTRING", STRING, INTEGER); //$NON-NLS-1$
         addPushDownFunction(PI, "PE", STRING, OBJECT); //$NON-NLS-1$
         
+        addPushDownFunction(PI, "ParentName", STRING, STRING, INTEGER); //$NON-NLS-1$
+        addPushDownFunction(PI, "VarType", STRING, STRING); //$NON-NLS-1$
+        addPushDownFunction(PI, "UOMID", STRING, STRING); //$NON-NLS-1$
+        addPushDownFunction(PI, "UOMName", STRING, STRING); //$NON-NLS-1$
+        addPushDownFunction(PI, "UOMAbbreviation", STRING, STRING); //$NON-NLS-1$
+        addPushDownFunction(PI, "UOMClassName", STRING, STRING); //$NON-NLS-1$
+        addPushDownFunction(PI, "UOMCanonicallD", STRING, STRING); //$NON-NLS-1$
+        addPushDownFunction(PI, "UOMConvert", DOUBLE, DOUBLE, STRING, STRING); //$NON-NLS-1$
+        
     }
 
     @Override
@@ -105,7 +126,7 @@ public class PIExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     public boolean supportsInlineViews() {
-        return false;
+        return true;
     }
     
     @Override
@@ -133,7 +154,6 @@ public class PIExecutionFactory extends JDBCExecutionFactory {
         return false;
     }
     
-    @SuppressWarnings("unchecked")
     @Override
     public List<?> translateLimit(Limit limit, ExecutionContext context) {
         return Arrays.asList("TOP ", limit.getRowLimit()); //$NON-NLS-1$
@@ -206,4 +226,67 @@ public class PIExecutionFactory extends JDBCExecutionFactory {
     	return "'" + formatDateValue(timestampValue) + "'"; //$NON-NLS-1$ //$NON-NLS-2$
     }
     
+    @Override
+    public void getMetadata(MetadataFactory metadataFactory, Connection conn) throws TranslatorException {
+        if (metadataFactory.getModelProperties().get("importer.ImportKeys") == null) {
+            metadataFactory.getModelProperties().put("importer.ImportKeys", "false");
+        }
+        super.getMetadata(metadataFactory, conn);       
+    }    
+    
+    @Override
+    public MetadataProcessor<Connection> getMetadataProcessor() {
+        return new PIMetadataProcessor();
+    }
+    
+    public boolean useAsInGroupAlias(){
+        return true;
+    }
+    
+    @Override
+    public List<?> translate(LanguageObject obj, ExecutionContext context) {
+        if (obj instanceof DerivedColumn) {
+            DerivedColumn derived = (DerivedColumn)obj;
+            if (derived.getExpression() instanceof ColumnReference) {
+                ColumnReference elem = (ColumnReference)derived.getExpression();
+                String nativeType = elem.getMetadataObject().getNativeType();
+                if (TypeFacility.RUNTIME_TYPES.STRING.equals(elem.getType())
+                        && elem.getMetadataObject() != null
+                        && nativeType != null
+                        && PIMetadataProcessor.guidPattern.matcher(nativeType).find()) {
+                    return Arrays.asList("cast(", elem, " as String)"); //$NON-NLS-1$ //$NON-NLS-2$
+                }
+            }
+        }
+        return super.translate(obj, context);
+    }
+    
+    @Override
+    public SQLConversionVisitor getSQLConversionVisitor() {
+        return new PISQLConversionVisitor(this);
+    } 
+    
+    /**
+     * 
+     * @return true if the source supports lateral join
+     */
+    public boolean supportsLateralJoin() {
+        return true;
+    }
+    
+    /**
+     * 
+     * @return true if the source supports lateral join conditions
+     */
+    public boolean supportsLateralJoinCondition() {
+        return false;
+    }
+    
+    /**
+     * 
+     * @return
+     */
+    public boolean supportsProcedureTable() {
+        return true;
+    }    
 }

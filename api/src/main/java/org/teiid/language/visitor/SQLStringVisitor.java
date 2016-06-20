@@ -579,7 +579,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
 
     public void visit(Join obj) {
         TableReference leftItem = obj.getLeftItem();
-        if(useParensForJoins() && leftItem instanceof Join) {
+        if(useParensForLHSJoins() && leftItem instanceof Join) {
             buffer.append(Tokens.LPAREN);
             append(leftItem);
             buffer.append(Tokens.RPAREN);
@@ -634,7 +634,15 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         }        
     }
 
-    public void visit(Like obj) {
+    /**
+     * If a nested left hand join should have parens
+     * @return
+     */
+    protected boolean useParensForLHSJoins() {
+		return useParensForJoins();
+	}
+
+	public void visit(Like obj) {
     	append(obj.getLeftExpression());
         if (obj.isNegated()) {
             buffer.append(Tokens.SPACE)

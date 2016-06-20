@@ -226,6 +226,7 @@ public class SortUtility {
 	    	
 	    	for (TupleBuffer tb : activeTupleBuffers) {
 				tb.close();
+				tb.setForwardOnly(false); //it is up to the caller to set the flag now
 			}
 	    	success = true;
 	    	return activeTupleBuffers;

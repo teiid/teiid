@@ -21,17 +21,16 @@
  */
 package org.teiid.query.metadata;
 
-import org.teiid.logging.LogConstants;
-import org.teiid.logging.LogManager;
+import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.Table;
-import org.teiid.query.QueryPlugin;
+import org.teiid.query.parser.QueryParser;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
 
 /**
- * This Metadata repository adds procedures to load materialization views 
+ * This Metadata Repository adds/corrects metadata for materialization 
  */
 public class MaterializationMetadataRepository extends MetadataRepository {
 	
@@ -68,27 +67,57 @@ public class MaterializationMetadataRepository extends MetadataRepository {
 					if (!Boolean.valueOf(manage)) {
 						continue;
 					}
-					
-					String statusTable = table.getProperty(MATVIEW_STATUS_TABLE, false); 
-					String beforeScript = table.getProperty(MATVIEW_BEFORE_LOAD_SCRIPT, false);		
-					String afterScript = table.getProperty(MATVIEW_AFTER_LOAD_SCRIPT, false);
-					String stageTable = table.getProperty(MATVIEW_STAGE_TABLE, false);
-					String loadScript = table.getProperty(MATVIEW_LOAD_SCRIPT, false);
-					
-					if (statusTable == null || (stageTable == null && loadScript == null)) {
-						throw new TranslatorException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31154));
-					}
-					
-					if (beforeScript == null || afterScript == null) {
-						LogManager.logWarning(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31155));
-					}
-					
+					fixScript(ON_VDB_START_SCRIPT, table);
+					fixScript(ON_VDB_DROP_SCRIPT, table);
+					fixScript(MATVIEW_BEFORE_LOAD_SCRIPT, table);		
+					fixScript(MATVIEW_AFTER_LOAD_SCRIPT, table);
+					fixScript(MATVIEW_LOAD_SCRIPT, table);
 				}
 				else {
 					// internal materialization
 				}
 			}
 		}
+	}
+	
+	/**
+	 * Rather than require a script to be tokenized directly
+	 * we expect it to be wrapped in an anon block
+	 * @param property
+	 * @param table
+	 * @return
+	 */
+	private String fixScript(String property, Table table) {
+		String script = table.getProperty(property, false);
+		if (script == null) {
+			return null;
+		}
+		if (!script.contains(";")) { //$NON-NLS-1$
+			return script;
+		}
+		QueryParser parser = QueryParser.getQueryParser();
+		try {
+			parser.parseCommand(script);
+			return script;
+		} catch (QueryParserException e) {
+		}
+		String wrapped = "begin " + script + "; end"; //$NON-NLS-1$ //$NON-NLS-2$
+		try {
+			parser.parseCommand(wrapped);
+			table.setProperty(property, wrapped);
+			return wrapped;
+		} catch (QueryParserException e) {
+		}
+		//because we don't handle empty ; in scripts also try without
+		wrapped = "begin " + script + " end"; //$NON-NLS-1$ //$NON-NLS-2$
+		try {
+			parser.parseCommand(wrapped);
+			table.setProperty(property, wrapped);
+			return wrapped;
+		} catch (QueryParserException e) {
+		}
+		//give up
+		return script;
 	}
 
 }

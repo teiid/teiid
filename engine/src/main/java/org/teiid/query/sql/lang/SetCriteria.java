@@ -22,9 +22,10 @@
 
 package org.teiid.query.sql.lang;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.TreeSet;
 
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
@@ -152,9 +153,17 @@ public class SetCriteria extends AbstractSetCriteria {
 	    
 	    Collection copyValues = null;
 	    if (isAllConstants()) {
-	    	copyValues = new LinkedHashSet(values);
+	    	if (values instanceof HashSet) {
+	    		copyValues = new LinkedHashSet();
+	    	} else {
+	    		//assume that it's non-hashable
+	    		copyValues = new TreeSet();
+	    	}
+	    	for (Expression ex : (Collection<Expression>)values) {
+	    		copyValues.add(ex.clone());
+	    	}
 	    } else {
-	    	copyValues = LanguageObject.Util.deepClone(new ArrayList(values), Expression.class);
+	    	copyValues = LanguageObject.Util.deepClone(values, Expression.class);
 	    }
 	    
         SetCriteria criteriaCopy = new SetCriteria(copy, copyValues);

@@ -27,7 +27,9 @@ import java.util.TimeZone;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.TimestampWithTimezone;
+import org.teiid.core.util.UnitTestUtil;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
 
@@ -48,10 +50,71 @@ public class TestPIExecutionFactory {
 		TimestampWithTimezone.resetCalendar(null);
 	}
 	
-	@Test public void testDateFormats() throws TranslatorException {
+	@Test 
+	public void testDateFormats() throws TranslatorException {
 		String input = "SELECT stringkey FROM BQT1.MediumA where datevalue < '2001-01-01' and timevalue < '12:11:01' and timestampvalue < '2012-02-03 11:12:13'"; //$NON-NLS-1$
 		String output = "SELECT MediumA.StringKey FROM MediumA WHERE MediumA.DateValue < '2001-01-01' AND MediumA.TimeValue < '12:11:01' AND MediumA.TimestampValue < '2012-02-03 11:12:13.0'"; //$NON-NLS-1$
 		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
 	}
 
+    @Test 
+    public void testLeftJoin() throws Exception {
+        String input = "SELECT * FROM Sample.Asset.ElementAttribute EA LEFT JOIN "
+                + "Sample.Asset.ElementAttributeCategory EAC ON EA.ID = EAC.ElementAttributeID"; //$NON-NLS-1$
+        String output = "SELECT EAC.[ElementAttributeID], cast(EAC.[CategoryID] as String), "
+                + "cast(EA.[ID] as String), EA.[Path], EA.[Name] "
+                + "FROM Sample.Asset.ElementAttribute AS EA "
+                + "LEFT OUTER JOIN [Sample].[Asset].[ElementAttributeCategory] AS EAC "
+                + "ON EA.[ID] = EAC.[ElementAttributeID]"; //$NON-NLS-1$
+        String ddl = ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("pi.ddl"));
+        TranslationHelper.helpTestVisitor(ddl, input, output, TRANSLATOR);
+    }
+    
+    @Test 
+    public void testCrossJoinAsInnter() throws Exception {
+        String input = "SELECT * FROM Sample.Asset.ElementAttribute EA CROSS JOIN "
+                + "Sample.Asset.ElementAttributeCategory EAC"; //$NON-NLS-1$
+        String output = "SELECT EAC.[ElementAttributeID], cast(EAC.[CategoryID] as String), "
+                + "cast(EA.[ID] as String), EA.[Path], EA.[Name] "
+                + "FROM Sample.Asset.ElementAttribute AS EA "
+                + "INNER JOIN [Sample].[Asset].[ElementAttributeCategory] AS EAC "
+                + "ON 1 = 1"; //$NON-NLS-1$
+        String ddl = ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("pi.ddl"));
+        TranslationHelper.helpTestVisitor(ddl, input, output, TRANSLATOR);
+    }
+    
+    @Test 
+    public void testRightOuterAsLeftOuter() throws Exception {
+        String input = "SELECT * FROM Sample.Asset.ElementAttribute EA RIGHT OUTER JOIN "
+                + "Sample.Asset.ElementAttributeCategory EAC ON EA.ID = EAC.ElementAttributeID"; //$NON-NLS-1$
+        String output = "SELECT EAC.[ElementAttributeID], cast(EAC.[CategoryID] as String), "
+                + "cast(EA.[ID] as String), EA.[Path], EA.[Name] "
+                + "FROM [Sample].[Asset].[ElementAttributeCategory] AS EAC "
+                + "LEFT OUTER JOIN Sample.Asset.ElementAttribute AS EA "
+                + "ON EA.[ID] = EAC.[ElementAttributeID]"; //$NON-NLS-1$
+        String ddl = ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("pi.ddl"));
+        TranslationHelper.helpTestVisitor(ddl, input, output, TRANSLATOR);
+    }     
+    
+    @Test 
+    public void testCrossApply() throws Exception {
+        String input = "SELECT * FROM Sample.Asset.ElementAttribute EA CROSS JOIN "
+                + "LATERAL (exec GetPIPoint(EA.ID)) EAC "; //$NON-NLS-1$
+        String output = "SELECT Path, Server, Tag, [Number of Computers], cast(EA.[ID] as String), "
+                + "EA.[Path], EA.[Name] FROM Sample.Asset.ElementAttribute AS EA "
+                + "CROSS APPLY Sample.EventFrame.GetPIPoint(EA.[ID])"; //$NON-NLS-1$
+        String ddl = ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("pi.ddl"));
+        TranslationHelper.helpTestVisitor(ddl, input, output, TRANSLATOR);
+    }   
+    
+    @Test 
+    public void testApplyOuter() throws Exception {
+        String input = "SELECT EA.ID, EAC.Path FROM ElementAttribute EA LEFT OUTER JOIN "
+                + "LATERAL (exec GetPIPoint(EA.ID)) AS EAC ON 1=1"; //$NON-NLS-1$
+        String output = "SELECT cast(EA.[ID] as String), Path "
+                + "FROM Sample.Asset.ElementAttribute AS EA "
+                + "OUTER APPLY Sample.EventFrame.GetPIPoint(EA.[ID])"; //$NON-NLS-1$
+        String ddl = ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("pi.ddl"));
+        TranslationHelper.helpTestVisitor(ddl, input, output, TRANSLATOR);
+    }  
 }

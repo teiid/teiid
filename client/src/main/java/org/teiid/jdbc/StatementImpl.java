@@ -24,6 +24,7 @@ package org.teiid.jdbc;
 
 import java.io.Serializable;
 import java.lang.ref.WeakReference;
+import java.sql.BatchUpdateException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -702,8 +703,9 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 
         setAnalysisInfo(resultsMsg);
 
-        if (resultsMsg.getException() != null) {
-            throw TeiidSQLException.create(resultsMsg.getException());
+        //throw an exception unless this represents a batch update exception
+        if (resultsMsg.getException() != null && (!resultsMsg.isUpdateResult() || resultsMsg.getResultsList() == null)) {
+    		throw TeiidSQLException.create(resultsMsg.getException());
         }
 
         // save warnings if have any
@@ -727,7 +729,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
             if (logger.isLoggable(Level.FINER)) {
             	logger.finer("Recieved update counts: " + Arrays.toString(updateCounts)); //$NON-NLS-1$
             }
-            // In update scenarios close the statement implicitly
+            // In update scenarios close the statement implicitly - the server should have already done this
             try {
 				getDQP().closeRequest(getCurrentRequestID());
 			} catch (TeiidProcessingException e) {
@@ -735,6 +737,14 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 			} catch (TeiidComponentException e) {
 				throw TeiidSQLException.create(e);
 			}            
+            
+            //handle a batch update exception
+            if (resultsMsg.getException() != null) {
+	            TeiidSQLException exe = TeiidSQLException.create(resultsMsg.getException());
+	            BatchUpdateException batchUpdateException = new BatchUpdateException(exe.getMessage(), exe.getSQLState(), exe.getErrorCode(), updateCounts, exe);
+	            this.updateCounts=null;
+	            throw batchUpdateException;
+            }
         } else {
             createResultSet(resultsMsg);
         }

@@ -267,14 +267,18 @@ public class TestMatViews {
 		ModelMetaData mmd1 = new ModelMetaData();
 		mmd1.setName("phy_mv");
 		mmd1.setSchemaSourceType("DDL");
-		mmd1.setSchemaText("CREATE FOREIGN TABLE t1_mv ( col1 string, col2 integer )");
+		mmd1.setSchemaText("CREATE FOREIGN TABLE t1_mv ( col1 string, col2 integer )" +
+				 " create foreign table status (VDBNAME STRING, VDBVERSION STRING, "
+				+ " SCHEMANAME STRING, NAME STRING, TARGETSCHEMANAME STRING, TARGETNAME STRING, "
+				+ " VALID BOOLEAN, LOADSTATE STRING, CARDINALITY LONG, UPDATED TIMESTAMP, LOADNUMBER LONG)");
 		mmd1.addSourceMapping("phy_mv", "loopback", null);
 
 		ModelMetaData mmd2 = new ModelMetaData();
 		mmd2.setName("view1");
 		mmd2.setModelType(Type.VIRTUAL);
 		mmd2.setSchemaSourceType("DDL");
-		mmd2.setSchemaText("CREATE VIEW v1 ( col1 string, col2 integer ) OPTIONS (MATERIALIZED true, MATERIALIZED_TABLE 'phy_mv.t1_mv') AS select t1.col1, t1.col2 FROM t1");
+		mmd2.setSchemaText("CREATE VIEW v1 ( col1 string, col2 integer ) OPTIONS (MATERIALIZED true, "
+				+ "MATERIALIZED_TABLE 'phy_mv.t1_mv', \"teiid_rel:MATVIEW_STATUS_TABLE\" 'phy_mv.status', \"teiid_rel:MATVIEW_LOAD_SCRIPT\" 'select 1') AS select t1.col1, t1.col2 FROM t1");
 		server.addTranslator(LoopbackExecutionFactory.class);
 		server.deployVDB("base", mmd, mmd1, mmd2);
 		

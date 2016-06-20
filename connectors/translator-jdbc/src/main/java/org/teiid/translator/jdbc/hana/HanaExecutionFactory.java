@@ -29,12 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.language.AggregateFunction;
-import org.teiid.language.Expression;
-import org.teiid.language.Function;
-import org.teiid.language.LanguageObject;
-import org.teiid.language.Limit;
-import org.teiid.language.Literal;
+import org.teiid.language.*;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.translator.ExecutionContext;
@@ -195,8 +190,13 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
     	convertModifier.addConvert(FunctionModifier.BOOLEAN, FunctionModifier.STRING, new FunctionModifier() {
 			@Override
 			public List<?> translate(Function function) {
-				Expression stringValue = function.getParameters().get(0);
-				return Arrays.asList("CASE WHEN ", stringValue, " THEN 'true' WHEN not(", stringValue, ") THEN 'false' END"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				Expression trueValue = function.getParameters().get(0);
+				Expression falseValue = trueValue;
+				falseValue = new IsNull(falseValue, true);
+				if (!(trueValue instanceof Predicate)) {
+					trueValue = new Comparison(trueValue, new Literal(Boolean.TRUE, TypeFacility.RUNTIME_TYPES.BOOLEAN), Comparison.Operator.EQ);
+				}
+				return Arrays.asList("CASE WHEN ", trueValue, " THEN 'true' WHEN ", falseValue, " THEN 'false' END"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			}
 		});
     	convertModifier.addSourceConversion(new FunctionModifier() {
@@ -314,6 +314,7 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
 		supportedFunctions.add(SourceSystemFunctions.DAYOFMONTH); 
 		supportedFunctions.add(SourceSystemFunctions.DAYOFYEAR);
 		supportedFunctions.add(SourceSystemFunctions.DAYOFWEEK);
+		supportedFunctions.add(SourceSystemFunctions.DAYNAME);
 		supportedFunctions.add(SourceSystemFunctions.HOUR); 
 		supportedFunctions.add(SourceSystemFunctions.MINUTE); 
 		supportedFunctions.add(SourceSystemFunctions.MONTH);
@@ -433,6 +434,14 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
             }
     	}
     	return super.translate(obj, context);
+    }
+    
+    @Override
+    public String translateLiteralBoolean(Boolean booleanValue) {
+    	if (booleanValue) {
+    		return "true"; //$NON-NLS-1$
+    	}
+    	return "false"; //$NON-NLS-1$
     }
 	
 }

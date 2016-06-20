@@ -63,15 +63,7 @@ public class SolrUpdateExecution implements UpdateExecution {
 
 	@Override
 	public void execute() throws TranslatorException {
-		if (this.command instanceof BatchedUpdates) {
-			List<Command> commands = ((BatchedUpdates)this.command).getUpdateCommands();
-			for (Command cmd:commands) {
-				process(cmd);
-			}
-		}
-		else {
-			process(this.command);
-		}
+		process(this.command);
 	}
 	
 	private void process(Command cmd) throws TranslatorException {

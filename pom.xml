@@ -12,7 +12,7 @@
 	<packaging>pom</packaging>
 	<name>Teiid</name>
 
-    <version>9.0.0.CR2-SNAPSHOT</version>
+    <version>9.1.0.Alpha1-SNAPSHOT</version>
 	<description>Federated SQL and XML query engine.</description>
 	<properties>
 	    <site.url>http://www.jboss.org/teiid</site.url>
@@ -49,7 +49,7 @@
         <version.org.codehaus.btm>2.1.3</version.org.codehaus.btm>
         <version.org.antlr>4.5</version.org.antlr>
         <version.org.mongodb.mongo-java-driver>2.13.1</version.org.mongodb.mongo-java-driver>
-        <version.teiid.console>2.6.1</version.teiid.console>
+        <version.teiid.console>2.7</version.teiid.console>
         <version.net.sourceforge.saxon>9.5.1-6</version.net.sourceforge.saxon>
         <version.jta>1.1</version.jta>
         <version.org.jboss.oreva>1.0.0</version.org.jboss.oreva>
@@ -105,7 +105,6 @@
         <version.org.apache.ant>1.8.2</version.org.apache.ant>
         <version.com.fasterxml.jackson.dataformat>2.4.5</version.com.fasterxml.jackson.dataformat>	 
         <version.javax.validation>1.1.0.Final</version.javax.validation>   	    
-        <version.com.fasterxml.jackson.dataformat>2.4.5</version.com.fasterxml.jackson.dataformat>	    	    
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -1591,16 +1590,6 @@
                 <artifactId>jackson-annotations</artifactId>
                 <version>${version.com.fasterxml.jackson.core}</version>
             </dependency>
-			<dependency>
-				<groupId>com.fasterxml.jackson.dataformat</groupId>
-				<artifactId>jackson-dataformat-yaml</artifactId>
-				<version>${version.com.fasterxml.jackson.dataformat}</version>
-			</dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.dataformat</groupId>
-                <artifactId>jackson-dataformat-xml</artifactId>
-                <version>${version.com.fasterxml.jackson.dataformat}</version>                
-            </dependency>             
     	    <dependency>
         		<groupId>org.eclipse.persistence</groupId>
         		<artifactId>eclipselink</artifactId>
@@ -1682,11 +1671,6 @@
 				<artifactId>swagger-parser</artifactId>
 				<version>${version.swagger-parser}</version>
 		    </dependency> 
-            <dependency>
-                <groupId>io.swagger</groupId>
-                <artifactId>swagger-parser</artifactId>
-                <version>${version.swagger-parser}</version>
-            </dependency>             
             <dependency>
                 <groupId>org.jboss.narayana.jta</groupId>
                 <artifactId>narayana-jta</artifactId>

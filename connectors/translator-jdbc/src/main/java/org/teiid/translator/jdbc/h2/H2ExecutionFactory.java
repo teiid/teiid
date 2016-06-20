@@ -41,6 +41,7 @@ import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.ModFunctionModifier;
+import org.teiid.translator.jdbc.SQLConversionVisitor;
 import org.teiid.translator.jdbc.hsql.AddDiffModifier;
 import org.teiid.translator.jdbc.oracle.ConcatFunctionModifier;
 import org.teiid.translator.jdbc.postgresql.PostgreSQLExecutionFactory;
@@ -259,5 +260,19 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean useParensForJoins() {
     	return true;
+    }
+    
+    @Override
+    public SQLConversionVisitor getSQLConversionVisitor() {
+    	return new SQLConversionVisitor(this) {
+    		/**
+    		 * low level override so that only the right hand side nested join
+    		 * is put in parens
+    		 */
+    		@Override
+    		protected boolean useParensForLHSJoins() {
+    			return false;
+    		}
+    	};
     }
 }

@@ -525,4 +525,16 @@ public class TestRuleMergeVirtual {
             });
     }
     
+    @Test public void testSingleOrPredicate() throws Exception {
+    	String sql = "SELECT alias3.a1 FROM (select e2 as a from pm1.g1) as alias2 INNER JOIN (SELECT t2.a AS a1, t1.a "
+    			+ "FROM (SELECT 1 AS a) AS t1 INNER JOIN (select e2 as a from pm1.g1) as t2 ON t1.a = t2.a) "
+    			+ "AS alias3 ON ((alias3.a = alias2.a) OR (alias3.a > alias2.a))";
+    	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+    	
+    	TestOptimizer.helpPlan(sql, //$NON-NLS-1$
+                RealMetadataFactory.example1Cached(),
+                new String[] {
+                    "SELECT 1 FROM pm1.g1 AS g_0 WHERE (g_0.e2 = 1) OR (g_0.e2 < 1)", "SELECT g_0.e2 FROM pm1.g1 AS g_0 WHERE g_0.e2 = 1"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    }
+    
 }

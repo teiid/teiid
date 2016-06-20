@@ -60,13 +60,13 @@ import org.teiid.jdbc.PreparedStatementImpl;
 import org.teiid.jdbc.ResultSetImpl;
 import org.teiid.jdbc.StatementImpl;
 import org.teiid.jdbc.TeiidDriver;
+import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.net.TeiidURL;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.net.socket.SocketServerConnection;
 import org.teiid.odbc.PGUtil.PgColInfo;
-import org.teiid.query.parser.SQLParserUtil;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.security.GSSResult;
 import org.teiid.transport.LocalServerConnection;
@@ -167,10 +167,10 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			"\\s+and cn.contype = 'p'\\)" +  //$NON-NLS-1$
 			"\\s+order by ref.oid, ref.i", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 		
-	private static Pattern cursorSelectPattern = Pattern.compile("DECLARE\\s+\"(\\w+)\"(?:\\s+INSENSITIVE)?(\\s+(NO\\s+)?SCROLL)?\\s+CURSOR\\s+(?:WITH(?:OUT)? HOLD\\s+)?FOR\\s+(.*)", Pattern.CASE_INSENSITIVE|Pattern.DOTALL); //$NON-NLS-1$
-	private static Pattern fetchPattern = Pattern.compile("FETCH(?:\\s+FORWARD)?\\s+(\\d+)\\s+(?:IN|FROM)\\s+\"(\\w+)\"\\s*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-	private static Pattern movePattern = Pattern.compile("MOVE(?:\\s+(FORWARD|BACKWARD))?\\s+(\\d+)\\s+(?:IN|FROM)\\s+\"(\\w+)\"\\s*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-	private static Pattern closePattern = Pattern.compile("CLOSE \"(\\w+)\"", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+	private static Pattern cursorSelectPattern = Pattern.compile("DECLARE\\s+(\\S+)(?:\\s+INSENSITIVE)?(\\s+(NO\\s+)?SCROLL)?\\s+CURSOR\\s+(?:WITH(?:OUT)? HOLD\\s+)?FOR\\s+(.*)", Pattern.CASE_INSENSITIVE|Pattern.DOTALL); //$NON-NLS-1$
+	private static Pattern fetchPattern = Pattern.compile("FETCH(?:(?:\\s+FORWARD)?\\s+(\\d+)\\s+(?:IN|FROM))?\\s+(\\S+)\\s*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+	private static Pattern movePattern = Pattern.compile("MOVE(?:\\s+(FORWARD|BACKWARD))?\\s+(\\d+)\\s+(?:IN|FROM)\\s+(\\S+)\\s*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+	private static Pattern closePattern = Pattern.compile("CLOSE (\\S+)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	
 	private static Pattern deallocatePattern = Pattern.compile("DEALLOCATE(?:\\s+PREPARE)?\\s+(.*)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	private static Pattern releasePattern = Pattern.compile("RELEASE (\\w+\\d?_*)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
@@ -1046,6 +1046,15 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		return this.connection.getExecutionProperty(PgBackendProtocol.CLIENT_ENCODING);
 	}
 	
+	static String normalizeName(String name) {
+		if (name.length() > 1 && name.startsWith("\"") && name.endsWith("\"")) {
+			return StringUtil.replaceAll(name.substring(1, name.length() - 1), "\"", "\"\"");
+		}
+		//--we are not consistently dealing with identifier naming/casing
+		//return name.toUpperCase();
+		return name;
+	}
+	
     private final class QueryWorkItem implements Runnable {
 		private final ScriptReader reader;
 		String sql;
@@ -1121,21 +1130,26 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		    	        	if (m.group(2) != null && m.group(3) == null ) {
 	    	        			scroll = true;
 		    	        	}
-		    				cursorExecute(m.group(1), fixSQL(m.group(4)), results, scroll);
+		    				cursorExecute(normalizeName(m.group(1)), fixSQL(m.group(4)), results, scroll);
 		    			}
 		    			else if ((m = fetchPattern.matcher(sql)).matches()){
-		    				cursorFetch(m.group(2), Integer.parseInt(m.group(1)), results);
+		    				String rows = m.group(1);
+		    				int rowCount = 1;
+		    				if (rows != null) {
+		    					rowCount = Integer.parseInt(rows);
+		    				}
+		    				cursorFetch(normalizeName(m.group(2)), rowCount, results);
 		    			}
 		    			else if ((m = movePattern.matcher(sql)).matches()){
-		    				cursorMove(m.group(3), m.group(1), Integer.parseInt(m.group(2)), results);
+		    				cursorMove(normalizeName(m.group(3)), m.group(1), Integer.parseInt(m.group(2)), results);
 		    			}
 		    			else if ((m = closePattern.matcher(sql)).matches()){
-		    				cursorClose(m.group(1));
+		    				cursorClose(normalizeName(m.group(1)));
 		    				results.getResultsReceiver().receiveResults(1);
 		    			}
 		    			else if ((m = deallocatePattern.matcher(sql)).matches()) { 
 		    				String plan_name = m.group(1);
-		    				plan_name = SQLParserUtil.normalizeId(plan_name);
+		    				plan_name = normalizeName(plan_name);
 		    				closePreparedStatement(plan_name);
 		    				client.sendCommandComplete("DEALLOCATE", null); //$NON-NLS-1$
 		    				results.getResultsReceiver().receiveResults(1);
@@ -1149,7 +1163,11 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		            	return;
 		            } 
 		        }
-			} catch(IOException e) {
+			} catch (NumberFormatException e) {
+				//create a sqlexception so that the logic doesn't over log this
+				done(TeiidSQLException.create(e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40147, e.getMessage())));
+				return;
+			} catch(Exception e) {
 				done(e);
 				return;
 			}
