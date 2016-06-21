@@ -4,7 +4,7 @@
 
      <model type="PHYSICAL" visible="true" name="timeseries">
          <property name="importer.useFullSchemaName" value="false"/>
-         <source name="timeseries" connection-jndi-name="java:Oracle11_PushDS" translator-name="timeseries.delegated-translator"/>
+         <source name="timeseries" connection-jndi-name="java:/ChainedDS" translator-name="timeseries.delegated-translator"/>
      </model>
 
      <translator name="timeseries.delegating-delegated-translator" type="fake">

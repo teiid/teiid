@@ -131,7 +131,7 @@ public class OAuthUtil {
 
         String clientID = getInput(in, "Enter the Client ID = ");
         String clientSecret = getInput(in, "Enter the Client Secret = ");
-        org.apache.cxf.rs.security.oauth2.client.OAuthClientUtils.Consumer consumer = new org.apache.cxf.rs.security.oauth2.client.OAuthClientUtils.Consumer(clientID,clientSecret);
+        org.apache.cxf.rs.security.oauth2.client.Consumer consumer = new org.apache.cxf.rs.security.oauth2.client.Consumer(clientID,clientSecret);
         
         String authorizeURL = getInput(in, "Enter the User Authorization URL = ");
         String scope = getInput(in, "Enter scope (hit enter for none) = ", true);

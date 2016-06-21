@@ -216,7 +216,7 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
 		        "list-get", "list-long-running-requests", "list-remove", "list-requests", 
 		        "list-requests-per-session", "list-requests-per-vdb", "list-sessions", "list-transactions", 
 		        "list-translators", "list-vdbs", "map-clear", "map-get", "map-put", "map-remove", 
-		        "mark-datasource-available", "read-attribute", "read-attribute-group", 
+		        "mark-datasource-available", "query", "read-attribute", "read-attribute-group", 
 		        "read-attribute-group-names", "read-children-names", "read-children-resources", 
 		        "read-children-types", "read-operation-description", "read-operation-names", 
 		        "read-rar-description", "read-resource", "read-resource-description", 
