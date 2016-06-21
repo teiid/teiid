@@ -206,7 +206,7 @@ BEGIN
 	BEGIN 
 	    LOOP ON (SELECT valid, updated, loadstate, cardinality, loadnumber FROM #load) AS matcursor
 	    BEGIN
-		    IF (not matcursor.valid OR (matcursor.valid AND TIMESTAMPDIFF(SQL_TSI_SECOND, matcursor.updated, now()) > (ttl/1000)) OR invalidate OR loadstate = 'NEEDS_LOADING'  OR loadstate = 'FAILED_LOAD')
+		    IF (loadstate <> 'LOADING' OR TIMESTAMPDIFF(SQL_TSI_SECOND, matcursor.updated, now()) > (ttl/1000))
 		        BEGIN 
 		            EXECUTE IMMEDIATE updateStmt || ' AND loadNumber = ' || matcursor.loadNumber USING loadNumber = matcursor.loadNumber + 1, vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = loadMatView.viewName, updated = now(), LoadState = 'LOADING', valid = matcursor.valid AND NOT invalidate, cardinality = matcursor.cardinality;
 					DECLARE integer updated = VARIABLES.ROWCOUNT;
@@ -224,7 +224,9 @@ BEGIN
 		        END
 	        ELSE
 		        BEGIN
-		        	VARIABLES.rowsUpdated = -2;
+	                IF (VARIABLES.status = 'DONE' AND invalidate AND NOT matcursor.valid)
+                        EXECUTE IMMEDIATE 'UPDATE ' || VARIABLES.statusTable || ' SET valid = false ' || crit || ' AND loadNumber = ' || matcursor.loadNumber USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = loadMatView.viewName;
+		        	VARIABLES.rowsUpdated = -1;
 		        	VARIABLES.status = 'DONE';
 		        END
 	    END
