@@ -21,7 +21,6 @@
  */
 package org.teiid.jboss;
 
-import org.jboss.as.controller.ObjectTypeAttributeDefinition;
 import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.dmr.ModelType;
 
@@ -54,10 +53,6 @@ class OperationsConstants {
 	
 	public static final SimpleAttributeDefinition OPTIONAL_VDB_NAME = new SimpleAttributeDefinition("vdb-name", ModelType.STRING, true); //$NON-NLS-1$
 	public static final SimpleAttributeDefinition OPTIONAL_VDB_VERSION = new SimpleAttributeDefinition("vdb-version", ModelType.STRING, true); //$NON-NLS-1$
-	
-	public static final String USER_PROPERTIES = "max-session-per-user"; //$NON-NLS-1$
-	public static final SimpleAttributeDefinition USER_NAME = new SimpleAttributeDefinition("username", ModelType.STRING, false); //$NON-NLS-1$
-	public static final SimpleAttributeDefinition USER_MAX_SESSION = new SimpleAttributeDefinition("max-sessions", ModelType.LONG, false); //$NON-NLS-1$
-	public static final ObjectTypeAttributeDefinition  USER_PROPERTIES_DEF = ObjectTypeAttributeDefinition.Builder.of("PropertyUserMaxSession", USER_NAME, USER_MAX_SESSION).build();  //$NON-NLS-1$
+
 	
 }
