@@ -80,8 +80,6 @@ public interface SessionService {
     boolean terminateSession(String terminatedSessionID, String adminSessionID);
     
     void addMaxSessionPerUser(String user, long maxSesson);
-    void removeMaxSessionPerUser(String user);
-    Map<String, Long> getMaxSessionPerUser();
 
     /**
      * Get the collection of active user sessions on the system.

@@ -98,6 +98,7 @@ enum Element {
 	TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE("max-socket-threads", "max-socket-threads"),
 	TRANSPORT_IN_BUFFER_SIZE_ATTRIBUTE("input-buffer-size", "input-buffer-size"),
 	TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE("output-buffer-size", "output-buffer-size"),
+	TRANSPORT_MAX_CONNECTIONS_PER_USER_ATTRIBUTE("max-connections-per-user", "max-connections-per-user"),
 	
 	AUTHENTICATION_ELEMENT("authentication"),
 	AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE("security-domain", "authentication-security-domain"),	

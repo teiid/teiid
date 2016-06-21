@@ -35,6 +35,7 @@ import javax.xml.stream.XMLStreamException;
 import org.jboss.as.controller.parsing.ParseUtils;
 import org.jboss.as.controller.persistence.SubsystemMarshallingContext;
 import org.jboss.dmr.ModelNode;
+import org.jboss.dmr.ModelType;
 import org.jboss.staxmapper.XMLElementReader;
 import org.jboss.staxmapper.XMLElementWriter;
 import org.jboss.staxmapper.XMLExtendedStreamReader;
@@ -161,6 +162,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     	TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE.marshallAsAttribute(node, false, writer);
     	TRANSPORT_IN_BUFFER_SIZE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
     	TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+    	TRANSPORT_MAX_CONNECTIONS_PER_USER_ATTRIBUTE.marshallAsAttribute(node, false, writer);
     	
     	if (like(node, Element.PG_ELEMENT)) {
 			writer.writeStartElement(Element.PG_ELEMENT.getLocalName());
@@ -429,6 +431,25 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     			case TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE:
     				node.get(element.getModelName()).set(Integer.parseInt(attrValue));
     				break;
+    			case TRANSPORT_MAX_CONNECTIONS_PER_USER_ATTRIBUTE:
+    			    attrValue = attrValue.replace("[", "")//$NON-NLS-1$ //$NON-NLS-2$
+    			            .replace("]", "") //$NON-NLS-1$ //$NON-NLS-2$
+    			            .replace("(", "") //$NON-NLS-1$ //$NON-NLS-2$
+    			            .replace(")", "") //$NON-NLS-1$ //$NON-NLS-2$
+    			            .replace("\"", ""); //$NON-NLS-1$ //$NON-NLS-2$
+    		        ModelNode listNode = new ModelNode(ModelType.LIST);
+    		        List<ModelNode> collections = new ArrayList<>();
+    		        for(String prop : attrValue.split(",")){//$NON-NLS-1$
+    		            String[] array = prop.split("=>");//$NON-NLS-1$
+    		            String key = array[0].trim();
+    		            String value = array[1].trim();
+    		            ModelNode propNode = new ModelNode(ModelType.PROPERTY);
+    		            propNode.set(key, Long.parseLong(value));
+    		            collections.add(propNode);
+    		        }
+    		        listNode.set(collections);
+                    node.get(element.getModelName()).set(listNode);
+                    break;
                 default: 
                     throw ParseUtils.unexpectedAttribute(reader, i);    				
     			}

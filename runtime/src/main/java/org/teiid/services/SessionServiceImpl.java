@@ -93,7 +93,10 @@ public class SessionServiceImpl implements SessionService {
 
     private DQPCore dqp;
     
-    private Map<String, Long> maxSessionPerUser;
+    // Keep the maximum connections per users setting, which passed from configuration
+    // 'permissionMap' is null hints no maximum connections per users limitation
+    private Map<String, Long> permissionMap;
+    // Track the connection per user if permissionMap not null
     private Map<String, Long> maxSessionPerUserCount;
 
     private Map<String, SessionMetadata> sessionCache = new ConcurrentHashMap<String, SessionMetadata>();
@@ -358,35 +361,24 @@ public class SessionServiceImpl implements SessionService {
 	public void setSessionMaxLimit(long limit) {
 		this.sessionMaxLimit = limit;
 	}
-	
-	public long getMaxSessionCount(String user) {
-	    if(this.maxSessionPerUser != null) {
-	        return this.maxSessionPerUser.get(user) == null ? sessionMaxLimit : this.maxSessionPerUser.get(user);
-	    } else {
-	        return sessionMaxLimit;
-	    }
-    }
 
 	@Override
     public void addMaxSessionPerUser(String user, long maxSesson) {
-        if(this.maxSessionPerUser == null) {
-            this.maxSessionPerUser =  new ConcurrentHashMap<>();
+        if(this.permissionMap == null) {
+            this.permissionMap =  new ConcurrentHashMap<>();
         }
-        this.maxSessionPerUser.put(user, maxSesson);
-    }
-
-    @Override
-    public void removeMaxSessionPerUser(String user) {
-        if(this.maxSessionPerUser != null){
-            this.maxSessionPerUser.remove(user);
-        }
+        this.permissionMap.put(user, maxSesson);
     }
     
-    public Map<String, Long> getMaxSessionPerUser(){
-        return this.maxSessionPerUser;
+    private long getMaxSessionCount(String user) {
+        if(this.permissionMap != null) {
+            return this.permissionMap.get(user) == null ? sessionMaxLimit : this.permissionMap.get(user);
+        } else {
+            return sessionMaxLimit;
+        }
     }
 
-    public long getSessionCount(String user) {
+    private long getSessionCount(String user) {
         if(this.maxSessionPerUserCount != null){
             return this.maxSessionPerUserCount.get(user) == null ? 0 : this.maxSessionPerUserCount.get(user);
         } else {
@@ -394,18 +386,27 @@ public class SessionServiceImpl implements SessionService {
         }
     }
 
-    public void increaseSessionCount(String user) {
+    private void increaseSessionCount(String user) {
+        
+        if(this.permissionMap == null){ // no connection per user setting
+            return;
+        }
+        
         if(this.maxSessionPerUserCount == null) {
             this.maxSessionPerUserCount =  new ConcurrentHashMap<>();
-            this.maxSessionPerUserCount.put(user, 1L);
-        } else {
-            long count = this.maxSessionPerUserCount.get(user) == null ? 0 : this.maxSessionPerUserCount.get(user);
-            count++;
-            this.maxSessionPerUserCount.put(user, count);
-        }    
+        }
+        
+        long count = this.maxSessionPerUserCount.get(user) == null ? 0 : this.maxSessionPerUserCount.get(user);
+        count++;
+        this.maxSessionPerUserCount.put(user, count);
     }
     
-    public void decreaseSessionCount(String user) {
+    private void decreaseSessionCount(String user) {
+        
+        if(this.permissionMap == null){ // no connection per user setting
+            return;
+        }
+        
         if(this.maxSessionPerUserCount != null && this.maxSessionPerUserCount.get(user) != null) {
             long count = this.maxSessionPerUserCount.get(user);
             count--;

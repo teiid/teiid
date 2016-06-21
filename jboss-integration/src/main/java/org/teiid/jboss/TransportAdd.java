@@ -26,6 +26,8 @@ import static org.teiid.jboss.TeiidConstants.*;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.naming.InitialContext;
 
@@ -64,6 +66,7 @@ class TransportAdd extends AbstractAddStepHandler {
 		TeiidConstants.TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE,
 		TeiidConstants.TRANSPORT_IN_BUFFER_SIZE_ATTRIBUTE,
 		TeiidConstants.TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE,
+		TeiidConstants.TRANSPORT_MAX_CONNECTIONS_PER_USER_ATTRIBUTE,
 		
 		TeiidConstants.PG_MAX_LOB_SIZE_ALLOWED_ELEMENT,
 		
@@ -134,6 +137,16 @@ class TransportAdd extends AbstractAddStepHandler {
         
         transportBuilder.setInitialMode(ServiceController.Mode.ACTIVE);
         transportBuilder.install();
+        
+        
+        if (isDefined(TRANSPORT_MAX_CONNECTIONS_PER_USER_ATTRIBUTE, operation, context)){
+            Map<String, Long> permissionMap = asMap(TRANSPORT_MAX_CONNECTIONS_PER_USER_ATTRIBUTE, operation, context);
+            SessionService sessionService = (SessionService) context.getServiceRegistry(false).getService(TeiidServiceNames.SESSION).getValue();
+            for(Entry<String, Long> entry : permissionMap.entrySet()){
+                sessionService.addMaxSessionPerUser(entry.getKey(), entry.getValue());
+            }
+            
+        }
         
         // register a JNDI name, this looks hard.
         if (transport.isLocal() && !isLocalRegistered(transportName)) {

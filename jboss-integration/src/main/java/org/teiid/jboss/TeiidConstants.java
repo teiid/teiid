@@ -21,6 +21,10 @@
  */
 package org.teiid.jboss;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.SimpleAttributeDefinition;
@@ -28,6 +32,7 @@ import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
 import org.jboss.as.controller.client.helpers.MeasurementUnit;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
+import org.jboss.dmr.Property;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.net.socket.SocketUtil;
 import org.teiid.transport.SSLConfiguration;
@@ -376,6 +381,12 @@ public class TeiidConstants {
         .setAllowNull(true)
         .setAllowExpression(false)
         .setDefaultValue(new ModelNode(0))
+        .build();
+	
+	public static SimpleAttributeDefinition TRANSPORT_MAX_CONNECTIONS_PER_USER_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.TRANSPORT_MAX_CONNECTIONS_PER_USER_ATTRIBUTE.getModelName(), ModelType.LIST)
+        .setXmlName(Element.TRANSPORT_MAX_CONNECTIONS_PER_USER_ATTRIBUTE.getXMLName())
+        .setAllowNull(true)
+        .setAllowExpression(false)
         .build();   
 	
 	//AUTHENTICATION_ELEMENT("authentication",false, false, MeasurementUnit.NONE);
@@ -565,6 +576,18 @@ public class TeiidConstants {
     public static String asString(final SimpleAttributeDefinition attr, ModelNode node, OperationContext context) throws OperationFailedException {
         ModelNode resolvedNode = attr.resolveModelAttribute(context, node);
         return resolvedNode.isDefined() ? resolvedNode.asString() : null;
+    }
+    
+    public static Map<String, Long> asMap(final SimpleAttributeDefinition attr, ModelNode node, OperationContext context) throws OperationFailedException {
+        Map<String, Long> results = new HashMap<>();
+        ModelNode resolvedNode = attr.resolveModelAttribute(context, node);
+        List<Property> list = resolvedNode.isDefined() ? resolvedNode.asPropertyList() : null;
+        if(list != null) {
+            for(Property prop : list){
+                results.put(prop.getName(), prop.getValue().asLong());
+            }
+        }      
+        return results;
     }
     
     public static Boolean asBoolean(final SimpleAttributeDefinition attr, ModelNode node, OperationContext context) throws OperationFailedException {

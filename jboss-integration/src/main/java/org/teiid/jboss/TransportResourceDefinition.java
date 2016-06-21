@@ -22,6 +22,8 @@
 package org.teiid.jboss;
 
 import org.jboss.as.controller.PathElement;
+import org.jboss.as.controller.SimpleOperationDefinition;
+import org.jboss.as.controller.SimpleOperationDefinitionBuilder;
 import org.jboss.as.controller.SimpleResourceDefinition;
 import org.jboss.as.controller.operations.common.GenericSubsystemDescribeHandler;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
@@ -31,6 +33,7 @@ class TransportResourceDefinition extends SimpleResourceDefinition {
 	/*
 	private final List<AccessConstraintDefinition> accessConstraints;
 	*/
+	
 	
 	public TransportResourceDefinition() {
 		super(TRANSPORT_PATH, TeiidExtension.getResourceDescriptionResolver(Element.TRANSPORT_ELEMENT.getLocalName()), 
@@ -46,9 +49,6 @@ class TransportResourceDefinition extends SimpleResourceDefinition {
     public void registerOperations(ManagementResourceRegistration resourceRegistration) {
         super.registerOperations(resourceRegistration);
         resourceRegistration.registerOperationHandler(GenericSubsystemDescribeHandler.DEFINITION,  GenericSubsystemDescribeHandler.INSTANCE);
-        new AddMaxSessionPerUser().register(resourceRegistration);
-        new RemoveMaxSessionPerUser().register(resourceRegistration);
-        new MaxSessionPerUser().register(resourceRegistration);
     }
 
     @Override
