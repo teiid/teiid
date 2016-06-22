@@ -895,5 +895,45 @@ public class TestWithClauseProcessing {
 	    TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("a", "a")});
 	}
 	
+	@Test public void testViewPlanningDeeplyNestedInlineRepeatedCTEName() throws Exception {
+	    CommandContext cc = TestProcessor.createCommandContext();
+	    BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+		bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+		bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
+		
+		TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table test_a (a varchar, b varchar); "
+				+ "	create view tv0 as WITH alias2 (a) AS (SELECT a FROM (SELECT 1 AS a) AS cte1) SELECT cte3.a FROM alias2 INNER JOIN (SELECT a FROM alias2) AS cte3 ON cte3.a = alias2.a;"
+				+ " create view tv1 as WITH cte1 as (SELECT a from test_a), alias2 as (select a from cte1), cte3 as (select a from alias2) SELECT cte3.a FROM alias2 join cte3 on cte3.a=alias2.a;"
+				+ " create view tv2 as WITH alias2 as (select b, a from test_a), cte4 as (select a from alias2) SELECT cte4.a FROM cte4 join alias2 on cte4.a=alias2.a ;", "x", "y");
+		
+		String sql = "with CTE1 as ( select a from ( with CTE11 as (select a from tv0) select a from CTE11 ) as  SUBQ1), CTE2 as ( select a from ( with CTE21 as (select a from tv1) select a from CTE21 ) as  SUBQ2) select * from CTE1 as T1 join CTE2 as T2 on T1.a=T2.a";
+
+		ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
+	    HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+	    hdm.addData("WITH alias2__1 (a) AS (SELECT g_0.a FROM test_a AS g_0) SELECT g_1.a AS c_0 FROM alias2__1 AS g_0, alias2__1 AS g_1 WHERE g_1.a = g_0.a AND g_1.a = '1' ORDER BY c_0", Arrays.asList("1"));
+	    
+	    TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("1", 1)});
+	}
+	
+	@Test public void testViewPlanningDeeplyNestedInlineRepeatedCTEName1() throws Exception {
+	    CommandContext cc = TestProcessor.createCommandContext();
+	    BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+		bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+		bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
+		
+		TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table test_a (a varchar, b varchar); "
+				+ "	create view tv0 as WITH alias2 (a) AS (SELECT a FROM (SELECT 1 AS a) AS cte1) SELECT cte3.a FROM alias2 INNER JOIN (SELECT a FROM alias2) AS cte3 ON cte3.a = alias2.a;"
+				+ " create view tv1 as WITH cte1 as (SELECT a from test_a), alias2 as (select a from cte1), cte3 as (select a from alias2) SELECT cte3.a FROM alias2 join cte3 on cte3.a=alias2.a;"
+				+ " create view tv2 as WITH alias2 as (select b, a from test_a), cte4 as (select a from alias2) SELECT cte4.a FROM cte4 join alias2 on cte4.a=alias2.a ;", "x", "y");
+		
+		String sql = "with CTE1 as ( select a from ( with CTE11 as (select a from tv2) select a from CTE11 ) as  SUBQ1), CTE2 as ( select a from ( with CTE21 as (select a from tv2) select a from CTE21 ) as  SUBQ2) select * from CTE1 as T1 join CTE2 as T2 on T1.a=T2.a";
+
+		ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
+	    HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+	    hdm.addData("WITH alias2 (b, a) AS (SELECT NULL, g_0.a FROM test_a AS g_0) SELECT g_2.a, g_0.a FROM alias2 AS g_0, alias2 AS g_1, alias2 AS g_2, alias2 AS g_3 WHERE g_2.a = g_3.a AND g_0.a = g_1.a AND g_0.a = g_2.a", Arrays.asList(1, 1));
+	    
+	    TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList(1, 1)});
+	}
+	
 }
 
