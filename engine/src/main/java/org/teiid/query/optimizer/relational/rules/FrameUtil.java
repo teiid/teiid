@@ -355,10 +355,10 @@ public class FrameUtil {
      * @throws QueryMetadataException
      * @throws TeiidComponentException
      */
-    public static Map<ElementSymbol, Expression> buildSymbolMap(GroupSymbol oldGroup, GroupSymbol newGroup, QueryMetadataInterface metadata) 
+    public static LinkedHashMap<ElementSymbol, Expression> buildSymbolMap(GroupSymbol oldGroup, GroupSymbol newGroup, QueryMetadataInterface metadata) 
         throws QueryMetadataException, TeiidComponentException {
 
-        Map<ElementSymbol, Expression> map = new HashMap<ElementSymbol, Expression>();    
+    	LinkedHashMap<ElementSymbol, Expression> map = new LinkedHashMap<ElementSymbol, Expression>();    
 
         // Get elements of old group
         List<ElementSymbol> elements = ResolverUtil.resolveElementsInGroup(oldGroup, metadata);
