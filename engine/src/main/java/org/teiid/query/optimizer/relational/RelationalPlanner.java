@@ -74,6 +74,7 @@ import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageObject.Util;
+import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
@@ -390,54 +391,75 @@ public class RelationalPlanner {
 			throws QueryMetadataException, TeiidComponentException {
 		for (int i = 0; i < withList.size(); i++) {
 			WithQueryCommand with = withList.get(i);
+			//check for a duplicate with clause, which can occur in a self-join scenario
+			int index = this.withPlanningState.withList.indexOf(with);
+			if (index > -1) {
+				final GroupSymbol old = with.getGroupSymbol();
+				replaceSymbol(command, old, this.withPlanningState.withList.get(index).getGroupSymbol());
+				continue;
+			}
 			final GroupSymbol old = with.getGroupSymbol();
 			if (!context.getGroups().add(old.getName())) {
 				final GroupSymbol gs = RulePlaceAccess.recontextSymbol(old, context.getGroups());
-				Map<ElementSymbol, Expression> replacementSymbols = FrameUtil.buildSymbolMap(old, gs, metadata);
+				LinkedHashMap<ElementSymbol, Expression> replacementSymbols = FrameUtil.buildSymbolMap(old, gs, metadata);
 				gs.setDefinition(null);
 				//update the with clause with the new group name / columns
 				with.setGroupSymbol(gs);
 				with.setColumns(new ArrayList(replacementSymbols.values()));
 				//we use equality checks here because there may be a similarly named at lower scopes
-				ExpressionMappingVisitor emv = new ExpressionMappingVisitor(null) {
-					@Override
-					public void visit(UnaryFromClause obj) {
-						if (old.getMetadataID() == obj.getGroup().getMetadataID()) {
-							String def = obj.getGroup().getDefinition();
-							if (def != null) {
-								String name = obj.getGroup().getName();
-								obj.setGroup(gs.clone());
-								obj.getGroup().setDefinition(gs.getName());
-								obj.getGroup().setName(name);
-							} else {
-								obj.setGroup(gs);
-							}
-						}
-					}
-					
-					@Override
-					public Expression replaceExpression(Expression element) {
-						if (element instanceof ElementSymbol) {
-							ElementSymbol es = (ElementSymbol)element;
-							if (es.getGroupSymbol().getMetadataID() == old.getMetadataID()) {
-								String def = es.getGroupSymbol().getDefinition();
-								if (def != null) {
-									String name = es.getGroupSymbol().getName();
-									es.setGroupSymbol(gs.clone());
-									es.getGroupSymbol().setDefinition(gs.getName());
-									es.getGroupSymbol().setName(name);
-								} else {
-									es.setGroupSymbol(gs);
-								}	
-							}
-						}
-						return element;
-					}
-				};
-				PreOrPostOrderNavigator.doVisit(command, emv, PreOrPostOrderNavigator.PRE_ORDER, true);
+				replaceSymbol(command, old, gs);
 			}
+			this.withPlanningState.withList.add(with);
 		}
-		this.withPlanningState.withList.addAll(withList);
+	}
+
+	private void replaceSymbol(final QueryCommand command,
+			final GroupSymbol old, final GroupSymbol gs) {
+		PreOrPostOrderNavigator nav = new PreOrPostOrderNavigator(new LanguageVisitor() {
+			@Override
+			public void visit(UnaryFromClause obj) {
+				if (old.getMetadataID() == obj.getGroup().getMetadataID()) {
+					String def = obj.getGroup().getDefinition();
+					if (def != null) {
+						String name = obj.getGroup().getName();
+						obj.setGroup(gs.clone());
+						obj.getGroup().setDefinition(gs.getName());
+						obj.getGroup().setName(name);
+					} else {
+						obj.setGroup(gs);
+					}
+				} 
+			}
+			
+			@Override
+			public void visit(ElementSymbol es) {
+				if (es.getGroupSymbol().getMetadataID() == old.getMetadataID()) {
+					String def = es.getGroupSymbol().getDefinition();
+					if (def != null) {
+						String name = es.getGroupSymbol().getName();
+						es.setGroupSymbol(gs.clone());
+						es.getGroupSymbol().setDefinition(gs.getName());
+						es.getGroupSymbol().setName(name);
+					} else {
+						es.setGroupSymbol(gs);
+					}	
+				}
+			}
+		}, PreOrPostOrderNavigator.PRE_ORDER, true) {
+			
+			/**
+			 * Add to the navigation the visitation of expanded commands
+			 * which are inlined with clauses
+			 */
+			@Override
+			public void visit(UnaryFromClause obj) {
+				super.visit(obj);
+				if (obj.getExpandedCommand() != null && !obj.getGroup().isProcedure()) {
+					obj.getExpandedCommand().acceptVisitor(this);
+				}
+			}
+		};
+		command.acceptVisitor(nav);
 	}
     
     private void assignWithClause(RelationalNode node, LinkedHashMap<String, WithQueryCommand> pushdownWith) {
