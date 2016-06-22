@@ -78,7 +78,7 @@
 
     <servlet-mapping>
         <servlet-name>static</servlet-name>
-        <url-pattern>static/*</url-pattern>
+        <url-pattern>/static/*</url-pattern>
     </servlet-mapping>
              
     <security-role>
@@ -100,7 +100,7 @@
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>Teiid Rest Application</web-resource-name>
-            <url-pattern>/static</url-pattern>
+            <url-pattern>/static/*</url-pattern>
         </web-resource-collection>
     </security-constraint>
 
