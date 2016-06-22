@@ -22,12 +22,15 @@
 
 package org.teiid.services;
 
-
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.security.Principal;
 import java.security.acl.Group;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -76,6 +79,7 @@ public class SessionServiceImpl implements SessionService {
 	public static final String PASSWORD_PATTERN_PROPERTY = "password-pattern"; //$NON-NLS-1$
 	public static final String SECURITY_DOMAIN_PROPERTY = "security-domain"; //$NON-NLS-1$
 	public static final String AUTHENTICATION_TYPE_PROPERTY = "authentication-type"; //$NON-NLS-1$
+	public static final String AUTHENTICATION_MAX_SESSIONS_ALLOWED_PER_USER_PROPERTY = "authentication-max-sessions-allowed-per-user"; //$NON-NLS-1$
 	public static final String AT = "@"; //$NON-NLS-1$
 	/*
 	 * Configuration state
@@ -190,6 +194,7 @@ public class SessionServiceImpl implements SessionService {
 	             throw new SessionServiceException(RuntimePlugin.Event.TEIID40043, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40043, new Long(sessionMaxLimit)));
 	        }
 	        
+	        this.setSessionPerUserMaxLimit(getAuthenticationProperties(vdbName, vdbVersion, vdb));
 	        if(this.getSessionCount(userName) >= this.getMaxSessionCount(userName)){
 	            throw new SessionServiceException(RuntimePlugin.Event.TEIID40044, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40044, userName, this.getMaxSessionCount(userName)));
 	        }
@@ -361,14 +366,42 @@ public class SessionServiceImpl implements SessionService {
 	public void setSessionMaxLimit(long limit) {
 		this.sessionMaxLimit = limit;
 	}
-
-	@Override
-    public void addMaxSessionPerUser(String user, long maxSesson) {
-        if(this.permissionMap == null) {
+	
+	/**
+	 * Authentication setting for max sessions allowed per user, supply a more fine-grained control than <tt>setSessionMaxLimit(limit)</tt>.
+	 * 
+	 * @param authenticationProperties - the authentication properties, eg, 'user1=25;user2=30'.
+	 * 
+	 */
+	public void setSessionPerUserMaxLimit(String authenticationProperties){
+	    
+	    if(authenticationProperties == null || authenticationProperties.equals("")){ //$NON-NLS-1$
+	        return;
+	    }
+	  
+	    if(this.permissionMap == null) {
             this.permissionMap =  new ConcurrentHashMap<>();
         }
-        this.permissionMap.put(user, maxSesson);
-    }
+	    
+	    // Map any \ to \\
+	    authenticationProperties = authenticationProperties.replaceAll("\\\\", "\\\\\\\\"); //$NON-NLS-1$ //$NON-NLS-2$
+	    authenticationProperties = authenticationProperties.replaceAll(";", "\n");
+	    InputStream is = new ByteArrayInputStream(authenticationProperties.getBytes()); //$NON-NLS-1$ //$NON-NLS-2$
+	    Properties authenticationProps = new Properties();
+	    
+	    try {
+            authenticationProps.load(is);
+            Enumeration<?> en = authenticationProps.propertyNames();
+            while(en.hasMoreElements()){
+                String user = (String) en.nextElement();
+                Long maxSesson = Long.parseLong(authenticationProps.getProperty(user));
+                this.permissionMap.put(user, maxSesson);
+            }
+        } catch (IOException | NumberFormatException e) {
+            throw new IllegalArgumentException("illegal or inappropriate authentication properties, the correct format like '<user>=<max-session>;<user>=<max-session>'", e); //$NON-NLS-1$ 
+        }
+	    
+	}
     
     private long getMaxSessionCount(String user) {
         if(this.permissionMap != null) {
@@ -578,6 +611,23 @@ public class SessionServiceImpl implements SessionService {
 		
 		//no default
 		return null;
+	}
+	
+	private String getAuthenticationProperties(String vdbName, String version, VDB vdb) {
+	    if (vdbName != null) {
+            try {           
+                if (vdb == null) {
+                    vdb = getActiveVDB(vdbName, version);
+                }
+                String typeProperty = vdb.getPropertyValue(AUTHENTICATION_MAX_SESSIONS_ALLOWED_PER_USER_PROPERTY);               
+                if (typeProperty != null) {
+                    return typeProperty;
+                }
+            } catch (SessionServiceException e) {
+                // ignore and return default, this only occur if the name and version are wrong 
+            }
+        }
+	    return null;
 	}
 	
 	@Override

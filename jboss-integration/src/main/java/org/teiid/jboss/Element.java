@@ -98,7 +98,6 @@ enum Element {
 	TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE("max-socket-threads", "max-socket-threads"),
 	TRANSPORT_IN_BUFFER_SIZE_ATTRIBUTE("input-buffer-size", "input-buffer-size"),
 	TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE("output-buffer-size", "output-buffer-size"),
-	TRANSPORT_MAX_CONNECTIONS_PER_USER_ATTRIBUTE("max-connections-per-user", "max-connections-per-user"),
 	
 	AUTHENTICATION_ELEMENT("authentication"),
 	AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE("security-domain", "authentication-security-domain"),	
@@ -106,6 +105,7 @@ enum Element {
 	AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE("sessions-expiration-timelimit", "authentication-sessions-expiration-timelimit"),
 	AUTHENTICATION_TYPE_ATTRIBUTE("type", "authentication-type"),
 	AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE("trust-all-local", "authentication-trust-all-local"),
+	AUTHENTICATION_MAX_SESSIONS_ALLOWED_PER_USER_ATTRIBUTE("max-sessions-allowed-per-user", "authentication-max-sessions-allowed-per-user"),
 	
 	PG_ELEMENT("pg"), //$NON-NLS-1$
 	PG_MAX_LOB_SIZE_ALLOWED_ELEMENT("max-lob-size-in-bytes", "pg-max-lob-size-in-bytes"), //$NON-NLS-1$ //$NON-NLS-2$

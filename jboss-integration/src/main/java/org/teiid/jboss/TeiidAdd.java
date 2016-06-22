@@ -159,7 +159,8 @@ class TeiidAdd extends AbstractAddStepHandler {
 		TeiidConstants.AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE,
 		TeiidConstants.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE,
 		TeiidConstants.AUTHENTICATION_TYPE_ATTRIBUTE,
-		TeiidConstants.AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE
+		TeiidConstants.AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE,
+		TeiidConstants.AUTHENTICATION_MAX_SESSIONS_ALLOWED_PER_USER_ATTRIBUTE,
 	};
 	
 	@Override
@@ -511,6 +512,10 @@ class TeiidAdd extends AbstractAddStepHandler {
    		if (isDefined(AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE, operation, context)) {
    			sessionServiceImpl.setSessionMaxLimit(asLong(AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE, operation, context));
    		}
+   		
+   		if (isDefined(AUTHENTICATION_MAX_SESSIONS_ALLOWED_PER_USER_ATTRIBUTE, operation, context)){
+            sessionServiceImpl.setSessionPerUserMaxLimit(asString(AUTHENTICATION_MAX_SESSIONS_ALLOWED_PER_USER_ATTRIBUTE, operation, context));
+        }
     	
    		if (isDefined(AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE, operation, context)) {
    			sessionServiceImpl.setSessionExpirationTimeLimit(asLong(AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE, operation, context));

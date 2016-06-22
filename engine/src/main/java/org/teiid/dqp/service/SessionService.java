@@ -79,8 +79,6 @@ public interface SessionService {
      */
     boolean terminateSession(String terminatedSessionID, String adminSessionID);
     
-    void addMaxSessionPerUser(String user, long maxSesson);
-
     /**
      * Get the collection of active user sessions on the system.
      * @return The collection of Session objects of active users on

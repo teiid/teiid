@@ -24,9 +24,7 @@ package org.teiid.runtime;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.resource.spi.work.WorkManager;
 import javax.transaction.TransactionManager;
@@ -63,7 +61,7 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	private String infinispanConfigFile = "infinispan-config.xml"; //$NON-NLS-1$
 	private String jgroupsConfigFile; // from infinispan-core
 	private List<SocketConfiguration> transports;
-	private Map<String, Long> maxSessionPerUser;
+	private String authenticationProperties = null;//max sessions allowed per user properties, format: user1=25;user2=35;user3=25
 	private int maxODBCLobSizeAllowed = 5*1024*1024; // 5 MB
 	private int maxAsyncThreads = DEFAULT_MAX_ASYNC_WORKERS;
 	
@@ -240,18 +238,15 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 		return this.transports;
 	}
 	
-	public void addMaxSessionPerUser(String user, long maxSession) {
-        if(this.maxSessionPerUser == null) {
-            this.maxSessionPerUser = new HashMap<>();
-        }
-        this.maxSessionPerUser.put(user, maxSession);
+	public String getAuthenticationProperties() {
+        return authenticationProperties;
     }
-    
-    public Map<String, Long> getMaxSessionPerUser(){
-        return this.maxSessionPerUser;
+
+    public void setAuthenticationProperties(String authenticationProperties) {
+        this.authenticationProperties = authenticationProperties;
     }
-	
-	public int getMaxODBCLobSizeAllowed() {
+
+    public int getMaxODBCLobSizeAllowed() {
 		return this.maxODBCLobSizeAllowed;
 	}
 	
