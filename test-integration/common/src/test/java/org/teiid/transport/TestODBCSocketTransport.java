@@ -242,6 +242,13 @@ public class TestODBCSocketTransport {
 		conn.setAutoCommit(true);
 	}
 	
+	@Test public void testRollbackSavepointNoOp() throws Exception {
+		conn.setAutoCommit(false); 
+		Statement s = conn.createStatement();
+		assertFalse(s.execute("rollback to foo1"));
+		assertFalse(conn.getAutoCommit());
+	}
+	
 	@Test public void testPk() throws Exception {
 		Statement stmt = conn.createStatement();
 		ResultSet rs = stmt.executeQuery("select ta.attname, ia.attnum, ic.relname, n.nspname, tc.relname " +//$NON-NLS-1$
