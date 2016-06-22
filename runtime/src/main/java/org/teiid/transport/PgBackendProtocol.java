@@ -433,7 +433,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 			if (tag.equals("EXEC") || tag.equals("CALL")) {
 				tag = "SELECT"; 
 			}
-			if (count != null) {
+			if (count != null && !(tag.equalsIgnoreCase("ROLLBACK") || tag.equalsIgnoreCase("SAVEPOINT") || tag.equalsIgnoreCase("RELEASE"))) {
 				tag += " " + count;
 			}
 		}
