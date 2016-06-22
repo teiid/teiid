@@ -790,13 +790,13 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			return m.group(1);
 		}
 		else if ((m = rollbackPattern.matcher(modified)).matches()) {
-			return "ROLLBACK"; //$NON-NLS-1$
+			return "set \"dummy-update-pg-odbc\" 0"; //$NON-NLS-1$
 		}					
 		else if ((m = savepointPattern.matcher(sql)).matches()) {
-			return "SELECT 0"; //$NON-NLS-1$
+			return "set \"dummy-update-pg-odbc\" 0"; //$NON-NLS-1$
 		}
 		else if ((m = releasePattern.matcher(sql)).matches()) {
-			return "SELECT 0"; //$NON-NLS-1$
+			return "set \"dummy-update-pg-odbc\" 0"; //$NON-NLS-1$
 		} 
 		for (int i = 0; i < modified.length(); i++) {
 			switch (modified.charAt(i)) {

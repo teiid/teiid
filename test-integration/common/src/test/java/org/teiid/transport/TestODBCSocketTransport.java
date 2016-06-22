@@ -317,10 +317,11 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		conn.setAutoCommit(true);
 	}
 	
-	@Test public void testTxnStatement() throws Exception {
+	@Test public void testRollbackSavepointNoOp() throws Exception {
+		conn.setAutoCommit(false); 
 		Statement s = conn.createStatement();
-		assertFalse(s.execute("begin work"));
-		assertFalse(s.execute("rollback transaction"));
+		assertFalse(s.execute("rollback to foo1"));
+		assertFalse(conn.getAutoCommit());
 	}
 	
 	@Test public void testPk() throws Exception {
