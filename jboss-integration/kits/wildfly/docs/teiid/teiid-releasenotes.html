@@ -169,6 +169,12 @@ specified and isSourceRequired should return false (see setSourceRequired).  If 
 
 See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on configuration and installation.
 
+<h4>from 9.0</h4>
+<ul>
+   <li><a href="https://issues.jboss.org/browse/TEIID-4129">TEIID-4129</a> in order to prevent seemingly invalid results from a sort/merge join, the sort operation will undergo additional checks.  If org.teiid.assumeMatchingCollation is false (the default) and a translator does not specify a collationLocale, then the sort for a sort/merge join will not be pushed.  
+   Teiid defaults to the Java UCS-2 collation, which may not match the default collation for sources, particular tables, or columns.  You may set the system property org.teiid.assumeMatchingCollation true to restore the old default behavior or selectively update the transaltors to report a collationLocale matching org.teiid.collationLocale (UCS-2 if unset).</li>
+</ul>
+
 <h4>from 8.x</h4>
 <ul>
    <li><a href="https://issues.jboss.org/browse/TEIID-2754">TEIID-2754</a> view are reported as VIEW table type in the metadata.  Use the connection property reportAsViews=false to restore the old behavior.</li>

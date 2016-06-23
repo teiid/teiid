@@ -27,6 +27,7 @@ import java.util.List;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.Assertion;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.processor.relational.SourceState.ImplicitBuffer;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.symbol.Constant;
@@ -290,6 +291,11 @@ public class MergeJoinStrategy extends JoinStrategy {
             int compare = 1;
             if (!target.isExpresssionDistinct()) {
                 compare = compare(previousTuple, target.getCurrentTuple(), target.getExpressionIndexes(), target.getExpressionIndexes());
+                if (compare < 0) {
+                	//sanity check - this means the sort order is not as expected
+                	//note this is not a complete check - it will not detect all invalid circumstances as we exit early
+                	throw new TeiidComponentException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31202));
+                }
             }
             if (compare != 0) {
                 target.setMaxProbeMatch(target.getIterator().getCurrentIndex() - 1);
@@ -308,6 +314,18 @@ public class MergeJoinStrategy extends JoinStrategy {
 				rightExpressionIndecies, grouping, false);
     }
 
+    /**
+     * 0 if the values match
+     * positive if right is greater than left
+     * negative if left is greater than right
+     * @param leftProbe
+     * @param rightProbe
+     * @param leftExpressionIndecies
+     * @param rightExpressionIndecies
+     * @param nullEquals
+     * @param columnDiff
+     * @return
+     */
 	public static int compareTuples(List<?> leftProbe, List<?> rightProbe,
 			int[] leftExpressionIndecies, int[] rightExpressionIndecies, boolean nullEquals, boolean columnDiff) {
 		for (int i = 0; i < leftExpressionIndecies.length; i++) {
