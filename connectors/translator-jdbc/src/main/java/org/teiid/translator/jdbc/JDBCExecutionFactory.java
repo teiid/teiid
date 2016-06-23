@@ -1418,7 +1418,10 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     			sb.append(", "); //$NON-NLS-1$
     		}
     	}
-    	sb.append(") ").append(getCreateTemporaryTablePostfix(transactional)); //$NON-NLS-1$
+    	sb.append(") ");
+    	if (getCreateTemporaryTablePostfix(transactional) != null) {
+    	    sb.append(getCreateTemporaryTablePostfix(transactional));
+    	}
     	String sql = sb.toString();
 		return sql;
 	}
@@ -1438,7 +1441,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	 * @return the post script for the temp table create
 	 */
 	public String getCreateTemporaryTablePostfix(boolean inTransaction) {
-		return getDialect().getCreateTemporaryTablePostfix();
+		return getDialect().getDefaultMultiTableBulkIdStrategy().getIdTableSupport().getCreateIdTableStatementOptions();
 	}
 	
 	/**
@@ -1447,7 +1450,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	 * @return the temp table creation ddl
 	 */
 	public String getCreateTemporaryTableString(boolean inTransaction) {
-		return getDialect().getCreateTemporaryTableString();
+		return getDialect().getDefaultMultiTableBulkIdStrategy().getIdTableSupport().getCreateIdTableCommand();
 	}
 	
 	public SQLDialect getDialect() {
@@ -1475,7 +1478,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	
 	@Override
 	public boolean supportsDependentJoins() {
-		return enableDependentJoins && getDialect().supportsTemporaryTables();
+		return enableDependentJoins && getDialect().getDefaultMultiTableBulkIdStrategy() != null;
 	}
 	
 	@Override

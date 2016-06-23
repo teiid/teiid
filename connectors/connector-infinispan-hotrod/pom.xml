@@ -54,10 +54,6 @@
     
     <dependencies>
         <dependency>
-            <groupId>org.antlr</groupId>
-            <artifactId>antlr-runtime</artifactId>
-        </dependency>    
-        <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>translator-infinispan-hotrod</artifactId>
         </dependency>
@@ -116,10 +112,6 @@
             <groupId>org.infinispan.protostream</groupId>
             <artifactId>protostream</artifactId>
         </dependency>    
-	     <dependency>
-	         <groupId>org.hibernate.hql</groupId>
-	         <artifactId>hibernate-hql-parser</artifactId>
-	      </dependency>                
         <dependency>
             <groupId>org.jboss.modules</groupId>
             <artifactId>jboss-modules</artifactId>

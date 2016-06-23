@@ -378,7 +378,7 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
 					for (NamedTable temp : tempTables) {
 						try {
 			            	LogManager.logDetail(LogConstants.CTX_CONNECTOR, "dropping temporary table", temp.getName()); //$NON-NLS-1$
-							s.execute(this.executionFactory.getDialect().getDropTemporaryTableString() + " " + temp.getName()); //$NON-NLS-1$
+							s.execute(this.executionFactory.getDialect().getDefaultMultiTableBulkIdStrategy().getIdTableSupport().getDropIdTableCommand() + " " + temp.getName()); //$NON-NLS-1$
 						} catch (SQLException e) {
 							//TODO: could refine this logic as drop is being performed as part of the txn cleanup for some sources
 						}

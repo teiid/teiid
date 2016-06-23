@@ -22,29 +22,17 @@
 
 package org.teiid.translator.jdbc;
 
+import org.hibernate.hql.spi.id.AbstractMultiTableBulkIdStrategyImpl;
+import org.hibernate.hql.spi.id.global.GlobalTemporaryTableBulkIdStrategy;
+
 final class DefaultSQLDialect implements SQLDialect {
-	@Override
-	public boolean supportsTemporaryTables() {
-		return false; //currently the other methods are only in service to the temp logic
-	}
 
 	@Override
 	public String getTypeName(int code, long length, int precision, int scale) {
 		return null;
 	}
 
-	@Override
-	public String getDropTemporaryTableString() {
-		return null;
-	}
-
-	@Override
-	public String getCreateTemporaryTableString() {
-		return null;
-	}
-
-	@Override
-	public String getCreateTemporaryTablePostfix() {
-		return null;
+	public AbstractMultiTableBulkIdStrategyImpl getDefaultMultiTableBulkIdStrategy() {
+	    return new GlobalTemporaryTableBulkIdStrategy();
 	}
 }

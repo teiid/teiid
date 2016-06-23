@@ -83,12 +83,13 @@ public class IntegrationTestDeployment {
 		props.setProperty("user-name", "sa");
 		props.setProperty("password", "sa");
 		
-		AdminUtil.createDataSource(admin, "Oracle11_PushDS", "h2", props);
+		AdminUtil.createDataSource(admin, "ChainedDS", "h2", props);
 		admin.deploy("fake.jar",new FileInputStream(UnitTestUtil.getTestDataFile("fake.jar")));
 		try {
 			admin.deploy("chained-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("chained-vdb.xml")));
 		} finally {
 			admin.undeploy("fake.jar");
+			admin.deleteDataSource("ChainedDS");
 		}
 	}
 	
