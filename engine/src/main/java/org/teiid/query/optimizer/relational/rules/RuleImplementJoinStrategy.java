@@ -194,7 +194,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
         		}
             }
 
-			boolean pushedLeft = insertSort(joinNode.getFirstChild(), leftExpressions, joinNode, metadata, capabilitiesFinder, pushLeft);	
+			boolean pushedLeft = insertSort(joinNode.getFirstChild(), leftExpressions, joinNode, metadata, capabilitiesFinder, pushLeft, context);	
 			
 			//TODO: this check could be performed, as it implies we're using enhanced and can back out of the sort
 			//      but this not valid in all circumstances
@@ -214,7 +214,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
 	        	}
 			}
 
-			boolean pushedRight = insertSort(joinNode.getLastChild(), rightExpressions, joinNode, metadata, capabilitiesFinder, pushRight);
+			boolean pushedRight = insertSort(joinNode.getLastChild(), rightExpressions, joinNode, metadata, capabilitiesFinder, pushRight, context);
         	if ((!pushedRight || !pushedLeft) && (joinType == JoinType.JOIN_INNER || (joinType == JoinType.JOIN_LEFT_OUTER && !pushedLeft))) {
         		joinNode.setProperty(NodeConstants.Info.JOIN_STRATEGY, JoinStrategyType.ENHANCED_SORT);
         	}
@@ -233,7 +233,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
      * @throws QueryMetadataException 
      */
     static boolean insertSort(PlanNode childNode, List<Expression> expressions, PlanNode jnode, QueryMetadataInterface metadata, CapabilitiesFinder capFinder,
-    		boolean attemptPush) throws QueryMetadataException, TeiidComponentException {
+    		boolean attemptPush, CommandContext context) throws QueryMetadataException, TeiidComponentException {
         Set<Expression> orderSymbols = new LinkedHashSet<Expression>(expressions); 
 
         PlanNode sourceNode = FrameUtil.findJoinSourceNode(childNode);
@@ -273,7 +273,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
         	if (!usesKey && RuleRaiseAccess.getModelIDFromAccess(sourceNode, metadata) == TempMetadataAdapter.TEMP_MODEL) {
         	    attemptPush = false;
         	}
-            if (attemptPush && RuleRaiseAccess.canRaiseOverSort(sourceNode, metadata, capFinder, sortNode, null, false, true)) {
+	        if (attemptPush && RuleRaiseAccess.canRaiseOverSort(sourceNode, metadata, capFinder, sortNode, null, false, context, true)) {
 	            sourceNode.getFirstChild().addAsParent(sortNode);
 	            
 	            if (needsCorrection) {

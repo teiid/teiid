@@ -286,7 +286,9 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
 		CommandContext commandContext = CommandContext.getThreadLocalContext();
 		if (collation != null && commandContext != null && commandContext.getOptions().isRequireTeiidCollation() && !collation.equals(DataTypeManager.COLLATION_LOCALE)) {
 	        for (OrderByItem symbol : obj.getOrderByItems()) {
-	            if (symbol.getSymbol().getType() == DataTypeManager.DefaultDataClasses.STRING) {
+	            if (symbol.getSymbol().getType() == DataTypeManager.DefaultDataClasses.STRING
+	            		|| symbol.getSymbol().getType() == DataTypeManager.DefaultDataClasses.CLOB
+	            		|| symbol.getSymbol().getType() == DataTypeManager.DefaultDataClasses.CHAR) {
 	    	    	//we require the collation to match
 	        		markInvalid(obj, "source is not using the same collation as Teiid"); //$NON-NLS-1$
 	            	break;

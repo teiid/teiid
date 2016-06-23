@@ -23,6 +23,7 @@
 package org.teiid.query.optimizer;
 
 import static org.junit.Assert.*;
+import static org.teiid.query.processor.TestProcessor.*;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -49,6 +50,7 @@ import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.rules.JoinUtil;
 import org.teiid.query.parser.QueryParser;
+import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.TestProcessor;
@@ -62,6 +64,7 @@ import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.util.CommandContext;
 import org.teiid.translator.ExecutionFactory.SupportedJoinCriteria;
 import org.teiid.translator.SourceSystemFunctions;
 
@@ -1237,6 +1240,48 @@ public class TestJoinOptimization {
 	   				"SELECT g_1.e2 AS c_0, g_0.e3 AS c_1 FROM pm1.g1 AS g_0 LEFT OUTER JOIN pm1.g3 AS g_1 ON g_0.e1 = g_1.e1 ORDER BY c_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 	 }
 	
+    @Test public void testMergeJoinOrderNotPushed() throws TeiidComponentException, TeiidProcessingException {
+        String sql = "select bqt1.smalla.intkey, bqt2.smalla.intkey "
+        		+ "from bqt1.smalla inner join bqt2.smalla on (bqt2.smalla.stringkey = bqt1.smalla.stringkey)"; //$NON-NLS-1$
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
+        bsc.setSourceProperty(Capability.COLLATION_LOCALE, "nowhere");
+        // Plan query
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), 
+        		new String[] {"SELECT g_0.StringKey, g_0.IntKey FROM BQT1.SmallA AS g_0", 
+        	"SELECT g_0.StringKey, g_0.IntKey FROM BQT2.SmallA AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT g_0.StringKey, g_0.IntKey FROM BQT1.SmallA AS g_0", Arrays.asList("b", 1), Arrays.asList("a", 3));
+        hdm.addData("SELECT g_0.StringKey, g_0.IntKey FROM BQT2.SmallA AS g_0", Arrays.asList("c", 1), Arrays.asList("a", 2));
+        
+        TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList(3, 2)});
+    }
+    
+    /**
+     * Same as above but using the system/option property
+     * @throws TeiidComponentException
+     * @throws TeiidProcessingException
+     */
+    @Test public void testMergeJoinOrderNotPushed1() throws Exception {
+    	String sql = "select bqt1.smalla.intkey, bqt2.smalla.intkey "
+        		+ "from bqt1.smalla inner join bqt2.smalla on (bqt2.smalla.stringkey = bqt1.smalla.stringkey)"; //$NON-NLS-1$
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
+        
+        CommandContext cc = TestProcessor.createCommandContext();
+        cc.getOptions().setAssumeMatchingCollation(false);
+        
+        // Plan query
+        ProcessorPlan plan = TestProcessor.helpGetPlan(TestOptimizer.helpGetCommand(sql, RealMetadataFactory.exampleBQTCached(), null), RealMetadataFactory.exampleBQTCached(), new DefaultCapabilitiesFinder(bsc), cc);
+
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT g_0.StringKey, g_0.IntKey FROM BQT1.SmallA AS g_0", Arrays.asList("b", 1), Arrays.asList("a", 3));
+        hdm.addData("SELECT g_0.StringKey, g_0.IntKey FROM BQT2.SmallA AS g_0", Arrays.asList("c", 1), Arrays.asList("a", 2));
+        
+        TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList(3, 2)});
+    }
+	
     @Test public void testOutputColumnsWithMergeJoinAndNonPushedSelect() throws TeiidComponentException, TeiidProcessingException {
         String sql = "select bqt1.smalla.intkey, bqt2.smalla.intkey "
         		+ "from bqt1.smalla inner join bqt2.smalla on (bqt2.smalla.intkey = case when bqt1.smalla.intkey = 1 then 2 else 3 end) where right(bqt1.smalla.stringkey, 1) = 'a'"; //$NON-NLS-1$
@@ -1432,4 +1477,16 @@ public class TestJoinOptimization {
         assertNotNull(joinNode.getJoinCriteria());
     }
 	
+	@Test(expected=AssertionError.class) public void testDetectInvalidSort() throws Exception {
+	    String sql = "select * from (with a (x, y, z) as /*+ no_inline */ (select e1, e2, e3 from pm1.g1) SELECT pm1.g2.e2, a.x, z from pm1.g2, a where e1 = x order by x) as x where z = 1"; //$NON-NLS-1$
+	    
+	    FakeDataManager dataManager = new FakeDataManager();
+	    sampleData1(dataManager);
+	    
+	    //we're allowing the sort to be pushed, but it's not honored by FakeDataManager
+	    ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(TestOptimizer.getTypicalCapabilities()), 
+	    		new String[] {"SELECT a.x, a.z FROM a WHERE a.z = TRUE ORDER BY a.x", "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING);
+	    
+	    helpProcess(plan, createCommandContext(), dataManager, null);
+	}
 }

@@ -394,7 +394,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
             semiJoin.addLastChild(node);
             PlanNode result = current.getParent();
             NodeEditor.removeChildNode(result, current);
-            RuleImplementJoinStrategy.insertSort(semiJoin.getFirstChild(), (List<Expression>) plannedResult.leftExpressions, semiJoin, metadata, capFinder, true);
+            RuleImplementJoinStrategy.insertSort(semiJoin.getFirstChild(), (List<Expression>) plannedResult.leftExpressions, semiJoin, metadata, capFinder, true, context);
             if (plannedResult.makeInd && !plannedResult.not) {
             	//TODO: would like for an enhanced sort merge with the semi dep option to avoid the sorting
             	//this is a little different than a typical dependent join in that the right is the independent side

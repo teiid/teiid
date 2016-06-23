@@ -57,16 +57,24 @@ public class TestWithClauseProcessing {
 	        Arrays.asList(0, "a", true),
 	        Arrays.asList(3, "a", true),
 	        Arrays.asList(1, "c", true),
+	        Arrays.asList(0, "a", true),
 	    };    
 	
 	    FakeDataManager dataManager = new FakeDataManager();
 	    dataManager.setBlockOnce();
 	    sampleData1(dataManager);
 	    
-	    ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(TestOptimizer.getTypicalCapabilities()), 
-	    		new String[] {"SELECT a.x, a.z FROM a WHERE a.z = TRUE", "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING);
+	    BasicSourceCapabilities typicalCapabilities = TestOptimizer.getTypicalCapabilities();
+	    typicalCapabilities.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
+		ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(typicalCapabilities), 
+	    		new String[] {"SELECT a.x, a.z FROM a WHERE a.z = TRUE", "SELECT g_0.e1, g_0.e2 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)"}, ComparisonMode.EXACT_COMMAND_STRING);
 	    
 	    helpProcess(plan, dataManager, expected);
+	    
+	    //combined when inlined
+	    sql = "SELECT g_0.e2, g_1.e1, g_1.e3 FROM pm1.g2 AS g_0, pm1.g1 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (g_1.e3 = TRUE)";
+	    TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(typicalCapabilities), 
+	    		new String[] {"SELECT g_0.e2, g_1.e1, g_1.e3 FROM pm1.g2 AS g_0, pm1.g1 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (g_1.e3 = TRUE)"}, ComparisonMode.EXACT_COMMAND_STRING);
 	}
 	
 	@Test public void testMultipleItems() {
