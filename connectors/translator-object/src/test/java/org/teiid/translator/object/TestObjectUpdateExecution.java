@@ -85,6 +85,30 @@ public class TestObjectUpdateExecution {
 	}
 	
 	@Test
+	public void testInsertUsingFolders() throws Exception {
+		// check the object doesn't exist before inserting
+		Object o = CONNECTION.get(new Long(99).longValue());
+		assertNull(o);
+		
+		Command command = translationUtility
+				.parseCommand("Insert into Trade_Mat.Trade_Mat.Trade (tradeId, TradeName, settled) VALUES (99, 'TestName', 'true')");
+
+		// no search required by the UpdateExecution logic
+		@SuppressWarnings("unchecked")
+		ObjectUpdateExecution ie = createExecution(command, Collections.EMPTY_LIST);
+
+		ie.execute();
+
+		Trade p = (Trade) CONNECTION.get((new Long(99).longValue()));
+
+		assertNotNull(p);
+		assertTrue(p.getName().equals("TestName"));
+		assertTrue(p.getTradeId() == 99);
+		assertTrue(p.isSettled());
+	
+	}
+	
+	@Test
 	public void testInsertChildClass() throws Exception {
 		CONNECTION = TradesCacheSource.createConnection();
 		insertChildClass();
@@ -100,7 +124,7 @@ public class TestObjectUpdateExecution {
 		assertNotNull(CONNECTION.get((new Long(2).longValue())));
 
 		Command command = translationUtility
-				.parseCommand("Insert into Leg (tradeID, notational, Name) VALUES (2, 3.456, 'legName 2a')");
+				.parseCommand("Insert into Trade_Object.Leg (tradeID, notational, Name) VALUES (2, 3.456, 'legName 2a')");
 
 		// no search required by the UpdateExecution logic
 		@SuppressWarnings("unchecked")
@@ -128,7 +152,7 @@ public class TestObjectUpdateExecution {
 		assertNotNull(o);
 		
 		Command command = translationUtility
-				.parseCommand("Update Trade  SET TradeName='Person 2 Changed', settled='true' WHERE TradeId=2");
+				.parseCommand("Update Trade_Object.Trade  SET TradeName='Person 2 Changed', settled='true' WHERE TradeId=2");
 
 		// no search required by the UpdateExecution logic
 		List<Object> rows = new ArrayList<Object>();
@@ -153,7 +177,7 @@ public class TestObjectUpdateExecution {
 		assertNotNull(o);
 
 		Command command = translationUtility
-				.parseCommand("Delete From Trade Where tradeId = 1");
+				.parseCommand("Delete From Trade_Object.Trade Where tradeId = 1");
 
 		List<Object> rows = new ArrayList<Object>();
 		rows.add(o);
