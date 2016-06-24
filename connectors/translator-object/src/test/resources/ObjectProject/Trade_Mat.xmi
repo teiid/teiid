@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="ASCII"?>
 <xmi:XMI xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:diagram="http://www.metamatrix.com/metamodels/Diagram" xmlns:mmcore="http://www.metamatrix.com/metamodels/Core" xmlns:relational="http://www.metamatrix.com/metamodels/Relational">
-  <mmcore:ModelAnnotation xmi:uuid="mmuuid:5f4d3ef6-026c-4a33-adea-fbf0eda391e7" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational" modelType="PHYSICAL" ProducerName="Teiid Designer" ProducerVersion="10.0.1.Nightly-v20160627-1409-B12">
+  <mmcore:ModelAnnotation xmi:uuid="mmuuid:5f4d3ef6-026c-4a33-adea-fbf0eda391e7" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational" modelType="PHYSICAL" ProducerName="Teiid Designer" ProducerVersion="10.0.1.Nightly-v20160622-1945-B8">
     <modelImports xmi:uuid="mmuuid:7f5cf45f-2fe8-41b6-805b-39f26c5f43ad" name="SimpleDatatypes-instance" modelLocation="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance" modelType="TYPE" primaryMetamodelUri="http://www.eclipse.org/xsd/2002/XSD"/>
     <modelImports xmi:uuid="mmuuid:ae44979e-0fda-4ea5-b499-53d6ff652f11" name="XMLSchema" modelLocation="http://www.w3.org/2001/XMLSchema" modelType="TYPE" primaryMetamodelUri="http://www.eclipse.org/xsd/2002/XSD"/>
   </mmcore:ModelAnnotation>
   <mmcore:AnnotationContainer xmi:uuid="mmuuid:db84df50-0cde-4f7c-b70b-ba9f244886de">
     <annotations xmi:uuid="mmuuid:3c743f95-fad6-4450-9496-d472ccd63b37" annotatedObject="mmuuid/5f4d3ef6-026c-4a33-adea-fbf0eda391e7">
       <tags xmi:uuid="mmuuid:bd4967a5-064d-4ff5-af57-7a07fc1fb6c9" key="modelExtensionDefinition:relational" value="relational"/>
-      <tags xmi:uuid="mmuuid:d38fe6fc-5009-4027-a75f-e2334ce9ea4e" key="modelExtensionDefinition:infinispan" value="infinispan"/>
     </annotations>
     <annotations xmi:uuid="mmuuid:8d7033f4-45f2-4153-9e1e-69844ccc83a0" annotatedObject="mmuuid/bd4967a5-064d-4ff5-af57-7a07fc1fb6c9">
       <tags xmi:uuid="mmuuid:421e0f8b-0301-4b11-a9ad-fa496eb4c4bb" key="metamodel" value="http://www.metamatrix.com/metamodels/Relational"/>
@@ -551,33 +550,6 @@
     </annotations>
     <annotations xmi:uuid="mmuuid:04824123-9fb3-404f-88b9-5763c5a328bd" annotatedObject="mmuuid/9971cf31-82f8-4096-9e20-f1da33ad482d">
       <tags xmi:uuid="mmuuid:8dbc7402-3bd8-47e2-9973-561b472d4439" key="en" value="Allows specifying a native type for OUT parameters. Typical value is REF CURSOR"/>
-    </annotations>
-    <annotations xmi:uuid="mmuuid:d8440a0c-5726-4f2c-a41e-a341d79e0e6f" annotatedObject="mmuuid/d38fe6fc-5009-4027-a75f-e2334ce9ea4e">
-      <tags xmi:uuid="mmuuid:ccfe396b-4a89-48f8-98c2-28cf0e29e2b3" key="metamodel" value="http://www.metamatrix.com/metamodels/Relational"/>
-      <tags xmi:uuid="mmuuid:80a3fd3b-7396-4885-bf30-ae0e901b771c" key="namespacePrefix" value="infinispan"/>
-      <tags xmi:uuid="mmuuid:2be15fd4-3f0c-4bdd-be7c-b2fc341d4e62" key="namespaceUri" value="http://www.teiid.org/translator/object/2016"/>
-      <tags xmi:uuid="mmuuid:b11ba8d1-00e9-4ff6-a3f8-7625316551b4" key="version" value="1"/>
-      <tags xmi:uuid="mmuuid:94b0e85b-4f6a-48f2-b161-f470aa6d570b" key="description" value="Indicates the primary table that this staging table is used for"/>
-      <tags xmi:uuid="mmuuid:582de0d3-8760-4ccf-9270-9c7ac66bcc39" key="modelTypes" value=""/>
-      <tags xmi:uuid="mmuuid:277ea4e0-df7b-4466-b758-bac13764349f" key="extendedMetaclass:org.teiid.designer.metamodels.relational.impl.BaseTableImpl" value="org.teiid.designer.metamodels.relational.impl.BaseTableImpl"/>
-    </annotations>
-    <annotations xmi:uuid="mmuuid:0e3e733c-d608-4749-a3c3-5aea713931ee" annotatedObject="mmuuid/582de0d3-8760-4ccf-9270-9c7ac66bcc39">
-      <tags xmi:uuid="mmuuid:800676a0-e826-47c5-a4ca-5a901c1e43dd" key="PHYSICAL" value=""/>
-    </annotations>
-    <annotations xmi:uuid="mmuuid:c1c289c0-b8db-4907-ada9-ea7ab592eff2" annotatedObject="mmuuid/277ea4e0-df7b-4466-b758-bac13764349f">
-      <tags xmi:uuid="mmuuid:b062dacb-ca90-4be4-b13b-5a998a950361" key="propertyDefinition:primary_table" value="primary_table"/>
-    </annotations>
-    <annotations xmi:uuid="mmuuid:36de5716-a68d-41bd-8aab-e2d179616298" annotatedObject="mmuuid/b062dacb-ca90-4be4-b13b-5a998a950361">
-      <tags xmi:uuid="mmuuid:cc7fdf9a-22dc-402c-b0e3-8cfbd3975a49" key="advanced" value="false"/>
-      <tags xmi:uuid="mmuuid:27373744-98f2-4e09-86ef-0d7eff5c30e2" key="id" value="primary_table"/>
-      <tags xmi:uuid="mmuuid:55596650-5883-45e7-9b16-dbcc250acc7b" key="index" value="true"/>
-      <tags xmi:uuid="mmuuid:da0f78ed-b8d4-4da8-9e38-f8bf4fc3e54d" key="modifiable" value="true"/>
-      <tags xmi:uuid="mmuuid:843d2b48-fef2-4e34-972b-a6fe46b4a00f" key="masked" value="false"/>
-      <tags xmi:uuid="mmuuid:c4053372-e853-40a2-9cf5-200220a76a42" key="required" value="true"/>
-      <tags xmi:uuid="mmuuid:806b71be-2883-4d41-924d-b6322889634e" key="runtimeType" value="string"/>
-    </annotations>
-    <annotations xmi:uuid="mmuuid:d6f41b99-4c6b-41d2-80bf-642a2c5b5526" annotatedObject="mmuuid/2b5a463d-d34f-4e9e-a22c-6a9b980319bc">
-      <tags xmi:uuid="mmuuid:0f7ed1a8-0afd-427c-b823-2e2136d2070e" key="infinispan:primary_table" value="TradeObject.Trade"/>
     </annotations>
   </mmcore:AnnotationContainer>
   <relational:Schema xmi:uuid="mmuuid:1c059e7c-01d4-4c3c-8c24-def3c7d6cfac" name="Trade_Mat" nameInSource="Trade_Mat">
