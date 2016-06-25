@@ -54,6 +54,7 @@
         <version.jta>1.1</version.jta>
         <version.org.jboss.oreva>1.0.0</version.org.jboss.oreva>
         <wildfly-module-root>modules/system/layers/dv</wildfly-module-root>
+        <odata-war-directory>standalone/deployments</odata-war-directory>
         <version.com.force.api>22.0.0</version.com.force.api>
         <version.com.force.api.34>34.0.0</version.com.force.api.34>
         <version.nux>1.6</version.nux>

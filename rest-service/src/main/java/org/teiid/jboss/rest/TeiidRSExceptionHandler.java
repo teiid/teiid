@@ -25,6 +25,9 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
 
+import javax.ws.rs.NotAuthorizedException;
+import javax.ws.rs.NotFoundException;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -36,8 +39,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import org.jboss.resteasy.spi.InternalServerErrorException;
-import org.jboss.resteasy.spi.NotFoundException;
-import org.jboss.resteasy.spi.UnauthorizedException;
 
 @Provider
 public class TeiidRSExceptionHandler implements ExceptionMapper<Exception> {
@@ -51,13 +52,15 @@ public class TeiidRSExceptionHandler implements ExceptionMapper<Exception> {
 		ResponseError error = new ResponseError();
 		
 	    String code = "ERROR"; //$NON-NLS-1$ 
-	    if(e instanceof UnauthorizedException){
+	    if(e instanceof NotAuthorizedException){
 			code = "401"; //$NON-NLS-1$ 
 		} else if(e instanceof NotFoundException){
 			code = "404"; //$NON-NLS-1$ 
 		} else if(e instanceof InternalServerErrorException) {
 			code = "500"; //$NON-NLS-1$ 
-		}
+		} else if(e instanceof WebApplicationException) {
+            code = "500"; //$NON-NLS-1$ 
+        }
 		error.setCode(code);
 		
 		error.setMessage(e.getMessage());
