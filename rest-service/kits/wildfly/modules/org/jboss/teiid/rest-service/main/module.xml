@@ -12,16 +12,13 @@
     <dependencies>
         <module name="javax.api"/>
         <module name="javax.servlet.api"/>
+        <module name="javax.xml.bind.api"/>
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.client" />
         <module name="org.jboss.teiid.api"/>
         <module name="org.jboss.teiid.admin"/>
         <module name="org.jboss.teiid"/>
-        
-        <module name="com.fasterxml.jackson.core"/>
-        <module name="com.fasterxml.jackson.dataformat"/>
-        <module name="io.swagger.core" />
-        
+                
         <module name="org.jboss.resteasy.resteasy-jaxrs"/> <!--  REST Web Service --> 
         <module name="org.jboss.resteasy.resteasy-multipart-provider"/> <!--  REST Web Service -->
         <module name="org.jboss.resteasy.resteasy-jaxb-provider" />
@@ -31,6 +28,10 @@
         <module name="org.jboss.dmr" /> <!-- Admin -->        
         <module name="org.jboss.as.cli"/> <!-- Admin -->
         <module name="org.jboss.as.controller-client"/> <!-- Admin -->
-        <module name="org.jboss.as.controller"/> <!-- Admin -->        
+        <module name="org.jboss.as.controller"/> <!-- Admin -->
+        
+        <module name="com.fasterxml.jackson.core"/>
+        <module name="com.fasterxml.jackson.dataformat"/>
+        <module name="io.swagger.core" />                
     </dependencies>
 </module>         
