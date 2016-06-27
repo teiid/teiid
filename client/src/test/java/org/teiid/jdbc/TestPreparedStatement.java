@@ -24,9 +24,11 @@ package org.teiid.jdbc;
 
 import static org.junit.Assert.*;
 
+import java.sql.BatchUpdateException;
 import java.sql.Blob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -36,12 +38,15 @@ import java.util.TimeZone;
 import org.junit.Test;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.teiid.client.DQP;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.RequestMessage.ResultsMode;
 import org.teiid.client.ResultsMessage;
 import org.teiid.client.security.LogonResult;
 import org.teiid.client.util.ResultsFuture;
+import org.teiid.core.TeiidException;
 import org.teiid.net.ServerConnection;
 
 
@@ -73,10 +78,25 @@ public class TestPreparedStatement {
 		Mockito.stub(logonResult.getTimeZone()).toReturn(TimeZone.getDefault());
 
 		// a dummy result message that is specific to this test case
-		ResultsFuture<ResultsMessage> results = new ResultsFuture<ResultsMessage>(); 
-		Mockito.stub(dqp.executeRequest(Matchers.anyLong(), (RequestMessage)Matchers.anyObject())).toReturn(results);
-		ResultsMessage rm = new ResultsMessage();
-		rm.setResults(new List<?>[] {Arrays.asList(0), Arrays.asList(0), Arrays.asList(0)});
+		final ResultsFuture<ResultsMessage> results = new ResultsFuture<ResultsMessage>();
+		final int[] count = new int[1];
+		final ResultsMessage rm = new ResultsMessage();
+		Mockito.stub(dqp.executeRequest(Matchers.anyLong(), (RequestMessage)Matchers.anyObject())).toAnswer(new Answer<ResultsFuture<ResultsMessage>>() {
+			@Override
+			public ResultsFuture<ResultsMessage> answer(InvocationOnMock invocation)
+					throws Throwable {
+				RequestMessage requestMessage = (RequestMessage)invocation.getArguments()[1];
+				count[0] += requestMessage.getParameterValues().size();
+				if (count[0] == 100000) {
+					rm.setException(new TeiidException());
+					rm.setResults(new List<?>[] {Arrays.asList(Statement.EXECUTE_FAILED)});
+				} else {
+					List<?>[] vals = new List<?>[requestMessage.getParameterValues().size()];
+					Arrays.fill(vals, Arrays.asList(0));
+					rm.setResults(Arrays.asList(vals));
+				}
+				return results;
+			}});
 		rm.setUpdateResult(true);
 		results.getResultsReceiver().receiveResults(rm);
 		Mockito.stub(conn.getDQP()).toReturn(dqp);
@@ -107,6 +127,21 @@ public class TestPreparedStatement {
 		assertTrue("RequestMessage.isBatchedUpdate should be true", statement.requestMessage.isBatchedUpdate()); //$NON-NLS-1$
 		assertFalse("RequestMessage.isCallableStatement should be false", statement.requestMessage.isCallableStatement()); //$NON-NLS-1$
 		assertTrue("RequestMessage.isPreparedStatement should be true", statement.requestMessage.isPreparedStatement()); //$NON-NLS-1$
+		
+		count[0] = 0;
+		//large batch handling - should split into 5
+		for (int i = 0; i < 100000; i++) {
+			statement.setInt(1, new Integer(1));
+			statement.addBatch();
+		}
+		try {
+			statement.executeBatch();
+			fail();
+		} catch (BatchUpdateException e) {
+			assertEquals(100000, count[0]);
+			assertEquals(95309, e.getUpdateCounts().length);
+			assertEquals(Statement.EXECUTE_FAILED, e.getUpdateCounts()[95308]);
+		}
 	}
 	
 	/**

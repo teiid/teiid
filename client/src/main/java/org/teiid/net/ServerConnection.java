@@ -45,5 +45,7 @@ public interface ServerConnection {
 	boolean supportsContinuous();
 	
 	boolean isLocal();
+
+	String getServerVersion();
 	
 }
