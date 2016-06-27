@@ -297,12 +297,7 @@
                         <xs:annotation>
                             <xs:documentation>Allow all local pass-through connections regardless of whether they are in the configured security domain.</xs:documentation>
                         </xs:annotation>                    
-                    </xs:attribute> 
-                    <xs:attribute name="max-sessions-allowed-per-user" type="xs:string">
-                        <xs:annotation>
-                            <xs:documentation>Semicolon separated properties for Maximum number of sessions allowed per user by the system, for example, "user1=25;user2=35"</xs:documentation>
-                        </xs:annotation>                    
-                    </xs:attribute>                   
+                    </xs:attribute>                 
                 </xs:complexType>                
             </xs:element>
         

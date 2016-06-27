@@ -21,19 +21,13 @@
  */
 package org.teiid.jboss;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
-import org.jboss.as.controller.StringListAttributeDefinition;
 import org.jboss.as.controller.client.helpers.MeasurementUnit;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
-import org.jboss.dmr.Property;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.net.socket.SocketUtil;
 import org.teiid.transport.SSLConfiguration;
@@ -419,12 +413,6 @@ public class TeiidConstants {
     	.setAllowExpression(false)
     	.setDefaultValue(new ModelNode(true))
     	.build();	
-    
-    public static SimpleAttributeDefinition AUTHENTICATION_MAX_SESSIONS_ALLOWED_PER_USER_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.AUTHENTICATION_MAX_SESSIONS_ALLOWED_PER_USER_ATTRIBUTE.getModelName(), ModelType.STRING)
-        .setXmlName(Element.AUTHENTICATION_MAX_SESSIONS_ALLOWED_PER_USER_ATTRIBUTE.getXMLName())
-        .setAllowNull(true)
-        .setAllowExpression(false)
-        .build();
 	
 	//PG_ELEMENT("pg"), //$NON-NLS-1$
 	public static SimpleAttributeDefinition PG_MAX_LOB_SIZE_ALLOWED_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.PG_MAX_LOB_SIZE_ALLOWED_ELEMENT.getModelName(), ModelType.INT)

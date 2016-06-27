@@ -378,10 +378,6 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		} else {
 			this.sessionService.setSecurityDomain("teiid-security"); //$NON-NLS-1$
 		}
-		
-		if(config.getAuthenticationProperties() != null) {
-		    this.sessionService.setSessionPerUserMaxLimit(config.getAuthenticationProperties());
-		}
 
 		this.sessionService.setVDBRepository(repo);
 		setBufferManagerProperties(config);

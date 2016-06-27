@@ -271,60 +271,12 @@ public class TestSessionServiceImpl {
         vdb.setVersion(1);
         vdb.setStatus(Status.ACTIVE);
         vdb.addProperty(SessionServiceImpl.SECURITY_DOMAIN_PROPERTY, "domain");
-        
-        Mockito.stub(repo.getLiveVDB("name", "1")).toReturn(vdb);
-        
-        ssi.setVDBRepository(repo);
-        
-        ssi.setSessionPerUserMaxLimit("x=3;x1=2");
-        
-        Properties properties = new Properties();
-        properties.setProperty(TeiidURL.JDBC.VDB_NAME, "name.1");
-        List<String> sessions = new ArrayList<>();
-        List<SessionServiceException> exceptions = new ArrayList<>();
-        sessions.add(ssi.createSession("name", "1", AuthenticationType.USERPASSWORD, "x", new Credentials(new char[] {'y'}), "z", properties).getSessionId());
-        sessions.add(ssi.createSession("name", "1", AuthenticationType.USERPASSWORD, "x", new Credentials(new char[] {'y'}), "z", properties).getSessionId());
-        sessions.add(ssi.createSession("name", "1", AuthenticationType.USERPASSWORD, "x", new Credentials(new char[] {'y'}), "z", properties).getSessionId());
-        
-        try {
-            sessions.add(ssi.createSession("name", "1", AuthenticationType.USERPASSWORD, "x", new Credentials(new char[] {'y'}), "z", properties).getSessionId());
-        } catch (SessionServiceException e) {
-            exceptions.add(e);
-        }
-        
-        assertEquals(3, sessions.size());
-        assertEquals(1, exceptions.size());
-        
-        sessions.add(ssi.createSession("name", "1", AuthenticationType.USERPASSWORD, "x1", new Credentials(new char[] {'y'}), "z", properties).getSessionId());
-        sessions.add(ssi.createSession("name", "1", AuthenticationType.USERPASSWORD, "x1", new Credentials(new char[] {'y'}), "z", properties).getSessionId());
-        
-        try {
-            sessions.add(ssi.createSession("name", "1", AuthenticationType.USERPASSWORD, "x1", new Credentials(new char[] {'y'}), "z", properties).getSessionId());
-        } catch (SessionServiceException e) {
-            exceptions.add(e);
-        }
-        
-        assertEquals(5, sessions.size());
-        assertEquals(2, exceptions.size());
-        
-    }
-    
-    @Test 
-    public void testMaxSessionPerUserVDBScope() throws Exception {
-        VDBRepository repo = Mockito.mock(VDBRepository.class);
-        VDBMetaData vdb = new VDBMetaData();
-        vdb.setName("name");
-        vdb.setVersion(1);
-        vdb.setStatus(Status.ACTIVE);
-        vdb.addProperty(SessionServiceImpl.SECURITY_DOMAIN_PROPERTY, "domain");
         vdb.addProperty(SessionServiceImpl.AUTHENTICATION_MAX_SESSIONS_ALLOWED_PER_USER_PROPERTY, "x=2;x1=1");
         
         Mockito.stub(repo.getLiveVDB("name", "1")).toReturn(vdb);
         
         ssi.setVDBRepository(repo);
-        
-        ssi.setSessionPerUserMaxLimit("x=3;x1=2");
-        
+                
         Properties properties = new Properties();
         properties.setProperty(TeiidURL.JDBC.VDB_NAME, "name.1");
         List<String> sessions = new ArrayList<>();

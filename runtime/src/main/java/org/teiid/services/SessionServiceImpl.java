@@ -373,7 +373,7 @@ public class SessionServiceImpl implements SessionService {
 	 * @param authenticationProperties - the authentication properties, eg, 'user1=25;user2=30'.
 	 * 
 	 */
-	public void setSessionPerUserMaxLimit(String authenticationProperties){
+	private void setSessionPerUserMaxLimit(String authenticationProperties){
 	    
 	    if(authenticationProperties == null || authenticationProperties.equals("")){ //$NON-NLS-1$
 	        return;

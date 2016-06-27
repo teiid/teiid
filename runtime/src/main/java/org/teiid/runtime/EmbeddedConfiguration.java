@@ -61,7 +61,6 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	private String infinispanConfigFile = "infinispan-config.xml"; //$NON-NLS-1$
 	private String jgroupsConfigFile; // from infinispan-core
 	private List<SocketConfiguration> transports;
-	private String authenticationProperties = null;//max sessions allowed per user properties, format: user1=25;user2=35;user3=25
 	private int maxODBCLobSizeAllowed = 5*1024*1024; // 5 MB
 	private int maxAsyncThreads = DEFAULT_MAX_ASYNC_WORKERS;
 	
@@ -237,14 +236,6 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	public List<SocketConfiguration> getTransports(){
 		return this.transports;
 	}
-	
-	public String getAuthenticationProperties() {
-        return authenticationProperties;
-    }
-
-    public void setAuthenticationProperties(String authenticationProperties) {
-        this.authenticationProperties = authenticationProperties;
-    }
 
     public int getMaxODBCLobSizeAllowed() {
 		return this.maxODBCLobSizeAllowed;
