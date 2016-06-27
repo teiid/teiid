@@ -2333,5 +2333,72 @@ public class TestODataIntegration {
             localClient = null;
             teiid.undeployVDB("northwind");
         }
-    }       
+    }
+    
+    @Test 
+    public void testReverseNavigation() throws Exception {
+        HardCodedExecutionFactory hc = new HardCodedExecutionFactory();
+        hc.addData("SELECT Customers.id, Customers.name FROM Customers", 
+                Arrays.asList(Arrays.asList(1, "customer1"), Arrays.asList(2, "customer2"),
+                Arrays.asList(3, "customer3"), Arrays.asList(4, "customer4")));
+
+
+        hc.addData("SELECT Customers.id FROM Customers", 
+                Arrays.asList(Arrays.asList(1), Arrays.asList(2),
+                Arrays.asList(3), Arrays.asList(4)));
+        hc.addData("SELECT Orders.id, Orders.customerid FROM Orders", 
+                Arrays.asList(Arrays.asList(1, 1), Arrays.asList(2, 1),
+                Arrays.asList(3,1), Arrays.asList(4,1),
+                Arrays.asList(5,2), Arrays.asList(6,2),
+                Arrays.asList(7,3), Arrays.asList(8,3)));
+        hc.addData("SELECT Orders.id, Orders.customerid, Orders.place FROM Orders", 
+                Arrays.asList(Arrays.asList(1, 1, "town"), Arrays.asList(2, 1, "state"),
+                Arrays.asList(3, 1,"country"), Arrays.asList(4, 1, "abroad"),
+                Arrays.asList(5,2, "state"), Arrays.asList(6,2, "country"),
+                Arrays.asList(7,3,"town"), Arrays.asList(8,3, "town")));        
+        
+        teiid.addTranslator("x12", hc);
+        
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("m");
+            mmd.addSourceMetadata("ddl", 
+                    "CREATE FOREIGN TABLE Customers (\n" + 
+                    "  id integer PRIMARY KEY OPTIONS (NAMEINSOURCE 'id'),\n" + 
+                    "  name varchar(10));\n" + 
+                    "CREATE FOREIGN TABLE Orders (\n" + 
+                    "  id integer PRIMARY KEY OPTIONS (NAMEINSOURCE 'id'),\n" + 
+                    "  customerid integer,\n" + 
+                    "  place varchar(10),\n" + 
+                    "  CONSTRAINT Customer FOREIGN KEY (customerid) REFERENCES Customers(id));");
+            
+            mmd.addSourceMapping("x12", "x12", null);
+            teiid.deployVDB("northwind", mmd);
+
+            localClient = getClient(teiid.getDriver(), "northwind",1,new Properties());
+
+            ContentResponse response = null;
+            
+            response = http.newRequest(baseURL + "/northwind/m/Orders(1)/Customer")
+                    .method("GET")
+                    .send();
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#Customers\","
+                    + "\"value\":[{\"id\":1,\"name\":\"customer1\"}]}", 
+                    response.getContentAsString());
+            
+            response = http.newRequest(baseURL + "/northwind/m/Orders(1)?$expand=Customer")
+                    .method("GET")
+                    .send();
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#Orders/$entity\","
+                    + "\"id\":1,\"customerid\":1,\"place\":\"town\","
+                    + "\"Customer\":[{\"id\":1,\"name\":\"customer1\"}]}", 
+                    response.getContentAsString());
+            
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");            
+        }
+    }
 }

@@ -246,31 +246,63 @@ public class ODataSchemaBuilder {
                 // check to see if fk is part of this table's pk, then it is 1 to 1 relation
                 boolean onetoone = sameColumnSet(getIdentifier(table), fk);
 
-                CsdlNavigationProperty navigaton = null;
-                CsdlNavigationPropertyBinding navigationBinding = null;
-                String entityTypeName = null;
-                if (onetoone) {
-                    entityTypeName = table.getName();
-                    navigaton = buildNavigation(fk);                
-                    navigationBinding = buildNavigationBinding(fk);                    
-                    navigaton.setNullable(false);
-                } else {
-                    entityTypeName = fk.getReferenceTableName();
-                    navigaton = buildReverseNavigation(table, fk);                
-                    navigationBinding = buildReverseNavigationBinding(table,fk);                                        
-                    navigaton.setCollection(true);
-                }                
-    
-                
-                CsdlEntityType entityType = entityTypes.get(entityTypeName);
-                entityType.getNavigationProperties().add(navigaton);
-                
-                CsdlEntitySet entitySet = entitySets.get(entityTypeName);
-                entitySet.getNavigationPropertyBindings().add(navigationBinding);                
+                addForwardNavigation(entityTypes, entitySets, table, fk, onetoone);
+                addReverseNavigation(entityTypes, entitySets, table, fk, onetoone);
             }
         }
     }
 
+    private static void addForwardNavigation(Map<String, CsdlEntityType> entityTypes,
+            Map<String, CsdlEntitySet> entitySets, Table table, ForeignKey fk, boolean onetoone) {
+        CsdlNavigationProperty navigaton = null;
+        CsdlNavigationPropertyBinding navigationBinding = null;
+        String entityTypeName = null;
+        if (onetoone) {
+            entityTypeName = table.getName();
+            navigaton = buildNavigation(fk);                
+            navigationBinding = buildNavigationBinding(fk);                    
+            navigaton.setNullable(false);
+        } else {
+            entityTypeName = fk.getReferenceTableName();
+            navigaton = buildReverseNavigation(table, fk);                
+            navigationBinding = buildReverseNavigationBinding(table,fk);                                        
+            navigaton.setCollection(true);
+        }                
+   
+        
+        CsdlEntityType entityType = entityTypes.get(entityTypeName);
+        entityType.getNavigationProperties().add(navigaton);
+        
+        CsdlEntitySet entitySet = entitySets.get(entityTypeName);
+        entitySet.getNavigationPropertyBindings().add(navigationBinding);
+    }
+
+    private static void addReverseNavigation(Map<String, CsdlEntityType> entityTypes,
+            Map<String, CsdlEntitySet> entitySets, Table table, ForeignKey fk, boolean onetoone) {
+        CsdlNavigationProperty navigaton = null;
+        CsdlNavigationPropertyBinding navigationBinding = null;
+        String entityTypeName = null;
+        
+        if (onetoone) {
+            entityTypeName = fk.getReferenceTableName();
+            navigaton = buildReverseNavigation(table, fk);                
+            navigationBinding = buildReverseNavigationBinding(table,fk);                                        
+            navigaton.setNullable(false);
+        } else {
+            entityTypeName = table.getName();
+            navigaton = buildNavigation(fk);                
+            navigationBinding = buildNavigationBinding(fk);
+            navigaton.setCollection(true);
+        }                
+   
+        
+        CsdlEntityType entityType = entityTypes.get(entityTypeName);
+        entityType.getNavigationProperties().add(navigaton);
+        
+        CsdlEntitySet entitySet = entitySets.get(entityTypeName);
+        entitySet.getNavigationPropertyBindings().add(navigationBinding);
+    }
+    
     private static CsdlNavigationPropertyBinding buildNavigationBinding(ForeignKey fk) {
         CsdlNavigationPropertyBinding navigationBinding = new CsdlNavigationPropertyBinding();
         navigationBinding.setPath(fk.getName());
