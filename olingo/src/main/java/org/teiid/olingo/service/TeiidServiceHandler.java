@@ -606,7 +606,8 @@ public class TeiidServiceHandler implements ServiceHandler {
             response.writeDeletedEntityOrReference();
         }
         else {
-            response.writeNotModified();
+            //since DELETE is idempotent same response as otherwise success operation.
+            response.writeDeletedEntityOrReference();
         }
     }
 
