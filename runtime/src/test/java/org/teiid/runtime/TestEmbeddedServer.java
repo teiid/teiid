@@ -68,6 +68,7 @@ import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.SimpleMock;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.deployers.VirtualDatabaseException;
+import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.jdbc.SQLStates;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.jdbc.TeiidSQLException;
@@ -1891,5 +1892,39 @@ public class TestEmbeddedServer {
 			assertEquals(-1, s.getUpdateCount());
 		}
 	}
+	
+	@Test
+	public void testPermissionPerUser() throws Exception {
+	    EmbeddedConfiguration ec = new EmbeddedConfiguration();
+        ec.setUseDisk(false);
+        
+        es.start(ec);   
+        es.deployVDB(new ByteArrayInputStream("<vdb name=\"test-1\" version=\"1\"><property name=\"max-sessions-allowed-per-user\" value=\"anonymous=2\" /></vdb>".getBytes())); //$NON-NLS-1$
+        es.deployVDB(new ByteArrayInputStream("<vdb name=\"test-2\" version=\"1\"><property name=\"max-sessions-allowed-per-user\" value=\"anonymous=3\" /></vdb>".getBytes())); //$NON-NLS-1$
+        
+        List<Connection> list = new ArrayList<>();
+        list.add(es.getDriver().connect("jdbc:teiid:test-1", null));
+        list.add(es.getDriver().connect("jdbc:teiid:test-1", null));
+        try {
+            list.add(es.getDriver().connect("jdbc:teiid:test-1", null));
+        } catch (TeiidSQLException e) {    
+        }
+        assertEquals(2, list.size());
+        list.get(0).close();
+        list.add(es.getDriver().connect("jdbc:teiid:test-1", null));
+        list.clear();
+                
+        list.add(es.getDriver().connect("jdbc:teiid:test-2", null));
+        list.add(es.getDriver().connect("jdbc:teiid:test-2", null));
+        list.add(es.getDriver().connect("jdbc:teiid:test-2", null));
+        try {
+            list.add(es.getDriver().connect("jdbc:teiid:test-2", null));
+        } catch (TeiidSQLException e) {    
+        }    
+        assertEquals(3, list.size());
+        list.get(0).close();
+        list.add(es.getDriver().connect("jdbc:teiid:test-2", null));
+	}
+	
 
 }

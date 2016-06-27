@@ -60,6 +60,7 @@ import org.teiid.deployers.UDFMetaData;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
+import org.teiid.dqp.service.SessionService;
 import org.teiid.jboss.TeiidServiceNames.InvalidServiceNameException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -194,6 +195,9 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		
 		// REST dependencies
 		vdbService.addDependency(Services.JBOSS_SERVER_CONTROLLER, ModelController.class, vdb.controllerValue);
+		
+		//authenticationManager
+		vdbService.addDependency(TeiidServiceNames.SESSION, SessionService.class, vdb.sessionServiceValue);
 		
 		// VDB restart switch, control the vdbservice by adding removing the switch service. If you
 		// remove the service by setting status remove, there is no way start it back up if vdbservice used alone
