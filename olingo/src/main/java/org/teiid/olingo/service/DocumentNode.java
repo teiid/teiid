@@ -401,6 +401,16 @@ public class DocumentNode {
             fk = joinFK(getTable(), joinResource.getTable());
         }
         
+        // reverse lookup
+        if (fk == null) {
+            if (isCollection) {
+                fk = joinFK(getTable(), joinResource.getTable());
+            }
+            else {
+                fk = joinFK(joinResource.getTable(), getTable());
+            }
+        }
+        
         if (fk == null && !joinType.equals(JoinType.JOIN_CROSS)) {
             throw new TeiidException("Fk not found");
         }
