@@ -224,7 +224,7 @@ BEGIN
 		        END
 	        ELSE
 		        BEGIN
-	                IF (VARIABLES.status = 'DONE' AND invalidate AND NOT matcursor.valid)
+	                IF (invalidate AND matcursor.valid)
                         EXECUTE IMMEDIATE 'UPDATE ' || VARIABLES.statusTable || ' SET valid = false ' || crit || ' AND loadNumber = ' || matcursor.loadNumber USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = loadMatView.viewName;
 		        	VARIABLES.rowsUpdated = -1;
 		        	VARIABLES.status = 'DONE';
