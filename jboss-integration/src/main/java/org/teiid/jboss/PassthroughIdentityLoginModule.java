@@ -138,19 +138,22 @@ public class PassthroughIdentityLoginModule extends AbstractPasswordCredentialLo
           }          
       }
 
-      GSSCredential rawCredential = getGssCredential(this.callerSubject);
-      if (rawCredential != null) {
-          log.trace("Kerberos passthough mechanism in works");
-          this.storedCredential = wrapGssCredential ? wrapCredential(rawCredential) : rawCredential;
-          this.intermediateSubject = GSSUtil.createGssSubject(rawCredential, storedCredential);
-          log.tracef("created a subject from deletegate credential");
-          makeCopy(intermediateSubject, this.subject);
-          log.tracef("Copied contents of temporary Subject to Subject from the LoginContext"); 
-          addPrivateCredential(this.subject, storedCredential);
-          log.trace("Also add the GSSCredential to the Subject");
-      } else if (this.callerSubject != null) {
-          makeCopy(this.callerSubject, this.subject);
+      if (this.callerSubject != null) {
+          GSSCredential rawCredential = getGssCredential(this.callerSubject);
+          if (rawCredential != null) {
+              log.trace("Kerberos passthough mechanism in works");
+              this.storedCredential = wrapGssCredential ? wrapCredential(rawCredential) : rawCredential;
+              this.intermediateSubject = GSSUtil.createGssSubject(rawCredential, storedCredential);
+              log.tracef("created a subject from deletegate credential");
+              makeCopy(intermediateSubject, this.subject);
+              log.tracef("Copied contents of temporary Subject to Subject from the LoginContext"); 
+              addPrivateCredential(this.subject, storedCredential);
+              log.trace("Also add the GSSCredential to the Subject");
+          } else {
+              makeCopy(this.callerSubject, this.subject);
+          }          
       }
+
       addPrivateCredential(this.subject, this.properties);
       log.trace("Adding module option properties as private credential");
       
