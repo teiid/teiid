@@ -32,6 +32,8 @@ public interface SubqueryContainer<T extends Command> extends LanguageObject {
 	
 	public static interface Evaluatable<T extends Command> extends SubqueryContainer<T> {
 		boolean shouldEvaluate();
+		
+		void setShouldEvaluate(boolean b);
 	}
 
     /**

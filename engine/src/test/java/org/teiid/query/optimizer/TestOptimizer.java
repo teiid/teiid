@@ -5773,7 +5773,7 @@ public class TestOptimizer {
         
     }
     
-    @Test public void testCase4263() {
+    @Test public void testCase4263() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         QueryMetadataInterface metadata = example1();
         
@@ -5786,10 +5786,37 @@ public class TestOptimizer {
         
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
-        ProcessorPlan plan = helpPlan("select vm1.g1.e1 from vm1.g1 left outer join (select * from vm1.g2 as v where v.e1 = (select max(vm1.g2.e1) from vm1.g2 where v.e1 = vm1.g2.e1)) f2 on (f2.e1 = vm1.g1.e1)", metadata,  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("select vm1.g1.e1 from vm1.g1 left outer join (select * from vm1.g2 as v where v.e1 = /*+ no_unnest */ (select max(vm1.g2.e1) from vm1.g2 where v.e1 = vm1.g2.e1)) f2 on (f2.e1 = vm1.g1.e1)", metadata,  //$NON-NLS-1$
                                       null, capFinder,
-            new String[] { "SELECT g1__1.e1 FROM pm1.g1 AS g1__1 LEFT OUTER JOIN pm1.g1 AS g1__2 ON g1__2.e1 = g1__1.e1 AND g1__2.e1 = (SELECT MAX(pm1.g1.e1) FROM pm1.g1 WHERE pm1.g1.e1 = g1__2.e1)" }, SHOULD_SUCCEED); //$NON-NLS-1$ 
+            new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 WHERE g_0.e1 = (SELECT MAX(g_1.e1) FROM pm1.g1 AS g_1 WHERE g_1.e1 = g_0.e1) ORDER BY c_0", "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
+
+        caps.setCapabilitySupport(Capability.CRITERIA_ON_SUBQUERY, true);
+
+        plan = helpPlan("select vm1.g1.e1 from vm1.g1 left outer join (select * from vm1.g2 as v where v.e1 = /*+ no_unnest */ (select max(vm1.g2.e1) from vm1.g2 where v.e1 = vm1.g2.e1)) f2 on (f2.e1 = vm1.g1.e1)", metadata,  //$NON-NLS-1$
+                null, capFinder,
+                new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 LEFT OUTER JOIN pm1.g1 AS g_1 ON g_1.e1 = g_0.e1 AND g_1.e1 = (SELECT MAX(g_2.e1) FROM pm1.g1 AS g_2 WHERE g_2.e1 = g_1.e1)" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
+        
         checkNodeTypes(plan, FULL_PUSHDOWN); 
+    }
+    
+    
+    @Test public void testCase4263a() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        QueryMetadataInterface metadata = example1();
+        
+        BasicSourceCapabilities caps = getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
+        
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        
+        helpPlan("select vm1.g1.e1 from vm1.g1 left outer join (select * from vm1.g2 as v where v.e1 in /*+ no_unnest */ (select vm1.g2.e1 from vm1.g2)) f2 on (f2.e1 = vm1.g1.e1)", metadata,  //$NON-NLS-1$
+                                      null, capFinder,
+            new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN /*+ NO_UNNEST */ (SELECT g_1.e1 FROM pm1.g1 AS g_1) ORDER BY c_0", "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
     }
     
     @Test public void testCase4263b() {

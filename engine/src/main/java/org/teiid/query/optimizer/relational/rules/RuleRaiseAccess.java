@@ -58,6 +58,7 @@ import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.SourceHint;
 import org.teiid.query.sql.lang.SubqueryContainer;
+import org.teiid.query.sql.lang.SubqueryContainer.Evaluatable;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -798,7 +799,16 @@ public final class RuleRaiseAccess implements OptimizerRule {
 				if (sjc != SupportedJoinCriteria.ANY && thetaCriteria.isEmpty()) {
                 	return null; //cross join not supported
                 }
-				
+				if (type == JoinType.JOIN_LEFT_OUTER && !CapabilitiesUtil.supports(Capability.CRITERIA_ON_SUBQUERY, accessModelID, metadata, capFinder)) {
+					PlanNode right = children.get(1);
+					for (PlanNode node : NodeEditor.findAllNodes(right, NodeConstants.Types.SELECT, NodeConstants.Types.SOURCE)) {
+						for (SubqueryContainer<?> subqueryContainer : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders((Criteria) node.getProperty(NodeConstants.Info.SELECT_CRITERIA))) {
+							if (!(subqueryContainer instanceof Evaluatable) || subqueryContainer.getCommand().getCorrelatedReferences() != null) {
+					        	return null;
+							}
+						}
+					}
+				}
 				modelID = accessModelID;
 				multiSource = childNode.hasBooleanProperty(Info.IS_MULTI_SOURCE);
 				
