@@ -96,7 +96,11 @@
         <artifactId>jboss-as-security</artifactId>
         <scope>provided</scope>        
     </dependency>    
-    
+	<dependency>
+	  <groupId>org.jboss.security</groupId>
+	  <artifactId>jboss-negotiation-common</artifactId>
+	  <scope>provided</scope>        
+	</dependency>    
     <dependency>
         <groupId>asm</groupId>
         <artifactId>asm</artifactId>
