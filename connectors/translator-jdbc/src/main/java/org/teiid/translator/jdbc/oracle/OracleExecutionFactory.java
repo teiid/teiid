@@ -70,6 +70,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	public static final Version NINE_0 = Version.getVersion("9.0"); //$NON-NLS-1$
 	public static final Version NINE_2 = Version.getVersion("9.2"); //$NON-NLS-1$
 	public static final Version ELEVEN_2_0_4 = Version.getVersion("11.2.0.4"); //$NON-NLS-1$
+	public static final Version TWELVE = Version.getVersion("12"); //$NON-NLS-1$
 	
 	private static final String TIME_FORMAT = "HH24:MI:SS"; //$NON-NLS-1$
 	private static final String DATE_FORMAT = "YYYY-MM-DD"; //$NON-NLS-1$
@@ -1107,5 +1108,10 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     @Override
     public String translateLiteralBinaryType(BinaryType obj) {
     	return "HEXTORAW('" + obj + "')"; //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Override
+    public boolean supportsSubqueryInOn() {
+    	return getVersion().compareTo(TWELVE) >= 0;
     }
 }
