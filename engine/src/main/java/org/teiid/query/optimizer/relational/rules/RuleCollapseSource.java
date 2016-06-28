@@ -65,6 +65,7 @@ import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.SetQuery.Operation;
+import org.teiid.query.sql.lang.SubqueryContainer.Evaluatable;
 import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
 import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.util.SymbolMap;
@@ -509,7 +510,8 @@ public final class RuleCollapseSource implements OptimizerRule {
     void buildQuery(PlanNode accessRoot, PlanNode node, Query query, CommandContext context, CapabilitiesFinder capFinder) throws QueryMetadataException, TeiidComponentException, QueryPlannerException {
         QueryMetadataInterface metadata = context.getMetadata();
     	//visit source and join nodes as they appear
-        switch(node.getType()) {
+        Object modelID = RuleRaiseAccess.getModelIDFromAccess(accessRoot, metadata);
+		switch(node.getType()) {
             case NodeConstants.Types.JOIN:
             {
                 prepareSubqueries(node.getSubqueryContainers());
@@ -544,6 +546,19 @@ public final class RuleCollapseSource implements OptimizerRule {
                     query.setCriteria(savedCriteria);
                 } 
                 
+                if (joinType == JoinType.JOIN_LEFT_OUTER || joinType == JoinType.JOIN_FULL_OUTER) {
+	                boolean subqueryOn = CapabilitiesUtil.supports(Capability.CRITERIA_ON_SUBQUERY, modelID, metadata, capFinder);
+	        		if (!subqueryOn) {
+	        			for (SubqueryContainer<?> subqueryContainer : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(crits)) {
+	        				if (subqueryContainer instanceof Evaluatable && subqueryContainer.getCommand().getCorrelatedReferences() == null) {
+	        					((Evaluatable)subqueryContainer).setShouldEvaluate(true);
+	        				} else {
+	        					throw new AssertionError("On clause not expected to contain non-evaluatable subqueries"); //$NON-NLS-1$
+	        				}
+	        			}
+	        		}
+                }
+                
                 // Get last two clauses added to the FROM and combine them into a JoinPredicate
                 From from = query.getFrom();
                 List<FromClause> clauses = from.getClauses();
@@ -554,7 +569,7 @@ public final class RuleCollapseSource implements OptimizerRule {
                 //compensate if we only support outer and use a left outer join instead
                 //TODO: moved the handling for the primary driver, salesforce, back into the translator
                 //so this may not be needed moving forward
-                if (!joinType.isOuter() && !CapabilitiesUtil.supports(Capability.QUERY_FROM_JOIN_INNER, RuleRaiseAccess.getModelIDFromAccess(accessRoot, metadata), metadata, capFinder)) {
+                if (!joinType.isOuter() && !CapabilitiesUtil.supports(Capability.QUERY_FROM_JOIN_INNER, modelID, metadata, capFinder)) {
                 	joinType = JoinType.JOIN_LEFT_OUTER;
                 	if (!crits.isEmpty()) {
 	                	if (!useLeftOuterJoin(query, metadata, crits, right.getGroups())) {
@@ -650,7 +665,7 @@ public final class RuleCollapseSource implements OptimizerRule {
             case NodeConstants.Types.SORT: 
             {
             	prepareSubqueries(node.getSubqueryContainers());
-                processOrderBy(node, query, RuleRaiseAccess.getModelIDFromAccess(accessRoot, metadata), context, capFinder);
+                processOrderBy(node, query, modelID, context, capFinder);
                 break;
             }
             case NodeConstants.Types.DUP_REMOVE: 
