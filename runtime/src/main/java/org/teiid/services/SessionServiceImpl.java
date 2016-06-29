@@ -92,6 +92,13 @@ public class SessionServiceImpl implements SessionService {
     protected SecurityHelper securityHelper;
 
     private DQPCore dqp;
+    
+    // Keep the maximum connections per users setting, which passed from configuration
+    // 'permissionMap' is null hints no maximum connections per users limitation
+    private Map<String, Long> permissionMap;
+    
+    // Track the connection per user if permissionMap not null
+    private Map<String, Long> maxSessionPerUserCount;
 
     private Map<String, SessionMetadata> sessionCache = new ConcurrentHashMap<String, SessionMetadata>();
     private Timer sessionMonitor = null;    
@@ -147,6 +154,7 @@ public class SessionServiceImpl implements SessionService {
 		info.setSecurityContext(null);
 		info.setClosed();
 		info.getSessionVariables().clear();
+		this.decreaseSessionCount(concatenation(info.getVDBName(), getBaseUsername(info.getUserName())));
 	}
 	
 	@Override
@@ -181,6 +189,11 @@ public class SessionServiceImpl implements SessionService {
 	
 	        if (sessionMaxLimit > 0 && getActiveSessionsCount() >= sessionMaxLimit) {
 	             throw new SessionServiceException(RuntimePlugin.Event.TEIID40043, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40043, new Long(sessionMaxLimit)));
+	        }
+	        
+	        String permissionKey = concatenation(vdbName, userName);
+	        if(this.getSessionCount(permissionKey) >= this.getMaxSessionCount(permissionKey)){
+	            throw new SessionServiceException(RuntimePlugin.Event.TEIID40044, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40044, userName, this.getMaxSessionCount(permissionKey)));
 	        }
 	        
 	        String securityDomain = getSecurityDomain(userName, vdbName, vdbVersion, vdb);
@@ -237,6 +250,7 @@ public class SessionServiceImpl implements SessionService {
 	        	LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful, created", newSession }); //$NON-NLS-1$
 	        }
 	        this.sessionCache.put(newSession.getSessionId(), newSession);
+	        this.increaseSessionCount(concatenation(newSession.getVDBName(), getBaseUsername(userName)));
 	        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_AUDITLOGGING, MessageLevel.DETAIL)) {
 	        	LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, new AuditMessage("session", "logon-success", newSession)); //$NON-NLS-1$ //$NON-NLS-2$
 	        }
@@ -350,6 +364,57 @@ public class SessionServiceImpl implements SessionService {
 		this.sessionMaxLimit = limit;
 	}
 	
+	public Map<String, Long> getPermissionMap() {
+	    if(this.permissionMap == null) {
+	        this.permissionMap = new ConcurrentHashMap<>();
+	    }
+	    return this.permissionMap ;
+	}
+	
+	private long getMaxSessionCount(String user){
+	    if(this.permissionMap != null){
+	        return this.permissionMap.get(user) == null ? sessionMaxLimit : this.permissionMap.get(user);
+	    } else {
+	        return sessionMaxLimit;
+	    }
+	}
+	
+	private long getSessionCount(String user) {
+	    if(this.maxSessionPerUserCount != null){
+	        return this.maxSessionPerUserCount.get(user) == null ? 0 : this.maxSessionPerUserCount.get(user);
+	    } else {
+	        return 0;
+	    }
+	}
+	
+	private void increaseSessionCount(String user){
+	    
+	    if(this.permissionMap == null){ // no connection per user setting
+	        return;
+	    }
+	    
+	    if(this.maxSessionPerUserCount == null) {
+	        this.maxSessionPerUserCount = new ConcurrentHashMap<>();
+	    }
+	    
+	    long count = this.maxSessionPerUserCount.get(user) == null ? 0 : this.maxSessionPerUserCount.get(user);
+	    count++;
+	    this.maxSessionPerUserCount.put(user, count);
+	}
+	
+	private void decreaseSessionCount(String user) {
+	    
+	    if(this.permissionMap == null){ // no connection per user setting
+            return;
+        }
+	    
+	    if(this.maxSessionPerUserCount != null && this.maxSessionPerUserCount.get(user) != null) {
+	        long count = this.maxSessionPerUserCount.get(user);
+	        count--;
+	        this.maxSessionPerUserCount.put(user, count);
+	    }
+	}
+	
 	public long getSessionExpirationTimeLimit() {
 		return this.sessionExpirationTimeLimit;
 	}
@@ -395,6 +460,10 @@ public class SessionServiceImpl implements SessionService {
 	@Override
 	public SecurityHelper getSecurityHelper() {
 		return securityHelper;
+	}
+	
+	public static String concatenation(String vdbName, String user){
+	    return vdbName == null ? user : vdbName.concat(user);
 	}
 
     static String getBaseUsername(String username) {

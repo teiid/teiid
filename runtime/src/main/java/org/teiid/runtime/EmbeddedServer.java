@@ -405,6 +405,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		this.services.setVDBRepository(this.repo);
 		this.materializationMgr = getMaterializationManager();
 		this.repo.addListener(this.materializationMgr);
+		this.repo.addListener(new AuthenticationManager(sessionService));
 		this.logon = new LogonImpl(sessionService, null);
 		services.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
 		services.registerClientService(DQP.class, dqp, LogConstants.CTX_DQP);

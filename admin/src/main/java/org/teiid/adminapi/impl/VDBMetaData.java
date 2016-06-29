@@ -43,6 +43,9 @@ import org.teiid.core.util.CopyOnWriteLinkedHashMap;
 public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 
 	public static final String VERSION_DELIM = "."; //$NON-NLS-1$
+	
+	//the authentication properties, eg, 'user1=25;user2=30'
+    public static final String AUTHENTICATION_MAX_SESSIONS_ALLOWED_PER_USER_PROPERTY = "max-sessions-allowed-per-user"; //$NON-NLS-1$
 
 	private static final long serialVersionUID = -4723595252013356436L;
 	
@@ -312,5 +315,10 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 	public Map<String, Boolean> getVisibilityOverrides() {
 		return visibilityOverrides;
 	}
+
+    @Override
+    public String getAuthenticationProperties() {
+        return getProperties().getProperty(AUTHENTICATION_MAX_SESSIONS_ALLOWED_PER_USER_PROPERTY);
+    }
 
 }

@@ -53,6 +53,8 @@ import org.mockito.Mockito;
 import org.postgresql.Driver;
 import org.teiid.CommandContext;
 import org.teiid.PreParser;
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.common.buffer.BufferManager;
@@ -68,6 +70,7 @@ import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.SimpleMock;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.deployers.VirtualDatabaseException;
+import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
 import org.teiid.jdbc.SQLStates;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.jdbc.TeiidSQLException;
@@ -1890,6 +1893,55 @@ public class TestEmbeddedServer {
 			assertArrayEquals(new int[] {1, -3}, updateCounts);
 			assertEquals(-1, s.getUpdateCount());
 		}
+	}
+	
+	@Test
+	public void testPermissionPerUser() throws Exception {
+	    
+	    EmbeddedConfiguration ec = new EmbeddedConfiguration();
+	    ec.setUseDisk(false);
+	    
+	    es.start(ec);
+	    es.deployVDB(new ByteArrayInputStream("<vdb name=\"test-1\" version=\"1\"><property name=\"max-sessions-allowed-per-user\" value=\"anonymous=2\" /></vdb>".getBytes())); //$NON-NLS-1$
+	    es.deployVDB(new ByteArrayInputStream("<vdb name=\"test-2\" version=\"1\"><property name=\"max-sessions-allowed-per-user\" value=\"anonymous=3\" /></vdb>".getBytes())); //$NON-NLS-1$
+
+	    List<Connection> list = new ArrayList<>();
+	    list.add(es.getDriver().connect("jdbc:teiid:test-1", null));
+	    list.add(es.getDriver().connect("jdbc:teiid:test-1", null));
+	    try {
+	        list.add(es.getDriver().connect("jdbc:teiid:test-1", null));
+	    } catch (TeiidSQLException e) {
+	    }
+	    assertEquals(2, list.size());
+	    list.get(0).close();
+	    list.add(es.getDriver().connect("jdbc:teiid:test-1", null));
+	    list.clear();
+	    
+	    list.add(es.getDriver().connect("jdbc:teiid:test-2", null));
+	    list.add(es.getDriver().connect("jdbc:teiid:test-2", null));
+	    list.add(es.getDriver().connect("jdbc:teiid:test-2", null));
+	    try {
+	        list.add(es.getDriver().connect("jdbc:teiid:test-2", null));
+	    } catch (TeiidSQLException e) {
+	    }
+	    assertEquals(3, list.size());
+	    list.get(0).close();
+	    list.add(es.getDriver().connect("jdbc:teiid:test-2", null));
+	}
+	
+	@SuppressWarnings("unchecked")
+    @Test
+    public void testPermissionPerUserMetadata() throws Exception {
+	    
+	    EmbeddedConfiguration ec = new EmbeddedConfiguration();
+        ec.setUseDisk(false);
+        
+        es.start(ec);
+        es.deployVDB(new ByteArrayInputStream("<vdb name=\"test\" version=\"1\"><property name=\"max-sessions-allowed-per-user\" value=\"user1=15;user2=25;user3=35\" /></vdb>".getBytes())); //$NON-NLS-1$
+        
+        List<VDB> list = (List<VDB>) es.getAdmin().getVDBs();
+        VDB vdb = list.get(0);
+        assertEquals("user1=15;user2=25;user3=35", vdb.getAuthenticationProperties()); //$NON-NLS-1$
 	}
 
 }
