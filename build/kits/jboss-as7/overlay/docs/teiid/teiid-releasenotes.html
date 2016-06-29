@@ -217,6 +217,50 @@ features.
 the wrapping begin/commit of a UseDeclareFetch cursor will be ignored as Teiid does not require a transaction.  
 Set the org.teiid.honorDeclareFetchTxn system property to false to revert to the old behavior which honored the transaction.</p>
 </ul>
+
+<h4 class="western">from ${project.version}</h4>
+<ul>
+	<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-3635'>TEIID-3635</a>] - Auto configuration of buffermanager values can be incorrect 
+	<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-3866'>TEIID-3866</a>] - with clause used by subquery repeated in the subquery (removing duplicate with clauses, correcting the check to remove the with clause) 
+	<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-3889'>TEIID-3889</a>] - asynch start transaction / rollback throws exception (expanding transaction checks) 
+	<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4238'>TEIID-4238</a>] - Remove need for quotes around cursor name declarations/fetches (removing the need for quoting) 
+	<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4245'>TEIID-4245</a>] - Add support for fetch syntax "FETCH cursorname" (supporing just fetch cursor name) 
+	<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4278'>TEIID-4278</a>] - MySQL 5 should support distinct aggregates 
+	<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4289'>TEIID-4289</a>] - Add transaction command support for syntax BEGIN/ROLLBACK/COMMIT WORK (adding support for the work/transaction keywords) 
+	<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4304'>TEIID-4304</a>] - Correct handling with subquery in on clause 
+	<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4320'>TEIID-4320</a>] - Costing calculation issues (fixing costing issues) 
+	<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4323'>TEIID-4323</a>] - Add support for first/last/absolute/relative "FETCH " syntax 
+	<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4324'>TEIID-4324</a>] - TEIID30019 Unexpected exception for request ... java.lang.AssertionError: Batch not found in storage (correcting clean up logic) 
+	<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4330'>TEIID-4330</a>] - Better planning with chained makedep scenarios
+	<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4335'>TEIID-4335</a>] - No buffer when close is called (fixing the npe)
+</ul>
+
 <h4 class="western">from 8.11</h4>
 <ul>
 	<li/>

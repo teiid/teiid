@@ -429,10 +429,17 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             this.stack.push(new Function(CONVERT,new org.teiid.query.sql.symbol.Expression[] 
                     {teiidExprs.get(0), teiidExprs.get(1) }));
             break;
+            
+        case DATE:
+            this.stack.push(new Function(CONVERT,new org.teiid.query.sql.symbol.Expression[] 
+                    {teiidExprs.get(0),  new Constant(DataTypeManager.DefaultDataTypes.DATE)}));            
+            break;
+        case TIME:
+            this.stack.push(new Function(CONVERT,new org.teiid.query.sql.symbol.Expression[] 
+                    {teiidExprs.get(0),  new Constant(DataTypeManager.DefaultDataTypes.TIME)}));            
+            break;
         case FRACTIONALSECONDS:
         case TOTALSECONDS:
-        case DATE:
-        case TIME:
         case TOTALOFFSETMINUTES:
         case MINDATETIME:
         case MAXDATETIME:

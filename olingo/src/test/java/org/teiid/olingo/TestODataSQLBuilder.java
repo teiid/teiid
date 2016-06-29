@@ -1031,6 +1031,21 @@ public class TestODataSQLBuilder {
                 + "PM1.SimpleTable AS g0 WHERE MONTH({ts'2001-01-01 00:01:01.01'}) = g0.intkey ORDER BY g0.intkey");   
     }
     
+    @Test
+    public void testDate() throws Exception {
+        helpTest("/odata4/vdb/PM1/SimpleTable?$select=intkey&$filter="+Encoder.encode("date(now()) eq dateval"),
+                "SELECT g0.intkey FROM PM1.SimpleTable AS g0 "
+                + "WHERE CONVERT(NOW(), date) = g0.dateval ORDER BY g0.intkey");   
+    }
+
+    @Test
+    public void testTime() throws Exception {
+        helpTest("/odata4/vdb/PM1/SimpleTable?$select=intkey&$filter="+
+                Encoder.encode("timeval gt time(2001-01-01T00:01:01.01Z)"),
+                "SELECT g0.intkey FROM PM1.SimpleTable AS g0 "
+                + "WHERE g0.timeval > CONVERT({ts'2001-01-01 00:01:01.01'}, time) ORDER BY g0.intkey");   
+    }
+    
     @BeforeClass public static void oneTimeSetup() {
     	TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT"));
     }
