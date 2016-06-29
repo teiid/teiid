@@ -21,7 +21,14 @@
  */
 package org.teiid.translator.hive;
 
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.BIG_INTEGER;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.DATE;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.DOUBLE;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.FLOAT;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.INTEGER;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.OBJECT;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.STRING;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.TIMESTAMP;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,7 +47,6 @@ import org.teiid.translator.jdbc.ModFunctionModifier;
 public class HiveExecutionFactory extends BaseHiveExecutionFactory {
 
     public static String HIVE = "hive"; //$NON-NLS-1$
-    
     public HiveExecutionFactory() {
         setSupportedJoinCriteria(SupportedJoinCriteria.EQUI);
     }
@@ -202,5 +208,9 @@ public class HiveExecutionFactory extends BaseHiveExecutionFactory {
     public boolean useParensForJoins() {
     	return true;
     }
-    
+        
+    @Override
+    public String translateLiteralDate(java.sql.Date dateValue) {
+        return "DATE '" + formatDateValue(dateValue) + '\'';
+    }     
 }

@@ -209,10 +209,9 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                 if (ei.getFilterOption() != null) {
                     Expression expandCriteria = processFilterOption(ei.getFilterOption(), expandResource);
                     expandResource.addCriteria(expandCriteria);
-                    
+                    ((JoinPredicate)expandResource.getFromClause()).getJoinCriteria().add(expandCriteria);
                 }
                 
-                this.context.addCriteria(expandResource.getCriteria());
                 this.context.setFromClause(expandResource.getFromClause());
                 
                 if (ei.getOrderByOption() != null) {

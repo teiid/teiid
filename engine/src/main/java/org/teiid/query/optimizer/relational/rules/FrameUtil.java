@@ -241,7 +241,7 @@ public class FrameUtil {
             if(joinCrits != null && !joinCrits.isEmpty()) {
             	Criteria crit = new CompoundCriteria(joinCrits);
             	crit = convertCriteria(crit, symbolMap, metadata, rewrite);
-            	if (crit instanceof CompoundCriteria) {
+            	if (crit instanceof CompoundCriteria && ((CompoundCriteria)crit).getOperator() == CompoundCriteria.AND) {
             		node.setProperty(NodeConstants.Info.JOIN_CRITERIA, ((CompoundCriteria)crit).getCriteria());
             	} else {
             		joinCrits = new ArrayList<Criteria>();
@@ -355,10 +355,10 @@ public class FrameUtil {
      * @throws QueryMetadataException
      * @throws TeiidComponentException
      */
-    public static Map<ElementSymbol, Expression> buildSymbolMap(GroupSymbol oldGroup, GroupSymbol newGroup, QueryMetadataInterface metadata) 
+    public static LinkedHashMap<ElementSymbol, Expression> buildSymbolMap(GroupSymbol oldGroup, GroupSymbol newGroup, QueryMetadataInterface metadata) 
         throws QueryMetadataException, TeiidComponentException {
 
-        Map<ElementSymbol, Expression> map = new HashMap<ElementSymbol, Expression>();    
+    	LinkedHashMap<ElementSymbol, Expression> map = new LinkedHashMap<ElementSymbol, Expression>();    
 
         // Get elements of old group
         List<ElementSymbol> elements = ResolverUtil.resolveElementsInGroup(oldGroup, metadata);

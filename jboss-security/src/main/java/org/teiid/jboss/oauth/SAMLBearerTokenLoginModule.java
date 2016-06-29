@@ -28,6 +28,7 @@ import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.login.LoginException;
 
 import org.apache.cxf.jaxrs.client.WebClient;
+import org.apache.cxf.rs.security.oauth2.client.Consumer;
 import org.apache.cxf.rs.security.oauth2.client.OAuthClientUtils;
 import org.apache.cxf.rs.security.oauth2.common.ClientAccessToken;
 import org.apache.cxf.rs.security.oauth2.grants.saml.Saml2BearerGrant;
@@ -54,7 +55,7 @@ public abstract class SAMLBearerTokenLoginModule extends OAuth20LoginModule {
         
         OAuth20CredentialImpl cred = new OAuth20CredentialImpl() {
             protected ClientAccessToken getAccessToken() {
-                OAuthClientUtils.Consumer consumer = new OAuthClientUtils.Consumer(getClientId(), getClientSecret());
+                Consumer consumer = new Consumer(getClientId(), getClientSecret());
                 WebClient client = WebClient.create(getAccessTokenURI());
                 Saml2BearerGrant grant = null;
                 if (scope != null) {

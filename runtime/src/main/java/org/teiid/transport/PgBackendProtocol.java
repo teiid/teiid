@@ -87,7 +87,6 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 			if (future.isSuccess()) {
 				SslHandler handler = new SslHandler(engine);
 				future.channel().pipeline().addFirst(SSL_HANDLER_KEY, handler);
-				handler.handshakeFuture().sync();
 			}
 		}
 	}
@@ -421,7 +420,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 			if (tag.equals("EXEC") || tag.equals("CALL")) {
 				tag = "SELECT"; 
 			}
-			if (count != null && !(tag.equalsIgnoreCase("SAVEPOINT") || tag.equalsIgnoreCase("RELEASE"))) {
+			if (count != null && !(tag.equalsIgnoreCase("ROLLBACK") || tag.equalsIgnoreCase("SAVEPOINT") || tag.equalsIgnoreCase("RELEASE"))) {
 				tag += " " + count;
 			}
 		}

@@ -46,7 +46,7 @@ class VDBStructureDeployer  implements DeploymentUnitProcessor {
         	return;
         }
         
-        if(deploymentName.endsWith(VDB_EXTENSION)) {
+        if(deploymentName.toLowerCase().endsWith(VDB_EXTENSION)) {
 			VirtualFile metainf = file.getChild("META-INF"); //$NON-NLS-1$
 			if (metainf == null) {
 				return;
@@ -58,7 +58,7 @@ class VDBStructureDeployer  implements DeploymentUnitProcessor {
 			// adds a TYPE attachment.
 			TeiidAttachments.setAsVDBDeployment(deploymentUnit);
         }
-        else if (deploymentName.endsWith(DYNAMIC_VDB_STRUCTURE)) {
+        else if (deploymentName.toLowerCase().endsWith(DYNAMIC_VDB_STRUCTURE)) {
 	        TeiidAttachments.setAsVDBXMLDeployment(deploymentUnit);			        	
         }
 	}

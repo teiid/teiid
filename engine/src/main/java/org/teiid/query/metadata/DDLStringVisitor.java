@@ -255,7 +255,7 @@ public class DDLStringVisitor {
 	}
 
 	private void addCommonOptions(StringBuilder sb, AbstractMetadataRecord record) {
-		if (record.getUUID() != null && !record.getUUID().startsWith("tid:")) { //$NON-NLS-1$
+		if (record.isUUIDSet() && record.getUUID() != null && !record.getUUID().startsWith("tid:")) { //$NON-NLS-1$
 			addOption(sb, UUID, record.getUUID());
 		}
 		if (record.getAnnotation() != null) {
@@ -394,25 +394,31 @@ public class DDLStringVisitor {
 			append(SQLStringVisitor.escapeSinglePart(column.getName()));
 		}
 		if (includeType) {
-			String runtimeTypeName = column.getDatatype().getRuntimeTypeName();
+			Datatype datatype = column.getDatatype();
+			String runtimeTypeName = column.getRuntimeType();
+			if (datatype != null) {
+				runtimeTypeName = datatype.getRuntimeTypeName();
+			}
 			if (includeName) {
 				append(SPACE);
 			}
 			append(runtimeTypeName);
 			if (LENGTH_DATATYPES.contains(runtimeTypeName)) {
-				if (column.getLength() != 0 && column.getLength() != column.getDatatype().getLength()) {
+				if (column.getLength() != 0 && (datatype == null || column.getLength() != datatype.getLength())) {
 					append(LPAREN).append(column.getLength()).append(RPAREN);
 				}
 			} else if (PRECISION_DATATYPES.contains(runtimeTypeName) 
-					&& (column.getPrecision() != column.getDatatype().getPrecision() || column.getScale() != column.getDatatype().getScale())) {
+					&& (datatype == null || column.getPrecision() != datatype.getPrecision() || column.getScale() != datatype.getScale())) {
 				append(LPAREN).append(column.getPrecision());
 				if (column.getScale() != 0) {
 					append(COMMA).append(column.getScale());
 				}
 				append(RPAREN);
 			}
-			for (int dims = column.getArrayDimensions(); dims > 0; dims--) {
-				append(Tokens.LSBRACE).append(Tokens.RSBRACE);
+			if (datatype != null) {
+				for (int dims = column.getArrayDimensions(); dims > 0; dims--) {
+					append(Tokens.LSBRACE).append(Tokens.RSBRACE);
+				}
 			}
 			if (column.getNullType() == NullType.No_Nulls) {
 				append(SPACE).append(NOT_NULL);

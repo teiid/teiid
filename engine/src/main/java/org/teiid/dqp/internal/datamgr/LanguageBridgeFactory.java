@@ -1059,7 +1059,9 @@ public class LanguageBridgeFactory {
         for (Iterator<Command> i = updates.iterator(); i.hasNext();) {
             translatedUpdates.add(translate(i.next()));
         }
-        return new BatchedUpdates(translatedUpdates);
+        BatchedUpdates batchedUpdates = new BatchedUpdates(translatedUpdates);
+        batchedUpdates.setSingleResult(command.isSingleResult());
+        return batchedUpdates;
     }
 
     org.teiid.language.Limit translate(Limit limit) {

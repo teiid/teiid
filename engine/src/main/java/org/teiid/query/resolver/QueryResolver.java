@@ -262,8 +262,16 @@ public class QueryResolver {
                 //make sure that the group is resolved and that it is pointing to the appropriate temp group
                 //TODO: this is mainly for XML resolving since it sends external groups in unresolved
                 if (metadataID == null || (!(extGroup.getMetadataID() instanceof TempMetadataID) && discoveredMetadata.getTempGroupID(extGroup.getName()) != null)) {
+                	boolean missing = metadataID == null;
                     metadataID = resolverMetadata.getGroupID(extGroup.getName());
-                    extGroup.setMetadataID(metadataID);
+                    if (missing) {
+                    	extGroup.setMetadataID(metadataID);
+                    } else {
+                    	//we shouldn't modify the existing, just add a shadow group
+                    	GroupSymbol gs = extGroup.clone();
+                    	gs.setMetadataID(metadataID);
+                    	currentCommand.getExternalGroupContexts().addGroup(gs);
+                    }
                 }
             }
 

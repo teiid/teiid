@@ -422,7 +422,8 @@ public class IndexMetadataRepository extends MetadataRepository {
 					FunctionParameter fp = new FunctionParameter();
 					fp.setName(param.getName());
 					fp.setDescription(param.getAnnotation());
-					fp.setType(param.getRuntimeType());
+					fp.setRuntimeType(param.getRuntimeType());
+					fp.setDatatype(param.getDatatype(), true, param.getArrayDimensions());
 					switch (param.getType()) {
 					case ReturnValue:
 						if (outputParam != null) {

@@ -43,7 +43,7 @@ import org.teiid.translator.UpdateExecution;
 @Translator(name="hardcoded")
 public class HardCodedExecutionFactory extends ExecutionFactory<Object, Object> {
 	Map<String, List<? extends List<?>>> dataMap = new HashMap<String, List<? extends List<?>>>();
-	Map<String, int[]> updateMap = new HashMap<String, int[]>();
+	Map<String, Object> updateMap = new HashMap<String, Object>();
 	
 	public HardCodedExecutionFactory() {
 		setSourceRequired(false);
@@ -140,34 +140,38 @@ public class HardCodedExecutionFactory extends ExecutionFactory<Object, Object> 
 	public UpdateExecution createUpdateExecution(Command command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
 			Object connection) throws TranslatorException {
-		final int[] result = updateMap.get(command.toString());
-		if (result == null) {
+		Object response = updateMap.get(command.toString());
+		if (response == null) {
 			throw new RuntimeException(command.toString());
 		}
-		return new UpdateExecution() {
-			
-			@Override
-			public void execute() throws TranslatorException {
+		if (response instanceof int[]) {
+			final int[] result = (int[])response;
+			return new UpdateExecution() {
 				
-			}
-			
-			@Override
-			public void close() {
+				@Override
+				public void execute() throws TranslatorException {
+					
+				}
 				
-			}
-			
-			@Override
-			public void cancel() throws TranslatorException {
+				@Override
+				public void close() {
+					
+				}
 				
-			}
-			
-			@Override
-			public int[] getUpdateCounts() throws DataNotAvailableException,
-					TranslatorException {
-				return result;
-			}
-			
-		};
+				@Override
+				public void cancel() throws TranslatorException {
+					
+				}
+				
+				@Override
+				public int[] getUpdateCounts() throws DataNotAvailableException,
+						TranslatorException {
+					return result;
+				}
+				
+			};
+		}
+		throw (TranslatorException)response;
 	}
 	
 	public void addData(String key, List<? extends List<?>> list) {
@@ -176,6 +180,10 @@ public class HardCodedExecutionFactory extends ExecutionFactory<Object, Object> 
 	
 	public void addUpdate(String key, int[] counts) {
 		this.updateMap.put(key, counts);
+	}
+	
+	public void addUpdate(String key, TranslatorException exception) {
+		this.updateMap.put(key, exception);
 	}
 	
 }

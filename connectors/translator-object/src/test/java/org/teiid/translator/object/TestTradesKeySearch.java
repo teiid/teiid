@@ -22,6 +22,7 @@
 package org.teiid.translator.object;
 
 import org.junit.Before;
+import org.junit.Test;
 import org.teiid.language.Select;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
@@ -54,4 +55,10 @@ public class TestTradesKeySearch extends BasicSearchTest {
 	}
 	
 
+	@Test public void testQueryGetAllTrades() throws Exception {						
+		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Mat.Trade_Mat.Trade as T"); //$NON-NLS-1$
+		
+	
+		performTest(command, 3, 5);
+	}	
 }

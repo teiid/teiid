@@ -102,20 +102,25 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
     		//TODO: use engine style logic to determine if the stack should be logged
     		LogManager.logWarning(LogConstants.CTX_ODATA, e, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16047, e.getMessage()));
     		HttpServletResponse httpResponse = (HttpServletResponse)response;
-    	    httpResponse.setStatus(404);
-    	    ContentType contentType = ContentType.parse(request.getContentType());
-    	    PrintWriter writer = httpResponse.getWriter();
-    	    String code = e.getCode()==null?"":e.getCode(); //$NON-NLS-1$
-    	    String message = e.getMessage()==null?"":e.getMessage(); //$NON-NLS-1$
-    		if (contentType == null || contentType.isCompatible(ContentType.APPLICATION_JSON)) {
-    			httpResponse.setHeader(HttpHeader.CONTENT_TYPE, ContentType.APPLICATION_JSON.toContentTypeString());
-    			writer.write("{ \"error\": { \"code\": \""+StringEscapeUtils.escapeJson(code)+"\", \"message\": \""+StringEscapeUtils.escapeJson(message)+"\" } }"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    	    } else {
-        	    httpResponse.setHeader(HttpHeader.CONTENT_TYPE, ContentType.APPLICATION_XML.toContentTypeString()); 
-        		writer.write("<m:error xmlns:m=\"http://docs.oasis-open.org/odata/ns/metadata\"><m:code>"+StringEscapeUtils.escapeXml10(code)+"</m:code><m:message>"+StringEscapeUtils.escapeXml10(message)+"</m:message></m:error>"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    	    }
-    		writer.close();
+    	    writeError(request, e, httpResponse);
     	}
+    }
+
+    static void writeError(ServletRequest request, TeiidProcessingException e,
+            HttpServletResponse httpResponse) throws IOException {
+        httpResponse.setStatus(404);
+        ContentType contentType = ContentType.parse(request.getContentType());
+        PrintWriter writer = httpResponse.getWriter();
+        String code = e.getCode()==null?"":e.getCode(); //$NON-NLS-1$
+        String message = e.getMessage()==null?"":e.getMessage(); //$NON-NLS-1$
+        if (contentType == null || contentType.isCompatible(ContentType.APPLICATION_JSON)) {
+        	httpResponse.setHeader(HttpHeader.CONTENT_TYPE, ContentType.APPLICATION_JSON.toContentTypeString());
+        	writer.write("{ \"error\": { \"code\": \""+StringEscapeUtils.escapeJson(code)+"\", \"message\": \""+StringEscapeUtils.escapeJson(message)+"\" } }"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        } else {
+            httpResponse.setHeader(HttpHeader.CONTENT_TYPE, ContentType.APPLICATION_XML.toContentTypeString()); 
+        	writer.write("<m:error xmlns:m=\"http://docs.oasis-open.org/odata/ns/metadata\"><m:code>"+StringEscapeUtils.escapeXml10(code)+"</m:code><m:message>"+StringEscapeUtils.escapeXml10(message)+"</m:message></m:error>"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        }
+        writer.close();
     }
 
     public void internalDoFilter(ServletRequest request, ServletResponse response,

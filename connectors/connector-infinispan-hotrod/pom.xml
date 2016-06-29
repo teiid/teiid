@@ -3,7 +3,7 @@
     <parent>
         <artifactId>connectors</artifactId>
         <groupId>org.jboss.teiid</groupId>
-        <version>9.0.0.Beta3-SNAPSHOT</version>
+        <version>9.1.0.Alpha1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>connector-infinispan-hotrod</artifactId>
@@ -53,10 +53,6 @@
     </dependencyManagement>
     
     <dependencies>
-        <dependency>
-            <groupId>org.antlr</groupId>
-            <artifactId>antlr-runtime</artifactId>
-        </dependency>    
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>translator-infinispan-hotrod</artifactId>
@@ -116,10 +112,6 @@
             <groupId>org.infinispan.protostream</groupId>
             <artifactId>protostream</artifactId>
         </dependency>    
-	     <dependency>
-	         <groupId>org.hibernate.hql</groupId>
-	         <artifactId>hibernate-hql-parser</artifactId>
-	      </dependency>                
         <dependency>
             <groupId>org.jboss.modules</groupId>
             <artifactId>jboss-modules</artifactId>

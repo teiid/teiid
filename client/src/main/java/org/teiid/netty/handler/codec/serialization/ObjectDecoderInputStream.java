@@ -112,7 +112,7 @@ public class ObjectDecoderInputStream extends ObjectInputStream {
     	while (streamIndex < streams.size()) {
     		if (!foundLength) {
     			clearRemaining();
-	        	remaining = dis.readShort();
+	        	remaining = 0xffff & dis.readShort(); //convert to unsigned
 	        	foundLength = true;
 		        if (remaining < 0) {
 		        	throw new StreamCorruptedException("Invalid stream chunk length"); //$NON-NLS-1$
@@ -147,6 +147,7 @@ public class ObjectDecoderInputStream extends ObjectInputStream {
 	        	}
 				if (remaining > 0) {
 					ObjectConverterUtil.write(this.stream, in, in.getBuffer(), remaining, false);
+					remaining = 0;
 				}
 				continue;
 	        }
@@ -163,7 +164,11 @@ public class ObjectDecoderInputStream extends ObjectInputStream {
     
     void clearRemaining() throws IOException {
     	while (remaining > 0) {
-    		remaining -= in.skip(remaining);
+    		long skipped = in.skip(remaining);
+    		if (skipped == 0) {
+    			break;
+    		}
+    		remaining -= skipped;
     	}
     }
 

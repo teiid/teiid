@@ -54,6 +54,7 @@ import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.ServerConnection;
 import org.teiid.net.TeiidURL;
+import org.teiid.net.socket.Handshake;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.vdb.runtime.VDBKey;
 
@@ -68,6 +69,7 @@ public class LocalServerConnection implements ServerConnection {
     private Properties connectionProperties;
     private boolean passthrough;
     private boolean derived;
+    private static String serverVersion = new Handshake().getVersion();
     
     private Method cancelMethod;
     
@@ -286,5 +288,10 @@ public class LocalServerConnection implements ServerConnection {
 		if (repo != null) {
 			repo.removeListener(listener);
 		}
+	}
+	
+	@Override
+	public String getServerVersion() {
+		return serverVersion;
 	}
 }

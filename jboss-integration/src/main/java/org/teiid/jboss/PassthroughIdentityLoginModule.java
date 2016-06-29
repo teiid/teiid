@@ -68,7 +68,9 @@ public class PassthroughIdentityLoginModule extends AbstractPasswordCredentialLo
    private boolean addPrincipal = true;
    private HashMap<String, Object> properties = new HashMap<String, Object>();
    private boolean wrapGssCredential;
-
+   private Subject intermediateSubject;
+   private GSSCredential storedCredential;
+   
    @Override
    public void initialize(Subject subject, CallbackHandler handler, Map<String, ?> sharedState, Map<String, ?> options) {
       super.initialize(subject, handler, sharedState, options);
@@ -135,17 +137,74 @@ public class PassthroughIdentityLoginModule extends AbstractPasswordCredentialLo
               SecurityActions.addCredentials(subject, cred);
           }          
       }
-            
+
       if (this.callerSubject != null) {
-          makeCopy(this.callerSubject, this.subject, this.wrapGssCredential);
+          GSSCredential rawCredential = getGssCredential(this.callerSubject);
+          if (rawCredential != null) {
+              log.trace("Kerberos passthough mechanism in works");
+              this.storedCredential = wrapGssCredential ? wrapCredential(rawCredential) : rawCredential;
+              this.intermediateSubject = GSSUtil.createGssSubject(rawCredential, storedCredential);
+              log.tracef("created a subject from deletegate credential");
+              makeCopy(intermediateSubject, this.subject);
+              log.tracef("Copied contents of temporary Subject to Subject from the LoginContext"); 
+              addPrivateCredential(this.subject, storedCredential);
+              log.trace("Also add the GSSCredential to the Subject");
+          } else {
+              makeCopy(this.callerSubject, this.subject);
+          }          
       }
+
       addPrivateCredential(this.subject, this.properties);
+      log.trace("Adding module option properties as private credential");
       
       // if oauth credential available in calling context then add the OAuthCredential.
       if (OAuthCredentialContext.getCredential() != null) {
           addPrivateCredential(this.subject, OAuthCredentialContext.getCredential());
+          log.trace("Adding OAuth credential as private credential");
       }
       return true;
+   }
+   
+   @Override
+   public boolean logout() throws LoginException {
+       if (System.getSecurityManager() == null) {
+           if (storedCredential != null) {
+               removePrivateCredential(subject, storedCredential);
+               log.trace("Remove GSSCredential to the Subject");
+           }
+           removePrivateCredential(subject, properties);
+           clearSubjectContents(subject, intermediateSubject != null?intermediateSubject:callerSubject);
+           log.trace("Clear Subject contents");
+           return true;
+       }
+       
+       return AccessController.doPrivileged(new PrivilegedAction<Boolean>() { 
+           public Boolean run() {
+               if (storedCredential != null) {
+                   removePrivateCredential(subject, storedCredential);
+                   log.trace("Remove GSSCredential to the Subject");
+               }
+               removePrivateCredential(subject, properties);               
+               clearSubjectContents(subject, intermediateSubject != null?intermediateSubject:callerSubject);
+               log.trace("Clear Subject contents");
+               return true;
+           }
+       });  
+   }
+   
+   private GSSCredential getGssCredential(Subject subject) {
+       for(Object obj:subject.getPrivateCredentials()) {
+           if (obj instanceof GSSCredential) {
+               return (GSSCredential)obj;
+           }
+       }
+       return null;
+   }
+
+   void clearSubjectContents(Subject toSubtract, Subject from) {
+       from.getPrincipals().removeAll(toSubtract.getPrincipals());
+       from.getPublicCredentials().removeAll(toSubtract.getPublicCredentials());
+       from.getPrivateCredentials().removeAll(toSubtract.getPrivateCredentials());
    }
    
    @Override
@@ -183,31 +242,26 @@ public class PassthroughIdentityLoginModule extends AbstractPasswordCredentialLo
        });        
    }    
    
-   static Object makeCopy(final Subject from, final Subject to, final boolean wrapGssCredential) {
+   static Object makeCopy(final Subject from, final Subject to) {
        if (System.getSecurityManager() == null) {
-           copy(from, to, wrapGssCredential);
+           copy(from, to);
            return null;
        }
        
        return AccessController.doPrivileged(new PrivilegedAction<Object>() { 
            public Object run() {
-               copy(from, to, wrapGssCredential);
+               copy(from, to);
                return null;
            }
        });        
    }   
    
-   static void copy (final Subject from, final Subject to, final boolean wrapGssCredential) {
+   static void copy (final Subject from, final Subject to) {
        for(Principal p:from.getPrincipals()) {
            to.getPrincipals().add(p);
        }
        
        for (Object obj: from.getPrivateCredentials()) {
-           if (obj instanceof GSSCredential) {
-               if (wrapGssCredential) {
-                   obj = wrapCredential((GSSCredential)obj);
-               }
-           }
            to.getPrivateCredentials().add(obj);
        }
        
@@ -229,6 +283,20 @@ public class PassthroughIdentityLoginModule extends AbstractPasswordCredentialLo
        });   
        }
    }
+   
+   static void removePrivateCredential(final Subject subject, final Object obj) {
+       if (System.getSecurityManager() == null) {
+           subject.getPrivateCredentials().remove(obj);
+       }
+       else {
+       AccessController.doPrivileged(new PrivilegedAction<Object>() { 
+           public Object run() {
+               subject.getPrivateCredentials().remove(obj);
+               return null;
+           }
+       });   
+       }
+   }   
    
    private static GSSCredential wrapCredential(final GSSCredential credential) {
        return new GSSCredential() {

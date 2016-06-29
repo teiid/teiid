@@ -44,6 +44,7 @@ import org.teiid.connector.DataPlugin;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.StringUtil;
+import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.MetadataStore.Grant;
 import org.teiid.metadata.ProcedureParameter.Type;
@@ -71,7 +72,7 @@ public class MetadataFactory implements Serializable {
 	private static final String TEIID_SPATIAL = "teiid_spatial"; //$NON-NLS-1$
 	private static final String TEIID_LDAP = "teiid_ldap"; //$NON-NLS-1$
 	private static final String TEIID_REST = "teiid_rest"; //$NON-NLS-1$
-
+	private static final String TEIID_PI = "teiid_pi"; //$NON-NLS-1$
 	private static final long serialVersionUID = 8590341087771685630L;
 
 	private String vdbName;
@@ -102,6 +103,7 @@ public class MetadataFactory implements Serializable {
 	public static final String SPATIAL_URI = "{http://www.teiid.org/translator/spatial/2015}"; //$NON-NLS-1$
 	public static final String LDAP_URI = "{http://www.teiid.org/translator/ldap/2015}"; //$NON-NLS-1$
 	public static final String REST_URI = "{http://teiid.org/rest}"; //$NON-NLS-1$
+	public static final String PI_URI = "{http://www.teiid.org/translator/pi/2016}"; //$NON-NLS-1$
 
 	public static final Map<String, String> BUILTIN_NAMESPACES;
 	static {
@@ -118,6 +120,7 @@ public class MetadataFactory implements Serializable {
 		map.put(TEIID_SPATIAL, SPATIAL_URI.substring(1, SPATIAL_URI.length()-1));
 		map.put(TEIID_LDAP, LDAP_URI.substring(1, LDAP_URI.length()-1));
 		map.put(TEIID_REST, REST_URI.substring(1, REST_URI.length()-1));
+		map.put(TEIID_PI, PI_URI.substring(1, PI_URI.length()-1));
 		BUILTIN_NAMESPACES = Collections.unmodifiableMap(map);
 	}
 
@@ -515,10 +518,21 @@ public class MetadataFactory implements Serializable {
 	 */
 	public FunctionMethod addFunction(String name, String returnType, String... paramTypes) {
 		FunctionMethod function = FunctionMethod.createFunctionMethod(name, null, null, returnType, paramTypes);
+		setFunctionMethodTypes(function);
 		function.setPushdown(PushDown.MUST_PUSHDOWN);
 		setUUID(function);
 		schema.addFunction(function);
 		return function;
+	}
+
+	private void setFunctionMethodTypes(FunctionMethod function) {
+		FunctionParameter outputParameter = function.getOutputParameter();
+		if (outputParameter != null) {
+			setDataType(outputParameter.getRuntimeType(), outputParameter, builtinDataTypes, outputParameter.getNullType() == NullType.Nullable);
+		}
+		for (FunctionParameter param : function.getInputParameters()) {
+			setDataType(param.getRuntimeType(), param, builtinDataTypes, param.getNullType() == NullType.Nullable);
+		}
 	}
 	
 	/**
@@ -530,6 +544,7 @@ public class MetadataFactory implements Serializable {
 	 */
 	public FunctionMethod addFunction(String name, Method method) {
 		FunctionMethod func = createFunctionFromMethod(name, method);
+		setFunctionMethodTypes(func);
 		setUUID(func);
 		getSchema().addFunction(func);
 		return func;
@@ -664,6 +679,9 @@ public class MetadataFactory implements Serializable {
 				correctDataTypes(p.getResultSet().getColumns());
 			}
 		}
+		for (FunctionMethod p : this.schema.getFunctions().values()) {
+			correctDataTypes(p.getInputParameters());
+		}
 	}
 
 	private void correctDataTypes(List<? extends BaseColumn> cols) {
@@ -671,23 +689,27 @@ public class MetadataFactory implements Serializable {
 			return;
 		}
 		for (BaseColumn c : cols) {
-			if (c.getDatatype() == null) {
-				continue;
+			Datatype datatype = c.getDatatype();
+			String name = null;
+			if (datatype == null) {
+				name = c.getRuntimeType();
+			} else {
+				name = datatype.getName();
 			}
-			Datatype dt = this.builtinDataTypes.get(c.getDatatype().getName());
+			Datatype dt = this.builtinDataTypes.get(name);
 			if (dt == null && this.enterpriseTypes != null) {
-				dt = this.enterpriseTypes.get(c.getDatatype().getName());
+				dt = this.enterpriseTypes.get(name);
 			}
 			if (dt != null) {
 				c.setDatatype(dt);
-			} else {
+			} else if (datatype != null) {
 				//must be an enterprise type
 				//if it's used in a single schema, we're ok, but when used in multiple there's an issue
 				//since the same record will exist as multiple instances
 				//
 				//old serialized forms do not have tracking for enterprise types, ensure that the
 				//type is added so that it will show up in the vdb metadata
-				addEnterpriseDatatype(c.getDatatype());
+				addEnterpriseDatatype(datatype);
 			}
 		}
 	}

@@ -21,17 +21,25 @@
  */
 package org.teiid.translator.simpledb.visitors;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
-import org.teiid.language.*;
+import org.teiid.language.Argument;
 import org.teiid.language.Argument.Direction;
+import org.teiid.language.Command;
+import org.teiid.language.LanguageFactory;
+import org.teiid.language.Select;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
@@ -73,11 +81,18 @@ public class TestSimpleDBExecution {
         
         Command cmd = utility.parseCommand(query);
         ExecutionContext context = Mockito.mock(ExecutionContext.class);
+        Mockito.stub(context.getBatchSize()).toReturn(10);
         ResultSetExecution exec = translator.createResultSetExecution((Select)cmd, context, Mockito.mock(RuntimeMetadata.class), connection);
         exec.execute();
         exec.next();
+        Mockito.verify(connection).performSelect("SELECT attribute, somedate, strarray FROM item WHERE attribute > 'name' LIMIT 10", null);
         
-        Mockito.verify(connection).performSelect("SELECT attribute, somedate, strarray FROM item WHERE attribute > 'name'", null);
+        //cap at 2500
+        Mockito.stub(context.getBatchSize()).toReturn(4000);
+        exec = translator.createResultSetExecution((Select)cmd, context, Mockito.mock(RuntimeMetadata.class), connection);
+        exec.execute();
+        exec.next();
+        Mockito.verify(connection).performSelect("SELECT attribute, somedate, strarray FROM item WHERE attribute > 'name' LIMIT 2500", null);
     }
     
     @Test

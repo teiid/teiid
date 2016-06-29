@@ -96,12 +96,10 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 					}
 					String remove = table.getProperty(MaterializationMetadataRepository.ON_VDB_DROP_SCRIPT, false);
 					if (remove != null) {
-						for (String cmd: StringUtil.tokenize(remove, ';')) {
-							try {
-								executeQuery(vdb, cmd);
-							} catch (SQLException e) {
-								LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
-							}
+						try {
+							executeQuery(vdb, remove);
+						} catch (SQLException e) {
+							LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
 						}					
 					}
 				}
@@ -154,12 +152,10 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 					}
 					String start = table.getProperty(MaterializationMetadataRepository.ON_VDB_START_SCRIPT, false);
 					if (start != null) {
-						for (String script : StringUtil.tokenize(start, ';')) {
-							try {
-								executeQuery(vdb, script);
-							} catch (SQLException e) {
-								LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
-							}
+						try {
+							executeQuery(vdb, start);
+						} catch (SQLException e) {
+							LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
 						}
 					}
 					

@@ -85,6 +85,7 @@ import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.TranslatorBatchException;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.UpdateExecution;
@@ -1197,7 +1198,7 @@ public class TestEmbeddedServer {
                 c.setUpdatable(true);
                 c = metadataFactory.addColumn("LoadState", TypeFacility.RUNTIME_NAMES.STRING, t);
                 c.setUpdatable(true);
-                c = metadataFactory.addColumn("Cardinality", TypeFacility.RUNTIME_NAMES.INTEGER, t);
+                c = metadataFactory.addColumn("Cardinality", TypeFacility.RUNTIME_NAMES.LONG, t);
                 c.setUpdatable(true);
                 c = metadataFactory.addColumn("Updated", TypeFacility.RUNTIME_NAMES.TIMESTAMP, t);
                 c.setUpdatable(true);
@@ -1810,6 +1811,85 @@ public class TestEmbeddedServer {
 		
 		//see the correct pushdown in hcef.addData above
 		s.execute("with a (x) as (select e1 from pm1.g1) SELECT a.x from a, a z"); //$NON-NLS-1$
+	}
+	
+	@Test public void testBatchedUpdateErrors() throws Exception {
+		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		ec.setUseDisk(false);
+		es.start(ec);
+		
+		MockTransactionManager tm = new MockTransactionManager();
+		ec.setTransactionManager(tm);
+		
+		HardCodedExecutionFactory hcef = new HardCodedExecutionFactory() {
+			@Override
+			public boolean supportsCompareCriteriaEquals() {
+				return true;
+			}
+		};
+		hcef.addUpdate("UPDATE pm1.g1 SET e1 = 'a' WHERE pm1.g1.e2 = 1", new int[] {1});
+		hcef.addUpdate("UPDATE pm1.g1 SET e1 = 'b' WHERE pm1.g1.e2 = 2", new TranslatorException("i've failed"));
+		es.addTranslator("y", hcef);
+		
+		ModelMetaData mmd = new ModelMetaData();
+		mmd.setName("my-schema");
+		mmd.addSourceMapping("x", "y", null);
+		mmd.addSourceMetadata("ddl", "create foreign table pm1.g1 (e1 string, e2 integer) options (updatable true)");
+
+		es.deployVDB("test", mmd);
+		
+		TeiidDriver td = es.getDriver();
+		Connection c = td.connect("jdbc:teiid:test", null);
+		Statement s = c.createStatement();
+		
+		s.addBatch("update pm1.g1 set e1 = 'a' where e2 = 1"); //$NON-NLS-1$
+		s.addBatch("update pm1.g1 set e1 = 'b' where e2 = 2"); //$NON-NLS-1$
+		try {
+			s.executeBatch();
+			fail();
+		} catch (BatchUpdateException e) {
+			int[] updateCounts = e.getUpdateCounts();
+			assertArrayEquals(new int[] {1, -3}, updateCounts);
+			assertEquals(-1, s.getUpdateCount());
+		}
+		
+		//redeploy with batch support
+		
+		hcef = new HardCodedExecutionFactory() {
+			@Override
+			public boolean supportsCompareCriteriaEquals() {
+				return true;
+			}
+			
+			@Override
+			public boolean supportsBatchedUpdates() {
+				return true;
+			}
+		};
+		
+		es.addTranslator("z", hcef);
+		es.undeployVDB("test");
+		mmd = new ModelMetaData();
+		mmd.setName("my-schema");
+		mmd.addSourceMetadata("ddl", "create foreign table pm1.g1 (e1 string, e2 integer) options (updatable true)");
+		mmd.addSourceMapping("y", "z", null);
+		es.deployVDB("test", mmd);
+
+		c = td.connect("jdbc:teiid:test", null);
+		s = c.createStatement();
+
+		s.addBatch("update pm1.g1 set e1 = 'a' where e2 = 1"); //$NON-NLS-1$
+		s.addBatch("update pm1.g1 set e1 = 'b' where e2 = 2"); //$NON-NLS-1$
+		hcef.updateMap.clear();
+		hcef.addUpdate("UPDATE pm1.g1 SET e1 = 'a' WHERE pm1.g1.e2 = 1;UPDATE pm1.g1 SET e1 = 'b' WHERE pm1.g1.e2 = 2;", new TranslatorBatchException(new SQLException(), new int[] {1, -3}));
+		try {
+			s.executeBatch();
+			fail();
+		} catch (BatchUpdateException e) {
+			int[] updateCounts = e.getUpdateCounts();
+			assertArrayEquals(new int[] {1, -3}, updateCounts);
+			assertEquals(-1, s.getUpdateCount());
+		}
 	}
 
 }

@@ -29,7 +29,12 @@ import javax.persistence.Query;
 import org.teiid.core.TeiidException;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.ReflectionHelper;
-import org.teiid.language.*;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Command;
+import org.teiid.language.Expression;
+import org.teiid.language.ExpressionValueSource;
+import org.teiid.language.Insert;
+import org.teiid.language.Literal;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
@@ -50,15 +55,7 @@ public class JPQLUpdateExecution extends JPQLBaseExecution implements UpdateExec
 	
 	@Override
 	public void execute() throws TranslatorException {
-		if (command instanceof BatchedUpdates) {
-			BatchedUpdates updates = (BatchedUpdates)this.command;
-			this.results = new int[updates.getUpdateCommands().size()];
-			int index = 0;
-			for (Command cmd:updates.getUpdateCommands()) {
-				this.results[index++] = executeUpdate(cmd);
-			}
-		}
-		else if (this.command instanceof Insert) {
+		if (this.command instanceof Insert) {
 			this.results = new int[1];
 			Object entity = handleInsert((Insert)this.command);
 			this.enityManager.merge(entity);

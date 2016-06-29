@@ -32,6 +32,7 @@ import org.teiid.language.visitor.LanguageObjectVisitor;
 public class BatchedUpdates extends BaseLanguageObject implements Command {
 
     private List<Command> updateCommands;
+    private boolean singleResult;
     
     public BatchedUpdates(List<Command> updateCommands) {
         this.updateCommands = updateCommands;
@@ -46,6 +47,30 @@ public class BatchedUpdates extends BaseLanguageObject implements Command {
 
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);
+    }
+    
+    /**
+     * Whether the batch represents a logical unit of work
+     * It is not required that this be treated as atomic, but
+     * the translator can use this as hint
+     * @return
+     */
+    public boolean isSingleResult() {
+		return singleResult;
+	}
+    
+    public void setSingleResult(boolean atomic) {
+		this.singleResult = atomic;
+	}
+    
+    @Override
+    public String toString() {
+    	StringBuffer result = new StringBuffer();
+    	for (Command command : updateCommands) {
+    		result.append(command.toString());
+    		result.append(";"); //$NON-NLS-1$
+    	}
+    	return result.toString();
     }
 
 }

@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>connectors</artifactId>
 		<groupId>org.jboss.teiid</groupId>
-		<version>9.0.0.Beta3-SNAPSHOT</version>
+		<version>9.1.0.Alpha1-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>translator-swagger</artifactId>
@@ -41,10 +41,6 @@
 			<artifactId>swagger-parser</artifactId>
 		</dependency>
         <dependency>
-            <groupId>io.swagger</groupId>
-            <artifactId>swagger-jaxrs</artifactId>
-        </dependency>		
-        <dependency>
           <groupId>org.jboss.teiid.connectors</groupId>
           <artifactId>translator-ws</artifactId>
         </dependency>
@@ -55,10 +51,6 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

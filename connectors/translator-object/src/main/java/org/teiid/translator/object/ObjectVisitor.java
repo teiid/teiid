@@ -24,6 +24,7 @@ package org.teiid.translator.object;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.core.util.StringUtil;
 import org.teiid.language.AndOr;
 import org.teiid.language.BaseLanguageObject;
 import org.teiid.language.ColumnReference;
@@ -64,6 +65,7 @@ public class ObjectVisitor extends HierarchyVisitor {
 
 	
 	private NamedTable table;
+	private String tableName;
 	
 	// will be non-null only when a child table is being processed
 	private String rootTableName = null;
@@ -106,9 +108,20 @@ public class ObjectVisitor extends HierarchyVisitor {
 	public void addException(TranslatorException e) {
 		exceptions.add(e);
 	}
-
-	public NamedTable getTable() {
-		return table;
+	
+	private void setTable(NamedTable t) {
+		String tn = t.getName();
+		// remove any folders that exist within the model (these are not folders that the models rsides in).
+		if (tn.contains(".")) {
+			tn = StringUtil.getLastToken(tn, ".");
+		}
+		
+		this.tableName=tn;
+		this.table = t;
+	}
+		
+	public String getTableName() {
+		return this.tableName;
 	}
 	
 	/**
@@ -157,7 +170,7 @@ public class ObjectVisitor extends HierarchyVisitor {
 	@Override
 	public void visit(NamedTable obj) {
 		super.visit(obj);
-		this.table = obj;
+		this.setTable(obj);
 		
 			if (obj.getMetadataObject().getPrimaryKey() != null) {
 				this.pkkeyCol = table.getMetadataObject().getPrimaryKey()

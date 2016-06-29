@@ -82,7 +82,8 @@ public class WithQueryCommand implements SubqueryContainer<QueryCommand> {
 		return EquivalenceUtil.areEqual(groupSymbol, other.getGroupSymbol()) &&
 		EquivalenceUtil.areEqual(this.columns, other.getColumns()) &&
 		EquivalenceUtil.areEqual(this.queryExpression, other.queryExpression) &&
-		noInline == other.noInline;
+		noInline == other.noInline &&
+		recursive == other.recursive;
 	}
 	
 	@Override

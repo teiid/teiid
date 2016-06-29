@@ -335,5 +335,15 @@ public class TestDDLStringVisitor {
 				"	e1 geometry\n" + 
 				");";
 		helpTest(ddl, expected);
-	}	
+	}
+	
+	public static String[] someMethod(int param) {return null;}
+	
+	@Test public void testFunction() throws Exception {
+		Schema s = new Schema();
+		s.addFunction(MetadataFactory.createFunctionFromMethod("x", TestDDLStringVisitor.class.getMethod("someMethod", int.class)));
+		String metadataDDL = DDLStringVisitor.getDDLString(s, null, null);
+		assertEquals("CREATE VIRTUAL FUNCTION x(param1 integer) RETURNS string[]"
+				+ "\nOPTIONS (NAMEINSOURCE 'x', JAVA_CLASS 'org.teiid.query.metadata.TestDDLStringVisitor', JAVA_METHOD 'someMethod');", metadataDDL);
+	}
 }

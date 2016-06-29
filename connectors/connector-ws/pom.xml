@@ -3,7 +3,7 @@
     <parent>
         <artifactId>connectors</artifactId>
         <groupId>org.jboss.teiid</groupId>
-        <version>9.0.0.Beta3-SNAPSHOT</version>
+        <version>9.1.0.Alpha1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>connector-ws</artifactId>
@@ -45,13 +45,10 @@
             <groupId>org.apache.wss4j</groupId>
             <artifactId>wss4j-ws-security-dom</artifactId>
         </dependency>
-        <!-- 
         <dependency>
             <groupId>org.apache.cxf</groupId>
             <artifactId>cxf-rt-ws-security</artifactId>
-            <scope>provided</scope>
         </dependency>
-         -->
         <dependency>
             <groupId>org.apache.cxf</groupId>
             <artifactId>cxf-rt-frontend-simple</artifactId>
@@ -72,10 +69,6 @@
             <groupId>org.apache.cxf</groupId>
             <artifactId>cxf-rt-frontend-jaxrs</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.apache.cxf</groupId>
-            <artifactId>cxf-rt-rs-client</artifactId>
-        </dependency>        
 		<dependency>
 		    <groupId>org.apache.cxf</groupId>
 		    <artifactId>cxf-rt-transports-http-hc</artifactId>

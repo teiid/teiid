@@ -63,6 +63,7 @@ public class DataTypeManager {
 	private static final boolean COMPARABLE_LOBS = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.comparableLobs", false); //$NON-NLS-1$
 	private static final boolean COMPARABLE_OBJECT = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.comparableObject", false); //$NON-NLS-1$
 	public static final boolean PAD_SPACE = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.padSpace", false); //$NON-NLS-1$
+	public static final String DEFAULT_COLLATION = "UCS-2"; //$NON-NLS-1$
 	public static final String COLLATION_LOCALE = System.getProperties().getProperty("org.teiid.collationLocale"); //$NON-NLS-1$
 	
 	private static boolean valueCacheEnabled = USE_VALUE_CACHE;
@@ -982,8 +983,12 @@ public class DataTypeManager {
     }
     
 	public static boolean isHashable(Class<?> type) {
+		if (type == DataTypeManager.DefaultDataClasses.STRING
+				|| type == DataTypeManager.DefaultDataClasses.CHAR) {
+			return COLLATION_LOCALE == null;
+		}
 		if (type == DataTypeManager.DefaultDataClasses.STRING) {
-			return !PAD_SPACE && COLLATION_LOCALE == null;
+			return 	!PAD_SPACE; 
 		}
 		return !(type == DataTypeManager.DefaultDataClasses.BIG_DECIMAL
 				|| type == DataTypeManager.DefaultDataClasses.BLOB

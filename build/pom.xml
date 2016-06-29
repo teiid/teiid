@@ -2,7 +2,7 @@
   <parent>
     <artifactId>teiid-parent</artifactId>
     <groupId>org.jboss.teiid</groupId>
-        <version>9.0.0.Beta3-SNAPSHOT</version>
+        <version>9.1.0.Alpha1-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   
@@ -17,35 +17,6 @@
       <dir.teiid>teiid-${project.version}</dir.teiid>
   </properties>
   
-    <dependencies>
-    	<dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency> 
-       
-		<dependency>
-		    <groupId>org.jboss.narayana.jta</groupId>
-		    <artifactId>narayana-jta</artifactId>
-		</dependency> 
-		<dependency>
-		    <groupId>org.jboss.ironjacamar</groupId>
-		    <artifactId>ironjacamar-jdbc</artifactId>
-		</dependency>
-		<dependency>
-		    <groupId>org.jboss.ironjacamar</groupId>
-		    <artifactId>ironjacamar-core-api</artifactId>
-		</dependency>
-		<dependency>
-		    <groupId>org.jboss.ironjacamar</groupId>
-		    <artifactId>ironjacamar-core-impl</artifactId>
-		</dependency>
-
-    </dependencies>   
-      
     <build>
         <outputDirectory>target/kits</outputDirectory>
         

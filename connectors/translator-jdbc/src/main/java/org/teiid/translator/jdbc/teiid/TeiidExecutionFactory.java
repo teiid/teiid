@@ -31,6 +31,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.boot.TempTableDdlTransactionHandling;
+import org.hibernate.hql.spi.id.AbstractMultiTableBulkIdStrategyImpl;
+import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
+import org.hibernate.hql.spi.id.local.AfterUseAction;
+import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.language.SQLConstants;
 import org.teiid.logging.LogConstants;
@@ -348,29 +353,28 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
     		this.dialect = new SQLDialect() {
 				
 				@Override
-				public boolean supportsTemporaryTables() {
-					return true;
-				}
-				
-				@Override
 				public String getTypeName(int code, long length, int precision, int scale) {
 					return JDBCSQLTypeInfo.getJavaClassName(code);
 				}
 				
-				@Override
-				public String getDropTemporaryTableString() {
-					return "drop table"; //$NON-NLS-1$
-				}
-				
-				@Override
-				public String getCreateTemporaryTableString() {
-					return "create local temporary table"; //$NON-NLS-1$
-				}
-				
-				@Override
-				public String getCreateTemporaryTablePostfix() {
-					return ""; //$NON-NLS-1$
-				}
+                public AbstractMultiTableBulkIdStrategyImpl getDefaultMultiTableBulkIdStrategy() {
+                    return new LocalTemporaryTableBulkIdStrategy(
+                            new IdTableSupportStandardImpl() {
+                                @Override
+                                public String getCreateIdTableCommand() {
+                                    return "create local temporary table";
+                                }
+                                @Override
+                                public String getDropIdTableCommand() {
+                                    return "drop table";
+                                }
+                                @Override
+                                public String getCreateIdTableStatementOptions() {
+                                    return "";
+                                }
+                            }, AfterUseAction.DROP,
+                            TempTableDdlTransactionHandling.NONE);
+                }
 			};
     	}
     	return super.getDialect();

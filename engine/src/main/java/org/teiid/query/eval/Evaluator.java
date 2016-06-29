@@ -1101,6 +1101,8 @@ public class Evaluator {
 			return new ArrayImpl(TextLine.evaluate(Arrays.asList(nameValuePairs), defaultExtractor, function));
 		} catch (TransformationException e) {
 			 throw new ExpressionEvaluationException(e);
+		} catch (TeiidProcessingException e) {
+			throw new ExpressionEvaluationException(e);
 		}
 	}
 

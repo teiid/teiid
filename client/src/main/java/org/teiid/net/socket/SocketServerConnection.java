@@ -81,6 +81,7 @@ public class SocketServerConnection implements ServerConnection {
 	private boolean failOver;
 	private long lastPing = System.currentTimeMillis();
 	private int pingFailOverInterval = FAILOVER_PING_INTERVAL;
+	private String serverVersion;
     
 	public SocketServerConnection(
 			SocketServerInstanceFactory connectionFactory, boolean secure,
@@ -92,7 +93,7 @@ public class SocketServerConnection implements ServerConnection {
 		//ILogon that is allowed to failover
 		this.logon = this.getService(ILogon.class);
 		this.failOver = Boolean.valueOf(connProps.getProperty(TeiidURL.CONNECTION.AUTO_FAILOVER)).booleanValue();
-		selectServerInstance(false);
+		this.serverVersion = selectServerInstance(false).getServerVersion();
 	}
 	
 	/**
@@ -424,5 +425,10 @@ public class SocketServerConnection implements ServerConnection {
 	@Override
 	public boolean isLocal() {
 		return false;
+	}
+	
+	@Override
+	public String getServerVersion() {
+		return this.serverVersion;
 	}
 }

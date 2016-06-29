@@ -203,11 +203,6 @@ public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
     }
 
     @Override
-    public String translateLiteralDate(java.sql.Date dateValue) {
-        return '\'' + formatDateValue(dateValue) + '\'';
-    }
-
-    @Override
     public String translateLiteralTime(Time timeValue) {
     	if (!hasTimeType()) {
     		return translateLiteralTimestamp(new Timestamp(timeValue.getTime()));

@@ -193,7 +193,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
         		}
             }
 
-			boolean pushedLeft = insertSort(joinNode.getFirstChild(), leftExpressions, joinNode, metadata, capabilitiesFinder, pushLeft);	
+			boolean pushedLeft = insertSort(joinNode.getFirstChild(), leftExpressions, joinNode, metadata, capabilitiesFinder, pushLeft, context);	
 			
 			//TODO: this check could be performed, as it implies we're using enhanced and can back out of the sort
 			//      but this not valid in all circumstances
@@ -213,7 +213,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
 	        	}
 			}
 
-			boolean pushedRight = insertSort(joinNode.getLastChild(), rightExpressions, joinNode, metadata, capabilitiesFinder, pushRight);
+			boolean pushedRight = insertSort(joinNode.getLastChild(), rightExpressions, joinNode, metadata, capabilitiesFinder, pushRight, context);
         	if ((!pushedRight || !pushedLeft) && (joinType == JoinType.JOIN_INNER || (joinType == JoinType.JOIN_LEFT_OUTER && !pushedLeft))) {
         		joinNode.setProperty(NodeConstants.Info.JOIN_STRATEGY, JoinStrategyType.ENHANCED_SORT);
         	}
@@ -232,7 +232,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
      * @throws QueryMetadataException 
      */
     static boolean insertSort(PlanNode childNode, List<Expression> expressions, PlanNode jnode, QueryMetadataInterface metadata, CapabilitiesFinder capFinder,
-    		boolean attemptPush) throws QueryMetadataException, TeiidComponentException {
+    		boolean attemptPush, CommandContext context) throws QueryMetadataException, TeiidComponentException {
         Set<Expression> orderSymbols = new LinkedHashSet<Expression>(expressions); 
 
         PlanNode sourceNode = FrameUtil.findJoinSourceNode(childNode);
@@ -254,7 +254,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
         if (sourceNode.getFirstChild() != null && sourceNode.getType() == NodeConstants.Types.SOURCE && outputSymbols.size() == expressions.size() && outputSymbols.containsAll(expressions)) {
         	PlanNode setOp = NodeEditor.findNodePreOrder(sourceNode.getFirstChild(), NodeConstants.Types.SET_OP, NodeConstants.Types.SOURCE);
         	if (setOp != null) {
-        		if (setOp.hasBooleanProperty(NodeConstants.Info.USE_ALL)) {
+        		if (!setOp.hasBooleanProperty(NodeConstants.Info.USE_ALL)) {
         			distinct = true;
         		}
         	} else if (NodeEditor.findNodePreOrder(sourceNode.getFirstChild(), NodeConstants.Types.DUP_REMOVE, NodeConstants.Types.PROJECT) != null) {
@@ -268,7 +268,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
         	if (distinct || NewCalculateCostUtil.usesKey(sourceNode, expressions, metadata)) {
                 joinNode.setProperty(joinNode.getFirstChild() == childNode ? NodeConstants.Info.IS_LEFT_DISTINCT : NodeConstants.Info.IS_RIGHT_DISTINCT, true);
         	}
-	        if (attemptPush && RuleRaiseAccess.canRaiseOverSort(sourceNode, metadata, capFinder, sortNode, null, false, true)) {
+	        if (attemptPush && RuleRaiseAccess.canRaiseOverSort(sourceNode, metadata, capFinder, sortNode, null, false, context, true)) {
 	            sourceNode.getFirstChild().addAsParent(sortNode);
 	            
 	            if (needsCorrection) {

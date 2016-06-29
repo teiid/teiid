@@ -52,6 +52,7 @@ import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.SetQuery.Operation;
+import org.teiid.query.sql.lang.SubqueryContainer.Evaluatable;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -383,13 +384,13 @@ public final class RuleRaiseAccess implements OptimizerRule {
             CapabilitiesFinder capFinder,
             PlanNode parentNode, AnalysisRecord record, boolean compensateForUnrelated, CommandContext context) throws QueryMetadataException,
                                 TeiidComponentException {
-    	return canRaiseOverSort(accessNode, metadata, capFinder, parentNode, record, compensateForUnrelated, context.getOptions().isRequireTeiidCollation());
+    	return canRaiseOverSort(accessNode, metadata, capFinder, parentNode, record, compensateForUnrelated, context, context.getOptions().isRequireTeiidCollation());
     }
 
 	static boolean canRaiseOverSort(PlanNode accessNode,
                                    QueryMetadataInterface metadata,
                                    CapabilitiesFinder capFinder,
-                                   PlanNode parentNode, AnalysisRecord record, boolean compensateForUnrelated, boolean checkCollation) throws QueryMetadataException,
+                                   PlanNode parentNode, AnalysisRecord record, boolean compensateForUnrelated, CommandContext context, boolean checkCollation) throws QueryMetadataException,
                                                        TeiidComponentException {
         // Find the model for this node by getting ACCESS node's model
         Object modelID = getModelIDFromAccess(accessNode, metadata);
@@ -407,7 +408,10 @@ public final class RuleRaiseAccess implements OptimizerRule {
             if (!CapabilitiesUtil.supportsNullOrdering(metadata, capFinder, modelID, symbol)) {
             	return false;
             }
-            if (symbol.getSymbol().getType() == DataTypeManager.DefaultDataClasses.STRING) {
+            Class<?> type = symbol.getSymbol().getType();
+			if (type == DataTypeManager.DefaultDataClasses.STRING 
+					|| type == DataTypeManager.DefaultDataClasses.CHAR 
+					|| type == DataTypeManager.DefaultDataClasses.CLOB) {
             	stringType = true;
             }
         }
@@ -446,12 +450,27 @@ public final class RuleRaiseAccess implements OptimizerRule {
         	return false;
         }
         
-    	String collation = (String) CapabilitiesUtil.getProperty(Capability.COLLATION_LOCALE, modelID, metadata, capFinder);
-    	
-    	//we require the collation to match
-    	if (stringType && checkCollation && collation != null && !collation.equals(DataTypeManager.COLLATION_LOCALE)) {
-    		return false;
-    	}
+        if (stringType) {
+	        if (!checkCollation && parentNode.getParent() != null 
+	        		&& parentNode.getParent().getType() == NodeConstants.Types.TUPLE_LIMIT 
+	        		&& NodeEditor.findParent(parentNode.getParent(), NodeConstants.Types.JOIN) != null) {
+	        	checkCollation = true;
+	        }
+	        
+	        if (checkCollation) {
+	        	String collation = (String) CapabilitiesUtil.getProperty(Capability.COLLATION_LOCALE, modelID, metadata, capFinder);
+
+	        	//we require the collation to match
+	        	if (collation != null) {
+	        		if ((DataTypeManager.COLLATION_LOCALE != null && !collation.equals(DataTypeManager.COLLATION_LOCALE))
+	        				|| (DataTypeManager.COLLATION_LOCALE == null && !collation.equals(DataTypeManager.DEFAULT_COLLATION))) {
+	        			return false;
+	        		}
+	        	} else if (!context.getOptions().isAssumeMatchingCollation()) {
+    				return false;
+	        	}
+	        }
+        }
         
         //we don't need to check for extended grouping here since we'll create an inline view later
         
@@ -822,7 +841,16 @@ public final class RuleRaiseAccess implements OptimizerRule {
 				if (sjc != SupportedJoinCriteria.ANY && thetaCriteria.isEmpty()) {
                 	return null; //cross join not supported
                 }
-				
+				if (type == JoinType.JOIN_LEFT_OUTER && !CapabilitiesUtil.supports(Capability.CRITERIA_ON_SUBQUERY, accessModelID, metadata, capFinder)) {
+					PlanNode right = children.get(1);
+					for (PlanNode node : NodeEditor.findAllNodes(right, NodeConstants.Types.SELECT, NodeConstants.Types.SOURCE)) {
+						for (SubqueryContainer<?> subqueryContainer : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders((Criteria) node.getProperty(NodeConstants.Info.SELECT_CRITERIA))) {
+							if (!(subqueryContainer instanceof Evaluatable) || subqueryContainer.getCommand().getCorrelatedReferences() != null) {
+					        	return null;
+							}
+						}
+					}
+				}
 				modelID = accessModelID;
 				multiSource = childNode.hasBooleanProperty(Info.IS_MULTI_SOURCE);
 			} else if(!CapabilitiesUtil.isSameConnector(modelID, accessModelID, metadata, capFinder) 

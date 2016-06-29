@@ -206,7 +206,7 @@ BEGIN
 	BEGIN 
 	    LOOP ON (SELECT valid, updated, loadstate, cardinality, loadnumber FROM #load) AS matcursor
 	    BEGIN
-		    IF (not matcursor.valid OR (matcursor.valid AND TIMESTAMPDIFF(SQL_TSI_SECOND, matcursor.updated, now()) > (ttl/1000)) OR invalidate OR loadstate = 'NEEDS_LOADING'  OR loadstate = 'FAILED_LOAD')
+		    IF (loadstate <> 'LOADING' OR TIMESTAMPDIFF(SQL_TSI_SECOND, matcursor.updated, now()) > (ttl/1000))
 		        BEGIN 
 		            EXECUTE IMMEDIATE updateStmt || ' AND loadNumber = ' || matcursor.loadNumber USING loadNumber = matcursor.loadNumber + 1, vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = loadMatView.viewName, updated = now(), LoadState = 'LOADING', valid = matcursor.valid AND NOT invalidate, cardinality = matcursor.cardinality;
 					DECLARE integer updated = VARIABLES.ROWCOUNT;
@@ -224,7 +224,9 @@ BEGIN
 		        END
 	        ELSE
 		        BEGIN
-		        	VARIABLES.rowsUpdated = -2;
+	                IF (invalidate AND matcursor.valid)
+                        EXECUTE IMMEDIATE 'UPDATE ' || VARIABLES.statusTable || ' SET valid = false ' || crit || ' AND loadNumber = ' || matcursor.loadNumber USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = loadMatView.viewName;
+		        	VARIABLES.rowsUpdated = -1;
 		        	VARIABLES.status = 'DONE';
 		        END
 	    END
@@ -240,24 +242,10 @@ BEGIN
     	
     	IF (VARIABLES.beforeLoadScript IS NOT null)
     	BEGIN
-    	   VARIABLES.index = 1;
-    	   declare string[] strings = tokenize(VARIABLES.beforeLoadScript, ';');
-    	   VARIABLES.lineCount = array_length(strings);
-    	    WHILE (index <= lineCount)
-    	    BEGIN 
-        	   EXECUTE IMMEDIATE array_get(strings, index);
-        	   index = index +1;
-        	END
+            EXECUTE IMMEDIATE VARIABLES.beforeLoadScript;
         END
 
-        VARIABLES.index = 1;
-        declare string[] strings = tokenize(VARIABLES.loadScript, ';');
-        VARIABLES.lineCount = array_length(strings);
-        WHILE (index <= lineCount)
-        BEGIN 
-           EXECUTE IMMEDIATE array_get(strings, index);
-           index = index +1;
-        END        
+        EXECUTE IMMEDIATE VARIABLES.loadScript;
         
         IF (VARIABLES.implicitLoadScript)
         BEGIN
@@ -271,14 +259,7 @@ BEGIN
     	
     	IF (VARIABLES.afterLoadScript IS NOT null)
     	BEGIN
-            VARIABLES.index = 1;
-            strings = tokenize(VARIABLES.afterLoadScript, ';');
-            VARIABLES.lineCount = array_length(strings);
-            WHILE (index <= lineCount)
-            BEGIN 
-               EXECUTE IMMEDIATE array_get(strings, index);
-               index = index +1;
-            END        
+	    	EXECUTE IMMEDIATE VARIABLES.afterLoadScript;
         END
         
         EXECUTE IMMEDIATE updateStmt || ' AND loadNumber = DVARS.loadNumber' USING  loadNumber = VARIABLES.loadNumber, vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = loadMatView.viewName, updated = now(), LoadState = 'LOADED', valid = true, cardinality = VARIABLES.rowsUpdated;        			
@@ -317,6 +298,50 @@ BEGIN
 	END		
 	
 	DECLARE string statusTable = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_STATUS_TABLE');
+
+        /* statusTable is null hints View is Internal Mat View*/
+        IF (statusTable IS NULL)
+        BEGIN
+	    DECLARE string KeyUID = (SELECT UID FROM SYS.Keys WHERE SchemaName = updateMatView.schemaName  AND TableName = updateMatView.viewName AND Type = 'Primary');
+
+	    IF (KeyUID IS NULL)
+	    BEGIN
+	        RAISE SQLEXCEPTION 'no primary key defined';
+	    END
+
+	    DECLARE string pkcolums = '(';
+        DECLARE string interViewName = updateMatView.schemaName || '.' || updateMatView.viewName;
+    
+	    LOOP ON (SELECT Name FROM SYS.KeyColumns WHERE SchemaName = updateMatView.schemaName  AND TableName = updateMatView.viewName AND UID = VARIABLES.KeyUID) AS colname
+	    BEGIN
+       	    pkcolums = pkcolums || updateMatView.viewName || '.' || colname.Name || ', ';
+	    END
+    
+	    pkcolums = pkcolums || ')';
+
+        BEGIN ATOMIC 
+            EXECUTE IMMEDIATE 'SELECT ' || VARIABLES.pkcolums || ' FROM ' || VARIABLES.interViewName || ' WHERE ' || updateMatView.refreshCriteria AS PrimaryKey object[] INTO #pklist;
+
+   	        DECLARE integer interrowUpdated = 0;
+
+	        LOOP ON (SELECT PrimaryKey FROM #pklist) AS pkrow
+	        BEGIN
+	            interrowUpdated = (EXECUTE SYSADMIN.refreshMatViewRows(VARIABLES.interViewName, pkrow.PrimaryKey));
+		        IF (interrowUpdated > 0)
+                BEGIN
+                    rowsUpdated = rowsUpdated + interrowUpdated;
+                END ELSE
+                BEGIN
+                    rowsUpdated = interrowUpdated;
+                END
+	       END
+	    EXCEPTION e
+	       VARIABLES.rowsUpdated = -3;
+	       EXECUTE logMsg(context=>'org.teiid.MATVIEWS', level=>'WARN', msg=>e.exception);
+	    END  
+	    RETURN rowsUpdated;
+        END
+
 	DECLARE string[] targets = (SELECT (TargetName, TargetSchemaName) from SYSADMIN.MatViews WHERE VDBName = VARIABLES.vdbName AND SchemaName = updateMatView.schemaName AND Name = updateMatView.viewName);
     DECLARE string matViewTable = array_get(targets, 1);
     DECLARE string targetSchemaName = array_get(targets, 2);

@@ -18,7 +18,7 @@
 	        <attachmentClassifier>odata2</attachmentClassifier>
 	        <includeDependencies>false</includeDependencies>
 	        <unpack>false</unpack>
-	        <outputDirectory>${wildfly-module-root}/org/jboss/teiid/main/deployments</outputDirectory>
+	        <outputDirectory>${odata-war-directory}</outputDirectory>
 	        <outputFileNameMapping>teiid-odata.war</outputFileNameMapping>
 	      </binaries>
 	  </moduleSet>

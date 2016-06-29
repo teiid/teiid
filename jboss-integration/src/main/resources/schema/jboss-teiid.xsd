@@ -285,7 +285,7 @@
                     </xs:attribute>
                     <xs:attribute name="sessions-expiration-timelimit" type="xs:int">
                         <xs:annotation>
-                            <xs:documentation>Max allowed time before the session is terminated by the system, 0 indicates unlimited (default 0)</xs:documentation>
+                            <xs:documentation>Max allowed time in milliseconds before the session is terminated by the system, 0 indicates unlimited (default 0)</xs:documentation>
                         </xs:annotation>                    
                     </xs:attribute>
                     <xs:attribute name="type" type="xs:string">

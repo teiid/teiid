@@ -36,6 +36,7 @@
           <includes>
               <include>org.jboss.teiid.connectors:translator-jdbc</include>
           </includes>
+          <useProjectArtifact>true</useProjectArtifact>
       </dependencySet>
   </dependencySets>
   

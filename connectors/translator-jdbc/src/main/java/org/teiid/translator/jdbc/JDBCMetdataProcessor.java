@@ -41,9 +41,16 @@ import java.util.regex.Pattern;
 import org.teiid.core.util.StringUtil;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.*;
+import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.BaseColumn;
 import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter.Type;
+import org.teiid.metadata.Table;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
@@ -94,7 +101,8 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 	private boolean useQualifiedName = true;
 	
 	private Set<String> unsignedTypes = new HashSet<String>();
-	private String quoteString;
+	private String startQuoteString;
+	private String endQuoteString;
 	
 	private Pattern excludeTables;
 	private Pattern excludeProcedures;
@@ -116,20 +124,26 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
         }
 	}
 	
+	private String getDefaultQuoteStr(DatabaseMetaData metadata, String quoteString) {
+        if (quoteString == null) {
+            try {
+                quoteString = metadata.getIdentifierQuoteString();
+            } catch (SQLException e) {
+                LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Assuming identifier quoting not supported"); //$NON-NLS-1$
+            }
+        }
+        if (quoteString != null && quoteString.trim().length() == 0) {
+            quoteString = null;
+        }
+        return quoteString;
+	}
+	
 	public void getConnectorMetadata(Connection conn, MetadataFactory metadataFactory)
 			throws SQLException {
 		DatabaseMetaData metadata = conn.getMetaData();
 		
-		if (this.quoteString == null) {
-			try {
-				quoteString = metadata.getIdentifierQuoteString();
-			} catch (SQLException e) {
-				LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Assuming identifier quoting not supported"); //$NON-NLS-1$
-			}
-		}
-		if (quoteString != null && quoteString.trim().length() == 0) {
-			quoteString = null;
-		}
+		this.startQuoteString = getDefaultQuoteStr(metadata, startQuoteString);
+		this.endQuoteString = getDefaultQuoteStr(metadata, endQuoteString);
 		
 		if (widenUnsingedTypes) {
 			ResultSet rs = null;
@@ -217,10 +231,17 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 			}
 			Procedure procedure = metadataFactory.addProcedure(useFullSchemaName?fullProcedureName:procedureName);
 			procedure.setNameInSource(getFullyQualifiedName(procedureCatalog, procedureSchema, nameInSource, true));
-			ResultSet columns = metadata.getProcedureColumns(catalog, procedureSchema, procedureName, null);
+			ResultSet columns = metadata.getProcedureColumns(procedureCatalog, procedureSchema, procedureName, null);
 			while (columns.next()) {
-				String columnName = columns.getString(4);
-				short columnType = columns.getShort(5);
+				String columnName = columns.getString(4);				
+				short columnType = 0;
+                try {
+                    columnType = columns.getShort(5);
+                } catch (SQLException e) {
+                    // PI jdbc driver has bug and treats column 5 as int
+                    int type = columns.getInt(5);
+                    columnType = new Integer(type).shortValue();
+                }
 				int sqlType = columns.getInt(6);
 				String typeName = columns.getString(7);
 				sqlType = checkForUnsigned(sqlType, typeName);
@@ -253,6 +274,7 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 				default:
 					continue; //shouldn't happen
 				}
+				record.setNameInSource(quoteName(columnName));
 				record.setNativeType(typeName);
 				record.setPrecision(precision);
 				record.setLength(columns.getInt(9));
@@ -476,8 +498,10 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 	}
 	
 	protected String quoteName(String name) {
-		if (quoteNameInSource && quoteString != null) {
-			return quoteString + StringUtil.replaceAll(name, quoteString, quoteString + quoteString) + quoteString;
+		if (quoteNameInSource && startQuoteString != null && endQuoteString != null) {
+		    String str = StringUtil.replaceAll(name, startQuoteString, startQuoteString + startQuoteString);
+		    str = StringUtil.replaceAll(str, endQuoteString, endQuoteString + endQuoteString);
+			return startQuoteString + str + endQuoteString;
 		}
 		return name;
 	}
@@ -492,7 +516,7 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 			String pkName = null;
 			while (pks.next()) {
 				String columnName = pks.getString(4);
-				short seqNum = pks.getShort(5);
+				short seqNum = safeGetShort(pks, 5);
 				if (keyColumns == null) {
 					keyColumns = new TreeMap<Short, String>();
 				}
@@ -510,6 +534,27 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 			pks.close();
 		}
 	}
+
+	/**
+	 * some sources, such as PI, don't consistently support getShort
+	 * @param rs
+	 * @param pos
+	 * @return
+	 * @throws SQLException
+	 */
+	private short safeGetShort(ResultSet rs, int pos) throws SQLException {
+		short val;
+		try {
+			val = rs.getShort(pos);
+		} catch (SQLException e) {
+			int valInt = rs.getInt(pos);
+			if (valInt > Short.MAX_VALUE) {
+				throw new SQLException("invalid short value " + valInt); //$NON-NLS-1$
+			}
+			val = (short)valInt;
+		}
+		return val;
+	}
 	
 	private class FKInfo {
 		TableInfo pkTable;
@@ -526,7 +571,7 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 			HashMap<String, FKInfo> allKeys = new HashMap<String, FKInfo>();
 			while (fks.next()) {
 				String columnName = fks.getString(8);
-				short seqNum = fks.getShort(9);
+				short seqNum = safeGetShort(fks, 9);
 				String pkColumnName = fks.getString(4);
 				
 				String fkName = fks.getString(12);
@@ -942,8 +987,17 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
     }    
     
     public void setQuoteString(String quoteString) {
-		this.quoteString = quoteString;
+		this.startQuoteString = quoteString;
+		this.endQuoteString = quoteString;
 	}
+    
+    public void setStartQuoteString(String quoteString) {
+        this.startQuoteString = quoteString;
+    }    
+    
+    public void setEndQuoteString(String quoteString) {
+        this.endQuoteString = quoteString;
+    } 
     
     @TranslatorProperty(display="Import RowId as binary", category=PropertyType.IMPORT, description="Import RowId values as varbinary rather than object.")
     public boolean isImportRowIdAsBinary() {

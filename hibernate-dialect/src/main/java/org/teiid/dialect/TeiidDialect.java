@@ -28,10 +28,15 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.LockMode;
+import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
+import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
+import org.hibernate.hql.spi.id.local.AfterUseAction;
+import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.type.*;
 
 public class TeiidDialect extends Dialect {
@@ -273,26 +278,22 @@ public class TeiidDialect extends Dialect {
 	public String getSelectGUIDString() {
 		return "select uuid()"; //$NON-NLS-1$
 	}
-	
-	@Override
-	public boolean supportsTemporaryTables() {
-		return true;
-	}
-	
-	@Override
-	public String getDropTemporaryTableString() {
-		return "drop table"; //$NON-NLS-1$
-	}
-	
-	@Override
-	public String getCreateTemporaryTableString() {
-		return "create local temporary table"; //$NON-NLS-1$
-	}
-	
-	@Override
-	public String getCreateTemporaryTablePostfix() {
-		return ""; //$NON-NLS-1$
-	}
    
+    public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
+        return new LocalTemporaryTableBulkIdStrategy(
+            new IdTableSupportStandardImpl() {
+                @Override
+                public String getCreateIdTableCommand() {
+                    return "create local temporary table";
+                }
+                @Override
+                public String getDropIdTableCommand() {
+                    return "drop table";
+                }
+            },
+            AfterUseAction.DROP,
+            TempTableDdlTransactionHandling.NONE
+        );
+    }
 }
 

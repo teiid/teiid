@@ -38,6 +38,7 @@ public class Options {
 	public static final String SANITIZE_MESSAGES = "org.teiid.sanitizeMessages"; //$NON-NLS-1$
 	public static final String REQUIRE_COLLATION = "org.teiid.requireTeiidCollation"; //$NON-NLS-1$
 	public static final String DEFAULT_NULL_ORDER = "org.teiid.defaultNullOrder"; //$NON-NLS-1$
+	public static final String ASSUME_MATCHING_COLLATION = "org.teiid.assumeMatchingCollation"; //$NON-NLS-1$
 
 	private Properties properties;
 	private boolean subqueryUnnestDefault = false;
@@ -47,6 +48,7 @@ public class Options {
 	private boolean sanitizeMessages;
 	private boolean requireTeiidCollation;
 	private NullOrder defaultNullOrder = NullOrder.LOW;
+	private boolean assumeMatchingCollation = true;
 	
 	public Properties getProperties() {
 		return properties;
@@ -144,6 +146,19 @@ public class Options {
 	
 	public Options defaultNullOrder(NullOrder b) {
 		this.defaultNullOrder = b;
+		return this;
+	}
+
+	public boolean isAssumeMatchingCollation() {
+		return this.assumeMatchingCollation;
+	}
+	
+	public void setAssumeMatchingCollation(boolean assumeMatchingCollation) {
+		this.assumeMatchingCollation = assumeMatchingCollation;
+	}
+	
+	public Options assumeMatchingCollation(boolean b) {
+		this.assumeMatchingCollation = b;
 		return this;
 	}
 

@@ -30,6 +30,7 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
@@ -54,9 +55,11 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.core.types.Streamable;
+import org.teiid.core.util.MultiArrayOutputStream;
 import org.teiid.core.util.ReaderInputStream;
 import org.teiid.core.util.SqlUtil;
 import org.teiid.core.util.TimestampWithTimezone;
+import org.teiid.netty.handler.codec.serialization.CompactObjectOutputStream;
 
 
 /**
@@ -248,12 +251,66 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
    	     	return new int[0];
     	}
 	   	try{
-	   		executeSql(new String[] {this.prepareSql}, true, ResultsMode.UPDATECOUNT, true, null);
+	   		//check to see if we need to split large batches
+	   		int[] allUpdateCounts = null;
+	   		if (batchParameterList.size() > 256 && !this.getConnection().getServerConnection().isLocal()) {
+	   			MultiArrayOutputStream maos = new MultiArrayOutputStream(1 << 13);
+	   			try {
+	   				CompactObjectOutputStream coos = new CompactObjectOutputStream(maos);
+		   			List<List<Object>> copy = new ArrayList<List<Object>>(this.batchParameterList);
+		   			int start = 0;
+		   			for (int i = 0; i < copy.size(); i++) {
+		   				coos.writeObject(copy.get(i));
+		   				coos.flush();
+		   				//if we have have over .5 mb, then send that as a single message
+		   				//TODO: we could use max message size from the server
+		   				if (maos.getCount() > (1 << 19) && i + 1 < copy.size()) {
+		   					this.batchParameterList = copy.subList(start, i + 1);
+		   					start = i + 1;
+		   					executeSql(new String[] {this.prepareSql}, true, ResultsMode.UPDATECOUNT, true, null);
+		   					if (allUpdateCounts == null) {
+		   						allUpdateCounts = this.updateCounts;
+		   					} else {
+		   						allUpdateCounts = concatArrays(allUpdateCounts, this.updateCounts);
+		   					}
+		   					coos.reset();
+		   					maos.reset(0);
+		   				}
+		   			}
+		   			if (allUpdateCounts != null) {
+		   				if (start < copy.size()) {
+			   				this.batchParameterList = copy.subList(start, copy.size());
+			   				executeSql(new String[] {this.prepareSql}, true, ResultsMode.UPDATECOUNT, true, null);
+	   						allUpdateCounts = concatArrays(allUpdateCounts, this.updateCounts);
+		   				}
+   						this.updateCounts = allUpdateCounts;
+		   			}
+	   			} catch (IOException e) {
+	   				TeiidSQLException ex = TeiidSQLException.create(e);
+	   				throw new BatchUpdateException(e.getMessage(), ex.getSQLState(), ex.getErrorCode(), allUpdateCounts==null?new int[0]:allUpdateCounts, e);
+	   			} catch (BatchUpdateException e) {
+	   				if (allUpdateCounts == null) {
+	   					throw e;
+	   				}
+	   				allUpdateCounts = concatArrays(allUpdateCounts, e.getUpdateCounts());
+	   				throw new BatchUpdateException(e.getMessage(), e.getSQLState(), e.getErrorCode(), allUpdateCounts, e);
+	   			}
+	   		}
+	   		if (allUpdateCounts == null) {
+	   			executeSql(new String[] {this.prepareSql}, true, ResultsMode.UPDATECOUNT, true, null);
+	   		}
 	   	}finally{
 	   		batchParameterList.clear();
 	   	}
 	   	return this.updateCounts;
     }
+
+	static int[] concatArrays(int[] array1, int[] array2) {
+		int length = array1.length;
+		array1 = Arrays.copyOf(array1, length + array2.length);
+		System.arraycopy(array2, 0, array1, length, array2.length);
+		return array1;
+	}
 
 	@Override
     public ResultSetImpl executeQuery() throws SQLException {

@@ -63,7 +63,11 @@ public class ValidatorReport extends ActivityReport<ValidatorFailure> {
 
             Iterator<ValidatorFailure> iter = failures.iterator();
             while(iter.hasNext()) {
-                err.append(iter.next());
+            	ValidatorFailure next = iter.next();
+            	if (next.getStatus() != Status.ERROR) {
+            		err.append(next.getStatus()).append(" "); //$NON-NLS-1$
+            	}
+				err.append(next.getMessage());
                 if (iter.hasNext()) {
                 	err.append(", "); //$NON-NLS-1$
                 }

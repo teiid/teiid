@@ -52,7 +52,11 @@ import org.teiid.translator.object.ObjectExecutionFactory;
 @Translator(name = "ispn-hotrod", description = "The Infinispan Translator Using Hotrod Client to query cache")
 public class InfinispanHotRodExecutionFactory extends ObjectExecutionFactory {
 
-	public static final int MAX_SET_SIZE = 10000;
+	// max available without having to try to override 
+	// BooleanQuery.setMaxClauseCount(), and
+	// infinispan doesn't currently support that option.
+	// https://issues.jboss.org/browse/ISPN-6728
+	public static final int MAX_SET_SIZE = 1024;
 	
 	private boolean supportsCompareCriteriaOrdered = false;
 	
@@ -60,7 +64,7 @@ public class InfinispanHotRodExecutionFactory extends ObjectExecutionFactory {
 		super();
 		setSourceRequiredForMetadata(true);
 		setMaxInCriteriaSize(MAX_SET_SIZE);
-		setMaxDependentInPredicates(1);
+		setMaxDependentInPredicates(5);
 
 		setSupportsOrderBy(true);
 		setSupportsSelectDistinct(false);

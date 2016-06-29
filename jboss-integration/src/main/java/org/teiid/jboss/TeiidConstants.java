@@ -390,7 +390,7 @@ public class TeiidConstants {
         .setXmlName(Element.AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE.getXMLName())
         .setAllowNull(true)
         .setAllowExpression(false)
-        .setDefaultValue(new ModelNode(5000))
+        .setDefaultValue(new ModelNode(10000))
         .build();   
 
     public static SimpleAttributeDefinition AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE.getModelName(), ModelType.INT)
@@ -407,8 +407,8 @@ public class TeiidConstants {
         .setDefaultValue(new ModelNode(AuthenticationType.USERPASSWORD.name()))
         .build();	
 	
-	public static SimpleAttributeDefinition AUTHENTICATION_TRUST_ALL_LOCAL = new SimpleAttributeDefinitionBuilder(Element.AUTHENTICATION_TRUST_ALL_LOCAL.getModelName(), ModelType.BOOLEAN)
-    	.setXmlName(Element.AUTHENTICATION_TRUST_ALL_LOCAL.getXMLName())
+	public static SimpleAttributeDefinition AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE.getModelName(), ModelType.BOOLEAN)
+    	.setXmlName(Element.AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE.getXMLName())
     	.setAllowNull(true)
     	.setAllowExpression(false)
     	.setDefaultValue(new ModelNode(true))

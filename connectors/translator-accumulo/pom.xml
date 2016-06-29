@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.jboss.teiid</groupId>
     <artifactId>connectors</artifactId>
-    <version>9.0.0.Beta3-SNAPSHOT</version>
+    <version>9.1.0.Alpha1-SNAPSHOT</version>
   </parent>
   <groupId>org.jboss.teiid.connectors</groupId>
   <artifactId>translator-accumulo</artifactId>
@@ -58,7 +58,6 @@
         <dependency>
             <groupId>commons-configuration</groupId>
             <artifactId>commons-configuration</artifactId>
-            <scope>test</scope>
         </dependency>
     </dependencies>
     

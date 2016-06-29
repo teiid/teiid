@@ -3,7 +3,7 @@
   <parent>
     <artifactId>teiid-parent</artifactId>
     <groupId>org.jboss.teiid</groupId>
-    <version>9.0.0.Beta3-SNAPSHOT</version>
+    <version>9.1.0.Alpha1-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>connectors</artifactId>
@@ -116,7 +116,7 @@
     <module>connector-accumulo</module>
     <module>connector-solr</module>
     <module>connector-infinispan-hotrod</module>
-    <module>connector-infinispan-libmode.6</module>
+    <module>connector-infinispan-libmode</module>
     <module>translator-prestodb</module>
     <module>sandbox</module>
     <module>translator-swagger</module>

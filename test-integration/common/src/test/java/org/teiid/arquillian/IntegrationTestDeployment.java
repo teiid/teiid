@@ -83,12 +83,13 @@ public class IntegrationTestDeployment {
 		props.setProperty("user-name", "sa");
 		props.setProperty("password", "sa");
 		
-		AdminUtil.createDataSource(admin, "Oracle11_PushDS", "h2", props);
+		AdminUtil.createDataSource(admin, "ChainedDS", "h2", props);
 		admin.deploy("fake.jar",new FileInputStream(UnitTestUtil.getTestDataFile("fake.jar")));
 		try {
 			admin.deploy("chained-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("chained-vdb.xml")));
 		} finally {
 			admin.undeploy("fake.jar");
+			admin.deleteDataSource("ChainedDS");
 		}
 	}
 	
@@ -716,4 +717,20 @@ public class IntegrationTestDeployment {
 		AdminUtil.waitForVDBLoad(admin, "bqt2", 1, 3);
 		admin.deploy("bqt2-1.vdb", new FileInputStream(UnitTestUtil.getTestDataFile("bqt2.vdb")));			
 	}
+	
+    @Test
+    public void testInsensitiveDeployment() throws Exception { 
+        admin.deploy("dynamicview-VDB.xml", new FileInputStream(UnitTestUtil.getTestDataFile("dynamicview-vdb.xml")));
+        AdminUtil.waitForVDBLoad(admin, "dynamic", 1, 3);
+        VDB vdb = admin.getVDB("dynamic", "1");
+        assertTrue(vdb.getStatus() == Status.ACTIVE);
+        admin.undeploy("dynamicview-VDB.xml");
+        
+        admin.deploy("bqt.VDB", new FileInputStream(UnitTestUtil.getTestDataFile("bqt.vdb")));  
+        AdminUtil.waitForVDBLoad(admin, "bqt", 1, 3);   
+        vdb = admin.getVDB("bqt", "1");
+        assertTrue(vdb.getStatus() == Status.ACTIVE);
+        admin.undeploy("bqt.VDB");        
+
+    }	
 }

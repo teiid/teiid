@@ -619,5 +619,37 @@ public class TestTextTable {
 
         helpProcess(plan, hdm, expected);    	
     }
+    
+    @Test public void testTextAggNoQuote() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        
+        String sql = "select convert(to_chars(textagg(col, col1 no quote), 'UTF-8'), string) as x from (select '1' as col, 2 as col1 union all select 'abc', 3) as v";
+
+        Command c = TestProcessor.helpParse(sql);
+        assertEquals("SELECT convert(to_chars(TEXTAGG(FOR col, col1 NO QUOTE), 'UTF-8'), string) AS x FROM (SELECT '1' AS col, 2 AS col1 UNION ALL SELECT 'abc', 3) AS v", c.toString());
+        
+        ProcessorPlan plan = helpPlan(sql, metadata,  null, capFinder, //$NON-NLS-1$
+            new String[] { }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        String nl = System.getProperty("line.separator");
+        ArrayList<Object> list = new ArrayList<Object>();
+        list.add("1,2"+nl+"abc,3"+nl);
+        List<?>[] expected = new List<?>[] {
+        		list,
+        };    
+
+        helpProcess(plan, new HardcodedDataManager(), expected);    	
+    }
+    
+    @Test(expected=TeiidProcessingException.class) public void testTextAggNoQuoteException() throws Exception {
+    	FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        
+        ProcessorPlan plan = helpPlan("select convert(to_chars(textagg(col, col1 no quote), 'UTF-8'), string) as x from (select ',1' as col, 2 as col1 union all select 'abc', 3) as v", metadata,  null, capFinder, //$NON-NLS-1$
+            new String[] { }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        helpProcess(plan, TestProcessor.createCommandContext(), new HardcodedDataManager(), null);    	
+    }
 	
 }

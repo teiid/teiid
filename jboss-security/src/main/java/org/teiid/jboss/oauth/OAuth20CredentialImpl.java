@@ -22,6 +22,7 @@
 package org.teiid.jboss.oauth;
 
 import org.apache.cxf.jaxrs.client.WebClient;
+import org.apache.cxf.rs.security.oauth2.client.Consumer;
 import org.apache.cxf.rs.security.oauth2.client.OAuthClientUtils;
 import org.apache.cxf.rs.security.oauth2.common.ClientAccessToken;
 import org.apache.cxf.rs.security.oauth2.grants.refresh.RefreshTokenGrant;
@@ -58,7 +59,7 @@ public class OAuth20CredentialImpl implements OAuthCredential {
     }
 
     protected ClientAccessToken getAccessToken() {
-        OAuthClientUtils.Consumer consumer = new OAuthClientUtils.Consumer(getClientId(), getClientSecret());
+        Consumer consumer = new Consumer(getClientId(), getClientSecret());
         WebClient client = WebClient.create(getAccessTokenURI());
         RefreshTokenGrant grant = new RefreshTokenGrant(getRefreshToken());
         return OAuthClientUtils.getAccessToken(client, consumer, grant, null, false);

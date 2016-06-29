@@ -29,12 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.language.AggregateFunction;
-import org.teiid.language.Expression;
-import org.teiid.language.Function;
-import org.teiid.language.LanguageObject;
-import org.teiid.language.Limit;
-import org.teiid.language.Literal;
+import org.teiid.language.*;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.translator.ExecutionContext;
@@ -49,6 +44,7 @@ import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.LocateFunctionModifier;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
+import org.teiid.translator.jdbc.TemplateFunctionModifier;
 import org.teiid.translator.jdbc.Version;
 
 @Translator(name = "hana", description = "SAP HANA translator")
@@ -133,8 +129,11 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
         	
     	});
         registerFunctionModifier(SourceSystemFunctions.CURDATE, new AliasModifier("current_date")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.CURTIME, new AliasModifier("current_time")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new AliasModifier("dayname")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.CURTIME, new AliasModifier("current_time")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.WEEK, new TemplateFunctionModifier("cast(substring(isoweek(",0,"), 7, 2) as integer)")); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new TemplateFunctionModifier("(MOD((WEEKDAY(",0,")+1),7)+1)")); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.DAYNAME, new TemplateFunctionModifier("initcap(lower(dayname(", 0, ")))")); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.QUARTER, new TemplateFunctionModifier("((month(",0,")+2)/3)")); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier(SourceSystemFunctions.NOW, new AliasModifier("current_timestamp")); //$NON-NLS-1$ 
         
         //spatial functions
@@ -188,6 +187,18 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
         convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIMESTAMP, new ConvertModifier.FormatModifier("to_timestamp", DATETIME_FORMAT));  //$NON-NLS-1$ 
         
     	convertModifier.setWideningNumericImplicit(true);
+    	convertModifier.addConvert(FunctionModifier.BOOLEAN, FunctionModifier.STRING, new FunctionModifier() {
+			@Override
+			public List<?> translate(Function function) {
+				Expression trueValue = function.getParameters().get(0);
+				Expression falseValue = trueValue;
+				falseValue = new IsNull(falseValue, true);
+				if (!(trueValue instanceof Predicate)) {
+					trueValue = new Comparison(trueValue, new Literal(Boolean.TRUE, TypeFacility.RUNTIME_TYPES.BOOLEAN), Comparison.Operator.EQ);
+				}
+				return Arrays.asList("CASE WHEN ", trueValue, " THEN 'true' WHEN ", falseValue, " THEN 'false' END"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			}
+		});
     	convertModifier.addSourceConversion(new FunctionModifier() {
 			@Override
 			public List<?> translate(Function function) {
@@ -303,6 +314,7 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
 		supportedFunctions.add(SourceSystemFunctions.DAYOFMONTH); 
 		supportedFunctions.add(SourceSystemFunctions.DAYOFYEAR);
 		supportedFunctions.add(SourceSystemFunctions.DAYOFWEEK);
+		supportedFunctions.add(SourceSystemFunctions.DAYNAME);
 		supportedFunctions.add(SourceSystemFunctions.HOUR); 
 		supportedFunctions.add(SourceSystemFunctions.MINUTE); 
 		supportedFunctions.add(SourceSystemFunctions.MONTH);
@@ -422,6 +434,14 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
             }
     	}
     	return super.translate(obj, context);
+    }
+    
+    @Override
+    public String translateLiteralBoolean(Boolean booleanValue) {
+    	if (booleanValue) {
+    		return "true"; //$NON-NLS-1$
+    	}
+    	return "false"; //$NON-NLS-1$
     }
 	
 }
