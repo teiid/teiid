@@ -2,10 +2,12 @@
 #/subsystem=datasources/jdbc-driver=teiidXA:add(driver-name=teiid,driver-module-name=org.jboss.teiid.client,driver-xa-datasource-class-name="${db.driver}")
 
 # XA Data source
+batch
 /subsystem=datasources/xa-data-source=teiidXADS:add(jndi-name="${db.jndi_name}",  driver-name=teiid, user-name="${db.user}", password="${db.password}", use-java-context=true)
 /subsystem=datasources/xa-data-source=teiidXADS/xa-datasource-properties=DatabaseName:add(value="${db.database_name}")
 /subsystem=datasources/xa-data-source=teiidXADS/xa-datasource-properties=PortNumber:add(value="${db.port}")
 /subsystem=datasources/xa-data-source=teiidXADS/xa-datasource-properties=ServerName:add(value="${db.host}")
+run-batch
 /subsystem=datasources/xa-data-source=teiidXADS:enable
 
 
