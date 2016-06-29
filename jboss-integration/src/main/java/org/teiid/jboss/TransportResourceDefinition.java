@@ -32,6 +32,7 @@ class TransportResourceDefinition extends SimpleResourceDefinition {
 	private final List<AccessConstraintDefinition> accessConstraints;
 	*/
 	
+	
 	public TransportResourceDefinition() {
 		super(TRANSPORT_PATH, TeiidExtension.getResourceDescriptionResolver(Element.TRANSPORT_ELEMENT.getLocalName()), 
 				TransportAdd.INSTANCE,

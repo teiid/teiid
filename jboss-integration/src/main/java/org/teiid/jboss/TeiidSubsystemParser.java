@@ -428,7 +428,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     				break;
     			case TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE:
     				node.get(element.getModelName()).set(Integer.parseInt(attrValue));
-    				break;
+    				break;    			
                 default: 
                     throw ParseUtils.unexpectedAttribute(reader, i);    				
     			}

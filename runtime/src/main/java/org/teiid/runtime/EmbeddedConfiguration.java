@@ -236,8 +236,8 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	public List<SocketConfiguration> getTransports(){
 		return this.transports;
 	}
-	
-	public int getMaxODBCLobSizeAllowed() {
+
+    public int getMaxODBCLobSizeAllowed() {
 		return this.maxODBCLobSizeAllowed;
 	}
 	

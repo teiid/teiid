@@ -297,7 +297,7 @@
                         <xs:annotation>
                             <xs:documentation>Allow all local pass-through connections regardless of whether they are in the configured security domain.</xs:documentation>
                         </xs:annotation>                    
-                    </xs:attribute>                    
+                    </xs:attribute>                 
                 </xs:complexType>                
             </xs:element>
         

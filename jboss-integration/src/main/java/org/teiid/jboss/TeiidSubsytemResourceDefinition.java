@@ -90,8 +90,8 @@ public class TeiidSubsytemResourceDefinition extends SimpleResourceDefinition {
     	}
     	
 		for (int i = 0; i < TeiidAdd.ATTRIBUTES.length; i++) {
-			resourceRegistration.registerReadWriteAttribute(TeiidAdd.ATTRIBUTES[i], null, new AttributeWrite(TeiidAdd.ATTRIBUTES[i]));
-		}    	
+		    resourceRegistration.registerReadWriteAttribute(TeiidAdd.ATTRIBUTES[i], null, new AttributeWrite(TeiidAdd.ATTRIBUTES[i]));
+		}		
     }
 
     @Override

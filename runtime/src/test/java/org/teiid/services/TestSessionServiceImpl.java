@@ -2,6 +2,8 @@ package org.teiid.services;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import javax.security.auth.login.LoginException;
@@ -259,5 +261,5 @@ public class TestSessionServiceImpl {
         assertEquals(null, SessionServiceImpl.getDomainName("@")); //$NON-NLS-1$
         
         assertEquals("@", SessionServiceImpl.getBaseUsername("@")); //$NON-NLS-1$ //$NON-NLS-2$
-    }	
+    }
 }

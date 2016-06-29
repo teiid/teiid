@@ -376,7 +376,7 @@ public class TeiidConstants {
         .setAllowNull(true)
         .setAllowExpression(false)
         .setDefaultValue(new ModelNode(0))
-        .build();   
+        .build(); 
 	
 	//AUTHENTICATION_ELEMENT("authentication",false, false, MeasurementUnit.NONE);
 	public static SimpleAttributeDefinition AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE.getModelName(), ModelType.STRING)
@@ -550,7 +550,7 @@ public class TeiidConstants {
     public static boolean isDefined(final SimpleAttributeDefinition attr, final ModelNode  model, final OperationContext context) throws OperationFailedException {
         ModelNode resolvedNode = attr.resolveModelAttribute(context, model);
         return resolvedNode.isDefined();    	
-    }    	
+    }
     
     public static Integer asInt(final SimpleAttributeDefinition attr, final ModelNode node, final OperationContext context) throws OperationFailedException {
         ModelNode resolvedNode = attr.resolveModelAttribute(context, node);

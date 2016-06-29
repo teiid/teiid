@@ -53,5 +53,5 @@ class OperationsConstants {
 	
 	public static final SimpleAttributeDefinition OPTIONAL_VDB_NAME = new SimpleAttributeDefinition("vdb-name", ModelType.STRING, true); //$NON-NLS-1$
 	public static final SimpleAttributeDefinition OPTIONAL_VDB_VERSION = new SimpleAttributeDefinition("vdb-version", ModelType.STRING, true); //$NON-NLS-1$
-	
+
 }
