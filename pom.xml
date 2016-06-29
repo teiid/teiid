@@ -12,7 +12,7 @@
 	<packaging>pom</packaging>
 	<name>Teiid</name>
 
-    <version>9.1.0.Alpha1-SNAPSHOT</version>
+    <version>9.1.0.Alpha1</version>
 	<description>Federated SQL and XML query engine.</description>
 	<properties>
 	    <site.url>http://www.jboss.org/teiid</site.url>
@@ -55,7 +55,7 @@
         <version.org.jboss.oreva>1.0.0</version.org.jboss.oreva>
         <wildfly-module-root>modules/system/layers/dv</wildfly-module-root>
         <odata-war-directory>modules/system/layers/dv/org/jboss/teiid/main/deployments</odata-war-directory>
-        <odata-war-prefix></odata-war-prefix>
+        <odata-war-prefix />
         <version.com.force.api>22.0.0</version.com.force.api>
         <version.com.force.api.34>34.0.0</version.com.force.api.34>
         <version.nux>1.6</version.nux>
@@ -111,7 +111,7 @@
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
         <developerConnection>scm:git:git@github.com:teiid/teiid.git</developerConnection>
         <url>http://github.com/teiid/teiid</url>
-	<tag>HEAD</tag>
+	<tag>teiid-parent-9.1.0.Alpha1</tag>
   </scm>
 	<licenses>
 		<license>
