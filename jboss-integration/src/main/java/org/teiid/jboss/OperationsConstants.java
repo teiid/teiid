@@ -22,14 +22,20 @@
 package org.teiid.jboss;
 
 import org.jboss.as.controller.SimpleAttributeDefinition;
+import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
 import org.jboss.dmr.ModelType;
+import org.teiid.adminapi.Admin;
 
 class OperationsConstants {
 	public static final SimpleAttributeDefinition SESSION = new SimpleAttributeDefinition("session", ModelType.STRING, false); //$NON-NLS-1$
 	public static final SimpleAttributeDefinition VDB_NAME = new SimpleAttributeDefinition("vdb-name", ModelType.STRING, false); //$NON-NLS-1$
 	public static final SimpleAttributeDefinition VDB_VERSION = new SimpleAttributeDefinition("vdb-version", ModelType.STRING, false); //$NON-NLS-1$
 	public static final SimpleAttributeDefinition EXECUTION_ID = new SimpleAttributeDefinition("execution-id", ModelType.STRING, false); //$NON-NLS-1$
-	public static final SimpleAttributeDefinition CACHE_TYPE = new SimpleAttributeDefinition("cache-type", ModelType.STRING, false); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition CACHE_TYPE = new SimpleAttributeDefinitionBuilder("cache-type", ModelType.STRING) //$NON-NLS-1$
+	    .setAllowNull(false)
+	    .setAllowExpression(false)
+	    .setAllowedValues(Admin.Cache.PREPARED_PLAN_CACHE.name(), Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE.name())
+	    .build();	    
 	public static final SimpleAttributeDefinition XID = new SimpleAttributeDefinition("xid", ModelType.STRING, false); //$NON-NLS-1$
 	public static final SimpleAttributeDefinition DATA_ROLE = new SimpleAttributeDefinition("data-role", ModelType.STRING, false); //$NON-NLS-1$
 	public static final SimpleAttributeDefinition MAPPED_ROLE = new SimpleAttributeDefinition("mapped-role", ModelType.STRING, false); //$NON-NLS-1$
