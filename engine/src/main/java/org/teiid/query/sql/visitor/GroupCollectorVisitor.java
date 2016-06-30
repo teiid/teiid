@@ -24,7 +24,6 @@ package org.teiid.query.sql.visitor;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 
 import org.teiid.query.QueryPlugin;
@@ -150,7 +149,7 @@ public class GroupCollectorVisitor extends LanguageVisitor {
     public static Collection<GroupSymbol> getGroups(LanguageObject obj, boolean removeDuplicates) {
         Collection<GroupSymbol> groups = null;
         if(removeDuplicates) {
-            groups = new HashSet<GroupSymbol>();
+            groups = new LinkedHashSet<GroupSymbol>();
         } else {
             groups = new ArrayList<GroupSymbol>();
         }

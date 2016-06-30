@@ -23,7 +23,7 @@
 package org.teiid.query.sql.visitor;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.teiid.query.sql.LanguageObject;
@@ -55,13 +55,13 @@ public class GroupsUsedByElementsVisitor {
      * @return Collection of {@link org.teiid.query.sql.symbol.GroupSymbol}
      */
     public static final Set<GroupSymbol> getGroups(LanguageObject obj) {
-        Set<GroupSymbol> groups = new HashSet<GroupSymbol>();
+        Set<GroupSymbol> groups = new LinkedHashSet<GroupSymbol>();
         getGroups(obj, groups);
         return groups;
     }
     
     public static Set<GroupSymbol> getGroups(Collection<? extends LanguageObject> objects) {
-        Set<GroupSymbol> groups = new HashSet<GroupSymbol>();
+        Set<GroupSymbol> groups = new LinkedHashSet<GroupSymbol>();
         getGroups(objects, groups);
         return groups;
     }
