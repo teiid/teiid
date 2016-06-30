@@ -31,6 +31,7 @@ import org.jboss.dmr.ModelType;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.net.socket.SocketUtil;
 import org.teiid.transport.SSLConfiguration;
+import org.teiid.transport.WireProtocol;
 
 @SuppressWarnings("nls")
 public class TeiidConstants {
@@ -341,7 +342,8 @@ public class TeiidConstants {
         .setXmlName(Element.TRANSPORT_PROTOCOL_ATTRIBUTE.getXMLName())
         .setAllowNull(true)
         .setAllowExpression(false)
-        .setDefaultValue(new ModelNode("teiid"))
+        .setDefaultValue(new ModelNode(WireProtocol.teiid.name()))
+        .setAllowedValues(new ModelNode(WireProtocol.teiid.name()), new ModelNode(WireProtocol.pg.name()))
         .build();   
 
     public static SimpleAttributeDefinition TRANSPORT_NAME_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.TRANSPORT_NAME_ATTRIBUTE.getModelName(), ModelType.STRING)
@@ -405,6 +407,7 @@ public class TeiidConstants {
         .setAllowNull(true)
         .setAllowExpression(false)
         .setDefaultValue(new ModelNode(AuthenticationType.USERPASSWORD.name()))
+        .setAllowedValues(new ModelNode(AuthenticationType.USERPASSWORD.name()), new ModelNode(AuthenticationType.GSS.name()))
         .build();	
 	
 	public static SimpleAttributeDefinition AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE.getModelName(), ModelType.BOOLEAN)
