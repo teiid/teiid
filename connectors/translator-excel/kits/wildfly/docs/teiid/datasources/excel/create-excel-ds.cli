@@ -1,0 +1,6 @@
+/subsystem=resource-adapters/resource-adapter=file:add(module=org.jboss.teiid.resource-adapter.file)
+/subsystem=resource-adapters/resource-adapter=file/connection-definitions=fileDS:add(jndi-name="${jndi.name}", class-name=org.teiid.resource.adapter.file.FileManagedConnectionFactory, enabled=true, use-java-context=true)
+/subsystem=resource-adapters/resource-adapter=file/connection-definitions=fileDS/config-properties=ParentDirectory:add(value="${parent.dir}" )
+/subsystem=resource-adapters/resource-adapter=file/connection-definitions=fileDS/config-properties=AllowParentPaths:add(value="${allow.parent.paths}" )
+/subsystem=resource-adapters/resource-adapter=file:activate
+
