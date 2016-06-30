@@ -340,7 +340,7 @@ class ListSessions extends TeiidOperationHandler{
 		Collection<SessionMetadata> sessions = getSessionService(context).getActiveSessions();
 		for (SessionMetadata session:sessions) {
 			if (filter) {
-				if (session.getVDBName().equals(vdbName) && session.getVDBVersion() == version) {
+				if (session.getVDBName().equals(vdbName) && session.getVDBVersion().equals(version)) {
 					VDBMetadataMapper.SessionMetadataMapper.INSTANCE.wrap(session, result.add());
 				}
 			}
