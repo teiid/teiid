@@ -274,10 +274,10 @@ public class RelationalPlanner {
 		planner.initialize(command, idGenerator, metadata, capFinder, analysisRecord, context);
 		planner.executeRules(stack, plan);
 		//discover all of the usage
-		List<Command> commands = CommandCollectorVisitor.getCommands(command);
+		List<Command> commands = CommandCollectorVisitor.getCommands(command, true);
 		while (!commands.isEmpty()) {
 			Command cmd = commands.remove(commands.size() - 1);
-			commands.addAll(CommandCollectorVisitor.getCommands(cmd));
+			commands.addAll(CommandCollectorVisitor.getCommands(cmd, true));
 			try {
 				//skip xml commands as they cannot be planned here and cannot directly reference with tables,
 				//but their subqueries still can
@@ -1366,7 +1366,10 @@ public class RelationalPlanner {
             if (nestedCommand != null) {
             	//only proc relational counts toward the planning stack
             	//other paths are inlining, so there isn't a proper virtual layer
-            	planningStackEntry = group.isProcedure();
+            	if (!group.isProcedure()) {
+            		planningStackEntry = false;
+            		hints.hasVirtualGroups = true;
+            	}
             } else if (!group.isProcedure()) {
             	Object id = getTrackableGroup(group, metadata);
             	if (id != null) {

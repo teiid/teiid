@@ -100,7 +100,8 @@ public class UnaryFromClause extends FromClause {
         
         if( EquivalenceUtil.areEqual(group.getDefinition(), other.getGroup().getDefinition()) ) {
         	return EquivalenceUtil.areEqual(getGroup().getNonCorrelationName(), other.getGroup().getNonCorrelationName()) &&
-            other.isOptional() == this.isOptional();	
+            other.isOptional() == this.isOptional() &&
+            EquivalenceUtil.areEqual(expandedCommand, other.expandedCommand);	
         }
         return false;
 	}
