@@ -1703,7 +1703,6 @@
 		<module>adminshell</module>
 		<module>hibernate-dialect</module>
 		<module>eclipselink-platform</module>		
-		<module>odata</module>
 		<module>olingo-common</module>
 		<module>olingo-patches</module>
 		<module>olingo</module>

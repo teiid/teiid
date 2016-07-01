@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<jboss-web>
-    <security-domain>java:/jaas/teiid-security</security-domain>
-    <context-root>odata</context-root>
-</jboss-web>
