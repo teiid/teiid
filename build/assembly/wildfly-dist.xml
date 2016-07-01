@@ -60,7 +60,6 @@
         <useAllReactorProjects>true</useAllReactorProjects>
         <includes>
             <include>org.jboss.teiid:teiid-jboss-integration</include>
-            <include>org.jboss.teiid:teiid-odata</include>
             <include>org.jboss.teiid:teiid-olingo-common</include>
             <include>org.jboss.teiid:teiid-olingo</include>
             <include>org.jboss.teiid:teiid-jboss-security</include>
