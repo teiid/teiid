@@ -208,9 +208,6 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
     	convertModifier.addTypeMapping("numeric(38, 19)", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
     	convertModifier.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
     	convertModifier.addTypeMapping("varchar(4000)", FunctionModifier.STRING); //$NON-NLS-1$
-    	if (!isSourceRequiredForCapabilities()) {
-    		handleTimeConversions();
-    	}
     	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.DATE, new FunctionModifier() {
 			@Override
 			public List<?> translate(Function function) {
@@ -435,7 +432,7 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 	public void initCapabilities(Connection connection)
 			throws TranslatorException {
 		super.initCapabilities(connection);
-		if (!jtdsDriver) {
+		if (!jtdsDriver && connection != null) {
 			try {
 				jtdsDriver = StringUtil.indexOfIgnoreCase(connection.getMetaData().getDriverName(), "jtds") != -1; //$NON-NLS-1$
 			} catch (SQLException e) {

@@ -138,6 +138,9 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 			//will throw an exception if not valid
 			new MessageFormat(commentFormat);
 		}
+		if (!isSourceRequiredForCapabilities()) {
+    		initCapabilities(null);
+    	}
     }
 	
     @TranslatorProperty(display="Database Version", description= "Database Version")
@@ -218,9 +221,15 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 		return false;
 	}
 	
+	/**
+	 * Will be called by {@link #start()} with a null connection if a source connection is not {@link #isSourceRequiredForCapabilities()}
+	 */
 	@Override
 	public void initCapabilities(Connection connection)
 			throws TranslatorException {
+		if (connection == null) {
+			return;
+		}
 		DatabaseMetaData metadata = null;
     	try {
 			metadata = connection.getMetaData();
