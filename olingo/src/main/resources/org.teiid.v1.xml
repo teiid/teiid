@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+
+  JBoss, Home of Professional Open Source.
+  See the COPYRIGHT.txt file distributed with this work for information
+  regarding copyright ownership.  Some portions may be licensed
+  to Red Hat, Inc. under one or more contributor license agreements.
+ 
+  This library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
+ 
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
+ 
+  You should have received a copy of the GNU Lesser General Public
+  License along with this library; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+  02110-1301 USA.
+
+-->
+
+<edmx:Edmx xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx" Version="4.0">
+  <edmx:Reference Uri="http://docs.oasis-open.org/odata/odata/v4.0/os/vocabularies/Org.OData.Core.V1.xml">
+    <edmx:Include Alias="Core" Namespace="Org.OData.Core.V1" />
+  </edmx:Reference>
+  <edmx:DataServices>
+    <Schema xmlns="http://teiid.org/odata/ns/edm" Namespace="org.teiid.v1" Alias="teiid">
+
+      <Term Name="NAMEINSOURCE" Type="Edm.String" AppliesTo="EntityType Property Parameter ReturnType Action Function">
+        <Annotation Term="Core.Description">
+          <String>
+            Resource's name in source
+          </String>
+        </Annotation>
+      </Term>
+      
+      <Term Name="UPDATECOUNT" Type="Edm.Int" AppliesTo="Action Function">
+        <Annotation Term="Core.Description">
+          <String>
+            Number of sources that invocation of operation updates.
+          </String>
+        </Annotation>
+      </Term>
+
+      <Term Name="NULL_VALUE_COUNT" Type="Edm.Int" AppliesTo="Property">
+        <Annotation Term="Core.Description">
+          <String>
+            Approximate number of NULL values in this property.
+          </String>
+        </Annotation>
+      </Term>
+      
+      <Term Name="DISTINCT_VALUES" Type="Edm.Int" AppliesTo="Property">
+        <Annotation Term="Core.Description">
+          <String>
+            Approximate number of distinct values in this property.
+          </String>
+        </Annotation>
+      </Term>
+
+      <Term Name="SIGNED" Type="Edm.Boolean" AppliesTo="Property" DefaultValue="true"> 
+        <Annotation Term="Core.Description">
+          <String>
+            column defines a signed value 
+          </String>
+        </Annotation>
+      </Term> 
+      
+       <Term Name="FIXED_LENGTH" Type="Edm.Boolean" AppliesTo="Property" DefaultValue="false">
+        <Annotation Term="Core.Description">
+          <String>
+            Is Column Length fixed
+          </String>
+        </Annotation>
+      </Term>      
+      
+      <Term Name="CASE_SENSITIVE" Type="Edm.Boolean" AppliesTo="Property" DefaultValue="false">
+        <Annotation Term="Core.Description">
+          <String>
+            Is Column value case sensitive
+          </String>
+        </Annotation>
+      </Term> 
+
+      <Term Name="CURRENCY" Type="Edm.Boolean" AppliesTo="Property" DefaultValue="false">
+        <Annotation Term="Core.Description">
+          <String>
+            Is Column represents currency
+          </String>
+        </Annotation>
+      </Term> 
+
+      <Term Name="UPDATABLE" Type="Edm.Boolean" AppliesTo="EntityType Property" DefaultValue="false">
+        <Annotation Term="Core.Description">
+          <String>
+            defines if resource is updatable 
+          </String>
+        </Annotation>
+      </Term>
+              
+      <Term Name="SELECTABLE" Type="Edm.Boolean" AppliesTo="Property" DefaultValue="true">
+        <Annotation Term="Core.Description">
+          <String>
+            defines if property is selectable 
+          </String>
+        </Annotation>
+      </Term>
+                                                    
+      <Term Name="ACCESS_PATTERNS" Type="Collection(Edm.String)" AppliesTo="EntityType">
+        <Annotation Term="Core.Description">
+          <String>
+            defines access patterns on the entity type.
+          </String>
+        </Annotation>
+      </Term>
+      
+      <Term Name="CARDINALITY" Type="Edm.Int" AppliesTo="EntityType">
+        <Annotation Term="Core.Description">
+          <String>
+            entity type cardinality information
+          </String>
+        </Annotation>
+      </Term> 
+      
+      <Term Name="MATERIALIZED_TABLE" Type="Edm.String" AppliesTo="EntityType">
+        <Annotation Term="Core.Description">
+          <String>
+            materialized table name
+          </String>
+        </Annotation>
+      </Term> 
+      
+      <Term Name="MATERIALIZED_STAGE_TABLE" Type="Edm.String" AppliesTo="EntityType">
+        <Annotation Term="Core.Description">
+          <String>
+            materialized staged table name
+          </String>
+        </Annotation>
+      </Term>             
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>

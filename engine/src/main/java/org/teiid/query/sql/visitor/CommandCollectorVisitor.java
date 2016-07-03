@@ -27,15 +27,7 @@ import java.util.List;
 
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.sql.lang.BatchedUpdateCommand;
-import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.ExistsCriteria;
-import org.teiid.query.sql.lang.Insert;
-import org.teiid.query.sql.lang.SetQuery;
-import org.teiid.query.sql.lang.SubqueryCompareCriteria;
-import org.teiid.query.sql.lang.SubqueryFromClause;
-import org.teiid.query.sql.lang.SubquerySetCriteria;
-import org.teiid.query.sql.lang.WithQueryCommand;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.proc.CommandStatement;
 import org.teiid.query.sql.proc.LoopStatement;
@@ -53,6 +45,7 @@ import org.teiid.query.sql.symbol.ScalarSubquery;
 public class CommandCollectorVisitor extends LanguageVisitor {
 
     private List<Command> commands = new ArrayList<Command>();
+    private boolean collectExpanded;
 
     /**
      * Get the commands collected by the visitor.  This should best be called 
@@ -132,13 +125,25 @@ public class CommandCollectorVisitor extends LanguageVisitor {
     	}
     }
     
+    @Override
+    public void visit(UnaryFromClause obj) {
+    	if (collectExpanded && obj.getExpandedCommand() != null && !obj.getGroup().isProcedure()) {
+    		this.commands.add(obj.getExpandedCommand());
+    	}
+    }
+    
     /**
      * Helper to quickly get the commands from obj
      * @param obj Language object
      * @param elements Collection to collect commands in
      */
     public static final List<Command> getCommands(Command command) {
+    	return getCommands(command, false);
+    }
+    	
+	public static final List<Command> getCommands(Command command, boolean includeExpanded) {
         CommandCollectorVisitor visitor = new CommandCollectorVisitor();
+        visitor.collectExpanded = includeExpanded;
         final boolean visitCommands = command instanceof SetQuery;
         PreOrderNavigator navigator = new PreOrderNavigator(visitor) {
 

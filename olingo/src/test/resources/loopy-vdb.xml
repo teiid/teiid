@@ -23,7 +23,7 @@
             CREATE VIEW LobTable (e1 integer PRIMARY KEY, e2 xml) AS
                SELECT 1, XMLELEMENT("name", 'content') union all SELECT 2, XMLELEMENT("name", 'content2');
             
-            CREATE VIEW G1 (e1 string, e2 integer PRIMARY KEY, e3 double) AS
+            CREATE VIEW G1 (e1 string, e2 integer PRIMARY KEY, e3 double) OPTIONS("teiid_rel:CUSTOM_EXTENSION" 'CUSTOM_VALUE') AS
                SELECT e1, e2, e3 FROM PM1.G1
                UNION ALL
                SELECT e1, e2, e3 FROM PM2.G1;
