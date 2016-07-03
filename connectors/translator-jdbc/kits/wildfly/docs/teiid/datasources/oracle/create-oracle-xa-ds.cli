@@ -1,8 +1,10 @@
 /subsystem=datasources/jdbc-driver=oracleXA:add(driver-name=oracleXA,driver-module-name=com.oracle,driver-xa-datasource-class-name="${db.driver}")
 
 # XA Data source
+batch
 /subsystem=datasources/xa-data-source=oracleXADS:add(jndi-name="${db.jndi_name}",  driver-name=oracleXA, user-name="${db.user}", password="${db.password}", use-java-context=true)
 /subsystem=datasources/xa-data-source=oracleXADS/xa-datasource-properties=URL:add(value="${db.url}")
+run-batch
 /subsystem=datasources/xa-data-source=oracleXADS:enable
 
 
