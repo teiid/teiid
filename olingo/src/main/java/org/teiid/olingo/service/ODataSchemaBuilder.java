@@ -21,7 +21,7 @@
  */
 package org.teiid.olingo.service;
 
-import static org.teiid.language.visitor.SQLStringVisitor.*;
+import static org.teiid.language.visitor.SQLStringVisitor.getRecordName;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -31,6 +31,9 @@ import java.util.Map;
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
 import org.apache.olingo.commons.api.edm.FullQualifiedName;
 import org.apache.olingo.commons.api.edm.provider.*;
+import org.apache.olingo.commons.api.edm.provider.annotation.CsdlCollection;
+import org.apache.olingo.commons.api.edm.provider.annotation.CsdlConstantExpression;
+import org.apache.olingo.commons.api.edm.provider.annotation.CsdlConstantExpression.ConstantExpressionType;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.logging.LogConstants;
@@ -40,6 +43,7 @@ import org.teiid.metadata.Column;
 import org.teiid.metadata.ColumnSet;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.Table;
@@ -50,10 +54,12 @@ public class ODataSchemaBuilder {
 
     public static CsdlSchema buildMetadata(String namespace, org.teiid.metadata.Schema teiidSchema) {
         try {
-            CsdlSchema edmSchema = new CsdlSchema();
-            buildEntityTypes(namespace, teiidSchema, edmSchema);
-            buildProcedures(teiidSchema, edmSchema);
-            return edmSchema;
+            CsdlSchema csdlSchema = new CsdlSchema();
+            String fullSchemaName = namespace+"."+teiidSchema.getName();
+            csdlSchema.setNamespace(fullSchemaName).setAlias(teiidSchema.getName());
+            buildEntityTypes(namespace, teiidSchema, csdlSchema);
+            buildProcedures(teiidSchema, csdlSchema);
+            return csdlSchema;
         } catch (Exception e) {
             throw new TeiidRuntimeException(e);
         }
@@ -91,7 +97,7 @@ public class ODataSchemaBuilder {
         return schema.getEntityContainer();
     }
 
-    static void buildEntityTypes(String namespace, org.teiid.metadata.Schema schema, CsdlSchema edmSchema) {
+    static void buildEntityTypes(String namespace, org.teiid.metadata.Schema schema, CsdlSchema csdlSchema) {
         Map<String, CsdlEntitySet> entitySets = new LinkedHashMap<String, CsdlEntitySet>();
         Map<String, CsdlEntityType> entityTypes = new LinkedHashMap<String, CsdlEntityType>();
         
@@ -113,8 +119,10 @@ public class ODataSchemaBuilder {
             // adding properties
             List<CsdlProperty> properties = new ArrayList<CsdlProperty>();
             for (Column c : table.getColumns()) {
-                properties.add(buildProperty(c, 
-                        isPartOfPrimaryKey(table, c.getName())?false:(c.getNullType() == NullType.Nullable)));
+                boolean nullable = c.getNullType() == NullType.Nullable;
+                CsdlProperty property = buildProperty(c, isPartOfPrimaryKey(table, c.getName())?false:nullable);
+                addColumnAnnotations(c, property, csdlSchema);
+                properties.add(property);
             }
             entityType.setProperties(properties);
             if (hasStream(properties)) {
@@ -128,6 +136,7 @@ public class ODataSchemaBuilder {
             }
 
             entityType.setKey(keyProps);
+            addTableAnnotations(table, entityType, csdlSchema);
 
             // entity set one for one entity type
             CsdlEntitySet entitySet = new CsdlEntitySet()
@@ -151,8 +160,7 @@ public class ODataSchemaBuilder {
                 new ArrayList<CsdlEntitySet>(entitySets.values()));
 
         // build entity schema
-        edmSchema.setNamespace(fullSchemaName).setAlias(schema.getName()) 
-                .setEntityTypes(new ArrayList<CsdlEntityType>(entityTypes.values()))
+        csdlSchema.setEntityTypes(new ArrayList<CsdlEntityType>(entityTypes.values()))
                 .setEntityContainer(entityContainer);
     }
 
@@ -294,7 +302,6 @@ public class ODataSchemaBuilder {
             navigationBinding = buildNavigationBinding(fk);
             navigaton.setCollection(true);
         }                
-   
         
         CsdlEntityType entityType = entityTypes.get(entityTypeName);
         entityType.getNavigationProperties().add(navigaton);
@@ -353,7 +360,7 @@ public class ODataSchemaBuilder {
         return navigaton;
     }    
 
-    static void buildProcedures(org.teiid.metadata.Schema schema, CsdlSchema edmSchema) {
+    static void buildProcedures(org.teiid.metadata.Schema schema, CsdlSchema csdlSchema) {
         // procedures
         ArrayList<CsdlComplexType> complexTypes = new ArrayList<CsdlComplexType>();
         ArrayList<CsdlFunction> functions = new ArrayList<CsdlFunction>();
@@ -369,17 +376,17 @@ public class ODataSchemaBuilder {
             }
             
             if (isFuntion(proc)) {
-                buildFunction(schema.getName(), proc, complexTypes, functions, functionImports);
+                buildFunction(schema.getName(), proc, complexTypes, functions, functionImports, csdlSchema);
             }
             else {
-                buildAction(schema.getName(), proc, complexTypes, actions, actionImports);
+                buildAction(schema.getName(), proc, complexTypes, actions, actionImports, csdlSchema);
             }
         }
-        edmSchema.setComplexTypes(complexTypes);
-        edmSchema.setFunctions(functions);
-        edmSchema.setActions(actions);
-        edmSchema.getEntityContainer().setFunctionImports(functionImports);
-        edmSchema.getEntityContainer().setActionImports(actionImports);
+        csdlSchema.setComplexTypes(complexTypes);
+        csdlSchema.setFunctions(functions);
+        csdlSchema.setActions(actions);
+        csdlSchema.getEntityContainer().setFunctionImports(functionImports);
+        csdlSchema.getEntityContainer().setActionImports(actionImports);
     }
 
     private static boolean doesProcedureReturn(Procedure proc) {        
@@ -453,7 +460,7 @@ public class ODataSchemaBuilder {
 
     static void buildFunction(String schemaName, Procedure proc,
             ArrayList<CsdlComplexType> complexTypes, ArrayList<CsdlFunction> functions,
-            ArrayList<CsdlFunctionImport> functionImports) {
+            ArrayList<CsdlFunctionImport> functionImports, CsdlSchema csdlSchema) {
 
         CsdlFunction edmFunction = new CsdlFunction();
         edmFunction.setName(proc.getName());
@@ -469,7 +476,9 @@ public class ODataSchemaBuilder {
             
             if (pp.getType().equals(ProcedureParameter.Type.In)
                     || pp.getType().equals(ProcedureParameter.Type.InOut)) {
-                params.add(buildParameter(pp, odataType));
+                CsdlParameter parameter = buildParameter(pp, odataType);
+                addOperationParameterAnnotations(pp, parameter, csdlSchema);
+                params.add(parameter);
             }           
         }
         edmFunction.setParameters(params);
@@ -477,7 +486,7 @@ public class ODataSchemaBuilder {
         // add a complex type for return resultset.
         ColumnSet<Procedure> returnColumns = proc.getResultSet();
         if (returnColumns != null) {
-            CsdlComplexType complexType = buildComplexType(proc, returnColumns);
+            CsdlComplexType complexType = buildComplexType(proc, returnColumns, csdlSchema);
             complexTypes.add(complexType);
             FullQualifiedName odataType = new FullQualifiedName(schemaName, complexType.getName());
             edmFunction.setReturnType((new CsdlReturnType().setType(odataType).setCollection(true)));
@@ -485,7 +494,7 @@ public class ODataSchemaBuilder {
 
         CsdlFunctionImport functionImport = new CsdlFunctionImport();
         functionImport.setName(proc.getName()).setFunction(new FullQualifiedName(schemaName, proc.getName()));
-
+        addOperationAnnotations(proc, edmFunction, csdlSchema);
         functions.add(edmFunction);
         functionImports.add(functionImport);
     }
@@ -519,7 +528,7 @@ public class ODataSchemaBuilder {
     static void buildAction(String schemaName, Procedure proc,
             ArrayList<CsdlComplexType> complexTypes,
             ArrayList<CsdlAction> actions,
-            ArrayList<CsdlActionImport> actionImports) {
+            ArrayList<CsdlActionImport> actionImports, CsdlSchema csdlSchema) {
         CsdlAction edmAction = new CsdlAction();
         edmAction.setName(proc.getName());
         edmAction.setBound(false);
@@ -534,7 +543,9 @@ public class ODataSchemaBuilder {
 
             if (pp.getType().equals(ProcedureParameter.Type.In)
                     || pp.getType().equals(ProcedureParameter.Type.InOut)) {
-                params.add(buildParameter(pp, odatatype));
+                CsdlParameter parameter = buildParameter(pp, odatatype);
+                addOperationParameterAnnotations(pp, parameter, csdlSchema);
+                params.add(parameter);
             }
         }
         edmAction.setParameters(params);
@@ -542,29 +553,31 @@ public class ODataSchemaBuilder {
         // add a complex type for return resultset.
         ColumnSet<Procedure> returnColumns = proc.getResultSet();
         if (returnColumns != null) {
-            CsdlComplexType complexType = buildComplexType(proc, returnColumns);
+            CsdlComplexType complexType = buildComplexType(proc, returnColumns, csdlSchema);
             complexTypes.add(complexType);
             edmAction.setReturnType((new CsdlReturnType()
                     .setType(new FullQualifiedName(schemaName, complexType
-                            .getName())).setCollection(true)));
+                    .getName())).setCollection(true)));
         }
 
         CsdlActionImport actionImport = new CsdlActionImport();
         actionImport.setName(proc.getName()).setAction(new FullQualifiedName(schemaName, proc.getName()));
-
+        addOperationAnnotations(proc, edmAction, csdlSchema);
         actions.add(edmAction);
         actionImports.add(actionImport);
     }
 
     private static CsdlComplexType buildComplexType(Procedure proc,
-            ColumnSet<Procedure> returnColumns) {
+            ColumnSet<Procedure> returnColumns, CsdlSchema csdlSchema) {
         CsdlComplexType complexType = new CsdlComplexType();
         String entityTypeName = proc.getName() + "_" + returnColumns.getName(); //$NON-NLS-1$
         complexType.setName(entityTypeName);
 
         ArrayList<CsdlProperty> props = new ArrayList<CsdlProperty>();
         for (Column c : returnColumns.getColumns()) {
-            props.add(buildProperty(c, (c.getNullType() == NullType.Nullable)));
+            CsdlProperty property = buildProperty(c, (c.getNullType() == NullType.Nullable));
+            props.add(property);
+            addColumnAnnotations(c, property, csdlSchema);
         }
         complexType.setProperties(props);
         return complexType;
@@ -598,5 +611,204 @@ public class ODataSchemaBuilder {
             }
         }
         return true;
+    }
+    
+    private static void addTableAnnotations(Table table, CsdlEntityType entityType, CsdlSchema csdlSchema) {
+        if (table.getAnnotation() != null) {
+            addStringAnnotation(entityType, "core.Description", table.getAnnotation());
+        }
+        
+        if (table.getCardinality() != -1) {
+            addIntAnnotation(entityType, "teiid.CARDINALITY", table.getCardinality());
+        }
+        
+        if (table.isMaterialized()) {
+        
+            if (table.getMaterializedTable() != null) {
+                addStringAnnotation(entityType, "teiid.MATERIALIZED_TABLE", table.getMaterializedTable().getFullName());
+            }
+            
+            if (table.getMaterializedStageTable() != null) {
+                addStringAnnotation(entityType, "teiid.MATERIALIZED_STAGE_TABLE", table.getMaterializedStageTable().getFullName());
+            }
+        }
+        
+        if (table.getNameInSource() != null) {
+            addStringAnnotation(entityType, "teiid.NAMEINSOURCE", table.getNameInSource());
+        }
+        
+        if (table.getAccessPatterns() != null && !table.getAccessPatterns().isEmpty()) {
+            ArrayList<String> values = new ArrayList<String>();
+            for (KeyRecord record:table.getAccessPatterns()) {
+                StringBuilder sb = new StringBuilder();
+                for (Column c:record.getColumns()) {
+                    if (sb.length() > 0) {
+                        sb.append(",");
+                    }
+                    sb.append(c.getName());
+                }
+                values.add(sb.toString());
+            }
+            addStringCollectionAnnotation(entityType, "teiid.ACCESS_PATTERNS", values);
+        }
+        
+        if (table.supportsUpdate()) {
+            addBooleanAnnotation(entityType, "teiid.UPDATABLE", table.supportsUpdate());
+        }
+        
+        // add all custom properties
+        for (String property:table.getProperties().keySet()) {
+            addTerm(normalizeTermName(property), "EntityType", csdlSchema);
+            addStringAnnotation(entityType, csdlSchema.getAlias()+"."+normalizeTermName(property), table.getProperties().get(property));
+        }
+    }
+
+    private static void addColumnAnnotations(Column column,
+            CsdlProperty property, CsdlSchema csdlSchema) {
+        if (column.getAnnotation() != null) {
+            addStringAnnotation(property, "core.Description", column.getAnnotation());
+        }
+        
+        if (column.getNameInSource() != null) {
+            addStringAnnotation(property, "teiid.NAMEINSOURCE", column.getNameInSource());
+        }
+        
+        if (!column.isSelectable()) {
+            addBooleanAnnotation(property, "teiid.SELECTABLE", column.isSelectable());
+        }
+        
+        if(column.isUpdatable()) {
+            addBooleanAnnotation(property, "teiid.UPDATABLE", column.isUpdatable());
+        }
+        
+        if (column.isCurrency()) {
+            addBooleanAnnotation(property, "teiid.CURRENCY", column.isCurrency());
+        }
+        
+        if (column.isCaseSensitive()) {
+            addBooleanAnnotation(property, "teiid.CASE_SENSITIVE", column.isCaseSensitive());
+        }
+        
+        if (column.isFixedLength()) {
+            addBooleanAnnotation(property, "teiid.FIXED_LENGTH", column.isFixedLength());
+        }
+        
+        if (!column.isSigned()) {
+            addBooleanAnnotation(property, "teiid.SIGNED", column.isSigned());
+        }
+        
+        if (column.getDistinctValues() != -1) {
+            addIntAnnotation(property, "teiid.DISTINCT_VALUES", column.getDistinctValues());
+        }
+        
+        if (column.getNullValues() != -1) {
+            addIntAnnotation(property, "teiid.NULL_VALUE_COUNT", column.getNullValues());
+        }
+        
+        // add all custom properties
+        for (String str:column.getProperties().keySet()) {
+            addTerm(normalizeTermName(str), "Property", csdlSchema);
+            addStringAnnotation(property, csdlSchema.getAlias()+"."+normalizeTermName(str), column.getProperties().get(str));
+        }        
+    }
+    
+    private static void addOperationAnnotations(Procedure proc,
+            CsdlOperation operation, CsdlSchema csdlSchema) {
+        if (proc.getAnnotation() != null) {
+            addStringAnnotation(operation, "core.Description", proc.getAnnotation());
+        }
+        
+        if (proc.getNameInSource() != null) {
+            addStringAnnotation(operation, "teiid.NAMEINSOURCE", proc.getNameInSource());
+        }
+        if (proc.getUpdateCount() != 1) {
+            addIntAnnotation(operation, "teiid.UPDATECOUNT", proc.getUpdateCount());
+        }   
+        // add all custom properties
+        for (String str:proc.getProperties().keySet()) {
+            addTerm(normalizeTermName(str), "Action Function", csdlSchema);
+            addStringAnnotation(operation, csdlSchema.getAlias()+"."+normalizeTermName(str), proc.getProperties().get(str));
+        }         
+    }    
+    
+
+    private static void addOperationParameterAnnotations(
+            ProcedureParameter procedure, CsdlParameter parameter,
+            CsdlSchema csdlSchema) {
+        if (procedure.getAnnotation() != null) {
+            addStringAnnotation(parameter, "core.Description", procedure.getAnnotation());
+        }
+        
+        if (procedure.getNameInSource() != null) {
+            addStringAnnotation(parameter, "teiid.NAMEINSOURCE", procedure.getNameInSource());
+        }
+        
+        // add all custom properties
+        for (String str:procedure.getProperties().keySet()) {
+            addTerm(normalizeTermName(str), "Parameter", csdlSchema);
+            addStringAnnotation(parameter, csdlSchema.getAlias()+"."+normalizeTermName(str), procedure.getProperties().get(str));
+        } 
+    }    
+    private static void addStringAnnotation(CsdlAnnotatable recipent, String term, String value) {
+        CsdlAnnotation annotation = new CsdlAnnotation();
+        annotation.setTerm(term);
+        annotation.setExpression(new CsdlConstantExpression(ConstantExpressionType.String, value));
+        recipent.getAnnotations().add(annotation);  
+    }
+    
+    private static void addIntAnnotation(CsdlAnnotatable recipent, String term, int value) {
+        CsdlAnnotation annotation = new CsdlAnnotation();
+        annotation.setTerm(term);
+        annotation.setExpression(new CsdlConstantExpression(ConstantExpressionType.Int, String.valueOf(value)));
+        recipent.getAnnotations().add(annotation);  
+    }  
+    
+    private static void addBooleanAnnotation(CsdlAnnotatable recipent, String term, boolean value) {
+        CsdlAnnotation annotation = new CsdlAnnotation();
+        annotation.setTerm(term);
+        annotation.setExpression(new CsdlConstantExpression(ConstantExpressionType.Bool, String.valueOf(value)));
+        recipent.getAnnotations().add(annotation);  
+    }
+    
+    private static void addStringCollectionAnnotation(CsdlAnnotatable recipent, String term, List<String> values) {
+        CsdlAnnotation annotation = new CsdlAnnotation();
+        annotation.setTerm(term);
+        CsdlCollection collection = new CsdlCollection();
+        for (String value:values) {
+            collection.getItems().add(new CsdlConstantExpression(ConstantExpressionType.String, value));
+        }
+        annotation.setExpression(collection);
+        recipent.getAnnotations().add(annotation);  
+    }  
+    
+    private static void addTerm(String property, String appliesTo, CsdlSchema schema) {
+        CsdlTerm term = schema.getTerm(property);
+        if ( term == null) {
+            term = new CsdlTerm();
+            term.setName(property);
+            term.setType("Edm.String");
+            schema.getTerms().add(term);            
+        }
+        if (term.getAppliesTo().isEmpty() || !term.getAppliesTo().contains(appliesTo)) {
+            term.getAppliesTo().add(appliesTo);
+        }
+    }     
+    
+    private static String normalizeTermName(String name) {
+        if (name.startsWith("{")) {
+            int end = name.indexOf("}");
+            if (end != -1) {
+                String modified = null;
+                String namespace = name.substring(1, end);
+                for (Map.Entry<String, String> entry:MetadataFactory.BUILTIN_NAMESPACES.entrySet()) {
+                    if (entry.getValue().equals(namespace)) {
+                        modified = entry.getKey();
+                        break;
+                    }
+                }
+                return modified + ":" + name.substring(end+1);
+            }
+        }
+        return name;
     }
 }

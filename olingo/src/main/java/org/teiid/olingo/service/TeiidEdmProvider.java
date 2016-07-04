@@ -45,6 +45,11 @@ public class TeiidEdmProvider extends SchemaBasedEdmProvider {
         EdmxReferenceInclude include = new EdmxReferenceInclude("org.apache.olingo.v1", "olingo-extensions");
         olingoRef.addInclude(include);
         addReference(olingoRef);
+
+        EdmxReference teiidRef = new EdmxReference(URI.create(baseUri+"/static/org.teiid.v1.xml"));
+        EdmxReferenceInclude teiidInclude = new EdmxReferenceInclude("org.teiid.v1", "teiid");
+        teiidRef.addInclude(teiidInclude);
+        addReference(teiidRef);
         
         MetadataParser parser = new MetadataParser();
         parser.parseAnnotations(true);
@@ -53,6 +58,10 @@ public class TeiidEdmProvider extends SchemaBasedEdmProvider {
         SchemaBasedEdmProvider provider = parser.buildEdmProvider(new InputStreamReader(
                 getClass().getClassLoader().getResourceAsStream("org.apache.olingo.v1.xml")));
         addVocabularySchema("org.apache.olingo.v1", provider);
+        
+        provider = parser.buildEdmProvider(new InputStreamReader(
+                getClass().getClassLoader().getResourceAsStream("org.teiid.v1.xml")));
+        addVocabularySchema("org.teiid.v1", provider);        
         
         // <Annotation Term="org.apache.olingo.v1.xml10-incompatible-char-replacement" String="xxx"/>
         if (invalidXmlReplacementChar != null) {
