@@ -105,7 +105,8 @@
         <version.commons-configuration>1.6</version.commons-configuration>
         <version.org.apache.ant>1.8.2</version.org.apache.ant>
         <version.com.fasterxml.jackson.dataformat>2.4.5</version.com.fasterxml.jackson.dataformat>	 
-        <version.javax.validation>1.1.0.Final</version.javax.validation>   	    
+        <version.javax.validation>1.1.0.Final</version.javax.validation>
+	<version.org.arrahtec>6.1.7</version.org.arrahtec>   	    
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -1688,7 +1689,11 @@
 			    <artifactId>reflections</artifactId>
 			    <version>${version.org.reflections}</version>
 			</dependency>
-            
+            <dependency>
+                <groupId>org.arrahtec</groupId>
+                <artifactId>profiler-core</artifactId>
+                <version>${version.org.arrahtec}</version>
+            </dependency>
         </dependencies>
 	</dependencyManagement>
 	<modules>

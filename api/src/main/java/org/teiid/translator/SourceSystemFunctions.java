@@ -200,4 +200,8 @@ public class SourceSystemFunctions {
 	public static final String ST_GEOMFROMEWKT = "st_geomfromewkt"; //$NON-NLS-1$
 	public static final String ST_ASEWKB = "st_asewkb"; //$NON-NLS-1$
 	public static final String ST_GEOMFROMEWKB = "st_geomfromewkb"; //$NON-NLS-1$
+	
+	public static final String OSDQ_RANDOM = "random"; //$NON-NLS-1$
+	public static final String OSDQ_HASH = "hash"; //$NON-NLS-1$
+	public static final String OSDQ_DIGIT = "digit"; //$NON-NLS-1$
 }

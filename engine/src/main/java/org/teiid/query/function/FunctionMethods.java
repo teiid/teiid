@@ -56,6 +56,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import org.arrah.framework.datagen.ShuffleRTM;
+import org.arrah.framework.ndtable.ResultsetToRTM;
+import org.arrah.framework.util.StringCaseFormatUtil;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -1716,5 +1719,17 @@ public final class FunctionMethods {
         }
 
         return result;
+    }
+    
+    public static String random(String str) {
+        return ShuffleRTM.shuffleString(str);
+    }
+    
+    public static String hash(String str) {
+        return ResultsetToRTM.getMD5(str == null ? "" : str).toString(); //$NON-NLS-1$
+    }
+    
+    public static String digit(String str) {
+        return StringCaseFormatUtil.digitString(str);
     }
 }

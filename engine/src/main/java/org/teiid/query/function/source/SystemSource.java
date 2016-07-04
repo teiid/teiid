@@ -216,8 +216,19 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
 		} catch (SecurityException e) {
 			throw new AssertionError("Could not find function"); //$NON-NLS-1$
 		}
+		
+		addOSDQFunction();
     }
     
+    private void addOSDQFunction() {
+        functions.add(new FunctionMethod(SourceSystemFunctions.OSDQ_RANDOM, QueryPlugin.Util.getString("SystemSource.random_desc"), MISCELLANEOUS, FUNCTION_CLASS, SourceSystemFunctions.OSDQ_RANDOM,  //$NON-NLS-1$
+                new FunctionParameter[]{new FunctionParameter("string", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.random_arg"))}, new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.random_desc")))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        functions.add(new FunctionMethod(SourceSystemFunctions.OSDQ_HASH, QueryPlugin.Util.getString("SystemSource.hash_desc"), MISCELLANEOUS, FUNCTION_CLASS, SourceSystemFunctions.OSDQ_HASH,  //$NON-NLS-1$
+                new FunctionParameter[]{new FunctionParameter("string", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.hash_arg"))}, new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.hash_desc")))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        functions.add(new FunctionMethod(SourceSystemFunctions.OSDQ_DIGIT, QueryPlugin.Util.getString("SystemSource.digit_desc"), MISCELLANEOUS, FUNCTION_CLASS, SourceSystemFunctions.OSDQ_DIGIT,  //$NON-NLS-1$
+                new FunctionParameter[]{new FunctionParameter("string", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.digit_arg"))}, new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.digit_desc")))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+    }
+
     private void addFunctions(Class<?> clazz) {
 		Method[] methods = clazz.getMethods();
 		//need a consistent order for tests
