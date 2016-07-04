@@ -52,6 +52,11 @@
 
 <h4>from 8.x</h4>
 <ul>
+   <li><a href="https://issues.jboss.org/browse/TEIID-4317">TEIID-4317</a> ExecutionFactory.initCapabilities will always be called - either during start if isSourceRequiredForCapabilities returns false, or later if true.</li>
+</ul>
+
+<h4>from 8.x</h4>
+<ul>
    <li><a href="https://issues.jboss.org/browse/TEIID-3462">TEIID-3462</a> Semantic versioning requires the VDB version to be a string, rather than an integer field.  This affects several public classes including CommandLogMessage, VDB, Session, EventListener, VDBImport, ExecutionContext, and MetadataRepository.  Any custom command logging or materialization status tables will need the version field updated as well.</li>
    <li><a href="https://issues.jboss.org/browse/TEIID-4147">TEIID-4147</a> ODBC type handling will now report the type name as the PostgreSQL type rather than the Teiid type.</li>
    <li><a href="https://issues.jboss.org/browse/TEIID-3601">TEIID-3601</a> changed the rowCount field on CommandLogMessages from Integer to Long.</li>

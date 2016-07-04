@@ -138,9 +138,6 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 			//will throw an exception if not valid
 			new MessageFormat(commentFormat);
 		}
-		if (!isSourceRequiredForCapabilities()) {
-    		initCapabilities(null);
-    	}
     }
 	
     @TranslatorProperty(display="Database Version", description= "Database Version")
@@ -221,9 +218,6 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 		return false;
 	}
 	
-	/**
-	 * Will be called by {@link #start()} with a null connection if a source connection is not {@link #isSourceRequiredForCapabilities()}
-	 */
 	@Override
 	public void initCapabilities(Connection connection)
 			throws TranslatorException {
@@ -239,13 +233,17 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     			setDatabaseVersion(fullVersion);
     		}
 		} catch (SQLException e) {
-			throw new TranslatorException(e);
+			if (version == null) {
+				throw new TranslatorException(e);
+			}
 		}
-    	try {
-    		supportsGeneratedKeys = metadata.supportsGetGeneratedKeys();
-    	} catch (SQLException e) {
-    		//ignore -- it's not supported
-		}
+    	if (metadata != null) {
+	    	try {
+	    		supportsGeneratedKeys = metadata.supportsGetGeneratedKeys();
+	    	} catch (SQLException e) {
+	    		//ignore -- it's not supported
+			}
+    	}
 	}
 
     @Override
