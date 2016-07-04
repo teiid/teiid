@@ -40,6 +40,10 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.sasl.RealmCallback;
 import javax.security.sasl.RealmChoiceCallback;
 
+import org.jboss.as.cli.CliInitializationException;
+import org.jboss.as.cli.CommandContext;
+import org.jboss.as.cli.CommandContextFactory;
+import org.jboss.as.cli.CommandFormatException;
 import org.jboss.as.cli.Util;
 import org.jboss.as.cli.operation.OperationFormatException;
 import org.jboss.as.cli.operation.impl.DefaultOperationRequestAddress;
@@ -57,6 +61,7 @@ import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.adminapi.jboss.VDBMetadataMapper.RequestMetadataMapper;
 import org.teiid.adminapi.jboss.VDBMetadataMapper.SessionMetadataMapper;
 import org.teiid.adminapi.jboss.VDBMetadataMapper.TransactionMetadataMapper;
+import org.teiid.core.BundleUtil;
 import org.teiid.core.util.ObjectConverterUtil;
 
 
@@ -67,6 +72,8 @@ import org.teiid.core.util.ObjectConverterUtil;
 public class AdminFactory {
 	private static final Logger LOGGER = Logger.getLogger(AdminFactory.class.getName());
 	private static AdminFactory INSTANCE = new AdminFactory();
+	
+	private static final BundleUtil CLIUtil = new BundleUtil("","cli", ResourceBundle.getBundle("cli")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
 	public static AdminFactory getInstance() {
 		return INSTANCE;
@@ -200,6 +207,8 @@ public class AdminFactory {
     	private boolean domainMode = false;
     	private String profileName = "ha";
     	
+    	private CommandContext ctx;
+    	
     	Expirable<Map<String, String>> connectionFactoryNames = new Expirable<Map<String,String>>();
     	Expirable<Set<String>> installedResourceAdaptorNames = new Expirable<Set<String>>();
     	Expirable<Set<String>> deployedResourceAdaptorNames = new Expirable<Set<String>>();
@@ -209,6 +218,12 @@ public class AdminFactory {
             List<String> nodeTypes = Util.getNodeTypes(connection, new DefaultOperationRequestAddress());
             if (!nodeTypes.isEmpty()) {
                 this.domainMode = nodeTypes.contains("server-group"); //$NON-NLS-1$
+            }
+            try {
+                ctx = CommandContextFactory.getInstance().newCommandContext();
+                ctx.bindClient(connection);
+            } catch (CliInitializationException e) {
+                throw new IllegalStateException(e);
             }
     	}
 
@@ -514,7 +529,74 @@ public class AdminFactory {
 			flush();
 		}
 
-		// /subsystem=datasources/data-source=DS/connection-properties=foo:add(value=/home/rareddy/testing)
+		@Override
+        public void createXADataSource(String deploymentName, final String driverName, final Properties properties) throws AdminException {
+
+		    this.flush();
+		    
+		    // validate whether xa-datasource already exist
+		    Collection<String> dsNames = getDataSourceNames(null);
+		    if (dsNames.contains(deploymentName)){
+		        throw new AdminProcessingException(AdminPlugin.Event.TEIID70003, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70003, deploymentName));
+		    }
+		    
+		    // validate driver exist
+		    Set<String> drivers = getInstalledJDBCDrivers();
+		    if (!drivers.contains(driverName)){
+		        throw new AdminProcessingException(AdminPlugin.Event.TEIID70004, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70004, driverName));
+		    }
+		    
+		    // validate driver-xa-datasource-class-name exsit
+		    ModelNode request = this.getRequest("createXADataSource.xa-datasource-class.validation", driverName); //$NON-NLS-1$
+		    execute(request, new ResultCallback(){
+                @Override
+                void onSuccess(ModelNode outcome, ModelNode result) throws AdminException {
+                    String xaDSclass = result.asString();
+                    if(xaDSclass == null || xaDSclass.equals("")) { //$NON-NLS-1$
+                        throw new AdminProcessingException(AdminPlugin.Event.TEIID70057, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70057, driverName));
+                    }
+                }});
+		    
+		    // build optional arguments
+		    request = this.getRequest("createXADataSource.xa-data-source.resource-description"); //$NON-NLS-1$
+		    final StringBuffer sb = new StringBuffer();
+		    execute(request, new ResultCallback(){
+                @Override
+                void onSuccess(ModelNode outcome, ModelNode result) throws AdminException {
+                    List<ModelNode> list = result.get("attributes").asList(); //$NON-NLS-1$
+                    for(ModelNode node : list) {
+                        String propKey = node.asProperty().getName();
+                        Object propValue = properties.remove(propKey);
+                        if(propValue != null){
+                            sb.append("--").append(propKey).append("=").append(propValue).append(" ") ; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                        }
+                    }
+                }});
+		    String optionalArguments = sb.toString();
+		    
+		    // build xa-datasource-properties
+		    if(properties.size() < 1){
+		        throw new AdminProcessingException(AdminPlugin.Event.TEIID70058, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70058, deploymentName));
+		    }
+		    sb.delete(0, sb.length());
+		    boolean isFirst = true;
+		    for(Object key : properties.keySet()){
+		        if(isFirst){
+		            isFirst = false;
+		        } else {
+		            sb.append(", "); //$NON-NLS-1$
+		        }
+		        sb.append(key + "=>" + properties.get(key)); //$NON-NLS-1$
+		    }
+		    String xaDsProtperties = sb.toString();
+		    
+		    request = this.getRequest("createXADataSource", deploymentName, driverName, addJavaContext(deploymentName), optionalArguments, xaDsProtperties); //$NON-NLS-1$
+		    this.execute(request);
+		    
+		    this.flush();
+        }
+
+        // /subsystem=datasources/data-source=DS/connection-properties=foo:add(value=/home/rareddy/testing)
 		private void addConnectionProperty(String deploymentName, String key, String value) throws AdminException {
 			if (value == null || value.trim().isEmpty()) {
 				throw new AdminProcessingException(AdminPlugin.Event.TEIID70054, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70054, key));
@@ -534,6 +616,24 @@ public class AdminFactory {
 	        } catch (IOException e) {
 	        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70007, e);
 	        }
+		}
+		
+		private void execute(final ModelNode request, ResultCallback callback) throws AdminException {
+		    try {
+                ModelNode outcome = this.connection.execute(request);
+                ModelNode result = null;
+                if (Util.isSuccess(outcome)){
+                    if (outcome.hasDefined("result")) {
+                        result = outcome.get("result");
+                    }
+                    callback.onSuccess(outcome, result);
+                } else {
+                    callback.onFailure(Util.getFailureDescription(outcome));
+                }
+            } catch (IOException e) {
+                throw new AdminComponentException(AdminPlugin.Event.TEIID70007, e);
+            }
+		    
 		}
 
 		@Override
@@ -1529,6 +1629,19 @@ public class AdminFactory {
 	        	throw new AdminComponentException(AdminPlugin.Event.TEIID70010, e, "Failed to build operation"); //$NON-NLS-1$
 	        }
 			return request;
+		}
+		
+		private ModelNode getRequest(String name, Object... param) throws AdminException {
+		    String cli = CLIUtil.gs(name, param);
+		    if (this.domainMode) {
+		        String profile = getProfileName();
+		        cli = profile.concat(cli);
+		    }
+		    try {
+                return this.ctx.buildRequest(cli);
+            } catch (CommandFormatException e) {
+                throw new AdminComponentException(e);
+            }
 		}
 
 		private void cliCall(String operationName, String[] address, String[] params, ResultCallback callback) throws AdminException {

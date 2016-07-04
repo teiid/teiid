@@ -442,6 +442,15 @@ public interface Admin {
      * @throws AdminException
      */
     void createDataSource(String deploymentName, String templateName, Properties properties) throws AdminException;
+    
+    /**
+     * Creates a JCA xa data source
+     * @param deploymentName - name of the source
+     * @param driverName - driverName of data source
+     * @param properties - properties
+     * @throws AdminException
+     */
+    void createXADataSource(String deploymentName, String driverName, Properties properties) throws AdminException;
 
     /**
      * Given the deployed name of the data source, this will return all the configuration properties
