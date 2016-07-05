@@ -40,10 +40,6 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.sasl.RealmCallback;
 import javax.security.sasl.RealmChoiceCallback;
 
-import org.jboss.as.cli.CliInitializationException;
-import org.jboss.as.cli.CommandContext;
-import org.jboss.as.cli.CommandContextFactory;
-import org.jboss.as.cli.CommandFormatException;
 import org.jboss.as.cli.Util;
 import org.jboss.as.cli.operation.OperationFormatException;
 import org.jboss.as.cli.operation.impl.DefaultOperationRequestAddress;
@@ -61,7 +57,6 @@ import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.adminapi.jboss.VDBMetadataMapper.RequestMetadataMapper;
 import org.teiid.adminapi.jboss.VDBMetadataMapper.SessionMetadataMapper;
 import org.teiid.adminapi.jboss.VDBMetadataMapper.TransactionMetadataMapper;
-import org.teiid.core.BundleUtil;
 import org.teiid.core.util.ObjectConverterUtil;
 
 
@@ -218,10 +213,10 @@ public class AdminFactory {
                 this.domainMode = nodeTypes.contains("server-group"); //$NON-NLS-1$
             }
             
-            initXADSclass();
+            initXADSclassSet();
     	}
 
-		private void initXADSclass() {
+		private void initXADSclassSet() {
 		    xaDSclass.add("com.ibm.db2.jcc.DB2XADataSource"); //$NON-NLS-1$
 		    xaDSclass.add("com.mysql.jdbc.jdbc2.optional.MysqlXADataSource"); //$NON-NLS-1$
 		    xaDSclass.add("oracle.jdbc.xa.client.OracleXADataSource"); //$NON-NLS-1$
