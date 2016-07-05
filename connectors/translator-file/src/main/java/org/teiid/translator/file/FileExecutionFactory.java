@@ -37,6 +37,7 @@ import java.util.List;
 import javax.resource.ResourceException;
 import javax.resource.cci.ConnectionFactory;
 
+import org.teiid.connector.DataPlugin;
 import org.teiid.core.BundleUtil;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.BlobImpl;
@@ -236,8 +237,13 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 					LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Deleting", filePath); //$NON-NLS-1$
 					
 					try {
-						if(!fc.getFile(filePath).delete()){
-							throw new TranslatorException(new IOException(), UTIL.getString("error_deleting")); //$NON-NLS-1$
+						File f = fc.getFile(filePath);
+						if (!f.exists()) {
+							if (exceptionIfFileNotFound) {
+								throw new TranslatorException(DataPlugin.Util.gs("file_not_found", filePath)); //$NON-NLS-1$
+							}
+						} else if(!f.delete()){
+							throw new TranslatorException(UTIL.getString("error_deleting")); //$NON-NLS-1$
 						}
 						
 					} catch (ResourceException e) {
