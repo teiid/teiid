@@ -1,0 +1,34 @@
+<!-- If susbsytem is already defined, only copy the contents under it and edit to suit your needs -->
+<subsystem xmlns="urn:jboss:domain:resource-adapters:1.1">
+    <resource-adapters>
+                <resource-adapter id="excel">
+                    <module slot="main" id="org.jboss.teiid.resource-adapter.file"/>
+                    <connection-definitions>
+                        <connection-definition class-name="org.teiid.resource.adapter.file.FileManagedConnectionFactory" 
+                                jndi-name="java:/excelDS" 
+                                enabled="true" 
+                                use-java-context="true" 
+                                pool-name="excelDS">
+ 
+                                <!-- Directory where the data files are stored -->
+                            <config-property name="ParentDirectory">
+                                {jboss.home.dir}/teiidfiles/excelFiles/
+                            </config-property>
+
+                        <!-- Optional properties -->
+                      
+                        <!-- Set FileMapping to redirect specific relative paths (case sensitive) to alternative locations.
+                           The string value specifies a map in the format key=value(,key=value)*
+                           -->
+                        <!-- <config-property name="FileMapping">file1=fileX.xls,file2=fileY.xls</config-property> -->
+                      
+                        <!-- Set AllowParentPaths to false to disallow .. in paths.
+                           This prevent requesting files that are not contained in the parent directory -->
+                           <config-property name="AllowParentPaths">
+                                true
+                            </config-property>
+                        </connection-definition>
+                    </connection-definitions>
+                </resource-adapter>
+    </resource-adapters>
+</subsystem>
