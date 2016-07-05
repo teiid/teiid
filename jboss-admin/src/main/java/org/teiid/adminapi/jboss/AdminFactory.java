@@ -73,8 +73,6 @@ public class AdminFactory {
 	private static final Logger LOGGER = Logger.getLogger(AdminFactory.class.getName());
 	private static AdminFactory INSTANCE = new AdminFactory();
 	
-	private static final BundleUtil CLIUtil = new BundleUtil("","cli", ResourceBundle.getBundle("cli")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-
 	public static AdminFactory getInstance() {
 		return INSTANCE;
 	}
@@ -206,12 +204,12 @@ public class AdminFactory {
 		private ModelControllerClient connection;
     	private boolean domainMode = false;
     	private String profileName = "ha";
-    	
-    	private CommandContext ctx;
-    	
+    	    	
     	Expirable<Map<String, String>> connectionFactoryNames = new Expirable<Map<String,String>>();
     	Expirable<Set<String>> installedResourceAdaptorNames = new Expirable<Set<String>>();
     	Expirable<Set<String>> deployedResourceAdaptorNames = new Expirable<Set<String>>();
+    	
+    	private Set<String> xaDSclass = new HashSet<String>();
     	
     	public AdminImpl (ModelControllerClient connection) {
     		this.connection = connection;
@@ -219,15 +217,23 @@ public class AdminFactory {
             if (!nodeTypes.isEmpty()) {
                 this.domainMode = nodeTypes.contains("server-group"); //$NON-NLS-1$
             }
-            try {
-                ctx = CommandContextFactory.getInstance().newCommandContext();
-                ctx.bindClient(connection);
-            } catch (CliInitializationException e) {
-                throw new IllegalStateException(e);
-            }
+            
+            initXADSclass();
     	}
 
-		public void setProfileName(String name) {
+		private void initXADSclass() {
+		    xaDSclass.add("com.ibm.db2.jcc.DB2XADataSource"); //$NON-NLS-1$
+		    xaDSclass.add("com.mysql.jdbc.jdbc2.optional.MysqlXADataSource"); //$NON-NLS-1$
+		    xaDSclass.add("oracle.jdbc.xa.client.OracleXADataSource"); //$NON-NLS-1$
+		    xaDSclass.add("org.postgresql.xa.PGXADataSource"); //$NON-NLS-1$
+		    xaDSclass.add("com.microsoft.sqlserver.jdbc.SQLServerXADataSource"); //$NON-NLS-1$
+		    xaDSclass.add("net.sourceforge.jtds.jdbcx.JtdsDataSource"); //$NON-NLS-1$
+		    xaDSclass.add("org.teiid.jdbc.TeiidDataSource"); //$NON-NLS-1$
+		    xaDSclass.add("org.mariadb.jdbc.MariaDbDataSource"); //$NON-NLS-1$
+		    xaDSclass.add("org.h2.jdbcx.JdbcDataSource"); //$NON-NLS-1$
+        }
+
+        public void setProfileName(String name) {
 			this.profileName = name;
 		}
 
@@ -484,8 +490,11 @@ public class AdminFactory {
         	Collection<PropertyDefinition> dsProperties = getTemplatePropertyDefinitions(templateName);
         	ArrayList<String> parameters = new ArrayList<String>();
             if (properties != null) {
-            	parameters.add("connection-url");
-            	parameters.add(properties.getProperty("connection-url"));
+                String url = properties.getProperty("connection-url"); //$NON-NLS-1$
+                if(url != null){
+                    parameters.add("connection-url"); //$NON-NLS-1$
+                    parameters.add(url);
+                }            	
 
 	            for (PropertyDefinition prop : dsProperties) {
 	            	if (prop.getName().equals("connection-properties")) {
@@ -509,10 +518,16 @@ public class AdminFactory {
         	parameters.add("pool-name");
         	parameters.add(deploymentName);
 
-        	// add data source
-			cliCall("add", new String[] { "subsystem", "datasources","data-source", deploymentName },
-					parameters.toArray(new String[parameters.size()]),
-					new ResultCallback());
+        	if(isXADataSource(templateName)){
+        	    ArrayList<String> xaDSparameters = loadXADSparameters(properties);
+        	    xaDScreate(parameters.toArray(new String[parameters.size()]), xaDSparameters.toArray(new String[xaDSparameters.size()]), addJavaContext(deploymentName));
+        	} else {
+        	    // add data source
+                cliCall("add", new String[] { "subsystem", "datasources","data-source", deploymentName },
+                        parameters.toArray(new String[parameters.size()]),
+                        new ResultCallback());
+        	}
+        	
 
 	        // add connection properties that are specific to driver
             String cp = properties.getProperty("connection-properties");
@@ -529,71 +544,20 @@ public class AdminFactory {
 			flush();
 		}
 
-		@Override
-        public void createXADataSource(String deploymentName, final String driverName, final Properties properties) throws AdminException {
-
-		    this.flush();
-		    
-		    // validate whether xa-datasource already exist
-		    Collection<String> dsNames = getDataSourceNames(null);
-		    if (dsNames.contains(deploymentName)){
-		        throw new AdminProcessingException(AdminPlugin.Event.TEIID70003, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70003, deploymentName));
-		    }
-		    
-		    // validate driver exist
-		    Set<String> drivers = getInstalledJDBCDrivers();
-		    if (!drivers.contains(driverName)){
-		        throw new AdminProcessingException(AdminPlugin.Event.TEIID70004, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70004, driverName));
-		    }
-		    
-		    // validate driver-xa-datasource-class-name exsit
-		    ModelNode request = this.getRequest("createXADataSource.xa-datasource-class.validation", driverName); //$NON-NLS-1$
-		    execute(request, new ResultCallback(){
-                @Override
-                void onSuccess(ModelNode outcome, ModelNode result) throws AdminException {
-                    String xaDSclass = result.asString();
-                    if(xaDSclass == null || xaDSclass.equals("")) { //$NON-NLS-1$
-                        throw new AdminProcessingException(AdminPlugin.Event.TEIID70057, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70057, driverName));
-                    }
-                }});
-		    
-		    // build optional arguments
-		    request = this.getRequest("createXADataSource.xa-data-source.resource-description"); //$NON-NLS-1$
-		    final StringBuffer sb = new StringBuffer();
-		    execute(request, new ResultCallback(){
-                @Override
-                void onSuccess(ModelNode outcome, ModelNode result) throws AdminException {
-                    List<ModelNode> list = result.get("attributes").asList(); //$NON-NLS-1$
-                    for(ModelNode node : list) {
-                        String propKey = node.asProperty().getName();
-                        Object propValue = properties.remove(propKey);
-                        if(propValue != null){
-                            sb.append("--").append(propKey).append("=").append(propValue).append(" ") ; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                        }
-                    }
-                }});
-		    String optionalArguments = sb.toString();
-		    
-		    // build xa-datasource-properties
-		    if(properties.size() < 1){
-		        throw new AdminProcessingException(AdminPlugin.Event.TEIID70058, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70058, deploymentName));
-		    }
-		    sb.delete(0, sb.length());
-		    boolean isFirst = true;
-		    for(Object key : properties.keySet()){
-		        if(isFirst){
-		            isFirst = false;
-		        } else {
-		            sb.append(", "); //$NON-NLS-1$
-		        }
-		        sb.append(key + "=>" + properties.get(key)); //$NON-NLS-1$
-		    }
-		    String xaDsProtperties = sb.toString();
-		    
-		    request = this.getRequest("createXADataSource", deploymentName, driverName, addJavaContext(deploymentName), optionalArguments, xaDsProtperties); //$NON-NLS-1$
-		    this.execute(request);
-		    
-		    this.flush();
+		private ArrayList<String> loadXADSparameters(Properties properties) {
+		    ArrayList<String> params = new ArrayList<String>();
+		    String xdp = properties.getProperty("xa-datasource-properties"); //$NON-NLS-1$
+            if(xdp != null) {
+                StringTokenizer st = new StringTokenizer(xdp, ","); //$NON-NLS-1$
+                while(st.hasMoreTokens()) {
+                    String prop = st.nextToken();
+                    String key = prop.substring(0, prop.indexOf('=')); //$NON-NLS-1$
+                    String value = prop.substring(prop.indexOf('=')+1); //$NON-NLS-1$
+                    params.add(key);
+                    params.add(value);
+                }
+            }
+            return params;
         }
 
         // /subsystem=datasources/data-source=DS/connection-properties=foo:add(value=/home/rareddy/testing)
@@ -616,24 +580,6 @@ public class AdminFactory {
 	        } catch (IOException e) {
 	        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70007, e);
 	        }
-		}
-		
-		private void execute(final ModelNode request, ResultCallback callback) throws AdminException {
-		    try {
-                ModelNode outcome = this.connection.execute(request);
-                ModelNode result = null;
-                if (Util.isSuccess(outcome)){
-                    if (outcome.hasDefined("result")) {
-                        result = outcome.get("result");
-                    }
-                    callback.onSuccess(outcome, result);
-                } else {
-                    callback.onFailure(Util.getFailureDescription(outcome));
-                }
-            } catch (IOException e) {
-                throw new AdminComponentException(AdminPlugin.Event.TEIID70007, e);
-            }
-		    
 		}
 
 		@Override
@@ -1305,7 +1251,11 @@ public class AdminFactory {
         	}
 
         	// get JDBC properties
-    		cliCall("read-resource-description", new String[] {"subsystem", "datasources", "data-source", templateName}, null, builder);
+        	if(isXADataSource(templateName)){
+        	    cliCall("read-resource-description", new String[] {"subsystem", "datasources", "xa-data-source", templateName}, null, builder);
+        	} else {
+        	    cliCall("read-resource-description", new String[] {"subsystem", "datasources", "data-source", templateName}, null, builder);
+        	}
 
 	        // add driver specific properties
 	        PropertyDefinitionMetadata cp = new PropertyDefinitionMetadata();
@@ -1318,8 +1268,26 @@ public class AdminFactory {
 	        props.add(cp);
 	        return props;
 		}
-		
-		@Override
+			
+		private boolean isXADataSource(String templateName) throws AdminException {
+		    ModelNode request = this.buildRequest("datasources", "get-installed-driver", "driver-name", templateName); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            try {
+                ModelNode outcome = this.connection.execute(request);
+                if (Util.isSuccess(outcome)) {
+                    ModelNode result = outcome.get("result"); //$NON-NLS-1$ 
+                    String xaClass = result.asList().get(0).get("driver-xa-datasource-class-name").asString(); //$NON-NLS-1$ 
+                    if(xaClass != null && xaDSclass.contains(xaClass)){
+                        return true;
+                    }
+                }              
+            } catch (IOException e) {
+                throw new AdminComponentException(AdminPlugin.Event.TEIID70015, e);
+            }
+		    
+            return false;
+        }
+
+        @Override
 		@Deprecated
 	    public Collection<? extends PropertyDefinition> getTranslatorPropertyDefinitions(String translatorName) throws AdminException{
 			BuildPropertyDefinitions builder = new BuildPropertyDefinitions();
@@ -1630,19 +1598,6 @@ public class AdminFactory {
 	        }
 			return request;
 		}
-		
-		private ModelNode getRequest(String name, Object... param) throws AdminException {
-		    String cli = CLIUtil.gs(name, param);
-		    if (this.domainMode) {
-		        String profile = getProfileName();
-		        cli = profile.concat(cli);
-		    }
-		    try {
-                return this.ctx.buildRequest(cli);
-            } catch (CommandFormatException e) {
-                throw new AdminComponentException(e);
-            }
-		}
 
 		private void cliCall(String operationName, String[] address, String[] params, ResultCallback callback) throws AdminException {
 			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
@@ -1678,6 +1633,69 @@ public class AdminFactory {
 	        } catch (IOException e) {
 	        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70007, e);
 	        }
+		}
+		
+		private void xaDScreate(String[] params, String[] dsParams, String dxaDsName) throws AdminException {
+		    
+		    DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
+            final ModelNode request;
+            
+            try {
+                builder.setOperationName("composite");//$NON-NLS-1$
+                request = builder.buildRequest();
+                ModelNode create = buildRequest("add", new String[]{"subsystem", "datasources", "xa-data-source", dxaDsName}, params); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                if(create != null) {
+                    request.get("steps").add(create);
+                }
+                if (dsParams.length % 2 != 0) {
+                    throw new IllegalArgumentException("Failed to build operation"); //$NON-NLS-1$
+                }
+                for (int i = 0; i < dsParams.length; i+=2) {
+                    String key = dsParams[i];
+                    String value = dsParams[i+1];
+                    String[] subAddress = new String[] {"subsystem", "datasources", "xa-data-source", dxaDsName, "xa-datasource-properties", key}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                    String[] subParames = new String[] {"value", value} ; //$NON-NLS-1$
+                    ModelNode propStep = buildRequest("add", subAddress, subParames);
+                    if(propStep != null) {
+                        request.get("steps").add(propStep);
+                    }
+                }
+                
+                ModelNode outcome = this.connection.execute(request);
+                if (!Util.isSuccess(outcome)){
+                    new ResultCallback().onFailure(Util.getFailureDescription(outcome));
+                }
+            } catch (OperationFormatException e) {
+                throw new AdminComponentException(AdminPlugin.Event.TEIID70010, e, "Failed to build xa datasource create operation"); //$NON-NLS-1$
+            } catch (IOException e) {
+                throw new AdminComponentException(AdminPlugin.Event.TEIID70007, e);
+            }		    
+		}
+		
+		private ModelNode buildRequest(String operationName, String[] address, String[] params) throws AdminException{
+		    DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
+            ModelNode request = null;
+            try {
+                if (address.length % 2 != 0) {
+                    throw new IllegalArgumentException("Failed to build operation"); //$NON-NLS-1$
+                }
+                addProfileNode(builder);
+                for (int i = 0; i < address.length; i+=2) {
+                    builder.addNode(address[i], address[i+1]); 
+                }
+                builder.setOperationName(operationName);
+                request = builder.buildRequest();
+                if (params != null && params.length % 2 == 0) {
+                    for (int i = 0; i < params.length; i+=2) {
+                        builder.addProperty(params[i], params[i+1]);
+                    }
+                }
+   
+            } catch (OperationFormatException e) {
+                throw new AdminComponentException(AdminPlugin.Event.TEIID70010, e, "Failed to build operation"); //$NON-NLS-1$
+            } 
+            
+            return request;
 		}
 
 		private <T> List<T> getDomainAwareList(ModelNode operationResult,  MetadataMapper<T> mapper) {

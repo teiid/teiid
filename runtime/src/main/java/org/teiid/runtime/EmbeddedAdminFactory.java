@@ -570,11 +570,6 @@ public class EmbeddedAdminFactory {
 			throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40137, "createDataSource")); //$NON-NLS-1$
 		}
 
-		@Override
-        public void createXADataSource(String deploymentName, String driverName, Properties properties) throws AdminException {
-		    throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40137, "createXADataSource")); //$NON-NLS-1$
-        }
-
         @Override
 		public Properties getDataSource(String deployedName) throws AdminException {
 			throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40137, "getDataSource")); //$NON-NLS-1$
