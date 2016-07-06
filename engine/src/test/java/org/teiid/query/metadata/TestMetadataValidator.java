@@ -336,6 +336,42 @@ public class TestMetadataValidator {
 	}
 	
 	@Test
+	public void testExternalMaterializationValidateColumns() throws Exception {
+		String ddl = "CREATE FOREIGN TABLE G1(e2 varchar);"
+				+ "create foreign table status (VDBNAME STRING, VDBVERSION STRING, "
+				+ " SCHEMANAME STRING, NAME STRING, TARGETSCHEMANAME STRING, TARGETNAME STRING, "
+				+ " VALID BOOLEAN, LOADSTATE STRING, CARDINALITY LONG, UPDATED TIMESTAMP, LOADNUMBER LONG)";
+		String ddl2 = "CREATE VIEW G2 (e1 integer, e2 varchar) OPTIONS (MATERIALIZED 'true', MATERIALIZED_TABLE 'pm1.G1', \"teiid_rel:MATVIEW_STATUS_TABLE\" 'pm1.status', \"teiid_rel:MATVIEW_LOAD_SCRIPT\" 'begin end') AS SELECT 1, 'a' FROM pm1.G1";		
+		
+		buildModel("pm1", true, this.vdb, this.store, ddl);
+		buildModel("vm1", false, this.vdb, this.store, ddl2);
+		
+		buildTransformationMetadata();
+		
+		ValidatorReport report = new ValidatorReport();
+		report = new MetadataValidator().validate(this.vdb, this.store);
+		assertTrue(printError(report), report.hasItems());
+	}
+	
+	@Test
+	public void testExternalMaterializationValidateColumnTypes() throws Exception {
+		String ddl = "CREATE FOREIGN TABLE G1(e1 integer, e2 integer);"
+				+ "create foreign table status (VDBNAME STRING, VDBVERSION STRING, "
+				+ " SCHEMANAME STRING, NAME STRING, TARGETSCHEMANAME STRING, TARGETNAME STRING, "
+				+ " VALID BOOLEAN, LOADSTATE STRING, CARDINALITY LONG, UPDATED TIMESTAMP, LOADNUMBER LONG)";
+		String ddl2 = "CREATE VIEW G2 (e1 integer, e2 varchar) OPTIONS (MATERIALIZED 'true', MATERIALIZED_TABLE 'pm1.G1', \"teiid_rel:MATVIEW_STATUS_TABLE\" 'pm1.status', \"teiid_rel:MATVIEW_LOAD_SCRIPT\" 'begin end') AS SELECT 1, 'a' FROM pm1.G1";		
+		
+		buildModel("pm1", true, this.vdb, this.store, ddl);
+		buildModel("vm1", false, this.vdb, this.store, ddl2);
+		
+		buildTransformationMetadata();
+		
+		ValidatorReport report = new ValidatorReport();
+		report = new MetadataValidator().validate(this.vdb, this.store);
+		assertTrue(printError(report), report.hasItems());
+	}
+	
+	@Test
 	public void testExternalMaterializationValidateMissingStatus() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE G1(e1 integer, e2 varchar); CREATE FOREIGN TABLE status(e1 integer, e2 varchar);";
 		String ddl2 = "CREATE VIEW G2 OPTIONS (MATERIALIZED 'true', MATERIALIZED_TABLE 'pm1.G1', \"teiid_rel:MATVIEW_STATUS_TABLE\" 'x') AS SELECT * FROM pm1.G1";		

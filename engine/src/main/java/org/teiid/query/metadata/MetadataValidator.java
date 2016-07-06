@@ -376,28 +376,25 @@ public class MetadataValidator {
                 ValidatorReport subReport = Validator.validate(command, metadata, visitor);
                 metadataValidator.processReport(model, matView, report, subReport);
             } catch (QueryParserException | QueryResolverException | TeiidComponentException e) {
-                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31198, matView.getName(), option, script, e));
+                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31198, matView.getFullName(), option, script, e));
             } 
         }
 
-        private void verifyTableColumns(ModelMetaData model, ValidatorReport report, MetadataValidator metadataValidator, Table matTable , Table table) {
+        private void verifyTableColumns(ModelMetaData model, ValidatorReport report, MetadataValidator metadataValidator, Table view , Table table) {
             
-            List<Column> matViewColumns = matTable.getColumns();
-            List<Column> tableColumns = table.getColumns();
+            List<Column> matViewColumns = view.getColumns();
             
-            if(matViewColumns.size() != tableColumns.size()) {
-                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31193, table.getName(), matTable.getName()));
-            }
-
-            for(int i = 0 ; i < matViewColumns.size() ; i ++) {
-                Column matViewColumn = matViewColumns.get(i);
-                Column tableColumn = tableColumns.get(i);
-                if(!matViewColumn.getDatatypeUUID().equals(tableColumn.getDatatypeUUID())){
-                    metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31194, tableColumn.getName(), table.getName(), matViewColumn.getName(), matTable.getName()));
-                }
-            }
+	        for(int i = 0 ; i < matViewColumns.size() ; i ++) {
+	            Column matViewColumn = matViewColumns.get(i);
+	            
+	            Column tableColumn = table.getColumnByName(matViewColumn.getName());
+	            if (tableColumn == null) {
+	            	metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31193, matViewColumn.getName(), table.getFullName(), view.getFullName()));
+	            } else if(!matViewColumn.getDatatypeUUID().equals(tableColumn.getDatatypeUUID())){
+	                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31194, tableColumn.getName(), table.getFullName(), matViewColumn.getName(), view.getFullName()));
+	            }
+	        }
         }
-
 	    
 	}
 
