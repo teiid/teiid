@@ -748,7 +748,7 @@ public class RulePushAggregates implements
         	if (ndv != NewCalculateCostUtil.UNKNOWN_VALUE && cardinality / ndv < 4) {
     			continue;
         	}
-            
+
             if (aggregates != null) {
                 aggregates = stageAggregates(groupNode, metadata, stagedGroupingSymbols, aggregates);
             } else {
