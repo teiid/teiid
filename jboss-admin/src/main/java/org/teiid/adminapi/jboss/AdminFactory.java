@@ -204,29 +204,13 @@ public class AdminFactory {
     	Expirable<Set<String>> installedResourceAdaptorNames = new Expirable<Set<String>>();
     	Expirable<Set<String>> deployedResourceAdaptorNames = new Expirable<Set<String>>();
     	
-    	private Set<String> xaDSclass = new HashSet<String>();
-    	
     	public AdminImpl (ModelControllerClient connection) {
     		this.connection = connection;
             List<String> nodeTypes = Util.getNodeTypes(connection, new DefaultOperationRequestAddress());
             if (!nodeTypes.isEmpty()) {
                 this.domainMode = nodeTypes.contains("server-group"); //$NON-NLS-1$
             }
-            
-            initXADSclassSet();
     	}
-
-		private void initXADSclassSet() {
-		    xaDSclass.add("com.ibm.db2.jcc.DB2XADataSource"); //$NON-NLS-1$
-		    xaDSclass.add("com.mysql.jdbc.jdbc2.optional.MysqlXADataSource"); //$NON-NLS-1$
-		    xaDSclass.add("oracle.jdbc.xa.client.OracleXADataSource"); //$NON-NLS-1$
-		    xaDSclass.add("org.postgresql.xa.PGXADataSource"); //$NON-NLS-1$
-		    xaDSclass.add("com.microsoft.sqlserver.jdbc.SQLServerXADataSource"); //$NON-NLS-1$
-		    xaDSclass.add("net.sourceforge.jtds.jdbcx.JtdsDataSource"); //$NON-NLS-1$
-		    xaDSclass.add("org.teiid.jdbc.TeiidDataSource"); //$NON-NLS-1$
-		    xaDSclass.add("org.mariadb.jdbc.MariaDbDataSource"); //$NON-NLS-1$
-		    xaDSclass.add("org.h2.jdbcx.JdbcDataSource"); //$NON-NLS-1$
-        }
 
         public void setProfileName(String name) {
 			this.profileName = name;
@@ -1271,7 +1255,7 @@ public class AdminFactory {
                 if (Util.isSuccess(outcome)) {
                     ModelNode result = outcome.get("result"); //$NON-NLS-1$ 
                     String xaClass = result.asList().get(0).get("driver-xa-datasource-class-name").asString(); //$NON-NLS-1$ 
-                    if(xaClass != null && xaDSclass.contains(xaClass)){
+                    if(xaClass != null && xaClass.length() > 0){
                         return true;
                     }
                 }              
