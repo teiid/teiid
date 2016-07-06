@@ -400,7 +400,8 @@ public class IntegrationTestDeployment {
 	@Test
 	public void getDatasourceTemplateNames() throws Exception {
 		Set<String> vals  = new HashSet<String>(Arrays.asList(new String[]{"teiid-local", "google", "teiid", "ldap", 
-				"accumulo", "file", "cassandra", "salesforce", "salesforce-34", "mongodb", "solr", "webservice", "simpledb", "h2"}));
+				"accumulo", "file", "cassandra", "salesforce", "salesforce-34", "mongodb", "solr", "webservice", 
+				"simpledb", "h2", "teiid-xa", "h2-xa", "teiid-local-xa"}));
 		deployVdb();
 		Set<String> templates = admin.getDataSourceTemplateNames();
 		assertEquals(vals, templates);
@@ -545,6 +546,43 @@ public class IntegrationTestDeployment {
 		
 		admin.deleteDataSource(deployedName);
 	}
+	
+	@Test
+    public void testCreateXADatasource() throws Exception {
+	    String vdbName = "test";
+        String deployedName = "fooXA";
+        String testVDB = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" + 
+                "<vdb name=\"test\" version=\"1\">\n" + 
+                "    <property name=\"UseConnectorMetadata\" value=\"cached\" />\n" + 
+                "    <model name=\"loopy\">\n" + 
+                "        <source name=\"loop\" translator-name=\"loopback\" />\n" + 
+                "    </model>\n" + 
+                "</vdb>";
+        admin.deploy("test-vdb.xml", new ByteArrayInputStream(testVDB.getBytes()));
+        AdminUtil.waitForVDBLoad(admin, vdbName, 1, 3);
+        
+        assertTrue(admin.getDataSourceTemplateNames().contains("teiid-xa"));
+        
+        Properties p = new Properties();
+        p.setProperty("DatabaseName", "test");
+        try {
+         admin.createDataSource(deployedName, "teiid-xa", p);
+         fail("should have fail not find portNumber");
+        } catch(AdminException e) {           
+        }
+        
+        assertFalse(admin.getDataSourceNames().contains(deployedName));
+        
+        p.setProperty("ServerName", "127.0.0.1");
+        p.setProperty("PortNumber", "31000");
+        
+        admin.createDataSource(deployedName, "teiid-xa", p);
+        
+        assertTrue(admin.getDataSourceNames().contains(deployedName));
+        
+        
+        //admin.deleteDataSource(deployedName);
+    }	
 	
 	@Test
 	public void testVDBRestart() throws Exception{
