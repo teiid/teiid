@@ -442,7 +442,7 @@ public interface Admin {
      * @throws AdminException
      */
     void createDataSource(String deploymentName, String templateName, Properties properties) throws AdminException;
-
+    
     /**
      * Given the deployed name of the data source, this will return all the configuration properties
      * used to create the datasource. If sensitive information like passwords are masked, they will NOT

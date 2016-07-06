@@ -67,7 +67,7 @@ import org.teiid.core.util.ObjectConverterUtil;
 public class AdminFactory {
 	private static final Logger LOGGER = Logger.getLogger(AdminFactory.class.getName());
 	private static AdminFactory INSTANCE = new AdminFactory();
-
+	
 	public static AdminFactory getInstance() {
 		return INSTANCE;
 	}
@@ -199,7 +199,7 @@ public class AdminFactory {
 		private ModelControllerClient connection;
     	private boolean domainMode = false;
     	private String profileName = "ha";
-    	
+    	    	
     	Expirable<Map<String, String>> connectionFactoryNames = new Expirable<Map<String,String>>();
     	Expirable<Set<String>> installedResourceAdaptorNames = new Expirable<Set<String>>();
     	Expirable<Set<String>> deployedResourceAdaptorNames = new Expirable<Set<String>>();
@@ -212,7 +212,7 @@ public class AdminFactory {
             }
     	}
 
-		public void setProfileName(String name) {
+        public void setProfileName(String name) {
 			this.profileName = name;
 		}
 
@@ -469,11 +469,14 @@ public class AdminFactory {
         	Collection<PropertyDefinition> dsProperties = getTemplatePropertyDefinitions(templateName);
         	ArrayList<String> parameters = new ArrayList<String>();
             if (properties != null) {
-            	parameters.add("connection-url");
-            	parameters.add(properties.getProperty("connection-url"));
+                String url = properties.getProperty("connection-url"); //$NON-NLS-1$
+                if(url != null){
+                    parameters.add("connection-url"); //$NON-NLS-1$
+                    parameters.add(url);
+                }            	
 
 	            for (PropertyDefinition prop : dsProperties) {
-	            	if (prop.getName().equals("connection-properties")) {
+	            	if (prop.getName().equals("connection-properties") || prop.getName().equals("xa-datasource-properties")) {
 	            		continue;
 	            	}
 	            	String value = properties.getProperty(prop.getName());
@@ -494,10 +497,16 @@ public class AdminFactory {
         	parameters.add("pool-name");
         	parameters.add(deploymentName);
 
-        	// add data source
-			cliCall("add", new String[] { "subsystem", "datasources","data-source", deploymentName },
-					parameters.toArray(new String[parameters.size()]),
-					new ResultCallback());
+        	if(isXADataSource(templateName)){
+        	    ArrayList<String> xaDSparameters = loadXADSparameters(properties);
+        	    xaDScreate(parameters.toArray(new String[parameters.size()]), xaDSparameters.toArray(new String[xaDSparameters.size()]), addJavaContext(deploymentName));
+        	} else {
+        	    // add data source
+                cliCall("add", new String[] { "subsystem", "datasources","data-source", deploymentName },
+                        parameters.toArray(new String[parameters.size()]),
+                        new ResultCallback());
+        	}
+        	
 
 	        // add connection properties that are specific to driver
             String cp = properties.getProperty("connection-properties");
@@ -514,7 +523,23 @@ public class AdminFactory {
 			flush();
 		}
 
-		// /subsystem=datasources/data-source=DS/connection-properties=foo:add(value=/home/rareddy/testing)
+		private ArrayList<String> loadXADSparameters(Properties properties) {
+		    ArrayList<String> params = new ArrayList<String>();
+		    String xdp = properties.getProperty("xa-datasource-properties"); //$NON-NLS-1$
+            if(xdp != null) {
+                StringTokenizer st = new StringTokenizer(xdp, ","); //$NON-NLS-1$
+                while(st.hasMoreTokens()) {
+                    String prop = st.nextToken();
+                    String key = prop.substring(0, prop.indexOf('=')); //$NON-NLS-1$
+                    String value = prop.substring(prop.indexOf('=')+1); //$NON-NLS-1$
+                    params.add(key);
+                    params.add(value);
+                }
+            }
+            return params;
+        }
+
+        // /subsystem=datasources/data-source=DS/connection-properties=foo:add(value=/home/rareddy/testing)
 		private void addConnectionProperty(String deploymentName, String key, String value) throws AdminException {
 			if (value == null || value.trim().isEmpty()) {
 				throw new AdminProcessingException(AdminPlugin.Event.TEIID70054, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70054, key));
@@ -1205,21 +1230,52 @@ public class AdminFactory {
         	}
 
         	// get JDBC properties
-    		cliCall("read-resource-description", new String[] {"subsystem", "datasources", "data-source", templateName}, null, builder);
-
-	        // add driver specific properties
-	        PropertyDefinitionMetadata cp = new PropertyDefinitionMetadata();
-	        cp.setName("connection-properties");
-	        cp.setDisplayName("Addtional Driver Properties");
-	        cp.setDescription("The connection-properties element allows you to pass in arbitrary connection properties to the Driver.connect(url, props) method. Supply comma separated name-value pairs"); //$NON-NLS-1$
-	        cp.setRequired(false);
-	        cp.setAdvanced(true);
-	        ArrayList<PropertyDefinition> props = builder.getPropertyDefinitions();
-	        props.add(cp);
-	        return props;
+        	if(isXADataSource(templateName)){
+        	    cliCall("read-resource-description", new String[] {"subsystem", "datasources", "xa-data-source", templateName}, null, builder);
+        	    PropertyDefinitionMetadata cp = new PropertyDefinitionMetadata();
+                cp.setName("xa-datasource-properties");
+                cp.setDisplayName("XA DataSource Properties");
+                cp.setDescription("The xa-datasource-properties element allows you to pass in arbitrary connection properties to the Driver.connect(url, props) method. Supply comma separated name-value pairs"); //$NON-NLS-1$
+                cp.setRequired(false);
+                cp.setAdvanced(true);
+                ArrayList<PropertyDefinition> props = builder.getPropertyDefinitions();
+                props.add(cp);
+        	    return props;
+        	} else {
+        	    cliCall("read-resource-description", new String[] {"subsystem", "datasources", "data-source", templateName}, null, builder);
+        	 // add driver specific properties
+        	    PropertyDefinitionMetadata cp = new PropertyDefinitionMetadata();
+                cp.setName("connection-properties");
+                cp.setDisplayName("Addtional Driver Properties");
+                cp.setDescription("The connection-properties element allows you to pass in arbitrary connection properties to the Driver.connect(url, props) method. Supply comma separated name-value pairs"); //$NON-NLS-1$
+                cp.setRequired(false);
+                cp.setAdvanced(true);
+                ArrayList<PropertyDefinition> props = builder.getPropertyDefinitions();
+                props.add(cp);
+                return props;
+        	}
+   
 		}
-		
-		@Override
+			
+		private boolean isXADataSource(String templateName) throws AdminException {
+		    ModelNode request = this.buildRequest("datasources", "get-installed-driver", "driver-name", templateName); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            try {
+                ModelNode outcome = this.connection.execute(request);
+                if (Util.isSuccess(outcome)) {
+                    ModelNode result = outcome.get("result"); //$NON-NLS-1$ 
+                    String xaClass = result.asList().get(0).get("driver-xa-datasource-class-name").asString(); //$NON-NLS-1$ 
+                    if(xaClass != null && xaClass.length() > 0){
+                        return true;
+                    }
+                }              
+            } catch (IOException e) {
+                throw new AdminComponentException(AdminPlugin.Event.TEIID70015, e);
+            }
+		    
+            return false;
+        }
+
+        @Override
 		@Deprecated
 	    public Collection<? extends PropertyDefinition> getTranslatorPropertyDefinitions(String translatorName) throws AdminException{
 			BuildPropertyDefinitions builder = new BuildPropertyDefinitions();
@@ -1565,6 +1621,69 @@ public class AdminFactory {
 	        } catch (IOException e) {
 	        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70007, e);
 	        }
+		}
+		
+		private void xaDScreate(String[] params, String[] dsParams, String dxaDsName) throws AdminException {
+		    
+		    DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
+            final ModelNode request;
+            
+            try {
+                builder.setOperationName("composite");//$NON-NLS-1$
+                request = builder.buildRequest();
+                ModelNode create = buildRequest("add", new String[]{"subsystem", "datasources", "xa-data-source", dxaDsName}, params); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                if(create != null) {
+                    request.get("steps").add(create);
+                }
+                if (dsParams.length % 2 != 0) {
+                    throw new IllegalArgumentException("Failed to build operation"); //$NON-NLS-1$
+                }
+                for (int i = 0; i < dsParams.length; i+=2) {
+                    String key = dsParams[i];
+                    String value = dsParams[i+1];
+                    String[] subAddress = new String[] {"subsystem", "datasources", "xa-data-source", dxaDsName, "xa-datasource-properties", key}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                    String[] subParames = new String[] {"value", value} ; //$NON-NLS-1$
+                    ModelNode propStep = buildRequest("add", subAddress, subParames);
+                    if(propStep != null) {
+                        request.get("steps").add(propStep);
+                    }
+                }
+                
+                ModelNode outcome = this.connection.execute(request);
+                if (!Util.isSuccess(outcome)){
+                    new ResultCallback().onFailure(Util.getFailureDescription(outcome));
+                }
+            } catch (OperationFormatException e) {
+                throw new AdminComponentException(AdminPlugin.Event.TEIID70010, e, "Failed to build xa datasource create operation"); //$NON-NLS-1$
+            } catch (IOException e) {
+                throw new AdminComponentException(AdminPlugin.Event.TEIID70007, e);
+            }		    
+		}
+		
+		private ModelNode buildRequest(String operationName, String[] address, String[] params) throws AdminException{
+		    DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
+            ModelNode request = null;
+            try {
+                if (address.length % 2 != 0) {
+                    throw new IllegalArgumentException("Failed to build operation"); //$NON-NLS-1$
+                }
+                addProfileNode(builder);
+                for (int i = 0; i < address.length; i+=2) {
+                    builder.addNode(address[i], address[i+1]); 
+                }
+                builder.setOperationName(operationName);
+                request = builder.buildRequest();
+                if (params != null && params.length % 2 == 0) {
+                    for (int i = 0; i < params.length; i+=2) {
+                        builder.addProperty(params[i], params[i+1]);
+                    }
+                }
+   
+            } catch (OperationFormatException e) {
+                throw new AdminComponentException(AdminPlugin.Event.TEIID70010, e, "Failed to build operation"); //$NON-NLS-1$
+            } 
+            
+            return request;
 		}
 
 		private <T> List<T> getDomainAwareList(ModelNode operationResult,  MetadataMapper<T> mapper) {
