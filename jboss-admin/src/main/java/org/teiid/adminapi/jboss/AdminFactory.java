@@ -476,7 +476,7 @@ public class AdminFactory {
                 }            	
 
 	            for (PropertyDefinition prop : dsProperties) {
-	            	if (prop.getName().equals("connection-properties")) {
+	            	if (prop.getName().equals("connection-properties") || prop.getName().equals("xa-datasource-properties")) {
 	            		continue;
 	            	}
 	            	String value = properties.getProperty(prop.getName());
@@ -1232,20 +1232,29 @@ public class AdminFactory {
         	// get JDBC properties
         	if(isXADataSource(templateName)){
         	    cliCall("read-resource-description", new String[] {"subsystem", "datasources", "xa-data-source", templateName}, null, builder);
+        	    PropertyDefinitionMetadata cp = new PropertyDefinitionMetadata();
+                cp.setName("xa-datasource-properties");
+                cp.setDisplayName("XA DataSource Properties");
+                cp.setDescription("The xa-datasource-properties element allows you to pass in arbitrary connection properties to the Driver.connect(url, props) method. Supply comma separated name-value pairs"); //$NON-NLS-1$
+                cp.setRequired(false);
+                cp.setAdvanced(true);
+                ArrayList<PropertyDefinition> props = builder.getPropertyDefinitions();
+                props.add(cp);
+        	    return props;
         	} else {
         	    cliCall("read-resource-description", new String[] {"subsystem", "datasources", "data-source", templateName}, null, builder);
+        	 // add driver specific properties
+        	    PropertyDefinitionMetadata cp = new PropertyDefinitionMetadata();
+                cp.setName("connection-properties");
+                cp.setDisplayName("Addtional Driver Properties");
+                cp.setDescription("The connection-properties element allows you to pass in arbitrary connection properties to the Driver.connect(url, props) method. Supply comma separated name-value pairs"); //$NON-NLS-1$
+                cp.setRequired(false);
+                cp.setAdvanced(true);
+                ArrayList<PropertyDefinition> props = builder.getPropertyDefinitions();
+                props.add(cp);
+                return props;
         	}
-
-	        // add driver specific properties
-	        PropertyDefinitionMetadata cp = new PropertyDefinitionMetadata();
-	        cp.setName("connection-properties");
-	        cp.setDisplayName("Addtional Driver Properties");
-	        cp.setDescription("The connection-properties element allows you to pass in arbitrary connection properties to the Driver.connect(url, props) method. Supply comma separated name-value pairs"); //$NON-NLS-1$
-	        cp.setRequired(false);
-	        cp.setAdvanced(true);
-	        ArrayList<PropertyDefinition> props = builder.getPropertyDefinitions();
-	        props.add(cp);
-	        return props;
+   
 		}
 			
 		private boolean isXADataSource(String templateName) throws AdminException {
