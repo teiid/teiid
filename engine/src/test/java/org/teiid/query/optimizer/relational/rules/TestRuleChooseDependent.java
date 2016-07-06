@@ -1079,7 +1079,7 @@ public class TestRuleChooseDependent {
         //atomic Join criteria 2
         List atomicJoinCrits2 = Collections.EMPTY_LIST; //INDICATES CROSS JOIN
         
-        int expected = NEITHER_SIDE;
+        int expected = LEFT_SIDE;
 
         helpTestChooseSiblingAndMarkDependent(
          group1, 
