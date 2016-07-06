@@ -661,7 +661,7 @@ public class NewCalculateCostUtil {
             if (compCrit.getOperator() == CompoundCriteria.OR) {
                 cost = 0;
             } 
-            if (usesKey(compCrit, metadata)) {
+            if (isSingleTable(currentNode) && usesKey(compCrit, metadata)) {
                 return 1;
             }
             for (Criteria critPart : compCrit.getCriteria()) {
@@ -1024,7 +1024,7 @@ public class NewCalculateCostUtil {
     }
 
 	static boolean isSingleTable(PlanNode planNode) {
-		return NodeEditor.findAllNodes(planNode, NodeConstants.Types.SOURCE, NodeConstants.Types.JOIN | NodeConstants.Types.SET_OP).size() == 1;
+		return planNode.getChildCount() == 0 || NodeEditor.findAllNodes(planNode, NodeConstants.Types.SOURCE, NodeConstants.Types.JOIN | NodeConstants.Types.SET_OP).size() == 1;
 	}
     
     public static boolean usesKey(Criteria crit, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
@@ -1164,7 +1164,7 @@ public class NewCalculateCostUtil {
 		for (int i = 0; i < independentExpressions.size(); i++) {
 			Expression indExpr = (Expression)independentExpressions.get(i);
 			Collection<ElementSymbol> indElements = ElementCollectorVisitor.getElements(indExpr, true);
-			float indSymbolNDV = getNDVEstimate(independentNode, metadata, independentCardinality, indElements, false);
+			float indSymbolNDV = getNDVEstimate(independentNode, metadata, independentCardinality, indElements, null);
 			boolean unknownNDV = false;
 			if (indSymbolNDV == UNKNOWN_VALUE) {
 				indSymbolNDV = independentCardinality;
@@ -1368,22 +1368,35 @@ public class NewCalculateCostUtil {
 		return targets;
 	}
 
+	/**
+	 * 
+	 * @param indNode
+	 * @param metadata
+	 * @param cardinality
+	 * @param elems
+	 * @param useCardinalityIfUnknown - if null use only the exact cardinality, if true use closest cardinality
+	 * @return
+	 * @throws QueryMetadataException
+	 * @throws TeiidComponentException
+	 */
 	static float getNDVEstimate(PlanNode indNode,
 			QueryMetadataInterface metadata, float cardinality,
-			Collection<? extends Expression> elems, boolean useCardinalityIfUnknown) throws QueryMetadataException,
+			Collection<? extends Expression> elems, Boolean useCardinalityIfUnknown) throws QueryMetadataException,
 			TeiidComponentException {
 		if (elems == null || elems.isEmpty()) {
 			return cardinality;
 		}
 		float ndv = getStat(Stat.NDV, elems, indNode, cardinality, metadata);
 		//special handling if cardinality has been set, but not ndv
-		if (ndv == UNKNOWN_VALUE && useCardinalityIfUnknown) {
+		if (ndv == UNKNOWN_VALUE && (useCardinalityIfUnknown == null || useCardinalityIfUnknown)) {
 			Set<GroupSymbol> groups = GroupsUsedByElementsVisitor.getGroups(elems);
 			PlanNode source = FrameUtil.findOriginatingNode(indNode, groups);
 			if (source != null) {
 				ndv = getStat(Stat.NDV, elems, source, cardinality, metadata);
 				if (ndv == UNKNOWN_VALUE) {
-					ndv = source.getCardinality();
+					if (useCardinalityIfUnknown != null || source.getChildCount() == 0) {
+						ndv = source.getCardinality();
+					}
 					if (ndv != UNKNOWN_VALUE && !usesKey(source, elems, metadata)) {
 						ndv/=2; //guess that it's non-unique
 					}
@@ -1405,7 +1418,7 @@ public class NewCalculateCostUtil {
 			}
 			if (usesKey(indNode, elems, metadata)) {
 				ndv = cardinality;
-			} else if (useCardinalityIfUnknown) {
+			} else if (useCardinalityIfUnknown != null && useCardinalityIfUnknown) {
 				ndv = cardinality/2; 
 			} else {
 				return UNKNOWN_VALUE;

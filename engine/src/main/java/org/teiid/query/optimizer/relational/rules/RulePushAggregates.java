@@ -749,10 +749,6 @@ public class RulePushAggregates implements
     			continue;
         	}
         	
-        	/*if (possibleTargetNodes.size() == 1 && groupingExpressions.size() == stagedGroupingSymbols.size() && stagedGroupingSymbols.containsAll(groupingExpressions)) {
-            	throw new AssertionError();
-            }*/
-            
             if (aggregates != null) {
                 aggregates = stageAggregates(groupNode, metadata, stagedGroupingSymbols, aggregates, true);
             } else {
