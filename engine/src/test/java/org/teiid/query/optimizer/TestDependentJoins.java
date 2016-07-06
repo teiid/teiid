@@ -662,7 +662,7 @@ public class TestDependentJoins {
 
     /**
      * Defect 13448 
-     * should be one merge join and one dependent join
+     * should be one merge join and two dependent join
      * Unlike the above tests, here the model pm1 supports ORDER BY.
      */
     @Test public void testMultiMergeJoin5_defect13448() throws Exception {
@@ -687,10 +687,10 @@ public class TestDependentJoins {
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,  
             null, capFinder,
-            new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0", "SELECT g_0.e1 AS c_0 FROM pm1.g3 AS g_0 ORDER BY c_0", "SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new String[] { "SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 AS c_0 FROM pm1.g3 AS g_0 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0", "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         TestOptimizer.checkNodeTypes(plan, new int[] {
-            2,      // Access
-            1,      // DependentAccess
+            1,      // Access
+            2,      // DependentAccess
             0,      // DependentSelect
             0,      // DependentProject
             0,      // DupRemove
