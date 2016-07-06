@@ -171,6 +171,8 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	private static Pattern savepointPattern = Pattern.compile("SAVEPOINT (\\w+\\d?_*)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	private static Pattern rollbackPattern = Pattern.compile("ROLLBACK\\s*(to)*\\s*(\\w+\\d+_*)*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	
+	private static Pattern txnPattern = Pattern.compile("(BEGIN|COMMIT|ROLLBACK)(\\s+(WORK|TRANSACTION))?", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+	
 	private TeiidDriver driver;
 	private ODBCClientRemote client;
 	private Properties props;
@@ -779,8 +781,11 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		else if ((m = setPattern.matcher(sql)).matches()) {
 			return "SET " + m.group(1) + " " + m.group(2); //$NON-NLS-1$ //$NON-NLS-2$
 		}
-		else if (modified.equalsIgnoreCase("BEGIN")) { //$NON-NLS-1$
-			return "START TRANSACTION"; //$NON-NLS-1$
+		else if ((m = txnPattern.matcher(sql)).matches()) {
+			if (m.group(1).equalsIgnoreCase("BEGIN")) { //$NON-NLS-1$
+				return "START TRANSACTION"; //$NON-NLS-1$
+			}
+			return m.group(1);
 		}
 		else if ((m = rollbackPattern.matcher(modified)).matches()) {
 			return "ROLLBACK"; //$NON-NLS-1$
