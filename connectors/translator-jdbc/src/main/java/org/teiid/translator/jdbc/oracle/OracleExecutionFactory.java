@@ -1017,6 +1017,6 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     public boolean supportsSubqueryInOn() {
-    	return getVersion().compareTo(TWELVE) >= 0;
+    	return false; //even oracle 12 still has issues if a with clause is also in the source query
     }
 }
