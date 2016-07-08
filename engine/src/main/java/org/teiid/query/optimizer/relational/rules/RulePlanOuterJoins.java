@@ -147,6 +147,8 @@ public class RulePlanOuterJoins implements OptimizerRule {
     				newParent.addLastChild(childJoin.getLastChild());
     				newParent.setProperty(Info.JOIN_CRITERIA, childJoinCriteria);
     			}
+				updateGroups(newChild);
+				updateGroups(newParent);
 				join.getParent().replaceChild(join, newParent);
 				if(RuleRaiseAccess.checkConformedSubqueries(newChild.getFirstChild(), newChild, true)) {
                 	RuleRaiseAccess.raiseAccessOverJoin(newChild, newChild.getFirstChild(), modelId, capabilitiesFinder, metadata, true);                    
@@ -183,9 +185,12 @@ public class RulePlanOuterJoins implements OptimizerRule {
 					newChild.addLastChild(childJoin.getLastChild());
 					newParent.addLastChild(childJoin.getFirstChild());
     			}
+    			newChild.addGroups(newChild.getFirstChild().getGroups());
 				newChild.setProperty(Info.JOIN_CRITERIA, joinCriteria);
 				newParent.addFirstChild(newChild);
 				newParent.setProperty(Info.JOIN_CRITERIA, childJoinCriteria);
+				updateGroups(newChild);
+				updateGroups(newParent);
 				join.getParent().replaceChild(join, newParent);
                 if(RuleRaiseAccess.checkConformedSubqueries(newChild.getFirstChild(), newChild, true)) {
                 	RuleRaiseAccess.raiseAccessOverJoin(newChild, newChild.getFirstChild(), modelId, capabilitiesFinder, metadata, true);                    
@@ -194,6 +199,12 @@ public class RulePlanOuterJoins implements OptimizerRule {
     		}
     	}
     	return changedAny;
+	}
+
+	private void updateGroups(PlanNode node) {
+		node.addGroups(GroupsUsedByElementsVisitor.getGroups(node.getCorrelatedReferenceElements()));
+		node.addGroups(FrameUtil.findJoinSourceNode(node.getFirstChild()).getGroups());
+		node.addGroups(FrameUtil.findJoinSourceNode(node.getLastChild()).getGroups());
 	}
     
     private boolean isCriteriaValid(List<Criteria> joinCriteria, QueryMetadataInterface metadata, PlanNode join) {
@@ -207,6 +218,11 @@ public class RulePlanOuterJoins implements OptimizerRule {
 			}
 		}
     	return true;
+    }
+    
+    @Override
+    public String toString() {
+    	return "PlanOuterJoins"; //$NON-NLS-1$
     }
     
 }
