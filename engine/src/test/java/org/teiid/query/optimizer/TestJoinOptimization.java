@@ -1191,6 +1191,23 @@ public class TestJoinOptimization {
 	   				"SELECT g_0.e1 AS c_0, g_0.e3 AS c_1 FROM pm1.g1 AS g_0 LEFT OUTER JOIN pm1.g3 AS g_1 ON g_0.e2 = g_1.e2 ORDER BY c_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 	 }
 	
+	@Test public void testLeftOuterAssocitivtyLeftLinearSwapNested() throws Exception {
+	   	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+	   	caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
+	   	ProcessorPlan plan = TestOptimizer.helpPlan("SELECT pm1.g1.e3 from (pm1.g1 left outer join pm2.g2 on pm1.g1.e1 = pm2.g2.e1 left outer join pm1.g3 on pm1.g1.e2 = pm1.g3.e2) inner join pm3.g1 on (pm1.g1.e1 = pm3.g1.e1)", //$NON-NLS-1$
+	   			RealMetadataFactory.example1Cached(),
+	            new String[] {
+	   				"SELECT g_0.e1 AS c_0 FROM pm2.g2 AS g_0 ORDER BY c_0", 
+	   				"SELECT g_0.e1 AS c_0, g_0.e3 AS c_1 FROM pm1.g1 AS g_0 LEFT OUTER JOIN pm1.g3 AS g_1 ON g_0.e2 = g_1.e2 ORDER BY c_0", 
+	   				"SELECT g_0.e1 AS c_0 FROM pm3.g1 AS g_0 ORDER BY c_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+	   	
+	   	HardcodedDataManager hdm = new HardcodedDataManager();
+	   	hdm.addData("SELECT g_0.e1 AS c_0 FROM pm2.g2 AS g_0 ORDER BY c_0", Arrays.asList("a"));
+	   	hdm.addData("SELECT g_0.e1 AS c_0, g_0.e3 AS c_1 FROM pm1.g1 AS g_0 LEFT OUTER JOIN pm1.g3 AS g_1 ON g_0.e2 = g_1.e2 ORDER BY c_0", Arrays.asList("a", true));
+	   	hdm.addData("SELECT g_0.e1 AS c_0 FROM pm3.g1 AS g_0 ORDER BY c_0", Arrays.asList("a")); 
+	   	TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(true)});
+	 }
+	
 	//doesn't modify the plan
 	@Test public void testLeftOuterAssocitivtyLeftLinearInvalid() throws Exception {
 	   	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
@@ -1423,7 +1440,7 @@ public class TestJoinOptimization {
 	}
 	
 	@Test(expected=TeiidComponentException.class) public void testDetectInvalidSort() throws Exception {
-	    String sql = "select * from (with a (x, y, z) as /*+ no_inline */ (select e1, e2, e3 from pm1.g1) SELECT pm1.g2.e2, a.x, z from pm1.g2, a where e1 = x order by x) as x where z = 1"; //$NON-NLS-1$
+		String sql = "select * from (with a (x, y, z) as /*+ no_inline */ (select e1, e2, e3 from pm1.g1) SELECT pm1.g2.e2, a.x, z from pm1.g2, a where e1 = x order by x) as x where z = 1"; //$NON-NLS-1$
 	    
 	    FakeDataManager dataManager = new FakeDataManager();
 	    sampleData1(dataManager);
@@ -1434,4 +1451,5 @@ public class TestJoinOptimization {
 	    
 	    helpProcess(plan, createCommandContext(), dataManager, null);
 	}
+	
 }
