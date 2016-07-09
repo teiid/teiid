@@ -51,7 +51,8 @@ public class SwaggerPlugin {
         TEIID28015,
         TEIID28016,
         TEIID28017,
-        TEIID28018
+        TEIID28018,
+        TEIID28019
     }   
 
 }
