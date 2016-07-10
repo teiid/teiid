@@ -95,7 +95,7 @@ public class JsonSerializer implements SwaggerSerializer {
                     }
                     break;
                 case END_ARRAY:
-                    if (arrayLevel > objectLevel) {
+                    if (arrayLevel > objectLevel && !fieldName.empty()) {
                         fieldName.pop();
                     }
                     arrayLevel--;
