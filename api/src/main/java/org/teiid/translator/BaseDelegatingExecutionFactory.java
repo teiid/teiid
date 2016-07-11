@@ -556,4 +556,9 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public boolean supportsProcedureTable() {
 		return delegate.supportsProcedureTable();
 	}
+	@Override
+	public void start() throws TranslatorException {
+		//nothing to do
+	}
+	
 }

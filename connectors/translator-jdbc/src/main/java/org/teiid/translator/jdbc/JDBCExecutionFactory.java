@@ -221,6 +221,9 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	@Override
 	public void initCapabilities(Connection connection)
 			throws TranslatorException {
+		if (connection == null) {
+			return;
+		}
 		DatabaseMetaData metadata = null;
     	try {
 			metadata = connection.getMetaData();
@@ -230,13 +233,17 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     			setDatabaseVersion(fullVersion);
     		}
 		} catch (SQLException e) {
-			throw new TranslatorException(e);
+			if (version == null) {
+				throw new TranslatorException(e);
+			}
 		}
-    	try {
-    		supportsGeneratedKeys = metadata.supportsGetGeneratedKeys();
-    	} catch (SQLException e) {
-    		//ignore -- it's not supported
-		}
+    	if (metadata != null) {
+	    	try {
+	    		supportsGeneratedKeys = metadata.supportsGetGeneratedKeys();
+	    	} catch (SQLException e) {
+	    		//ignore -- it's not supported
+			}
+    	}
 	}
 
     @Override

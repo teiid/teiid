@@ -281,7 +281,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     	if (getVersion().compareTo(NINE_0) <= 0) {
 	        registerFunctionModifier(SourceSystemFunctions.LEFT, new LeftOrRightFunctionModifier(getLanguageFactory()));
         }
-    	if (this.postGisVersion.compareTo(Version.DEFAULT_VERSION) != 0) {
+    	if (this.postGisVersion.compareTo(Version.DEFAULT_VERSION) != 0 || connection == null) {
     		return;
     	}
     	Statement s = null;

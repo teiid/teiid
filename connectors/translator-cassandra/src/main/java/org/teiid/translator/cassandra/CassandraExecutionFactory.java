@@ -152,6 +152,9 @@ public class CassandraExecutionFactory extends ExecutionFactory<ConnectionFactor
 	@Override
 	public void initCapabilities(CassandraConnection connection)
 			throws TranslatorException {
+		if (connection == null) {
+			return;
+		}
 		if (connection.getVersion().compareTo(ProtocolVersion.V2) >= 0) {
 			this.isV2 = true;
 		}

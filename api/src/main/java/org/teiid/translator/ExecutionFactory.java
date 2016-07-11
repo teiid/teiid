@@ -133,8 +133,10 @@ public class ExecutionFactory<F, C> {
 	/**
 	 * Initialize the connector with supplied configuration
 	 */
-	@SuppressWarnings("unused")
 	public void start() throws TranslatorException {
+		if (!isSourceRequiredForCapabilities()) {
+    		initCapabilities(null);
+    	}
 	}
 	    
 	/**
@@ -262,7 +264,7 @@ public class ExecutionFactory<F, C> {
 	}
 	
 	/**
-	 * Invoked if {@link #isSourceRequiredForCapabilities()} returns true
+	 * Will be called by {@link #start()} with a null connection if a source connection is not {@link #isSourceRequiredForCapabilities()}
 	 * @param connection
 	 * @throws TranslatorException
 	 */

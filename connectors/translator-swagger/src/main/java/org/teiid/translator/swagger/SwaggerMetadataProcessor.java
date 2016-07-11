@@ -21,29 +21,7 @@
  */
 package org.teiid.translator.swagger;
 
-import io.swagger.models.HttpMethod;
-import io.swagger.models.Model;
-import io.swagger.models.Operation;
-import io.swagger.models.Path;
-import io.swagger.models.RefModel;
-import io.swagger.models.Response;
-import io.swagger.models.Scheme;
-import io.swagger.models.Swagger;
-import io.swagger.models.parameters.BodyParameter;
-import io.swagger.models.parameters.CookieParameter;
-import io.swagger.models.parameters.FormParameter;
-import io.swagger.models.parameters.HeaderParameter;
-import io.swagger.models.parameters.Parameter;
-import io.swagger.models.parameters.PathParameter;
-import io.swagger.models.parameters.QueryParameter;
-import io.swagger.models.properties.ArrayProperty;
-import io.swagger.models.properties.FileProperty;
-import io.swagger.models.properties.MapProperty;
-import io.swagger.models.properties.ObjectProperty;
-import io.swagger.models.properties.Property;
-import io.swagger.models.properties.RefProperty;
-import io.swagger.parser.SwaggerParser;
-
+import java.io.File;
 import java.sql.Blob;
 import java.util.HashMap;
 import java.util.List;
@@ -68,6 +46,29 @@ import org.teiid.translator.ws.BinaryWSProcedureExecution;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.swagger.models.HttpMethod;
+import io.swagger.models.Model;
+import io.swagger.models.Operation;
+import io.swagger.models.Path;
+import io.swagger.models.RefModel;
+import io.swagger.models.Response;
+import io.swagger.models.Scheme;
+import io.swagger.models.Swagger;
+import io.swagger.models.parameters.BodyParameter;
+import io.swagger.models.parameters.CookieParameter;
+import io.swagger.models.parameters.FormParameter;
+import io.swagger.models.parameters.HeaderParameter;
+import io.swagger.models.parameters.Parameter;
+import io.swagger.models.parameters.PathParameter;
+import io.swagger.models.parameters.QueryParameter;
+import io.swagger.models.properties.ArrayProperty;
+import io.swagger.models.properties.FileProperty;
+import io.swagger.models.properties.MapProperty;
+import io.swagger.models.properties.ObjectProperty;
+import io.swagger.models.properties.Property;
+import io.swagger.models.properties.RefProperty;
+import io.swagger.parser.SwaggerParser;
 
 public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>{
     public static final String KEY_NAME = "key_name";
@@ -109,6 +110,8 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
             allowed="CSV,SSV,TSV,PIPES,MULTI")        
     public final static String COLLECION_FORMAT = RestMetadataExtension.COLLECION_FORMAT;    
     
+    
+    private String swaggerFilePath;    
     private boolean useDefaultHost = true;
     private String preferredScheme; 
     private String preferredProduces = "application/json";
@@ -118,6 +121,16 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
     public SwaggerMetadataProcessor(SwaggerExecutionFactory ef) {
         this.ef = ef;
     }
+    
+    @TranslatorProperty(display="Swagger metadata file path", category=PropertyType.IMPORT, 
+            description="Swagger metadata file path.")
+	public String getSwaggerFilePath() {
+		return swaggerFilePath;
+	}
+
+	public void setSwaggerFilePath(String swaggerFilePath) {
+		this.swaggerFilePath = swaggerFilePath;
+	}    
     
     @TranslatorProperty(display="Use Host from Swagger File", category=PropertyType.IMPORT, 
             description="Use default host specified in the Swagger file; Defaults to true") 
@@ -541,7 +554,10 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                 
                 pp = mf.addProcedureParameter(name, type, Type.In, procedure);
                 pp.setProperty(PARAMETER_TYPE, parameter.getIn());
-                pp.setNullType(NullType.No_Nulls); // This should be set with up "allowEmptyValue" but not available
+                
+                boolean required = parameter.getRequired();
+                pp.setNullType(required ? NullType.No_Nulls : NullType.Nullable);  
+                
                 pp.setAnnotation(parameter.getDescription());
                 if (defaultValue != null) {
                     pp.setDefaultValue(defaultValue);
@@ -583,23 +599,41 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
     }
 
     protected Swagger getSchema(WSConnection conn) throws TranslatorException {
+    	Swagger swagger = null;
+    	
         try {
-            BaseQueryExecution execution = new BaseQueryExecution(this.ef, null, null, conn);
-            Map<String, List<String>> headers = new HashMap<String, List<String>>();
-            BinaryWSProcedureExecution call = execution.buildInvokeHTTP("GET", "swagger.json", null, headers); //$NON-NLS-1$ //$NON-NLS-2$
-            call.execute();
-            if (call.getResponseCode() != 200) {
-                throw new TranslatorException(SwaggerPlugin.Event.TEIID28015,
-                        SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28015,call.getResponseCode()));
-            }
-            
-            Blob out = (Blob)call.getOutputParameterValues().get(0);
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode rootNode = objectMapper.readTree(out.getBinaryStream());
-            return new SwaggerParser().read(rootNode);
+        	String swaggerFile = getSwaggerFilePath();
+        			
+        	if( swaggerFile != null &&  !swaggerFile.isEmpty()) {        		 
+                File f = new File(swaggerFile);
+
+                if(f == null || !f.exists() || !f.isFile()) {
+	                throw new TranslatorException(SwaggerPlugin.Event.TEIID28019,
+	                        SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28019, swaggerFile));
+                }
+                	
+                SwaggerParser parser = new SwaggerParser();
+                swagger =  parser.read(f.getAbsolutePath());
+        	} else {        	
+	            BaseQueryExecution execution = new BaseQueryExecution(this.ef, null, null, conn);
+	            Map<String, List<String>> headers = new HashMap<String, List<String>>();
+	            BinaryWSProcedureExecution call = execution.buildInvokeHTTP("GET", "swagger.json", null, headers); //$NON-NLS-1$ //$NON-NLS-2$
+	            call.execute();
+	            if (call.getResponseCode() != 200) {
+	                throw new TranslatorException(SwaggerPlugin.Event.TEIID28015,
+	                        SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28015,call.getResponseCode()));
+	            }
+	            
+	            Blob out = (Blob)call.getOutputParameterValues().get(0);
+	            ObjectMapper objectMapper = new ObjectMapper();
+	            JsonNode rootNode = objectMapper.readTree(out.getBinaryStream());
+	            swagger =  new SwaggerParser().read(rootNode);
+        	}
         } catch (Exception e) {
-            throw new TranslatorException(SwaggerPlugin.Event.TEIID28016,
+            throw new TranslatorException(SwaggerPlugin.Event.TEIID28016, e,
                     SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28016, e));            
         }
+        
+        return swagger;
     }
 }

@@ -37,6 +37,7 @@ import java.util.List;
 import javax.resource.ResourceException;
 import javax.resource.cci.ConnectionFactory;
 
+import org.teiid.connector.DataPlugin;
 import org.teiid.core.BundleUtil;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.BlobImpl;
@@ -140,6 +141,7 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 	public static final String GETTEXTFILES = "getTextFiles"; //$NON-NLS-1$
 	public static final String GETFILES = "getFiles"; //$NON-NLS-1$
 	public static final String SAVEFILE = "saveFile"; //$NON-NLS-1$
+	public static final String DELETEFILE = "deleteFile"; //$NON-NLS-1$
 	
 	private Charset encoding = Charset.defaultCharset();
 	private boolean exceptionIfFileNotFound = true;
@@ -222,6 +224,51 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 					return Collections.emptyList();
 				}
 			};
+		} else if (command.getProcedureName().equalsIgnoreCase(DELETEFILE)) {
+			return new ProcedureExecution() {
+				
+				@Override
+				public void execute() throws TranslatorException {
+					String filePath = (String)command.getArguments().get(0).getArgumentValue().getValue();
+					
+					if ( filePath == null) {
+						throw new TranslatorException(UTIL.getString("non_null")); //$NON-NLS-1$
+					}
+					LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Deleting", filePath); //$NON-NLS-1$
+					
+					try {
+						File f = fc.getFile(filePath);
+						if (!f.exists()) {
+							if (exceptionIfFileNotFound) {
+								throw new TranslatorException(DataPlugin.Util.gs("file_not_found", filePath)); //$NON-NLS-1$
+							}
+						} else if(!f.delete()){
+							throw new TranslatorException(UTIL.getString("error_deleting")); //$NON-NLS-1$
+						}
+						
+					} catch (ResourceException e) {
+						throw new TranslatorException(e, UTIL.getString("error_deleting")); //$NON-NLS-1$
+					}
+				}
+				
+				@Override
+				public void close() {
+				}
+				
+				@Override
+				public void cancel() throws TranslatorException {
+				}
+				
+				@Override
+				public List<?> next() throws TranslatorException, DataNotAvailableException {
+					return null;
+				}
+				
+				@Override
+				public List<?> getOutputParameterValues() throws TranslatorException {
+					return Collections.emptyList();
+				}
+			};
 		}
 		return new FileProcedureExecution(command, fc);
 	}
@@ -247,6 +294,10 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 		metadataFactory.addProcedureParameter("filePath", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p2); //$NON-NLS-1$
 		param = metadataFactory.addProcedureParameter("file", TypeFacility.RUNTIME_NAMES.OBJECT, Type.In, p2); //$NON-NLS-1$
 		param.setAnnotation("The contents to save.  Can be one of CLOB, BLOB, or XML"); //$NON-NLS-1$
+		
+		Procedure p3 = metadataFactory.addProcedure(DELETEFILE);
+		p3.setAnnotation("Delete the given file path. "); //$NON-NLS-1$
+		metadataFactory.addProcedureParameter("filePath", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p3); //$NON-NLS-1$	
 	} 
 	
 	@Override
