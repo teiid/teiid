@@ -35,6 +35,7 @@ import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
+import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
@@ -43,6 +44,7 @@ import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
@@ -263,7 +265,7 @@ public class RulePlanJoins implements OptimizerRule {
                     /*
                      * If we failed to find direct criteria, a cross join may still be acceptable
                      */
-                    if (joinCriteriaNodes.isEmpty() && (hasJoinCriteria || !canPushCrossJoin(metadata, context, accessNode1, accessNode2))) {
+                    if (joinCriteriaNodes.isEmpty() && (hasJoinCriteria || !canPushCrossJoin(metadata, accessNode1, accessNode2))) {
                     	continue;
                     }                    
                     
@@ -271,8 +273,34 @@ public class RulePlanJoins implements OptimizerRule {
                     
                     JoinType joinType = joinCriteria.isEmpty()?JoinType.JOIN_CROSS:JoinType.JOIN_INNER;
                     
+                    /*
+                     * We need to limit the heuristic grouping as we don't want to create larger source queries than necessary
+                     */
+                    boolean shouldPush = true;
+                    int sourceCount = NodeEditor.findAllNodes(accessNode1, NodeConstants.Types.SOURCE, NodeConstants.Types.SOURCE).size();
+                	sourceCount += NodeEditor.findAllNodes(accessNode2, NodeConstants.Types.SOURCE, NodeConstants.Types.SOURCE).size();
+                	
+                    if (!context.getOptions().isAggressiveJoinGrouping() && accessMap.size() > 1 && joinType == JoinType.JOIN_INNER 
+                			&& (sourceCount > 2 && (accessNode1.hasProperty(Info.MAKE_DEP) || accessNode2.hasProperty(Info.MAKE_DEP)) || sourceCount > 3) 
+                			&& !canPushCrossJoin(metadata, accessNode1, accessNode2)) {
+                		Collection<GroupSymbol> leftGroups = accessNode1.getGroups();
+                        Collection<GroupSymbol> rightGroups = accessNode2.getGroups();
+                        
+                        List<Expression> leftExpressions = new ArrayList<Expression>();
+                        List<Expression> rightExpressions = new ArrayList<Expression>();
+                        List<Criteria> nonEquiJoinCriteria = new ArrayList<Criteria>();
+                        
+                        RuleChooseJoinStrategy.separateCriteria(leftGroups, rightGroups, leftExpressions, rightExpressions, joinCriteria, nonEquiJoinCriteria);        		
+
+                        //allow a 1-1 join
+                        if (!NewCalculateCostUtil.usesKey(accessNode1, leftExpressions, metadata) 
+                        		|| !NewCalculateCostUtil.usesKey(accessNode2, rightExpressions, metadata)) {
+                        	shouldPush = false; //don't push heuristically
+                        }
+                	}
+                    
                     //try to push to the source
-                    if (RuleRaiseAccess.canRaiseOverJoin(toTest, metadata, capFinder, joinCriteria, joinType, null, context, secondPass != -1, false) == null) {
+                    if (!shouldPush || RuleRaiseAccess.canRaiseOverJoin(toTest, metadata, capFinder, joinCriteria, joinType, null, context, secondPass != -1, false) == null) {
                     	if (secondPass == - 1 && sjc != SupportedJoinCriteria.KEY && discoveredJoin == -1) {
                 			for (Criteria criteria : joinCriteria) {
                 				if (criteria instanceof CompareCriteria && ((CompareCriteria) criteria).isOptional()) {
@@ -338,13 +366,13 @@ public class RulePlanJoins implements OptimizerRule {
         }
     }
 
-	private boolean canPushCrossJoin(QueryMetadataInterface metadata, CommandContext context,
+	private boolean canPushCrossJoin(QueryMetadataInterface metadata, 
 			PlanNode accessNode1, PlanNode accessNode2)
 			throws QueryMetadataException, TeiidComponentException {
 		float cost1 = NewCalculateCostUtil.computeCostForTree(accessNode1, metadata);
 		float cost2 = NewCalculateCostUtil.computeCostForTree(accessNode2, metadata);
-		float acceptableCost = context == null? 45.0f : (float)Math.sqrt(context.getProcessorBatchSize());
-		return !((cost1 == -1 || cost2 == -1 || (cost1 > acceptableCost && cost2 > acceptableCost)));
+		float acceptableCost = 64;
+		return !((cost1 == NewCalculateCostUtil.UNKNOWN_VALUE || cost2 == NewCalculateCostUtil.UNKNOWN_VALUE || (cost1 > acceptableCost && cost2 > acceptableCost)));
 	}
 
     /**

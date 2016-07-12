@@ -38,6 +38,7 @@ public class Options {
 	public static final String SANITIZE_MESSAGES = "org.teiid.sanitizeMessages"; //$NON-NLS-1$
 	public static final String REQUIRE_COLLATION = "org.teiid.requireTeiidCollation"; //$NON-NLS-1$
 	public static final String DEFAULT_NULL_ORDER = "org.teiid.defaultNullOrder"; //$NON-NLS-1$
+	public static final String AGGRESSIVE_JOIN_GROUPING = "org.teiid.aggressiveJoinGrouping"; //$NON-NLS-1$
 
 	private Properties properties;
 	private boolean subqueryUnnestDefault = false;
@@ -47,6 +48,7 @@ public class Options {
 	private boolean sanitizeMessages;
 	private boolean requireTeiidCollation;
 	private NullOrder defaultNullOrder = NullOrder.LOW;
+	private boolean aggressiveJoinGrouping = true;
 	
 	public Properties getProperties() {
 		return properties;
@@ -144,6 +146,19 @@ public class Options {
 	
 	public Options defaultNullOrder(NullOrder b) {
 		this.defaultNullOrder = b;
+		return this;
+	}
+
+	public boolean isAggressiveJoinGrouping() {
+		return this.aggressiveJoinGrouping;
+	}
+	
+	public void setAggressiveJoinGrouping(boolean aggressiveJoinGrouping) {
+		this.aggressiveJoinGrouping = aggressiveJoinGrouping;
+	}
+	
+	public Options aggressiveJoinGrouping(boolean b) {
+		this.aggressiveJoinGrouping = b;
 		return this;
 	}
 
