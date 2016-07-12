@@ -132,4 +132,9 @@ public interface VDB extends AdminObject, DomainAware {
 	 */
 	@Override
 	public String getName();
+	
+	/**
+	 * @return the authenticationProperties(eg, user1=25;user2=25) of the vdb, which used to provide an option to Limit per user based connections
+	 */
+	public String getAuthenticationProperties();
 }

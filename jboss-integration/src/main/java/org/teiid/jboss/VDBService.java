@@ -61,6 +61,7 @@ import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
+import org.teiid.dqp.service.SessionService;
 import org.teiid.jboss.rest.ResteasyEnabler;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -74,6 +75,8 @@ import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.VDBResources;
 import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.runtime.AbstractVDBDeployer;
+import org.teiid.runtime.AuthenticationManager;
+import org.teiid.services.SessionServiceImpl;
 import org.teiid.translator.DelegatingExecutionFactory;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
@@ -93,8 +96,11 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 	// for REST deployment
 	protected final InjectedValue<ModelController> controllerValue = new InjectedValue<ModelController>();
 	
+	protected final InjectedValue<SessionService> sessionServiceValue = new InjectedValue<SessionService>();
+	
 	private VDBLifeCycleListener vdbListener;
 	private VDBLifeCycleListener restEasyListener;
+	private VDBLifeCycleListener authenticationManager;
 	private VDBResources vdbResources;
 	private ContainerLifeCycleListener shutdownListener;
 	private VDBKey vdbKey;
@@ -164,6 +170,10 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		
 		this.restEasyListener = new ResteasyEnabler(this.vdb.getName(), this.vdb.getVersion(), controllerValue.getValue(), executorInjector.getValue(), shutdownListener);
 		getVDBRepository().addListener(this.restEasyListener);
+		
+		SessionServiceImpl sessionService = (SessionServiceImpl) sessionServiceValue.getValue();
+		this.authenticationManager = new AuthenticationManager(sessionService);
+		getVDBRepository().addListener(this.authenticationManager);
 				
 		MetadataStore store = new MetadataStore();
 		
