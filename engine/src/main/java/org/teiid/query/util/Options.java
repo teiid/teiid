@@ -24,6 +24,8 @@ package org.teiid.query.util;
 
 import java.util.Properties;
 
+import org.teiid.translator.ExecutionFactory.NullOrder;
+
 /**
  * A holder for options
  */
@@ -35,6 +37,9 @@ public class Options {
 	public static final String JOIN_PREFETCH_BATCHES = "org.teiid.joinPrefetchBatches"; //$NON-NLS-1$
 	public static final String SANITIZE_MESSAGES = "org.teiid.sanitizeMessages"; //$NON-NLS-1$
 	public static final String REQUIRE_COLLATION = "org.teiid.requireTeiidCollation"; //$NON-NLS-1$
+	public static final String DEFAULT_NULL_ORDER = "org.teiid.defaultNullOrder"; //$NON-NLS-1$
+	public static final String ASSUME_MATCHING_COLLATION = "org.teiid.assumeMatchingCollation"; //$NON-NLS-1$
+	public static final String AGGRESSIVE_JOIN_GROUPING = "org.teiid.aggressiveJoinGrouping"; //$NON-NLS-1$
 
 	private Properties properties;
 	private boolean subqueryUnnestDefault;
@@ -44,6 +49,9 @@ public class Options {
 	private boolean sanitizeMessages;
 	private float dependentJoinPushdownThreshold = 0;
 	private boolean requireTeiidCollation;
+	private NullOrder defaultNullOrder = NullOrder.LOW;
+	private boolean assumeMatchingCollation = true;
+	private boolean aggressiveJoinGrouping = true;
 	
 	public Properties getProperties() {
 		return properties;
@@ -146,4 +154,16 @@ public class Options {
 		return this;
 	}
 
+	public boolean isAggressiveJoinGrouping() {
+		return this.aggressiveJoinGrouping;
+	}
+	
+	public void setAggressiveJoinGrouping(boolean aggressiveJoinGrouping) {
+		this.aggressiveJoinGrouping = aggressiveJoinGrouping;
+	}
+	
+	public Options aggressiveJoinGrouping(boolean b) {
+		this.aggressiveJoinGrouping = b;
+		return this;
+	}
 }
