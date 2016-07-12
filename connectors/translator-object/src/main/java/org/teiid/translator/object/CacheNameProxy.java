@@ -36,7 +36,7 @@ import java.util.Map;
  */
 public class CacheNameProxy {
 	
-	private Map<Object, Object> aliasMap = new HashMap<Object,Object>(2);
+	private Map<Object, Object> aliasMap = null;
 	
 	private String primaryCacheNameKey = null;
 	
@@ -44,12 +44,11 @@ public class CacheNameProxy {
 	
 	private String aliasCacheName = null;
 	
-	private Object matLock = new Object();
+	private ObjectMaterializeLifeCycle materialize = null;
 	
 	public CacheNameProxy(String primaryCacheNameKey, String stageCacheNameKey, String aliasCacheName) {
-		if (primaryCacheNameKey == null) {
-			throw new IllegalArgumentException("Program error: primaryCacheNameKey must not be null");
-		}
+		this(primaryCacheNameKey);
+
 		if (stageCacheNameKey == null) {
 			throw new IllegalArgumentException("Program error: stageCacheNameKey must not be null");
 		}
@@ -57,67 +56,112 @@ public class CacheNameProxy {
 			throw new IllegalArgumentException("Program error: aliasCacheName must not be null");
 		}
 		
-		setPrimaryCacheName(primaryCacheNameKey, primaryCacheNameKey);
+		this.stageCacheNameKey = stageCacheNameKey;
+		this.aliasCacheName = aliasCacheName;
 		
-		setStageCacheName(stageCacheNameKey, stageCacheNameKey);
+		initializeKey(this.stageCacheNameKey, this.stageCacheNameKey);
 		
-		setAliasCacheName(aliasCacheName);
+	}
+	
+	public CacheNameProxy(String primaryCacheNameKey, String stageCacheNameKey, String aliasCacheName, Map<Object, Object> aliasMap) {
+		this(primaryCacheNameKey, aliasMap);
+		
+		if (stageCacheNameKey == null) {
+			throw new IllegalArgumentException("Program error: stageCacheNameKey must not be null");
+		}
+		if (aliasCacheName == null) {
+			throw new IllegalArgumentException("Program error: aliasCacheName must not be null");
+		}
+		
+		this.stageCacheNameKey = stageCacheNameKey;
+		this.aliasCacheName = aliasCacheName;
+		
+		initializeKey(this.stageCacheNameKey, this.stageCacheNameKey);
+		
 	}
 	
 	/** instantiated when materialization isnt being performed 
 	 * @param primaryCacheName 
    **/
 	public CacheNameProxy(String primaryCacheName) {
-		setPrimaryCacheName(primaryCacheName, primaryCacheName);
+		if (primaryCacheName == null) {
+			throw new IllegalArgumentException("Program error: primaryCacheNameKey must not be null");
+		}
+
+		this.primaryCacheNameKey = primaryCacheName;
+		
+		setAliasCache( new HashMap<Object,Object>(2) );
+		
+		initializeKey(primaryCacheNameKey, primaryCacheNameKey);
+		
+		materialize = new ObjectMaterializeLifeCycle(this);
+	}
+	
+	/** instantiated when materialization isnt being performed 
+	 * @param primaryCacheName 
+	 * @param aliasMap 
+   **/
+	public CacheNameProxy(String primaryCacheName, Map<Object, Object> aliasMap) {
+		if (primaryCacheName == null) {
+			throw new IllegalArgumentException("Program error: primaryCacheNameKey must not be null");
+		}
+		
+		if (aliasMap == null) {
+			throw new IllegalArgumentException("Program error: aliasMap must not be null");
+		}
+
+		this.primaryCacheNameKey = primaryCacheName;
+		
+		setAliasCache( aliasMap );
+		
+		initializeKey(primaryCacheNameKey, primaryCacheNameKey);
+		
+		materialize = new ObjectMaterializeLifeCycle(this);
 	}
 	
 	/**
-	 * Called to initialize.  If the cache already has the aliases, then set those values
-	 * on the cacheNameProxy.   If they do not exist, generally the first time this runs, then update
-	 * the cache with the defaults.
+	 * Called to initialize.  This can be used to reset the state of the proxy.
 	 * @param cache
 	 */
-	public void initializeAliasCache(Map<Object, Object> cache) {
-		String pcn = (String) cache.get(primaryCacheNameKey);
-		if (pcn != null) {
-			setPrimaryCacheName(primaryCacheNameKey, pcn);
-		} else {
-			cache.put(primaryCacheNameKey, primaryCacheNameKey);
-			
-		}
-
-		String scn = (String) cache.get(stageCacheNameKey);
-		if (scn != null) {
-			setPrimaryCacheName(stageCacheNameKey, scn);
-		} else {
-			cache.put(stageCacheNameKey, stageCacheNameKey);
-			
-		}
+	public synchronized void initializeAliasCache(Map<Object, Object> cache) {
+		this.aliasMap = cache;
+		initializeKey(primaryCacheNameKey, primaryCacheNameKey);
+		initializeKey(stageCacheNameKey, stageCacheNameKey);
+	}
+	
+	public boolean isAliasCacheValid() {
+		if (this.aliasMap == null) return false;
+		if (this.aliasMap.isEmpty()) return false;
+		if (this.aliasMap.get(this.primaryCacheNameKey) == null) return false;
+		
+		return true;
 	}
 	
 	public boolean useMaterialization() {
 		return (this.stageCacheNameKey != null);
 	}
 	
+	public ObjectMaterializeLifeCycle getObjectMaterializeLifeCycle() {
+		return this.materialize;
+	}
+		
 	public String getPrimaryCacheKey() {
 		return this.primaryCacheNameKey;
 	}
 	
 	public String getStageCacheKey() {
 		return this.stageCacheNameKey;
-	}	
+	}
 	
-	public String getStageCacheAliasName() {
+	public synchronized String getStageCacheAliasName() {
 		return (String) aliasMap.get(getStageCacheKey());
 	}
 	
-	public String getPrimaryCacheAliasName() {
-		synchronized(matLock) {
-			return (String) aliasMap.get(getPrimaryCacheKey());
-		}		
+	public synchronized String getPrimaryCacheAliasName() {
+			return (String) aliasMap.get(getPrimaryCacheKey());	
 	}
 
-	public String getCacheName(String cacheNameKey) {
+	public synchronized String getCacheName(String cacheNameKey) {
 		return (String) aliasMap.get(cacheNameKey);
 	}
 	
@@ -125,32 +169,44 @@ public class CacheNameProxy {
 		return this.aliasCacheName;
 	}
 	
-	public void swapCacheNames( Map<Object, Object> cache){
+	public synchronized void swapCacheNames(){
 		
-		synchronized(matLock) {
-			Object scn = cache.get(stageCacheNameKey);
-			Object pcn = cache.get(primaryCacheNameKey);
+			Object scn = aliasMap.get(stageCacheNameKey);
+			Object pcn = aliasMap.get(primaryCacheNameKey);
 		
 			aliasMap.put(this.primaryCacheNameKey, scn);
 			aliasMap.put(this.stageCacheNameKey, pcn);
 
-			cache.put(primaryCacheNameKey, scn);
-			cache.put(stageCacheNameKey, pcn);
-		}	
 	}
 	
-	private void setPrimaryCacheName(String key, String alias) {
-		this.primaryCacheNameKey = key;
+	public synchronized void ensureCacheNames(){
+		
+		Object scn = aliasMap.get(stageCacheNameKey);
+		Object pcn = aliasMap.get(primaryCacheNameKey);
+		
+		if (pcn.equals(scn)) {
+			if (scn.equals(stageCacheNameKey)) {
+				aliasMap.put(stageCacheNameKey, primaryCacheNameKey);
+			} else {
+				aliasMap.put(stageCacheNameKey, stageCacheNameKey);
+			}
+		}
+
+	}
+	
+	// only set the key if its not already set, so that there is an initial state
+	private void initializeKey(String key, String alias) {
+		if (aliasMap.get(key) != null) return;
+		
 		aliasMap.put(key, alias);
+	}
+	
+	private void setAliasCache(Map<Object, Object> aliasCache) {
+		this.aliasMap = aliasCache;
+	}
+	
+	public Map<Object, Object> getAliasCache() {
+		return this.aliasMap;
 	}
 
-	private void setStageCacheName(String key, String alias) {
-		// once set, cannot be changed, can only use swapCacheNames
-		this.stageCacheNameKey = key;
-		aliasMap.put(key, alias);
-	}
-	
-	private void setAliasCacheName(String aliasCacheName) {		
-		this.aliasCacheName = aliasCacheName;
-	}	
 }
