@@ -6,10 +6,10 @@
 #
 #  Note:  The RemoteServerList host:port may have to be changed, depending on your JDG deployment.  Also, the port is based on running it locally and incrementing the ports
 
-                <resource-adapter id="infinispanRemQSDSL">
-                    <module slot="main" id="org.jboss.teiid.resource-adapter.infinispan.dsl"/>
+               <resource-adapter id="infinispanRemMatRA">
+                    <module slot="main" id="org.jboss.teiid.resource-adapter.infinispan.hotrod"/>
                     <connection-definitions>
-                        <connection-definition class-name="org.teiid.resource.adapter.infinispan.dsl.InfinispanManagedConnectionFactory" jndi-name="java:/infinispanRemoteDSL" enabled="true" use-java-context="true" pool-name="infinispanRemoteDSL">
+                        <connection-definition class-name="org.teiid.resource.adapter.infinispan.hotrod.InfinispanManagedConnectionFactory" jndi-name="java:/infinispanRemoteMat" enabled="true" use-java-context="true" pool-name="infinispanRemoteMat">
                             <config-property name="StagingCacheName">
                                 addressbook_indexed_mat
                             </config-property>
@@ -17,13 +17,13 @@
                                 aliasCache
                             </config-property>
                             <config-property name="Module">
-                                com.client.quickstart.addressbook.pojos
+                               com.client.quickstart.addressbook.remotecache.pojos
                             </config-property>
                             <config-property name="RemoteServerList">
                                 127.0.0.1:11322
                             </config-property>
                             <config-property name="CacheTypeMap">
-                                addressbook_indexed:org.jboss.as.quickstarts.datagrid.hotrod.query.domain.Person;id
+                                addressbook_indexed:com.client.quickstart.addressbook.remotecache.pojos.domain.Person;id
                             </config-property>
                         </connection-definition>
                     </connection-definitions>
