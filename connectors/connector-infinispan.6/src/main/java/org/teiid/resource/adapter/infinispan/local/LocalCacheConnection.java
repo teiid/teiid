@@ -91,7 +91,7 @@ public class LocalCacheConnection<K,V>  extends InfinispanCacheWrapper<K,V> {
 				}
 				conf.module(config.getCacheClassType());
 				
-				if (config.getCacheNameProxy().useMaterialization()) {
+				if (config.getCacheNameProxy().getStageCacheAliasName() != null) {
 					conf = cc.getCacheConfiguration(config.getCacheNameProxy().getStageCacheAliasName());
 					if (conf == null) {
 						throw new ResourceException("Program Error: cache " +  config.getCacheNameProxy().getStageCacheAliasName() + " was not configured");
@@ -118,21 +118,22 @@ public class LocalCacheConnection<K,V>  extends InfinispanCacheWrapper<K,V> {
 	@Override
 	public boolean isAlive() {		
 		if (ecm == null) return false;
-		return ecm.isRunning(config.getCacheName());
+		return ecm.isRunning(getTargetCacheName());
 	}	
+	
 
-	/**
+	/**getTargetCache()
 	 * {@inheritDoc}
 	 *
 	 * @see org.teiid.resource.adapter.infinispan.InfinispanCacheWrapper#getCache()
 	 */
 	@Override
 	public Cache getCache() {
-		if (config.getCacheName() == null) {
+		if (getTargetCacheName() == null) {
 			return ecm.getCache();
 		}
 		
-		return getCache(config.getCacheName());
+		return getCache(getTargetCacheName());
 	}
 	
 	/**
@@ -219,7 +220,7 @@ public class LocalCacheConnection<K,V>  extends InfinispanCacheWrapper<K,V> {
 	 */
 	@Override
 	public void add(Object key, Object value)  {
-		getCache(this.getConfig().getCacheNameForUpdate()).put(key, value);
+		getCache(getTargetCacheName()).put(key,value);
 	}
 
 	/**
@@ -229,7 +230,7 @@ public class LocalCacheConnection<K,V>  extends InfinispanCacheWrapper<K,V> {
 	 */
 	@Override
 	public Object remove(Object key)  {
-		return getCache(this.getConfig().getCacheNameForUpdate()).removeAsync(key);
+		return getCache(getTargetCacheName()).remove(key);
 	}
 
 	/**
@@ -239,7 +240,8 @@ public class LocalCacheConnection<K,V>  extends InfinispanCacheWrapper<K,V> {
 	 */
 	@Override
 	public void update(Object key, Object value) {
-		getCache(this.getConfig().getCacheNameForUpdate()).replace(key, value);
+		getCache(getTargetCacheName()).replace(key, value);
+
 	}
 
 	/**
@@ -248,8 +250,9 @@ public class LocalCacheConnection<K,V>  extends InfinispanCacheWrapper<K,V> {
 	 * @see org.teiid.translator.object.ObjectConnection#clearCache(java.lang.String)
 	 */
 	@Override
-	public void clearCache(String cacheName) throws TranslatorException {		
-		getCache(cacheName).clearAsync();
+	public void clearCache(String cacheName) throws TranslatorException {	
+		getCache(cacheName).clear();
+
 	}
 	
 	/**

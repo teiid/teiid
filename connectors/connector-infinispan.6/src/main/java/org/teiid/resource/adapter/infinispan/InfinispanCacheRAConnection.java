@@ -30,7 +30,7 @@ import org.teiid.resource.spi.BasicConnection;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.infinispan.cache.InfinispanCacheConnection;
 import org.teiid.translator.object.ClassRegistry;
-import org.teiid.translator.object.ObjectMaterializeLifeCycle;
+import org.teiid.translator.object.DDLHandler;
 import org.teiid.translator.object.SearchType;
 
 /**
@@ -175,11 +175,11 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @see org.teiid.translator.object.ObjectConnection#getMaterializeLifeCycle()
+	 * @see org.teiid.translator.object.ObjectConnection#getDDLHandler()
 	 */
 	@Override
-	public ObjectMaterializeLifeCycle getMaterializeLifeCycle() {
-		return cacheWrapper.getMaterializeLifeCycle();
+	public DDLHandler getDDLHandler() {
+		return cacheWrapper.getDDLHandler();
 	}
 
 	/** 

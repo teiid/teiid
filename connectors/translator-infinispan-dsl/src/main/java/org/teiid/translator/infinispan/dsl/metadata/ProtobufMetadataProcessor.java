@@ -43,6 +43,7 @@ import org.teiid.translator.TypeFacility;
 import org.teiid.translator.infinispan.dsl.InfinispanDSLConnection;
 import org.teiid.translator.infinispan.dsl.InfinispanPlugin;
 import org.teiid.translator.object.ObjectConnection;
+import org.teiid.translator.object.metadata.JavaBeanMetadataProcessor;
 
 import protostream.com.google.protobuf.Descriptors;
 
@@ -84,12 +85,12 @@ import protostream.com.google.protobuf.Descriptors;
  * 
  */
 public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnection>{
-//    @ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="Entity Class", description="Java Entity Class that represents this table", required=true)
-//    public static final String ENTITYCLASS= MetadataFactory.JPA_URI+"entity_class"; //$NON-NLS-1$
 				
 	public static final String VIEWTABLE_SUFFIX = "View"; //$NON-NLS-1$
 	public static final String OBJECT_COL_SUFFIX = "Object"; //$NON-NLS-1$
 
+	private Table rootTable = null;
+	private Method pkMethod = null;
 	
 	@Override
 	public void process(MetadataFactory metadataFactory, ObjectConnection conn) throws TranslatorException {
@@ -97,21 +98,44 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 			String cacheName = conn.getCacheName();			
 
 			Class<?> type = conn.getCacheClassType();
-			createRootTable(metadataFactory, type, ((InfinispanDSLConnection) conn).getDescriptor(), cacheName,conn);
+			boolean hasInnerClasses = false;
+			if (conn.getDDLHandler().getCacheNameProxy().getAliasCacheName() != null) {
+							
+				hasInnerClasses = createRootTable(metadataFactory, type, ((InfinispanDSLConnection) conn).getDescriptor(), cacheName,conn);
+											
+				Table stageTable = addTable(metadataFactory, type, true, true);
+							
+				stageTable.setColumns(rootTable.getColumns());
+				stageTable.setForiegnKeys(rootTable.getForeignKeys());
+				stageTable.setFunctionBasedIndexes(rootTable.getFunctionBasedIndexes());
+				stageTable.setIndexes(rootTable.getIndexes());
+				stageTable.setParent(rootTable.getParent());
+				stageTable.setSupportsUpdate(true);
+				stageTable.setUniqueKeys(rootTable.getUniqueKeys());
+				stageTable.setPrimaryKey(rootTable.getPrimaryKey());
+				stageTable.setProperty(JavaBeanMetadataProcessor.PRIMARY_TABLE_PROPERTY, rootTable.getFullName());
+			
+			} else {
+					hasInnerClasses = createRootTable(metadataFactory, type, ((InfinispanDSLConnection) conn).getDescriptor(), cacheName,conn);
+			}
+						
+			if (hasInnerClasses) {
+					addInnerClasses(metadataFactory, ((InfinispanDSLConnection) conn).getDescriptor(), conn );
+			}
 	}
 
 
-	private Table createRootTable(MetadataFactory mf, Class<?> entity, Descriptor descriptor, String cacheName, ObjectConnection conn) throws TranslatorException {
+	private boolean createRootTable(MetadataFactory mf, Class<?> entity, Descriptor descriptor, String cacheName, ObjectConnection conn) throws TranslatorException {
 			
 		String pkField = conn.getPkField();
 		boolean updatable = (pkField != null ? true : false);
 		
-		Table rootTable = addTable(mf, entity, updatable);
+		rootTable = addTable(mf, entity, updatable, false);
 		
 	    // add column for cache Object, set to non-selectable by default so that select * queries don't fail by default
 		addRootColumn(mf, Object.class, entity, null, null, SearchType.Unsearchable, rootTable.getName(), rootTable, false, false, NullType.Nullable); //$NON-NLS-1$	
 
-		Method pkMethod = null;
+		pkMethod = null;
 		if (updatable) {
 		    pkMethod = conn.getClassRegistry().getReadClassMethods(entity.getName()).get(pkField);
 		    if (pkMethod == null) {
@@ -151,20 +175,25 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 	        ArrayList<String> x = new ArrayList<String>(1) ;
 	        x.add(pkField);
 	        mf.addPrimaryKey(pkName, x , rootTable);		    
-		}
-		if (repeats) {
-			for (FieldDescriptor fd:descriptor.getFields()) {	
-				if (fd.isRepeated() ) {
-					processRepeatedType(mf,fd, rootTable, pkMethod, conn);	
-				} 
-			}	
-		}
+		}			
+		return repeats;
+	}
 			
-		return rootTable;
+	private void addInnerClasses(MetadataFactory mf, Descriptor descriptor, ObjectConnection conn) throws TranslatorException {
+			
+
+		for (FieldDescriptor fd:descriptor.getFields()) {	
+			if (fd.isRepeated() ) {
+				processRepeatedType(mf,fd, rootTable, pkMethod, conn);	
+			} 
+		}	
 	}
 	
-	private Table addTable(MetadataFactory mf, Class<?> entity, boolean updatable) {
+	private Table addTable(MetadataFactory mf, Class<?> entity, boolean updatable, boolean staging) {
 		String tName = entity.getSimpleName();
+		if (staging) {
+			tName = "ST_" + tName; //$NON-NLS-1$
+		}
 		Table t = mf.getSchema().getTable(tName);
 		if (t != null) {
 			//already loaded
@@ -213,7 +242,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25060, new Object[] { fd.getName() }));
 		}
 		
-		Table t = addTable(mf, c, true);
+		Table t = addTable(mf, c, true, false);
 		
 		// do not use getSourceName, the NameInSource has to be defined as the cache name
 		t.setNameInSource(rootTable.getNameInSource()); 

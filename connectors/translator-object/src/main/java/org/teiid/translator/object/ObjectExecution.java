@@ -39,7 +39,9 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Command;
 import org.teiid.language.DerivedColumn;
+import org.teiid.language.NamedTable;
 import org.teiid.language.Select;
+import org.teiid.language.TableReference;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
@@ -49,6 +51,7 @@ import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.object.metadata.JavaBeanMetadataProcessor;
 import org.teiid.translator.object.util.ObjectUtil;
 
 /**
@@ -249,24 +252,30 @@ public class ObjectExecution extends ObjectBaseExecution implements ResultSetExe
 
 	@Override
 	public void execute() throws TranslatorException {
-	
-		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.TRACE)) {
-			LogManager.logTrace(LogConstants.CTX_CONNECTOR,
-					"ObjectExecution command:", query.toString(), "using connection:", connection.getClass().getName()); //$NON-NLS-1$ //$NON-NLS-2$
+
+		if (visitor.getPrimaryTable() != null) {
+			connection.getDDLHandler().setStagingTarget(true);
 		}
-	    
-		// column NIS for a column will be used to query the cache
-	    List<Object> objResults = connection.getSearchType().performSearch(visitor, executionContext); 
-	    		//env.search(visitor, connection, executionContext);
-	    
-		if (objResults == null) {
-			objResults = Collections.emptyList();
+		try {
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.TRACE)) {
+				LogManager.logTrace(LogConstants.CTX_CONNECTOR,
+						"ObjectExecution command:", query.toString(), "using connection:", connection.getClass().getName()); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+		    
+			// column NIS for a column will be used to query the cache
+		    List<Object> objResults = connection.getSearchType().performSearch(visitor, executionContext); 
+		    		//env.search(visitor, connection, executionContext);
+		    
+			if (objResults == null) {
+				objResults = Collections.emptyList();
+			}
+			LogManager.logDetail(LogConstants.CTX_CONNECTOR,
+					"ObjectExecution: number of returned objects is :", objResults.size() ); //$NON-NLS-1$
+			
+			this.objResultsItr = objResults.iterator();
+		} finally {
+			connection.getDDLHandler().setStagingTarget(false);
 		}
-		LogManager.logDetail(LogConstants.CTX_CONNECTOR,
-				"ObjectExecution: number of returned objects is :", objResults.size() ); //$NON-NLS-1$
-		
-		this.objResultsItr = objResults.iterator();
-		
 	}
 	
 	@SuppressWarnings("unchecked")

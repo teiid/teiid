@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="ASCII"?>
 <xmi:XMI xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:diagram="http://www.metamatrix.com/metamodels/Diagram" xmlns:jdbc="http://www.metamatrix.com/metamodels/JDBC" xmlns:mmcore="http://www.metamatrix.com/metamodels/Core" xmlns:relational="http://www.metamatrix.com/metamodels/Relational">
-  <mmcore:ModelAnnotation xmi:uuid="mmuuid:abbd65a2-2896-4819-9428-fa8ba13a1b71" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational" modelType="PHYSICAL" ProducerName="Teiid Designer" ProducerVersion="9.1.0.Beta2-v20150624-2132-B3933">
+  <mmcore:ModelAnnotation xmi:uuid="mmuuid:abbd65a2-2896-4819-9428-fa8ba13a1b71" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational" modelType="PHYSICAL" ProducerName="Teiid Designer" ProducerVersion="10.0.1.Nightly-v20160622-1945-B8">
     <modelImports xmi:uuid="mmuuid:7c40d324-5eca-472f-a7a8-c20b01f5d848" name="SimpleDatatypes-instance" modelLocation="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance" modelType="TYPE" primaryMetamodelUri="http://www.eclipse.org/xsd/2002/XSD"/>
     <modelImports xmi:uuid="mmuuid:4414223d-d6b6-4300-87ce-4316eeb5ddcb" name="XMLSchema" modelLocation="http://www.w3.org/2001/XMLSchema" modelType="TYPE" primaryMetamodelUri="http://www.eclipse.org/xsd/2002/XSD"/>
   </mmcore:ModelAnnotation>
   <diagram:DiagramContainer xmi:uuid="mmuuid:060329df-f071-436c-91d8-8de84f4a38b3">
     <diagram xmi:uuid="mmuuid:0d512295-f6e7-418d-8409-f7e689137c68" type="packageDiagramType" target="mmuuid/abbd65a2-2896-4819-9428-fa8ba13a1b71">
       <diagramEntity xmi:uuid="mmuuid:b81484fc-8676-4c01-a0fb-8c82fdc3744d" name="Trade" modelObject="mmuuid/e4662c1d-443f-45a8-8623-8a4876ea7539" xPosition="20" yPosition="20"/>
-      <diagramEntity xmi:uuid="mmuuid:232a8473-80d4-495b-900e-415be34eef35" name="Leg" modelObject="mmuuid/e1093478-579b-4a84-ad31-8c2a0bdce936" xPosition="204" yPosition="163"/>
+      <diagramEntity xmi:uuid="mmuuid:232a8473-80d4-495b-900e-415be34eef35" name="Leg" modelObject="mmuuid/e1093478-579b-4a84-ad31-8c2a0bdce936" xPosition="429" yPosition="164"/>
+      <diagramEntity xmi:uuid="mmuuid:f7d5db68-5c8b-4be7-ba56-6268d3a328f2" name="Trade_Errors" modelObject="mmuuid/2404168a-7cde-477e-8b09-dd9263baa7ac" xPosition="20" yPosition="20"/>
     </diagram>
   </diagram:DiagramContainer>
   <mmcore:AnnotationContainer xmi:uuid="mmuuid:146acc5c-ec00-4c47-b40f-bcde7a260d72">
@@ -319,8 +320,8 @@
     </importSettings>
   </jdbc:JdbcSource>
   <relational:BaseTable xmi:uuid="mmuuid:e4662c1d-443f-45a8-8623-8a4876ea7539" name="Trade" nameInSource="Trades">
-    <columns xmi:uuid="mmuuid:73b0ec15-2abe-4f72-b25e-b9113b528b41" name="TradeObject" nameInSource="this" nativeType="" length="4000" nullable="NULLABLE_UNKNOWN" caseSensitive="false" searchability="UNSEARCHABLE" radix="0" signed="false" distinctValueCount="0" nullValueCount="0">
-      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#XMLLiteral"/>
+    <columns xmi:uuid="mmuuid:73b0ec15-2abe-4f72-b25e-b9113b528b41" name="TradeObject" nameInSource="this" nativeType="var_binary" length="4000" nullable="NULLABLE_UNKNOWN" defaultValue="" collationName="" caseSensitive="false" searchability="UNSEARCHABLE" radix="0" signed="false" distinctValueCount="0">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
     </columns>
     <columns xmi:uuid="mmuuid:7ad19ea9-1751-49e0-89c7-e759dd50ff46" name="TradeID" nameInSource="tradeId" nativeType="long" uniqueKeys="mmuuid/6bee1ce8-0ac1-4ee0-a0a8-d200e2936b86">
       <type href="http://www.w3.org/2001/XMLSchema#long"/>
@@ -350,5 +351,26 @@
       <type href="http://www.w3.org/2001/XMLSchema#date"/>
     </columns>
     <foreignKeys xmi:uuid="mmuuid:bcc9abfb-bfc4-4102-9505-66f1667e5efd" name="FK_TradeId" nameInSource="legs" columns="mmuuid/3b7be33a-2e50-4c79-9cdc-13d7b166a2d2" uniqueKey="mmuuid/6bee1ce8-0ac1-4ee0-a0a8-d200e2936b86"/>
+  </relational:BaseTable>
+  <relational:BaseTable xmi:uuid="mmuuid:2404168a-7cde-477e-8b09-dd9263baa7ac" name="Trade_Errors" nameInSource="Trade_Errors">
+    <columns xmi:uuid="mmuuid:5aafafd0-dcf5-4d1d-9977-d6024d6b0260" name="TradeObject" nameInSource="this" nativeType="var_binary" length="4000" nullable="NULLABLE_UNKNOWN" defaultValue="" collationName="" caseSensitive="false" searchability="UNSEARCHABLE" radix="0" signed="false" distinctValueCount="0">
+      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:333489ca-63ea-47f9-860f-a0f75573e650" name="TradeID" nameInSource="tradeId" nativeType="long" uniqueKeys="mmuuid/7391b873-c70b-40f9-9017-11c28a686a55">
+      <type href="http://www.w3.org/2001/XMLSchema#long"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:b9798e5b-e3aa-492f-93c9-9861f5bfef11" name="TradeName" nameInSource="name">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:adbd034d-75ec-498a-8f75-8f386869d23c" name="Settled" nameInSource="settled" nativeType="boolean">
+      <type href="http://www.w3.org/2001/XMLSchema#boolean"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:1529660e-939c-4042-8059-f760545667d7" name="TradeDate" nameInSource="tradeDate" nativeType="java.util.Date">
+      <type href="http://www.w3.org/2001/XMLSchema#date"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:19eb9a3f-4d65-4f5b-a7f9-e5996a365d7c" name="CustomerId" nameInSource="customerId">
+      <type href="http://www.w3.org/2001/XMLSchema#long"/>
+    </columns>
+    <primaryKey xmi:uuid="mmuuid:7391b873-c70b-40f9-9017-11c28a686a55" name="PK_ID" columns="mmuuid/333489ca-63ea-47f9-860f-a0f75573e650"/>
   </relational:BaseTable>
 </xmi:XMI>

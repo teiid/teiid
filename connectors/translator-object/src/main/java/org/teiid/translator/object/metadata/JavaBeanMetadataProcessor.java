@@ -34,6 +34,7 @@ import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.MetadataException;
+import org.teiid.metadata.ExtensionMetadataProperty;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.translator.MetadataProcessor;
@@ -49,6 +50,13 @@ import org.teiid.translator.object.ObjectPlugin;
  */
 public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnection>{
 	
+	private static final String PRIMARY_TABLE="primary_table"; //$NON-NLS-1$
+
+	public static final String OBJECT_URI = "{http://www.teiid.org/translator/object/2016}"; //$NON-NLS-1$
+	
+    @ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="Primary Table", description="Indicates the primary table that this staging table is used for", required=true)
+    public static final String PRIMARY_TABLE_PROPERTY= OBJECT_URI+PRIMARY_TABLE; //$NON-NLS-1$
+
 	public static final String GET = "get"; //$NON-NLS-1$
 	public static final String IS = "is"; //$NON-NLS-1$
 		
@@ -57,6 +65,7 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 	
 	protected boolean isUpdatable = false;
 	protected boolean useAnnotations = false;
+	protected Table rootTable = null;
 	
 	public JavaBeanMetadataProcessor(boolean useAnnotations) {
 		this.useAnnotations = useAnnotations;
@@ -67,10 +76,14 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 		String cacheName = conn.getCacheName();			
 
 		Class<?> type = conn.getCacheClassType();
-		createSourceTable(mf, type, cacheName, conn);
+		rootTable = createSourceTable(mf, type, cacheName, conn, false);
+		
+		if (conn.getDDLHandler().getCacheNameProxy().getAliasCacheName() != null) {
+			createSourceTable(mf, type, cacheName, conn, true);
+		}
 	}
 	
-	private Table createSourceTable(MetadataFactory mf, Class<?> entity, String cacheName, ObjectConnection conn ) {
+	private Table createSourceTable(MetadataFactory mf, Class<?> entity, String cacheName, ObjectConnection conn, boolean staging ) {
 
 		ClassRegistry registry = conn.getClassRegistry();
 		
@@ -78,6 +91,9 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 		setIsUpdateable(pkField != null ? true : false);
 			
 		String tableName = getTableName(entity);
+		if (staging) {
+			tableName = "ST_" + tableName; //$NON-NLS-1$
+		}
 		Table table = mf.getSchema().getTable(tableName);
 		if (table != null) {
 			//TODO: probably an error
@@ -85,7 +101,6 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 		}
 		table = mf.addTable(tableName);
 		table.setSupportsUpdate(this.isUpdatable);
-//		table.setNameInSource(cacheName); 
 		
 		String columnName = tableName + OBJECT_COL_SUFFIX;
 		addColumn(mf, entity, entity, columnName, "this", SearchType.Unsearchable, table, false, NullType.Nullable, false); //$NON-NLS-1$
@@ -137,7 +152,7 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 		}
 		
 		for (Map.Entry<Method, String> entry : methodsToAdd.entrySet()) {
-			Method m = (Method) entry.getKey();
+			Method m = entry.getKey();
 	
 				SearchType st = SearchType.Unsearchable;
 				
@@ -166,6 +181,11 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 				}
 				
 				addColumn(mf, entity, m.getReturnType(), entry.getValue(), entry.getValue(), st, table, true, nt, this.isUpdatable);			
+		}
+		
+		if (staging) {
+			table.setProperty(PRIMARY_TABLE_PROPERTY, rootTable.getFullName());
+
 		}
 				
 		return table;

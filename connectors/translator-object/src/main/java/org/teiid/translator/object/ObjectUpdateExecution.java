@@ -51,6 +51,7 @@ import org.teiid.language.SetClause;
 import org.teiid.language.Update;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.query.eval.TeiidScriptEngine;
@@ -73,9 +74,6 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 	private Command command;
 	private Class<?> clz =  null;
 	
-	// the assumption is materialization will on be to do inserts, single or batch.  No updates or deletes will be in the commands
-	private boolean useForMat = false;
-	
 	private String tablename = null;
 
 	private int[] result;
@@ -85,9 +83,6 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 			ObjectExecutionFactory env) {
 		super(connection, context, env);
 		this.command = command;
-		
-		useForMat = connection.getMaterializeLifeCycle().getCacheNameProxy().useMaterialization();
-		
 	}
 
 	// ===========================================================================================================================
@@ -135,30 +130,43 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 		Map<String, Method> writeMethods = classRegistry.getWriteClassMethods(clz.getSimpleName());
 		
 		int cnt = 0;
-		if (command instanceof Update) {
-			cnt = handleUpdate((Update) command, visitor, classRegistry, writeMethods);
-			
-		} else if (command instanceof Delete) {
-			cnt = handleDelete((Delete) command, visitor);
-			
-		} else if (command instanceof Insert) {
-			cnt = handleInsert((Insert) command, visitor, clz, writeMethods);
-			
-		} else {
-			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21004, new Object[] {command.getClass().getName()}));
+		try {
+			if (command instanceof Update) {
+				if (visitor.getPrimaryTable() != null) {
+					this.connection.getDDLHandler().setStagingTarget(true);
+				}
+				cnt = handleUpdate((Update) command, visitor, classRegistry, writeMethods);
+				
+			} else if (command instanceof Delete) {
+				if (visitor.getPrimaryTable() != null) {
+					this.connection.getDDLHandler().setStagingTarget(true);
+				}
+				cnt = handleDelete((Delete) command, visitor);
+				
+			} else if (command instanceof Insert) {
+				if (visitor.getPrimaryTable() != null) {
+					this.connection.getDDLHandler().setStagingTarget(true);
+				}
+				cnt = handleInsert((Insert) command, visitor, clz, writeMethods);
+				
+			} else {
+				throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21004, new Object[] {command.getClass().getName()}));
+			}
+		} finally {
+			this.connection.getDDLHandler().setStagingTarget(false);
 		}
 		return cnt;
 	}
-	
+
 	private Class<?> getRegisteredClass(ClassRegistry classRegistry, ObjectVisitor visitor) throws TranslatorException {
-		String tname = visitor.getTable().getName();
+		String tname = (visitor.getPrimaryTable() != null ? visitor.getPrimaryTable() :  visitor.getTableName());
 		if (tablename != null && tablename.equals(tname) ) {
 			return clz;
 		}
 		tablename = tname;
-		Class<?> clz = classRegistry.getRegisteredClassUsingTableName(tname);
+		clz = classRegistry.getRegisteredClassUsingTableName(tname);
 		if (clz == null) {
-			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21005, new Object[] {visitor.getTable().getName()}));
+			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21005, new Object[] {visitor.getTableName()}));
 		}
 		return clz;
 	}
@@ -172,9 +180,7 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 			entity = clz.newInstance();
 		} catch (Exception e) {
 			throw new TranslatorException(e);
-		} 
-
-		NamedTable rootTable = visitor.getTable();
+		}  
 
 		// first determine if the table to be inserted into has a foreign key relationship, which
 		// would then be considered a child table, otherwise it must have a primary key
@@ -189,7 +195,7 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 		keyCol = visitor.getPrimaryKeyCol();
 		
 		if (keyCol == null) {
-			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21006, new Object[] {"insert", rootTable.getName()}));
+			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21006, new Object[] {"insert", visitor.getTableName()}));
 		}
 
 		List<ColumnReference> columns = visitor.getInsert().getColumns();
@@ -226,15 +232,15 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 		
 		keyValue = convertKeyValue(keyValue, keyCol);
 		
-		// don't perform a search when doing inserts for materialization, its assume a cleared cache
-		if (!useForMat) {
-			Object rootObject = connection.getSearchType().performKeySearch(ObjectUtil.getRecordName(keyCol), keyValue, executionContext) ;
-					//env.performKeySearch(ObjectUtil.getRecordName(keyCol), keyValue, connection, executionContext);
-	
-			if (rootObject != null) {
-				throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21007, new Object[] {insert.getTable().getName(), keyValue}));
-			}
-		}		
+		//TODO: for 1.8 use putIfAbsent
+		
+		Object rootObject = connection.getSearchType().performKeySearch(ObjectUtil.getRecordName(keyCol), keyValue, executionContext) ;
+				//env.performKeySearch(ObjectUtil.getRecordName(keyCol), keyValue, connection, executionContext);
+
+		if (rootObject != null) {
+			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21007, new Object[] {insert.getTable().getName(), keyValue}));
+		}
+		
 		connection.add(keyValue, entity);
 
 		return 1;
@@ -245,7 +251,6 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 
 		ForeignKey fk = visitor.getForeignKey();
 
-		NamedTable rootTable = visitor.getTable();
 		String fkeyColNIS = visitor.getForeignKeyNameInSource();
 		
 		List<ColumnReference> columns = visitor.getInsert().getColumns();
@@ -288,7 +293,7 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 				//env.performKeySearch(fkeyColNIS, fkeyValue, connection, executionContext);
 
 		if (rootObject == null) {
-			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21015, new Object[] {fkeyValue, rootTable.getName()}));
+			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21015, new Object[] {fkeyValue, visitor.getTableName()}));
 		}
 		Object childrenObjects = this.evaluate(rootObject, fk_nis, connection.getClassRegistry().getReadScriptEngine());
 			
@@ -304,7 +309,7 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 				writeColumnData(rootObject, fk_nis, c, rootwriteMethods);
 
 			} else if (Map.class.isAssignableFrom(childrenObjects.getClass())) {
-				throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21008, new Object[] {rootTable.getName()}));
+				throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21008, new Object[] {visitor.getTableName()}));
 
 			} else if (childrenObjects.getClass().isArray()) {
 				Object[] a = (Object[]) childrenObjects;
@@ -327,9 +332,7 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 
 	// Private method to actually do a delete operation. 
 	private int handleDelete(Delete delete, ObjectVisitor visitor) throws TranslatorException {
-		
-		NamedTable rootTable = visitor.getTable();
-		
+				
 		// if this is the root class (no foreign key), then for each object, obtain
 		// the primary key value and use it to be removed from the cache
 
@@ -342,7 +345,7 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 		List<Object> toDelete = connection.getSearchType().performSearch(visitor, executionContext) ;
 				//env.search(visitor, connection, executionContext);
 		if (toDelete == null || toDelete.isEmpty()) {
-			LogManager.logWarning(LogConstants.CTX_CONNECTOR, ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21013, new Object[] {rootTable.getName(), visitor.getWhereCriteria()}));
+			LogManager.logWarning(LogConstants.CTX_CONNECTOR, ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21013, new Object[] {visitor.getTableName(), visitor.getWhereCriteria()}));
 			return 0;
 		}
 		int cnt = 0;
@@ -360,9 +363,9 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 				Object removed = connection.remove(v);
 				if (removed == null) {
 					if (connection.get(v) == null) {
-						LogManager.logWarning(LogConstants.CTX_CONNECTOR, ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21013, new Object[] {rootTable.getName(), v}));
+						LogManager.logWarning(LogConstants.CTX_CONNECTOR, ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21013, new Object[] {visitor.getTableName(), v}));
 					} 
-					throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21012, new Object[] {rootTable.getName(), v}));
+					throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21012, new Object[] {visitor.getTableName(), v}));
 						
 				}
 				++cnt;
@@ -443,8 +446,6 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 
 	// Private method to actually do an update operation. 
 	private int handleUpdate(Update update, ObjectVisitor visitor, ClassRegistry classRegistry, Map<String, Method> writeMethods) throws TranslatorException {
-		NamedTable rootTable = visitor.getTable();
-		
 		// Find all the objects that meet the criteria for updating
 		List<Object> toUpdate = connection.getSearchType().performSearch(visitor, executionContext) ;
 				//env.search(visitor, connection, executionContext);
@@ -479,7 +480,7 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 					Object value = sc.getValue();
 					
 					if ( keyCol.getName().equals(column.getName()) ) {
-						throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21009, new Object[] {keyCol.getName(),rootTable.getName()}));						
+						throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21009, new Object[] {keyCol.getName(),visitor.getTableName()}));						
 					}
 					
 					if (value instanceof Literal) {
@@ -554,6 +555,17 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 
 			Method m = writeMethods.get(nameInSource);
 			if (m == null) {
+				m = writeMethods.get(nameInSource.toLowerCase());
+
+			}
+
+			if (m == null) {
+				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.TRACE)) {
+					LogManager.logTrace(LogConstants.CTX_CONNECTOR,
+							"ObjectUpdateExecution API name :",entity.getClass().getName()); //$NON-NLS-1$
+					//ClassRegistry.print(writeMethods);
+				}
+				
 				throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21010, new Object[] {entity.getClass().getSimpleName(), nameInSource}));
 
 			}

@@ -31,6 +31,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +39,7 @@ import java.util.Map;
 import javax.script.ScriptException;
 
 import org.teiid.core.util.LRUCache;
+import org.teiid.core.util.StringUtil;
 import org.teiid.query.eval.TeiidScriptEngine;
 import org.teiid.translator.TranslatorException;
 
@@ -134,20 +136,23 @@ public class ClassRegistry {
      * @throws Exception
      */
 	public static Object executeSetMethod(Method m, Object api, Object arg) throws Exception {
-        
-    	List<Object> args = new ArrayList<Object>(1);
-    	args.add(arg);
+
+		final Class<?> argType = m.getParameterTypes()[0];
+		Object[] params = new Object[] {arg};
+		if (arg != null && !argType.isAssignableFrom(arg.getClass())) {
+			params = new Object[] {StringUtil.valueOf(arg.toString(), argType)};
+		}
+
     	try {
-    		return m.invoke(api, args.toArray());
+    		return m.invoke(api, params);
     	} catch (java.lang.IllegalArgumentException ia) {
-    		String msg = "Unable to execute method, invalid argument: (api) " + api.getClass().getName() + " (method) " + m.getName() + " (methodarg) " +  m.getParameterTypes().toString() + " (arg) " + arg.getClass().getName(); 
-    				//ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21000, "write", "table:" + tableName);
-    		throw new TranslatorException(msg);
+    		
+			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21016, new Object[] {(arg != null ? arg : "Null"), m.getName(), api.getClass().getName(), argType.getName() }));
     		
     	}
     } 
     
-    private static Map<String, Method> getWriteMethodMap(Class<?> clazz) throws TranslatorException {
+    public  Map<String, Method> getWriteMethodMap(Class<?> clazz) throws TranslatorException {
     	LinkedHashMap<String, Method> methodMap = new LinkedHashMap<String, Method>();
     	
 		try {
@@ -160,32 +165,24 @@ public class ClassRegistry {
 					if (pd.getWriteMethod() == null || pd instanceof IndexedPropertyDescriptor) {
 						continue;
 					}
-					String name = pd.getName();
-						Method m = pd.getWriteMethod();
-						methodMap.put(name, m);
-					if (name.startsWith("set")) {
+//					String name = pd.getName();
+					Method m = pd.getWriteMethod();
 						
-						String nname = name.substring( 3 );
-						methodMap.put(nname.toLowerCase(), m);
-
-					}
+					registerWriteMethod(m, methodMap);
+						
 				}
 			}
 			MethodDescriptor[] mds = info.getMethodDescriptors();
 			if (pds != null) {
 				for (int j = 0; j < mds.length; j++) {
 					MethodDescriptor md = mds[j];
-					if (md.getMethod() == null || md.getMethod().getParameterTypes().length !=1 || (md.getMethod().getReturnType() != Void.class && md.getMethod().getReturnType() != void.class)) {
+								
+					if (md.getMethod() == null ) {
 						continue;
 					}
-					String name = md.getName();
-						Method m = md.getMethod();
-						methodMap.put(name, m);
-					if (name.startsWith("set")) {
 					
-						String nname = name.substring( 3 );
-						methodMap.put(nname.toLowerCase(), m);
-					}
+					registerWriteMethod(md.getMethod(), methodMap);
+
 				}
 			}
 
@@ -195,6 +192,20 @@ public class ClassRegistry {
 		return methodMap;
 	}
     
+    private void registerWriteMethod(Method method, LinkedHashMap<String, Method> methodMap) {
+		String name = method.getName();
+		
+		if (! name.startsWith("set") || method.getParameterTypes().length !=1 || (method.getReturnType() != Void.class && method.getReturnType() != void.class)) {
+			return;
+		}
+
+		methodMap.put(name, method);
+		
+		String nname = name.substring( 3 );
+		methodMap.put(nname.toLowerCase(), method);
+	
+    }
+    
     public void cleanUp() {
     	registeredClasses.clear();
     	tableNameClassMap.clear();
@@ -203,5 +214,18 @@ public class ClassRegistry {
 
     }
 
+    /**
+     * Utility method for debugging to print out the key and methods for a class
+     * @param m
+     */
+    public static void print(Map m) {
+    	Iterator<Object> i = m.keySet().iterator();
+    	while (i.hasNext()) {
+    		Object k = (Object) i.next();
+    		Method v = (Method) m.get(k);
+    		System.out.println("---- " + k.toString() + ":" + v.getName());
+    	}
 
+
+    }
 }
