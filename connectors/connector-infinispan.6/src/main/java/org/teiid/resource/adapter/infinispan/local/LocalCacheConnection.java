@@ -219,7 +219,11 @@ public class LocalCacheConnection<K,V>  extends InfinispanCacheWrapper<K,V> {
 	 */
 	@Override
 	public void add(Object key, Object value)  {
-		getCache(this.getConfig().getCacheNameForUpdate()).put(key, value);
+		if (getMaterializeLifeCycle().hasStarted()) {
+			getCache(config.getCacheStagingName()).put(key, value);
+		} else {
+			getCache(config.getCacheName()).put(key, value);
+		}
 	}
 
 	/**
@@ -229,7 +233,10 @@ public class LocalCacheConnection<K,V>  extends InfinispanCacheWrapper<K,V> {
 	 */
 	@Override
 	public Object remove(Object key)  {
-		return getCache(this.getConfig().getCacheNameForUpdate()).removeAsync(key);
+		if (getMaterializeLifeCycle().hasStarted()) {
+			return getCache(config.getCacheStagingName()).removeAsync(key);
+		}
+		return getCache(config.getCacheName()).removeAsync(key);
 	}
 
 	/**
@@ -239,7 +246,11 @@ public class LocalCacheConnection<K,V>  extends InfinispanCacheWrapper<K,V> {
 	 */
 	@Override
 	public void update(Object key, Object value) {
-		getCache(this.getConfig().getCacheNameForUpdate()).replace(key, value);
+		if (getMaterializeLifeCycle().hasStarted()) {
+			getCache(config.getCacheStagingName()).replace(key, value);
+		} else {
+			getCache(config.getCacheName()).replace(key, value);
+		}
 	}
 
 	/**
@@ -248,8 +259,12 @@ public class LocalCacheConnection<K,V>  extends InfinispanCacheWrapper<K,V> {
 	 * @see org.teiid.translator.object.ObjectConnection#clearCache(java.lang.String)
 	 */
 	@Override
-	public void clearCache(String cacheName) throws TranslatorException {		
-		getCache(cacheName).clearAsync();
+	public void clearCache(String cacheName) throws TranslatorException {	
+		if (getMaterializeLifeCycle().hasStarted()) {
+			getCache(config.getCacheStagingName()).clear();
+		} else {
+			getCache(cacheName).clear();
+		}	
 	}
 	
 	/**

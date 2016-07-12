@@ -214,8 +214,11 @@ public class RemoteCacheConnection<K,V>  extends InfinispanCacheWrapper<K,V> {
 	 */
 	@Override
 	public void add(Object key, Object value)  {
-		getCache(this.getConfig().getCacheNameForUpdate()).put(key, value);
-	}
+		if (getMaterializeLifeCycle().hasStarted()) {
+			getCache(config.getCacheStagingName()).put(key, value);
+		} else {
+			getCache(config.getCacheName()).put(key, value);
+		}	}
 
 	/**
 	 * {@inheritDoc}
@@ -224,7 +227,10 @@ public class RemoteCacheConnection<K,V>  extends InfinispanCacheWrapper<K,V> {
 	 */
 	@Override
 	public Object remove(Object key)  {
-		return getCache(this.getConfig().getCacheNameForUpdate()).removeAsync(key);
+		if (getMaterializeLifeCycle().hasStarted()) {
+			return getCache(config.getCacheStagingName()).removeAsync(key);
+		}
+		return getCache(config.getCacheName()).removeAsync(key);
 	}
 
 	/**
@@ -234,7 +240,11 @@ public class RemoteCacheConnection<K,V>  extends InfinispanCacheWrapper<K,V> {
 	 */
 	@Override
 	public void update(Object key, Object value) {
-		getCache(this.getConfig().getCacheNameForUpdate()).replace(key, value);
+		if (getMaterializeLifeCycle().hasStarted()) {
+			getCache(config.getCacheStagingName()).replace(key, value);
+		} else {
+			getCache(config.getCacheName()).replace(key, value);
+		}
 	}
 
 
@@ -245,7 +255,12 @@ public class RemoteCacheConnection<K,V>  extends InfinispanCacheWrapper<K,V> {
 	 */
 	@Override
 	public void clearCache(String cacheName) throws TranslatorException {
-		RemoteCache cache = getCache(cacheName);
+                RemoteCache cache = null;
+		if (getMaterializeLifeCycle().hasStarted()) {
+			cache = getCache(config.getCacheStagingName());
+		} else {
+			cache = getCache(cacheName);
+		}	
 
 		Map<Object, Object> c = cache.getBulk();
 		List<Object> results = new ArrayList<Object>();

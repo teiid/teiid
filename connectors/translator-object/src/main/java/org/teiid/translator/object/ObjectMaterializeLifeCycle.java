@@ -22,7 +22,6 @@
 package org.teiid.translator.object;
 
 import java.util.List;
-import java.util.Map;
 
 import org.teiid.core.util.StringUtil;
 import org.teiid.logging.LogConstants;
@@ -30,43 +29,63 @@ import org.teiid.logging.LogManager;
 import org.teiid.translator.TranslatorException;
 
 /**
- * The ObjectMaterializeLifeCycle is used to control life cycle behavior that needs to be performed at the different stages 
- * of when object materialization is being performed.
+ * The ObjectMaterializeLifeCycle is used to control life cycle behavior that needs to be performed at different stages 
+ * of the materialization process being performed.   This object is designed to have a single instance per resource-adapter 
+ * and used for any connection so that at any time, it can be determined at what stage the materialization process is in
+ * for that particular data source.
  * 
  * @author vanhalbert
  *
  */
 public class ObjectMaterializeLifeCycle {
 	
-	public static String BEFORE_NATIVE_QUERY_PREFIX = "truncate cache"; // example:  truncate cache personStageCache 
-	public static String AFTER_NATIVE_QUERY_PREFIX = "swap cache names"; // example:  swap cache names personCache personStageCache 
-
-	private static String BEFORE_FORMAT = "truncate cache";
-	private static String AFTER_FORMAT = "swap cache names";
-
-	private static List<String> BEFORENODES = StringUtil.getTokens( BEFORE_NATIVE_QUERY_PREFIX, " ");
-	private static List<String> AFTERNODES  = StringUtil.getTokens( AFTER_NATIVE_QUERY_PREFIX, " ");
-	
-	
-	private ObjectConnection connection;
-	private CacheNameProxy proxy;
-	
-	public ObjectMaterializeLifeCycle(ObjectConnection connection, CacheNameProxy proxy) {
-		this.connection = connection;
-		this.proxy = proxy;
-		
+	enum Stage {
+		INACTIVE,
+		START_BEFORE,
+		END_BEFORE,
+		START_LOAD,
+		END_LOAD,
+		START_AFTER
 	}
 	
-	protected ObjectConnection getConnection() {
-		return this.connection;
+	public static String BEFORE_FORMAT = "truncate cache";
+	public static String AFTER_FORMAT = "swap cache names";
+	public static String RESET_FORMAT = "reset";
+
+	private static List<String> BEFORENODES = StringUtil.getTokens( BEFORE_FORMAT, " ");
+	private static List<String> AFTERNODES  = StringUtil.getTokens( AFTER_FORMAT, " ");
+
+	
+	private CacheNameProxy proxy;
+	private Stage currentStage=Stage.INACTIVE;
+	
+	public ObjectMaterializeLifeCycle(CacheNameProxy proxy) {
+		this.proxy = proxy;
+		
 	}
 	
 	public CacheNameProxy getCacheNameProxy() {
 		return this.proxy;
 	}
+	
+	public Stage getCurrentStage() {
+		return currentStage;
+	}
+	
+	public boolean hasStarted() {
+		return (currentStage != Stage.INACTIVE);
+	}
+	
+	public boolean isLoading() {
+		return (currentStage == Stage.START_LOAD);
+	}
 		
-	public void performLifeCycleStep(String nativeQuery) throws TranslatorException {
-		if (isBefore(nativeQuery)) {
+	public synchronized void performLifeCycleStep(String nativeQuery, ObjectConnection connection) throws TranslatorException {
+		if (nativeQuery.trim().toLowerCase().startsWith(BEFORE_FORMAT)) {
+			// its assumed the materialize process will not allow multiple executions to occur at the same time by checking
+			// the status table.  Therefore, if it does execute this matview process, then the "IsBefore" step will
+			// reset at the beginning
+
 			LogManager.logDetail(LogConstants.CTX_CONNECTOR,
 					"ObjectMaterializeLifeCycle: performing beforeLoad materializatiion :", nativeQuery ); //$NON-NLS-1$
 			
@@ -80,9 +99,9 @@ public class ObjectMaterializeLifeCycle {
 				throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21301, new Object[] {nativeQuery, BEFORE_FORMAT}));						
 			}
 			
-			beforeMaterialiationOnCache();
+			beforeMaterialiationOnCache(connection);
 			
-		} else if (isAfter(nativeQuery)) {
+		} else if (nativeQuery.trim().toLowerCase().startsWith(AFTER_FORMAT)) {
 			LogManager.logDetail(LogConstants.CTX_CONNECTOR,
 					"ObjectMaterializeLifeCycle: performing afterLoad materializatiion :", nativeQuery ); //$NON-NLS-1$
 
@@ -96,10 +115,15 @@ public class ObjectMaterializeLifeCycle {
 				
 			}
 
-			afterMaterialiationOnCache();
+			afterMaterialiationOnCache(connection);
 			
+		} else if (nativeQuery.trim().toLowerCase().startsWith(RESET_FORMAT)) {
+			reset();
+			LogManager.logDetail(LogConstants.CTX_CONNECTOR,
+					"ObjectMaterializeLifeCycle: performing reset "); //$NON-NLS-1$
+
 		} else {
-			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21302, new Object[] {nativeQuery, "[" + BEFORE_NATIVE_QUERY_PREFIX + "," +  AFTER_NATIVE_QUERY_PREFIX + "]"}));
+			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21302, new Object[] {nativeQuery, "[" + BEFORE_FORMAT + "," +  AFTER_FORMAT + "]"}));
 
 		}
 	}
@@ -110,61 +134,42 @@ public class ObjectMaterializeLifeCycle {
 	 * the following:
 	 * <li>Clear the staging cache
 	 * <li>Adding key->value entry to AliasCache, if it doesn't exist
-	 * @throws TranslatorException if the staging cache cannot be determined or is not available
+	 * @param connection 
+	 * @throws TranslatorException if the staging cache cannot be determined or is not avaiCommandContext lable
 	 */
-	protected void beforeMaterialiationOnCache() throws TranslatorException {
+	private void beforeMaterialiationOnCache(ObjectConnection connection) throws TranslatorException {
+		this.currentStage = Stage.START_BEFORE;
+		
+		proxy.ensureCacheNames();
+		
 		String scn = this.getCacheNameProxy().getStageCacheAliasName();
 		
-		this.connection.clearCache(scn);
-	}
-	
-	/**
-	 * Returns the boolean true if the native query is to be performed in the beforeLoad lifecycle step.
-	 * @param nativeQuery 
-	 * @return boolean true if the nativeQuery is for the beforeLoad lifecycle step
-	 */
-	public boolean isBefore(String nativeQuery) {
-		if (nativeQuery.trim().toLowerCase().startsWith(BEFORE_NATIVE_QUERY_PREFIX)) {
-			return true;
-		}
-		return false;
+		connection.clearCache(scn);
+		
+		this.currentStage = Stage.END_BEFORE;
 	}
 
 	/**
 	 * Call after the actual materialization is performed as the afterLoad lifecycle step.  The following will be done:
 	 * <li>swap the cache names in the AliasCache so that the newly populated staging cache is now the cache used for querying
 	 * <li>do NOT clear the now old cache, as it can currently be queried.
+	 * @param connection 
 	 * @throws TranslatorException
 	 */
-	public void afterMaterialiationOnCache() throws TranslatorException {
-		@SuppressWarnings("unchecked")
-		Map<Object, Object> c = (Map<Object, Object>) this.getConnection().getCache(proxy.getAliasCacheName());
-		if (c == null) {
-			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21303, new Object[] {proxy.getAliasCacheName()}));
-		}
+	private void afterMaterialiationOnCache(ObjectConnection connection) throws TranslatorException {
+		this.currentStage = Stage.START_AFTER;
 		
 		// now swap the values in the proxy so that the next reads will use the updated cache
-		proxy.swapCacheNames(c);
+		proxy.swapCacheNames();
+		
+		reset();
 	}
 
 	/**
-	 * Returns the boolean true if the native query is to be performed in the afterLoad lifecycle step.
-	 * @param nativeQuery 
-	 * @return boolean true if the nativeQuery is for the afterLoad lifecycle step
+	 * Call to reset the materialization stage, especially when a failure has occured.
 	 */
-	public boolean isAfter(String nativeQuery) {
-		if (nativeQuery.trim().toLowerCase().startsWith(AFTER_NATIVE_QUERY_PREFIX)) {
-			return true;
-		}
-		return false;
-	}
-	
-	/**
-	 * Called at the end of this specific materialization processing
-	 */
-	public void cleanup() {
-		this.connection = null;
-		this.proxy = null;
+	public synchronized void reset() {
+		this.currentStage = Stage.INACTIVE;
 	}
 	
 }
