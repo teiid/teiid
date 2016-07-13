@@ -34,6 +34,7 @@ import java.util.List;
 
 import org.junit.Test;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
+import org.teiid.client.util.ExceptionUtil;
 import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
@@ -66,6 +67,16 @@ public class TestGeometry {
 		GeometryType geom1 = (GeometryType) Evaluator.evaluate(ex1);
 		assertEquals(8307, geom1.getSrid());
 		assertEquals(geom, geom1);
+	}
+	
+	@Test public void testTextError() throws Exception {
+		Expression ex = TestFunctionResolving.getExpression("ST_GeomFromText('''hello''')");
+		try {
+			Evaluator.evaluate(ex);
+			fail();
+		} catch (ExpressionEvaluationException e) {
+			assertNull(ExceptionUtil.getExceptionOfType(e, NullPointerException.class));
+		}
 	}
 	
 	@Test public void testAsText() throws Exception {

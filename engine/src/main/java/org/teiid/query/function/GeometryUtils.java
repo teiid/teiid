@@ -136,6 +136,10 @@ public class GeometryUtils {
             	}
             }
             Geometry jtsGeometry = reader.read(r);
+            if (jtsGeometry == null) {
+            	//for some reason io and parse exceptions are caught in their logic if they occur on the first word, then null is returned
+            	throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31203));
+            }
             if (!allowEwkt && (jtsGeometry.getSRID() != GeometryType.UNKNOWN_SRID || (jtsGeometry.getCoordinate() != null && !Double.isNaN(jtsGeometry.getCoordinate().z)))) {
             	//don't allow ewkt that requires a specific function
             	throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31160, "EWKT")); //$NON-NLS-1$
