@@ -574,9 +574,15 @@ public class STree implements Cloneable {
 	
 	public void clearClonedFlags() {
 		for (SPage page : pages.values()) {
-			page.trackingObject = null;
-			//we don't really care about using synchronization or a volatile here
-			//since the worst case is that we'll just use gc cleanup
+			if (page.trackingObject != null) {
+				Long val = page.managedBatch;
+				if (val != null) {
+					SPage.REFERENCES.remove(val);
+				}
+				page.trackingObject = null;
+				//we don't really care about using synchronization or a volatile here
+				//since the worst case is that we'll just use gc cleanup
+			}
 		}
 	}
 	
