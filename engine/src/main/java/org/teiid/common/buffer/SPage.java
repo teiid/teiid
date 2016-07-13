@@ -26,11 +26,11 @@ import java.lang.ref.PhantomReference;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.util.Collections;
-import java.util.IdentityHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Set;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.teiid.client.ResizingArrayList;
@@ -61,7 +61,7 @@ class SPage implements Cloneable {
 		}
 	}
 	
-	private static final Set<PhantomReference<Object>> REFERENCES = Collections.newSetFromMap(new IdentityHashMap<PhantomReference<Object>, Boolean>());
+	static final Map<Long, PhantomReference<Object>> REFERENCES = new ConcurrentHashMap<Long, PhantomReference<Object>>();
 	private static ReferenceQueue<Object> QUEUE = new ReferenceQueue<Object>();
 	static class CleanupReference extends PhantomReference<Object> {
 		
@@ -113,7 +113,7 @@ class SPage implements Cloneable {
 			if (this.managedBatch != null && trackingObject == null) {
 				this.trackingObject = new Object();
 				CleanupReference managedBatchReference  = new CleanupReference(trackingObject, managedBatch, stree.getBatchManager(children == null).getBatchManagerReference());
-				REFERENCES.add(managedBatchReference);
+				REFERENCES.put(managedBatch, managedBatchReference);
 			}
 			SPage clone = (SPage) super.clone();
 			clone.stree = tree;
@@ -231,8 +231,9 @@ class SPage implements Cloneable {
 			if (ref == null) {
 				break;
 			}
-			REFERENCES.remove(ref);
-			ref.cleanup();
+			if (REFERENCES.remove(ref.batch) != null) {
+				ref.cleanup();
+			}
 		}
 		List<List<?>> result = stree.getBatchManager(children == null).getBatch(managedBatch, true);
 		if (trackingObject != null) {
