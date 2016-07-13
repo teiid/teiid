@@ -90,7 +90,7 @@ public abstract class AbstractQueryTest {
         return execute(sql, new Object[] {});
     }
     
-    public boolean execute(String sql, Object[] params) throws SQLException {
+    public boolean execute(String sql, Object... params) throws SQLException {
     	closeResultSet();
     	closeStatement();
     	this.updateCount = -1;

@@ -302,4 +302,9 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 			//implicitly closed
 		}
 	}
+	
+	@Test public void testImplicitResolvingWithParameter() throws Exception {
+		this.execute("create local temporary table #x (e1 string)");
+		this.execute("insert into #x (e1) values (?)", "a");
+	}
 }
