@@ -51,17 +51,19 @@ public class ObjectDirectExecution extends ObjectBaseExecution implements Proced
     
     @Override
     public void execute() throws TranslatorException {
-    	ObjectMaterializeLifeCycle omlc = connection.getMaterializeLifeCycle();
+       	ObjectMaterializeLifeCycle omlc = connection.getMaterializeLifeCycle();
     	
 		String sourceSQL = (String) this.arguments.get(0).getArgumentValue().getValue();
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Source-specific command: ", sourceSQL); //$NON-NLS-1$
 
         try {
-        	omlc.performLifeCycleStep(sourceSQL);
+        	omlc.performLifeCycleStep(sourceSQL, this.connection);
         	updateCount = 1;
-        } finally {
-        	omlc.cleanup();
-        }	 
+		} catch (TranslatorException e) {
+			connection.getMaterializeLifeCycle().reset();
+			throw e;
+		}
+
     }
 
 	@Override
@@ -88,10 +90,6 @@ public class ObjectDirectExecution extends ObjectBaseExecution implements Proced
 		return null;  //could support as an array of output values via given that the native procedure returns an array value
 	}
 	
-	public String getStagingCacheName() {
-		return this.connection.getCacheName() + "-staging";
-	}
-
 	/**
 	 * {@inheritDoc}
 	 *

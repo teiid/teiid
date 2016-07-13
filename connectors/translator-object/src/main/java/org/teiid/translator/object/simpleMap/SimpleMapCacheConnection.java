@@ -207,7 +207,7 @@ public class SimpleMapCacheConnection implements ObjectConnection {
 	 */
 	@Override
 	public ObjectMaterializeLifeCycle getMaterializeLifeCycle() {
-		return new ObjectMaterializeLifeCycle(this, proxy);
+		return proxy.getObjectMaterializeLifeCycle();
 	}
 
 	/**

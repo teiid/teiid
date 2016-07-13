@@ -43,6 +43,7 @@ import org.teiid.translator.infinispan.hotrod.InfinispanPlugin;
 import org.teiid.translator.object.ObjectMaterializeLifeCycle;
 import org.teiid.translator.object.SearchType;
 
+
 /** 
  * Represents a connection to an Infinispan cache container. The <code>cacheName</code> that is specified will dictate the
  * cache to be accessed in the container.
@@ -62,11 +63,11 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	
 	/** 
 	 * Close the connection, if a connection requires closing.
-	 * (non-Javadoc
+	 * (non-Javadoc)
 	 */
 	@Override
     public void close() {
-		config = null;
+		config = null;	
 	}
 
 	/** 
@@ -82,27 +83,27 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 
 	@Override
 	public Class<?> getCacheClassType() throws TranslatorException {		
-		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "=== GetType for cache :", config.getCacheName(),  "==="); //$NON-NLS-1$ //$NON-NLS-2$
+		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "=== GetType for cache :", getCacheName(),  "==="); //$NON-NLS-1$ //$NON-NLS-2$
 
 		Class<?> type = config.getCacheClassType();
 		if (type != null) {
 			return type;
 		}
-		throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25040,config.getCacheName()));
+		throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25040, getCacheName()));
 
 	}
 	
 	@Override
-	public Class<?> getCacheKeyClassType() throws TranslatorException {
+	public Class<?> getCacheKeyClassType()  {
 		return config.getCacheKeyClassType();
 	}
 	
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({ "rawtypes"})
 	@Override
 	public RemoteCache getCache() throws TranslatorException {
 
-		return config.getCache();
+		return config.getCache(config.getCacheName());
 
 	}
 
@@ -115,7 +116,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 			throws TranslatorException {
 		Descriptor d = config.getContext().getMessageDescriptor(config.getMessageDescriptor());
 		if (d == null) {
-			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25028,  config.getMessageDescriptor(), config.getCacheName()));			
+			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25028,  config.getMessageDescriptor(), getCacheName()));			
 		}
 		
 		return d;
@@ -125,7 +126,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	@Override
 	public QueryFactory getQueryFactory() throws TranslatorException {
 		
-		return Search.getQueryFactory(getCache());
+		return Search.getQueryFactory(getCache(config.getCacheName()));
 	}
 
 	/**
@@ -136,7 +137,11 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	@SuppressWarnings("unchecked")
 	@Override
 	public void add(Object key, Object value) throws TranslatorException {
-		getCache(config.getCacheNameForUpdate()).put(key, value);
+		if (getMaterializeLifeCycle().hasStarted()) {
+			getCache(config.getCacheStagingName()).put(key, value);
+		} else {
+			getCache(config.getCacheName()).put(key, value);
+		}
 	}
 
 	/**
@@ -146,7 +151,10 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	 */
 	@Override
 	public Object remove(Object key) throws TranslatorException {
-		return getCache(config.getCacheNameForUpdate()).removeAsync(key);
+		if (getMaterializeLifeCycle().hasStarted()) {
+			return getCache(config.getCacheStagingName()).removeAsync(key);
+		}
+		return getCache(config.getCacheName()).removeAsync(key);
 	}
 
 	/**
@@ -157,7 +165,11 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	@SuppressWarnings("unchecked")
 	@Override
 	public void update(Object key, Object value) throws TranslatorException {
-		getCache(config.getCacheNameForUpdate()).replace(key, value);
+		if (getMaterializeLifeCycle().hasStarted()) {
+			getCache(config.getCacheStagingName()).replace(key, value);
+		} else {
+			getCache(config.getCacheName()).replace(key, value);
+		}
 	}
 
 	/**
@@ -177,7 +189,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	 */
 	@Override
 	public Object get(Object key) throws TranslatorException {
-		return getCache().get(key);
+		return getCache(config.getCacheName()).get(key);
 	}
 
 	/**
@@ -188,7 +200,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	@Override
 	public Collection<Object> getAll() throws TranslatorException {
 		@SuppressWarnings("rawtypes")
-		RemoteCache cache = getCache();
+		RemoteCache cache = getCache(config.getCacheName());
 
 		Map<Object, Object> c = cache.getBulk();
 		List<Object> results = new ArrayList<Object>();
@@ -208,7 +220,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	 */
 	@Override
 	public ObjectMaterializeLifeCycle getMaterializeLifeCycle() {
-		return new ObjectMaterializeLifeCycle(this, config.getCacheNameProxy());
+		return config.getCacheNameProxy().getObjectMaterializeLifeCycle();
 	}
 
 	/**
@@ -248,7 +260,11 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	 */
 	@Override
 	public void clearCache(String cacheName) throws TranslatorException {
-		config.getCache(cacheName).clear();
+		if (getMaterializeLifeCycle().hasStarted()) {
+			config.getCache(config.getCacheStagingName()).clear();
+		} else {
+			config.getCache(cacheName).clear();
+		}
 	}
 
 	/**
@@ -260,7 +276,5 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	public SearchType getSearchType() {
 		return new DSLSearch(this);
 	}
-
-	
 
 }
