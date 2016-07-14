@@ -12,10 +12,10 @@
                         <connection-definition class-name="org.teiid.resource.adapter.infinispan.hotrod.InfinispanManagedConnectionFactory" jndi-name="java:/infinispanRemote" enabled="true" use-java-context="true" pool-name="infinispanRemote">
                             <!-- module name to load the cache classes from -->
  <config-property name="CacheTypeMap">
-                                addressbook_indexed:org.jboss.as.quickstarts.datagrid.hotrod.query.domain.Personinfo;id
+                                addressbook_indexed:com.client.quickstart.addressbook.pojos.domain.Person;id
                             </config-property>
                             <config-property name="Module">
-                                org.jboss.as.quickstarts.datagrid.hotrod.query.domain
+                                com.client.quickstart.addressbook.pojos
                             </config-property>
                             <config-property name="RemoteServerList">
                                 127.0.0.1:11322
