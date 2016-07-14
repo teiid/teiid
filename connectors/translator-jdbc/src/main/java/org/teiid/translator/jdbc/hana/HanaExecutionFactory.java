@@ -366,17 +366,6 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
 		return true;
 	}
 
-	@Override
-	public boolean isSourceRequired() {
-		return false;
-	}
-	
-	@Override
-	public List<?> translateGeometryLiteral(Literal l) {
-      return  super.translateGeometryLiteral(l);
-   }
-	
-	
 	@SuppressWarnings("unchecked")
 	@Override
     public List<?> translateLimit(Limit limit, ExecutionContext context) {
