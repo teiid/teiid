@@ -58,24 +58,36 @@ public abstract class EventDistributorImpl implements EventDistributor {
 			@Override
 			public void removed(String name, CompositeVDB vdb) {
 				for(EventListener el:EventDistributorImpl.this.listeners) {
-					el.vdbUndeployed(name, vdb.getVDB().getVersion());
+					try {
+						el.vdbUndeployed(name, vdb.getVDB().getVersion());
+					} catch (Exception e) {
+						LogManager.logError(LogConstants.CTX_RUNTIME, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40148, "undeployed", vdb.getVDBKey())); //$NON-NLS-1$
+					}
 				}
 			}
 			@Override
 			public void finishedDeployment(String name, CompositeVDB vdb) {
 				for(EventListener el:EventDistributorImpl.this.listeners) {
-					if (vdb.getVDB().getStatus().equals(Status.ACTIVE)) {
-						el.vdbLoaded(vdb.getVDB());
-					}
-					else {
-						el.vdbLoadFailed(vdb.getVDB());
+					try {					
+						if (vdb.getVDB().getStatus().equals(Status.ACTIVE)) {
+							el.vdbLoaded(vdb.getVDB());
+						}
+						else {
+							el.vdbLoadFailed(vdb.getVDB());
+						}
+					} catch (Exception e) {
+						LogManager.logError(LogConstants.CTX_RUNTIME, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40148, "finished deployment", vdb.getVDBKey())); //$NON-NLS-1$
 					}
 				}
 			}
 			@Override
 			public void added(String name, CompositeVDB vdb) {
 				for(EventListener el:EventDistributorImpl.this.listeners) {
-					el.vdbDeployed(name, vdb.getVDB().getVersion());
+					try {
+						el.vdbDeployed(name, vdb.getVDB().getVersion());
+					} catch (Exception e) {
+						LogManager.logError(LogConstants.CTX_RUNTIME, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40148, "deployed", vdb.getVDBKey())); //$NON-NLS-1$
+					}
 				}
 			}
 			@Override
