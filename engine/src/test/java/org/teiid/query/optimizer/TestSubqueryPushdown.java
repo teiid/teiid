@@ -25,10 +25,15 @@ package org.teiid.query.optimizer;
 import static org.junit.Assert.*;
 import static org.teiid.query.optimizer.TestOptimizer.*;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.Test;
+import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer.AntiSemiJoin;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.TestOptimizer.SemiJoin;
@@ -38,8 +43,10 @@ import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.rewriter.TestQueryRewriter;
+import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.util.Options;
@@ -1209,6 +1216,58 @@ public class TestSubqueryPushdown {
                                       new String[] {"SELECT g_0.IntKey, (SELECT AVG(g_1.IntKey) FROM BQT1.SmallB AS g_1 WHERE g_1.IntKey = g_0.IntKey) FROM BQT1.SmallA AS g_0 GROUP BY g_0.IntKey"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+    }
+    
+    @Test public void testSubqueryProducingBuffer() throws Exception {
+    	TransformationMetadata tm = RealMetadataFactory.example1Cached();
+		
+    	String sql = "SELECT e1, (select e2 from pm2.g1 where e1 = pm1.g1.e1 order by e2 limit 1) from pm1.g1 limit 1";
+    	
+    	BasicSourceCapabilities bsc = getTypicalCapabilities();
+    	bsc.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
+    	
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, //$NON-NLS-1$
+                                      tm, null, new DefaultCapabilitiesFinder(bsc),
+                                      new String[] {
+                                          "SELECT g_0.e1 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        HardcodedDataManager hdm = new HardcodedDataManager(tm) {
+        	
+        	@Override
+        	public TupleSource registerRequest(CommandContext context,
+        			Command command, String modelName,
+        			RegisterRequestParameter parameterObject)
+        			throws TeiidComponentException {
+        		if (command.toString().equals("SELECT g_0.e2 FROM pm2.g1 AS g_0 WHERE g_0.e1 = 'a'")) {
+        			return new TupleSource() {
+						
+						@Override
+						public List<?> nextTuple() throws TeiidComponentException,
+								TeiidProcessingException {
+							throw new TeiidProcessingException("something's wrong");
+						}
+						
+						@Override
+						public void closeSource() {
+							
+						}
+					};
+        		}
+        		return super.registerRequest(context, command, modelName, parameterObject);
+        	}
+        	
+        };
+        hdm.addData("SELECT g_0.e1 FROM g1 AS g_0", Arrays.asList("a"));
+        hdm.setBlockOnce(true);
+        
+        CommandContext cc = TestProcessor.createCommandContext();
+        cc.setMetadata(tm);
+        try {
+        	TestProcessor.helpProcess(plan, cc, hdm, new List[] {Arrays.asList(2)} );
+        	fail();
+        } catch (TeiidProcessingException e) {
+        	assert(e.getMessage().contains("something's wrong"));
+        }
     }
 
 }
