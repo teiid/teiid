@@ -54,6 +54,7 @@ import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
+import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -371,6 +372,9 @@ public class MetadataValidator {
             QueryParser queryParser = QueryParser.getQueryParser();
             try {
                 Command command = queryParser.parseCommand(script);
+                if (command instanceof CreateProcedureCommand) {
+                	((CreateProcedureCommand)command).setResultSetColumns(Collections.EMPTY_LIST);
+                }
                 QueryResolver.resolveCommand(command, metadata);        
                 AbstractValidationVisitor visitor = new ValidationVisitor();
                 ValidatorReport subReport = Validator.validate(command, metadata, visitor);
