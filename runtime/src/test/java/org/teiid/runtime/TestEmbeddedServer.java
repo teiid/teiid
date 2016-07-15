@@ -1315,7 +1315,8 @@ public class TestEmbeddedServer {
                 "MATERIALIZED_TABLE 'my_schema.mat_table', \n" + 
                 "\"teiid_rel:MATERIALIZED_STAGE_TABLE\" 'my_schema.mat_table',\n" + 
                 "\"teiid_rel:ALLOW_MATVIEW_MANAGEMENT\" 'true', \n" + 
-                "\"teiid_rel:MATVIEW_STATUS_TABLE\" 'my_schema.status', \n" + 
+                "\"teiid_rel:MATVIEW_STATUS_TABLE\" 'my_schema.status', \n" +
+                "\"teiid_rel:MATVIEW_AFTER_LOAD_SCRIPT\" 'select 1; select 1, ''a''', \n" +
                 "\"teiid_rel:MATVIEW_SHARE_SCOPE\" 'NONE',\n" + 
                 "\"teiid_rel:MATVIEW_ONERROR_ACTION\" 'THROW_EXCEPTION',\n" + 
                 "\"teiid_rel:MATVIEW_TTL\" 100000)" +

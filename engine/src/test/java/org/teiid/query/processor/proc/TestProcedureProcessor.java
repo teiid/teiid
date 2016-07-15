@@ -2280,6 +2280,28 @@ public class TestProcedureProcessor {
         helpTestProcess(plan, expected, dataManager, tm);
     }
     
+    @Test public void testDyanmicAnonBlockWithReturn() throws Exception {
+        String sql = "begin execute immediate 'begin select 1; select 1, 2; end'; end"; //$NON-NLS-1$
+        TransformationMetadata tm = RealMetadataFactory.example1Cached();
+        ProcessorPlan plan = getProcedurePlan(sql, tm);
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        List[] expected = new List[] {}; //$NON-NLS-1$
+        helpTestProcess(plan, expected, dataManager, tm);
+        
+        sql = "begin execute immediate 'begin select 1; select 1, 2; end' as y string; end"; //$NON-NLS-1$
+        tm = RealMetadataFactory.example1Cached();
+        plan = getProcedurePlan(sql, tm);
+        
+        try {
+        	helpTestProcess(plan, expected, dataManager, tm);
+        	fail();
+        } catch (QueryProcessingException e) {
+        	
+        }
+    }
+
+    
     /**
      * Should fail as the results conflict from multiple statements
      */

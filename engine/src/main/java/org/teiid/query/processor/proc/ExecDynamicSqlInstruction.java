@@ -167,6 +167,10 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
                 using.setMetadataID(metadataStore.getTempGroupID(ProcedureReservedWords.DVARS));
                 command.addExternalGroupToContext(using);
             }
+            
+            if (!returnable && command instanceof CreateProcedureCommand) {
+            	((CreateProcedureCommand)command).setResultSetColumns(Collections.EMPTY_LIST);
+            }
 
 			QueryResolver.resolveCommand(command, metadata.getDesignTimeMetadata());
 
