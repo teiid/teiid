@@ -140,16 +140,6 @@
 
         </plugins>
     </build>
-    
-
-<dependencies>
- <dependency>
-              <groupId>org.arrahtec</groupId>
-              <artifactId>profiler-core</artifactId>
-        </dependency>
-</dependencies>
-
-
 
     <profiles>
         <profile>

@@ -137,7 +137,14 @@
 			<outputDirectory>${wildfly-module-root}/com/google/code/findbugs/main</outputDirectory>
 			<useProjectArtifact>false</useProjectArtifact>
 		</dependencySet>
-
+        <dependencySet>
+            <includes>
+                <include>org.arrahtec:profiler-core</include>
+            </includes>
+            <outputDirectory>${wildfly-module-root}/org/arrahtec/main</outputDirectory>
+            <useProjectArtifact>false</useProjectArtifact>
+        </dependencySet>
+        
 		<!-- These are Teiid internal dependencies; to make JCA work -->
 		<dependencySet>
 		    <outputDirectory>${wildfly-module-root}/org/jboss/teiid/main</outputDirectory>

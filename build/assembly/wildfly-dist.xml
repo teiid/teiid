@@ -38,33 +38,8 @@
           <exclude>**/*.properties</exclude>
         </excludes>      
     </fileSet>
-    
-    <fileSet>
-        <directory>kits/wildfly/modules</directory>
-        <outputDirectory>${wildfly-module-root}</outputDirectory>
-        <filtered>true</filtered>
-        <includes>
-          <include>**/*</include>
-        </includes>
-    </fileSet>
-
-
   </fileSets>
   
-
- <dependencySets>
-    <dependencySet>
-      <outputDirectory>${wildfly-module-root}/org/arrahtec/main</outputDirectory>
-      <useTransitiveDependencies>false</useTransitiveDependencies>
-      <includes>
-        <include>org.arrahtec:profiler-core:jar</include>
-      </includes>
-      <useProjectArtifact>true</useProjectArtifact>
-    </dependencySet>
-
- </dependencySets>
-
-
   <!--  these have external dependent clients like connectors-->
   <moduleSets>
             

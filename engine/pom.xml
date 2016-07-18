@@ -147,10 +147,8 @@
         </dependency>
         
         <dependency>
-              <groupId>org.arrahtec</groupId>
-              <artifactId>profiler-core</artifactId>
-<scope>provided</scope>
-
+	        <groupId>org.arrahtec</groupId>
+	        <artifactId>profiler-core</artifactId>
         </dependency>
                           
 	</dependencies>
