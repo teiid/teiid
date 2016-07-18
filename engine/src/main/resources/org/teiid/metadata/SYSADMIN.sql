@@ -251,16 +251,17 @@ BEGIN
         BEGIN
 	       rowsUpdated = VARIABLES.rowcount;
         END 
-        ELSE
-        BEGIN
-	       EXECUTE IMMEDIATE 'SELECT count(*) as rowCount FROM ' || targetSchemaName || '.' || matViewTable AS rowCount integer INTO #load_count;        
-           rowsUpdated = (SELECT rowCount FROM #load_count);        
-        END 
     	
     	IF (VARIABLES.afterLoadScript IS NOT null)
     	BEGIN
 	    	EXECUTE IMMEDIATE VARIABLES.afterLoadScript;
         END
+        
+        IF (NOT VARIABLES.implicitLoadScript)
+        BEGIN
+	       EXECUTE IMMEDIATE 'SELECT count(*) as rowCount FROM ' || targetSchemaName || '.' || matViewTable AS rowCount integer INTO #load_count;        
+           rowsUpdated = (SELECT rowCount FROM #load_count);    
+        END 
         
         EXECUTE IMMEDIATE updateStmt || ' AND loadNumber = DVARS.loadNumber' USING  loadNumber = VARIABLES.loadNumber, vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = loadMatView.viewName, updated = now(), LoadState = 'LOADED', valid = true, cardinality = VARIABLES.rowsUpdated;        			
         VARIABLES.status = 'DONE';
