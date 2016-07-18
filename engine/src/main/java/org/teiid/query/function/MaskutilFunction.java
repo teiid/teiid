@@ -1,3 +1,25 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * See the COPYRIGHT.txt file distributed with this work for information
+ * regarding copyright ownership.  Some portions may be licensed
+ * to Red Hat, Inc. under one or more contributor license agreements.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
 package org.teiid.query.function;
 
 import java.util.ArrayList;
@@ -17,9 +39,7 @@ import org.teiid.query.function.source.XMLSystemFunctions;
 public class MaskutilFunction extends UDFSource implements FunctionCategoryConstants {
 
 	private static final String FUNCTION_CLASS = Maskutil.class.getName();
-	private static final String XML_FUNCTION_CLASS = XMLSystemFunctions.class.getName();
-	private static final String SECURITY_FUNCTION_CLASS = SecuritySystemFunctions.class.getName();
-
+	 
 	public MaskutilFunction(boolean allowEnvFunction) {
 		super(new ArrayList<FunctionMethod>());
 		// TODO Auto-generated constructor stub
@@ -29,24 +49,24 @@ public class MaskutilFunction extends UDFSource implements FunctionCategoryConst
 	}
 
 	private void addRandom() {
-		functions.add(new FunctionMethod("random", "testUDF description", STRING, FUNCTION_CLASS, "toRandomValue",
+		functions.add(new FunctionMethod("random", "randomize the string", STRING, FUNCTION_CLASS, "toRandomValue",
 				new FunctionParameter[] {
 						new FunctionParameter("sourceValue", DataTypeManager.DefaultDataTypes.STRING, "String") }, //$NON-NLS-1$ //$NON-NLS-2$
-				new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "testUDF return data")));
+				new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "The string after randomize")));
 	}
 
 	private void addHash() {
-		functions.add(new FunctionMethod("hash", "testUDF description", STRING, FUNCTION_CLASS, "toHashValue",
+		functions.add(new FunctionMethod("hash", "Get the hash code of string", STRING, FUNCTION_CLASS, "toHashValue",
 				new FunctionParameter[] {
 						new FunctionParameter("sourceValue", DataTypeManager.DefaultDataTypes.STRING, "String") }, //$NON-NLS-1$ //$NON-NLS-2$
-				new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "testUDF return data")));
+				new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING,"The hashcode of string")));
 	}
 
 	private void addDigit() {
-		functions.add(new FunctionMethod("digit", "testUDF description", STRING, FUNCTION_CLASS, "toDigitValue",
+		functions.add(new FunctionMethod("digit", "Get the digit characters of the string", STRING, FUNCTION_CLASS, "toDigitValue",
 				new FunctionParameter[] {
 						new FunctionParameter("sourceValue", DataTypeManager.DefaultDataTypes.STRING, "String") }, //$NON-NLS-1$ //$NON-NLS-2$
-				new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "testUDF return data")));
+				new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "digit characters of the string")));
 	}
 
 	 
@@ -59,10 +79,5 @@ public class MaskutilFunction extends UDFSource implements FunctionCategoryConst
         return this.functions;
 	}
     
-    public static FunctionMethod createSyntheticMethod(String name, String description, String category, 
-            String invocationClass, String invocationMethod, FunctionParameter[] inputParams, 
-            FunctionParameter outputParam) {
-    	return new FunctionMethod(name, description, category, PushDown.SYNTHETIC, invocationClass, invocationMethod, inputParams!=null?Arrays.asList(inputParams):null, outputParam, false,Determinism.NONDETERMINISTIC);
-    }
 
 }
