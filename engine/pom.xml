@@ -145,6 +145,13 @@
               <groupId>jaxen</groupId>
               <artifactId>jaxen</artifactId>    
         </dependency>
+        
+        <dependency>
+              <groupId>org.arrahtec</groupId>
+              <artifactId>profiler-core</artifactId>
+<scope>provided</scope>
+
+        </dependency>
                           
 	</dependencies>
 
