@@ -21,16 +21,7 @@
  */
 package org.teiid.translator.jdbc.vertica;
 
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.DATE;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.TIMESTAMP;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.TIME;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.INTEGER;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.STRING;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.BYTE;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.OBJECT;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.BOOLEAN;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.DOUBLE;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.FLOAT;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -211,11 +202,6 @@ public class VerticaExecutionFactory extends JDBCExecutionFactory{
         return true;
     }
 
-    @Override
-    public boolean isSourceRequired() {
-        return false;
-    }
-    
     @Override
     public boolean supportsIntersect() {
         return true;

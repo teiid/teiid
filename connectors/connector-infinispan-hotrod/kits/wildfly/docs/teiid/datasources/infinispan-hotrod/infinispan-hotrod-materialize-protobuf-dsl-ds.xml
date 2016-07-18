@@ -6,13 +6,13 @@
 #
 #  Note:  The RemoteServerList host:port may have to be changed, depending on your JDG deployment.  Also, the port is based on running it locally and incrementing the ports
 
-                <resource-adapter id="infinispanRemQSDSL">
-                    <module slot="main" id="org.jboss.teiid.resource-adapter.infinispan.dsl"/>
+                <resource-adapter id="infinispanRemRADSL">
+                    <module slot="main" id="org.jboss.teiid.resource-adapter.infinispan.hotrod"/>
                     <connection-definitions>
-                        <connection-definition class-name="org.teiid.resource.adapter.infinispan.dsl.InfinispanManagedConnectionFactory" jndi-name="java:/infinispanRemoteDSL" enabled="true" use-java-context="true" pool-name="infinispanRemoteDSL">
+                        <connection-definition class-name="org.teiid.resource.adapter.infinispan.hotrod.InfinispanManagedConnectionFactory" jndi-name="java:/infinispanRemoteMat" enabled="true" use-java-context="true" pool-name="infinispanRemoteMat">
                             <!-- cacheName:className[;pkFieldName[:cacheKeyJavaType]]) -->
                             <config-property name="CacheTypeMap">
-                                addressbook_indexed:org.jboss.as.quickstarts.datagrid.hotrod.query.domain.Person;id
+                                addressbook_indexed:com.client.quickstart.addressbook.remotecache.pojos.domain.Person;id
                             </config-property>
                             <!-- protobuf definition file that defines the schema and, possibly, indexes -->
                             <config-property name="ProtobufDefinitionFile">
@@ -24,10 +24,10 @@
                             </config-property>
                              <!-- module name to load the cache classes from -->
                             <config-property name="Module">
-                                com.client.quickstart.addressbook.pojos
+                                com.client.quickstart.addressbook.remotecache.pojos
                             </config-property>
                             <config-property name="MessageMarshallers">
-                                org.jboss.as.quickstarts.datagrid.hotrod.query.domain.Person:org.jboss.as.quickstarts.datagrid.hotrod.query.marshallers.PersonMarshaller,org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PhoneNumber:org.jboss.as.quickstarts.datagrid.hotrod.query.marshallers.PhoneNumberMarshaller,org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PhoneType:org.jboss.as.quickstarts.datagrid.hotrod.query.marshallers.PhoneTypeMarshaller
+                                com.client.quickstart.addressbook.remotecache.pojos.domain.Person:com.client.quickstart.addressbook.remotecache.pojos.marshallers.PersonMarshaller
                             </config-property>
                             <!-- comma seperated list of hostname:port  -->
                             <config-property name="RemoteServerList">

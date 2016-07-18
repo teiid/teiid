@@ -43,17 +43,19 @@ public class StaticContentServlet extends HttpServlet {
         String pathInfo = request.getPathInfo();
         
         try {
-            if (pathInfo.endsWith(".xml")
-                    && !pathInfo.endsWith("pom.xml")
-                    && !pathInfo.contains("META-INF")
-                    && !pathInfo.contains("WEB-INF")
-                    && !pathInfo.substring(1).contains("/")) {
+            if (pathInfo.endsWith(".xml") //$NON-NLS-1$
+                    && !pathInfo.endsWith("pom.xml") //$NON-NLS-1$
+                    && !pathInfo.contains("META-INF") //$NON-NLS-1$
+                    && !pathInfo.contains("WEB-INF") //$NON-NLS-1$
+                    && !pathInfo.substring(1).contains("/")) { //$NON-NLS-1$
                 InputStream contents = getClass().getResourceAsStream(pathInfo);
-                writeContent(response, contents);
-                response.flushBuffer();
-            } else {
-                throw new TeiidProcessingException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16055, pathInfo));
+                if (contents != null) {
+	                writeContent(response, contents);
+	                response.flushBuffer();
+	                return;
+                }
             }
+            throw new TeiidProcessingException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16055, pathInfo));
         } catch (TeiidProcessingException e) {
             ODataFilter.writeError(request, e, response);
         }

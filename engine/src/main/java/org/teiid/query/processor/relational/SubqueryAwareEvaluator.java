@@ -198,7 +198,8 @@ public class SubqueryAwareEvaluator extends Evaluator {
 			}
 			processor.requestCanceled();
 			processor.closeProcessing();
-			if (removeBuffer) {
+			//check that the collector has it's own buffer
+			if (removeBuffer && collector.getTupleBuffer() != null) {
 				collector.getTupleBuffer().remove();
 			}
 			processor = null;

@@ -98,13 +98,6 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
         }
         
         if (insert.getVariables().isEmpty()) {
-        	if (insert.getGroup().isImplicitTempGroupSymbol()) {
-        		try {
-        			ResolverUtil.resolveGroup(insert.getGroup(), metadata);
-        		} catch (QueryResolverException e) {
-        			//not defined yet
-        		}
-            }
             if (insert.getGroup().isResolved()) {
                 List<ElementSymbol> variables = ResolverUtil.resolveElementsInGroup(insert.getGroup(), metadata);
                 for (Iterator<ElementSymbol> i = variables.iterator(); i.hasNext();) {
@@ -235,9 +228,13 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
     protected void resolveGroup(TempMetadataAdapter metadata,
                                 ProcedureContainer procCommand) throws TeiidComponentException,
                                                               QueryResolverException {
-        if (!procCommand.getGroup().isImplicitTempGroupSymbol() || metadata.getMetadataStore().getTempGroupID(procCommand.getGroup().getName()) != null) {
-            super.resolveGroup(metadata, procCommand);
-        }
+    	try { 
+    		super.resolveGroup(metadata, procCommand);
+    	} catch (QueryResolverException e) {
+            if (!procCommand.getGroup().isImplicitTempGroupSymbol() || metadata.getMetadataStore().getTempGroupID(procCommand.getGroup().getName()) != null) {
+                throw e;
+            }
+    	}
     }
 
     /** 

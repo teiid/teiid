@@ -38,7 +38,6 @@
           <exclude>**/*.properties</exclude>
         </excludes>      
     </fileSet>
-    
   </fileSets>
   
   <!--  these have external dependent clients like connectors-->

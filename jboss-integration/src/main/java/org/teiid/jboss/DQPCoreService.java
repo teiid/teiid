@@ -102,12 +102,18 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 				}
 			        
 				// dump the caches. 
-		        if (getResultSetCacheInjector().getValue() != null) {
-		        	getResultSetCacheInjector().getValue().clearForVDB(vdb.getVDBKey());
-		        }
-		        if (getPreparedPlanCacheInjector().getValue() != null) {
-		        	getPreparedPlanCacheInjector().getValue().clearForVDB(vdb.getVDBKey());
-		        }
+				try {
+			        SessionAwareCache<?> value = getResultSetCacheInjector().getValue();
+					if (value != null) {
+			        	value.clearForVDB(vdb.getVDBKey());
+			        }
+			        value = getPreparedPlanCacheInjector().getValue();
+					if (value != null) {
+			        	value.clearForVDB(vdb.getVDBKey());
+			        }
+				} catch (IllegalStateException e) {
+					//already shutdown
+				}
 			}
 			
 			@Override
