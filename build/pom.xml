@@ -141,6 +141,17 @@
         </plugins>
     </build>
     
+
+<dependencies>
+ <dependency>
+              <groupId>org.arrahtec</groupId>
+              <artifactId>profiler-core</artifactId>
+              <version>${version.profiler-core}</version>
+        </dependency>
+</dependencies>
+
+
+
     <profiles>
         <profile>
             <!--

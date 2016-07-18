@@ -55,6 +55,7 @@ public class SystemFunctionManager {
 			// Validate the system source - should never fail
 	    	ValidatorReport report = new ValidatorReport("Function Validation"); //$NON-NLS-1$
 	        Collection<FunctionMethod> functionMethods = systemSource.getFunctionMethods();
+	        functionMethods.addAll(new MaskutilFunction(this.allowEnvFunction).getFunctionMethods());
 	    	FunctionMetadataValidator.validateFunctionMethods(functionMethods,report, types);
 			if(report.hasItems()) {
 			    // Should never happen as SystemSourcTe doesn't change
