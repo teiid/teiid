@@ -63,5 +63,6 @@
         <module name="org.jboss.as.cli"/> <!-- Admin -->
         <module name="org.jboss.as.controller-client"/> <!-- Admin -->
         <module name="org.jboss.as.controller"/> <!-- Admin -->
+        <module name="org.arrahtec"/>
     </dependencies>
 </module>
