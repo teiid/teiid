@@ -67,8 +67,9 @@ public class InfinispanCacheRAConnection extends BasicConnection
 		return cacheWrapper.getPkField();
 	}
 
+	@SuppressWarnings("unused")
 	@Override
-	public Class<?> getCacheKeyClassType() {
+	public Class<?> getCacheKeyClassType() throws TranslatorException {
 		return cacheWrapper.getCacheKeyClassType();
 	}
 
@@ -88,7 +89,7 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	 * @see org.teiid.translator.object.ObjectConnection#getCacheClassType()
 	 */
 	@Override
-	public Class<?> getCacheClassType() {
+	public Class<?> getCacheClassType() throws TranslatorException {
 		return cacheWrapper.getCacheClassType();
 	}
 
