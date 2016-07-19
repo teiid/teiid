@@ -22,7 +22,7 @@
 package org.teiid.translator;
 
 import java.io.File;
-import java.io.FilenameFilter;
+import java.io.FileFilter;
 import java.nio.file.FileSystems;
 import java.nio.file.PathMatcher;
 
@@ -82,11 +82,11 @@ public interface FileConnection extends Connection {
 		        final PathMatcher matcher =
 		        	    FileSystems.getDefault().getPathMatcher("glob:" + location); //$NON-NLS-1$
 
-		        FilenameFilter fileFilter = new FilenameFilter() {
+		        FileFilter fileFilter = new FileFilter() {
 		        	
 		        	@Override
-		        	public boolean accept(File dir, String name) {
-		        		return matcher.matches(FileSystems.getDefault().getPath(name));
+		        	public boolean accept(File pathname) {
+		        		return pathname.isFile() && matcher.matches(FileSystems.getDefault().getPath(pathname.getName()));
 		        	}
 		        };
 
