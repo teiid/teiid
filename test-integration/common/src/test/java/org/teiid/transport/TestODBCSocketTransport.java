@@ -494,6 +494,40 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		
 	}
 	
+	@Test public void testScrollCursorOtherFetches() throws Exception {
+		Statement stmt = conn.createStatement();
+		ExtendedQueryExectutorImpl.simplePortal = "foo";
+		try {
+			assertFalse(stmt.execute("declare \"foo\" insensitive scroll cursor for values (1), (2), (3);"));
+			stmt.execute("fetch first in \"foo\"");
+			ResultSet rs = stmt.getResultSet();
+			assertTrue(rs.next());
+			assertEquals(1, rs.getInt(1));
+			assertFalse(rs.next());
+			
+			stmt.execute("fetch last in \"foo\"");
+			rs = stmt.getResultSet();
+			assertTrue(rs.next());
+			assertEquals(3, rs.getInt(1));
+			assertFalse(rs.next());
+			
+			stmt.execute("fetch absolute 2 in \"foo\"");
+			rs = stmt.getResultSet();
+			assertTrue(rs.next());
+			assertEquals(2, rs.getInt(1));
+			assertFalse(rs.next());
+			
+			stmt.execute("fetch relative 1 in \"foo\"");
+			rs = stmt.getResultSet();
+			assertTrue(rs.next());
+			assertEquals(3, rs.getInt(1));
+			assertFalse(rs.next());
+			
+		} finally {
+			ExtendedQueryExectutorImpl.simplePortal = null;
+		}
+	}
+	
 	@Test public void testPgProcedure() throws Exception {
 		Statement stmt = conn.createStatement();
 		ResultSet rs = stmt.executeQuery("select has_function_privilege(100, 'foo')");
@@ -684,7 +718,7 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 	@Test public void testImplicitPortalClosing() throws Exception {
 		PreparedStatement s = conn.prepareStatement("select 1");
 		s.executeQuery();
-		
+		s.executeQuery();
 		s.executeQuery();
 		
 		assertEquals(1, odbcServer.server.getDqp().getRequests().size());

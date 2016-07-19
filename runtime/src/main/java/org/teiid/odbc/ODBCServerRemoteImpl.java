@@ -66,6 +66,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.net.TeiidURL;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.net.socket.SocketServerConnection;
+import org.teiid.odbc.ODBCClientRemote.CursorDirection;
 import org.teiid.odbc.PGUtil.PgColInfo;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.security.GSSResult;
@@ -162,7 +163,8 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			"\\s+order by ref.oid, ref.i", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 		
 	private static Pattern cursorSelectPattern = Pattern.compile("DECLARE\\s+(\\S+)(?:\\s+INSENSITIVE)?(\\s+(NO\\s+)?SCROLL)?\\s+CURSOR\\s+(?:WITH(?:OUT)? HOLD\\s+)?FOR\\s+(.*)", Pattern.CASE_INSENSITIVE|Pattern.DOTALL); //$NON-NLS-1$
-	private static Pattern fetchPattern = Pattern.compile("FETCH(?:(?:\\s+FORWARD)?\\s+(\\d+)\\s+(?:IN|FROM))?\\s+(\\S+)\\s*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+	private static Pattern fetchPattern = Pattern.compile("FETCH(?:(?:\\s+(FORWARD|ABSOLUTE|RELATIVE))?\\s+(\\d+)\\s+(?:IN|FROM))?\\s+(\\S+)\\s*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+	private static Pattern fetchFirstLastPattern = Pattern.compile("FETCH\\s+(FIRST|LAST)\\s+(?:IN|FROM)\\s+(\\S+)\\s*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	private static Pattern movePattern = Pattern.compile("MOVE(?:\\s+(FORWARD|BACKWARD))?\\s+(\\d+)\\s+(?:IN|FROM)\\s+(\\S+)\\s*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	private static Pattern closePattern = Pattern.compile("CLOSE (\\S+)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	
@@ -367,7 +369,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		} 
 	}
 	
-	private void cursorFetch(String cursorName, int rows, final ResultsFuture<Integer> completion) throws SQLException {
+	private void cursorFetch(String cursorName, CursorDirection direction, int rows, final ResultsFuture<Integer> completion) throws SQLException {
 		Cursor cursor = this.cursorMap.get(cursorName);
 		if (cursor == null) {
 			throw new SQLException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40078, cursorName));
@@ -375,7 +377,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		if (rows < 1) {
 			throw new SQLException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40112, cursorName, rows));
 		}
-		this.client.sendResults("FETCH", cursor.rs, cursor.prepared.columnMetadata, completion, rows, true); //$NON-NLS-1$
+		this.client.sendResults("FETCH", cursor.rs, cursor.prepared.columnMetadata, completion, direction, rows, true); //$NON-NLS-1$
 	}
 	
         private void cursorMove(String prepareName, String direction, final int rows, final ResultsFuture<Integer> completion) throws SQLException {
@@ -468,7 +470,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
     			try {
 	                if (future.get()) {
                 		List<PgColInfo> cols = getPgColInfo(stmt.getResultSet().getMetaData());
-                        client.sendResults(sql, stmt.getResultSet(), cols, completion, -1, true);
+                                client.sendResults(sql, stmt.getResultSet(), cols, completion, CursorDirection.FORWARD, -1, true);
 	                } else {
 	                	client.sendUpdateCount(sql, stmt.getUpdateCount());
 	                	setEncoding();
@@ -697,7 +699,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 
 	private void sendCursorResults(final Portal cursor, final int fetchSize) {
 		ResultsFuture<Integer> result = new ResultsFuture<Integer>();
-		this.client.sendResults(null, cursor.rs, cursor.prepared.columnMetadata, result, fetchSize, false);
+		this.client.sendResults(null, cursor.rs, cursor.prepared.columnMetadata, result, CursorDirection.FORWARD, fetchSize, false);
 		result.addCompletionListener(new ResultsFuture.CompletionListener<Integer>() {
 			public void onCompletion(ResultsFuture<Integer> future) {
 				try {
@@ -1123,12 +1125,23 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		    				cursorExecute(normalizeName(m.group(1)), fixSQL(m.group(4)), results, scroll);
 		    			}
 		    			else if ((m = fetchPattern.matcher(sql)).matches()){
-		    				String rows = m.group(1);
 		    				int rowCount = 1;
+		    				String direction = m.group(1);
+		    				CursorDirection cursorDirection = CursorDirection.FORWARD;
+		    				if (direction != null) {
+		    					cursorDirection = CursorDirection.valueOf(direction.toUpperCase());
+		    				}
+	    					String rows = m.group(2);
 		    				if (rows != null) {
 		    					rowCount = Integer.parseInt(rows);
 		    				}
-		    				cursorFetch(normalizeName(m.group(2)), rowCount, results);
+	    					cursorFetch(normalizeName(m.group(3)), cursorDirection, rowCount, results);
+		    			} 
+		    			else if ((m = fetchFirstLastPattern.matcher(sql)).matches()){
+		    				int rowCount = 1;
+		    				String direction = m.group(1);
+		    				CursorDirection cursorDirection = CursorDirection.valueOf(direction.toUpperCase());
+	    					cursorFetch(normalizeName(m.group(2)), cursorDirection, rowCount, results);
 		    			}
 		    			else if ((m = movePattern.matcher(sql)).matches()){
 		    				cursorMove(normalizeName(m.group(3)), m.group(1), Integer.parseInt(m.group(2)), results);
