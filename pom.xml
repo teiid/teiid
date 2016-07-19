@@ -45,7 +45,6 @@
         
 
         <!-- Teiid specific properties -->
-	<version.profiler-core>6.1.7</version.profiler-core>
         <version.org.apache.commons>3.3.2</version.org.apache.commons>
         <version.org.codehaus.btm>2.1.3</version.org.codehaus.btm>
         <version.org.antlr>4.5</version.org.antlr>
@@ -651,12 +650,6 @@
            </dependency>
 
       <!-- External dependencies -->
-
-            <dependency>
-              <groupId>org.arrahtec</groupId>
-              <artifactId>profiler-core</artifactId>
-               <version>${version.profiler-core}</version>   
-            </dependency>
 			<dependency>
 				<groupId>net.sf.retrotranslator</groupId>
 				<artifactId>retrotranslator-runtime</artifactId>
