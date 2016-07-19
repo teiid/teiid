@@ -31,9 +31,9 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.language.Argument;
+import org.teiid.language.Argument.Direction;
 import org.teiid.language.Call;
 import org.teiid.language.Literal;
-import org.teiid.language.Argument.Direction;
 import org.teiid.translator.FileConnection;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TypeFacility;
@@ -56,6 +56,20 @@ public class TestFileExecutionFactory {
 			count++;
 		}
 		assertEquals(2, count);
+		
+		
+		call = fef.getLanguageFactory().createCall("getTextFiles", Arrays.asList(new Argument(Direction.IN, new Literal("*1*", TypeFacility.RUNTIME_TYPES.STRING), TypeFacility.RUNTIME_TYPES.STRING, null)), null);
+		pe = fef.createProcedureExecution(call, null, null, fc);
+		Mockito.stub(fc.getFile("*1*")).toReturn(new File(UnitTestUtil.getTestDataPath(), "*1*"));
+		pe.execute();
+		count = 0;
+		while (true) {
+			if (pe.next() == null) {
+				break;
+			}
+			count++;
+		}
+		assertEquals(1, count);
 	}
 	
 }

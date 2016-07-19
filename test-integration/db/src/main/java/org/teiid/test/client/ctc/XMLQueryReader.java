@@ -23,6 +23,7 @@
 package org.teiid.test.client.ctc;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -32,10 +33,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.teiid.core.util.FileUtils;
 import org.teiid.core.util.StringUtil;
-import org.teiid.test.client.QueryTest;
 import org.teiid.test.client.QueryReader;
+import org.teiid.test.client.QueryTest;
 import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.ConfigPropertyNames;
 import org.teiid.test.framework.TestLogger;
@@ -96,7 +96,7 @@ public class XMLQueryReader implements QueryReader {
 
 	TestLogger.log("Loading queries from " + loc);
 
-	File files[] = FileUtils.findAllFilesInDirectoryHavingExtension(loc,
+	File files[] = findAllFilesInDirectoryHavingExtension(loc,
 		".xml");
 	if (files == null || files.length == 0)
 	    throw new QueryTestFailedException((new StringBuilder()).append(
@@ -189,5 +189,48 @@ public class XMLQueryReader implements QueryReader {
 	}
 
     }
+    
+    /**
+     * Returns a <code>File</code> array that will contain all the files that
+     * exist in the directory that have the specified extension.
+     * @return File[] of files having a certain extension
+     */
+    public static File[] findAllFilesInDirectoryHavingExtension(String dir, final String extension) {
+
+      // Find all files in that directory that end in XML and attempt to
+      // load them into the runtime metadata database.
+      File modelsDirFile = new File(dir);
+      FileFilter fileFilter = new FileFilter() {
+          public boolean accept(File file) {
+              if(file.isDirectory()) {
+                  return false;
+              }
+
+
+              String fileName = file.getName();
+
+              if (fileName==null || fileName.length()==0) {
+                  return false;
+              }
+
+              // here we check to see if the file is an .xml file...
+              int index = fileName.lastIndexOf("."); //$NON-NLS-1$
+
+              if (index<0 || index==fileName.length()) {
+                  return false;
+              }
+
+              if (fileName.substring(index, fileName.length()).equalsIgnoreCase(extension)) {
+                  return true;
+              }
+              return false;
+          }
+      };
+
+      File[] modelFiles = modelsDirFile.listFiles(fileFilter);
+
+      return modelFiles;
+
+  }
 
 }
