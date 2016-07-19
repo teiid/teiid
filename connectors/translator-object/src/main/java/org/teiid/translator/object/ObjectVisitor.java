@@ -49,6 +49,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.object.metadata.JavaBeanMetadataProcessor;
 import org.teiid.translator.object.util.ObjectUtil;
 
 /**
@@ -66,6 +67,8 @@ public class ObjectVisitor extends HierarchyVisitor {
 	
 	private NamedTable table;
 	private String tableName;
+	// identifies the table that the staging table is staging on behalf 
+	private String primaryTable;
 	
 	// will be non-null only when a child table is being processed
 	private String rootTableName = null;
@@ -118,10 +121,20 @@ public class ObjectVisitor extends HierarchyVisitor {
 		
 		this.tableName=tn;
 		this.table = t;
+		
+		this.primaryTable =  t.getMetadataObject().getProperty(JavaBeanMetadataProcessor.PRIMARY_TABLE_PROPERTY, false);
+		if (this.primaryTable != null && primaryTable.contains(".")) {
+			primaryTable = StringUtil.getLastToken(primaryTable, ".");
+		}
+
 	}
 		
 	public String getTableName() {
 		return this.tableName;
+	}
+	
+	public String getPrimaryTable() {
+		return this.primaryTable;
 	}
 	
 	/**
