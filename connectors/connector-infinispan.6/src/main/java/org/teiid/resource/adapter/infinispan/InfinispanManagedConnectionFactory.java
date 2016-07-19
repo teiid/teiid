@@ -113,14 +113,11 @@ public class InfinispanManagedConnectionFactory extends
 		// return the cacheName that is mapped as the alias
 		return cacheNameProxy.getPrimaryCacheAliasName();
 	}
-	
-	public String getCacheNameForUpdate() {
-		if (cacheNameProxy.useMaterialization()) {
-			return cacheNameProxy.getStageCacheAliasName();
-		}
-		return cacheNameProxy.getPrimaryCacheAliasName();
-	}
 
+	public String getCacheStagingName() {
+		return cacheNameProxy.getStageCacheAliasName();
+	}
+	
 	/** 
 	 * Call to set the name of the cache to access when calling getCache
 	 * @param cacheName

@@ -28,12 +28,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.teiid.dqp.service.TransactionContext;
 import org.teiid.language.Argument;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.Literal;
+import org.teiid.query.util.CommandContext;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.simpleMap.SimpleMapCacheExecutionFactory;
@@ -47,6 +52,7 @@ import org.teiid.translator.object.testdata.trades.VDBUtility;
  */
 @SuppressWarnings("nls")
 public class TestObjectMaterializeLifeCycle {
+	private static final String TRANSACTION_ID = "xyz";
 	
 	private static String STAGE_CACHE_NAME = PersonCacheSource.PERSON_CACHE_NAME + "Stage";
 	
@@ -56,14 +62,22 @@ public class TestObjectMaterializeLifeCycle {
 	
 	static Map<?, ?> DATA = PersonCacheSource.loadCache();
 	
+	@Mock
+	protected ExecutionContext context;
 	
-    @BeforeClass
-    public static void setUp()  {
-    	PROXY = new CacheNameProxy(PersonCacheSource.PERSON_CACHE_NAME, STAGE_CACHE_NAME, "aliasCache");
-        
-		CONNECTION = PersonCacheSource.createConnectionForMaterialization(PROXY);
+	@Mock
+	protected CommandContext commandContext;
+		
+	@Before public void beforeEach() throws Exception{	
+		
+		context = Mockito.mock(ExecutionContext.class);
+		commandContext = Mockito.mock(CommandContext.class);
 
-    }	
+		
+		PROXY = new CacheNameProxy(PersonCacheSource.PERSON_CACHE_NAME, STAGE_CACHE_NAME, "aliasCache");
+			
+		CONNECTION = PersonCacheSource.createConnectionForMaterialization(PROXY);
+    }
 
 
 	@Test public void testOrder() throws Exception {
@@ -323,6 +337,6 @@ public class TestObjectMaterializeLifeCycle {
 //        };
         translator.start();
 
-		return (ObjectDirectExecution) translator.createDirectExecution(args, null, Mockito.mock(ExecutionContext.class), VDBUtility.RUNTIME_METADATA, CONNECTION);
+		return (ObjectDirectExecution) translator.createDirectExecution(args, null, context, VDBUtility.RUNTIME_METADATA, CONNECTION);
 	}
 }
