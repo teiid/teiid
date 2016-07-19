@@ -355,7 +355,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	
 	@Override
 	public void sendResults(String sql, ResultSetImpl rs, List<PgColInfo> cols,
-			ResultsFuture<Integer> result, int rowCount, boolean describeRows) {
+			ResultsFuture<Integer> result, CursorDirection direction, int rowCount, boolean describeRows) {
 		if (nextFuture != null) {
 			sendErrorResponse(new IllegalStateException("Pending results have not been sent")); //$NON-NLS-1$
 		}
@@ -363,9 +363,39 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
     	if (describeRows) {
     		sendRowDescription(cols);
     	}
-    	ResultsWorkItem r = new ResultsWorkItem(cols, rs, result, rowCount);
-    	r.sql = sql;
-    	r.run();    
+    	ResultsWorkItem r;
+		try {
+			Boolean singleResult = null;
+			//TODO: all of these need a non-blocking form
+			if (direction != CursorDirection.FORWARD) {
+				switch (direction) {
+				case ABSOLUTE:
+					singleResult = rs.absolute(rowCount);
+					break;
+				case RELATIVE:
+					singleResult = rs.relative(rowCount);
+					break;
+				case FIRST:
+					singleResult = rs.first();
+					break;
+				case LAST:
+					singleResult = rs.last();
+					break;
+				}
+				rowCount = 1;
+			}
+			r = new ResultsWorkItem(cols, rs, result, rowCount);
+	    	r.sql = sql;
+	    	if (singleResult != null) {
+	    		ResultsFuture<Boolean> resultsFuture = new ResultsFuture<Boolean>();
+				resultsFuture.getResultsReceiver().receiveResults(singleResult);
+	    		r.processRow(resultsFuture);
+	    	} else {
+	    		r.run();
+	    	}
+		} catch (SQLException e) {
+			result.getResultsReceiver().exceptionOccurred(e);
+		}
 	}
 
 	@Override
