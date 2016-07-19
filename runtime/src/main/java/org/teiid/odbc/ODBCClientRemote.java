@@ -30,6 +30,14 @@ import org.teiid.odbc.PGUtil.PgColInfo;
 
 public interface ODBCClientRemote {
 	
+	enum CursorDirection {
+		FORWARD,
+		FIRST,
+		ABSOLUTE,
+		RELATIVE,
+		LAST
+	}
+	
 	void initialized(Properties props);
 	
 	void setEncoding(String value, boolean init);
@@ -71,7 +79,7 @@ public interface ODBCClientRemote {
 	
 	//	DataRow (B)
 	//	CommandComplete (B)
-	void sendResults(String sql, ResultSetImpl rs, List<PgColInfo> cols, ResultsFuture<Integer> result, int rowCount, boolean describeRows);
+	void sendResults(String sql, ResultSetImpl rs, List<PgColInfo> cols, ResultsFuture<Integer> result, CursorDirection direction, int rowCount, boolean describeRows);
 	
 	void sendCommandComplete(String sql, Integer count);	
 
