@@ -584,10 +584,13 @@ QT_Ora9DS                                                          SYS          
 QT_Ora9DS                                                          SYS                                                                decodeString                                                       <null>                                                             1              tsid:fffffff88de4692-00000a54                     
 QT_Ora9DS                                                          SYS                                                                degrees                                                            <null>                                                             1              tsid:00000005c507e1a-000000ec                     
 QT_Ora9DS                                                          SYS                                                                degrees                                                            <null>                                                             1              tsid:00000005c507e1a-000000ef                     
+<<<<<<< ab61d34080e6d403dc828b0536e36dab07ea516d
 <<<<<<< 6bb9bfd64fb0f00ac0fc674dcc7efa05e2c58594
 QT_Ora9DS                                                          SYS                                                                endswith                                                           <null>                                                             1              tsid:0000000681c1ab1-0000022d                     
 QT_Ora9DS                                                          SYS                                                                env                                                                <null>                                                             1              tsid:000000000289be0-00000adb                     
 =======
+=======
+>>>>>>> Revert "TEIID-4297 (#763)"
 QT_Ora9DS                                                          SYS                                                                endswith                                                           <null>                                                             1              tsid:0000000681c1ab1-00000221                     
 QT_Ora9DS                                                          SYS                                                                env                                                                <null>                                                             1              tsid:000000000289be0-00000acf                     
 >>>>>>> Revert "TEIID-4297 (#763)"
@@ -611,6 +614,9 @@ QT_Ora9DS                                                          SYS          
 =======
 QT_Ora9DS                                                          SYS                                                                hasRole                                                            <null>                                                             1              tsid:000000029b0bd23-00000c13                     
 QT_Ora9DS                                                          SYS                                                                hasRole                                                            <null>                                                             1              tsid:000000029b0bd23-00000c17                     
+<<<<<<< ab61d34080e6d403dc828b0536e36dab07ea516d
+>>>>>>> Revert "TEIID-4297 (#763)"
+=======
 >>>>>>> Revert "TEIID-4297 (#763)"
 QT_Ora9DS                                                          SYS                                                                hour                                                               <null>                                                             1              tsid:0000000005808d7-00000169                     
 QT_Ora9DS                                                          SYS                                                                hour                                                               <null>                                                             1              tsid:0000000005808d7-0000016c                     
@@ -751,6 +757,7 @@ QT_Ora9DS                                                          SYS          
 QT_Ora9DS                                                          SYS                                                                radians                                                            <null>                                                             1              tsid:000000039e5ed65-000000f7                     
 QT_Ora9DS                                                          SYS                                                                rand                                                               <null>                                                             1              tsid:0000000005c5f18-0000008a                     
 QT_Ora9DS                                                          SYS                                                                rand                                                               <null>                                                             1              tsid:0000000005c5f18-0000008d                     
+<<<<<<< ab61d34080e6d403dc828b0536e36dab07ea516d
 <<<<<<< 6bb9bfd64fb0f00ac0fc674dcc7efa05e2c58594
 QT_Ora9DS                                                          SYS                                                                regexp_replace                                                     <null>                                                             1              tsid:fffffffb37a6c71-00000d7e                     
 QT_Ora9DS                                                          SYS                                                                regexp_replace                                                     <null>                                                             1              tsid:fffffffb37a6c71-00000d83                     
@@ -760,6 +767,8 @@ QT_Ora9DS                                                          SYS          
 QT_Ora9DS                                                          SYS                                                                replace                                                            <null>                                                             1              tsid:00000004163c5a7-000001f5                     
 QT_Ora9DS                                                          SYS                                                                right                                                              <null>                                                             1              tsid:0000000069ed50f-000001e8                     
 =======
+=======
+>>>>>>> Revert "TEIID-4297 (#763)"
 QT_Ora9DS                                                          SYS                                                                regexp_replace                                                     <null>                                                             1              tsid:fffffffb37a6c71-00000d72                     
 QT_Ora9DS                                                          SYS                                                                regexp_replace                                                     <null>                                                             1              tsid:fffffffb37a6c71-00000d77                     
 QT_Ora9DS                                                          SYS                                                                regexp_replace                                                     <null>                                                             1              tsid:fffffffb37a6c71-00000d8a                     
