@@ -22,12 +22,14 @@
 package org.teiid.translator;
 
 import java.io.File;
+import java.io.FilenameFilter;
+import java.nio.file.FileSystems;
+import java.nio.file.PathMatcher;
 
 import javax.resource.ResourceException;
 import javax.resource.cci.Connection;
 
 import org.teiid.connector.DataPlugin;
-import org.teiid.core.util.FileUtils;
 
 /**
  * Simple {@link Connection} interface for the filesystem
@@ -44,8 +46,7 @@ public interface FileConnection extends Connection {
 	public static class Util {
 		
 		/**
-		 * Gets the file or files, if the path is a directory, at the given path.  The path may include
-		 * a trailing extension wildcard, such as foo/bar/*.txt to return only txt files at the given path.
+		 * Gets the file or files, if the path is a directory, at the given path.  
 		 * Note the path can only refer to a single directory - directories are not recursively scanned.
 		 * @param exceptionIfFileNotFound 
 		 * @param path
@@ -58,22 +59,45 @@ public interface FileConnection extends Connection {
 	        	return datafile.listFiles();
 	        }
 	        
-	        String fname = datafile.getName();
-	        String ext = FileUtils.getExtension(fname);
+	        if (datafile.exists()) {
+	        	return new File[] {datafile};
+	        }
+	        
 	        File parentDir = datafile.getParentFile();
 	        
-	        // determine if the wild card is used to indicate all files
-	        // of the specified extension
-	        if (ext != null && "*".equals(FileUtils.getBaseFileNameWithoutExtension(fname))) { //$NON-NLS-1$            
-	            return FileUtils.findAllFilesInDirectoryHavingExtension(parentDir.getAbsolutePath(), "." + ext); //$NON-NLS-1$
-	        }
-	        if (!datafile.exists()) {
+	        if (parentDir == null || !parentDir.exists()) {
 	        	if (exceptionIfFileNotFound) {
 					throw new ResourceException(DataPlugin.Util.gs("file_not_found", location)); //$NON-NLS-1$
 	        	}
 	        	return null;
 	        }
-	        return new File[] {datafile};
+	        
+	        if (location.contains("*")) { //$NON-NLS-1$
+	        	//for backwards compatibility support any wildcard, but no escapes or other glob searches
+	        	location = location.replaceAll("\\\\", "\\\\\\\\"); //$NON-NLS-1$ //$NON-NLS-2$ 
+	        	location = location.replaceAll("\\?", "\\\\?"); //$NON-NLS-1$ //$NON-NLS-2$
+	        	location = location.replaceAll("\\[", "\\\\["); //$NON-NLS-1$ //$NON-NLS-2$
+	        	location = location.replaceAll("\\{", "\\\\{"); //$NON-NLS-1$ //$NON-NLS-2$
+	        	
+		        final PathMatcher matcher =
+		        	    FileSystems.getDefault().getPathMatcher("glob:" + location); //$NON-NLS-1$
+
+		        FilenameFilter fileFilter = new FilenameFilter() {
+		        	
+		        	@Override
+		        	public boolean accept(File dir, String name) {
+		        		return matcher.matches(FileSystems.getDefault().getPath(name));
+		        	}
+		        };
+
+		        return parentDir.listFiles(fileFilter);
+	        }
+	        
+	        if (exceptionIfFileNotFound) {
+				throw new ResourceException(DataPlugin.Util.gs("file_not_found", location)); //$NON-NLS-1$
+	        }
+	        
+        	return null;
 		}
 		
 	}

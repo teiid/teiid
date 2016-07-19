@@ -485,49 +485,6 @@ public final class FileUtils {
 
     }
 
-      /**
-       * Returns a <code>File</code> array that will contain all the files that
-       * exist in the directory that have the specified extension.
-       * @return File[] of files having a certain extension
-       */
-      public static File[] findAllFilesInDirectoryHavingExtension(String dir, final String extension) {
-
-        // Find all files in that directory that end in XML and attempt to
-        // load them into the runtime metadata database.
-        File modelsDirFile = new File(dir);
-        FileFilter fileFilter = new FileFilter() {
-            public boolean accept(File file) {
-                if(file.isDirectory()) {
-                    return false;
-                }
-
-
-                String fileName = file.getName();
-
-                if (fileName==null || fileName.length()==0) {
-                    return false;
-                }
-
-                // here we check to see if the file is an .xml file...
-                int index = fileName.lastIndexOf("."); //$NON-NLS-1$
-
-                if (index<0 || index==fileName.length()) {
-                    return false;
-                }
-
-                if (fileName.substring(index, fileName.length()).equalsIgnoreCase(extension)) {
-                    return true;
-                }
-                return false;
-            }
-        };
-
-        File[] modelFiles = modelsDirFile.listFiles(fileFilter);
-
-        return modelFiles;
-
-    }
-
     /**
      * @param string
      * @return
