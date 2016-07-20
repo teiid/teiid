@@ -46,9 +46,12 @@ public class InfinispanManagedConnectionFactory extends
 	public static final BundleUtil UTIL = BundleUtil.getBundleUtil(InfinispanManagedConnectionFactory.class);
 
 	private static final String LOCAL_CACHE_CONNECTION = "org.teiid.resource.adapter.infinispan.local.LocalCacheConnection";
+	private static final String REMOTE_CACHE_CONNECTION = "org.teiid.resource.adapter.infinispan.remote.RemoteCacheConnection";
 	
 	private static final long serialVersionUID = -9153717006234080627L;
+	private String remoteServerList = null;
 	private String configurationFileNameForLocalCache = null;
+	private String hotrodClientPropertiesFile = null;
 	private String cacheJndiName = null;
 	private String cacheTypeMapping = null;
 	private ClassRegistry methodUtil = new ClassRegistry();
@@ -72,7 +75,9 @@ public class InfinispanManagedConnectionFactory extends
 					UTIL.getString("InfinispanManagedConnectionFactory.cacheTypeMapNotSet")); //$NON-NLS-1$
 		}
 
-		if (configurationFileNameForLocalCache == null && cacheJndiName == null) {
+		if (remoteServerList == null
+				&& configurationFileNameForLocalCache == null
+				&& hotrodClientPropertiesFile == null && cacheJndiName == null) {
 			throw new InvalidPropertyException(
 					UTIL.getString("InfinispanManagedConnectionFactory.invalidServerConfiguration")); //$NON-NLS-1$	
 		}
@@ -108,14 +113,11 @@ public class InfinispanManagedConnectionFactory extends
 		// return the cacheName that is mapped as the alias
 		return cacheNameProxy.getPrimaryCacheAliasName();
 	}
-	
-	public String getCacheNameForUpdate() {
-		if (cacheNameProxy.useMaterialization()) {
-			return cacheNameProxy.getStageCacheAliasName();
-		}
-		return cacheNameProxy.getPrimaryCacheAliasName();
-	}
 
+	public String getCacheStagingName() {
+		return cacheNameProxy.getStageCacheAliasName();
+	}
+	
 	/** 
 	 * Call to set the name of the cache to access when calling getCache
 	 * @param cacheName
@@ -240,6 +242,31 @@ public class InfinispanManagedConnectionFactory extends
 	}
 
 	/**
+	 * Returns the <code>host:port[;host:port...]</code> list that identifies
+	 * the remote servers to include in this cluster;
+	 * 
+	 * @return <code>host:port[;host:port...]</code> list
+	 */
+	public String getRemoteServerList() {
+		return remoteServerList;
+	}
+
+	/**
+	 * Set the list of remote servers that make up the Infinispan cluster. The
+	 * servers must be Infinispan HotRod servers. The list must be in the
+	 * appropriate format of <code>host:port[;host:port...]</code> that would be
+	 * used when defining an Infinispan RemoteCacheManager instance. If
+	 * the value is missing, <code>localhost:11311</code> is assumed.
+	 * 
+	 * @param remoteServerList
+	 *            the server list in appropriate
+	 *            <code>server:port;server2:port2</code> format.
+	 */
+	public void setRemoteServerList(String remoteServerList) {
+		this.remoteServerList = remoteServerList;
+	}
+
+	/**
 	 * Get the name of the configuration resource or file that should be used to
 	 * configure a local cache manager
 	 * 
@@ -264,6 +291,32 @@ public class InfinispanManagedConnectionFactory extends
 	public void setConfigurationFileNameForLocalCache(
 			String configurationFileName) {
 		this.configurationFileNameForLocalCache = configurationFileName;
+	}
+
+	/**
+	 * Get the name of the HotRod client properties file that should be used to
+	 * configure a RemoteCacheManager remoteCacheManager.
+	 * 
+	 * @return the name of the HotRod client properties file to be used to
+	 *         configure RemoteCacheManager
+	 * @see #setHotRodClientPropertiesFile(String)
+	 */
+	public String getHotRodClientPropertiesFile() {
+		return hotrodClientPropertiesFile;
+	}
+
+	/**
+	 * Set the name of the HotRod client properties file that should be used to
+	 * configure a remoteCacheManager.
+	 * 
+	 * @param propertieFileName
+	 *            the name of the HotRod client properties file that should be
+	 *            used to configure the RemoteCacheManager
+	 *            container.
+	 * @see #getHotRodClientPropertiesFile()
+	 */
+	public void setHotRodClientPropertiesFile(String propertieFileName) {
+		this.hotrodClientPropertiesFile = propertieFileName;
 	}
 
 	/**
@@ -383,7 +436,12 @@ public class InfinispanManagedConnectionFactory extends
 				Class<?> clz = null;
 				if (getCacheJndiName() != null) {
 					Object cacheMgr = performJNDICacheLookup(getCacheJndiName());
-					clz = loadClass(LOCAL_CACHE_CONNECTION);
+					boolean isHotRod = isHotRod(cacheMgr);
+					if (isHotRod) {
+						clz = loadClass(REMOTE_CACHE_CONNECTION);
+					} else {
+						clz = loadClass(LOCAL_CACHE_CONNECTION);
+					}
 					InfinispanCacheWrapper<?,?> cachewrapper  =  (InfinispanCacheWrapper<?, ?>) clz.newInstance();
 					cachewrapper.init(this, cacheMgr);
 					this.cacheWrapper =cachewrapper;
@@ -396,7 +454,7 @@ public class InfinispanManagedConnectionFactory extends
 				}
 						
 				// if configured for materialization, initialize the 
-				if (cacheNameProxy.useMaterialization()) {
+				if (cacheNameProxy.getAliasCacheName() != null) {
 					Map<Object,Object> aliasCache = (Map<Object, Object>) this.cacheWrapper.getCache(cacheNameProxy.getAliasCacheName());
 					if (aliasCache == null) {
 						throw new ResourceException(	
@@ -423,12 +481,34 @@ public class InfinispanManagedConnectionFactory extends
 		} 
 		String jndiName = getCacheJndiName();
 		if (jndiName != null && jndiName.trim().length() != 0) {
-			return true; 
-		} 
+			return true; // to be determined later
+		} else if (this.getHotRodClientPropertiesFile() != null) {
+			this.connectionType = REMOTE_CACHE_CONNECTION;
+			return true;
+		} else if (this.getRemoteServerList() != null
+				&& !this.getRemoteServerList().isEmpty()) {
+			this.connectionType = REMOTE_CACHE_CONNECTION;
+			return true;
+		}
 		
 		return false;
 	}
 	
+	/** 
+	 * If the CacheManager is the HotRod manager, then use the remote cache connection,
+	 * otherwise, use the local cache connection
+	 * @param cacheMgr
+	 * @return boolean true if its the RemoteCacheManager used in HotRod
+	 * @throws Exception
+	 */
+	protected boolean isHotRod(Object cacheMgr) throws Exception {
+		if (cacheMgr.getClass().getName().contains("hotrod")) {
+			return true;
+		}
+		return false;
+	}
+	
+
 	/* split out for testing purposes */
 	protected Object performJNDICacheLookup(String jndiName) throws Exception {
 		Context context = null;
@@ -452,8 +532,15 @@ public class InfinispanManagedConnectionFactory extends
 		int result = 1;
 		result = prime
 				* result
+				+ ((remoteServerList == null) ? 0 : remoteServerList.hashCode());
+		result = prime
+				* result
 				+ ((configurationFileNameForLocalCache == null) ? 0
 						: configurationFileNameForLocalCache.hashCode());
+		result = prime
+				* result
+				+ ((hotrodClientPropertiesFile == null) ? 0
+						: hotrodClientPropertiesFile.hashCode());
 		result = prime * result
 				+ ((cacheJndiName == null) ? 0 : cacheJndiName.hashCode());
 		return result;
@@ -469,8 +556,15 @@ public class InfinispanManagedConnectionFactory extends
 			return false;
 		InfinispanManagedConnectionFactory other = (InfinispanManagedConnectionFactory) obj;
 
+		if (!checkEquals(this.remoteServerList, other.remoteServerList)) {
+			return false;
+		}
 		if (!checkEquals(this.configurationFileNameForLocalCache,
 				other.configurationFileNameForLocalCache)) {
+			return false;
+		}
+		if (!checkEquals(this.hotrodClientPropertiesFile,
+				other.hotrodClientPropertiesFile)) {
 			return false;
 		}
 		if (!checkEquals(this.cacheJndiName, other.cacheJndiName)) {

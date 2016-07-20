@@ -22,7 +22,6 @@ org.teiid.translator.jdbc.sybase.SybaseExecutionFactory #sybase
 org.teiid.translator.jdbc.sybase.SybaseIQExecutionFactory #sybaseiq
 org.teiid.translator.jdbc.teiid.TeiidExecutionFactory #teiid
 org.teiid.translator.jdbc.teradata.TeradataExecutionFactory #teradata
-org.teiid.translator.jdbc.excel.ExcelExecutionFactory #excel-odbc
 org.teiid.translator.jdbc.postgresql.GreenplumExecutionFactory #greenplum
 org.teiid.translator.jdbc.ucanaccess.UCanAccessExecutionFactory #ucanaccess
 org.teiid.translator.jdbc.vertica.VerticaExecutionFactory #vertica

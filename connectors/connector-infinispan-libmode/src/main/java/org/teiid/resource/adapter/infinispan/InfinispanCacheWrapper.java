@@ -25,7 +25,7 @@ import javax.resource.ResourceException;
 
 import org.teiid.translator.infinispan.libmode.InfinispanCacheConnection;
 import org.teiid.translator.object.ClassRegistry;
-import org.teiid.translator.object.ObjectMaterializeLifeCycle;
+import org.teiid.translator.object.DDLHandler;
 
 /**
  * @author vanhalbert
@@ -102,15 +102,10 @@ public abstract class InfinispanCacheWrapper<K,V> implements InfinispanCacheConn
 	public ClassRegistry getClassRegistry() {
 		return getConfig().getClassRegistry();
 	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.teiid.translator.object.ObjectConnection#getMaterializeLifeCycle()
-	 */
+	
 	@Override
-	public ObjectMaterializeLifeCycle getMaterializeLifeCycle() {
-		return new ObjectMaterializeLifeCycle(this, getConfig().getCacheNameProxy());
+	public DDLHandler getDDLHandler() {
+		 return getConfig().getCacheNameProxy().getDDLHandler();
 	}	
 	
 	/**

@@ -81,8 +81,8 @@ public class TestInfinispanHotRodConnection extends SimpleMapCacheConnection imp
 //
 //
 //	@Override
-//	public ObjectMaterializeLifeCycle getMaterializeLifeCycle() {
-//		return new ObjectMaterializeLifeCycle(this, proxy);
+//	public DDLHandler getMaterializeLifeCycle() {
+//		return new DDLHandler(this, proxy);
 //	}
 
 	/**

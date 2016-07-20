@@ -70,14 +70,22 @@ public class TradesCacheSource extends HashMap <Object, Object> {
 	public static ObjectConnection createConnection() {
 		Map <Object, Object> objects = TradesCacheSource.loadCache();
 
-		ObjectConnection toc = TradeObjectConnection.createConnection(objects);
-		
-		return toc;
+		return createConnection(objects, false);
+	}
+	
+	public static ObjectConnection createConnection(boolean staging) {
+		Map <Object, Object> objects = TradesCacheSource.loadCache();
+
+		return createConnection(objects, staging);
 	}
 	
 	public static ObjectConnection createConnection(Map <Object, Object> cache) {
 
-		ObjectConnection toc = TradeObjectConnection.createConnection(cache);
+		return createConnection(cache, false);	
+	}
+	
+	public static ObjectConnection createConnection(Map <Object, Object> cache, boolean staging) {
+		ObjectConnection toc = TradeObjectConnection.createConnection(cache, staging);
 		
 		return toc;
 	}

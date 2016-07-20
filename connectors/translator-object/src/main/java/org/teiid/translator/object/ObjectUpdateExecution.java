@@ -38,7 +38,17 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
-import org.teiid.language.*;
+import org.teiid.language.BatchedUpdates;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Command;
+import org.teiid.language.Delete;
+import org.teiid.language.Expression;
+import org.teiid.language.ExpressionValueSource;
+import org.teiid.language.Insert;
+import org.teiid.language.Literal;
+import org.teiid.language.NamedTable;
+import org.teiid.language.SetClause;
+import org.teiid.language.Update;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
@@ -64,9 +74,6 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 	private Command command;
 	private Class<?> clz =  null;
 	
-	// the assumption is materialization will on be to do inserts, single or batch.  No updates or deletes will be in the commands
-	private boolean useForMat = false;
-	
 	private String tablename = null;
 
 	private int[] result;
@@ -76,9 +83,6 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 			ObjectExecutionFactory env) {
 		super(connection, context, env);
 		this.command = command;
-		
-		useForMat = connection.getMaterializeLifeCycle().getCacheNameProxy().useMaterialization();
-		
 	}
 
 	// ===========================================================================================================================
@@ -126,28 +130,41 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 		Map<String, Method> writeMethods = classRegistry.getWriteClassMethods(clz.getSimpleName());
 		
 		int cnt = 0;
-		if (command instanceof Update) {
-			cnt = handleUpdate((Update) command, visitor, classRegistry, writeMethods);
-			
-		} else if (command instanceof Delete) {
-			cnt = handleDelete((Delete) command, visitor);
-			
-		} else if (command instanceof Insert) {
-			cnt = handleInsert((Insert) command, visitor, clz, writeMethods);
-			
-		} else {
-			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21004, new Object[] {command.getClass().getName()}));
+		try {
+			if (command instanceof Update) {
+				if (visitor.getPrimaryTable() != null) {
+					this.connection.getDDLHandler().setStagingTarget(true);
+				}
+				cnt = handleUpdate((Update) command, visitor, classRegistry, writeMethods);
+				
+			} else if (command instanceof Delete) {
+				if (visitor.getPrimaryTable() != null) {
+					this.connection.getDDLHandler().setStagingTarget(true);
+				}
+				cnt = handleDelete((Delete) command, visitor);
+				
+			} else if (command instanceof Insert) {
+				if (visitor.getPrimaryTable() != null) {
+					this.connection.getDDLHandler().setStagingTarget(true);
+				}
+				cnt = handleInsert((Insert) command, visitor, clz, writeMethods);
+				
+			} else {
+				throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21004, new Object[] {command.getClass().getName()}));
+			}
+		} finally {
+			this.connection.getDDLHandler().setStagingTarget(false);
 		}
 		return cnt;
 	}
-	
+
 	private Class<?> getRegisteredClass(ClassRegistry classRegistry, ObjectVisitor visitor) throws TranslatorException {
-		String tname = visitor.getTableName();
+		String tname = (visitor.getPrimaryTable() != null ? visitor.getPrimaryTable() :  visitor.getTableName());
 		if (tablename != null && tablename.equals(tname) ) {
 			return clz;
 		}
 		tablename = tname;
-		Class<?> clz = classRegistry.getRegisteredClassUsingTableName(tname);
+		clz = classRegistry.getRegisteredClassUsingTableName(tname);
 		if (clz == null) {
 			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21005, new Object[] {visitor.getTableName()}));
 		}
@@ -215,15 +232,15 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 		
 		keyValue = convertKeyValue(keyValue, keyCol);
 		
-		// don't perform a search when doing inserts for materialization, its assume a cleared cache
-		if (!useForMat) {
-			Object rootObject = connection.getSearchType().performKeySearch(ObjectUtil.getRecordName(keyCol), keyValue, executionContext) ;
-					//env.performKeySearch(ObjectUtil.getRecordName(keyCol), keyValue, connection, executionContext);
-	
-			if (rootObject != null) {
-				throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21007, new Object[] {insert.getTable().getName(), keyValue}));
-			}
-		}		
+		//TODO: for 1.8 use putIfAbsent
+		
+		Object rootObject = connection.getSearchType().performKeySearch(ObjectUtil.getRecordName(keyCol), keyValue, executionContext) ;
+				//env.performKeySearch(ObjectUtil.getRecordName(keyCol), keyValue, connection, executionContext);
+
+		if (rootObject != null) {
+			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21007, new Object[] {insert.getTable().getName(), keyValue}));
+		}
+		
 		connection.add(keyValue, entity);
 
 		return 1;

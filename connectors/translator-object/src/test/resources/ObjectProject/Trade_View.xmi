@@ -1,15 +1,12 @@
 <?xml version="1.0" encoding="ASCII"?>
 <xmi:XMI xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:diagram="http://www.metamatrix.com/metamodels/Diagram" xmlns:mmcore="http://www.metamatrix.com/metamodels/Core" xmlns:relational="http://www.metamatrix.com/metamodels/Relational" xmlns:transformation="http://www.metamatrix.com/metamodels/Transformation">
-  <mmcore:ModelAnnotation xmi:uuid="mmuuid:b68bf59f-b3ad-4db6-b1a4-dab83e3b5b56" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational" modelType="VIRTUAL" ProducerName="Teiid Designer" ProducerVersion="10.0.1.Nightly-v20160622-1945-B8">
+  <mmcore:ModelAnnotation xmi:uuid="mmuuid:b68bf59f-b3ad-4db6-b1a4-dab83e3b5b56" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational" modelType="VIRTUAL" ProducerName="Teiid Designer" ProducerVersion="10.0.1.Nightly-v20160627-1409-B12">
     <modelImports xmi:uuid="mmuuid:a2f50f17-b5e5-405a-9c42-98885468ac72" name="XMLSchema" modelLocation="http://www.w3.org/2001/XMLSchema" modelType="TYPE" primaryMetamodelUri="http://www.eclipse.org/xsd/2002/XSD"/>
     <modelImports xmi:uuid="mmuuid:bc1d14b2-ef98-482d-af90-77e90a7a79c7" name="SimpleDatatypes-instance" modelLocation="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance" modelType="TYPE" primaryMetamodelUri="http://www.eclipse.org/xsd/2002/XSD"/>
     <modelImports xmi:uuid="mmuuid:166fed44-bb42-40c4-8169-1bae9b6e5771" name="Trade_Object" modelLocation="Trade_Object.xmi" uuid="mmuuid:abbd65a2-2896-4819-9428-fa8ba13a1b71" modelType="PHYSICAL" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational"/>
     <modelImports xmi:uuid="mmuuid:83922c48-3cdb-4a68-90ae-1e2dc51101ba" name="Trade_Mat" modelLocation="Trade_Mat.xmi" uuid="mmuuid:5f4d3ef6-026c-4a33-adea-fbf0eda391e7" modelType="PHYSICAL" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational"/>
   </mmcore:ModelAnnotation>
   <relational:BaseTable xmi:uuid="mmuuid:1fc3bc7a-7ba3-4940-8422-53735c249676" name="Trade" nameInSource="Trades" supportsUpdate="false" materialized="true">
-    <columns xmi:uuid="mmuuid:10577b53-845a-498b-8745-61cd275df196" name="TradeObject" nameInSource="this" nativeType="var_binary" length="4000" nullable="NULLABLE_UNKNOWN" defaultValue="" collationName="" updateable="false" caseSensitive="false" searchability="UNSEARCHABLE" radix="0" signed="false" distinctValueCount="0">
-      <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
-    </columns>
     <columns xmi:uuid="mmuuid:511f2da4-40e5-4829-b9f5-38cbf8fc3ee5" name="TradeID" nameInSource="tradeId" nativeType="long" updateable="false" uniqueKeys="mmuuid/bb27e4d7-da59-4bd8-9cdf-b9ef2462d16d">
       <type href="http://www.w3.org/2001/XMLSchema#long"/>
     </columns>
@@ -64,14 +61,11 @@
   <transformation:TransformationContainer xmi:uuid="mmuuid:7c614639-5168-4260-b6f1-6b5e37f840fe">
     <transformationMappings xsi:type="transformation:SqlTransformationMappingRoot" xmi:uuid="mmuuid:6dad4e39-aeec-4af3-a572-fd9d6a9eea8a" outputs="mmuuid/1fc3bc7a-7ba3-4940-8422-53735c249676" target="mmuuid/1fc3bc7a-7ba3-4940-8422-53735c249676">
       <helper xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:cc069e3d-2081-4915-bec1-0d288227391f">
-        <nested xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:3d8e9327-3fc1-4ffb-8a68-dbbe685a0566" selectSql="SELECT * FROM Trade_Object.Trade"/>
+        <nested xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:3d8e9327-3fc1-4ffb-8a68-dbbe685a0566" selectSql="SELECT Trade_Object.Trade.TradeID, Trade_Object.Trade.TradeName, Trade_Object.Trade.Settled, Trade_Object.Trade.TradeDate FROM Trade_Object.Trade"/>
         <aliases xmi:uuid="mmuuid:0c7f7863-d2c6-4062-b7f3-ad40143a070e" alias="Trade">
           <aliasedObject href="Trade_Object.xmi#mmuuid/e4662c1d-443f-45a8-8623-8a4876ea7539"/>
         </aliases>
       </helper>
-      <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:1c638f08-fdf9-4b9c-a2da-b6f0772b21e4" outputs="mmuuid/10577b53-845a-498b-8745-61cd275df196">
-        <inputs href="Trade_Object.xmi#mmuuid/73b0ec15-2abe-4f72-b25e-b9113b528b41"/>
-      </nested>
       <nested xsi:type="transformation:TransformationMapping" xmi:uuid="mmuuid:94aae62d-e897-42c8-a5d5-b80b5cd3ef90" outputs="mmuuid/511f2da4-40e5-4829-b9f5-38cbf8fc3ee5">
         <inputs href="Trade_Object.xmi#mmuuid/7ad19ea9-1751-49e0-89c7-e759dd50ff46"/>
       </nested>
