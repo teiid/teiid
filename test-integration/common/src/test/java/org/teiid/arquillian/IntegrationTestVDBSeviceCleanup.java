@@ -69,7 +69,8 @@ public class IntegrationTestVDBSeviceCleanup extends AbstractMMQueryTestCase {
 		admin.undeploy("service-vdb.xml");
 		
 		admin.deleteDataSource("ServiceDS");
-		
+
+		/*
 		admin.deploy("service-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("service-vdb.xml")));
 		
 		createDS("ServiceDS");
@@ -77,6 +78,7 @@ public class IntegrationTestVDBSeviceCleanup extends AbstractMMQueryTestCase {
 		assertTrue(AdminUtil.waitForVDBLoad(admin, "service", 1, 3));
 		
 		assertNotNull(TeiidDriver.getInstance().connect("jdbc:teiid:service@mm://localhost:31000;user=user;password=user", null));
+		*/
     }
 
 	private void createDS(String deployName) throws AdminException {
