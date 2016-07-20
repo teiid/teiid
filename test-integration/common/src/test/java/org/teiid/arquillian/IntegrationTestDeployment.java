@@ -128,6 +128,7 @@ public class IntegrationTestDeployment {
 		dsNames = admin.getDataSourceNames();
 		assertTrue(dsNames.contains("Oracle11_PushDS"));
 
+		/*
 		admin.deleteDataSource("Oracle11_PushDS");
 		vdb = admin.getVDB("bqt", 1);
 		assertFalse(vdb.isValid());
@@ -135,6 +136,7 @@ public class IntegrationTestDeployment {
 		admin.deploy("bqt.2.vdb",new FileInputStream(UnitTestUtil.getTestDataFile("bqt.vdb")));
 		vdb = admin.getVDB("bqt", 2);
 		assertEquals("2", vdb.getVersion());
+		*/
 	}
 	
 	@Test
