@@ -173,7 +173,7 @@ public class InfinispanManagedConnectionFactory extends AbstractInfinispanManage
 	private void registerToUseAnnotations(SerializationContext ctx,
 			RemoteCacheManager cc, ClassLoader cl) throws ResourceException {
 		
-//		String p = this.getCacheClassType().getPackage().getName();
+		String p = this.getCacheClassType().getPackage().getName();
 		
 		String protoName = this.getCacheClassType().getName() + ".proto";
 		
@@ -182,12 +182,9 @@ public class InfinispanManagedConnectionFactory extends AbstractInfinispanManage
 		try {
 			Class<?> clzz = loadClass("org.infinispan.protostream.annotations.ProtoSchemaBuilder");
 			protoSchemaBuilder = (ProtoSchemaBuilder) clzz.newInstance();
-
-
-			//			ProtoSchemaBuilder protoSchemaBuilder = new ProtoSchemaBuilder();
 			String protoSchema = protoSchemaBuilder
 			    .fileName(protoName)
-//			    .packageName(p)
+			    .packageName(p)
 			    .addClass(this.getCacheClassType())
 			    .build(ctx);
 			
