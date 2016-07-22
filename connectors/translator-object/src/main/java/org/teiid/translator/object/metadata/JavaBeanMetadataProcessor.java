@@ -65,10 +65,16 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 	
 	protected boolean isUpdatable = false;
 	protected boolean useAnnotations = false;
+	protected boolean classObjectAsColumn = false;
 	protected Table rootTable = null;
 	
 	public JavaBeanMetadataProcessor(boolean useAnnotations) {
 		this.useAnnotations = useAnnotations;
+	}
+	
+	public JavaBeanMetadataProcessor(boolean useAnnotations, boolean classObjectAsColumn) {
+		this.useAnnotations = useAnnotations;
+		this.classObjectAsColumn = classObjectAsColumn;
 	}
 
 	@Override
@@ -102,8 +108,11 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 		table = mf.addTable(tableName);
 		table.setSupportsUpdate(this.isUpdatable);
 		
-		String columnName = tableName + OBJECT_COL_SUFFIX;
-		addColumn(mf, entity, entity, columnName, "this", SearchType.Unsearchable, table, false, NullType.Nullable, false); //$NON-NLS-1$
+		if (classObjectAsColumn) {
+			String columnName = tableName + OBJECT_COL_SUFFIX;
+			addColumn(mf, entity, entity, columnName, "this", SearchType.Unsearchable, table, false, NullType.Nullable, false); //$NON-NLS-1$
+		}
+		
 		Map<String, Method> methods;
 		try {
 			

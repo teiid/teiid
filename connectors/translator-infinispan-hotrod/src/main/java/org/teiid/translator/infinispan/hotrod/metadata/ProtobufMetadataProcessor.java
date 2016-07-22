@@ -91,6 +91,15 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 
 	private Table rootTable = null;
 	private Method pkMethod = null;
+	private boolean classObjectAsColumn = false;
+	
+	public ProtobufMetadataProcessor(boolean classObjectAsColumn) {
+		this.classObjectAsColumn = classObjectAsColumn;
+	}
+	
+	public ProtobufMetadataProcessor() {
+		
+	}
 	
 	@Override
 	public void process(MetadataFactory metadataFactory, ObjectConnection conn) throws TranslatorException {
@@ -133,9 +142,11 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 		
 		rootTable = addTable(mf, entity, updatable, false);
 		
-	    // add column for cache Object, set to non-selectable by default so that select * queries don't fail by default
-		addRootColumn(mf, Object.class, entity, null, null, SearchType.Unsearchable, rootTable.getName(), rootTable, false, false, NullType.Nullable); //$NON-NLS-1$	
-
+		if (classObjectAsColumn) {
+			// add column for cache Object, set to non-selectable by default so that select * queries don't fail by default
+			addRootColumn(mf, Object.class, entity, null, null, SearchType.Unsearchable, rootTable.getName(), rootTable, false, false, NullType.Nullable); //$NON-NLS-1$	
+		}
+		
 		pkMethod = null;
 		if (updatable) {
 		    pkMethod = conn.getClassRegistry().getReadClassMethods(entity.getName()).get(pkField);

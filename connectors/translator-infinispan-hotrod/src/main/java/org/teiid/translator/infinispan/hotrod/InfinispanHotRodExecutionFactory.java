@@ -158,9 +158,9 @@ public class InfinispanHotRodExecutionFactory extends ObjectExecutionFactory {
 	@Override
     public MetadataProcessor<ObjectConnection> getMetadataProcessor(){
 		if (this.supportsSearchabilityUsingAnnotations()) {
-			return new AnnotationMetadataProcessor(true);
+			return new AnnotationMetadataProcessor(true, this.supportClassObjectAsColumn());
 		}
-	    return new ProtobufMetadataProcessor();
+	    return new ProtobufMetadataProcessor(this.supportClassObjectAsColumn());
 	}
 
 }

@@ -30,6 +30,7 @@ import java.util.Map;
 
 import org.jboss.teiid.jdg_remote.pojo.AllTypesCacheSource;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
@@ -78,7 +79,10 @@ public class TestInfinispanExecutionUsingAllTypes {
 	/**
 	 * Test that only the 'object' instance is returned in the result set
 	 * @throws Exception
+	 * 
+	 * 
 	 */
+	@Ignore
 	@Test public void testReturningObject() throws Exception {
 		Select command = (Select)translationUtility.parseCommand("select AllTypesObject From AllTypes as T"); //$NON-NLS-1$
 

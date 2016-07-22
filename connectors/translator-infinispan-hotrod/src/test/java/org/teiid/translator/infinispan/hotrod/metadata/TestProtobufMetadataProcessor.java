@@ -35,6 +35,32 @@ public class TestProtobufMetadataProcessor {
 
 	@Test
 	public void testPersonMetadata() throws Exception {
+		TRANSLATOR.setSupportsSearchabilityUsingAnnotations(false);
+		
+		TRANSLATOR.start();
+
+
+		MetadataFactory mf = new MetadataFactory("vdb", 1, "objectvdb",
+				SystemMetadata.getInstance().getRuntimeTypeMap(),
+				new Properties(), null);
+
+		InfinispanHotRodConnection conn = PersonCacheSource.createConnection(true);
+
+		TRANSLATOR.getMetadataProcessor().process(mf, conn);
+
+		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
+				null, null);
+
+		assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("personMetadataNoObject.ddl")), metadataDDL);	
+
+	}
+	
+	@Test
+	public void testPersonMetadataWithObject() throws Exception {
+		TRANSLATOR.setSupportsSearchabilityUsingAnnotations(false);
+		TRANSLATOR.setSupportsClassObjectAsColumn(true);
+		TRANSLATOR.start();
+
 
 		MetadataFactory mf = new MetadataFactory("vdb", 1, "objectvdb",
 				SystemMetadata.getInstance().getRuntimeTypeMap(),
@@ -53,6 +79,9 @@ public class TestProtobufMetadataProcessor {
 	
 	@Test
 	public void testAllTypesMetadata() throws Exception {
+		TRANSLATOR.setSupportsSearchabilityUsingAnnotations(false);
+		TRANSLATOR.start();
+
 
 		MetadataFactory mf = new MetadataFactory("vdb", 1, "objectvdb",
 				SystemMetadata.getInstance().getRuntimeTypeMap(),

@@ -44,6 +44,15 @@ public class AnnotationMetadataProcessor extends JavaBeanMetadataProcessor {
 		super(useAnnotations);
 		
 	}
+	
+	/**
+	 * @param useAnnotations
+	 * @param classObjectAsColumn 
+	 */
+	public AnnotationMetadataProcessor(boolean useAnnotations, boolean classObjectAsColumn) {
+		super(useAnnotations, classObjectAsColumn);
+		
+	}
 
 	/**
 	 * {@inheritDoc}

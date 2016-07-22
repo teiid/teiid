@@ -53,6 +53,7 @@ public abstract class ObjectExecutionFactory extends
 
 	public static final int MAX_SET_SIZE = 10000;
 	private boolean searchabilityBasedOnAnnotations = true;
+	private boolean classObjectAsColumn = false;
 	
 	public ObjectExecutionFactory() {
 		setSourceRequiredForMetadata(false);
@@ -104,6 +105,15 @@ public abstract class ObjectExecutionFactory extends
 	public void setSupportsSearchabilityUsingAnnotations(boolean useAnnotations) {
 		this.searchabilityBasedOnAnnotations = useAnnotations;
 	}
+	
+	@TranslatorProperty(display="Class Object As Column", description="If true, and when the translator provides the metadata, a column of object data type will be created that represents the stored object in the cache", advanced=true)
+	public boolean supportClassObjectAsColumn() {
+		return classObjectAsColumn;
+	}	
+	
+	public void setSupportsClassObjectAsColumn(boolean classObjectAsColumn) {
+		this.classObjectAsColumn = classObjectAsColumn;
+	}
 
 	@Override
     public boolean supportsCompareCriteriaEquals() {
@@ -122,7 +132,7 @@ public abstract class ObjectExecutionFactory extends
 	
 	@Override
     public MetadataProcessor<ObjectConnection> getMetadataProcessor(){
-	    return new JavaBeanMetadataProcessor(searchabilityBasedOnAnnotations);
+	    return new JavaBeanMetadataProcessor(supportsSearchabilityUsingAnnotations(), supportClassObjectAsColumn());
 	}
 
 	/**

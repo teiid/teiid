@@ -24,6 +24,7 @@ package org.teiid.translator.object;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.core.util.Assertion;
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.AndOr;
 import org.teiid.language.BaseLanguageObject;
@@ -48,6 +49,8 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.metadata.JavaBeanMetadataProcessor;
 import org.teiid.translator.object.util.ObjectUtil;
@@ -122,9 +125,11 @@ public class ObjectVisitor extends HierarchyVisitor {
 		this.tableName=tn;
 		this.table = t;
 		
-		this.primaryTable =  t.getMetadataObject().getProperty(JavaBeanMetadataProcessor.PRIMARY_TABLE_PROPERTY, false);
-		if (this.primaryTable != null && primaryTable.contains(".")) {
-			primaryTable = StringUtil.getLastToken(primaryTable, ".");
+
+		String primary_table =  t.getMetadataObject().getProperty(JavaBeanMetadataProcessor.PRIMARY_TABLE_PROPERTY, false);
+		
+		if (primary_table != null && primary_table.contains(".")) {
+			this.primaryTable = StringUtil.getLastToken(primary_table, ".");
 		}
 
 	}
