@@ -38,6 +38,7 @@ import org.infinispan.protostream.SerializationContext;
 import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoadException;
+import org.teiid.core.util.Assertion;
 import org.teiid.core.util.StringUtil;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -149,20 +150,16 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 		return cacheNameProxy.getPrimaryCacheAliasName();
 	}
 	
-	public String getCacheNameForUpdate() {
-		if (cacheNameProxy.useMaterialization()) {
-			return cacheNameProxy.getStageCacheAliasName();
-		}
-		return cacheNameProxy.getPrimaryCacheAliasName();
+	public String getCacheStagingName() {
+		return cacheNameProxy.getStageCacheAliasName();
 	}	
 	
 	@SuppressWarnings("rawtypes")
-	public RemoteCache getCache() {
-		return getCache(this.getCacheName());
-	}
-	
-	@SuppressWarnings("rawtypes")
 	public RemoteCache getCache(String cacheName) {
+        if (cacheName == null) {
+        	Assertion.isNotNull(cacheName, "Program Error: Cache Name is null");
+        }
+
 		return cacheContainer.getCache(cacheName);
 	}	
 
@@ -293,11 +290,11 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	 * An option to configure the staging cache name to use when using JDG to materialize data.
 	 * @param cacheName
 	 */
-	public void setStagingCacheName(String cacheName) {
+	protected void setStagingCacheName(String cacheName) {
 		this.stagingCacheName = cacheName;
 	}
 	
-	public String getAliasCacheName() {
+	protected String getAliasCacheName() {
 		return this.aliasCacheName;
 	}
 	
@@ -305,7 +302,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	 * An option to configure the alias cache name to use when using JDG to materialize data.
 	 * @param cacheName
 	 */
-	public void setAliasCacheName(String cacheName) {
+	protected void setAliasCacheName(String cacheName) {
 		this.aliasCacheName = cacheName;
 	}	
 
@@ -601,7 +598,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 			registerWithCacheManager(getContext(), cc, classLoader, this.usingAnnotations);
 			
 			// if configured for materialization, initialize the cacheNameProxy
-			if (cacheNameProxy.useMaterialization()) {
+			if (cacheNameProxy.getAliasCacheName() != null) {
 				RemoteCache aliasCache = cc.getCache(cacheNameProxy.getAliasCacheName());
 				if (aliasCache == null) {
 					throw new ResourceException(	

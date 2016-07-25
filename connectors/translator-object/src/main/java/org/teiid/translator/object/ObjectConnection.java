@@ -157,10 +157,10 @@ public interface ObjectConnection {
 	public void clearCache(String cacheName) throws TranslatorException;
 	
 	/**
-	 * Implement @link ObjectMaterializeLifeCycle if the translator supports materialization.
-	 * @return ObjectMaterializeLifeCycle
+	 * Implement @link DDLHandler if the translator supports materialization.
+	 * @return DDLHandler
 	 */
-	public ObjectMaterializeLifeCycle getMaterializeLifeCycle();
+	public DDLHandler getDDLHandler();
 
 	
 }

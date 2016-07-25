@@ -26,7 +26,9 @@ import java.util.List;
 
 import javax.resource.cci.ConnectionFactory;
 
-import org.teiid.language.*;
+import org.teiid.language.Argument;
+import org.teiid.language.Command;
+import org.teiid.language.QueryExpression;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
@@ -101,11 +103,6 @@ public abstract class ObjectExecutionFactory extends
 	
 	public void setSupportsSearchabilityUsingAnnotations(boolean useAnnotations) {
 		this.searchabilityBasedOnAnnotations = useAnnotations;
-	}
-
-	@Override
-	public boolean supportsBatchedUpdates() {
-		return true;
 	}
 
 	@Override

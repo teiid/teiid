@@ -113,14 +113,11 @@ public class InfinispanManagedConnectionFactory extends
 		// return the cacheName that is mapped as the alias
 		return cacheNameProxy.getPrimaryCacheAliasName();
 	}
-	
-	public String getCacheNameForUpdate() {
-		if (cacheNameProxy.useMaterialization()) {
-			return cacheNameProxy.getStageCacheAliasName();
-		}
-		return cacheNameProxy.getPrimaryCacheAliasName();
-	}
 
+	public String getCacheStagingName() {
+		return cacheNameProxy.getStageCacheAliasName();
+	}
+	
 	/** 
 	 * Call to set the name of the cache to access when calling getCache
 	 * @param cacheName
@@ -457,7 +454,7 @@ public class InfinispanManagedConnectionFactory extends
 				}
 						
 				// if configured for materialization, initialize the 
-				if (cacheNameProxy.useMaterialization()) {
+				if (cacheNameProxy.getAliasCacheName() != null) {
 					Map<Object,Object> aliasCache = (Map<Object, Object>) this.cacheWrapper.getCache(cacheNameProxy.getAliasCacheName());
 					if (aliasCache == null) {
 						throw new ResourceException(	

@@ -9,8 +9,14 @@ import org.teiid.translator.object.simpleMap.SimpleMapCacheConnection;
 
 public class TradeObjectConnection extends SimpleMapCacheConnection {
 
-	public static ObjectConnection createConnection(Map<Object,Object> map) {
-		CacheNameProxy proxy = new CacheNameProxy(TradesCacheSource.TRADES_CACHE_NAME);
+	public static ObjectConnection createConnection(Map<Object,Object> map, boolean staging) {
+		CacheNameProxy proxy = null;
+		
+		if (staging) {
+			proxy = new CacheNameProxy(TradesCacheSource.TRADES_CACHE_NAME, "st_" + TradesCacheSource.TRADES_CACHE_NAME, "aliasCacheName");
+		} else { 
+			proxy = new CacheNameProxy(TradesCacheSource.TRADES_CACHE_NAME);
+		}
 
 		return new TradeObjectConnection(map, TradesCacheSource.CLASS_REGISTRY, proxy);
 	}

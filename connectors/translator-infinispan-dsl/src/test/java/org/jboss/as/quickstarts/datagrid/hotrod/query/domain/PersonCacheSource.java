@@ -44,12 +44,9 @@ import org.infinispan.protostream.config.Configuration;
 import org.infinispan.protostream.descriptors.Descriptor;
 import org.infinispan.protostream.descriptors.FileDescriptor;
 import org.infinispan.protostream.impl.parser.SquareProtoParser;
-import org.jboss.teiid.jdg_remote.pojo.AllTypeCacheConnection;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.infinispan.dsl.InfinispanDSLConnection;
-import org.teiid.translator.infinispan.dsl.TestInfinispanDSLConnection;
 import org.teiid.translator.object.ClassRegistry;
-import org.teiid.translator.object.ObjectMaterializeLifeCycle;
+
 
 /**
  * Sample cache of objects

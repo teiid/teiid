@@ -9,7 +9,7 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.CacheNameProxy;
 import org.teiid.translator.object.ClassRegistry;
 import org.teiid.translator.object.ObjectConnection;
-import org.teiid.translator.object.ObjectMaterializeLifeCycle;
+import org.teiid.translator.object.DDLHandler;
 import org.teiid.translator.object.SearchType;
 
 public class SimpleMapCacheConnection implements ObjectConnection {
@@ -200,14 +200,14 @@ public class SimpleMapCacheConnection implements ObjectConnection {
 	}
 	
 	/**
-	 * Implement @link ObjectMaterializeLifeCycle if the translator supports materialization.
+	 * Implement @link DDLHandler if the translator supports materialization.
 	 * The default implementation expects to use a second cache to manage the cache alias names
 	 * in order to support materialization into a staging location.
-	 * @return ObjectMaterializeLifeCycle
+	 * @return DDLHandler
 	 */
 	@Override
-	public ObjectMaterializeLifeCycle getMaterializeLifeCycle() {
-		return new ObjectMaterializeLifeCycle(this, proxy);
+	public DDLHandler getDDLHandler() {
+		return proxy.getDDLHandler();
 	}
 
 	/**
