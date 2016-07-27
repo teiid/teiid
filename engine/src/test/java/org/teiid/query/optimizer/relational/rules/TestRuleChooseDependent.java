@@ -543,7 +543,7 @@ public class TestRuleChooseDependent {
         ArrayList atomicJoinCrits2 = new ArrayList(1);
         atomicJoinCrits2.add(atomicJoinCrit2);        
         
-        int expected = NEITHER_SIDE;
+        int expected = LEFT_SIDE;
 
         helpTestChooseSiblingAndMarkDependent(
          group1, 
@@ -557,7 +557,7 @@ public class TestRuleChooseDependent {
          atomicCrit2a, 
          atomicJoinCrits2,
          crits, 
-         expected, -1, 7930);        
+         expected, -1, 7923);        
     }
     
     /**

@@ -29,6 +29,7 @@
     <li><a href="https://issues.jboss.org/browse/TEIID-4243">TEIID-4243</a> <b>BatchUpdateException</b> support in JDBC to indicate what part of batch succeeds when a failure occurs.
     <li><a href="https://issues.jboss.org/browse/TEIID-4191">TEIID-4191</a> <b>NO QUOTE</b> option for TEXTAGG.
     <li><a href="https://issues.jboss.org/browse/TEIID-4200">TEIID-4200</a> Moved to WildFly 10 as host environment
+    <li><a href="https://issues.jboss.org/browse/TEIID-4332">TEIID-4332</a> <b>Improved NDV</b> calculations for costing.
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -54,6 +55,7 @@
 <ul>
    <li><a href="https://issues.jboss.org/browse/TEIID-4317">TEIID-4317</a> ExecutionFactory.initCapabilities will always be called - either during start if isSourceRequiredForCapabilities returns false, or later if true.</li>
    <li><a href="https://issues.jboss.org/browse/TEIID-4346">TEIID-4346</a> The excel-odbc translator has been removed.  Please use the excel translator instead.</li>
+   <li><a href="https://issues.jboss.org/browse/TEIID-4332">TEIID-4332</a> Due to costing logic changes plans may be different that in previous releases.  Please raise an issue is you feel a plan is not appropriate.   
 </ul>
 
 <h4>from 8.x</h4>

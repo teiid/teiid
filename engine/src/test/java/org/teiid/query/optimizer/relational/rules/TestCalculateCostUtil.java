@@ -134,7 +134,7 @@ public class TestCalculateCostUtil {
         QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm2.g3.e1 NOT LIKE '#_'"; //$NON-NLS-1$
         
-        helpTestEstimateCost(critString, 300, 233, metadata);
+        helpTestEstimateCost(critString, 300, 241, metadata);
     }
     
     /**
@@ -167,7 +167,7 @@ public class TestCalculateCostUtil {
         QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm2.g3.e1 IS NULL"; //$NON-NLS-1$
         
-        helpTestEstimateCost(critString, 300, 33, metadata);
+        helpTestEstimateCost(critString, 300, 35, metadata);
     }
     
     /**
@@ -178,7 +178,7 @@ public class TestCalculateCostUtil {
         QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm2.g3.e1 IS NOT NULL"; //$NON-NLS-1$
         
-        helpTestEstimateCost(critString, 300, 266, metadata);
+        helpTestEstimateCost(critString, 300, 264, metadata);
     }
     
     /**
@@ -200,7 +200,7 @@ public class TestCalculateCostUtil {
         QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm1.g1.e1 IS NOT NULL"; //$NON-NLS-1$
         
-        helpTestEstimateCost(critString, 300, 299, metadata);
+        helpTestEstimateCost(critString, 300, 300, metadata);
     }
     
     /**
@@ -236,7 +236,7 @@ public class TestCalculateCostUtil {
         QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm2.g3.e1 IN ('2', '3')"; //$NON-NLS-1$
         
-        helpTestEstimateCost(critString, 300, 66, metadata);
+        helpTestEstimateCost(critString, 300, 33, metadata);
     }
     
     /**
@@ -248,7 +248,7 @@ public class TestCalculateCostUtil {
         QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm2.g3.e1 NOT IN ('2', '3')"; //$NON-NLS-1$
         
-        helpTestEstimateCost(critString, 300, 233, metadata);
+        helpTestEstimateCost(critString, 300, 266, metadata);
     }
     
     /**
@@ -260,7 +260,7 @@ public class TestCalculateCostUtil {
         QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm1.g1.e1 IN ('2', '3')"; //$NON-NLS-1$
         
-        helpTestEstimateCost(critString, NewCalculateCostUtil.UNKNOWN_VALUE, NewCalculateCostUtil.UNKNOWN_VALUE, metadata);
+        helpTestEstimateCost(critString, NewCalculateCostUtil.UNKNOWN_VALUE, 2, metadata);
     }
     
     /**
@@ -319,7 +319,7 @@ public class TestCalculateCostUtil {
     @Test public void testEstimateNdvPostJoin() throws Exception {
     	String query = "SELECT account FROM US.Accounts, Europe.CustAccts, CustomerMaster.Customers where account + accid + CustomerMaster.Customers.id = 1000000"; //$NON-NLS-1$
     	
-    	helpTestQuery(1E9f, query, new String[] {"SELECT g_0.accid FROM Europe.CustAccts AS g_0", "SELECT g_0.id FROM CustomerMaster.Customers AS g_0", "SELECT g_0.account FROM US.Accounts AS g_0"});
+    	helpTestQuery(1, query, new String[] {"SELECT g_0.accid FROM Europe.CustAccts AS g_0", "SELECT g_0.id FROM CustomerMaster.Customers AS g_0", "SELECT g_0.account FROM US.Accounts AS g_0"});
     }
 
     /** 
@@ -524,7 +524,7 @@ public class TestCalculateCostUtil {
         QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm4.g1.e1 = pm1.g1.e1"; //$NON-NLS-1$
         
-        helpTestEstimateCost(critString, 100, 10, metadata);
+        helpTestEstimateCost(critString, 100, 3, metadata);
     }
     
     /**
@@ -534,7 +534,7 @@ public class TestCalculateCostUtil {
         QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm2.g3.e1 = pm4.g1.e1"; //$NON-NLS-1$
         
-        helpTestEstimateCost(critString, 100, 33, metadata);
+        helpTestEstimateCost(critString, 100, 10, metadata);
     }
     
     /**
@@ -626,13 +626,13 @@ public class TestCalculateCostUtil {
     @Test public void testNDVEstimate1() throws Exception {
         String crit = "US.accounts.account = US.accounts.customer"; //$NON-NLS-1$
         
-        helpTestEstimateCost(crit, 1000, 800, TestVirtualDepJoin.exampleVirtualDepJoin());
+        helpTestEstimateCost(crit, 1000, 894, TestVirtualDepJoin.exampleVirtualDepJoin());
     }
     
     @Test public void testCompoundCriteriaEstimate() throws Exception {
         String crit = "US.accounts.account = 10 and US.accounts.account = US.accounts.customer"; //$NON-NLS-1$
         
-        helpTestEstimateCost(crit, 1000, 720, TestVirtualDepJoin.exampleVirtualDepJoin());
+        helpTestEstimateCost(crit, 1000, 757, TestVirtualDepJoin.exampleVirtualDepJoin());
     }
 
     @Test public void testCompoundCriteriaEstimate1() throws Exception {
@@ -662,18 +662,18 @@ public class TestCalculateCostUtil {
     @Test public void testCompoundCriteriaEstimate3() throws Exception {
         String crit = "US.accounts.account is null or US.accounts.account = US.accounts.customer"; //$NON-NLS-1$
         
-        helpTestEstimateCost(crit, 1000, 801, TestVirtualDepJoin.exampleVirtualDepJoin());
+        helpTestEstimateCost(crit, 1000, 895, TestVirtualDepJoin.exampleVirtualDepJoin());
     }
     
     //ensures that the ordering of criteria does not effect the costing calculation
     @Test public void testCompoundCriteriaEstimate4() throws Exception {
         String crit = "US.accounts.account = 10 and US.accounts.account = US.accounts.customer and US.accounts.customer < 100"; //$NON-NLS-1$
         
-        helpTestEstimateCost(crit, 1000, 86, TestVirtualDepJoin.exampleVirtualDepJoin());
+        helpTestEstimateCost(crit, 1000, 87, TestVirtualDepJoin.exampleVirtualDepJoin());
         
         String crit1 = "US.accounts.account = US.accounts.customer and US.accounts.customer < 100 and US.accounts.account = 10"; //$NON-NLS-1$
         
-        helpTestEstimateCost(crit1, 1000, 81, TestVirtualDepJoin.exampleVirtualDepJoin());
+        helpTestEstimateCost(crit1, 1000, 85, TestVirtualDepJoin.exampleVirtualDepJoin());
     }
     
     @Test public void testCompoundCriteriaEstimate5() throws Exception {

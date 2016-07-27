@@ -140,8 +140,8 @@ public final class RuleChooseDependent implements OptimizerRule {
                 List leftExpressions = (List)joinNode.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS);
                 List rightExpressions = (List)joinNode.getProperty(NodeConstants.Info.RIGHT_EXPRESSIONS);
                 
-                float sourceNdv = NewCalculateCostUtil.getNDVEstimate(joinNode.getFirstChild(), metadata, sourceCost, leftExpressions, true);
-                float siblingNdv = NewCalculateCostUtil.getNDVEstimate(joinNode.getLastChild(), metadata, siblingCost, rightExpressions, true);
+                float sourceNdv = NewCalculateCostUtil.getNDVEstimate(sourceNode, metadata, sourceCost, entry.leftCandidate?leftExpressions:rightExpressions, true);
+                float siblingNdv = NewCalculateCostUtil.getNDVEstimate(siblingNode, metadata, siblingCost, entry.leftCandidate?rightExpressions:leftExpressions, true);
                 
                 if (sourceCost != NewCalculateCostUtil.UNKNOWN_VALUE && sourceNdv == NewCalculateCostUtil.UNKNOWN_VALUE) {
                 	sourceNdv = sourceCost;
@@ -150,10 +150,10 @@ public final class RuleChooseDependent implements OptimizerRule {
                 	siblingNdv = siblingCost;
                 }
 
-                if (bothCandidates && sourceNdv != NewCalculateCostUtil.UNKNOWN_VALUE && ((sourceCost <= RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY 
-                		&& sourceCost <= siblingCost) || (siblingCost == NewCalculateCostUtil.UNKNOWN_VALUE && sourceNdv <= UNKNOWN_INDEPENDENT_CARDINALITY))) {
+                if (bothCandidates && sourceNdv != NewCalculateCostUtil.UNKNOWN_VALUE && ((sourceNdv <= RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY 
+                		&& sourceNdv < siblingNdv) || (siblingCost == NewCalculateCostUtil.UNKNOWN_VALUE && sourceNdv <= UNKNOWN_INDEPENDENT_CARDINALITY))) {
                     pushCriteria |= markDependent(siblingNode, joinNode, metadata, null, sourceCost > RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY?true:null, capFinder, context, rules, analysisRecord);
-                } else if (siblingNdv != NewCalculateCostUtil.UNKNOWN_VALUE && (siblingCost <= RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY || (sourceCost == NewCalculateCostUtil.UNKNOWN_VALUE && siblingNdv <= UNKNOWN_INDEPENDENT_CARDINALITY))) {
+                } else if (siblingNdv != NewCalculateCostUtil.UNKNOWN_VALUE && ((siblingNdv <= RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY && siblingNdv < sourceNdv) || (sourceCost == NewCalculateCostUtil.UNKNOWN_VALUE && siblingNdv <= UNKNOWN_INDEPENDENT_CARDINALITY))) {
                     pushCriteria |= markDependent(sourceNode, joinNode, metadata, null, siblingCost > RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY?true:null, capFinder, context, rules, analysisRecord);
                 }
             }
@@ -199,12 +199,18 @@ public final class RuleChooseDependent implements OptimizerRule {
                 if (candidate == null) {
                     candidate = new CandidateJoin();
                     candidate.joinNode = joinNode;
-                    candidates.add(candidate);
                 }
                 if (j.hasNext()) {
-                    candidate.leftCandidate=true;
+                	JoinType jtype = (JoinType) joinNode.getProperty(NodeConstants.Info.JOIN_TYPE);
+                	if (!jtype.isOuter()) {
+	                    candidate.leftCandidate=true;
+	                    candidates.add(candidate);
+                	}
                 } else {
                     candidate.rightCandidate=true;
+                    if (!candidate.leftCandidate) {
+                    	candidates.add(candidate);
+                    }
                 }
             }
         }

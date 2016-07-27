@@ -1136,7 +1136,7 @@ public class TestJoinOptimization {
             "SELECT BQT1.SmallA.IntKey FROM BQT1.SmallB, BQT1.Smalla, bqt2.smallb where bqt2.smallb.intkey = bqt1.smallb.intkey and bqt2.smallb.stringkey = bqt1.smalla.stringkey",  //$NON-NLS-1$
             metadata,
             null, capFinder,
-            new String[] {"SELECT g_0.IntKey, g_0.StringKey FROM BQT2.SmallB AS g_0", 
+            new String[] {"SELECT g_0.IntKey, g_0.StringKey FROM BQT2.SmallB AS g_0 WHERE g_0.IntKey IN (<dependent values>)", 
             		"SELECT g_0.StringKey AS c_0, g_0.IntKey AS c_1 FROM BQT1.SmallA AS g_0 ORDER BY c_0", 
             		"SELECT g_0.IntKey AS c_0 FROM BQT1.SmallB AS g_0 ORDER BY c_0"}, 
             ComparisonMode.EXACT_COMMAND_STRING );

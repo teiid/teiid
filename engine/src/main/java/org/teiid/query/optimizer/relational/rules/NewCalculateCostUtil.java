@@ -46,6 +46,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.resolver.util.ResolverUtil;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.symbol.Constant;
@@ -73,6 +74,7 @@ public class NewCalculateCostUtil {
     
     enum Stat {
     	NDV,
+    	NDV_HIGH,
     	NNV
     }
     
@@ -105,6 +107,14 @@ public class NewCalculateCostUtil {
     		    }
     		}
     		return sb.append('}').toString();
+    	}
+    	
+    	public float[] put(Expression key, float[] value) {
+    		return super.put(SymbolMap.getExpression(key), value);
+    	}
+    	
+    	public float[] get(Expression key) {
+    		return super.get(SymbolMap.getExpression(key));
     	}
     }
         
@@ -300,8 +310,11 @@ public class NewCalculateCostUtil {
 		}
 		return result;
 	}
-
-    private static void setCardinalityEstimate(PlanNode node, Float bestEstimate, boolean setColEstimates, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
+	private static void setCardinalityEstimate(PlanNode node, Float bestEstimate, boolean setColEstimates, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
+		setCardinalityEstimate(node, bestEstimate, setColEstimates, metadata, 1, 1);
+	}
+	
+    private static void setCardinalityEstimate(PlanNode node, Float bestEstimate, boolean setColEstimates, QueryMetadataInterface metadata, float leftPercent, float rightPercent) throws QueryMetadataException, TeiidComponentException {
         if (bestEstimate == null){
         	bestEstimate = Float.valueOf(UNKNOWN_VALUE);
         }
@@ -310,7 +323,53 @@ public class NewCalculateCostUtil {
         	node.getParent().setProperty(Info.EST_CARDINALITY, null);
         }
         if (setColEstimates) {
-        	setColStatEstimates(node, bestEstimate, metadata);
+        	setColStatEstimates(node, bestEstimate, metadata, leftPercent, rightPercent);
+        	ColStats stats = (ColStats) node.getProperty(Info.EST_COL_STATS);
+        	if (stats != null && node.getType() == NodeConstants.Types.SELECT) {
+        		Criteria predicateCriteria = (Criteria) node.getProperty(NodeConstants.Info.SELECT_CRITERIA);
+        		
+        		if(predicateCriteria instanceof CompareCriteria) {
+                    CompareCriteria compCrit = (CompareCriteria) predicateCriteria;
+                                
+                    
+                	Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(compCrit.getLeftExpression(), true);
+					if (elements.size() == 1 && EvaluatableVisitor.willBecomeConstant(compCrit.getRightExpression())) {
+						float[] val = stats.get(elements.iterator().next());
+						if (val != null) {
+							val[Stat.NNV.ordinal()] = 0;
+							switch (compCrit.getOperator()) {
+							case CompareCriteria.EQ:
+								val[Stat.NDV.ordinal()] = 1;
+								val[Stat.NDV_HIGH.ordinal()] = 1;
+								break;
+							}
+						}
+					}
+                } else if(predicateCriteria instanceof SetCriteria) {
+                    SetCriteria setCriteria = (SetCriteria) predicateCriteria;
+                    
+                    Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(setCriteria.getExpression(), true);
+					if (elements.size() == 1 && !setCriteria.isNegated()) {
+						float[] val = stats.get(elements.iterator().next());
+						if (val != null) {
+							val[Stat.NNV.ordinal()] = 0;
+							val[Stat.NDV.ordinal()] = (val[Stat.NDV.ordinal()] == UNKNOWN_VALUE?setCriteria.getNumberOfValues():Math.min(setCriteria.getNumberOfValues(), val[Stat.NDV.ordinal()]));
+							val[Stat.NDV_HIGH.ordinal()] = (val[Stat.NDV_HIGH.ordinal()] == UNKNOWN_VALUE?setCriteria.getNumberOfValues():Math.min(setCriteria.getNumberOfValues(), val[Stat.NDV_HIGH.ordinal()]));
+						}
+					}
+                } else if(predicateCriteria instanceof IsNullCriteria) {
+                    IsNullCriteria isNullCriteria = (IsNullCriteria)predicateCriteria;
+
+                    Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(isNullCriteria.getExpression(), true);
+					if (elements.size() == 1 && isNullCriteria.isNegated()) {
+						float[] val = stats.get(elements.iterator().next());
+						if (val != null) {
+							val[Stat.NDV.ordinal()] = 0;
+							val[Stat.NDV_HIGH.ordinal()] = 0;
+						}
+					}
+                }
+        	}
         }
     }
 
@@ -337,12 +396,46 @@ public class NewCalculateCostUtil {
         List joinCriteria = (List) node.getProperty(NodeConstants.Info.JOIN_CRITERIA);
         
         float baseCost = childCost1 * childCost2;
-
+        float leftPercent = 1;
+        float rightPercent = 1;
         if (joinCriteria != null && !joinCriteria.isEmpty()) {
-    		Criteria crit = Criteria.combineCriteria(joinCriteria);
-    		//TODO: we may be able to get a fairly accurate join estimate if the
-    		//unknown side is being joined with a key
-        	baseCost = recursiveEstimateCostOfCriteria(baseCost, node, crit, metadata);
+        	List<Expression> leftExpressions = null;
+            List<Expression> rightExpressions = null;
+            List<Criteria> nonEquiJoinCriteria = null;
+        	if (!node.hasCollectionProperty(NodeConstants.Info.LEFT_EXPRESSIONS)) {
+        		Collection<GroupSymbol> leftGroups = child1.getGroups();
+                Collection<GroupSymbol> rightGroups = child2.getGroups();
+                
+                leftExpressions = new ArrayList<Expression>();
+                rightExpressions = new ArrayList<Expression>();
+                nonEquiJoinCriteria = new ArrayList<Criteria>();
+                
+                RuleChooseJoinStrategy.separateCriteria(leftGroups, rightGroups, leftExpressions, rightExpressions, joinCriteria, nonEquiJoinCriteria);        		
+        	} else {
+        		leftExpressions = (List<Expression>) node.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS);
+        		rightExpressions = (List<Expression>) node.getProperty(NodeConstants.Info.RIGHT_EXPRESSIONS);
+        		nonEquiJoinCriteria = (List<Criteria>) node.getProperty(NodeConstants.Info.NON_EQUI_JOIN_CRITERIA);
+        	}
+        	
+        	//float leftNdv = getNDVEstimate(child1, metadata, childCost1, leftExpressions, childCost1 > childCost2 ? false : null);
+        	//float rightNdv = getNDVEstimate(child2, metadata, childCost2, rightExpressions, childCost1 > childCost2 ? null : false);
+        	float leftNdv = getNDVEstimate(child1, metadata, childCost1, leftExpressions, null);
+        	float rightNdv = getNDVEstimate(child2, metadata, childCost2, rightExpressions, null);
+        	
+        	if (leftNdv != UNKNOWN_VALUE && rightNdv != UNKNOWN_VALUE) {
+        		baseCost = (childCost1 / leftNdv) * (childCost2 / rightNdv) * Math.min(leftNdv, rightNdv);
+        		leftPercent = leftNdv / (Math.max(leftNdv, rightNdv));
+        		rightPercent = rightNdv / (Math.max(leftNdv, rightNdv));
+        	} else {
+        		nonEquiJoinCriteria = joinCriteria;
+        	}
+        	
+        	if (!nonEquiJoinCriteria.isEmpty()) {
+            	Criteria crit = Criteria.combineCriteria(nonEquiJoinCriteria);
+        		//TODO: we may be able to get a fairly accurate join estimate if the
+        		//unknown side is being joined with a key
+            	baseCost = recursiveEstimateCostOfCriteria(baseCost, node, crit, metadata);
+        	}        	
         }
         
         Float cost = null;
@@ -356,7 +449,7 @@ public class NewCalculateCostUtil {
         	cost = Math.min(childCost1, baseCost);
         }
         
-        setCardinalityEstimate(node, cost, true, metadata);
+        setCardinalityEstimate(node, cost, true, metadata, leftPercent, rightPercent);
     }
 
     /**
@@ -376,7 +469,7 @@ public class NewCalculateCostUtil {
         setCardinalityEstimate(node, newCost, true, metadata);
     }
     
-    private static void setColStatEstimates(PlanNode node, float cardinality, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
+    private static void setColStatEstimates(PlanNode node, float cardinality, QueryMetadataInterface metadata, float leftPercent, float rightPercent) throws QueryMetadataException, TeiidComponentException {
     	if (cardinality == UNKNOWN_VALUE) {
     		return;
     	}
@@ -399,51 +492,62 @@ public class NewCalculateCostUtil {
     	ColStats newColStats = new ColStats();
     	for (int i = 0; i < outputCols.size(); i++) {
     		Expression expr = outputCols.get(i);
-    		float[] newStats = new float[2];
+    		float[] newStats = new float[3];
     		Arrays.fill(newStats, UNKNOWN_VALUE);
     		if (childCardinality == UNKNOWN_VALUE || (setOp != null && (colStats == null || colStatsOther == null))) {
     			//base case - cannot determine, just assume unique rows
         		newStats[Stat.NDV.ordinal()] = cardinality;
+        		newStats[Stat.NDV_HIGH.ordinal()] = cardinality;
         		newStats[Stat.NNV.ordinal()] = 0;
     		} else if (setOp != null) {
     			//set op
 				float[] stats = colStats.get(expr);
 				float[] statsOther = colStatsOther.get(outputColsOther.get(i));
-				newStats[Stat.NDV.ordinal()] = getCombinedSetEstimate(setOp, stats[Stat.NDV.ordinal()], statsOther[Stat.NDV.ordinal()], true);
-        		newStats[Stat.NNV.ordinal()] = getCombinedSetEstimate(setOp, stats[Stat.NNV.ordinal()], statsOther[Stat.NNV.ordinal()], !node.hasBooleanProperty(NodeConstants.Info.USE_ALL));
+				newStats[Stat.NDV.ordinal()] = Math.min(cardinality, getCombinedSetEstimate(setOp, stats[Stat.NDV.ordinal()], statsOther[Stat.NDV.ordinal()], true));
+				newStats[Stat.NDV_HIGH.ordinal()] = Math.min(cardinality, getCombinedSetEstimate(setOp, stats[Stat.NDV_HIGH.ordinal()], statsOther[Stat.NDV_HIGH.ordinal()], true));
+        		newStats[Stat.NNV.ordinal()] = Math.min(cardinality, getCombinedSetEstimate(setOp, stats[Stat.NNV.ordinal()], statsOther[Stat.NNV.ordinal()], !node.hasBooleanProperty(NodeConstants.Info.USE_ALL)));
     		} else {
     			//all other cases - join is the only multi-node case here
     			float[] stats = null;
     			float origCardinality = childCardinality;
+    			boolean left = true;
     			if (colStats != null) {
     				stats = colStats.get(expr);
     			}
     			if (stats == null && colStatsOther != null) {
     				origCardinality = otherChildCardinality;
     				stats = colStatsOther.get(expr);
+    				left = false;
     			}
+    			origCardinality = Math.max(1, origCardinality);
     			if (stats == null) {
         			if (node.getType() == NodeConstants.Types.PROJECT) {
 	        			Collection<Expression> elems = new HashSet<Expression>();
 	        			ElementCollectorVisitor.getElements(expr, elems);
 	        			newStats[Stat.NDV.ordinal()] = getStat(Stat.NDV, elems, node, childCardinality, metadata);
+	        			newStats[Stat.NDV_HIGH.ordinal()] = getStat(Stat.NDV_HIGH, elems, node, childCardinality, metadata);
 		        		newStats[Stat.NNV.ordinal()] = getStat(Stat.NNV, elems, node, childCardinality, metadata);
         			} else {
         				//TODO: use a better estimate for new aggs
         				if (node.hasProperty(Info.GROUP_COLS)) {
             				newStats[Stat.NDV.ordinal()] = cardinality / 3;
+            				newStats[Stat.NDV_HIGH.ordinal()] = cardinality / 3;
         				} else {
         					newStats[Stat.NDV.ordinal()] = cardinality;
+        					newStats[Stat.NDV_HIGH.ordinal()] = cardinality;
         				}
                 		newStats[Stat.NNV.ordinal()] = UNKNOWN_VALUE;
         			}
         		} else {
-        			if (node.getType() == NodeConstants.Types.DUP_REMOVE || node.getType() == NodeConstants.Types.GROUP) {
+        			if (node.getType() == NodeConstants.Types.DUP_REMOVE || node.getType() == NodeConstants.Types.GROUP || node.getType() == NodeConstants.Types.PROJECT || node.getType() == NodeConstants.Types.ACCESS) {
         				//don't scale down
-        				newStats[Stat.NDV.ordinal()] = stats[Stat.NDV.ordinal()];
+        				newStats[Stat.NDV.ordinal()] = Math.min(cardinality, stats[Stat.NDV.ordinal()]);
+        				newStats[Stat.NDV_HIGH.ordinal()] = Math.min(cardinality, stats[Stat.NDV_HIGH.ordinal()]);
         			} else if (stats[Stat.NDV.ordinal()] != UNKNOWN_VALUE) {
-    					newStats[Stat.NDV.ordinal()] = stats[Stat.NDV.ordinal()]*Math.min(1, cardinality/origCardinality);
+        				newStats[Stat.NDV.ordinal()] = stats[Stat.NDV.ordinal()]*Math.min(left?leftPercent:rightPercent, cardinality/origCardinality);
+        				newStats[Stat.NDV_HIGH.ordinal()] = stats[Stat.NDV_HIGH.ordinal()]*Math.min(left?leftPercent:rightPercent, cardinality/origCardinality);
     					newStats[Stat.NDV.ordinal()] = Math.max(1, newStats[Stat.NDV.ordinal()]);
+    					newStats[Stat.NDV_HIGH.ordinal()] = Math.max(1, newStats[Stat.NDV_HIGH.ordinal()]);
         			}
     				if (stats[Stat.NNV.ordinal()] != UNKNOWN_VALUE) {
     					//TODO: this is an under estimate for the inner side of outer joins
@@ -487,7 +591,15 @@ public class NewCalculateCostUtil {
 		            		}
 		            		ElementSymbol es = (ElementSymbol)expr;
 		            		Expression ex = symbolMap.getMappedExpression(es);
-							newColStats.put(es, colStats.get(ex));
+							float[] value = colStats.get(ex);
+							if (value == null) {
+								Collection<ElementSymbol> elems =ElementCollectorVisitor.getElements(ex, true);
+								value = new float[3];
+								value[Stat.NDV.ordinal()] = getStat(Stat.NDV, elems, node, cost, metadata);
+								value[Stat.NDV_HIGH.ordinal()] = getStat(Stat.NDV_HIGH, elems, node, cost, metadata);
+								value[Stat.NNV.ordinal()] = getStat(Stat.NNV, elems, node, cost, metadata);
+							}
+							newColStats.put(es, value);
 						}
 		        		node.setProperty(Info.EST_COL_STATS, newColStats);
 		            } else {
@@ -536,15 +648,49 @@ public class NewCalculateCostUtil {
 				continue;
 			}
 			ElementSymbol es = (ElementSymbol)expr;
-			float[] vals = new float[2];
+			float[] vals = new float[3];
 			float ndv = metadata.getDistinctValues(es.getMetadataID());
 			float nnv = metadata.getNullValues(es.getMetadataID());
+			float ndv_high = ndv;
 			if (cardinality != UNKNOWN_VALUE) {
+				if (ndv == UNKNOWN_VALUE) {
+					if (usesKey(node, Arrays.asList(expr), metadata)) { 
+						ndv = cardinality;
+						nnv = 0;
+					} else {
+						//follow the foreign keys
+						Collection<?> fks = metadata.getForeignKeysInGroup(es.getGroupSymbol().getMetadataID());
+						for (Object fk : fks) {
+							List<?> fkColumns = metadata.getElementIDsInKey(fk);
+							if (fkColumns.size() == 1 && fkColumns.get(0).equals(es.getMetadataID())) {
+								Object pk = metadata.getPrimaryKeyIDForForeignKeyID(fk);
+								List<?> pkColumns = metadata.getElementIDsInKey(pk);
+								if (pkColumns.size() == 1) {
+									float distinctValues = metadata.getDistinctValues(pkColumns.get(0));
+									ndv = Math.min(cardinality, distinctValues);
+								}
+								if (ndv == UNKNOWN_VALUE) {
+									float cardinality2 = metadata.getCardinality(metadata.getGroupIDForElementID(pkColumns.get(0)));
+									if (cardinality2 != UNKNOWN_VALUE) {
+										ndv = Math.min(cardinality, cardinality2);
+									}
+								}
+							}
+						}
+					}
+					if (ndv == UNKNOWN_VALUE) {
+						ndv = (float)Math.ceil(Math.pow(cardinality, .5));
+						ndv_high = cardinality / 2;
+					} else {
+						ndv_high = ndv;
+					}
+				}
             	float groupCardinality = metadata.getCardinality(es.getGroupSymbol().getMetadataID());
             	if (groupCardinality != UNKNOWN_VALUE && groupCardinality > cardinality) {
             		if (ndv != UNKNOWN_VALUE) {
             			ndv *= cardinality / Math.max(1, groupCardinality);
             			ndv = Math.max(ndv, 1);
+            			ndv_high = Math.min(ndv_high, groupCardinality);
             		}
             		if (nnv != UNKNOWN_VALUE) {
             			nnv *= cardinality / Math.max(1, groupCardinality);
@@ -552,8 +698,16 @@ public class NewCalculateCostUtil {
             		}
             	}
 			}
+			if (es.getType() == DataTypeManager.DefaultDataClasses.BOOLEAN) {
+				ndv = (ndv == UNKNOWN_VALUE?2:Math.min(ndv, 2));
+				ndv_high = (ndv_high == UNKNOWN_VALUE?2:Math.min(ndv_high, 2));
+			} else if (es.getType() == DataTypeManager.DefaultDataClasses.BYTE) {
+				ndv = (ndv == UNKNOWN_VALUE?2:Math.min(ndv, 256));
+				ndv_high = (ndv_high == UNKNOWN_VALUE?2:Math.min(ndv_high, 256));
+			}
 			vals[Stat.NDV.ordinal()] = ndv;
 			vals[Stat.NNV.ordinal()] = nnv;
+			vals[Stat.NDV_HIGH.ordinal()] = ndv_high;
 			colStats.put(es, vals);
 		}
 		return colStats;
@@ -610,16 +764,25 @@ public class NewCalculateCostUtil {
         setCardinalityEstimate(node, cardinality, true, metadata);
     }
 
+    /**
+     * Get an estimate directly from the stat.  Values will be combined based upon combining percentages
+     */
     static float getStat(Stat stat, Collection<? extends Expression> elems, PlanNode node,
     		float cardinality, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
         float result = 1;
         int branch = 0;
         boolean branchFound = false;
+        if (elems.size() > 1 && !(elems instanceof Set)) {
+        	elems = new HashSet<Expression>(elems);
+        }
+        if (cardinality != UNKNOWN_VALUE) {
+        	cardinality = Math.max(1, cardinality);
+        }
         for (Expression expression : elems) {
-        	ColStats colStats = null;
-	    	if (node.getChildCount() == 0) {
+        	ColStats colStats = (ColStats) node.getProperty(Info.EST_COL_STATS);
+	    	if (node.getChildCount() == 0 && colStats == null) {
 	    		colStats = createColStats(node, metadata, cardinality);
-	    	} else {
+	    	} else if (colStats == null) {
 		    	for (int i = branch; i < node.getChildCount(); i++) {
 		    		PlanNode child = node.getChildren().get(i);
 			    	colStats = (ColStats) child.getProperty(Info.EST_COL_STATS);
@@ -648,19 +811,43 @@ public class NewCalculateCostUtil {
 				if (stat == Stat.NDV) {
 					//use type information
 					if (expression.getType() == DataTypeManager.DefaultDataClasses.BOOLEAN) {
-						result = Math.max(result, 2);
+						if (elems.size() == 1) {
+							result = 2;
+						} else if (cardinality != UNKNOWN_VALUE) {
+							result *= (Math.max(0, cardinality - 2))/cardinality;
+						} else {
+							result *= 2;
+						}
 						continue;
 					}
 					if (expression.getType() == DataTypeManager.DefaultDataClasses.BYTE) {
-						result = Math.max(result, 256);
+						if (elems.size() == 1) {
+							result = 256;
+						} else if (cardinality != UNKNOWN_VALUE) {
+							result *= (Math.max(0, cardinality - 256))/cardinality;
+						} else {
+							result *= 256;
+						}
 						continue;
 					}
 				}
 				return UNKNOWN_VALUE;
 			}
-			result = Math.max(result, stats[stat.ordinal()]);
+			if (elems.size() == 1) {
+				result = stats[stat.ordinal()];
+			} else if (cardinality != UNKNOWN_VALUE) {
+				result *= (Math.max(0, cardinality - stats[stat.ordinal()]))/cardinality;
+			} else {
+				result *= stats[stat.ordinal()];
+			}
     	}
-		return result;
+        if (cardinality == UNKNOWN_VALUE) {
+        	return result;
+        }
+        if (elems.size() > 1) {
+        	result = (1 - result) * cardinality;
+        }
+		return Math.min(result, cardinality);
 	}
 
 	static float recursiveEstimateCostOfCriteria(float childCost, PlanNode currentNode, Criteria crit, QueryMetadataInterface metadata)
@@ -798,36 +985,8 @@ public class NewCalculateCostUtil {
     private static float estimatePredicateCost(float childCost, PlanNode currentNode, PredicateCriteria predicateCriteria, QueryMetadataInterface metadata)
         throws QueryMetadataException, TeiidComponentException {
         
-        Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(predicateCriteria, true);
-        
-        Collection<GroupSymbol> groups = GroupsUsedByElementsVisitor.getGroups(elements);
-        boolean multiGroup = groups.size() > 1;
-        
         float cost = childCost;
-        float ndv = getStat(Stat.NDV, elements, currentNode, childCost, metadata);
         
-        boolean unknownChildCost = childCost == UNKNOWN_VALUE;
-        boolean usesKey = usesKey(elements, metadata);
-        
-        if (childCost == UNKNOWN_VALUE) {
-            childCost = 1;
-        }
-
-        if (ndv == UNKNOWN_VALUE) {
-            if (multiGroup) {
-                if (usesKey) {
-                    ndv = (float)Math.ceil(Math.sqrt(childCost));
-                } else {
-                    ndv = (float)Math.ceil(Math.sqrt(childCost)/4);
-                }
-            } else if (usesKey) {
-                ndv = childCost;
-            } else {
-                ndv = (float)Math.ceil(Math.sqrt(childCost)/2);
-            }
-            ndv = Math.max(ndv, 1);
-        } 
-                
         boolean isNegatedPredicateCriteria = false;
         if(predicateCriteria instanceof CompareCriteria) {
             CompareCriteria compCrit = (CompareCriteria) predicateCriteria;
@@ -837,69 +996,100 @@ public class NewCalculateCostUtil {
         	}
             
             if (compCrit.getOperator() == CompareCriteria.EQ || compCrit.getOperator() == CompareCriteria.NE){
-                if (unknownChildCost && (!usesKey || multiGroup)) {
+            	if (childCost == UNKNOWN_VALUE) {
+            		if (isSingleTable(currentNode) 
+            				&& EvaluatableVisitor.willBecomeConstant(compCrit.getRightExpression()) 
+            				&& usesKey(compCrit, metadata)) {
+            			return 1;
+            		}
                     return UNKNOWN_VALUE;
                 }
-                cost = childCost / ndv;
+                float ndv = getPredicateNDV(compCrit.getLeftExpression(), currentNode, childCost, metadata);
+                if (!EvaluatableVisitor.willBecomeConstant(compCrit.getRightExpression())) {
+                	float ndv1 = getPredicateNDV(compCrit.getRightExpression(), currentNode, childCost, metadata);
+                	ndv = (float) Math.sqrt(ndv * ndv1);
+                } 
+            	cost = childCost / ndv;
                 if (compCrit.getOperator() == CompareCriteria.NE) {
                     isNegatedPredicateCriteria = true;
                 }
             } else { //GE, LE, GT, LT
-                cost = getCostForComparison(childCost, metadata, compCrit, unknownChildCost);
+                cost = getCostForComparison(childCost, metadata, compCrit);
             }
         } else if(predicateCriteria instanceof MatchCriteria) {
-            MatchCriteria matchCriteria = (MatchCriteria)predicateCriteria;
-            if (unknownChildCost) {
+        	if (childCost == UNKNOWN_VALUE) {
                 return UNKNOWN_VALUE;
             }
+            MatchCriteria matchCriteria = (MatchCriteria)predicateCriteria;
+            
+            float ndv = getPredicateNDV(matchCriteria.getLeftExpression(), currentNode, childCost, metadata);
+            
             cost = estimateMatchCost(childCost, ndv, matchCriteria);
             
             isNegatedPredicateCriteria = matchCriteria.isNegated();
 
         } else if(predicateCriteria instanceof SetCriteria) {
             SetCriteria setCriteria = (SetCriteria) predicateCriteria;
-            if (unknownChildCost) {
+            
+            if (childCost == UNKNOWN_VALUE) {
+        		if (isSingleTable(currentNode) && usesKey(setCriteria, metadata)) {
+        			return setCriteria.getNumberOfValues();
+        		}
                 return UNKNOWN_VALUE;
             }
+            
+            float ndv = getPredicateNDV(setCriteria.getExpression(), currentNode, childCost, metadata);
+            
             cost = childCost * setCriteria.getNumberOfValues() / ndv;
             
             isNegatedPredicateCriteria = setCriteria.isNegated();
             
         } else if(predicateCriteria instanceof SubquerySetCriteria) {
+        	if (childCost == UNKNOWN_VALUE) {
+                return UNKNOWN_VALUE;
+            }
             SubquerySetCriteria setCriteria = (SubquerySetCriteria) predicateCriteria;
             
             // TODO - use inner ProcessorPlan cardinality estimates 
             // to determine the estimated number of values
-            if (unknownChildCost) {
-                return UNKNOWN_VALUE;
-            }
             cost = childCost / 3;
             
             isNegatedPredicateCriteria = setCriteria.isNegated();
 
         } else if(predicateCriteria instanceof IsNullCriteria) {
-            IsNullCriteria isNullCriteria = (IsNullCriteria)predicateCriteria;
+        	Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(predicateCriteria, true);
+            
+        	IsNullCriteria isNullCriteria = (IsNullCriteria)predicateCriteria;
 
             float nnv = getStat(Stat.NNV, elements, currentNode, childCost, metadata);
             if (nnv == UNKNOWN_VALUE) {
-            	if (unknownChildCost) {
-            		return UNKNOWN_VALUE;
-            	}
-                cost = childCost / ndv;
+            	if (childCost == UNKNOWN_VALUE) {
+                    return UNKNOWN_VALUE;
+                }
+            	float ndv = getPredicateNDV(isNullCriteria.getExpression(), currentNode, childCost, metadata); 
+            	cost = (childCost - ndv)/8;
             } else {
+                if (childCost == UNKNOWN_VALUE) {
+                	if (!isNullCriteria.isNegated()) {
+                		return nnv;
+                	}
+                	return UNKNOWN_VALUE;
+                }
                 cost = nnv;
             }
             
             isNegatedPredicateCriteria = isNullCriteria.isNegated();
         } else if (predicateCriteria instanceof DependentSetCriteria) {
-        	DependentSetCriteria dsc = (DependentSetCriteria)predicateCriteria;
-        	
-        	if (unknownChildCost) {
+        	if (childCost == UNKNOWN_VALUE) {
                 return UNKNOWN_VALUE;
             }
+        	DependentSetCriteria dsc = (DependentSetCriteria)predicateCriteria;
+        	
         	if (dsc.getNdv() == UNKNOWN_VALUE) {
         		return childCost / 3;
         	}
+        	
+        	float ndv = getPredicateNDV(dsc.getExpression(), currentNode, childCost, metadata);
         	
         	cost = childCost * dsc.getNdv() / ndv;
         }
@@ -920,6 +1110,33 @@ public class NewCalculateCostUtil {
         }
                 
         return cost;
+    }
+    
+    private static float getPredicateNDV(LanguageObject object, PlanNode currentNode, float childCost, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
+        Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(object, true);
+        
+        Collection<GroupSymbol> groups = GroupsUsedByElementsVisitor.getGroups(elements);
+        boolean multiGroup = groups.size() > 1;
+    	
+    	float ndv = getStat(Stat.NDV, elements, currentNode, childCost, metadata);
+        
+        if (ndv == UNKNOWN_VALUE) {
+        	boolean usesKey = usesKey(elements, metadata);
+            if (multiGroup) {
+                if (usesKey) {
+                    ndv = (float)Math.ceil(Math.sqrt(childCost));
+                } else {
+                    ndv = (float)Math.ceil(Math.sqrt(childCost)/4);
+                }
+            } else if (usesKey) {
+                ndv = childCost;
+            } else {
+                ndv = (float)Math.ceil(Math.sqrt(childCost)/2);
+            }
+            ndv = Math.max(ndv, 1);
+        } 
+        
+        return ndv;
     }
 
     /** 
@@ -944,12 +1161,9 @@ public class NewCalculateCostUtil {
 
     private static float getCostForComparison(float childCost,
                                               QueryMetadataInterface metadata,
-                                              CompareCriteria compCrit, boolean unknownChildCost) throws TeiidComponentException,
+                                              CompareCriteria compCrit) throws TeiidComponentException,
                                                                        QueryMetadataException {
         if (!(compCrit.getLeftExpression() instanceof ElementSymbol) || !(compCrit.getRightExpression() instanceof Constant)) {
-            if (unknownChildCost) {
-                return UNKNOWN_VALUE;
-            }
             return childCost/3;
         }
         ElementSymbol element = (ElementSymbol)compCrit.getLeftExpression();
@@ -958,9 +1172,6 @@ public class NewCalculateCostUtil {
         String max = (String)metadata.getMaximumValue(element.getMetadataID());
         String min = (String)metadata.getMinimumValue(element.getMetadataID());
         if(max == null || min == null) {
-            if (unknownChildCost) {
-                return UNKNOWN_VALUE;
-            }
             return childCost/3;
         } 
         float cost = childCost;
@@ -987,9 +1198,6 @@ public class NewCalculateCostUtil {
                 minValue = Timestamp.valueOf(min).getTime();
             } else {
             	if(!Number.class.isAssignableFrom(dataType)) {
-                    if (unknownChildCost) {
-                        return UNKNOWN_VALUE;
-                    }
                     return childCost/3;
                 }
                 compareValue = ((Number)value.getValue()).floatValue();
@@ -1020,9 +1228,6 @@ public class NewCalculateCostUtil {
         } catch(IllegalArgumentException e) {
             LogManager.logWarning(LogConstants.CTX_QUERY_PLANNER, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30029));
             // If we were unable to parse the timestamp we will revert to the divide by three estimate
-            if (unknownChildCost) {
-                return UNKNOWN_VALUE;
-            }
             cost = childCost/3;
         }
         return cost;
@@ -1175,7 +1380,8 @@ public class NewCalculateCostUtil {
 		for (int i = 0; i < independentExpressions.size(); i++) {
 			Expression indExpr = (Expression)independentExpressions.get(i);
 			Collection<ElementSymbol> indElements = ElementCollectorVisitor.getElements(indExpr, true);
-			float indSymbolNDV = getNDVEstimate(independentNode, metadata, independentCardinality, indElements, null);
+			//use a mid estimate
+			float indSymbolNDV = getNDVEstimate(independentNode, metadata, independentCardinality, indElements, true);
 			boolean unknownNDV = false;
 			if (indSymbolNDV == UNKNOWN_VALUE) {
 				indSymbolNDV = independentCardinality;
@@ -1190,7 +1396,8 @@ public class NewCalculateCostUtil {
 			for (Iterator<PlanNode> targetIter = targets.iterator(); targetIter.hasNext();) {
 				PlanNode target = targetIter.next();
 				Expression targerDepExpr = exprIter.next();
-				PlanNode accessNode = NodeEditor.findParent(target, NodeConstants.Types.ACCESS);
+				boolean isAccess = target.getType() == NodeConstants.Types.ACCESS;
+				PlanNode accessNode = isAccess?target:NodeEditor.findParent(target, NodeConstants.Types.ACCESS);
 
 		        float setCriteriaBatchSize = indSymbolNDV;
                 
@@ -1210,20 +1417,21 @@ public class NewCalculateCostUtil {
 	        		//TODO: we should be using a tree structure rather than just a value iterator
 	        		continue;
 		        }
-		        if (target.hasBooleanProperty(Info.MAKE_NOT_DEP)) {
-		        	continue;
-		        }
 	        	Collection<ElementSymbol> depElems = ElementCollectorVisitor.getElements(targerDepExpr, true);
-	        	while (target.getParent().getType() == NodeConstants.Types.SELECT) {
-	        		target = target.getParent();
-	        	}
+	        	if (!isAccess) {
+		        	while (target.getParent().getType() == NodeConstants.Types.SELECT) {
+		        		target = target.getParent();
+		        	}
+	        	} //TODO: we can be more particluar about what criteria we're considering
 	        	float depTargetCardinality = computeCostForTree(target, metadata);
 	        	if (depTargetCardinality == UNKNOWN_VALUE) {
 	        		continue;
 	        	}
-	        	float depSymbolNDV = getStat(Stat.NDV, depElems, target, depTargetCardinality, metadata);
-	        	boolean usesKey = usesKey(dependentNode, depElems, metadata);
+	        	//use a high/low estimate
+	        	float depSymbolNDV = getNDVEstimate(target, metadata, depTargetCardinality, depElems, isAccess?true:null);
+	        	boolean usesKey = usesKey(target, depElems, metadata);
 				if (depSymbolNDV == UNKNOWN_VALUE) {
+					//should not come here - as we should have an estimate from above
 					if (!usesKey) {
 						//make an educated guess that this is a fk
 						float indSymbolOrigNDV = indSymbolNDV;
@@ -1255,26 +1463,27 @@ public class NewCalculateCostUtil {
 		        		dca.expectedCardinality = Math.min(dca.expectedCardinality, estimates[0]);
 		        	}
 		        }
-		        //don't use the ndv if it is unknown
-		        if (unknownNDV) {
+		        //don't use the ndv if it is unknown or significantly smaller than the high estimate
+		        if (unknownNDV || depSymbolNDV > 2 * getNDVEstimate(target, metadata, depTargetCardinality, depElems, null)) {
 		        	continue;
 		        }
 		        dca.expectedNdv[i] = indSymbolNDV;
 		        //use a quick binary search to find the max ndv
 		        float min = 0;
 		        float max = Math.max(Integer.MAX_VALUE, indSymbolNDV);
+		        float tempNdv = indSymbolNDV;
 		        for (int j = 0; j < 10; j++) {
 		        	if (estimates[1] > 1) {
-		        		max = indSymbolNDV;
-		        		indSymbolNDV = (indSymbolNDV + min)/2;
+		        		max = tempNdv;
+		        		tempNdv = (tempNdv + min)/2;
 		        	} else if (estimates[1] < 0) {
-		        		min = indSymbolNDV;
+		        		min = tempNdv;
 		        		//we assume that values should be closer to the min side
-		        		indSymbolNDV = Math.min(indSymbolNDV * 8 + 1, (indSymbolNDV + max)/2);
+		        		tempNdv = Math.min(tempNdv * 8 + 1, (tempNdv + max)/2);
 		        	} else {
 		        		break;
 		        	}
-		        	estimates = estimateCost(accessNode, setCriteriaBatchSize, usesIndex, depTargetCardinality, indSymbolNDV, dependentCardinality, depSymbolNDV);
+		        	estimates = estimateCost(accessNode, setCriteriaBatchSize, usesIndex, depTargetCardinality, tempNdv, dependentCardinality, depSymbolNDV);
 		        }
 		        dca.maxNdv[i] = indSymbolNDV;
 			}
@@ -1324,6 +1533,23 @@ public class NewCalculateCostUtil {
 				continue;
 			}
 			PlanNode target = sourceNode;
+			PlanNode accessNode = NodeEditor.findParent(target, NodeConstants.Types.ACCESS);
+			if (accessNode != null) {
+				if (accessNode.hasBooleanProperty(Info.MAKE_NOT_DEP)) {
+		        	targets.clear();
+		        	break;
+		        }
+				targets.add(accessNode);
+				DependentSetCriteria dsc = (DependentSetCriteria)critNode.getProperty(Info.SELECT_CRITERIA);
+				depExpressions.add(dsc.getExpression());
+				List<PlanNode> sources = NodeEditor.findAllNodes(target, NodeConstants.Types.SOURCE, NodeConstants.Types.SOURCE);
+				if (sources.size() == 1) {
+					PlanNode source = sources.get(0);
+					if (source.getChildCount() == 0) {
+						continue;						
+					}
+				} 
+			}
 			if (initial != sourceNode) {
 				//pretend the criteria starts at the initial location
 				//either above or below depending upon the node type
@@ -1336,6 +1562,10 @@ public class NewCalculateCostUtil {
 				critNode.getParent().replaceChild(critNode, critNode.getFirstChild());
 			}
 			if (target != sourceNode || (sourceNode.getType() == NodeConstants.Types.SOURCE && sourceNode.getChildCount() == 0)) {
+				if (target.hasBooleanProperty(Info.MAKE_NOT_DEP)) {
+		        	targets.clear();
+		        	break;
+		        }
 				targets.add(target);
 				DependentSetCriteria dsc = (DependentSetCriteria)critNode.getProperty(Info.SELECT_CRITERIA);
 				depExpressions.add(dsc.getExpression());
@@ -1346,6 +1576,10 @@ public class NewCalculateCostUtil {
 				PlanNode child = sourceNode.getFirstChild();
 		        child = FrameUtil.findOriginatingNode(child, child.getGroups());
 		        if (child != null && child.getType() == NodeConstants.Types.SET_OP) {
+					if (target.hasBooleanProperty(Info.MAKE_NOT_DEP)) {
+			        	targets.clear();
+			        	break;
+			        }
 		        	targets.add(target);
 					DependentSetCriteria dsc = (DependentSetCriteria)critNode.getProperty(Info.SELECT_CRITERIA);
 					depExpressions.add(dsc.getExpression());
@@ -1353,6 +1587,10 @@ public class NewCalculateCostUtil {
 					continue;
 		        }
 				if (!rpsc.pushAcrossFrame(sourceNode, critNode, metadata)) {
+					if (target.hasBooleanProperty(Info.MAKE_NOT_DEP)) {
+			        	targets.clear();
+			        	break;
+			        }
 					targets.add(target);
 					DependentSetCriteria dsc = (DependentSetCriteria)critNode.getProperty(Info.SELECT_CRITERIA);
 					depExpressions.add(dsc.getExpression());
@@ -1385,7 +1623,7 @@ public class NewCalculateCostUtil {
 	 * @param metadata
 	 * @param cardinality
 	 * @param elems
-	 * @param useCardinalityIfUnknown - if null use only the exact cardinality, if true use closest cardinality
+	 * @param useCardinalityIfUnknown - false is a low estimate, null uses a middle estimate, and true uses a high estimate
 	 * @return
 	 * @throws QueryMetadataException
 	 * @throws TeiidComponentException
@@ -1398,12 +1636,23 @@ public class NewCalculateCostUtil {
 			return cardinality;
 		}
 		float ndv = getStat(Stat.NDV, elems, indNode, cardinality, metadata);
+		//if we're using cardinality, then we want to include the high estimate
+		if (ndv != UNKNOWN_VALUE && (useCardinalityIfUnknown == null || useCardinalityIfUnknown)) {
+			float ndv_high = getStat(Stat.NDV_HIGH, elems, indNode, cardinality, metadata);
+			if (ndv_high != UNKNOWN_VALUE) {
+				if (useCardinalityIfUnknown == null) {
+					ndv = (float) Math.sqrt(ndv * ndv_high);
+				} else {
+					ndv = (ndv + ndv_high)/2;
+				}
+			}
+		}
 		//special handling if cardinality has been set, but not ndv
 		if (ndv == UNKNOWN_VALUE && (useCardinalityIfUnknown == null || useCardinalityIfUnknown)) {
 			Set<GroupSymbol> groups = GroupsUsedByElementsVisitor.getGroups(elems);
 			PlanNode source = FrameUtil.findOriginatingNode(indNode, groups);
 			if (source != null) {
-				ndv = getStat(Stat.NDV, elems, source, cardinality, metadata);
+				ndv = getStat(Stat.NDV, elems, source, source.getCardinality(), metadata);
 				if (ndv == UNKNOWN_VALUE) {
 					if (useCardinalityIfUnknown != null || source.getChildCount() == 0) {
 						ndv = source.getCardinality();
@@ -1434,6 +1683,9 @@ public class NewCalculateCostUtil {
 			} else {
 				return UNKNOWN_VALUE;
 			}
+		}
+		if (cardinality != UNKNOWN_VALUE && cardinality < ndv) {
+			ndv = cardinality;
 		}
 		return Math.max(1, ndv);
 	}

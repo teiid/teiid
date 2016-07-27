@@ -23,6 +23,7 @@
 package org.teiid.query.optimizer.relational.rules;
 
 import java.util.*;
+import java.util.Map.Entry;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
@@ -240,6 +241,11 @@ class JoinRegion {
         
         HashSet<PlanNode> criteria = new HashSet<PlanNode>(this.criteriaNodes);
         HashSet<GroupSymbol> groups = new HashSet<GroupSymbol>(this.joinSourceNodes.size());
+        HashSet<GroupSymbol> rightGroups = new HashSet<GroupSymbol>();
+        List<Expression> leftExpressions = new ArrayList<Expression>();
+        List<Expression> rightExpressions = new ArrayList<Expression>();
+        HashSet<Criteria> nonEquiJoinCriteria = new HashSet<Criteria>();
+
         //only calculate up to the second to last as the last is not an intermediate result
         for (int i = 0; i < joinOrder.length - (partial?0:1); i++) {
         	boolean hasUnknown = false;
@@ -262,29 +268,35 @@ class JoinRegion {
 	            }
             } 
             
+            rightGroups.clear();
+            rightGroups.addAll(groups);
             groups.addAll(joinSourceRoot.getGroups());
             
             if (startIndex > 0 && i < startIndex) {
             	continue;
             }
             
-            float sourceCost = ((Float)joinSourceRoot.getProperty(NodeConstants.Info.EST_CARDINALITY)).floatValue();
+            float sourceCost = joinSourceRoot.getCardinality();
             
             List<PlanNode> applicableCriteria = null;
             
+            CompoundCriteria cc = null;
+        	
             if (!criteria.isEmpty() && i > 0) {
                 applicableCriteria = getJoinCriteriaForGroups(groups, criteria);
+                if (applicableCriteria != null && !applicableCriteria.isEmpty()) {
+                	cc = new CompoundCriteria();
+                	for (PlanNode planNode : applicableCriteria) {
+        				cc.addCriteria((Criteria) planNode.getProperty(NodeConstants.Info.SELECT_CRITERIA));
+        			}    	
+                }
             }
             
         	if (sourceCost == NewCalculateCostUtil.UNKNOWN_VALUE) {
         		sourceCost = UNKNOWN_TUPLE_EST;
         		hasUnknown = true;
-                if (applicableCriteria != null && !applicableCriteria.isEmpty()) {
+                if (cc != null) {
                 	shouldFilter = false;
-                	CompoundCriteria cc = new CompoundCriteria();
-                	for (PlanNode planNode : applicableCriteria) {
-    					cc.addCriteria((Criteria) planNode.getProperty(NodeConstants.Info.SELECT_CRITERIA));
-    				}
                 	sourceCost = (float)cost;
                 	criteria.removeAll(applicableCriteria);
             		if (NewCalculateCostUtil.usesKey(cc, metadata) || (i >= 1 && joinSourceRoot.hasProperty(Info.MAKE_DEP) && !joinSourceRoot.hasBooleanProperty(Info.MAKE_NOT_DEP))) {
@@ -320,10 +332,51 @@ class JoinRegion {
         		sourceCost *= 10; //cross join penalty
         	}
         
+        	double rightCost = cost;
             cost *= sourceCost;
             
-            if (applicableCriteria != null && shouldFilter) {
-                for (PlanNode criteriaNode : applicableCriteria) {
+            if (cc != null && applicableCriteria != null && shouldFilter) {
+            	//filter based upon notion of join
+                leftExpressions.clear();
+                rightExpressions.clear();
+                nonEquiJoinCriteria.clear();
+
+            	Collection<GroupSymbol> leftGroups = joinSourceRoot.getGroups();
+                
+                RuleChooseJoinStrategy.separateCriteria(leftGroups, rightGroups, leftExpressions, rightExpressions, cc.getCriteria(), nonEquiJoinCriteria);   
+                
+                if (!leftExpressions.isEmpty()) {
+					float leftNdv = NewCalculateCostUtil.getNDVEstimate(joinSourceRoot, metadata, sourceCost, leftExpressions, null);
+                	float rightNdv = NewCalculateCostUtil.UNKNOWN_VALUE;
+                	
+                	if (leftNdv != NewCalculateCostUtil.UNKNOWN_VALUE) {
+                		Set<GroupSymbol> usedRight = GroupsUsedByElementsVisitor.getGroups(rightExpressions);
+                		for (int j = 0; j < i; j++) {
+                			Entry<PlanNode, PlanNode> previousEntry = joinSourceEntries.get((int) joinOrder[j]);
+							if (previousEntry.getValue().getGroups().containsAll(usedRight)) {
+								rightNdv = NewCalculateCostUtil.getNDVEstimate(previousEntry.getValue(), metadata, sourceCost, rightExpressions, null);
+								break;
+							}
+                		}
+                	}
+                	
+                	if (leftNdv != NewCalculateCostUtil.UNKNOWN_VALUE && rightNdv != NewCalculateCostUtil.UNKNOWN_VALUE) {
+                		cost = (sourceCost / leftNdv) * (rightCost / rightNdv) * Math.min(leftNdv, rightNdv);
+                	} else {
+                		//check for a key
+                		//just use the default logic
+                		nonEquiJoinCriteria.clear();
+                	}
+                } else {
+                	//just use the default logic
+                	nonEquiJoinCriteria.clear();
+                }
+            	
+            	for (PlanNode criteriaNode : applicableCriteria) {
+            		Criteria crit = (Criteria) criteriaNode.getProperty(NodeConstants.Info.SELECT_CRITERIA);
+            		if (!nonEquiJoinCriteria.contains(crit)) {
+            			continue;
+            		}
                     float filter = ((Float)criteriaNode.getProperty(NodeConstants.Info.EST_SELECTIVITY)).floatValue();
                     
                     cost *= filter;
