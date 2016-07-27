@@ -39,7 +39,9 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
+import org.teiid.translator.TranslatorProperty.PropertyType;
 import org.teiid.translator.infinispan.hotrod.InfinispanHotRodConnection;
 import org.teiid.translator.infinispan.hotrod.InfinispanPlugin;
 import org.teiid.translator.object.ObjectConnection;
@@ -91,6 +93,16 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 
 	private Table rootTable = null;
 	private Method pkMethod = null;
+	protected boolean classObjectAsColumn = false;
+	
+	@TranslatorProperty(display="Class Object As Column", category=PropertyType.IMPORT, description="If true, and when the translator provides the metadata, a column of object data type will be created that represents the stored object in the cache", advanced=true)
+	public boolean supportClassObjectAsColumn() {
+		return classObjectAsColumn;
+	}	
+	
+	public void setSupportsClassObjectAsColumn(boolean classObjectAsColumn) {
+		this.classObjectAsColumn = classObjectAsColumn;
+	}
 	
 	@Override
 	public void process(MetadataFactory metadataFactory, ObjectConnection conn) throws TranslatorException {
@@ -133,9 +145,11 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 		
 		rootTable = addTable(mf, entity, updatable, false);
 		
-	    // add column for cache Object, set to non-selectable by default so that select * queries don't fail by default
-		addRootColumn(mf, Object.class, entity, null, null, SearchType.Unsearchable, rootTable.getName(), rootTable, false, false, NullType.Nullable); //$NON-NLS-1$	
-
+		
+		if (classObjectAsColumn) {
+			// add column for cache Object, set to non-selectable by default so that select * queries don't fail by default
+			addRootColumn(mf, Object.class, entity, null, null, SearchType.Unsearchable, rootTable.getName(), rootTable, false, false, NullType.Nullable); //$NON-NLS-1$	
+		}
 		pkMethod = null;
 		if (updatable) {
 		    pkMethod = conn.getClassRegistry().getReadClassMethods(entity.getName()).get(pkField);

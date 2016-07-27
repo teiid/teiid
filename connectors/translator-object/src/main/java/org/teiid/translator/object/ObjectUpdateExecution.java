@@ -131,22 +131,16 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 		
 		int cnt = 0;
 		try {
+			if (visitor.getPrimaryTable() != null) {
+				this.connection.getDDLHandler().setStagingTarget(true);
+			}
 			if (command instanceof Update) {
-				if (visitor.getPrimaryTable() != null) {
-					this.connection.getDDLHandler().setStagingTarget(true);
-				}
 				cnt = handleUpdate((Update) command, visitor, classRegistry, writeMethods);
 				
 			} else if (command instanceof Delete) {
-				if (visitor.getPrimaryTable() != null) {
-					this.connection.getDDLHandler().setStagingTarget(true);
-				}
 				cnt = handleDelete((Delete) command, visitor);
 				
 			} else if (command instanceof Insert) {
-				if (visitor.getPrimaryTable() != null) {
-					this.connection.getDDLHandler().setStagingTarget(true);
-				}
 				cnt = handleInsert((Insert) command, visitor, clz, writeMethods);
 				
 			} else {

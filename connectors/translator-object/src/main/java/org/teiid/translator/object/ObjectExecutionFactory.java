@@ -70,7 +70,7 @@ public abstract class ObjectExecutionFactory extends
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @see org.teiid.translator.ExecutionFactory#start()
+	 * @see org.teiid.translator.ExecutionFactory
 	 */
 	@Override
 	public void start() throws TranslatorException {
@@ -122,7 +122,7 @@ public abstract class ObjectExecutionFactory extends
 	
 	@Override
     public MetadataProcessor<ObjectConnection> getMetadataProcessor(){
-	    return new JavaBeanMetadataProcessor(searchabilityBasedOnAnnotations);
+	    return new JavaBeanMetadataProcessor(supportsSearchabilityUsingAnnotations());
 	}
 
 	/**
