@@ -39,6 +39,8 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TranslatorProperty;
+import org.teiid.translator.TranslatorProperty.PropertyType;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.object.ClassRegistry;
 import org.teiid.translator.object.ObjectConnection;
@@ -65,10 +67,21 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 	
 	protected boolean isUpdatable = false;
 	protected boolean useAnnotations = false;
+	protected boolean classObjectAsColumn = false;
 	protected Table rootTable = null;
 	
 	public JavaBeanMetadataProcessor(boolean useAnnotations) {
 		this.useAnnotations = useAnnotations;
+	}
+	
+	
+	@TranslatorProperty(display="Class Object As Column", category=PropertyType.IMPORT, description="If true, and when the translator provides the metadata, a column of object data type will be created that represents the stored object in the cache", advanced=true)
+	public boolean supportClassObjectAsColumn() {
+		return classObjectAsColumn;
+	}	
+	
+	public void setSupportsClassObjectAsColumn(boolean classObjectAsColumn) {
+		this.classObjectAsColumn = classObjectAsColumn;
 	}
 
 	@Override
@@ -102,8 +115,11 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 		table = mf.addTable(tableName);
 		table.setSupportsUpdate(this.isUpdatable);
 		
-		String columnName = tableName + OBJECT_COL_SUFFIX;
-		addColumn(mf, entity, entity, columnName, "this", SearchType.Unsearchable, table, false, NullType.Nullable, false); //$NON-NLS-1$
+		if (classObjectAsColumn) {
+			String columnName = tableName + OBJECT_COL_SUFFIX;
+			addColumn(mf, entity, entity, columnName, "this", SearchType.Unsearchable, table, false, NullType.Nullable, false); //$NON-NLS-1$
+		}
+		
 		Map<String, Method> methods;
 		try {
 			

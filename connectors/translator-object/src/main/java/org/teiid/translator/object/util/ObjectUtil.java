@@ -26,6 +26,7 @@ import org.teiid.core.types.TransformationException;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
 
 /**
@@ -84,6 +85,14 @@ public class ObjectUtil {
 		String name = c.getNameInSource();
 		if (name == null || name.trim().isEmpty()) {
 			return c.getName();
+		}
+		return name;
+	}
+	
+	public static String getRecordName(Table t) {
+		String name = t.getNameInSource();
+		if (name == null || name.trim().isEmpty()) {
+			return t.getName();
 		}
 		return name;
 	}

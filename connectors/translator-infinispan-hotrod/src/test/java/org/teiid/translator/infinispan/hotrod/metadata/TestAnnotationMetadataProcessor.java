@@ -13,6 +13,7 @@ import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.translator.infinispan.hotrod.InfinispanExecutionFactory;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectExecutionFactory;
+import org.teiid.translator.object.metadata.JavaBeanMetadataProcessor;
 
 @SuppressWarnings("nls")
 public class TestAnnotationMetadataProcessor {
@@ -23,19 +24,53 @@ public class TestAnnotationMetadataProcessor {
 	@Before public void beforeEach() throws Exception{	
 		 
 		TRANSLATOR = new InfinispanExecutionFactory();
-		TRANSLATOR.setSupportsSearchabilityUsingAnnotations(true);
-		TRANSLATOR.start();    }
+	}
+	
+	
+	public void testPersonMetadataNoObject() throws Exception {
+					
+		TRANSLATOR.setSupportsSearchabilityUsingAnnotations(true);		
+		TRANSLATOR.start(); 
+		
+		MetadataFactory mf = new MetadataFactory("vdb", 1, "objectvdb",
+				SystemMetadata.getInstance().getRuntimeTypeMap(),
+				new Properties(), null);
+
+		ObjectConnection conn = PersonCacheSource.createConnection(false);
+		
+		JavaBeanMetadataProcessor mp = (JavaBeanMetadataProcessor) TRANSLATOR.getMetadataProcessor();
+		mp.process(mf, conn);
+
+		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
+				null, null);
+
+		System.out.println("Schema: " + metadataDDL);
+		String expected = "CREATE FOREIGN TABLE Person (\n"
+	    + "\tid integer NOT NULL OPTIONS (NAMEINSOURCE 'id', SEARCHABLE 'Searchable', NATIVE_TYPE 'int'),\n"
+	    + "\temail string OPTIONS (NAMEINSOURCE 'email', SEARCHABLE 'Searchable', NATIVE_TYPE 'java.lang.String'),\n"
+	    + "\tname string NOT NULL OPTIONS (NAMEINSOURCE 'name', SEARCHABLE 'Searchable', NATIVE_TYPE 'java.lang.String'),\n"	    
+		+ "\tCONSTRAINT PK_ID PRIMARY KEY(id)\n"
+		+ ") OPTIONS (UPDATABLE TRUE);";
+		
+		assertEquals(expected, metadataDDL);
+	}
+		 
 	
 	@Test
 	public void testPersonMetadata() throws Exception {
+		
+		TRANSLATOR.setSupportsSearchabilityUsingAnnotations(true);
+		TRANSLATOR.start();   
 
 		MetadataFactory mf = new MetadataFactory("vdb", 1, "objectvdb",
 				SystemMetadata.getInstance().getRuntimeTypeMap(),
 				new Properties(), null);
 
 		ObjectConnection conn = PersonCacheSource.createConnection(false);
-
-		TRANSLATOR.getMetadataProcessor().process(mf, conn);
+		
+		JavaBeanMetadataProcessor mp = (JavaBeanMetadataProcessor) TRANSLATOR.getMetadataProcessor();
+		mp.setSupportsClassObjectAsColumn(true);
+		mp.process(mf, conn);
 
 		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
 				null, null);
