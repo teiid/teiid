@@ -404,7 +404,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 			
 			column.setNameInSource(field.getName());
 			column.setLength(field.getLength());
-			if(field.isUpdateable()) {
+			if(field.isUpdateable() || field.isCreateable()) {
 				column.setUpdatable(true);
 				hasUpdateableColumn  = true;
 			}
