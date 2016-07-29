@@ -22,10 +22,21 @@
 package org.teiid.translator.object.testdata.person;
  
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 
+import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.cdk.api.TranslationUtility;
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.query.metadata.MetadataValidator;
+import org.teiid.query.metadata.SystemMetadata;
+import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.parser.QueryParser;
+import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.validator.ValidatorReport;
 
 /**
  * This VDBUtility is building the metadata based on the JDG quickstart:  remote-query
@@ -59,6 +70,47 @@ public class PersonSchemaVDBUtility {
 		
 		RUNTIME_METADATA = PersonSchemaVDBUtility.TRANSLATION_UTILITY.createRuntimeMetadata();
 	}
+	
+	   public static TranslationUtility createPersonMetadata()   {
+		   
+		try {
+			return createTranslationUtility("Person", "PersonVDB", "person.ddl");
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	   }
+		
+	   public static TranslationUtility createTranslationUtility(String modelName, String vdbName, String ddlFile) throws IOException, Exception {
+
+	    	TransformationMetadata metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile(ddlFile)), vdbName, modelName);
+	    	return new TranslationUtility(metadata);
+
+		}
+	
+	   public static TransformationMetadata queryMetadataInterface(String modelName, String translator, String ddlFile) {
+	        
+	        try {
+	            ModelMetaData mmd = new ModelMetaData();
+	            mmd.setName(modelName);
+	            
+	            MetadataFactory mf = new MetadataFactory(translator, 1, SystemMetadata.getInstance().getRuntimeTypeMap(), mmd);
+	            mf.setParser(new QueryParser());
+	            mf.parse(new FileReader(UnitTestUtil.getTestDataFile(ddlFile)));
+	            
+	            TransformationMetadata tm = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "x");
+	            ValidatorReport report = new MetadataValidator().validate(tm.getVdbMetaData(), tm.getMetadataStore());
+	            if (report.hasItems()) {
+	                throw new RuntimeException(report.getFailureMessage());
+	            }
+	            return tm;
+
+	        } catch (Exception e) {
+	            throw new RuntimeException(e);
+	        } 
+	    }
 	
 
 }

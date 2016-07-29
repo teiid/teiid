@@ -6,7 +6,7 @@
     <modelImports xmi:uuid="mmuuid:166fed44-bb42-40c4-8169-1bae9b6e5771" name="Trade_Object" modelLocation="Trade_Object.xmi" uuid="mmuuid:abbd65a2-2896-4819-9428-fa8ba13a1b71" modelType="PHYSICAL" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational"/>
     <modelImports xmi:uuid="mmuuid:83922c48-3cdb-4a68-90ae-1e2dc51101ba" name="Trade_Mat" modelLocation="Trade_Mat.xmi" uuid="mmuuid:5f4d3ef6-026c-4a33-adea-fbf0eda391e7" modelType="PHYSICAL" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational"/>
   </mmcore:ModelAnnotation>
-  <relational:BaseTable xmi:uuid="mmuuid:1fc3bc7a-7ba3-4940-8422-53735c249676" name="Trade" nameInSource="Trades" supportsUpdate="false" materialized="true">
+  <relational:BaseTable xmi:uuid="mmuuid:1fc3bc7a-7ba3-4940-8422-53735c249676" name="Trade" nameInSource="" supportsUpdate="false" materialized="true">
     <columns xmi:uuid="mmuuid:511f2da4-40e5-4829-b9f5-38cbf8fc3ee5" name="TradeID" nameInSource="tradeId" nativeType="long" updateable="false" uniqueKeys="mmuuid/bb27e4d7-da59-4bd8-9cdf-b9ef2462d16d">
       <type href="http://www.w3.org/2001/XMLSchema#long"/>
     </columns>
@@ -22,7 +22,7 @@
     <materializedTable xsi:type="relational:BaseTable" href="Trade_Mat.xmi#mmuuid/2b5a463d-d34f-4e9e-a22c-6a9b980319bc"/>
     <primaryKey xmi:uuid="mmuuid:bb27e4d7-da59-4bd8-9cdf-b9ef2462d16d" name="PK_ID" columns="mmuuid/511f2da4-40e5-4829-b9f5-38cbf8fc3ee5" foreignKeys="mmuuid/2ee3ed56-af94-459a-b6a2-907c4b0002f7"/>
   </relational:BaseTable>
-  <relational:BaseTable xmi:uuid="mmuuid:de4cc42e-2127-400f-a532-20a9262ce39b" name="Leg" nameInSource="Trades" supportsUpdate="false">
+  <relational:BaseTable xmi:uuid="mmuuid:de4cc42e-2127-400f-a532-20a9262ce39b" name="Leg" nameInSource="" supportsUpdate="false">
     <columns xmi:uuid="mmuuid:f58a9a62-f32a-4d6d-a2d1-f3ccf0eb35d3" name="TradeID" nameInSource="tradeId" updateable="false" foreignKeys="mmuuid/2ee3ed56-af94-459a-b6a2-907c4b0002f7">
       <type href="http://www.w3.org/2001/XMLSchema#long"/>
     </columns>
