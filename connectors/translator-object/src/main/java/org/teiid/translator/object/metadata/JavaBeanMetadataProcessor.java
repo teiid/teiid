@@ -200,8 +200,9 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 		}
 		
 		if (staging) {
+			// for the staging table, point the nameinSource back to primary table
+			table.setNameInSource(rootTable.getName());
 			table.setProperty(PRIMARY_TABLE_PROPERTY, rootTable.getFullName());
-
 		}
 				
 		return table;

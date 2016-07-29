@@ -46,7 +46,6 @@ import org.teiid.language.Expression;
 import org.teiid.language.ExpressionValueSource;
 import org.teiid.language.Insert;
 import org.teiid.language.Literal;
-import org.teiid.language.NamedTable;
 import org.teiid.language.SetClause;
 import org.teiid.language.Update;
 import org.teiid.logging.LogConstants;
