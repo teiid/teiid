@@ -52,6 +52,7 @@ import org.teiid.translator.salesforce.execution.visitors.InsertVisitor;
 import com.sforce.async.BatchResult;
 import com.sforce.async.JobInfo;
 import com.sforce.async.JobStateEnum;
+import com.sforce.async.OperationEnum;
 import com.sforce.async.Result;
 import com.sforce.async.SObject;
 
@@ -90,7 +91,7 @@ public class InsertExecutionImpl extends AbstractUpdateExecution {
 			}
 			else {
 				if (this.activeJob == null) {
-					this.activeJob = getConnection().createBulkJob(this.objectName);
+					this.activeJob = getConnection().createBulkJob(this.objectName, OperationEnum.insert);
 					counts = new ArrayList<Integer>();
 				}
 				if (this.activeJob.getState() == JobStateEnum.Open) {

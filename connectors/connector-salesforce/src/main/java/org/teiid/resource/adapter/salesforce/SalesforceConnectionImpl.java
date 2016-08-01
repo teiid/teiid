@@ -21,6 +21,7 @@
  */
 package org.teiid.resource.adapter.salesforce;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -57,13 +58,7 @@ import org.teiid.translator.salesforce.execution.DeletedObject;
 import org.teiid.translator.salesforce.execution.DeletedResult;
 import org.teiid.translator.salesforce.execution.UpdatedResult;
 
-import com.sforce.async.AsyncApiException;
-import com.sforce.async.BatchRequest;
-import com.sforce.async.BatchResult;
-import com.sforce.async.BulkConnection;
-import com.sforce.async.ContentType;
-import com.sforce.async.JobInfo;
-import com.sforce.async.OperationEnum;
+import com.sforce.async.*;
 import com.sforce.soap.partner.*;
 import com.sforce.soap.partner.Error;
 import com.sforce.soap.partner.fault.InvalidFieldFault;
@@ -78,11 +73,13 @@ import com.sforce.ws.transport.JdkHttpTransport;
 
 public class SalesforceConnectionImpl extends BasicConnection implements SalesforceConnection {
 	
+	private static final int MAX_CHUNK_SIZE = 100000;
 	private BulkConnection bulkConnection; 
 	private PartnerConnection partnerConnection;
 	private SalesforceConnectorConfig config;
 	private String restEndpoint;
 	private String apiVersion;
+	private int pollingInterval = 500; //TODO: this could be configurable
 	
 	public SalesforceConnectionImpl(SalesForceManagedConnectionFactory mcf) throws ResourceException {
 		login(mcf);
@@ -249,7 +246,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 		return false;
 	}
 
-	public QueryResult query(String queryString, int batchSize, Boolean queryAll) throws ResourceException {
+	public QueryResult query(String queryString, int batchSize, boolean queryAll) throws ResourceException {
 		
 		if(batchSize > 2000) {
 			batchSize = 2000;
@@ -259,7 +256,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 		QueryResult qr = null;
 		partnerConnection.setQueryOptions(batchSize);
 		try {
-			if(queryAll != null && queryAll) {
+			if(queryAll) {
 				qr = partnerConnection.queryAll(queryString);
 			} else {
 				partnerConnection.setMruHeader(false);
@@ -509,12 +506,13 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 	}
 
 	@Override
-	public JobInfo createBulkJob(String objectName) throws ResourceException {
+	public JobInfo createBulkJob(String objectName, OperationEnum operation) throws ResourceException {
         try {
 			JobInfo job = new JobInfo();
 			job.setObject(objectName);
-			job.setOperation(OperationEnum.insert);
-			job.setContentType(ContentType.XML);
+			job.setOperation(operation);
+			job.setContentType(operation==OperationEnum.insert?ContentType.XML:ContentType.CSV);
+			job.setConcurrencyMode(ConcurrencyMode.Parallel);
 			return this.bulkConnection.createJob(job);
 		} catch (AsyncApiException e) {
 			throw new ResourceException(e);
@@ -532,6 +530,54 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 		}
 	}
 	
+	@Override
+	public BatchResultInfo addBatch(String query, JobInfo job) throws ResourceException {
+		try {
+			this.bulkConnection.addHeader("Sforce-Enable-PKChunking", String.valueOf(MAX_CHUNK_SIZE)); //$NON-NLS-1$
+			BatchInfo batch = this.bulkConnection.createBatchFromStream(job, new ByteArrayInputStream(query.getBytes(Charset.forName("UTF-8")))); //$NON-NLS-1$
+			return new BatchResultInfo(batch.getId());
+		} catch (AsyncApiException e) {
+			throw new ResourceException(e);
+		}
+	}
+	
+	@Override
+	public List<List<String>> getBatchQueryResults(String jobId, BatchResultInfo info) throws ResourceException {
+		if (info.getBatchList() == null) {
+			try {
+				BatchInfo batch = this.bulkConnection.getBatchInfo(jobId, info.getBatchId());
+				if (batch.getState() == BatchStateEnum.Completed) {
+					QueryResultList list = this.bulkConnection.getQueryResultList(jobId, info.getBatchId());
+					info.setBatchList(list.getResult());
+				} else if (batch.getState() == BatchStateEnum.Failed) {
+					throw new ResourceException(batch.getStateMessage());
+				} else {
+					throw new DataNotAvailableException(pollingInterval);
+				}
+			} catch (AsyncApiException e) {
+				throw new ResourceException(e);
+			}
+		}
+		List<List<String>> result = new ArrayList<List<String>>();
+		int index = info.getAndIncrementBatchNum();
+		if (index < info.getBatchList().length) {
+			try {
+				InputStream inputStream=bulkConnection.getQueryResultStream(jobId, info.getBatchId(), info.getBatchList()[index]);
+				CSVReader reader = new CSVReader(inputStream);
+				reader.setMaxRowsInFile(MAX_CHUNK_SIZE);
+				List<String> vals = null;
+				while ((vals = reader.nextRecord()) != null) {
+					result.add(vals);
+				}
+			} catch (AsyncApiException e) {
+				throw new ResourceException(e);
+			} catch (IOException e) {
+				throw new ResourceException(e);
+			}
+		}
+		return result;
+	}
+	
 	@Override 
 	public JobInfo closeJob(String jobId) throws ResourceException {
 		try {
@@ -546,8 +592,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 		try {
 			JobInfo info = this.bulkConnection.getJobStatus(job.getId());
 			if (info.getNumberBatchesTotal() != info.getNumberBatchesFailed() + info.getNumberBatchesCompleted()) {
-				//TODO: this should be configurable
-				throw new DataNotAvailableException(500);
+				throw new DataNotAvailableException(pollingInterval);
 			}
 			BatchResult[] results = new BatchResult[ids.size()];
 			for (int i = 0; i < ids.size(); i++) {

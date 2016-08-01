@@ -23,28 +23,15 @@ package org.teiid.translator.salesforce.execution;
 
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.resource.ResourceException;
 
 import org.teiid.core.util.TimestampWithTimezone;
-import org.teiid.language.AggregateFunction;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Expression;
-import org.teiid.language.Join;
-import org.teiid.language.QueryExpression;
-import org.teiid.language.Select;
-import org.teiid.language.TableReference;
+import org.teiid.language.*;
+import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
@@ -58,14 +45,70 @@ import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.salesforce.SalesForcePlugin;
 import org.teiid.translator.salesforce.SalesforceConnection;
+import org.teiid.translator.salesforce.SalesforceConnection.BatchResultInfo;
 import org.teiid.translator.salesforce.execution.visitors.JoinQueryVisitor;
 import org.teiid.translator.salesforce.execution.visitors.SelectVisitor;
 
+import com.sforce.async.JobInfo;
+import com.sforce.async.OperationEnum;
 import com.sforce.soap.partner.QueryResult;
 import com.sforce.soap.partner.sobject.SObject;
 import com.sforce.ws.bind.XmlObject;
 
 public class QueryExecutionImpl implements ResultSetExecution {
+
+	/**
+	 * A validator for and asynch bulk / pk chunking
+	 * https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/asynch_api_using_bulk_query.htm
+	 * https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/async_api_headers_enable_pk_chunking.htm
+	 */
+	static final class BulkValidator extends HierarchyVisitor {
+		boolean bulkEligible = true;
+		static Set<String> allowed = new HashSet<String>(
+				Arrays.asList("Account", "Campaign", "CampaignMember", "Case", "Contact", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+						"Lead", "LoginHistory", "Opportunity", "Task", "User")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+
+		@Override
+		public void visit(AggregateFunction obj) {
+			//sum, count
+			if (obj.getName().equalsIgnoreCase(SQLConstants.NonReserved.COUNT) || obj.getName().equalsIgnoreCase(SQLConstants.NonReserved.SUM)) {
+				bulkEligible = false;
+			} else {
+				super.visit(obj);
+			}
+		}
+
+		@Override
+		public void visit(GroupBy obj) {
+			if (obj.isRollup()) { //not yet supported, but just in case
+				bulkEligible = false;
+			} else {
+				super.visit(obj);
+			}
+		}
+
+		@Override
+		public void visit(Limit obj) {
+			if (obj.getRowOffset() > 0) {
+				bulkEligible = false;
+			} else {
+				super.visit(obj);
+			}
+		}
+		
+		@Override
+		public void visit(NamedTable obj) {
+			//since this is hint driven we'll assume that it is used selectively
+			/*if (!allowed.contains(obj.getMetadataObject().getSourceName()) 
+					&& !Boolean.valueOf(obj.getMetadataObject().getProperty(SalesForceMetadataProcessor.TABLE_CUSTOM, false))) {
+				bulkEligible = false;
+			}*/
+		}
+		
+		public boolean isBulkEligible() {
+			return bulkEligible;
+		}
+	}
 
 	private static final String TYPE = "type"; //$NON-NLS-1$
 
@@ -104,6 +147,12 @@ public class QueryExecutionImpl implements ResultSetExecution {
 	
 	private Calendar cal;
 	
+	//bulk support
+	private JobInfo activeJob;
+	private BatchResultInfo batchInfo;
+	private List<List<String>> batchResults;
+	
+	
 	public QueryExecutionImpl(QueryExpression command, SalesforceConnection connection, RuntimeMetadata metadata, ExecutionContext context) {
 		this.connection = connection;
 		this.metadata = metadata;
@@ -118,10 +167,24 @@ public class QueryExecutionImpl implements ResultSetExecution {
 
 	public void cancel() throws TranslatorException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.cancel"));//$NON-NLS-1$
+		if (activeJob != null) {
+			try {
+				this.connection.cancelBulkJob(activeJob);
+			} catch (ResourceException e) {
+				throw new TranslatorException(e);
+			}
+		}
 	}
-
+	
 	public void close() {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.close")); //$NON-NLS-1$
+		if (activeJob != null) {
+			try {
+				this.connection.closeJob(activeJob.getId());
+			} catch (ResourceException e) {
+				LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Exception closing"); //$NON-NLS-1$
+			}
+		}
 	}
 
 	@Override
@@ -130,7 +193,9 @@ public class QueryExecutionImpl implements ResultSetExecution {
 			//redundant with command log
 			LogManager.logDetail(LogConstants.CTX_CONNECTOR, getLogPreamble(), "Incoming Query:", query); //$NON-NLS-1$
 			List<TableReference> from = ((Select)query).getFrom();
+			boolean join = false;
 			if(from.get(0) instanceof Join) {
+				join = true;
 				visitor = new JoinQueryVisitor(metadata);
 			} else {
 				visitor = new SelectVisitor(metadata);
@@ -145,6 +210,18 @@ public class QueryExecutionImpl implements ResultSetExecution {
 				//redundant
 				LogManager.logDetail(LogConstants.CTX_CONNECTOR,  getLogPreamble(), "Executing Query:", finalQuery); //$NON-NLS-1$
 				context.logCommand(finalQuery);
+				
+				if (!join && !visitor.getQueryAll() 
+						&& (context.getSourceHints() != null && context.getSourceHints().contains("bulk"))) { //$NON-NLS-1$
+					BulkValidator bulkValidator = new BulkValidator();
+					query.acceptVisitor(bulkValidator);
+					if (bulkValidator.isBulkEligible()) {
+						this.activeJob = connection.createBulkJob(visitor.getTableName(), OperationEnum.query);
+						batchInfo = connection.addBatch(finalQuery, this.activeJob);
+						return;
+					}
+				}
+				
 				results = connection.query(finalQuery, this.context.getBatchSize(), visitor.getQueryAll());
 			}
 		} catch (ResourceException e) {
@@ -154,6 +231,31 @@ public class QueryExecutionImpl implements ResultSetExecution {
 	
 	@Override
 	public List<?> next() throws TranslatorException, DataNotAvailableException {
+		if (activeJob != null) {
+			if (batchResults == null || topResultIndex >= batchResults.size()) {
+				try {
+					batchResults = connection.getBatchQueryResults(activeJob.getId(), batchInfo);
+					topResultIndex = 1; //ignore the header
+				} catch (ResourceException e) {
+					throw new TranslatorException(e);
+				}
+			}
+			if (topResultIndex >= batchResults.size()) {
+				return null;
+			}
+			List<String> row = batchResults.get(topResultIndex++);
+			List<Object> result = new ArrayList<Object>();
+			for (int j = 0; j < visitor.getSelectSymbolCount(); j++) {
+				Expression ex = visitor.getSelectSymbolMetadata(j);
+				Class<?> type = ex.getType();
+				if (ex instanceof ColumnReference) {
+					Column element = ((ColumnReference)ex).getMetadataObject();
+					type = element.getJavaType();
+				}
+				result.add(convertValue(type, row.get(j)));
+			}
+			return result;
+		}
 		List<?> result = getRow(results);
 		return result;
 	}
@@ -343,6 +445,11 @@ public class QueryExecutionImpl implements ResultSetExecution {
 			throw new TranslatorException(SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.column.mismatch1") + name + SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.column.mismatch2") + elem.getName().getLocalPart()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		Object value = elem.getValue();
+		return convertValue(type, value);
+	}
+
+	private Object convertValue(Class<?> type, Object value)
+			throws TranslatorException {
 		if (value == null) {
 			return null;
 		}
