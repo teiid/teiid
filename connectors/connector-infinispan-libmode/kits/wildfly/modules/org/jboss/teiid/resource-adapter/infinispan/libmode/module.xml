@@ -18,7 +18,14 @@
         <module name="org.jboss.teiid.translator.infinispan.libmode" export="true"/>      
         <module name="org.jboss.modules"/>
                
-		<module name="org.infinispan" slot="${jdg.slot}" optional="true" services="export"  export="true" />
-		<module name="org.infinispan.query" slot="${jdg.slot}" optional="true"  services="export" export="true"  />
+	<module name="org.infinispan" slot="${jdg.slot}" optional="true" services="export"  export="true" />
+	<module name="org.infinispan.query" slot="${jdg.slot}" optional="true"  services="export" export="true"  />
+	
+	<module name="org.infinispan" slot="jdg-6.6" optional="true" services="export"  export="true" />
+	<module name="org.infinispan.query" slot="jdg-6.6" optional="true"  services="export" export="true"  />
+
+	<module name="org.infinispan" slot="jdg-6.5" optional="true" services="export"  export="true" />
+	<module name="org.infinispan.query" slot="jdg-6.5" optional="true"  services="export" export="true"  />
+
     </dependencies>
 </module>
