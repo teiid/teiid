@@ -61,7 +61,7 @@ public class OAuth20CredentialImpl implements OAuthCredential {
         OAuthClientUtils.Consumer consumer = new OAuthClientUtils.Consumer(getClientId(), getClientSecret());
         WebClient client = WebClient.create(getAccessTokenURI());
         RefreshTokenGrant grant = new RefreshTokenGrant(getRefreshToken());
-        return OAuthClientUtils.getAccessToken(client, consumer, grant, null, false);
+        return OAuthClientUtils.getAccessToken(client, consumer, grant, null, "Bearer", false);
     }
 
     public String getClientId() {
