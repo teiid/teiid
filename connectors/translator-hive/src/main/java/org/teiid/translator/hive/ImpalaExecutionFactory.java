@@ -362,6 +362,21 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
     }
     
     @Override
+    public List<?> translate(LanguageObject obj, ExecutionContext context) {
+    	if (obj instanceof WithItem) {
+    		WithItem item = (WithItem)obj;
+    		List<ColumnReference> cols = item.getColumns();
+    		item.setColumns(null);
+    		Select select = item.getSubquery().getProjectedQuery();
+			List<DerivedColumn> selectClause = select.getDerivedColumns();
+			for (int i = 0; i < cols.size(); i++) {
+				selectClause.get(i).setAlias(cols.get(i).getName());
+			}
+    	}
+    	return super.translate(obj, context);
+    }
+    
+    @Override
     protected boolean usesDatabaseVersion() {
     	return true;
     }
