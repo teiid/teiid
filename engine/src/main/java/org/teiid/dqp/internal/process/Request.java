@@ -57,6 +57,7 @@ import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
+import org.teiid.query.metadata.DatabaseStorage;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempCapabilitiesFinder;
 import org.teiid.query.metadata.TempMetadataAdapter;
@@ -137,6 +138,7 @@ public class Request {
 	private Executor executor;
 	protected Options options;
 	protected PreParser preParser;
+	protected DatabaseStorage databaseStorage;
 
     void initialize(RequestMessage requestMsg,
                               BufferManager bufferManager,
@@ -144,7 +146,8 @@ public class Request {
                               TransactionService transactionService,
                               TempTableStore tempTableStore,
                               DQPWorkContext workContext,
-                              SessionAwareCache<PreparedPlan> planCache) {
+                              SessionAwareCache<PreparedPlan> planCache,
+                              DatabaseStorage databaseStorage) {
 
         this.requestMsg = requestMsg;
         this.vdbName = workContext.getVdbName();        
@@ -157,6 +160,7 @@ public class Request {
         this.requestId = workContext.getRequestID(this.requestMsg.getExecutionId());
         this.connectorManagerRepo = workContext.getVDB().getAttachment(ConnectorManagerRepository.class);
         this.planCache = planCache;
+        this.databaseStorage = databaseStorage;
     }
     
     public void setOptions(Options options) {
@@ -303,7 +307,11 @@ public class Request {
         	if (preParser != null) {
         		commandStr = preParser.preParse(commandStr, this.context);
         	}
-            return queryParser.parseCommand(commandStr, parseInfo);
+        	if (requestMsg.isVdbInEditMode()) {
+				return queryParser.parseCommand(commandStr, parseInfo, false, this.databaseStorage, vdbName, vdbVersion,
+						requestMsg.getSchemaInContext());
+        	}
+        	return queryParser.parseCommand(commandStr, parseInfo, false);
         } 
         List<Command> parsedCommands = new ArrayList<Command>(commands.length);
         for (int i = 0; i < commands.length; i++) {
@@ -311,7 +319,7 @@ public class Request {
         	if (preParser != null) {
         		updateCommand = preParser.preParse(updateCommand, this.context);
         	}
-            parsedCommands.add(queryParser.parseCommand(updateCommand, parseInfo));
+			parsedCommands.add(queryParser.parseCommand(updateCommand, parseInfo, false));
         }
         return new BatchedUpdateCommand(parsedCommands);
     }

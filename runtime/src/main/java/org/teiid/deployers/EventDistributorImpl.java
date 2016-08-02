@@ -21,37 +21,56 @@
  */
 package org.teiid.deployers;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.script.ScriptEngineManager;
+
+import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.VDB.Status;
+import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
+import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
+import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ExecutionFactoryProvider;
 import org.teiid.dqp.internal.process.DataTierManagerImpl;
 import org.teiid.events.EventDistributor;
 import org.teiid.events.EventListener;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.ColumnStats;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Table;
+import org.teiid.metadata.*;
 import org.teiid.metadata.Table.TriggerEvent;
-import org.teiid.metadata.TableStats;
+import org.teiid.metadatastore.AdminAwareEventDistributor;
+import org.teiid.query.function.FunctionTree;
+import org.teiid.query.metadata.DDLMetadataRepository;
+import org.teiid.query.metadata.DDLStringVisitor;
+import org.teiid.query.metadata.DatabaseUtil;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.metadata.VDBResources;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
+import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.DdlPlan;
 import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.runtime.RuntimePlugin;
+import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.TranslatorException;
 
 public abstract class EventDistributorImpl implements EventDistributor {
 	private Set<EventListener> listeners = Collections.newSetFromMap(new ConcurrentHashMap<EventListener, Boolean>());
-
+	private AdminAwareEventDistributor adminEventDistributor;
+	
 	public abstract VDBRepository getVdbRepository();
+	public abstract ExecutionFactoryProvider getExecutionFactoryProvider();
+	public abstract ConnectorManagerRepository getConnectorManagerRepository();
+	public abstract Admin getAdmin();
+	public abstract ClassLoader getClassLoader(String[] path) throws MetadataException;
 	
 	public EventDistributorImpl() {
 		getVdbRepository().addListener(new VDBLifeCycleListener() {
@@ -94,6 +113,9 @@ public abstract class EventDistributorImpl implements EventDistributor {
 			public void beforeRemove(String name, CompositeVDB vdb) {
 			}			
 		});
+		
+		// add delegators
+		adminEventDistributor = new AdminAwareEventDistributor(getAdmin());
 	}
 	
 	@Override
@@ -299,4 +321,156 @@ public abstract class EventDistributorImpl implements EventDistributor {
 	public void unregister(EventListener listener) {
 		this.listeners.remove(listener);
 	}
+
+    @Override
+    public void dropDatabase(Database database) {
+        for (Server s : database.getServers()) {
+            dropServer(database.getName(), database.getVersion(), s);
+        }
+        for (DataWrapper dw : database.getDataWrappers()) {
+            dropDataWrapper(database.getName(), database.getVersion(), dw.getName(), dw.getType() != null);
+        }
+        getVdbRepository().removeVDB(database.getName(), database.getVersion());
+    }
+
+    @Override
+    public void reloadDatabase(Database database) {
+        getVdbRepository().removeVDB(database.getName(), database.getVersion(), true);
+        createDatabase(database);
+    }
+    
+    @Override
+    public void createDatabase(Database database) {
+        VDBMetaData vdb = DatabaseUtil.convert(database);
+        vdb.addProperty("database-origin", "db-store");
+        getVdbRepository().addPendingDeployment(vdb);
+        MetadataStore store = new MetadataStore();
+        try {
+            boolean hasMetadata = false;
+            for (ModelMetaData model : vdb.getModelMetaDatas().values()) {
+                Schema schema = database.getSchema(model.getName());
+                if (!schema.getTables().isEmpty() || !schema.getProcedures().isEmpty()
+                        || !schema.getFunctions().isEmpty()) {
+                    String ddl = DDLStringVisitor.getDDLString(database.getSchema(model.getName()), null, null);
+                    DDLMetadataRepository repo = new DDLMetadataRepository();
+                    MetadataFactory mf = new MetadataFactory(database.getName(), database.getVersion(),
+                            getVdbRepository().getRuntimeTypeMap(), model);
+                    // for thread safety each factory gets it's own instance.
+                    mf.setParser(new QueryParser()); 
+                    repo.loadMetadata(mf, null, null, ddl);
+                    mf.mergeInto(store);
+                    hasMetadata = true;
+                }
+            }     
+        
+            // avoid kicking off materialization scripts
+            if (!hasMetadata) {
+                vdb.addProperty("load-matviews", "false");
+            }
+
+            // handle all the classloading of libraries here.
+            UDFMetaData udf = new UDFMetaData();
+            if (vdb.getPropertyValue("lib") != null) {
+                ClassLoader classLoader = getClassLoader(parsePath(vdb.getPropertyValue("lib")));
+                if (classLoader != null) {
+                    vdb.addAttchment(ClassLoader.class, classLoader);
+                    vdb.addAttchment(ScriptEngineManager.class, new ScriptEngineManager(classLoader));
+                }
+                udf.setFunctionClassLoader(classLoader);
+            }
+            getVdbRepository().addVDB(vdb, store, new LinkedHashMap<String, VDBResources.Resource>(), udf,
+                    getConnectorManagerRepository());
+        } catch (VirtualDatabaseException e) {
+            throw new MetadataException(e);
+        } catch (TranslatorException e) {
+            throw new MetadataException(e);
+        }
+        getVdbRepository().finishDeployment(database.getName(), database.getVersion());
+    }
+    
+    private String[] parsePath(String path) {
+        ArrayList<String> list = new ArrayList<String>();
+        StringTokenizer st = new StringTokenizer(path, ",");
+        while(st.hasMoreTokens()) {
+            String token = st.nextToken().trim();
+            list.add(token);
+        }
+        return list.toArray(new String[list.size()]);
+    }    
+    
+    @Override
+    public void createDataWrapper(String dbName, String version, DataWrapper dataWrapper) {
+        this.adminEventDistributor.createDataWrapper(dbName, version, dataWrapper);
+        
+        // handle override translators
+        if (dataWrapper.getType() != null) {
+            try {
+                // create translator here
+                VDBTranslatorMetaData translator = new VDBTranslatorMetaData();
+                translator.setName(dataWrapper.getName());
+                if (dataWrapper.getType() != null) {
+                    ExecutionFactoryProvider efp = getConnectorManagerRepository().getProvider();
+                    ExecutionFactory<Object, Object> parent = efp.getExecutionFactory(dataWrapper.getType());
+                    translator.setExecutionFactoryClass(parent.getClass());
+                }
+                String module = dataWrapper.getProperty("module", false);
+                if (module != null) {
+                    translator.setModuleName(module);
+                }
+                if (dataWrapper.getAnnotation() != null) {
+                    translator.setDescription(dataWrapper.getAnnotation());
+                }
+                for (String key:dataWrapper.getProperties().keySet()) {
+                    if (key.equalsIgnoreCase("module")) {
+                        continue;
+                    }
+                    translator.addProperty(key, dataWrapper.getProperties().get(key));
+                }
+                getConnectorManagerRepository().getProvider().addOverrideTranslator(translator);
+            } catch (ConnectorManagerException e) {
+                throw new MetadataException(e);
+            }
+        }
+    }
+    
+    @Override
+    public void dropDataWrapper(String dbName, String version, String dataWrapperName, boolean override) {
+        if (override) {
+            try {
+                this.adminEventDistributor.dropDataWrapper(dbName, version, dataWrapperName, override);
+                getConnectorManagerRepository().getProvider().removeOverrideTranslator(dataWrapperName);
+            } catch (ConnectorManagerException e) {
+                throw new MetadataException(e);
+            }
+        }
+    }
+    
+    @Override
+    public void createServer(String dbName, String version, Server server) {
+        try {
+            this.adminEventDistributor.createServer(dbName, version, server);
+            String jndiName = server.getJndiName();
+            if (jndiName == null) {
+                jndiName = server.getName();
+            }
+            getConnectorManagerRepository().createConnectorManager(server.getName(), server.getDataWrapper(),
+                    jndiName, getExecutionFactoryProvider(), false);
+        } catch (ConnectorManagerException e) {
+            throw new MetadataException(e);
+        }                
+    }
+    @Override
+    public void dropServer(String dbName, String version, Server server) {
+        this.adminEventDistributor.dropServer(dbName, version, server);
+        getConnectorManagerRepository().removeConnectorManager(server.getName());
+    }
+    
+    @Override
+    public void validateRecord(String dbName, String version, AbstractMetadataRecord record) {
+        VDBMetaData vdb = getVdbRepository().getLiveVDB(dbName, version);
+        if (record instanceof FunctionMethod) {
+            ClassLoader classLoader = vdb.getAttachment(ClassLoader.class);
+            FunctionTree.validateFunction((FunctionMethod)record, classLoader);
+        }
+    }
 }

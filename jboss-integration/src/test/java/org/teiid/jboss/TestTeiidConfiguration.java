@@ -211,7 +211,7 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
         List<String> opNames = getList(result);
 		String[] ops = { "add", "add-anyauthenticated-role", "add-data-role", "add-source",
 		        "assign-datasource", "cache-statistics", "cache-types", "cancel-request",
-		        "change-vdb-connection-type", "clear-cache", "engine-statistics", "execute-query",
+		        "change-vdb-connection-type", "clear-cache", "ddl-exec", "engine-statistics", "execute-query",
 		        "get-query-plan", "get-schema", "get-translator", "get-vdb", "list-add", "list-clear",
 		        "list-get", "list-long-running-requests", "list-remove", "list-requests", 
 		        "list-requests-per-session", "list-requests-per-vdb", "list-sessions", "list-transactions", 

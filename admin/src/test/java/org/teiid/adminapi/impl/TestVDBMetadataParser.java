@@ -51,6 +51,7 @@ public class TestVDBMetadataParser {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		VDBMetadataParser.marshell(metadata, baos);
 		baos.close();
+		System.out.println(new String(baos.toByteArray()));
 		VDBMetaData parsed = VDBMetadataParser.unmarshell(new ByteArrayInputStream(baos.toByteArray()));
 		assertNull(parsed.getModel("model-one"));
 	}

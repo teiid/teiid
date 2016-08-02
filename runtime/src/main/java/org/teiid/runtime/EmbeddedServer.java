@@ -102,17 +102,21 @@ import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.metadata.MetadataException;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.index.IndexMetadataRepository;
+import org.teiid.metadatastore.DefaultDatabaseStore;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.ServerConnection;
 import org.teiid.net.socket.ObjectChannel;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.metadata.DDLStringVisitor;
+import org.teiid.query.metadata.DatabaseStorage;
+import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.metadata.PureZipFileSystem;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.metadata.VDBResources;
@@ -283,6 +287,22 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
         protected ObjectReplicator getObjectReplicator() {
             return replicator;
         }
+
+        @Override
+        protected ConnectorManagerRepository getConnectorManagerRepository() {
+            return cmr;
+        }
+
+        @Override
+        protected Admin getAdmin() {
+            return EmbeddedServer.this.getAdmin();
+        }
+
+        @Override
+        protected ClassLoader getClassLoader(String[] path) throws MetadataException {
+            // TODO: should we expand this to actual URLClassloader? 
+            return Thread.currentThread().getContextClassLoader();
+        }
     };	
 	
 	protected boolean throwMetadataErrors = true;
@@ -294,6 +314,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	protected BufferServiceImpl bufferService = new BufferServiceImpl();
 	protected TransactionServerImpl transactionService = new TransactionServerImpl();
 	protected boolean waitForLoad;
+	private DatabaseStore databaseStore;
 	protected ClientServiceRegistryImpl services = new ClientServiceRegistryImpl() {
 		@Override
 		public void waitForFinished(VDBKey vdbKey, int timeOutMillis) throws ConnectionException {
@@ -352,6 +373,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		}
 		this.shutdownListener.setBootInProgress(true);
 		this.config = config;
+		this.cmr.setProvider(this);
 		this.eventDistributorFactoryService = new EmbeddedEventDistributorFactoryService();
 		this.eventDistributorFactoryService.start();
 		this.dqp.setEventDistributor(this.eventDistributorFactoryService.getReplicatedEventDistributor());
@@ -431,6 +453,21 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			}
 		}
 		this.shutdownListener.setBootInProgress(false);
+		
+		// load from DDL file
+		DatabaseStorage storage = config.getDatabaseStorage();
+		if (storage != null) {
+		    DefaultDatabaseStore store = new DefaultDatabaseStore();
+		    store.setVDBRepository(getVDBRepository());
+		    getVDBRepository().setDatabaseStorage(storage);
+		    store.setExecutionFactoryProvider(this);
+		    store.setConnectorManagerRepository(this.cmr);
+	        store.setFunctionalStore(getEventDistributor());
+            this.databaseStore = store;
+            storage.setStore(this.databaseStore);
+            storage.load();
+            this.dqp.setDatabaseStorage(storage);
+		}
 		running = true;
 	}
 
@@ -830,6 +867,10 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		this.repo.removeVDB(vdbName, "1"); //$NON-NLS-1$
 	}
 
+	EmbeddedConfiguration getConfiguration() {
+	    return this.config;
+	}
+	
 	/**
 	 * Stops the server.  Once stopped it cannot be restarted.
 	 */
@@ -844,6 +885,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			this.channelFactory.stop();
 		}
         this.shutdownListener.setShutdownInProgress(true);
+
         this.repo.removeListener(this.materializationMgr);
         this.scheduler.shutdownNow();
 		for (SocketListener socket:this.transports) {
@@ -892,6 +934,17 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		return (ExecutionFactory<Object, Object>) ef;
 	}
 	
+    @Override
+    public void addOverrideTranslator(VDBTranslatorMetaData translator) throws ConnectorManagerException {
+        ExecutionFactory<Object, Object> ef = TranslatorUtil.buildDelegateAwareExecutionFactory(translator, this);
+        translators.put(translator.getName(), ef);
+    }
+
+    @Override
+    public void removeOverrideTranslator(String translatorName) throws ConnectorManagerException{
+        translators.remove(translatorName);
+    }
+    
 	@Override
 	protected VDBRepository getVDBRepository() {
 		return this.repo;

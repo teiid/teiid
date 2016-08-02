@@ -39,7 +39,7 @@ public class TestSessionServiceImpl {
 		
 		ssi.setVDBRepository(repo);
 		
-		ssi.getActiveVDB("name", null);
+		ssi.getActiveVDB("name", null,false);
 		
 		Mockito.verify(repo, Mockito.times(1)).getLiveVDB("name");
 	}
@@ -56,7 +56,7 @@ public class TestSessionServiceImpl {
 		
 		ssi.setVDBRepository(repo);
 		
-		ssi.getActiveVDB("name.1.2.3", null);
+		ssi.getActiveVDB("name.1.2.3", null, false);
 		Mockito.verify(repo, Mockito.times(1)).getLiveVDB("name.1.2.3");
 	}
 	
@@ -73,7 +73,7 @@ public class TestSessionServiceImpl {
 		
 		ssi.setVDBRepository(repo);
 		
-		ssi.getActiveVDB("name", "1");
+		ssi.getActiveVDB("name", "1", false);
 		
 		Mockito.verify(repo, Mockito.times(1)).getLiveVDB("name", "1");
 	}
@@ -92,7 +92,7 @@ public class TestSessionServiceImpl {
 		
 		ssi.setVDBRepository(repo);
 		
-		ssi.getActiveVDB("name", "1");
+		ssi.getActiveVDB("name", "1", false);
 		
 		Mockito.verify(repo, Mockito.times(1)).getLiveVDB("name", "1");
 	}
@@ -111,7 +111,7 @@ public class TestSessionServiceImpl {
 		ssi.setVDBRepository(repo);
 		
 		try {
-			ssi.getActiveVDB("name.x", null);
+			ssi.getActiveVDB("name.x", null, false);
 			fail("must have failed with non integer version");
 		} catch (SessionServiceException e) {
 		}
@@ -131,13 +131,13 @@ public class TestSessionServiceImpl {
 		ssi.setVDBRepository(repo);
 		
 		try {
-			ssi.getActiveVDB("name.1", "1");
+			ssi.getActiveVDB("name.1", "1", false);
 			fail("must have failed with ambigious version info");
 		} catch (SessionServiceException e) {
 		}
 		
 		try {
-			ssi.getActiveVDB("name..1", null);
+			ssi.getActiveVDB("name..1", null, false);
 			fail("must have failed with ambigious version info");
 		} catch (SessionServiceException e) {
 		}

@@ -41,6 +41,7 @@ import org.teiid.dqp.internal.process.TeiidExecutor;
 import org.teiid.dqp.internal.process.ThreadReuseExecutor;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.query.ObjectReplicator;
+import org.teiid.query.metadata.DatabaseStorage;
 import org.teiid.security.SecurityHelper;
 import org.teiid.transport.SocketConfiguration;
 
@@ -61,6 +62,7 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	private String infinispanConfigFile = "infinispan-config.xml"; //$NON-NLS-1$
 	private String jgroupsConfigFile; // from infinispan-core
 	private List<SocketConfiguration> transports;
+	private DatabaseStorage databaseStorage;
 	private int maxODBCLobSizeAllowed = 5*1024*1024; // 5 MB
 	private int maxAsyncThreads = DEFAULT_MAX_ASYNC_WORKERS;
 	
@@ -235,6 +237,14 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	
 	public List<SocketConfiguration> getTransports(){
 		return this.transports;
+	}
+	
+	public void setDatabaseStorage(DatabaseStorage store) {
+	    this.databaseStorage = store;
+	}
+	
+	public DatabaseStorage getDatabaseStorage() {
+	    return this.databaseStorage;
 	}
 	
 	public int getMaxODBCLobSizeAllowed() {

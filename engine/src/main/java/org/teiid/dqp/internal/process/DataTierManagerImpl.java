@@ -81,6 +81,8 @@ import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.CompositeMetadataStore.RecordHolder;
 import org.teiid.query.metadata.DDLConstants;
+import org.teiid.query.metadata.DatabaseStorage;
+import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TempMetadataID;
@@ -88,6 +90,7 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.parser.ParseInfo;
 import org.teiid.query.processor.CollectionTupleSource;
+import org.teiid.query.processor.DdlPlan;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.processor.relational.RelationalNodeUtil;
@@ -1176,7 +1179,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 			DQPWorkContext workContext) throws TeiidComponentException, TeiidProcessingException {
 		String vdbName = workContext.getVdbName();
 		String vdbVersion = workContext.getVdbVersion();
-		VDBMetaData vdb = workContext.getVDB();
+		final VDBMetaData vdb = workContext.getVDB();
 		TransformationMetadata indexMetadata = vdb.getAttachment(TransformationMetadata.class);
 		CompositeMetadataStore metadata = indexMetadata.getMetadataStore();
 		if (command instanceof Query) {
@@ -1231,7 +1234,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 						}
 						strVal = ObjectConverterUtil.convertToString(value.getCharacterStream());
 					}
-					AbstractMetadataRecord target = getByUuid(metadata, uuid);
+					final AbstractMetadataRecord target = getByUuid(metadata, uuid);
 					if (target == null) {
 						 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30549, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30549, uuid));
 					}
@@ -1244,6 +1247,33 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 					}
 					if (getMetadataRepository(target, vdb) != null) {
 						getMetadataRepository(target, vdb).setProperty(vdbName, vdbVersion, target, key, strVal);
+					}
+					DatabaseStorage storage = vdb.getAttachment(DatabaseStorage.class);
+					if (storage != null) {
+						final String k = key;
+						final String v = strVal;
+						final Database.ResourceType type = (target == schema) ?  Database.ResourceType.SCHEMA :
+								(target instanceof Table) ? Database.ResourceType.TABLE :
+								(target instanceof Procedure) ? Database.ResourceType.PROCEDURE :
+								(target instanceof FunctionMethod) ? Database.ResourceType.FUNCTION :
+								(target instanceof ProcedureParameter) ? Database.ResourceType.PARAMETER :
+								Database.ResourceType.COLUMN;
+						DatabaseStore store = storage.getStore();
+						DdlPlan.alterDatabaseStore(store, vdb.getName(), vdb.getVersion(), new DdlPlan.DDLChange() {
+							@Override
+							public void process(DatabaseStore store) {
+								store.databaseSwitched(vdb.getName(), vdb.getVersion());
+								if (type.equals(Database.ResourceType.COLUMN)) {
+									store.addOrSetOption(target.getParent().getName(), Database.ResourceType.TABLE,
+											target.getName(), type, k, v);
+								} else if (type.equals(Database.ResourceType.PARAMETER)) {
+									store.addOrSetOption(target.getParent().getName(), Database.ResourceType.PROCEDURE,
+											target.getName(), type, k, v);									
+								} else {
+									store.addOrSetOption(target.getName(), type, k, v);
+								}
+							}
+						});
 					}
 					result = target.setProperty(key, strVal);
 					if (eventDistributor != null) {
@@ -1265,10 +1295,10 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 					 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30551, e);
 				}
 			}
-			Table table = indexMetadata.getGroupID((String)((Constant)proc.getParameter(1).getExpression()).getValue());
+			final Table table = indexMetadata.getGroupID((String)((Constant)proc.getParameter(1).getExpression()).getValue());
 			switch (sysProc) {
 			case SETCOLUMNSTATS:
-				String columnName = (String)((Constant)proc.getParameter(2).getExpression()).getValue();
+				final String columnName = (String)((Constant)proc.getParameter(2).getExpression()).getValue();
 				Column c = null;
 				for (Column col : table.getColumns()) {
 					if (col.getName().equalsIgnoreCase(columnName)) {
@@ -1283,7 +1313,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				Number nullVals = (Number)((Constant)proc.getParameter(4).getExpression()).getValue();
 				String max = (String) ((Constant)proc.getParameter(5).getExpression()).getValue();
 				String min = (String) ((Constant)proc.getParameter(6).getExpression()).getValue();
-				ColumnStats columnStats = new ColumnStats();
+				final ColumnStats columnStats = new ColumnStats();
 				columnStats.setDistinctValues(distinctVals);
 				columnStats.setNullValues(nullVals);
 				columnStats.setMaximumValue(max);
@@ -1295,10 +1325,32 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				if (eventDistributor != null) {
 					eventDistributor.setColumnStats(vdbName, vdbVersion, table.getParent().getName(), table.getName(), columnName, columnStats);
 				}
+				DatabaseStorage storage = vdb.getAttachment(DatabaseStorage.class);
+				if (storage != null) {
+					DatabaseStore store = storage.getStore();
+					DdlPlan.alterDatabaseStore(store, vdb.getName(), vdb.getVersion(), new DdlPlan.DDLChange() {
+						@Override
+						public void process(DatabaseStore store) {
+							store.databaseSwitched(vdb.getName(), vdb.getVersion());
+							store.addOrSetOption(table.getName(), Database.ResourceType.TABLE, columnName,
+									Database.ResourceType.COLUMN, DDLConstants.DISTINCT_VALUES,
+									columnStats.getDistinctValues().toString());
+							store.addOrSetOption(table.getName(), Database.ResourceType.TABLE, columnName,
+									Database.ResourceType.COLUMN, DDLConstants.NULL_VALUE_COUNT,
+									columnStats.getNullValues().toString());
+							store.addOrSetOption(table.getName(), Database.ResourceType.TABLE, columnName,
+									Database.ResourceType.COLUMN, DDLConstants.MAX_VALUE,
+									columnStats.getMaximumValue().toString());
+							store.addOrSetOption(table.getName(), Database.ResourceType.TABLE, columnName,
+									Database.ResourceType.COLUMN, DDLConstants.MIN_VALUE,
+									columnStats.getMinimumValue().toString());							
+						}
+					});
+				}				
 				break;
 			case SETTABLESTATS:
 				Constant val = (Constant)proc.getParameter(2).getExpression();
-				Number cardinality = (Number)val.getValue();
+				final Number cardinality = (Number)val.getValue();
 				TableStats tableStats = new TableStats();
 				tableStats.setCardinality(cardinality);
 				if (getMetadataRepository(table, vdb) != null) {
@@ -1308,6 +1360,18 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				if (eventDistributor != null) {
 					eventDistributor.setTableStats(vdbName, vdbVersion, table.getParent().getName(), table.getName(), tableStats);
 				}
+				storage = vdb.getAttachment(DatabaseStorage.class);
+				if (storage != null) {
+					DatabaseStore store = storage.getStore();
+					DdlPlan.alterDatabaseStore(store, vdb.getName(), vdb.getVersion(), new DdlPlan.DDLChange() {
+						@Override
+						public void process(DatabaseStore store) {
+							store.databaseSwitched(vdb.getName(), vdb.getVersion());
+							store.addOrSetOption(table.getName(), Database.ResourceType.TABLE, 
+									DDLConstants.CARDINALITY, cardinality.toString());
+						}
+					});
+				}				
 				break;
 			}
 			table.setLastModified(System.currentTimeMillis());
@@ -1359,8 +1423,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 			}
 		}
 		return new CollectionTupleSource(rows.iterator());
-		
-			
 	}
 	
 	public MetadataRepository getMetadataRepository(AbstractMetadataRecord target, VDBMetaData vdb) {

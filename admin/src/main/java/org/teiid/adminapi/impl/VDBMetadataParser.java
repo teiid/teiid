@@ -522,9 +522,14 @@ public class VDBMetadataParser {
 		writeAttribute(writer, Element.NAME.getLocalName(), dp.getName());
 		writeAttribute(writer, Element.DATA_ROLE_ANY_ATHENTICATED_ATTR.getLocalName(), String.valueOf(dp.isAnyAuthenticated()));
 		writeAttribute(writer, Element.DATA_ROLE_GRANT_ALL_ATTR.getLocalName(), String.valueOf(dp.isGrantAll()));
-		writeAttribute(writer, Element.DATA_ROLE_ALLOW_TEMP_TABLES_ATTR.getLocalName(), String.valueOf(dp.isAllowCreateTemporaryTables()));
+		
+		if(dp.isAllowCreateTemporaryTables() !=null) {
+		    writeAttribute(writer, Element.DATA_ROLE_ALLOW_TEMP_TABLES_ATTR.getLocalName(), String.valueOf(dp.isAllowCreateTemporaryTables()));
+		}
 
-		writeElement(writer, Element.DESCRIPTION, dp.getDescription());
+		if (dp.getDescription() != null) {
+		    writeElement(writer, Element.DESCRIPTION, dp.getDescription());
+		}
 		
 		// permission
 		for (DataPolicy.DataPermission permission: dp.getPermissions()) {

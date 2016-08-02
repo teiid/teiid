@@ -88,6 +88,7 @@ public class JDBCURL {
     	        TeiidURL.CONNECTION.KERBEROS_SERVICE_PRINCIPLE_NAME,
     	        TeiidURL.CONNECTION.ENCRYPT_REQUESTS,
     	        TeiidURL.CONNECTION.LOGIN_TIMEOUT,
+    	        TeiidURL.CONNECTION.VDBEDITMODE,
     	        DatabaseMetaDataImpl.REPORT_AS_VIEWS,
     	        ResultSetImpl.DISABLE_FETCH_SIZE));
     	props.addAll(EXECUTION_PROPERTIES.keySet());
@@ -326,4 +327,20 @@ public class JDBCURL {
         return props;
     }
 
+    public static boolean isVDBInEditMode(String editMode) {
+    	if (editMode != null) {
+    		if (editMode.equalsIgnoreCase("create") || editMode.equalsIgnoreCase("true")) {
+    			return true;
+    		}
+    	}
+    	return false;
+    }
+    public static boolean isVDBInCreatetMode(String editMode) {
+    	if (editMode != null) {
+    		if (editMode.equalsIgnoreCase("create")) {
+    			return true;
+    		}
+    	}
+    	return false;
+    }    
 }

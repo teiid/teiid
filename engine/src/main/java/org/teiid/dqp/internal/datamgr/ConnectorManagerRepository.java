@@ -31,6 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.core.TeiidException;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.query.QueryPlugin;
@@ -60,6 +61,10 @@ public class ConnectorManagerRepository implements Serializable{
 		 * @throws ConnectorManagerException
 		 */
 		ExecutionFactory<Object, Object> getExecutionFactory(String name) throws ConnectorManagerException;
+		
+		void addOverrideTranslator(VDBTranslatorMetaData translator) throws ConnectorManagerException;
+
+        void removeOverrideTranslator(String translatorName) throws ConnectorManagerException;
 	}
 	
 	private static final long serialVersionUID = -1611063218178314458L;
@@ -113,32 +118,37 @@ public class ConnectorManagerRepository implements Serializable{
 	public void createConnectorManager(
 			VDBMetaData deployment, ExecutionFactoryProvider provider,
 			SourceMappingMetadata source, boolean replace) throws ConnectorManagerException {
-		ConnectorManager cm = getConnectorManager(source.getName());
 		String name = source.getTranslatorName();
 		String connection = source.getConnectionJndiName();
-		ExecutionFactory<Object, Object> ef = null;
-		if (cm != null) {
-			if (!cm.getTranslatorName().equals(name)
-					|| !EquivalenceUtil.areEqual(cm.getConnectionName(), connection)) {
-				if (!replace) {
-					throw new ConnectorManagerException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31103, source, deployment.getName(), deployment.getVersion()));
-				}
-				if (cm.getTranslatorName().equals(name)) {
-					ef = cm.getExecutionFactory();
-				}
-			} else {
-				return;
-			}
-		}
-		if (ef == null) {
-			ef = provider.getExecutionFactory(name);
-			if (ef == null) {
-				throw new ConnectorManagerException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31146, deployment.getName(), deployment.getVersion(), name));
-			}
-		}
-		cm = createConnectorManager(name, connection, ef);
-		addConnectorManager(source.getName(), cm);
+		createConnectorManager(source.getName(), name, connection, provider, replace);
 	}
+	
+    public void createConnectorManager(String sourceName, String translatorName, String jndiName,
+            ExecutionFactoryProvider provider, boolean replace) throws ConnectorManagerException {
+        ConnectorManager cm = getConnectorManager(sourceName);
+        ExecutionFactory<Object, Object> ef = null;
+        if (cm != null) {
+            if (!cm.getTranslatorName().equals(translatorName)
+                    || !EquivalenceUtil.areEqual(cm.getConnectionName(), jndiName)) {
+                if (!replace) {
+                    throw new ConnectorManagerException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31217, sourceName));
+                }
+                if (cm.getTranslatorName().equals(translatorName)) {
+                    ef = cm.getExecutionFactory();
+                }
+            } else {
+                return;
+            }
+        }
+        if (ef == null) {
+            ef = provider.getExecutionFactory(translatorName);
+            if (ef == null) {
+                throw new ConnectorManagerException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31218, translatorName));
+            }
+        }
+        cm = createConnectorManager(translatorName, jndiName, ef);
+        addConnectorManager(sourceName, cm);
+    }	
 
 	protected ConnectorManager createConnectorManager(String name,
 			String connection, ExecutionFactory<Object, Object> ef) throws ConnectorManagerException {

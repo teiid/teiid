@@ -80,6 +80,7 @@ public class TeiidSubsytemResourceDefinition extends SimpleResourceDefinition {
 		new GetSchema().register(resourceRegistration);
 		new EngineStatistics().register(resourceRegistration);
 		new ReadTranslatorProperties().register(resourceRegistration);
+		new DDLExecutor().register(resourceRegistration);
     }
 
     @Override

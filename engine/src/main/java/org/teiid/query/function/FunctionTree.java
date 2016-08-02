@@ -421,4 +421,10 @@ public class FunctionTree {
 		return ft;
 	}
 
+    public static void validateFunction(FunctionMethod fm, ClassLoader classLoader) {
+        UDFSource dummySource = new UDFSource(Collections.EMPTY_LIST);
+        dummySource.setClassLoader(classLoader);
+        FunctionTree ft = new FunctionTree("dummy", dummySource, true);
+        ft.addFunction("dummy", dummySource, fm, false);
+    }
 }

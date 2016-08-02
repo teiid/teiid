@@ -104,6 +104,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
     private Collection<Annotation> annotations;
     private Properties connectionProps;
     private Properties payload;
+    private String schema;
         
     public ConnectionImpl(ServerConnection serverConn, Properties info, String url) { 
     	this.connectionProps = info;
@@ -1037,7 +1038,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
 	}
 
 	public String getSchema() throws SQLException {
-		return null;
+		return schema;
 	}
 
 	/**
@@ -1049,7 +1050,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
 	}
 
 	public void setSchema(String schema) throws SQLException {
-		
+		this.schema = schema;
 	}
 	
 	public Properties getPayload() {
