@@ -61,6 +61,11 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Infinispan Connection has been newly created "); //$NON-NLS-1$
 	}
 	
+	@Override
+	public String getVersion() throws TranslatorException {
+		return this.config.getVersion();
+	}
+	
 	/** 
 	 * Close the connection, if a connection requires closing.
 	 * (non-Javadoc)

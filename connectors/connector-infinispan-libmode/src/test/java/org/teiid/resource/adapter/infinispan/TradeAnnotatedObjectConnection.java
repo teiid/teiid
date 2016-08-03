@@ -26,7 +26,6 @@ public class TradeAnnotatedObjectConnection extends SimpleMapCacheConnection imp
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @see org.teiid.translator.infinispan.cache.InfinispanCacheConnection#getQueryFactory()
 	 */
 	@SuppressWarnings("rawtypes")
 	@Override

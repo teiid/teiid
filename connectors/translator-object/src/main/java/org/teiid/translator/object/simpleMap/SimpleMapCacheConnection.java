@@ -39,6 +39,11 @@ public class SimpleMapCacheConnection implements ObjectConnection {
 		this.registry = registry;
 		this.proxy = proxy;
 	}
+	
+	@Override
+	public String getVersion()  {
+		return "";
+	}
 
 	@Override 
 	public  Map<Object, Object> getCache() throws TranslatorException {

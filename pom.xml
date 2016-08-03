@@ -37,7 +37,7 @@
         <version.bundle.plugin>2.5.0</version.bundle.plugin>
 
         <!-- JDG module slot to use  -->
-        <jdg.slot>jdg-6.6</jdg.slot>  
+        <jdg.slot>jdg-7.0</jdg.slot>  
         <version.org.infinispan.6>7.2.3.Final</version.org.infinispan.6> 
         <version.org.apache.lucene.infinispan>7.2.3.Final</version.org.apache.lucene.infinispan>
         <version.com.squareup.protoparser>3.1.5</version.com.squareup.protoparser>

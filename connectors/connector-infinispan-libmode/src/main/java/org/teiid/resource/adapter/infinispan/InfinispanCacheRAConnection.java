@@ -21,8 +21,20 @@
  */
 package org.teiid.resource.adapter.infinispan;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.resource.ResourceException;
+
+import org.infinispan.Cache;
+import org.infinispan.client.hotrod.RemoteCache;
+import org.infinispan.configuration.cache.Configuration;
+import org.infinispan.manager.DefaultCacheManager;
+import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.query.Search;
 import org.infinispan.query.dsl.QueryFactory;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -39,38 +51,41 @@ import org.teiid.translator.object.SearchType;
  */
 public class InfinispanCacheRAConnection extends BasicConnection
 		implements InfinispanCacheConnection {
+	
+	private InfinispanManagedConnectionFactory config;
 
-	private InfinispanCacheWrapper<?, ?> cacheWrapper;
 	
 	public InfinispanCacheRAConnection(InfinispanManagedConnectionFactory config) {
-		this.cacheWrapper = config.getCacheWrapper();
+		this.config = config;
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Infinispan-Library Mode Cache Connection has been created."); //$NON-NLS-1$				
 	}
-
-	@Override
-	public Object getCache() throws TranslatorException  {
-		return cacheWrapper.getCache();
+	
+	public InfinispanManagedConnectionFactory getConfig() {
+		return config;
 	}
 	
 	@Override
-	public Collection<Object> getAll() throws TranslatorException {
-		return cacheWrapper.getAll();
+	public String getVersion() throws TranslatorException {
+		return this.getConfig().getVersion();
 	}
-	
-	@Override
-	public QueryFactory getQueryFactory() throws TranslatorException {
-		return cacheWrapper.getQueryFactory();
-	}
-
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#getPkField()
+	 */
 	@Override
 	public String getPkField() {
-		return cacheWrapper.getPkField();
+		return getConfig().getPKey();
 	}
 
-	@SuppressWarnings("unused")
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#getCacheKeyClassType()
+	 */
 	@Override
-	public Class<?> getCacheKeyClassType() throws TranslatorException {
-		return cacheWrapper.getCacheKeyClassType();
+	public Class<?> getCacheKeyClassType()  {
+		return getConfig().getCacheKeyClassType();
 	}
 
 	/**
@@ -79,8 +94,8 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	 * @see org.teiid.translator.object.ObjectConnection#getCacheName()
 	 */
 	@Override
-	public String getCacheName()  {
-		return cacheWrapper.getCacheName();
+	public String getCacheName() {
+		return getTargetCacheName();
 	}
 
 	/**
@@ -89,38 +104,8 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	 * @see org.teiid.translator.object.ObjectConnection#getCacheClassType()
 	 */
 	@Override
-	public Class<?> getCacheClassType() throws TranslatorException {
-		return cacheWrapper.getCacheClassType();
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.teiid.translator.object.ObjectConnection#add(java.lang.Object, java.lang.Object)
-	 */
-	@Override
-	public void add(Object key, Object value) throws TranslatorException {
-		 this.cacheWrapper.add(key, value);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.teiid.translator.object.ObjectConnection#remove(java.lang.Object)
-	 */
-	@Override
-	public Object remove(Object key) throws TranslatorException {
-		return this.cacheWrapper.remove(key);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.teiid.translator.object.ObjectConnection#update(java.lang.Object, java.lang.Object)
-	 */
-	@Override
-	public void update(Object key, Object value) throws TranslatorException {
-		this.cacheWrapper.update(key, value);
+	public Class<?> getCacheClassType()  {
+		return getConfig().getCacheClassType();
 	}
 
 	/**
@@ -130,17 +115,129 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	 */
 	@Override
 	public ClassRegistry getClassRegistry() {
-		return cacheWrapper.getClassRegistry();
+		return getConfig().getClassRegistry();
+	}
+	
+	@Override
+	public DDLHandler getDDLHandler() {
+		 return getConfig().getCacheNameProxy().getDDLHandler();
+	}	
+	
+	@Override
+	public boolean isAlive() {		
+		boolean alive = (config == null ? false :  this.config.isAlive());
+		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Infinispan Library Mode Connection is alive:", alive); //$NON-NLS-1$
+		return (alive);
+
+	}	
+	
+	private String getTargetCacheName() {
+		if (getDDLHandler().isStagingTarget()) {
+			return config.getCacheNameProxy().getStageCacheAliasName();
+		}
+		return config.getCacheNameProxy().getPrimaryCacheAliasName();//	public String getCacheName() {
+//		// return the cacheName that is mapped as the alias
+//		return cacheNameProxy.getPrimaryCacheAliasName();
+//	}
+//
+//	public String getCacheStagingName() {
+//		return cacheNameProxy.getStageCacheAliasName();
+//	}
+
 	}
 
+	public Cache<Object, Object> getCache() {
+		return getCache(getTargetCacheName());
+	}
+	
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @see org.teiid.translator.object.ObjectConnection#get(java.lang.Object)
+	 * @see org.teiid.translator.object.ObjectConnection#getCache(java.lang.String)
 	 */
 	@Override
-	public Object get(Object key) throws TranslatorException {
-		return this.cacheWrapper.get(key);
+	public Cache<Object, Object> getCache(String cacheName) {
+		return config.getCache(cacheName);
+	}	
+
+	@Override
+	public Collection<Object> getAll() {
+		Collection<Object> objs = new ArrayList<Object>();
+		Cache c = getCache(getTargetCacheName());
+		for (Object k : c.keySet()) {
+			objs.add(c.get(k));
+		}
+		return objs;
+	}
+
+	/* split out for testing purposes */
+	protected Object performJNDICacheLookup(String jndiName) throws Exception {
+		Context context = null;
+
+		context = new InitialContext();
+		final Object cache = context.lookup(jndiName);
+
+		if (cache == null) {
+			throw new ResourceException(
+					InfinispanManagedConnectionFactory.UTIL
+							.getString(
+									"InfinispanManagedConnectionFactory.unableToFindCacheUsingJNDI", jndiName)); //$NON-NLS-1$
+		}
+
+		return cache;
+	}
+	
+	@Override
+	public void cleanUp() {
+		config = null;
+
+	}
+
+	@SuppressWarnings("rawtypes")
+	@Override
+	public QueryFactory getQueryFactory() {
+
+		return Search.getQueryFactory(getCache(getTargetCacheName()));
+
+	}
+
+	@Override
+	public Object get(Object key)  {
+		return getCache(getTargetCacheName()).get(key);
+	}
+
+	@Override
+	public void add(Object key, Object value)  {
+		getCache(getTargetCacheName()).put(key, value);
+	}
+
+	@Override
+	public Object remove(Object key)  {
+		return getCache(getTargetCacheName()).removeAsync(key);
+	}
+
+	@Override
+	public void update(Object key, Object value) {
+		getCache(getTargetCacheName()).replace(key, value);
+	}
+
+	@Override
+	public void clearCache(String cacheName) throws TranslatorException {	
+		getCache(cacheName).clear();
+	}
+	
+	protected void shutDownCacheManager() {
+		getCache().stop();
+	}
+	
+	/** 
+	 * Returns the <code>SearchType</code> that will be used to perform
+	 * dynamic searching of the cache.
+	 * @return SearchType
+	 */
+	@Override
+	public SearchType getSearchType() {
+		return new DSLSearch(this);
 	}
 
 	/**
@@ -149,44 +246,7 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	 * @see javax.resource.cci.Connection#close()
 	 */
 	@Override
-	public void close() {
-		this.cacheWrapper = null;
+	public void close() throws ResourceException {
 	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.teiid.translator.object.ObjectConnection#getCache(java.lang.String)
-	 */
-	@Override
-	public Object getCache(String cacheName) throws TranslatorException {
-		return cacheWrapper.getCache(cacheName);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.teiid.translator.object.ObjectConnection#clearCache(java.lang.String)
-	 */
-	@Override
-	public void clearCache(String cacheName) throws TranslatorException {
-		cacheWrapper.clearCache(cacheName);
-	}
-	
-	@Override
-	public DDLHandler getDDLHandler() {
-		return cacheWrapper.getDDLHandler();
-	}
-
-	/** 
-	 * Returns the <code>SearchType</code> that will be used to perform
-	 * dynamic searching of the cache.
-	 * @return SearchType
-	 */
-	@Override
-	public SearchType getSearchType() {
-		return cacheWrapper.getSearchType();
-	}
-	
 
 }

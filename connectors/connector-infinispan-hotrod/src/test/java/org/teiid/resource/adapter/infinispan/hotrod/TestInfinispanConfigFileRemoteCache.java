@@ -87,6 +87,10 @@ public class TestInfinispanConfigFileRemoteCache {
     		
     		 assertNotNull(conn.getCache());
     		 
+    			
+    		 assertEquals("Version doesn't start with 7.2", conn.getVersion().startsWith("7.2"));
+
+    		 
     		 conn.cleanUp();
     		 
     	} finally {

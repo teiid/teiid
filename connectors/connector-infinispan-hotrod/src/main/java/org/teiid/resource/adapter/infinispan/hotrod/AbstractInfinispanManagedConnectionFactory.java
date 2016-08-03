@@ -160,7 +160,8 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
       	Assertion.isNotNull(cacheName, "Program Error: Cache Name is null");
       }
 
-		return cacheContainer.getCache(cacheName);
+       return cacheContainer.getCache(cacheName);
+      
 	}	
 
 	/**
@@ -665,6 +666,12 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	
 	protected void registerWithCacheManager(SerializationContext ctx, RemoteCacheManager cc, ClassLoader cl, boolean useAnnotations) throws ResourceException {
 		
+	}
+	
+	public String getVersion() throws TranslatorException {
+		RemoteCache rc = this.getCache(this.getCacheNameProxy().getPrimaryCacheKey());
+		if (rc != null)  return rc.getProtocolVersion();
+		return "";
 	}
 
 	@Override
