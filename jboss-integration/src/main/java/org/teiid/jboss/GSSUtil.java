@@ -64,7 +64,7 @@ class GSSUtil {
                 GSSName name = delegatedCredential.getName(Constants.KERBEROS_V5);
                 intermediateSubject = invokeCreateSubject(CREATE_SUBJECT_METHOD, name, delegatedCredential);
                 log.trace("Delegated credential converted to Subject.");
-            } catch (GSSException e) {
+            } catch (Exception e) {
                 log.debug(e);
                 throw new LoginException("Unable to use supplied GSSCredential to populate Subject.");
             }
@@ -106,7 +106,7 @@ class GSSUtil {
     }
     
     static Subject invokeCreateSubject(Method createSubjectMethod,
-            GSSName gssName, GSSCredential gssCredential) throws GSSException {
+            GSSName gssName, GSSCredential gssCredential) throws Exception {
         try {
             return (Subject)createSubjectMethod.invoke(null, gssName, gssCredential);
         } catch (IllegalAccessException e) {
@@ -116,17 +116,18 @@ class GSSUtil {
             log.debug(e);
             return null;
         } catch (InvocationTargetException e) {
-            Throwable cause = e.getCause();
-            if (cause instanceof GSSException) {
-                throw (GSSException) cause;
-            }
             log.debug(e);
-            return null;
+            Throwable cause = e.getCause();
+            if (cause instanceof Exception) {
+                throw (Exception) cause;
+            } else {
+                throw (Error) cause;
+            }
         }
     } 
     
     static Subject createSubjectMethod(final Method createSubjectMethod,
-            final GSSName gssName, final GSSCredential gssCredential) throws GSSException {
+            final GSSName gssName, final GSSCredential gssCredential) throws Exception {
         if (System.getSecurityManager() == null) {
             return invokeCreateSubject(createSubjectMethod, gssName, gssCredential);
         }
@@ -137,7 +138,12 @@ class GSSUtil {
                 }
             });
         } catch (PrivilegedActionException e) {
-            throw (GSSException) e.getCause();
+            Throwable cause = e.getCause();
+            if (cause instanceof Exception) {
+                throw (Exception) cause;
+            } else {
+                throw (Error) cause;
+            }
         }        
     }    
 }
