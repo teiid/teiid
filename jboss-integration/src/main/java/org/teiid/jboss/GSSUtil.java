@@ -120,7 +120,7 @@ class GSSUtil {
             if (cause instanceof GSSException) {
                 throw (GSSException) cause;
             }
-            log.debug(e);
+            log.debug(cause);
             return null;
         }
     } 
