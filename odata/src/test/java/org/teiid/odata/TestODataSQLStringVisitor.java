@@ -22,11 +22,14 @@
 package org.teiid.odata;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.regex.Matcher;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -343,7 +346,7 @@ public class TestODataSQLStringVisitor {
 		TransformationMetadata metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.ddl")), "northwind", "nw");		
 		ODataSQLBuilder visitor = new ODataSQLBuilder(metadata.getMetadataStore(), false);
 		OEntityKey key = OEntityKey.parse("(11044)");
-		EdmDataServices eds = LocalClient.buildMetadata(metadata.getVdbMetaData(), metadata.getMetadataStore());
+		EdmDataServices eds = LocalClient.buildMetadata(metadata.getVdbMetaData(), metadata.getMetadataStore(), new HashSet<String>());
 		EdmEntitySet entitySet = eds.getEdmEntitySet("Categories");
 		Delete delete = visitor.delete(entitySet, key);
 		assertEquals("DELETE FROM nw.Categories WHERE nw.Categories.CategoryID = 11044", delete.toString()); 
@@ -355,7 +358,6 @@ public class TestODataSQLStringVisitor {
 		Insert insert = visitor.insert(entitySet, entity);
 		assertEquals("INSERT INTO nw.Categories (Description) VALUES (?)", insert.toString());
 	}
-	
 }
 
 

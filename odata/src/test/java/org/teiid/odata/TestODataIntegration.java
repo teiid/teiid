@@ -22,23 +22,19 @@
 package org.teiid.odata;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyListOf;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.stub;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.StringTokenizer;
+import java.util.*;
 
 import javax.ws.rs.core.MediaType;
 
@@ -208,7 +204,7 @@ public class TestODataIntegration extends BaseResourceTest {
         stub(model.isVisible()).toReturn(false);
         stub(vdb.getModel("nw")).toReturn(model);
         stub(client.getMetadataStore()).toReturn(metadata.getMetadataStore());  
-        EdmDataServices eds = LocalClient.buildMetadata(vdb, metadata.getMetadataStore());
+        EdmDataServices eds = LocalClient.buildMetadata(vdb, metadata.getMetadataStore(), new HashSet<String>());
         stub(client.getMetadata()).toReturn(eds);
         return client;
     }	
@@ -234,7 +230,7 @@ public class TestODataIntegration extends BaseResourceTest {
         Client client = mock(Client.class);
         VDBMetaData vdb = mock(VDBMetaData.class);
 		stub(client.getMetadataStore()).toReturn(metadata.getMetadataStore());	
-		EdmDataServices eds = LocalClient.buildMetadata(vdb, metadata.getMetadataStore());
+		EdmDataServices eds = LocalClient.buildMetadata(vdb, metadata.getMetadataStore(), new HashSet<String>());
 		stub(client.getMetadata()).toReturn(eds);
         return client;
     }

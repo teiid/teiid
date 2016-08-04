@@ -21,7 +21,13 @@
         <param-name>resteasy.document.expand.entity.references</param-name>
         <param-value>false</param-value>
     </context-param>
-    
+    <!-- 
+    uncomment if you want exclude system schemas from $metadata, The below property takes true/false    
+    <context-param>
+        <param-name>exclude-system-schema</param-name>
+        <param-value>true</param-value>
+    </context-param>
+     -->    
     <!--
     If you want to restrict access to single VDB, uncomment and provide the VDB name(must be in format vdbName.vdbVersion), 
     and provide a context name in jboss-web.xml that is not "odata"

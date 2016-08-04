@@ -32,9 +32,11 @@ import java.sql.SQLXML;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import org.odata4j.core.OCollection;
 import org.odata4j.core.OCollection.Builder;
@@ -93,11 +95,13 @@ import org.teiid.translator.odata.ODataEntitySchemaBuilder;
 import org.teiid.translator.odata.ODataTypeManager;
 import org.teiid.transport.LocalServerConnection;
 
+
 public class LocalClient implements Client {
 	private static final String BATCH_SIZE = "batch-size"; //$NON-NLS-1$
 	private static final String SKIPTOKEN_TIME = "skiptoken-cache-time"; //$NON-NLS-1$
 	static final String INVALID_CHARACTER_REPLACEMENT = "invalid-xml10-character-replacement"; //$NON-NLS-1$
 	static final String DELIMITER = "--" ; //$NON-NLS-1$
+	private static final String EXCLUDE_SYSTEMS_SCHEMAS = "exclude-system-schema"; //$NON-NLS-1$
 	
 	private volatile VDBMetaData vdb;
 	private String vdbName;
@@ -109,6 +113,7 @@ public class LocalClient implements Client {
 	private EdmDataServices edmMetaData;
 	private TeiidDriver driver = TeiidDriver.getInstance();
 	private String invalidCharacterReplacement;
+	private HashSet<String> excludeSchemas = new HashSet<String>();
 
 	public LocalClient(String vdbName, int vdbVersion, Properties props) {
 		this.vdbName = vdbName;
@@ -129,6 +134,17 @@ public class LocalClient implements Client {
 		    this.initProperties.put(EmbeddedProfile.WAIT_FOR_LOAD, "0"); //$NON-NLS-1$
 		}
 		this.connectionString = sb.toString();
+		
+		if (PropertiesUtils.getBooleanProperty(props, EXCLUDE_SYSTEMS_SCHEMAS, false)) {
+		    this.excludeSchemas.add("SYS");
+		    this.excludeSchemas.add("SYSADMIN");
+		    this.excludeSchemas.add("pg_catalog");
+		}
+	}
+	
+    static boolean isExcludeSchema(String schemaName,
+            Set<String> excludeSchemas) {
+        return excludeSchemas.contains(schemaName);
 	}
 	
 	@Override
@@ -482,26 +498,27 @@ public class LocalClient implements Client {
 	@Override
 	public EdmDataServices getMetadata() {
 		if (this.edmMetaData == null) {
-			this.edmMetaData = buildMetadata(getVDB(), getMetadataStore());
+			this.edmMetaData = buildMetadata(getVDB(), getMetadataStore(), this.excludeSchemas);
 		}
 		return this.edmMetaData;
 	}
 	
-    public static EdmDataServices buildMetadata(VDBMetaData vdb, MetadataStore metadataStore) {
+    public static EdmDataServices buildMetadata(VDBMetaData vdb,
+            MetadataStore metadataStore, Set<String> excludeSchemas) {
         try {
             List<EdmSchema.Builder> edmSchemas = new ArrayList<EdmSchema.Builder>();
             for (Schema schema:metadataStore.getSchemaList()) {
-                if (isVisible(vdb, schema)) {
+                if (isVisible(vdb, schema) && !isExcludeSchema(schema.getName(), excludeSchemas)) {
                     ODataEntitySchemaBuilder.buildEntityTypes(schema, edmSchemas, false);
                 }
             }
             for (Schema schema:metadataStore.getSchemaList()) {
-                if (isVisible(vdb, schema)) {
+                if (isVisible(vdb, schema) && !isExcludeSchema(schema.getName(), excludeSchemas)) {
                     ODataEntitySchemaBuilder.buildFunctionImports(schema, edmSchemas, false);
                 }
             }
             for (Schema schema:metadataStore.getSchemaList()) {
-                if (isVisible(vdb, schema)) {
+                if (isVisible(vdb, schema) && !isExcludeSchema(schema.getName(), excludeSchemas)) {
                     ODataEntitySchemaBuilder.buildAssosiationSets(schema, edmSchemas, false);
                 }
             }
