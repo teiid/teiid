@@ -483,9 +483,9 @@ public class TestAggregatePushdown {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
         
-        String sql = "SELECT count(x.e1) from pm1.g1 x left outer join pm2.g1 y on x.e3 = y.e3 group by x.e2, y.e1"; //$NON-NLS-1$
+        String sql = "SELECT count(x.e1) from pm1.g1 x left outer join pm2.g1 y on x.e4 = y.e4 group by x.e2, y.e1"; //$NON-NLS-1$
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
-                                      new String[] {"SELECT g_0.e3, g_0.e2, COUNT(g_0.e1) FROM pm1.g1 AS g_0 GROUP BY g_0.e3, g_0.e2", "SELECT g_0.e3, g_0.e1 FROM pm2.g1 AS g_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
+                                      new String[] {"SELECT g_0.e4, g_0.e2, COUNT(g_0.e1) FROM pm1.g1 AS g_0 GROUP BY g_0.e4, g_0.e2", "SELECT g_0.e4, g_0.e1 FROM pm2.g1 AS g_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access

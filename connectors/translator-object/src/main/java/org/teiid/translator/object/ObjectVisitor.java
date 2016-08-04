@@ -113,8 +113,8 @@ public class ObjectVisitor extends HierarchyVisitor {
 	}
 	
 	private void setTable(NamedTable t) {
-		String tn = t.getName();
-		// remove any folders that exist within the model (these are not folders that the models rsides in).
+		String tn = ObjectUtil.getRecordName(t.getMetadataObject());
+		// remove any folders that exist within the model (these are not folders that the models resides in).
 		if (tn.contains(".")) {
 			tn = StringUtil.getLastToken(tn, ".");
 		}

@@ -74,7 +74,7 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
     protected List<TranslatorException> exceptions = new ArrayList<TranslatorException>();
     protected Table table;
     boolean onlyIDCriteria;
-    protected Boolean queryAll = Boolean.FALSE;
+    protected boolean queryAll = Boolean.FALSE;
     
     // support for invoking a retrieve when possible.
     protected In idInCriteria = null;

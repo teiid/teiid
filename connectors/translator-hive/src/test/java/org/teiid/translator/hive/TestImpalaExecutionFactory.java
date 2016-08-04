@@ -32,6 +32,7 @@ import org.teiid.language.Command;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageFactory;
+import org.teiid.language.Select;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.TranslatorException;
@@ -127,5 +128,13 @@ public class TestImpalaExecutionFactory {
         SQLConversionVisitor sqlVisitor = impalaTranslator.getSQLConversionVisitor(); 
         sqlVisitor.append(obj);
         assertEquals("SELECT DISTINCT c_0 FROM (SELECT MAX(SmallA.StringNum) AS c_0 FROM SmallA GROUP BY SmallA.StringKey) X__", sqlVisitor.toString());
+    }
+    
+    @Test public void testWith() {
+    	CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
+        Select obj = (Select) commandBuilder.getCommand("with x as /*+ no_inline */ (SELECT max(StringNum) as a FROM bqt1.SmallA group by stringkey) select * from x");
+        SQLConversionVisitor sqlVisitor = impalaTranslator.getSQLConversionVisitor(); 
+        sqlVisitor.append(obj);
+        assertEquals("WITH x AS (SELECT MAX(SmallA.StringNum) AS a FROM SmallA GROUP BY SmallA.StringKey) SELECT x.a FROM x", sqlVisitor.toString());
     }
 }

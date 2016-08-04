@@ -33,14 +33,42 @@ import org.teiid.translator.salesforce.execution.UpdatedResult;
 
 import com.sforce.async.BatchResult;
 import com.sforce.async.JobInfo;
+import com.sforce.async.OperationEnum;
 import com.sforce.async.SObject;
 import com.sforce.soap.partner.DescribeGlobalResult;
 import com.sforce.soap.partner.DescribeSObjectResult;
 import com.sforce.soap.partner.QueryResult;
 
 public interface SalesforceConnection extends Connection {
+	
+	public static class BatchResultInfo {
+		private String batchId;
+		private String[] batchList;
+		private int batchNum;
 
-	public QueryResult query(String queryString, int maxBatchSize, Boolean queryAll) throws ResourceException;
+		public BatchResultInfo(String batchInfo) {
+			this.batchId = batchInfo;
+		}
+		
+		public String[] getBatchList() {
+			return batchList;
+		}
+		
+		public void setBatchList(String[] batchList) {
+			this.batchList = batchList;
+		}
+		
+		public int getAndIncrementBatchNum() {
+			return batchNum++;
+		}
+		
+		public String getBatchId() {
+			return batchId;
+		}
+		
+	}
+
+	public QueryResult query(String queryString, int maxBatchSize, boolean queryAll) throws ResourceException;
 
 	public QueryResult queryMore(String queryLocator, int batchSize) throws ResourceException;
 	
@@ -71,10 +99,14 @@ public interface SalesforceConnection extends Connection {
 	String addBatch(List<SObject> payload, JobInfo job)
 			throws ResourceException;
 
-	JobInfo createBulkJob(String objectName) throws ResourceException;
+	JobInfo createBulkJob(String objectName, OperationEnum operation) throws ResourceException;
 
 	Long getCardinality(String sobject) throws ResourceException;
 	
 	String getVersion();
+
+	BatchResultInfo addBatch(String query, JobInfo job) throws ResourceException;
+
+	List<List<String>> getBatchQueryResults(String id, BatchResultInfo info) throws ResourceException;
 
 }

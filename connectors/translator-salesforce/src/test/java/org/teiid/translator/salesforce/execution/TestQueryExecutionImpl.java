@@ -28,20 +28,28 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.List;
 import java.util.TimeZone;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.language.Select;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.query.unittest.TimestampUtil;
+import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.salesforce.SalesforceConnection;
+import org.teiid.translator.salesforce.SalesforceConnection.BatchResultInfo;
 import org.teiid.translator.salesforce.execution.visitors.TestVisitors;
 
+import com.sforce.async.JobInfo;
+import com.sforce.async.OperationEnum;
 import com.sforce.soap.partner.QueryResult;
 import com.sforce.soap.partner.sobject.SObject;
 
@@ -120,6 +128,53 @@ public class TestQueryExecutionImpl {
 		QueryExecutionImpl qei = new QueryExecutionImpl(command, sfc, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class));
 		qei.execute();
 		assertNull(qei.next());
+	}
+	
+	@Test
+	public void testBulkFlow() throws Exception {
+		Select command = (Select)translationUtility.parseCommand("select Name from Account"); //$NON-NLS-1$
+		
+		SalesforceConnection connection = Mockito.mock(SalesforceConnection.class);
+		JobInfo jobInfo = Mockito.mock(JobInfo.class);
+		
+		Mockito.when(connection.createBulkJob(Mockito.anyString(), Mockito.eq(OperationEnum.query))).thenReturn(jobInfo);
+		
+		final BatchResultInfo info = new BatchResultInfo("x");
+		
+		Mockito.when(connection.getBatchQueryResults(Mockito.anyString(), Mockito.eq(info))).thenAnswer(new Answer<List<List<String>>>() {
+			boolean first = true;
+			@Override
+			public List<List<String>> answer(InvocationOnMock invocation)
+					throws Throwable {
+				if (first) {
+					first = false;
+					throw new DataNotAvailableException();
+				}
+				if (info.getAndIncrementBatchNum() == 0) {
+					return Arrays.asList(Arrays.asList("Name"), Arrays.asList("X"));
+				}
+				return Collections.emptyList();
+			}
+		});
+		
+		Mockito.when(connection.addBatch("SELECT Account.Name FROM Account", jobInfo)).thenReturn(info);
+			
+		ExecutionContext mock = Mockito.mock(ExecutionContext.class);
+		Mockito.stub(mock.getSourceHints()).toReturn(Arrays.asList("bulk"));
+		
+		QueryExecutionImpl execution = new QueryExecutionImpl(command, connection, Mockito.mock(RuntimeMetadata.class), mock);
+		
+		execution.execute();
+		
+		try {
+			execution.next();
+			fail();
+		} catch (DataNotAvailableException e) {
+			
+		}
+		List<?> row = execution.next();
+		assertEquals(Arrays.asList("X"), row);
+		assertNull(execution.next());
 	}
 	
 }

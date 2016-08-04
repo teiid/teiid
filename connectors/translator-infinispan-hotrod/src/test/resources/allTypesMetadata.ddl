@@ -1,5 +1,4 @@
 CREATE FOREIGN TABLE AllTypes (
-	AllTypesObject object OPTIONS (NAMEINSOURCE 'this', SELECTABLE FALSE, UPDATABLE FALSE, SEARCHABLE 'Unsearchable', NATIVE_TYPE 'org.jboss.teiid.jdg_remote.pojo.AllTypes'),
 	intKey integer NOT NULL OPTIONS (NAMEINSOURCE 'intKey', SEARCHABLE 'Searchable', NATIVE_TYPE 'int'),
 	stringNum string OPTIONS (NAMEINSOURCE 'stringNum', SEARCHABLE 'Searchable', NATIVE_TYPE 'java.lang.String'),
 	stringKey string OPTIONS (NAMEINSOURCE 'stringKey', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'java.lang.String'),

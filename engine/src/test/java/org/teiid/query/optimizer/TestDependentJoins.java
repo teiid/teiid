@@ -641,10 +641,10 @@ public class TestDependentJoins {
     
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,  
             null, capFinder,
-            new String[] { "SELECT g_0.e1 FROM pm1.g3 AS g_0", "SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0", "SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g3 AS g_0 WHERE g_0.e1 IN (<dependent values>)" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         TestOptimizer.checkNodeTypes(plan, new int[] {
-            2,      // Access
-            1,      // DependentAccess
+            1,      // Access
+            2,      // DependentAccess
             0,      // DependentSelect
             0,      // DependentProject
             0,      // DupRemove
@@ -687,7 +687,7 @@ public class TestDependentJoins {
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,  
             null, capFinder,
-            new String[] { "SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 AS c_0 FROM pm1.g3 AS g_0 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0", "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0", "SELECT g_0.e1 AS c_0 FROM pm1.g3 AS g_0 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0", "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         TestOptimizer.checkNodeTypes(plan, new int[] {
             1,      // Access
             2,      // DependentAccess
@@ -726,7 +726,7 @@ public class TestDependentJoins {
     
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,  
             null, capFinder,
-            new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0", "SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
+            new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0", "SELECT g_0.e1 AS c_0 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             1,      // Access
             1,      // DependentAccess
@@ -857,7 +857,7 @@ public class TestDependentJoins {
             "SELECT max(a.stringkey) from bqt1.smalla a, bqt2.smalla a2, bqt1.smalla a1 where a.intnum = a2.intnum and a1.stringnum = a2.stringnum and a.floatnum = a1.floatnum",  //$NON-NLS-1$
             metadata,
             null, capFinder,
-            new String[] {"SELECT g_0.StringNum, g_0.IntNum FROM BQT2.SmallA AS g_0 WHERE (g_0.StringNum IN (<dependent values>)) AND (g_0.IntNum IN (<dependent values>))", "SELECT g_1.StringNum AS c_0, g_0.IntNum AS c_1, MAX(g_0.StringKey) AS c_2 FROM BQT1.SmallA AS g_0, BQT1.SmallA AS g_1 WHERE g_0.FloatNum = g_1.FloatNum GROUP BY g_1.StringNum, g_0.IntNum ORDER BY c_0, c_1"},
+            new String[] {"SELECT g_0.StringNum, g_0.IntNum FROM BQT2.SmallA AS g_0 WHERE (g_0.StringNum IN (<dependent values>)) AND (g_0.IntNum IN (<dependent values>))", "SELECT DISTINCT g_1.StringNum AS c_0, g_0.IntNum AS c_1, g_0.StringKey AS c_2 FROM BQT1.SmallA AS g_0, BQT1.SmallA AS g_1 WHERE g_0.FloatNum = g_1.FloatNum ORDER BY c_0, c_1"},
             TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING );
 
         TestOptimizer.checkNodeTypes(plan, new int[] {

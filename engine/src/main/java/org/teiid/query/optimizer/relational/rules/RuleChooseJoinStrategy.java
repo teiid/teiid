@@ -127,7 +127,7 @@ public class RuleChooseJoinStrategy implements OptimizerRule {
 			Collection<GroupSymbol> rightGroups,
 			List<Expression> leftExpressions,
 			List<Expression> rightExpressions, List<Criteria> crits,
-			List<Criteria> nonEquiJoinCriteria) {
+			Collection<Criteria> nonEquiJoinCriteria) {
 		for (Criteria theCrit : crits) {
             Set<GroupSymbol> critGroups =GroupsUsedByElementsVisitor.getGroups(theCrit);
 

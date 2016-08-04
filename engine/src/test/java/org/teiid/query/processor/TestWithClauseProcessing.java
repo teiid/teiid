@@ -892,10 +892,9 @@ public class TestWithClauseProcessing {
 	    ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
 	    HardcodedDataManager hdm = new HardcodedDataManager(metadata);
 	    
-	    hdm.addData("WITH alias (a) AS (SELECT g_0.a FROM test_a AS g_0), alias2 (a1, a) AS (SELECT NULL, g_0.a FROM alias AS g_0, test_a AS g_1 WHERE g_0.a = g_1.a) SELECT g_1.a AS c_0, g_0.a AS c_1 FROM alias AS g_0, alias2 AS g_1 WHERE g_0.a = g_1.a ORDER BY c_0", Arrays.asList("a", "a"));
 	    hdm.addData("WITH alias (a) AS (SELECT g_0.a FROM test_a AS g_0), alias2 (a1, a) AS (SELECT NULL, g_0.a FROM alias AS g_0, test_a AS g_1 WHERE g_0.a = g_1.a) SELECT g_0.a AS c_0 FROM alias2 AS g_0 ORDER BY c_0", Arrays.asList("a"));
+	    hdm.addData("WITH alias (a) AS (SELECT g_0.a FROM test_a AS g_0), alias2 (a1, a) AS (SELECT NULL, g_0.a FROM alias AS g_0, test_a AS g_1 WHERE g_0.a = g_1.a) SELECT g_1.a AS c_0, g_0.a AS c_1 FROM alias AS g_0, alias2 AS g_1 WHERE g_0.a = g_1.a ORDER BY c_0", Arrays.asList("a", "a"));
 	    hdm.addData("WITH alias (a) AS (SELECT g_0.a FROM test_a AS g_0), alias2 (a1, a) AS (SELECT NULL, g_0.a FROM alias AS g_0, test_a AS g_1 WHERE g_0.a = g_1.a) SELECT g_0.a AS c_0, g_1.a AS c_1 FROM alias AS g_0, alias2 AS g_1 WHERE g_0.a = g_1.a ORDER BY c_0", Arrays.asList("a", "a"));
-	    hdm.addData("WITH alias__1 (a) AS (SELECT g_0.a FROM test_a AS g_0), alias2__1 (a1, a) AS (SELECT NULL, g_0.a FROM alias__1 AS g_0, test_a AS g_1 WHERE g_0.a = g_1.a) SELECT g_0.a AS c_0 FROM alias2__1 AS g_0 ORDER BY c_0", Arrays.asList("a"));
 	    
 	    TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("a", "a")});
 	}

@@ -77,7 +77,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 	@ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports Delete")
 	static final String TABLE_SUPPORTS_DELETE = MetadataFactory.SF_URI+"Supports Delete"; //$NON-NLS-1$
 	@ExtensionMetadataProperty(applicable={Table.class, Column.class}, datatype=Boolean.class, display="Custom")
-	static final String TABLE_CUSTOM = MetadataFactory.SF_URI+"Custom"; //$NON-NLS-1$
+	public static final String TABLE_CUSTOM = MetadataFactory.SF_URI+"Custom"; //$NON-NLS-1$
 	@ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports ID Lookup")
 	static final String TABLE_SUPPORTS_LOOKUP = MetadataFactory.SF_URI+"Supports ID Lookup"; //$NON-NLS-1$
 	@ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports Merge")
@@ -404,7 +404,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 			
 			column.setNameInSource(field.getName());
 			column.setLength(field.getLength());
-			if(field.isUpdateable()) {
+			if(field.isUpdateable() || field.isCreateable()) {
 				column.setUpdatable(true);
 				hasUpdateableColumn  = true;
 			}

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ASCII"?>
 <xmi:XMI xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:diagram="http://www.metamatrix.com/metamodels/Diagram" xmlns:jdbc="http://www.metamatrix.com/metamodels/JDBC" xmlns:mmcore="http://www.metamatrix.com/metamodels/Core" xmlns:relational="http://www.metamatrix.com/metamodels/Relational">
-  <mmcore:ModelAnnotation xmi:uuid="mmuuid:abbd65a2-2896-4819-9428-fa8ba13a1b71" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational" modelType="PHYSICAL" ProducerName="Teiid Designer" ProducerVersion="9.1.0.Beta2-v20150624-2132-B3933">
+  <mmcore:ModelAnnotation xmi:uuid="mmuuid:abbd65a2-2896-4819-9428-fa8ba13a1b71" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational" modelType="PHYSICAL" ProducerName="Teiid Designer" ProducerVersion="10.0.1.Nightly-v20160627-1409-B12">
     <modelImports xmi:uuid="mmuuid:7c40d324-5eca-472f-a7a8-c20b01f5d848" name="SimpleDatatypes-instance" modelLocation="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance" modelType="TYPE" primaryMetamodelUri="http://www.eclipse.org/xsd/2002/XSD"/>
     <modelImports xmi:uuid="mmuuid:4414223d-d6b6-4300-87ce-4316eeb5ddcb" name="XMLSchema" modelLocation="http://www.w3.org/2001/XMLSchema" modelType="TYPE" primaryMetamodelUri="http://www.eclipse.org/xsd/2002/XSD"/>
   </mmcore:ModelAnnotation>
@@ -317,7 +317,7 @@
       <includedTableTypes>TABLE</includedTableTypes>
     </importSettings>
   </jdbc:JdbcSource>
-  <relational:BaseTable xmi:uuid="mmuuid:e4662c1d-443f-45a8-8623-8a4876ea7539" name="Trade" nameInSource="Trades">
+  <relational:BaseTable xmi:uuid="mmuuid:e4662c1d-443f-45a8-8623-8a4876ea7539" name="Trade" nameInSource="">
     <columns xmi:uuid="mmuuid:73b0ec15-2abe-4f72-b25e-b9113b528b41" name="TradeObject" nameInSource="this" length="4000" nullable="NULLABLE_UNKNOWN" caseSensitive="false" searchability="UNSEARCHABLE" radix="0" signed="false" distinctValueCount="0" nullValueCount="0">
       <nativeType xsi:nil="true"/>
       <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>

@@ -19,7 +19,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-
 package org.teiid.translator.object;
 
 import static org.junit.Assert.assertEquals;
@@ -33,6 +32,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.language.Select;
+import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.simpleMap.SimpleMapCacheExecutionFactory;
@@ -40,30 +40,21 @@ import org.teiid.translator.object.testdata.person.PersonCacheSource;
 import org.teiid.translator.object.testdata.person.PersonSchemaVDBUtility;
 
 /**
- * NOTES: 
- * 
- * <li>These test queries only test based on the source query.  A VIEW query will not 
- * resolve correctly to produce a source query that will be sent to the translator.
- * <li>The WHERE clause cannot be tested to confirm filtering at this time.
- * 
- * These test also test parent-child relationship between Person and PhoneNumber.
- * 
- * @author vanhalbert
+ * @author vhalbert
  *
  */
-@SuppressWarnings("nls")
-public class TestPersonKeySearch {
+public class TestPersonSearchNameInSource  {
+	protected static TranslationUtility translationUtility = PersonSchemaVDBUtility.createPersonMetadata();
+	protected static RuntimeMetadata RUNTIME = translationUtility.createRuntimeMetadata();
 	
 	protected static ObjectConnection CONNECTION;
-	
-	protected static TranslationUtility translationUtility = PersonSchemaVDBUtility.TRANSLATION_UTILITY;
 	
 	static Map<?, ?> DATA = PersonCacheSource.loadCache();
 	
 	
     @BeforeClass
     public static void setUp()  {
-        
+    	translationUtility.createRuntimeMetadata();
 		CONNECTION = PersonCacheSource.createConnection();
 
     }	
@@ -80,19 +71,6 @@ public class TestPersonKeySearch {
 		Select command = (Select)translationUtility.parseCommand("select name, id, email From Person as T where id = 2"); //$NON-NLS-1$
 		
 		performTest(1, 3, command);
-
-	}
-	
-	
-	/**
-	 * Test that only the 'object' instance is returned in the result set
-	 * @throws Exception
-	 */
-	@Test public void testReturningObject() throws Exception {
-		Select command = (Select)translationUtility.parseCommand("select PersonObject From Person as T"); //$NON-NLS-1$
-
-		
-		performTest(10, 1, command);
 
 	}
 	
@@ -129,7 +107,7 @@ public class TestPersonKeySearch {
 	}	
 	
 	@Test public void testLimit() throws Exception {
-		Select command = (Select)translationUtility.parseCommand("select a.name, a.id, a.email From Person As a   LIMIT 4"); //$NON-NLS-1$
+		Select command = (Select)translationUtility.parseCommand("select name, id, email From Person  LIMIT 4"); //$NON-NLS-1$
 
 		
 		performTest(4, 3, command);
@@ -208,6 +186,6 @@ public class TestPersonKeySearch {
         translator.start();
 
 		
-		return (ObjectExecution) translator.createExecution(command, Mockito.mock(ExecutionContext.class), translationUtility.createRuntimeMetadata(), CONNECTION);
+		return (ObjectExecution) translator.createExecution(command, Mockito.mock(ExecutionContext.class), RUNTIME, CONNECTION);
 	}
 }

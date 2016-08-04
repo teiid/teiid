@@ -47,7 +47,7 @@ public class TestPartitionedJoinPlanning {
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
-        caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 100);
+        caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 10);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         QueryMetadataInterface metadata = RealMetadataFactory.example1();
