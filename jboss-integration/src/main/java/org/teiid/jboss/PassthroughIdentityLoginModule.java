@@ -144,6 +144,9 @@ public class PassthroughIdentityLoginModule extends AbstractPasswordCredentialLo
               log.trace("Kerberos passthough mechanism in works");
               this.storedCredential = wrapGssCredential ? wrapCredential(rawCredential) : rawCredential;
               this.intermediateSubject = GSSUtil.createGssSubject(rawCredential, storedCredential);
+              if (this.intermediateSubject == null){
+            	  throw new LoginException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50108));
+              }
               log.tracef("created a subject from deletegate credential");
               makeCopy(intermediateSubject, this.subject);
               log.tracef("Copied contents of temporary Subject to Subject from the LoginContext"); 
