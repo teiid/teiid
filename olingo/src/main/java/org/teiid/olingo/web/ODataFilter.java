@@ -102,13 +102,13 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
     		//TODO: use engine style logic to determine if the stack should be logged
     		LogManager.logWarning(LogConstants.CTX_ODATA, e, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16047, e.getMessage()));
     		HttpServletResponse httpResponse = (HttpServletResponse)response;
-    	    writeError(request, e, httpResponse);
+    	    writeError(request, e, httpResponse, 404);
     	}
     }
 
     static void writeError(ServletRequest request, TeiidProcessingException e,
-            HttpServletResponse httpResponse) throws IOException {
-        httpResponse.setStatus(404);
+            HttpServletResponse httpResponse, int statusCode) throws IOException {
+        httpResponse.setStatus(statusCode);
         ContentType contentType = ContentType.parse(request.getContentType());
         PrintWriter writer = httpResponse.getWriter();
         String code = e.getCode()==null?"":e.getCode(); //$NON-NLS-1$
