@@ -42,6 +42,7 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.JDBCMetdataProcessor;
@@ -241,7 +242,12 @@ public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
     	if (expectedType.equals(Time.class)) {
     		return results.getTime(columnIndex);
     	}
-    	return super.retrieveValue(results, columnIndex, expectedType);
+    	try {
+    		return super.retrieveValue(results, columnIndex, expectedType);
+    	} catch (SQLException e) {
+    		//impala for aggregate and other functions returns double, but bigdecimal is expected and the driver can't convert
+    		return super.retrieveValue(results, columnIndex, TypeFacility.RUNTIME_TYPES.OBJECT);
+    	}
     }
     
     @Override
@@ -257,7 +263,12 @@ public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
     	if (expectedType.equals(Time.class)) {
     		return results.getTime(parameterIndex);
     	}
-    	return super.retrieveValue(results, parameterIndex, expectedType);
+    	try {
+    		return super.retrieveValue(results, parameterIndex, expectedType);
+    	} catch (SQLException e) {
+    		//impala for aggregate and other functions returns double, but bigdecimal is expected and the driver can't convert
+    		return super.retrieveValue(results, parameterIndex, TypeFacility.RUNTIME_TYPES.OBJECT);
+    	}
     }
     
     @Override
