@@ -345,12 +345,12 @@ public class TestSqlServerConversionVisitor {
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, trans);
         
         input = "select intkey c1 from bqt1.smalla order by stringkey offset 20 rows "; //$NON-NLS-1$
-        output = "SELECT c1 FROM (SELECT SmallA.IntKey AS c1, ROW_NUMBER() OVER (ORDER BY SmallA.StringKey) AS ROWNUM_ FROM SmallA) v WHERE ROWNUM_ > 20"; //$NON-NLS-1$
+        output = "SELECT c1 FROM (SELECT SmallA.IntKey AS c1, ROW_NUMBER() OVER (ORDER BY SmallA.StringKey) AS ROWNUM_ FROM SmallA) v WHERE ROWNUM_ > 20 ORDER BY ROWNUM_"; //$NON-NLS-1$
         
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, trans);
         
         input = "select intkey c1, stringkey c2 from bqt1.smalla union all select 1, '2' from bqt1.smallb order by c2 limit 10, 20"; //$NON-NLS-1$
-        output = "SELECT c1, c2 FROM (SELECT v.*, ROW_NUMBER() OVER (ORDER BY c2) ROWNUM_ FROM (SELECT SmallA.IntKey AS c1, SmallA.StringKey AS c2 FROM SmallA UNION ALL SELECT 1, '2' FROM SmallB) v) v WHERE ROWNUM_ <= 30 AND ROWNUM_ > 10"; //$NON-NLS-1$
+        output = "SELECT c1, c2 FROM (SELECT v.*, ROW_NUMBER() OVER (ORDER BY c2) ROWNUM_ FROM (SELECT SmallA.IntKey AS c1, SmallA.StringKey AS c2 FROM SmallA UNION ALL SELECT 1, '2' FROM SmallB) v) v WHERE ROWNUM_ <= 30 AND ROWNUM_ > 10 ORDER BY ROWNUM_"; //$NON-NLS-1$
         
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, trans);
     } 

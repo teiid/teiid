@@ -628,6 +628,9 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 		}
 		parts.add("> "); //$NON-NLS-1$
 		parts.add(limit.getRowOffset());
+		if (orderBy != null) {
+			parts.add(" ORDER BY ROWNUM_"); //$NON-NLS-1$
+		}
 		return parts;
     }
     
