@@ -1507,4 +1507,20 @@ public class TestAggregatePushdown {
         TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
             new String[]{"SELECT DISTINCT g_0.IntKey AS c_0, g_0.DoubleNum AS c_1 FROM BQT1.SmallA AS g_0 ORDER BY c_0", "SELECT DISTINCT g_0.IntKey AS c_0, g_0.ByteNum AS c_1, g_0.StringNum AS c_2, g_0.StringKey AS c_3 FROM BQT1.SmallB AS g_0 ORDER BY c_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); 
     }
+    
+    @Test public void testMultipleDistinct() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = getAggregateCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_GROUP_BY_MULTIPLE_DISTINCT_AGGREGATES, false);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_DISTINCT, true);
+        capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
+        String sql = "SELECT count(distinct bqt1.smallb.stringkey), count(distinct bqt1.smallb.stringnum) from bqt1.smallb group by intkey";
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
+            new String[]{"SELECT g_0.IntKey, g_0.StringKey, g_0.StringNum FROM BQT1.SmallB AS g_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); 
+        
+        //same distinct args are fine
+        sql = "SELECT count(distinct bqt1.smallb.intkey), avg(distinct bqt1.smallb.intkey) from bqt1.smallb group by stringnum";
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
+            new String[]{"SELECT COUNT(DISTINCT g_0.IntKey), AVG(DISTINCT g_0.IntKey) FROM BQT1.SmallB AS g_0 GROUP BY g_0.StringNum"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING);
+    }
 }

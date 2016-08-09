@@ -393,4 +393,9 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
     public String translateLiteralDate(java.sql.Date dateValue) {
         return '\'' + formatDateValue(dateValue) + '\'';
     }    
+    
+    @Override
+    public boolean supportsGroupByMultipleDistinctAggregates() {
+    	return false;
+    }    
 }
