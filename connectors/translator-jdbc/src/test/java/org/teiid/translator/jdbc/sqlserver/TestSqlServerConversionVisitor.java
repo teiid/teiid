@@ -353,6 +353,11 @@ public class TestSqlServerConversionVisitor {
         output = "SELECT c1, c2 FROM (SELECT v.*, ROW_NUMBER() OVER (ORDER BY c2) ROWNUM_ FROM (SELECT SmallA.IntKey AS c1, SmallA.StringKey AS c2 FROM SmallA UNION ALL SELECT 1, '2' FROM SmallB) v) v WHERE ROWNUM_ <= 30 AND ROWNUM_ > 10 ORDER BY ROWNUM_"; //$NON-NLS-1$
         
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, trans);
+        
+    	input = "select distinct intkey c1 from bqt1.smalla order by c1 limit 10, 20"; //$NON-NLS-1$
+        output = "SELECT c1 FROM (SELECT v.*, ROW_NUMBER() OVER (ORDER BY c1) ROWNUM_ FROM (SELECT DISTINCT SmallA.IntKey AS c1 FROM SmallA) v) v WHERE ROWNUM_ <= 30 AND ROWNUM_ > 10 ORDER BY ROWNUM_"; //$NON-NLS-1$
+        
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, trans);
     } 
     
     @Test

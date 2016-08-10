@@ -595,19 +595,24 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     	} else {
         	parts.add("*"); //$NON-NLS-1$
     	}
+    	boolean addedToSelect = false;
     	if (orderBy != null && queryCommand instanceof Select) {
-    		//the order by may be unrelated, so it needs to be with the select
     		Select select = (Select)queryCommand;
-    		WindowFunction expression = new WindowFunction();
-    		expression.setFunction(new AggregateFunction("ROW_NUMBER", //$NON-NLS-1$
-    				false, Collections.EMPTY_LIST, TypeFacility.RUNTIME_TYPES.INTEGER));
-    		WindowSpecification windowSpecification = new WindowSpecification();
-    		windowSpecification.setOrderBy(orderBy);
-			expression.setWindowSpecification(windowSpecification);
-			select.getDerivedColumns().add(new DerivedColumn("ROWNUM_", expression)); //$NON-NLS-1$
-			parts.add(" FROM ("); //$NON-NLS-1$
-			parts.add(select);
-    	} else {
+    		if (!select.isDistinct() && select.getGroupBy() == null) {
+        		//the order by may be unrelated, so it needs to be with the select
+        		WindowFunction expression = new WindowFunction();
+        		expression.setFunction(new AggregateFunction("ROW_NUMBER", //$NON-NLS-1$
+        				false, Collections.EMPTY_LIST, TypeFacility.RUNTIME_TYPES.INTEGER));
+        		WindowSpecification windowSpecification = new WindowSpecification();
+        		windowSpecification.setOrderBy(orderBy);
+    			expression.setWindowSpecification(windowSpecification);
+    			select.getDerivedColumns().add(new DerivedColumn("ROWNUM_", expression)); //$NON-NLS-1$
+    			parts.add(" FROM ("); //$NON-NLS-1$
+    			parts.add(select);
+    			addedToSelect = true;
+    		}
+    	}
+    	if (!addedToSelect) {
     		//the order by can be done above the view
     		parts.add(" FROM (SELECT v.*, ROW_NUMBER() OVER ("); //$NON-NLS-1$
     		if (orderBy != null) {
