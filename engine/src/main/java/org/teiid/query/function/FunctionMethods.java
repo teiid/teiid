@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.Serializable;
+import java.io.Writer;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -61,16 +62,16 @@ import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.client.util.ExceptionUtil;
 import org.teiid.common.buffer.BlockedException;
+import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.FileStore;
+import org.teiid.common.buffer.FileStoreInputStreamFactory;
 import org.teiid.core.CorePlugin;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.types.BlobImpl;
-import org.teiid.core.types.BlobType;
-import org.teiid.core.types.ClobImpl;
-import org.teiid.core.types.ClobType;
-import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.*;
 import org.teiid.core.types.InputStreamFactory.BlobInputStreamFactory;
 import org.teiid.core.types.InputStreamFactory.ClobInputStreamFactory;
-import org.teiid.core.types.TransformationException;
+import org.teiid.core.types.InputStreamFactory.StorageMode;
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.ReaderInputStream;
 import org.teiid.core.util.StringUtil;
@@ -770,6 +771,45 @@ public final class FunctionMethods {
 			return str1;
 		}
 		return str1 + str2;
+	}
+	
+	public static ClobType concat(CommandContext context, ClobType str1, ClobType str2) throws IOException, SQLException {
+		BufferManager bm = context.getBufferManager();
+		FileStore fs = bm.createFileStore("clob"); //$NON-NLS-1$
+		FileStoreInputStreamFactory fsisf = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
+		boolean remove = true;
+		
+		try (Reader characterStream = str1.getCharacterStream(); Reader characterStream2 = str2.getCharacterStream();){
+		    Writer writer = fsisf.getWriter();
+		    int chars = ObjectConverterUtil.write(writer, characterStream, -1, false);
+		    chars += ObjectConverterUtil.write(writer, characterStream2, -1, false);
+		    writer.close();
+		    if (fsisf.getStorageMode() == StorageMode.MEMORY) {
+		        //detach if just in memory
+		    	byte[] bytes = fsisf.getMemoryBytes();
+		    	return new ClobType(new ClobImpl(new String(bytes, Streamable.ENCODING)));
+			}
+		    remove = false;
+			context.addCreatedLob(fsisf);
+		    return new ClobType(new ClobImpl(fsisf, chars));
+		} finally {
+			if (remove) {
+				fs.remove();
+			}
+		}
+	}
+	
+	public static ClobType concat2(CommandContext context, ClobType str1, ClobType str2) throws IOException, SQLException {
+		if (str1 == null) {
+			if (str2 == null) {
+				return null;
+			}
+			return str2;
+		}
+		if (str2 == null) {
+			return str1;
+		}
+		return concat(context, str1, str2);
 	}
 
 	// ================== Function = substring =====================
