@@ -77,11 +77,12 @@ public class DynamicCommandResolver implements CommandResolver {
         ResolverVisitor.resolveLanguageObject(dynamicCmd, groups, dynamicCmd.getExternalGroupContexts(), metadata);
         
         String sqlType = DataTypeManager.getDataTypeName(dynamicCmd.getSql().getType());
-        String targetType = DataTypeManager.DefaultDataTypes.STRING;
+        String targetType = DataTypeManager.DefaultDataTypes.CLOB;
         
         if (!targetType.equals(sqlType) && !DataTypeManager.isImplicitConversion(sqlType, targetType)) {
              throw new QueryResolverException(QueryPlugin.Event.TEIID30100, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30100, sqlType));
         }
+        dynamicCmd.setSql(ResolverUtil.convertExpression(dynamicCmd.getSql(), targetType, metadata));
         
         if (dynamicCmd.getUsing() != null && !dynamicCmd.getUsing().isEmpty()) {
             for (SetClause clause : dynamicCmd.getUsing().getClauses()) {

@@ -2504,6 +2504,17 @@ public class TestProcedureProcessor {
         helpProcess(plan, cc, hdm, new List[] {Arrays.asList(expected)});
     }
     
+    @Test public void testDynamicClob() throws Exception {
+        String sql = "exec p1()"; //$NON-NLS-1$
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("create virtual procedure p1() as "
+        		+ "begin create local temporary table t (x string); execute immediate cast('select * from t' as clob); end;", "x", "y");
+        ProcessorPlan plan = getProcedurePlan(sql, tm);
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        List[] expected = new List[] {  }; //$NON-NLS-1$
+        helpTestProcess(plan, expected, dataManager, tm);
+    }
+    
     private static final boolean DEBUG = false;
     
 }
