@@ -332,7 +332,7 @@ public class ODataTypeManager {
         }
         EdmPrimitiveTypeKind kind = EdmPrimitiveTypeKind.valueOf(odataType);
         String value =  EdmPrimitiveTypeFactory.getInstance(kind).valueToString(
-                val, true, 4000, 0, 0, true);
+                val, true, DataTypeManager.MAX_STRING_LENGTH, 0, 0, true);
         if (kind == EdmPrimitiveTypeKind.String) {
             return EdmString.getInstance().toUriLiteral(value);
         }

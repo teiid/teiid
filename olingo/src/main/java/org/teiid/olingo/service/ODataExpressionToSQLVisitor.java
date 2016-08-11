@@ -21,8 +21,7 @@
  */
 package org.teiid.olingo.service;
 
-import static org.teiid.language.SQLConstants.Reserved.CAST;
-import static org.teiid.language.SQLConstants.Reserved.CONVERT;
+import static org.teiid.language.SQLConstants.Reserved.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -618,7 +617,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             AliasSymbol expression = new AliasSymbol(projectedEs.getShortName(), castFunction);
             itResource.setFromClause(fromClause);
             itResource.setGroupSymbol(groupSymbol);            
-            itResource.addProjectedColumn(expression, true, info.getType(), true);
+            itResource.addProjectedColumn(expression, true, info.getType(), null, true);
             
             this.ctxQuery.getProjectedColumns().remove(0);
             this.ctxQuery.addSibiling(itResource);

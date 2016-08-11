@@ -29,6 +29,7 @@ import org.apache.olingo.commons.api.edm.EdmEntitySet;
 import org.apache.olingo.commons.api.edm.EdmEntityType;
 import org.apache.olingo.commons.api.edm.EdmNavigationProperty;
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
+import org.apache.olingo.commons.api.edm.EdmProperty;
 import org.apache.olingo.commons.api.edm.EdmType;
 import org.apache.olingo.commons.api.edm.FullQualifiedName;
 import org.apache.olingo.commons.core.edm.EdmPropertyImpl;
@@ -264,12 +265,12 @@ public class DocumentNode {
     protected void addProjectedColumn(final String columnName,
             final Expression expr, boolean visibility) {
         EdmPropertyImpl edmProperty = (EdmPropertyImpl) this.edmEntityType.getProperty(columnName);
-        addProjectedColumn(expr, visibility, edmProperty.getType(),
+        addProjectedColumn(expr, visibility, edmProperty.getType(), edmProperty,
                 edmProperty.isCollection());
     }
 
     protected void addProjectedColumn(final Expression expr, final boolean visibility,
-            final EdmType type, final boolean collection) {
+            final EdmType type, EdmProperty property, final boolean collection) {
         int i = 0;
         for (i = 0; i < this.projectedColumns.size(); i++) {
             ProjectedColumn pc = this.projectedColumns.get(i);
@@ -278,7 +279,7 @@ public class DocumentNode {
                 break;
             }
         }
-        this.projectedColumns.add(new ProjectedColumn(expr, visibility, type, collection));
+        this.projectedColumns.add(new ProjectedColumn(expr, visibility, type, property, collection));
     }
     
     boolean hasProjectedColumn(final Expression expr) {

@@ -2540,4 +2540,28 @@ public class TestODataIntegration {
         }
     }
     
+    @Test 
+    public void testDecimalPrecisionScale() throws Exception {
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("vw");
+            mmd.addSourceMetadata("ddl", "CREATE VIEW SimpleTable(\n" + 
+                    "    intkey integer PRIMARY KEY,\n" + 
+                    "    decimalval decimal(3, 1)) as select 1,12.31 union all select 2, 1.0001 union all select 3, 123.1;");
+            mmd.setModelType(Model.Type.VIRTUAL);
+            teiid.deployVDB("northwind", mmd);
+
+            Properties props = new Properties();
+            localClient = getClient(teiid.getDriver(), "northwind", 1, props);
+            
+            ContentResponse response = http.GET(baseURL + "/northwind/vw/SimpleTable");
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#SimpleTable\",\"value\":[{\"intkey\":1,\"decimalval\":12.3},{\"intkey\":2,\"decimalval\":1.0},{\"intkey\":3,\"decimalval\":123}]}", 
+                    response.getContentAsString());
+            
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");
+        }
+    }
 }

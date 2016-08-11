@@ -21,6 +21,7 @@
  */
 package org.teiid.olingo;
 
+import org.apache.olingo.commons.api.edm.EdmProperty;
 import org.apache.olingo.commons.api.edm.EdmType;
 import org.teiid.query.sql.symbol.Expression;
 
@@ -30,12 +31,14 @@ public class ProjectedColumn {
     private EdmType edmType;
     private boolean collection;
     private int ordinal;
+    private EdmProperty property;
     
-    public ProjectedColumn(Expression expr, boolean visible, EdmType edmType, boolean collection) {
+    public ProjectedColumn(Expression expr, boolean visible, EdmType edmType, EdmProperty property, boolean collection) {
         this.expr = expr; 
         this.visible = visible;
         this.edmType = edmType;
         this.collection = collection;
+        this.property = property;
     }
     
     public Expression getExpression() {
@@ -60,6 +63,24 @@ public class ProjectedColumn {
 
     public void setOrdinal(int ordinal) {
         this.ordinal = ordinal;
+    }
+    
+    public EdmProperty getProperty() {
+		return property;
+	}
+    
+    public Integer getPrecision() {
+    	if (property == null) {
+    		return null;
+    	}
+    	return property.getPrecision();
+    }
+    
+    public Integer getScale() {
+    	if (property == null) {
+    		return null;
+    	}
+    	return property.getScale();
     }
     
 }

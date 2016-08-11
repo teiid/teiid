@@ -365,7 +365,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                 else {
                     AliasSymbol alias = new AliasSymbol("_orderByAlias", expr);
                     orderBy.addVariable(alias, !obitem.isDescending());
-                    visitor.getEntityResource().addProjectedColumn(alias, false, EdmInt32.getInstance(), false);
+                    visitor.getEntityResource().addProjectedColumn(alias, false, EdmInt32.getInstance(), null, false);
                 }
             } catch (TeiidException e) {
                 this.exceptions.add(e);
