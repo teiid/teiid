@@ -1696,6 +1696,7 @@
 		<module>api</module>
 		<module>client</module>
 		<module>admin</module>
+		<module>data-quality</module>
 		<module>engine</module>
 		<module>connectors</module>
 		<module>metadata</module>
