@@ -30,6 +30,8 @@ public interface QueryResponse extends BaseResponse {
     void setCount(long count);
     void setNextToken(String token);
     String getNextToken();
+    /**
+     * Will also create/set the current entity if not same
+     */
     boolean isSameEntity(ResultSet rs) throws SQLException;
-    void advanceRow(ResultSet rs, boolean sameEntity) throws SQLException;
 }

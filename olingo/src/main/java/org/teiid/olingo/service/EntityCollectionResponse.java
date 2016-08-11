@@ -98,12 +98,9 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
             entity = createEntity(rs, this.documentNode, this.baseURL, this);
             this.currentEntity = entity;
         } else {
+        	entity = this.currentEntity;
             if(sameEntity) {
-                entity = this.currentEntity;
                 add = false;
-            } else {
-                entity = createEntity(rs, this.documentNode, this.baseURL, this);
-                this.currentEntity = entity;            
             }
         }
         
@@ -149,28 +146,11 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
     
     @Override
     public boolean isSameEntity(ResultSet rs) throws SQLException {
-        if (this.currentEntity == null) {
-            this.currentEntity = createEntity(rs, this.documentNode,this.baseURL, this);
-            return false;
-        } else {
-            if (isSameRow(rs, this.documentNode, this.currentEntity)) {
-                return true;
-            } else {
-                this.currentEntity = createEntity(rs, this.documentNode,this.baseURL, this);
-                return false;
-            }
-        }
-    }    
-    
-    @Override
-    public void advanceRow(ResultSet rs, boolean sameEntity) throws SQLException {
-        if (this.currentEntity == null) {
-            this.currentEntity = createEntity(rs, this.documentNode, this.baseURL, this);
-        } else {
-            if (!sameEntity) {
-                this.currentEntity = createEntity(rs, this.documentNode, this.baseURL, this);
-            }
-        }
+    	if (currentEntity == null || !isSameRow(rs, this.documentNode, this.currentEntity)) {
+    		this.currentEntity = createEntity(rs, this.documentNode, this.baseURL, this);
+    		return false;
+    	}
+    	return true;
     }
     
     private boolean isSameRow(ResultSet rs,  DocumentNode node, Entity other) throws SQLException {

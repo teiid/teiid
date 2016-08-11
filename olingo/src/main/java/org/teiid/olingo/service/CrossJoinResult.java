@@ -66,11 +66,7 @@ public class CrossJoinResult implements QueryResponse {
     
     @Override
     public boolean isSameEntity(ResultSet rs) throws SQLException {
-        return false;
-    }
-    
-    @Override
-    public void advanceRow(ResultSet rs, boolean sameEntity) throws SQLException {
+    	return false;
     }
     
     public CrossJoinNode getResource() {

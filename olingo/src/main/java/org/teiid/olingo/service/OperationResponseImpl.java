@@ -38,11 +38,7 @@ public class OperationResponseImpl implements OperationResponse {
     
     @Override
     public boolean isSameEntity(ResultSet rs) throws SQLException {
-        return false;
-    }
-    
-    @Override
-    public void advanceRow(ResultSet rs, boolean sameEntity) throws SQLException {
+    	return false;
     }
     
     private ComplexValue getComplexProperty(ResultSet rs) throws SQLException {
