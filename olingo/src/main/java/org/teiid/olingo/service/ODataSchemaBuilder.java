@@ -658,7 +658,7 @@ public class ODataSchemaBuilder {
         
         // add all custom properties
         for (String property:table.getProperties().keySet()) {
-            addTerm(normalizeTermName(property), "EntityType", csdlSchema);
+            addTerm(normalizeTermName(property), new String[] {"EntityType"}, csdlSchema);
             addStringAnnotation(entityType, csdlSchema.getAlias()+"."+normalizeTermName(property), table.getProperties().get(property));
         }
     }
@@ -707,7 +707,7 @@ public class ODataSchemaBuilder {
         
         // add all custom properties
         for (String str:column.getProperties().keySet()) {
-            addTerm(normalizeTermName(str), "Property", csdlSchema);
+            addTerm(normalizeTermName(str), new String[] {"Property"}, csdlSchema);
             addStringAnnotation(property, csdlSchema.getAlias()+"."+normalizeTermName(str), column.getProperties().get(str));
         }        
     }
@@ -726,7 +726,7 @@ public class ODataSchemaBuilder {
         }   
         // add all custom properties
         for (String str:proc.getProperties().keySet()) {
-            addTerm(normalizeTermName(str), "Action Function", csdlSchema);
+            addTerm(normalizeTermName(str), new String[] {"Action", "Function"}, csdlSchema);
             addStringAnnotation(operation, csdlSchema.getAlias()+"."+normalizeTermName(str), proc.getProperties().get(str));
         }         
     }    
@@ -745,7 +745,7 @@ public class ODataSchemaBuilder {
         
         // add all custom properties
         for (String str:procedure.getProperties().keySet()) {
-            addTerm(normalizeTermName(str), "Parameter", csdlSchema);
+            addTerm(normalizeTermName(str), new String[] {"Parameter"}, csdlSchema);
             addStringAnnotation(parameter, csdlSchema.getAlias()+"."+normalizeTermName(str), procedure.getProperties().get(str));
         } 
     }    
@@ -781,7 +781,7 @@ public class ODataSchemaBuilder {
         recipent.getAnnotations().add(annotation);  
     }  
     
-    private static void addTerm(String property, String appliesTo, CsdlSchema schema) {
+    private static void addTerm(String property, String[] appliesTo, CsdlSchema schema) {
         CsdlTerm term = schema.getTerm(property);
         if ( term == null) {
             term = new CsdlTerm();
@@ -790,7 +790,9 @@ public class ODataSchemaBuilder {
             schema.getTerms().add(term);            
         }
         if (term.getAppliesTo().isEmpty() || !term.getAppliesTo().contains(appliesTo)) {
-            term.getAppliesTo().add(appliesTo);
+            for (int i = 0; i < appliesTo.length; i++) {
+                term.getAppliesTo().add(appliesTo[i]);
+            }
         }
     }     
     
