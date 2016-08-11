@@ -209,6 +209,8 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
         addFunctions(SystemFunctionMethods.class);
         addFunctions(FunctionMethods.class);
         addFunctions(XMLSystemFunctions.class);
+        addOSDQLibrary();
+        
 		try {
 			FunctionMethod fm = MetadataFactory.createFunctionFromMethod("st_extent", GeometryUtils.Extent.class.getMethod("addInput", GeometryType.class)); //$NON-NLS-1$ //$NON-NLS-2$
 			this.functions.add(fm);
@@ -217,6 +219,17 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
 		} catch (SecurityException e) {
 			throw new AssertionError("Could not find function"); //$NON-NLS-1$
 		}
+    }
+    
+    private void addOSDQLibrary() {
+        try {
+            Class<?> osdqFunctions = Class.forName(
+                    "org.teiid.dataquality.OSDQFunctions", false,
+                    this.getClass().getClassLoader());
+            addFunctions(osdqFunctions);
+        } catch (ClassNotFoundException e) {
+            // ignore the add
+        }
     }
     
     private void addFunctions(Class<?> clazz) {

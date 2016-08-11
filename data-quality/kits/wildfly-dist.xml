@@ -1,0 +1,57 @@
+<!--This script builds a zip for Teiid Server Installation -->
+<assembly>
+  
+  <id>wildfly-dist</id> 
+  
+  <formats>
+    <format>zip</format>
+  </formats>
+  
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <baseDirectory>modules</baseDirectory>
+
+ <fileSets>
+    <fileSet>
+        <directory>kits/wildfly/modules</directory>
+        <outputDirectory>${wildfly-module-root}</outputDirectory>     
+        <filtered>true</filtered> 
+        <includes>
+          <include>**/*</include>
+        </includes>   
+    </fileSet>
+    <fileSet>
+        <directory>kits/wildfly/docs</directory>
+        <outputDirectory>docs</outputDirectory>     
+        <filtered>true</filtered> 
+        <includes>
+          <include>**/*</include>
+        </includes>   
+    </fileSet>  
+  </fileSets>
+  
+  <dependencySets>
+        <dependencySet>
+            <includes>
+                <include>org.jboss.teiid:teiid-data-quality</include>
+            </includes>
+            <outputDirectory>${wildfly-module-root}/org/jboss/teiid/main</outputDirectory>
+            <useProjectArtifact>true</useProjectArtifact>
+        </dependencySet>
+  
+        <dependencySet>
+            <includes>
+                <include>org.arrahtec:osdq-core</include>
+                <include>com.github.mpkorstanje:simmetrics-core</include>
+                <include>com.itextpdf:itextpdf</include>
+                <include>com.opencsv:opencsv</include>
+                <include>info.debatty:java-string-similarity</include>
+                <include>net.sourceforge.jexcelapi:jxl</include>
+                <include>>net.sourceforge.jeval:jeval</include>
+            </includes>
+            <outputDirectory>${wildfly-module-root}/org/arrahtec/main</outputDirectory>
+            <useProjectArtifact>false</useProjectArtifact>
+        </dependencySet>
+  </dependencySets>
+  
+  
+</assembly>
