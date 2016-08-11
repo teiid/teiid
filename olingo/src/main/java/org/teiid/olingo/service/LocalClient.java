@@ -372,7 +372,6 @@ public class LocalClient implements Client {
                 if (skippedEntities == skipEntities) {
                     break;
                 }
-                response.advanceRow(rs, same);
             }
         }
         return new int[] {skipped, skippedEntities};
