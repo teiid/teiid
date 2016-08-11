@@ -28,6 +28,7 @@ import java.util.List;
 
 import org.teiid.language.DerivedColumn;
 import org.teiid.language.LanguageObject;
+import org.teiid.language.Limit;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
@@ -182,6 +183,11 @@ public class DerbyExecutionFactory extends BaseDB2ExecutionFactory {
     public boolean supportsRowLimit() {
     	return this.getVersion().compareTo(TEN_5) >= 0;
     }
+
+    @Override
+    public boolean supportsRowOffset() {
+    	return this.getVersion().compareTo(TEN_5) >= 0;
+    }
     
 	@Override
 	protected boolean usesDatabaseVersion() {
@@ -218,6 +224,14 @@ public class DerbyExecutionFactory extends BaseDB2ExecutionFactory {
 			}
 		}
 		return super.translate(obj, context);
+	}
+	
+	@Override
+	public List<?> translateLimit(Limit limit, ExecutionContext context) {
+		if (limit.getRowOffset() > 0) {
+	        return Arrays.asList("OFFSET ", limit.getRowOffset(), " ROWS FETCH FIRST ", limit.getRowLimit(), " ROWS ONLY"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		}
+		return super.translateLimit(limit, context);
 	}
     
 }

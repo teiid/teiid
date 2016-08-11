@@ -130,6 +130,7 @@ public class TestSocketServerInstanceImpl {
 	private SocketServerInstanceImpl createInstance(ObjectChannelFactory channelFactory)
 			throws CommunicationException, IOException {
 		HostInfo info = new HostInfo("0.0.0.0", 1);
+		info.getInetAddress();
 		SocketServerInstanceImpl ssii = new SocketServerInstanceImpl(info, 1, 1);
 		ssii.connect(channelFactory);
 		return ssii;

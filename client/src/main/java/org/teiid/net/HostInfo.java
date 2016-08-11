@@ -66,22 +66,18 @@ public class HostInfo {
     	ArgCheck.isNotNull(host);
 		this.hostName = host.toLowerCase();
     	this.portNumber = port;
-    	
-    	//only cache inetaddresses if they represent the ip. 
-    	try {
-			InetAddress addr = InetAddress.getByName(this.hostName);
-			if (addr.getHostAddress().equalsIgnoreCase(this.hostName)) {
-				this.inetAddress = addr;
-			}
-		} catch (UnknownHostException e) {
-		}
     }
     
     public InetAddress getInetAddress() throws UnknownHostException {
     	if (inetAddress != null) {
     		return inetAddress;
     	}
-    	return InetAddress.getByName(this.hostName);
+    	//only cache inetaddresses if they represent the ip. 
+		InetAddress addr = InetAddress.getByName(this.hostName);
+		if (addr.getHostAddress().equalsIgnoreCase(this.hostName)) {
+			this.inetAddress = addr;
+		}
+		return addr;
     }
     
     public String getHostName() {

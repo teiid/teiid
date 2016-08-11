@@ -631,6 +631,14 @@ public class ExecutionFactory<F, C> {
     public boolean supportsOnlySingleTableGroupBy() {
     	return false;
     }
+    
+    /**
+     * Whether the source supports grouping with multiple distinct aggregates
+     * @return
+     */
+    public boolean supportsGroupByMultipleDistinctAggregates() {
+    	return supportsGroupBy();
+    }
 
     /**
      * Whether the source supports the HAVING clause

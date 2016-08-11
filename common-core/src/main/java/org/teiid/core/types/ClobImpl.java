@@ -144,7 +144,7 @@ public class ClobImpl extends BaseLob implements Clob {
     public String getSubString(long pos, int length) throws SQLException {
         if (pos < 1) {
             Object[] params = new Object[] {new Long(pos)};
-            throw new SQLException(CorePlugin.Util.getString("MMClob_MMBlob.0", params)); //$NON-NLS-1$
+            throw new SQLException(CorePlugin.Util.getString("MMClob_MMBlob.2", params)); //$NON-NLS-1$
         } else if (pos > length()) {
             return null;
         }

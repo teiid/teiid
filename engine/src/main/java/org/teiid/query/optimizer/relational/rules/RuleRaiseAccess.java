@@ -35,6 +35,7 @@ import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
+import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -361,10 +362,24 @@ public final class RuleRaiseAccess implements OptimizerRule {
                 }
             }
         }
+        boolean multipleDistinct = CapabilitiesUtil.supports(Capability.QUERY_GROUP_BY_MULTIPLE_DISTINCT_AGGREGATES, modelID, metadata, capFinder);
         if (aggregates != null) {
+        	AggregateSymbol distinct = null;
             for (AggregateSymbol aggregateSymbol : aggregates) {
                 if(! CriteriaCapabilityValidatorVisitor.canPushLanguageObject(aggregateSymbol, modelID, metadata, capFinder, record)) {
                     return false;
+                }
+                if (groupCols != null && !multipleDistinct) {
+                	if (aggregateSymbol.isDistinct()) {
+                		if (distinct == null) {
+                			distinct = aggregateSymbol;
+                		} else if (!EquivalenceUtil.areEqual(distinct.getCondition(), aggregateSymbol.getCondition())
+                				|| !EquivalenceUtil.areEqual(distinct.getOrderBy(), aggregateSymbol.getOrderBy())
+                				|| !EquivalenceUtil.areEquivalent(distinct.getArgs(), aggregateSymbol.getArgs())) {
+                        	groupNode.recordDebugAnnotation("multiple distinct aggregates not supported", modelID, "cannot push group by", record, metadata); //$NON-NLS-1$ //$NON-NLS-2$
+                			return false;
+                		}
+                	}
                 }
             }
         }

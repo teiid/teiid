@@ -102,4 +102,12 @@ public class TestDerbySQLTranslator {
                 TRANSLATOR);
     }
     
+    @Test
+    public void testOffset() throws Exception {
+    	String input = "select intkey from bqt1.smalla limit 50, 100"; //$NON-NLS-1$
+        String output = "SELECT SmallA.IntKey FROM SmallA OFFSET 50 ROWS FETCH FIRST 100 ROWS ONLY"; //$NON-NLS-1$
+        
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }   
+    
 }

@@ -557,6 +557,10 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 		return delegate.supportsProcedureTable();
 	}
 	@Override
+	public boolean supportsGroupByMultipleDistinctAggregates() {
+		return delegate.supportsGroupByMultipleDistinctAggregates();
+	}
+	@Override
 	public void start() throws TranslatorException {
 		//nothing to do
 	}

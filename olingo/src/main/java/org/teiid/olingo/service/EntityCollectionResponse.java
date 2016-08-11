@@ -25,6 +25,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Array;
@@ -227,7 +229,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                     }
                 }
                 else {
-                    Property property = buildPropery(propertyName, type,
+                    Property property = buildPropery(propertyName, type, column.getPrecision(), column.getScale(),
                             column.isCollection(), value);
                     entity.addProperty(property);
                 }
@@ -312,7 +314,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                 SingletonPrimitiveType type = (SingletonPrimitiveType) column.getEdmType();
                 if (column.isCollection()) {
                     Property previousProperty = entity.getProperty(propertyName);
-                    Property property = buildPropery(propertyName, type,
+                    Property property = buildPropery(propertyName, type, column.getPrecision(), column.getScale(),
                             column.isCollection(), value);
                     
                     property = mergeProperties(propertyName, type, previousProperty, property);
@@ -356,7 +358,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
     }
 
     static Property buildPropery(String propName,
-            SingletonPrimitiveType type, boolean isArray, Object value) throws TeiidProcessingException,
+            SingletonPrimitiveType type, Integer precision, Integer scale, boolean isArray, Object value) throws TeiidProcessingException,
             SQLException, IOException {
 
         if (value instanceof Array) {
@@ -370,17 +372,17 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                     throw new TeiidNotImplementedException(ODataPlugin.Event.TEIID16029, 
                             ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16029, propName));
                 }
-                Object p = getPropertyValue(type, isArray,  o);
+                Object p = getPropertyValue(type, precision, scale, isArray,  o);
                 values.add(p);
             }
             return createCollection(propName, type, values);
         }
         if (isArray) {
             ArrayList<Object> values = new ArrayList<Object>();
-            values.add(getPropertyValue(type, isArray, value));
+            values.add(getPropertyValue(type, precision, scale, isArray, value));
             return createCollection(propName, type, values);
         }
-        return createPrimitive(propName, type, getPropertyValue(type, isArray, value));
+        return createPrimitive(propName, type, getPropertyValue(type, precision, scale, isArray, value));
     }
 
     private static Property createPrimitive(final String name,
@@ -422,14 +424,36 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
         return value;
     }
 */
-    
-    static Object getPropertyValue(SingletonPrimitiveType expectedType, boolean isArray,
+
+    static Object getPropertyValue(SingletonPrimitiveType expectedType, Integer precision, Integer scale, boolean isArray,
             Object value)
             throws TransformationException, SQLException, IOException {
-        if (value == null) {
-            return null;
-        }
-                
+    	if (value == null) {
+    		return null;
+    	}
+    	value = getPropertyValueInternal(expectedType, isArray, value);
+    	if (value instanceof BigDecimal) {
+    		BigDecimal bigDecimalValue = (BigDecimal)value;
+    		
+    		//if precision is set, then try to set an appropriate scale to pass the facet check
+    		if (precision != null) {
+	    		final int digits = bigDecimalValue.scale() >= 0
+	    		          ? Math.max(bigDecimalValue.precision(), bigDecimalValue.scale())
+	    		              : bigDecimalValue.precision() - bigDecimalValue.scale();
+	    		
+	            if (bigDecimalValue.scale() > (scale == null ? 0 : scale) || (digits > precision)) {
+	            	bigDecimalValue = bigDecimalValue.setScale(Math.min(digits > precision ? bigDecimalValue.scale() - digits + precision : bigDecimalValue.scale(), scale == null ? 0 : scale), RoundingMode.HALF_UP);
+	            }
+    		}
+
+    		value = bigDecimalValue;
+    	}
+    	return value;
+    }
+    
+    private static Object getPropertyValueInternal(SingletonPrimitiveType expectedType, boolean isArray,
+            Object value)
+            throws TransformationException, SQLException, IOException {
         Class<?> sourceType = DataTypeManager.getRuntimeType(value.getClass());
         if (sourceType.isAssignableFrom(expectedType.getDefaultType())) {
             return value;
@@ -443,7 +467,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
             return value;
         } else if (expectedType instanceof EdmBinary) {
             // there could be memory implications here, should have been modeled as EdmStream
-            LogManager.logDetail(LogConstants.CTX_ODATA, "Possible OOM when inlining the stream based values");
+            LogManager.logDetail(LogConstants.CTX_ODATA, "Possible OOM when inlining the stream based values"); //$NON-NLS-1$
             if (sourceType == ClobType.class) {
                 return ClobType.getString((Clob) value).getBytes();
             }
