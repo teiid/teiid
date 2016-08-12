@@ -386,34 +386,20 @@ public class TeiidServiceHandler implements ServiceHandler {
     
     private UpdateResponse performDeepInsert(String rawURI, UriInfo uriInfo,
             EdmEntityType entityType, Entity entity) throws SQLException, TeiidException {
-        String txn = getClient().startTransaction();
-        boolean success = false;
-        try {
-            UpdateResponse response = performInsert(rawURI, uriInfo, entityType, entity);
-            for (String navigationName:entityType.getNavigationPropertyNames()) {
-                EdmNavigationProperty navProperty = entityType.getNavigationProperty(navigationName);
-                Link navLink = entity.getNavigationLink(navigationName);
-                if (navLink != null && navLink.getInlineEntity() != null) {
-                    performInsert(rawURI, uriInfo, navProperty.getType(), navLink.getInlineEntity());
-                }
-                if (navLink != null && navLink.getInlineEntitySet() != null && !navLink.getInlineEntitySet().getEntities().isEmpty()) {
-                    for (Entity inlineEntity:navLink.getInlineEntitySet().getEntities()) {
-                        performInsert(rawURI, uriInfo, navProperty.getType(), inlineEntity);
-                    }
+        UpdateResponse response = performInsert(rawURI, uriInfo, entityType, entity);
+        for (String navigationName:entityType.getNavigationPropertyNames()) {
+            EdmNavigationProperty navProperty = entityType.getNavigationProperty(navigationName);
+            Link navLink = entity.getNavigationLink(navigationName);
+            if (navLink != null && navLink.getInlineEntity() != null) {
+                performInsert(rawURI, uriInfo, navProperty.getType(), navLink.getInlineEntity());
+            }
+            if (navLink != null && navLink.getInlineEntitySet() != null && !navLink.getInlineEntitySet().getEntities().isEmpty()) {
+                for (Entity inlineEntity:navLink.getInlineEntitySet().getEntities()) {
+                    performInsert(rawURI, uriInfo, navProperty.getType(), inlineEntity);
                 }
             }
-            getClient().commit(txn);
-            success = true;
-            return response;
-        } finally {
-        	if (!success) {
-                try {
-                    getClient().rollback(txn);
-                } catch (SQLException e1) {
-                    // ignore
-                }
-        	}
         }
+        return response;
     }
 
     private Set<EdmNavigationProperty> deepInsertNames(EdmEntityType entityType, Entity entity) {
@@ -422,13 +408,17 @@ public class TeiidServiceHandler implements ServiceHandler {
         for (String navigationName:entityType.getNavigationPropertyNames()) {
             EdmNavigationProperty navProperty = entityType.getNavigationProperty(navigationName);
             Link navLink = entity.getNavigationLink(navigationName);
-            if (navLink != null) {
-                if (navLink.getInlineEntity() != null) {
-                   expand.add(navProperty);
-                }
-                if (navLink.getInlineEntitySet() != null && !navLink.getInlineEntitySet().getEntities().isEmpty()) {
-                    expand.add(navProperty);
-                }
+            if (navLink == null) {
+            	continue;
+            }
+            if (navLink.getInlineEntity() != null) {
+                expand.add(navProperty);
+                deepInsertNames(navProperty.getType(), navLink.getInlineEntity());
+            } else if (navLink.getInlineEntitySet() != null && !navLink.getInlineEntitySet().getEntities().isEmpty()) {
+            	expand.add(navProperty);
+            	for (Entity nested : navLink.getInlineEntitySet().getEntities()) {
+            		deepInsertNames(navProperty.getType(), nested);
+            	}
             }
         }
         return expand;
@@ -438,9 +428,28 @@ public class TeiidServiceHandler implements ServiceHandler {
     public void createEntity(DataRequest request, Entity entity,
             EntityResponse response) throws ODataLibraryException,
             ODataApplicationException {
+    	
+        EdmEntityType entityType = request.getEntitySet().getEntityType();
+        Set<EdmNavigationProperty> deepInsertNames = deepInsertNames(entityType, entity);
+		
+        if (deepInsertNames.size() > 1) {
+        	throw new ODataApplicationException(
+                    ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16057),
+                    HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(),
+                    Locale.getDefault());
+        }
+    	
+    	String txn;
+		try {
+			txn = getClient().startTransaction();
+		} catch (SQLException e) {
+			throw new ODataApplicationException(e.getMessage(),
+                    HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
+                    Locale.getDefault(), e);
+		}
+        boolean success = false;
         
-        try {
-            EdmEntityType entityType = request.getEntitySet().getEntityType();
+    	try {
             UpdateResponse updateResponse = performDeepInsert(request
                     .getODataRequest().getRawBaseUri(), request.getUriInfo(),
                     entityType, entity);
@@ -451,7 +460,7 @@ public class TeiidServiceHandler implements ServiceHandler {
                         request.getODataRequest().getRawBaseUri(), this.serviceMetadata, this.nameGenerator);
                 
                 Query query = visitor.selectWithEntityKey(entityType,
-                                entity, updateResponse.getGeneratedKeys(), deepInsertNames(entityType, entity));
+                                entity, updateResponse.getGeneratedKeys(), deepInsertNames);
                 LogManager.logDetail(LogConstants.CTX_ODATA, null, "created entity = ", entityType.getName(), " with key=", query.getCriteria().toString()); //$NON-NLS-1$ //$NON-NLS-2$
                 
                 EntityCollectionResponse result = new EntityCollectionResponse(
@@ -473,6 +482,8 @@ public class TeiidServiceHandler implements ServiceHandler {
             else {
                 response.writeNotModified();
             }
+            getClient().commit(txn);
+            success = true;
         } catch (SQLException e) {
             throw new ODataApplicationException(e.getMessage(),
                     HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
@@ -489,6 +500,14 @@ public class TeiidServiceHandler implements ServiceHandler {
             throw new ODataApplicationException(e.getMessage(),
                     HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
                     Locale.getDefault(), e);
+        } finally { 
+        	if (!success) {
+                try {
+                    getClient().rollback(txn);
+                } catch (SQLException e1) {
+                    // ignore
+                }
+        	}
         }
     }
 

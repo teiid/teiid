@@ -534,6 +534,8 @@ public class TestODataIntegration {
         hc.addUpdate("INSERT INTO x (a, b) VALUES ('teiid', 'dv')", new int[] {1});
         hc.addUpdate("INSERT INTO y (a, b) VALUES ('odata', 'olingo')", new int[] {1});
         hc.addUpdate("INSERT INTO y (a, b) VALUES ('odata4', 'olingo4')", new int[] {1});
+        hc.addUpdate("INSERT INTO z (a, b) VALUES ('odata', 'olingo')", new int[] {1});
+        hc.addUpdate("INSERT INTO z (a, b) VALUES ('odata4', 'olingo4')", new int[] {1});
         teiid.addTranslator("x10", hc);
         
         try {
@@ -545,6 +547,12 @@ public class TestODataIntegration {
                     + " primary key (a)"
                     + ") options (updatable true);"
                     + "create foreign table y ("
+                    + " a string, "
+                    + " b string, "
+                    + " primary key (a),"
+                    + " CONSTRAINT FKX FOREIGN KEY (b) REFERENCES x(a)"                    
+                    + ") options (updatable true);"
+                    + "create foreign table z ("
                     + " a string, "
                     + " b string, "
                     + " primary key (a),"
@@ -581,6 +589,39 @@ public class TestODataIntegration {
             assertEquals("{\"@odata.context\":\"$metadata#x\",\"a\":\"ABCDEFG\",\"b\":\"ABCDEFG\"}", 
                     response.getContentAsString());
 
+            // update to collection based reference
+            payload = "{\n" +
+                    "  \"a\":\"teiid\",\n" +
+                    "  \"b\":\"dv\",\n" +
+                    "    \"y_FKX\": [\n"+
+                    "        {"+
+                    "          \"a\":\"odata\",\n" +
+                    "          \"b\":\"olingo\"\n" +                    
+                    "        },\n"+
+                    "        {\n"+
+                    "          \"a\":\"odata4\",\n" +
+                    "          \"b\":\"olingo4\"\n" +                    
+                    "        }\n"+                    
+                    "     ],\n"+ 
+                    "    \"z_FKX\": [\n"+
+                    "        {"+
+                    "          \"a\":\"odata\",\n" +
+                    "          \"b\":\"olingo\"\n" +                    
+                    "        },\n"+
+                    "        {\n"+
+                    "          \"a\":\"odata4\",\n" +
+                    "          \"b\":\"olingo4\"\n" +                    
+                    "        }\n"+                    
+                    "     ]\n"+
+                    "}";
+            response = http.newRequest(baseURL + "/northwind/m/x")
+                    .method("POST")
+                    .content(new StringContentProvider(payload), ContentType.APPLICATION_JSON.toString())
+                    // when this header is defined the return should be expanded, but due to way olingo 
+                    // designed it is going to be a big refactoring.
+                    .header("Prefer", "return=representation")
+                    .send();
+            assertEquals(501, response.getStatus());
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");
