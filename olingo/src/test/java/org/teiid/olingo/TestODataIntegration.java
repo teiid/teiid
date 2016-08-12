@@ -2286,7 +2286,29 @@ public class TestODataIntegration {
                     +  "\"Orders_FK0\":[{\"id\":7,\"customerid\":3,\"place\":\"town\"},"
                     + "{\"id\":8,\"customerid\":3,\"place\":\"town\"}]},"
                     + "{\"id\":4,\"name\":\"customer4\",\"Orders_FK0\":[]}]}", 
-                    response.getContentAsString());                  
+                    response.getContentAsString());  
+            
+            response = http.newRequest(baseURL + "/northwind/m/Customers?$expand=Orders_FK0($top=0;$count=true)&$count=true")
+                    .method("GET")
+                    .send();
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#Customers\","
+                    + "\"@odata.count\":4,\""
+                    + "value\":["
+                        + "{\"id\":1,\"name\":\"customer1\","
+                        + "\"Orders_FK0@odata.count\":4,"
+                        + "\"Orders_FK0\":[]},"
+                        + "{\"id\":2,\"name\":\"customer2\","
+                        + "\"Orders_FK0@odata.count\":2,"
+                        + "\"Orders_FK0\":[]},"
+                        + "{\"id\":3,\"name\":\"customer3\","
+                        + "\"Orders_FK0@odata.count\":2,"
+                        + "\"Orders_FK0\":[]},"
+                        + "{\"id\":4,\"name\":\"customer4\","
+                        + "\"Orders_FK0@odata.count\":0,"
+                        + "\"Orders_FK0\":["
+                        + "]}]}", 
+                    response.getContentAsString());
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");

@@ -527,13 +527,12 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
             return false;
         }
         
-        if (top > 0 ) {
+        if (top > -1 ) {
             if (this.topCount < top) {
                 this.topCount++;                
                 return true;
-            } else {
-                return false;
-            }
+            } 
+            return false;
         }
         return true;
     }

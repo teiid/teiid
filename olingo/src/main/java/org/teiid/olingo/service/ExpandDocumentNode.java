@@ -34,7 +34,7 @@ import org.teiid.olingo.service.TeiidServiceHandler.UniqueNameGenerator;
 public class ExpandDocumentNode extends DocumentNode {
     private String navigationName;
     private boolean collection;
-    private int top;
+    private int top=-1;
     private int skip;
     private boolean calculateCount;
 
