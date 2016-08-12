@@ -49,6 +49,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.swagger.models.HttpMethod;
 import io.swagger.models.Model;
+import io.swagger.models.ModelImpl;
 import io.swagger.models.Operation;
 import io.swagger.models.Path;
 import io.swagger.models.RefModel;
@@ -485,13 +486,17 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                     }
                     break;
                 } else {
-                    ProcedureParameter p = mf.addProcedureParameter(
-                            parameter.getName(),
-                            DataTypeManager.DefaultDataTypes.CLOB, Type.In,
-                            procedure);
-                    p.setProperty(PARAMETER_TYPE, parameter.getIn());
-                    p.setNullType(NullType.No_Nulls);
-                    p.setAnnotation(parameter.getDescription());
+                    if ((model instanceof ModelImpl) && model.getProperties() != null) {
+                        walkProperties(swagger, model.getProperties(), null, null, pa);
+                    } else {
+                        ProcedureParameter p = mf.addProcedureParameter(
+                                parameter.getName(),
+                                DataTypeManager.DefaultDataTypes.CLOB, Type.In,
+                                procedure);
+                        p.setProperty(PARAMETER_TYPE, parameter.getIn());
+                        p.setNullType(NullType.No_Nulls);
+                        p.setAnnotation(parameter.getDescription());
+                    }
                 }
             } else {            
                 String name = parameter.getName();
