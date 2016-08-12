@@ -25,6 +25,7 @@
         <module name="org.slf4j"/>
         <module name="org.apache.commons.lang" slot="3.3.2"/>
         <module name="javax.xml.bind.api"/>
+        <module name="org.apache.commons.io"/>
     </dependencies>
     
 </module>

@@ -22,7 +22,6 @@
         <module name="org.jboss.teiid.api" />
         <module name="org.jboss.teiid.client" />
         <module name="org.jboss.teiid.admin" />
-        <module name="org.jboss.teiid.data-quality" />
         <module name="org.jboss.teiid.rest-service" />
         <module name="org.jboss.logging" />
         <module name="org.jboss.modules"/>
