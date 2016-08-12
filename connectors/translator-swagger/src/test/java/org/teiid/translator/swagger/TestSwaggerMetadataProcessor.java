@@ -127,7 +127,7 @@ public class TestSwaggerMetadataProcessor {
             procSet.add(p.getName());
         }
         
-        assertEquals(28, procSet.size());
+        assertEquals(29, procSet.size());
         
         assertTrue(procSet.contains("addCustomer"));
         assertTrue(procSet.contains("addOneCustomer"));
@@ -425,4 +425,28 @@ public class TestSwaggerMetadataProcessor {
         pa = p.getResultSet().getColumnByName("tags_Tag_id");
         assertEquals("tags[]/Tag/id", pa.getNameInSource());
     }     
+    
+    @Test
+    public void testBodyandPathProcedure() throws Exception {
+        SwaggerExecutionFactory translator = new SwaggerExecutionFactory();
+        translator.start();
+        MetadataFactory mf = swaggerMetadata(translator);
+        
+        Procedure p = mf.getSchema().getProcedure("executeOperation");
+        assertNotNull(p);
+        assertEquals("PUT", p.getProperty(RestMetadataExtension.METHOD, false).toUpperCase());
+        assertEquals("http://localhost:8080/operation/{operationId}", p.getProperty(RestMetadataExtension.URI, false));
+        assertNotNull(p.getResultSet());
+
+        assertNotNull(p.getParameterByName("operationId"));
+        assertNotNull(p.getParameterByName("id"));
+        assertNotNull(p.getParameterByName("name"));
+        assertNotNull(p.getParameterByName("resourceId"));
+        assertNotNull(p.getParameterByName("definitionId"));
+        assertNotNull(p.getParameterByName("readyToSubmit"));
+        assertNotNull(p.getParameterByName("params_arguments"));
+        
+        List<Column> columns = p.getResultSet().getColumns();
+        assertEquals(2, columns.size());        
+    }
 }
