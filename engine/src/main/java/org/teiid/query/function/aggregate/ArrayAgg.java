@@ -64,7 +64,11 @@ public class ArrayAgg extends SingleArgumentAggregateFunction {
 		}
 		Object array = Array.newInstance(componentType, this.result.size());
 		for (int i = 0; i < result.size(); i++) {
-			Array.set(array, i, result.get(i));
+			Object val = result.get(i);
+			if (val instanceof ArrayImpl) {
+				val = ((ArrayImpl)val).getValues();
+			}
+			Array.set(array, i, val);
 		}
 		return new ArrayImpl((Object[]) array);
 	}
