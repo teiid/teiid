@@ -242,13 +242,22 @@ public class TestArrayProcessing {
 	}
 	
 	@Test public void testQuantifiedCompareProcessing() throws Exception {
-		String sql = "select e1 from pm1.g1 where e2 = some (('a', 'b'))"; //$NON-NLS-1$
+		String sql = "select e2 from pm1.g1 where e1 = some (('a', 'b'))"; //$NON-NLS-1$
 		Command command = helpParse(sql);
 		ProcessorPlan pp = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
 	    HardcodedDataManager dataManager = new HardcodedDataManager();
-	    dataManager.addData("SELECT g_0.e2, g_0.e1 FROM pm1.g1 AS g_0", Arrays.asList("a", 1), Arrays.asList("c", 2));
+	    dataManager.addData("SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0", Arrays.asList("a", 1), Arrays.asList("c", 2));
 		TestProcessor.helpProcess(pp, dataManager, new List[] {Arrays.asList(1)});
 	    
+	}
+	
+	@Test public void testNestedArrayAgg() throws Exception {
+		String sql = "select array_agg((e1, e2)) from pm1.g1"; //$NON-NLS-1$
+		Command command = helpParse(sql);
+		ProcessorPlan pp = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+	    HardcodedDataManager dataManager = new HardcodedDataManager();
+	    dataManager.addData("SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0", Arrays.asList("a", 1), Arrays.asList("c", 2));
+		TestProcessor.helpProcess(pp, dataManager, new List[] {Arrays.asList(new ArrayImpl(new Object[] {"a", 1}, new Object[] {"c", 2}))});
 	}
 	
 	/**
