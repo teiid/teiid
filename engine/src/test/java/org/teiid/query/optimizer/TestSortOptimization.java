@@ -542,5 +542,22 @@ public class TestSortOptimization {
         
         TestProcessor.helpProcess(plan, dataManager, expectedResults);
     }
+    
+    @Test public void testOffsetWithOrderBy() throws Exception{
+        String sql = "select e1 from pm1.g1 order by e1 offset 2 rows";
+        
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
+        
+        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps), 
+                new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT g_0.e1 FROM pm1.g1 AS g_0", Arrays.asList("a"), Arrays.asList("b"), Arrays.asList("c"));
+        
+        List<?>[] expectedResults = new List[] {Arrays.asList("c")};
+        
+        TestProcessor.helpProcess(plan, dataManager, expectedResults);
+    }
 
 }

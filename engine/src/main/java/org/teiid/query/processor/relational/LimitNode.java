@@ -140,8 +140,8 @@ public class LimitNode extends RelationalNode {
             offset = 0;
         }
         offsetPhase = offset > 0;
-        if (this.getChildren()[0] instanceof SortNode) {
-        	((SortNode)this.getChildren()[0]).setRowLimit(limit + offset);
+        if (limit > -1 && this.getChildren()[0] instanceof SortNode) {
+        	((SortNode)this.getChildren()[0]).setRowLimit((int) Math.min(Integer.MAX_VALUE, (long)limit + offset));
         }
         super.open();
     }
