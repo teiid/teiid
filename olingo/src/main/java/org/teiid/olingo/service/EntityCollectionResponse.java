@@ -75,6 +75,12 @@ import org.teiid.olingo.common.ODataTypeManager;
 import org.teiid.query.sql.symbol.Symbol;
 
 public class EntityCollectionResponse extends EntityCollection implements QueryResponse {
+	
+	interface Row {
+    	Object getObject(int column) throws SQLException;
+		Object[] getArray(int columnIndex) throws SQLException;
+    }
+	
     private String nextToken;
     private Entity currentEntity;
     private DocumentNode documentNode;
@@ -104,19 +110,29 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
             }
         }
         
-        if (this.documentNode.getExpands() != null && !this.documentNode.getExpands().isEmpty()) {
-            // right now it can do only one expand, when more than one this logic
-            // need to be re-done.
-            for (DocumentNode resource : this.documentNode.getExpands()) {
-                ExpandDocumentNode expandNode = (ExpandDocumentNode)resource;
-                Entity expandEntity = createEntity(rs, expandNode, this.baseURL, this);
+        if (add) {
+        	processExpands(asRow(rs), entity, this.documentNode);
+            getEntities().add(entity);
+        } else {
+            // this is property update incase of collection return 
+            updateEntity(rs, entity, this.documentNode);            
+        }
+    }
+
+	private void processExpands(Row vals, Entity entity, DocumentNode node)
+			throws SQLException {
+		if (node.getExpands() == null || node.getExpands().isEmpty()) {
+			return;
+		}
+        for (ExpandDocumentNode expandNode : node.getExpands()) {
+            Object[] expandedVals = vals.getArray(expandNode.getColumnIndex());
+            if (expandedVals == null) {
+            	continue;
+            }
+            for (Object o : expandedVals) {
+            	Object[] expandedVal = (Object[])o;
+    			Entity expandEntity = createEntity(expandedVal, expandNode, this.baseURL, this);
                 
-                // make sure the expanded entity has valid key, otherwise it is just nulls on right side
-                boolean valid = (expandEntity != null);
-                if (!valid) {
-                    continue;
-                }
-                                               
                 Link link = entity.getNavigationLink(expandNode.getNavigationName());
                 if (expandNode.isCollection()) {
                     if (link.getInlineEntitySet() == null) {
@@ -133,16 +149,11 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                 else {
                     link.setInlineEntity(expandEntity);
                 }
+                
+                processExpands(asRow(expandedVal), expandEntity, expandNode);
             }
         }
-        
-        if (add) {
-            getEntities().add(entity);
-        } else {
-            // this is property update incase of collection return 
-            updateEntity(rs, entity, this.documentNode);            
-        }
-    }
+	}
     
     @Override
     public boolean isSameEntity(ResultSet rs) throws SQLException {
@@ -175,10 +186,20 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
         }
         return null;
     }
-
-    static Entity createEntity(ResultSet rs, DocumentNode node, String baseURL, EntityCollectionResponse response)
+    
+    static Entity createEntity(final Object[] vals, DocumentNode node, String baseURL, EntityCollectionResponse response)
             throws SQLException {
-        
+    	return createEntity(asRow(vals), node, baseURL, response);
+    }
+
+    static Entity createEntity(final ResultSet vals, DocumentNode node, String baseURL, EntityCollectionResponse response)
+            throws SQLException {
+    	return createEntity(asRow(vals), node, baseURL, response);
+    }
+    
+    static Entity createEntity(Row row, DocumentNode node, String baseURL, EntityCollectionResponse response)
+            throws SQLException {
+    	
         List<ProjectedColumn> projected = node.getAllProjectedColumns();
         EdmEntityType entityType = node.getEdmEntityType();
         
@@ -195,7 +216,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
             }*/
             
             String propertyName = Symbol.getShortName(column.getExpression());
-            Object value = rs.getObject(column.getOrdinal());
+            Object value = row.getObject(column.getOrdinal());
             if (value != null) {
                 allNulls = false;
             }
@@ -258,7 +279,37 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
         }            
         
         return entity;
-    }    
+    }
+
+	private static Row asRow(final ResultSet vals) {
+		return new Row() {
+			@Override
+			public Object getObject(int column) throws SQLException {
+				return vals.getObject(column);
+			}
+			@Override
+			public Object[] getArray(int columnIndex) throws SQLException {
+				Array array = vals.getArray(columnIndex);
+				if (array == null) {
+					return null;
+				}
+				return (Object[]) array.getArray();
+			}
+		};
+	}
+	
+	private static Row asRow(final Object[] vals) {
+    	return new Row() {
+			@Override
+			public Object getObject(int column) throws SQLException {
+				return vals[column - 1];
+			}
+			@Override
+			public Object[] getArray(int columnIndex) {
+				return (Object[]) vals[columnIndex - 1];
+			}
+		};
+	}    
     
     void setStream(String propertyName, Object value) {
     	if (this.streams == null) {
@@ -282,25 +333,26 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
         
         for (ProjectedColumn column: projected) {
 
-            String propertyName = Symbol.getShortName(column.getExpression());
-            if (entityType.getKeyPredicateNames().contains(propertyName)) {
-                // no reason to update the identity keys
-                continue;
-            }
-            
-            Object value = rs.getObject(column.getOrdinal());
-            
             try {
                 SingletonPrimitiveType type = (SingletonPrimitiveType) column.getEdmType();
-                if (column.isCollection()) {
-                    Property previousProperty = entity.getProperty(propertyName);
-                    Property property = buildPropery(propertyName, type, column.getPrecision(), column.getScale(),
-                            column.isCollection(), value);
-                    
-                    property = mergeProperties(propertyName, type, previousProperty, property);
-                    entity.getProperties().remove(previousProperty);
-                    entity.addProperty(property);
-                }                
+                if (!column.isCollection()) {
+                	continue;
+                } 
+                String propertyName = Symbol.getShortName(column.getExpression());
+                if (entityType.getKeyPredicateNames().contains(propertyName)) {
+                    // no reason to update the identity keys
+                    continue;
+                }
+
+                Object value = rs.getObject(column.getOrdinal());
+            	
+                Property previousProperty = entity.getProperty(propertyName);
+                Property property = buildPropery(propertyName, type, column.getPrecision(), column.getScale(),
+                        column.isCollection(), value);
+                
+                property = mergeProperties(propertyName, type, previousProperty, property);
+                entity.getProperties().remove(previousProperty);
+                entity.addProperty(property);
             } catch (IOException e) {
                 throw new SQLException(e);
             } catch (TeiidProcessingException e) {
