@@ -1639,5 +1639,34 @@ public class TestSubqueryPushdown {
         	assert(e.getMessage().contains("something's wrong"));
         }
     }
+    
+	@Test public void testAggNestedSubquery() throws Exception {
+		String sql = "SELECT g0.a, g0.b, (SELECT max((SELECT g2.a FROM m.z AS g2 WHERE g2.b = g1.a)) FROM m.y AS g1 WHERE g0.a = g1.b) FROM m.x AS g0"; //$NON-NLS-1$
+		
+		TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table x ("
+                + " a string, "
+                + " b string, "
+                + " primary key (a)"
+                + ") options (updatable true);"
+                + "create foreign table y ("
+                + " a string, "
+                + " b string, "
+                + " primary key (a)"
+                + ") options (updatable true);"
+                + "create foreign table z ("
+                + " a string, "
+                + " b string, "
+                + " primary key (a)"
+                + ") options (updatable true);", "x", "m");
+		
+		ProcessorPlan pp = TestProcessor.helpGetPlan(sql, metadata, TestOptimizer.getGenericFinder());
+	    HardcodedDataManager dataManager = new HardcodedDataManager();
+	    dataManager.addData("SELECT g_0.a, g_0.b FROM m.x AS g_0", Arrays.asList("a", "b"), Arrays.asList("a1", "b1"));
+	    dataManager.addData("SELECT g_0.a FROM m.y AS g_0 WHERE g_0.b = 'a'", Arrays.asList("a"));
+	    dataManager.addData("SELECT g_0.a FROM m.y AS g_0 WHERE g_0.b = 'a1'", Arrays.asList("b"));
+	    dataManager.addData("SELECT g_0.a FROM m.z AS g_0 WHERE g_0.b = 'b'", Arrays.asList("b2"));
+	    dataManager.addData("SELECT g_0.a FROM m.z AS g_0 WHERE g_0.b = 'a'", Arrays.asList("a2"));
+		TestProcessor.helpProcess(pp, dataManager, new List[] {Arrays.asList("a", "b", "a2"), Arrays.asList("a1", "b1", "b2")});
+	}
 
 }
