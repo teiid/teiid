@@ -633,8 +633,12 @@ public class RelationalPlanner {
         	return;
         }
 		Set<GroupSymbol> localGroupSymbols = groupSymbols;
-		if (node != null && node.getType() == NodeConstants.Types.JOIN) {
-			localGroupSymbols = getGroupSymbols(node);
+		if (node != null) {
+			if (node.getType() == NodeConstants.Types.JOIN) {
+				localGroupSymbols = getGroupSymbols(node);
+			} else if (node.getType() == NodeConstants.Types.GROUP) {
+				localGroupSymbols = getGroupSymbols(node.getFirstChild());
+			}
 		}
 		for (SubqueryContainer container : subqueryContainers) {
 			if (container.getCommand().getProcessorPlan() != null) {
