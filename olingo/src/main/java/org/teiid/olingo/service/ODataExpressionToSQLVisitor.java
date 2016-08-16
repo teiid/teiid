@@ -592,35 +592,50 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
     @Override
     public void visit(UriResourceIt info) {
         if (info.getType() instanceof SingletonPrimitiveType) {
-            String group = this.nameGenerator.getNextGroup();
-            GroupSymbol groupSymbol = new GroupSymbol(group);
-            ElementSymbol es = new ElementSymbol("col", groupSymbol);
-            String type = ODataTypeManager.teiidType((SingletonPrimitiveType)info.getType(), false);
-            Function castFunction = new Function(CAST,new org.teiid.query.sql.symbol.Expression[] {es, new Constant(type)});            
-            this.stack.push(castFunction);
+        	org.teiid.query.sql.symbol.Expression ex = null;
+        	if (this.ctxQuery.getIterator() == null) {
+                String group = this.nameGenerator.getNextGroup();
+                GroupSymbol groupSymbol = new GroupSymbol(group);
+
+                StoredProcedure procedure = new StoredProcedure();
+                procedure.setProcedureName("arrayiterate");
+                
+                ElementSymbol projectedEs = (ElementSymbol)this.ctxQuery.getProjectedColumns().get(0).getExpression();
+                List<SPParameter> params = new ArrayList<SPParameter>();
+                SPParameter param = new SPParameter(1, SPParameter.IN, "val");
+                param.setExpression(projectedEs);
+                params.add(param);
+                
+                procedure.setParameter(param);
+                
+                SubqueryFromClause fromClause = new SubqueryFromClause(group, procedure);
+                fromClause.setLateral(true);
             
-            StoredProcedure procedure = new StoredProcedure();
-            procedure.setProcedureName("arrayiterate");
-            
-            ElementSymbol projectedEs = (ElementSymbol)this.ctxQuery.getProjectedColumns().get(0).getExpression();
-            List<SPParameter> params = new ArrayList<SPParameter>();
-            SPParameter param = new SPParameter(1, SPParameter.IN, "val");
-            param.setExpression(projectedEs);
-            params.add(param);
-            
-            procedure.setParameter(param);
-            
-            SubqueryFromClause fromClause = new SubqueryFromClause(group, procedure);
-            fromClause.setLateral(true);
-            
-            DocumentNode itResource = new DocumentNode();
-            AliasSymbol expression = new AliasSymbol(projectedEs.getShortName(), castFunction);
-            itResource.setFromClause(fromClause);
-            itResource.setGroupSymbol(groupSymbol);            
-            itResource.addProjectedColumn(expression, true, info.getType(), null, true);
-            
-            this.ctxQuery.getProjectedColumns().remove(0);
-            this.ctxQuery.addSibiling(itResource);
+                ElementSymbol es = new ElementSymbol("col", groupSymbol);
+                String type = ODataTypeManager.teiidType((SingletonPrimitiveType)info.getType(), false);
+                Function castFunction = new Function(CAST,new org.teiid.query.sql.symbol.Expression[] {es, new Constant(type)});            
+
+                DocumentNode itResource = new DocumentNode();
+                org.teiid.query.sql.symbol.Expression clone = (org.teiid.query.sql.symbol.Expression) castFunction.clone();
+                AggregateSymbol symbol = new AggregateSymbol(AggregateSymbol.Type.ARRAY_AGG.name(), false, clone);
+				AliasSymbol expression = new AliasSymbol(projectedEs.getShortName(), symbol);
+                
+                itResource.setFromClause(fromClause);
+                itResource.setGroupSymbol(groupSymbol);            
+                itResource.addProjectedColumn(expression, true, info.getType(), null, true);
+
+                this.ctxQuery.getProjectedColumns().remove(0);
+                this.ctxQuery.setIterator(itResource);
+                
+                ex = castFunction;
+        	} else {
+        		GroupSymbol groupSymbol = this.ctxQuery.getIterator().getGroupSymbol();
+                ElementSymbol es = new ElementSymbol("col", groupSymbol);
+                String type = ODataTypeManager.teiidType((SingletonPrimitiveType)info.getType(), false);
+                ex = new Function(CAST,new org.teiid.query.sql.symbol.Expression[] {es, new Constant(type)});            
+        	}
+        	
+            this.stack.push(ex);
         }
         else {
             throw new TeiidRuntimeException(new TeiidNotImplementedException(

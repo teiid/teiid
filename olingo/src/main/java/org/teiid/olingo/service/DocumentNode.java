@@ -65,6 +65,7 @@ public class DocumentNode {
     private List<DocumentNode> sibilings = new ArrayList<DocumentNode>();
     private List<ExpandDocumentNode> expands = new ArrayList<ExpandDocumentNode>();
     private boolean distinct;
+	private DocumentNode iterator;
         
     public static DocumentNode build(EdmEntityType type,
             List<UriParameter> keyPredicates, MetadataStore metadata, OData odata,
@@ -324,6 +325,9 @@ public class DocumentNode {
         for (DocumentNode er:this.sibilings) {
             columns.addAll(er.getAllProjectedColumns());
         }
+        if (this.iterator != null) {
+        	columns.addAll(this.iterator.getAllProjectedColumns());
+        }
         return columns;
     }    
     
@@ -371,6 +375,15 @@ public class DocumentNode {
         from.addClause(this.fromClause);
         for (DocumentNode sibiling:this.sibilings) {
             from.addClause(sibiling.getFromClause());
+        }
+        if (this.iterator != null) {
+        	addProjectedColumns(select, ordinal, this.iterator.getProjectedColumns());
+        	from.addClause(this.iterator.getFromClause());
+        	GroupBy groupBy = new GroupBy();
+        	for (String keyCol : this.getKeyColumnNames()) {
+        		groupBy.addSymbol(new ElementSymbol(keyCol, this.groupSymbol));
+        	}
+        	query.setGroupBy(groupBy);
         }
         
         query.setSelect(select);
@@ -525,4 +538,12 @@ public class DocumentNode {
     public String toString() {
         return table.getFullName();
     }
+
+	public void setIterator(DocumentNode itResource) {
+		this.iterator = itResource;
+	}
+
+	public DocumentNode getIterator() {
+		return this.iterator;
+	}
 }

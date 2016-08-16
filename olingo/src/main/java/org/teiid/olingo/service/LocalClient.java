@@ -174,7 +174,7 @@ public class LocalClient implements Client {
         if (results) {
             final ResultSet rs = stmt.getResultSet();
             while (rs.next()) {
-                response.addRow(rs, false);
+                response.addRow(rs);
             }
         }
 
@@ -253,9 +253,9 @@ public class LocalClient implements Client {
         //skip based upon the skip value
         if (nextToken == null && skipOption != null && !skipAndTopApplied) {            
             if (skipOption > 0) {                
-                int[] s = skipEntities(response, rs, skipOption);
-                count += s[0];
-                entityCount = s[1];
+                int s = skipEntities(rs, skipOption);
+                count += s;
+                entityCount = s;
                 skipSize = count;
             }                        
         }
@@ -289,25 +289,20 @@ public class LocalClient implements Client {
                 break;
             }
             count++;
-            boolean same = response.isSameEntity(rs);
-            if (!same) {
-                i++;
-                entityCount++;
-                if (i > size) {
-                    break;
-                }
+            i++;
+            entityCount++;
+            if (i > size) {
+                break;
             }
             nextCount++;
-            response.addRow(rs, same);
+            response.addRow(rs);
         }
         
         //set the count
         if (getCount) {
             while (rs.next()) {
                 count++;
-                if (!response.isSameEntity(rs)) {
-                    entityCount++;
-                }
+                entityCount++;
             }
         }
         if (savedEntityCount != null) {
@@ -359,21 +354,16 @@ public class LocalClient implements Client {
         return skipped;
     }
     
-    private int[] skipEntities(QueryResponse response, final ResultSet rs, int skipEntities)
+    private int skipEntities(final ResultSet rs, int skipEntities)
             throws SQLException {
         int skipped = 0;
-        int skippedEntities = 0;
         while (rs.next()) {
             skipped++;
-            boolean same = response.isSameEntity(rs);
-            if (!same) {                
-                skippedEntities++;
-                if (skippedEntities == skipEntities) {
-                    break;
-                }
+            if (skipped == skipEntities) {
+                break;
             }
         }
-        return new int[] {skipped, skippedEntities};
+        return skipped;
     }    
 
     @Override

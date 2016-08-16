@@ -82,7 +82,6 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
     }
 	
     private String nextToken;
-    private Entity currentEntity;
     private DocumentNode documentNode;
     private String baseURL;
     private Map<String, Object> streams;
@@ -96,27 +95,11 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
     }
     
     @Override
-    public void addRow(ResultSet rs, boolean sameEntity) throws SQLException {
-        Entity entity = null;
-        boolean add = true;
+    public void addRow(ResultSet rs) throws SQLException {
+        Entity entity = createEntity(rs, this.documentNode, this.baseURL, this);
         
-        if (this.currentEntity == null) {
-            entity = createEntity(rs, this.documentNode, this.baseURL, this);
-            this.currentEntity = entity;
-        } else {
-        	entity = this.currentEntity;
-            if(sameEntity) {
-                add = false;
-            }
-        }
-        
-        if (add) {
-        	processExpands(asRow(rs), entity, this.documentNode);
-            getEntities().add(entity);
-        } else {
-            // this is property update incase of collection return 
-            updateEntity(rs, entity, this.documentNode);            
-        }
+    	processExpands(asRow(rs), entity, this.documentNode);
+        getEntities().add(entity);
     }
 
 	private void processExpands(Row vals, Entity entity, DocumentNode node)
@@ -154,38 +137,6 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
             }
         }
 	}
-    
-    @Override
-    public boolean isSameEntity(ResultSet rs) throws SQLException {
-    	if (currentEntity == null || !isSameRow(rs, this.documentNode, this.currentEntity)) {
-    		this.currentEntity = createEntity(rs, this.documentNode, this.baseURL, this);
-    		return false;
-    	}
-    	return true;
-    }
-    
-    private boolean isSameRow(ResultSet rs,  DocumentNode node, Entity other) throws SQLException {
-        List<ProjectedColumn> projected = node.getAllProjectedColumns();
-        EdmEntityType entityType = node.getEdmEntityType();
-        
-        for (String name:entityType.getKeyPredicateNames()) {
-            ProjectedColumn pc = getProjectedColumn(name, projected);
-            if (!(rs.getObject(pc.getOrdinal()).equals(other.getProperty(name).getValue()))) {
-                return false;
-            }
-        }
-        return true;
-    }
-    
-    private ProjectedColumn getProjectedColumn(String name, List<ProjectedColumn> projected){
-        for (ProjectedColumn pc:projected) {
-            String propertyName = Symbol.getShortName(pc.getExpression());
-            if (name.equals(propertyName)) {
-                return pc;
-            }
-        }
-        return null;
-    }
     
     static Entity createEntity(final Object[] vals, DocumentNode node, String baseURL, EntityCollectionResponse response)
             throws SQLException {
@@ -323,50 +274,6 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
     		return null;
     	}
     	return streams.get(propertyName);
-    }
-
-	private static void updateEntity(ResultSet rs, Entity entity, DocumentNode node)
-            throws SQLException {
-        
-        List<ProjectedColumn> projected = node.getAllProjectedColumns();
-        EdmEntityType entityType = node.getEdmEntityType();
-        
-        for (ProjectedColumn column: projected) {
-
-            try {
-                SingletonPrimitiveType type = (SingletonPrimitiveType) column.getEdmType();
-                if (!column.isCollection()) {
-                	continue;
-                } 
-                String propertyName = Symbol.getShortName(column.getExpression());
-                if (entityType.getKeyPredicateNames().contains(propertyName)) {
-                    // no reason to update the identity keys
-                    continue;
-                }
-
-                Object value = rs.getObject(column.getOrdinal());
-            	
-                Property previousProperty = entity.getProperty(propertyName);
-                Property property = buildPropery(propertyName, type, column.getPrecision(), column.getScale(),
-                        column.isCollection(), value);
-                
-                property = mergeProperties(propertyName, type, previousProperty, property);
-                entity.getProperties().remove(previousProperty);
-                entity.addProperty(property);
-            } catch (IOException e) {
-                throw new SQLException(e);
-            } catch (TeiidProcessingException e) {
-                throw new SQLException(e);
-            }
-        }
-    }    
-
-    private static Property mergeProperties(String propName,
-            SingletonPrimitiveType type, Property one, Property two) {
-        ArrayList<Object> values = new ArrayList<Object>();
-        values.addAll(one.asCollection());
-        values.addAll(two.asCollection());
-        return createCollection(propName, type, values);
     }
 
     private static void buildStreamLink(LinkedHashMap<String, Link> streamProperties,

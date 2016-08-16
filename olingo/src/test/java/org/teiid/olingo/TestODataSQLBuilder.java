@@ -317,12 +317,7 @@ public class TestODataSQLBuilder {
     @Test
     public void test_$it_OverPrimitiveProperty() throws Exception {
         helpTest("/odata4/vdb/PM1/G3(e1='e1',e2=2)/e3?$filter=endswith($it,'.com')",
-                "SELECT g0.e1, g0.e2, CAST(g1.col AS string) AS e3 "
-                + "FROM PM1.G3 AS g0, "
-                + "TABLE(EXEC arrayiterate(g0.e3)) AS g1 "
-                + "WHERE (g0.e1 = 'e1') AND (g0.e2 = 2) "
-                + "AND (ENDSWITH('.com', CAST(g1.col AS string)) = TRUE) "
-                + "ORDER BY g0.e1, g0.e2");
+                "SELECT g0.e1, g0.e2, ARRAY_AGG(CAST(g1.col AS string) ORDER BY g0.e1, g0.e2) AS e3 FROM PM1.G3 AS g0, LATERAL(EXEC arrayiterate(g0.e3)) AS g1 WHERE (g0.e1 = 'e1') AND (g0.e2 = 2) AND (ENDSWITH('.com', CAST(g1.col AS string)) = TRUE) GROUP BY g0.e1, g0.e2");
     }
         
     @Test

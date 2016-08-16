@@ -25,13 +25,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public interface QueryResponse extends BaseResponse {
-    void addRow(ResultSet rs, boolean sameEntity) throws SQLException;
+    void addRow(ResultSet rs) throws SQLException;
     long size();
     void setCount(long count);
     void setNextToken(String token);
     String getNextToken();
-    /**
-     * Will also create/set the current entity if not same
-     */
-    boolean isSameEntity(ResultSet rs) throws SQLException;
 }

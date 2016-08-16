@@ -181,7 +181,12 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             Select select = new Select(Arrays.asList(aggregateSymbol));
             query.setSelect(select);
         } else if (this.orderBy != null) {
-            query.setOrderBy(this.orderBy);
+        	if (this.context.getIterator() != null) {
+        		//currently this doesn't matter as the ordering can only be based upon the parent entity
+        		((AggregateSymbol)((AliasSymbol)query.getSelect().getSymbol(query.getSelect().getProjectedSymbols().size() - 1)).getSymbol()).setOrderBy(this.orderBy);
+        	} else {
+        		query.setOrderBy(this.orderBy);
+        	}
         }
         
         if (this.expandOption != null) {

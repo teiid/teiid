@@ -877,7 +877,12 @@ public class TestODataIntegration {
     
     @Test 
     public void test$ItFilter() throws Exception {
-        HardCodedExecutionFactory hc = buildHardCodedExecutionFactory();
+        HardCodedExecutionFactory hc = new HardCodedExecutionFactory() {
+        	@Override
+        	public boolean supportsCompareCriteriaEquals() {
+        		return true;
+        	}
+        };
         hc.addData("SELECT x.c, x.a FROM x WHERE x.a = 'x'", Arrays.asList(Arrays.asList(new String[] {"google.net", "google.com"}, 'x')));
         hc.addData("SELECT x.c, x.a FROM x WHERE x.a = 'y'", Arrays.asList(Arrays.asList(new String[] {"example.net", "example.com"}, 'y')));
         
@@ -902,6 +907,11 @@ public class TestODataIntegration {
             
             response = http.GET(baseURL + "/northwind/vw/x('y')/c?$filter=startswith($it,'example')&$orderby=$it");
             assertEquals(501, response.getStatus());
+            
+            response = http.GET(baseURL + "/northwind/vw/x('x')/c?$filter=endswith($it,'com')%20or%20endswith($it,'net')");
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#x('x')/c\",\"value\":[\"google.net\",\"google.com\"]}", response.getContentAsString());
+            
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");
