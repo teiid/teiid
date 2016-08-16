@@ -192,8 +192,7 @@ public class LocalClient implements Client {
     @Override
     public void executeSQL(Query query, List<SQLParameter> parameters,
             boolean calculateTotalSize, Integer skipOption, Integer topOption,
-            String nextOption, int pageSize, final QueryResponse response, 
-            final boolean expand)  throws SQLException {
+            String nextOption, int pageSize, final QueryResponse response)  throws SQLException {
         boolean cache = pageSize > 0; 
         if (cache) {
             CacheHint hint = new CacheHint();
@@ -205,7 +204,7 @@ public class LocalClient implements Client {
         boolean getCount = false; 
         getCount = calculateTotalSize;
         boolean skipAndTopApplied = false;
-        if (!getCount && !expand && (topOption != null || skipOption != null)) {
+        if (!getCount && (topOption != null || skipOption != null)) {
             query.setLimit(new Limit(skipOption!=null?new Constant(skipOption):null, 
                     topOption!=null?new Constant(topOption):null));
             skipAndTopApplied=true;

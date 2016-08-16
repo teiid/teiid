@@ -63,7 +63,8 @@ public class DocumentNode {
     private Criteria criteria;
     private List<ProjectedColumn> projectedColumns = new ArrayList<ProjectedColumn>();
     private List<DocumentNode> sibilings = new ArrayList<DocumentNode>();
-    private List<DocumentNode> expands = new ArrayList<DocumentNode>();
+    private List<ExpandDocumentNode> expands = new ArrayList<ExpandDocumentNode>();
+    private boolean distinct;
         
     public static DocumentNode build(EdmEntityType type,
             List<UriParameter> keyPredicates, MetadataStore metadata, OData odata,
@@ -323,10 +324,6 @@ public class DocumentNode {
         for (DocumentNode er:this.sibilings) {
             columns.addAll(er.getAllProjectedColumns());
         }
-        for(DocumentNode er:this.expands) {
-            columns.addAll(er.getAllProjectedColumns());
-        }
-        
         return columns;
     }    
     
@@ -350,11 +347,11 @@ public class DocumentNode {
         return this.sibilings;
     }
 
-    public void addExpand(DocumentNode resource) {
+    public void addExpand(ExpandDocumentNode resource) {
         this.expands.add(resource);
     }
     
-    public List<DocumentNode> getExpands(){
+    public List<ExpandDocumentNode> getExpands(){
         return this.expands;
     }
     
@@ -366,9 +363,7 @@ public class DocumentNode {
         for (DocumentNode sibiling:this.sibilings) {
             addProjectedColumns(select, ordinal, sibiling.getProjectedColumns());
         }
-        for (DocumentNode expand:this.expands) {
-            addProjectedColumns(select, ordinal, expand.getProjectedColumns());
-        }        
+        select.setDistinct(this.distinct);
 
         Query query = new Query();
         From from = new From();

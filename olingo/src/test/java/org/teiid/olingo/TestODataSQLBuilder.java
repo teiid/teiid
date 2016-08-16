@@ -251,7 +251,7 @@ public class TestODataSQLBuilder {
                     Mockito.eq(parameters), Mockito.eq(count),
                     (Integer) Mockito.eq(skip), (Integer) Mockito.eq(top),
                     (String) Mockito.eq(null), Mockito.anyInt(),
-                    arg6.capture(), Mockito.anyBoolean());
+                    arg6.capture());
             Assert.assertEquals(actualCommand.toString(), arg1.getValue().toString());
         }
         
@@ -334,7 +334,7 @@ public class TestODataSQLBuilder {
                 Mockito.eq(state.parameters), Mockito.eq(true), (Integer)Mockito.eq(null),
                 (Integer)Mockito.eq(null), 
                 (String) Mockito.eq(null), Mockito.anyInt(),
-                state.arg6.capture(), Mockito.anyBoolean());
+                state.arg6.capture());
         Assert.assertEquals(expected, state.arg1.getValue().toString());
     }
 
@@ -878,85 +878,49 @@ public class TestODataSQLBuilder {
     @Test
     public void testExpandSimple() throws Exception {
         helpTest("/odata4/vdb/PM1/G1?$expand=G4_FKX",
-                "SELECT g0.e1, g0.e2, g0.e3, g1.e1, g1.e2 "
-                + "FROM PM1.G1 AS g0 "
-                + "LEFT OUTER JOIN PM1.G4 AS g1 "
-                + "ON g0.e2 = g1.e2 "
-                + "ORDER BY g0.e2");        
+                "SELECT g0.e1, g0.e2, g0.e3, (SELECT ARRAY_AGG((g1.e1, g1.e2) ORDER BY g1.e1) FROM PM1.G4 AS g1 WHERE g0.e2 = g1.e2) FROM PM1.G1 AS g0 ORDER BY g0.e2");        
     }
     
     @Test
     public void testExpandSimple_OneToOne() throws Exception {
         helpTest("/odata4/vdb/PM1/G2?$expand=FK0",
-                "SELECT g0.e1, g0.e2, g1.e1, g1.e2, g1.e3 "
-                + "FROM PM1.G2 AS g0 "
-                + "LEFT OUTER JOIN PM1.G1 AS g1 "
-                + "ON g1.e2 = g0.e2 "
-                + "ORDER BY g0.e2");   
+                "SELECT g0.e1, g0.e2, (SELECT ARRAY_AGG((g1.e1, g1.e2, g1.e3) ORDER BY g1.e2) FROM PM1.G1 AS g1 WHERE g1.e2 = g0.e2) FROM PM1.G2 AS g0 ORDER BY g0.e2");   
     }    
     
     @Test
     public void testExpandSimpleWithSelect() throws Exception {
         helpTest("/odata4/vdb/PM1/G1?$expand=G4_FKX&$select=e3",
-                "SELECT g0.e2, g0.e3, g1.e1, g1.e2 "
-                + "FROM PM1.G1 AS g0 "
-                + "LEFT OUTER JOIN PM1.G4 AS g1 "
-                + "ON g0.e2 = g1.e2 "
-                + "ORDER BY g0.e2");        
+                "SELECT g0.e2, g0.e3, (SELECT ARRAY_AGG((g1.e1, g1.e2) ORDER BY g1.e1) FROM PM1.G4 AS g1 WHERE g0.e2 = g1.e2) FROM PM1.G1 AS g0 ORDER BY g0.e2");        
     }
     
     @Test
     public void testExpandWithNestedSelect() throws Exception {
         helpTest("/odata4/vdb/PM1/G1?$expand=G4_FKX($select=e2)&$select=e3",
-                "SELECT g0.e2, g0.e3, g1.e2, g1.e1 "
-                + "FROM PM1.G1 AS g0 "
-                + "LEFT OUTER JOIN PM1.G4 AS g1 "
-                + "ON g0.e2 = g1.e2 "
-                + "ORDER BY g0.e2");        
+                "SELECT g0.e2, g0.e3, (SELECT ARRAY_AGG((g1.e1, g1.e2) ORDER BY g1.e1) FROM PM1.G4 AS g1 WHERE g0.e2 = g1.e2) FROM PM1.G1 AS g0 ORDER BY g0.e2");        
     }
     
     @Test
     public void testExpandFilter() throws Exception {
         helpTest("/odata4/vdb/PM1/G1?$expand=G4_FKX($filter=e2 eq 100)&$select=e3",
-                "SELECT g0.e2, g0.e3, g1.e1, g1.e2 "
-                + "FROM PM1.G1 AS g0 "
-                + "LEFT OUTER JOIN PM1.G4 AS g1 "
-                + "ON g0.e2 = g1.e2 "
-                + "AND g1.e2 = 100 "
-                + "ORDER BY g0.e2");        
+                "SELECT g0.e2, g0.e3, (SELECT ARRAY_AGG((g1.e1, g1.e2) ORDER BY g1.e1) FROM PM1.G4 AS g1 WHERE (g0.e2 = g1.e2) AND (g1.e2 = 100)) FROM PM1.G1 AS g0 ORDER BY g0.e2");        
     }
     
     @Test
     public void testExpandFilter2() throws Exception {
         helpTest("/odata4/vdb/PM1/G1?$expand=G4_FKX($filter=e2 eq 1)&$select=e3",
-                "SELECT g0.e2, g0.e3, g1.e1, g1.e2 "
-                + "FROM PM1.G1 AS g0 "
-                + "LEFT OUTER JOIN PM1.G4 AS g1 "
-                + "ON g0.e2 = g1.e2 "
-                + "AND g1.e2 = 1 "
-                + "ORDER BY g0.e2");        
+                "SELECT g0.e2, g0.e3, (SELECT ARRAY_AGG((g1.e1, g1.e2) ORDER BY g1.e1) FROM PM1.G4 AS g1 WHERE (g0.e2 = g1.e2) AND (g1.e2 = 1)) FROM PM1.G1 AS g0 ORDER BY g0.e2");        
     }    
     
     @Test
     public void testExpandCompoundFilter() throws Exception {
         helpTest("/odata4/vdb/PM1/G1?$expand=G4_FKX($filter=e2 eq 100)&$select=e3&$filter=e2 ne 100",
-                "SELECT g0.e2, g0.e3, g1.e1, g1.e2 "
-                + "FROM PM1.G1 AS g0 "
-                + "LEFT OUTER JOIN PM1.G4 AS g1 "
-                + "ON g0.e2 = g1.e2 "
-                + "AND g1.e2 = 100 "
-                + "WHERE g0.e2 != 100 "
-                + "ORDER BY g0.e2");        
+                "SELECT g0.e2, g0.e3, (SELECT ARRAY_AGG((g1.e1, g1.e2) ORDER BY g1.e1) FROM PM1.G4 AS g1 WHERE (g0.e2 = g1.e2) AND (g1.e2 = 100)) FROM PM1.G1 AS g0 WHERE g0.e2 <> 100 ORDER BY g0.e2");        
     }
     
     @Test
     public void testExpandOrderby() throws Exception {
         helpTest("/odata4/vdb/PM1/G1?$expand=G4_FKX($orderby=e1 desc)",
-                "SELECT g0.e1, g0.e2, g0.e3, g1.e1, g1.e2 "
-                + "FROM PM1.G1 AS g0 "
-                + "LEFT OUTER JOIN PM1.G4 AS g1 "
-                + "ON g0.e2 = g1.e2 "
-                + "ORDER BY g0.e2, g1.e1 DESC");        
+                "SELECT g0.e1, g0.e2, g0.e3, (SELECT ARRAY_AGG((g1.e1, g1.e2) ORDER BY g1.e1 DESC) FROM PM1.G4 AS g1 WHERE g0.e2 = g1.e2) FROM PM1.G1 AS g0 ORDER BY g0.e2");        
     }
     
     @Test
