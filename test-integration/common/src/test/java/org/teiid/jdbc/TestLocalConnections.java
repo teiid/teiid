@@ -24,7 +24,9 @@ package org.teiid.jdbc;
 
 import static org.junit.Assert.*;
 
+import java.io.ByteArrayInputStream;
 import java.lang.Thread.UncaughtExceptionHandler;
+import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -36,6 +38,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -443,6 +446,42 @@ public class TestLocalConnections {
 			fail();
 		} catch (TeiidSQLException e) {
 			
+		}
+	}
+	
+	@Test public void testWaitForLoadTimeout() throws Exception {
+		final ResultsFuture<Void> future = new ResultsFuture<Void>();
+		final Thread main = Thread.currentThread();
+		Thread t = new Thread() {
+			@Override
+			public void run() {
+				try {
+					server.createConnection("jdbc:teiid:not_there.1;waitForLoad=1000");
+					future.getResultsReceiver().receiveResults(null);
+				} catch (Exception e) {
+					future.getResultsReceiver().exceptionOccurred(e);
+				} finally {
+					main.interrupt();
+				}
+			}
+		};
+		t.setDaemon(true);
+		t.start();
+		assertFalse(future.isDone());
+		try {
+			server.deployVDB(new ByteArrayInputStream(
+					"<vdb name=\"not_there\" version=\"1\"><model name=\"myschema\"><source name=\"x\" translator-name=\"x\" connection-jndi-name=\"x\"/></model></vdb>".getBytes(Charset.forName("UTF-8"))));
+			fail();
+		} catch (TranslatorException e) {
+			//no connection factory
+		}
+		try {
+			future.get(5000, TimeUnit.SECONDS);
+			fail();
+		} catch (ExecutionException e) {
+			assertTrue(e.getMessage().contains("TEIID40097"));
+		} finally {
+			server.undeployVDB("not_there");
 		}
 	}
 
