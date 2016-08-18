@@ -28,6 +28,7 @@ import java.net.URISyntaxException;
 import java.sql.SQLXML;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -196,6 +197,8 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
     }
     
     private void processExpandOption(ExpandOption option, DocumentNode node, Query outerQuery) throws TeiidException {
+    	boolean isStar = false;
+    	HashSet<String> seen = new HashSet<String>();
     	for (ExpandItem ei : option.getExpandItems()) {
             if (ei.getSearchOption() != null
                     || ei.getLevelsOption() != null) {
@@ -205,9 +208,23 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
 
         	ExpandSQLBuilder esb = new ExpandSQLBuilder(ei);
             EdmNavigationProperty property = esb.getNavigationProperty();
+            if (property == null) {
+            	if (ei.isStar()) {
+            		isStar = true;
+            		continue;
+            	}
+            	throw new TeiidNotImplementedException(
+                        ODataPlugin.Event.TEIID16057, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16057));
+            }
+            if (!seen.add(property.getName())) {
+            	throw new TeiidProcessingException(
+                        ODataPlugin.Event.TEIID16058, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16058, property.getName()));
+            }
             ExpandDocumentNode expandResource = ExpandDocumentNode.buildExpand(
                     property, this.metadata, this.odata, this.nameGenerator, true,
                     getUriInfo(), this.parseService);
+
+            node.addExpand(expandResource);
             
             // process $filter
             if (ei.getFilterOption() != null) {
@@ -225,8 +242,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             
             // process $select
             processSelectOption(ei.getSelectOption(), expandResource, this.reference);
-            node.addExpand(expandResource);
-
+            
             //TODO: if not the count option, then we can process the skip/top inline
             //but it's messier - select array_agg(cols) from (select ... where ... order by .. limit) x
             
@@ -246,6 +262,22 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
 
             buildAggregateQuery(node, outerQuery, expandResource,
 					expandOrder, query);
+    	}
+    	
+    	if (isStar) {
+    		List<ExpandNode> starExpand = new ArrayList<TeiidServiceHandler.ExpandNode>();
+    		for (String name : node.getEdmEntityType().getNavigationPropertyNames()) {
+    			if (seen.contains(name)) {
+    				continue; //explicit expand supersedes
+    			}
+    			EdmNavigationProperty property = node.getEdmEntityType().getNavigationProperty(name);
+    			ExpandNode en = new ExpandNode();
+    			en.navigationProperty = property;
+    			starExpand.add(en);
+    		}
+    		if (!starExpand.isEmpty()) {
+    			processExpand(starExpand, node, outerQuery);
+    		}
     	}
     }
 
@@ -340,15 +372,13 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                         getUriInfo(), this.metadata, this.odata, this.nameGenerator, this.params,
                         this.parseService);
                 ElementSymbol expr = (ElementSymbol)visitor.getExpression(si.getResourcePath());
-                resource.addVisibleColumn(expr.getShortName(), expr);
+                resource.addProjectedColumn(expr.getShortName(), expr);
                 keys.remove(expr.getShortName());
             }
             if (!keys.isEmpty() && addkeys) {
                 for (String key:keys) {
                     ElementSymbol es = new ElementSymbol(key, resource.getGroupSymbol());
-                    if (!resource.hasProjectedColumn(es)) {
-                        resource.addProjectedColumn(key, es, false);
-                    }
+                    resource.addProjectedColumn(key, es);
                 }
             }
         }
@@ -378,12 +408,12 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             Expression expr = visitor.getExpression(obitem.getExpression());
             if (expr instanceof ElementSymbol) {
                 orderBy.addVariable(expr, !obitem.isDescending());
-                visitor.getExpresionEntityResource().addProjectedColumn(((ElementSymbol)expr).getShortName(), expr, false);
+                visitor.getExpresionEntityResource().addProjectedColumn(((ElementSymbol)expr).getShortName(), expr);
             }
             else {
                 AliasSymbol alias = new AliasSymbol("_orderByAlias", expr);
                 orderBy.addVariable(alias, !obitem.isDescending());
-                visitor.getExpresionEntityResource().addProjectedColumn(alias, false, EdmInt32.getInstance(), null, false);
+                visitor.getExpresionEntityResource().addProjectedColumn(alias, EdmInt32.getInstance(), null, false);
             }
         }
         return orderBy;
@@ -431,7 +461,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
     public void visit(UriResourcePrimitiveProperty info) {
         String propertyName = info.getProperty().getName();
         ElementSymbol es = new ElementSymbol(propertyName, this.context.getGroupSymbol());
-        this.context.addVisibleColumn(propertyName, es);
+        this.context.addProjectedColumn(propertyName, es);
         this.selectionComplete = true;
     }
     

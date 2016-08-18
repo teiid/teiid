@@ -288,7 +288,7 @@ public class TestODataSQLBuilder {
 
     @Test
     public void testEntitySet$Select() throws Exception {
-        helpTest("/odata4/vdb/PM1/G1?$select=e1", "SELECT g0.e2, g0.e1 FROM PM1.G1 AS g0 ORDER BY g0.e2");
+        helpTest("/odata4/vdb/PM1/G1?$select=e1", "SELECT g0.e1, g0.e2 FROM PM1.G1 AS g0 ORDER BY g0.e2");
     }
 
     @Test
@@ -308,7 +308,7 @@ public class TestODataSQLBuilder {
     @Test
     public void testEntitySet$OrderByNotIn$Select() throws Exception {
         helpTest("/odata4/vdb/PM1/G1?$orderby=e2&$select=e1",
-                "SELECT g0.e2, g0.e1 FROM PM1.G1 AS g0 ORDER BY g0.e2");
+                "SELECT g0.e1, g0.e2 FROM PM1.G1 AS g0 ORDER BY g0.e2");
     }
 
     @Test
@@ -365,7 +365,7 @@ public class TestODataSQLBuilder {
     
     @Test
     public void test$CountIn$FilterWithCount() throws Exception {
-        String expected = "SELECT g0.e2, g0.e1 FROM PM1.G1 AS g0 WHERE "
+        String expected = "SELECT g0.e1, g0.e2 FROM PM1.G1 AS g0 WHERE "
                 + "(SELECT COUNT(*) FROM PM1.G4 AS g1 WHERE g1.e2 = g0.e2) = 2 ORDER BY g0.e2";
         helpTest("/odata4/vdb/PM1/G1?$filter=G4_FKX/$count eq 2&$select=e1", expected);
     }
@@ -380,8 +380,8 @@ public class TestODataSQLBuilder {
     
     @Test
     public void test$CountIn$orderby() throws Exception {
-        String expected = "SELECT (SELECT COUNT(*) FROM PM1.G4 AS g1 WHERE g1.e2 = g0.e2) "
-                + "AS \"_orderByAlias\", g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 "
+        String expected = "SELECT g0.e1, g0.e2, g0.e3, (SELECT COUNT(*) FROM PM1.G4 AS g1 WHERE g1.e2 = g0.e2) "
+                + "AS \"_orderByAlias\" FROM PM1.G1 AS g0 "
                 + "ORDER BY \"_orderByAlias\"";
         helpTest("/odata4/vdb/PM1/G1?$orderby=G4_FKX/$count", expected);
     }    
@@ -389,9 +389,8 @@ public class TestODataSQLBuilder {
     @Test
     public void test$CountIn$OrderBy() throws Exception {
         helpTest("/odata4/vdb/PM1/G1?$orderby=G4_FKX/$count", 
-                "SELECT "
-                + "(SELECT COUNT(*) FROM PM1.G4 AS g1 WHERE g1.e2 = g0.e2) AS \"_orderByAlias\", "
-                + "g0.e1, g0.e2, g0.e3 "
+                "SELECT g0.e1, g0.e2, g0.e3, "
+                + "(SELECT COUNT(*) FROM PM1.G4 AS g1 WHERE g1.e2 = g0.e2) AS \"_orderByAlias\" "
                 + "FROM PM1.G1 AS g0 "
                 + "ORDER BY \"_orderByAlias\"");
     }
@@ -642,7 +641,7 @@ public class TestODataSQLBuilder {
     public void testNavigationQuery$Select() throws Exception {
         helpTest(
                 "/odata4/vdb/PM1/G2(1)/FK0?$select=e1",
-                "SELECT g1.e2, g1.e1 FROM PM1.G2 as g0 INNER JOIN PM1.G1 as g1 "
+                "SELECT g1.e1, g1.e2 FROM PM1.G2 as g0 INNER JOIN PM1.G1 as g1 "
                 + "ON g1.e2 = g0.e2 WHERE g0.e2 = 1 ORDER BY g1.e2");
     }
 
@@ -950,7 +949,7 @@ public class TestODataSQLBuilder {
     @Test
     public void testSimpleCrossJoinWith$Orderby() throws Exception {
         helpTest("/odata4/vdb/PM1/$crossjoin(G1,G2)?$orderby=G1/e1,G2/e2",
-                "SELECT g0.e2, g0.e1, g1.e2 "
+                "SELECT g0.e1, g0.e2, g1.e2 "
                 + "FROM PM1.G1 AS g0, "
                 + "PM1.G2 AS g1 "
                 + "ORDER BY g0.e1, g1.e2");        
