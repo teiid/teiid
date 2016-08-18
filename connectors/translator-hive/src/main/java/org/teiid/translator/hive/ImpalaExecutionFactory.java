@@ -42,11 +42,11 @@ import org.teiid.translator.jdbc.Version;
 
 @Translator(name="impala", description="A translator for Coludera's Impala based database on HDFS")
 public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
-    
+
     public static String IMPALA = "impala"; //$NON-NLS-1$
     public static final Version TWO_0 = Version.getVersion("2.0"); //$NON-NLS-1$
     public static final Version ONE_2_1 = Version.getVersion("1.2.1"); //$NON-NLS-1$
-    
+
     @Override
     public void start() throws TranslatorException {
         super.start();
@@ -60,13 +60,14 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
         convert.addTypeMapping("float", FunctionModifier.FLOAT); //$NON-NLS-1$
         convert.addTypeMapping("string", FunctionModifier.STRING); //$NON-NLS-1$
         convert.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
-        
+
         registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.CURDATE, new AliasModifier("unix_timestamp")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("isnull")); //$NON-NLS-1$
+
 
         addPushDownFunction(IMPALA, "lower", STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "upper", STRING, STRING); //$NON-NLS-1$
@@ -164,12 +165,15 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
         addPushDownFunction(IMPALA, "initcap", STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "instr", INTEGER, STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "find_in_set", INTEGER, STRING, STRING); //$NON-NLS-1$
+
+        addPushDownFunction(IMPALA, "find_in_set", INTEGER, STRING, STRING); //$NON-NLS-1$
+
     }
-    
+
     @Override
     public void initCapabilities(Connection connection)
-    		throws TranslatorException {
-    	super.initCapabilities(connection);
+            throws TranslatorException {
+        super.initCapabilities(connection);
         //supported data types post-Impala v2
         if (getVersion().compareTo(TWO_0) >= 0) {
             convert.addTypeMapping("decimal", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
@@ -177,7 +181,7 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
             convert.addTypeMapping("varchar", FunctionModifier.STRING); //$NON-NLS-1$
         }
     }
-    
+
     @Override
     public List<String> getSupportedFunctions() {
         List<String> supportedFunctions = new ArrayList<String>();
@@ -237,13 +241,22 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.UCASE);
         supportedFunctions.add(SourceSystemFunctions.YEAR);
         return supportedFunctions;
-    }   
-    
+    }
+
     @Override
     public boolean supportsCommonTableExpressions() {
         return true; // WITH clause
     }
-    
+
+    @Override
+    public boolean supportsElementaryOlapOperations() {
+        /*
+        Impala supports window functions
+        From Cloudera doc:  http://www.cloudera.com/documentation/archive/impala/2-x/2-1-x/topics/impala_analytic_functions.html#window_clause_unique_1
+         */
+        return getVersion().compareTo(TWO_0) >= 0;
+    }
+
     @Override
     public boolean supportsHaving() {
         /*
@@ -253,9 +266,9 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
          * always used in conjunction with a function such as COUNT(), SUM(), AVG(), 
          * MIN(), or MAX(), and typically with the GROUP BY clause also.
          */
-        return true; 
-    }    
-    
+        return true;
+    }
+
     @Override
     public boolean supportsRowLimit() {
         /*
@@ -264,138 +277,138 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
          */
         return true;
     }
-    
+
     @Override
     public boolean supportsRowOffset() {
-    	return getVersion().compareTo(ONE_2_1) >= 0;
+        return getVersion().compareTo(ONE_2_1) >= 0;
     }
-    
+
     @Override
     public org.teiid.translator.ExecutionFactory.NullOrder getDefaultNullOrder() {
-    	return NullOrder.HIGH;
+        return NullOrder.HIGH;
     }
-    
+
     @Override
     public boolean supportsOrderByNullOrdering() {
-    	return true;
+        return true;
     }
-    
+
     @Override
     public org.teiid.translator.ExecutionFactory.SupportedJoinCriteria getSupportedJoinCriteria() {
-    	return SupportedJoinCriteria.ANY;
+        return SupportedJoinCriteria.ANY;
     }
-    
+
     @Override
     public boolean requiresLeftLinearJoin() {
-    	return true;
+        return true;
     }
-    
+
     @Override
     public List<?> translateCommand(Command command, ExecutionContext context) {
-    	if (command instanceof Select) {
-    		Select select = (Select)command;
-    		
-    		if (select.getLimit() != null && select.getLimit().getRowOffset() != 0 && select.getOrderBy() == null) {
-    			select.setOrderBy(new OrderBy(Arrays.asList(new SortSpecification(Ordering.ASC, new Literal(1, DataTypeManager.DefaultDataClasses.INTEGER)))));
-    		}
-    		
-    		//compensate for an impala issue - https://issues.jboss.org/browse/TEIID-3743
-    		if (select.getGroupBy() == null && select.getHaving() == null) {
-    			boolean rewrite = false;
-    			String distinctVal = null;
-    			for (DerivedColumn col : select.getDerivedColumns()) {
-    				if (col.getExpression() instanceof AggregateFunction && ((AggregateFunction)col.getExpression()).isDistinct()) {
-    					if (distinctVal == null) {
-    						distinctVal = ((AggregateFunction)col.getExpression()).getParameters().toString();
-    					} else if (!((AggregateFunction)col.getExpression()).getParameters().toString().equals(distinctVal)){
-    						rewrite = true;
-    						break;
-    					}
-    				}
-    			}
-    			if (rewrite) {
-    				Select top = new Select();
-    				top.setWith(select.getWith());
-    				top.setDerivedColumns(new ArrayList<DerivedColumn>());
-    				top.setFrom(new ArrayList<TableReference>());
-    				//rewrite as a cross join of single groups
-    				Select viewSelect = new Select();
-    				viewSelect.setFrom(select.getFrom());
-    				viewSelect.setDerivedColumns(new ArrayList<DerivedColumn>());
-    				viewSelect.setWhere(select.getWhere());
-    				distinctVal = null;
-        			int viewCount = 0;
-        			NamedTable view = new NamedTable("v" + viewCount++, null, null); //$NON-NLS-1$
-        			for (int i = 0; i < select.getDerivedColumns().size(); i++) {
-        				DerivedColumn col = select.getDerivedColumns().get(i);
-        				if (col.getExpression() instanceof AggregateFunction && ((AggregateFunction)col.getExpression()).isDistinct()) {
-        					if (distinctVal == null) {
-        						distinctVal = ((AggregateFunction)col.getExpression()).getParameters().toString();
-        					} else if (!((AggregateFunction)col.getExpression()).getParameters().toString().equals(distinctVal)){
-        						DerivedTable dt = new DerivedTable(viewSelect, view.getName());
-        						if (top.getFrom().isEmpty()) {
-        							top.getFrom().add(dt);
-        						} else {
-        							Join join = new Join(top.getFrom().remove(0), dt, JoinType.CROSS_JOIN, null);
-        							top.getFrom().add(join);
-        						}
-        						view = new NamedTable("v" + viewCount++, null, null); //$NON-NLS-1$
-        						viewSelect = new Select();
-        						viewSelect.setFrom(select.getFrom());
-        						viewSelect.setDerivedColumns(new ArrayList<DerivedColumn>());
-        						viewSelect.setWhere(select.getWhere());
-        						distinctVal = ((AggregateFunction)col.getExpression()).getParameters().toString();
-        					}
-        				}
-        				col.setAlias("c" + i); //$NON-NLS-1$
-        				top.getDerivedColumns().add(new DerivedColumn(null, new ColumnReference(view, col.getAlias(), null, col.getExpression().getType())));
-        				viewSelect.getDerivedColumns().add(col);
-        			}
-        			DerivedTable dt = new DerivedTable(viewSelect, view.getName());
-        			Join join = new Join(top.getFrom().remove(0), dt, JoinType.CROSS_JOIN, null);
-					top.getFrom().add(join);
-					return Arrays.asList(top);
-    			}
-    		}
-    	}
-    	return super.translateCommand(command, context);
+        if (command instanceof Select) {
+            Select select = (Select)command;
+
+            if (select.getLimit() != null && select.getLimit().getRowOffset() != 0 && select.getOrderBy() == null) {
+                select.setOrderBy(new OrderBy(Arrays.asList(new SortSpecification(Ordering.ASC, new Literal(1, DataTypeManager.DefaultDataClasses.INTEGER)))));
+            }
+
+            //compensate for an impala issue - https://issues.jboss.org/browse/TEIID-3743
+            if (select.getGroupBy() == null && select.getHaving() == null) {
+                boolean rewrite = false;
+                String distinctVal = null;
+                for (DerivedColumn col : select.getDerivedColumns()) {
+                    if (col.getExpression() instanceof AggregateFunction && ((AggregateFunction)col.getExpression()).isDistinct()) {
+                        if (distinctVal == null) {
+                            distinctVal = ((AggregateFunction)col.getExpression()).getParameters().toString();
+                        } else if (!((AggregateFunction)col.getExpression()).getParameters().toString().equals(distinctVal)){
+                            rewrite = true;
+                            break;
+                        }
+                    }
+                }
+                if (rewrite) {
+                    Select top = new Select();
+                    top.setWith(select.getWith());
+                    top.setDerivedColumns(new ArrayList<DerivedColumn>());
+                    top.setFrom(new ArrayList<TableReference>());
+                    //rewrite as a cross join of single groups
+                    Select viewSelect = new Select();
+                    viewSelect.setFrom(select.getFrom());
+                    viewSelect.setDerivedColumns(new ArrayList<DerivedColumn>());
+                    viewSelect.setWhere(select.getWhere());
+                    distinctVal = null;
+                    int viewCount = 0;
+                    NamedTable view = new NamedTable("v" + viewCount++, null, null); //$NON-NLS-1$
+                    for (int i = 0; i < select.getDerivedColumns().size(); i++) {
+                        DerivedColumn col = select.getDerivedColumns().get(i);
+                        if (col.getExpression() instanceof AggregateFunction && ((AggregateFunction)col.getExpression()).isDistinct()) {
+                            if (distinctVal == null) {
+                                distinctVal = ((AggregateFunction)col.getExpression()).getParameters().toString();
+                            } else if (!((AggregateFunction)col.getExpression()).getParameters().toString().equals(distinctVal)){
+                                DerivedTable dt = new DerivedTable(viewSelect, view.getName());
+                                if (top.getFrom().isEmpty()) {
+                                    top.getFrom().add(dt);
+                                } else {
+                                    Join join = new Join(top.getFrom().remove(0), dt, JoinType.CROSS_JOIN, null);
+                                    top.getFrom().add(join);
+                                }
+                                view = new NamedTable("v" + viewCount++, null, null); //$NON-NLS-1$
+                                viewSelect = new Select();
+                                viewSelect.setFrom(select.getFrom());
+                                viewSelect.setDerivedColumns(new ArrayList<DerivedColumn>());
+                                viewSelect.setWhere(select.getWhere());
+                                distinctVal = ((AggregateFunction)col.getExpression()).getParameters().toString();
+                            }
+                        }
+                        col.setAlias("c" + i); //$NON-NLS-1$
+                        top.getDerivedColumns().add(new DerivedColumn(null, new ColumnReference(view, col.getAlias(), null, col.getExpression().getType())));
+                        viewSelect.getDerivedColumns().add(col);
+                    }
+                    DerivedTable dt = new DerivedTable(viewSelect, view.getName());
+                    Join join = new Join(top.getFrom().remove(0), dt, JoinType.CROSS_JOIN, null);
+                    top.getFrom().add(join);
+                    return Arrays.asList(top);
+                }
+            }
+        }
+        return super.translateCommand(command, context);
     }
-    
+
     @Override
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
-    	if (obj instanceof WithItem) {
-    		WithItem item = (WithItem)obj;
-    		List<ColumnReference> cols = item.getColumns();
-    		item.setColumns(null);
-    		Select select = item.getSubquery().getProjectedQuery();
-			List<DerivedColumn> selectClause = select.getDerivedColumns();
-			for (int i = 0; i < cols.size(); i++) {
-				selectClause.get(i).setAlias(cols.get(i).getName());
-			}
-    	}
-    	return super.translate(obj, context);
+        if (obj instanceof WithItem) {
+            WithItem item = (WithItem)obj;
+            List<ColumnReference> cols = item.getColumns();
+            item.setColumns(null);
+            Select select = item.getSubquery().getProjectedQuery();
+            List<DerivedColumn> selectClause = select.getDerivedColumns();
+            for (int i = 0; i < cols.size(); i++) {
+                selectClause.get(i).setAlias(cols.get(i).getName());
+            }
+        }
+        return super.translate(obj, context);
     }
-    
+
     @Override
     protected boolean usesDatabaseVersion() {
-    	return true;
+        return true;
     }
-    
+
     @Override
     public List<?> translateLimit(Limit limit, ExecutionContext context) {
-    	if (limit.getRowOffset() > 0) {
-    		return Arrays.asList("LIMIT ", limit.getRowLimit(), " OFFSET ", limit.getRowOffset()); //$NON-NLS-1$ //$NON-NLS-2$ 
-    	}
+        if (limit.getRowOffset() > 0) {
+            return Arrays.asList("LIMIT ", limit.getRowLimit(), " OFFSET ", limit.getRowOffset()); //$NON-NLS-1$ //$NON-NLS-2$
+        }
         return null;
     }
-    
+
     @Override
     public String translateLiteralDate(java.sql.Date dateValue) {
         return '\'' + formatDateValue(dateValue) + '\'';
-    }    
-    
+    }
+
     @Override
     public boolean supportsGroupByMultipleDistinctAggregates() {
-    	return false;
-    }    
+        return false;
+    }
 }
