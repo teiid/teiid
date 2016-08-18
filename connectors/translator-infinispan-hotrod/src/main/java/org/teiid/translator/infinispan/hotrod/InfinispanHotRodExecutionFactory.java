@@ -51,6 +51,11 @@ import org.teiid.translator.object.ObjectExecutionFactory;
  */
 @Translator(name = "ispn-hotrod", description = "The Infinispan Translator Using Hotrod Client to query cache")
 public class InfinispanHotRodExecutionFactory extends ObjectExecutionFactory {
+	
+	// with JDG 6.6 supportCompareCriteria no longer needs to be disabled
+	// @see @link https://issues.jboss.org/browse/TEIID-4333
+	private static final String JDG6_6 = "6.6"; 
+
 
 	// max available without having to try to override 
 	// BooleanQuery.setMaxClauseCount(), and
@@ -162,5 +167,29 @@ public class InfinispanHotRodExecutionFactory extends ObjectExecutionFactory {
 		}
 	    return new ProtobufMetadataProcessor();
 	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.ExecutionFactory#initCapabilities(java.lang.Object)
+	 */
+	@Override
+	public void initCapabilities(ObjectConnection connection) throws TranslatorException {
+		super.initCapabilities(connection);
+		if (connection == null) return;
+		
+		String version = connection.getVersion();
+		
+		if (version != null) {
+			if (version.compareTo(JDG6_6) < 0) {
+				// any version prior to JDG 6.6 the supportCompareCritiaOrdered needs to be set to false;
+			} else {
+				this.supportsCompareCriteriaOrdered = true;
+			}
+		}
+		
+	}
+	
+	
 
 }

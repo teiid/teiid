@@ -45,7 +45,7 @@ public class TestInfinispanManagedConnectionFactory {
 	
 	@After
 	public void after() {
-		factory.getCacheWrapper().shutDownCacheManager();
+		factory.shutDownCache();
 	}
 	
     @Test
@@ -63,6 +63,10 @@ public class TestInfinispanManagedConnectionFactory {
     		
     		assertEquals(InfinispanTestHelper.TRADE_CACHE_NAME, conn.getCacheName());
     		assertNotNull(conn.getClassRegistry());
+    		
+    		assertNotNull(conn.getVersion());
+    		
+    		System.out.println("Version " + conn.getVersion());
      		
     		factory.cleanUp();
     }

@@ -89,7 +89,7 @@ public class TestInfinispanJndiNameKeyOnlySearch extends BasicSearchTest {
     public static void closeConnection() throws Exception {
     	
 	    CONNECTION.cleanUp();
-	    factory.shutDown();
+	    factory.shutDownCache();
     }
     
 	@Override

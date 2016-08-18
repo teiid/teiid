@@ -42,6 +42,7 @@ import org.teiid.translator.object.testdata.annotated.TradesAnnotatedCacheSource
  *
  */
 public class TestInfinispanHotRodConnection extends SimpleMapCacheConnection implements InfinispanHotRodConnection {
+	protected String version;
 	
 	public static ObjectConnection createConnection(Map<Object,Object> map) {
 		CacheNameProxy proxy = new CacheNameProxy(TradesAnnotatedCacheSource.TRADES_CACHE_NAME);
@@ -78,13 +79,6 @@ public class TestInfinispanHotRodConnection extends SimpleMapCacheConnection imp
 		return results;
 	}
 
-//
-//
-//	@Override
-//	public DDLHandler getMaterializeLifeCycle() {
-//		return new DDLHandler(this, proxy);
-//	}
-
 	/**
 	 * {@inheritDoc}
 	 *
@@ -93,5 +87,19 @@ public class TestInfinispanHotRodConnection extends SimpleMapCacheConnection imp
 	@Override
 	public Descriptor getDescriptor() throws TranslatorException {
 		return null;
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.simpleMap.SimpleMapCacheConnection#getVersion()
+	 */
+	@Override
+	public String getVersion() {
+		return version;
+	}
+	
+	public void setVersion(String v) {
+		this.version = v;
 	}
 }

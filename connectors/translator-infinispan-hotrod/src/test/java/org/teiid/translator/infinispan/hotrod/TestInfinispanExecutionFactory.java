@@ -22,23 +22,24 @@
 package org.teiid.translator.infinispan.hotrod;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PersonCacheSource;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.teiid.language.Select;
 import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.TranslatorException;
-import org.teiid.translator.object.testdata.person.PersonSchemaVDBUtility;
 import org.teiid.translator.object.ObjectExecution;
+import org.teiid.translator.object.testdata.person.PersonSchemaVDBUtility;
 
 @SuppressWarnings("nls")
 public class TestInfinispanExecutionFactory {
 	
+	@SuppressWarnings("deprecation")
 	protected static InfinispanExecutionFactory TRANSLATOR;
+	protected static InfinispanHotRodConnection CONNECTION;
 
 	
 	@Mock
@@ -46,27 +47,64 @@ public class TestInfinispanExecutionFactory {
 	
 	@Mock
 	private Select command;
-	
-	
-	private InfinispanHotRodConnection connection = PersonCacheSource.createConnection(true);
-	
-    @BeforeClass
-    public static void setUp() throws TranslatorException {
-        TRANSLATOR = new InfinispanExecutionFactory();
-        TRANSLATOR.start();
-    }	
 
 	@Before public void beforeEach() throws Exception{	
- 
+
 		MockitoAnnotations.initMocks(this);
     }
 
 	@Test public void testFactory() throws Exception {
+	   	CONNECTION = PersonCacheSource.createConnection(true);
+    	TestInfinispanHotRodConnection conn = (TestInfinispanHotRodConnection) CONNECTION;
+    	conn.setVersion("6.6");
+    	
+        TRANSLATOR = new InfinispanExecutionFactory();
+        TRANSLATOR.initCapabilities(CONNECTION);
+        TRANSLATOR.start();
 
-		ObjectExecution exec = (ObjectExecution) TRANSLATOR.createExecution(command, context, PersonSchemaVDBUtility.RUNTIME_METADATA, connection);
+        assertTrue(TRANSLATOR.supportsCompareCriteriaOrdered());
+        
+		ObjectExecution exec = (ObjectExecution) TRANSLATOR.createExecution(command, context, PersonSchemaVDBUtility.RUNTIME_METADATA, CONNECTION);
 		
 		assertNotNull(exec);
 		assertNotNull(TRANSLATOR.getMetadataProcessor());
 	}	
+	
+	@Test public void testFactoryVersion7() throws Exception {
+	   	CONNECTION = PersonCacheSource.createConnection(true);
+    	TestInfinispanHotRodConnection conn = (TestInfinispanHotRodConnection) CONNECTION;
+    	conn.setVersion("7.2.3");
+    	
+        TRANSLATOR = new InfinispanExecutionFactory();
+        TRANSLATOR.initCapabilities(CONNECTION);
+        TRANSLATOR.start();
+        
+        assertTrue(TRANSLATOR.supportsCompareCriteriaOrdered());
+
+
+		ObjectExecution exec = (ObjectExecution) TRANSLATOR.createExecution(command, context, PersonSchemaVDBUtility.RUNTIME_METADATA, CONNECTION);
+		
+		assertNotNull(exec);
+		assertNotNull(TRANSLATOR.getMetadataProcessor());
+	}	
+	
+	@Test public void testFactoryVersion65() throws Exception {
+	   	CONNECTION = PersonCacheSource.createConnection(true);
+    	TestInfinispanHotRodConnection conn = (TestInfinispanHotRodConnection) CONNECTION;
+    	conn.setVersion("6.5");
+    	
+        TRANSLATOR = new InfinispanExecutionFactory();
+        TRANSLATOR.initCapabilities(CONNECTION);
+        TRANSLATOR.start();
+        
+        assertTrue(!TRANSLATOR.supportsCompareCriteriaOrdered());
+
+
+		ObjectExecution exec = (ObjectExecution) TRANSLATOR.createExecution(command, context, PersonSchemaVDBUtility.RUNTIME_METADATA, CONNECTION);
+		
+		assertNotNull(exec);
+		assertNotNull(TRANSLATOR.getMetadataProcessor());
+	}	
+	
 	
 }

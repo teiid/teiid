@@ -90,7 +90,7 @@ public class TestInfinispanJndiDSLSearch extends BasicAnnotatedSearchTest {
     public static void closeConnection() throws Exception {
 
 	    CONNECTION.cleanUp();
-	    factory.shutDown();
+	    factory.shutDownCache();
 	}
     
 	@Override

@@ -68,7 +68,7 @@ public class TestInfinispanConfigFileLocalCache extends BasicAnnotatedSearchTest
 	@AfterClass
     public static void closeConnection() throws Exception {    	    
     	    
-		factory.getCacheWrapper().shutDownCacheManager();
+		factory.shutDownCache();
     }
 	
 	@Override
