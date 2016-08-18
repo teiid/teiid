@@ -29,8 +29,8 @@
 	    <version.commons-codec>1.10</version.commons-codec>
         <version.com.google.guava>18.0</version.com.google.guava>
         <version.dom4j>1.6.1</version.dom4j>
-        <version.org.hibernate.search>5.5.1.Final</version.org.hibernate.search>
-        <version.org.hibernate>5.0.7.Final</version.org.hibernate>
+        <version.org.hibernate.search>5.6.0.Alpha2-redhat-1</version.org.hibernate.search> <!-- 5.5.1.Final -->
+        <version.org.hibernate>5.0.9.Final-redhat-1</version.org.hibernate> <!-- 5.0.7.Final -->
         <version.org.infinispan.hibernate.search>4.6.3.Final-redhat-1</version.org.infinispan.hibernate.search> 
         
         <!--  with wildfly parent version 2.5.4 the build is failing -->
@@ -38,8 +38,9 @@
 
         <!-- JDG module slot to use  -->
         <jdg.slot>jdg-7.0</jdg.slot>  
-        <version.org.infinispan.6>7.2.3.Final</version.org.infinispan.6> 
-        <version.org.apache.lucene.infinispan>7.2.3.Final</version.org.apache.lucene.infinispan>
+        <version.org.infinispan.6>8.2.4.Final</version.org.infinispan.6> 
+        <version.org.apache.lucene.infinispan>5.5.0</version.org.apache.lucene.infinispan> <!--  8.2.4.Final -->
+
         <version.com.squareup.protoparser>3.1.5</version.com.squareup.protoparser>
         <version.org.infinispan.protostream>3.0.5.Final</version.org.infinispan.protostream>        
         

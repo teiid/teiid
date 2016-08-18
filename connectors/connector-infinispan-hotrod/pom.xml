@@ -14,41 +14,28 @@
     
     <dependencyManagement>
         <dependencies>
+          <dependency>
+             <groupId>org.infinispan</groupId>
+             <artifactId>infinispan-bom</artifactId>
+             <version>${version.org.infinispan.6}</version>
+             <type>pom</type>
+             <scope>import</scope>
+          </dependency>
             <dependency>
-              <groupId>org.infinispan</groupId>
-              <artifactId>infinispan-client-hotrod</artifactId>
-              <version>${version.org.infinispan.6}</version>
-            </dependency>
+                <groupId>org.infinispan</groupId>
+                <artifactId>infinispan-remote-query-client</artifactId>
+                <version>${version.org.infinispan.6}</version>
+            </dependency> 
             <dependency>
                 <groupId>org.infinispan</groupId>
                 <artifactId>infinispan-server-hotrod</artifactId>
                 <version>${version.org.infinispan.6}</version>
-            </dependency>       
-            <dependency>
-                <groupId>org.infinispan</groupId>
-                <artifactId>infinispan-commons</artifactId>
-                <version>${version.org.infinispan.6}</version>
-            </dependency>
+            </dependency> 
            <dependency>
-                <groupId>org.infinispan</groupId>
-                <artifactId>infinispan-core</artifactId>
-                <version>${version.org.infinispan.6}</version>
-            </dependency>   
-             <dependency>
-                <groupId>org.infinispan</groupId>
-                <artifactId>infinispan-remote-query-client</artifactId>
-                <version>${version.org.infinispan.6}</version>
-            </dependency>   
-            <dependency>
-                <groupId>org.infinispan</groupId>
-                <artifactId>infinispan-query-dsl</artifactId>
-                <version>${version.org.infinispan.6}</version>
-            </dependency>  
-            <dependency>
-                 <groupId>org.infinispan.protostream</groupId>
-                 <artifactId>protostream</artifactId>
-                 <version>${version.org.infinispan.protostream}</version>
-            </dependency>                                                               
+             <groupId>org.apache.lucene</groupId>
+             <artifactId>lucene-core</artifactId>
+             <version>${version.org.apache.lucene.infinispan}</version>
+         </dependency>                                                                         
         </dependencies> 
     </dependencyManagement>
     
@@ -62,10 +49,6 @@
 			<artifactId>translator-infinispan-hotrod</artifactId>
 			<type>test-jar</type> 
 		</dependency>       
-        <dependency>
-            <groupId>org.jboss.teiid.connectors</groupId>
-            <artifactId>translator-object</artifactId>
-        </dependency>
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>translator-object</artifactId>
@@ -103,15 +86,12 @@
         <dependency>
           <groupId>org.infinispan</groupId>
           <artifactId>infinispan-remote-query-client</artifactId>
-        </dependency>   
+        </dependency> 
         <dependency>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-query-dsl</artifactId>
-        </dependency>  
-        <dependency>
-            <groupId>org.infinispan.protostream</groupId>
-            <artifactId>protostream</artifactId>
-        </dependency>    
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-core</artifactId>
+            <scope>test</scope>
+        </dependency>         
         <dependency>
             <groupId>org.jboss.modules</groupId>
             <artifactId>jboss-modules</artifactId>

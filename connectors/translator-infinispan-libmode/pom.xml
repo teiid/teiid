@@ -14,38 +14,13 @@
 
     <dependencyManagement>
         <dependencies>
-          <dependency>
-              <groupId>org.infinispan</groupId>
-              <artifactId>infinispan-core</artifactId>
-              <version>${version.org.infinispan.6}</version>
-          </dependency>
-<!--           <dependency>
+            <dependency>
              <groupId>org.infinispan</groupId>
              <artifactId>infinispan-bom</artifactId>
              <version>${version.org.infinispan.6}</version>
              <type>pom</type>
              <scope>import</scope>
-          </dependency>  -->  
-        <dependency>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-commons</artifactId>
-            <version>${version.org.infinispan.6}</version>
-        </dependency>       
-        <dependency>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-query</artifactId>
-            <version>${version.org.infinispan.6}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-lucene-directory </artifactId>
-            <version>${version.org.infinispan.6}</version>
-        </dependency>  
-        <dependency>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-query-dsl</artifactId>
-            <version>${version.org.infinispan.6}</version>
-        </dependency>               
+          </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -87,10 +62,6 @@
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-search-engine</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-search-infinispan</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
