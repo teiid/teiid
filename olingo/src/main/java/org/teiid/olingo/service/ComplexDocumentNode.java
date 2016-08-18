@@ -101,20 +101,18 @@ public class ComplexDocumentNode extends DocumentNode {
                 EdmReturnType returnType = procedureReturn.getReturnType();
                 EdmComplexType complexType = (EdmComplexType)returnType.getType();
                 EdmPropertyImpl edmProperty = (EdmPropertyImpl)complexType.getProperty(column.getName());
-                addProjectedColumn(new ElementSymbol(column.getName(), getGroupSymbol()), true, edmProperty.getType(), edmProperty,
-                        edmProperty.isCollection());
+                addProjectedColumn(new ElementSymbol(column.getName(), getGroupSymbol()), edmProperty.getType(), edmProperty, edmProperty.isCollection());
             }
         }        
     }
     
     @Override
     protected void addProjectedColumn(final String columnName,
-            final Expression expr, boolean visibility) {
+            final Expression expr) {
         EdmReturnType returnType = procedureReturn.getReturnType();
         EdmComplexType complexType = (EdmComplexType)returnType.getType();
         EdmPropertyImpl edmProperty = (EdmPropertyImpl)complexType.getProperty(columnName);
-        addProjectedColumn(expr, visibility, edmProperty.getType(), edmProperty, 
-                edmProperty.isCollection());
+        addProjectedColumn(expr, edmProperty.getType(), edmProperty, edmProperty.isCollection());
     }
     
     

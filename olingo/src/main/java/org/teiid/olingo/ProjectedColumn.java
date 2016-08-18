@@ -27,15 +27,13 @@ import org.teiid.query.sql.symbol.Expression;
 
 public class ProjectedColumn {
     private Expression expr;
-    private boolean visible;
     private EdmType edmType;
     private boolean collection;
     private int ordinal;
     private EdmProperty property;
     
-    public ProjectedColumn(Expression expr, boolean visible, EdmType edmType, EdmProperty property, boolean collection) {
+    public ProjectedColumn(Expression expr, EdmType edmType, EdmProperty property, boolean collection) {
         this.expr = expr; 
-        this.visible = visible;
         this.edmType = edmType;
         this.collection = collection;
         this.property = property;
@@ -43,10 +41,6 @@ public class ProjectedColumn {
     
     public Expression getExpression() {
         return this.expr;
-    }
-    
-    public boolean isVisible() {
-        return this.visible;
     }
     
     public EdmType getEdmType() {

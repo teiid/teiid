@@ -1685,8 +1685,9 @@ public class TestODataIntegration {
         HardCodedExecutionFactory hc = new HardCodedExecutionFactory();
         hc.addData("SELECT x.a, x.b FROM x", Arrays.asList(Arrays.asList("a", "b")));
         hc.addData("SELECT y.b, y.a FROM y", Arrays.asList(Arrays.asList("a", "y"), Arrays.asList("a", "y1")));
-        hc.addData("SELECT z.b, z.a FROM z", Arrays.asList(Arrays.asList("y", "a")));
+        hc.addData("SELECT y.a, y.b FROM y", Arrays.asList(Arrays.asList("y", "a"), Arrays.asList("y1","a")));
         hc.addData("SELECT z.a, z.b FROM z", Arrays.asList(Arrays.asList("a", "y")));
+        hc.addData("SELECT z.b, z.a FROM z", Arrays.asList(Arrays.asList("y", "a")));
         teiid.addTranslator("x7", hc);
 
         try {
@@ -1738,13 +1739,38 @@ public class TestODataIntegration {
             		+ "]}", 
                     response.getContentAsString());
 
+            response = http.newRequest(baseURL + "/northwind/m/x?$expand=*")
+                .method("GET")
+                .send();
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":["
+            		+ "{\"a\":\"a\",\"b\":\"b\",\"y_FKX\":"
+            			+ "[{\"a\":\"y\",\"b\":\"a\"},{\"a\":\"y1\",\"b\":\"a\"}],"
+            			+ "\"z_FKX\":{\"a\":\"a\",\"b\":\"y\"}}"
+            		+ "]}", 
+                    response.getContentAsString());
+            
+            response = http.newRequest(baseURL + "/northwind/m/x?$expand=y_FKX($filter=a%20eq%20'y1'),*")
+                    .method("GET")
+                    .send();
+                assertEquals(200, response.getStatus());
+                assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":["
+                		+ "{\"a\":\"a\",\"b\":\"b\",\"y_FKX\":"
+                			+ "[{\"a\":\"y1\",\"b\":\"a\"}],"
+                			+ "\"z_FKX\":{\"a\":\"a\",\"b\":\"y\"}}"
+                		+ "]}", 
+                        response.getContentAsString());
+                
+            response = http.newRequest(baseURL + "/northwind/m/x?$expand=y_FKX,y_FKX")
+                    .method("GET")
+                    .send();
+                assertEquals(400, response.getStatus());
+
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");
         }
     }    
-    
-    
     
     @Test
     public void testBatch() throws Exception {
