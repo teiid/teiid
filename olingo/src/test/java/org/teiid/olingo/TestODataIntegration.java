@@ -1688,6 +1688,9 @@ public class TestODataIntegration {
         hc.addData("SELECT y.a, y.b FROM y", Arrays.asList(Arrays.asList("y", "a"), Arrays.asList("y1","a")));
         hc.addData("SELECT z.a, z.b FROM z", Arrays.asList(Arrays.asList("a", "y")));
         hc.addData("SELECT z.b, z.a FROM z", Arrays.asList(Arrays.asList("y", "a")));
+        hc.addData("SELECT tree.a, tree.b FROM tree", Arrays.asList(Arrays.asList("1", "2"), Arrays.asList("2", "3"), Arrays.asList("3", "1")));
+        hc.addData("SELECT tree.b, tree.a FROM tree", Arrays.asList(Arrays.asList("2", "1"), Arrays.asList("3", "2"), Arrays.asList("1", "3")));
+        
         teiid.addTranslator("x7", hc);
 
         try {
@@ -1710,7 +1713,13 @@ public class TestODataIntegration {
                     + " primary key (a),"
                     + " CONSTRAINT FKX FOREIGN KEY (a) REFERENCES x(a),"                    
                     + " CONSTRAINT FKY FOREIGN KEY (b) REFERENCES y(a)"
-                    + ") options (updatable true);");
+                    + ") options (updatable true);"
+                    + "create foreign table tree ("
+                    + " a string, "
+                    + " b string, "
+                    + " primary key (a),"
+                    + " CONSTRAINT parent FOREIGN KEY (b) REFERENCES tree(a)"
+                    + ");");
             
             mmd.addSourceMapping("x7", "x7", null);
             teiid.deployVDB("northwind", mmd);
@@ -1765,7 +1774,23 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
                 assertEquals(400, response.getStatus());
-
+                
+            response = http.newRequest(baseURL + "/northwind/m/x?$expand=*($levels=1)")
+                    .method("GET")
+                    .send();
+                assertEquals(200, response.getStatus());
+                assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":["
+                		+ "{\"a\":\"a\",\"b\":\"b\",\"y_FKX\":"
+                			+ "[{\"a\":\"y\",\"b\":\"a\"},{\"a\":\"y1\",\"b\":\"a\"}],"
+                			+ "\"z_FKX\":{\"a\":\"a\",\"b\":\"y\"}}"
+                		+ "]}", 
+                        response.getContentAsString());
+            
+            //invalid it's not a self relationship
+            response = http.newRequest(baseURL + "/northwind/m/x?$expand=y_FKX($levels=1)")
+                    .method("GET")
+                    .send();
+                assertEquals(400, response.getStatus());
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");
