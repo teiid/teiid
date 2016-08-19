@@ -383,6 +383,23 @@ public class TeiidServiceHandler implements ServiceHandler {
         return getClient().executeUpdate(command, visitor.getParameters());
     }
     
+    private int insertDepth(EdmEntityType entityType, Entity entity) throws SQLException, TeiidException {
+        int depth = 1;
+        int childDepth = 0;
+        for (String navigationName:entityType.getNavigationPropertyNames()) {
+            EdmNavigationProperty navProperty = entityType.getNavigationProperty(navigationName);
+            Link navLink = entity.getNavigationLink(navigationName);
+            if (navLink != null && navLink.getInlineEntity() != null) {
+            	childDepth = Math.max(childDepth, insertDepth(navProperty.getType(), navLink.getInlineEntity()));
+            } else if (navLink != null && navLink.getInlineEntitySet() != null && !navLink.getInlineEntitySet().getEntities().isEmpty()) {
+            	for (Entity inlineEntity:navLink.getInlineEntitySet().getEntities()) {
+            		childDepth = Math.max(childDepth, insertDepth(navProperty.getType(), inlineEntity));
+                }
+            }
+        }
+        return depth + childDepth;
+    }
+    
     private UpdateResponse performDeepInsert(String rawURI, UriInfo uriInfo,
             EdmEntityType entityType, Entity entity, List<ExpandNode> expandNodes) throws SQLException, TeiidException {
         UpdateResponse response = performInsert(rawURI, uriInfo, entityType, entity);
@@ -425,6 +442,8 @@ public class TeiidServiceHandler implements ServiceHandler {
         
     	try {
     		List<ExpandNode> expands = new ArrayList<TeiidServiceHandler.ExpandNode>();
+    		int insertDepth = insertDepth(entityType, entity);
+    		ODataSQLBuilder.checkExpandLevel(insertDepth - 1); //don't count the root
             UpdateResponse updateResponse = performDeepInsert(request
                     .getODataRequest().getRawBaseUri(), request.getUriInfo(),
                     entityType, entity, expands);
@@ -459,19 +478,7 @@ public class TeiidServiceHandler implements ServiceHandler {
             }
             getClient().commit(txn);
             success = true;
-        } catch (SQLException e) {
-            throw new ODataApplicationException(e.getMessage(),
-                    HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
-                    Locale.getDefault(), e);
-        } catch (URISyntaxException e) {
-            throw new ODataApplicationException(e.getMessage(),
-                    HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
-                    Locale.getDefault(), e);
-        } catch (TeiidException e) {
-            throw new ODataApplicationException(e.getMessage(),
-                    HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
-                    Locale.getDefault(), e);
-        } catch (EdmPrimitiveTypeException e) {
+        } catch (EdmPrimitiveTypeException | TeiidException | SQLException | URISyntaxException e) {
             throw new ODataApplicationException(e.getMessage(),
                     HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
                     Locale.getDefault(), e);
