@@ -61,6 +61,7 @@ import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
+import org.teiid.translator.TypeFacility.RUNTIME_CODES;
 import org.teiid.translator.jdbc.*;
 
 
@@ -225,6 +226,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.DATE, new ConvertModifier.FormatModifier("to_date", DATE_FORMAT)); //$NON-NLS-1$ 
     	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIME, new ConvertModifier.FormatModifier("to_date", TIME_FORMAT)); //$NON-NLS-1$ 
     	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIMESTAMP, new ConvertModifier.FormatModifier("to_timestamp", TIMESTAMP_FORMAT)); //$NON-NLS-1$ 
+    	convertModifier.addConvert(FunctionModifier.CLOB, FunctionModifier.STRING, new TemplateFunctionModifier("DBMS_LOB.substr(", 0, ", 4000)")); //$NON-NLS-1$ //$NON-NLS-2$
     	convertModifier.addTypeConversion(new ConvertModifier.FormatModifier("to_char"), FunctionModifier.STRING); //$NON-NLS-1$
     	//NOTE: numeric handling in Oracle is split only between integral vs. floating/decimal types
     	convertModifier.addTypeConversion(new ConvertModifier.FormatModifier("to_number"), //$NON-NLS-1$
@@ -1114,4 +1116,12 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsSubqueryInOn() {
     	return false; //even oracle 12 still has issues if a with clause is also in the source query
     }
+    
+    public boolean supportsConvert(int fromType, int toType) {
+    	//allow conversion from clob to string
+		if (fromType == RUNTIME_CODES.OBJECT || fromType == RUNTIME_CODES.XML || fromType == RUNTIME_CODES.BLOB || toType == RUNTIME_CODES.CLOB || toType == RUNTIME_CODES.XML || toType == RUNTIME_CODES.BLOB) {
+			return false;
+		}
+		return true;
+	}
 }
