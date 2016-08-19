@@ -20,7 +20,19 @@
         <module name="org.infinispan.query.dsl" slot="${jdg.slot}" optional="true"  export="true" /> 
           
         <module name="org.infinispan.lucene-directory" slot="${jdg.slot}" optional="true"  export="true" /> 
+ 
+        <module name="org.infinispan" slot="jdg-6.5" optional="true"  export="true"  services="import" />
+        <module name="org.infinispan.query" slot="jdg-6.5" optional="true" export="true"  services="import" />
+        <module name="org.infinispan.query.dsl" slot="jdg-6.5" optional="true"  export="true" /> 
+          
+        <module name="org.infinispan.lucene-directory" slot="jdg-6.5" optional="true"  export="true" /> 
       
+        <module name="org.infinispan" slot="jdg-6.4" optional="true"  export="true"  services="import" />
+        <module name="org.infinispan.query" slot="jdg-6.4" optional="true" export="true"  services="import" />
+        <module name="org.infinispan.query.dsl" slot="jdg-6.4" optional="true"  export="true" /> 
+          
+        <module name="org.infinispan.lucene-directory" slot="jdg-6.4" optional="true"  export="true" /> 
+       
     </dependencies>
 </module>
   
