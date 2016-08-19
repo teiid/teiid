@@ -22,7 +22,7 @@
 
 package org.teiid.translator.jdbc.oracle;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -31,6 +31,8 @@ import java.util.Arrays;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.language.ColumnReference;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageFactory;
@@ -518,6 +520,11 @@ public class TestOracleConvertModifier {
     @Test public void testTimestampToTime() throws Exception {
         Timestamp ts = TimestampUtil.createTimestamp(103, 10, 1, 12, 5, 2, 10000000);        
         helpTest(LANG_FACTORY.createLiteral(ts, Timestamp.class), "time", "case when {ts '2003-11-01 12:05:02.01'} is null then null else to_date('1970-01-01 ' || to_char({ts '2003-11-01 12:05:02.01'}, 'HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS') end"); //$NON-NLS-1$ //$NON-NLS-2$
-    }    
+    }
+    
+    @Test public void testClobToString() throws Exception {
+    	assertTrue(TRANSLATOR.supportsConvert(TypeFacility.RUNTIME_CODES.CLOB, TypeFacility.RUNTIME_CODES.STRING));
+        helpTest(new ColumnReference(null, "x", null, DataTypeManager.DefaultDataClasses.CLOB), "string", "DBMS_LOB.substr(x, 4000)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
 
 }
