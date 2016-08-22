@@ -13,6 +13,7 @@ import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.translator.infinispan.hotrod.InfinispanExecutionFactory;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectExecutionFactory;
+import org.teiid.translator.object.Version;
 import org.teiid.translator.object.metadata.JavaBeanMetadataProcessor;
 
 @SuppressWarnings("nls")
@@ -36,7 +37,7 @@ public class TestAnnotationMetadataProcessor {
 				SystemMetadata.getInstance().getRuntimeTypeMap(),
 				new Properties(), null);
 
-		ObjectConnection conn = PersonCacheSource.createConnection(false);
+		ObjectConnection conn = PersonCacheSource.createConnection(false, Version.getVersion("6.6"));
 		
 		JavaBeanMetadataProcessor mp = (JavaBeanMetadataProcessor) TRANSLATOR.getMetadataProcessor();
 		mp.process(mf, conn);
@@ -66,7 +67,7 @@ public class TestAnnotationMetadataProcessor {
 				SystemMetadata.getInstance().getRuntimeTypeMap(),
 				new Properties(), null);
 
-		ObjectConnection conn = PersonCacheSource.createConnection(false);
+		ObjectConnection conn = PersonCacheSource.createConnection(false, Version.getVersion("10.2"));
 		
 		JavaBeanMetadataProcessor mp = (JavaBeanMetadataProcessor) TRANSLATOR.getMetadataProcessor();
 		mp.setClassObjectColumn(true);

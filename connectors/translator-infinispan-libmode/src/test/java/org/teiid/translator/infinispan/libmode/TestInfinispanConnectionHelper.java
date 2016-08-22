@@ -1,10 +1,7 @@
 package org.teiid.translator.infinispan.libmode;
 
-import java.lang.annotation.ElementType;
 import java.util.Properties;
 
-import org.hibernate.search.annotations.Analyze;
-import org.hibernate.search.cfg.SearchMapping;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
@@ -15,7 +12,7 @@ import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.transaction.TransactionMode;
 import org.teiid.core.TeiidException;
 import org.teiid.translator.object.ObjectConnection;
-import org.teiid.translator.object.testdata.annotated.Trade;
+import org.teiid.translator.object.Version;
 import org.teiid.translator.object.testdata.annotated.TradesAnnotatedCacheSource;
 import org.teiid.translator.object.testdata.trades.TradesCacheSource;
 
@@ -23,14 +20,14 @@ public class TestInfinispanConnectionHelper  {
 	
 	private static int cnt = 0;
 
-	public static ObjectConnection createNonAnnotatedConnection(String configFile)
+	public static ObjectConnection createNonAnnotatedConnection(String configFile, Version version)
 			throws Exception {
 
 		DefaultCacheManager container = new DefaultCacheManager(configFile);
 		
 		container.startCache(TradesCacheSource.TRADES_CACHE_NAME);
 		TradesCacheSource.loadCache(container.getCache(TradesCacheSource.TRADES_CACHE_NAME));
-		ObjectConnection conn = TradesCacheSource.createConnection(container.getCache(TradesCacheSource.TRADES_CACHE_NAME));
+		ObjectConnection conn = TradesCacheSource.createConnection(container.getCache(TradesCacheSource.TRADES_CACHE_NAME), false, version);
 
 		return conn;  	
 	}

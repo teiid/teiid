@@ -16,6 +16,7 @@ import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.infinispan.hotrod.InfinispanHotRodConnection;
+import org.teiid.translator.object.Version;
 import org.teiid.translator.object.metadata.JavaBeanMetadataProcessor;
 import org.teiid.translator.infinispan.hotrod.InfinispanExecutionFactory;
 
@@ -42,7 +43,7 @@ public class TestProtobufMetadataProcessor {
 				SystemMetadata.getInstance().getRuntimeTypeMap(),
 				new Properties(), null);
 
-		InfinispanHotRodConnection conn = PersonCacheSource.createConnection(true);
+		InfinispanHotRodConnection conn = PersonCacheSource.createConnection(true, Version.getVersion("6.6"));
 
 		ProtobufMetadataProcessor mp = (ProtobufMetadataProcessor) TRANSLATOR.getMetadataProcessor();
 		mp.process(mf, conn);
@@ -63,7 +64,7 @@ public class TestProtobufMetadataProcessor {
 				SystemMetadata.getInstance().getRuntimeTypeMap(),
 				new Properties(), null);
 
-		InfinispanHotRodConnection conn = PersonCacheSource.createConnection(true);
+		InfinispanHotRodConnection conn = PersonCacheSource.createConnection(true, Version.getVersion("6.6"));
 
 		ProtobufMetadataProcessor mp = (ProtobufMetadataProcessor) TRANSLATOR.getMetadataProcessor();
 		mp.setClassObjectColumn(true);

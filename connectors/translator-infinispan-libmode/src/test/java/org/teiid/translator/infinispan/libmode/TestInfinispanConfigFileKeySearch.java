@@ -21,7 +21,8 @@
  */
 package org.teiid.translator.infinispan.libmode;
 
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
 
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -29,10 +30,10 @@ import org.junit.BeforeClass;
 import org.teiid.language.Select;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.infinispan.libmode.InfinispanCacheExecutionFactory;
 import org.teiid.translator.object.BasicSearchTest;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectExecution;
+import org.teiid.translator.object.Version;
 import org.teiid.translator.object.testdata.trades.VDBUtility;
 
 @SuppressWarnings("nls")
@@ -48,8 +49,10 @@ public class TestInfinispanConfigFileKeySearch extends BasicSearchTest {
     public static void beforeClass() throws Exception {  
         // Set up the mock JNDI ...
    		context = mock(ExecutionContext.class);
+   		
+   		Version v = Version.getVersion("10.1");
 		
-		conn = TestInfinispanConnectionHelper.createNonAnnotatedConnection("./src/test/resources/infinispan_persistent_indexing_config.xml");
+		conn = TestInfinispanConnectionHelper.createNonAnnotatedConnection("./src/test/resources/infinispan_persistent_indexing_config.xml", v);
 
 	}
 	
@@ -62,10 +65,15 @@ public class TestInfinispanConfigFileKeySearch extends BasicSearchTest {
 	@Before public void beforeEachTest() throws Exception{	
 		factory = new InfinispanCacheExecutionFactory();
 		factory.start();
+		
+		factory.initCapabilities(conn);
     }
 	
 	@Override
 	protected ObjectExecution createExecution(Select command) throws TranslatorException {
+		
+		assertEquals("supportsCompareCriteriaOrdered was not configurred correctly ", factory.supportsCompareCriteriaOrdered(), true); //$NON-NLS-1$
+
 		return (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, conn);
 	}
 	

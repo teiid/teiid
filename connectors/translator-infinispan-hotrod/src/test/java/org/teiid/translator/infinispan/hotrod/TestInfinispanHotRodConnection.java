@@ -32,8 +32,8 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.CacheNameProxy;
 import org.teiid.translator.object.ClassRegistry;
 import org.teiid.translator.object.ObjectConnection;
+import org.teiid.translator.object.Version;
 import org.teiid.translator.object.simpleMap.SimpleMapCacheConnection;
-import org.teiid.translator.object.testdata.annotated.TestObjectConnection;
 import org.teiid.translator.object.testdata.annotated.Trade;
 import org.teiid.translator.object.testdata.annotated.TradesAnnotatedCacheSource;
 
@@ -42,12 +42,15 @@ import org.teiid.translator.object.testdata.annotated.TradesAnnotatedCacheSource
  *
  */
 public class TestInfinispanHotRodConnection extends SimpleMapCacheConnection implements InfinispanHotRodConnection {
-	protected String version;
+	protected Version version;
 	
-	public static ObjectConnection createConnection(Map<Object,Object> map) {
+	public static ObjectConnection createConnection(Map<Object,Object> map, Version version) {
 		CacheNameProxy proxy = new CacheNameProxy(TradesAnnotatedCacheSource.TRADES_CACHE_NAME);
 
-		return new TestObjectConnection(map, TradesAnnotatedCacheSource.METHOD_REGISTRY, proxy);
+		TestInfinispanHotRodConnection conn = new TestInfinispanHotRodConnection(map, TradesAnnotatedCacheSource.METHOD_REGISTRY, proxy);
+		conn.setVersion(version);
+				
+		return conn;
 	}
 
 	public TestInfinispanHotRodConnection(Map<Object,Object> map, ClassRegistry registry, CacheNameProxy proxy) {
@@ -56,7 +59,6 @@ public class TestInfinispanHotRodConnection extends SimpleMapCacheConnection imp
 		setPkField("tradeId");
 		setCacheKeyClassType(java.lang.Integer.class);
 		this.setCacheClassType(Trade.class);
-
 	}	
 
 
@@ -95,11 +97,11 @@ public class TestInfinispanHotRodConnection extends SimpleMapCacheConnection imp
 	 * @see org.teiid.translator.object.simpleMap.SimpleMapCacheConnection#getVersion()
 	 */
 	@Override
-	public String getVersion() {
+	public Version getVersion() {
 		return version;
 	}
 	
-	public void setVersion(String v) {
+	public void setVersion(Version v) {
 		this.version = v;
 	}
 }

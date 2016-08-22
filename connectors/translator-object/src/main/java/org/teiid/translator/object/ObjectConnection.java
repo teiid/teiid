@@ -35,11 +35,11 @@ import org.teiid.translator.TranslatorException;
 public interface ObjectConnection {
 
 	/**
-	 * Call to get the version of the data source that being used.
-	 * @return String verison
+	 * Call to get the version of the data source that is being accessed.
+	 * @return Version
 	 * @throws TranslatorException
 	 */
-	public String getVersion() throws TranslatorException;
+	public Version getVersion() throws TranslatorException;
 
 	/**
 	 * Call to check the status of the connection

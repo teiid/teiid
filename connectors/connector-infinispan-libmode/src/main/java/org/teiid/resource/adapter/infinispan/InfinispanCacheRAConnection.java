@@ -21,7 +21,6 @@
  */
 package org.teiid.resource.adapter.infinispan;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -30,10 +29,6 @@ import javax.naming.InitialContext;
 import javax.resource.ResourceException;
 
 import org.infinispan.Cache;
-import org.infinispan.client.hotrod.RemoteCache;
-import org.infinispan.configuration.cache.Configuration;
-import org.infinispan.manager.DefaultCacheManager;
-import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.query.Search;
 import org.infinispan.query.dsl.QueryFactory;
 import org.teiid.logging.LogConstants;
@@ -44,6 +39,7 @@ import org.teiid.translator.infinispan.libmode.InfinispanCacheConnection;
 import org.teiid.translator.object.ClassRegistry;
 import org.teiid.translator.object.DDLHandler;
 import org.teiid.translator.object.SearchType;
+import org.teiid.translator.object.Version;
 
 /**
  * @author vanhalbert
@@ -65,7 +61,7 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	}
 	
 	@Override
-	public String getVersion() throws TranslatorException {
+	public Version getVersion() throws TranslatorException {
 		return this.getConfig().getVersion();
 	}
 	/**
