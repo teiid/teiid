@@ -31,6 +31,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.util.CommandContext;
 
 public class ArrayAgg extends SingleArgumentAggregateFunction {
@@ -50,7 +51,7 @@ public class ArrayAgg extends SingleArgumentAggregateFunction {
 		}
 		this.result.add(input);
 		if (this.result.size() > 1000) {
-			throw new AssertionError("Exceeded the max allowable array size of 1000."); //$NON-NLS-1$
+			throw new TeiidProcessingException(QueryPlugin.Event.TEIID31205, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31205, 1000)); 
 		}
 	}
 
