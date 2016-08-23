@@ -44,7 +44,7 @@ public class TestUpdates {
     private static TranslationUtility translationUtility = new TranslationUtility(TestVisitors.exampleSalesforce());
 
     @Test
-    public void testDateTypes() throws Exception {
+    public void testIds() throws Exception {
         Delete delete = (Delete) translationUtility.parseCommand("delete from contacts");
         
         SalesforceConnection connection = Mockito.mock(SalesforceConnection.class);
@@ -60,7 +60,7 @@ public class TestUpdates {
         so.addField("Id", "x");
         qr.setRecords(new SObject[] {so});
         qr.setSize(1);
-        qr.setDone(false);
+        qr.setDone(true);
         
         Mockito.stub(connection.query(queryArgument.capture(), Mockito.anyInt(), Mockito.anyBoolean())).toReturn(qr);
         Mockito.stub(connection.delete(new String[] {"x"})).toReturn(1);
