@@ -619,8 +619,9 @@ public class TestTempTables extends TempTableTestHarness {
 		for (int i = 0; i < 1277; i++) {
 			execute("insert into #tmp_dates select DATE '2016-05-01' as datum, 'somevalue' as somevalue", new List[] {Arrays.asList(1)});
 		}
-		execute("delete from #tmp_dates where datum > (select cast(endtime as date) from #tmp_params)", new List[] {Arrays.asList(1024)});
+		execute("delete from #tmp_dates where datum > (select cast(endtime as date) from #tmp_params)", new List[] {Arrays.asList(1278)});
 		execute("delete from #tmp_dates where datum < (select cast(starttime as date) from #tmp_params)", new List[] {Arrays.asList(1)});
+		execute("select count(*) from #tmp_dates", new List[] {Arrays.asList(1)});
 	}
 	
 	@Test public void testImplicitResolvingWithoutColumns() throws Exception {
@@ -630,5 +631,24 @@ public class TestTempTables extends TempTableTestHarness {
 				+ "UNION select cast(parsetimestamp('2016-04-20','yyyy-MM-dd') as date) as datum, 'somevalue' as somevalue", new List[] {Arrays.asList(3)});
 		execute("insert into #tmp_dates select DATE '2016-05-01', somevalue from #tmp_dates", new List[] {Arrays.asList(3)});
 	}
+	
+	@Test public void testNotInPredicateDelete() throws Exception {
+        execute("create local temporary table x (e1 string, e2 integer, primary key (e1))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+
+        for (int i = 0; i < 2048; i++) {
+            execute("insert into x (e2, e1) values ("+i+", '"+i+"')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+        }
+
+        execute("delete from x where e1 not in ('2000', '1')", new List[] {Arrays.asList(2046)}); //$NON-NLS-1$
+        
+        execute("drop table x", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+        execute("create local temporary table x (e1 string, e2 integer)", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+
+        for (int i = 0; i < 2048; i++) {
+            execute("insert into x (e2, e1) values ("+i+", '"+i+"')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+        }
+
+        execute("delete from x where e1 not in ('2000', '1')", new List[] {Arrays.asList(2046)}); //$NON-NLS-1$
+    }
 	
 }
