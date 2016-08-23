@@ -37,6 +37,7 @@ import org.mockito.Mockito;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.language.Command;
 import org.teiid.language.Select;
@@ -252,12 +253,12 @@ public class TestVisitors {
 	
 	@BeforeClass static public void oneTimeSetup() {
 	    Util.resetTimeZone();
-		TimeZone.setDefault(TimeZone.getTimeZone("GMT-06:00"));
+		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00"));
 	}
 	
 	@AfterClass static public void oneTimeTearDown() {
 	    Util.resetTimeZone();
-		TimeZone.setDefault(null);
+	    TimestampWithTimezone.resetCalendar(null);
 	}
 	
 	@Test public void testDateTimeFormating() throws Exception {
