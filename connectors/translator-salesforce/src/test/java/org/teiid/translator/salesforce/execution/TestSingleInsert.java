@@ -52,17 +52,20 @@ import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.salesforce.SalesForceExecutionFactory;
 import org.teiid.translator.salesforce.SalesforceConnection;
+import org.teiid.translator.salesforce.Util;
 
 @SuppressWarnings("nls")
 public class TestSingleInsert {
 
     @BeforeClass
     public static void oneTimeSetup() {
+        Util.resetTimeZone();
         TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-1"));
     }
     
     @AfterClass
     public static void oneTimeTeardown() {
+        Util.resetTimeZone();
         TimestampWithTimezone.resetCalendar(null);
     }
 

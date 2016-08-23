@@ -62,6 +62,7 @@ import org.teiid.translator.TypeFacility;
 import org.teiid.translator.salesforce.SalesForceExecutionFactory;
 import org.teiid.translator.salesforce.SalesForceMetadataProcessor;
 import org.teiid.translator.salesforce.SalesforceConnection;
+import org.teiid.translator.salesforce.Util;
 import org.teiid.translator.salesforce.execution.QueryExecutionImpl;
 
 import com.sforce.soap.partner.QueryResult;
@@ -250,10 +251,12 @@ public class TestVisitors {
 	}
 	
 	@BeforeClass static public void oneTimeSetup() {
+	    Util.resetTimeZone();
 		TimeZone.setDefault(TimeZone.getTimeZone("GMT-06:00"));
 	}
 	
 	@AfterClass static public void oneTimeTearDown() {
+	    Util.resetTimeZone();
 		TimeZone.setDefault(null);
 	}
 	
