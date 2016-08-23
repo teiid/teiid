@@ -100,7 +100,7 @@ public abstract class AbstractUpdateExecution implements UpdateExecution {
 				throw new RuntimeException(SalesForcePlugin.Util.gs(SalesForcePlugin.Event.TEIID13008));
 			}
 	
-		} else if (visitor.hasCriteria()) {
+		} else {
 			try {
 				String query = visitor.getQuery();
 				context.logCommand(query);
