@@ -228,71 +228,74 @@ Set the org.teiid.honorDeclareFetchTxn system property to false to revert to the
 <a href='https://issues.jboss.org/browse/TEIID-4202'>TEIID-4202</a>] - Support Lateral join and procedure pushdown (added the initial mechanics for pushdown - with initial support pg and teiid)
         <li/>	
         <p style="margin-bottom: 0in">
-<a href='https://issues.jboss.org/browse/TEIID-4330'>TEIID-4330</a>] - Better planning with chained makedep scenarios (adding an option to make source grouping less aggressive)
+<a href='https://issues.jboss.org/browse/TEIID-4330'>TEIID-4330</a> - Better planning with chained makedep scenarios (adding an option to make source grouping less aggressive)
         <li/>	
         <p style="margin-bottom: 0in">
-<a href='https://issues.jboss.org/browse/TEIID-4344'>TEIID-4344</a>] - OData static context - if resource does not exist then Teiid throws NPE and returns empty page (fixing npe)
+<a href='https://issues.jboss.org/browse/TEIID-4344'>TEIID-4344</a> - OData static context - if resource does not exist then Teiid throws NPE and returns empty page (fixing npe)
         <li/>	
         <p style="margin-bottom: 0in">
-<a href='https://issues.jboss.org/browse/TEIID-4367'>TEIID-4367</a>] - Fail to deploy VDB with TextTable SELECTOR (correcting the to string logic)
+<a href='https://issues.jboss.org/browse/TEIID-4367'>TEIID-4367</a> - Fail to deploy VDB with TextTable SELECTOR (correcting the to string logic)
         <li/>	
         <p style="margin-bottom: 0in">
-<a href='https://issues.jboss.org/browse/TEIID-4405'>TEIID-4405</a>] - delete using in statement does not remove records from temporary table (addressing temp table issues)
+<a href='https://issues.jboss.org/browse/TEIID-4405'>TEIID-4405</a> - delete using in statement does not remove records from temporary table (addressing temp table issues)
+        <li/>	
+        <p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4410'>TEIID-4410</a> - ConnectorWorkItem setting of convertIn should be based upon the execution factory (fixing in conversion)
 </ul>
 
 <h4 class="western">from 8.12.6.6_3</h4>
 <ul>
 	<li/>
 	<p style="margin-bottom: 0in">
-<a href='https://issues.jboss.org/browse/TEIID-4238'>TEIID-4238</a>] - Remove need for quotes around cursor name declarations/fetches (removing the need for quoting) 
+<a href='https://issues.jboss.org/browse/TEIID-4238'>TEIID-4238</a> - Remove need for quotes around cursor name declarations/fetches (removing the need for quoting) 
 	<li/>
 	<p style="margin-bottom: 0in">
-<a href='https://issues.jboss.org/browse/TEIID-4245'>TEIID-4245</a>] - Add support for fetch syntax "FETCH cursorname" (supporing just fetch cursor name) 
+<a href='https://issues.jboss.org/browse/TEIID-4245'>TEIID-4245</a> - Add support for fetch syntax "FETCH cursorname" (supporing just fetch cursor name) 
 	<li/>
 	<p style="margin-bottom: 0in">
-<a href='https://issues.jboss.org/browse/TEIID-4247'>TEIID-4247</a>] - OData - support date and time functions (adding date and time functions)
+<a href='https://issues.jboss.org/browse/TEIID-4247'>TEIID-4247</a> - OData - support date and time functions (adding date and time functions)
 	<li/>
 	<p style="margin-bottom: 0in">
-<a href='https://issues.jboss.org/browse/TEIID-4271'>TEIID-4271</a>] - Consume Teiid OData from Salesforce (Providing an option to exclude system metadata from OData  schema document)
+<a href='https://issues.jboss.org/browse/TEIID-4271'>TEIID-4271</a> - Consume Teiid OData from Salesforce (Providing an option to exclude system metadata from OData  schema document)
 	<li/>
 	<p style="margin-bottom: 0in">
-<a href='https://issues.jboss.org/browse/TEIID-4278'>TEIID-4278</a>] - MySQL 5 should support distinct aggregates 
+<a href='https://issues.jboss.org/browse/TEIID-4278'>TEIID-4278</a> - MySQL 5 should support distinct aggregates 
 	<li/>
 	<p style="margin-bottom: 0in">
-<a href='https://issues.jboss.org/browse/TEIID-4288'>TEIID-4288</a>] - Cancel method against a socket based jdbc query can wait for synch timeout (narrowing the synchronization)
+<a href='https://issues.jboss.org/browse/TEIID-4288'>TEIID-4288</a> - Cancel method against a socket based jdbc query can wait for synch timeout (narrowing the synchronization)
 	<li/>
 	<p style="margin-bottom: 0in">
-<a href='https://issues.jboss.org/browse/TEIID-4289'>TEIID-4289</a>] - Add transaction command support for syntax BEGIN/ROLLBACK/COMMIT WORK (adding support for the work/transaction keywords) 
+<a href='https://issues.jboss.org/browse/TEIID-4289'>TEIID-4289</a> - Add transaction command support for syntax BEGIN/ROLLBACK/COMMIT WORK (adding support for the work/transaction keywords) 
 	<li/>
 	<p style="margin-bottom: 0in">
-<a href='https://issues.jboss.org/browse/TEIID-4299'>TEIID-4299</a>] - Object translator null values correctly (added logic and test to handle the schema within a schema after teiid designer materialization generates it. Regarding trying to set a null on a java native type, added to throw an exception)
+<a href='https://issues.jboss.org/browse/TEIID-4299'>TEIID-4299</a> - Object translator null values correctly (added logic and test to handle the schema within a schema after teiid designer materialization generates it. Regarding trying to set a null on a java native type, added to throw an exception)
 	<li/>
 	<p style="margin-bottom: 0in">
-<a href='https://issues.jboss.org/browse/TEIID-4304'>TEIID-4304</a>] - Correct handling with subquery in on clause 
+<a href='https://issues.jboss.org/browse/TEIID-4304'>TEIID-4304</a> - Correct handling with subquery in on clause 
 	<li/>
 	<p style="margin-bottom: 0in">
-<a href='https://issues.jboss.org/browse/TEIID-4320'>TEIID-4320</a>] - Costing calculation issues (fixing costing issues) 
+<a href='https://issues.jboss.org/browse/TEIID-4320'>TEIID-4320</a> - Costing calculation issues (fixing costing issues) 
 	<li/>
 	<p style="margin-bottom: 0in">
-<a href='https://issues.jboss.org/browse/TEIID-4323'>TEIID-4323</a>] - Add support for first/last/absolute/relative "FETCH " syntax 
+<a href='https://issues.jboss.org/browse/TEIID-4323'>TEIID-4323</a> - Add support for first/last/absolute/relative "FETCH " syntax 
 	<li/>
 	<p style="margin-bottom: 0in">
-<a href='https://issues.jboss.org/browse/TEIID-4324'>TEIID-4324</a>] - TEIID30019 Unexpected exception for request ... java.lang.AssertionError: Batch not found in storage (correcting clean up logic) 
+<a href='https://issues.jboss.org/browse/TEIID-4324'>TEIID-4324</a> - TEIID30019 Unexpected exception for request ... java.lang.AssertionError: Batch not found in storage (correcting clean up logic) 
 	<li/>
 	<p style="margin-bottom: 0in">
-<a href='https://issues.jboss.org/browse/TEIID-4325'>TEIID-4325</a>] - ASSERTION FAILED: expected reference to be not null (fixing planning error with outer join associativity) 
+<a href='https://issues.jboss.org/browse/TEIID-4325'>TEIID-4325</a> - ASSERTION FAILED: expected reference to be not null (fixing planning error with outer join associativity) 
 	<li/>
 	<p style="margin-bottom: 0in">
-<a href='https://issues.jboss.org/browse/TEIID-4329'>TEIID-4329</a>] - Using JDG annotations, unable to provide package name qualification for serialization 
+<a href='https://issues.jboss.org/browse/TEIID-4329'>TEIID-4329</a> - Using JDG annotations, unable to provide package name qualification for serialization 
 	<li/>
 	<p style="margin-bottom: 0in">
-<a href='https://issues.jboss.org/browse/TEIID-4330'>TEIID-4330</a>] - Better planning with chained makedep scenarios
+<a href='https://issues.jboss.org/browse/TEIID-4330'>TEIID-4330</a> - Better planning with chained makedep scenarios
 	<li/>
 	<p style="margin-bottom: 0in">
-<a href='https://issues.jboss.org/browse/TEIID-4335'>TEIID-4335</a>] - No buffer when close is called (fixing the npe)
+<a href='https://issues.jboss.org/browse/TEIID-4335'>TEIID-4335</a> - No buffer when close is called (fixing the npe)
 	<li/>
 	<p style="margin-bottom: 0in">
-<a href='https://issues.jboss.org/browse/TEIID-4358'>TEIID-4358</a>] - JDG: Retain supported dependencies in the module.xml for out-of-the-box usage
+<a href='https://issues.jboss.org/browse/TEIID-4358'>TEIID-4358</a> - JDG: Retain supported dependencies in the module.xml for out-of-the-box usage
 </ul>
 
 <h4 class="western">from 8.11</h4>

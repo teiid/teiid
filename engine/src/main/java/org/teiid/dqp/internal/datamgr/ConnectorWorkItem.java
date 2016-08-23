@@ -163,8 +163,10 @@ public class ConnectorWorkItem implements ConnectorWork {
         LanguageBridgeFactory factory = new LanguageBridgeFactory(this.queryMetadata);
         try {
 			SourceCapabilities capabilities = manager.getCapabilities();
+			//set other properties once the capabilities have been obtained
 			factory.setSupportsConcat2(capabilities.supportsFunction(SourceSystemFunctions.CONCAT2));
-	        factory.setConvertIn(!capabilities.supportsCapability(Capability.CRITERIA_IN));
+			//read directly from the connector
+	        factory.setConvertIn(!this.connector.supportsInCriteria());
 	        factory.setMaxInPredicateSize((Integer) capabilities.getSourceProperty(Capability.MAX_IN_CRITERIA_SIZE));
 	        factory.setCommandContext(requestMsg.getCommandContext());
 	        factory.setExcludeWithName((String) capabilities.getSourceProperty(Capability.EXCLUDE_COMMON_TABLE_EXPRESSION_NAME));
