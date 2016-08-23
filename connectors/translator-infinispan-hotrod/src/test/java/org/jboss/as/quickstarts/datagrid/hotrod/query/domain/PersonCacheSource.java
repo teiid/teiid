@@ -49,6 +49,7 @@ import org.infinispan.protostream.impl.parser.SquareProtoParser;
 import org.infinispan.query.dsl.Query;
 import org.teiid.translator.infinispan.hotrod.InfinispanHotRodConnection;
 import org.teiid.translator.object.ClassRegistry;
+import org.teiid.translator.object.Version;
 
 /**
  * Sample cache of objects
@@ -88,11 +89,14 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 		}
 	}
 	
-	
 	public static InfinispanHotRodConnection createConnection(final boolean useKeyClass) {
+		return createConnection(useKeyClass, Version.getVersion("10.2.1"));
+	}
+	
+	public static InfinispanHotRodConnection createConnection(final boolean useKeyClass, Version version) {
 		final RemoteCache objects = PersonCacheSource.loadCache();
 
-		return PersonCacheConnection.createConnection(objects, useKeyClass, DESCRIPTOR);
+		return PersonCacheConnection.createConnection(objects, useKeyClass, DESCRIPTOR, version);
 
 	}
 	
@@ -111,6 +115,7 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 			}
 			
 			Person p = new Person();
+
 			p.setId(i);
 			p.setName("Person " + i);
 			p.setPhones(pns);

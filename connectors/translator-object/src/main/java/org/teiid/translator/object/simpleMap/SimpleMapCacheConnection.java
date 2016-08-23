@@ -11,8 +11,10 @@ import org.teiid.translator.object.ClassRegistry;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.DDLHandler;
 import org.teiid.translator.object.SearchType;
+import org.teiid.translator.object.Version;
 
 public class SimpleMapCacheConnection implements ObjectConnection {
+	private Version version = Version.getVersion("0.0.0");
 	private Map<String, Map<Object,Object>> mapCaches = new HashMap<String, Map<Object, Object>>(3);
 	private ClassRegistry registry;
 	private String pkField;
@@ -39,10 +41,14 @@ public class SimpleMapCacheConnection implements ObjectConnection {
 		this.registry = registry;
 		this.proxy = proxy;
 	}
-	
+
 	@Override
-	public String getVersion()  {
-		return "";
+	public Version getVersion()  {
+		return version;
+	}
+	
+	public void setVersion(Version version) {
+		this.version = version;
 	}
 
 	@Override 

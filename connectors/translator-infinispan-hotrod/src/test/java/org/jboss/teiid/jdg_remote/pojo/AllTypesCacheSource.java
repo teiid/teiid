@@ -37,6 +37,9 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import org.infinispan.client.hotrod.CacheTopologyInfo;
 import org.infinispan.client.hotrod.Flag;
@@ -82,7 +85,7 @@ public class AllTypesCacheSource<K, V>  implements RemoteCache<K, V>{
 	
 	static {
 		try {
-			DESCRIPTOR = (Descriptor) createDescriptor();
+			DESCRIPTOR = createDescriptor();
 
 			CLASS_REGISTRY.registerClass(AllTypes.class);
 
@@ -90,7 +93,6 @@ public class AllTypesCacheSource<K, V>  implements RemoteCache<K, V>{
 			throw new RuntimeException(e);
 		}
 	}
-	
 	
 	public static InfinispanHotRodConnection createConnection() {
 		return createConnection(true);
@@ -103,55 +105,6 @@ public class AllTypesCacheSource<K, V>  implements RemoteCache<K, V>{
 		final RemoteCache objects = AllTypesCacheSource.loadCache();
 		
 		return AllTypeCacheConnection.createConnection(objects, useKeyClassType, DESCRIPTOR);
-//
-//		return new TestInfinispanDSLConnection()   {
-//
-//			@Override
-//			public String getPkField() {
-//				return "intKey";
-//			}
-//
-//			@Override
-//			public Class<?> getCacheKeyClassType() throws TranslatorException {
-//				if (useKeyClassType) {
-//					return Integer.class;
-//				} 
-//				return null;
-//			}
-//			
-//			@Override
-//			public String getCacheName() {
-//				return AllTypesCacheSource.ALLTYPES_CACHE_NAME;
-//			}
-//
-//
-//			@Override
-//			public Class<?> getCacheClassType() throws TranslatorException {
-//				return AllTypes.class;
-//			}
-//
-//
-//			@Override
-//			public Descriptor getDescriptor() throws TranslatorException {
-//				return DESCRIPTOR;
-//			}
-//
-//
-//			@Override
-//			public RemoteCache getCache(String cacheName)  {
-//				return objects;
-//			}
-//			
-//			@Override
-//			public QueryFactory getQueryFactory() throws TranslatorException {
-//				return null;
-//			}
-//
-//			@Override
-//	        public ClassRegistry getClassRegistry() {
-//		        return AllTypesCacheSource.CLASS_REGISTRY;
-//		    }
-//		};
 	}
 	
 	public static void loadCache(Map<Object, Object> cache) {
@@ -1068,7 +1021,5 @@ public class AllTypesCacheSource<K, V>  implements RemoteCache<K, V>{
 			Set<Integer> arg0, int arg1) {
 		return null;
 	}
-	
-	
 	
 }

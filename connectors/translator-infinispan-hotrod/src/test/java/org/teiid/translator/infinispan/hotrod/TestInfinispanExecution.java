@@ -37,6 +37,7 @@ import org.teiid.language.Select;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.ObjectExecution;
+import org.teiid.translator.object.Version;
 import org.teiid.translator.object.testdata.person.PersonSchemaVDBUtility;
 
 /**
@@ -62,7 +63,7 @@ public class TestInfinispanExecution {
     @BeforeClass
     public static void setUp()  {
         
-		CONNECTION = PersonCacheSource.createConnection(true);
+		CONNECTION = PersonCacheSource.createConnection(true, Version.getVersion("7.2.3"));
 
     }	
 

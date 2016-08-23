@@ -31,7 +31,6 @@ import javax.resource.ResourceException;
 import javax.resource.spi.InvalidPropertyException;
 
 import org.infinispan.Cache;
-import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.lifecycle.ComponentStatus;
 import org.infinispan.manager.DefaultCacheManager;
@@ -49,6 +48,7 @@ import org.teiid.resource.spi.BasicManagedConnectionFactory;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.CacheNameProxy;
 import org.teiid.translator.object.ClassRegistry;
+import org.teiid.translator.object.Version;
 
 public class InfinispanManagedConnectionFactory extends
 		BasicManagedConnectionFactory {
@@ -70,6 +70,7 @@ public class InfinispanManagedConnectionFactory extends
 	private Class<?> cacheTypeClass = null; // cacheName ==> ClassType
 	private ClassLoader cl;
 	private CacheNameProxy cacheNameProxy;
+	private Version version = Version.getVersion("0.0.0");
 
 	@Override
 	public BasicConnectionFactory<InfinispanCacheRAConnection> createConnectionFactory()
@@ -385,13 +386,12 @@ public class InfinispanManagedConnectionFactory extends
 						this.getClass().getClassLoader());
 				loadClasses();
 				
-				InfinispanCacheRAConnection conn = new InfinispanCacheRAConnection(this);
 				createCache();
 
 						
 				// if configured for materialization, initialize the 
 				if (cacheNameProxy.getAliasCacheName() != null) {
-					Map<Object,Object> aliasCache = (Map<Object, Object>) this.cacheManager.getCache(cacheNameProxy.getAliasCacheName());
+					Map<Object,Object> aliasCache = this.cacheManager.getCache(cacheNameProxy.getAliasCacheName());
 					if (aliasCache == null) {
 						throw new ResourceException(	
 							InfinispanManagedConnectionFactory.UTIL
@@ -400,6 +400,9 @@ public class InfinispanManagedConnectionFactory extends
 					}
 					cacheNameProxy.initializeAliasCache(aliasCache);
 				}
+				
+				Cache<Object, Object> cache = this.getCache(this.getCacheNameProxy().getPrimaryCacheKey());
+				version = Version.getVersion(cache.getVersion());
 
 			} catch (Exception e) {
 				throw new ResourceException(e);
@@ -465,7 +468,7 @@ public class InfinispanManagedConnectionFactory extends
 				throw new TranslatorException("Program Error: DefaultCacheManager was not configured");
 			}
 		}
-
+		
 	}
 	
 
@@ -565,10 +568,8 @@ public class InfinispanManagedConnectionFactory extends
 		return false;
 	}
 	
-	protected String getVersion() {
-		if (cacheManager == null) return "";
-
-		return cacheManager.getCache(this.getCacheNameProxy().getPrimaryCacheKey()).getVersion();
+	protected Version getVersion() {
+		return version;
 	}
 	
 	

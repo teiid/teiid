@@ -34,10 +34,10 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.translator.object.ObjectConnection;
+import org.teiid.translator.object.Version;
 
 
 @SuppressWarnings("nls")
-@Ignore
 public class TestInfinispanConfigFileRemoteCache {
     
     private static InfinispanManagedConnectionFactory factory = null;
@@ -55,7 +55,7 @@ public class TestInfinispanConfigFileRemoteCache {
   		Properties props = PropertiesUtils.load(f.getAbsolutePath());
   		props.setProperty("infinispan.client.hotrod.server_list", RemoteInfinispanTestHelper.hostAddress() + ":" + RemoteInfinispanTestHelper.hostPort());
 		
-  		PropertiesUtils.print("./target/jdg.properties", props);
+  		PropertiesUtils.print("./target/hotrod-client.properties", props);
 
 		factory = new InfinispanManagedConnectionFactory();
 
@@ -87,8 +87,8 @@ public class TestInfinispanConfigFileRemoteCache {
     		
     		 assertNotNull(conn.getCache());
     		 
-    			
-    		 assertEquals("Version doesn't start with 7.2", conn.getVersion().startsWith("7.2"));
+    		 assertEquals("Support For Compare is false", conn.getVersion().compareTo(Version.getVersion("6.6")) >= 0, false );
+ //   		 assertEquals("Version doesn't start with 7.2", conn.getVersion().startsWith("7.2"));
 
     		 
     		 conn.cleanUp();

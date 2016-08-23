@@ -26,7 +26,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
-import org.teiid.translator.infinispan.libmode.InfinispanCacheExecutionFactory;
 import org.teiid.translator.object.ObjectExecution;
 import org.teiid.translator.object.ObjectExecutionFactory;
 import org.teiid.translator.object.TestObjectExecutionFactory;
@@ -55,7 +54,7 @@ public class TestInfinispanExecutionFactory extends TestObjectExecutionFactory {
 	@Test public void testDefaultSearch() throws Exception {
 		InfinispanCacheExecutionFactory f = (InfinispanCacheExecutionFactory) this.factory;
 		factory.start();
-			
+
 		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, conn);
 		
 		assertNotNull(exec);

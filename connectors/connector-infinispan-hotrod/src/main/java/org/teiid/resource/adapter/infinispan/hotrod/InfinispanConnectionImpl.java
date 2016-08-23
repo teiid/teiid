@@ -42,6 +42,7 @@ import org.teiid.translator.infinispan.hotrod.InfinispanHotRodConnection;
 import org.teiid.translator.infinispan.hotrod.InfinispanPlugin;
 import org.teiid.translator.object.DDLHandler;
 import org.teiid.translator.object.SearchType;
+import org.teiid.translator.object.Version;
 
 
 /** 
@@ -62,7 +63,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	}
 	
 	@Override
-	public String getVersion() throws TranslatorException {
+	public Version getVersion() throws TranslatorException {
 		return this.config.getVersion();
 	}
 	

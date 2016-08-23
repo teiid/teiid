@@ -32,6 +32,7 @@ import org.mockito.MockitoAnnotations;
 import org.teiid.language.Select;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.object.ObjectExecution;
+import org.teiid.translator.object.Version;
 import org.teiid.translator.object.testdata.person.PersonSchemaVDBUtility;
 
 @SuppressWarnings("nls")
@@ -54,9 +55,7 @@ public class TestInfinispanExecutionFactory {
     }
 
 	@Test public void testFactory() throws Exception {
-	   	CONNECTION = PersonCacheSource.createConnection(true);
-    	TestInfinispanHotRodConnection conn = (TestInfinispanHotRodConnection) CONNECTION;
-    	conn.setVersion("6.6");
+	   	CONNECTION = PersonCacheSource.createConnection(true, Version.getVersion("6.6"));
     	
         TRANSLATOR = new InfinispanExecutionFactory();
         TRANSLATOR.initCapabilities(CONNECTION);
@@ -71,9 +70,8 @@ public class TestInfinispanExecutionFactory {
 	}	
 	
 	@Test public void testFactoryVersion7() throws Exception {
-	   	CONNECTION = PersonCacheSource.createConnection(true);
-    	TestInfinispanHotRodConnection conn = (TestInfinispanHotRodConnection) CONNECTION;
-    	conn.setVersion("7.2.3");
+	   	CONNECTION = PersonCacheSource.createConnection(true, Version.getVersion("7.2.3"));
+
     	
         TRANSLATOR = new InfinispanExecutionFactory();
         TRANSLATOR.initCapabilities(CONNECTION);
@@ -89,9 +87,8 @@ public class TestInfinispanExecutionFactory {
 	}	
 	
 	@Test public void testFactoryVersion65() throws Exception {
-	   	CONNECTION = PersonCacheSource.createConnection(true);
-    	TestInfinispanHotRodConnection conn = (TestInfinispanHotRodConnection) CONNECTION;
-    	conn.setVersion("6.5");
+	   	CONNECTION = PersonCacheSource.createConnection(true, Version.getVersion("6.5.2"));
+
     	
         TRANSLATOR = new InfinispanExecutionFactory();
         TRANSLATOR.initCapabilities(CONNECTION);
