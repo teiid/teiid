@@ -50,6 +50,10 @@ public class Util {
 	
 	private static String timeZone;
 	
+	public static void resetTimeZone() {
+	    timeZone = null;
+	}
+	
 	public static String getDefaultTimeZoneString() {
 		if (timeZone == null) {
 			String s = new SimpleDateFormat("Z").format(new Date(0)); //$NON-NLS-1$
