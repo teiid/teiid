@@ -41,6 +41,7 @@ public class FakeConnector extends ExecutionFactory<Object, Object> {
     private int connectionCount;
     private int executionCount;
     private int closeCount;
+    private List<Command> commands = new ArrayList<Command>();
 
     public int getConnectionCount() {
 		return connectionCount;
@@ -53,9 +54,10 @@ public class FakeConnector extends ExecutionFactory<Object, Object> {
     @Override
     public Execution createExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connection) throws TranslatorException {
     	executionCount++;
-        return new FakeExecution(executionContext);
+        commands.add(command);
+	return new FakeExecution(executionContext);
     }
-    
+
     @Override
     public Object getConnection(Object factory) throws TranslatorException {
     	connectionCount++;
@@ -105,5 +107,18 @@ public class FakeConnector extends ExecutionFactory<Object, Object> {
 		}
     }
 
+    public List<Command> getCommands() {
+        return commands;
+    }
+    
+    @Override
+    public boolean supportsCompareCriteriaEquals() {
+        return true;
+    }
+    
+    @Override
+    public boolean supportsOrCriteria() {
+        return true;
+    }
 	
 }
