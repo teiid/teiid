@@ -353,4 +353,59 @@ public class TestGeometry {
 		assertFalse((Boolean)Evaluator.evaluate(ex));
 	}
     
+    @Test public void testEndPoint() throws Exception {
+		Expression ex = TestFunctionResolving.getExpression("ST_AsText(st_endpoint(ST_GEOMFROMTEXT('LINESTRING(0 0, 1 3)'))))");
+		assertEquals("POINT (1 3)", ClobType.getString((ClobType)Evaluator.evaluate(ex)));
+	}
+    
+    @Test public void testStartPoint() throws Exception {
+        Expression ex = TestFunctionResolving.getExpression("ST_AsText(st_startpoint(ST_GEOMFROMTEXT('LINESTRING(0 0, 1 3)'))))");
+        assertEquals("POINT (0 0)", ClobType.getString((ClobType)Evaluator.evaluate(ex)));
+    }
+    
+    @Test public void testCoordDims() throws Exception {
+		Expression ex = TestFunctionResolving.getExpression("ST_CoordDim(ST_GEOMFROMTEXT('LINESTRING EMPTY'))");
+		assertEquals(2, Evaluator.evaluate(ex));
+	}
+    
+    @Test public void testOrderingEquals() throws Exception {
+		Expression ex = TestFunctionResolving.getExpression("ST_OrderingEquals(ST_GeomFromText('LINESTRING(0 0, 10 10)'),ST_GeomFromText('LINESTRING(0 0, 0 0, 10 10)'))");
+		assertFalse((Boolean)Evaluator.evaluate(ex));
+	}
+    
+    @Test public void testPointN() throws Exception {
+		Expression ex = TestFunctionResolving.getExpression("ST_AsText(ST_PointN(ST_GeomFromText('LINESTRING(1 2, 3 2, 1 2)'),4))");
+		assertNull(Evaluator.evaluate(ex));
+	}
+    
+    @Test public void testPolygon() throws Exception {
+        Expression ex = TestFunctionResolving.getExpression("ST_ASEWKT(ST_Polygon(ST_GeomFromText('LINESTRING(75.15 29.53,77 29,77.6 29.5, 75.15 29.53)'), 4326))");
+        assertEquals("SRID=4326;POLYGON ((75.15 29.53, 77 29, 77.6 29.5, 75.15 29.53))", ClobType.getString((ClobType)Evaluator.evaluate(ex)));
+    }
+    
+    @Test public void testRelate() throws Exception {
+        Expression ex = TestFunctionResolving.getExpression("ST_Relate(ST_GeomFromText('POINT(1 2)'), ST_Buffer(ST_GeomFromText('POINT(1 2)'),2))");
+        assertEquals("0FFFFF212", Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testRelatePattern() throws Exception {
+        Expression ex = TestFunctionResolving.getExpression("ST_Relate(ST_GeomFromText('POINT(1 2)'), ST_Buffer(ST_GeomFromText('POINT(1 2)'),2), '*FF*FF212')");
+        assertEquals(true, Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testX() throws Exception {
+        Expression ex = TestFunctionResolving.getExpression("ST_X(ST_GeomFromText('POINT(1 2)'))");
+        assertEquals(1.0, Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testY() throws Exception {
+        Expression ex = TestFunctionResolving.getExpression("ST_Y(ST_GeomFromText('POINT(1 2)'))");
+        assertEquals(2.0, Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testZ() throws Exception {
+        Expression ex = TestFunctionResolving.getExpression("ST_Z(ST_GeomFromText('POINT(1 2)'))");
+        assertNull(Evaluator.evaluate(ex));
+    }
+    
 }

@@ -31,6 +31,7 @@ import org.teiid.core.types.ClobType;
 import org.teiid.core.types.GeometryType;
 import org.teiid.language.SQLConstants;
 import org.teiid.metadata.FunctionMethod.PushDown;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.SourceSystemFunctions;
@@ -342,5 +343,333 @@ public class GeometryFunctionMethods {
 	     throws FunctionExecutionException, SQLException {
 		return GeometryUtils.geometryFromEwkb(ewkb.getBinaryStream(), null);
 	}
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_AREA,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static Double area(GeometryType geom) 
+         throws FunctionExecutionException {
+        return GeometryUtils.area(geom);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_BOUNDARY,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static GeometryType boundary(GeometryType geom) 
+         throws FunctionExecutionException {
+        return GeometryUtils.boundary(geom);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_BUFFER,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static GeometryType buffer(GeometryType geom, double distance) 
+         throws FunctionExecutionException {
+        return GeometryUtils.buffer(geom, distance);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_CENTROID,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static GeometryType buffer(GeometryType geom) 
+         throws FunctionExecutionException {
+        return GeometryUtils.centroid(geom);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_CONVEXHULL,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static GeometryType convexHull(GeometryType geom) 
+         throws FunctionExecutionException {
+        return GeometryUtils.convexHull(geom);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_COORDDIM,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static Integer coordDim(GeometryType geom) 
+         throws FunctionExecutionException {
+        return GeometryUtils.coordDim(geom);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_CURVETOLINE,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static GeometryType curveToLine(@SuppressWarnings("unused") GeometryType geom) 
+         throws FunctionExecutionException {
+        throw new FunctionExecutionException(QueryPlugin.Event.TEIID31206, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31206));
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_DIFFERENCE,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static GeometryType difference(GeometryType geom1, GeometryType geom2) 
+         throws FunctionExecutionException {
+        return GeometryUtils.difference(geom1, geom2);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_DIMENSION,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static Integer dimension(GeometryType geom) 
+         throws FunctionExecutionException {
+        return GeometryUtils.dimension(geom);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_ENDPOINT,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static GeometryType endPoint(GeometryType geom) 
+         throws FunctionExecutionException {
+        return GeometryUtils.startEndPoint(geom, false);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_EXTERIORRING,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static GeometryType exteriorRing(GeometryType geom) 
+         throws FunctionExecutionException {
+        return GeometryUtils.exteriorRing(geom);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_GEOMETRYN,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static GeometryType geometryN(GeometryType geom, int index) 
+         throws FunctionExecutionException {
+        return GeometryUtils.geometryN(geom, index - 1);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_GEOMETRYTYPE,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static String geometryType(GeometryType geom) 
+         throws FunctionExecutionException {
+        return GeometryUtils.geometryType(geom);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_INTERIORRINGN,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static GeometryType interiorRingN(GeometryType geom, int index) 
+         throws FunctionExecutionException {
+        return GeometryUtils.interiorRingN(geom, index - 1);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_ISCLOSED,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static Boolean isClosed(GeometryType geom) 
+         throws FunctionExecutionException {
+        return GeometryUtils.isClosed(geom);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_ISEMPTY,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static Boolean isEmpty(GeometryType geom) 
+         throws FunctionExecutionException {
+        return GeometryUtils.isEmpty(geom);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_ISRING,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static Boolean isRing(GeometryType geom) 
+         throws FunctionExecutionException {
+        return GeometryUtils.isRing(geom);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_ISSIMPLE,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static Boolean isSimple(GeometryType geom) 
+         throws FunctionExecutionException {
+        return GeometryUtils.isSimple(geom);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_ISVALID,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static Boolean isValid(GeometryType geom) 
+         throws FunctionExecutionException {
+        return GeometryUtils.isValid(geom);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_LENGTH,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static Double length(GeometryType geom) 
+         throws FunctionExecutionException {
+        return GeometryUtils.length(geom);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_NUMGEOMETRIES,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static Integer numGeometries(GeometryType geom) 
+         throws FunctionExecutionException {
+        return GeometryUtils.numGeometries(geom);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_NUMINTERIORRINGS,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static Integer numInteriorRings(GeometryType geom) throws FunctionExecutionException {
+        return GeometryUtils.numInteriorRings(geom);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_NUMPOINTS,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static Integer numPoints(GeometryType geom) throws FunctionExecutionException {
+        return GeometryUtils.numPoints(geom);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_ORDERINGEQUALS,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static Boolean orderingEquals(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
+        return GeometryUtils.orderingEquals(geom1, geom2);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_POINT,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static GeometryType point(double x, double y) {
+        return GeometryUtils.point(x, y);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_POINTN,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static GeometryType pointN(GeometryType geom, int index) throws FunctionExecutionException {
+        return GeometryUtils.pointN(geom, index - 1);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_PERIMETER,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static Double perimeter(GeometryType geom) 
+         throws FunctionExecutionException {
+        return GeometryUtils.perimeter(geom);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_POINTONSURFACE,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static GeometryType pointOnSurface(GeometryType geom) 
+         throws FunctionExecutionException {
+        return GeometryUtils.pointOnSurface(geom);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_POLYGON,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static GeometryType polygon(GeometryType geom, int srid) 
+         throws FunctionExecutionException {
+        return GeometryUtils.polygon(geom, srid);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_RELATE,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static String relate(GeometryType geom1, GeometryType geom2) 
+         throws FunctionExecutionException {
+        return GeometryUtils.relate(geom1, geom2);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_RELATE,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static Boolean relate(GeometryType geom1, GeometryType geom2, String intersectionPattern) 
+         throws FunctionExecutionException {
+        return GeometryUtils.relate(geom1, geom2, intersectionPattern);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_STARTPOINT,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static GeometryType startPoint(GeometryType geom) 
+         throws FunctionExecutionException {
+        return GeometryUtils.startEndPoint(geom, true);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_SYMDIFFERENCE,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static GeometryType symDifference(GeometryType geom1, GeometryType geom2) 
+         throws FunctionExecutionException {
+        return GeometryUtils.symDifference(geom1, geom2);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_UNION,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static GeometryType union(GeometryType geom1, GeometryType geom2) 
+         throws FunctionExecutionException {
+        return GeometryUtils.union(geom1, geom2);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_X,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static Double ordinateX(GeometryType geom) 
+         throws FunctionExecutionException {
+        return GeometryUtils.ordinate(geom, GeometryUtils.Ordinate.X);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_Y,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static Double ordinateY(GeometryType geom) 
+         throws FunctionExecutionException {
+        return GeometryUtils.ordinate(geom, GeometryUtils.Ordinate.Y);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_Z,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static Double ordinateZ(GeometryType geom) 
+         throws FunctionExecutionException {
+        return GeometryUtils.ordinate(geom, GeometryUtils.Ordinate.Z);
+    }
     
 }
