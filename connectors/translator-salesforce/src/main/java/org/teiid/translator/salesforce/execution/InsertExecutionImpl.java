@@ -24,8 +24,10 @@ package org.teiid.translator.salesforce.execution;
 
 import java.sql.SQLWarning;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
 
@@ -140,12 +142,16 @@ public class InsertExecutionImpl extends AbstractUpdateExecution {
 			
 			Literal literalValue = (Literal)values.get(i);
 			Object val = literalValue.getValue();
-			Class<?> type = literalValue.getType();
-			data.addField(column.getSourceName(), getValue(val, type));
+			if (val instanceof Timestamp) {
+			    Calendar cal = Calendar.getInstance();
+			    cal.setTime((Timestamp)val);
+			    val = cal;
+			}
+			data.addField(column.getSourceName(), val);
 		}
 	}
 
-	private String getValue(Object val, Class<?> type) {
+	private String getStringValue(Object val, Class<?> type) {
 		if (val == null) {
 			return null;
 		}
@@ -180,7 +186,7 @@ public class InsertExecutionImpl extends AbstractUpdateExecution {
 				} else {
 					value = ((Literal)ex).getValue();
 				}
-				sobj.setField(column.getSourceName(), getValue(value, type));
+				sobj.setField(column.getSourceName(), getStringValue(value, type));
 			}
 			rows.add(sobj);
 		}
