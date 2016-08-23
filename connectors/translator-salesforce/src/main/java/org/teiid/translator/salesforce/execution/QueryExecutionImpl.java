@@ -458,7 +458,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 				return value;
 			}
 			return null;
-		} else if (type.equals(java.sql.Timestamp.class) || type.equals(java.sql.Time.class) && !(value instanceof Date)) {
+		} else if ((type.equals(java.sql.Timestamp.class) || type.equals(java.sql.Time.class)) && !(value instanceof Date)) {
 			if (cal == null) {
 				cal = Calendar.getInstance();
 			}
