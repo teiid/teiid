@@ -105,7 +105,8 @@
         <version.commons-configuration>1.6</version.commons-configuration>
         <version.org.apache.ant>1.8.2</version.org.apache.ant>
         <version.com.fasterxml.jackson.dataformat>2.4.5</version.com.fasterxml.jackson.dataformat>	 
-        <version.javax.validation>1.1.0.Final</version.javax.validation>   	    
+        <version.javax.validation>1.1.0.Final</version.javax.validation>
+        <version.org.wildfly.build-tools>1.1.3.Final</version.org.wildfly.build-tools>   	    
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -246,7 +247,12 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-rar-plugin</artifactId>
                 <version>2.3</version>
-               </plugin>                
+               </plugin>
+                <plugin>
+                  <groupId>org.wildfly.build</groupId>
+                  <artifactId>wildfly-feature-pack-build-maven-plugin</artifactId>
+                  <version>${version.org.wildfly.build-tools}</version>
+                </plugin>                
 			</plugins>
 		</pluginManagement>
 		<plugins>
@@ -492,6 +498,166 @@
                 <artifactId>document-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>translator-odata4</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>translator-jpa</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>translator-hbase</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>translator-mongodb</artifactId>
+	    <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>translator-ldap</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>translator-hive</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>translator-swagger</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>translator-olap</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+	<dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>translator-google</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+	<dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>translator-excel</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+	<dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>translator-prestodb</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+	<dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>translator-simpledb</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>connector-accumulo</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>connector-simpledb</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>connector-mongodb</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>connector-ldap</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>connector-google</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>connector-ws</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>connector-cassandra</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>connector-solr</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>connector-infinispan-hotrod</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>connector-infinispan-libmode</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+	<dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-hibernate-dialect</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-olingo</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.force.api</groupId>
+            <artifactId>force-wsc</artifactId>
+            <version>${version.com.force.api}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.code.gson</groupId>
+                    <artifactId>gson</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>rhino</groupId>
+                    <artifactId>js</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.force.api</groupId>
+            <artifactId>force-partner-api</artifactId>
+            <version>${version.com.force.api}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>annotations</artifactId>
+            <version>${version.com.google.code.findbugs}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-core</artifactId>
+            <version>${version.io.swagger}</version>
+        </dependency> 
+        <dependency>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-models</artifactId>
+            <version>${version.io.swagger}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-annotations</artifactId>
+            <version>${version.io.swagger}</version>
+        </dependency>
         	<dependency>
            	 	<groupId>org.jboss.teiid.connectors</groupId>
             	<artifactId>translator-jdbc</artifactId>    
@@ -1711,6 +1877,7 @@
 		<module>jboss-integration</module>
 		<module>jboss-security</module>
 		<module>rest-service</module>
+                <module>feature-pack</module>
 		<module>test-integration</module>
 	</modules>
 </project>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.3" name="org.jboss.teiid.translator.object">
+    <properties>
+        <property name="jboss.api" value="private"/>
+    </properties>
+    
+    <resources>
+        <artifact name="${org.jboss.teiid.connectors:translator-object}" />
+        <!-- Insert resources here -->
+    </resources>
+
+    <dependencies>
+        <module name="javax.api"/>
+        <module name="javax.resource.api"/>
+        <module name="org.jboss.teiid.common-core"  export="true" />
+        <module name="org.jboss.teiid.api"  export="true" />
+        <!--  need teiid-engine for the scriptengine -->
+        <module name="org.jboss.teiid" export="true" />
+        <module name="org.jboss.modules"  export="true" />
+ 
+        <module name="org.hibernate.search.engine" />
+ 
+    </dependencies>
+</module>
+        
