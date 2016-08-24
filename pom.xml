@@ -106,7 +106,9 @@
         <version.org.apache.ant>1.8.2</version.org.apache.ant>
         <version.com.fasterxml.jackson.dataformat>2.4.5</version.com.fasterxml.jackson.dataformat>	 
         <version.javax.validation>1.1.0.Final</version.javax.validation>
-        <version.org.wildfly.build-tools>1.1.3.Final</version.org.wildfly.build-tools>   	    
+        <version.org.wildfly.build-tools>1.1.3.Final</version.org.wildfly.build-tools>
+        <version.org.apache.maven>2.2.1</version.org.apache.maven>
+        <version.org.jboss.shrinkwrap.descriptors>2.0.0-alpha-10</version.org.jboss.shrinkwrap.descriptors>   	    
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -616,6 +618,11 @@
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-olingo</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-data-quality</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -1854,7 +1861,21 @@
 			    <artifactId>reflections</artifactId>
 			    <version>${version.org.reflections}</version>
 			</dependency>
-            
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-project</artifactId>
+                <version>${version.org.apache.maven}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.shrinkwrap.descriptors</groupId>
+                <artifactId>shrinkwrap-descriptors-api-jboss</artifactId>
+                <version>${version.org.jboss.shrinkwrap.descriptors}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.shrinkwrap.descriptors</groupId>
+                <artifactId>shrinkwrap-descriptors-impl-jboss</artifactId>
+                <version>${version.org.jboss.shrinkwrap.descriptors}</version>
+            </dependency>
         </dependencies>
 	</dependencyManagement>
 	<modules>
@@ -1877,6 +1898,7 @@
 		<module>jboss-integration</module>
 		<module>jboss-security</module>
 		<module>rest-service</module>
+                <module>feature-pack-generator</module>
                 <module>feature-pack</module>
 		<module>test-integration</module>
 	</modules>

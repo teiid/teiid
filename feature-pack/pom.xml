@@ -11,7 +11,32 @@
   <packaging>pom</packaging>
   
     <build>
-        <plugins>
+        <plugins> 
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>unpack</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                              <artifactItem>
+                                <groupId>org.jboss.teiid</groupId>
+                                <artifactId>teiid-feature-generator</artifactId>
+                                <version>${project.version}</version>
+                              </artifactItem>
+                            </artifactItems>                    
+                            <includes>**/*.xml, **/MANIFEST.MF</includes>
+                            <excludes>**/*.class</excludes>
+                            <outputDirectory>${project.build.directory}/classes</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>         
             <plugin>
                 <groupId>org.wildfly.build</groupId>
                 <artifactId>wildfly-feature-pack-build-maven-plugin</artifactId>
@@ -199,6 +224,10 @@
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-olingo</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-data-quality</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
