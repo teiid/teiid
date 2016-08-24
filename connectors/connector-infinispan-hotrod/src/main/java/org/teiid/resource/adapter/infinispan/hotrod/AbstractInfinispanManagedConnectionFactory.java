@@ -86,9 +86,6 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	private String module;
 	private ClassLoader cl;
 	private CacheNameProxy cacheNameProxy;
-	private Version version = null;
-
-
 
 	@Override
 	public BasicConnectionFactory<InfinispanConnectionImpl> createConnectionFactory()
@@ -432,6 +429,10 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	public CacheNameProxy getCacheNameProxy() {
 		return cacheNameProxy;
 	}
+	
+    public boolean configuredUsingAnnotations() {
+    	return this.usingAnnotations;
+    }
 
 	public boolean isAlive() {
 		return this.cacheContainer != null;
