@@ -8,7 +8,7 @@
     <includeBaseDirectory>false</includeBaseDirectory>
     <fileSets>
         <fileSet>
-            <directory>target/${project.artifactId}-${project.version}</directory>
+            <directory>${project.build.directory}/${project.artifactId}-${project.version}</directory>
             <outputDirectory/>
         </fileSet>
     </fileSets>

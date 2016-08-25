@@ -19,15 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.feature.modules.generator;
+package org.teiid.plugin.maven;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -41,11 +39,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
+import java.util.Set;
 
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.jboss.shrinkwrap.descriptor.spi.node.Node;
@@ -54,52 +54,35 @@ import org.jboss.shrinkwrap.descriptor.spi.node.dom.XmlDomNodeImporterImpl;
 
 
 /**
- * A codehaus pojo class used to collect module.xml from Teiid code base
+ * A pojo class used to collect module.xml from Teiid code base or Teiid wildfly-dist
  * and replace module.xml resource's 'resource-root' to 'artifact'.
  * @author kylin
  *
  */
 public class Generator {
-    
-    private static final Logger log = Logger.getLogger(Generator.class.getName());
-    
-    private Path codeDir;
-    
+            
     private Path modulesTargetDir;
     
     private Path pomPath;
+    
+    private Set<String> modules;
+    
+    private List<String> dependencyArtifact;
+    
+    private Log log;
         
     private Charset charset = StandardCharsets.UTF_8;
     
-    protected Generator(Path codeDir, Path modulesTargetDir, Path pomPath) {
-        this.codeDir = codeDir;
+    protected Generator(Path modulesTargetDir, Path pomPath, Set<String> modules) {
+        this(modulesTargetDir, pomPath, modules, null, new SystemStreamLog());
+    }
+    
+    protected Generator(Path modulesTargetDir, Path pomPath, Set<String> modules, List<String> dependencyArtifact, Log log) {
         this.modulesTargetDir = modulesTargetDir;
         this.pomPath = pomPath;
-    }
-
-    public static void main(String[] args) throws Exception {
-
-        log.info("Teiid Code Base Dir: " + args[0]); //$NON-NLS-1$
-        log.info("Wildfly Feature build classes Dir: " + args[1]); //$NON-NLS-1$
-        log.info("Wildfly Feature build pom.xml: " + args[2]); //$NON-NLS-1$
-        
-        Path codeDir = Paths.get(args[0]);
-        if(!Files.exists(codeDir)){
-            throw new IllegalArgumentException("Teiid Code Base Dir argument not exist, " + codeDir); //$NON-NLS-1$
-        }
-        
-        Path modulesTargetDir = Paths.get(args[1], "modules/system/layers/dv"); //$NON-NLS-1$
-        if(!Files.exists(modulesTargetDir)){
-            Files.createDirectories(modulesTargetDir);
-        }
-        
-        Path pomPath = Paths.get(args[2]);
-        if(!Files.exists(pomPath)){
-            throw new IllegalArgumentException("Wildfly Feature Pack pom.xml argument not exist, " + pomPath); //$NON-NLS-1$
-        }
-                        
-        new Generator(codeDir, modulesTargetDir, pomPath).processGeneratorTargets();
-                
+        this.modules = modules;
+        this.dependencyArtifact = dependencyArtifact;
+        this.log = log;
     }
 
     /**
@@ -121,9 +104,14 @@ public class Generator {
      */
     public void processGeneratorTargets() throws IOException {
         
-        copyModules();
+        for(String path : modules) {
+            copy(Paths.get(path).toFile(), modulesTargetDir.toFile());
+            log.debug("Copy " + path + " to " + modulesTargetDir); //$NON-NLS-1$ //$NON-NLS-2$
+        }
         
-        final List<String> dependencies = getArtifactsDependencies();
+        if(dependencyArtifact == null){
+            dependencyArtifact = getArtifactsDependencies();
+        }
 
         Files.walkFileTree(modulesTargetDir, new SimpleFileVisitor<Path>(){
 
@@ -132,7 +120,7 @@ public class Generator {
                 if(path.endsWith("module.xml")){ //$NON-NLS-1$
                     String content = new String(Files.readAllBytes(path), charset);
                  
-                    Map<String, String> replacementMap = getReplacementMap(dependencies, path);
+                    Map<String, String> replacementMap = getReplacementMap(dependencyArtifact, path);
                     replacementMap.put("urn:jboss:module:1.0", "urn:jboss:module:1.3"); //$NON-NLS-1$ //$NON-NLS-2$
                     replacementMap.put("urn:jboss:module:1.1", "urn:jboss:module:1.3"); //$NON-NLS-1$ //$NON-NLS-2$
                     for(String key : replacementMap.keySet()){
@@ -147,31 +135,11 @@ public class Generator {
                         }              
                     }
                     Files.write(path, content.getBytes(charset));
-                    log.finer("rewrite " + path + " base on " + replacementMap); //$NON-NLS-1$ //$NON-NLS-2$
+                    log.debug("rewrite " + path + " base on " + replacementMap); //$NON-NLS-1$ //$NON-NLS-2$
                 }         
                 return super.visitFile(path, attrs);
             }});
      
-    }
-    
-    private void copyModules() throws IOException {
-
-        List<String> modules = new ArrayList<>();
-        try(BufferedReader br = new BufferedReader(new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream("teiid-codebase-modules.txt")))){ //$NON-NLS-1$
-            for(String line; (line = br.readLine()) != null; ){
-                modules.add(line.trim());
-            }
-        }
-        
-        for(String path : modules) {
-            Path modulePath = Paths.get(codeDir.toString(), path);
-            if(Files.exists(modulePath) && Files.isDirectory(modulePath)){
-                copy(modulePath.toFile(), modulesTargetDir.toFile());
-                log.fine("Copy " + modulePath + " to " + modulesTargetDir); //$NON-NLS-1$ //$NON-NLS-2$
-            } else {
-                log.warning(modulePath + " not exist"); //$NON-NLS-1$
-            }
-        }
     }
     
     private void copy(File sourceLocation, File targetLocation) throws IOException {
@@ -268,7 +236,7 @@ public class Generator {
                 throw new IllegalArgumentException(path + "'s resource-root " + artifactId + " not define a dependency in feature pack pom.xml"); //$NON-NLS-1$ //$NON-NLS-2$
             }
         } else {
-            log.warning(path + "'s resource-root " + artifactId + " not a jar resource, skipped"); //$NON-NLS-1$ //$NON-NLS-2$
+            log.warn(path + "'s resource-root " + artifactId + " not a jar resource, skipped"); //$NON-NLS-1$ //$NON-NLS-2$
         }
         return replacement;
     }
@@ -297,8 +265,11 @@ public class Generator {
         return ":" + artifactId;
     }
 
-    @SuppressWarnings("unchecked")
     protected List<String> getArtifactsDependencies() throws IOException{
+        
+        if(!Files.exists(pomPath)){
+            throw new IllegalArgumentException("Wildfly Feature Pack pom.xml argument not exist, " + pomPath); //$NON-NLS-1$
+        }
         
         MavenXpp3Reader mavenReader = new MavenXpp3Reader();
         Model model;

@@ -34,7 +34,6 @@
                 <version>${project.version}</version>
                 <configuration>
                     <teiidCodebaseDir>${project.basedir}/../</teiidCodebaseDir>
-                    <modulesTargetDir>${project.build.directory}/${project.artifactId}-${project.version}</modulesTargetDir>
                 </configuration>
                 <executions>
                     <execution>
@@ -44,7 +43,34 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>                
+            </plugin> 
+            <!--  
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>unpack</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                              <artifactItem>
+                                <groupId>org.jboss.teiid</groupId>
+                                <artifactId>teiid-feature-generator</artifactId>
+                                <version>${project.version}</version>
+                              </artifactItem>
+                            </artifactItems>                    
+                            <includes>**/module.xml</includes>
+                            <excludes>**/*.class</excludes>
+                            <outputDirectory>${project.build.directory}/${project.artifactId}-${project.version}</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin> 
+            -->                
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
