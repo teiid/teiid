@@ -38,6 +38,7 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.salesforce.SalesForceExecutionFactory;
 import org.teiid.translator.salesforce.SalesforceConnection;
 import org.teiid.translator.salesforce.Util;
+import org.teiid.translator.salesforce.execution.visitors.IQueryProvidingVisitor;
 import org.teiid.translator.salesforce.execution.visitors.UpdateVisitor;
 
 
@@ -53,31 +54,29 @@ public class UpdateExecutionImpl extends AbstractUpdateExecution {
 	public void execute() throws TranslatorException {
 		UpdateVisitor visitor = new UpdateVisitor(getMetadata());
 		visitor.visit((Update)command);
-		String[] ids = getIDs(((Update)command).getWhere(), visitor);
-
-		if (ids != null && ids.length > 0) {
-			List<DataPayload> updateDataList = new ArrayList<DataPayload>();
-
-			for (int i = 0; i < ids.length; i++) {
-				DataPayload data = new DataPayload();
-
-				for (SetClause clause : ((Update)command).getChanges()) {
-					ColumnReference element = clause.getSymbol();
-					Column column = element.getMetadataObject();
-					String val = ((Literal) clause.getValue()).toString();
-					data.addField(column.getSourceName(), Util.stripQutes(val));
-				}
+		execute(((Update)command).getWhere(), visitor);
+	}
 	
-				data.setType(visitor.getTableName());
-				data.setID(ids[i]);
-				updateDataList.add(data);
-			}
+	@Override
+	protected int processIds(String[] ids, IQueryProvidingVisitor visitor)
+	        throws ResourceException {
+	    List<DataPayload> updateDataList = new ArrayList<DataPayload>();
 
-			try {
-				result = getConnection().update(updateDataList);
-			} catch (ResourceException e) {
-				throw new TranslatorException(e);
-			}
-		}
+        for (int i = 0; i < ids.length; i++) {
+            DataPayload data = new DataPayload();
+
+            for (SetClause clause : ((Update)command).getChanges()) {
+                ColumnReference element = clause.getSymbol();
+                Column column = element.getMetadataObject();
+                String val = ((Literal) clause.getValue()).toString();
+                data.addField(column.getSourceName(), Util.stripQutes(val));
+            }
+
+            data.setType(visitor.getTableName());
+            data.setID(ids[i]);
+            updateDataList.add(data);
+        }
+
+        return getConnection().update(updateDataList);
 	}
 }

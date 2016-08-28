@@ -31,6 +31,7 @@ import java.util.Map;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.ClassRegistry;
 import org.teiid.translator.object.ObjectConnection;
+import org.teiid.translator.object.Version;
 
 
 
@@ -68,12 +69,15 @@ public class TradesAnnotatedCacheSource extends HashMap <Object, Object> {
 		}
 	}
 		
-	public static ObjectConnection createConnection() {
+	public static ObjectConnection createConnection(Version version) {
 		Map <Object, Object> objects = TradesAnnotatedCacheSource.loadCache();
 
-		ObjectConnection toc = TestObjectConnection.createConnection(objects);
+		ObjectConnection toc = TestObjectConnection.createConnection(objects, version);
+		return toc;
+	}
+	public static ObjectConnection createConnection() {
 		
-		return toc;		
+		return createConnection(null);		
 		
 	}
 	

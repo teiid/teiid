@@ -54,7 +54,7 @@ public class TestInfinispanUpdateExecution {
 	@AfterClass
 	public static void afterClass() {
 		CONNECTION.cleanUp();
-		factory.shutDown();
+		factory.shutDownCache();
 	}
 
 	

@@ -9,7 +9,8 @@
         <resource-root path="teiid-jboss-integration-${project.version}.jar" />
         <resource-root path="teiid-metadata-${project.version}.jar" />
         <resource-root path="teiid-runtime-${project.version}.jar" /> 
-        <resource-root path="teiid-jboss-admin-${project.version}.jar" />       
+        <resource-root path="teiid-jboss-admin-${project.version}.jar" />
+        <resource-root path="teiid-data-quality-${project.version}.jar" />       
         <resource-root path="deployments" />
     </resources>
 
@@ -39,6 +40,7 @@
         <module name="javax.activation.api"/>
         <module name="org.jboss.as.clustering.jgroups"/>
         <module name="org.infinispan"/>
+        <module name="org.arrahtec"/>
         
         <module name="org.jboss.marshalling"/>
         <module name="org.jboss.marshalling.river"/> 

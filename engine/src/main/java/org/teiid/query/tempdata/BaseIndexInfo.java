@@ -181,6 +181,9 @@ public class BaseIndexInfo<T extends SearchableTable> {
 					}
 				} else if (criteria instanceof SetCriteria) {
 					SetCriteria setCriteria = (SetCriteria)criteria;
+					if (setCriteria.isNegated()) {
+					    continue;
+					}
 					Object matchResult = table.matchesPkColumn(i, setCriteria.getExpression());
 					if (Boolean.FALSE.equals(matchResult)) {
 						continue;

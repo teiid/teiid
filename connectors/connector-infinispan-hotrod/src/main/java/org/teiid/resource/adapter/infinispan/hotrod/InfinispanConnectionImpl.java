@@ -42,6 +42,7 @@ import org.teiid.translator.infinispan.hotrod.InfinispanHotRodConnection;
 import org.teiid.translator.infinispan.hotrod.InfinispanPlugin;
 import org.teiid.translator.object.DDLHandler;
 import org.teiid.translator.object.SearchType;
+import org.teiid.translator.object.Version;
 
 
 /** 
@@ -59,6 +60,11 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 		this.config.createCacheContainer();
 		
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Infinispan Connection has been newly created "); //$NON-NLS-1$
+	}
+	
+	@Override
+	public Version getVersion() throws TranslatorException {
+		return this.config.getVersion();
 	}
 	
 	/** 

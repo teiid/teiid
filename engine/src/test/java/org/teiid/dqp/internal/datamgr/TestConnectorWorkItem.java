@@ -186,6 +186,21 @@ public class TestConnectorWorkItem {
 		assertEquals(1, fc.getConnectionCount());
 		assertEquals(1, fc.getCloseCount());
 	}
+	
+   @Test public void testConvertIn() throws Exception {
+        Command command = helpGetCommand("select intkey from bqt1.smalla where stringkey in ('1', '2')", EXAMPLE_BQT); //$NON-NLS-1$
+        AtomicRequestMessage arm = createNewAtomicRequestMessage(1, 1);
+        arm.setCommand(command);
+        ConnectorManager cm = TestConnectorManager.getConnectorManager();
+        cm.getExecutionFactory().setSourceRequired(false);
+        ConnectorWork synchConnectorWorkItem = cm.registerRequest(arm);
+        synchConnectorWorkItem.execute();
+        synchConnectorWorkItem.close();
+        FakeConnector fc = (FakeConnector)cm.getExecutionFactory();
+        assertEquals("SELECT SmallA.IntKey FROM SmallA WHERE SmallA.StringKey = '2' OR SmallA.StringKey = '1'", fc.getCommands().get(0).toString());
+        assertEquals(1, fc.getConnectionCount());
+        assertEquals(1, fc.getCloseCount());
+    }
 
 	@Ignore    
 	@Test public void testIsImmutablePropertySucceeds() throws Exception {

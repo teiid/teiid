@@ -21,21 +21,7 @@
  */
 package org.teiid.translator.infinispan.libmode;
 
-import org.teiid.language.Command;
-import org.teiid.language.QueryExpression;
-import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
-import org.teiid.translator.TranslatorProperty;
-import org.teiid.translator.UpdateExecution;
-import org.teiid.translator.object.ObjectConnection;
-import org.teiid.translator.object.ObjectExecution;
-import org.teiid.translator.object.ObjectExecutionFactory;
-import org.teiid.translator.object.ObjectUpdateExecution;
-import org.teiid.translator.object.ObjectVisitor;
-import org.teiid.translator.object.simpleMap.SimpleKeyVisitor;
 
 /**
  * InfinispanExecutionFactory is the "infinispan-cache" translator that is used to access an Infinispan cache.

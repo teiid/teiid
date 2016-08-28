@@ -33,7 +33,6 @@ import org.infinispan.protostream.SerializationContext;
 import org.jboss.teiid.jdg_remote.pojo.AllTypes;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 

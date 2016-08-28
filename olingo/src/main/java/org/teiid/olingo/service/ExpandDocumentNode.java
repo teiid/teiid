@@ -34,9 +34,9 @@ import org.teiid.olingo.service.TeiidServiceHandler.UniqueNameGenerator;
 public class ExpandDocumentNode extends DocumentNode {
     private String navigationName;
     private boolean collection;
-    private int top;
+    private int top=-1;
     private int skip;
-    private boolean calculateCount;
+    private int columnIndex;
 
     public static ExpandDocumentNode buildExpand(EdmNavigationProperty property,
             MetadataStore metadata, OData odata, UniqueNameGenerator nameGenerator,
@@ -82,11 +82,12 @@ public class ExpandDocumentNode extends DocumentNode {
         return skip;
     }
 
-    public boolean isCalculateCount() {
-        return this.calculateCount;
-    }
-    
-    public void setCalculateCount(boolean calculateCount) {
-        this.calculateCount = calculateCount;
-    }
+	public void setColumnIndex(int count) {
+		this.columnIndex = count;
+	}
+	
+	public int getColumnIndex() {
+		return columnIndex;
+	}
+
 }

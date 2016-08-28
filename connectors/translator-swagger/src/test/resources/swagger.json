@@ -813,6 +813,84 @@
             }
          }
       },
+        "/operation/{operationId}": {
+            "put": {
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ],
+                "tags": [
+                    "operations"
+                ],
+                "summary": "Execute an operation created from a definition",
+                "operationId": "executeOperation",
+                "parameters": [
+                    {
+                        "name": "operationId",
+                        "description": "The Id of a resource schedule",
+                        "in": "path",
+                        "type": "integer",
+                        "format": "int64",
+                        "required": true
+                    },
+                    {
+                        "name": "executePayload",
+                        "description": "Payload required to execute the operation",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "integer",
+                                    "format": "int64"
+                                },
+                                "name": {
+                                    "type": "string"
+                                },
+                                "resourceId": {
+                                    "type": "integer",
+                                    "format": "int64"
+                                },
+                                "definitionId": {
+                                    "type": "integer",
+                                    "format": "int64"
+                                },
+                                "readyToSubmit": {
+                                    "type": "boolean"
+                                },
+                                "params": {
+                                    "type": "object",
+                                    "properties": {
+                                        "arguments": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Job Status for id returned",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "integer",
+                                    "format": "int64"
+                                },
+                                "name": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },      
       "/test/ping":{
          "get":{
             "tags":[

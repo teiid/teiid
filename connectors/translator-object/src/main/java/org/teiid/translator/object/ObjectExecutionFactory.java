@@ -92,7 +92,7 @@ public abstract class ObjectExecutionFactory extends
 	}
     
 	@Override
-	public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, ObjectConnection connection) throws TranslatorException {
+	public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, ObjectConnection connection)  {
 		return new ObjectDirectExecution(arguments, command, connection, executionContext, this);
 	}   
 	

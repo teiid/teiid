@@ -331,5 +331,50 @@ public class TestSqlServerConversionVisitor {
         Command obj = commandBuilder.getCommand(input, true, true);
         TranslationHelper.helpTestVisitor(output, trans, obj);
     }
+    
+    @Test
+    public void testOffset() throws Exception {
+    	String input = "select intkey from bqt1.smalla limit 10, 20"; //$NON-NLS-1$
+        String output = "SELECT * FROM (SELECT v.*, ROW_NUMBER() OVER (ORDER BY @@version) ROWNUM_ FROM (SELECT SmallA.IntKey FROM SmallA) v) v WHERE ROWNUM_ <= 30 AND ROWNUM_ > 10"; //$NON-NLS-1$
+        
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, trans);
+        
+        input = "select intkey c1 from bqt1.smalla offset 20 rows"; //$NON-NLS-1$
+        output = "SELECT c1 FROM (SELECT v.*, ROW_NUMBER() OVER (ORDER BY @@version) ROWNUM_ FROM (SELECT SmallA.IntKey AS c1 FROM SmallA) v) v WHERE ROWNUM_ > 20"; //$NON-NLS-1$
+        
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, trans);
+        
+        input = "select intkey c1 from bqt1.smalla order by stringkey offset 20 rows "; //$NON-NLS-1$
+        output = "SELECT c1 FROM (SELECT SmallA.IntKey AS c1, ROW_NUMBER() OVER (ORDER BY SmallA.StringKey) AS ROWNUM_ FROM SmallA) v WHERE ROWNUM_ > 20 ORDER BY ROWNUM_"; //$NON-NLS-1$
+        
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, trans);
+        
+        input = "select intkey c1, stringkey c2 from bqt1.smalla union all select 1, '2' from bqt1.smallb order by c2 limit 10, 20"; //$NON-NLS-1$
+        output = "SELECT c1, c2 FROM (SELECT v.*, ROW_NUMBER() OVER (ORDER BY c2) ROWNUM_ FROM (SELECT SmallA.IntKey AS c1, SmallA.StringKey AS c2 FROM SmallA UNION ALL SELECT 1, '2' FROM SmallB) v) v WHERE ROWNUM_ <= 30 AND ROWNUM_ > 10 ORDER BY ROWNUM_"; //$NON-NLS-1$
+        
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, trans);
+        
+    	input = "select distinct intkey c1 from bqt1.smalla order by c1 limit 10, 20"; //$NON-NLS-1$
+        output = "SELECT c1 FROM (SELECT v.*, ROW_NUMBER() OVER (ORDER BY c1) ROWNUM_ FROM (SELECT DISTINCT SmallA.IntKey AS c1 FROM SmallA) v) v WHERE ROWNUM_ <= 30 AND ROWNUM_ > 10 ORDER BY ROWNUM_"; //$NON-NLS-1$
+        
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, trans);
+    } 
+    
+    @Test
+    public void testOffset2012() throws Exception {
+    	String input = "select intkey from bqt1.smalla limit 10, 20"; //$NON-NLS-1$
+        String output = "SELECT SmallA.IntKey FROM SmallA ORDER BY @@version OFFSET 10 ROWS FETCH NEXT 20 ROWS ONLY"; //$NON-NLS-1$
+
+        SQLServerExecutionFactory trans1 = new SQLServerExecutionFactory();
+        trans1.setDatabaseVersion(SQLServerExecutionFactory.V_2012);
+        trans1.start();
+        
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, trans1);
+        
+    	input = "select intkey from bqt1.smalla order by stringkey limit 20"; //$NON-NLS-1$
+        output = "SELECT SmallA.IntKey FROM SmallA ORDER BY SmallA.StringKey OFFSET 0 ROWS FETCH NEXT 20 ROWS ONLY"; //$NON-NLS-1$
+        
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, trans1);
+    } 
        
 }

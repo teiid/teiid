@@ -37,6 +37,7 @@ import org.mockito.Mockito;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.language.Command;
 import org.teiid.language.Select;
@@ -62,6 +63,7 @@ import org.teiid.translator.TypeFacility;
 import org.teiid.translator.salesforce.SalesForceExecutionFactory;
 import org.teiid.translator.salesforce.SalesForceMetadataProcessor;
 import org.teiid.translator.salesforce.SalesforceConnection;
+import org.teiid.translator.salesforce.Util;
 import org.teiid.translator.salesforce.execution.QueryExecutionImpl;
 
 import com.sforce.soap.partner.QueryResult;
@@ -250,11 +252,13 @@ public class TestVisitors {
 	}
 	
 	@BeforeClass static public void oneTimeSetup() {
-		TimeZone.setDefault(TimeZone.getTimeZone("GMT-06:00"));
+	    Util.resetTimeZone();
+		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00"));
 	}
 	
 	@AfterClass static public void oneTimeTearDown() {
-		TimeZone.setDefault(null);
+	    Util.resetTimeZone();
+	    TimestampWithTimezone.resetCalendar(null);
 	}
 	
 	@Test public void testDateTimeFormating() throws Exception {

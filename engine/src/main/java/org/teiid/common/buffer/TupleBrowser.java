@@ -279,17 +279,16 @@ public class TupleBrowser implements TupleSource {
 	
 	/**
 	 * Notify the browser that the last value was deleted.
+	 * @throws TeiidComponentException 
 	 */
-	public void removed() {
+	public void removed() throws TeiidComponentException {
 		index-=getOffset();
 		//check if the page has been removed
-		if (index == 0 && page != null && page.managedBatch == null && page.values == null) {
-			values = null;
-			if (direction) {
-				page = page.next;
-			} else {
-				page = page.prev;
-			} 
+		if (page != null && page.managedBatch == null && page.values == null) {
+		    //navigate to the current position
+		    List<?> lowerBound = values.get(index);
+		    values = null;
+		    setPage(lowerBound);
 		}
 	}
 	

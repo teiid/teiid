@@ -32,6 +32,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -315,6 +316,11 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     }
     
     @Override
+    public boolean supportsRowOffset() {
+    	return getVersion().compareTo(TEN_0) >= 0;
+    }
+    
+    @Override
     public boolean supportsIntersect() {
     	return true;
     }
@@ -528,7 +534,122 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     			}
     		}
     	}
-    	return super.translateCommand(command, context);
+    	
+    	//handle offset support
+    	if (getVersion().compareTo(ELEVEN_0) >= 0 || !(command instanceof QueryExpression)) {
+    		if (getVersion().compareTo(ELEVEN_0) >= 0 && command instanceof QueryExpression) {
+    			QueryExpression queryCommand = (QueryExpression)command;
+    			if (queryCommand.getLimit() != null && queryCommand.getOrderBy() == null) {
+    				//an order by is required
+    				//we could use top if offset is 0, but that would require contextual knowledge in useSelectLimit
+    				List<Object> parts = new ArrayList<Object>();
+    				Limit limit = queryCommand.getLimit();
+    				queryCommand.setLimit(null);
+    				parts.add(queryCommand);
+    				parts.add(" ORDER BY @@version "); //$NON-NLS-1$
+    				parts.add(limit);
+    				return parts;
+    			}
+    		}
+    		return super.translateCommand(command, context);
+    	}
+		QueryExpression queryCommand = (QueryExpression)command;
+		if (queryCommand.getLimit() == null || queryCommand.getLimit().getRowOffset() == 0) {
+			return super.translateCommand(command, context);
+    	}
+		Limit limit = queryCommand.getLimit();
+		queryCommand.setLimit(null);
+		
+    	List<Object> parts = new ArrayList<Object>();
+    	
+    	if (queryCommand.getWith() != null) {
+			With with = queryCommand.getWith();
+			queryCommand.setWith(null);
+			parts.add(with);
+		}
+    	
+    	OrderBy orderBy = queryCommand.getOrderBy();
+    	queryCommand.setOrderBy(null);
+    	
+    	parts.add("SELECT "); //$NON-NLS-1$
+    	/*
+    	 * if all of the columns are aliased, assume that names matter - it actually only seems to matter for
+    	 * the first query of a set op when there is a order by.  Rather than adding logic to traverse up,
+    	 * we just use the projected names 
+    	 */
+    	boolean allAliased = true;
+    	for (DerivedColumn selectSymbol : queryCommand.getProjectedQuery().getDerivedColumns()) {
+			if (selectSymbol.getAlias() == null) {
+				allAliased = false;
+				break;
+			}
+		}
+    	if (allAliased) {
+	    	String[] columnNames = queryCommand.getColumnNames();
+	    	for (int i = 0; i < columnNames.length; i++) {
+	    		if (i > 0) {
+	    			parts.add(", "); //$NON-NLS-1$
+	    		}
+	    		parts.add(columnNames[i]);
+			}
+    	} else {
+        	parts.add("*"); //$NON-NLS-1$
+    	}
+    	boolean addedToSelect = false;
+    	if (orderBy != null && queryCommand instanceof Select) {
+    		Select select = (Select)queryCommand;
+    		if (!select.isDistinct() && select.getGroupBy() == null) {
+        		//the order by may be unrelated, so it needs to be with the select
+        		WindowFunction expression = new WindowFunction();
+        		expression.setFunction(new AggregateFunction("ROW_NUMBER", //$NON-NLS-1$
+        				false, Collections.EMPTY_LIST, TypeFacility.RUNTIME_TYPES.INTEGER));
+        		WindowSpecification windowSpecification = new WindowSpecification();
+        		windowSpecification.setOrderBy(orderBy);
+    			expression.setWindowSpecification(windowSpecification);
+    			select.getDerivedColumns().add(new DerivedColumn("ROWNUM_", expression)); //$NON-NLS-1$
+    			parts.add(" FROM ("); //$NON-NLS-1$
+    			parts.add(select);
+    			addedToSelect = true;
+    		}
+    	}
+    	if (!addedToSelect) {
+    		//the order by can be done above the view
+    		parts.add(" FROM (SELECT v.*, ROW_NUMBER() OVER ("); //$NON-NLS-1$
+    		if (orderBy != null) {
+    			parts.add(orderBy);
+    		} else {
+    			//use an order by a "constant"
+    			parts.add("ORDER BY @@version"); //$NON-NLS-1$
+    		}
+    		parts.add(") ROWNUM_ FROM ("); //$NON-NLS-1$
+    		parts.add(queryCommand);
+    		parts.add(") v"); //$NON-NLS-1$
+    	}
+    	parts.add(") v WHERE ROWNUM_ "); //$NON-NLS-1$
+		if (limit.getRowLimit() != Integer.MAX_VALUE) {
+			parts.add("<= "); //$NON-NLS-1$
+			parts.add((long)limit.getRowLimit() + limit.getRowOffset());
+			parts.add(" AND ROWNUM_ "); //$NON-NLS-1$
+		}
+		parts.add("> "); //$NON-NLS-1$
+		parts.add(limit.getRowOffset());
+		if (orderBy != null) {
+			parts.add(" ORDER BY ROWNUM_"); //$NON-NLS-1$
+		}
+		return parts;
+    }
+    
+    @Override
+    public List<?> translateLimit(Limit limit, ExecutionContext context) {
+    	if (getVersion().compareTo(ELEVEN_0) >= 0) {
+	        return Arrays.asList("OFFSET ", limit.getRowOffset(), " ROWS FETCH NEXT ", limit.getRowLimit(), " ROWS ONLY"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    	}
+    	return super.translateLimit(limit, context);
+    }
+    
+    @Override
+    public boolean useSelectLimit() {
+    	return getVersion().compareTo(ELEVEN_0) < 0;
     }
     
 }

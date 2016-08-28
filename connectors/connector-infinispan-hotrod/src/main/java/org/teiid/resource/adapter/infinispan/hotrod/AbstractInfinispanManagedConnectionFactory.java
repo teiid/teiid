@@ -48,6 +48,7 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.infinispan.hotrod.InfinispanPlugin;
 import org.teiid.translator.object.CacheNameProxy;
 import org.teiid.translator.object.ClassRegistry;
+import org.teiid.translator.object.Version;
 
 
 public abstract class AbstractInfinispanManagedConnectionFactory extends
@@ -85,6 +86,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	private String module;
 	private ClassLoader cl;
 	private CacheNameProxy cacheNameProxy;
+	private Version version = null;
 
 
 
@@ -160,7 +162,8 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
       	Assertion.isNotNull(cacheName, "Program Error: Cache Name is null");
       }
 
-		return cacheContainer.getCache(cacheName);
+       return cacheContainer.getCache(cacheName);
+      
 	}	
 
 	/**
@@ -665,6 +668,12 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 	
 	protected void registerWithCacheManager(SerializationContext ctx, RemoteCacheManager cc, ClassLoader cl, boolean useAnnotations) throws ResourceException {
 		
+	}
+	
+	public Version getVersion() throws TranslatorException {
+		RemoteCache rc = this.getCache(this.getCacheNameProxy().getPrimaryCacheKey());
+		return Version.getVersion(rc.getProtocolVersion());
+
 	}
 
 	@Override

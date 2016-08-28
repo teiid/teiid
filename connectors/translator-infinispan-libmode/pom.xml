@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>connectors</artifactId>
 		<groupId>org.jboss.teiid</groupId>
-		<version>9.1.0.Alpha3-SNAPSHOT</version>
+		<version>9.1.0.Beta2-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>translator-infinispan-libmode</artifactId>
@@ -14,38 +14,13 @@
 
     <dependencyManagement>
         <dependencies>
-          <dependency>
-              <groupId>org.infinispan</groupId>
-              <artifactId>infinispan-core</artifactId>
-              <version>${version.org.infinispan.6}</version>
-          </dependency>
-<!--           <dependency>
+            <dependency>
              <groupId>org.infinispan</groupId>
              <artifactId>infinispan-bom</artifactId>
-             <version>${version.org.infinispan.6}</version>
+             <version>${version.org.infinispan.ds}</version>
              <type>pom</type>
              <scope>import</scope>
-          </dependency>  -->  
-        <dependency>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-commons</artifactId>
-            <version>${version.org.infinispan.6}</version>
-        </dependency>       
-        <dependency>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-query</artifactId>
-            <version>${version.org.infinispan.6}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-lucene-directory </artifactId>
-            <version>${version.org.infinispan.6}</version>
-        </dependency>  
-        <dependency>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-query-dsl</artifactId>
-            <version>${version.org.infinispan.6}</version>
-        </dependency>               
+          </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -87,10 +62,6 @@
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-search-engine</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-search-infinispan</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>

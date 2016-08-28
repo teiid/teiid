@@ -35,13 +35,14 @@ import org.teiid.translator.object.ObjectExecution;
 import org.teiid.translator.object.ObjectExecutionFactory;
 import org.teiid.translator.object.ObjectUpdateExecution;
 import org.teiid.translator.object.ObjectVisitor;
+import org.teiid.translator.object.Version;
 import org.teiid.translator.object.simpleMap.SimpleKeyVisitor;
 
 /**
- * InfinispanExecutionFactory is the "infinispan-cache" translator that is used to access an Infinispan cache.
+ * InfinispanExecutionFactory is the "infinispan-lib-mode" translator that is used to access an Infinispan cache running in library mode.
  * <p>
  * The optional setting is:
- * <li>{@link #supportsDSLSearching DSL Searching} - will default to <code>false</code>, supporting only Key searching.
+ * <li>{@link #supportsDSLSearching DSL Searching} - will default to <code>true</code>, to support only Key searching set to false.
  * Set to <code>true</code> will use the Infinispan DSL query language to search the cache for objects</li> 
  * </li>
  * 
@@ -50,7 +51,7 @@ import org.teiid.translator.object.simpleMap.SimpleKeyVisitor;
  */
 @Translator(name = "ispn-lib-mode", description = "(Deprecated) Translator used for accessing Infinispan cache running in Library Mode ")
 public class InfinispanLibModeExecutionFactory extends ObjectExecutionFactory {
-
+	public static final Version SIX_6 = Version.getVersion("6.6"); //$NON-NLS-1$
 
 	// max available without having to try to override 
 	// BooleanQuery.setMaxClauseCount(), and
@@ -189,7 +190,7 @@ public class InfinispanLibModeExecutionFactory extends ObjectExecutionFactory {
 		// at this point, i've been unable to get this to work with Lucene searching
 		return this.supportsDSLSearching;
 	}
-	
+
 	@Override
 	public boolean supportsLikeCriteriaEscapeCharacter() {
 		return this.supportsDSLSearching;
@@ -204,5 +205,21 @@ public class InfinispanLibModeExecutionFactory extends ObjectExecutionFactory {
 	public boolean supportsOrderByUnrelated() {
 		return this.isFullQuerySupported();
 	}	
+	
+	@Override
+	public void initCapabilities(ObjectConnection connection)
+			throws TranslatorException {
+		super.initCapabilities(connection);
+		if (connection == null) {
+			return;
+		}
+
+		Version version = connection.getVersion();
+		// any version prior to JDG 6.6 the supportCompareCritiaOrdered needs to be set to false;
+		if (version != null && version.compareTo(SIX_6) >= 0) {
+			this.supportsCompareCriteriaOrdered = true;
+		}
+	}
+
 	
 }

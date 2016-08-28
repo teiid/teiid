@@ -1465,5 +1465,18 @@ public class TestFunctionLibrary {
 	@Test public void testGetBuiltin() throws Exception {
 		assertEquals(17, RealMetadataFactory.SFM.getSystemFunctionLibrary().getBuiltInAggregateFunctions(false).size());
 	}
+	
+	@Test public void testClobConcat() throws Exception {
+        CommandContext c = new CommandContext();
+        c.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
+        ClobType result = (ClobType)helpInvokeMethod("concat", new Class<?>[] {DataTypeManager.DefaultDataClasses.CLOB, DataTypeManager.DefaultDataClasses.CLOB}, 
+        		new Object[] {DataTypeManager.transformValue("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\"><Name>Lamp</Name><Quantity>5</Quantity></Item></Items></Catalog></Catalogs>", DataTypeManager.DefaultDataClasses.CLOB), 
+        		DataTypeManager.transformValue("<?xml version=\"1.0\" encoding=\"UTF-8\"?><xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"><xsl:template match=\"@*|node()\"><xsl:copy><xsl:apply-templates select=\"@*|node()\"/></xsl:copy></xsl:template><xsl:template match=\"Quantity\"/></xsl:stylesheet>", DataTypeManager.DefaultDataClasses.CLOB)}, c);
+        
+        String xml = ObjectConverterUtil.convertToString(result.getCharacterStream());
+        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\">"
+        		+ "<Name>Lamp</Name><Quantity>5</Quantity></Item></Items></Catalog></Catalogs><?xml version=\"1.0\" encoding=\"UTF-8\"?><xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\">"
+        		+ "<xsl:template match=\"@*|node()\"><xsl:copy><xsl:apply-templates select=\"@*|node()\"/></xsl:copy></xsl:template><xsl:template match=\"Quantity\"/></xsl:stylesheet>", xml);
+    }
 
 }

@@ -31,6 +31,9 @@
     <li><a href="https://issues.jboss.org/browse/TEIID-4200">TEIID-4200</a> Moved to WildFly 10 as host environment
     <li><a href="https://issues.jboss.org/browse/TEIID-4332">TEIID-4332</a> <b>Improved NDV</b> calculations for costing.
     <li><a href="https://issues.jboss.org/browse/TEIID-4284">TEIID-4284</a> <b>Salesforce Bulk API</b> for SELECT queries.
+    <li><a href="https://issues.jboss.org/browse/TEIID-4378">TEIID-4378</a> <a href="https://issues.jboss.org/browse/TEIID-4376">TEIID-4376</a> <b>Clob enhancements</b> to support concat and use in EXECUTE IMMEDIATE.
+    <li><a href="https://issues.jboss.org/browse/TEIID-4100">TEIID-4100</a> <b>OData expand</b> support for siblings and nested expands.
+    <li><a href="https://issues.jboss.org/browse/TEIID-4100">TEIID-4393</a> <b>Additional Geospatial Functions</b> to more fully support the SQL-MM specification.
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -54,6 +57,7 @@
 
 <h4>from 9.0</h4>
 <ul>
+   <li><a href="https://issues.jboss.org/browse/TEIID-4400">TEIID-4400</a> XML Document Models have been deprecated.  OData or SQL/XML should be used instead.</li>
    <li><a href="https://issues.jboss.org/browse/TEIID-4317">TEIID-4317</a> ExecutionFactory.initCapabilities will always be called - either during start if isSourceRequiredForCapabilities returns false, or later if true.</li>
    <li><a href="https://issues.jboss.org/browse/TEIID-4346">TEIID-4346</a> The excel-odbc translator has been removed.  Please use the excel translator instead.</li>
    <li><a href="https://issues.jboss.org/browse/TEIID-4332">TEIID-4332</a> Due to costing logic changes plans may be different that in previous releases.  Please raise an issue is you feel a plan is not appropriate.   

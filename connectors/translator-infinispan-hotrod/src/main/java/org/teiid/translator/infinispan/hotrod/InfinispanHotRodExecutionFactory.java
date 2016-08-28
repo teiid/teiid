@@ -37,11 +37,12 @@ import org.teiid.translator.infinispan.hotrod.metadata.AnnotationMetadataProcess
 import org.teiid.translator.infinispan.hotrod.metadata.ProtobufMetadataProcessor;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectExecutionFactory;
+import org.teiid.translator.object.Version;
 
 
 
 /**
- * InfinispanExecutionFactory is the translator that will be use to translate  a remote Infinispan cache and issue queries
+ * InfinispanExecutionFactory is the translator that will be use to translate a remote Infinispan cache and issue queries
  * using hotrod client to query the cache.  
  * 
  * @author vhalbert
@@ -51,6 +52,7 @@ import org.teiid.translator.object.ObjectExecutionFactory;
  */
 @Translator(name = "ispn-hotrod", description = "The Infinispan Translator Using Hotrod Client to query cache")
 public class InfinispanHotRodExecutionFactory extends ObjectExecutionFactory {
+	public static final Version SIX_6 = Version.getVersion("6.6"); //$NON-NLS-1$
 
 	// max available without having to try to override 
 	// BooleanQuery.setMaxClauseCount(), and
@@ -88,8 +90,7 @@ public class InfinispanHotRodExecutionFactory extends ObjectExecutionFactory {
 	@Override
 	public ProcedureExecution createDirectExecution(List<Argument> arguments,
 			Command command, ExecutionContext executionContext,
-			RuntimeMetadata metadata, ObjectConnection connection)
-			throws TranslatorException {
+			RuntimeMetadata metadata, ObjectConnection connection) {
 		return super.createDirectExecution(arguments, command, executionContext,
 				metadata, connection);
 	}
@@ -162,5 +163,28 @@ public class InfinispanHotRodExecutionFactory extends ObjectExecutionFactory {
 		}
 	    return new ProtobufMetadataProcessor();
 	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.ExecutionFactory#initCapabilities(java.lang.Object)
+	 */
+	@Override
+	public void initCapabilities(ObjectConnection connection)
+			throws TranslatorException {
+		super.initCapabilities(connection);
+		if (connection == null) {
+			return;
+		}
+
+		Version version = connection.getVersion();
+		// with JDG 6.6 supportCompareCriteria no longer needs to be disabled
+		// @see @link https://issues.jboss.org/browse/TEIID-4333
+		if (version != null && version.compareTo(SIX_6) >= 0) {
+			this.supportsCompareCriteriaOrdered = true;
+		}
+	}
+	
+	
 
 }

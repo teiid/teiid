@@ -428,7 +428,7 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
         return this.onlyIDCriteria;
     }
 
-    public String getTableName() throws TranslatorException {
+    public String getTableName() {
         return table.getSourceName();
     }
     

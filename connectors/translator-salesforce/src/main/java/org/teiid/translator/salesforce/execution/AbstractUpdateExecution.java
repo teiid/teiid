@@ -89,34 +89,63 @@ public abstract class AbstractUpdateExecution implements UpdateExecution {
 		return connection;
 	}
 
-	String[] getIDs(Condition criteria, IQueryProvidingVisitor visitor) throws TranslatorException {
+	void execute(Condition criteria, IQueryProvidingVisitor visitor) throws TranslatorException {
+	    int batchSize = 2000; //Salesforce limit
+	    int updateSize = 200; //Salesforce limit
 		String[] Ids = null;
 		if (visitor.hasOnlyIDCriteria()) {
 			try {
 				String Id = ((Comparison)criteria).getRightExpression().toString();
 				Id = Util.stripQutes(Id);
 				Ids = new String[] { Id };
+				result = processIds(Ids, visitor);
 			} catch (ClassCastException cce) {
 				throw new RuntimeException(SalesForcePlugin.Util.gs(SalesForcePlugin.Event.TEIID13008));
-			}
+			} catch (ResourceException e) {
+			    throw new TranslatorException(e);
+            }
 	
-		} else if (visitor.hasCriteria()) {
+		} else {
 			try {
 				String query = visitor.getQuery();
 				context.logCommand(query);
-				QueryResult results = getConnection().query(query, context.getBatchSize(), Boolean.FALSE);
-				if (results != null && results.getSize() > 0) {
-					ArrayList<String> idList = new ArrayList<String>(results.getRecords().length);
-					for (int i = 0; i < results.getRecords().length; i++) {
-						SObject sObject = results.getRecords()[i];
-						idList.add(sObject.getId());
+				QueryResult results = getConnection().query(query, batchSize, Boolean.FALSE);
+				ArrayList<String> idList = new ArrayList<String>(results.getRecords().length);
+                while (results != null) {
+                    if (results.getSize() > 0) {
+                        for (int i = 0; i < results.getRecords().length; i++) {
+    						SObject sObject = results.getRecords()[i];
+    						idList.add(sObject.getId());
+                            if (idList.size() == updateSize) {
+                                Ids = idList.toArray(new String[0]);
+                                result += processIds(Ids, visitor);
+                                idList.clear();
+                            }
+    					}
+                    }
+					if (results.isDone()) {
+					    break;
 					}
-					Ids = idList.toArray(new String[0]);
+				    results = connection.queryMore(results.getQueryLocator(), batchSize);					    
 				}
+                if (!idList.isEmpty()) {
+                    Ids = idList.toArray(new String[0]);
+                    result += processIds(Ids, visitor);
+                }
 			} catch (ResourceException e) {
 				throw new TranslatorException(e);
 			}
 		}
-		return Ids;
 	}
+
+	/**
+	 * Process an update against the ids
+	 * @param ids
+	 * @param visitor
+	 * @return
+	 * @throws ResourceException
+	 */
+    protected int processIds(String[] ids, IQueryProvidingVisitor visitor) throws ResourceException {
+        return 0;
+    }
 }
