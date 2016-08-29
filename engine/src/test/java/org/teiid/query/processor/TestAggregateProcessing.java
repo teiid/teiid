@@ -1038,18 +1038,18 @@ public class TestAggregateProcessing {
 		helpProcess(plan, hdm, expected);
 	}
 	
-	@Test public void testAggregateNVL() throws Exception {
+	@Test public void testAggregateGroupByFunctionDependent() throws Exception {
         String sql = "select count(x.e2), nvl(x.e1, '') from pm1.g1 x makedep, pm2.g2 where x.e3 = pm2.g2.e3 group by nvl(x.e1, '')"; //$NON-NLS-1$
 
         List[] expected = new List[] {
         		Arrays.asList(1, "a"),
 		};
 
-		HardcodedDataManager dataManager = new HardcodedDataManager();
-		dataManager.addData("SELECT g_0.e3 AS c_0 FROM pm2.g2 AS g_0 ORDER BY c_0", new List[] {
+		HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+		dataManager.addData("SELECT g_0.e3 AS c_0 FROM g2 AS g_0 ORDER BY c_0", new List[] {
 				Arrays.asList(1.0),
 		});
-		dataManager.addData("SELECT v_0.c_0, v_0.c_1, COUNT(v_0.c_2) FROM (SELECT g_0.e3 AS c_0, ifnull(g_0.e1, '') AS c_1, g_0.e2 AS c_2 FROM pm1.g1 AS g_0 WHERE g_0.e3 IN (<dependent values>)) AS v_0 GROUP BY v_0.c_0, v_0.c_1", new List[] {
+		dataManager.addData("SELECT v_0.c_0, v_0.c_1, COUNT(v_0.c_2) FROM (SELECT g_0.e3 AS c_0, ifnull(g_0.e1, '') AS c_1, g_0.e2 AS c_2 FROM g1 AS g_0) AS v_0 WHERE v_0.c_0 = 1.0 GROUP BY v_0.c_0, v_0.c_1", new List[] {
 				Arrays.asList(1.0, "a", 1)
 		});
 		BasicSourceCapabilities capabilities = TestAggregatePushdown.getAggregateCapabilities();
