@@ -375,7 +375,7 @@ public class GeometryFunctionMethods {
             category=FunctionCategoryConstants.GEOMETRY,
             nullOnNull=true,
             pushdown=PushDown.CAN_PUSHDOWN)
-    public static GeometryType centroid(GeometryType geom) 
+    public static GeometryType buffer(GeometryType geom) 
          throws FunctionExecutionException {
         return GeometryUtils.centroid(geom);
     }

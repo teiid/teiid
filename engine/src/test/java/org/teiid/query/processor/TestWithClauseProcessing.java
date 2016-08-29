@@ -938,7 +938,7 @@ public class TestWithClauseProcessing {
 	    
 	    TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList(1, 1)});
 	}
-	/*
+	
 	@Test public void testProjectionMinimizationWithInlined() throws Exception {
 	    CommandContext cc = TestProcessor.createCommandContext();
 	    BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
@@ -972,89 +972,6 @@ public class TestWithClauseProcessing {
 	    
 	    TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList(1, 1), Arrays.asList(1, 1), Arrays.asList(1, 1), Arrays.asList(1, 1)});
 	}
-	
-   @Test public void testPullupNestedSubquery() throws Exception {
-        CommandContext cc = TestProcessor.createCommandContext();
-        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
-        bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
-        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
-        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
-        bsc.setCapabilitySupport(Capability.SUBQUERY_COMMON_TABLE_EXPRESSIONS, true);
-        bsc.setCapabilitySupport(Capability.QUERY_UNION, true);
-        
-        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
-        
-        String sql = "with CTE1 as (SELECT e1 from pm1.g1) select * from pm1.g2 where e1 = (select e1 from CTE1) union all select * from pm1.g3 where e1 = (select e1 from CTE1)";
-
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
-        HardcodedDataManager hdm = new HardcodedDataManager(metadata);
-        hdm.addData("WITH alias2 (a1, a) AS (SELECT NULL, g_0.a FROM test_a AS g_0 WHERE g_0.a = 1) SELECT g_1.a AS c_0 FROM alias2 AS g_0, alias2 AS g_1 WHERE g_1.a = g_0.a AND g_1.a = 1 ORDER BY c_0", Arrays.asList(1), Arrays.asList(1), Arrays.asList(1), Arrays.asList(1));
-        
-        TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList(1, 1), Arrays.asList(1, 1), Arrays.asList(1, 1), Arrays.asList(1, 1)});
-    }
-   
-   @Test public void testPullupNestedSubquery1() throws Exception {
-       CommandContext cc = TestProcessor.createCommandContext();
-       BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
-       bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
-       bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
-       bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
-       bsc.setCapabilitySupport(Capability.SUBQUERY_COMMON_TABLE_EXPRESSIONS, true);
-       bsc.setCapabilitySupport(Capability.QUERY_UNION, true);
-       
-       TransformationMetadata metadata = RealMetadataFactory.example1Cached();
-   */    
-   //    String sql = "select * from pm1.g2 where e1 = (with CTE1 as /*+ no_inline */ (SELECT e1 from pm1.g1) select e1 from CTE1) union all select * from pm1.g3 where e1 = (with CTE1 as /*+ no_inline */ (SELECT e1 from pm1.g1) select e1 from CTE1)";
-   /*
-       ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
-       HardcodedDataManager hdm = new HardcodedDataManager(metadata);
-       hdm.addData("WITH alias2 (a1, a) AS (SELECT NULL, g_0.a FROM test_a AS g_0 WHERE g_0.a = 1) SELECT g_1.a AS c_0 FROM alias2 AS g_0, alias2 AS g_1 WHERE g_1.a = g_0.a AND g_1.a = 1 ORDER BY c_0", Arrays.asList(1), Arrays.asList(1), Arrays.asList(1), Arrays.asList(1));
-       
-       TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList(1, 1), Arrays.asList(1, 1), Arrays.asList(1, 1), Arrays.asList(1, 1)});
-   }
-   
-   @Test public void testPullupNestedSubquery1Correlated() throws Exception {
-       CommandContext cc = TestProcessor.createCommandContext();
-       BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
-       bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
-       bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
-       bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
-       bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
-       bsc.setCapabilitySupport(Capability.SUBQUERY_COMMON_TABLE_EXPRESSIONS, true);
-       bsc.setCapabilitySupport(Capability.QUERY_UNION, true);
-       
-       TransformationMetadata metadata = RealMetadataFactory.example1Cached();
-    */   
-    //   String sql = "select e1, e2 from pm1.g2 where e1 = (with CTE1 as /*+ no_inline */ (SELECT pm1.g2.e1 from pm1.g1) select e1 from CTE1)";
-    /*
-       ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
-       HardcodedDataManager hdm = new HardcodedDataManager(metadata);
-       hdm.addData("SELECT g_0.e1, g_0.e2 FROM g2 AS g_0", Arrays.asList("a", 1), Arrays.asList("b", 2));
-       
-       TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList(1, 1), Arrays.asList(1, 1), Arrays.asList(1, 1), Arrays.asList(1, 1)});
-   }
-   
-   @Test public void testPullupNestedSubquery2() throws Exception {
-       CommandContext cc = TestProcessor.createCommandContext();
-       BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
-       bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
-       bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
-       bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
-       bsc.setCapabilitySupport(Capability.QUERY_UNION, true);
-       bsc.setCapabilitySupport(Capability.ROW_LIMIT, true);
-       bsc.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
-       bsc.setCapabilitySupport(Capability.SUBQUERY_COMMON_TABLE_EXPRESSIONS, true);
-       
-       TransformationMetadata metadata = RealMetadataFactory.example1Cached();
-       
-       String sql = "with CTE1 as (SELECT e1 from pm1.g1) select distinct * from (select * from pm1.g2 where e1 = (select e1 from CTE1) order by e1 limit 10) x union all select * from pm1.g3 where e1 = (select e1 from CTE1)";
-
-       ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
-       HardcodedDataManager hdm = new HardcodedDataManager(metadata);
-       hdm.addData("WITH alias2 (a1, a) AS (SELECT NULL, g_0.a FROM test_a AS g_0 WHERE g_0.a = 1) SELECT g_1.a AS c_0 FROM alias2 AS g_0, alias2 AS g_1 WHERE g_1.a = g_0.a AND g_1.a = 1 ORDER BY c_0", Arrays.asList(1), Arrays.asList(1), Arrays.asList(1), Arrays.asList(1));
-       
-       TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList(1, 1), Arrays.asList(1, 1), Arrays.asList(1, 1), Arrays.asList(1, 1)});
-   }*/
 	
 }
 
