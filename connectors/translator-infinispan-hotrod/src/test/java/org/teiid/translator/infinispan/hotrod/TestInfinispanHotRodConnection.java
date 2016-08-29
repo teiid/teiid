@@ -43,12 +43,14 @@ import org.teiid.translator.object.testdata.annotated.TradesAnnotatedCacheSource
  */
 public class TestInfinispanHotRodConnection extends SimpleMapCacheConnection implements InfinispanHotRodConnection {
 	protected Version version;
+	protected boolean useAnnotations;
 	
 	public static ObjectConnection createConnection(Map<Object,Object> map, Version version) {
 		CacheNameProxy proxy = new CacheNameProxy(TradesAnnotatedCacheSource.TRADES_CACHE_NAME);
 
 		TestInfinispanHotRodConnection conn = new TestInfinispanHotRodConnection(map, TradesAnnotatedCacheSource.METHOD_REGISTRY, proxy);
 		conn.setVersion(version);
+		conn.setConfiguredUsingAnnotations(true);
 				
 		return conn;
 	}
@@ -103,5 +105,19 @@ public class TestInfinispanHotRodConnection extends SimpleMapCacheConnection imp
 	
 	public void setVersion(Version v) {
 		this.version = v;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.infinispan.hotrod.InfinispanHotRodConnection#configuredUsingAnnotations()
+	 */
+	@Override
+	public boolean configuredUsingAnnotations() {
+		return useAnnotations;
+	}
+	
+	public void setConfiguredUsingAnnotations(boolean useAnnotations) {
+		this.useAnnotations = useAnnotations;
 	}
 }
