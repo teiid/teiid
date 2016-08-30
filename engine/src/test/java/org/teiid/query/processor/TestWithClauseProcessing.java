@@ -830,5 +830,46 @@ public class TestWithClauseProcessing {
 	    TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList(1, 1)});
 	}
 	
+    @Test public void testPullupNestedSubquery() throws Exception {
+        CommandContext cc = TestProcessor.createCommandContext();
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+        bsc.setCapabilitySupport(Capability.SUBQUERY_COMMON_TABLE_EXPRESSIONS, true);
+        bsc.setCapabilitySupport(Capability.QUERY_UNION, true);
+        
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        
+        String sql = "with CTE1 as (SELECT e1 from pm1.g1) select * from pm1.g2 where e1 = (select e1 from CTE1) union all select * from pm1.g3 where e1 = (select e1 from CTE1)";
+
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
+        HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+        hdm.addData("WITH CTE1 (e1) AS (SELECT g_0.e1 FROM g1 AS g_0) SELECT g_2.e1 AS c_0, g_2.e2 AS c_1, g_2.e3 AS c_2, g_2.e4 AS c_3 FROM g2 AS g_2 WHERE g_2.e1 = (SELECT g_3.e1 FROM CTE1 AS g_3) UNION ALL SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM g3 AS g_0 WHERE g_0.e1 = (SELECT g_1.e1 FROM CTE1 AS g_1)", Arrays.asList("a", 1, false, 1.0));
+        
+        TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("a", 1, false, 1.0)});
+   }
+      
+   @Test public void testPullupNestedSubquery1() throws Exception {
+        CommandContext cc = TestProcessor.createCommandContext();
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+        bsc.setCapabilitySupport(Capability.QUERY_UNION, true);
+        bsc.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        bsc.setCapabilitySupport(Capability.SUBQUERY_COMMON_TABLE_EXPRESSIONS, true);
+        
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        
+        String sql = "with CTE1 as (SELECT e1 from pm1.g1) select distinct e1 from (select * from pm1.g2 where e1 = (select e1 from CTE1) order by e1 limit 10) x union all select e1 from pm1.g3 where e1 = (select e1 from CTE1)";
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
+        HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+        hdm.addData("WITH CTE1 (e1) AS (SELECT g_0.e1 FROM g1 AS g_0) SELECT DISTINCT v_0.c_0 FROM (SELECT g_2.e1 AS c_0 FROM g2 AS g_2 WHERE g_2.e1 = (SELECT g_3.e1 FROM CTE1 AS g_3) ORDER BY c_0 LIMIT 10) AS v_0 UNION ALL SELECT g_0.e1 AS c_0 FROM g3 AS g_0 WHERE g_0.e1 = (SELECT g_1.e1 FROM CTE1 AS g_1)", Arrays.asList("a"));
+         
+        TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("a")});
+    }
 }
 
