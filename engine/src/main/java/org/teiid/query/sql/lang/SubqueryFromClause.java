@@ -36,6 +36,7 @@ public class SubqueryFromClause extends FromClause implements SubqueryContainer{
 
     private GroupSymbol symbol;
     private Command command;
+    private boolean lateral;
     private boolean table;
 	
 	/**
@@ -66,6 +67,14 @@ public class SubqueryFromClause extends FromClause implements SubqueryContainer{
     
     public void setTable(boolean table) {
 		this.table = table;
+	}
+
+    public boolean isLateral() {
+		return lateral;
+	}
+    
+    public void setLateral(boolean table) {
+		this.lateral = table;
 	}
 
     /** 
