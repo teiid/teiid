@@ -1791,6 +1791,16 @@ public class TestODataIntegration {
                     .method("GET")
                     .send();
                 assertEquals(400, response.getStatus());
+                
+            response = http.newRequest(baseURL + "/northwind/m/x?$expand=y_FKX($filter=$it/b%20eq%20a)")
+                    .method("GET")
+                    .send();
+                assertEquals(200, response.getStatus());
+                assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":["
+                        + "{\"a\":\"a\",\"b\":\"b\",\"y_FKX\":"
+                            + "[]}"
+                        + "]}", 
+                        response.getContentAsString());
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");

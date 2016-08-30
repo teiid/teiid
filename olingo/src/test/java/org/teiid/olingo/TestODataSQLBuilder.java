@@ -912,6 +912,18 @@ public class TestODataSQLBuilder {
     }
     
     @Test
+    public void testExpandFilter$it() throws Exception {
+        helpTest("/odata4/vdb/PM1/G1?$expand=G4_FKX($filter=$it/e2 eq e2)",
+                "SELECT g0.e1, g0.e2, g0.e3, (SELECT ARRAY_AGG((g1.e1, g1.e2) ORDER BY g1.e1) FROM PM1.G4 AS g1 WHERE (g0.e2 = g1.e2) AND (g0.e2 = g1.e2)) FROM PM1.G1 AS g0 ORDER BY g0.e2");        
+    }
+    
+    @Test
+    public void testExpandFilter$itNested() throws Exception {
+        helpTest("/odata4/vdb/PM1/G1?$expand=G4_FKX($expand=FKX($filter=$it/e3 eq e2))",
+                "SELECT g0.e1, g0.e2, g0.e3, (SELECT ARRAY_AGG((g1.e1, g1.e2, (SELECT ARRAY_AGG((g2.e1, g2.e2, g2.e3) ORDER BY g2.e2) FROM PM1.G1 AS g2 WHERE (g2.e2 = g1.e2) AND (g0.e3 = g2.e2))) ORDER BY g1.e1) FROM PM1.G4 AS g1 WHERE g0.e2 = g1.e2) FROM PM1.G1 AS g0 ORDER BY g0.e2");        
+    }
+    
+    @Test
     public void testExpandOrderby() throws Exception {
         helpTest("/odata4/vdb/PM1/G1?$expand=G4_FKX($orderby=e1 desc)",
                 "SELECT g0.e1, g0.e2, g0.e3, (SELECT ARRAY_AGG((g1.e1, g1.e2) ORDER BY g1.e1 DESC) FROM PM1.G4 AS g1 WHERE g0.e2 = g1.e2) FROM PM1.G1 AS g0 ORDER BY g0.e2");        

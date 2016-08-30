@@ -91,9 +91,9 @@ public class DocumentNode {
         GroupSymbol gs = null;
         
         if (useAlias) {
-            gs = new GroupSymbol(nameGenerator.getNextGroup(), table.getFullName()); //$NON-NLS-1$
+            gs = new GroupSymbol(nameGenerator.getNextGroup(), table.getFullName()); 
         } else {
-            gs = new GroupSymbol(table.getFullName()); //$NON-NLS-1$
+            gs = new GroupSymbol(table.getFullName()); 
         }
 
         resource.setTable(table);
