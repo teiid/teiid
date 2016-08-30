@@ -646,9 +646,20 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             this.stack.push(ex);
         }
         else {
-            throw new TeiidRuntimeException(new TeiidNotImplementedException(
-                    ODataPlugin.Event.TEIID16010,
-                    ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16010)));
+            boolean ex = true;
+            if (this.ctxQuery instanceof ExpandDocumentNode) {
+                ExpandDocumentNode node = (ExpandDocumentNode)this.ctxQuery;
+                DocumentNode parent = node.getCollectionContext();
+                if (parent != null) {
+                    this.ctxExpression = parent;
+                    ex = false;
+                }
+            }
+            if (ex) {
+                throw new TeiidRuntimeException(new TeiidNotImplementedException(
+                        ODataPlugin.Event.TEIID16010,
+                        ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16010)));
+            }
         }
     }
     
