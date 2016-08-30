@@ -21,7 +21,7 @@
  */
 package org.teiid.olingo;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -299,7 +299,7 @@ public class TestODataSQLBuilder {
     @Test
     public void testEntitySet$OrderByNotIn$Select() throws Exception {
         helpTest("/odata4/vdb/PM1/G1?$orderby=e2&$select=e1",
-                "SELECT g0.e2, g0.e1 FROM PM1.G1 AS g0 ORDER BY g0.e2");
+                "SELECT g0.e1, g0.e2 FROM PM1.G1 AS g0 ORDER BY g0.e2");
     }
 
     @Test
@@ -823,19 +823,41 @@ public class TestODataSQLBuilder {
     } 
     
     @Test
+    public void test$RootOverPath1() throws Exception {
+        helpTest("/odata4/vdb/PM1/G1?$filter=$root/G1(1)/e1 eq e1",
+                "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 WHERE (SELECT g1.e1 FROM PM1.G1 AS g1 WHERE g1.e2 = 1) = g0.e1 ORDER BY g0.e2");
+    }
+    
+    @Test
     public void testAny() throws Exception {
         helpTest("/odata4/vdb/PM1/G1?$filter="+Encoder.encode("G4_FKX/any(ol:ol/e2 gt 10)"), 
-                "SELECT DISTINCT ol.e1, ol.e2 FROM PM1.G1 AS g0 "
-                + "INNER JOIN PM1.G4 AS ol ON g0.e2 = ol.e2 "
-                + "WHERE ol.e2 > 10 ORDER BY ol.e1");
+                "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 WHERE EXISTS (SELECT 1 FROM PM1.G4 AS ol WHERE (g0.e2 = ol.e2) AND (ol.e2 > 10)) ORDER BY g0.e2");
+    }
+    
+    @Test
+    public void testAnyNoLambdaVariable() throws Exception {
+        helpTest("/odata4/vdb/PM1/G1?$filter="+Encoder.encode("G4_FKX/any(ol:1 gt 10)"), 
+                "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 WHERE 1 > 10 ORDER BY g0.e2");
     }
 
     @Test
     public void testAll() throws Exception {
         helpTest("/odata4/vdb/PM1/G1?$filter="+Encoder.encode("G4_FKX/all(ol:ol/e2 gt 10)"),
                 "SELECT g0.e1, g0.e2, g0.e3 "
-                + "FROM PM1.G1 AS g0 WHERE 10 < ALL (SELECT ol.e2 FROM PM1.G4 AS ol "
+                + "FROM PM1.G1 AS g0 WHERE TRUE = ALL (SELECT ol.e2 > 10 FROM PM1.G4 AS ol "
                 + "WHERE g0.e2 = ol.e2) ORDER BY g0.e2");        
+    }
+    
+    @Test
+    public void testAllRoot() throws Exception {
+        helpTest("/odata4/vdb/PM1/G1?$filter="+Encoder.encode("G4_FKX/all(ol:ol/e2 gt length($root/G1(1)/e1))"),
+                "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 WHERE TRUE = ALL (SELECT ol.e2 > LENGTH((SELECT g2.e1 FROM PM1.G1 AS g2 WHERE g2.e2 = 1)) FROM PM1.G4 AS ol WHERE g0.e2 = ol.e2) ORDER BY g0.e2");        
+    }
+    
+    @Test
+    public void testAllAnd() throws Exception {
+        helpTest("/odata4/vdb/PM1/G1?$filter="+Encoder.encode("G4_FKX/all(ol:ol/e2 gt 10 and ol/e1 eq 'b')"),
+                "SELECT g0.e1, g0.e2, g0.e3 FROM PM1.G1 AS g0 WHERE TRUE = ALL (SELECT (ol.e2 > 10) AND (ol.e1 = 'b') FROM PM1.G4 AS ol WHERE g0.e2 = ol.e2) ORDER BY g0.e2");        
     }
     
     @Test
@@ -971,7 +993,7 @@ public class TestODataSQLBuilder {
     @Test
     public void testSimpleCrossJoinWith$Orderby() throws Exception {
         helpTest("/odata4/vdb/PM1/$crossjoin(G1,G2)?$orderby=G1/e1,G2/e2",
-                "SELECT g0.e2, g0.e1, g1.e2 "
+                "SELECT g0.e2, g1.e2 "
                 + "FROM PM1.G1 AS g0, "
                 + "PM1.G2 AS g1 "
                 + "ORDER BY g0.e1, g1.e2");        
