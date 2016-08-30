@@ -62,7 +62,6 @@ public class DocumentNode {
     private List<ProjectedColumn> projectedColumns = new ArrayList<ProjectedColumn>();
     private List<DocumentNode> sibilings = new ArrayList<DocumentNode>();
     private List<DocumentNode> expands = new ArrayList<DocumentNode>();
-    private boolean distinct;
         
     public static DocumentNode build(EdmEntityType type,
             List<UriParameter> keyPredicates, MetadataStore metadata, OData odata,
@@ -367,7 +366,6 @@ public class DocumentNode {
         for (DocumentNode expand:this.expands) {
             addProjectedColumns(select, ordinal, expand.getProjectedColumns());
         }        
-        select.setDistinct(this.distinct);
 
         Query query = new Query();
         From from = new From();
@@ -503,10 +501,6 @@ public class DocumentNode {
         return columnNames;
     }
 
-    public void setDistinct(boolean b) {
-        this.distinct = b;
-    }
-    
     public void addCriteria(Expression filter) {
         if (filter != null) {
         	Criteria crit = null;

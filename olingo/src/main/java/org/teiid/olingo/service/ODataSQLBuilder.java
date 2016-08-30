@@ -360,12 +360,11 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                 Expression expr = visitor.getExpression(obitem.getExpression());
                 if (expr instanceof ElementSymbol) {
                     orderBy.addVariable(expr, !obitem.isDescending());
-                    visitor.getExpresionEntityResource().addProjectedColumn(((ElementSymbol)expr).getShortName(), expr, false);
                 }
                 else {
                     AliasSymbol alias = new AliasSymbol("_orderByAlias", expr);
                     orderBy.addVariable(alias, !obitem.isDescending());
-                    visitor.getExpresionEntityResource().addProjectedColumn(alias, false, EdmInt32.getInstance(), false);
+                    visitor.getEntityResource().addProjectedColumn(alias, false, EdmInt32.getInstance(), false);
                 }
             } catch (TeiidException e) {
                 this.exceptions.add(e);
