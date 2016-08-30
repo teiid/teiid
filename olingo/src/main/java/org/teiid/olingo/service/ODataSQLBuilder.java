@@ -471,12 +471,11 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             Expression expr = visitor.getExpression(obitem.getExpression());
             if (expr instanceof ElementSymbol) {
                 orderBy.addVariable(expr, !obitem.isDescending());
-                visitor.getExpresionEntityResource().addProjectedColumn(((ElementSymbol)expr).getShortName(), expr);
             }
             else {
                 AliasSymbol alias = new AliasSymbol("_orderByAlias", expr);
                 orderBy.addVariable(alias, !obitem.isDescending());
-                visitor.getExpresionEntityResource().addProjectedColumn(alias, EdmInt32.getInstance(), null, false);
+                visitor.getEntityResource().addProjectedColumn(alias, EdmInt32.getInstance(), null, false);
             }
         }
         return orderBy;
