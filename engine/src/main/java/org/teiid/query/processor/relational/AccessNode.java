@@ -53,7 +53,6 @@ import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.processor.relational.SubqueryAwareEvaluator.SubqueryState;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
-import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.symbol.AggregateSymbol;
@@ -580,6 +579,14 @@ public class AccessNode extends SubqueryAwareRelationalNode {
     	PlanNode props = super.getDescriptionProperties();
         props.addProperty(PROP_SQL, this.command.toString());
         props.addProperty(PROP_MODEL_NAME, this.modelName);
+        Collection<? extends SubqueryContainer<?>> objects = getObjects();
+        if (!objects.isEmpty()) {
+            int index = 0;
+            for (Iterator<? extends SubqueryContainer<?>> iterator = objects.iterator(); iterator.hasNext();) {
+                SubqueryContainer<?> subqueryContainer = iterator.next();
+                props.addProperty(PROP_SQL + " Subplan " + index++, subqueryContainer.getCommand().getProcessorPlan().getDescriptionProperties()); //$NON-NLS-1$
+            }
+        }
         if (this.projection != null && this.projection.length > 0 && this.originalSelect != null) {
         	props.addProperty(PROP_SELECT_COLS, this.originalSelect.toString());
         }
@@ -612,8 +619,8 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 	}
 	
 	@Override
-	protected Collection<? extends LanguageObject> getObjects() {
-		ArrayList<LanguageObject> list = new ArrayList<LanguageObject>();
+	protected Collection<? extends SubqueryContainer<?>> getObjects() {
+		ArrayList<SubqueryContainer<?>> list = new ArrayList<SubqueryContainer<?>>();
 		if (shouldEvaluate) {
 			//collect any evaluatable subqueries
 			for (SubqueryContainer<?> container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(this.command)) {

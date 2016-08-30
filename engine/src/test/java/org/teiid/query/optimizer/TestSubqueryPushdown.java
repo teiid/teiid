@@ -737,6 +737,8 @@ public class TestSubqueryPushdown {
                                       null, capFinder,
             new String[] { "SELECT g_0.e1, (convert((SELECT MAX(g_0.e1) FROM pm1.g1 AS g_0), integer) + 1) FROM pm1.g1 AS g_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
+        assertNotNull(plan.getDescriptionProperties().getProperty("Query Subplan 0"));
+        
         HardcodedDataManager hcdm = new HardcodedDataManager(true);
         hcdm.addData("SELECT MAX(g_0.e1) FROM pm1.g1 AS g_0", Arrays.asList("13"));
         hcdm.addData("SELECT g_0.e1 FROM pm1.g1 AS g_0", Arrays.asList("10"), Arrays.asList("13"));
@@ -750,6 +752,8 @@ public class TestSubqueryPushdown {
                 null, capFinder,
 		new String[] { "SELECT g_0.e1, (convert((SELECT MAX(g_1.e1) FROM pm1.g1 AS g_1), integer) + 1) FROM pm1.g1 AS g_0" }, SHOULD_SUCCEED); //$NON-NLS-1$
 		checkNodeTypes(plan, FULL_PUSHDOWN);
+		
+		assertNull(plan.getDescriptionProperties().getProperty("Query Subplan 0"));
     }
     
     @Test public void testScalarSubquery2() {
