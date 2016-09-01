@@ -340,7 +340,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 					try {
 						unwrapped = ((WrappedConnection)connection).unwrap();
 					} catch (ResourceException e) {
-						 throw new TranslatorException(QueryPlugin.Event.TEIID30477, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30477));
+						 throw new TranslatorException(QueryPlugin.Event.TEIID30477, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30477, this.manager.getConnectionName()));
 					}	
 				}
 	
