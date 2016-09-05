@@ -36,7 +36,6 @@ import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.object.metadata.JavaBeanMetadataProcessor;
 
@@ -52,7 +51,7 @@ public abstract class ObjectExecutionFactory extends
 		ExecutionFactory<ConnectionFactory, ObjectConnection> {
 
 	public static final int MAX_SET_SIZE = 10000;
-	private boolean searchabilityBasedOnAnnotations = true;
+	private boolean searchabilityBasedOnAnnotations = false;
 	
 	public ObjectExecutionFactory() {
 		setSourceRequiredForMetadata(false);
@@ -96,7 +95,6 @@ public abstract class ObjectExecutionFactory extends
 		return new ObjectDirectExecution(arguments, command, connection, executionContext, this);
 	}   
 	
-	@TranslatorProperty(display="SearchabilityBasedOnAnnotations", description="If false, will turn off determining column searchability based on hibernate annotations", advanced=true)
 	public boolean supportsSearchabilityUsingAnnotations() {
 		return searchabilityBasedOnAnnotations;
 	}	

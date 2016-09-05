@@ -67,7 +67,6 @@ public class DocumentNode {
     private LinkedHashMap<Expression, ProjectedColumn> projectedColumns = new LinkedHashMap<Expression, ProjectedColumn>();
     private List<DocumentNode> sibilings = new ArrayList<DocumentNode>();
     private List<ExpandDocumentNode> expands = new ArrayList<ExpandDocumentNode>();
-    private boolean distinct;
 	private DocumentNode iterator;
         
     public static DocumentNode build(EdmEntityType type,
@@ -90,9 +89,9 @@ public class DocumentNode {
         GroupSymbol gs = null;
         
         if (useAlias) {
-            gs = new GroupSymbol(nameGenerator.getNextGroup(), table.getFullName()); //$NON-NLS-1$
+            gs = new GroupSymbol(nameGenerator.getNextGroup(), table.getFullName()); 
         } else {
-            gs = new GroupSymbol(table.getFullName()); //$NON-NLS-1$
+            gs = new GroupSymbol(table.getFullName()); 
         }
 
         resource.setTable(table);
@@ -354,7 +353,6 @@ public class DocumentNode {
         for (DocumentNode sibiling:this.sibilings) {
             addProjectedColumns(select, ordinal, sortColumns(sibiling.getProjectedColumns().values()));
         }
-        select.setDistinct(this.distinct);
 
         Query query = new Query();
         From from = new From();
@@ -521,10 +519,6 @@ public class DocumentNode {
         return columnNames;
     }
 
-    public void setDistinct(boolean b) {
-        this.distinct = b;
-    }
-    
     public void addCriteria(Expression filter) {
         if (filter != null) {
         	Criteria crit = null;

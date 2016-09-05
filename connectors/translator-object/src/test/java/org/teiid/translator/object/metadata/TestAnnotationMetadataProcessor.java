@@ -23,11 +23,12 @@ public class TestAnnotationMetadataProcessor {
 	@Before public void beforeEach() throws Exception{	
 		 
 		TRANSLATOR = new SimpleMapCacheExecutionFactory();
+		TRANSLATOR.setSupportsSearchabilityUsingAnnotations(true);
+
     }
 	
 	@Test
 	public void testPersonMetadata() throws Exception {
-		
 		TRANSLATOR.start();
 
 

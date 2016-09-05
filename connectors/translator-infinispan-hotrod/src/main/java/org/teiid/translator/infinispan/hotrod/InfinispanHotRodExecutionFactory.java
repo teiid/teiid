@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.teiid.language.Argument;
 import org.teiid.language.Command;
+import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.MetadataProcessor;
@@ -81,6 +82,11 @@ public class InfinispanHotRodExecutionFactory extends ObjectExecutionFactory {
 	public int getMaxFromGroups() {
 		return 2;
 	}
+	
+	@Override
+	public boolean isSourceRequiredForCapabilities() {
+		return true;
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -94,7 +100,6 @@ public class InfinispanHotRodExecutionFactory extends ObjectExecutionFactory {
 		return super.createDirectExecution(arguments, command, executionContext,
 				metadata, connection);
 	}
-    
 
 	@Override
     public boolean supportsAliasedTable() {
@@ -156,6 +161,20 @@ public class InfinispanHotRodExecutionFactory extends ObjectExecutionFactory {
 		return Boolean.FALSE.booleanValue();
 	}
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.ExecutionFactory#getMetadata(org.teiid.metadata.MetadataFactory,
+	 *      java.lang.Object)
+	 */
+//	@Override
+//	public void getMetadata(MetadataFactory metadataFactory, ObjectConnection conn) throws TranslatorException {
+//		InfinispanHotRodConnection dsl = (InfinispanHotRodConnection) conn;
+//		this.setSupportsSearchabilityUsingAnnotations(dsl.configuredUsingAnnotations());
+//
+//		super.getMetadata(metadataFactory, conn);
+//	}
+
 	@Override
     public MetadataProcessor<ObjectConnection> getMetadataProcessor(){
 		if (this.supportsSearchabilityUsingAnnotations()) {
@@ -176,6 +195,10 @@ public class InfinispanHotRodExecutionFactory extends ObjectExecutionFactory {
 		if (connection == null) {
 			return;
 		}
+		
+		InfinispanHotRodConnection dsl = (InfinispanHotRodConnection) connection;
+		this.setSupportsSearchabilityUsingAnnotations(dsl.configuredUsingAnnotations());
+
 
 		Version version = connection.getVersion();
 		// with JDG 6.6 supportCompareCriteria no longer needs to be disabled

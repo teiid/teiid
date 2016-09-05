@@ -274,5 +274,16 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	public SearchType getSearchType() {
 		return new DSLSearch(this);
 	}
+	
+	/**
+	* Call to determine if the JDG cache is configured using annotation (or using protobuf and marsharllers).
+	* @return true if annotations are used
+	*/
+
+	@Override
+	 public boolean configuredUsingAnnotations() {
+	        return config.configuredUsingAnnotations();
+	}
+
 
 }

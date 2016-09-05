@@ -251,9 +251,11 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             	throw new TeiidProcessingException(
                         ODataPlugin.Event.TEIID16058, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16058, property.getName()));
             }
+            //always pass in the root as the parent as that seems to be the definition of the current context
+            //if instead it should refer to the parent expands, then we would pass in the node instead
             ExpandDocumentNode expandResource = ExpandDocumentNode.buildExpand(
                     property, this.metadata, this.odata, this.nameGenerator, true,
-                    getUriInfo(), this.parseService);
+                    getUriInfo(), this.parseService, this.context);
 
             node.addExpand(expandResource);
             
@@ -471,12 +473,11 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             Expression expr = visitor.getExpression(obitem.getExpression());
             if (expr instanceof ElementSymbol) {
                 orderBy.addVariable(expr, !obitem.isDescending());
-                visitor.getExpresionEntityResource().addProjectedColumn(((ElementSymbol)expr).getShortName(), expr);
             }
             else {
                 AliasSymbol alias = new AliasSymbol("_orderByAlias", expr);
                 orderBy.addVariable(alias, !obitem.isDescending());
-                visitor.getExpresionEntityResource().addProjectedColumn(alias, EdmInt32.getInstance(), null, false);
+                visitor.getEntityResource().addProjectedColumn(alias, EdmInt32.getInstance(), null, false);
             }
         }
         return orderBy;
@@ -684,7 +685,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
 		for (ExpandNode expandNode: expand) {
             ExpandDocumentNode expandResource = ExpandDocumentNode.buildExpand(
             		expandNode.navigationProperty, this.metadata, this.odata, this.nameGenerator,
-                    this.aliasedGroups, getUriInfo(), this.parseService);
+                    this.aliasedGroups, getUriInfo(), this.parseService, this.context);
                     
             OrderBy expandOrder = expandResource.addDefaultOrderBy();
 

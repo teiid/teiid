@@ -720,7 +720,7 @@ public class TestSubqueryPushdown {
     /*
      * Expressions containing subqueries can be pushed down
      */
-    @Test public void testProjectSubqueryPushdown() {
+    @Test public void testProjectSubqueryPushdown() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
@@ -735,7 +735,16 @@ public class TestSubqueryPushdown {
         
         ProcessorPlan plan = helpPlan("select pm1.g1.e1, convert((select max(vm1.g1.e1) from vm1.g1), integer) + 1 from pm1.g1", metadata,  //$NON-NLS-1$
                                       null, capFinder,
-            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, SHOULD_SUCCEED); //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1, (convert((SELECT MAX(g_0.e1) FROM pm1.g1 AS g_0), integer) + 1) FROM pm1.g1 AS g_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+
+        assertNotNull(plan.getDescriptionProperties().getProperty("Query Subplan 0"));
+        
+        HardcodedDataManager hcdm = new HardcodedDataManager(true);
+        hcdm.addData("SELECT MAX(g_0.e1) FROM pm1.g1 AS g_0", Arrays.asList("13"));
+        hcdm.addData("SELECT g_0.e1 FROM pm1.g1 AS g_0", Arrays.asList("10"), Arrays.asList("13"));
+        CommandContext cc = TestProcessor.createCommandContext();
+        cc.setMetadata(metadata);
+        TestProcessor.helpProcess(plan, cc, hcdm, new List<?>[] {Arrays.asList("10", 14), Arrays.asList("13", 14)});
         
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, true);
         
@@ -743,6 +752,8 @@ public class TestSubqueryPushdown {
                 null, capFinder,
 		new String[] { "SELECT g_0.e1, (convert((SELECT MAX(g_1.e1) FROM pm1.g1 AS g_1), integer) + 1) FROM pm1.g1 AS g_0" }, SHOULD_SUCCEED); //$NON-NLS-1$
 		checkNodeTypes(plan, FULL_PUSHDOWN);
+		
+		assertNull(plan.getDescriptionProperties().getProperty("Query Subplan 0"));
     }
     
     @Test public void testScalarSubquery2() {

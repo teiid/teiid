@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.naming.InitialContext;
+import javax.resource.ResourceException;
 
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
@@ -49,6 +50,7 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.validator.ValidatorReport;
+import org.teiid.resource.spi.WrappedConnection;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
@@ -181,6 +183,13 @@ public class ConnectorManager  {
         		if (connection == null) {
             		throw new TranslatorException(QueryPlugin.Event.TEIID31108, QueryPlugin.Util.getString("datasource_not_found", getConnectionName())); //$NON-NLS-1$);
             	}
+        		if (connection instanceof WrappedConnection) {
+                    try {
+                        connection = ((WrappedConnection)connection).unwrap();
+                    } catch (ResourceException e) {
+                        throw new TranslatorException(QueryPlugin.Event.TEIID30477, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30477, getConnectionName()));
+                    }   
+                }
         		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Initializing the capabilities for", translatorName); //$NON-NLS-1$
         		synchronized (executionFactory) {
             		executionFactory.initCapabilities(connection);

@@ -49,5 +49,11 @@ public interface InfinispanHotRodConnection extends ObjectConnection {
 	 */
 	public Descriptor getDescriptor()  throws TranslatorException;
 	
+	/**
+	* Call to determine if the JDG cache is configured using annotation (or using protobuf and marsharllers).
+	* @return true if annotations are used
+	*/ 
+	public boolean configuredUsingAnnotations();
+	
 }
 
