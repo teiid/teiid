@@ -216,4 +216,11 @@ public class TestAliasGenerator {
         helpTest(sql, expected, RealMetadataFactory.exampleBQTCached(), av);
     }
     
+    @Test public void testNestedCommonTables() throws Exception {
+        String sql = "WITH CTE0 (e1, e2) AS /*+ no_inline */ (SELECT e1, e2 FROM pm1.g2) SELECT g_0.e1, g_0.e2 FROM CTE0 AS g_0 WHERE g_0.e1 = (WITH CTE1 (e1) AS /*+ no_inline */ (SELECT g_0.e1 FROM pm1.g1 AS g_1) SELECT g_2.e1 FROM CTE1 AS g_2)";
+        String expected = "WITH CTE0 (e1, e2) AS (SELECT g_0.e1, g_0.e2 FROM pm1.g2 AS g_0) SELECT g_1.e1, g_1.e2 FROM CTE0 AS g_1 WHERE g_1.e1 = (WITH CTE1 (e1) AS (SELECT g_1.e1 FROM pm1.g1 AS g_2) SELECT g_3.e1 AS c_0 FROM CTE1 AS g_3 LIMIT 2)"; //$NON-NLS-1$
+        AliasGenerator av = new AliasGenerator(true, false);
+        helpTest(sql, expected, RealMetadataFactory.example1Cached(), av);
+    }
+    
 }

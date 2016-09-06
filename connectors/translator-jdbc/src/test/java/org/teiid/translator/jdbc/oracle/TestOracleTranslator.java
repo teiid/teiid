@@ -107,7 +107,7 @@ public class TestOracleTranslator {
 	@Test public void testSourceHint2() throws Exception {
 		ExecutionContextImpl impl = new FakeExecutionContextImpl();
 		impl.setHints(Arrays.asList("hello world"));
-		helpTestVisitor(getTestVDB(), "with x (y) as (select part_name from parts) select y from x", impl, null, "WITH x AS (SELECT PARTS.PART_NAME AS y FROM PARTS) SELECT /*+ hello world */ g_0.y FROM x g_0", true);
+		helpTestVisitor(getTestVDB(), "with x (y) as /*+ no_inline */ (select part_name from parts) select y from x", impl, null, "WITH x AS (SELECT g_0.PART_NAME AS y FROM PARTS g_0) SELECT /*+ hello world */ g_1.y FROM x g_1", true);
 	}
 	
 	@Test public void testSourceHint3() throws Exception {

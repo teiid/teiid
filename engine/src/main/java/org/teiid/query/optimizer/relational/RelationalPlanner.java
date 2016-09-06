@@ -173,7 +173,7 @@ public class RelationalPlanner {
 	};
 	
 	private static class WithPlanningState {
-		List<WithQueryCommand> withList = new ArrayList<WithQueryCommand>();
+	    LinkedHashMap<QueryCommand, WithQueryCommand> withList = new LinkedHashMap<QueryCommand, WithQueryCommand>();
 		LinkedHashMap<String, WithQueryCommand> pushdownWith = new LinkedHashMap<String, WithQueryCommand>();
 	}
 	
@@ -259,7 +259,7 @@ public class RelationalPlanner {
         }
         if (!fullPushdown && !this.withPlanningState.withList.isEmpty()) {
         	//generally any with item associated with a pushdown will not be needed as we're converting to a source query
-        	result.setWith(this.withPlanningState.withList);
+        	result.setWith(new ArrayList<WithQueryCommand>(this.withPlanningState.withList.values()));
         }
         result.setOutputElements(topCols);
         this.sourceHint = previous;
@@ -320,7 +320,7 @@ public class RelationalPlanner {
 			}
 		}
 		//plan and minimize projection
-		for (WithQueryCommand with : this.withPlanningState.withList) {
+		for (WithQueryCommand with : this.withPlanningState.withList.values()) {
 			QueryCommand subCommand = with.getCommand();
 			
 			//there are no columns to remove for xml
@@ -504,14 +504,14 @@ public class RelationalPlanner {
 		for (int i = 0; i < withList.size(); i++) {
 			WithQueryCommand with = withList.get(i);
 			//check for a duplicate with clause, which can occur in a self-join scenario
-			int index = this.withPlanningState.withList.indexOf(with);
-			if (index > -1) {
+			WithQueryCommand existing = this.withPlanningState.withList.get(with.getCommand());
+			if (existing != null) {
 				final GroupSymbol old = with.getGroupSymbol();
-				replaceSymbol(command, old, this.withPlanningState.withList.get(index).getGroupSymbol());
+				replaceSymbol(command, old, existing.getGroupSymbol());
 				continue;
 			}
 			final GroupSymbol old = with.getGroupSymbol();
-			if (!context.getGroups().add(old.getName())) {
+			if (!context.getGroups().add(old.getName()) || old.getName().matches("(g|v)_\\d*")) {
 				final GroupSymbol gs = RulePlaceAccess.recontextSymbol(old, context.getGroups());
 				LinkedHashMap<ElementSymbol, Expression> replacementSymbols = FrameUtil.buildSymbolMap(old, gs, metadata);
 				gs.setDefinition(null);
@@ -521,7 +521,8 @@ public class RelationalPlanner {
 				//we use equality checks here because there may be a similarly named at lower scopes
 				replaceSymbol(command, old, gs);
 			}
-			this.withPlanningState.withList.add(with);
+			this.context.getAliasMapping().put(with.getGroupSymbol().getName(), old.getName());
+			this.withPlanningState.withList.put(with.getCommand(), with);
 		}
 	}
 
@@ -557,6 +558,14 @@ public class RelationalPlanner {
 					}	
 				}
 			}
+			
+			@Override
+			public void visit(Reference obj) {
+			    if (obj.getExpression() != null) {
+			        visit(obj.getExpression());
+			    }
+			}
+			
 		}, PreOrPostOrderNavigator.PRE_ORDER, true) {
 			
 			/**
@@ -642,7 +651,11 @@ public class RelationalPlanner {
             		}
             		QueryCommand query = (QueryCommand)command;
             		List<SubqueryContainer<?>> subqueries = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(query);
-            		pullupWith(with, subqueries);
+            		this.withGroups.clear();
+            		for (WithQueryCommand wqc : with) {
+            		    withGroups.add(wqc.getGroupSymbol());
+            		}
+            		pullupWith(with, subqueries, withGroups);
             		if (query.getWith() != null) {
             			//we need to accumulate as a with clause could have been used at a lower scope
             			query.getWith().addAll(with);
@@ -663,25 +676,33 @@ public class RelationalPlanner {
     }
 
 	private void pullupWith(List<WithQueryCommand> with,
-			List<SubqueryContainer<?>> subqueries) {
+			List<SubqueryContainer<?>> subqueries, Set<GroupSymbol> knownWithGroups) {
 		for (SubqueryContainer<?> subquery : subqueries) {
 			if (subquery.getCommand() instanceof QueryCommand) {
 				QueryCommand qc = (QueryCommand)subquery.getCommand();
 				if (qc.getWith() != null) {
-					qc.getWith().removeAll(with);
+				    for (Iterator<WithQueryCommand> i = qc.getWith().iterator(); i.hasNext();) {
+				        WithQueryCommand wqc = i.next();
+				        if (knownWithGroups.contains(wqc.getGroupSymbol())) {
+				            i.remove();
+				        }
+				    }
 					if (qc.getWith().isEmpty()) {
 						qc.setWith(null);
 					}
 				}
-				pullupWith(with, ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(qc));
+				pullupWith(with, ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(qc), knownWithGroups);
 			}
 		}
 	}
 
 	private void discoverWith(
 			LinkedHashMap<String, WithQueryCommand> pushdownWith,
-			Command command, List<WithQueryCommand> with, Collection<GroupSymbol> groups) {
+			Command command, List<WithQueryCommand> with, Collection<GroupSymbol> groups) throws QueryMetadataException, TeiidComponentException {
 		for (GroupSymbol groupSymbol : groups) {
+		    if (!groupSymbol.isPushedCommonTable()) {
+		        continue;
+		    }
 			WithQueryCommand clause = pushdownWith.get(groupSymbol.getNonCorrelationName());
 			if (clause == null) {
 				continue;

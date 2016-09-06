@@ -25,6 +25,7 @@ package org.teiid.query.sql.symbol;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.sql.LanguageVisitor;
 
@@ -238,6 +239,15 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
      */
     public boolean isTempTable() {
         return this.isTempTable;
+    }
+    
+    /**
+     * Returns if this is a pushed Common Table 
+     * Set after resolving and initial common table planning
+     * @return
+     */
+    public boolean isPushedCommonTable() {
+        return isTempTable && TempMetadataAdapter.getActualMetadataId(metadataID) == metadataID;
     }
 
     public boolean isProcedure() {

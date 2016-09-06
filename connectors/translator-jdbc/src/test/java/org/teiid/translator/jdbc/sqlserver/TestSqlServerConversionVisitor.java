@@ -263,8 +263,8 @@ public class TestSqlServerConversionVisitor {
     }
     
     @Test public void testWith() throws Exception {
-        String input = "with x as (select intkey from bqt1.smalla) select intkey from x limit 100"; //$NON-NLS-1$
-        String output = "WITH x (IntKey) AS (SELECT SmallA.IntKey FROM SmallA) SELECT TOP 100 g_0.intkey AS c_0 FROM x g_0"; //$NON-NLS-1$
+        String input = "with x as /*+ no_inline */ (select intkey from bqt1.smalla) select intkey from x limit 100"; //$NON-NLS-1$
+        String output = "WITH x (IntKey) AS (SELECT g_0.IntKey FROM SmallA g_0) SELECT TOP 100 g_1.intkey AS c_0 FROM x g_1"; //$NON-NLS-1$
                
 		CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
         Command obj = commandBuilder.getCommand(input, true, true);
@@ -339,7 +339,7 @@ public class TestSqlServerConversionVisitor {
     			+ "union all "
     			+ " select n.intkey, n.stringkey, 1 from bqt1.smalla n inner join a rcte on n.intkey = rcte.intkey + 1) "
     			+ "select * from a";
-    	String output = "WITH a (intkey, stringkey, bigintegervalue) AS (SELECT cast(SmallA.IntKey AS int), cast(NULL AS char) AS stringkey, cast(SmallA.BigIntegerValue AS numeric(38, 0)) FROM SmallA WHERE SmallA.IntKey = 1 UNION ALL SELECT cast(n.IntKey AS int), n.StringKey, cast(1 AS numeric(38, 0)) AS expr3 FROM SmallA n INNER JOIN a rcte ON n.IntKey = (rcte.intkey + 1)) SELECT g_0.intkey, g_0.stringkey, g_0.bigintegervalue FROM a g_0";
+    	String output = "WITH a (intkey, stringkey, bigintegervalue) AS (SELECT cast(g_2.IntKey AS int) AS c_0, cast(NULL AS char) AS c_1, cast(g_2.BigIntegerValue AS numeric(38, 0)) AS c_2 FROM SmallA g_2 WHERE g_2.IntKey = 1 UNION ALL SELECT cast(g_0.IntKey AS int) AS c_0, g_0.StringKey AS c_1, cast(1 AS numeric(38, 0)) AS c_2 FROM SmallA g_0 INNER JOIN a g_1 ON g_0.IntKey = (g_1.intkey + 1)) SELECT g_3.intkey, g_3.stringkey, g_3.bigintegervalue FROM a g_3";
     	
     	CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
         Command obj = commandBuilder.getCommand(input, true, true);

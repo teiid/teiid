@@ -37,7 +37,6 @@ import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.SupportConstants;
-import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
@@ -637,7 +636,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
                 Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroupsIgnoreInlineViews(obj.getCommand(), true);
                 boolean allTemp = true;
                 for (GroupSymbol gs : groups) {
-                    if (!gs.isTempTable() || TempMetadataAdapter.getActualMetadataId(gs.getMetadataID()) != gs.getMetadataID()) {
+                    if (!gs.isPushedCommonTable()) {
                         allTemp = false;
                         break;
                     }
