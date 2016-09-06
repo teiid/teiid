@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module xmlns="urn:jboss:module:1.0" name="nux.nux">
+<module xmlns="urn:jboss:module:1.3" name="nux.nux">
 	<properties>
 		<property name="jboss.api" value="private" />
 	</properties>
