@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 
-<module xmlns="urn:jboss:module:1.1" name="net.ucanaccess">
+<module xmlns="urn:jboss:module:1.3" name="net.ucanaccess">
 
     <resources>
         <resource-root path="ucanaccess-[version].jar"/>
