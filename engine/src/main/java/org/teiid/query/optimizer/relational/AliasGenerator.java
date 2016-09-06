@@ -268,6 +268,7 @@ public class AliasGenerator extends PreOrderNavigator {
      * visit the query in definition order
      */
     public void visit(Query obj) {
+        visitNodes(obj.getWith());
         if (obj.getOrderBy() != null || obj.getLimit() != null) {
             visitor.namingContext.aliasColumns = !stripColumnAliases;
         }        
@@ -383,6 +384,13 @@ public class AliasGenerator extends PreOrderNavigator {
         visitor.removeChildNamingContext();
     }
     
+    @Override
+    public void visit(WithQueryCommand obj) {
+        visitor.createChildNamingContext(false);
+        visitNode(obj.getCommand());
+        visitor.removeChildNamingContext();
+    }
+
     public void visit(OrderBy obj) {
     	//add/correct aliases if necessary
         for (int i = 0; i < obj.getVariableCount(); i++) {

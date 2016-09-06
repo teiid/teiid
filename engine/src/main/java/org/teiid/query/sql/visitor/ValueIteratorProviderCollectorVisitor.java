@@ -156,6 +156,6 @@ public class ValueIteratorProviderCollectorVisitor extends LanguageVisitor {
     }
 
 	public void setCollectLateral(boolean b) {
-		this.collectLateral = true;
+		this.collectLateral = b;
 	}            
 }
