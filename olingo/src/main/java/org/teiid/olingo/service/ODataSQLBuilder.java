@@ -51,6 +51,7 @@ import org.apache.olingo.server.core.RequestURLHierarchyVisitor;
 import org.apache.olingo.server.core.uri.UriResourceEntitySetImpl;
 import org.apache.olingo.server.core.uri.parser.Parser;
 import org.apache.olingo.server.core.uri.parser.UriParserException;
+import org.apache.olingo.server.core.uri.queryoption.ExpandOptionImpl;
 import org.apache.olingo.server.core.uri.validator.UriValidationException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
@@ -194,13 +195,13 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         }
         
         if (this.expandOption != null) {
-            processExpandOption(this.expandOption, this.context, query, 1);
+            processExpandOption(this.expandOption, this.context, query, 1, null);
         }
         
         return query;
     }
     
-    private void processExpandOption(ExpandOption option, DocumentNode node, Query outerQuery, int expandLevel) throws TeiidException {
+    private void processExpandOption(ExpandOption option, DocumentNode node, Query outerQuery, int expandLevel, Integer cyclicLevel) throws TeiidException {
         checkExpandLevel(expandLevel);
     	int starLevels = 0;
     	HashSet<String> seen = new HashSet<String>();
@@ -211,8 +212,10 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             }  
         
             Integer levels = null;
-        	
-            if (ei.getLevelsOption() != null) {
+            
+            if (cyclicLevel != null) {
+                levels = cyclicLevel - 1;
+            } else if (ei.getLevelsOption() != null) {
             	if (ei.getLevelsOption().isMax()) {
             		levels = MAX_EXPAND_LEVEL - expandLevel + 1;
             	} else {
@@ -282,22 +285,18 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             Query query = expandResource.buildQuery();
 
             if (ei.getExpandOption() != null) {
-            	processExpandOption(ei.getExpandOption(), expandResource, query, expandLevel + 1);
+            	processExpandOption(ei.getExpandOption(), expandResource, query, expandLevel + 1, null);
             } else if (levels != null) {
             	//self reference check
             	if (!property.getType().getFullQualifiedName().equals(node.getEdmEntityType().getFullQualifiedName())) {
             		throw new TeiidProcessingException(ODataPlugin.Event.TEIID16060, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16060, node.getEdmEntityType().getFullQualifiedName(), property.getType().getFullQualifiedName()));
             	}
-            	//add a recursion chain
-            	ExpandNode expandNodeRoot = new ExpandNode();
-            	ExpandNode current = expandNodeRoot;
-            	for (int i = 1; i < levels; i++) {
-            		ExpandNode en = new ExpandNode();
-            		en.navigationProperty = property;
-            		current.children.add(en);
-            		current = en;
+            	
+            	if (levels > 1) {
+                	ExpandOptionImpl eoi = new ExpandOptionImpl();
+                	eoi.addExpandItem(ei);
+                	processExpandOption(eoi, expandResource, query, expandLevel + 1, levels);
             	}
-            	processExpand(expandNodeRoot.children, expandResource, query, expandLevel + 1);
             }
 
             buildAggregateQuery(node, outerQuery, expandResource,
