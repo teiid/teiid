@@ -32,6 +32,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.*;
 import org.teiid.language.Join.JoinType;
 import org.teiid.language.SortSpecification.Ordering;
+import org.teiid.metadata.AggregateAttributes;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
@@ -67,7 +68,7 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.CURDATE, new AliasModifier("unix_timestamp")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("isnull")); //$NON-NLS-1$
-
+        registerFunctionModifier("string_agg", new AliasModifier("group_concat")); //$NON-NLS-1$ //$NON-NLS-2$
 
         addPushDownFunction(IMPALA, "lower", STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "upper", STRING, STRING); //$NON-NLS-1$
@@ -161,13 +162,12 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
         addPushDownFunction(IMPALA, "parse_url", STRING, STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "regexp_extract", STRING, STRING, STRING, INTEGER); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "regexp_replace", STRING, STRING, STRING, STRING); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "group_concat", STRING, STRING, STRING); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "group_concat", STRING, STRING, STRING).setAggregateAttributes(new AggregateAttributes()); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "concat_ws", STRING, STRING, STRING).setVarArgs(true); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "concat", STRING, STRING).setVarArgs(true); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "initcap", STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "instr", INTEGER, STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "find_in_set", INTEGER, STRING, STRING); //$NON-NLS-1$
-
-        addPushDownFunction(IMPALA, "find_in_set", INTEGER, STRING, STRING); //$NON-NLS-1$
-
     }
 
     @Override
@@ -410,5 +410,10 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
     @Override
     public boolean supportsGroupByMultipleDistinctAggregates() {
         return false;
+    }
+    
+    @Override
+    public boolean supportsStringAgg() {
+        return true;
     }
 }
