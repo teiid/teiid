@@ -235,4 +235,9 @@ public class HsqlExecutionFactory extends JDBCExecutionFactory {
     public boolean useParensForJoins() {
     	return true;
     }
+    
+    @Override
+    public boolean isSourceRequiredForCapabilities() {
+        return true;
+    }
 }
