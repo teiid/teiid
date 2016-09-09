@@ -55,7 +55,6 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataParser;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.common.buffer.BufferManager;
-import org.teiid.core.TeiidException;
 import org.teiid.deployers.*;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
@@ -70,11 +69,9 @@ import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.index.IndexMetadataRepository;
 import org.teiid.query.ObjectReplicator;
-import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.VDBResources;
 import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.runtime.AbstractVDBDeployer;
-import org.teiid.translator.DelegatingExecutionFactory;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
 import org.teiid.vdb.runtime.VDBKey;
@@ -292,7 +289,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 				
 				@Override
 				public ExecutionFactory<Object, Object> getExecutionFactory(String name) throws ConnectorManagerException {
-					return VDBService.getExecutionFactory(name, repo, getTranslatorRepository(), deployment, map, new HashSet<String>());
+					return TranslatorUtil.getExecutionFactory(name, repo, getTranslatorRepository(), deployment, map, new HashSet<String>());
 				}
 			};
 			cmr.setProvider(provider);
@@ -305,41 +302,6 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		}
 	}
 	
-	@SuppressWarnings({"rawtypes","unchecked"})
-	static ExecutionFactory<Object, Object> getExecutionFactory(String name, TranslatorRepository vdbRepo, TranslatorRepository repo, VDBMetaData deployment, IdentityHashMap<Translator, ExecutionFactory<Object, Object>> map, HashSet<String> building) throws ConnectorManagerException {
-		if (!building.add(name)) {
-			throw new ConnectorManagerException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50076, deployment.getName(), deployment.getVersion(), building));
-		}
-		VDBTranslatorMetaData translator = vdbRepo.getTranslatorMetaData(name);
-		if (translator == null) {
-			translator = repo.getTranslatorMetaData(name);
-		}
-		if (translator == null) {
-			return null;
-		}
-		ExecutionFactory<Object, Object> ef = map.get(translator);
-		if ( ef == null) {
-			try {
-				ef = TranslatorUtil.buildExecutionFactory(translator);
-			} catch (TeiidException e) {
-				throw new ConnectorManagerException(e);
-			}
-			if (ef instanceof DelegatingExecutionFactory) {
-				DelegatingExecutionFactory delegator = (DelegatingExecutionFactory)ef;
-				String delegateName = delegator.getDelegateName();
-				if (delegateName != null) {
-					ExecutionFactory<Object, Object> delegate = getExecutionFactory(delegateName, vdbRepo, repo, deployment, map, building);
-					if (delegate == null) {
-						throw new ConnectorManagerException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31146, deployment.getName(), deployment.getVersion(), delegateName));
-					}
-					((DelegatingExecutionFactory<Object, Object>) ef).setDelegate(delegate);
-				}
-			}
-			map.put(translator, ef);
-		}
-		return ef;
-	}
-
 	@Override
 	@SuppressWarnings({"rawtypes","unchecked"})
     protected void loadMetadata(final VDBMetaData vdb, final ModelMetaData model, final ConnectorManagerRepository cmr, final MetadataRepository metadataRepo, final MetadataStore vdbMetadataStore, final AtomicInteger loadCount, final VDBResources vdbResources) {

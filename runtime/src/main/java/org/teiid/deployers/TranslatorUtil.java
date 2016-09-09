@@ -27,20 +27,27 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 
 import org.teiid.adminapi.Translator;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.core.CorePlugin;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.StringUtil;
+import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
+import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.ExtensionMetadataProperty;
+import org.teiid.query.QueryPlugin;
 import org.teiid.runtime.RuntimePlugin;
+import org.teiid.translator.DelegatingExecutionFactory;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorProperty;
@@ -141,7 +148,7 @@ public class TranslatorUtil {
 	
 	private static void injectProperties(ExecutionFactory ef, final VDBTranslatorMetaData data) throws InvocationTargetException, IllegalAccessException, TeiidException{
 		Map<Method, TranslatorProperty> props = TranslatorUtil.getTranslatorProperties(ef.getClass());
-		Map p = data.getPropertiesMap();
+		Map<String, String> p = data.getPropertiesMap();
 		TreeMap<String, String> caseInsensitiveProps = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
 		/*
 		VDBTranslatorMetaData parent = data.getParent();
@@ -430,4 +437,43 @@ public class TranslatorUtil {
 	public static Object getDefaultValue(Object instance, Method method, TranslatorProperty prop) {
 		return convert(instance, method, prop);
 	}	
+	
+	@SuppressWarnings({"rawtypes","unchecked"})
+    public static ExecutionFactory<Object, Object> getExecutionFactory(String name, TranslatorRepository vdbRepo, TranslatorRepository repo, VDBMetaData deployment, IdentityHashMap<Translator, ExecutionFactory<Object, Object>> map, HashSet<String> building) throws ConnectorManagerException {
+        if (!building.add(name)) {
+            throw new ConnectorManagerException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40138, building));
+        }
+        VDBTranslatorMetaData translator = vdbRepo.getTranslatorMetaData(name);
+        if (translator == null) {
+            translator = repo.getTranslatorMetaData(name);
+        }
+        if (translator == null) {
+            return null;
+        }
+        ExecutionFactory<Object, Object> ef = map.get(translator);
+        if ( ef == null) {
+            try {
+                ef = TranslatorUtil.buildExecutionFactory(translator);
+            } catch (TeiidException e) {
+                throw new ConnectorManagerException(e);
+            }
+            if (ef instanceof DelegatingExecutionFactory) {
+                DelegatingExecutionFactory delegator = (DelegatingExecutionFactory)ef;
+                String delegateName = delegator.getDelegateName();
+                if (delegateName != null) {
+                    ExecutionFactory<Object, Object> delegate = getExecutionFactory(delegateName, vdbRepo, repo, deployment, map, building);
+                    if (delegate == null) {
+                        if (deployment != null) {
+                            throw new ConnectorManagerException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31146, deployment.getName(), deployment.getVersion(), delegateName));
+                        }
+                        throw new ConnectorManagerException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40136, delegateName));
+                    }
+                    ((DelegatingExecutionFactory<Object, Object>) ef).setDelegate(delegate);
+                }
+            }
+            map.put(translator, ef);
+        }
+        return ef;
+    }
+	
 }

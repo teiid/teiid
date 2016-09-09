@@ -30,6 +30,7 @@ import org.junit.Test;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
+import org.teiid.deployers.TranslatorUtil;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.translator.BaseDelegatingExecutionFactory;
@@ -50,7 +51,7 @@ public class TestVDBService {
 		tmd.setProperties(props);
 		tmd.setExecutionFactoryClass(SampleExecutionFactory.class);
 		repo.addTranslatorMetadata("x", tmd);
-		VDBService.getExecutionFactory("x", repo, repo, 
+		TranslatorUtil.getExecutionFactory("x", repo, repo, 
 				new VDBMetaData(), new IdentityHashMap<Translator, ExecutionFactory<Object, Object>>(), new HashSet<String>());
 	}
 	

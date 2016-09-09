@@ -35,8 +35,10 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -85,6 +87,7 @@ import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorBatchException;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
@@ -1892,5 +1895,68 @@ public class TestEmbeddedServer {
 			assertEquals(-1, s.getUpdateCount());
 		}
 	}
+	
+	@Translator(name="dummy")
+	public static class DummyExecutionFactory extends ExecutionFactory {
+
+	    static AtomicInteger INSTANCES = new AtomicInteger();
+	    
+	    int instance = INSTANCES.getAndIncrement();
+	    
+	    @Override
+	    public void getMetadata(MetadataFactory metadataFactory, Object conn)
+	            throws TranslatorException {
+	        Table t = metadataFactory.addTable("test"+ String.valueOf(instance));
+	        if (this.supportsOrderBy()) {
+	            metadataFactory.addColumn("y", "integer", t);
+	        } else {
+	            metadataFactory.addColumn("x", "integer", t);
+	        }
+	    }
+	    
+	    @Override
+	    public boolean isSourceRequiredForMetadata() {
+	        return false;
+	    }
+	    
+	};
+	
+    @Test public void testTranslatorCreation() throws Exception {
+        EmbeddedConfiguration ec = new EmbeddedConfiguration();
+        ec.setUseDisk(false);
+        es.start(ec);
+        
+        es.addTranslator(DummyExecutionFactory.class);
+
+        Map<String, String> props = new HashMap<String, String>();
+        props.put("supportsOrderBy", "true");
+        
+        es.addTranslator("dummy-override", "dummy", props);
+
+        ModelMetaData mmd = new ModelMetaData();
+        mmd.setName("test-one");
+        mmd.addSourceMapping("one", "dummy", null);
+        
+        ModelMetaData mmd2 = new ModelMetaData();
+        mmd2.setName("test-two");
+        mmd2.addSourceMapping("two", "dummy", null);
+        
+        ModelMetaData mmd3 = new ModelMetaData();
+        mmd3.setName("test-three");
+        mmd3.addSourceMapping("three", "dummy-override", null);
+        
+        es.deployVDB("test", mmd, mmd2, mmd3);
+
+        TeiidDriver td = es.getDriver();
+        Connection c = td.connect("jdbc:teiid:test", null);
+        Statement s = c.createStatement();
+        s.execute("select count(distinct name) from sys.tables where name like 'test%'");
+        s.getResultSet().next();
+        assertEquals(3, s.getResultSet().getInt(1));
+        
+        s.execute("select count(distinct name) from sys.columns where tablename like 'test%'");
+        s.getResultSet().next();
+        assertEquals(2, s.getResultSet().getInt(1));
+    }
 
 }
