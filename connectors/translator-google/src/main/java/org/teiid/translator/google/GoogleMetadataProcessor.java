@@ -23,6 +23,8 @@
 package org.teiid.translator.google;
 
 
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.resource.adapter.google.GoogleSpreadsheetConnection;
@@ -95,7 +97,15 @@ public class GoogleMetadataProcessor implements MetadataProcessor<GoogleSpreadsh
 			default:
 				type = TypeFacility.RUNTIME_NAMES.STRING;
 			}
-			org.teiid.metadata.Column c = mf.addColumn(worksheet.isHeaderEnabled()?column.getLabel():column.getAlphaName(), type, table);
+			String name = column.getAlphaName();
+			if (worksheet.isHeaderEnabled()) {
+			    name = column.getLabel();
+			    if (name == null) {
+			        LogManager.logDetail(LogConstants.CTX_CONNECTOR, SpreadsheetExecutionFactory.UTIL.getString("missing_label", column.getAlphaName())); //$NON-NLS-1$
+			        continue;
+			    }
+			}
+			org.teiid.metadata.Column c = mf.addColumn(name, type, table);
 			c.setNameInSource(worksheet.isHeaderEnabled()?column.getLabel():column.getAlphaName());
 			c.setNativeType(column.getDataType().name());
 		}    
