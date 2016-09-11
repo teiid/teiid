@@ -822,7 +822,8 @@ public final class RulePushSelectCriteria implements OptimizerRule {
         }
         //otherwise mark it as pushed so we don't consider it again
         critNode.setProperty(NodeConstants.Info.IS_PUSHED, Boolean.TRUE);
-        return false;
+        //if any moved, then we need to continue
+        return movedCount != 0;
 	}
 
 	static void collectUnionChildren(PlanNode unionNode, List<PlanNode> unionChildren) {

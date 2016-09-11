@@ -1507,4 +1507,14 @@ public class TestAggregatePushdown {
         TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
             new String[]{"SELECT DISTINCT g_0.IntKey AS c_0, g_0.DoubleNum AS c_1 FROM BQT1.SmallA AS g_0 ORDER BY c_0", "SELECT DISTINCT g_0.IntKey AS c_0, g_0.ByteNum AS c_1, g_0.StringNum AS c_2, g_0.StringKey AS c_3 FROM BQT1.SmallB AS g_0 ORDER BY c_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); 
     }
+    
+    @Test public void testSinglePredicatePushedWithUnionAndGrouping() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = getAggregateCapabilities();
+        capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
+        String sql = "select * from (select intnum as a from bqt1.smalla group by intnum union all select 1 as a) as x where a = 1;";
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
+            new String[]{"SELECT g_0.IntNum FROM BQT1.SmallA AS g_0 WHERE g_0.IntNum = 1 GROUP BY g_0.IntNum"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); 
+    }
+    
 }
