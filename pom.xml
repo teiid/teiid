@@ -471,7 +471,12 @@
             	<groupId>org.jboss.teiid.connectors</groupId>
            		<artifactId>translator-jdbc</artifactId>
 				<version>${project.version}</version>
-			</dependency>        	      	   
+			</dependency>
+      		<dependency>
+            	<groupId>org.jboss.teiid</groupId>
+           		<artifactId>teiid-hibernate-dialect</artifactId>
+				<version>${project.version}</version>
+			</dependency>        	      	   			        	      	   
             <dependency>
       	    	<groupId>org.jboss.teiid.connectors</groupId>
             	<artifactId>google-api</artifactId>
@@ -648,7 +653,11 @@
                <artifactId>connector-file</artifactId>
                <version>${project.version}</version>
            </dependency>
-
+           <dependency>
+               <groupId>org.jboss.teiid</groupId>
+               <artifactId>teiid-data-quality</artifactId>
+               <version>${project.version}</version>
+           </dependency>
       <!-- External dependencies -->
 <!-- 			<dependency>
 				<groupId>javax.resource</groupId>
@@ -1701,6 +1710,7 @@
 		<module>jboss-integration</module>
 		<module>jboss-security</module>
 		<module>rest-service</module>
+		<module>wildfly-distribution</module>
 		<module>test-integration</module>
 	</modules>
 </project>

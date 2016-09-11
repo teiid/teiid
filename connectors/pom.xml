@@ -82,7 +82,7 @@
     <module>simpledb-api</module>
     <module>document-api</module>      
     
-    <module>translator-jdbc</module>
+    <module>jdbc</module>
     <module>translator-google</module>
     <module>translator-ldap</module>
     <module>translator-loopback</module>
