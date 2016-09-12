@@ -67,6 +67,7 @@ import org.teiid.translator.salesforce.Util;
 import org.teiid.translator.salesforce.execution.QueryExecutionImpl;
 
 import com.sforce.soap.partner.QueryResult;
+import com.sforce.soap.partner.sobject.SObject;
 
 @SuppressWarnings("nls")
 public class TestVisitors {
@@ -246,7 +247,8 @@ public class TestVisitors {
 	@Test public void testIDCriteria() throws Exception {
 		Select command = (Select)translationUtility.parseCommand("select id, name from Account where id = 'bar'"); //$NON-NLS-1$
 		SalesforceConnection sfc = Mockito.mock(SalesforceConnection.class);
-		QueryExecutionImpl qei = new QueryExecutionImpl(command, sfc, translationUtility.createRuntimeMetadata(), Mockito.mock(ExecutionContext.class));
+		Mockito.stub(sfc.retrieve("Account.Id, Account.Name", "Account", Arrays.asList("bar"))).toReturn(new SObject[] {null});
+		QueryExecutionImpl qei = new QueryExecutionImpl(command, sfc, translationUtility.createRuntimeMetadata(), Mockito.mock(ExecutionContext.class), new SalesForceExecutionFactory());
 		qei.execute();
 		Mockito.verify(sfc).retrieve("Account.Id, Account.Name", "Account", Arrays.asList("bar"));
 	}

@@ -449,14 +449,9 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			return result;
 	}
 	
-	public  QueryResult retrieve(String fieldList, String sObjectType, List<String> ids) throws ResourceException {
+	public SObject[] retrieve(String fieldList, String sObjectType, List<String> ids) throws ResourceException {
 		try {
-			SObject[] objects = partnerConnection.retrieve(fieldList, sObjectType, ids.toArray(new String[ids.size()]));
-			QueryResult result = new QueryResult();
-			result.setRecords(objects);			
-			result.setSize(objects.length);
-			result.setDone(true);
-			return result;			
+			return partnerConnection.retrieve(fieldList, sObjectType, ids.toArray(new String[ids.size()]));
 		} catch (InvalidFieldFault e) {
 			throw new ResourceException(e);
 		} catch (MalformedQueryFault e) {

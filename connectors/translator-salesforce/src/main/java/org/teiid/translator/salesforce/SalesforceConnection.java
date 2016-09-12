@@ -84,7 +84,7 @@ public interface SalesforceConnection extends Connection {
 
 	public DeletedResult getDeleted(String objectName, Calendar startCalendar, Calendar endCalendar) throws ResourceException;
 	
-	public QueryResult retrieve(String fieldList, String sObjectType, List<String> ids) throws ResourceException;
+	public com.sforce.soap.partner.sobject.SObject[] retrieve(String fieldList, String sObjectType, List<String> ids) throws ResourceException;
 	
 	public DescribeGlobalResult getObjects() throws ResourceException;
 	
