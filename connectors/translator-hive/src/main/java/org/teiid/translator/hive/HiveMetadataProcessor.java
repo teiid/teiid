@@ -28,6 +28,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.core.util.StringUtil;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
@@ -109,7 +110,7 @@ public class HiveMetadataProcessor extends JDBCMetdataProcessor implements Metad
 		else if (type.equalsIgnoreCase("boolean")) { //$NON-NLS-1$
 			return TypeFacility.RUNTIME_NAMES.BOOLEAN;
 		}
-		else if (type.equalsIgnoreCase("decimal")) { //$NON-NLS-1$
+		else if (StringUtil.startsWithIgnoreCase(type, "decimal")) { //$NON-NLS-1$
 			return TypeFacility.RUNTIME_NAMES.BIG_DECIMAL;
 		}
 		else if (type.equalsIgnoreCase("timestamp")) { //$NON-NLS-1$
