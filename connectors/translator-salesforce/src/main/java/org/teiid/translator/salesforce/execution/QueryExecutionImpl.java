@@ -56,6 +56,7 @@ import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.salesforce.SalesForceExecutionFactory;
 import org.teiid.translator.salesforce.SalesForcePlugin;
 import org.teiid.translator.salesforce.SalesforceConnection;
 import org.teiid.translator.salesforce.execution.visitors.JoinQueryVisitor;
@@ -72,6 +73,8 @@ public class QueryExecutionImpl implements ResultSetExecution {
 	private static final String AGGREGATE_RESULT = "AggregateResult"; //$NON-NLS-1$
 
 	private static final Pattern dateTimePattern = Pattern.compile("^(?:(\\d{4}-\\d{2}-\\d{2})T)?(\\d{2}:\\d{2}:\\d{2}(?:.\\d+)?)(.*)"); //$NON-NLS-1$
+	
+	private SalesForceExecutionFactory executionFactory;
 	
 	private SalesforceConnection connection;
 
@@ -104,11 +107,12 @@ public class QueryExecutionImpl implements ResultSetExecution {
 	
 	private Calendar cal;
 	
-	public QueryExecutionImpl(QueryExpression command, SalesforceConnection connection, RuntimeMetadata metadata, ExecutionContext context) {
+	public QueryExecutionImpl(QueryExpression command, SalesforceConnection connection, RuntimeMetadata metadata, ExecutionContext context, SalesForceExecutionFactory salesForceExecutionFactory) {
 		this.connection = connection;
 		this.metadata = metadata;
 		this.context = context;
 		this.query = command;
+		this.executionFactory = salesForceExecutionFactory;
 
 		connectionIdentifier = context.getConnectionId();
 		connectorIdentifier = context.getConnectorIdentifier();
@@ -138,8 +142,8 @@ public class QueryExecutionImpl implements ResultSetExecution {
 			visitor.visitNode(query);
 			if(visitor.canRetrieve()) {
 				context.logCommand("Using retrieve: ", visitor.getRetrieveFieldList(), visitor.getTableName(), visitor.getIdInCriteria()); //$NON-NLS-1$
-				results = connection.retrieve(visitor.getRetrieveFieldList(),
-						visitor.getTableName(), visitor.getIdInCriteria());
+				results = this.executionFactory.buildQueryResult(connection.retrieve(visitor.getRetrieveFieldList(),
+						visitor.getTableName(), visitor.getIdInCriteria()));
 			} else {
 				String finalQuery = visitor.getQuery().trim();
 				//redundant

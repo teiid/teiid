@@ -1,3 +1,9 @@
+package org.teiid.translator.salesforce;
+
+import static org.junit.Assert.*;
+
+import org.junit.Test;
+import org.teiid.translator.salesforce34.SalesForce34ExecutionFactory;
 /*
  * JBoss, Home of Professional Open Source.
  * See the COPYRIGHT.txt file distributed with this work for information
@@ -20,26 +26,16 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.translator.salesforce34;
-
-import org.teiid.translator.Translator;
-import org.teiid.translator.salesforce.SalesForceExecutionFactory;
-
 import com.sforce.soap.partner.QueryResult;
 import com.sforce.soap.partner.sobject.SObject;
 
-@Translator(name="salesforce-34", description="A translator for Salesforce With API version 34")
-public class SalesForce34ExecutionFactory extends SalesForceExecutionFactory {
-    
-    /*
-     * Handles an api difference with {@link QueryResult}.setRecords
-     */
-    @Override
-    public QueryResult buildQueryResult(SObject[] results) {
-        QueryResult result = new QueryResult();
-        result.setRecords(results);         
-        result.setSize(results.length);
-        result.setDone(true);
-        return result;
+public class TestSalesForce34ExecutionFactory {
+	
+    @Test public void testCreateResults() {
+        SalesForce34ExecutionFactory ef = new SalesForce34ExecutionFactory();
+        QueryResult qr = ef.buildQueryResult(new SObject[1]);
+        assertTrue(qr.isDone());
+        assertEquals(1, qr.getSize());
     }
+    
 }

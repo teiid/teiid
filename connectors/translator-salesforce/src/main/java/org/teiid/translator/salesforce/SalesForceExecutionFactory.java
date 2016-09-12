@@ -55,6 +55,9 @@ import org.teiid.translator.salesforce.execution.ProcedureExecutionParentImpl;
 import org.teiid.translator.salesforce.execution.QueryExecutionImpl;
 import org.teiid.translator.salesforce.execution.UpdateExecutionImpl;
 
+import com.sforce.soap.partner.QueryResult;
+import com.sforce.soap.partner.sobject.SObject;
+
 @Translator(name="salesforce", description="A translator for Salesforce")
 public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFactory, SalesforceConnection> {
 	private static final String SALESFORCE = "salesforce"; //$NON-NLS-1$
@@ -95,7 +98,7 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 	@Override
 	public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, SalesforceConnection connection)
 			throws TranslatorException {
-		return new QueryExecutionImpl(command, connection, metadata, executionContext);
+		return new QueryExecutionImpl(command, connection, metadata, executionContext, this);
 	}
 	
 	@Override
@@ -266,4 +269,13 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
     public void setSupportsGroupBy(boolean supportsGroupBy) {
 		this.supportsGroupBy = supportsGroupBy;
 	}
+    
+    public QueryResult buildQueryResult(SObject[] objects) {
+        QueryResult result = new QueryResult();
+        result.setRecords(objects);         
+        result.setSize(objects.length);
+        result.setDone(true);
+        return result;
+    }
+
 }
