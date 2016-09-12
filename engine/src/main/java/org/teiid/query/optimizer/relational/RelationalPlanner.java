@@ -244,7 +244,7 @@ public class RelationalPlanner {
          		}
          	}
      		//distribute the appropriate clauses to the pushdowns
-     		assignWithClause(result.getRootNode(), this.withPlanningState.pushdownWith);
+     		assignWithClause(result.getRootNode(), this.withPlanningState.pushdownWith, false);
         }
         if (!fullPushdown && !this.withPlanningState.withList.isEmpty()) {
         	//generally any with item associated with a pushdown will not be needed as we're converting to a source query
@@ -495,7 +495,7 @@ public class RelationalPlanner {
 		command.acceptVisitor(nav);
 	}
     
-    private void assignWithClause(RelationalNode node, LinkedHashMap<String, WithQueryCommand> pushdownWith) throws QueryPlannerException, TeiidComponentException {
+    private void assignWithClause(RelationalNode node, LinkedHashMap<String, WithQueryCommand> pushdownWith, boolean deep) throws QueryPlannerException, TeiidComponentException {
     	if (node instanceof PlanExecutionNode) {
     		//need to check for nested relational plans.  these are created by things such as the semi-join optimization in rulemergevirtual
     		ProcessorPlan plan = ((PlanExecutionNode)node).getProcessorPlan();
@@ -509,7 +509,7 @@ public class RelationalPlanner {
             Map<GroupSymbol, RelationalPlan> subplans = accessNode.getSubPlans();
             if (subplans != null) {
             	for (RelationalPlan subplan : subplans.values()) {
-    				assignWithClause(subplan.getRootNode(), pushdownWith);
+    				assignWithClause(subplan.getRootNode(), pushdownWith, deep);
             	}
             }
             Command command = accessNode.getCommand();
@@ -563,13 +563,23 @@ public class RelationalPlanner {
             		//TODO: this should be based upon whether any of the need evaluated
             		accessNode.setShouldEvaluateExpressions(true); 
             	}
+            	if (deep) {
+                	for (SubqueryContainer<?> subquery : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(command)) {
+                	    if (subquery instanceof Evaluatable && ((Evaluatable)subquery).shouldEvaluate()) {
+                	        ProcessorPlan plan = subquery.getCommand().getProcessorPlan();
+                	        if (plan instanceof RelationalPlan) {
+                	            assignWithClause(((RelationalPlan)plan).getRootNode(), pushdownWith, deep);
+                	        }
+                	    }
+                	}
+            	}
             }
         } 
         
         // Recurse through children
         RelationalNode[] children = node.getChildren();
         for(int i=0; i<node.getChildCount(); i++) {
-        	assignWithClause(children[i], pushdownWith);
+        	assignWithClause(children[i], pushdownWith, deep);
         }
     }
 
@@ -684,7 +694,7 @@ public class RelationalPlanner {
 							}
 			    		}
 			    	}
-			    	assignWithClause(((RelationalPlan) procPlan).getRootNode(), parentPushdownWith);
+			    	assignWithClause(((RelationalPlan) procPlan).getRootNode(), parentPushdownWith, true);
 			    }
 			    container.getCommand().setProcessorPlan(procPlan);
 			    setCorrelatedReferences(container, correlatedReferences);
