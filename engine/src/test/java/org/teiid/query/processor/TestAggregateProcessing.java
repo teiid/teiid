@@ -1117,7 +1117,7 @@ public class TestAggregateProcessing {
     	helpProcess(plan, dataManager, expected);
     }
     
-	@Test public void testBigIntegerSum() throws Exception {
+    @Test public void testBigIntegerSum() throws Exception {
 		String sql = "SELECT sum(x) FROM agg x"; //$NON-NLS-1$
 
 		TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table agg (x biginteger)", "x", "y");
@@ -1127,5 +1127,22 @@ public class TestAggregateProcessing {
 		TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(BigInteger.valueOf(1))});
 	}
 
-	
+    @Test public void testStringAggOverJoin() throws Exception {
+        String sql = "select string_agg(pm1.g1.e1, ',') from pm1.g1, pm2.g1 where pm1.g1.e2 = pm2.g1.e2 group by pm2.g1.e3, pm1.g1.e3";
+
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        
+        hdm.addData("SELECT g_0.e2 AS c_0, g_0.e3 AS c_1, g_0.e1 AS c_2 FROM pm1.g1 AS g_0 ORDER BY c_0", Arrays.asList(1, true, "a"), Arrays.asList(1, false, "b"));
+        hdm.addData("SELECT g_0.e2 AS c_0, g_0.e3 AS c_1 FROM pm2.g1 AS g_0 ORDER BY c_0", Arrays.asList(1, true), Arrays.asList(1, true));
+        
+        BasicSourceCapabilities bsc = TestAggregatePushdown.getAggregateCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_STRING, true);
+        
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder(bsc));
+        
+        TestProcessor.helpProcess(plan, TestProcessor.createCommandContext(),
+                hdm, new List<?>[] {Arrays.asList("b,b"), Arrays.asList("a,a")});
+    }
+
 }

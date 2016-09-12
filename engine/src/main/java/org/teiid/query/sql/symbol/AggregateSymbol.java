@@ -360,6 +360,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		case TEXTAGG:
 		case ARRAY_AGG:
 		case JSONARRAY_AGG:
+		case STRING_AGG:
 			return false;
 		case USER_DEFINED:
 			return this.getArgs().length == 1 && this.getFunctionDescriptor().getMethod().getAggregateAttributes().isDecomposable();
