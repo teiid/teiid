@@ -95,6 +95,8 @@ public final class FunctionMethods {
 	
 	private static final boolean CALENDAR_TIMESTAMPDIFF = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.calendarTimestampDiff", true); //$NON-NLS-1$
 
+	public static final String AT = "@"; //$NON-NLS-1$
+	
 	// ================== Function = plus =====================
 
 	public static int plus(int x, int y) throws FunctionExecutionException {
@@ -1397,8 +1399,25 @@ public final class FunctionMethods {
 
     // ================= Function - USER ========================
     public static Object user(CommandContext context) {
-        return context.getUserName();
+        return user(context, true);
     }
+    
+    public static Object user(CommandContext context, boolean includeSecurityDomain) {
+        if (!includeSecurityDomain || context.getSession() == null) {
+            return context.getUserName();
+        }
+        String name = context.getUserName();
+        return escapeName(name) + AT + context.getSession().getSecurityDomain();         
+    }
+    
+    static String escapeName(String name) {
+        if (name == null) {
+            return name;
+        }
+        
+        return name.replaceAll(AT, "\\\\"+AT); //$NON-NLS-1$
+    }
+
     
     public static Object current_database(CommandContext context) {
     	return context.getVdbName();

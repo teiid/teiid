@@ -297,6 +297,11 @@
                         <xs:annotation>
                             <xs:documentation>Allow all local pass-through connections regardless of whether they are in the configured security domain.</xs:documentation>
                         </xs:annotation>                    
+                    </xs:attribute>
+                    <xs:attribute name="allow-security-domain-qualifier" type="xs:boolean">
+                        <xs:annotation>
+                            <xs:documentation>Allow user names to be qualified with @security-domain.</xs:documentation>
+                        </xs:annotation>                    
                     </xs:attribute>                    
                 </xs:complexType>                
             </xs:element>

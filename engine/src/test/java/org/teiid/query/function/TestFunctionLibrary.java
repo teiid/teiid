@@ -1210,7 +1210,9 @@ public class TestFunctionLibrary {
     @Test public void testInvokeUser() throws Exception {
         CommandContext c = new CommandContext();
         c.setUserName("foodude"); //$NON-NLS-1$
-        helpInvokeMethod("user", new Class<?>[] {}, new Object[] {}, c, "foodude"); //$NON-NLS-1$ //$NON-NLS-2$
+        c.setSession(new SessionMetadata());
+        c.getSession().setSecurityDomain("x");
+        helpInvokeMethod("user", new Class<?>[] {}, new Object[] {}, c, "foodude@x"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testInvokeEnv() throws Exception {

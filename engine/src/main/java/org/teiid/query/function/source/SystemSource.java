@@ -890,6 +890,13 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
         functions.add(
             new FunctionMethod("user", QueryPlugin.Util.getString("SystemSource.User_desc"), MISCELLANEOUS, PushDown.CANNOT_PUSHDOWN, FUNCTION_CLASS, "user", null, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.User_result")), true, Determinism.USER_DETERMINISTIC) );                     //$NON-NLS-1$ //$NON-NLS-2$
+        
+        functions.add(
+                new FunctionMethod("user", QueryPlugin.Util.getString("SystemSource.User_desc"), MISCELLANEOUS, PushDown.CANNOT_PUSHDOWN, FUNCTION_CLASS, "user", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                        Arrays.asList(
+                                new FunctionParameter("includeSecurityDomain", DataTypeManager.DefaultDataTypes.BOOLEAN, QueryPlugin.Util.getString("SystemSource.User_param1")) //$NON-NLS-1$ //$NON-NLS-2$
+                                 ),
+                    new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.User_result")), true, Determinism.USER_DETERMINISTIC) );                     //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     private void addCurrentDatabaseFunction() {

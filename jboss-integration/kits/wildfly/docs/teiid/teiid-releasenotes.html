@@ -63,6 +63,8 @@
    <li><a href="https://issues.jboss.org/browse/TEIID-4346">TEIID-4346</a> The excel-odbc translator has been removed.  Please use the excel translator instead.</li>
    <li><a href="https://issues.jboss.org/browse/TEIID-4332">TEIID-4332</a> Due to costing logic changes plans may be different that in previous releases.  Please raise an issue is you feel a plan is not appropriate.
    <li><a href="https://issues.jboss.org/browse/TEIID-4421">TEIID-4421</a> Removed the deprecated EmbeddedServer.addTranslator(ExecutionFactory) method.   
+   <li><a href="https://issues.jboss.org/browse/TEIID-4442">TEIID-4442</a> Removed the interpretation of the security-domain setting for the session service as a comma separated list of domains.  Also added the USER(boolean) function to control
+   if the USER function returns a name with the security domain.  Finally the DatabaseMetaData and CommandContext getUserName will both return the simple user name without the domain. 
 </ul>
 
 <h4>from 8.x</h4>

@@ -159,7 +159,8 @@ class TeiidAdd extends AbstractAddStepHandler {
 		TeiidConstants.AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE,
 		TeiidConstants.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE,
 		TeiidConstants.AUTHENTICATION_TYPE_ATTRIBUTE,
-		TeiidConstants.AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE
+		TeiidConstants.AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE,
+		TeiidConstants.AUTHENTICATION_ALLOW_SECURITY_DOMAIN_QUALIFIER
 	};
 	
 	@Override
@@ -527,6 +528,11 @@ class TeiidAdd extends AbstractAddStepHandler {
    			boolean allowUnauthenticated = asBoolean(AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE, operation, context);
    			sessionServiceImpl.setTrustAllLocal(allowUnauthenticated);
 		}
+   		
+   		if (isDefined(AUTHENTICATION_ALLOW_SECURITY_DOMAIN_QUALIFIER, operation, context)) {
+            boolean allowSecurityDomainQualifier = asBoolean(AUTHENTICATION_ALLOW_SECURITY_DOMAIN_QUALIFIER, operation, context);
+            sessionServiceImpl.setAllowSecurityDomainQualifier(allowSecurityDomainQualifier);
+        }
    		
    		sessionServiceImpl.setDqp(engine.getValue());
    		sessionServiceImpl.setVDBRepository(vdbRepository);

@@ -26,9 +26,7 @@ package org.teiid.services;
 import java.security.Principal;
 import java.security.acl.Group;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -95,16 +93,12 @@ public class SessionServiceImpl implements SessionService {
 
     private Map<String, SessionMetadata> sessionCache = new ConcurrentHashMap<String, SessionMetadata>();
     private Timer sessionMonitor = null;    
-    private List<String> securityDomainNames;
+    private String securityDomainName;
 	private boolean trustAllLocal = true;
+	private boolean allowSecurityDomainQualifier;
     
     public void setSecurityDomain(String domainName) {
-    	if (domainName == null) {
-    		this.securityDomainNames = null;
-    	} else {
-    		//allow for legacy multiple domain names
-    		this.securityDomainNames = Arrays.asList(domainName.split(",")); //$NON-NLS-1$
-    	}
+        this.securityDomainName = domainName;
     }
     
     // -----------------------------------------------------------------------------------
@@ -190,7 +184,10 @@ public class SessionServiceImpl implements SessionService {
 		        // if not authenticated, this method throws exception
 	            LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"authenticateUser", userName, applicationName}); //$NON-NLS-1$
 	
-	        	String baseUserName = getBaseUsername(userName);
+	        	String baseUserName = userName;
+	        	if (allowSecurityDomainQualifier) {
+	        	    baseUserName = getBaseUsername(userName);
+	        	}
 	    		if (onlyAllowPassthrough || authType.equals(AuthenticationType.GSS)) {
 	        		subject = this.securityHelper.getSubjectInContext(securityDomain);
 	    	        if (subject == null) {
@@ -198,11 +195,11 @@ public class SessionServiceImpl implements SessionService {
 	    	        		throw new LoginException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40087));
 	    	        	}
 	    	        } else {
-	    	        	userName = escapeName(getUserName(subject, baseUserName)) + AT + securityDomain;
+	    	        	userName = getUserName(subject, baseUserName);
 	    	        }
 	    	        securityContext = this.securityHelper.getSecurityContext();
 	        	} else {
-	        		userName = escapeName(baseUserName) + AT + securityDomain;
+	        		userName = baseUserName;
 	        		securityContext = this.securityHelper.authenticate(securityDomain, baseUserName, credentials, applicationName);
 	        		subject = this.securityHelper.getSubjectInContext(securityContext);
 	        	}
@@ -363,7 +360,7 @@ public class SessionServiceImpl implements SessionService {
 	}	
 	
 	public void start() {
-		LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Default security domain configured=", this.securityDomainNames}); //$NON-NLS-1$
+		LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Default security domain configured=", this.securityDomainName}); //$NON-NLS-1$
 		this.sessionMonitor = new Timer("SessionMonitor", true); //$NON-NLS-1$
         this.sessionMonitor.schedule(new TimerTask() {
         	@Override
@@ -412,14 +409,6 @@ public class SessionServiceImpl implements SessionService {
         
         //strip the escape character from the remaining ats
         return result.replaceAll("\\\\"+AT, AT); //$NON-NLS-1$
-    }
-    
-    static String escapeName(String name) {
-        if (name == null) {
-            return name;
-        }
-        
-        return name.replaceAll(AT, "\\\\"+AT); //$NON-NLS-1$
     }
     
     static String getDomainName(String username) {
@@ -483,7 +472,10 @@ public class SessionServiceImpl implements SessionService {
 	}
 
 	public String getSecurityDomain(String userName, String vdbName, String version, VDB vdb) throws LoginException {
-		String securityDomain = getDomainName(userName);
+		String securityDomain = null;
+		if (allowSecurityDomainQualifier) {
+		    securityDomain = getDomainName(userName);
+		}
 		if (vdbName != null) {
 	    	try {    		
 	    		if (vdb == null) {
@@ -502,18 +494,13 @@ public class SessionServiceImpl implements SessionService {
 			}			
 		} 
 		if (securityDomain != null) {
-			if (this.securityDomainNames != null && this.securityDomainNames.contains(securityDomain)) {
+			if (this.securityDomainName != null && this.securityDomainName.equals(securityDomain)) {
 				return securityDomain;
 			}
 			throw new LoginException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40116));
 		}
 		
-		if (this.securityDomainNames != null && !this.securityDomainNames.isEmpty()) {
-			return this.securityDomainNames.get(0);
-		}
-		
-		//no default
-		return null;
+		return this.securityDomainName;
 	}
 	
 	@Override
@@ -548,5 +535,13 @@ public class SessionServiceImpl implements SessionService {
     public void setTrustAllLocal(boolean trustAllLocal) {
 		this.trustAllLocal = trustAllLocal;
 	}
+    
+    public void setAllowSecurityDomainQualifier(boolean useSecurityDomainQualifier) {
+        this.allowSecurityDomainQualifier = useSecurityDomainQualifier;
+    }
+    
+    public boolean isAllowSecurityDomainQualifier() {
+        return allowSecurityDomainQualifier;
+    }
         
 }
