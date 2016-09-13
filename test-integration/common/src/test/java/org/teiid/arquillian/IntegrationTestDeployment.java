@@ -313,7 +313,7 @@ public class IntegrationTestDeployment {
 		assertEquals (1, sessions.size());
 		Session s = sessions.iterator().next();
 		
-		assertEquals("user@teiid-security", s.getUserName());
+		assertEquals("user", s.getUserName());
 		assertEquals("test", s.getApplicationName());
 		assertEquals("bqt", s.getVDBName());
 		assertEquals("1", s.getVDBVersion());
