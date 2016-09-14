@@ -1841,7 +1841,7 @@ WithQueryCommand withListElement(ParseInfo info) :
 	<AS> lparen = <LPAREN> queryExpression = queryExpression(info) <RPAREN>
 	{
 	    WithQueryCommand result = new WithQueryCommand(new GroupSymbol(name), columns, queryExpression);
-	    result.setNoInline(isNoInline(lparen));
+	    parseWithHints(lparen, result);
 	    return result;
 	}
 }

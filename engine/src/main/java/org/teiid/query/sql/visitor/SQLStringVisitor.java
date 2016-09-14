@@ -826,7 +826,14 @@ public class SQLStringVisitor extends LanguageVisitor {
     		append(SPACE);
     	}
     	append(AS);
-    	if (obj.isNoInline()) {
+    	if (obj.isMaterialize()) {
+    	    append(SPACE);
+            append(BEGIN_HINT);
+            append(SPACE);
+            append(WithQueryCommand.MATERIALIZE);
+            append(SPACE);
+            append(END_HINT);    	    
+    	} else if (obj.isNoInline()) {
     		append(SPACE);
         	append(BEGIN_HINT);
             append(SPACE);

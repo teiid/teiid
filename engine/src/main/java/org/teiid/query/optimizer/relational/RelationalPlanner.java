@@ -335,7 +335,7 @@ public class RelationalPlanner {
 			    if (aNode != null) {
 					modelID = CriteriaCapabilityValidatorVisitor.validateCommandPushdown(null, metadata, capFinder, aNode, false);
 					if (modelID != null) {
-						if (!CapabilitiesUtil.supports(Capability.RECURSIVE_COMMON_TABLE_EXPRESSIONS, modelID, metadata, capFinder)) {
+						if (!CapabilitiesUtil.supports(Capability.RECURSIVE_COMMON_TABLE_EXPRESSIONS, modelID, metadata, capFinder) || with.isMaterialize()) {
 							modelID = null;
 						} else {
 							withCommand = CriteriaCapabilityValidatorVisitor.getQueryCommand(aNode);
@@ -376,7 +376,7 @@ public class RelationalPlanner {
 		    if (modelID == null || withCommand == null) {
 		    	continue;
 		    }
-			if (!CapabilitiesUtil.supports(Capability.COMMON_TABLE_EXPRESSIONS, modelID, metadata, capFinder)) {
+			if (!CapabilitiesUtil.supports(Capability.COMMON_TABLE_EXPRESSIONS, modelID, metadata, capFinder) || with.isMaterialize()) {
 				continue;
 			}
 			WithQueryCommand wqc = new WithQueryCommand(with.getGroupSymbol(), with.getColumns(), withCommand);

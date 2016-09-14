@@ -213,18 +213,19 @@ public class SQLParserUtil {
     	}
     }
     
-    boolean isNoInline(Token paren){
+    void parseWithHints(Token paren, WithQueryCommand with){
     	String comment = getComment(paren);
     	if (comment == null || comment.isEmpty()) {
-    		return false;
+    		return;
     	}
     	String[] parts = comment.split("\\s"); //$NON-NLS-1$
     	for (String part : parts) {
     		if (WithQueryCommand.NO_INLINE.equalsIgnoreCase(part)) {
-    			return true;
+    			with.setNoInline(true);
+    		} else if (WithQueryCommand.MATERIALIZE.equalsIgnoreCase(part)) {
+    		    with.setMaterialize(true);
     		}
     	}
-    	return false;
     }
 
 	//([max:val] [[no] join])

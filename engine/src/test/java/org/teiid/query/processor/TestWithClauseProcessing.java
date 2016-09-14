@@ -1,5 +1,6 @@
 package org.teiid.query.processor;
 
+import static org.junit.Assert.*;
 import static org.teiid.query.processor.TestProcessor.*;
 
 import java.util.Arrays;
@@ -431,6 +432,25 @@ public class TestWithClauseProcessing {
 	    
 	    helpProcess(plan, cc, dataManager, expected);
 	}
+	
+	@Test public void testMaterialize() throws Exception {
+        String sql = "with test as /*+ materialize */ (select user() as u from pm1.g1) select u from test, pm1.g2";
+        
+        List<?>[] expected = new List[] {Arrays.asList("user")};    
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+        dataManager.addData("SELECT 'user' FROM g1 AS g_0", Arrays.asList("user"));
+        dataManager.addData("SELECT 1 FROM g2 AS g_0", Arrays.asList(1));
+        CommandContext cc = TestProcessor.createCommandContext();
+        Command command = helpParse(sql);
+        assertEquals("WITH test AS /*+ materialize */ (SELECT user() AS u FROM pm1.g1) SELECT u FROM test, pm1.g2", command.toString());
+        assertEquals("WITH test AS /*+ materialize */ (SELECT user() AS u FROM pm1.g1) SELECT u FROM test, pm1.g2", command.clone().toString());
+        ProcessorPlan plan = helpGetPlan(command, RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(caps), cc);
+        
+        helpProcess(plan, cc, dataManager, expected);
+    }
 	
 	@Test public void testRecursive() throws Exception {
 	    String sql = "WITH t(n) AS ( VALUES (1) UNION ALL SELECT n+1 FROM t WHERE n < 64 ) SELECT sum(n) FROM t;"; //$NON-NLS-1$
