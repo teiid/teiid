@@ -77,22 +77,23 @@
   </dependencies>
   
   <modules>
-    <module>google-api</module>
-    <module>mongodb-api</module>
     <module>simpledb-api</module>
     <module>document-api</module>      
     
+    <module>accumulo</module>
+    <module>cassandra</module>
+    <module>file</module> 
+    <module>google</module>
+    <module>object</module>
+    <module>infinispan</module>
+    <module>ldap</module>
     <module>jdbc</module>
-    <module>translator-google</module>
-    <module>translator-ldap</module>
+    <module>mongodb</module>
+
     <module>translator-loopback</module>
-    <module>translator-file</module>
     <module>translator-salesforce</module>
     <module>translator-salesforce-34</module>
-    <module>translator-mongodb</module>
-    <module>translator-cassandra</module>
     <module>translator-simpledb</module>
-    <module>translator-accumulo</module>
     <module>translator-solr</module>
     <module>translator-excel</module>
     <module>translator-ws</module>
@@ -102,21 +103,11 @@
     <module>translator-object</module>
     <module>translator-odata</module>
     <module>translator-odata4</module>
-    <module>translator-infinispan-libmode</module>
-    <module>translator-infinispan-hotrod</module>
-    <module>connector-file</module>
-    <module>connector-google</module>
     <module>connector-salesforce</module>
     <module>connector-salesforce-34</module>    
-    <module>connector-ldap</module>
     <module>connector-ws</module>
-    <module>connector-mongodb</module>
-    <module>connector-cassandra</module>
     <module>connector-simpledb</module>
-    <module>connector-accumulo</module>
     <module>connector-solr</module>
-    <module>connector-infinispan-hotrod</module>
-    <module>connector-infinispan-libmode</module>
     <module>translator-prestodb</module>
     <module>sandbox</module>
     <module>translator-swagger</module>

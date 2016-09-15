@@ -6,13 +6,6 @@
     </dependencies>
     
     <config>
-        <standalone template="configuration/standalone/template.xml" 
-        	subsystems="configuration/standalone/subsystems.xml" 
-        	output-file="standalone/configuration/standalone.xml" />
-        
-        <domain template="configuration/domain/template.xml" 
-        	subsystems="configuration/domain/subsystems.xml" 
-        	output-file="domain/configuration/domain.xml" />
     </config>
         
     <file-permissions>

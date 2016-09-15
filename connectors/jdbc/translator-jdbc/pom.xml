@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <parent>
-    <artifactId>connectors</artifactId>
-    <groupId>org.jboss.teiid</groupId>
+    <artifactId>jdbc</artifactId>
+    <groupId>org.jboss.teiid.connectors</groupId>
     <version>9.2.0.Alpha1-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>translator-jdbc</artifactId>
-  <groupId>org.jboss.teiid.connectors</groupId>
   <name>JDBC Translator</name>
   <packaging>bundle</packaging>
   <description>This project contains translators for a JDBC source. Currently this is an aggregator for all the JDBC translators relational databases.</description>
