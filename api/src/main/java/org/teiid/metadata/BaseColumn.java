@@ -37,6 +37,11 @@ public abstract class BaseColumn extends AbstractMetadataRecord {
 	public static final String SPATIAL_TYPE = MetadataFactory.SPATIAL_URI + "type"; //$NON-NLS-1$
 	public static final String SPATIAL_COORD_DIMENSION = MetadataFactory.SPATIAL_URI + "coord_dimension"; //$NON-NLS-1$
 	
+	//the defaults are safe for odbc/jdbc metadata
+    public static final int DEFAULT_PRECISION = Short.MAX_VALUE;
+    //similar to postgresql behavior, we default to a non-zero
+    public static final int DEFAULT_SCALE = Short.MAX_VALUE/2;
+	
 	private static final long serialVersionUID = 6382258617714856616L;
 
 	public enum NullType {
@@ -84,11 +89,26 @@ public abstract class BaseColumn extends AbstractMetadataRecord {
     }
 
     public int getPrecision() {
+        if (precision == 0 && this.getDatatype() != null && getDatatype().getName().equals(DataTypeManager.DefaultDataTypes.BIG_DECIMAL)) {
+            return DEFAULT_PRECISION;
+        }
         return precision;
     }
-
+    
     public int getScale() {
+        if (this.getDatatype() != null && getDatatype().getName().equals(DataTypeManager.DefaultDataTypes.BIG_DECIMAL)) {
+            if (precision == 0 && scale == 0) {
+                return DEFAULT_SCALE;
+            }
+            if (Math.abs(scale) > precision) {
+                return Integer.signum(scale)*precision;
+            }
+        }
         return scale;
+    }
+    
+    public boolean isDefaultPrecisionScale() {
+        return precision == 0 && scale == 0;
     }
 
     public int getRadix() {
@@ -174,8 +194,10 @@ public abstract class BaseColumn extends AbstractMetadataRecord {
 			if (copyAttributes) {
 				this.radix = this.datatype.getRadix();
 				this.length = this.datatype.getLength();
-				this.precision = this.datatype.getPrecision();
-				this.scale = this.datatype.getScale();
+				if (!datatype.getName().equals(DataTypeManager.DefaultDataTypes.BIG_DECIMAL)) {
+				    this.precision = this.datatype.getPrecision();
+	                this.scale = this.datatype.getScale();
+				}
 				this.nullType = this.datatype.getNullType();
 			}
 		}

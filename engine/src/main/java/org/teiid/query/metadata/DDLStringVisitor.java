@@ -408,7 +408,7 @@ public class DDLStringVisitor {
 					append(LPAREN).append(column.getLength()).append(RPAREN);
 				}
 			} else if (PRECISION_DATATYPES.contains(runtimeTypeName) 
-					&& (datatype == null || column.getPrecision() != datatype.getPrecision() || column.getScale() != datatype.getScale())) {
+					&& !column.isDefaultPrecisionScale()) {
 				append(LPAREN).append(column.getPrecision());
 				if (column.getScale() != 0) {
 					append(COMMA).append(column.getScale());

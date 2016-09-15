@@ -1,6 +1,6 @@
 integer      integer      string                                                             integer      short   short   integer      boolean     boolean       boolean  
 oid          attrelid     attname                                                            atttypid     attlen  attnum  atttypmod    attnotnull  attisdropped  atthasdef
-57           56           c                                                                  1700         -1      1       2147483647   false       false         false    
+57           56           c                                                                  1700         -1      1       2147450883   false       false         false    
 60           59           VDBName                                                            1043         -1      1       259          true        false         false    
 61           59           SchemaName                                                         1043         -1      2       259          false       false         false    
 62           59           TableName                                                          1043         -1      3       259          true        false         false    

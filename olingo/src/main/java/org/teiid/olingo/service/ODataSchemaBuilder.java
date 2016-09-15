@@ -21,7 +21,7 @@
  */
 package org.teiid.olingo.service;
 
-import static org.teiid.language.visitor.SQLStringVisitor.getRecordName;
+import static org.teiid.language.visitor.SQLStringVisitor.*;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -185,12 +185,13 @@ public class ODataSchemaBuilder {
 
         if (c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.STRING)) {
             property.setMaxLength(c.getLength()).setUnicode(true);
-        } else if (c.getRuntimeType().equals(
-                DataTypeManager.DefaultDataTypes.DOUBLE)
-                || c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.FLOAT)
-                || c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.BIG_DECIMAL)) {
-            property.setPrecision(c.getPrecision());
-            property.setScale(c.getScale());
+        } else if (c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.BIG_DECIMAL)) {
+            if (c.getScale() < 0) {
+                property.setPrecision((int)Math.min(Integer.MAX_VALUE, (long)c.getPrecision() - c.getScale()));
+            } else {
+                property.setPrecision(c.getPrecision());
+            }
+            property.setScale(Math.max(0, c.getScale()));
         } else if (c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.TIMESTAMP)
                 || c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.TIME)) {
             property.setPrecision(c.getPrecision() == 0?new Integer(4):c.getPrecision());
@@ -512,11 +513,13 @@ public class ODataSchemaBuilder {
         
         if (pp.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.STRING)) {
             param.setMaxLength(pp.getLength());
-        } else if (pp.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.DOUBLE)
-                || pp.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.FLOAT)
-                || pp.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.BIG_DECIMAL)) {
-            param.setPrecision(pp.getPrecision());
-            param.setScale(pp.getScale());
+        } else if (pp.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.BIG_DECIMAL)) {
+            if (pp.getScale() < 0) {
+                param.setPrecision((int)Math.min(Integer.MAX_VALUE, (long)pp.getPrecision() - pp.getScale()));
+            } else {
+                param.setPrecision(pp.getPrecision());
+            }
+            param.setScale(Math.max(0, pp.getScale()));
         } else {
             if (pp.getDefaultValue() != null) {
                 //param.setDefaultValue(pp.getDefaultValue());
