@@ -1393,4 +1393,15 @@ public class TestJoinOptimization {
 			Arrays.asList(3, 2, 3, 3), Arrays.asList(3, 10, 3, 3), 
 			Arrays.asList(3, 2, 3, 3), Arrays.asList(3, 10, 3, 3) });
 	}
+	
+	@Test public void testCopyCriteriaMultiway() throws Exception {
+        String sql = "select bqt1.smalla.intkey, bqt2.smalla.intkey from bqt1.smalla, bqt2.smalla, bqt1.smallb where bqt1.smalla.intnum = bqt2.smalla.intnum and cast(bqt1.smalla.stringkey as integer) = coalesce(bqt2.smalla.intkey, bqt1.smallb.intkey) and bqt2.smalla.intkey = 1"; //$NON-NLS-1$
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), new String[] {"SELECT g_0.IntKey FROM BQT1.SmallB AS g_0", "SELECT g_0.IntNum AS c_0, g_0.IntKey AS c_1 FROM BQT2.SmallA AS g_0 WHERE g_0.IntKey = 1 ORDER BY c_0", "SELECT g_0.IntNum AS c_0, g_0.StringKey AS c_1, g_0.IntKey AS c_2 FROM BQT1.SmallA AS g_0 ORDER BY c_0"});
+        
+        RelationalPlan relationalPlan = (RelationalPlan)plan;
+        JoinNode joinNode = (JoinNode) relationalPlan.getRootNode().getChildren()[0];
+        assertNotNull(joinNode.getJoinCriteria());
+    }
+	
 }
