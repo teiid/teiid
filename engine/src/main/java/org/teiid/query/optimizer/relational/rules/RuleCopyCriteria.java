@@ -53,7 +53,6 @@ import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.util.CommandContext;
@@ -123,9 +122,9 @@ public final class RuleCopyCriteria implements OptimizerRule {
      * @param tgtMap
      * @param joinCriteria
      * @param combinedCriteria
-     * @return true if the copy was successful
+     * @return number of remaining groups if the copy was successful
      */
-    private boolean copyCriteria(Criteria crit,
+    private Integer copyCriteria(Criteria crit,
                                  Map<Expression, Expression> tgtMap,
                                  List<Criteria> joinCriteria,
                                  Set<Criteria> combinedCriteria,
@@ -140,21 +139,21 @@ public final class RuleCopyCriteria implements OptimizerRule {
             tgtCrit = FrameUtil.convertCriteria(tgtCrit, tgtMap, metadata, true);
         } catch (QueryPlannerException err) {
             LogManager.logDetail(LogConstants.CTX_QUERY_PLANNER, err, "Could not remap target criteria in RuleCopyCriteria"); //$NON-NLS-1$
-            return false;
+            return null;
         }
         
         if (tgtCrit instanceof IsNullCriteria && ((IsNullCriteria)tgtCrit).isNegated()) {
-        	return false;
+        	return null;
         }
         
         int endGroups = GroupsUsedByElementsVisitor.getGroups(tgtCrit).size();
         
         if (checkForGroupReduction) {
             if (endGroups >= startGroups) {
-                return false;
+                return null;
             }
         } else if (endGroups > startGroups) {
-            return false;
+            return null;
         }
         
         boolean isNew = combinedCriteria.add(tgtCrit);
@@ -173,7 +172,7 @@ public final class RuleCopyCriteria implements OptimizerRule {
 	        	}
         	}
         	if (!use) {
-        		return false;
+        		return null;
         	}
         }
         
@@ -187,12 +186,12 @@ public final class RuleCopyCriteria implements OptimizerRule {
             		((CompareCriteria)tgtCrit).setOptional(true);
             	}
             }
-            return true;
-        } else if (checkForGroupReduction) {
-            return true;
+            return endGroups;
+        } else if (checkForGroupReduction && endGroups < 2) {
+            return endGroups;
         }
         
-        return false;
+        return null;
     }
             
     /** 
@@ -332,9 +331,11 @@ public final class RuleCopyCriteria implements OptimizerRule {
         while (i.hasNext()) {
             Criteria crit = i.next();
             
-            if (copyCriteria(crit, srcToTgt, newJoinCrits, combinedCriteria, copyingJoinCriteria, metadata, underAccess)) {
+            Integer endGroups = copyCriteria(crit, srcToTgt, newJoinCrits, combinedCriteria, copyingJoinCriteria, metadata, underAccess);
+            
+            if (endGroups != null) {
             	changedTree = true;
-            	if (copyingJoinCriteria) {
+            	if (copyingJoinCriteria && endGroups < 2) {
             		if (crit instanceof CompareCriteria) {
             			CompareCriteria cc = (CompareCriteria)crit;
             			//don't remove theta criteria, just mark it as optional
