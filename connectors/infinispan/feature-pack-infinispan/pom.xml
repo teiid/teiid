@@ -31,9 +31,8 @@
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
-            <artifactId>feature-pack-object</artifactId>
+            <artifactId>translator-object</artifactId>
             <version>${project.version}</version>
-            <type>zip</type>
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>

@@ -77,22 +77,20 @@
   </dependencies>
   
   <modules>
-    <module>simpledb-api</module>
     <module>document-api</module>      
     
     <module>accumulo</module>
     <module>cassandra</module>
     <module>file</module> 
     <module>google</module>
-    <module>object</module>
     <module>infinispan</module>
     <module>ldap</module>
     <module>jdbc</module>
     <module>mongodb</module>
     <module>salesforce</module>
+    <module>simpledb</module>
 
     <module>translator-loopback</module>
-    <module>translator-simpledb</module>
     <module>translator-solr</module>
     <module>translator-ws</module>
     <module>translator-olap</module>
@@ -101,7 +99,6 @@
     <module>translator-odata</module>
     <module>translator-odata4</module>
     <module>connector-ws</module>
-    <module>connector-simpledb</module>
     <module>connector-solr</module>
     <module>translator-prestodb</module>
     <module>sandbox</module>

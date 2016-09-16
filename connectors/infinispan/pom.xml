@@ -17,6 +17,7 @@
     <module>translator-infinispan-hotrod</module>
     <module>connector-infinispan-hotrod</module>
     <module>connector-infinispan-libmode</module>
+    <module>translator-object</module>
     <module>feature-pack-infinispan</module>
   </modules>
 
