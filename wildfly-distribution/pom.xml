@@ -14,6 +14,7 @@
   <modules>
     <module>client-feature-pack</module>
     <module>rest-service-feature-pack</module>
+    <module>olingo-feature-pack</module>
     <module>wildfly-integration-feature-pack</module>
     <module>wildfly-server</module>
   </modules>
