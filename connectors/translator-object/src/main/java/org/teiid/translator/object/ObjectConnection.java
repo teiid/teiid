@@ -168,6 +168,20 @@ public interface ObjectConnection {
 	 * @return DDLHandler
 	 */
 	public DDLHandler getDDLHandler();
+	
+	/**
+	* Call to determine if the JDG cache is configured using annotation (or using protobuf and marsharllers).
+	* @return true if annotations are used
+	*/ 
+	public boolean configuredUsingAnnotations();
+	
+	
+	/**
+	 * Call to determine if this connection is configured for materialization.
+	 * @return true if materialization is being used
+	 */
+	public boolean configuredForMaterialization();
+
 
 	
 }

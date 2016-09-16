@@ -58,26 +58,28 @@ public class TradesCacheSource extends HashMap <Object, Object> {
 	static ClassRegistry CLASS_REGISTRY = new ClassRegistry();
 	
 	static {
-		try {
 			CLASS_REGISTRY.registerClass(Trade.class);
 			CLASS_REGISTRY.registerClass(Leg.class);
 			CLASS_REGISTRY.registerClass(Transaction.class);
-
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+			CLASS_REGISTRY.registerClass(MetaData.class);
 	}
-		
+	
 	public static ObjectConnection createConnection() {
 		Map <Object, Object> objects = TradesCacheSource.loadCache();
 
-		return createConnection(objects, false);
+		return createConnection(objects, false, null, false);
 	}
-	
-	public static ObjectConnection createConnection(boolean staging) {
+		
+	public static ObjectConnection createConnection(boolean annotations) {
 		Map <Object, Object> objects = TradesCacheSource.loadCache();
 
-		return createConnection(objects, staging);
+		return createConnection(objects, false, null, annotations);
+	}
+	
+	public static ObjectConnection createConnection(boolean annotations, boolean staging) {
+		Map <Object, Object> objects = TradesCacheSource.loadCache();
+
+		return createConnection(objects, staging, null, annotations);
 	}
 	
 	public static ObjectConnection createConnection(Map <Object, Object> cache) {
@@ -86,13 +88,13 @@ public class TradesCacheSource extends HashMap <Object, Object> {
 	}
 	
 	public static ObjectConnection createConnection(Map <Object, Object> cache, boolean staging) {
-		ObjectConnection toc = TradeObjectConnection.createConnection(cache, staging, null);
+		ObjectConnection toc = TradeObjectConnection.createConnection(cache, staging, null, false);
 		
 		return toc;
 	}
 	
-	public static ObjectConnection createConnection(Map <Object, Object> cache, boolean staging, Version version) {
-		ObjectConnection toc = TradeObjectConnection.createConnection(cache, staging, version);
+	public static ObjectConnection createConnection(Map <Object, Object> cache, boolean staging, Version version, boolean annotations) {
+		ObjectConnection toc = TradeObjectConnection.createConnection(cache, staging, version, annotations);
 		
 		return toc;
 	}

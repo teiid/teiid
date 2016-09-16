@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ASCII"?>
 <xmi:XMI xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:diagram="http://www.metamatrix.com/metamodels/Diagram" xmlns:mmcore="http://www.metamatrix.com/metamodels/Core" xmlns:relational="http://www.metamatrix.com/metamodels/Relational" xmlns:transformation="http://www.metamatrix.com/metamodels/Transformation">
-  <mmcore:ModelAnnotation xmi:uuid="mmuuid:b68bf59f-b3ad-4db6-b1a4-dab83e3b5b56" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational" modelType="VIRTUAL" ProducerName="Teiid Designer" ProducerVersion="10.0.1.Nightly-v20160627-1409-B12">
+  <mmcore:ModelAnnotation xmi:uuid="mmuuid:b68bf59f-b3ad-4db6-b1a4-dab83e3b5b56" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational" modelType="VIRTUAL" ProducerName="Teiid Designer" ProducerVersion="9.0.6.Final-v20160316-1409-B1242">
     <modelImports xmi:uuid="mmuuid:a2f50f17-b5e5-405a-9c42-98885468ac72" name="XMLSchema" modelLocation="http://www.w3.org/2001/XMLSchema" modelType="TYPE" primaryMetamodelUri="http://www.eclipse.org/xsd/2002/XSD"/>
     <modelImports xmi:uuid="mmuuid:bc1d14b2-ef98-482d-af90-77e90a7a79c7" name="SimpleDatatypes-instance" modelLocation="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance" modelType="TYPE" primaryMetamodelUri="http://www.eclipse.org/xsd/2002/XSD"/>
     <modelImports xmi:uuid="mmuuid:166fed44-bb42-40c4-8169-1bae9b6e5771" name="Trade_Object" modelLocation="Trade_Object.xmi" uuid="mmuuid:abbd65a2-2896-4819-9428-fa8ba13a1b71" modelType="PHYSICAL" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational"/>
@@ -22,7 +22,7 @@
     <materializedTable xsi:type="relational:BaseTable" href="Trade_Mat.xmi#mmuuid/2b5a463d-d34f-4e9e-a22c-6a9b980319bc"/>
     <primaryKey xmi:uuid="mmuuid:bb27e4d7-da59-4bd8-9cdf-b9ef2462d16d" name="PK_ID" columns="mmuuid/511f2da4-40e5-4829-b9f5-38cbf8fc3ee5" foreignKeys="mmuuid/2ee3ed56-af94-459a-b6a2-907c4b0002f7"/>
   </relational:BaseTable>
-  <relational:BaseTable xmi:uuid="mmuuid:de4cc42e-2127-400f-a532-20a9262ce39b" name="Leg" nameInSource="" supportsUpdate="false">
+  <relational:BaseTable xmi:uuid="mmuuid:de4cc42e-2127-400f-a532-20a9262ce39b" name="Leg" nameInSource="Trades" supportsUpdate="false">
     <columns xmi:uuid="mmuuid:f58a9a62-f32a-4d6d-a2d1-f3ccf0eb35d3" name="TradeID" nameInSource="tradeId" updateable="false" foreignKeys="mmuuid/2ee3ed56-af94-459a-b6a2-907c4b0002f7">
       <type href="http://www.w3.org/2001/XMLSchema#long"/>
     </columns>

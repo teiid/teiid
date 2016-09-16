@@ -22,10 +22,10 @@
 
 package org.teiid.translator.object;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -139,7 +139,7 @@ public class ObjectExecution extends ObjectBaseExecution implements ResultSetExe
 			return (ot == OBJECT_TYPE.ARRAY);
 		}
 		
-		boolean isObjectValue() {
+		boolean isObjectValue() { 
 			return (ot == OBJECT_TYPE.VALUE);
 		}
 		
@@ -182,7 +182,7 @@ public class ObjectExecution extends ObjectBaseExecution implements ResultSetExe
 	protected Command query;
 	private Object[] colObjects;
 	private ScriptContext sc = new SimpleScriptContext();
-	private TeiidScriptEngine scriptEngine;
+	private ObjectScriptEngine scriptEngine;
 	private Iterator<Object> objResultsItr = null;
 	private Iterator<Object> cacheResultsIt = null;
 	private ObjectVisitor visitor;
@@ -215,7 +215,6 @@ public class ObjectExecution extends ObjectBaseExecution implements ResultSetExe
 		int col = 0;
 		for (DerivedColumn dc : cols) {
 			ColumnReference cr = (ColumnReference) dc.getExpression();
-			String name = cr.getName();
 			
 			String nis = ObjectUtil.getRecordName(cr.getMetadataObject());
 
@@ -228,12 +227,12 @@ public class ObjectExecution extends ObjectBaseExecution implements ResultSetExe
 					if (fk == null) {
 						throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21003, new Object[] { ((Select)query).getFrom()}));
 					}
-						DepthNode dn = new DepthNode(ObjectUtil.getRecordName(fk) + "." + name, col);
- 						colObjects[col] = dn;
-						 						
- 						int n =dn.getNumberOfNodes();
+					DepthNode dn = new DepthNode(nis, col);
+					colObjects[col] = dn;
+					 						
+					int n =dn.getNumberOfNodes();
 
-						if (n > depth) depth = n;
+					if (n > depth) depth = n;
 					
 			} else {
 				
@@ -285,50 +284,31 @@ public class ObjectExecution extends ObjectBaseExecution implements ResultSetExe
 			return (List<Object>) cacheResultsIt.next();
 		} 
 		
+		String fkeyColNIS = null;
 		cacheResultsIt = null;
+		if (depth > 0 ) {
+
+			fkeyColNIS = visitor.getForeignKey().getNameInSource();
+		}
 		
 		// process the next object in the search result set
 		while (objResultsItr.hasNext()) {
-			List<Object> r = new ArrayList<Object>(colSize);
+			
 			final Object o = objResultsItr.next();
-			sc.setAttribute(ClassRegistry.OBJECT_NAME, o, ScriptContext.ENGINE_SCOPE);			
 			
 			if (depth > 0) {
-				// this contains the object returned from a node that has depth
-				// key=value   ---  nodename=Object
-				// it should contain 2 types of relationships
-				// 1.  Collection based object (list, map, arraylist)
-				// 2.  non-primitive type object
-				Map<String, DepthNode> loadedDepths = new HashMap<String, DepthNode>();  // nodename ==> value
-				// process all the columns for a row, before processing depth
-				for (int i = 0; i < colSize; i++) {
-					if (colObjects[i] == null) {
-						r.add(o);
-						continue;
-					}					
-					
-					try {
-						if (colObjects[i] instanceof CompiledScript) {
-							CompiledScript cs = (CompiledScript) colObjects[i];
-							r.add(cs.eval(sc));
-						} else {
-							DepthNode dn = (DepthNode) colObjects[i];	
-							dn.reset();
-							Object depthObject = getCompiledNode(dn.getCurrentNodeName()).eval(sc);
-							dn.setValue(depthObject);
-							
-								// only include those that contain multiple objects
-							loadedDepths.put(dn.getDepthNodes(), dn);
-							r.add(dn);
-						}
-						
-					} catch (ScriptException e) {
-						throw new TranslatorException(e);
-					}
+				
+				Method rootClassReadMethod = ClassRegistry.findMethod(this.getClassRegistry().getReadClassMethods(this.connection.getCacheClassType().getName()), fkeyColNIS, this.connection.getCacheClassType().getName());
+
+				Object parentValue = null;
+				try {
+					parentValue = ClassRegistry.executeGetMethod(rootClassReadMethod, o);
+				} catch (Exception e1) {
+					throw new TranslatorException(e1);
 				}
 				
-				final List<Object> rows = processDepth( r, loadedDepths);
-				
+				final List<Object> rows = processNode(o, parentValue);
+
 				if (rows != null && rows.size() > 0) {
 				
 					if (rows.size() < 2) return (List<Object>) rows.get(0);
@@ -338,22 +318,10 @@ public class ObjectExecution extends ObjectBaseExecution implements ResultSetExe
 						// return the next row in the cache 
 						return (List<Object>) cacheResultsIt.next();
 					} 
-
 				}
 			} else {
-
-				for (int i = 0; i < colSize; i++) {
-					if (colObjects[i] == null) {
-						r.add(o);
-						continue;
-					}
-					try {
-						CompiledScript cs = (CompiledScript) colObjects[i];					
-						r.add(cs.eval(sc));
-					} catch (ScriptException e) {
-						throw new TranslatorException(e);
-					}
-				}	
+				final List<Object> r = new ArrayList<Object>(colSize);
+				addColumnData(r, o, null);
 				
 				return r;
 			}
@@ -362,188 +330,300 @@ public class ObjectExecution extends ObjectBaseExecution implements ResultSetExe
 		return null;
 	}
 	
-	// the recursive logic will traverse to the bottom depth and work its way back up
-	// expanding the the number of rows
-	@SuppressWarnings("rawtypes")
-	private List<Object> processDepth(List<Object> mainRow, Map<String, DepthNode> loadedDepths) throws TranslatorException {
+	private void addColumnData(List<Object> r, Object parent, Object child) throws TranslatorException {
 		
-		// assumptions:
-		// -  only 1 1-to-many relationship can be specified per query, so if more than one column maps to a collection, 
-		//		its assumed they all map to the same collection
-		
-		Object[] cols = new Object[colSize];
 
-		int rows = 0;
-		if (this.depth > 0) {
-			for (Object r: mainRow) {
-				if (r instanceof DepthNode) {
-					DepthNode dn = (DepthNode) r;
-					dn.incrementPosition();
-					if (dn.isLast() && dn.isObjectValue()) {
-						Object o = evaluate(dn);
-						dn.setValue(o);
-						cols[dn.getColumnLocation()] = o;
-					} else {
-						List<Object> newrows = processNode(dn);
-						dn.setValue(newrows);
-						cols[dn.getColumnLocation()] = newrows;
-						rows = newrows.size();
-					}
-				}
+		for (int i = 0; i < colSize; i++) {
+			if (colObjects[i] == null) {
+				r.add( (child != null ? child : parent));
+				continue;
 			}
-		}
-		
-		// contains the rows to be returned
-		List<Object> results = new ArrayList<Object>();
-
-		for (int r=0; r < rows; r++) {
-			
-			List<Object> row = new ArrayList<Object>(colSize);
-
-			for (int c = 0; c < colSize; c++) {
-				Object o = mainRow.get(c);
-				if (cols[c] == null) {
-					row.add(o);
+			try {
+				
+				if (colObjects[i] instanceof CompiledScript) {
+					sc.setAttribute(ClassRegistry.OBJECT_NAME, parent, ScriptContext.ENGINE_SCOPE);	
+					CompiledScript cs = (CompiledScript) colObjects[i];
+					r.add(cs.eval(sc));
 				} else {
-					if (cols[c] instanceof List) {
-						List l = (List) cols[c];
-						row.add(l.get(r));
-					} else {
-						row.add(cols[c]);
-					}
+					sc.setAttribute(ClassRegistry.OBJECT_NAME, child, ScriptContext.ENGINE_SCOPE);	
+					DepthNode dn = (DepthNode) colObjects[i];	
+					dn.reset();
+					CompiledScript cs = getCompiledNode(dn.getDepthMethodName());
 					
-				}
-					
+					r.add(cs.eval(sc));
+
+				}				
+
+			} catch (ScriptException e) {
+				throw new TranslatorException(e);
 			}
-			
-			results.add(row);
-		}
-			
-		return results;	
+		}	
 
 	}
 	
+//	// the recursive logic will traverse to the bottom depth and work its way back up
+//	// expanding the the number of rows
+//	@SuppressWarnings("rawtypes")
+//	private List<Object> processDepth(List<Object> mainRow, Map<String, DepthNode> loadedDepths) throws TranslatorException {
+//		
+//		// assumptions:
+//		// -  only 1 1-to-many relationship can be specified per query, so if more than one column maps to a collection, 
+//		//		its assumed they all map to the same collection
+//		
+//		Object[] cols = new Object[colSize];
+//
+//		int rows = 0;
+//		if (this.depth > 0) {
+//			for (Object r: mainRow) {
+//				if (r instanceof DepthNode) {
+//					DepthNode dn = (DepthNode) r;
+//					dn.incrementPosition();
+//					if (dn.isLast() && dn.isObjectValue()) {
+//						Object o = evaluate(dn);
+//						dn.setValue(o);
+//						cols[dn.getColumnLocation()] = o;
+//					} else {
+//						List<Object> newrows = processNode(dn);
+//						dn.setValue(newrows);
+//						cols[dn.getColumnLocation()] = newrows;
+//						rows = newrows.size();
+//					}
+//				}
+//			}
+//		}
+//		
+//		// contains the rows to be returned
+//		List<Object> results = new ArrayList<Object>();
+//
+//		for (int r=0; r < rows; r++) {
+//			
+//			List<Object> row = new ArrayList<Object>(colSize);
+//
+//			for (int c = 0; c < colSize; c++) {
+//				Object o = mainRow.get(c);
+//				if (cols[c] == null) {
+//					row.add(o);
+//				} else {
+//					if (cols[c] instanceof List) {
+//						List l = (List) cols[c];
+//						row.add(l.get(r));
+//					} else {
+//						row.add(cols[c]);				
+////						CompiledScript cs = getCompiledNode(depthNode.getCurrentNodeName());
+//
+//					}
+//					
+//				}
+//					
+//			}
+//			
+//			results.add(row);
+//		}
+//			
+//		return results;	
+//
+//	}
+//	
 	@SuppressWarnings("rawtypes")
-	private List<Object> processNode(DepthNode depthNode) throws TranslatorException {
-		List<Object> rows = new ArrayList<Object>();
+	private List<Object> processNode(Object parent, Object value) throws TranslatorException {
+		// contains the rows to be returned
+		List<Object> results = new ArrayList<Object>();
+
 			//	Collections.emptyList();
+		if (value == null) return results;
 		
-		Object obj = depthNode.getValue();
-		if (obj == null) return rows;
+//		Object obj = depthNode.getValue();
+//		if (obj == null) return rows;
 		
 		try {
 			
-			if (depthNode.isCollection()) {
-				Collection c = (Collection) obj;
-				
-				CompiledScript cs = getCompiledNode(depthNode.getCurrentNodeName());
+			if (Collection.class.isAssignableFrom(value.getClass())) {
+				Collection c = (Collection) value;
 								
 				for (Iterator it=c.iterator(); it.hasNext();) {
 					Object o = it.next();
+					
+					final List<Object> r = new ArrayList<Object>(colSize);
 
 					if (o == null) {
-						rows.add(null);
+						r.add(null);
 						continue;
 					}
-
-					sc.setAttribute(ClassRegistry.OBJECT_NAME, o, ScriptContext.ENGINE_SCOPE);
-
-					Object v = cs.eval(sc);
 					
-					DepthNode ndn;
-					ndn = (DepthNode) depthNode.clone();
-
-					ndn.setValue(v);
+					addColumnData(r, parent, o);
 					
-					if (ndn.hasNext()) {
-						ndn.incrementPosition();
-						
-						List<Object> values = processNode(ndn);
-						rows.add(values);
-					} else {
-						rows.add(v);
-					}
+					results.add(r);
+
 				}
+	
+			} else if (Map.class.isAssignableFrom(value.getClass())) {
+				Map m = (Map) value;
 				
-			} else if (depthNode.isMap()) {
-				Map m = (Map) obj;
-				
-				CompiledScript cs = getCompiledNode(depthNode.getCurrentNodeName());
-				depthNode.incrementPosition();
 				Iterator it = m.values().iterator();
 				while(it.hasNext()) {
 					Object o = it.next();
+					
+					final List<Object> r = new ArrayList<Object>(colSize);
+					
 					if (o == null) {
-						rows.add(null);
+						r.add(null);
 						continue;
 					}
-					sc.setAttribute(ClassRegistry.OBJECT_NAME, o, ScriptContext.ENGINE_SCOPE);
-
-					Object v = cs.eval(sc);
 					
-					DepthNode ndn;
-					ndn = (DepthNode) depthNode.clone();
-					ndn.setValue(v);
-					ndn.incrementPosition();
-					
-					List<Object> values = processNode(ndn);
-					rows.add(values);
+					addColumnData(r, parent, o);
+					results.add(r);
 
 				}
-				
-			} else if (depthNode.isArray()) {
-				Object[] a = (Object[]) obj;
+			} else if (value.getClass().isArray()) {
+				Object[] a = (Object[]) value;
 								
-				CompiledScript cs = getCompiledNode(depthNode.getCurrentNodeName());
-				depthNode.incrementPosition();
-				
 				for (int i = 0; i < a.length; i++) {
-
+					final List<Object> r = new ArrayList<Object>(colSize);
+					
 					if (a[i] == null) {
-						rows.add(null);
+						r.add(null);
 						continue;
 					}
-					sc.setAttribute(ClassRegistry.OBJECT_NAME, a[i], ScriptContext.ENGINE_SCOPE);
-
-					Object v = cs.eval(sc);
 					
-					DepthNode ndn;
-					ndn = (DepthNode) depthNode.clone();
-					ndn.setValue(v);
-					ndn.incrementPosition();
-					
-					List<Object> values = processNode(ndn);
-					rows.add(values);
+					addColumnData(r, parent, a[i]);
+					results.add(r);
 
 				}
-				// 
+
 			} else {
-				sc.setAttribute(ClassRegistry.OBJECT_NAME, depthNode.getValue(), ScriptContext.ENGINE_SCOPE);
-				Object v = getCompiledNode(depthNode.getCurrentNodeName()).eval(sc);
-				depthNode.incrementPosition();
-				rows.add(v);
-				return rows;
+				final List<Object> r = new ArrayList<Object>(colSize);		
+				addColumnData(r, parent, value);
+				results.add(r);
 			}
 
 		} catch (TranslatorException te) {
 			throw te;
-		} catch (ScriptException e) {
-			throw new TranslatorException(e);
 		}
-		return rows;
+		return results;
 	}
+//	
+//	@SuppressWarnings("rawtypes")
+//	private List<Object> processNode(DepthNode depthNode) throws TranslatorException {
+//		List<Object> rows = new ArrayList<Object>();
+//			//	Collections.emptyList();
+//		
+//		Object obj = depthNode.getValue();
+//		if (obj == null) return rows;
+//		
+//		try {
+//			
+//			if (depthNode.isCollection()) {
+//				Collection c = (Collection) obj;
+//				
+//				CompiledScript cs = getCompiledNode(depthNode.getCurrentNodeName());
+//								
+//				for (Iterator it=c.iterator(); it.hasNext();) {
+//					Object o = it.next();
+//
+//					if (o == null) {
+//						rows.add(null);
+//						continue;
+//					}
+//
+//					sc.setAttribute(ClassRegistry.OBJECT_NAME, o, ScriptContext.ENGINE_SCOPE);
+//
+//					Object v = cs.eval(sc);
+//					
+//					DepthNode ndn;
+//					ndn = (DepthNode) depthNode.clone();
+//
+//					ndn.setValue(v);
+//					
+//					if (ndn.hasNext()) {
+//						ndn.incrementPosition();
+//						
+//						List<Object> values = processNode(ndn);
+//						rows.add(values);
+//					} else {
+//						rows.add(v);
+//					}
+//				}
+//				
+//			} else if (depthNode.isMap()) {
+//				Map m = (Map) obj;
+//				
+//				CompiledScript cs = getCompiledNode(depthNode.getCurrentNodeName());
+//				depthNode.incrementPosition();
+//				Iterator it = m.values().iterator();
+//				while(it.hasNext()) {
+//					Object o = it.next();
+//					if (o == null) {
+//						rows.add(null);
+//						continue;
+//					}
+//					sc.setAttribute(ClassRegistry.OBJECT_NAME, o, ScriptContext.ENGINE_SCOPE);
+//
+//					Object v = cs.eval(sc);
+//					
+//					DepthNode ndn;
+//					ndn = (DepthNode) depthNode.clone();
+//					ndn.setValue(v);
+//					ndn.incrementPosition();
+//					
+//					List<Object> values = processNode(ndn);
+//					rows.add(values);
+//
+//				}
+//				
+//			} else if (depthNode.isArray()) {
+//				Object[] a = (Object[]) obj;
+//								
+//				CompiledScript cs = getCompiledNode(depthNode.getCurrentNodeName());
+//				depthNode.incrementPosition();
+//				
+//				for (int i = 0; i < a.length; i++) {
+//
+//					if (a[i] == null) {
+//						rows.add(null);
+//						continue;
+//					}
+//					sc.setAttribute(ClassRegistry.OBJECT_NAME, a[i], ScriptContext.ENGINE_SCOPE);
+//
+//					Object v = cs.eval(sc);
+//					
+//					DepthNode ndn;
+//					ndn = (DepthNode) depthNode.clone();
+//					ndn.setValue(v);
+//					ndn.incrementPosition();
+//					
+//					List<Object> values = processNode(ndn);
+//					rows.add(values);
+//
+//				}
+//				// 
+//			} else {
+//				sc.setAttribute(ClassRegistry.OBJECT_NAME, depthNode.getValue(), ScriptContext.ENGINE_SCOPE);
+//				Object v = getCompiledNode(depthNode.getCurrentNodeName()).eval(sc);
+//				depthNode.incrementPosition();
+//				rows.add(v);
+//				return rows;
+//			}
+//
+//		} catch (TranslatorException te) {
+//			throw te;
+//		} catch (ScriptException e) {
+//			throw new TranslatorException(e);
+//		}
+//		return rows;
+//	}
 	
-	private Object evaluate(DepthNode depthNode) throws TranslatorException {
-		sc.setAttribute(ClassRegistry.OBJECT_NAME, depthNode.getValue(), ScriptContext.ENGINE_SCOPE);
-		Object v;
-		try {
-			v = getCompiledNode(depthNode.getCurrentNodeName()).eval(sc);
-		} catch (ScriptException e) {
-			throw new TranslatorException(e);
-		}
-		return v;
-
-	}
+//	private Object evaluate(DepthNode depthNode) throws TranslatorException {
+//		sc.setAttribute(ClassRegistry.OBJECT_NAME, depthNode.getValue(), ScriptContext.ENGINE_SCOPE);
+//
+//		Object v;
+//		try {
+//			v = getCompiledNode(depthNode.getCurrentNodeName()).eval(sc);
+//		} catch (ScriptException e) {
+//			throw new TranslatorException(e);
+//		}
+//		return v;
+//
+//	}
 	
 	@Override
 	public void close() {
@@ -578,4 +658,5 @@ public class ObjectExecution extends ObjectBaseExecution implements ResultSetExe
 	public Command getCommand() {
 		return this.query;
 	}
+	
 }

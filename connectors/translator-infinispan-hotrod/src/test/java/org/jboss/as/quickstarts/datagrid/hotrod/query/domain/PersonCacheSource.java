@@ -67,12 +67,14 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 	public static final String PERSON_CLASS_NAME = Person.class.getName();
 	public static final String PHONENUMBER_CLASS_NAME = PhoneNumber.class.getName();
 	public static final String PHONETYPE_CLASS_NAME = PhoneType.class.getName();
+	public static final String ADDRESSTYPE_CLASS_NAME = Address.class.getName();
+	
 	public static Descriptor DESCRIPTOR;
 	
 	public static final int NUMPERSONS = 10;
 	public static final int NUMPHONES = 2;
 	
-	static ClassRegistry CLASS_REGISTRY = new ClassRegistry();
+	public static ClassRegistry CLASS_REGISTRY = new ClassRegistry();
 	
 	private Map<Object, Object> cache =  Collections.synchronizedMap(new HashMap<Object, Object>());
 	
@@ -83,14 +85,19 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 			CLASS_REGISTRY.registerClass(Person.class);
 			CLASS_REGISTRY.registerClass(PhoneNumber.class);
 			CLASS_REGISTRY.registerClass(PhoneType.class);
+			CLASS_REGISTRY.registerClass(Address.class);
 
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 	
+	
 	public static InfinispanHotRodConnection createConnection(final boolean useKeyClass) {
-		return createConnection(useKeyClass, Version.getVersion("10.2.1"));
+		final RemoteCache objects = PersonCacheSource.loadCache();
+
+		return PersonCacheConnection.createConnection(objects, useKeyClass, DESCRIPTOR, null);
+
 	}
 	
 	public static InfinispanHotRodConnection createConnection(final boolean useKeyClass, Version version) {
@@ -115,11 +122,16 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 			}
 			
 			Person p = new Person();
-
 			p.setId(i);
 			p.setName("Person " + i);
 			p.setPhones(pns);
-				
+			
+			Address a = new Address();
+			a.setAddress(p.getName() + " address");
+			a.setCity(p.getName() + " city");
+			a.setState("VA");	
+			p.setAddress(a);
+			
 			cache.put(new Integer(i), p);
 
 		}
@@ -873,17 +885,17 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 	public void removeClientListener(Object arg0) {
 	}
 
-
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @see org.infinispan.client.hotrod.RemoteCache#execute(java.lang.String, java.util.Map)
+	 * @see org.infinispan.client.hotrod.RemoteCache#replaceWithVersion(java.lang.Object, java.lang.Object, long, long, java.util.concurrent.TimeUnit, long, java.util.concurrent.TimeUnit)
 	 */
 	@Override
-	public <T> T execute(String arg0, Map<String, ?> arg1) {
-		return null;
+	public boolean replaceWithVersion(K key, V newValue, long version,
+			long lifespan, TimeUnit lifespanTimeUnit, long maxIdle,
+			TimeUnit maxIdleTimeUnit) {
+		return false;
 	}
-	
 
 	/**
 	 * {@inheritDoc}
@@ -898,21 +910,21 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @see org.infinispan.client.hotrod.RemoteCache#getCacheTopologyInfo()
+	 * @see org.infinispan.client.hotrod.RemoteCache#execute(java.lang.String, java.util.Map)
 	 */
 	@Override
-	public CacheTopologyInfo getCacheTopologyInfo() {
+	public <T> T execute(String arg0, Map<String, ?> arg1) {
 		return null;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @see org.infinispan.client.hotrod.RemoteCache#replaceWithVersion(java.lang.Object, java.lang.Object, long, long, java.util.concurrent.TimeUnit, long, java.util.concurrent.TimeUnit)
+	 * @see org.infinispan.client.hotrod.RemoteCache#getCacheTopologyInfo()
 	 */
 	@Override
-	public boolean replaceWithVersion(K arg0, V arg1, long arg2, long arg3, TimeUnit arg4, long arg5, TimeUnit arg6) {
-		return false;
+	public CacheTopologyInfo getCacheTopologyInfo() {
+		return null;
 	}
 
 	/**
@@ -968,9 +980,6 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 			Set<Integer> arg0, int arg1) {
 		return null;
 	}
-	
-//	@Override
-//	public getCacheTopologyInfo
 	
 	
 	

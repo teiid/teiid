@@ -7,7 +7,7 @@
 #
 #  Note:  The RemoteServerList host:port may have to be changed, depending on your JDG deployment.  Also, the port is based on running it locally and incrementing the ports
 
-                <resource-adapter id="infinispanRemQSDSL">
+                <resource-adapter id="java:/infinispanRemoteHotRod">
                     <module slot="main" id="org.jboss.teiid.resource-adapter.infinispan.hotrod"/>
                     <connection-definitions>
                         <connection-definition class-name="org.teiid.resource.adapter.infinispan.hotrod.InfinispanManagedConnectionFactory" jndi-name="java:/infinispanRemoteDSL" enabled="true" use-java-context="true" pool-name="infinispanRemoteDSL">

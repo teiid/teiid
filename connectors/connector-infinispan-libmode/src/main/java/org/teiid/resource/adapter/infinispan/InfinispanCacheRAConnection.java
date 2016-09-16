@@ -244,5 +244,21 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	@Override
 	public void close() throws ResourceException {
 	}
+	
+
+	/**
+	* Call to determine if the JDG cache is configured using annotation (or using protobuf and marsharllers).
+	* @return true if annotations are used
+	*/
+
+	@Override
+	 public boolean configuredUsingAnnotations() {
+	        return false;
+	}
+
+	@Override
+	public boolean configuredForMaterialization() {
+		return false;
+	}
 
 }

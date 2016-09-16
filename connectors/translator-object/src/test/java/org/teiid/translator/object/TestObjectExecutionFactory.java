@@ -30,6 +30,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.teiid.cdk.api.TranslationUtility;
+import org.teiid.language.Command;
 import org.teiid.language.Select;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Datatype;
@@ -46,6 +48,7 @@ import org.teiid.translator.object.testdata.trades.VDBUtility;
 public class TestObjectExecutionFactory {
 	
 	protected static ObjectConnection conn = TradesCacheSource.createConnection();
+	private static TranslationUtility translationUtility = VDBUtility.TRANSLATION_UTILITY;
 	
 	public class TestFactory extends SimpleMapCacheExecutionFactory {
 		public TestFactory() {
@@ -63,7 +66,6 @@ public class TestObjectExecutionFactory {
 	protected ObjectExecutionFactory factory;
 
 	@Before public void beforeEach() throws Exception{	
- 
 		MockitoAnnotations.initMocks(this);
 		
 		factory = createFactory();
@@ -75,7 +77,10 @@ public class TestObjectExecutionFactory {
 
 	@Test public void testFactory() throws Exception {
 		factory.start();
-			
+		
+		Command command = translationUtility
+				.parseCommand("Select settled, tradeId from  Trade_Object.Trade");
+
 		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, conn);
 		
 		assertNotNull(exec);
@@ -100,12 +105,14 @@ public class TestObjectExecutionFactory {
 		assertNotNull(physicalTable);
 		assertTrue(physicalTable.isPhysical());
 		assertTrue(!physicalTable.isVirtual());
-		assertEquals(4, physicalTable.getColumns().size());
+		assertEquals(6, physicalTable.getColumns().size());
 		//this
-		assertEquals("long", physicalTable.getColumns().get(0).getRuntimeType());
-		assertEquals(NullType.No_Nulls, physicalTable.getColumns().get(0).getNullType());
+		assertEquals("object", physicalTable.getColumns().get(0).getRuntimeType());
+		//trade id key
+		assertEquals("long", physicalTable.getColumns().get(1).getRuntimeType());
+		assertEquals(NullType.No_Nulls, physicalTable.getColumns().get(1).getNullType());
 		//name
-		assertEquals("string", physicalTable.getColumns().get(1).getRuntimeType());
+		assertEquals("object", physicalTable.getColumns().get(2).getRuntimeType());
 		
 		assertEquals(1, physicalTable.getAllKeys().size());
 	}	

@@ -25,6 +25,7 @@
 package org.teiid.translator.object;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +38,6 @@ import javax.script.SimpleScriptContext;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.PropertiesUtils;
-import org.teiid.core.util.StringUtil;
 import org.teiid.language.BatchedUpdates;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Command;
@@ -50,7 +50,6 @@ import org.teiid.language.SetClause;
 import org.teiid.language.Update;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.query.eval.TeiidScriptEngine;
@@ -63,9 +62,6 @@ import org.teiid.translator.object.util.ObjectUtil;
 /**
  */
 public class ObjectUpdateExecution extends ObjectBaseExecution implements UpdateExecution {
-	public static final String GET = "get"; //$NON-NLS-1$
-	public static final String SET = "set"; //$NON-NLS-1$
-	public static final String IS = "is"; //$NON-NLS-1$
 
 	private ScriptContext sc = new SimpleScriptContext();
 
@@ -89,9 +85,7 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 	// ===========================================================================================================================
 
 	@Override
-	public void execute() throws TranslatorException {
-		ClassRegistry classRegistry = connection.getClassRegistry();
-
+	public void execute() throws TranslatorException {		
 		int index = 0;
 
 		if (command instanceof BatchedUpdates) {
@@ -99,12 +93,12 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 			result = new int[updates.getUpdateCommands().size()];
 			for (Command cmd:updates.getUpdateCommands()) {
 				
-				this.result[index++] = executeUpdate(cmd, classRegistry);
+				this.result[index++] = executeUpdate(cmd);
 			}		
 			
 		} else {
 			result = new int[1];
-			this.result[index] = executeUpdate(command, classRegistry);
+			this.result[index] = executeUpdate(command);
 		}
 	
 	}
@@ -114,8 +108,9 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 		return this.result;
 	}
 	
-	private int executeUpdate(Command command, ClassRegistry classRegistry ) throws TranslatorException {
+	private int executeUpdate(Command command ) throws TranslatorException {
 		
+		ClassRegistry classRegistry = this.getClassRegistry();
 		ObjectVisitor visitor = createVisitor();
 		visitor.visitNode(command);
 
@@ -124,22 +119,28 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 			throw visitor.getExceptions().get(0);
 		}
 		
-		clz = getRegisteredClass(classRegistry, visitor);
+		clz = ObjectUtil.getRegisteredClass(classRegistry, visitor);
 
 		Map<String, Method> writeMethods = classRegistry.getWriteClassMethods(clz.getSimpleName());
 		
 		int cnt = 0;
 		try {
-			if (visitor.getPrimaryTable() != null) {
-				this.connection.getDDLHandler().setStagingTarget(true);
-			}
 			if (command instanceof Update) {
-				cnt = handleUpdate((Update) command, visitor, classRegistry, writeMethods);
+				if (visitor.getPrimaryTable() != null) {
+					this.connection.getDDLHandler().setStagingTarget(true);
+				}
+				cnt = handleUpdate((Update) command, visitor, classRegistry, clz, writeMethods);
 				
 			} else if (command instanceof Delete) {
-				cnt = handleDelete((Delete) command, visitor);
+				if (visitor.getPrimaryTable() != null) {
+					this.connection.getDDLHandler().setStagingTarget(true);
+				}
+				cnt = handleDelete((Delete) command, visitor, clz);
 				
 			} else if (command instanceof Insert) {
+				if (visitor.getPrimaryTable() != null) {
+					this.connection.getDDLHandler().setStagingTarget(true);
+				}
 				cnt = handleInsert((Insert) command, visitor, clz, writeMethods);
 				
 			} else {
@@ -149,19 +150,6 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 			this.connection.getDDLHandler().setStagingTarget(false);
 		}
 		return cnt;
-	}
-
-	private Class<?> getRegisteredClass(ClassRegistry classRegistry, ObjectVisitor visitor) throws TranslatorException {
-		String tname = (visitor.getPrimaryTable() != null ? visitor.getPrimaryTable() :  visitor.getTableName());
-		if (tablename != null && tablename.equals(tname) ) {
-			return clz;
-		}
-		tablename = tname;
-		clz = classRegistry.getRegisteredClassUsingTableName(tname);
-		if (clz == null) {
-			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21005, new Object[] {visitor.getTableName()}));
-		}
-		return clz;
 	}
 
 	private int handleInsert(Insert insert, ObjectVisitor visitor,  Class<?> clz, Map<String, Method> writeMethods) throws TranslatorException {
@@ -180,7 +168,7 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 		ForeignKey fk = visitor.getForeignKey();
 		
 		if (fk != null) {
-			int r = handleInsertChildObject(visitor, entity, writeMethods);
+			int r = handleInsertChildObject(visitor, entity, writeMethods, clz);
 			return r;
 		}
 		
@@ -209,7 +197,7 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 					
 				writeColumnData(entity, column, value, writeMethods);
 				
-				keyValue = evaluate(entity, ObjectUtil.getRecordName(keyCol), connection.getClassRegistry().getReadScriptEngine());
+				keyValue = evaluate(entity, ObjectUtil.getRecordName(keyCol), connection.getClassRegistry().getReadScriptEngine(), clz);
 				
 			} else {
 				
@@ -240,24 +228,32 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 
 	}
 
-	private int handleInsertChildObject(ObjectVisitor visitor, Object newEntity, Map<String, Method> writeMethods) throws TranslatorException {
+	@SuppressWarnings("rawtypes")
+	private int handleInsertChildObject(ObjectVisitor visitor, Object newEntity, Map<String, Method> writeMethods, Class<?> clzz) throws TranslatorException {
 
 		ForeignKey fk = visitor.getForeignKey();
 
-		String fkeyColNIS = visitor.getForeignKeyNameInSource();
+		String fkeyColNIS = fk.getNameInSource();
+		String fkeyRefColumnName = visitor.getForeignKeyReferenceColName();
 		
+		// get the root method based on the foreign key, will be used to add the child
+		Method rootClassWriteMethod = ClassRegistry.findMethod(this.getClassRegistry().getWriteClassMethods(this.connection.getCacheClassType().getName()), fkeyColNIS, this.connection.getCacheClassType().getName());
+			
 		List<ColumnReference> columns = visitor.getInsert().getColumns();
 		List<Expression> values = ((ExpressionValueSource) visitor.getInsert()
 				.getValueSource()).getValues();
 		
 		Object fkeyValue = null;
 		
+		// iterate over the columns and set data on newentity
 		for (int i = 0; i < columns.size(); i++) {
 
 			Column column = columns.get(i).getMetadataObject();
 			Object value = values.get(i);
 
-			if (fkeyColNIS.equals(ObjectUtil.getRecordName(column)) ) {
+			// on a child object do not add the value for column that's the used in the foreign key,
+			// which is already stored as the key value on the root object
+			if (fkeyRefColumnName.equals(ObjectUtil.getRecordName(column)) ) {
 				if (value instanceof Literal) {
 					Literal literalValue = (Literal) value;
 					fkeyValue = literalValue.getValue();
@@ -271,52 +267,76 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 					Literal literalValue = (Literal) value;
 					value = literalValue.getValue();
 				}
-				
 				writeColumnData(newEntity, column, value, writeMethods);
-
 			}
 		}
 		
 
+		// need to find the parent object in order to add the child
+		
 		fkeyValue = convertKeyValue(fkeyValue, visitor.getPrimaryKeyCol());
-		String fk_nis = fk.getNameInSource();
+
 		// don't perform a search when doing inserts for materialization
 						
-		Object rootObject = connection.getSearchType().performKeySearch(fkeyColNIS, fkeyValue, executionContext) ; 
-				//env.performKeySearch(fkeyColNIS, fkeyValue, connection, executionContext);
+		Object rootObject = connection.getSearchType().performKeySearch(fkeyRefColumnName, fkeyValue, executionContext) ; 
 
 		if (rootObject == null) {
-			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21015, new Object[] {fkeyValue, visitor.getTableName()}));
+			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21015, new Object[] {fkeyValue, connection.getCacheClassType().getSimpleName()}));
 		}
-		Object childrenObjects = this.evaluate(rootObject, fk_nis, connection.getClassRegistry().getReadScriptEngine());
+		// read the child object from the root object based on the relationship 
+		Object childrenObjects = this.evaluate(rootObject, fkeyColNIS, getClassRegistry().getReadScriptEngine(), connection.getCacheClassType());
 			
-		if (childrenObjects != null) {
-			// next
-			if (Collection.class.isAssignableFrom(childrenObjects.getClass())) {
-				@SuppressWarnings("rawtypes")
-				Collection c = (Collection) childrenObjects;
-				c.add(newEntity);
+		// first see if its a 1-to-many relationship
+		// if it not of type (collection, map, or array), then
+		// assume its a 1-to-1 relationship		
+		Class<?> parmType = rootClassWriteMethod.getParameterTypes()[0];
+		if (Collection.class.isAssignableFrom(parmType)) {
+			Collection c = null;
+			if (childrenObjects == null) {
+				try {
+					if (parmType.getConstructors() != null && parmType.getConstructors().length > 0) {
+						c = (Collection) parmType.newInstance();
+					} else {
+						c = new ArrayList();
+					}
+				} catch (InstantiationException e) {
+					throw new TranslatorException(e);
+				} catch (IllegalAccessException e) {
+					throw new TranslatorException(e);
+				}
+			} else {
+				c = (Collection) childrenObjects;
+			}
+			c.add(newEntity);
 
-				Map<String, Method> rootwriteMethods = connection.getClassRegistry().getWriteClassMethods(visitor.getRootTableName());
-
-				writeColumnData(rootObject, fk_nis, c, rootwriteMethods);
-
-			} else if (Map.class.isAssignableFrom(childrenObjects.getClass())) {
-				throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21008, new Object[] {visitor.getTableName()}));
-
-			} else if (childrenObjects.getClass().isArray()) {
-				Object[] a = (Object[]) childrenObjects;
-				Object[] n = new Object[a.length + 1];
+			writeColumnData(rootObject, fkeyColNIS, c, rootClassWriteMethod);		
+		} else if (parmType.isAssignableFrom(Map.class)) {
+			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21008, new Object[] {visitor.getTableName()}));
+			
+		} else if (parmType.isArray()) {
+			Object[] a = null;
+			Object[] n = null;
+			if (childrenObjects == null) {
+				n = new Object[1];
+				n[0] = newEntity;
+			} else {
+				a = (Object[]) childrenObjects;
+				n = new Object[a.length + 1];
 				int i = 0;
 				for (Object o:a) {
 					n[i] = o;
 				}
 				n[i] = newEntity;
-				
-				writeColumnData(newEntity, fk_nis, n, writeMethods);
-			} 
-		}
-		
+			}
+
+			writeColumnData(rootObject, fkeyColNIS, n, rootClassWriteMethod);		
+
+		} else {
+
+			// then assume its a 1-to-1 relationship
+			writeColumnData(rootObject, fkeyColNIS, newEntity, rootClassWriteMethod);
+		}		
+
 		connection.update(fkeyValue, rootObject);
 		
 		return 1;
@@ -324,7 +344,7 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 	}
 
 	// Private method to actually do a delete operation. 
-	private int handleDelete(Delete delete, ObjectVisitor visitor) throws TranslatorException {
+	private int handleDelete(Delete delete, ObjectVisitor visitor,  Class<?> clz) throws TranslatorException {
 				
 		// if this is the root class (no foreign key), then for each object, obtain
 		// the primary key value and use it to be removed from the cache
@@ -343,8 +363,8 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 		}
 		int cnt = 0;
 		try {
-			TeiidScriptEngine scriptEngine = connection.getClassRegistry().getReadScriptEngine();
-							
+			ObjectScriptEngine scriptEngine =this.getClassRegistry().getReadScriptEngine();
+
 			CompiledScript cs = scriptEngine.compile(ClassRegistry.OBJECT_NAME + "." +  ObjectUtil.getRecordName(keyCol));
 
 			for (Object o : toDelete) {
@@ -438,7 +458,7 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 	}
 
 	// Private method to actually do an update operation. 
-	private int handleUpdate(Update update, ObjectVisitor visitor, ClassRegistry classRegistry, Map<String, Method> writeMethods) throws TranslatorException {
+	private int handleUpdate(Update update, ObjectVisitor visitor, ClassRegistry classRegistry,  Class<?> clz, Map<String, Method> writeMethods) throws TranslatorException {
 		// Find all the objects that meet the criteria for updating
 		List<Object> toUpdate = connection.getSearchType().performSearch(visitor, executionContext) ;
 				//env.search(visitor, connection, executionContext);
@@ -466,7 +486,7 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 		if (keyCol != null) {
 			for (Object entity:toUpdate) {
 				
-				Object keyValue = evaluate(entity, ObjectUtil.getRecordName(keyCol), classRegistry.getReadScriptEngine());
+				Object keyValue = evaluate(entity, ObjectUtil.getRecordName(keyCol), classRegistry.getReadScriptEngine(), clz);
 				
 				for (SetClause sc:updateList) {
 					Column column = sc.getSymbol().getMetadataObject();
@@ -504,13 +524,20 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 		result = null;
 	}
 
-	private Object evaluate(Object value, String columnName, TeiidScriptEngine scriptEngine)
+	private Object evaluate(Object value, String columnName, ObjectScriptEngine scriptEngine, Class entityClass)
 			throws TranslatorException {
+		Method m = null;
+		try {
+			m = ClassRegistry.findMethod(scriptEngine.getMethodMap(entityClass), columnName, entityClass.getSimpleName());
+		} catch (ScriptException e1) {
+			throw new TranslatorException(e1);
+		}
+		
 		sc.setAttribute(ClassRegistry.OBJECT_NAME, value,
 				ScriptContext.ENGINE_SCOPE);
 		try {
 			CompiledScript cs = scriptEngine.compile(ClassRegistry.OBJECT_NAME
-					+ "." + columnName);
+					+ "." + m.getName());
 			final Object v = cs.eval(sc);
 			return v;
 		} catch (ScriptException e) {
@@ -538,30 +565,16 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 	
 			writeColumnData(entity, nis, value, writeMethods);
 	}
+	
+	
 	private void writeColumnData(Object entity, String nameInSource, Object value, Map<String, Method> writeMethods) throws TranslatorException {
-		
 			
-			// if this is a child table, the nis will have the table.columnName formatted
-			if (nameInSource.contains(".")) {
-				nameInSource = StringUtil.getLastToken(nameInSource, ".");
-			}
+			Method m = ClassRegistry.findMethod(writeMethods, nameInSource, entity.getClass().getSimpleName());
+			writeColumnData(entity, nameInSource, value, m);
+			
+	}
+	private void writeColumnData(Object entity, String nameInSource, Object value, Method m) throws TranslatorException {
 
-			Method m = writeMethods.get(nameInSource);
-			if (m == null) {
-				m = writeMethods.get(nameInSource.toLowerCase());
-
-			}
-
-			if (m == null) {
-				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.TRACE)) {
-					LogManager.logTrace(LogConstants.CTX_CONNECTOR,
-							"ObjectUpdateExecution API name :",entity.getClass().getName()); //$NON-NLS-1$
-					//ClassRegistry.print(writeMethods);
-				}
-				
-				throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21010, new Object[] {entity.getClass().getSimpleName(), nameInSource}));
-
-			}
 			try {
 				if (value == null) {
 					ClassRegistry.executeSetMethod(m, entity, value);
@@ -569,6 +582,9 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 				}
 				final Class<?> sourceClassType = value.getClass();
 				final Class<?> targetClassType = m.getParameterTypes()[0];
+				if (targetClassType == null) {
+					throw new TranslatorException("Program Error: invalid method " + m.getName() + ", no valid parameter defined on the expected set method");
+				}
 				if (targetClassType.isEnum()) {
 					Object[] con = targetClassType.getEnumConstants();
 					for (Object c:con) {
@@ -599,6 +615,7 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 
 				
 			} catch (Exception e) {
+				e.printStackTrace();
 				throw new TranslatorException(e);
 			}
 

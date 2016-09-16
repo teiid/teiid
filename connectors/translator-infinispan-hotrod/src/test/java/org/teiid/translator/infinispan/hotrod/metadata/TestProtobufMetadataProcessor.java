@@ -1,9 +1,10 @@
 package org.teiid.translator.infinispan.hotrod.metadata;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Properties;
 
+import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.Address;
 import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PersonCacheSource;
 import org.jboss.teiid.jdg_remote.pojo.AllTypesCacheSource;
 import org.junit.Before;
@@ -16,8 +17,6 @@ import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.infinispan.hotrod.InfinispanHotRodConnection;
-import org.teiid.translator.object.Version;
-import org.teiid.translator.object.metadata.JavaBeanMetadataProcessor;
 import org.teiid.translator.infinispan.hotrod.InfinispanExecutionFactory;
 
 @SuppressWarnings("nls")
@@ -31,44 +30,21 @@ public class TestProtobufMetadataProcessor {
 	@Before public void beforeEach() throws Exception{	
 		 
 		TRANSLATOR = new InfinispanExecutionFactory();
+		TRANSLATOR.setSupportsSearchabilityUsingAnnotations(false);
+		TRANSLATOR.start();
     }
 
 	@Test
 	public void testPersonMetadata() throws Exception {
-		TRANSLATOR.setSupportsSearchabilityUsingAnnotations(false);
-		TRANSLATOR.start();
 
-		 
 		MetadataFactory mf = new MetadataFactory("vdb", 1, "objectvdb",
 				SystemMetadata.getInstance().getRuntimeTypeMap(),
 				new Properties(), null);
 
-		InfinispanHotRodConnection conn = PersonCacheSource.createConnection(true, Version.getVersion("6.6"));
+		PersonCacheSource.CLASS_REGISTRY.registerClass(Address.class);
+		InfinispanHotRodConnection conn = PersonCacheSource.createConnection(true);
 
-		ProtobufMetadataProcessor mp = (ProtobufMetadataProcessor) TRANSLATOR.getMetadataProcessor();
-		mp.process(mf, conn);
-
-		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
-				null, null);
-
-		assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("personMetadataNoObject.ddl")), metadataDDL);	
-	}
-		
-	@Test
-	public void testPersonMetadataWithObject() throws Exception {
-		TRANSLATOR.setSupportsSearchabilityUsingAnnotations(false);
-		TRANSLATOR.start();
-
-		 
-		MetadataFactory mf = new MetadataFactory("vdb", 1, "objectvdb",
-				SystemMetadata.getInstance().getRuntimeTypeMap(),
-				new Properties(), null);
-
-		InfinispanHotRodConnection conn = PersonCacheSource.createConnection(true, Version.getVersion("6.6"));
-
-		ProtobufMetadataProcessor mp = (ProtobufMetadataProcessor) TRANSLATOR.getMetadataProcessor();
-		mp.setClassObjectColumn(true);
-		mp.process(mf, conn);
+		TRANSLATOR.getMetadataProcessor().process(mf, conn);
 
 		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
 				null, null);
@@ -79,8 +55,6 @@ public class TestProtobufMetadataProcessor {
 	
 	@Test
 	public void testAllTypesMetadata() throws Exception {
-		TRANSLATOR.setSupportsSearchabilityUsingAnnotations(false);
-		TRANSLATOR.start();
 
 		MetadataFactory mf = new MetadataFactory("vdb", 1, "objectvdb",
 				SystemMetadata.getInstance().getRuntimeTypeMap(),

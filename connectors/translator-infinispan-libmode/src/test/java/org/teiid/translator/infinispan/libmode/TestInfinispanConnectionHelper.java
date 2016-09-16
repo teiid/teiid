@@ -27,7 +27,7 @@ public class TestInfinispanConnectionHelper  {
 		
 		container.startCache(TradesCacheSource.TRADES_CACHE_NAME);
 		TradesCacheSource.loadCache(container.getCache(TradesCacheSource.TRADES_CACHE_NAME));
-		ObjectConnection conn = TradesCacheSource.createConnection(container.getCache(TradesCacheSource.TRADES_CACHE_NAME), false, version);
+		ObjectConnection conn = TradesCacheSource.createConnection(container.getCache(TradesCacheSource.TRADES_CACHE_NAME), false, version, false);
 
 		return conn;  	
 	}

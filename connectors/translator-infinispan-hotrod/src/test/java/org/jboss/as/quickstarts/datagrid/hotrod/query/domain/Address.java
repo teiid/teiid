@@ -19,29 +19,60 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.translator.infinispan.libmode;
+package org.jboss.as.quickstarts.datagrid.hotrod.query.domain;
 
-import org.teiid.translator.Translator;
+import org.infinispan.protostream.annotations.ProtoDoc;
+import org.infinispan.protostream.annotations.ProtoField;
 
 /**
- * InfinispanExecutionFactory is the "infinispan-cache" translator that is used to access an Infinispan cache.
- * <p>
- * The optional setting is:
- * <li>{@link #supportsDSLSearching DSL Searching} - will default to <code>false</code>, supporting only Key searching.
- * Set to <code>true</code> will use the Infinispan DSL query language to search the cache for objects</li> 
- * </li>
- * 
  * @author vhalbert
  *
  */
-@Deprecated
-@Translator(name = "infinispan-cache", description = "The Infinispan Cache Library Mode Translator (Deprecated)")
-public class InfinispanCacheExecutionFactory extends InfinispanLibModeExecutionFactory {
+@ProtoDoc("@Indexed")
+public class Address {
 
-
-	public InfinispanCacheExecutionFactory() {
-		super();
-
+	private String address;
+	private String city;
+	private String state;
+	/**
+	 * @return address
+	 */
+	@ProtoField(number = 1, required = true)
+	public String getAddress() {
+		return address;
 	}
+	/**
+	 * @param address Sets address to the specified value.
+	 */
+	public void setAddress(String address) {
+		this.address = address;
+	}
+	/**
+	 * @return city
+	 */
+	@ProtoField(number = 2, required = true)
+	public String getCity() {
+		return city;
+	}
+	/**
+	 * @param city Sets city to the specified value.
+	 */
+	public void setCity(String city) {
+		this.city = city;
+	}
+	/**
+	 * @return state
+	 */
+	@ProtoField(number = 3, required = true)
+	public String getState() {
+		return state;
+	}
+	/**
+	 * @param state Sets state to the specified value.
+	 */
+	public void setState(String state) {
+		this.state = state;
+	}
+	
 	
 }

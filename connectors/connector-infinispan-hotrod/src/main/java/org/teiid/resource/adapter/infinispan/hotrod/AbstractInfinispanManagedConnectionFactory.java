@@ -508,13 +508,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 		String className = cacheClassparm.get(1);
 		cacheTypeClass = loadClass(className);
 	
-		
-	
-		try {
-			methodUtil.registerClass(cacheTypeClass);
-		} catch (TranslatorException e1) {
-			throw new ResourceException(e1);
-		}
+		methodUtil.registerClass(cacheTypeClass);
 			
 		if (parms.size() == 2) {
 			String rightside = parms.get(1);
@@ -555,9 +549,7 @@ public abstract class AbstractInfinispanManagedConnectionFactory extends
 					throw new ResourceException(e);
 				} catch (IllegalAccessException e) {	
 					throw new ResourceException(e);
-				} catch (TranslatorException e) {
-					throw new ResourceException(e);
-				}
+				} 
 			
 			}
 			

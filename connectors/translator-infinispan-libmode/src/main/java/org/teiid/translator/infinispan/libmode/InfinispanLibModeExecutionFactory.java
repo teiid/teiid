@@ -49,7 +49,7 @@ import org.teiid.translator.object.simpleMap.SimpleKeyVisitor;
  * @author vhalbert
  *
  */
-@Translator(name = "ispn-lib-mode", description = "(Deprecated) Translator used for accessing Infinispan cache running in Library Mode ")
+@Translator(name = "ispn-lib-mode", description = "Translator used for accessing Infinispan cache running in Library Mode ")
 public class InfinispanLibModeExecutionFactory extends ObjectExecutionFactory {
 	public static final Version SIX_6 = Version.getVersion("6.6"); //$NON-NLS-1$
 
@@ -81,7 +81,7 @@ public class InfinispanLibModeExecutionFactory extends ObjectExecutionFactory {
 		
 		setSupportedJoinCriteria(SupportedJoinCriteria.EQUI);
 
-	}
+	} 
 	
 	public boolean isFullQuerySupported() {
 		return this.supportsDSLSearching ;

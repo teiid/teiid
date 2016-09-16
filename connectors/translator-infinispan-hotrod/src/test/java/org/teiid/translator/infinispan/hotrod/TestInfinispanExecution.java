@@ -87,7 +87,7 @@ public class TestInfinispanExecution {
 
 	}
 	
-	@Test public void test1toManyOnlyChild() throws Exception {
+	@Test public void test1toManyOnlyChildColumn() throws Exception {
 		Select command = (Select)translationUtility.parseCommand("select number From PhoneNumber as T"); //$NON-NLS-1$
 
 		
@@ -95,11 +95,11 @@ public class TestInfinispanExecution {
 
 	}
 	
-	@Test public void test1toManyA() throws Exception {
-		Select command = (Select)translationUtility.parseCommand("select a.name, a.id, a.email, b.number From Person as A, PhoneNumber as b where a.id = b.id"); //$NON-NLS-1$
+	@Test public void test1toManyParentAndChildColumn() throws Exception {
+		Select command = (Select)translationUtility.parseCommand("select b.id, b.number From  PhoneNumber as b"); //$NON-NLS-1$
 
 		
-		performTest(20, 4, command);
+		performTest(20, 2, command);
 
 	}
 	
@@ -110,7 +110,30 @@ public class TestInfinispanExecution {
 		performTest(20, 5, command);
 
 	}	
+
+	@Test public void test1to1Child() throws Exception {
+		Select command = (Select)translationUtility.parseCommand("select City From Address as T"); //$NON-NLS-1$
+
+		
+		performTest(10, 1, command);
+
+	}
 	
+	@Test public void test1to1Child_B() throws Exception {
+		Select command = (Select)translationUtility.parseCommand("select id, City From Address as T"); //$NON-NLS-1$
+
+		
+		performTest(10, 2, command);
+
+	}
+	
+	@Test public void test1to1Child_All() throws Exception {
+		Select command = (Select)translationUtility.parseCommand("select * From Address as T"); //$NON-NLS-1$
+
+		
+		performTest(10, 4, command);
+
+	}
 
 	protected List<Object> performTest(int rowcnt, int colCount, Select command)
 			throws TranslatorException {
@@ -170,7 +193,7 @@ public class TestInfinispanExecution {
 	}
 
 	protected ObjectExecution createExecution(Select command, int rowCount, int colCount) throws TranslatorException {
-		InfinispanExecutionFactory translator = new InfinispanExecutionFactory() {
+		InfinispanHotRodExecutionFactory translator = new InfinispanHotRodExecutionFactory() {
 //			@Override
 //			public List<Object> search(ObjectVisitor visitor, ObjectConnection connection, ExecutionContext executionContext)
 //					throws TranslatorException {

@@ -581,7 +581,7 @@
     </annotations>
   </mmcore:AnnotationContainer>
   <relational:Schema xmi:uuid="mmuuid:1c059e7c-01d4-4c3c-8c24-def3c7d6cfac" name="Trade_Mat" nameInSource="Trade_Mat">
-    <tables xsi:type="relational:BaseTable" xmi:uuid="mmuuid:2b5a463d-d34f-4e9e-a22c-6a9b980319bc" name="Trade" nameInSource="">
+    <tables xsi:type="relational:BaseTable" xmi:uuid="mmuuid:2b5a463d-d34f-4e9e-a22c-6a9b980319bc" name="Trade" nameInSource="Trades">
       <columns xmi:uuid="mmuuid:52ba1a65-b660-4c3e-b1f3-54840d744906" name="TradeObject" nameInSource="this" nativeType="var_binary" length="4000" nullable="NULLABLE_UNKNOWN" defaultValue="" collationName="" caseSensitive="false" searchability="UNSEARCHABLE" radix="0" signed="false">
         <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
       </columns>
@@ -604,9 +604,6 @@
   <diagram:DiagramContainer xmi:uuid="mmuuid:f912d42c-9e40-4d81-93b8-60d97ae659e5">
     <diagram xmi:uuid="mmuuid:c34b047e-c0ef-4c8e-9e58-20461590a8ac" type="packageDiagramType" target="mmuuid/5f4d3ef6-026c-4a33-adea-fbf0eda391e7">
       <diagramEntity xmi:uuid="mmuuid:ea81cc32-0207-4859-9a25-6219c4ee5668" modelObject="mmuuid/1c059e7c-01d4-4c3c-8c24-def3c7d6cfac" xPosition="10" yPosition="10"/>
-    </diagram>
-    <diagram xmi:uuid="mmuuid:28fd9b85-29cb-4dd9-a51f-680e002f9578" type="packageDiagramType" target="mmuuid/1c059e7c-01d4-4c3c-8c24-def3c7d6cfac">
-      <diagramEntity xmi:uuid="mmuuid:48df3674-3810-4880-af6d-a6e19ef46aa3" name="Trade" modelObject="mmuuid/2b5a463d-d34f-4e9e-a22c-6a9b980319bc" xPosition="10" yPosition="10"/>
     </diagram>
   </diagram:DiagramContainer>
 </xmi:XMI>

@@ -42,6 +42,7 @@ protected  long tradeId;
 protected   String name;
 protected   Date tradeDate;
 protected   boolean settled;
+protected   MetaData metaData;
 
    public Trade() {
    }
@@ -94,9 +95,23 @@ protected   boolean settled;
    
    public void setSettled(boolean isSettled) {
 	   this.settled = isSettled;
-   }
-  
-   @Override
+   } 
+	  
+	   /**
+	 * @return metaData
+	 */
+	public MetaData getMetaData() {
+		return metaData;
+	}
+	
+	/**
+	 * @param metaData Sets metaData to the specified value.
+	 */
+	public void setMetaData(MetaData metaData) {
+		this.metaData = metaData;
+	}
+
+@Override
    public String toString() {
 	   
 	   StringBuffer sb = new StringBuffer("Trade:");

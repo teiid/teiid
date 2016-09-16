@@ -23,23 +23,21 @@ public class TestAnnotationMetadataProcessor {
 	@Before public void beforeEach() throws Exception{	
 		 
 		TRANSLATOR = new SimpleMapCacheExecutionFactory();
-		TRANSLATOR.setSupportsSearchabilityUsingAnnotations(true);
-
     }
 	
 	@Test
-	public void testPersonMetadata() throws Exception {
-		TRANSLATOR.start();
-
+	public void testTradesMetadata() throws Exception {
 
 		MetadataFactory mf = new MetadataFactory("vdb", 1, "objectvdb",
 				SystemMetadata.getInstance().getRuntimeTypeMap(),
 				new Properties(), null);
 
 		ObjectConnection conn = TradesAnnotatedCacheSource.createConnection();
+		TRANSLATOR.initCapabilities(conn);
+		TRANSLATOR.start();
+
 
 		JavaBeanMetadataProcessor mp = (JavaBeanMetadataProcessor) TRANSLATOR.getMetadataProcessor();
-		mp.setClassObjectColumn(true);
 		mp.process(mf, conn);
 
 		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
@@ -62,7 +60,6 @@ public class TestAnnotationMetadataProcessor {
 	@Test
 	public void testPersonMetadataWithNoObjectColumn() throws Exception {
 		
-		TRANSLATOR.start();
 
 		MetadataFactory mf = new MetadataFactory("vdb", 1, "objectvdb",
 				SystemMetadata.getInstance().getRuntimeTypeMap(),
@@ -70,12 +67,18 @@ public class TestAnnotationMetadataProcessor {
 
 		ObjectConnection conn = TradesAnnotatedCacheSource.createConnection();
 
+		TRANSLATOR.initCapabilities(conn);
+		TRANSLATOR.start();
+
 		TRANSLATOR.getMetadataProcessor().process(mf, conn);
 
 		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
 				null, null);
+		
+		System.out.println(metadataDDL);
 
 		String expected = "CREATE FOREIGN TABLE Trade (\n"
+	    + "\tTradeObject object OPTIONS (NAMEINSOURCE 'this', SELECTABLE FALSE, UPDATABLE FALSE, SEARCHABLE 'Unsearchable', NATIVE_TYPE 'org.teiid.translator.object.testdata.annotated.Trade'),\n"
 	    + "\ttradeId long NOT NULL OPTIONS (NAMEINSOURCE 'tradeId', SEARCHABLE 'Searchable', NATIVE_TYPE 'long'),\n"	    
 	    + "\tdescription string OPTIONS (NAMEINSOURCE 'description', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'java.lang.String'),\n"
 	    + "\tname string OPTIONS (NAMEINSOURCE 'name', SEARCHABLE 'Searchable', NATIVE_TYPE 'java.lang.String'),\n"

@@ -23,7 +23,6 @@ public class TestPersonMetadataProcessor {
 	@Before public void beforeEach() throws Exception{	
 		 
 		TRANSLATOR = new SimpleMapCacheExecutionFactory();
-		TRANSLATOR.start();
     }
 
 	@Test
@@ -35,12 +34,16 @@ public class TestPersonMetadataProcessor {
 
 		ObjectConnection conn = PersonCacheSource.createConnection();
 
+		TRANSLATOR.initCapabilities(conn);
+		TRANSLATOR.start();
+
 		TRANSLATOR.getMetadataProcessor().process(mf, conn);
 
 		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
 				null, null);
 
 		String expected =  "CREATE FOREIGN TABLE Person (\n"
+				+ "\tPersonObject object OPTIONS (NAMEINSOURCE 'this', SELECTABLE FALSE, UPDATABLE FALSE, SEARCHABLE 'Unsearchable', NATIVE_TYPE 'org.teiid.translator.object.testdata.person.Person'),\n"
 				+ "\tid integer NOT NULL OPTIONS (NAMEINSOURCE 'id', SEARCHABLE 'Searchable', NATIVE_TYPE 'int'),\n"
 				+ "\temail string OPTIONS (NAMEINSOURCE 'email', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'java.lang.String'),\n"
 				+ "\tname string OPTIONS (NAMEINSOURCE 'name', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'java.lang.String'),\n"

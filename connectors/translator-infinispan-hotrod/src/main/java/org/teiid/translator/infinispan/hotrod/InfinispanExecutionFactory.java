@@ -22,21 +22,7 @@
 
 package org.teiid.translator.infinispan.hotrod;
 
-import java.util.List;
-
-import org.teiid.language.Argument;
-import org.teiid.language.Command;
-import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.MetadataProcessor;
-import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
-import org.teiid.translator.TranslatorProperty;
-import org.teiid.translator.infinispan.hotrod.metadata.AnnotationMetadataProcessor;
-import org.teiid.translator.infinispan.hotrod.metadata.ProtobufMetadataProcessor;
-import org.teiid.translator.object.ObjectConnection;
-import org.teiid.translator.object.ObjectExecutionFactory;
 
 
 

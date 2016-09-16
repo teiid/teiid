@@ -91,10 +91,10 @@ public class TestPersonSearchNameInSource  {
 	}	
 	
 	@Test public void test1toManyA() throws Exception {
-		Select command = (Select)translationUtility.parseCommand("select a.name, a.id, a.email, b.number From Person as A, PhoneNumber as b where a.id = b.id"); //$NON-NLS-1$
+		Select command = (Select)translationUtility.parseCommand("select b.number From  PhoneNumber as b"); //$NON-NLS-1$
 
 		
-		performTest(20, 4, command);
+		performTest(20, 1, command);
 
 	}
 	

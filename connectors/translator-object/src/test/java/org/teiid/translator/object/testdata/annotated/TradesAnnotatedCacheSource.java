@@ -59,14 +59,10 @@ public class TradesAnnotatedCacheSource extends HashMap <Object, Object> {
 	public static final int NUMTRANSACTIONS = 5;
 	
 	static {
-	
-		try {
 			METHOD_REGISTRY.registerClass(Trade.class);
 			METHOD_REGISTRY.registerClass(Leg.class);
 			METHOD_REGISTRY.registerClass(Transaction.class);
-		} catch (TranslatorException e) {
-			e.printStackTrace();
-		}
+
 	}
 		
 	public static ObjectConnection createConnection(Version version) {

@@ -41,5 +41,7 @@ public interface InfinispanCacheConnection extends ObjectConnection {
 	@SuppressWarnings("rawtypes")
 	public QueryFactory getQueryFactory() throws TranslatorException;
 	
+
+	public boolean configuredForMaterialization();
 	
 }

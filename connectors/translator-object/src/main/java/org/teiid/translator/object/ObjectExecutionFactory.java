@@ -54,7 +54,7 @@ public abstract class ObjectExecutionFactory extends
 	private boolean searchabilityBasedOnAnnotations = false;
 	
 	public ObjectExecutionFactory() {
-		setSourceRequiredForMetadata(false);
+		setSourceRequiredForMetadata(true);
 		setMaxInCriteriaSize(MAX_SET_SIZE);
 		setMaxDependentInPredicates(1);
 
@@ -64,6 +64,11 @@ public abstract class ObjectExecutionFactory extends
 		setSupportsFullOuterJoins(false);
 		setSupportsOuterJoins(false);
 			
+	}
+	
+	@Override
+	public boolean isSourceRequiredForCapabilities() {
+		return true;
 	}
 	
 	/**
@@ -132,5 +137,14 @@ public abstract class ObjectExecutionFactory extends
 	public boolean supportsRowLimit() {
 		return true;
 	}
+	
+	@Override
+	public void initCapabilities(ObjectConnection connection) throws TranslatorException {
+		if (connection == null) {
+			return;
+		}
 
+		this.setSupportsSearchabilityUsingAnnotations(connection.configuredUsingAnnotations());
+
+	}
 }

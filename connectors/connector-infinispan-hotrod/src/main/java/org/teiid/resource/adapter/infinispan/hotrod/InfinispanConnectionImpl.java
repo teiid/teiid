@@ -153,7 +153,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	 */
 	@Override
 	public Object remove(Object key) throws TranslatorException {
-		return getCache(getTargetCache()).removeAsync(key);
+		return getCache(getTargetCache()).remove(key);
 	}
 
 	/**
@@ -285,5 +285,8 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	        return config.configuredUsingAnnotations();
 	}
 
-
+	@Override
+	public boolean configuredForMaterialization() {
+		return (getDDLHandler().isStagingTarget());
+	}
 }

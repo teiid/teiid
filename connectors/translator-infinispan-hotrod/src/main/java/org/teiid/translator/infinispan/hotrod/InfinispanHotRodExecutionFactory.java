@@ -26,7 +26,6 @@ import java.util.List;
 
 import org.teiid.language.Argument;
 import org.teiid.language.Command;
-import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.MetadataProcessor;
@@ -66,6 +65,7 @@ public class InfinispanHotRodExecutionFactory extends ObjectExecutionFactory {
 	public InfinispanHotRodExecutionFactory() {
 		super();
 		setSourceRequiredForMetadata(true);
+		
 		setMaxInCriteriaSize(MAX_SET_SIZE);
 		setMaxDependentInPredicates(5);
 
@@ -161,53 +161,41 @@ public class InfinispanHotRodExecutionFactory extends ObjectExecutionFactory {
 		return Boolean.FALSE.booleanValue();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.teiid.translator.ExecutionFactory#getMetadata(org.teiid.metadata.MetadataFactory,
-	 *      java.lang.Object)
-	 */
-//	@Override
-//	public void getMetadata(MetadataFactory metadataFactory, ObjectConnection conn) throws TranslatorException {
-//		InfinispanHotRodConnection dsl = (InfinispanHotRodConnection) conn;
-//		this.setSupportsSearchabilityUsingAnnotations(dsl.configuredUsingAnnotations());
-//
-//		super.getMetadata(metadataFactory, conn);
-//	}
-
 	@Override
     public MetadataProcessor<ObjectConnection> getMetadataProcessor(){
-		if (this.supportsSearchabilityUsingAnnotations()) {
-			return new AnnotationMetadataProcessor(true);
-		}
+		// commenting out as the  config of protobuf annotations will trigger JDG
+		// to auto create the protobuf file and marshallers, and therefore,
+		// the descriptor info will be available for metadatda creation.
+		// this is important because the correct NIS is assigned to the
+		// child object/tables so that they are correctly searched via DSL.
+		
+		
+//		if (this.supportsSearchabilityUsingAnnotations()) {
+//			return new AnnotationMetadataProcessor(true);
+//		}
 	    return new ProtobufMetadataProcessor();
 	}
 
 	/**
-	 * {@inheritDoc}
 	 *
+	 * @param connection 
+	 * @throws TranslatorException 
 	 * @see org.teiid.translator.ExecutionFactory#initCapabilities(java.lang.Object)
 	 */
-	@Override
-	public void initCapabilities(ObjectConnection connection)
-			throws TranslatorException {
-		super.initCapabilities(connection);
-		if (connection == null) {
-			return;
-		}
 		
-		InfinispanHotRodConnection dsl = (InfinispanHotRodConnection) connection;
-		this.setSupportsSearchabilityUsingAnnotations(dsl.configuredUsingAnnotations());
+	@Override
+	public void initCapabilities(ObjectConnection connection) throws TranslatorException {
+		super.initCapabilities(connection);
+		if (connection == null) return;
 
 
-		Version version = connection.getVersion();
 		// with JDG 6.6 supportCompareCriteria no longer needs to be disabled
 		// @see @link https://issues.jboss.org/browse/TEIID-4333
-		if (version != null && version.compareTo(SIX_6) >= 0) {
+		if (connection.getVersion() != null && connection.getVersion().compareTo(SIX_6) >= 0) {
 			this.supportsCompareCriteriaOrdered = true;
 		}
 	}
-	
+
 	
 
 }

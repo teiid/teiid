@@ -46,6 +46,7 @@ public class PersonCacheConnection extends TestInfinispanHotRodConnection {
 
 		PersonCacheConnection conn = new PersonCacheConnection(map, PersonCacheSource.CLASS_REGISTRY, proxy, useKeyClassType, descriptor);
 		conn.setVersion(version);
+		conn.setConfiguredUsingAnnotations(true);
 		return conn;
 	}
 	

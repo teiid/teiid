@@ -32,6 +32,7 @@ public class Person {
    public String name;
    public int id;
    public String email;
+   public Address address;
 
 	public List<PhoneNumber> phones;
 
@@ -69,6 +70,14 @@ public class Person {
 
    public void setPhones(List<PhoneNumber> phones) {
       this.phones = phones;
+   }
+   
+   public Address getAddress() {
+	   return this.address;
+   }
+   
+   public void setAddress(Address address) {
+	   this.address = address;
    }
 
    @Override

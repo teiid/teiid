@@ -39,6 +39,10 @@ public class ObjectBaseExecution {
 	   env = null;
 	   connection = null;
 	}
+	
+	public ClassRegistry getClassRegistry() {
+		return this.connection.getClassRegistry();
+	}
 
 	public void cancel()  {
 		close();

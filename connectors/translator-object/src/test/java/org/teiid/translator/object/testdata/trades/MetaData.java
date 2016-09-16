@@ -19,29 +19,39 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.translator.infinispan.libmode;
-
-import org.teiid.translator.Translator;
+package org.teiid.translator.object.testdata.trades;
 
 /**
- * InfinispanExecutionFactory is the "infinispan-cache" translator that is used to access an Infinispan cache.
- * <p>
- * The optional setting is:
- * <li>{@link #supportsDSLSearching DSL Searching} - will default to <code>false</code>, supporting only Key searching.
- * Set to <code>true</code> will use the Infinispan DSL query language to search the cache for objects</li> 
- * </li>
- * 
  * @author vhalbert
  *
  */
-@Deprecated
-@Translator(name = "infinispan-cache", description = "The Infinispan Cache Library Mode Translator (Deprecated)")
-public class InfinispanCacheExecutionFactory extends InfinispanLibModeExecutionFactory {
+public class MetaData {
 
-
-	public InfinispanCacheExecutionFactory() {
-		super();
-
+	/**
+	 * @return id
+	 */
+	public int getId() {
+		return id;
+	}
+	/**
+	 * @param id Sets id to the specified value.
+	 */
+	public void setId(int id) {
+		this.id = id;
+	}
+	/**
+	 * @return content
+	 */
+	public String getContent() {
+		return content;
+	}
+	/**
+	 * @param content Sets content to the specified value.
+	 */
+	public void setContent(String content) {
+		this.content = content;
 	}
 	
+	private int id;
+	private String content;
 }

@@ -16,6 +16,7 @@ public class TestObjectConnection extends SimpleMapCacheConnection {
 
 		TestObjectConnection conn = new TestObjectConnection(map, TradesAnnotatedCacheSource.METHOD_REGISTRY, proxy);
 		conn.setVersion(version);
+		conn.setConfiguredUsingAnnotations(true);
 		return conn;
 	}
 

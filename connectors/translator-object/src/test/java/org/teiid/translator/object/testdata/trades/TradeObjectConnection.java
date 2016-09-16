@@ -10,7 +10,7 @@ import org.teiid.translator.object.simpleMap.SimpleMapCacheConnection;
 
 public class TradeObjectConnection extends SimpleMapCacheConnection {
 
-	public static ObjectConnection createConnection(Map<Object,Object> map, boolean staging, Version theVersion) {
+	public static ObjectConnection createConnection(Map<Object,Object> map, boolean staging, Version version, boolean annotations) {
 		CacheNameProxy proxy = null;
 		
 		if (staging) {
@@ -20,7 +20,8 @@ public class TradeObjectConnection extends SimpleMapCacheConnection {
 		}
 
 		TradeObjectConnection conn =  new TradeObjectConnection(map, TradesCacheSource.CLASS_REGISTRY, proxy);
-		conn.setVersion(theVersion);
+		conn.setVersion(version);
+		conn.setConfiguredUsingAnnotations(annotations);
 		return conn;
 	}
 

@@ -22,6 +22,7 @@ public class SimpleMapCacheConnection implements ObjectConnection {
 	private String cacheName = "SimpleCache";
 	private Class<?> cacheClassType;
 	private CacheNameProxy proxy;
+	private boolean usingAnnotations;
 
 	public SimpleMapCacheConnection(Map<Object, Object> cache, ClassRegistry registry, CacheNameProxy proxy){
 		mapCaches.put(proxy.getPrimaryCacheKey(), cache);
@@ -242,7 +243,24 @@ public class SimpleMapCacheConnection implements ObjectConnection {
 		return new SearchByKey(this);
 	}	
 	
+	@Override
+	public boolean configuredUsingAnnotations() {
+		return usingAnnotations;
+	}
+
+	public void setConfiguredUsingAnnotations(boolean configured) {
+		this.usingAnnotations = configured;
+	}
 	
+	/**
+	 * Call to determine if this connection is configured for materialization.
+	 * @return true if materialization is being used
+	 */
+	@Override
+	public boolean configuredForMaterialization() {
+		return (getDDLHandler().getCacheNameProxy().getAliasCacheName() != null ? true : false);
+	}
+
 	
 }
 

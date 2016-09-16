@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ASCII"?>
 <xmi:XMI xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:diagram="http://www.metamatrix.com/metamodels/Diagram" xmlns:jdbc="http://www.metamatrix.com/metamodels/JDBC" xmlns:mmcore="http://www.metamatrix.com/metamodels/Core" xmlns:relational="http://www.metamatrix.com/metamodels/Relational">
-  <mmcore:ModelAnnotation xmi:uuid="mmuuid:abbd65a2-2896-4819-9428-fa8ba13a1b71" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational" modelType="PHYSICAL" ProducerName="Teiid Designer" ProducerVersion="10.0.1.Nightly-v20160627-1409-B12">
+  <mmcore:ModelAnnotation xmi:uuid="mmuuid:abbd65a2-2896-4819-9428-fa8ba13a1b71" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational" modelType="PHYSICAL" ProducerName="Teiid Designer" ProducerVersion="9.0.6.Final-v20160316-1409-B1242">
     <modelImports xmi:uuid="mmuuid:7c40d324-5eca-472f-a7a8-c20b01f5d848" name="SimpleDatatypes-instance" modelLocation="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance" modelType="TYPE" primaryMetamodelUri="http://www.eclipse.org/xsd/2002/XSD"/>
     <modelImports xmi:uuid="mmuuid:4414223d-d6b6-4300-87ce-4316eeb5ddcb" name="XMLSchema" modelLocation="http://www.w3.org/2001/XMLSchema" modelType="TYPE" primaryMetamodelUri="http://www.eclipse.org/xsd/2002/XSD"/>
   </mmcore:ModelAnnotation>
@@ -352,7 +352,7 @@
     </columns>
     <foreignKeys xmi:uuid="mmuuid:bcc9abfb-bfc4-4102-9505-66f1667e5efd" name="FK_TradeId" nameInSource="legs" columns="mmuuid/3b7be33a-2e50-4c79-9cdc-13d7b166a2d2" uniqueKey="mmuuid/6bee1ce8-0ac1-4ee0-a0a8-d200e2936b86"/>
   </relational:BaseTable>
-  <relational:BaseTable xmi:uuid="mmuuid:2404168a-7cde-477e-8b09-dd9263baa7ac" name="Trade_Errors" nameInSource="">
+  <relational:BaseTable xmi:uuid="mmuuid:2404168a-7cde-477e-8b09-dd9263baa7ac" name="Trade_Errors" nameInSource="Trade_Errors">
     <columns xmi:uuid="mmuuid:5aafafd0-dcf5-4d1d-9977-d6024d6b0260" name="TradeObject" nameInSource="this" nativeType="var_binary" length="4000" nullable="NULLABLE_UNKNOWN" defaultValue="" collationName="" caseSensitive="false" searchability="UNSEARCHABLE" radix="0" signed="false" distinctValueCount="0">
       <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
     </columns>
