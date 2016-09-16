@@ -8,7 +8,7 @@
         <version>9.1.0.Beta2-SNAPSHOT</version>
     </parent>
     <artifactId>feature-pack-infinispan</artifactId>
-    <name>Teiid Connector infinispan Feature Pack</name>
+    <name>Infinispan Feature Pack</name>
     <packaging>pom</packaging>
 
     <dependencies>
@@ -28,24 +28,12 @@
             <artifactId>teiid-client-feature-pack</artifactId>
             <version>${project.version}</version>
             <type>zip</type>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>feature-pack-object</artifactId>
             <version>${project.version}</version>
             <type>zip</type>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
@@ -63,7 +51,6 @@
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>connector-infinispan-hotrod</artifactId>
-            <version>${project.version}</version>
         </dependency>
     </dependencies>
 

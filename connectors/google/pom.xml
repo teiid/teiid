@@ -6,10 +6,9 @@
       <artifactId>connectors</artifactId>
       <version>9.1.0.Beta2-SNAPSHOT</version>
   </parent>
-  <groupId>org.jboss.teiid.connectors</groupId>
   <artifactId>google</artifactId>
   <packaging>pom</packaging>
-  <name>Teiid Connector google parent</name>
+  <name>Google Extensions</name>
   <description/>
   
   <modules>

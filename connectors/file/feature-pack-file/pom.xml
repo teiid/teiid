@@ -28,32 +28,6 @@
             <artifactId>teiid-client-feature-pack</artifactId>
             <version>${project.version}</version>
             <type>zip</type>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.poi</groupId>
-            <artifactId>poi</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.poi</groupId>
-            <artifactId>poi-ooxml</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.poi</groupId>
-            <artifactId>poi-ooxml-schemas</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>dom4j</groupId>
-            <artifactId>dom4j</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.xmlbeans</groupId>
-            <artifactId>xmlbeans</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
@@ -62,12 +36,10 @@
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>translator-excel</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>connector-file</artifactId>
-            <version>${project.version}</version>
         </dependency>
     </dependencies>
 

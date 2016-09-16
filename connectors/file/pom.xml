@@ -6,10 +6,9 @@
       <artifactId>connectors</artifactId>
       <version>9.1.0.Beta2-SNAPSHOT</version>
   </parent>
-  <groupId>org.jboss.teiid.connectors</groupId>
   <artifactId>file</artifactId>
   <packaging>pom</packaging>
-  <name>Teiid Connector file parent</name>
+  <name>File Extensions</name>
   <description/>
   
   <modules>

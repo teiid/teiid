@@ -8,7 +8,7 @@
       <version>9.1.0.Beta2-SNAPSHOT</version>
     </parent>
     <artifactId>feature-pack-accumulo</artifactId>
-    <name>Teiid Connector accumulo Feature Pack</name>
+    <name>Teiid Accumulo Feature Pack</name>
     <packaging>pom</packaging>
 
     <dependencies>
@@ -28,72 +28,12 @@
             <artifactId>teiid-client-feature-pack</artifactId>
             <version>${project.version}</version>
             <type>zip</type>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-wildfly-integration-feature-pack</artifactId>
             <version>${project.version}</version>
             <type>zip</type>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-common-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-engine</artifactId>
-        </dependency>        
-        <dependency>
-            <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-admin</artifactId>
-        </dependency>                
-        <dependency>
-            <groupId>org.jboss.spec.javax.resource</groupId>
-            <artifactId>jboss-connector-api_1.7_spec</artifactId>
-        </dependency>     
-        <dependency>
-            <groupId>org.apache.accumulo</groupId>
-            <artifactId>accumulo-core</artifactId>
-        </dependency>            
-        <dependency>
-            <groupId>org.apache.accumulo</groupId>
-            <artifactId>accumulo-fate</artifactId>
-        </dependency>  
-        <dependency>
-            <groupId>org.apache.accumulo</groupId>
-            <artifactId>accumulo-trace</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.thrift</groupId>
-            <artifactId>libthrift</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.zookeeper</groupId>
-            <artifactId>zookeeper</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>commons-configuration</groupId>
-            <artifactId>commons-configuration</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
@@ -102,7 +42,6 @@
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>connector-accumulo</artifactId>
-            <version>${project.version}</version>
         </dependency>
     </dependencies>
 

@@ -1,8 +1,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-      <groupId>org.jboss.teiid.connectors</groupId>
-      <artifactId>ldap</artifactId>
+      <groupId>org.jboss.teiid</groupId>
+      <artifactId>connectors</artifactId>
        <version>9.2.0.Alpha1-SNAPSHOT</version>
     </parent>
     <artifactId>connector-ldap</artifactId>
@@ -24,25 +24,4 @@
             <artifactId>jboss-connector-api_1.7_spec</artifactId>
         </dependency>
     </dependencies>
-    <build>
-        <plugins>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <descriptors>
-                        <descriptor>kits/wildfly-dist.xml</descriptor>
-                    </descriptors>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>create-assemblies</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 </project>

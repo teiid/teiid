@@ -6,10 +6,9 @@
       <artifactId>connectors</artifactId>
       <version>9.1.0.Beta2-SNAPSHOT</version>
   </parent>
-  <groupId>org.jboss.teiid.connectors</groupId>
   <artifactId>cassandra</artifactId>
   <packaging>pom</packaging>
-  <name>Teiid Connector cassandra parent</name>
+  <name>Cassandra Extensions</name>
   <description/>
   
   <modules>

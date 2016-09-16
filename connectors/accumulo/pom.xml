@@ -6,10 +6,9 @@
       <artifactId>connectors</artifactId>
       <version>9.1.0.Beta2-SNAPSHOT</version>
   </parent>
-  <groupId>org.jboss.teiid.connectors</groupId>
   <artifactId>accumulo</artifactId>
   <packaging>pom</packaging>
-  <name>Teiid Connector accumulo parent</name>
+  <name>Accumulo Extensions</name>
   <description/>
   
   <modules>

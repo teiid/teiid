@@ -8,7 +8,7 @@
       <version>9.1.0.Beta2-SNAPSHOT</version>
     </parent>
     <artifactId>feature-pack-google</artifactId>
-    <name>Teiid Connector google Feature Pack</name>
+    <name>Google Feature Pack</name>
     <packaging>pom</packaging>
 
     <dependencies>
@@ -36,30 +36,16 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.google.gdata</groupId>
-            <artifactId>core</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>google-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>translator-google</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>connector-google</artifactId>
-            <version>${project.version}</version>
         </dependency>
     </dependencies>
 
