@@ -33,6 +33,14 @@
             <artifactId>noggit</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.apache.zookeeper</groupId>
+            <artifactId>zookeeper</artifactId>
+        </dependency>        
+        <dependency>
+            <groupId>commons-configuration</groupId>
+            <artifactId>commons-configuration</artifactId>
+        </dependency>        
+        <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>translator-jdbc</artifactId>
         </dependency>         
@@ -58,24 +66,5 @@
                 </excludes>
             </resource>
         </resources>
-        <plugins>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <descriptors>
-                        <descriptor>kits/wildfly-dist.xml</descriptor>
-                    </descriptors>
-                </configuration>
-                <executions>
-                  <execution>
-                    <id>create-assemblies</id>
-                    <phase>package</phase>
-                    <goals>
-                      <goal>single</goal>
-                    </goals>
-                  </execution>
-                </executions>
-            </plugin>   
-        </plugins>         
     </build>
 </project>

@@ -29,6 +29,12 @@
 			<version>${project.version}</version>
 			<type>zip</type>
 		</dependency>
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>feature-pack-jdbc</artifactId>
+            <version>${project.version}</version>
+            <type>zip</type>
+        </dependency>		
 		<dependency>
 			<groupId>org.jboss.teiid.connectors</groupId>
 			<artifactId>translator-solr</artifactId>

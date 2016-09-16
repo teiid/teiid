@@ -9,7 +9,7 @@
 
     <modelVersion>4.0.0</modelVersion>
     <artifactId>olingo-feature-pack</artifactId>
-    <name>Rest Service Feature Pack</name>
+    <name>Olingo Feature Pack</name>
     <packaging>pom</packaging>
 
     <dependencies>
@@ -23,26 +23,30 @@
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
+        </dependency>      
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-client-feature-pack</artifactId>
             <version>${project.version}</version>
             <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-wildfly-integration-feature-pack</artifactId>
+            <version>${project.version}</version>
+            <type>zip</type>
         </dependency>        
         <dependency>
             <groupId>org.jboss.teiid</groupId>
-            <artifactId>olingo</artifactId>
-            <version>${project.version}</version>
+            <artifactId>teiid-olingo-patches</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
-            <artifactId>olingo-common</artifactId>
-            <version>${project.version}</version>
+            <artifactId>teiid-olingo-common</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
-            <artifactId>olingo-patches</artifactId>
+            <artifactId>teiid-olingo</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

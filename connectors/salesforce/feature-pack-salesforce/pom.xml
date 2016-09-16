@@ -29,6 +29,12 @@
 			<version>${project.version}</version>
 			<type>zip</type>
 		</dependency>
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>feature-pack-ws</artifactId>
+            <version>${project.version}</version>
+            <type>zip</type>
+        </dependency>		
 		<dependency>
 			<groupId>org.jboss.teiid.connectors</groupId>
 			<artifactId>translator-salesforce</artifactId>

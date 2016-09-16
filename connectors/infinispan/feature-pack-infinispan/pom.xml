@@ -30,6 +30,12 @@
             <type>zip</type>
         </dependency>
         <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-wildfly-integration-feature-pack</artifactId>
+            <version>${project.version}</version>
+            <type>zip</type>
+        </dependency>        
+        <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>translator-object</artifactId>
             <version>${project.version}</version>

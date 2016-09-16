@@ -5,8 +5,8 @@
     </properties>
     
     <resources>  
-        <resource-root path="translator-salesforce-${project.version}.jar" />      
-        <resource-root path="translator-salesforce-34-${project.version}.jar" />
+        <artifact name="${org.jboss.teiid.connectors:translator-salesforce}"/>
+        <artifact name="${org.jboss.teiid.connectors:translator-salesforce-34}"/>
     </resources>
         
     <dependencies>

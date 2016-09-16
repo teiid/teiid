@@ -5,9 +5,8 @@
     </properties>
     
     <resources>
-        <resource-root path="force-wsc-${version.com.force.api}.jar" />
-        <resource-root path="force-partner-api-${version.com.force.api}.jar" />
-        <!-- Insert resources here -->
+        <artifact name="${com.force.api:force-wsc}"/>
+        <artifact name="${com.force.api:force-partner-api}"/>
     </resources>
 
     <dependencies>
