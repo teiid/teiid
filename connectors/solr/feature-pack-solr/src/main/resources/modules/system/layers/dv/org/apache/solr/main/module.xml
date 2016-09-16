@@ -4,8 +4,8 @@
     </properties>
        
     <resources>
-        <resource-root path="solr-solrj-${version.solr}.jar"/>
-        <resource-root path="noggit-${version.noggit}.jar"/>
+        <artifact name="${org.apache.solr:solr-solrj}"/>
+        <artifact name="${org.noggit:noggit}"/>
     </resources>
 
     <dependencies>

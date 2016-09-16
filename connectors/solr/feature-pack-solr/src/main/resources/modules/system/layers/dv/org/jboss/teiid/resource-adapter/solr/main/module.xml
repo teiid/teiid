@@ -4,9 +4,8 @@
     </properties>
        
     <resources>
-        <resource-root path="connector-solr-${project.version}.jar"/>
+        <artifact name="${org.jboss.teiid.connectors:connector-solr}"/>
         <resource-root path="."/>
-        <!-- Insert resources here -->
     </resources>
 
     <dependencies>

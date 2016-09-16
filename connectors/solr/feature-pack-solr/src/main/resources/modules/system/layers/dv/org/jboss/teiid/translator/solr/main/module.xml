@@ -5,8 +5,7 @@
     </properties>
     
     <resources>
-        <resource-root path="translator-solr-${project.version}.jar" />
-        <!-- Insert resources here -->
+        <artifact name="${org.jboss.teiid.connectors:translator-solr}"/>
     </resources>
 
 
