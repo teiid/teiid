@@ -32,10 +32,12 @@
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>translator-cassandra</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>connector-cassandra</artifactId>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 

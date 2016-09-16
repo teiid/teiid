@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <artifactId>connectors</artifactId>
-        <groupId>org.jboss.teiid</groupId>
-	<version>9.2.0.Alpha1-SNAPSHOT</version>
+    <parent>        
+        <groupId>org.jboss.teiid.connectors</groupId>
+        <artifactId>infinispan</artifactId>
+        <version>9.2.0.Alpha1-SNAPSHOT</version>
     </parent>
+    <groupId>org.jboss.teiid.connectors</groupId>
 	<artifactId>translator-infinispan-hotrod</artifactId>
 	<name>Infinispan Hotrod Translator</name>
 	<description>This tranlator is using Hotrod client to access the Infinispan cache</description>

@@ -33,6 +33,7 @@
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>translator-jdbc</artifactId>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 

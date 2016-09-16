@@ -6,6 +6,7 @@
       <artifactId>connectors</artifactId>
       <version>9.1.0.Beta2-SNAPSHOT</version>
   </parent>
+  <groupId>org.jboss.teiid.connectors</groupId>
   <artifactId>jdbc</artifactId>
   <packaging>pom</packaging>
   <name>JDBC Extensions</name>

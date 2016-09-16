@@ -38,10 +38,12 @@
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>translator-infinispan-libmode</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>translator-infinispan-hotrod</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
@@ -51,6 +53,7 @@
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>connector-infinispan-hotrod</artifactId>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 

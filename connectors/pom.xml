@@ -89,22 +89,17 @@
     <module>ldap</module>
     <module>jdbc</module>
     <module>mongodb</module>
+    <module>salesforce</module>
 
     <module>translator-loopback</module>
-    <module>translator-salesforce</module>
-    <module>translator-salesforce-34</module>
     <module>translator-simpledb</module>
     <module>translator-solr</module>
-    <module>translator-excel</module>
     <module>translator-ws</module>
     <module>translator-olap</module>
     <module>translator-hive</module>
     <module>translator-jpa</module>
-    <module>translator-object</module>
     <module>translator-odata</module>
     <module>translator-odata4</module>
-    <module>connector-salesforce</module>
-    <module>connector-salesforce-34</module>    
     <module>connector-ws</module>
     <module>connector-simpledb</module>
     <module>connector-solr</module>

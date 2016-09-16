@@ -38,10 +38,12 @@
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>translator-accumulo</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>connector-accumulo</artifactId>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 

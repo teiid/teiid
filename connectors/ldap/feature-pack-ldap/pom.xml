@@ -38,10 +38,12 @@
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>translator-ldap</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>connector-ldap</artifactId>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 
