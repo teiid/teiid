@@ -43,7 +43,6 @@ public class TestTradesMetadataProcessor {
 
 		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
 				null, null);
-		System.out.println(metadataDDL);
 		
 		assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("tradeChildMetadata.ddl")), metadataDDL );	
 
@@ -66,8 +65,6 @@ public class TestTradesMetadataProcessor {
 		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
 				null, null);
 		
-		System.out.println(metadataDDL);
-		
 		assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("tradeMetadataFromVDB.ddl")), metadataDDL );	
 
 	}	
@@ -88,8 +85,6 @@ public class TestTradesMetadataProcessor {
 
 		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
 				null, null);
-		
-		System.out.println(metadataDDL);
 		
 		assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("tradeMatMetadataFromVDB.ddl")).trim(), metadataDDL.trim() );	
 

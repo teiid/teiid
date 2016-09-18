@@ -66,8 +66,6 @@ public class TestInfinispanManagedConnectionFactory {
     		
     		assertNotNull(conn.getVersion());
     		
-    		System.out.println("Version " + conn.getVersion());
-     		
     		factory.cleanUp();
     }
     

@@ -67,8 +67,7 @@ public class RemoteInfinispanTestHelper {
 				PersonCacheSource.loadCache(CACHEMANAGER.getCache(PERSON_CACHE_NAME));
 				
 			} catch (Exception e) {
-				e.printStackTrace();
-				return null;
+				throw new RuntimeException(e);
 			}
 			
 			String hostAddress = hostAddress();

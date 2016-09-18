@@ -615,7 +615,6 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 
 				
 			} catch (Exception e) {
-				e.printStackTrace();
 				throw new TranslatorException(e);
 			}
 

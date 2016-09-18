@@ -316,8 +316,6 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 		            for(Type typeArgument : typeArguments){
 		                Class typeArgClass = (Class) typeArgument;
 		                if (typeArgument.equals(childClzz)) {
-		                	System.out.println("typeArgClass = " + typeArgClass);
-		                	
 		                	return ObjectUtil.getNameFromMethodName(m.getName()).toLowerCase();
 
 		                }

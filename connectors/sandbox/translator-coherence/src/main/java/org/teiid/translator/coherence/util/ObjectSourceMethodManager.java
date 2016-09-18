@@ -168,10 +168,8 @@ public class ObjectSourceMethodManager {
 			String msg = CoherencePlugin.Util
 			.getString(
 					"ObjectSourceMethodManager.No_method_implemented_for", new Object[] {methodName, api.getName()});
-			System.out.println(msg);
 			throw new TranslatorException(msg); //$NON-NLS-1$           
 		} catch (Exception e) {
-			e.printStackTrace();
 	        final String msg = CoherencePlugin.Util.getString("ObjectSourceMethodManager.No_method_implemented_for", new Object[] {methodName, api.getName()}); //$NON-NLS-1$
 			throw new TranslatorException(msg);	
 		}		

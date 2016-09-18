@@ -47,7 +47,6 @@ public class TestAnnotationMetadataProcessor {
 		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
 				null, null);
 
-		System.out.println("Schema: " + metadataDDL);
 		String expected = "CREATE FOREIGN TABLE Person (\n"
 	    + "\tid integer NOT NULL OPTIONS (NAMEINSOURCE 'id', SEARCHABLE 'Searchable', NATIVE_TYPE 'int'),\n"
 	    + "\temail string OPTIONS (NAMEINSOURCE 'email', SEARCHABLE 'Searchable', NATIVE_TYPE 'java.lang.String'),\n"
@@ -77,8 +76,6 @@ public class TestAnnotationMetadataProcessor {
 		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
 				null, null);
 
-		System.out.println("Schema: " + metadataDDL);
-		
 		assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("testAnnotatedMetadata.ddl")), metadataDDL );	
 
 

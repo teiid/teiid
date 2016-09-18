@@ -502,8 +502,6 @@ public final class DSLSearch implements SearchType   {
 			value  = DataTypeManager.transformValue(value,  mdIDElement.getJavaType());
 			return value;
 		} catch (TransformationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 			throw new TranslatorException(e);
 		}
 	}

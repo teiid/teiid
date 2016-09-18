@@ -199,7 +199,6 @@ public class AllTypesCacheSource<K, V>  implements RemoteCache<K, V>{
 	      Map<String, Descriptor> messages = new HashMap<String, Descriptor>();
 	      for (Descriptor m : descriptor.getMessageTypes()) {
 	         messages.put(m.getFullName(), m);
-	         System.out.println("Descriptor Name: " + m.getFullName());
 	      }
 
 	      Descriptor testClass = messages.get(descriptorName);
@@ -211,7 +210,6 @@ public class AllTypesCacheSource<K, V>  implements RemoteCache<K, V>{
 	      return testClass;
 	      
 	  } catch (Exception e) {
-    	e.printStackTrace();
     	throw e;
 	  }
 		

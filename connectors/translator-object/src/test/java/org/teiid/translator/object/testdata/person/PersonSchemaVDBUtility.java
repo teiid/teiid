@@ -63,8 +63,6 @@ public class PersonSchemaVDBUtility {
 		try {
 			TRANSLATION_UTILITY = new TranslationUtility("Person.vdb", f.toURI().toURL());
 		} catch (Throwable e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 			throw new RuntimeException(e);
 		}
 		
@@ -75,12 +73,9 @@ public class PersonSchemaVDBUtility {
 		   
 		try {
 			return createTranslationUtility("Person", "PersonVDB", "person.ddl");
-		} catch (IOException e) {
-			e.printStackTrace();
 		} catch (Exception e) {
-			e.printStackTrace();
+		    throw new RuntimeException(e);
 		}
-		return null;
 	   }
 		
 	   public static TranslationUtility createTranslationUtility(String modelName, String vdbName, String ddlFile) throws IOException, Exception {
