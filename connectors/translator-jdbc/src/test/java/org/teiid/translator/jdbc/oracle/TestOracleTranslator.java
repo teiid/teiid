@@ -71,7 +71,7 @@ import org.teiid.translator.jdbc.JDBCQueryExecution;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
 import org.teiid.translator.jdbc.TranslatedCommand;
 import org.teiid.translator.jdbc.TranslationHelper;
-import org.teiid.translator.jdbc.Version;
+import org.teiid.util.Version;
 
 @SuppressWarnings("nls")
 public class TestOracleTranslator {

@@ -44,7 +44,7 @@ import org.teiid.translator.jdbc.ExtractFunctionModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.LocateFunctionModifier;
-import org.teiid.translator.jdbc.Version;
+import org.teiid.util.Version;
 
 
 @Translator(name = "netezza", description = "A translator for Netezza Database")

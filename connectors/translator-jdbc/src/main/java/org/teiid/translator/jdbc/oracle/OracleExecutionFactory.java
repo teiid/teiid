@@ -63,6 +63,7 @@ import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.TypeFacility.RUNTIME_CODES;
 import org.teiid.translator.jdbc.*;
+import org.teiid.util.Version;
 
 
 @Translator(name="oracle", description="A translator for Oracle 9i Database or later")

@@ -32,7 +32,7 @@ import org.teiid.core.util.SimpleMock;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
-import org.teiid.translator.jdbc.Version;
+import org.teiid.util.Version;
 
 @SuppressWarnings("nls")
 public class TestPostgreSQLTranslator {

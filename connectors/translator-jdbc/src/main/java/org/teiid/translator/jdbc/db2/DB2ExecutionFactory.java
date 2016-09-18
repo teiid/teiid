@@ -36,7 +36,7 @@ import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
-import org.teiid.translator.jdbc.Version;
+import org.teiid.util.Version;
 
 @Translator(name="db2", description="A translator for IBM DB2 Database")
 public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {

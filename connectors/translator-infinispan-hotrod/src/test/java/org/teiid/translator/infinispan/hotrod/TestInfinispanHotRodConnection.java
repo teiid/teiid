@@ -32,10 +32,10 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.CacheNameProxy;
 import org.teiid.translator.object.ClassRegistry;
 import org.teiid.translator.object.ObjectConnection;
-import org.teiid.translator.object.Version;
 import org.teiid.translator.object.simpleMap.SimpleMapCacheConnection;
 import org.teiid.translator.object.testdata.annotated.Trade;
 import org.teiid.translator.object.testdata.annotated.TradesAnnotatedCacheSource;
+import org.teiid.util.Version;
 
 /**
  * @author vanhalbert

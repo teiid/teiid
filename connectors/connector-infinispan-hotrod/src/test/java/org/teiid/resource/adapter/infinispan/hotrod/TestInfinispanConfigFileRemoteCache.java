@@ -21,20 +21,17 @@
  */
 package org.teiid.resource.adapter.infinispan.hotrod;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.util.Properties;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.translator.object.ObjectConnection;
-import org.teiid.translator.object.Version;
+import org.teiid.util.Version;
 
 
 @SuppressWarnings("nls")

@@ -5,8 +5,8 @@ import java.util.Map;
 import org.teiid.translator.object.CacheNameProxy;
 import org.teiid.translator.object.ClassRegistry;
 import org.teiid.translator.object.ObjectConnection;
-import org.teiid.translator.object.Version;
 import org.teiid.translator.object.simpleMap.SimpleMapCacheConnection;
+import org.teiid.util.Version;
 
 
 public class TestObjectConnection extends SimpleMapCacheConnection {

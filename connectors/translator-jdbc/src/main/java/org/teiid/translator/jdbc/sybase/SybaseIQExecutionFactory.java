@@ -16,9 +16,9 @@ import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.EscapeSyntaxModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
-import org.teiid.translator.jdbc.Version;
 import org.teiid.translator.jdbc.hsql.AddDiffModifier;
 import org.teiid.translator.jdbc.oracle.ConcatFunctionModifier;
+import org.teiid.util.Version;
 
 /**
  * A translator for Sybase IQ 15.1+

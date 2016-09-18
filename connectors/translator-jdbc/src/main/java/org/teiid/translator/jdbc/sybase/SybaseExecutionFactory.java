@@ -59,8 +59,8 @@ import org.teiid.translator.jdbc.EscapeSyntaxModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.ModFunctionModifier;
 import org.teiid.translator.jdbc.ParseFormatFunctionModifier;
-import org.teiid.translator.jdbc.Version;
 import org.teiid.translator.jdbc.oracle.ConcatFunctionModifier;
+import org.teiid.util.Version;
 
 
 @Translator(name="sybase", description="A translator for Sybase Database")

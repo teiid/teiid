@@ -53,8 +53,8 @@ import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.JDBCMetdataProcessor;
-import org.teiid.translator.jdbc.Version;
 import org.teiid.translator.jdbc.sybase.SybaseExecutionFactory;
+import org.teiid.util.Version;
 
 /**
  * Updated to assume the use of the DataDirect, 2005 driver, or later.

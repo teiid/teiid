@@ -48,7 +48,7 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.infinispan.hotrod.InfinispanPlugin;
 import org.teiid.translator.object.CacheNameProxy;
 import org.teiid.translator.object.ClassRegistry;
-import org.teiid.translator.object.Version;
+import org.teiid.util.Version;
 
 
 public abstract class AbstractInfinispanManagedConnectionFactory extends

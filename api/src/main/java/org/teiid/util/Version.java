@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.translator.jdbc;
+package org.teiid.util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,7 +67,7 @@ public class Version implements Comparable<Version> {
 		return new Version(versionParts.toArray(new Integer[versionParts.size()]));
 	}
 	
-	Version(Integer[] parts) {
+	public Version(Integer[] parts) {
 		this.parts = parts;
 	}
 	

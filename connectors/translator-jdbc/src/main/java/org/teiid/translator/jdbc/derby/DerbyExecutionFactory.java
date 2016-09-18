@@ -35,9 +35,9 @@ import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.EscapeSyntaxModifier;
-import org.teiid.translator.jdbc.Version;
 import org.teiid.translator.jdbc.db2.BaseDB2ExecutionFactory;
 import org.teiid.translator.jdbc.oracle.LeftOrRightFunctionModifier;
+import org.teiid.util.Version;
 
 /** 
  * @since 4.3

@@ -1154,7 +1154,6 @@ public class TestMongoDBQueryExecution {
         params.add(4);
 
         DBObject ne = buildNE("$CategoryName", null);
-        System.out.println(ne);
         BasicDBObject func = new BasicDBObject("$substr", params);
         BasicDBObject expr = buildCondition(ne, func, null);
         

@@ -39,7 +39,7 @@ import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
-import org.teiid.translator.jdbc.Version;
+import org.teiid.util.Version;
 
 @Translator(name="impala", description="A translator for Coludera's Impala based database on HDFS")
 public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {

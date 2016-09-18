@@ -21,8 +21,8 @@
  */
 package org.teiid.translator.infinispan.libmode;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -33,8 +33,8 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.BasicSearchTest;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectExecution;
-import org.teiid.translator.object.Version;
 import org.teiid.translator.object.testdata.trades.VDBUtility;
+import org.teiid.util.Version;
 
 @SuppressWarnings("nls")
 public class TestInfinispanConfigFileKeySearch extends BasicSearchTest {

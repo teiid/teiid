@@ -45,7 +45,7 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.LocateFunctionModifier;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
 import org.teiid.translator.jdbc.TemplateFunctionModifier;
-import org.teiid.translator.jdbc.Version;
+import org.teiid.util.Version;
 
 @Translator(name = "hana", description = "SAP HANA translator")
 public class HanaExecutionFactory extends JDBCExecutionFactory {

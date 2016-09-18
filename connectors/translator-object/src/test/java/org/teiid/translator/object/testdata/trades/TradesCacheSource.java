@@ -30,7 +30,7 @@ import java.util.Map;
 
 import org.teiid.translator.object.ClassRegistry;
 import org.teiid.translator.object.ObjectConnection;
-import org.teiid.translator.object.Version;
+import org.teiid.util.Version;
 
 
 /**

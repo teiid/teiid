@@ -33,11 +33,10 @@ import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
-import org.teiid.translator.infinispan.hotrod.metadata.AnnotationMetadataProcessor;
 import org.teiid.translator.infinispan.hotrod.metadata.ProtobufMetadataProcessor;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectExecutionFactory;
-import org.teiid.translator.object.Version;
+import org.teiid.util.Version;
 
 
 

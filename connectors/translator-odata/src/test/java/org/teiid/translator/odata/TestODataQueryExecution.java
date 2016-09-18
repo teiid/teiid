@@ -216,7 +216,6 @@ public class TestODataQueryExecution {
        
         
         String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        System.out.println(ddl);
         TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "northwind", "nw");        
         
         String query = "SELECT * FROM G2";

@@ -60,6 +60,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.*;
+import org.teiid.util.Version;
 
 
 /**

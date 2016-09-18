@@ -49,7 +49,7 @@ import org.infinispan.protostream.impl.parser.SquareProtoParser;
 import org.infinispan.query.dsl.Query;
 import org.teiid.translator.infinispan.hotrod.InfinispanHotRodConnection;
 import org.teiid.translator.object.ClassRegistry;
-import org.teiid.translator.object.Version;
+import org.teiid.util.Version;
 
 /**
  * Sample cache of objects

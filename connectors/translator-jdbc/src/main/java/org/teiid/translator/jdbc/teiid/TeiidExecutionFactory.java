@@ -49,7 +49,7 @@ import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.JDBCMetdataProcessor;
 import org.teiid.translator.jdbc.SQLDialect;
-import org.teiid.translator.jdbc.Version;
+import org.teiid.util.Version;
 
 /** 
  * @since 4.3

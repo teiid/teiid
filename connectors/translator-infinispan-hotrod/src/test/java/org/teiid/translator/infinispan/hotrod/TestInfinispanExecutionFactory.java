@@ -21,8 +21,7 @@
  */
 package org.teiid.translator.infinispan.hotrod;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PersonCacheSource;
 import org.junit.Before;
@@ -32,8 +31,8 @@ import org.mockito.MockitoAnnotations;
 import org.teiid.language.Select;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.object.ObjectExecution;
-import org.teiid.translator.object.Version;
 import org.teiid.translator.object.testdata.person.PersonSchemaVDBUtility;
+import org.teiid.util.Version;
 
 @SuppressWarnings("nls")
 public class TestInfinispanExecutionFactory {

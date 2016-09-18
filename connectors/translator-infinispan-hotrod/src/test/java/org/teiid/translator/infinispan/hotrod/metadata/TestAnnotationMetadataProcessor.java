@@ -1,6 +1,6 @@
 package org.teiid.translator.infinispan.hotrod.metadata;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.Properties;
 
@@ -16,7 +16,7 @@ import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.infinispan.hotrod.InfinispanHotRodExecutionFactory;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectExecutionFactory;
-import org.teiid.translator.object.Version;
+import org.teiid.util.Version;
 
 @SuppressWarnings("nls")
 public class TestAnnotationMetadataProcessor {

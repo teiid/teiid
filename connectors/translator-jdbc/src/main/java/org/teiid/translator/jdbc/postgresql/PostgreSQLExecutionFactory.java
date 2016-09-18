@@ -56,6 +56,7 @@ import org.teiid.translator.jdbc.*;
 import org.teiid.translator.jdbc.oracle.LeftOrRightFunctionModifier;
 import org.teiid.translator.jdbc.oracle.MonthOrDayNameFunctionModifier;
 import org.teiid.translator.jdbc.oracle.OracleFormatFunctionModifier;
+import org.teiid.util.Version;
 
 
 

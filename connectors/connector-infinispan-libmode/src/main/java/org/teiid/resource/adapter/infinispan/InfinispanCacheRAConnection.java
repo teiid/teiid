@@ -39,7 +39,7 @@ import org.teiid.translator.infinispan.libmode.InfinispanCacheConnection;
 import org.teiid.translator.object.ClassRegistry;
 import org.teiid.translator.object.DDLHandler;
 import org.teiid.translator.object.SearchType;
-import org.teiid.translator.object.Version;
+import org.teiid.util.Version;
 
 /**
  * @author vanhalbert

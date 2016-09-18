@@ -24,6 +24,7 @@ package org.teiid.translator.object;
 import java.util.Collection;
 
 import org.teiid.translator.TranslatorException;
+import org.teiid.util.Version;
 
 /**
  * Each ObjectConnection implementation represents a connection to a single cache. 

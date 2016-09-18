@@ -39,6 +39,7 @@ import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.JDBCExecutionFactory.StructRetrieval;
+import org.teiid.util.Version;
 
 @SuppressWarnings("nls")
 public class TestJDBCExecutionFactory {

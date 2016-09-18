@@ -42,7 +42,7 @@ import org.teiid.translator.infinispan.hotrod.InfinispanHotRodConnection;
 import org.teiid.translator.infinispan.hotrod.InfinispanPlugin;
 import org.teiid.translator.object.DDLHandler;
 import org.teiid.translator.object.SearchType;
-import org.teiid.translator.object.Version;
+import org.teiid.util.Version;
 
 
 /** 

@@ -48,7 +48,7 @@ import org.teiid.resource.spi.BasicManagedConnectionFactory;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.CacheNameProxy;
 import org.teiid.translator.object.ClassRegistry;
-import org.teiid.translator.object.Version;
+import org.teiid.util.Version;
 
 public class InfinispanManagedConnectionFactory extends
 		BasicManagedConnectionFactory {

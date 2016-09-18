@@ -8,10 +8,10 @@ import java.util.Map;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.CacheNameProxy;
 import org.teiid.translator.object.ClassRegistry;
-import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.DDLHandler;
+import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.SearchType;
-import org.teiid.translator.object.Version;
+import org.teiid.util.Version;
 
 public class SimpleMapCacheConnection implements ObjectConnection {
 	private Version version = Version.getVersion("0.0.0");

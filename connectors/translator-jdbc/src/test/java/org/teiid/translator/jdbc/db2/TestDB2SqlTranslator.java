@@ -35,7 +35,7 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslatedCommand;
 import org.teiid.translator.jdbc.TranslationHelper;
-import org.teiid.translator.jdbc.Version;
+import org.teiid.util.Version;
 
 @SuppressWarnings("nls")
 public class TestDB2SqlTranslator {

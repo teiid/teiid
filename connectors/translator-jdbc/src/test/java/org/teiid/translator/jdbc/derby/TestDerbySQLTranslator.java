@@ -28,7 +28,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
-import org.teiid.translator.jdbc.Version;
+import org.teiid.util.Version;
 
 @SuppressWarnings("nls")
 public class TestDerbySQLTranslator {

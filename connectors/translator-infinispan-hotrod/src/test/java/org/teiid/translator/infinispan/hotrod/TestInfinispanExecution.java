@@ -22,7 +22,7 @@
 
 package org.teiid.translator.infinispan.hotrod;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,8 +37,8 @@ import org.teiid.language.Select;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.ObjectExecution;
-import org.teiid.translator.object.Version;
 import org.teiid.translator.object.testdata.person.PersonSchemaVDBUtility;
+import org.teiid.util.Version;
 
 /**
  * NOTES: 

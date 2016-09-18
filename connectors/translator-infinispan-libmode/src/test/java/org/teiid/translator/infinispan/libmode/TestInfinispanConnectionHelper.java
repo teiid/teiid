@@ -12,9 +12,9 @@ import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.transaction.TransactionMode;
 import org.teiid.core.TeiidException;
 import org.teiid.translator.object.ObjectConnection;
-import org.teiid.translator.object.Version;
 import org.teiid.translator.object.testdata.annotated.TradesAnnotatedCacheSource;
 import org.teiid.translator.object.testdata.trades.TradesCacheSource;
+import org.teiid.util.Version;
 
 public class TestInfinispanConnectionHelper  {
 	

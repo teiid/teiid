@@ -40,7 +40,7 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
-import org.teiid.translator.jdbc.Version;
+import org.teiid.util.Version;
 
 @Translator(name="mysql5", description="A translator for open source MySQL5 Database")
 public class MySQL5ExecutionFactory extends MySQLExecutionFactory {

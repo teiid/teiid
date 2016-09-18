@@ -30,7 +30,7 @@ import org.teiid.translator.infinispan.hotrod.InfinispanHotRodConnection;
 import org.teiid.translator.infinispan.hotrod.TestInfinispanHotRodConnection;
 import org.teiid.translator.object.CacheNameProxy;
 import org.teiid.translator.object.ClassRegistry;
-import org.teiid.translator.object.Version;
+import org.teiid.util.Version;
 
 /**
  * @author vanhalbert

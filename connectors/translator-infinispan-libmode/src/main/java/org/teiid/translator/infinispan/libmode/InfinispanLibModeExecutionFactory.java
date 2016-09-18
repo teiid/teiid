@@ -35,8 +35,8 @@ import org.teiid.translator.object.ObjectExecution;
 import org.teiid.translator.object.ObjectExecutionFactory;
 import org.teiid.translator.object.ObjectUpdateExecution;
 import org.teiid.translator.object.ObjectVisitor;
-import org.teiid.translator.object.Version;
 import org.teiid.translator.object.simpleMap.SimpleKeyVisitor;
+import org.teiid.util.Version;
 
 /**
  * InfinispanExecutionFactory is the "infinispan-lib-mode" translator that is used to access an Infinispan cache running in library mode.

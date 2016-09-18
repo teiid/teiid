@@ -62,6 +62,7 @@ import org.teiid.mongodb.MongoDBConnection;
 import org.teiid.translator.*;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
+import org.teiid.util.Version;
 
 import com.mongodb.AggregationOptions;
 import com.mongodb.BasicDBList;

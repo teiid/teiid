@@ -25,7 +25,7 @@ package org.teiid.translator.jdbc.derby;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
-import org.teiid.translator.jdbc.Version;
+import org.teiid.util.Version;
 
 public class TestDerbyCapabilities {
 	
