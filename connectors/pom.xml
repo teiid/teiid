@@ -91,6 +91,7 @@
     <module>simpledb</module>
     <module>webservice</module>
     <module>solr</module>
+    <module>odata</module>
 
     <module>translator-loopback</module>
     <module>translator-olap</module>
