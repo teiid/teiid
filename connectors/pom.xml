@@ -92,16 +92,14 @@
     <module>webservice</module>
     <module>solr</module>
     <module>odata</module>
+    <module>swagger</module>
 
     <module>translator-loopback</module>
     <module>translator-olap</module>
     <module>translator-hive</module>
     <module>translator-jpa</module>
-    <module>translator-odata</module>
-    <module>translator-odata4</module>
     <module>translator-prestodb</module>
     <module>sandbox</module>
-    <module>translator-swagger</module>
     <module>translator-hbase</module>
   </modules>
 </project>
