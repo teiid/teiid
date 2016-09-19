@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <parent>
-        <artifactId>odata</artifactId>
+        <artifactId>jdbc</artifactId>
         <groupId>org.jboss.teiid.connectors</groupId>
         <version>9.2.0.Alpha1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>translator-odata</artifactId>
+    <artifactId>translator-hbase</artifactId>
     <groupId>org.jboss.teiid.connectors</groupId>
-    <name>Odata Translator</name>
-    <description>This translator provides access to Odata based data sources</description>
+    <name>HBase Translator</name>
+    <description>This translator provides access to HBase</description>
     <packaging>bundle</packaging>
-    
     <dependencies>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
@@ -26,29 +25,10 @@
             <artifactId>jboss-connector-api_1.7_spec</artifactId>
         </dependency>
         <dependency>
-          <groupId>org.jboss.teiid.connectors</groupId>
-          <artifactId>translator-ws</artifactId>
-        </dependency>  
-        <dependency>
-          <groupId>org.jboss.teiid.connectors</groupId>
-          <artifactId>translator-jdbc</artifactId>
-        </dependency>              
-        <dependency>
-            <groupId>org.jboss.oreva</groupId>
-            <artifactId>odata-core</artifactId>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>translator-jdbc</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.jboss.oreva</groupId>
-            <artifactId>common</artifactId>
-        </dependency>    
-        <dependency>
-            <groupId>org.jboss.resteasy</groupId>
-            <artifactId>resteasy-jaxrs</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.spec.javax.ws.rs</groupId>
-            <artifactId>jboss-jaxrs-api_2.0_spec</artifactId>
-        </dependency>
+        
     </dependencies>
 
     <build>

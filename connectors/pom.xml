@@ -96,10 +96,7 @@
 
     <module>translator-loopback</module>
     <module>translator-olap</module>
-    <module>translator-hive</module>
     <module>translator-jpa</module>
-    <module>translator-prestodb</module>
     <module>sandbox</module>
-    <module>translator-hbase</module>
   </modules>
 </project>
