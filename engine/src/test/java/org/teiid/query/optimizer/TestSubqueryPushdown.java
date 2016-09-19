@@ -1717,5 +1717,26 @@ public class TestSubqueryPushdown {
 	    dataManager.addData("SELECT g_0.a FROM m.z AS g_0 WHERE g_0.b = 'a'", Arrays.asList("a2"));
 		TestProcessor.helpProcess(pp, dataManager, new List[] {Arrays.asList("a", "b", "a2"), Arrays.asList("a1", "b1", "b2")});
 	}
+	
+	@Test public void testAggSubqueryAsJoin() throws Exception {
+        String sql = "SELECT INTKEY, LONGNUM FROM BQT1.SMALLA AS A WHERE LONGNUM > (SELECT SUM(LONGNUM) FROM BQT1.SMALLA AS B WHERE A.INTKEY = B.INTKEY) ORDER BY INTKEY"; //$NON-NLS-1$
+        
+        TransformationMetadata metadata = RealMetadataFactory.exampleBQTCached();
+        RealMetadataFactory.setCardinality("BQT1.smalla", 1000, metadata);
+
+        HardcodedDataManager dataMgr = new HardcodedDataManager();
+    
+        dataMgr.addData("SELECT g_0.LongNum AS c_0, g_0.IntKey AS c_1 FROM BQT1.SmallA AS g_0 ORDER BY c_1", Arrays.asList(1l, 1));
+        dataMgr.addData("SELECT SUM(g_0.LongNum) AS c_0, g_0.IntKey AS c_1 FROM BQT1.SmallA AS g_0 GROUP BY g_0.IntKey ORDER BY c_1", Arrays.asList(1l, 1));
+
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
+        bsc.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+        bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
+        
+        ProcessorPlan pp = TestProcessor.helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder(bsc));
+        
+        TestProcessor.helpProcess(pp, dataMgr, new List[] {});
+	}
 
 }
