@@ -1729,10 +1729,10 @@ public class TestSubqueryPushdown {
 		TestProcessor.helpProcess(pp, dataManager, new List[] {Arrays.asList("a", "b", "a2"), Arrays.asList("a1", "b1", "b2")});
 	}
 	
-	@Test public void testAggSubqueryAsJoin() throws Exception {
+    @Test public void testAggSubqueryAsJoin() throws Exception {
         String sql = "SELECT INTKEY, LONGNUM FROM BQT1.SMALLA AS A WHERE LONGNUM > (SELECT SUM(LONGNUM) FROM BQT1.SMALLA AS B WHERE A.INTKEY = B.INTKEY) ORDER BY INTKEY"; //$NON-NLS-1$
         
-        TransformationMetadata metadata = RealMetadataFactory.exampleBQTCached();
+        TransformationMetadata metadata = RealMetadataFactory.exampleBQT();
         RealMetadataFactory.setCardinality("BQT1.smalla", 1000, metadata);
 
         HardcodedDataManager dataMgr = new HardcodedDataManager();
@@ -1748,6 +1748,6 @@ public class TestSubqueryPushdown {
         ProcessorPlan pp = TestProcessor.helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder(bsc));
         
         TestProcessor.helpProcess(pp, dataMgr, new List[] {});
-	}
+    }
 
 }
