@@ -44,8 +44,8 @@ import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.processor.BatchCollector.BatchProducer;
 import org.teiid.query.processor.ProcessorDataManager;
-import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.util.CommandContext;
 
 
@@ -399,9 +399,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
         for(int i=0; i<elements.size(); i++) {
             Expression element = elements.get(i);
             lookupMap.put(element, i);
-            if (element instanceof AliasSymbol) {
-                lookupMap.put(((AliasSymbol)element).getSymbol(), i);
-            }
+            lookupMap.put(SymbolMap.getExpression(element), i);
         }
         return lookupMap;
     }
