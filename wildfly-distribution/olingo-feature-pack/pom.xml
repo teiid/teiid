@@ -45,9 +45,24 @@
             <artifactId>teiid-olingo-common</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.apache.olingo</groupId>
+            <artifactId>odata-commons-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.olingo</groupId>
+            <artifactId>odata-commons-core</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-olingo</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-olingo</artifactId>
+            <classifier>odata4</classifier>
+            <version>${project.version}</version>
+            <type>war</type>
         </dependency>
     </dependencies>
 

@@ -5,8 +5,8 @@
     </properties>
     
     <resources>
-        <artfact name="${org.apache.olingo:odata-commons-api}"/>
-        <artfact name="${org.apache.olingo:odata-commons-core}"/>
+        <artifact name="${org.apache.olingo:odata-commons-api}"/>
+        <artifact name="${org.apache.olingo:odata-commons-core}"/>
     </resources>
 
     <dependencies>

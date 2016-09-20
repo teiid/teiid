@@ -1734,6 +1734,7 @@
 		<module>rest-service</module>
 		<module>wildfly-distribution</module>
                 <module>connectors</module>
+                <module>jboss-security-feature-pack</module>
 		<module>test-integration</module>
 	</modules>
 </project>

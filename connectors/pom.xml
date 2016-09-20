@@ -93,10 +93,7 @@
     <module>solr</module>
     <module>odata</module>
     <module>swagger</module>
-
-    <module>translator-loopback</module>
-    <module>translator-olap</module>
-    <module>translator-jpa</module>
+    <module>misc</module>
     <module>sandbox</module>
   </modules>
 </project>

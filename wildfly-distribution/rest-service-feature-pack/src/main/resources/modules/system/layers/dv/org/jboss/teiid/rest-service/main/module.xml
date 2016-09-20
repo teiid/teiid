@@ -6,7 +6,7 @@
     </properties>
     
     <resources>
-        <resource-root path="rest-service-${project.version}.jar" />
+        <artifact name="${org.jboss.teiid:rest-service}" />
     </resources>
     
     <dependencies>
