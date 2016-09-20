@@ -78,7 +78,7 @@ connect
 /profile=ha/subsystem=teiid/translator=olap:add(module=org.jboss.teiid.translator.olap)
 /profile=ha/subsystem=teiid/translator=ws:add(module=org.jboss.teiid.translator.ws)
 /profile=ha/subsystem=teiid/translator=salesforce:add(module=org.jboss.teiid.translator.salesforce)
-/profile=ha/subsystem=teiid/translator=salesforce-34:add(module=org.jboss.teiid.translator.salesforce, slot="34")
+/profile=ha/subsystem=teiid/translator=salesforce-34:add(module=org.jboss.teiid.translator.salesforce-34)
 /profile=ha/subsystem=teiid/translator=hive:add(module=org.jboss.teiid.translator.hive)
 /profile=ha/subsystem=teiid/translator=map-cache:add(module=org.jboss.teiid.translator.object)
 /profile=ha/subsystem=teiid/translator=google-spreadsheet:add(module=org.jboss.teiid.translator.google)
