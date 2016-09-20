@@ -28,15 +28,12 @@ import java.util.Collection;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.jboss.as.controller.ModelController;
+import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.adminapi.jboss.AdminFactory;
-import org.teiid.adminapi.jboss.AdminFactory.AdminImpl;
 import org.teiid.deployers.CompositeVDB;
-import org.teiid.deployers.ContainerLifeCycleListener;
 import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -44,19 +41,23 @@ import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Schema;
 import org.teiid.query.metadata.TransformationMetadata;
-import org.teiid.vdb.runtime.VDBKey;
-
+/*
+        Admin admin = AdminFactory.getInstance().createAdmin(controllerValue
+                .getValue().createClient(executorInjector.getValue()));     
+        this.restEasyListener = new ResteasyEnabler(this.vdb.getName(),
+                this.vdb.getVersion(), admin, executorInjector.getValue(),
+                shutdownListener);
+        getVDBRepository().addListener(this.restEasyListener);  
+ */
 public class ResteasyEnabler implements VDBLifeCycleListener {
 	static final String REST_NAMESPACE = "{http://teiid.org/rest}"; //$NON-NLS-1$
-	private AdminImpl admin;
+	private Admin admin;
 	private Executor executor;
-	private VDBKey vdbKey;
 	private AtomicBoolean deployed = new AtomicBoolean(false);
 	
-	public ResteasyEnabler(String vdbName, String version, ModelController deployer, Executor executor, ContainerLifeCycleListener shutdownListener) {
-		this.admin = (AdminImpl)AdminFactory.getInstance().createAdmin(deployer.createClient(executor));
+	public ResteasyEnabler(Admin admin, Executor executor) {
+		this.admin = admin;
 		this.executor = executor;
-		vdbKey = new VDBKey(vdbName, version);
 	}
 	
 	@Override
@@ -70,47 +71,44 @@ public class ResteasyEnabler implements VDBLifeCycleListener {
 	
 	@Override
 	public synchronized void finishedDeployment(String name, CompositeVDB cvdb) {
-		if (cvdb.getVDBKey().equals(this.vdbKey)) {
+		final VDBMetaData vdb = cvdb.getVDB();
+		
+		if (!vdb.getStatus().equals(Status.ACTIVE)) {
+			return;
+		}
+		
+		String generate = vdb.getPropertyValue(ResteasyEnabler.REST_NAMESPACE+"auto-generate"); //$NON-NLS-1$
 
-			final VDBMetaData vdb = cvdb.getVDB();
-			
-			if (!vdb.getStatus().equals(Status.ACTIVE)) {
-				return;
-			}
-			
-			String generate = vdb.getPropertyValue(ResteasyEnabler.REST_NAMESPACE+"auto-generate"); //$NON-NLS-1$
-	
-			final String warName = buildName(name, cvdb.getVDB().getVersion());
-			if (generate != null && Boolean.parseBoolean(generate)
-					&& hasRestMetadata(vdb)
-					&& this.deployed.compareAndSet(false, true)) {
+		final String warName = buildName(name, cvdb.getVDB().getVersion());
+		if (generate != null && Boolean.parseBoolean(generate)
+				&& hasRestMetadata(vdb)
+				&& this.deployed.compareAndSet(false, true)) {
 
-				final Runnable job = new Runnable() {
-					@Override
-					public void run() {
-						try {
-							RestASMBasedWebArchiveBuilder builder = new RestASMBasedWebArchiveBuilder();
-							byte[] warContents = builder.createRestArchive(vdb);
-							if (!vdb.getStatus().equals(Status.ACTIVE)) {
-								return;
-							}
-							//make it a non-persistent deployment
-							admin.deploy(warName, new ByteArrayInputStream(warContents), false);
-						} catch (FileNotFoundException e) {
-							LogManager.logWarning(LogConstants.CTX_RUNTIME, e, 
-							        RestServicePlugin.Util.gs(RestServicePlugin.Event.TEIID28004, warName)); 
-						} catch (IOException e) {
-							LogManager.logWarning(LogConstants.CTX_RUNTIME, e, 
-							        RestServicePlugin.Util.gs(RestServicePlugin.Event.TEIID28004, warName)); 
-						} catch (AdminException e) {
-							LogManager.logWarning(LogConstants.CTX_RUNTIME, e, 
-							        RestServicePlugin.Util.gs(RestServicePlugin.Event.TEIID28004, warName)); 
+			final Runnable job = new Runnable() {
+				@Override
+				public void run() {
+					try {
+						RestASMBasedWebArchiveBuilder builder = new RestASMBasedWebArchiveBuilder();
+						byte[] warContents = builder.createRestArchive(vdb);
+						if (!vdb.getStatus().equals(Status.ACTIVE)) {
+							return;
 						}
+						//make it a non-persistent deployment
+						admin.deploy(warName, new ByteArrayInputStream(warContents), false);
+					} catch (FileNotFoundException e) {
+						LogManager.logWarning(LogConstants.CTX_RUNTIME, e, 
+						        RestServicePlugin.Util.gs(RestServicePlugin.Event.TEIID28004, warName)); 
+					} catch (IOException e) {
+						LogManager.logWarning(LogConstants.CTX_RUNTIME, e, 
+						        RestServicePlugin.Util.gs(RestServicePlugin.Event.TEIID28004, warName)); 
+					} catch (AdminException e) {
+						LogManager.logWarning(LogConstants.CTX_RUNTIME, e, 
+						        RestServicePlugin.Util.gs(RestServicePlugin.Event.TEIID28004, warName)); 
 					}
-				};
+				}
+			};
 
-				executor.execute(job);
-			}
+			executor.execute(job);
 		}
 	}
 	

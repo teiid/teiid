@@ -10,6 +10,13 @@
             <directory>${project.build.directory}/${project.artifactId}-${project.version}</directory>
             <outputDirectory/>
         </fileSet>
+        <fileSet>
+            <directory>src/main/modules</directory>
+            <outputDirectory>modules</outputDirectory>
+            <includes>
+                <include>layers.conf</include>
+            </includes>
+        </fileSet>        
     </fileSets>
 </assembly>
 

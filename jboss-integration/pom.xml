@@ -46,11 +46,6 @@
 			<artifactId>teiid-metadata</artifactId>
 		</dependency>
         
-        <dependency>
-            <groupId>org.jboss.teiid</groupId>
-            <artifactId>rest-service</artifactId>
-        </dependency>
-        
 		<dependency>
 			<groupId>org.jboss</groupId>
 			<artifactId>jboss-dmr</artifactId>

@@ -60,7 +60,6 @@ import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
-import org.teiid.jboss.rest.ResteasyEnabler;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Datatype;
@@ -91,16 +90,13 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 	protected final InjectedValue<ModelController> controllerValue = new InjectedValue<ModelController>();
 	
 	private VDBLifeCycleListener vdbListener;
-	private VDBLifeCycleListener restEasyListener;
 	private VDBResources vdbResources;
-	private ContainerLifeCycleListener shutdownListener;
 	private VDBKey vdbKey;
 	
 	public VDBService(VDBMetaData metadata, VDBResources vdbResources, ContainerLifeCycleListener shutdownListener) {
 		this.vdb = metadata;
 		this.vdbKey = new VDBKey(metadata.getName(), metadata.getVersion());
 		this.vdbResources = vdbResources;
-		this.shutdownListener = shutdownListener;
 	}
 	
 	@Override
@@ -159,11 +155,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		
 		getVDBRepository().addListener(this.vdbListener);
 		
-		this.restEasyListener = new ResteasyEnabler(this.vdb.getName(), this.vdb.getVersion(), controllerValue.getValue(), executorInjector.getValue(), shutdownListener);
-		getVDBRepository().addListener(this.restEasyListener);
-				
 		MetadataStore store = new MetadataStore();
-		
 		try {
 			//check to see if there is an index file.  if there is then we assume
 			//that index is the default metadata repo

@@ -99,10 +99,7 @@
                     <descriptors>
                         <descriptor>assembly/src.xml</descriptor>
                         <descriptor>assembly/client-jar.xml</descriptor>
-                        <descriptor>assembly/wildfly-dist.xml</descriptor>
                         <descriptor>assembly/adminshell-dist.xml</descriptor>
-                        <descriptor>assembly/wildfly-server.xml</descriptor>
-                        <descriptor>assembly/docker.xml</descriptor>            
                     </descriptors>
                 </configuration>
                 <executions>
@@ -155,10 +152,7 @@
                             <descriptors>
                                 <descriptor>assembly/src.xml</descriptor>
                                 <descriptor>assembly/client-jar.xml</descriptor>
-                                <descriptor>assembly/wildfly-dist.xml</descriptor>
                                 <descriptor>assembly/adminshell-dist.xml</descriptor>
-                                <descriptor>assembly/wildfly-server.xml</descriptor>
-                                <descriptor>assembly/docker.xml</descriptor>
                             </descriptors>
                         </configuration>
                     </plugin>

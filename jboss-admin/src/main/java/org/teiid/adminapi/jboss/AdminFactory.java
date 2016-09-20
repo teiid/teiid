@@ -915,6 +915,7 @@ public class AdminFactory {
 			execute(request);
 		}
 
+		@Override
 		public void deploy(String deployName, InputStream vdb, boolean persist)	throws AdminException {
 			ModelNode request = buildDeployVDBRequest(deployName, vdb, persist);
 			execute(request);
