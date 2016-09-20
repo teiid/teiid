@@ -1,6 +1,6 @@
 <server-provisioning xmlns="urn:wildfly:server-provisioning:1.1"
 	extract-schemas="true" copy-module-artifacts="true"
-	extract-schemas-groups="org.wildfly.core">
+	extract-schemas-groups="org.wildfly.core" exclude-dependencies="true">
 	<feature-packs>
 		<feature-pack groupId="org.jboss.teiid" artifactId="teiid-client-feature-pack"
 			version="${project.version}" />

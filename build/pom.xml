@@ -80,6 +80,13 @@
                                     <outputDirectory>${project.build.directory}</outputDirectory>
                                 </artifactItem>
                                 <artifactItem>
+                                    <groupId>org.jboss.teiid</groupId>
+                                    <artifactId>teiid-wildfly-overlay-dist</artifactId>
+                                    <version>${project.version}</version>
+                                    <type>zip</type>
+                                    <outputDirectory>${project.build.directory}/${dir.wildfly}</outputDirectory>
+                                </artifactItem>                                
+                                <artifactItem>
 									  <groupId>org.jboss.teiid.hal</groupId>
 									  <artifactId>dist</artifactId>
 									  <version>${version.teiid.console}</version>
@@ -90,6 +97,27 @@
                             </artifactItems>
                         </configuration>
                     </execution>
+					<execution>
+						<id>copy</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy</goal>
+						</goals>
+						<configuration>
+							<artifactItems>
+								<artifactItem>
+									<groupId>org.jboss.teiid</groupId>
+									<artifactId>teiid-wildfly-overlay-dist</artifactId>
+									<version>${project.version}</version>
+									<type>zip</type>
+									<outputDirectory>${project.build.directory}</outputDirectory>
+								</artifactItem>
+							</artifactItems>
+							<outputDirectory>${project.build.directory}</outputDirectory>
+							<overWriteReleases>false</overWriteReleases>
+							<overWriteSnapshots>true</overWriteSnapshots>
+						</configuration>
+					</execution>                    
                 </executions>
             </plugin>
             
@@ -98,8 +126,10 @@
                 <configuration>
                     <descriptors>
                         <descriptor>assembly/src.xml</descriptor>
-                        <descriptor>assembly/client-jar.xml</descriptor>
+                        <descriptor>assembly/client-jar.xml</descriptor>                        
                         <descriptor>assembly/adminshell-dist.xml</descriptor>
+                        <descriptor>assembly/wildfly-server.xml</descriptor>
+                        <descriptor>assembly/docker.xml</descriptor>            
                     </descriptors>
                 </configuration>
                 <executions>
@@ -151,8 +181,10 @@
                         <configuration>
                             <descriptors>
                                 <descriptor>assembly/src.xml</descriptor>
-                                <descriptor>assembly/client-jar.xml</descriptor>
+                                <descriptor>assembly/client-jar.xml</descriptor>                                
                                 <descriptor>assembly/adminshell-dist.xml</descriptor>
+                                <descriptor>assembly/wildfly-server.xml</descriptor>
+                                <descriptor>assembly/docker.xml</descriptor>
                             </descriptors>
                         </configuration>
                     </plugin>

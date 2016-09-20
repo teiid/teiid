@@ -3,31 +3,66 @@
    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <parent>
         <groupId>org.jboss.teiid</groupId>
-        <artifactId>wildfly-distribution</artifactId>
+        <artifactId>teiid-feature-pack</artifactId>
         <version>9.1.0.Beta2-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>wildfly-server</artifactId>
-    <name>WildFly Server Distribution</name>
+    <artifactId>rest-service-feature-pack</artifactId>
+    <name>Rest Service Feature Pack</name>
     <packaging>pom</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.wildfly</groupId>
+            <artifactId>wildfly-feature-pack</artifactId>
+            <type>zip</type>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-client-feature-pack</artifactId>
+            <version>${project.version}</version>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-wildfly-integration-feature-pack</artifactId>
+            <version>${project.version}</version>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>feature-pack-swagger</artifactId>
+            <version>${project.version}</version>
+            <type>zip</type>
+        </dependency>                          
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>rest-service</artifactId>
+        </dependency>
+    </dependencies>
 
     <build>
         <finalName>${project.artifactId}-${project.version}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.wildfly.build</groupId>
-                <artifactId>wildfly-server-provisioning-maven-plugin</artifactId>
-                <version>1.1.6.Final</version>
+                <artifactId>wildfly-feature-pack-build-maven-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>server-provisioning</id>
+                        <id>feature-pack-build</id>
                         <goals>
                             <goal>build</goal>
                         </goals>
                         <phase>compile</phase>
                         <configuration>
-                            <config-file>server-provisioning.xml</config-file>
+                            <config-file>feature-pack-build.xml</config-file>
                         </configuration>
                     </execution>
                 </executions>
@@ -44,7 +79,7 @@
                     </goals>
                     <configuration>
                       <descriptors>
-                        <descriptor>server-assembly.xml</descriptor>
+                        <descriptor>feature-pack-assembly.xml</descriptor>
                       </descriptors>
                       <recompressZippedFiles>true</recompressZippedFiles>
                       <finalName>${project.artifactId}-${project.version}</finalName>

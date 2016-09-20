@@ -3,13 +3,13 @@
    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <parent>
         <groupId>org.jboss.teiid</groupId>
-        <artifactId>wildfly-distribution</artifactId>
+        <artifactId>teiid-feature-pack</artifactId>
         <version>9.1.0.Beta2-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>rest-service-feature-pack</artifactId>
-    <name>Rest Service Feature Pack</name>
+    <artifactId>olingo-feature-pack</artifactId>
+    <name>Olingo Feature Pack</name>
     <packaging>pom</packaging>
 
     <dependencies>
@@ -23,7 +23,7 @@
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
+        </dependency>      
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-client-feature-pack</artifactId>
@@ -35,16 +35,30 @@
             <artifactId>teiid-wildfly-integration-feature-pack</artifactId>
             <version>${project.version}</version>
             <type>zip</type>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.teiid.connectors</groupId>
-            <artifactId>feature-pack-swagger</artifactId>
-            <version>${project.version}</version>
-            <type>zip</type>
-        </dependency>                          
+        </dependency>        
         <dependency>
             <groupId>org.jboss.teiid</groupId>
-            <artifactId>rest-service</artifactId>
+            <artifactId>teiid-olingo-patches</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-olingo-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.olingo</groupId>
+            <artifactId>odata-commons-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-olingo</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-olingo</artifactId>
+            <classifier>odata4</classifier>
+            <version>${project.version}</version>
+            <type>war</type>
         </dependency>
     </dependencies>
 

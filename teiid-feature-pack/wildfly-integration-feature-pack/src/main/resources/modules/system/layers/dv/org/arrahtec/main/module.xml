@@ -4,13 +4,6 @@
 		<property name="jboss.api" value="public" />
 	</properties>
 	<resources>
-		<resource-root path="itextpdf-${version.com.itextpdf}.jar" />
-		<resource-root path="java-string-similarity-${version.info.debatty}.jar" />
-		<resource-root path="jxl-${version.net.sourceforge.jexcelapi}.jar" />
-		<resource-root path="opencsv-${version.com.opencsv}.jar" />
-		<resource-root path="osdq-core-${version.org.arrahtec}.jar" />
-		<resource-root path="simmetrics-core-${version.com.github.mpkorstanje}.jar" />
-		
 		<artifact name="${com.itextpdf:itextpdf}"/>
 		<artifact name="${org.arrahtec:osdq-core}"/>
 		<artifact name="${com.github.mpkorstanje:simmetrics-core}"/>

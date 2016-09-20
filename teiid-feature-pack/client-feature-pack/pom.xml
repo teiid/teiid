@@ -3,13 +3,13 @@
    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <parent>
         <groupId>org.jboss.teiid</groupId>
-        <artifactId>wildfly-distribution</artifactId>
+        <artifactId>teiid-feature-pack</artifactId>
         <version>9.1.0.Beta2-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>olingo-feature-pack</artifactId>
-    <name>Olingo Feature Pack</name>
+    <artifactId>teiid-client-feature-pack</artifactId>
+    <name>Teiid Client/Public API Feature Pack</name>
     <packaging>pom</packaging>
 
     <dependencies>
@@ -23,43 +23,27 @@
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>      
-        <dependency>
-            <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-client-feature-pack</artifactId>
-            <version>${project.version}</version>
-            <type>zip</type>
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-wildfly-integration-feature-pack</artifactId>
-            <version>${project.version}</version>
-            <type>zip</type>
-        </dependency>        
-        <dependency>
-            <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-olingo-patches</artifactId>
+            <artifactId>teiid-common-core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-olingo-common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.olingo</groupId>
-            <artifactId>odata-commons-api</artifactId>
+            <artifactId>teiid-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-olingo</artifactId>
-            <version>${project.version}</version>
+            <artifactId>teiid-client</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-olingo</artifactId>
-            <classifier>odata4</classifier>
-            <version>${project.version}</version>
-            <type>war</type>
+            <artifactId>teiid-admin</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-hibernate-dialect</artifactId>
+        </dependency>                
     </dependencies>
 
     <build>
@@ -68,6 +52,7 @@
             <plugin>
                 <groupId>org.wildfly.build</groupId>
                 <artifactId>wildfly-feature-pack-build-maven-plugin</artifactId>
+                <version>1.1.6.Final</version>
                 <executions>
                     <execution>
                         <id>feature-pack-build</id>

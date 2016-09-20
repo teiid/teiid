@@ -1743,7 +1743,7 @@
 		<module>jboss-integration</module>
 		<module>jboss-security</module>
 		<module>rest-service</module>
-		<module>wildfly-distribution</module>
+		<module>teiid-feature-pack</module>
                 <module>connectors</module>
 		<module>test-integration</module>
 	</modules>

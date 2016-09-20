@@ -6,9 +6,9 @@
     <version>9.1.0.Beta2-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>wildfly-distribution</artifactId>
+  <artifactId>teiid-feature-pack</artifactId>
   <packaging>pom</packaging>
-  <name>WildFly Distribution</name>
+  <name>Feature packs related Teiid core modules</name>
   <description/>
   
   <modules>
@@ -16,7 +16,7 @@
     <module>rest-service-feature-pack</module>
     <module>wildfly-integration-feature-pack</module>
     <module>olingo-feature-pack</module>
-    <module>wildfly-server</module>
+    <module>wildfly-overlay-dist</module>
   </modules>
 
 </project>
