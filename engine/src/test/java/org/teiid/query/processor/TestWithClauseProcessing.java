@@ -521,13 +521,24 @@ public class TestWithClauseProcessing {
 	    TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT 1 FROM pm1.g1 AS g_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING);
 	}
 
-	@Test public void testWithAndUncorrelatedSubquery() throws TeiidComponentException, TeiidProcessingException {
+	@Test public void testWithAndUncorrelatedSubquery() throws Exception {
 	    String sql = "WITH t(n) AS /*+ no_inline */ ( select e1 from pm2.g1 ) SELECT n FROM t as t1, pm1.g1 where e1 = (select n from t)"; //$NON-NLS-1$
 
 	    BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
 	    bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
 	    CapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
-	    TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT 1 FROM pm1.g1 AS g_0 WHERE g_0.e1 = (WITH t (n) AS /*+ no_inline */ (SELECT g_0.e1 FROM pm2.g1 AS g_0) SELECT g_0.n FROM t AS g_0)", "WITH t (n) AS /*+ no_inline */ (SELECT g_0.e1 FROM pm2.g1 AS g_0) SELECT g_0.n FROM t AS g_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING);
+	    ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT 1 FROM pm1.g1 AS g_0 WHERE g_0.e1 = (SELECT g_0.n FROM t AS g_0)", "WITH t (n) AS /*+ no_inline */ (SELECT g_0.e1 FROM pm2.g1 AS g_0) SELECT g_0.n FROM t AS g_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING);
+	    
+	    HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+	    
+	    dataManager.addData("WITH t (n) AS (SELECT g_0.e1 FROM g1 AS g_0) SELECT g_0.n FROM t AS g_0", Arrays.asList("a"));
+	    dataManager.addData("SELECT 1 FROM g1 AS g_0 WHERE g_0.e1 = 'a'", Arrays.asList(1));
+	    
+	    List<?>[] expected = new List[] { 
+                Arrays.asList("a"),
+            };
+	    
+	    helpProcess(plan, TestProcessor.createCommandContext(), dataManager, expected);
 	}
 	
 	@Test public void testWithPushdownNested() throws TeiidException {
@@ -683,7 +694,7 @@ public class TestWithClauseProcessing {
 		String sql = "with eee as /*+ no_inline */ (select * from pm1.g1) select * from pm1.g2 where pm1.g2.e1 in (select e1 from eee)";
 	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), cc);
 	    HardcodedDataManager hdm = new HardcodedDataManager(RealMetadataFactory.example1Cached());
-	    hdm.addData("WITH eee (e1, e2, e3, e4) AS (SELECT g_0.e1, NULL, NULL, NULL FROM g1 AS g_0) SELECT g_0.e1, g_0.e2, g_0.e3, g_0.e4 FROM g2 AS g_0 WHERE g_0.e1 IN (SELECT g_2.e1 FROM eee AS g_2)", Arrays.asList("a", 1, 3.0, true));
+	    hdm.addData("WITH eee (e1, e2, e3, e4) AS (SELECT g_0.e1, NULL, NULL, NULL FROM g1 AS g_0) SELECT g_0.e1, g_0.e2, g_0.e3, g_0.e4 FROM g2 AS g_0 WHERE g_0.e1 IN (SELECT g_1.e1 FROM eee AS g_1)", Arrays.asList("a", 1, 3.0, true));
 	    TestProcessor.helpProcess(plan, hdm, null);
 	}
 	
@@ -1010,7 +1021,7 @@ public class TestWithClauseProcessing {
 
         ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
         HardcodedDataManager hdm = new HardcodedDataManager(metadata);
-        hdm.addData("WITH CTE1 (e1) AS (SELECT g_0.e1 FROM g1 AS g_0) SELECT g_3.e1 AS c_0, g_3.e2 AS c_1, g_3.e3 AS c_2, g_3.e4 AS c_3 FROM g2 AS g_3 WHERE g_3.e1 IN (SELECT g_5.e1 FROM CTE1 AS g_5) UNION ALL SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM g3 AS g_0 WHERE g_0.e1 IN (SELECT g_2.e1 FROM CTE1 AS g_2)", Arrays.asList("a", 1, false, 1.0));
+        hdm.addData("WITH CTE1 (e1) AS (SELECT g_0.e1 FROM g1 AS g_0) SELECT g_2.e1 AS c_0, g_2.e2 AS c_1, g_2.e3 AS c_2, g_2.e4 AS c_3 FROM g2 AS g_2 WHERE g_2.e1 IN (SELECT g_3.e1 FROM CTE1 AS g_3) UNION ALL SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM g3 AS g_0 WHERE g_0.e1 IN (SELECT g_1.e1 FROM CTE1 AS g_1)", Arrays.asList("a", 1, false, 1.0));
         
         TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("a", 1, false, 1.0)});
    }
@@ -1033,7 +1044,7 @@ public class TestWithClauseProcessing {
         
         ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
         HardcodedDataManager hdm = new HardcodedDataManager(metadata);
-        hdm.addData("WITH CTE1 (e1) AS (SELECT g_0.e1 FROM g1 AS g_0) SELECT DISTINCT v_0.c_0 FROM (SELECT g_3.e1 AS c_0 FROM g2 AS g_3 WHERE g_3.e1 IN (SELECT g_5.e1 FROM CTE1 AS g_5) ORDER BY c_0 LIMIT 10) AS v_0 UNION ALL SELECT g_0.e1 AS c_0 FROM g3 AS g_0 WHERE g_0.e1 IN (SELECT g_2.e1 FROM CTE1 AS g_2)", Arrays.asList("a"));
+        hdm.addData("WITH CTE1 (e1) AS (SELECT g_0.e1 FROM g1 AS g_0) SELECT DISTINCT v_0.c_0 FROM (SELECT g_2.e1 AS c_0 FROM g2 AS g_2 WHERE g_2.e1 IN (SELECT g_3.e1 FROM CTE1 AS g_3) ORDER BY c_0 LIMIT 10) AS v_0 UNION ALL SELECT g_0.e1 AS c_0 FROM g3 AS g_0 WHERE g_0.e1 IN (SELECT g_1.e1 FROM CTE1 AS g_1)", Arrays.asList("a"));
          
         TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("a")});
     }

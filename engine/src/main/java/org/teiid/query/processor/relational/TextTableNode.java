@@ -620,7 +620,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 	}
 	
 	@Override
-	protected Collection<? extends LanguageObject> getObjects() {
+	public Collection<? extends LanguageObject> getObjects() {
 		return Arrays.asList(this.table.getFile());
 	}
 	

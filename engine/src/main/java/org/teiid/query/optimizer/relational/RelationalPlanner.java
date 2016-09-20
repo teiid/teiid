@@ -68,6 +68,7 @@ import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
 import org.teiid.query.processor.relational.PlanExecutionNode;
 import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.processor.relational.RelationalPlan;
+import org.teiid.query.processor.relational.SubqueryAwareRelationalNode;
 import org.teiid.query.resolver.ProcedureContainerResolver;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
@@ -244,7 +245,7 @@ public class RelationalPlanner {
          		}
          	}
      		//distribute the appropriate clauses to the pushdowns
-     		assignWithClause(result.getRootNode(), this.withPlanningState.pushdownWith, false);
+     		assignWithClause(result.getRootNode(), this.withPlanningState.pushdownWith);
         }
         if (!fullPushdown && !this.withPlanningState.withList.isEmpty()) {
         	//generally any with item associated with a pushdown will not be needed as we're converting to a source query
@@ -495,8 +496,22 @@ public class RelationalPlanner {
 		command.acceptVisitor(nav);
 	}
     
-    private void assignWithClause(RelationalNode node, LinkedHashMap<String, WithQueryCommand> pushdownWith, boolean deep) throws QueryPlannerException, TeiidComponentException {
-    	if (node instanceof PlanExecutionNode) {
+    private void assignWithClause(RelationalNode node, LinkedHashMap<String, WithQueryCommand> pushdownWith) throws QueryPlannerException, TeiidComponentException {
+        List<SubqueryContainer<?>> subCommands = new ArrayList<SubqueryContainer<?>>();
+        if (node instanceof SubqueryAwareRelationalNode) {
+            for (LanguageObject lo : ((SubqueryAwareRelationalNode)node).getObjects()) {
+                ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(lo, subCommands);
+                if (!subCommands.isEmpty()) {
+                    for (SubqueryContainer<?> subquery : subCommands) {
+                        if (subquery.getCommand().getProcessorPlan() instanceof RelationalPlan) {
+                            assignWithClause(((RelationalPlan)subquery.getCommand().getProcessorPlan()).getRootNode(), pushdownWith);
+                        }
+                    }
+                    subCommands.clear();
+                }
+            }
+        }
+        if (node instanceof PlanExecutionNode) {
     		//need to check for nested relational plans.  these are created by things such as the semi-join optimization in rulemergevirtual
     		ProcessorPlan plan = ((PlanExecutionNode)node).getProcessorPlan();
     		if (plan instanceof RelationalPlan) {
@@ -509,7 +524,7 @@ public class RelationalPlanner {
             Map<GroupSymbol, RelationalPlan> subplans = accessNode.getSubPlans();
             if (subplans != null) {
             	for (RelationalPlan subplan : subplans.values()) {
-    				assignWithClause(subplan.getRootNode(), pushdownWith, deep);
+    				assignWithClause(subplan.getRootNode(), pushdownWith);
             	}
             }
             Command command = accessNode.getCommand();
@@ -563,23 +578,13 @@ public class RelationalPlanner {
             		//TODO: this should be based upon whether any of the need evaluated
             		accessNode.setShouldEvaluateExpressions(true); 
             	}
-            	if (deep) {
-                	for (SubqueryContainer<?> subquery : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(command)) {
-                	    if (subquery instanceof Evaluatable && ((Evaluatable)subquery).shouldEvaluate()) {
-                	        ProcessorPlan plan = subquery.getCommand().getProcessorPlan();
-                	        if (plan instanceof RelationalPlan) {
-                	            assignWithClause(((RelationalPlan)plan).getRootNode(), pushdownWith, deep);
-                	        }
-                	    }
-                	}
-            	}
             }
         } 
         
         // Recurse through children
         RelationalNode[] children = node.getChildren();
         for(int i=0; i<node.getChildCount(); i++) {
-        	assignWithClause(children[i], pushdownWith, deep);
+        	assignWithClause(children[i], pushdownWith);
         }
     }
 
@@ -682,20 +687,6 @@ public class RelationalPlanner {
 			    ArrayList<Reference> correlatedReferences = new ArrayList<Reference>();
 			    CorrelatedReferenceCollectorVisitor.collectReferences(subCommand, localGroupSymbols, correlatedReferences, metadata);
 			    ProcessorPlan procPlan = QueryOptimizer.optimizePlan(subCommand, metadata, idGenerator, capFinder, analysisRecord, context);
-			    if (procPlan instanceof RelationalPlan && pushdownWith != null && !pushdownWith.isEmpty()) {
-			    	LinkedHashMap<String, WithQueryCommand> parentPushdownWith = pushdownWith;
-			    	if (subCommand instanceof QueryCommand) {
-			    		QueryCommand query = (QueryCommand)subCommand;
-			    		List<WithQueryCommand> with = query.getWith();
-			    		if (with != null && !with.isEmpty()) {
-			    			parentPushdownWith = new LinkedHashMap<String, WithQueryCommand>(parentPushdownWith);
-			    			for (WithQueryCommand withQueryCommand : with) {
-			    				parentPushdownWith.remove(withQueryCommand.getGroupSymbol().getNonCorrelationName());
-							}
-			    		}
-			    	}
-			    	assignWithClause(((RelationalPlan) procPlan).getRootNode(), parentPushdownWith, true);
-			    }
 			    container.getCommand().setProcessorPlan(procPlan);
 			    setCorrelatedReferences(container, correlatedReferences);
 			    //ensure plans are set on the original nested subqueries

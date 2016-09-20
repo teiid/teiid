@@ -83,7 +83,7 @@ public abstract class SubqueryAwareRelationalNode extends RelationalNode {
 		}
 	}
 	
-	abstract protected Collection<? extends LanguageObject> getObjects();
+	abstract public Collection<? extends LanguageObject> getObjects();
 	
 	@Override
 	public Boolean requiresTransaction(boolean transactionalReads) {
