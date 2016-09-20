@@ -7,4 +7,8 @@
         <artifact name="${com.google.code.findbugs:annotations}"/>
     </resources>
     
+    <dependencies>
+        <module name="javax.api"/> 
+    </dependencies>
+    
 </module>

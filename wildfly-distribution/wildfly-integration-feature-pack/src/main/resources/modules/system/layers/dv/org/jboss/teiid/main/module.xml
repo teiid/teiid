@@ -40,7 +40,9 @@
         <module name="org.jboss.as.clustering.jgroups"/>
         <module name="org.infinispan"/>
         <module name="org.arrahtec"/>
+        <!-- TODO:  
         <module name="org.jboss.teiid.rest-service"/>
+         -->
         
         <module name="org.jboss.marshalling"/>
         <module name="org.jboss.marshalling.river"/> 

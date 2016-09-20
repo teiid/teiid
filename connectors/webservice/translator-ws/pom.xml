@@ -20,11 +20,10 @@
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-common-core</artifactId>
         </dependency>
-        <!-- for json parser -->
-        <dependency>
-            <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-engine</artifactId>
-        </dependency>
+		<dependency>
+		    <groupId>com.googlecode.json-simple</groupId>
+		    <artifactId>json-simple</artifactId>
+		</dependency>
         <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>

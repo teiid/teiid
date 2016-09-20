@@ -15,7 +15,9 @@
         <module name="javax.resource.api"/>
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.api" />
+        <!--
         <module name="org.jboss.teiid" />
+         -->
         <module name="io.swagger.core"/>
         <module name="com.fasterxml.jackson.core.jackson-core"/>
         <module name="com.fasterxml.jackson.core.jackson-annotations"/>

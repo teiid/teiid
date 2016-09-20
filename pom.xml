@@ -106,7 +106,8 @@
         <version.org.apache.ant>1.8.2</version.org.apache.ant>
         <version.com.fasterxml.jackson.dataformat>2.4.5</version.com.fasterxml.jackson.dataformat>	 
         <version.javax.validation>1.1.0.Final</version.javax.validation>
-        <version.org.wildfly.build-tools>1.1.6.Final</version.org.wildfly.build-tools>   	    
+        <version.org.wildfly.build-tools>1.1.6.Final</version.org.wildfly.build-tools>
+        <version.com.googlecode.json-simple>1.1.1</version.com.googlecode.json-simple>   	    
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -1711,6 +1712,16 @@
 			    <version>${version.org.reflections}</version>
 			</dependency>
             
+			<dependency>
+			    <groupId>com.googlecode.json-simple</groupId>
+			    <artifactId>json-simple</artifactId>
+			    <version>${version.com.googlecode.json-simple}</version>
+			</dependency>
+			<dependency>
+			    <groupId>com.google.code.findbugs</groupId>
+			    <artifactId>annotations</artifactId>
+			    <version>${version.com.google.code.findbugs}</version>
+			</dependency>			            
         </dependencies>
 	</dependencyManagement>
 	<modules>
@@ -1734,7 +1745,6 @@
 		<module>rest-service</module>
 		<module>wildfly-distribution</module>
                 <module>connectors</module>
-                <module>jboss-security-feature-pack</module>
 		<module>test-integration</module>
 	</modules>
 </project>

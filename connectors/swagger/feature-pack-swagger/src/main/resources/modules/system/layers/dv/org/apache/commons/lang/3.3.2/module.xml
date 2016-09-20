@@ -6,4 +6,8 @@
     <resources>
         <artifact name="${org.apache.commons:commons-lang3}"/>
     </resources>
+    
+    <dependencies>
+        <module name="javax.api"/> 
+    </dependencies>    
 </module>

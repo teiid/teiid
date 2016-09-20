@@ -36,9 +36,9 @@
                 </exclusion>
             </exclusions>
         </dependency>
-		<dependency>
-            <groupId>org.jboss.teiid</groupId>
-            <artifactId>rest-service-feature-pack</artifactId>
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>feature-pack-ws</artifactId>
             <version>${project.version}</version>
             <type>zip</type>
             <exclusions>
@@ -47,7 +47,7 @@
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>                
+        </dependency>        
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-jboss-integration</artifactId>
@@ -56,6 +56,10 @@
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-data-quality</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-jboss-security</artifactId>
+        </dependency>        
     </dependencies>
 
     <build>
