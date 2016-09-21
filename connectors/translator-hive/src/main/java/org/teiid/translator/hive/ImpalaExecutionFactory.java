@@ -79,7 +79,7 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
         addPushDownFunction(IMPALA, "space", STRING, INTEGER); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "hex", STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "unhex", STRING, STRING); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "bin", STRING, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "bin", STRING, LONG); //$NON-NLS-1$
 
         //date functions
         addPushDownFunction(IMPALA, "add_months", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
@@ -95,45 +95,46 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
         addPushDownFunction(IMPALA, "days_sub", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "days_sub", TIMESTAMP, TIMESTAMP, LONG); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "extract", INTEGER, TIMESTAMP, STRING); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "from_unixtime", STRING, BIG_INTEGER); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "from_unixtime", STRING, BIG_INTEGER, STRING); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "from_unixtime", STRING, LONG); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "from_unixtime", STRING, LONG, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "from_utc_timestamp", TIMESTAMP, TIMESTAMP, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "hour",INTEGER, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "hours_add", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "hours_add", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "hours_add", TIMESTAMP, TIMESTAMP, LONG); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "hours_sub", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "hours_sub", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "hours_sub", TIMESTAMP, TIMESTAMP, LONG); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "microseconds_sub", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "microseconds_sub", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "microseconds_sub", TIMESTAMP, TIMESTAMP, LONG); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "milliseconds_add", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "milliseconds_add", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "milliseconds_add", TIMESTAMP, TIMESTAMP, LONG); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "milliseconds_sub", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "milliseconds_sub", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "milliseconds_sub", TIMESTAMP, TIMESTAMP, LONG); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "minute", INTEGER, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "minutes_add", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "minutes_add", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "minutes_add", TIMESTAMP, TIMESTAMP, LONG); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "minutes_sub", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "minutes_sub", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "minutes_sub", TIMESTAMP, TIMESTAMP, LONG); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "month", INTEGER, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "months_add", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "months_add", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "months_add", TIMESTAMP, TIMESTAMP, LONG); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "months_sub", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "months_sub", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "months_sub", TIMESTAMP, TIMESTAMP, LONG); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "nanoseconds_add", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "nanoseconds_add", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "nanoseconds_add", TIMESTAMP, TIMESTAMP, LONG); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "nanoseconds_sub", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "nanoseconds_sub", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "nanoseconds_sub", TIMESTAMP, TIMESTAMP, LONG); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "second", INTEGER, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "seconds_add", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "seconds_add", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "seconds_add", TIMESTAMP, TIMESTAMP, LONG); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "seconds_sub", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "seconds_sub", TIMESTAMP, TIMESTAMP, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "seconds_sub", TIMESTAMP, TIMESTAMP, LONG); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "subdate", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "to_date", STRING, TIMESTAMP); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "to_utc_timestamp", TIMESTAMP, TIMESTAMP, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "trunc", TIMESTAMP, TIMESTAMP, STRING); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "unix_timestamp", BIG_INTEGER, STRING); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "unix_timestamp", BIG_INTEGER, STRING, STRING); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "unix_timestamp", INTEGER, STRING); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "unix_timestamp", INTEGER, STRING, STRING); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "unix_timestamp", INTEGER, TIMESTAMP); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "weekofyear", INTEGER, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "weeks_add", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "weeks_add", TIMESTAMP, TIMESTAMP, LONG); //$NON-NLS-1$
@@ -144,13 +145,13 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
         addPushDownFunction(IMPALA, "years_sub", TIMESTAMP, TIMESTAMP, INTEGER); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "years_sub", TIMESTAMP, TIMESTAMP, LONG); //$NON-NLS-1$
 
-        addPushDownFunction(IMPALA, "conv", STRING, BIG_INTEGER, INTEGER, INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "conv", STRING, LONG, INTEGER, INTEGER); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "greatest", STRING, STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "greatest", TIMESTAMP, TIMESTAMP, TIMESTAMP); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "greatest", BIG_INTEGER, BIG_INTEGER, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "greatest", LONG, LONG, LONG); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "least", STRING, STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "least", TIMESTAMP, TIMESTAMP, TIMESTAMP); //$NON-NLS-1$
-        addPushDownFunction(IMPALA, "least", BIG_INTEGER, BIG_INTEGER, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(IMPALA, "least", LONG, LONG, LONG); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "log2", STRING, DOUBLE); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "pow", DOUBLE, DOUBLE); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "quotient", INTEGER, INTEGER, INTEGER); //$NON-NLS-1$
