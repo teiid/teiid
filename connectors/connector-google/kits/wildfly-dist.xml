@@ -23,10 +23,16 @@
 
     <dependencySets>
         <dependencySet>
+            <outputDirectory>${wildfly-module-root}/com/google/gdata/main</outputDirectory>
+            <includes>
+                <include>com.google.gdata:core</include>
+            </includes>
+            <useTransitiveDependencies>false</useTransitiveDependencies>
+        </dependencySet>
+        <dependencySet>
             <outputDirectory>${wildfly-module-root}/org/jboss/teiid/resource-adapter/google/main</outputDirectory>
             <includes>
                 <include>org.jboss.teiid.connectors:connector-google</include>
-                <include>com.google.gdata:core</include>
             </includes>
             <useTransitiveDependencies>true</useTransitiveDependencies>
         </dependencySet>
