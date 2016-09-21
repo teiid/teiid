@@ -6,6 +6,7 @@ import static org.teiid.query.processor.TestProcessor.helpParse;
 import static org.teiid.query.processor.TestProcessor.helpProcess;
 import static org.teiid.query.processor.TestProcessor.sampleData1;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
@@ -203,15 +204,12 @@ public class TestWithClauseProcessing {
 	    
 	    HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
 
-	    dataManager.addData("WITH a (x, y, z) AS (SELECT g_0.e1, g_0.e2, NULL FROM g1 AS g_0) SELECT g_1.x, g_0.y, g_0.x FROM a AS g_0, a AS g_1", Arrays.asList("a", 1, "a"));
-	    dataManager.addData("WITH b__1 (e1) AS (SELECT NULL FROM g1 AS g_0), a (x, y, z) AS (SELECT g_0.e1, g_0.e2, NULL FROM g1 AS g_0) SELECT g_0.y FROM a AS g_0, b__1 AS g_1 WHERE g_0.x = 'a'", 
-	    		new List[] {Arrays.asList(2)});
+	    dataManager.addData("SELECT g_0.e1, g_0.e2 FROM g1 AS g_0", Arrays.asList("a", 1));
+	    dataManager.addData("WITH b__3 (e1) AS (SELECT NULL FROM g1 AS g_0) SELECT 1 FROM b__3 AS g_0", Arrays.asList(1));
 	    
-	    ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, new String[] {"WITH a (x, y, z) AS (SELECT g_0.e1, g_0.e2, UNKNOWN FROM pm1.g1 AS g_0) SELECT g_1.x, g_0.y, g_0.x FROM a AS g_0, a AS g_1"}, ComparisonMode.EXACT_COMMAND_STRING);
+	    ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, new String[] {"SELECT a.y, a.x FROM a", "SELECT a.x FROM a"}, ComparisonMode.EXACT_COMMAND_STRING);
 	    
-	    helpProcess(plan, dataManager, new List[] { 
-		        Arrays.asList(1, 1),
-		    });
+	    helpProcess(plan, dataManager, new List[] {});
 	}
 	
 	/**
@@ -499,11 +497,11 @@ public class TestWithClauseProcessing {
 	    BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
 	    bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
 	    CapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
-	    ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT 1 FROM pm1.g1 AS g_0 WHERE g_0.e1 = (SELECT g_0.n FROM t AS g_0)", "WITH t (n) AS (SELECT g_0.e1 FROM pm2.g1 AS g_0) SELECT g_0.n FROM t AS g_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING);
+	    ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT t.n FROM t", "SELECT 1 FROM pm1.g1 AS g_0 WHERE g_0.e1 = (SELECT t.n FROM t)"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING);
 	    
 	    HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
 	    
-	    dataManager.addData("WITH t (n) AS (SELECT g_0.e1 FROM g1 AS g_0) SELECT g_0.n FROM t AS g_0", Arrays.asList("a"));
+	    dataManager.addData("SELECT g_0.e1 FROM g1 AS g_0", Arrays.asList("a"));
 	    dataManager.addData("SELECT 1 FROM g1 AS g_0 WHERE g_0.e1 = 'a'", Arrays.asList(1));
 	    
 	    List<?>[] expected = new List[] { 
@@ -975,7 +973,7 @@ public class TestWithClauseProcessing {
         
         ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
         HardcodedDataManager hdm = new HardcodedDataManager(metadata);
-        hdm.addData("WITH CTE1 (e1) AS (SELECT g_0.e1 FROM g1 AS g_0) SELECT g_0.e1 AS c_0 FROM CTE1 AS g_0 LIMIT 2", Arrays.asList("a"));
+        hdm.addData("SELECT g_0.e1 FROM g1 AS g_0", Arrays.asList("a"));
         hdm.addData("SELECT DISTINCT v_0.c_0 FROM (SELECT g_1.e1 AS c_0 FROM g2 AS g_1 WHERE g_1.e1 = 'a' ORDER BY c_0 LIMIT 10) AS v_0 UNION ALL SELECT g_0.e1 AS c_0 FROM g3 AS g_0 WHERE g_0.e1 = 'a'", Arrays.asList("b"));
         TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("b")});
     }
@@ -1207,6 +1205,30 @@ public class TestWithClauseProcessing {
         hdm.addData("SELECT g_0.name FROM tab1 AS g_0", Arrays.asList("a"));
         hdm.addData("SELECT g_0.course_id FROM tab3 AS g_0", Arrays.asList(1l));
         TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("a")});
+    }
+    
+    @Test public void testCTEReferencedByNonPushedSubquery() throws Exception {
+        String ddl = "CREATE foreign TABLE g1(e1 varchar(10), e2 integer, e3 decimal, e4 decimal);\n" + 
+                "CREATE foreign TABLE g2(e1 varchar(10), e2 integer, e3 decimal, e4 decimal);";
+        String sql = "with CTE1 as /*+ no_inline */ (SELECT e1, e2, e3 from pm1.g1) select array_agg((select e3 from cte1 where e1=pm1.g2.e1 and e2=pm1.g2.e2)) from pm1.g2";
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
+        bsc.setCapabilitySupport(Capability.SUBQUERY_COMMON_TABLE_EXPRESSIONS, true);
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, true);
+        
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "x", "pm1");
+        CommandContext cc = createCommandContext();
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
+        HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+        hdm.addData("SELECT g_0.e1, g_0.e2 FROM g2 AS g_0", Arrays.asList("a", 1));
+        hdm.addData("SELECT g_0.e1, g_0.e2, g_0.e3 FROM g1 AS g_0", Arrays.asList("a", 1, BigDecimal.valueOf(1)));
+        TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList(new ArrayImpl(BigDecimal.valueOf(1)))});
     }
 
 }
