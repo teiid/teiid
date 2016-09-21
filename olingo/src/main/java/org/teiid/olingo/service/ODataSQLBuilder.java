@@ -215,18 +215,9 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             if (ei.getLevelsOption() != null) {
             	if (ei.getLevelsOption().isMax()) {
             		levels = MAX_EXPAND_LEVEL - expandLevel + 1;
-            		
-            		//OLINGO-1009
-            		levels = 1;
             	} else {
             		levels = ei.getLevelsOption().getValue();
             		checkExpandLevel(expandLevel + levels - 1);
-            		
-            		//OLINGO-1009
-            		if (levels > 1) {
-            			throw new TeiidNotImplementedException(
-                                ODataPlugin.Event.TEIID16061, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16061));
-            		}
             	}
             }
             

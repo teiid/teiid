@@ -502,8 +502,8 @@ public class TestODataIntegration {
                         + "\"decimalval\":-20.4,"
                         + "\"timeval\":\"00:00:00\","
                         + "\"dateval\":\"1970-01-01\","
-                        + "\"timestampval\":\"1970-01-01T00:00:00Z\","
-                        + "\"clobval\":null}", response.getContentAsString());
+                        + "\"timestampval\":\"1970-01-01T00:00:00Z\""
+                        + "}", response.getContentAsString());
                 
                 response = http.newRequest(baseURL + "/northwind/m/PostTable(4)/clobval")
                         .method("POST")
@@ -1775,16 +1775,79 @@ public class TestODataIntegration {
                     .send();
                 assertEquals(400, response.getStatus());
                 
-            response = http.newRequest(baseURL + "/northwind/m/x?$expand=*($levels=1)")
+            response = http.newRequest(baseURL + "/northwind/m/x?$expand=*($levels=3)")
                     .method("GET")
                     .send();
                 assertEquals(200, response.getStatus());
-                assertEquals("{\"@odata.context\":\"$metadata#x\",\"value\":["
-                		+ "{\"a\":\"a\",\"b\":\"b\",\"y_FKX\":"
-                			+ "[{\"a\":\"y\",\"b\":\"a\"},{\"a\":\"y1\",\"b\":\"a\"}],"
-                			+ "\"z_FKX\":{\"a\":\"a\",\"b\":\"y\"}}"
-                		+ "]}", 
-                        response.getContentAsString());
+                String expected = "{" + 
+                		"\"@odata.context\":\"$metadata#x\"," + 
+                		"\"value\":[" + 
+                		    "{" + 
+                		    "\"a\":\"a\"," + 
+                		      "\"b\":\"b\"," + 
+                		      "\"y_FKX\":[" + 
+                		        "{" + 
+                		          "\"a\":\"y\"," + 
+                		          "\"b\":\"a\"," + 
+                		          "\"FKX\":[" + 
+                		            "{" + 
+                		              "\"@odata.id\":\""+baseURL+"/northwind/m/x('a')\"" + 
+                		            "}" + 
+                		          "]," + 
+                		          "\"z_FKY\":[" + 
+                		            "{" + 
+                		              "\"a\":\"a\"," + 
+                		              "\"b\":\"y\"," + 
+                		              "\"FKX\":{" + 
+                		                "\"@odata.id\":\""+baseURL+"/northwind/m/x('a')\"" + 
+                		              "}," + 
+                		              "\"FKY\":[" + 
+                		                "{" + 
+                		                  "\"@odata.id\":\""+baseURL+"/northwind/m/y('y')\"" + 
+                		                "}" + 
+                		              "]" + 
+                		            "}" + 
+                		          "]" + 
+                		        "}," + 
+                		        "{" + 
+                		          "\"a\":\"y1\"," + 
+                		          "\"b\":\"a\"," + 
+                		          "\"FKX\":[" + 
+                		            "{" + 
+                		              "\"@odata.id\":\""+baseURL+"/northwind/m/x('a')\"" + 
+                		            "}" + 
+                		          "]," + 
+                		          "\"z_FKY\":[" + 
+                		          "]" + 
+                		        "}" + 
+                		      "]," + 
+                		      "\"z_FKX\":{" + 
+                		        "\"a\":\"a\"," + 
+                		        "\"b\":\"y\"," + 
+                		        "\"FKX\":{" + 
+                		          "\"@odata.id\":\""+baseURL+"/northwind/m/x('a')\"" + 
+                		        "}," + 
+                		        "\"FKY\":[" + 
+                		          "{" + 
+                		            "\"a\":\"y\"," + 
+                		            "\"b\":\"a\"," + 
+                		            "\"FKX\":[" + 
+                		              "{" + 
+                		                "\"@odata.id\":\""+baseURL+"/northwind/m/x('a')\"" + 
+                		              "}" + 
+                		            "]," + 
+                		            "\"z_FKY\":[" + 
+                		              "{" + 
+                		                "\"@odata.id\":\""+baseURL+"/northwind/m/z('a')\"" + 
+                		              "}" + 
+                		            "]" + 
+                		          "}" + 
+                		        "]" + 
+                		      "}" + 
+                		    "}" + 
+                		  "]" + 
+                		"}";
+                assertEquals(expected, response.getContentAsString());
             
             //invalid it's not a self relationship
             response = http.newRequest(baseURL + "/northwind/m/x?$expand=y_FKX($levels=1)")
@@ -2021,8 +2084,9 @@ public class TestODataIntegration {
                 .send();
         assertEquals(200, response.getStatus());
         String string = response.getContentAsString();
-        assertTrue(string.contains("odata4/loopy/vm1/LobTable(1)/e2"));
-        assertTrue(string.contains("odata4/loopy/vm1/LobTable(2)/e2"));
+        // stream properties are computed, not shown in the payload.
+        assertFalse(string.contains("odata4/loopy/vm1/LobTable(1)/e2"));
+        assertFalse(string.contains("odata4/loopy/vm1/LobTable(2)/e2"));
     } 
     
     @Test
