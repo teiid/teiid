@@ -21,14 +21,7 @@
  */
 package org.teiid.translator.hive;
 
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.BIG_INTEGER;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.DATE;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.DOUBLE;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.FLOAT;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.INTEGER;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.OBJECT;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.STRING;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.TIMESTAMP;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -102,15 +95,15 @@ public class HiveExecutionFactory extends BaseHiveExecutionFactory {
         addPushDownFunction(HIVE, "split", OBJECT, STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(HIVE, "hex", STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(HIVE, "unhex", STRING, STRING); //$NON-NLS-1$
-        addPushDownFunction(HIVE, "bin", STRING, BIG_INTEGER); //$NON-NLS-1$
+        addPushDownFunction(HIVE, "bin", STRING, LONG); //$NON-NLS-1$
         addPushDownFunction(HIVE, "day", INTEGER, DATE); //$NON-NLS-1$
         addPushDownFunction(HIVE, "datediff", INTEGER, STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(HIVE, "date_add", INTEGER, STRING, INTEGER); //$NON-NLS-1$
         addPushDownFunction(HIVE, "date_sub", INTEGER, STRING, INTEGER); //$NON-NLS-1$
-        addPushDownFunction(HIVE, "from_unixtime", STRING, BIG_INTEGER); //$NON-NLS-1$
-        addPushDownFunction(HIVE, "from_unixtime", STRING, BIG_INTEGER, STRING); //$NON-NLS-1$
-        addPushDownFunction(HIVE, "unix_timestamp", BIG_INTEGER, STRING); //$NON-NLS-1$
-        addPushDownFunction(HIVE, "unix_timestamp", BIG_INTEGER, STRING, STRING); //$NON-NLS-1$
+        addPushDownFunction(HIVE, "from_unixtime", STRING, LONG); //$NON-NLS-1$
+        addPushDownFunction(HIVE, "from_unixtime", STRING, LONG, STRING); //$NON-NLS-1$
+        addPushDownFunction(HIVE, "unix_timestamp", LONG, STRING); //$NON-NLS-1$
+        addPushDownFunction(HIVE, "unix_timestamp", LONG, STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(HIVE, "to_date", STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(HIVE, "from_utc_timestamp", TIMESTAMP, TIMESTAMP, STRING); //$NON-NLS-1$
         addPushDownFunction(HIVE, "to_utc_timestamp", TIMESTAMP, TIMESTAMP, STRING); //$NON-NLS-1$
@@ -125,7 +118,7 @@ public class HiveExecutionFactory extends BaseHiveExecutionFactory {
         addAggregatePushDownFunction(HIVE, "LAST_VALUE", OBJECT, OBJECT); //$NON-NLS-1$
         addAggregatePushDownFunction(HIVE, "PERCENT_RANK", FLOAT); //$NON-NLS-1$
         addAggregatePushDownFunction(HIVE, "CUME_DIST", FLOAT); //$NON-NLS-1$
-        addAggregatePushDownFunction(HIVE, "NTILE", BIG_INTEGER, INTEGER); //$NON-NLS-1$
+        addAggregatePushDownFunction(HIVE, "NTILE", LONG, INTEGER); //$NON-NLS-1$
     }    
     
     @Override
