@@ -367,7 +367,7 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
     protected void loadColumnMetadata( NamedTable group ) throws TranslatorException {
         table = group.getMetadataObject();
         String supportsQuery = table.getProperty(Constants.SUPPORTS_QUERY, true);
-        if (!Boolean.valueOf(supportsQuery)) {
+        if (supportsQuery != null && !Boolean.valueOf(supportsQuery)) {
             throw new TranslatorException(table.getSourceName() + " " + SalesForcePlugin.Util.getString("CriteriaVisitor.query.not.supported")); //$NON-NLS-1$ //$NON-NLS-2$
         }
         List<Column> columnIds = table.getColumns();

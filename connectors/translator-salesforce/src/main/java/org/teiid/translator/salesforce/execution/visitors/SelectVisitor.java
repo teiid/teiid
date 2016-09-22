@@ -125,7 +125,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 			table = obj.getMetadataObject();
 	        String supportsQuery = table.getProperty(Constants.SUPPORTS_QUERY, true);
 	        objectSupportsRetrieve = Boolean.valueOf(table.getProperty(Constants.SUPPORTS_RETRIEVE, true));
-	        if (!Boolean.valueOf(supportsQuery)) {
+	        if (supportsQuery != null && !Boolean.valueOf(supportsQuery)) {
 	            throw new TranslatorException(table.getSourceName() + " " + SalesForcePlugin.Util.getString("CriteriaVisitor.query.not.supported")); //$NON-NLS-1$ //$NON-NLS-2$
 	        }
 			loadColumnMetadata(obj);
