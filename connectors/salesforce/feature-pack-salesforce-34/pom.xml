@@ -7,8 +7,8 @@
 		<artifactId>salesforce</artifactId>
 		<version>9.1.0.Beta2-SNAPSHOT</version>
 	</parent>
-	<artifactId>feature-pack-salesforce</artifactId>
-	<name>Teiid Salesforce Feature Pack</name>
+	<artifactId>feature-pack-salesforce-34</artifactId>
+	<name>Teiid Salesforce 34 Feature Pack</name>
 	<packaging>pom</packaging>
 
 	<dependencies>
@@ -37,12 +37,12 @@
         </dependency>		
 		<dependency>
 			<groupId>org.jboss.teiid.connectors</groupId>
-			<artifactId>translator-salesforce</artifactId>
+			<artifactId>translator-salesforce-34</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.teiid.connectors</groupId>
-			<artifactId>connector-salesforce</artifactId>
+			<artifactId>connector-salesforce-34</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 	</dependencies>

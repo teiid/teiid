@@ -16,7 +16,6 @@
     <module>rest-service-feature-pack</module>
     <module>wildfly-integration-feature-pack</module>
     <module>olingo-feature-pack</module>
-    <module>wildfly-overlay-dist</module>
   </modules>
 
 </project>
