@@ -320,7 +320,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
 			return result;
 		}
 		result = DataTypeManager.transformValue(result, expectedType);
-		if (result instanceof String) {
+		if (result != null && expectedType == DataTypeManager.DefaultDataClasses.STRING) {
 			String s = (String)result;
 			if (s.length() > DataTypeManager.MAX_STRING_LENGTH) {
 				return s.substring(0, DataTypeManager.MAX_STRING_LENGTH);
