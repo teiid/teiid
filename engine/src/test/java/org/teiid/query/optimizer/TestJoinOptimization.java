@@ -1404,4 +1404,24 @@ public class TestJoinOptimization {
         assertNotNull(joinNode.getJoinCriteria());
     }
 	
+	@Test public void testCrossSourceOuterWithOffset() throws Exception {
+        String sql = "SELECT pm1.g1.e1, pm2.g1.e2 from pm1.g1 left outer join pm2.g1 on pm1.g1.e1 = pm2.g1.e1 ORDER BY pm1.g1.e1 OFFSET 1 ROWS";
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        bsc.setCapabilitySupport(Capability.ROW_OFFSET, true);
+        
+        DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
+                new String[] {"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g1 AS g_0 ORDER BY c_0", "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING);
+        
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        
+        hdm.addData("SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0", Arrays.asList("a"), Arrays.asList("b"));
+        hdm.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g1 AS g_0 ORDER BY c_0", Arrays.asList("a", 1), Arrays.asList("b", 2));
+        
+        helpProcess(plan, createCommandContext(), hdm, new List[] {Arrays.asList("b", 2)});
+    }
+	
 }
