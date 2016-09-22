@@ -1425,6 +1425,10 @@ public class TestFunctionLibrary {
 		assertEquals(1, helpInvokeMethod("array_get", new Class<?>[] {DefaultDataClasses.OBJECT, DefaultDataClasses.INTEGER}, new Object[] {new Object[] {1}, 1}, null)); //$NON-NLS-1$
 	}
 	
+	@Test() public void testArrayGetClob() throws Exception {
+	    assertEquals(new String(new char[5000]), helpInvokeMethod("array_get", new Class<?>[] {DefaultDataClasses.OBJECT, DefaultDataClasses.INTEGER}, new Object[] {new Object[] {new String(new char[5000])}, 1}, null)); //$NON-NLS-1$
+	}
+	
 	@Test() public void testTrim() throws Exception {
 		helpInvokeMethod("trim", new Object[] {"leading", "x", "xaxx"}, "axx"); //$NON-NLS-1$
 	}
