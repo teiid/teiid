@@ -172,6 +172,9 @@ public class RulePushLimit implements OptimizerRule {
                 return false;
             }
             case NodeConstants.Types.JOIN:
+                if (parentLimit == null) {
+                    return false;
+                }
             	JoinType joinType = (JoinType)child.getProperty(Info.JOIN_TYPE);
             	boolean pushLeft = false;
             	boolean pushRight = false;
@@ -252,6 +255,9 @@ public class RulePushLimit implements OptimizerRule {
             	}
             	case NodeConstants.Types.JOIN:
             	{
+            	    if (parentLimit == null) {
+                        return false;
+                    }
             		PlanNode join = child.getFirstChild();
             		JoinType jt = (JoinType)join.getProperty(NodeConstants.Info.JOIN_TYPE);
             		if (!jt.isOuter()) {
@@ -453,6 +459,9 @@ public class RulePushLimit implements OptimizerRule {
 	}
 
 	private boolean canPushToBranches(PlanNode limitNode, PlanNode child) {
+	    if (!limitNode.hasProperty(Info.MAX_TUPLE_LIMIT)) {
+	        return false;
+	    }
 		if (!SetQuery.Operation.UNION.equals(child.getProperty(NodeConstants.Info.SET_OPERATION))) {
 			return false;
 		}   
