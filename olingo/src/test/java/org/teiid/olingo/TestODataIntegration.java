@@ -1629,11 +1629,11 @@ public class TestODataIntegration {
     
     @Test 
     public void testExpandSimple2() throws Exception {
-        HardCodedExecutionFactory hc = buildHardCodedExecutionFactory();
+        HardCodedExecutionFactory hc = new HardCodedExecutionFactory();
         hc.addData("SELECT x.a, x.b FROM x", Arrays.asList(Arrays.asList("xa1", "xb"),
                 Arrays.asList("xa2", "xb2")));
-        hc.addData("SELECT y.a, y.b FROM y WHERE y.b = 'xa1'", Arrays.asList(Arrays.asList("ya1", "xa1"), 
-                Arrays.asList("ya2", "xa1")));
+        hc.addData("SELECT y.b, y.a FROM y", Arrays.asList(Arrays.asList("xa1", "ya1"), 
+                Arrays.asList("xa1", "ya2")));
         teiid.addTranslator("x7", hc);
 
         try {
@@ -2296,11 +2296,6 @@ public class TestODataIntegration {
                 Arrays.asList(1, 3, "country"), Arrays.asList(1,4, "abroad"),
                 Arrays.asList(2, 5, "state"), Arrays.asList(2, 6, "country"),
                 Arrays.asList(3,7,"town"), Arrays.asList(3, 8, "town")));
-        hc.addData("SELECT Orders.customerid, Orders.place, Orders.id FROM Orders", 
-                Arrays.asList(Arrays.asList(1, "town", 1), Arrays.asList(1, "state", 2),
-                Arrays.asList(1, "country",3), Arrays.asList(1,"abroad", 4),
-                Arrays.asList(2, "state", 5), Arrays.asList(2, "country", 6),
-                Arrays.asList(3,"town", 7), Arrays.asList(3, "town", 8)));
         hc.addData("SELECT Orders.place, Orders.customerid, Orders.id FROM Orders", 
                 Arrays.asList(Arrays.asList("town",1, 1), Arrays.asList("state", 1, 2),
                 Arrays.asList("country",1, 3), Arrays.asList("abroad", 1, 4),

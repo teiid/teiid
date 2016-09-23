@@ -68,8 +68,7 @@ public class DocumentNode {
     private LinkedHashMap<Expression, ProjectedColumn> projectedColumns = new LinkedHashMap<Expression, ProjectedColumn>();
     private List<DocumentNode> sibilings = new ArrayList<DocumentNode>();
     private List<ExpandDocumentNode> expands = new ArrayList<ExpandDocumentNode>();
-    private boolean distinct;
-	private DocumentNode iterator;
+    private DocumentNode iterator;
         
     public static DocumentNode build(EdmEntityType type,
             List<UriParameter> keyPredicates, MetadataStore metadata, OData odata,
@@ -356,7 +355,6 @@ public class DocumentNode {
         for (DocumentNode sibiling:this.sibilings) {
             addProjectedColumns(select, ordinal, sortColumns(sibiling.getProjectedColumns().values()));
         }
-        select.setDistinct(this.distinct);
 
         Query query = new Query();
         From from = new From();
