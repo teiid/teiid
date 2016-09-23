@@ -185,7 +185,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	private ODBCClientRemote client;
 	private Properties props;
 	private ConnectionImpl connection;
-	private boolean executing;
+	private volatile boolean executing;
 	private boolean errorOccurred;
 	
 	private volatile ResultsFuture<Boolean> executionFuture;
@@ -865,9 +865,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		if (this.executionFuture != null) {
 			return true;
 		}
-		synchronized (this) {
-			this.executing = true;			
-		}
+		this.executing = true;			
 		return false;
 	}
 	
@@ -932,7 +930,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		ready();
 	}
 	
-	protected synchronized void doneExecuting() {
+	protected void doneExecuting() {
 		executing = false;
 	}
 	
