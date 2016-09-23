@@ -475,6 +475,7 @@
             <translator name="odata4" module="org.jboss.teiid.translator.odata4"/>
             <translator name="redshift" module="org.jboss.teiid.translator.jdbc"/>
             <translator name="swagger" module="org.jboss.teiid.translator.swagger"/>
+            <translator name="delegator" module="org.jboss.teiid.api"/>
         </subsystem>         
         
         <subsystem xmlns="urn:jboss:domain:transactions:3.0">
