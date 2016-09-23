@@ -1749,5 +1749,19 @@ public class TestSubqueryPushdown {
         
         TestProcessor.helpProcess(pp, dataMgr, new List[] {});
     }
-
+    
+    @Test public void testProjectSubqueryRewriteToJoin() throws Exception {
+        TestQueryRewriter.helpTestRewriteCommand("Select e1, /*+ mj */ (select max(pm1.g1.e1) as x FROM pm1.g1 where e2 = pm2.g1.e2) as e2 from pm2.g1", 
+                "SELECT e1, X__1.x AS e2 FROM pm2.g1 LEFT OUTER JOIN (SELECT MAX(pm1.g1.e1) AS x, e2 FROM pm1.g1 GROUP BY e2) AS X__1 ON pm2.g1.e2 = X__1.e2", RealMetadataFactory.example1Cached());
+    }
+    
+    @Test public void testProjectSubqueryRewriteToJoin1() throws Exception {
+        String sql = "SELECT A.INTKEY, C.LONGNUM, "
+                + "/*+ mj */ (SELECT SUM(LONGNUM) FROM BQT1.SMALLB AS B WHERE A.INTKEY = B.INTKEY), "
+                + "/*+ mj */ (SELECT MIN(LONGNUM) FROM BQT1.SMALLB AS B WHERE A.INTKEY = B.INTKEY) "
+                + " FROM BQT1.SMALLA AS A, BQT2.SMALLA AS C WHERE A.INTNUM = C.INTNUM ORDER BY INTKEY"; //$NON-NLS-1$
+        
+        TestQueryRewriter.helpTestRewriteCommand(sql, 
+                "SELECT A.INTKEY, C.LONGNUM, X__1.expr1 AS expr3, X__2.expr1 AS expr4 FROM ((BQT1.SMALLA AS A CROSS JOIN BQT2.SMALLA AS C) LEFT OUTER JOIN (SELECT SUM(LONGNUM) AS expr1, B.INTKEY FROM BQT1.SMALLB AS B GROUP BY B.INTKEY) AS X__1 ON A.INTKEY = X__1.IntKey) LEFT OUTER JOIN (SELECT MIN(LONGNUM) AS expr1, B.INTKEY FROM BQT1.SMALLB AS B GROUP BY B.INTKEY) AS X__2 ON A.INTKEY = X__2.IntKey WHERE A.INTNUM = C.INTNUM ORDER BY A.INTKEY", RealMetadataFactory.exampleBQTCached());
+    }
 }
