@@ -7,16 +7,13 @@
             <connection-definitions>
                 <connection-definition class-name="org.teiid.resource.adapter.google.SpreadsheetManagedConnectionFactory" jndi-name="java:/google" enabled="true" use-java-context="true" pool-name="google">
                     <config-property name="AuthMethod">
-                        ClientLogin
+                        OAuth2
                     </config-property>
                     <config-property name="SpreadsheetName">
                         spreadsheetName
                     </config-property>
-                    <config-property name="Username">
-                        GoogleUserName
-                    </config-property>
-                    <config-property name="Password">
-                        Password
+                    <config-property name="RefreshToken">
+                        ...
                     </config-property>
                     <config-property name="BatchSize">
                         100
