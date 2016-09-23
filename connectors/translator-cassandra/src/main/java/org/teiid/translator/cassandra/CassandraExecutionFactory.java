@@ -143,6 +143,26 @@ public class CassandraExecutionFactory extends ExecutionFactory<ConnectionFactor
 	public boolean supportsBatchedUpdates() {
 		return isV2;
 	}
+
+	@Override
+    public boolean supportsAggregatesSum() {
+    	return true;
+    }
+
+	@Override
+    public boolean supportsAggregatesAvg() {
+    	return true;
+    }
+    
+	@Override
+    public boolean supportsAggregatesMin() {
+    	return true;
+    }
+	
+	@Override
+    public boolean supportsAggregatesMax() {
+    	return true;
+    }
 	
 	@Override
 	public boolean returnsSingleUpdateCount() {
