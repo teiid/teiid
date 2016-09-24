@@ -504,7 +504,7 @@ public class TempTable implements Cloneable, SearchableTable {
 			final List<? extends Expression> projectedCols,
 			final Criteria condition, OrderBy orderBy, IndexInfo ii, boolean agg)
 			throws TeiidComponentException, TeiidProcessingException {
-		TupleBrowser browser = ii.createTupleBrowser(bm.getOptions().getDefaultNullOrder());
+		TupleBrowser browser = ii.createTupleBrowser(bm.getOptions().getDefaultNullOrder(), true);
 		TupleSource ts = new QueryTupleSource(browser, columnMap, agg?getColumns():projectedCols, condition);
 		
 		boolean usingQueryTupleSource = false;
@@ -589,7 +589,7 @@ public class TempTable implements Cloneable, SearchableTable {
 	private TupleBrowser createTupleBrower(Criteria condition, boolean direction) throws TeiidComponentException {
 		IndexInfo ii = new IndexInfo(this, null, condition, null, true);
 		ii.ordering = direction;
-		return ii.createTupleBrowser(bm.getOptions().getDefaultNullOrder());
+		return ii.createTupleBrowser(bm.getOptions().getDefaultNullOrder(), false);
 	}
 	
 	public long getRowCount() {
