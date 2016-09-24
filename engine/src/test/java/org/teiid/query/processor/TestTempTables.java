@@ -610,7 +610,27 @@ public class TestTempTables extends TempTableTestHarness {
 	}
 	
 	@Test public void testDeleteRemovingPage() throws Exception {
-		execute("insert into #tmp_params "
+	    helpTestDelete();
+	    
+	    //test under other buffer scenarios - with restricted memory / small batch
+	    
+        FakeDataManager fdm = new FakeDataManager();
+        TestProcessor.sampleData1(fdm);
+        BufferManager bm = BufferManagerFactory.getTestBufferManager(100000, 10);
+        setUp(RealMetadataFactory.example1Cached(), fdm, bm);
+		
+        helpTestDelete();
+        
+        //with restricted memory / normal batch
+        
+        bm = BufferManagerFactory.getTestBufferManager(100000, 250);
+        setUp(RealMetadataFactory.example1Cached(), fdm, bm);
+        
+        helpTestDelete();
+	}
+
+    private void helpTestDelete() throws Exception {
+        execute("insert into #tmp_params "
 				+ "select parsetimestamp('2016-04-01','yyyy-MM-dd') as starttime, parsetimestamp('2016-04-15','yyyy-MM-dd') as endtime", new List[] {Arrays.asList(1)});
 		execute("insert into #tmp_dates "
 				+ "select cast(parsetimestamp('2016-03-20','yyyy-MM-dd') as date) as datum, 'somevalue' as somevalue "
@@ -622,7 +642,7 @@ public class TestTempTables extends TempTableTestHarness {
 		execute("delete from #tmp_dates where datum > (select cast(endtime as date) from #tmp_params)", new List[] {Arrays.asList(1278)});
 		execute("delete from #tmp_dates where datum < (select cast(starttime as date) from #tmp_params)", new List[] {Arrays.asList(1)});
 		execute("select count(*) from #tmp_dates", new List[] {Arrays.asList(1)});
-	}
+    }
 	
 	@Test public void testImplicitResolvingWithoutColumns() throws Exception {
 		execute("insert into #tmp_dates "
