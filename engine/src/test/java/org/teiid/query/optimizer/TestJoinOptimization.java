@@ -23,6 +23,7 @@
 package org.teiid.query.optimizer;
 
 import static org.junit.Assert.*;
+import static org.teiid.query.processor.TestProcessor.*;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
