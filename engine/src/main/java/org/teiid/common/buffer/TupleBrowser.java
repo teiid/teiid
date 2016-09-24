@@ -57,17 +57,32 @@ public class TupleBrowser implements TupleSource {
 	
 	private ArrayList<SearchResult> places = new ArrayList<SearchResult>();
 
+    private boolean readOnly = true;
+
+    /**
+     * Construct a value based browser.  The {@link TupleSource} should already be in the
+     * proper direction.
+     * @param sTree
+     * @param valueSet
+     * @param direction
+     */
+    public TupleBrowser(STree sTree, TupleSource valueSet, boolean direction) {
+        this(sTree, valueSet, direction, true);
+    }
+    
 	/**
 	 * Construct a value based browser.  The {@link TupleSource} should already be in the
 	 * proper direction.
 	 * @param sTree
 	 * @param valueSet
 	 * @param direction
+	 * @param readOnly
 	 */
-	public TupleBrowser(STree sTree, TupleSource valueSet, boolean direction) {
+	public TupleBrowser(STree sTree, TupleSource valueSet, boolean direction, boolean readOnly) {
 		this.tree = sTree;
 		this.direction = direction;
 		this.valueSet = valueSet;
+		this.readOnly = readOnly;
 	}
 	
 	/**
@@ -78,10 +93,10 @@ public class TupleBrowser implements TupleSource {
 	 * @param direction
 	 * @throws TeiidComponentException
 	 */
-	public TupleBrowser(STree sTree, List<Object> lowerBound, List<Object> upperBound, boolean direction) throws TeiidComponentException {
+	public TupleBrowser(STree sTree, List<Object> lowerBound, List<Object> upperBound, boolean direction, boolean readOnly) throws TeiidComponentException {
 		this.tree = sTree;
 		this.direction = direction;
-		
+		this.readOnly = readOnly;
 		init(lowerBound, upperBound, false);
 	}
 
@@ -111,7 +126,7 @@ public class TupleBrowser implements TupleSource {
 				boundIndex = Math.min(upper.values.size(), -boundIndex -1) - 1;
 			}
 			if (!direction) {
-				values = upper.values;
+				setValues(upper.values);
 			}
 			if (lowerBound != null && page == bound) {
 				valid = index<=boundIndex;
@@ -122,7 +137,7 @@ public class TupleBrowser implements TupleSource {
 			}
 			if (!direction) {
 				if (page != bound || values == null) {
-					values = bound.getValues();
+					setValues(bound.getValues());
 				}
 				boundIndex = values.size() - 1;
 			}
@@ -153,7 +168,7 @@ public class TupleBrowser implements TupleSource {
 			result = false;
 			index = -index - 1;
 		}
-		values = sr.values;
+		setValues(sr.values);
 		return result;
 	}
 	
@@ -220,7 +235,7 @@ public class TupleBrowser implements TupleSource {
 				return null;
 			}
 			if (values == null) {
-				values = page.getValues();
+				setValues(page.getValues());
 				if (direction) {
 					index = 0;
 				} else {
@@ -256,7 +271,7 @@ public class TupleBrowser implements TupleSource {
 			page.setValues(values);
 		}
 		updated = false;
-		values = null;
+		setValues(null);
 	}
 	
 	private int getOffset() {
@@ -273,6 +288,9 @@ public class TupleBrowser implements TupleSource {
 	 * @throws TeiidComponentException
 	 */
 	public void update(List<?> tuple) throws TeiidComponentException {
+        if (readOnly) {
+            throw new AssertionError("read only"); //$NON-NLS-1$
+        }
 		values.set(index - getOffset(), tuple);
 		updated = true;
 	}
@@ -282,13 +300,26 @@ public class TupleBrowser implements TupleSource {
 	 * @throws TeiidComponentException 
 	 */
 	public void removed() throws TeiidComponentException {
+	    if (readOnly) {
+	        throw new AssertionError("read only"); //$NON-NLS-1$
+	    }
 		index-=getOffset();
+	    List<?> lowerBound = values.remove(index);
 		//check if the page has been removed
 		if (page != null && page.managedBatch == null && page.values == null) {
 		    //navigate to the current position
-		    List<?> lowerBound = values.get(index);
-		    values = null;
 		    setPage(lowerBound);
+		}
+		if (index == values.size() && page != null) {
+		    boolean search = false;
+		    if (direction) {
+	            search = page.next == null;
+	        } else {
+	            search = page.prev == null;
+	        }
+		    if (search) {
+		        setPage(lowerBound);
+		    }
 		}
 	}
 	
@@ -296,5 +327,21 @@ public class TupleBrowser implements TupleSource {
 	public void closeSource() {
 		
 	}
-	
+
+    private void setValues(List<List<?>> values) {
+        if (updated) {
+            throw new AssertionError("should have committed updates"); //$NON-NLS-1$
+        }
+        if (readOnly || values == null || values instanceof LightWeightCopyOnWriteList) {
+            this.values = values;
+        } else {
+            //use a lightweight copy if we're possibly mutative
+            //as we'll modify the values in line
+            //-for updates the browser will save back to the tree
+            //-for deletes we let the normal tree logic handle the actual delete
+            //so that the tree can rebalance
+            this.values = new LightWeightCopyOnWriteList<List<?>>(values);
+        }
+    }
+    
 }

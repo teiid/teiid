@@ -65,12 +65,15 @@ public class TempTableTestHarness {
 	public ProcessorPlan execute(String sql, List<?>[] expectedResults) throws Exception {
 		return execute(sql, expectedResults, DefaultCapabilitiesFinder.INSTANCE);
 	}
-	
-	public void setUp(QueryMetadataInterface qmi, ProcessorDataManager dm) {
+
+    public void setUp(QueryMetadataInterface qmi, ProcessorDataManager dm) {
+        setUp(qmi, dm, BufferManagerFactory.getStandaloneBufferManager());
+    }
+
+	public void setUp(QueryMetadataInterface qmi, ProcessorDataManager dm, BufferManager bm) {
 		tempStore = new TempTableStore("1", TransactionMode.ISOLATE_WRITES); //$NON-NLS-1$
 		metadata = new TempMetadataAdapter(qmi, tempStore.getMetadataStore());
 		metadata.setSession(true);
-	    BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
 	    
 	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>("resultset", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.RESULTSET, 0);
 	    cache.setTupleBufferCache(bm);
