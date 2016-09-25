@@ -26,11 +26,11 @@ import static org.teiid.language.SQLConstants.Reserved.*;
 
 import org.teiid.language.Function;
 import org.teiid.language.LanguageObject;
+import org.teiid.language.Like;
 import org.teiid.language.Literal;
 import org.teiid.language.NamedTable;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.Select;
-import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.google.SpreadsheetExecutionFactory;
@@ -43,15 +43,13 @@ import org.teiid.translator.goole.api.metadata.Worksheet;
  * @author felias
  *
  */
-public class SpreadsheetSQLVisitor extends SQLStringVisitor {
+public class SpreadsheetSQLVisitor extends SpreadsheetCriteriaVisitor {
 
-	private String worksheetTitle;
 	private Integer limitValue = null;
 	private Integer offsetValue = null;
-    private SpreadsheetInfo info;
 
 	public SpreadsheetSQLVisitor(SpreadsheetInfo spreadsheetInfo) {
-		this.info=spreadsheetInfo;
+		super(spreadsheetInfo);
 	}
 
 	public String getWorksheetTitle() {
@@ -155,4 +153,22 @@ public class SpreadsheetSQLVisitor extends SQLStringVisitor {
 			super.visit(obj);
 		}
 	}
+	
+	@Override
+	public void visit(Like obj) {
+	    if (obj.isNegated()) {
+	        buffer.append("("); //$NON-NLS-1$   
+	    }
+	    super.visit(obj);
+	    if (obj.isNegated()) {
+	        buffer.append(" AND "); //$NON-NLS-1$
+            visitNode(obj.getLeftExpression());
+            buffer.append(" IS NOT NULL)"); //$NON-NLS-1$
+	    }
+	}
+	
+	@Override
+    protected boolean isUpdate() {
+        return false;
+    }
 }

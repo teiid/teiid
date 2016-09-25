@@ -128,10 +128,10 @@ public class TestSQLtoSpreadsheetQuery {
 		testConversion("select A,B from PeopleList", "SELECT A, B");
 		testConversion("select C from PeopleList", "SELECT C");
 		testConversion("select * from PeopleList", "SELECT A, B, C");
-		testConversion("select A,B from PeopleList where A like '%car%'", "SELECT A, B WHERE A LIKE '%car%'");
+		testConversion("select A,B from PeopleList where A like '%car%' AND A NOT like '_car_'", "SELECT A, B WHERE A LIKE '%car%' AND (A NOT LIKE '_car_' AND A IS NOT NULL)");
 		testConversion("select A,B from PeopleList where A='car'", "SELECT A, B WHERE A = 'car'");
 		testConversion("select A,B from PeopleList where A >1  and B='bike'", "SELECT A, B WHERE A > '1' AND B = 'bike'");
-		testConversion("select A,B from PeopleList where A<1 or B <> 'bike'", "SELECT A, B WHERE A < '1' OR B <> 'bike'");
+		testConversion("select A,B from PeopleList where A<1 or B <> 'bike'", "SELECT A, B WHERE A < '1' OR (B <> 'bike' AND B IS NOT NULL)");
 		testConversion("select A,B from PeopleList limit 2", "SELECT A, B");
 		testConversion("select A,B from PeopleList offset 2 row", "SELECT A, B");
 		testConversion("select A,B from PeopleList limit 2,2", "SELECT A, B");
@@ -145,7 +145,7 @@ public class TestSQLtoSpreadsheetQuery {
 	public void testUpdateCriteria() throws Exception {
 		testUpdateConversion("update PeopleList set A=1 where C>1","c > 1.0");
 		testUpdateConversion("update PeopleList set A=1 where C=10.5","c = 10.5");
-		testUpdateConversion("update PeopleList set A=1 where C <= 1000 and C !=5","c <= 1000.0 AND c <> 5.0");
+		testUpdateConversion("update PeopleList set A=1 where C <= 1000 and C !=5","c <= 1000.0 AND (c <> 5.0 AND c IS NOT NULL)");
 		testUpdateConversion("update PeopleList set A=1 where C >= 50 or C <=60.1","c >= 50.0 OR c <= 60.1");
 		testUpdateConversion("update PeopleList set A=1 where A = 'car'","a = \"car\"");
 	}
@@ -154,7 +154,7 @@ public class TestSQLtoSpreadsheetQuery {
 	public void testDeleteCriteria() throws Exception {
 		testDeleteConversion("delete from PeopleList where C > 1","c > 1.0");
 		testDeleteConversion("delete from PeopleList where C=10.5","c = 10.5");
-		testDeleteConversion("delete from PeopleList where C <= 1000 and C !=5","c <= 1000.0 AND c <> 5.0");
+		testDeleteConversion("delete from PeopleList where C <= 1000 and C !=5","c <= 1000.0 AND (c <> 5.0 AND c IS NOT NULL)");
 		testDeleteConversion("delete from PeopleList where C >= 50 or C <=60.1","c >= 50.0 OR c <= 60.1");
 		testDeleteConversion("delete from PeopleList where A = 'car'","a = \"car\"");
 	}
