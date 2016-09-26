@@ -1012,6 +1012,9 @@ public class RelationalPlanner {
 	            attachLast(sourceNode, plan);
 	            mergeTempMetadata(insert.getQueryExpression(), insert);
 	            projectNode.setProperty(NodeConstants.Info.INTO_GROUP, insert.getGroup());
+	            if (this.sourceHint != null) {
+	                projectNode.setProperty(Info.SOURCE_HINT, this.sourceHint);
+	            }
 	            if (insert.getConstraint() != null) {
 	            	projectNode.setProperty(NodeConstants.Info.CONSTRAINT, insert.getConstraint());
 	            }
