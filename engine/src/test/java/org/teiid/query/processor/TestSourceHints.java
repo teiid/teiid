@@ -25,6 +25,7 @@ package org.teiid.query.processor;
 import static org.junit.Assert.*;
 import static org.teiid.query.processor.TestProcessor.*;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
@@ -141,6 +142,21 @@ public class TestSourceHints {
 		plan = helpGetPlan(sql, metadata);
         helpProcess(plan, manager, expected);
 	}
+	
+	@Test public void testInsertWithQueryExpression() throws TeiidException {
+        String sql = "INSERT /*+ sh:'append' */ into pm1.g1 (e1) select e1 from pm2.g1"; //$NON-NLS-1$
+        
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        CommandContext context = new CommandContext();
+        context.setDQPWorkContext(new DQPWorkContext());
+        context.getDQPWorkContext().getSession().setVdb(RealMetadataFactory.example1VDB());
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(caps), context);
+        
+        HardcodedDataManager manager = manager("append", null);
+        manager.addData("SELECT /*+sh:'append' */ g_0.e1 FROM pm2.g1 AS g_0", Arrays.asList("a"));
+        manager.addData("INSERT /*+sh:'append' */ INTO pm1.g1 (e1) VALUES ('a')", Arrays.asList(1));
+        helpProcess(plan, manager, new List[] {Arrays.asList(1)});
+    }
 
 	private HardcodedDataManager manager(final String ... hints) {
 		HardcodedDataManager manager = new HardcodedDataManager() {
@@ -157,6 +173,9 @@ public class TestSourceHints {
 					assertEquals(hints[i*2+1], command.getSourceHint().getSourceHint("bar")); //$NON-NLS-1$
 				}
 				i = ++i%(hints.length/2);
+				if (getData(command.toString()) != null) {
+				    return super.registerRequest(context, command, modelName, parameterObject);
+				}
 				return CollectionTupleSource.createNullTupleSource();
 			}
 		};

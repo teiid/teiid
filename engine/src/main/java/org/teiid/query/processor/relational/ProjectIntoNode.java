@@ -47,6 +47,7 @@ import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.Insert;
+import org.teiid.query.sql.lang.SourceHint;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -83,6 +84,8 @@ public class ProjectIntoNode extends RelationalNode {
     
     private Criteria constraint;
     private Evaluator eval;
+
+    private SourceHint sourceHint;
 
     protected ProjectIntoNode() {
         super();
@@ -207,6 +210,7 @@ public class ProjectIntoNode extends RelationalNode {
                     Insert insert = new Insert( intoGroup, 
                                                  intoElements, 
                                                  convertValuesToConstants(currentBatch.getTuple(rowNum), intoElements));
+                    insert.setSourceHint(sourceHint);
                     rows.add( insert );
                 }
                 registerRequest(new BatchedUpdateCommand( rows ));
@@ -215,7 +219,9 @@ public class ProjectIntoNode extends RelationalNode {
                 batchSize = 1;
                 // Register insert command against source 
                 // Defect 16036 - submit a new INSERT command to the DataManager.
-                registerRequest(new Insert(intoGroup, intoElements, convertValuesToConstants(currentBatch.getTuple(batchRow), intoElements)));
+                Insert insert = new Insert(intoGroup, intoElements, convertValuesToConstants(currentBatch.getTuple(batchRow), intoElements));
+                insert.setSourceHint(sourceHint);
+                registerRequest(insert);
             }
             
             this.batchRow += batchSize;
@@ -241,6 +247,7 @@ public class ProjectIntoNode extends RelationalNode {
 	private void registerIteratorRequest() throws TeiidComponentException,
 			TeiidProcessingException {
 		Insert insert = new Insert(intoGroup, intoElements, null);
+		insert.setSourceHint(sourceHint);
 		buffer.close();
 		insert.setTupleSource(buffer.createIndexedTupleSource(true));
 		// Register insert command against source 
@@ -276,6 +283,7 @@ public class ProjectIntoNode extends RelationalNode {
     }
 
     private void registerRequest(Command command) throws TeiidComponentException, TeiidProcessingException {
+    	command.setSourceHint(sourceHint);
     	tupleSource = getDataManager().registerRequest(getContext(), command, this.modelName, new RegisterRequestParameter(null, getID(), -1));        
     }
     
@@ -304,6 +312,7 @@ public class ProjectIntoNode extends RelationalNode {
         clonedNode.modelName = this.modelName;
         clonedNode.mode = this.mode;
         clonedNode.constraint = this.constraint;
+        clonedNode.sourceHint = this.sourceHint;
         return clonedNode;
     }
 
@@ -361,5 +370,8 @@ public class ProjectIntoNode extends RelationalNode {
     public void setConstraint(Criteria constraint) {
 		this.constraint = constraint;
 	}
-    
+
+    public void setSourceHint(SourceHint property) {
+        this.sourceHint = property;
+    }
 }
