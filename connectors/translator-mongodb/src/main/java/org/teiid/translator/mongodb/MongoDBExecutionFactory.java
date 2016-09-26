@@ -44,6 +44,7 @@ import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.GeometryType;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.Transform;
@@ -159,25 +160,73 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
         registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("$ifNull")); //$NON-NLS-1$		
 		
         FunctionMethod method = null;
-        method = addPushDownFunction(MONGO, FUNC_GEO_INTERSECTS, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE+"[][]"); //$NON-NLS-1$ 
+		method = addPushDownFunction(MONGO, FUNC_GEO_INTERSECTS, TypeFacility.RUNTIME_NAMES.BOOLEAN,
+				TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING,
+				TypeFacility.RUNTIME_NAMES.DOUBLE + "[][]"); //$NON-NLS-1$
         method.setProperty(AVOID_PROJECTION, "true");
-        method = addPushDownFunction(MONGO, FUNC_GEO_WITHIN, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE+"[][]"); //$NON-NLS-1$ 
+		
+        method = addPushDownFunction(MONGO, FUNC_GEO_INTERSECTS, TypeFacility.RUNTIME_NAMES.BOOLEAN,
+				TypeFacility.RUNTIME_NAMES.GEOMETRY); // $NON-NLS-1$ 
         method.setProperty(AVOID_PROJECTION, "true");
+
+		method = addPushDownFunction(MONGO, FUNC_GEO_WITHIN, TypeFacility.RUNTIME_NAMES.BOOLEAN,
+				TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING,
+				TypeFacility.RUNTIME_NAMES.DOUBLE + "[][]"); //$NON-NLS-1$
+        method.setProperty(AVOID_PROJECTION, "true");
+        
+		method = addPushDownFunction(MONGO, FUNC_GEO_WITHIN, TypeFacility.RUNTIME_NAMES.BOOLEAN,
+				TypeFacility.RUNTIME_NAMES.GEOMETRY); // $NON-NLS-1$ 
+        method.setProperty(AVOID_PROJECTION, "true");
+        
         if (getVersion().compareTo(MongoDBExecutionFactory.TWO_6) >= 0) {
-            method = addPushDownFunction(MONGO, FUNC_GEO_NEAR, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE+"[]", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ 
+			method = addPushDownFunction(MONGO, FUNC_GEO_NEAR, TypeFacility.RUNTIME_NAMES.BOOLEAN,
+					TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE + "[]", //$NON-NLS-1$
+					TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.INTEGER); 
             method.setProperty(AVOID_PROJECTION, "true");
-            method = addPushDownFunction(MONGO, FUNC_GEO_NEAR_SPHERE, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE+"[]", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ 
+            
+			method = addPushDownFunction(MONGO, FUNC_GEO_NEAR, TypeFacility.RUNTIME_NAMES.BOOLEAN,
+					TypeFacility.RUNTIME_NAMES.GEOMETRY,
+					TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.INTEGER); 
+            method.setProperty(AVOID_PROJECTION, "true");            
+            
+			method = addPushDownFunction(MONGO, FUNC_GEO_NEAR_SPHERE, TypeFacility.RUNTIME_NAMES.BOOLEAN,
+					TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE + "[]", //$NON-NLS-1$
+					TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.INTEGER); 
             method.setProperty(AVOID_PROJECTION, "true");
-        }
-        else {
-            method = addPushDownFunction(MONGO, FUNC_GEO_NEAR, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE+"[]", TypeFacility.RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ 
-            method.setProperty(AVOID_PROJECTION, "true");
-            method = addPushDownFunction(MONGO, FUNC_GEO_NEAR_SPHERE, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE+"[]", TypeFacility.RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ 
+            
+			method = addPushDownFunction(MONGO, FUNC_GEO_NEAR_SPHERE, TypeFacility.RUNTIME_NAMES.BOOLEAN,
+					TypeFacility.RUNTIME_NAMES.GEOMETRY,
+					TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.INTEGER); 
             method.setProperty(AVOID_PROJECTION, "true");            
         }
-        method = addPushDownFunction(MONGO, FUNC_GEO_POLYGON_INTERSECTS, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE,TypeFacility.RUNTIME_NAMES.DOUBLE,TypeFacility.RUNTIME_NAMES.DOUBLE,TypeFacility.RUNTIME_NAMES.DOUBLE); 
+        else {
+			method = addPushDownFunction(MONGO, FUNC_GEO_NEAR, TypeFacility.RUNTIME_NAMES.BOOLEAN,
+					TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE + "[]", //$NON-NLS-1$
+					TypeFacility.RUNTIME_NAMES.INTEGER); 
+            method.setProperty(AVOID_PROJECTION, "true");
+            
+			method = addPushDownFunction(MONGO, FUNC_GEO_NEAR_SPHERE, TypeFacility.RUNTIME_NAMES.BOOLEAN,
+					TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE + "[]", //$NON-NLS-1$
+					TypeFacility.RUNTIME_NAMES.INTEGER); 
+            method.setProperty(AVOID_PROJECTION, "true");            
+        }
+        
+		method = addPushDownFunction(MONGO, FUNC_GEO_POLYGON_INTERSECTS, TypeFacility.RUNTIME_NAMES.BOOLEAN,
+				TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE, TypeFacility.RUNTIME_NAMES.DOUBLE,
+				TypeFacility.RUNTIME_NAMES.DOUBLE, TypeFacility.RUNTIME_NAMES.DOUBLE);
         method.setProperty(AVOID_PROJECTION, "true");
-        method = addPushDownFunction(MONGO, FUNC_GEO_POLYGON_WITHIN, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE,TypeFacility.RUNTIME_NAMES.DOUBLE,TypeFacility.RUNTIME_NAMES.DOUBLE,TypeFacility.RUNTIME_NAMES.DOUBLE); 
+        
+		method = addPushDownFunction(MONGO, FUNC_GEO_POLYGON_INTERSECTS, TypeFacility.RUNTIME_NAMES.BOOLEAN,
+				TypeFacility.RUNTIME_NAMES.GEOMETRY);
+        method.setProperty(AVOID_PROJECTION, "true");        
+
+		method = addPushDownFunction(MONGO, FUNC_GEO_POLYGON_WITHIN, TypeFacility.RUNTIME_NAMES.BOOLEAN,
+				TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.DOUBLE, TypeFacility.RUNTIME_NAMES.DOUBLE,
+				TypeFacility.RUNTIME_NAMES.DOUBLE, TypeFacility.RUNTIME_NAMES.DOUBLE); 
+        method.setProperty(AVOID_PROJECTION, "true");
+
+		method = addPushDownFunction(MONGO, FUNC_GEO_POLYGON_WITHIN, TypeFacility.RUNTIME_NAMES.BOOLEAN,
+				TypeFacility.RUNTIME_NAMES.GEOMETRY); 
         method.setProperty(AVOID_PROJECTION, "true");
         
         registerFunctionModifier(FUNC_GEO_NEAR, new AliasModifier("$near"));//$NON-NLS-1$
@@ -591,7 +640,7 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 			else if (value instanceof byte[]) {
 				return new Binary((byte[])value);
 			}			
-			else if (value instanceof Blob) {
+			else if (!(value instanceof GeometryType) && value instanceof Blob) {
 				String uuid = UUID.randomUUID().toString();
 				GridFS gfs = new GridFS(mongoDB, fqn);
 				GridFSInputFile gfsFile = gfs.createFile(((Blob)value).getBinaryStream());
@@ -614,7 +663,7 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 				gfsFile.setFilename(uuid);
 				gfsFile.save();
 				return uuid;
-			}
+			} 
 			else if (value instanceof Object[]) {
 			    BasicDBList list = new BasicDBList();
 			    for (Object obj:(Object[])value) {
