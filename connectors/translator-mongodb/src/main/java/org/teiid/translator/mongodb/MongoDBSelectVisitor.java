@@ -28,11 +28,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
+import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.core.types.ClobType;
+import org.teiid.core.types.GeometryType;
+import org.teiid.core.types.TransformationException;
+import org.teiid.core.types.basic.ClobToStringTransform;
 import org.teiid.language.*;
 import org.teiid.language.Join.JoinType;
 import org.teiid.language.SortSpecification.Ordering;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.*;
+import org.teiid.query.function.GeometryUtils;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.mongodb.MergeDetails.Association;
 
@@ -354,7 +360,11 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
     	}
     	BasicDBObject expr = null;
     	if (isGeoSpatialFunction(functionName)) {
-			expr = (BasicDBObject)handleGeoSpatialFunction(functionName, obj);
+			try {
+				expr = (BasicDBObject)handleGeoSpatialFunction(functionName, obj);
+			} catch (TranslatorException e) {
+				this.exceptions.add(e);
+			}
     	} 
     	else if (isStringFunction(functionName)) {
     	    expr = (BasicDBObject)handleStringFunction(functionName, obj);
@@ -999,7 +1009,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 
 	static enum SpatialType {Point, LineString, Polygon, MultiPoint, MultiLineString};
 
-	private DBObject handleGeoSpatialFunction(String functionName, Function function) {
+	private DBObject handleGeoSpatialFunction(String functionName, Function function) throws TranslatorException{
 		if (functionName.equalsIgnoreCase(MongoDBExecutionFactory.FUNC_GEO_NEAR) ||
 				functionName.equalsIgnoreCase(MongoDBExecutionFactory.FUNC_GEO_NEAR_SPHERE)) {
 			return buildGeoNearFunction(function);
@@ -1007,7 +1017,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 		return buildGeoFunction(function);
 	}
 
-	private DBObject buildGeoNearFunction(Function function) {
+	private DBObject buildGeoNearFunction(Function function) throws TranslatorException {
 		List<Expression> args = function.getParameters();
 
 		// Column Name
@@ -1017,14 +1027,20 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 		BasicDBObjectBuilder builder = BasicDBObjectBuilder.start();
 		builder.push(column.documentFieldName);
 		builder.push(function.getName());
-		builder.push("$geometry");//$NON-NLS-1$
-		builder.add("type", SpatialType.Point.name());//$NON-NLS-1$
 
-		// walk the co-ordinates
 		append(args.get(paramIndex++));
-		BasicDBList coordinates = new BasicDBList();
-		coordinates.add(this.onGoingExpression.pop());
-		builder.add("coordinates", coordinates); //$NON-NLS-1$
+		Object object = this.onGoingExpression.pop();
+		if (object instanceof GeometryType) {
+			convertGeometryToJson(builder, (GeometryType)object);
+		} else {
+			builder.push("$geometry");//$NON-NLS-1$
+			builder.add("type", SpatialType.Point.name());//$NON-NLS-1$
+	
+			// walk the co-ordinates
+			BasicDBList coordinates = new BasicDBList();
+			coordinates.add(object);
+			builder.add("coordinates", coordinates); //$NON-NLS-1$
+		}
 
 		// maxdistance
 		append(args.get(paramIndex++));
@@ -1039,28 +1055,44 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 		return builder.get();
 	}
 
-	private DBObject buildGeoFunction(Function function) {
+	private DBObject buildGeoFunction(Function function) throws TranslatorException{
 		List<Expression> args = function.getParameters();
 
 		// Column Name
 		int paramIndex = 0;
 		ColumnDetail column = getExpressionAlias(args.get(paramIndex++));
 
-		// Type: Point, LineString, Polygon..
-		append(args.get(paramIndex++));
-		SpatialType type = SpatialType.valueOf((String)this.onGoingExpression.pop());
-
 		BasicDBObjectBuilder builder = BasicDBObjectBuilder.start();
 		builder.push(column.documentFieldName);
 		builder.push(function.getName());
-		builder.push("$geometry");//$NON-NLS-1$
-		builder.add("type", type.name());//$NON-NLS-1$
 
-		// walk the co-ordinates
 		append(args.get(paramIndex++));
-		BasicDBList coordinates = new BasicDBList();
-		coordinates.add(this.onGoingExpression.pop());
-		builder.add("coordinates", coordinates); //$NON-NLS-1$
+		Object object = this.onGoingExpression.pop();
+		if (object instanceof GeometryType) {
+			convertGeometryToJson(builder, (GeometryType)object);
+		} else {
+			// Type: Point, LineString, Polygon..
+			SpatialType type = SpatialType.valueOf((String)object);
+			
+			append(args.get(paramIndex++));
+			builder.push("$geometry");//$NON-NLS-1$
+			builder.add("type", type.name());//$NON-NLS-1$
+			// walk the co-ordinates
+			BasicDBList coordinates = new BasicDBList();
+			coordinates.add(this.onGoingExpression.pop());
+			builder.add("coordinates", coordinates); //$NON-NLS-1$
+		}
 		return builder.get();
+	}
+
+	private void convertGeometryToJson(BasicDBObjectBuilder builder, GeometryType object) throws TranslatorException {
+		try {
+			ClobType clob = GeometryUtils.geometryToGeoJson(object);
+			ClobToStringTransform clob2str = new ClobToStringTransform();
+			String geometry = (String)clob2str.transform(clob, String.class);
+			builder.add("$geometry", geometry);
+		} catch (FunctionExecutionException | TransformationException e) {
+			throw new TranslatorException(e);
+		}
 	}
 }

@@ -22,6 +22,7 @@
 package org.teiid.translator.mongodb;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Assert;
@@ -32,13 +33,29 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.teiid.cdk.api.TranslationUtility;
+import org.teiid.core.types.ClobImpl;
+import org.teiid.core.types.ClobType;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.GeometryType;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.language.ColumnReference;
 import org.teiid.language.Command;
+import org.teiid.language.Comparison;
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.Function;
+import org.teiid.language.Literal;
+import org.teiid.language.NamedTable;
 import org.teiid.language.QueryExpression;
+import org.teiid.language.Select;
+import org.teiid.language.TableReference;
+import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Table;
 import org.teiid.mongodb.MongoDBConnection;
 import org.teiid.query.function.FunctionTree;
+import org.teiid.query.function.GeometryUtils;
 import org.teiid.query.function.UDFSource;
 import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.TransformationMetadata;
@@ -49,7 +66,16 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 
-import com.mongodb.*;
+import com.mongodb.AggregationOptions;
+import com.mongodb.AggregationOutput;
+import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
+import com.mongodb.Cursor;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import com.mongodb.QueryBuilder;
 
 @SuppressWarnings("nls")
 public class TestMongoDBQueryExecution {
@@ -79,6 +105,9 @@ public class TestMongoDBQueryExecution {
 
 	private DBCollection helpExecute(String query, String[] expectedCollection, int expectedParameters) throws TranslatorException {
 		Command cmd = this.utility.parseCommand(query);
+		return helpExecute(cmd, expectedCollection, expectedParameters);
+	}    
+	private DBCollection helpExecute(Command cmd, String[] expectedCollection, int expectedParameters) throws TranslatorException {
 		ExecutionContext context = Mockito.mock(ExecutionContext.class);
 		Mockito.stub(context.getBatchSize()).toReturn(256);
 		MongoDBConnection connection = Mockito.mock(MongoDBConnection.class);
@@ -1263,6 +1292,54 @@ public class TestMongoDBQueryExecution {
                         new BasicDBObject("$project", result));
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }
+    
+    private FunctionMethod getFunctionMethod(String name) {
+    	for (FunctionMethod fm: this.translator.getPushDownFunctions()) {
+    		if (fm.getName().equalsIgnoreCase(name)) {
+    			for (FunctionParameter fp:fm.getInputParameters()) {
+    				if (fp.getType().equals(DataTypeManager.DefaultDataTypes.GEOMETRY)) {
+    					return fm;
+    				}
+    			}
+    		}
+    	}
+    	return null;
+    }
+    
+    @Test
+    public void testGeoFunctionInWhereWithGeometry() throws Exception {
+		Table table = this.utility.createRuntimeMetadata().getTable("northwind.Categories");
+		NamedTable namedTable = new NamedTable("Categories", "g0", table);
+		ColumnReference colRef = new ColumnReference(namedTable, "CategoryName", table.getColumnByName("CategoryName"), String.class);
+		DerivedColumn col = new DerivedColumn("CategoryName", colRef);
+		Select select = new Select();
+		select.setDerivedColumns(Arrays.asList(col));
+		List<TableReference> tables = new ArrayList<TableReference>();
+		tables.add(namedTable);
+		select.setFrom(tables);
+
+		final GeometryType geo = GeometryUtils.geometryFromClob(new ClobType(new ClobImpl("POLYGON ((1.0 2.0,3.0 4.0,5.0 6.0,1.0 2.0))")));		
+		Function function = new Function("mongo.geoWithin", Arrays.asList(colRef, new Literal(geo, GeometryType.class)), //$NON-NLS-1$
+				Boolean.class); //$NON-NLS-2$
+		function.setMetadataObject(getFunctionMethod("mongo.geoWithin"));
+		
+		Comparison c = new Comparison(function, new Literal(true, Boolean.class), Comparison.Operator.EQ);
+		select.setWhere(c);
+		
+        DBCollection dbCollection = helpExecute(select, new String[]{"Categories"}, 2);
+
+        BasicDBObjectBuilder builder = new BasicDBObjectBuilder();
+        builder.push("CategoryName");
+        builder.push("$geoWithin");//$NON-NLS-1$
+		builder.add("$geometry", "{\"type\":\"Polygon\",\"coordinates\":[[[1.0,2.0],[3.0,4.0],[5.0,6.0],[1.0,2.0]]]}");//$NON-NLS-1$
+		BasicDBObject result = new BasicDBObject();
+        result.append( "CategoryName", "$CategoryName");
+
+        List<DBObject> pipeline = buildArray(
+                        new BasicDBObject("$match", builder.get()),
+                        new BasicDBObject("$project", result));
+        Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
+    }    
 
     @Test(expected=TranslatorException.class)
     public void testGeoFunctionInWhereWithFalse() throws Exception {

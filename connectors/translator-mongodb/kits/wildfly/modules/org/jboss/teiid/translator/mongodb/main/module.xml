@@ -15,5 +15,6 @@
         <module name="org.jboss.teiid.api" />
         <module name="org.jboss.teiid.translator.mongodb.api" />    
         <module name="org.jboss.teiid.translator.jdbc" />
+        <module name="org.jboss.teiid" /> <!-- for geostuff -->
     </dependencies>
 </module>
