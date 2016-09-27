@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Properties;
 
-import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.Address;
 import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PersonCacheSource;
 import org.jboss.teiid.jdg_remote.pojo.AllTypesCacheSource;
 import org.junit.Before;
@@ -17,19 +16,19 @@ import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.infinispan.hotrod.InfinispanHotRodConnection;
-import org.teiid.translator.infinispan.hotrod.InfinispanExecutionFactory;
+import org.teiid.translator.infinispan.hotrod.InfinispanHotRodExecutionFactory;
 
 @SuppressWarnings("nls")
 public class TestProtobufMetadataProcessor {
-	protected static InfinispanExecutionFactory TRANSLATOR;
+	protected static InfinispanHotRodExecutionFactory TRANSLATOR;
 
 	@BeforeClass
-	public static void setUp() throws TranslatorException {
+	public static void setUp()  {
 	}
 	
 	@Before public void beforeEach() throws Exception{	
 		 
-		TRANSLATOR = new InfinispanExecutionFactory();
+		TRANSLATOR = new InfinispanHotRodExecutionFactory();
 		TRANSLATOR.setSupportsSearchabilityUsingAnnotations(false);
 		TRANSLATOR.start();
     }
@@ -41,7 +40,6 @@ public class TestProtobufMetadataProcessor {
 				SystemMetadata.getInstance().getRuntimeTypeMap(),
 				new Properties(), null);
 
-		PersonCacheSource.CLASS_REGISTRY.registerClass(Address.class);
 		InfinispanHotRodConnection conn = PersonCacheSource.createConnection(true);
 
 		TRANSLATOR.getMetadataProcessor().process(mf, conn);

@@ -117,11 +117,7 @@ public class ObjectUtil {
 			methodName = StringUtil.getLastToken(methodName, ".");
 		}
 
-		Method m = searchMethodMap(mapMethods, methodName);
-		if (m != null) return m;
-
-		return null;
-
+		return searchMethodMap(mapMethods, methodName);
 	}
 	
 	public static Method searchMethodMap(Map<String, Method> mapMethods, String methodName)  {
@@ -135,7 +131,13 @@ public class ObjectUtil {
 			return m;
 		}
 		
-		return findMethod(mapMethods, getNameFromMethodName(methodName));
+		String nm = getNameFromMethodName(methodName);
+		if (! methodName.equals(nm)) {
+			return findMethod(mapMethods, nm);
+		}
+		
+		return null;
+
 	}
 	
 	/*
@@ -150,7 +152,7 @@ public class ObjectUtil {
 			return name.substring(2);
 		}
 		// return null to indicate no name was found within the name
-		return "";
+		return tolower;
 	}
 
 }

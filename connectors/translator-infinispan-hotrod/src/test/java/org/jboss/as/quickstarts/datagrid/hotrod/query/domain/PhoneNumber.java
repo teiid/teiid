@@ -16,11 +16,15 @@
  */
 package org.jboss.as.quickstarts.datagrid.hotrod.query.domain;
 
+import org.infinispan.protostream.annotations.ProtoDoc;
+import org.infinispan.protostream.annotations.ProtoField;
+
 /**
  *  * Copied from JDG quickstart - remote-query
  *  
  * @author Adrian Nistor
  */
+@ProtoDoc("@Indexed")
 public class PhoneNumber {
 
    private String number;
@@ -35,6 +39,7 @@ public class PhoneNumber {
 	   this.type = type;
    }
 
+	@ProtoField(number = 1, required = true)
    public String getNumber() {
       return number;
    }

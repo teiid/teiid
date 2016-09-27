@@ -82,7 +82,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 
 	private Table rootTable = null;
 	private Method pkMethod = null;
-	private Map<String, String> repeatableMap = new HashMap<String, String>();
+	private Map<String, FieldDescriptor> descriptorMap = new HashMap<String, FieldDescriptor>();
 	protected boolean classObjectColumn = false;
 	
 	@TranslatorProperty(display = "Class Object As Column", category = PropertyType.IMPORT, description = "If true, and when the translator provides the metadata, a column of object data type will be created that represents the stored object in the cache", advanced = true)
@@ -95,38 +95,32 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 	}
 
 	@Override
-	public void process(MetadataFactory metadataFactory, ObjectConnection conn) throws TranslatorException {
+	public void process(MetadataFactory metadataFactory, ObjectConnection connection) throws TranslatorException {
+		InfinispanHotRodConnection conn = (InfinispanHotRodConnection) connection;		
+
+		createRootTable(metadataFactory, conn.getCacheClassType(), conn.getDescriptor(), conn.getCacheName() ,conn);
+
+		boolean materializied = conn.getDDLHandler().isStagingTarget();
+		if (materializied) {
+										
+			Table stageTable = addTable(metadataFactory, conn.getCacheClassType(), true, true);
+						
+			stageTable.setColumns(rootTable.getColumns());
+			stageTable.setForiegnKeys(rootTable.getForeignKeys());
+			stageTable.setFunctionBasedIndexes(rootTable.getFunctionBasedIndexes());
+			stageTable.setIndexes(rootTable.getIndexes());
+			stageTable.setParent(rootTable.getParent());
+			stageTable.setSupportsUpdate(true);
+			stageTable.setUniqueKeys(rootTable.getUniqueKeys());
+			stageTable.setPrimaryKey(rootTable.getPrimaryKey());
+			stageTable.setProperty(JavaBeanMetadataProcessor.PRIMARY_TABLE_PROPERTY, rootTable.getFullName());	
 			
-			String cacheName = conn.getCacheName();			
-
-			Class<?> type = conn.getCacheClassType();
-			createRootTable(metadataFactory, type, ((InfinispanHotRodConnection) conn).getDescriptor(), cacheName,conn);
-
-			boolean materializied = conn.getDDLHandler().getCacheNameProxy().getAliasCacheName() != null;
-			if (materializied) {
-											
-				Table stageTable = addTable(metadataFactory, type, true, true);
-							
-				stageTable.setColumns(rootTable.getColumns());
-				stageTable.setForiegnKeys(rootTable.getForeignKeys());
-				stageTable.setFunctionBasedIndexes(rootTable.getFunctionBasedIndexes());
-				stageTable.setIndexes(rootTable.getIndexes());
-				stageTable.setParent(rootTable.getParent());
-				stageTable.setSupportsUpdate(true);
-				stageTable.setUniqueKeys(rootTable.getUniqueKeys());
-				stageTable.setPrimaryKey(rootTable.getPrimaryKey());
-				stageTable.setProperty(JavaBeanMetadataProcessor.PRIMARY_TABLE_PROPERTY, rootTable.getFullName());	
-				
-			} else {
-				// only define inner classes when the data source is not using materialization.  
-				// do not support materializing to inner classes
-				addInnerClasses(metadataFactory, ((InfinispanHotRodConnection) conn).getDescriptor(), conn );
-			}
+		}
 
 	}
 
 
-	private void createRootTable(MetadataFactory mf, Class<?> entity, Descriptor descriptor, String cacheName, ObjectConnection conn) throws TranslatorException {
+	private void createRootTable(MetadataFactory mf, Class<?> entity, Descriptor descriptor, String cacheName, InfinispanHotRodConnection conn) throws TranslatorException {
 			
 		String pkField = conn.getPkField();
 		boolean updatable = (pkField != null ? true : false);
@@ -138,12 +132,24 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 			addRootColumn(mf, Object.class, entity, null, null, SearchType.Unsearchable, rootTable.getName(), rootTable, false, false, NullType.Nullable); //$NON-NLS-1$	
 		}
 		
+		pkMethod = null;
+		if (updatable) {
+		    pkMethod = conn.getClassRegistry().getReadClassMethods(entity.getName()).get(pkField);
+		    if (pkMethod == null) {
+				throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25008, new Object[] {pkField, cacheName, entity.getName()}));
+		    	
+		    }	
+		}
+		
 		boolean addKey = false;
+		boolean registeredClass = false;
 		// the descriptor is needed to determine which fields are defined as searchable.
 		for (FieldDescriptor fd:descriptor.getFields()) {	
 			if (fd.isRepeated() ) {
-				repeatableMap.put(fd.getMessageType().getName(), fd.getName());
-			} else {
+				descriptorMap.put(fd.getName(), fd);				
+				continue;
+
+			} 
 				NullType nt = NullType.Nullable;
 				SearchType st = isSearchable(fd);
 				Class<?> returnType = getJavaType( fd,entity, conn);
@@ -152,21 +158,22 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 					addKey = true;
 					st = SearchType.Searchable;
 					nt = NullType.No_Nulls;
-				} else if (fd.isRequired()) {
-					nt = NullType.No_Nulls;
+				} else {
+					registeredClass = (conn.getClassRegistry().getRegisteredClass(returnType.getName()) != null ? true : false);
+					if (registeredClass) {		
+						descriptorMap.put(fd.getName(), fd);						
+						continue;
+					}
+
+					if (fd.isRequired()) {
+						nt = NullType.No_Nulls;
+					}
 				}
 				// dont make primary key updatable, the object must be deleted and readded in order to change the key
 				addRootColumn(mf, returnType, getProtobufNativeType(fd), fd.getFullName(), fd.getName(), st, rootTable.getName(), rootTable, true, true, nt);	
-			}
-		}	
-		
-		pkMethod = null;
-		if (updatable) {
-		    pkMethod = conn.getClassRegistry().getReadClassMethods(entity.getName()).get(pkField);
-		    if (pkMethod == null) {
-				throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25008, new Object[] {pkField, cacheName, entity.getName()}));
-		    	
-		    }	
+		}
+			
+		if (pkMethod != null) {
 			@SuppressWarnings("null")
 			String pkName = "PK_" + pkField.toUpperCase(); //$NON-NLS-1$
 	        ArrayList<String> x = new ArrayList<String>(1) ;
@@ -174,21 +181,19 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 	        mf.addPrimaryKey(pkName, x , rootTable);		    
 
 		}
-
-		
+	
 		if (!addKey) {
 				addRootColumn(mf, pkMethod.getReturnType(), pkMethod.getReturnType(), pkField, pkField, SearchType.Searchable, rootTable.getName(), rootTable, true, true, NullType.No_Nulls);
 		}
-			
-	}
-			
-	private void addInnerClasses(MetadataFactory mf, Descriptor descriptor, ObjectConnection conn) throws TranslatorException {
-		for (Descriptor des: descriptor.getNestedTypes()) {
-			createInnerTable(mf, des, rootTable, pkMethod, conn);		
-		}	
+		
+		for (String key : descriptorMap.keySet()) {
+			FieldDescriptor fd = descriptorMap.get(key);
+			Descriptor d = fd.getMessageType();
+			createInnerTable(mf, d, key, rootTable, pkMethod, conn);
 
+		}
+			
 	}
-	
 	
 	private Table addTable(MetadataFactory mf, Class<?> entity, boolean updatable, boolean staging) {
 		String tName = entity.getSimpleName();
@@ -207,15 +212,14 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 		
 	}
 	
-    private static Method findMethod(String className, String methodName, ObjectConnection conn) throws TranslatorException {
+    private static Method findMethod(String className, String methodName, InfinispanHotRodConnection conn) throws TranslatorException {
         Map<String, Method> mapMethods = conn.getClassRegistry().getReadClassMethods(className);
 
-        Method m = mapMethods.get(methodName);
-        if (m!= null) return m;
         
-        m = mapMethods.get(methodName.toLowerCase());
-        if (m!= null) return m;
-        
+        Method m = ClassRegistry.findMethod(mapMethods, methodName, className);
+        		//mapMethods.get(methodName);
+        if (m != null) return m;
+         
         // because the class 'methods' contains 2 different references
         //  get'Name'  and 'Name', this will look for the 'Name' version
         for (Iterator<String> it=mapMethods.keySet().iterator(); it.hasNext();) {
@@ -228,22 +232,15 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 		throw new TranslatorException("Program Error: unable to find method " + methodName + " on class " + className);
 
     }
-    private void createInnerTable(MetadataFactory mf, Descriptor desc, Table rootTable, Method pkMethod, ObjectConnection conn) throws TranslatorException  {
-
-    	//	Descriptor d = desc.getContainingType();
-		Descriptor parent = desc.getContainingType();
-		// Need to find the method name that corresponds to the repeating attribute
-		// so that the actual method name can be used in defining the NIS
-		// which will provide the correct method to use when retrieving the data at execution time
-
-		Class<?> pc = getRegisteredClass(parent.getName(), conn);
-		Class<?> c = getRegisteredClass(desc.getName(), conn);
+    private void createInnerTable(MetadataFactory mf, Descriptor desc, String parentColumnRef, Table rootTable, Method pkMethod, InfinispanHotRodConnection conn) throws TranslatorException  {
+    	Class<?> c = getRegisteredClass(desc.getName(), conn);
+ 
+    	// get the root class
+		Class<?> pc = conn.getCacheClassType();
 		
-		String fd_Name = repeatableMap.get(desc.getName());
+		String fd_Name = parentColumnRef;
 
-		Table t = addTable(mf, c, true, false);
-
-		t.setSupportsUpdate(rootTable.supportsUpdate());
+		Table t = addTable(mf, c, rootTable.supportsUpdate(), false);
 
 		List<FieldDescriptor> fields = desc.getFields();
 		for (FieldDescriptor f:fields) {
@@ -255,15 +252,13 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 		}
 		
 		if (pkMethod != null) {
-			
-			
+					
 			// if not repeatable, then use the attribute name
 			String mName =  findMethodNameForReturnType(pc.getName(), c, fd_Name, conn);
 			
 			if (mName == null) {		
 				mName = desc.getName();
 			}
-
 			
 			// use the same parent table primary ke column name in the foreign key tables
 			String methodName = rootTable.getPrimaryKey().getColumns().get(0).getName();
@@ -273,12 +268,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 			referencedKeyColumns.add(methodName);
 			String fkName = "FK_" + rootTable.getName().toUpperCase();
 			
- //   		addColumn(mf, pkMethod.getReturnType(), methodName, methodName, SearchType.Searchable, childTable,  false, NullType.No_Nulls, false);
- //   		addColumn(MetadataFactory mf,  Class<?> type, String attributeName, String nis, SearchType searchType, Table entityTable, boolean selectable, NullType nt, boolean updatable) {
-
-
-			
-    		addRootColumn(mf, pkMethod.getReturnType(), pkMethod.getReturnType(), methodName, methodName, SearchType.Searchable, t.getName(), t, false, false, NullType.No_Nulls);
+    		addRootColumn(mf, pkMethod.getReturnType(), pkMethod.getReturnType(), methodName, methodName, SearchType.Searchable, t.getName(), t, false, true, NullType.No_Nulls);
 			ForeignKey fk = mf.addForiegnKey(fkName, keyColumns, referencedKeyColumns, rootTable.getName(), t);
 			
 			fk.setNameInSource(mName);
@@ -290,17 +280,28 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
     /*
      * This is used to find the method name to call on the parent object to obtain the child reference object(s)
      */
-    private  String findMethodNameForReturnType(String parentClassName, Class<?> childClzz, String methodName, ObjectConnection conn) throws TranslatorException {
+    private  String findMethodNameForReturnType(String parentClassName, Class<?> childClzz, String methodName, InfinispanHotRodConnection conn) throws TranslatorException {
         if (methodName == null || methodName.length() == 0) {
             return null;
         }
-               
+        
         Map<String, Method> mapMethods = conn.getClassRegistry().
         		getReadClassMethods(parentClassName);
         
         Method m = ClassRegistry.findMethod(mapMethods, methodName, parentClassName);
         
-        if (m != null) return m.getName(); 
+        if (m != null) return ObjectUtil.getNameFromMethodName(m.getName().toLowerCase()); 
+
+        String methodKey = ObjectUtil.getNameFromMethodName(methodName.toLowerCase());        
+
+        for (String k:mapMethods.keySet()) {
+			// because parent methods can have plural names (i.e., add 's')
+				
+			String nk = ObjectUtil.getNameFromMethodName(k.toLowerCase());
+			if (nk.startsWith(methodKey)) {
+				return nk;
+			}
+        }
         
         // try to match the return generic type (if defined) to the child class
 		for (Iterator it = mapMethods.keySet().iterator(); it.hasNext();) {
@@ -453,7 +454,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 
 	}
 	
-	private static Class<?> getJavaType(FieldDescriptor fd, Class<?> c, ObjectConnection conn) throws TranslatorException {
+	private static Class<?> getJavaType(FieldDescriptor fd, Class<?> c, InfinispanHotRodConnection conn) throws TranslatorException {
 
 			Method m = findMethod(c.getName(), fd.getName(), conn);
 			return m.getReturnType();

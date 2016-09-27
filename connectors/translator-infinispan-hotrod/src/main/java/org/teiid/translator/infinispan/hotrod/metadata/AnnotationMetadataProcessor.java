@@ -33,6 +33,9 @@ import org.teiid.translator.object.metadata.JavaBeanMetadataProcessor;
  * The AnnotationMetadataProcessor is used when the metadata is derived from annotations in the pojo.
  * 
  * @author vanhalbert
+ * 
+ * ** NOTE:  This is currently not needed, as all the metadata, regardless of how the JDG schema is configured,
+ *   		can be derived using the ProtobufMetadataProcessor.
  *
  */
 public class AnnotationMetadataProcessor extends JavaBeanMetadataProcessor {

@@ -43,11 +43,19 @@ public interface InfinispanHotRodConnection extends ObjectConnection {
 	public QueryFactory getQueryFactory() throws TranslatorException;
 	
 	/**
-	 * Call to return the Descriptor from JDG cache.
+	 * Call to return the Descriptor from JDG cache based on the root class.
 	 * @return Descriptor
 	 * @throws TranslatorException
 	 */
 	public Descriptor getDescriptor()  throws TranslatorException;
-		
+	
+	/**
+	 * Call to return the Descriptor from JDG cache based on the specified class
+	 * @param clz 
+	 * @return Descriptor
+	 * @throws TranslatorException
+	 */
+	public Descriptor getDescriptor(Class<?> clz) throws TranslatorException;
+			
 }
 

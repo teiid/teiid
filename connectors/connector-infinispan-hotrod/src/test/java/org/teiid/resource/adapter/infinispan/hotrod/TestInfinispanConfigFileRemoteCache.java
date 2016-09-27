@@ -21,7 +21,9 @@
  */
 package org.teiid.resource.adapter.infinispan.hotrod;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.io.File;
 import java.util.Properties;

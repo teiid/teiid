@@ -44,7 +44,6 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.ForeignKey;
-import org.teiid.query.eval.TeiidScriptEngine;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;

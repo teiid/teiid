@@ -69,7 +69,7 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 	public static final String PHONETYPE_CLASS_NAME = PhoneType.class.getName();
 	public static final String ADDRESSTYPE_CLASS_NAME = Address.class.getName();
 	
-	public static Descriptor DESCRIPTOR;
+	public static Map<String, Descriptor> DESCRIPTORS = new HashMap<String, Descriptor>();
 	
 	public static final int NUMPERSONS = 10;
 	public static final int NUMPHONES = 2;
@@ -80,7 +80,7 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 	
 	static {
 		try {
-			DESCRIPTOR = createDescriptor();
+			createDescriptors();
 
 			CLASS_REGISTRY.registerClass(Person.class);
 			CLASS_REGISTRY.registerClass(PhoneNumber.class);
@@ -96,14 +96,14 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 	public static InfinispanHotRodConnection createConnection(final boolean useKeyClass) {
 		final RemoteCache objects = PersonCacheSource.loadCache();
 
-		return PersonCacheConnection.createConnection(objects, useKeyClass, DESCRIPTOR, null);
+		return PersonCacheConnection.createConnection(objects, useKeyClass, null);
 
 	}
 	
 	public static InfinispanHotRodConnection createConnection(final boolean useKeyClass, Version version) {
 		final RemoteCache objects = PersonCacheSource.loadCache();
 
-		return PersonCacheConnection.createConnection(objects, useKeyClass, DESCRIPTOR, version);
+		return PersonCacheConnection.createConnection(objects, useKeyClass, version);
 
 	}
 	
@@ -113,7 +113,7 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 		
 		for (int i = 1; i <= NUMPERSONS; i++) {
 			
-			List<PhoneNumber> pns = new ArrayList<PhoneNumber>();
+			ArrayList<PhoneNumber> pns = new ArrayList<PhoneNumber>();
 			double d = 0;
 			for (int j = 1; j <= NUMPHONES; j++) {
 				PhoneNumber pn = new PhoneNumber("(111)222-345" + j, types[t++]);
@@ -149,7 +149,7 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 		return objs;
 	}	
 	
-	private static Descriptor createDescriptor() throws Exception {
+	private static void createDescriptors() throws Exception {
 		Configuration config = new Configuration.Builder().build();
 		
 		try {
@@ -160,19 +160,32 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 
 	      FileDescriptor descriptor = files.get("addressbook.proto");
 	      
-	      String descriptorName = "quickstart.Person";
 	      Map<String, Descriptor> messages = new HashMap<String, Descriptor>();
 	      for (Descriptor m : descriptor.getMessageTypes()) {
 	         messages.put(m.getFullName(), m);
 	      }
 
-	      Descriptor testClass = messages.get(descriptorName);
+	      String descriptorName = "quickstart.Person";
+	      Descriptor personDesc = messages.get(descriptorName);
 	      
-	      if (testClass == null) {
+	      if (personDesc == null) {
 	    	  throw new Exception("Did not get descriptor: " + descriptorName );
 	      }
 	      
-	      return testClass;
+	      DESCRIPTORS.put(Person.class.getName(), personDesc);
+	      
+	      Descriptor addressDesc = messages.get("quickstart.Address");
+	      
+	      if (addressDesc == null) {
+	    	  throw new Exception("Did not get descriptor: " + "quickstart.Address" );
+	      }
+	      
+	      Descriptor phoneDesc = messages.get("quickstart.PhoneNumber");
+	      
+	      if (phoneDesc == null) {
+	    	  throw new Exception("Did not get descriptor: " + "quickstart.PhoneNumber" );
+	      }
+
 	      
 	  } catch (Exception e) {
     	throw e;

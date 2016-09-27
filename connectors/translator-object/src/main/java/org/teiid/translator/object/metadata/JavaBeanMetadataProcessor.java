@@ -417,7 +417,7 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 			List<String> referencedKeyColumns = new ArrayList<String>();
 			referencedKeyColumns.add(methodName);			
 			
-    		addColumn(mf, pkMethod.getReturnType(), methodName, methodName, SearchType.Searchable, childTable,  false, NullType.No_Nulls, false);
+    		addColumn(mf, pkMethod.getReturnType(), methodName, methodName, SearchType.Searchable, childTable,  false, NullType.No_Nulls, true);
     		addPrimaryKey(mf, pkMethod.getName(), childTable);
     		
     		ForeignKey fk = mf.addForiegnKey(fkName, keyColumns, referencedKeyColumns, rootTable.getName(), childTable);
