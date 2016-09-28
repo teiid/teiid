@@ -79,8 +79,6 @@ import javax.naming.directory.SearchControls;
 import javax.naming.ldap.LdapContext;
 
 import org.teiid.language.Select;
-import org.teiid.logging.LogConstants;
-import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
@@ -178,12 +176,16 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 	
 	@Override
 	public void cancel() throws TranslatorException {
-		this.delegate.cancel();
+	    if (this.delegate != null) {
+            this.delegate.cancel();
+        }
 	}
 
 	@Override
 	public void close() {
-		this.delegate.close();
+	    if (this.delegate != null) {
+	        this.delegate.close();
+	    }
 	}
 	
 	// testing

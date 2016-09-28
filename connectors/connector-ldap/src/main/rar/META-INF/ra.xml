@@ -68,7 +68,7 @@
             </config-property>    
             
             <config-property>
-               <description>{$display:"Ldap Context Factory",$description:"LDAP Context factory Class",$required:"true", $readOnly:"true"}</description>
+               <description>{$display:"Ldap Context Factory",$description:"LDAP Context factory Class"}</description>
                <config-property-name>LdapContextFactory</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
                <config-property-value>com.sun.jndi.ldap.LdapCtxFactory</config-property-value>
