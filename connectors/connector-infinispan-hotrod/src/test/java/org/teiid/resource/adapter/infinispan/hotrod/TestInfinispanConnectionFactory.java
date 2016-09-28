@@ -52,27 +52,27 @@ public class TestInfinispanConnectionFactory  {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			protected SerializationContext getContext() {
+			public SerializationContext getContext() {
 				// TODO Auto-generated method stub
 				return null;
 			}
 
 			@Override
-			protected RemoteCacheManager createRemoteCacheFromProperties(
+			public RemoteCacheManager createRemoteCacheFromProperties(
 					ClassLoader classLoader) throws ResourceException {
 				// TODO Auto-generated method stub
 				return null;
 			}
 
 			@Override
-			protected RemoteCacheManager createRemoteCacheFromServerList(
+			public RemoteCacheManager createRemoteCacheFromServerList(
 					ClassLoader classLoader) throws ResourceException {
 				// TODO Auto-generated method stub
 				return null;
 			}
 			
 			@Override
-			protected void registerWithCacheManager(SerializationContext ctx, RemoteCacheManager cc, ClassLoader cl, boolean useAnnotations) throws ResourceException {
+			protected void registerWithCacheManager() throws ResourceException {
 				// don't call JDG
 			}			
 

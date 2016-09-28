@@ -6,6 +6,7 @@ import java.util.Properties;
 
 import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PersonCacheSource;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
@@ -18,7 +19,9 @@ import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectExecutionFactory;
 import org.teiid.util.Version;
 
+// Turned off the annotation test as the AnnotationMetadataProces is no longer being used
 @SuppressWarnings("nls")
+@Ignore
 public class TestAnnotationMetadataProcessor {
 
 	protected static ObjectExecutionFactory TRANSLATOR;

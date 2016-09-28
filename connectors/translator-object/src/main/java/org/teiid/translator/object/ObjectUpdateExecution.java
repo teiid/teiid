@@ -52,7 +52,6 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ForeignKey;
-import org.teiid.query.eval.TeiidScriptEngine;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
@@ -69,7 +68,7 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 	private Command command;
 	private Class<?> clz =  null;
 	
-	private String tablename = null;
+//	private String tablename = null;
 
 	private int[] result;
 
@@ -474,11 +473,8 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 		// if fk exist, its assumed its a container class
 		// don't want to use PK, cause it can exist on any table
 		ForeignKey fk = visitor.getForeignKey();
-				//getForeignKeyColumn(update.getTable());
 		if (fk == null) {
 			keyCol = visitor.getPrimaryKeyCol();
-					//getPrimaryKeyColumn(rootTable);
-
 		} 		
 
 		List<SetClause> updateList = update.getChanges();

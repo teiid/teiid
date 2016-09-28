@@ -38,13 +38,10 @@ import org.teiid.util.Version;
  */
 public class PersonCacheConnection extends TestInfinispanHotRodConnection {
 	
-	protected Descriptor descriptor;
-	
-
-	public static InfinispanHotRodConnection createConnection(RemoteCache map, boolean useKeyClassType, Descriptor descriptor, Version version) {
+	public static InfinispanHotRodConnection createConnection(RemoteCache map, boolean useKeyClassType, Version version) {
 		CacheNameProxy proxy = new CacheNameProxy(PersonCacheSource.PERSON_CACHE_NAME);
 
-		PersonCacheConnection conn = new PersonCacheConnection(map, PersonCacheSource.CLASS_REGISTRY, proxy, useKeyClassType, descriptor);
+		PersonCacheConnection conn = new PersonCacheConnection(map, PersonCacheSource.CLASS_REGISTRY, proxy, useKeyClassType);
 		conn.setVersion(version);
 		conn.setConfiguredUsingAnnotations(true);
 		return conn;
@@ -55,12 +52,10 @@ public class PersonCacheConnection extends TestInfinispanHotRodConnection {
 	 * @param registry
 	 * @param proxy
 	 * @param useKeyClassType 
-	 * @param desc 
 	 */
 	public PersonCacheConnection(RemoteCache map,
-			ClassRegistry registry, CacheNameProxy proxy, boolean useKeyClassType, Descriptor desc) {
+			ClassRegistry registry, CacheNameProxy proxy, boolean useKeyClassType) {
 		super(map, registry, proxy);
-		this.descriptor = desc;
 		
 		setPkField("id");
 		if (useKeyClassType) {
@@ -80,16 +75,27 @@ public class PersonCacheConnection extends TestInfinispanHotRodConnection {
 			return null;
 		}
 	}
+	
 
-		@Override
-		public Descriptor getDescriptor() throws TranslatorException {
-			return descriptor;
-		}
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.infinispan.hotrod.InfinispanHotRodConnection#getDescriptor(java.lang.Class)
+	 */
+	@Override
+	public Descriptor getDescriptor(Class<?> clz) throws TranslatorException {
+		return PersonCacheSource.DESCRIPTORS.get(clz.getName());
+	}
 
-		
-		@Override
-		public QueryFactory getQueryFactory() throws TranslatorException {
-			return null;
-		}
+	@Override
+	public Descriptor getDescriptor() throws TranslatorException {
+		return PersonCacheSource.DESCRIPTORS.get(PersonCacheSource.PERSON_CLASS_NAME);
+	}
+
+	
+	@Override
+	public QueryFactory getQueryFactory() throws TranslatorException {
+		return null;
+	}
 
 }

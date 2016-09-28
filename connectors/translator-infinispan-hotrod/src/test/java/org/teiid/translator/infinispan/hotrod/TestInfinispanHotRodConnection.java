@@ -91,4 +91,16 @@ public class TestInfinispanHotRodConnection extends SimpleMapCacheConnection imp
 		return null;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.infinispan.hotrod.InfinispanHotRodConnection#getDescriptor(java.lang.Class)
+	 */
+	@Override
+	public Descriptor getDescriptor(Class<?> clz) throws TranslatorException {
+		return null;
+	}
+	
+	
+
 }

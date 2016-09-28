@@ -52,9 +52,9 @@ import org.teiid.util.Version;
  */
 public class InfinispanConnectionImpl extends BasicConnection implements InfinispanHotRodConnection { 
 	
-	AbstractInfinispanManagedConnectionFactory config = null;
+	InfinispanManagedConnectionFactory config = null;
 
-	public InfinispanConnectionImpl(AbstractInfinispanManagedConnectionFactory config)  throws ResourceException {
+	public InfinispanConnectionImpl(InfinispanManagedConnectionFactory config)  throws ResourceException {
 		this.config = config;
 
 		this.config.createCacheContainer();
@@ -115,17 +115,22 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 
 	/**
 	 * {@inheritDoc}
-	 *
+	 * Called to return the descriptor based on the root class
 	 */
 	@Override
 	public Descriptor getDescriptor()
 			throws TranslatorException {
-		Descriptor d = config.getContext().getMessageDescriptor(config.getMessageDescriptor());
-		if (d == null) {
-			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25028,  config.getMessageDescriptor(), getCacheName()));			
-		}
 		
-		return d;
+		return getDescriptor(config.getCacheClassType());
+
+	}
+	
+	@Override
+	public Descriptor getDescriptor(Class<?> clz)
+			throws TranslatorException {
+		
+		return config.getCacheSchemaConfigurator().getDecriptor(config, clz);
+
 	}
 	
 	@SuppressWarnings({ "rawtypes" })
