@@ -56,6 +56,14 @@ import org.teiid.resource.spi.ConnectionContext;
  */
 public class LDAPConnectionImpl extends BasicConnection implements LdapContext  {  
 
+    static SearchControls VALIDATION_SEARCH_CONTROLS = new SearchControls();
+    static {
+        VALIDATION_SEARCH_CONTROLS.setSearchScope(SearchControls.OBJECT_SCOPE);
+        VALIDATION_SEARCH_CONTROLS.setCountLimit(1);
+        VALIDATION_SEARCH_CONTROLS.setReturningAttributes(new String[] { "objectclass" }); //$NON-NLS-1$
+        VALIDATION_SEARCH_CONTROLS.setTimeLimit(500);
+    }
+    
 	private LDAPManagedConnectionFactory config;
 	
 	// Standard Connection data members
@@ -172,19 +180,15 @@ public class LDAPConnectionImpl extends BasicConnection implements LdapContext  
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR,"LDAP context has been closed."); //$NON-NLS-1$
 	}
 
-	/** 
-	 * Currently, this method always returns alive. We assume the connection is alive,
-	 * and rely on proper timeout values to automatically clean up connections before
-	 * any server-side timeout occurs. Rather than incur overhead by rebinding,
-	 * we'll assume the connection is always alive, and throw an error when it is actually used,
-	 * if the connection fails. This may be a more efficient way of handling failed connections,
-	 * with the one tradeoff that stale connections will not be detected until execution time. In
-	 * practice, there is no benefit to detecting stale connections before execution time.
-	 * 
-	 * One possible extension is to implement a UnsolicitedNotificationListener.
-	 * (non-Javadoc)
-	 */
 	public boolean isAlive() {
+	    try {
+            NamingEnumeration<SearchResult> result = this.initCtx.search("", "objectclass=*", VALIDATION_SEARCH_CONTROLS); //$NON-NLS-1$ //$NON-NLS-2$
+            if (result.hasMore()) {
+                result.next();
+            }
+        } catch (NamingException e) {
+            return false;
+        } 
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "LDAP Connection is alive."); //$NON-NLS-1$
 		return true;
 	}
