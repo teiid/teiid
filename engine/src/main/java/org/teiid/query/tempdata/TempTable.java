@@ -359,7 +359,10 @@ public class TempTable implements Cloneable, SearchableTable {
 		if (!tid.getElements().isEmpty()) {
 			//not relevant for indexes
 			for (int i = startIndex; i < columns.size(); i++) {
-				TempMetadataID col = tid.getElements().get(i - startIndex);
+				TempMetadataID col = (TempMetadataID) columns.get(i).getMetadataID();
+				if (col == null) {
+				    continue;
+				}
 				if (col.isAutoIncrement()) {
 					if (this.sequences == null) {
 						this.sequences = new HashMap<Integer, AtomicInteger>();
