@@ -417,12 +417,20 @@ public class TempTableStore {
 	    	id = tempMetadataStore.addTempGroup(tempTableName, columns, false, true);
 	        TempTableResolver.addAdditionalMetadata(create, id);
     	}
-    	columns = new ArrayList<ElementSymbol>(create.getColumnSymbols());
+    	for (int i = 0; i < id.getElements().size(); i++) {
+    	    columns.get(i).setMetadataID(id.getElements().get(i));
+    	}
+    	columns = new ArrayList<ElementSymbol>(columns);
         if (!create.getPrimaryKey().isEmpty()) {
     		//reorder the columns to put the key in front
+            //retain the metadata as well by using the original column
     		List<ElementSymbol> primaryKey = create.getPrimaryKey();
-    		columns.removeAll(primaryKey);
-    		columns.addAll(0, primaryKey);
+    		for (int i = 0; i < primaryKey.size(); i++) {
+    		    ElementSymbol es = primaryKey.get(i);
+    		    int index = columns.indexOf(es);
+    		    es = columns.remove(index);
+    		    columns.add(i, es);
+    		}
     	}
         final TempTable tempTable = new TempTable(id, buffer, columns, create.getPrimaryKey().size(), sessionID);
         if (add) {

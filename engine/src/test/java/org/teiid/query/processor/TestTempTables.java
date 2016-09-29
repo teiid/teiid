@@ -435,6 +435,11 @@ public class TestTempTables extends TempTableTestHarness {
 		execute("insert into x (e2) values ((select null))", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
 	}
 	
+	@Test(expected=TeiidProcessingException.class) public void testNotNull2() throws Exception {
+        execute("create local temporary table x (e1 string not null, e2 integer, e3 integer, primary key (e2))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+        execute("insert into x (e2, e1) values (2, (select null))", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+    }
+	
 	/**
 	 * If the session metadata is still visible, then the procedure will fail due to the conflicting
 	 * definitions of temp_table
