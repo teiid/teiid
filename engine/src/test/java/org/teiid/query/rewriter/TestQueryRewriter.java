@@ -205,6 +205,10 @@ public class TestQueryRewriter {
     	Command command = QueryParser.getQueryParser().parseCommand(original);            
         QueryResolver.resolveCommand(command, metadata);
         Command rewriteCommand = QueryRewriter.rewrite(command, metadata, cc);
+        //to accomodate the logic that was moved to QueryOptimizer
+        if (rewriteCommand instanceof Insert && ((Insert)rewriteCommand).isUpsert()) {
+            rewriteCommand = QueryRewriter.rewriteAsUpsertProcedure((Insert)rewriteCommand, metadata, cc);
+        }
         assertEquals("Rewritten command was not expected", expected, rewriteCommand.toString()); //$NON-NLS-1$
         return rewriteCommand;
     }

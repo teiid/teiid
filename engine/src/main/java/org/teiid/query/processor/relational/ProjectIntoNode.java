@@ -68,6 +68,7 @@ public class ProjectIntoNode extends RelationalNode {
     private List intoElements;
     private String modelName;
     private Mode mode;
+    private boolean upsert;
     
     // Processing state
     private long batchRow = 1;
@@ -213,6 +214,7 @@ public class ProjectIntoNode extends RelationalNode {
                                                  intoElements, 
                                                  convertValuesToConstants(currentBatch.getTuple(rowNum), intoElements));
                     insert.setSourceHint(sourceHint);
+                    insert.setUpsert(upsert);
                     rows.add( insert );
                 }
                 registerRequest(new BatchedUpdateCommand( rows ));
@@ -223,6 +225,7 @@ public class ProjectIntoNode extends RelationalNode {
                 // Defect 16036 - submit a new INSERT command to the DataManager.
                 Insert insert = new Insert(intoGroup, intoElements, convertValuesToConstants(currentBatch.getTuple(batchRow), intoElements));
                 insert.setSourceHint(sourceHint);
+                insert.setUpsert(upsert);
                 registerRequest(insert);
             }
             
@@ -252,6 +255,7 @@ public class ProjectIntoNode extends RelationalNode {
 			TeiidProcessingException {
 		Insert insert = new Insert(intoGroup, intoElements, null);
 		insert.setSourceHint(sourceHint);
+		insert.setUpsert(upsert);
 		buffer.close();
 		insert.setTupleSource(buffer.createIndexedTupleSource(true));
 		// Register insert command against source 
@@ -316,12 +320,16 @@ public class ProjectIntoNode extends RelationalNode {
         clonedNode.mode = this.mode;
         clonedNode.constraint = this.constraint;
         clonedNode.sourceHint = this.sourceHint;
+        clonedNode.upsert = this.upsert;
         return clonedNode;
     }
 
     public PlanNode getDescriptionProperties() {
     	PlanNode props = super.getDescriptionProperties();
         props.addProperty(PROP_INTO_GROUP, intoGroup.toString());
+        if (upsert) { 
+            props.addProperty(PROP_UPSERT, "true"); //$NON-NLS-1$
+        }
         List<String> selectCols = new ArrayList<String>(intoElements.size());
         for(int i=0; i<this.intoElements.size(); i++) {
             selectCols.add(this.intoElements.get(i).toString());
@@ -387,6 +395,10 @@ public class ProjectIntoNode extends RelationalNode {
 
     public void setSourceHint(SourceHint property) {
         this.sourceHint = property;
+    }
+    
+    public void setUpsert(boolean upsert) {
+        this.upsert = upsert;
     }
     
 }

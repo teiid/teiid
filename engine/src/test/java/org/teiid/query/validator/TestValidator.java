@@ -1788,7 +1788,7 @@ public class TestValidator {
     @Test public void testMergeNoKey() {
         String userUpdateStr = "MERGE into pm1.g2 (e1) values ('x')"; //$NON-NLS-1$
         
-        helpValidate(userUpdateStr, new String[]{"MERGE INTO pm1.g2 (e1) VALUES ('x')"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+        helpValidate(userUpdateStr, new String[]{"UPSERT INTO pm1.g2 (e1) VALUES ('x')"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
     }
     
     @Test public void testDeleteError() {

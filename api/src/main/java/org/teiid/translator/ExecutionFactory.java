@@ -1379,4 +1379,11 @@ public class ExecutionFactory<F, C> {
 	public boolean supportsProcedureTable() {
 		return false;
 	}
+	
+	/**
+	 * @return true if the source supports upsert
+	 */
+	public boolean supportsUpsert() {
+	    return false;
+	}
 }

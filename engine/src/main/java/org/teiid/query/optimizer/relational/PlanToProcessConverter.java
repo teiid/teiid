@@ -207,6 +207,9 @@ public class PlanToProcessConverter {
 	                        pinode.setModelName(modelName);
 	                        pinode.setConstraint((Criteria) node.getProperty(Info.CONSTRAINT));
 	                        pinode.setSourceHint((SourceHint) node.getProperty(Info.SOURCE_HINT));
+	                        if (node.hasBooleanProperty(Info.UPSERT)) {
+	                            pinode.setUpsert(true);
+	                        }
 	                        processNode = pinode;
                             SourceCapabilities caps = capFinder.findCapabilities(modelName);
                             if (caps.supportsCapability(Capability.INSERT_WITH_ITERATOR)) {

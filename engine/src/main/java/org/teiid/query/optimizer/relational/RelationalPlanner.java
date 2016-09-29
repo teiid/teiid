@@ -1092,6 +1092,9 @@ public class RelationalPlanner {
 	            if (insert.getConstraint() != null) {
 	            	projectNode.setProperty(NodeConstants.Info.CONSTRAINT, insert.getConstraint());
 	            }
+	            if (insert.isUpsert()) {
+	                projectNode.setProperty(NodeConstants.Info.UPSERT, true);
+	            }
         	}
         }
         if (usingTriggerAction && FrameUtil.getNestedPlan(projectNode) instanceof RelationalPlan) {

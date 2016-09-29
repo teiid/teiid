@@ -40,14 +40,18 @@ import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
+import org.teiid.query.optimizer.relational.rules.CapabilitiesUtil;
 import org.teiid.query.optimizer.xml.XMLPlanner;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.proc.CreateProcedureCommand;
+import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.util.CommandContext;
 
 
@@ -98,7 +102,30 @@ public class QueryOptimizer {
 		if(debug) {
 			analysisRecord.println("\n----------------------------------------------------------------------------"); //$NON-NLS-1$
             analysisRecord.println("OPTIMIZE: \n" + command); //$NON-NLS-1$
-		}   
+		}
+		
+		if (command instanceof Insert) {
+		    Insert insert = (Insert)command;
+		    if (insert.isUpsert()) {
+		        //if not supported or there are trigger actions, then rewrite as a procedure
+		        //we do this here since we're changing the command type.
+		        //TODO: we could push this back into the rewrite, but it will need to be capabilities aware
+		        GroupSymbol group = insert.getGroup();
+		        Object modelId = metadata.getModelID(group.getMetadataID());
+		        boolean supportsUpsert = CapabilitiesUtil.supports(Capability.UPSERT, modelId, metadata, capFinder);
+		        if (!supportsUpsert) {
+		            try {
+                        command = QueryRewriter.rewriteAsUpsertProcedure(insert, metadata, context);
+                    } catch (TeiidProcessingException e) {
+                        throw new QueryPlannerException(e);
+                    }
+		            if(debug) {
+		                analysisRecord.println("\n----------------------------------------------------------------------------"); //$NON-NLS-1$
+		                analysisRecord.println("OPTIMIZE UPSERT PROCEDURE: \n" + command); //$NON-NLS-1$
+		            }           
+		        }
+		    }
+		}
                                    
 		ProcessorPlan result = null;
 

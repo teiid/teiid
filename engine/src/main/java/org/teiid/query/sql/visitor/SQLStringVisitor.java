@@ -297,8 +297,8 @@ public class SQLStringVisitor extends LanguageVisitor {
 
     @Override
     public void visit( Insert obj ) {
-    	if (obj.isMerge()) {
-    		append(MERGE);
+    	if (obj.isUpsert()) {
+    		append(NonReserved.UPSERT);
     	} else {
     		append(INSERT);
     	}

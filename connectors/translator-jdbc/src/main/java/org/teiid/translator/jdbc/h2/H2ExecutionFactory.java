@@ -273,6 +273,16 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
     		protected boolean useParensForLHSJoins() {
     			return false;
     		}
+    		
+    		@Override
+    		protected String getUpsertKeyword() {
+    		    return "MERGE"; //$NON-NLS-1$
+    		}
     	};
+    }
+    
+    @Override
+    public boolean supportsUpsert() {
+        return true;
     }
 }

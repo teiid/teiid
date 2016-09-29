@@ -34,6 +34,8 @@ public class Insert extends BaseLanguageObject implements BatchedCommand {
     private List<ColumnReference> columns;
     private InsertValueSource valueSource;
     private Iterator<? extends List<?>> parameterValues;
+    
+    private boolean upsert;
 
     public Insert(NamedTable group, List<ColumnReference> elements, InsertValueSource valueSource) {
         this.table = group;
@@ -77,5 +79,13 @@ public class Insert extends BaseLanguageObject implements BatchedCommand {
     public void setParameterValues(Iterator<? extends List<?>> parameterValues) {
 		this.parameterValues = parameterValues;
 	}
+    
+    public boolean isUpsert() {
+        return upsert;
+    }
+    
+    public void setUpsert(boolean upsert) {
+        this.upsert = upsert;
+    }
 
 }

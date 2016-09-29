@@ -1401,4 +1401,17 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void start() throws TranslatorException {
 		//nothing to do
 	}
+	
+    Boolean supportsUpsert;
+    @TranslatorProperty(display="Supports Upsert", advanced=true)
+    @Override
+    public boolean supportsUpsert() {
+        if (supportsUpsert != null) {
+            return supportsUpsert;
+        }
+        return delegate.supportsGroupByMultipleDistinctAggregates();
+    }
+    public void setSupportsUpsert(boolean value) {
+        supportsUpsert = value;
+    }
 }

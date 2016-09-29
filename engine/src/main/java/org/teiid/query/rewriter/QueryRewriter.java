@@ -2767,55 +2767,6 @@ public class QueryRewriter {
     }
 
 	private Command rewriteInsert(Insert insert) throws TeiidComponentException, TeiidProcessingException{
-		if (insert.isMerge()) {
-			Collection keys = metadata.getUniqueKeysInGroup(insert.getGroup().getMetadataID());
-			if (keys.isEmpty()) {
-				throw new QueryValidatorException(QueryPlugin.Event.TEIID31132, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31132, insert.getGroup()));
-			}
-			Object key = keys.iterator().next();
-			Set<Object> keyCols = new LinkedHashSet<Object>(metadata.getElementIDsInKey(key));
-			Insert newInsert = new Insert();
-			newInsert.setGroup(insert.getGroup().clone());
-			newInsert.setVariables(LanguageObject.Util.deepClone(insert.getVariables(), ElementSymbol.class));
-			ArrayList<Expression> values = new ArrayList<Expression>();
-			IfStatement ifStatement = new IfStatement();
-			Query exists = new Query();
-			exists.setSelect(new Select(Arrays.asList(new Constant(1))));
-			exists.setFrom(new From(Arrays.asList(new UnaryFromClause(insert.getGroup().clone()))));
-			ifStatement.setCondition(new ExistsCriteria(exists));
-			Update update = new Update();
-			update.setGroup(insert.getGroup().clone());
-			SetClauseList setClauses = new SetClauseList();
-			update.setChangeList(setClauses);
-			List<Criteria> crits = new ArrayList<Criteria>();
-			GroupSymbol varGroup = getVarGroup(insert);
-			for (ElementSymbol es : insert.getVariables()) {
-				ElementSymbol var = new ElementSymbol(es.getShortName(), varGroup.clone());
-				values.add(var.clone()); 
-				if (keyCols.contains(es.getMetadataID())) {
-					CompareCriteria cc = new CompareCriteria(es.clone(), CompareCriteria.EQ, var.clone());
-					crits.add(cc);
-				} else {
-					setClauses.addClause(new SetClause(es.clone(), var.clone()));
-				}
-			}
-			newInsert.setValues(values);
-			update.setCriteria((Criteria) Criteria.combineCriteria(crits).clone());
-			exists.setCriteria((Criteria) Criteria.combineCriteria(crits).clone());
-			ifStatement.setIfBlock(new Block(new CommandStatement(update)));
-			ifStatement.setElseBlock(new Block(new CommandStatement(newInsert)));
-			//construct the value query
-			QueryCommand query = insert.getQueryExpression();
-			if (query == null) {
-				Query q = new Query();
-				Select s = new Select();
-				s.addSymbols(LanguageObject.Util.deepClone(insert.getValues(), Expression.class));
-				q.setSelect(s);
-				query = q;
-			}
-			query = createInlineViewQuery(new GroupSymbol("X"), query, metadata, insert.getVariables()); //$NON-NLS-1$
-			return asLoopProcedure(insert.getGroup(), query, ifStatement, varGroup, Command.TYPE_INSERT);
-		}
 		UpdateInfo info = insert.getUpdateInfo();
 		if (info != null && info.isInherentInsert()) {
 			//TODO: update error messages
@@ -2858,6 +2809,60 @@ public class QueryRewriter {
         insert.setValues(evalExpressions);        
 		return insert;
 	}
+
+    public static Command rewriteAsUpsertProcedure(Insert insert, QueryMetadataInterface metadata, CommandContext context)
+            throws TeiidComponentException, QueryMetadataException,
+            QueryValidatorException, QueryResolverException,
+            TeiidProcessingException {
+        QueryRewriter rewriter = new QueryRewriter(metadata, context);
+        Collection<?> keys = metadata.getUniqueKeysInGroup(insert.getGroup().getMetadataID());
+        if (keys.isEmpty()) {
+        	throw new QueryValidatorException(QueryPlugin.Event.TEIID31132, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31132, insert.getGroup()));
+        }
+        Object key = keys.iterator().next();
+        Set<Object> keyCols = new LinkedHashSet<Object>(metadata.getElementIDsInKey(key));
+        Insert newInsert = new Insert();
+        newInsert.setGroup(insert.getGroup().clone());
+        newInsert.setVariables(LanguageObject.Util.deepClone(insert.getVariables(), ElementSymbol.class));
+        ArrayList<Expression> values = new ArrayList<Expression>();
+        IfStatement ifStatement = new IfStatement();
+        Query exists = new Query();
+        exists.setSelect(new Select(Arrays.asList(new Constant(1))));
+        exists.setFrom(new From(Arrays.asList(new UnaryFromClause(insert.getGroup().clone()))));
+        ifStatement.setCondition(new ExistsCriteria(exists));
+        Update update = new Update();
+        update.setGroup(insert.getGroup().clone());
+        SetClauseList setClauses = new SetClauseList();
+        update.setChangeList(setClauses);
+        List<Criteria> crits = new ArrayList<Criteria>();
+        GroupSymbol varGroup = getVarGroup(insert);
+        for (ElementSymbol es : insert.getVariables()) {
+        	ElementSymbol var = new ElementSymbol(es.getShortName(), varGroup.clone());
+        	values.add(var.clone()); 
+        	if (keyCols.contains(es.getMetadataID())) {
+        		CompareCriteria cc = new CompareCriteria(es.clone(), CompareCriteria.EQ, var.clone());
+        		crits.add(cc);
+        	} else {
+        		setClauses.addClause(new SetClause(es.clone(), var.clone()));
+        	}
+        }
+        newInsert.setValues(values);
+        update.setCriteria((Criteria) Criteria.combineCriteria(crits).clone());
+        exists.setCriteria((Criteria) Criteria.combineCriteria(crits).clone());
+        ifStatement.setIfBlock(new Block(new CommandStatement(update)));
+        ifStatement.setElseBlock(new Block(new CommandStatement(newInsert)));
+        //construct the value query
+        QueryCommand query = insert.getQueryExpression();
+        if (query == null) {
+        	Query q = new Query();
+        	Select s = new Select();
+        	s.addSymbols(LanguageObject.Util.deepClone(insert.getValues(), Expression.class));
+        	q.setSelect(s);
+        	query = q;
+        }
+        query = createInlineViewQuery(new GroupSymbol("X"), query, metadata, insert.getVariables()); //$NON-NLS-1$
+        return rewriter.asLoopProcedure(insert.getGroup(), query, ifStatement, varGroup, Command.TYPE_INSERT);
+    }
 
 	private static GroupSymbol getVarGroup(TargetedCommand cmd) {
 		if (cmd.getGroup().getShortName().equalsIgnoreCase("X")) { //$NON-NLS-1$

@@ -78,6 +78,7 @@ public class AnalysisRecord {
     public static final String PROP_JOIN_CRITERIA = "Join Criteria"; //$NON-NLS-1$
     public static final String PROP_EXECUTION_PLAN = "Execution Plan"; //$NON-NLS-1$
     public static final String PROP_INTO_GROUP = "Into Target"; //$NON-NLS-1$
+    public static final String PROP_UPSERT = "Upsert"; //$NON-NLS-1$
     public static final String PROP_SORT_COLS = "Sort Columns"; //$NON-NLS-1$
     public static final String PROP_SORT_MODE = "Sort Mode"; //$NON-NLS-1$
     public static final String PROP_ROLLUP = "Rollup"; //$NON-NLS-1$

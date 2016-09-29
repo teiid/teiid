@@ -189,7 +189,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
         		insert,
             DataPolicy.PermissionType.CREATE,
             Context.INSERT);
-        if (obj.isMerge()) {
+        if (obj.isUpsert()) {
         	validateEntitlements(
             		insert,
                 DataPolicy.PermissionType.UPDATE,

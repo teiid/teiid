@@ -313,4 +313,9 @@ public class HBaseExecutionFactory extends JDBCExecutionFactory {
     	return false; //not supported in the select clause
     }
     
+    @Override
+    public boolean supportsUpsert() {
+        return true;
+    }
+    
 }

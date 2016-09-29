@@ -3804,6 +3804,34 @@ public class TestProcessor {
         // Run query
         helpProcess(plan, dataManager, expected);
     }
+    
+    @Test public void testUpsert() throws Exception {
+        String sql = "upsert into pm1.g1 (pm1.g1.e1, pm1.g1.e2) values ('MyString', 1)"; //$NON-NLS-1$
+
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] { new Integer(1)})
+        };    
+        
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table g1 (e1 string, e2 integer, primary key (e1)) options (updatable true)", "x", "pm1");
+
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT 1 FROM pm1.g1 AS g_0 WHERE g_0.e1 = 'MyString'", new List[] {Arrays.asList(1)});
+        dataManager.addData("UPDATE pm1.g1 SET e2 = 1 WHERE pm1.g1.e1 = 'MyString'", new List[] {Arrays.asList(1)});
+
+        BasicSourceCapabilities bsc = getTypicalCapabilities();
+        ProcessorPlan plan = helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder(bsc));
+
+        helpProcess(plan, dataManager, expected);
+        
+        dataManager.clearData();
+        
+        //plan again with upsert pushdown
+
+        dataManager.addData("UPSERT INTO pm1.g1 (e1, e2) VALUES ('MyString', 1)", Arrays.asList(1));
+        bsc.setCapabilitySupport(Capability.UPSERT, true);
+        plan = helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder(bsc));
+        helpProcess(plan, dataManager, expected);
+    }
 
      /** SELECT BQT1.SmallA.IntKey AS SmallA_IntKey, BQT2.MediumB.IntKey AS MediumB_IntKey FROM BQT1.SmallA FULL OUTER JOIN BQT2.MediumB ON BQT1.SmallA.IntKey = BQT2.MediumB.IntKey WHERE (BQT1.SmallA.IntKey >= 0) AND (BQT1.SmallA.IntKey <= 15) AND (BQT2.MediumB.IntKey >= 5) AND (BQT2.MediumB.IntKey <= 20) */
      @Test public void testDefect7770_FullOuter() { 

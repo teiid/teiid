@@ -233,6 +233,27 @@ public class TestTempTables extends TempTableTestHarness {
 		execute("insert into x (e2, e1) values (1, 'one')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
 	}
 	
+    @Test public void testUpsert() throws Exception {
+        execute("create local temporary table x (e1 string, e2 integer, e3 integer, primary key (e2))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+        execute("insert into x (e2, e1, e3) values (1, 'one', 2)", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+        execute("upsert into x (e2, e1) values (1, 'x')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+        execute("upsert into x (e2, e1) values (2, 'two')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+        execute("select e1, e2, e3 from x", new List[] {Arrays.asList("x", 1, 2), Arrays.asList("two", 2, null)}); //$NON-NLS-1$
+    }
+    
+    @Test public void testUpsertFails() throws Exception {
+        execute("create local temporary table x (e1 string not null, e2 integer, primary key (e2))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+        execute("insert into x (e2, e1) values (1, 'one')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+        execute("upsert into x (e2, e1) values (1, 'two'), (2, 'three')", new List[] {Arrays.asList(2)}); //$NON-NLS-1$
+        try {
+            execute("upsert into x (e2, e1) values (1, 3), (1, 4), (1, rand() || null)", new List[] {Arrays.asList(2)}); //$NON-NLS-1$
+            fail();
+        } catch (TeiidProcessingException e) {
+            
+        }
+        execute("select e1, e2 from x", new List[] {Arrays.asList("3", 1), Arrays.asList("three", 2)}); //$NON-NLS-1$
+    }
+	
 	@Test public void testAtomicUpdate() throws Exception {
 		execute("create local temporary table x (e1 string, e2 integer, primary key (e2))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
 		execute("insert into x (e2, e1) values (1, 'one')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$

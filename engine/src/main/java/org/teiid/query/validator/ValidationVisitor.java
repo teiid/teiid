@@ -180,7 +180,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         validateInsert(obj);
         
         try {
-			if (obj.isMerge()) {
+			if (obj.isUpsert()) {
 				Collection keys = getMetadata().getUniqueKeysInGroup(obj.getGroup().getMetadataID());
 				if (keys.isEmpty()) {
 					handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31132, obj.getGroup()), obj);

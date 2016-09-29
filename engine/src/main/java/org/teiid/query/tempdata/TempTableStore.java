@@ -124,7 +124,7 @@ public class TempTableStore {
     			//sanity check to make sure that we haven't inappropriately redefined the common table
     			throw new TeiidComponentException("failed to plan common table appropriately " + columns + " " + tempTable.getColumns()); //$NON-NLS-1$ //$NON-NLS-2$
     		}
-    		tempTable.insert(iterator, columns, false, null);
+    		tempTable.insert(iterator, columns, false, false, null);
     		tempTable.setUpdatable(false);
     		close();
     		return tempTable;
