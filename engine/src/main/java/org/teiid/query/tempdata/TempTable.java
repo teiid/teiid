@@ -142,11 +142,7 @@ public class TempTable implements Cloneable, SearchableTable {
 			}
 			currentTuple = tuple;
 			
-			for (int i = 0; i < notNull.length; i++) {
-				if (tuple.get(notNull[i]) == null) {
-					 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30236, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30236, columns.get(i)));
-				}
-			}
+			validateNotNull(tuple);
 			insertTuple(tuple, addRowId, true);
 			if (generatedKey != null) {
 				this.keys.addKey(generatedKey);
@@ -383,6 +379,15 @@ public class TempTable implements Cloneable, SearchableTable {
 		this.leafBatchSize = bm.getSchemaSize(columns);
 		tid.setCardinality(0);
 	}
+	
+    private void validateNotNull(List tuple)
+            throws TeiidProcessingException {
+        for (int i = 0; i < notNull.length; i++) {
+            if (tuple.get(notNull[i]) == null) {
+                 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30236, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30236, columns.get(i)));
+            }
+        }
+    }
 	
 	public TempTable clone() {
 		lock.readLock().lock();
@@ -702,12 +707,12 @@ public class TempTable implements Cloneable, SearchableTable {
 			
 			@Override
 			protected void tuplePassed(List tuple)
-					throws ExpressionEvaluationException,
-					BlockedException, TeiidComponentException {
+					throws BlockedException, TeiidComponentException, TeiidProcessingException {
 				List<Object> newTuple = new ArrayList<Object>(tuple);
     			for (Map.Entry<ElementSymbol, Expression> entry : update.getClauseMap().entrySet()) {
     				newTuple.set(columnMap.get(entry.getKey()), eval.evaluate(entry.getValue(), tuple));
     			}
+    			validateNotNull(newTuple);
     			if (primaryKeyChangePossible) {
     				browser.removed();
     				deleteTuple(tuple);
