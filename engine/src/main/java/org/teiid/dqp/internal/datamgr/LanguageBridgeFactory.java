@@ -907,6 +907,7 @@ public class LanguageBridgeFactory {
                               valueSource);
         result.setParameterValues(parameterValues);
         setBatchValues(result);
+        result.setUpsert(insert.isUpsert());
         return result;
     }
     

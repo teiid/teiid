@@ -367,6 +367,13 @@ public class TestSQLStringVisitor  {
     	assertEquals("INSERT INTO g1 (e1, e2, e3, e4) SELECT g2.e1, g2.e2, g2.e3, g2.e4 FROM g2", insert.toString()); //$NON-NLS-1$
     }
     
+    @Test public void testUpsert() throws Exception {
+        String sql = "upsert into pm1.g1 values (null, null, null, null)"; //$NON-NLS-1$
+
+        Insert insert = (Insert)FakeTranslationFactory.getInstance().getExampleTranslationUtility().parseCommand(sql); 
+        assertEquals("UPSERT INTO g1 (e1, e2, e3, e4) VALUES (NULL, NULL, NULL, NULL)", insert.toString()); //$NON-NLS-1$
+    }
+    
     @Test public void testUnrelatedOrderBy() throws Exception {
     	String sql = "select intkey from bqt1.smalla order by stringkey"; //$NON-NLS-1$ 
     	
