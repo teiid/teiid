@@ -48,6 +48,7 @@ import org.teiid.translator.Translator;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.JDBCMetdataProcessor;
+import org.teiid.translator.jdbc.SQLConversionVisitor;
 import org.teiid.translator.jdbc.SQLDialect;
 import org.teiid.util.Version;
 
@@ -70,6 +71,7 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
 	public static final Version EIGHT_5 = Version.getVersion("8.5"); //$NON-NLS-1$
 	public static final Version EIGHT_10 = Version.getVersion("8.10"); //$NON-NLS-1$
 	public static final Version NINE_0 = Version.getVersion("9.0"); //$NON-NLS-1$
+	public static final Version NINE_1 = Version.getVersion("9.1"); //$NON-NLS-1$
 	
 	public TeiidExecutionFactory() {
 	}
@@ -464,6 +466,29 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsProcedureTable() {
     	return true;
+    }
+    
+    @Override
+    public boolean supportsArrayType() {
+        return getVersion().compareTo(EIGHT_1) > 0;
+    }
+    
+    @Override
+    public boolean supportsUpsert() {
+        return getVersion().compareTo(EIGHT_3) > 0;
+    }
+    
+    @Override
+    public SQLConversionVisitor getSQLConversionVisitor() {
+        return new SQLConversionVisitor(this) {
+            @Override
+            protected String getUpsertKeyword() {
+                if (getVersion().compareTo(NINE_1) >= 0) {
+                    return SQLConstants.NonReserved.UPSERT;
+                }
+                return SQLConstants.Reserved.MERGE;
+            }  
+        };
     }
     
 }
