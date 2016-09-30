@@ -483,6 +483,7 @@ public class TestLocalConnections {
 		} finally {
 			server.undeployVDB("not_there");
 		}
+		main.isInterrupted(); //clear the interrupt flag
 	}
 
 	static Subject currentContext = new Subject();
