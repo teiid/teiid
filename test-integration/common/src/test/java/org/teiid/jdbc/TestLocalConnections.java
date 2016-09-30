@@ -451,7 +451,6 @@ public class TestLocalConnections {
 	
 	@Test public void testWaitForLoadTimeout() throws Exception {
 		final ResultsFuture<Void> future = new ResultsFuture<Void>();
-		final Thread main = Thread.currentThread();
 		Thread t = new Thread() {
 			@Override
 			public void run() {
@@ -460,8 +459,6 @@ public class TestLocalConnections {
 					future.getResultsReceiver().receiveResults(null);
 				} catch (Exception e) {
 					future.getResultsReceiver().exceptionOccurred(e);
-				} finally {
-					main.interrupt();
 				}
 			}
 		};
@@ -483,7 +480,6 @@ public class TestLocalConnections {
 		} finally {
 			server.undeployVDB("not_there");
 		}
-		main.isInterrupted(); //clear the interrupt flag
 	}
 
 	static Subject currentContext = new Subject();
