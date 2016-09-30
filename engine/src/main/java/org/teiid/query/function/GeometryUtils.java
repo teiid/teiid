@@ -53,6 +53,8 @@ import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.io.ByteOrderValues;
@@ -439,31 +441,36 @@ public class GeometryUtils {
 	
 	public static class Extent implements UserDefinedAggregate<GeometryType> {
 		
-		private Geometry g;
+		private Envelope e;
 		
 		public Extent() {
 		}
 		
 		@Override
 		public void reset() {
-			g = null;
+			e = null;
 		}
 		
 		public void addInput(GeometryType geom) throws FunctionExecutionException {
 			Geometry g1 = getGeometry(geom);
-			if (g == null) {
-				g = g1.getEnvelope();
-			} else {
-				g = g.union(g1.getEnvelope());
-			}
+			if (e == null) {
+				e = new Envelope();
+			} 
+		    e.expandToInclude(g1.getEnvelopeInternal());
 		}
 		
 		@Override
 		public GeometryType getResult(CommandContext commandContext) {
-			if (g == null) {
+			if (e == null) {
 				return null;
 			}
-			return getGeometryType(g.getEnvelope());
+			//created a closed polygon box result
+			return getGeometryType(new GeometryFactory().createPolygon(new Coordinate[] {
+			        new Coordinate(e.getMinX(), e.getMinY()),
+			        new Coordinate(e.getMinX(), e.getMaxY()),
+			        new Coordinate(e.getMaxX(), e.getMaxY()),
+			        new Coordinate(e.getMaxX(), e.getMinY()),
+			        new Coordinate(e.getMinX(), e.getMinY())}));
 		}
 
 	}
