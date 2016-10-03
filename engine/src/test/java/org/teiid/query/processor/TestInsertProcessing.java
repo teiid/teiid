@@ -601,6 +601,22 @@ public class TestInsertProcessing {
         helpProcess(plan, dataManager, expected);
     }
     
+    @Test public void testInsertSubqueryMultipleValues() throws Exception {
+        String sql = "Insert into pm1.g1 (e1) values ((select current_database())), (('a'))"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List[] { 
+            Arrays.asList(2)
+        };    
+
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("INSERT INTO pm1.g1 (e1) VALUES ('myvdb')", Arrays.asList(1));
+        dataManager.addData("INSERT INTO pm1.g1 (e1) VALUES ('a')", Arrays.asList(1));
+
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+
+        helpProcess(plan, dataManager, expected);
+    }
+    
     @Test public void testInsertSubquery() throws Exception {
     	String sql = "Insert into pm1.g1 (e1) values ((select current_database()))"; //$NON-NLS-1$
     	

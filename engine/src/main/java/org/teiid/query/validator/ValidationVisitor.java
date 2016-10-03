@@ -244,7 +244,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
             validateAggregates(obj);
 
             //if it is select with no from, should not have ScalarSubQuery
-            if(obj.getSelect() != null && obj.getFrom() == null){
+            if(!obj.isRowConstructor() && obj.getSelect() != null && obj.getFrom() == null){
                 if(!ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(obj.getSelect()).isEmpty()){
                     handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0067"),obj); //$NON-NLS-1$
                 }
