@@ -94,7 +94,7 @@ public class PreparedStatementRequest extends Request {
     	if (this.preParser != null) {
     		sqlQuery = this.preParser.preParse(sqlQuery, this.context);
     	}
-    	CacheID id = new CacheID(this.workContext, Request.createParseInfo(this.requestMsg), sqlQuery);
+    	CacheID id = new CacheID(this.workContext, Request.createParseInfo(this.requestMsg, this.workContext.getSession()), sqlQuery);
         prepPlan = prepPlanCache.get(id);
         
         if (prepPlan != null) {

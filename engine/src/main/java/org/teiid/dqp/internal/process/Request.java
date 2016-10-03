@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.concurrent.Executor;
 
 import org.teiid.PreParser;
+import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
@@ -295,7 +296,7 @@ public class Request {
     		return (Command)requestMsg.getCommand();
     	}
         String[] commands = requestMsg.getCommands();
-        ParseInfo parseInfo = createParseInfo(this.requestMsg);
+        ParseInfo parseInfo = createParseInfo(this.requestMsg, this.workContext.getSession());
         QueryParser queryParser = QueryParser.getQueryParser();
 		if (requestMsg.isPreparedStatement() || requestMsg.isCallableStatement() || !requestMsg.isBatchedUpdate()) {
         	String commandStr = commands[0];
@@ -315,9 +316,16 @@ public class Request {
         return new BatchedUpdateCommand(parsedCommands);
     }
 
-	public static ParseInfo createParseInfo(RequestMessage requestMsg) {
+	public static ParseInfo createParseInfo(RequestMessage requestMsg, SessionMetadata sessionMetadata) {
 		ParseInfo parseInfo = new ParseInfo();
     	parseInfo.ansiQuotedIdentifiers = requestMsg.isAnsiQuotedIdentifiers();
+    	Object value = sessionMetadata.getSessionVariables().get("backslashDefaultMatchEscape"); //$NON-NLS-1$
+    	try {
+            if (value != null && Boolean.TRUE.equals(DataTypeManager.transformValue(value, DataTypeManager.DefaultDataClasses.BOOLEAN))) {
+                parseInfo.setBackslashDefaultMatchEscape(true);
+            }
+        } catch (TransformationException e) {
+        }
 		return parseInfo;
 	}
 

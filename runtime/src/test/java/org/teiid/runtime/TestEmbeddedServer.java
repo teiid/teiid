@@ -1477,6 +1477,26 @@ public class TestEmbeddedServer {
 		assertEquals(73906, val.getString().length());
 	}
 	
+	@Test public void testDefaultEscape() throws Exception {
+        EmbeddedConfiguration ec = new EmbeddedConfiguration();
+        es.start(ec);
+        ModelMetaData mmd = new ModelMetaData();
+        mmd.setName("y");
+        mmd.setModelType(Type.VIRTUAL);
+        mmd.addSourceMetadata("ddl", "create view dummy as select 1;");
+        es.deployVDB("x", mmd);
+
+        Connection c = es.getDriver().connect("jdbc:teiid:x", null);
+        Statement s = c.createStatement();
+        ResultSet rs = s.executeQuery("select '_a' like '\\_a'");
+        rs.next();
+        assertFalse(rs.getBoolean(1));
+        s.execute("select teiid_session_set('backslashDefaultMatchEscape', true)");
+        rs = s.executeQuery("select '_a' like '\\_a'");
+        rs.next();
+        assertTrue(rs.getBoolean(1));
+    }
+	
 	@Test
 	public void testBufferManagerProperties() throws TranslatorException {
 		EmbeddedConfiguration ec = new EmbeddedConfiguration();

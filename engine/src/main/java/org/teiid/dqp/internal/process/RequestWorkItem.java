@@ -618,7 +618,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 				LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Command has no cache hint and result set cache mode is not on."); //$NON-NLS-1$
 			}
 			if (canUseCache) {
-				ParseInfo pi = Request.createParseInfo(requestMsg);
+				ParseInfo pi = Request.createParseInfo(requestMsg, this.dqpWorkContext.getSession());
 				cacheId = new CacheID(this.dqpWorkContext, pi, requestMsg.getCommandString());
 		    	cachable = cacheId.setParameters(requestMsg.getParameterValues());
 				if (cachable) {
