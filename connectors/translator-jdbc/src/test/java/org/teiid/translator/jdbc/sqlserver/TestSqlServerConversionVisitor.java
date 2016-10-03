@@ -216,6 +216,19 @@ public class TestSqlServerConversionVisitor {
         
         TranslationUtility tu = new TranslationUtility(metadata);
         Command command = tu.parseCommand("select max(x) from bar"); //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor("SELECT MAX(bar.x) FROM bar", trans, command); //$NON-NLS-1$
+        
+        command = tu.parseCommand("select * from (select max(x) as max from bar) x"); //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor("SELECT x.max FROM (SELECT MAX(bar.x) AS max FROM bar) x", trans, command); //$NON-NLS-1$
+        
+        command = tu.parseCommand("insert into bar (x) values ('a')"); //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor("INSERT INTO bar (x) VALUES ('a')", trans, command); //$NON-NLS-1$
+        
+        trans = new SQLServerExecutionFactory();
+        trans.setDatabaseVersion(SQLServerExecutionFactory.V_2000);
+        trans.start();
+        
+        command = tu.parseCommand("select max(x) from bar"); //$NON-NLS-1$
         TranslationHelper.helpTestVisitor("SELECT MAX(cast(bar.x as char(36))) FROM bar", trans, command); //$NON-NLS-1$
         
         command = tu.parseCommand("select * from (select max(x) as max from bar) x"); //$NON-NLS-1$

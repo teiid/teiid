@@ -143,7 +143,8 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
     	if (obj instanceof ColumnReference) {
     		ColumnReference elem = (ColumnReference)obj;
-			if (TypeFacility.RUNTIME_TYPES.STRING.equals(elem.getType()) && elem.getMetadataObject() != null && "uniqueidentifier".equalsIgnoreCase(elem.getMetadataObject().getNativeType())) { //$NON-NLS-1$
+			if (getVersion().compareTo(SEVEN_0) <= 0 
+			        && TypeFacility.RUNTIME_TYPES.STRING.equals(elem.getType()) && elem.getMetadataObject() != null && "uniqueidentifier".equalsIgnoreCase(elem.getMetadataObject().getNativeType())) { //$NON-NLS-1$
 				return Arrays.asList("cast(", elem, " as char(36))"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
     	} else if (obj instanceof AggregateFunction) {
