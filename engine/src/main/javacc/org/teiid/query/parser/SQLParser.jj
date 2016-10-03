@@ -3333,7 +3333,7 @@ MatchCriteria matchCrit(ParseInfo info, Expression expression) :
 	{
     	MatchCriteria matchcriteria = new MatchCriteria(expression, value);
 		matchcriteria.setNegated(negated);
-	    if(esc == null && !similar
+	    if(esc == null 
 			&& ((value instanceof Constant && t.image != null && t.image.startsWith("E'"))
 			    || info.isBackslashDefaultMatchEscape())) {
 				esc = '\\';
