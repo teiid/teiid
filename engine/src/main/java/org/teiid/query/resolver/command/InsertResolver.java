@@ -50,6 +50,7 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.GroupContext;
 import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.ProcedureContainer;
+import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -79,8 +80,10 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
 	        //variables and values must be resolved separately to account for implicitly defined temp groups
 	        resolveList(insert.getValues(), metadata, insert.getExternalGroupContexts(), null);
     	}
+        boolean usingQuery = insert.getQueryExpression() != null;
+        QueryResolverException resolveQueryException = null;
         //resolve subquery if there
-        if(insert.getQueryExpression() != null) {
+        if(usingQuery) {
         	QueryResolver.setChildMetadata(insert.getQueryExpression(), command);
             
             QueryResolver.resolveCommand(insert.getQueryExpression(), metadata.getMetadata(), false);
@@ -91,7 +94,6 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
         
      // resolve any functions in the values
         List values = insert.getValues();
-        boolean usingQuery = insert.getQueryExpression() != null;
         
         if (usingQuery) {
             values = insert.getQueryExpression().getProjectedSymbols();
@@ -120,6 +122,12 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
         }
 
         resolveTypes(insert, metadata, values, usingQuery);
+        
+        if (usingQuery && insert.getQueryExpression() instanceof SetQuery) {
+            //now that the first branch is set, we need to make sure that all branches conform
+            QueryResolver.resolveCommand(insert.getQueryExpression(), metadata.getMetadata(), false);
+            resolveTypes(insert, metadata, values, usingQuery);
+        }
         
         if (!insert.getGroup().isResolved()) { //define the implicit temp group
             ResolverUtil.resolveImplicitTempGroup(metadata, insert.getGroup(), insert.getVariables());
