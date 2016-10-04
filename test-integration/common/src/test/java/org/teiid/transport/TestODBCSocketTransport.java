@@ -45,7 +45,9 @@ import org.mockito.Mockito;
 import org.postgresql.Driver;
 import org.postgresql.core.v3.ExtendedQueryExectutorImpl;
 import org.teiid.adminapi.Model.Type;
+import org.teiid.adminapi.Request.ProcessingState;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.util.ObjectConverterUtil;
@@ -702,7 +704,15 @@ public class TestODBCSocketTransport {
 		s.executeQuery();
 		s.executeQuery();
 		
-		assertEquals(1, odbcServer.server.getDqp().getRequestsForSession(id).size());
+		//due to asynch close, there may be several requests
+		int runningCount = 0;
+		for (RequestMetadata request : odbcServer.server.getDqp().getRequestsForSession(id)) {
+		   if (request.getState() == ProcessingState.PROCESSING) {
+		       runningCount++;
+		   }
+		}
+		assertEquals(1, runningCount);
+		s.close();
 	}
 	
 	@Test public void testExportedKey() throws Exception {

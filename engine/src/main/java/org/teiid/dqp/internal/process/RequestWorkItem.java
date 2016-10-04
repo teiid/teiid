@@ -159,7 +159,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	}
 
 	private enum ProcessingState {NEW, PROCESSING, CLOSE}
-	private ProcessingState state = ProcessingState.NEW;
+	private volatile ProcessingState state = ProcessingState.NEW;
     
 	private enum TransactionState {NONE, ACTIVE, DONE}
 	private TransactionState transactionState = TransactionState.NONE;
@@ -346,8 +346,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
             if (this.state == ProcessingState.PROCESSING) {
             	if (!this.closeRequested) {
             		processMore();
-            	}
-            	if (this.closeRequested) {
+            	} else {
             		this.state = ProcessingState.CLOSE;
             	}
             }                  	            
@@ -1207,19 +1206,24 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     }
     
     public void requestClose() throws TeiidComponentException {
-    	synchronized (this) {
-        	if (this.state == ProcessingState.CLOSE || this.closeRequested) {
-        		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-        			LogManager.logDetail(LogConstants.CTX_DQP, "Request already closing" + requestID); //$NON-NLS-1$
-        		}
-        		return;
-        	}
-		}
+    	if (this.state == ProcessingState.CLOSE || this.closeRequested) {
+    		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+    			LogManager.logDetail(LogConstants.CTX_DQP, "Request already closing" + requestID); //$NON-NLS-1$
+    		}
+    		return;
+    	}
     	if (!this.doneProducingBatches) {
     		this.requestCancel(); //pending work should be canceled for fastest clean up
+    	} else {
+    	    //it's safe to transition directly to close
+    	    this.state = ProcessingState.CLOSE;
     	}
     	this.closeRequested = true;
     	this.doMoreWork();
+    }
+    
+    public boolean isCloseRequested() {
+        return closeRequested;
     }
     
     public void requestMore(int batchFirst, int batchLast, ResultsReceiver<ResultsMessage> receiver) {

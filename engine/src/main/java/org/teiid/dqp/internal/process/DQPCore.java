@@ -190,7 +190,7 @@ public class DQPCore implements DQP {
             	req.setSessionId(holder.requestID.getConnectionID());
             	req.setCommand(holder.requestMsg.getCommandString());
             	req.setStartTime(holder.getProcessingTimestamp());
-            	req.setState(holder.isCanceled()?ProcessingState.CANCELED:holder.isDoneProcessing()?ProcessingState.DONE:ProcessingState.PROCESSING);
+            	req.setState(holder.isCanceled()?ProcessingState.CANCELED:(holder.isDoneProcessing() || holder.isCloseRequested())?ProcessingState.DONE:ProcessingState.PROCESSING);
             	switch (holder.getThreadState()) {
             	case DONE:
             	case IDLE:
