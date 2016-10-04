@@ -53,7 +53,6 @@ import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor.EvaluationLevel;
-import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.ExecutionFactory.Format;
@@ -607,7 +606,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     	    if (obj.shouldEvaluate()) {
     	        return;
     	    }
-    	    boolean canPreEval = obj.getCommand().getCorrelatedReferences() == null && !FunctionCollectorVisitor.isNonDeterministic(obj.getCommand());
+    	    boolean canPreEval = obj.getCommand().getCorrelatedReferences() == null;
     		if(!this.caps.supportsCapability(Capability.QUERY_SUBQUERIES_SCALAR)) {  
     		    markEvaluatable(obj, canPreEval, "Correlated/nonDeterministic ScalarSubquery is not supported"); //$NON-NLS-1$
     	    } else if (validateSubqueryPushdown(obj, modelID, metadata, capFinder, analysisRecord) == null) {

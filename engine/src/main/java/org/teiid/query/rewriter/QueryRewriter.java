@@ -309,12 +309,7 @@ public class QueryRewriter {
 			return false;
 		}
 		//if deterministic, just inline
-		for (Expression ex : FunctionCollectorVisitor.getFunctions(withQueryCommand.getCommand(), false, true)) {
-	        if (FunctionCollectorVisitor.isNonDeterministic(ex)) {
-	        	return false;
-	        }
-		}
-		return true;
+		return !FunctionCollectorVisitor.isNonDeterministic(withQueryCommand.getCommand());
 	}
 
 	private List<UnaryFromClause> getUnaryFromClauses(QueryCommand queryCommand) {

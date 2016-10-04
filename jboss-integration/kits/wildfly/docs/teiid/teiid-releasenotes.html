@@ -67,7 +67,8 @@
    <li><a href="https://issues.jboss.org/browse/TEIID-4421">TEIID-4421</a> Removed the deprecated EmbeddedServer.addTranslator(ExecutionFactory) method.</li>   
    <li><a href="https://issues.jboss.org/browse/TEIID-4442">TEIID-4442</a> Removed the interpretation of the security-domain setting for the session service as a comma separated list of domains.  Also added the USER(boolean) function to control
    if the USER function returns a name with the security domain.  Finally the DatabaseMetaData and CommandContext getUserName will both return the simple user name without the domain.</li>
-   <li><a href="https://issues.jboss.org/browse/TEIID-4228">TEIID-4228</a> Precision/scale will now be set consistently.  Values reported from JDBC/OData/ODBC metadata may be different if your current metadata declares a bigdecimal type with default precision.</li>  
+   <li><a href="https://issues.jboss.org/browse/TEIID-4228">TEIID-4228</a> Precision/scale will now be set consistently.  Values reported from JDBC/OData/ODBC metadata may be different if your current metadata declares a bigdecimal type with default precision.</li>
+   <li><a href="https://issues.jboss.org/browse/TEIID-4423">TEIID-4423</a> Uncorrelated subqueries will be treated as deterministic regardless of functions used within them.  Prior releases treated most uncorrelated subqueries as non-deterministic if they contained a non-deterministic function.</li>  
 </ul>
 
 <h4>from 8.x</h4>
