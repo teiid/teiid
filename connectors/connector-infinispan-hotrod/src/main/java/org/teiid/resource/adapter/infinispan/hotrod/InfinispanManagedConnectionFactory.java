@@ -78,6 +78,8 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 	private String messageMarshallers = null;
 	private String messageDescriptor = null;
 	
+	private String childClasses= null;
+	
 	private boolean usingAnnotations = false;
 	
 	private RemoteCacheManager cacheContainer = null;
@@ -292,6 +294,26 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 	public void setMessageDescriptor(String messageDescriptor) {
 		this.messageDescriptor = messageDescriptor;
 	}	
+	
+   /**
+    * Returns a comma separated list of child class names that are
+    * registered in the JDG schema
+    * 
+    * @return childClasses
+    */
+   public String getChildClasses() {
+           return childClasses;
+   }
+
+   /**
+    * Sets a comma separated list of class names to register in the JDG schema
+    * 
+    * @param childClasses Sets childClasses to the specified value.
+    */
+   public void setChildClasses(String childClasses) {
+           this.childClasses = childClasses;
+   }
+
 	
 	public String getStagingCacheName() {
 		return this.stagingCacheName;

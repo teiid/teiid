@@ -28,11 +28,14 @@ import static org.junit.Assert.assertNull;
 import java.io.File;
 import java.util.Properties;
 
+import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.Address;
+import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PersonCacheSource;
+import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PhoneNumber;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.core.util.PropertiesUtils;
-import org.teiid.translator.object.ObjectConnection;
+import org.teiid.translator.infinispan.hotrod.InfinispanHotRodConnection;
 import org.teiid.util.Version;
 
 
@@ -58,7 +61,7 @@ public class TestInfinispanConfigFileRemoteCache {
 
 		factory.setHotRodClientPropertiesFile("./target/hotrod-client.properties");
 		factory.setCacheTypeMap(RemoteInfinispanTestHelper.PERSON_CACHE_NAME + ":" + RemoteInfinispanTestHelper.PERSON_CLASS.getName()+ ";" + RemoteInfinispanTestHelper.PKEY_COLUMN);
-
+		factory.setChildClasses(PersonCacheSource.ADDRESSTYPE_CLASS_NAME + "," + PersonCacheSource.PHONENUMBER_CLASS_NAME);
 		
 	}
 	
@@ -71,7 +74,7 @@ public class TestInfinispanConfigFileRemoteCache {
     @Test
     public void testConnection() throws Exception {
     	try {
-    		ObjectConnection conn = factory.createConnectionFactory().getConnection();
+    		InfinispanHotRodConnection conn = factory.createConnectionFactory().getConnection();
     		Class<?> clz = conn.getCacheClassType();
     
     		assertEquals(RemoteInfinispanTestHelper.PERSON_CLASS, clz);
@@ -87,6 +90,8 @@ public class TestInfinispanConfigFileRemoteCache {
     		 assertEquals("Support For Compare is false", conn.getVersion().compareTo(Version.getVersion("6.6")) >= 0, false );
  //   		 assertEquals("Version doesn't start with 7.2", conn.getVersion().startsWith("7.2"));
 
+    		 assertNotNull(conn.getDescriptor(Address.class));
+    		 assertNotNull(conn.getDescriptor(PhoneNumber.class));
     		 
     		 conn.cleanUp();
     		 
