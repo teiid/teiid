@@ -25,6 +25,7 @@
             <outputDirectory>${wildfly-module-root}/org/jboss/teiid/resource-adapter/salesforce-34/main</outputDirectory>
             <includes>
                 <include>org.jboss.teiid.connectors:connector-salesforce</include>
+                <include>org.jboss.teiid.connectors:connector-salesforce-34</include>
             </includes>
             <useTransitiveDependencies>false</useTransitiveDependencies>
         </dependencySet>
