@@ -64,6 +64,8 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 	
 	public static final String PERSON_CACHE_NAME = "PersonsCache";
 	
+	public static final String PERSON_KEY_FIELD = "id";
+	
 	public static final String PERSON_CLASS_NAME = Person.class.getName();
 	public static final String PHONENUMBER_CLASS_NAME = PhoneNumber.class.getName();
 	public static final String PHONETYPE_CLASS_NAME = PhoneType.class.getName();
