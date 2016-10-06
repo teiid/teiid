@@ -47,6 +47,21 @@ public class PersonCacheConnection extends TestInfinispanHotRodConnection {
 		return conn;
 	}
 	
+	public static InfinispanHotRodConnection createConnection(RemoteCache map, final String keyField, boolean useKeyClassType, Version version) {
+		CacheNameProxy proxy = new CacheNameProxy(PersonCacheSource.PERSON_CACHE_NAME);
+
+		PersonCacheConnection conn = new PersonCacheConnection(map, PersonCacheSource.CLASS_REGISTRY, proxy, useKeyClassType) {
+			
+			@Override
+			public void setPkField(String keyfield) {
+				super.setPkField(keyField);
+			}
+		};
+		conn.setVersion(version);
+		conn.setConfiguredUsingAnnotations(true);
+		return conn;
+	}
+	
 	/**
 	 * @param map
 	 * @param registry

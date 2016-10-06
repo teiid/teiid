@@ -134,7 +134,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 		
 		pkMethod = null;
 		if (updatable) {
-		    pkMethod = conn.getClassRegistry().getReadClassMethods(entity.getName()).get(pkField);
+		    pkMethod = findMethod(entity.getName(), pkField, conn);
 		    if (pkMethod == null) {
 				throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25008, new Object[] {pkField, cacheName, entity.getName()}));
 		    	
