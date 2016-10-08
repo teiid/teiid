@@ -22,6 +22,9 @@
 package org.teiid.resource.adapter.infinispan.hotrod.schema;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import javax.resource.ResourceException;
 
@@ -31,6 +34,7 @@ import org.infinispan.protostream.annotations.ProtoSchemaBuilder;
 import org.infinispan.protostream.annotations.ProtoSchemaBuilderException;
 import org.infinispan.protostream.descriptors.Descriptor;
 import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
+import org.teiid.core.util.StringUtil;
 import org.teiid.resource.adapter.infinispan.hotrod.InfinispanManagedConnectionFactory;
 import org.teiid.resource.adapter.infinispan.hotrod.InfinispanSchemaDefinition;
 import org.teiid.translator.TranslatorException;
@@ -44,10 +48,21 @@ import org.teiid.translator.object.ClassRegistry;
  *
  */
 public class AnnotationSchema implements InfinispanSchemaDefinition {
-
+	private Set<Class> classes = new HashSet<Class>();
+	
 	@Override
-	public void initialize(InfinispanManagedConnectionFactory config, ClassRegistry methodUtil) {
+	public void initialize(InfinispanManagedConnectionFactory config, ClassRegistry methodUtil) throws ResourceException {
 		
+		if (config.getChildClasses() != null) {
+			List<String> clzzes = StringUtil.getTokens(config.getChildClasses(), ","); //$NON-NLS-1$
+			for (String clzName : clzzes) {
+				Class<?> ci = config.loadClass(clzName);
+
+				methodUtil.registerClass(ci);	
+				classes.add(ci);
+			}
+		}
+
 	}
 
 	@Override
@@ -62,16 +77,18 @@ public class AnnotationSchema implements InfinispanSchemaDefinition {
 		try {
 			Class<?> clzz = config.loadClass("org.infinispan.protostream.annotations.ProtoSchemaBuilder");
 			protoSchemaBuilder = (ProtoSchemaBuilder) clzz.newInstance();
-			String protoSchema = protoSchemaBuilder
-			    .fileName(protoName)
-			    .packageName(p)
-			    .addClass(clzzType)
-			    .build(config.getContext());
+			protoSchemaBuilder.fileName(protoName);
+			protoSchemaBuilder.packageName(p);
+			protoSchemaBuilder.addClass(clzzType);
 			
-		      RemoteCache<String, String> metadataCache = config.getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME);
-		      metadataCache.put(protoName, protoSchema);
-
+			for(Class<?> c:classes) {
+				protoSchemaBuilder.addClass(c);
+			}
+			String protoSchema = protoSchemaBuilder.build(config.getContext());
 			
+		     RemoteCache<String, String> metadataCache = config.getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME);
+		     metadataCache.put(protoName, protoSchema);
+		
 		} catch (ProtoSchemaBuilderException e) {
 			throw new ResourceException(e);
 		} catch (IOException e) {
@@ -81,8 +98,7 @@ public class AnnotationSchema implements InfinispanSchemaDefinition {
 		} catch (IllegalAccessException e) {
 			throw new ResourceException(e);
 		}
-	}
-	
+	}	
 
 	@Override
 	public Descriptor getDecriptor(InfinispanManagedConnectionFactory config, Class<?> clz) throws TranslatorException {
