@@ -490,7 +490,7 @@ public class TestTextTable {
         BasicSourceCapabilities caps = getTypicalCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$        
         
-        ProcessorPlan plan = helpPlan("select convert(to_chars(textagg(pm1.g1.e1), 'UTF-8'), string) as x from pm1.g1 group by e2", metadata,  null, capFinder, //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("select convert(to_chars(textagg(pm1.g1.e1 order by pm1.g1.e1), 'UTF-8'), string) as x from pm1.g1 group by e2", metadata,  null, capFinder, //$NON-NLS-1$
             new String[] { "SELECT g_0.e2, g_0.e1 FROM pm1.g1 AS g_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         
         HardcodedDataManager hdm = new HardcodedDataManager();
@@ -504,7 +504,7 @@ public class TestTextTable {
         ArrayList<Object> list = new ArrayList<Object>();
         list.add("\"b\""+nl+"\"b\""+nl);
         ArrayList<Object> list1 = new ArrayList<Object>();
-        list1.add("\"a\""+nl+"\"z\""+nl+"\"c\""+nl+"\"z\""+nl);
+        list1.add("\"a\""+nl+"\"c\""+nl+"\"z\""+nl+"\"z\""+nl);
         List<?>[] expected = new List<?>[] {
         		list, list1
         };    

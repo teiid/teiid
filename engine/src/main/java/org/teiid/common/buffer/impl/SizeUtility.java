@@ -38,6 +38,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.BaseLob;
 import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.DataTypeManager;
@@ -54,7 +55,7 @@ import org.teiid.core.types.Streamable;
  * Actual object allocation efficiency can be quite poor.  
  */
 public final class SizeUtility {
-	private static final int UNKNOWN_SIZE_BYTES = 512;
+	private static final int UNKNOWN_SIZE_BYTES = 1024;
 
 	private static final class DummyOutputStream extends OutputStream {
 		int bytes;
@@ -90,7 +91,7 @@ public final class SizeUtility {
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.FLOAT, new int[] {6, 12});
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.CHAR, new int[] {4, 10});
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.SHORT, new int[] {4, 10});
-		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.OBJECT, new int[] {1024, 1024});
+		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.OBJECT, new int[] {UNKNOWN_SIZE_BYTES, UNKNOWN_SIZE_BYTES});
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.NULL, new int[] {0, 0});
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.BYTE, new int[] {1, 1});
 		SIZE_ESTIMATES.put(DataTypeManager.DefaultDataClasses.BOOLEAN, new int[] {1, 1});
@@ -101,10 +102,12 @@ public final class SizeUtility {
 		VARIABLE_SIZE_TYPES.add(DataTypeManager.DefaultDataClasses.OBJECT);
 		VARIABLE_SIZE_TYPES.add(DataTypeManager.DefaultDataClasses.BIG_INTEGER);
 		VARIABLE_SIZE_TYPES.add(DataTypeManager.DefaultDataClasses.BIG_DECIMAL);
+		VARIABLE_SIZE_TYPES.add(DataTypeManager.DefaultDataClasses.BLOB);
+		VARIABLE_SIZE_TYPES.add(DataTypeManager.DefaultDataClasses.CLOB);
+		VARIABLE_SIZE_TYPES.add(DataTypeManager.DefaultDataClasses.XML);
+		VARIABLE_SIZE_TYPES.add(DataTypeManager.DefaultDataClasses.GEOMETRY);
 	}
 	
-	private long bigIntegerEstimate;
-	private long bigDecimalEstimate;
 	private Class<?>[] types;
 	
 	private static class ClassStats {
@@ -115,9 +118,6 @@ public final class SizeUtility {
 	private static ConcurrentHashMap<String, ClassStats> objectEstimates = new ConcurrentHashMap<String, ClassStats>();
 	
 	public SizeUtility(Class<?>[] types) {
-		boolean isValueCacheEnabled = DataTypeManager.isValueCacheEnabled();
-		bigIntegerEstimate = getSize(isValueCacheEnabled, DataTypeManager.DefaultDataClasses.BIG_INTEGER);
-		bigDecimalEstimate = getSize(isValueCacheEnabled, DataTypeManager.DefaultDataClasses.BIG_DECIMAL);
 		this.types = types;
 	}
 	
@@ -133,10 +133,10 @@ public final class SizeUtility {
             Class<?> type = types[col];
             int rowsSampled = 0;
             int estimatedSize = 0;
-			if (VARIABLE_SIZE_TYPES.contains(type)) {
+			if (isVariableSize(type)) {
                 for (int row = 0; row < rowLength; row=(row*2)+1) {
                 	rowsSampled++;
-                    estimatedSize += getSize(data.get(row).get(col), types[col], true, accountForValueCache);
+                    estimatedSize += getSize(data.get(row).get(col), accountForValueCache);
                 }
                 size += estimatedSize/(float)rowsSampled * rowLength;
             } else {
@@ -145,8 +145,12 @@ public final class SizeUtility {
         }
         return size;
     }
+
+    public static boolean isVariableSize(Class<?> type) {
+        return VARIABLE_SIZE_TYPES.contains(type) || type.isArray();
+    }
     
-    static int getSize(boolean isValueCacheEnabled,
+    public static int getSize(boolean isValueCacheEnabled,
 			Class<?> type) {
     	int[] vals = SIZE_ESTIMATES.get(type);
     	if (vals == null) {
@@ -160,54 +164,54 @@ public final class SizeUtility {
      * Get size of object
      * @return Size in bytes
      */
-    protected long getSize(Object obj, Class<?> type, boolean updateEstimate, boolean accountForValueCache) {
+    public static long getSize(Object obj, boolean accountForValueCache) {
         if(obj == null) {
             return 0;
         }
 
-        if(obj.getClass() == DataTypeManager.DefaultDataClasses.STRING) {
+        Class<? extends Object> clazz = obj.getClass();
+        if(clazz == DataTypeManager.DefaultDataClasses.STRING) {
             int length = ((String)obj).length();
             if (length > 0) {
                 return alignMemory(40 + (2 * length));
             }
             return 40;
-        } else if(obj.getClass() == DataTypeManager.DefaultDataClasses.VARBINARY) {
+        } else if(clazz == DataTypeManager.DefaultDataClasses.VARBINARY) {
             int length = ((BinaryType)obj).getLength();
             if (length > 0) {
                 return alignMemory(16 + length);
             }
             return 16;
-        } else if(type == DataTypeManager.DefaultDataClasses.BIG_DECIMAL) {
-        	if (!updateEstimate) {
-        		return bigDecimalEstimate;
-        	}
+        } else if(clazz  == DataTypeManager.DefaultDataClasses.BIG_DECIMAL) {
             int bitLength = ((BigDecimal)obj).unscaledValue().bitLength();
             //TODO: this does not account for the possibility of a cached string
             long result = 88 + alignMemory(4 + (bitLength >> 3));
-        	bigDecimalEstimate = (bigDecimalEstimate + result)/2;
             return result;
-        } else if(type == DataTypeManager.DefaultDataClasses.BIG_INTEGER) {
-        	if (!updateEstimate) {
-        		return bigIntegerEstimate;
-        	}
+        } else if(clazz  == DataTypeManager.DefaultDataClasses.BIG_INTEGER) {
             int bitLength = ((BigInteger)obj).bitLength();
             long result = 40 + alignMemory(4 + (bitLength >> 3));
-        	bigIntegerEstimate = (bigIntegerEstimate + result)/2;
             return result;
         } else if(obj instanceof Iterable<?>) {
         	Iterable<?> i = (Iterable<?>)obj;
         	long total = 16;
         	for (Object object : i) {
-				total += getSize(object, DataTypeManager.determineDataTypeClass(object), updateEstimate, false) + REFERENCE_SIZE;
+				total += getSize(object, false) + REFERENCE_SIZE;
 			}
         	return total;
-        } else if(obj.getClass().isArray()) {
-        	Class<?> componentType = obj.getClass().getComponentType(); 
+        } else if(clazz.isArray() || obj instanceof ArrayImpl) {
+            int overhead = 0;
+            if (obj instanceof ArrayImpl) {
+                obj = ((ArrayImpl)obj).getValues();
+                clazz = obj.getClass();
+                overhead += 2*REFERENCE_SIZE;
+            }
+            
+        	Class<?> componentType = clazz.getComponentType(); 
         	if (!componentType.isPrimitive()) {
 	            Object[] rows = (Object[]) obj;
-	            long total = 16 + alignMemory(rows.length * REFERENCE_SIZE); // Array overhead
+	            long total = overhead+16 + alignMemory(rows.length * REFERENCE_SIZE); // Array overhead
 	            for(int i=0; i<rows.length; i++) {
-	                total += getSize(rows[i], DataTypeManager.determineDataTypeClass(rows[i]), updateEstimate, false);
+	                total += getSize(rows[i], false);
 	            }
 	            return total;
         	}
@@ -222,7 +226,7 @@ public final class SizeUtility {
         	} else if (componentType == int.class || componentType == float.class) {
         		primitiveSize = 4;
         	}
-        	return alignMemory(length * primitiveSize) + 16;
+        	return overhead + alignMemory(length * primitiveSize) + 16;
         } else if (obj instanceof Streamable<?>) {
 			try {
 				Streamable<?> s = (Streamable)obj;
@@ -241,50 +245,48 @@ public final class SizeUtility {
 	    		}
 			} catch (Exception e) {
 			}
-        } else if (type == DataTypeManager.DefaultDataClasses.OBJECT) {
-        	if (obj.getClass() != DataTypeManager.DefaultDataClasses.OBJECT && (SIZE_ESTIMATES.containsKey(obj.getClass()) || VARIABLE_SIZE_TYPES.contains(obj.getClass()))) {
-        		return getSize(obj, obj.getClass(), updateEstimate, accountForValueCache);
+        } else {
+        	if (SIZE_ESTIMATES.containsKey(clazz)) {
+        		return getSize(accountForValueCache, clazz);
         	}
         	//assume we can get a plausable estimate from the serialized size
         	if (obj instanceof Serializable) {
-            	ClassStats stats = objectEstimates.get(obj.getClass().getName()); //we're ignoring classloader differences here
+            	ClassStats stats = objectEstimates.get(clazz.getName()); //we're ignoring classloader differences here
             	if (stats == null) {
             		stats = new ClassStats();
-            		objectEstimates.put(obj.getClass().getName(), stats);
+            		objectEstimates.put(clazz.getName(), stats);
             	}
-            	if (updateEstimate) {
-	            	int samples = stats.samples.getAndIncrement();
-	            	if (samples < 1000 || (samples&1023) == 1023) {
-	    	        	try {
-	    		        	DummyOutputStream os = new DummyOutputStream();
-	    		        	ObjectOutputStream oos = new ObjectOutputStream(os) {
-	    		        		@Override
-	    		        		protected void writeClassDescriptor(
-	    		        				ObjectStreamClass desc) throws IOException {
-	    		        		}
-	    		        		@Override
-	    		        		protected void writeStreamHeader()
-	    		        				throws IOException {
-	    		        		}
-	    		        	};
-	    		        	oos.writeObject(obj);
-	    		        	oos.close();
-	    		        	int result = (int)alignMemory(os.getBytes() * 3);
-	    		        	if (result > stats.averageSize) {
-	    		        		stats.averageSize = (stats.averageSize + result*2)/3;
-	    		        	} else {
-	    		        		stats.averageSize = (stats.averageSize + result)/2;
-	    		        	}
-	    		        	return result;
-	    	        	} catch (Exception e) {
-	    	        		
-	    	        	}            		
-	            	}
+            	int samples = stats.samples.getAndIncrement();
+            	if (samples < 1000 || (samples&1023) == 1023) {
+    	        	try {
+    		        	DummyOutputStream os = new DummyOutputStream();
+    		        	ObjectOutputStream oos = new ObjectOutputStream(os) {
+    		        		@Override
+    		        		protected void writeClassDescriptor(
+    		        				ObjectStreamClass desc) throws IOException {
+    		        		}
+    		        		@Override
+    		        		protected void writeStreamHeader()
+    		        				throws IOException {
+    		        		}
+    		        	};
+    		        	oos.writeObject(obj);
+    		        	oos.close();
+    		        	int result = (int)alignMemory(os.getBytes() * 3);
+    		        	if (result > stats.averageSize) {
+    		        		stats.averageSize = (stats.averageSize + result*2)/3;
+    		        	} else {
+    		        		stats.averageSize = (stats.averageSize + result)/2;
+    		        	}
+    		        	return result;
+    	        	} catch (Exception e) {
+    	        		
+    	        	}            		
             	}
             	return stats.averageSize;
         	}
         }
-		return getSize(accountForValueCache, type);
+		return getSize(accountForValueCache, clazz);
     }
     
     /**

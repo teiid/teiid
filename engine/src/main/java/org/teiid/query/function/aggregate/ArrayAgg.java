@@ -27,6 +27,7 @@ import java.util.List;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.common.buffer.impl.SizeUtility;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.ArrayImpl;
@@ -36,23 +37,38 @@ import org.teiid.query.util.CommandContext;
 
 public class ArrayAgg extends SingleArgumentAggregateFunction {
 	
+    private static final int MAX_SIZE = 1 << 23;
     private ArrayList<Object> result;
     private Class<?> componentType;
+    private long size;
+    private int elemSize;
     
     @Override
     public void initialize(Class<?> dataType, Class<?> inputType) {
     	this.componentType = inputType;
+    	if (!SizeUtility.isVariableSize(componentType)) {
+    	    elemSize = SizeUtility.getSize(false, componentType);
+    	}
     }
     
 	@Override
 	public void addInputDirect(Object input, List<?> tuple, CommandContext commandContext) throws TeiidComponentException, TeiidProcessingException {
 		if (this.result == null) {
 			this.result = new ArrayList<Object>();
+			size = 0;
 		}
 		this.result.add(input);
-		if (this.result.size() > 1000) {
-			throw new TeiidProcessingException(QueryPlugin.Event.TEIID31205, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31205, 1000)); 
-		}
+		size += SizeUtility.REFERENCE_SIZE;
+		if (input != null) {
+        	if (elemSize != 0) {
+        	    size += elemSize;
+        	} else {
+        	    size += SizeUtility.getSize(input, false);
+        	} 
+	    }
+        if (size > MAX_SIZE) {
+            throw new TeiidProcessingException(QueryPlugin.Event.TEIID31209, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31209, MAX_SIZE));
+        }
 	}
 
 	@Override
