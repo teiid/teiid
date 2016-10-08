@@ -13,11 +13,12 @@ connect
 /subsystem=logging/logger=org.teiid.AUDIT_LOG:write-attribute(name="level", value="WARN")
 
 /subsystem=infinispan/cache-container=teiid-cache:add(default-cache=resultset)
-/subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset-repl:add(batching=true)
-/subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset-repl/locking=LOCKING:add(isolation=READ_COMMITTED)
-/subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset-repl/expiration=EXPIRATION:add(lifespan=7200000)
-/subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset-repl/eviction=EVICTION:add(max-entries=1024, strategy=LIRS)
-/subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset-repl/transaction=TRANSACTION:add(mode=NON_XA)
+/subsystem=infinispan/cache-container=teiid-cache/transport=TRANSPORT:add(lock-timeout=60000)
+/subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl:add(mode=SYNC, batching=true)
+/subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl/locking=LOCKING:add(isolation=READ_COMMITTED)
+/subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl/expiration=EXPIRATION:add(lifespan=7200000)
+/subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl/eviction=EVICTION:add(max-entries=1024, strategy=LIRS)
+/subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl/transaction=TRANSACTION:add(mode=NON_XA)
 
 /subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset:add(batching=true)
 /subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset/locking=LOCKING:add(isolation=READ_COMMITTED)
@@ -34,7 +35,7 @@ connect
 /subsystem=security/security-domain=teiid-security/authentication=classic:add()
 /subsystem=security/security-domain=teiid-security/authentication=classic/login-module=RealmDirect:add(code=RealmDirect, flag=sufficient, module-options=[("password-stacking"=>"useFirstPass")])
 
-/subsystem=teiid:add(authentication-security-domain=teiid-security, resultset-cache-infinispan-container=teiid-cache, preparedplan-cache-infinispan-container=teiid-cache, policy-decider-module=org.jboss.teiid)
+/subsystem=teiid:add(authentication-security-domain=teiid-security, resultset-cache-infinispan-container=teiid-cache, distributed-cache-jgroups-stack=udp, preparedplan-cache-infinispan-container=teiid-cache, policy-decider-module=org.jboss.teiid)
 /subsystem=teiid/transport=local:add()
 /subsystem=teiid/transport=odata:add()
 /subsystem=teiid/transport=jdbc:add(protocol=teiid, socket-binding=teiid-jdbc)
@@ -95,7 +96,6 @@ connect
 /subsystem=teiid/translator=ucanaccess:add(module=org.jboss.teiid.translator.jdbc)
 /subsystem=teiid/translator=simpledb:add(module=org.jboss.teiid.translator.simpledb)
 /subsystem=teiid/translator=swagger:add(module=org.jboss.teiid.translator.swagger)
-/subsystem=teiid/translator=delegator:add(module=org.jboss.teiid.api)
 
 /subsystem=datasources/jdbc-driver=teiid:add(driver-name=teiid, driver-module-name=org.jboss.teiid.client, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)
 /subsystem=datasources/jdbc-driver=teiid-local:add(driver-name=teiid-local, driver-module-name=org.jboss.teiid, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)
@@ -104,7 +104,7 @@ connect
 /subsystem=resource-adapters/resource-adapter=google:add(module=org.jboss.teiid.resource-adapter.google)
 /subsystem=resource-adapters/resource-adapter=ldap:add(module=org.jboss.teiid.resource-adapter.ldap)
 /subsystem=resource-adapters/resource-adapter=salesforce:add(module=org.jboss.teiid.resource-adapter.salesforce)
-/subsystem=resource-adapters/resource-adapter=salesforce-34:add(module=org.jboss.teiid.resource-adapter.salesforce-34)
+#/subsystem=resource-adapters/resource-adapter=salesforce-34:add(module=org.jboss.teiid.resource-adapter.salesforce-34)
 /subsystem=resource-adapters/resource-adapter=webservice:add(module=org.jboss.teiid.resource-adapter.webservice)
 /subsystem=resource-adapters/resource-adapter=mongodb:add(module=org.jboss.teiid.resource-adapter.mongodb)
 /subsystem=resource-adapters/resource-adapter=cassandra:add(module=org.jboss.teiid.resource-adapter.cassandra)
