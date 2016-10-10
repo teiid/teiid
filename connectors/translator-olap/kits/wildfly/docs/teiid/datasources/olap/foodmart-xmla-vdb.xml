@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <vdb name="foodmart" version="1">
     <description>Connects to FoodMart Mondrian database</description>
-    <property name="UseConnectorMetadata" value="cached" />
+    <property name="cache-metadata" value="true" />
 
     <model name="xmla">
         <!-- This model introduces a invokeMDX procedure when deployed -->

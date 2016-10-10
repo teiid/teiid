@@ -3,7 +3,7 @@
 
     <description>Shows how to integrate infinispan</description>
     
-    <property name="UseConnectorMetadata" value="cached" />
+    <property name="cache-metadata" value="true" />
     <model name="Team" visible="false">
         <source name="objsource" translator-name="infinispan1" connection-jndi-name="java:infinispan-jndi"/>
         <metadata type="DDL"><![CDATA[

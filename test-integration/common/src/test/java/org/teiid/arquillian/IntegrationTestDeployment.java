@@ -556,7 +556,7 @@ public class IntegrationTestDeployment {
         String deployedName = "fooXA";
         String testVDB = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" + 
                 "<vdb name=\"test\" version=\"1\">\n" + 
-                "    <property name=\"UseConnectorMetadata\" value=\"cached\" />\n" + 
+                "    <property name=\"cache-metadata\" value=\"true\" />\n" + 
                 "    <model name=\"loopy\">\n" + 
                 "        <source name=\"loop\" translator-name=\"loopback\" />\n" + 
                 "    </model>\n" + 
@@ -592,7 +592,7 @@ public class IntegrationTestDeployment {
 		String vdbName = "test";
 		String testVDB = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" + 
 				"<vdb name=\"test\" version=\"1\">\n" + 
-				"    <property name=\"UseConnectorMetadata\" value=\"cached\" />\n" + 
+				"    <property name=\"cache-metadata\" value=\"true\" />\n" + 
 				"    <model name=\"loopy\">\n" + 
 				"        <source name=\"loop\" translator-name=\"loopy\" />\n" + 
 				"    </model>\n" + 
@@ -643,7 +643,7 @@ public class IntegrationTestDeployment {
 		String vdbName = "test";
 		String testVDB = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" + 
 				"<vdb name=\"test\" version=\"1\">\n" + 
-				"    <property name=\"UseConnectorMetadata\" value=\"cached\" />\n" + 
+				"    <property name=\"cache-metadata\" value=\"true\" />\n" + 
 				"    <model name=\"loopy\">\n" + 
 				"        <source name=\"loop\" translator-name=\"loopy\" />\n" + 
 				"    </model>\n" + 
@@ -710,7 +710,7 @@ public class IntegrationTestDeployment {
 		String vdbName = "test";
 		String testVDB = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" + 
 				"<vdb name=\"test\" version=\"1\">\n" + 
-				"    <property name=\"UseConnectorMetadata\" value=\"${teiid.vdb.UseConnectorMetadata:none}\" />\n" + 
+				"    <property name=\"cache-metadata\" value=\"${teiid.vdb.UseConnectorMetadata:false}\" />\n" + 
 				"    <model name=\"loopy\">\n" + 
 				"        <source name=\"loop\" translator-name=\"loopy\" />\n" + 
 				"    </model>\n" + 
@@ -727,10 +727,10 @@ public class IntegrationTestDeployment {
 		AdminUtil.waitForVDBLoad(admin, vdbName, 1, 3);
 		
 		VDB vdb = admin.getVDB(vdbName, 1);
-		String value = vdb.getPropertyValue("UseConnectorMetadata");
+		String value = vdb.getPropertyValue("cache-metadata");
 
 		// see the arquillian.zml file in resources in the JVM proeprties section for the expected value
-		assertEquals("custom", value);
+		assertEquals("true", value);
 		
 		admin.undeploy("loopy.jar");
 		admin.undeploy("test-vdb.xml");

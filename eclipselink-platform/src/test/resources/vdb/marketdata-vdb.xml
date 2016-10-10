@@ -3,8 +3,6 @@
 
   <description>The Marketdata VDB</description>
 
-  <property name="UseConnectorMetadata" value="true" />
-
   <model name="MarketData">
     <source name="text-connector" translator-name="file" connection-jndi-name="java:/marketdata-file"/>
   </model>
