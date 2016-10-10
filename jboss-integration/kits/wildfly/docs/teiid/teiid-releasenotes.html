@@ -25,6 +25,17 @@
 </UL>
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <ul>
+    <li><a href="https://issues.jboss.org/browse/TEIID-2715">TEIID-2715</a> <b>OData Metadata</b> support for providing the metadata extension properties for OData.
+    <li><a href="https://issues.jboss.org/browse/TEIID-4243">TEIID-4243</a> <b>BatchUpdateException</b> support in JDBC to indicate what part of batch succeeds when a failure occurs.
+    <li><a href="https://issues.jboss.org/browse/TEIID-4191">TEIID-4191</a> <b>NO QUOTE</b> option for TEXTAGG.
+    <li><a href="https://issues.jboss.org/browse/TEIID-4200">TEIID-4200</a> Moved to WildFly 10 as host environment
+    <li><a href="https://issues.jboss.org/browse/TEIID-4332">TEIID-4332</a> <b>Improved NDV</b> calculations for costing.
+    <li><a href="https://issues.jboss.org/browse/TEIID-4284">TEIID-4284</a> <b>Salesforce Bulk API</b> for SELECT queries.
+    <li><a href="https://issues.jboss.org/browse/TEIID-4378">TEIID-4378</a> <a href="https://issues.jboss.org/browse/TEIID-4376">TEIID-4376</a> <b>Clob enhancements</b> to support concat and use in EXECUTE IMMEDIATE.
+    <li><a href="https://issues.jboss.org/browse/TEIID-4100">TEIID-4100</a> <b>OData expand</b> support for siblings and nested expands.
+    <li><a href="https://issues.jboss.org/browse/TEIID-4100">TEIID-4393</a> <b>Additional Geospatial Functions</b> to more fully support the SQL-MM specification.
+    <li><a href="https://issues.jboss.org/browse/TEIID-4421">TEIID-4421</a> <b>Embedded Translator Refinements</b> to allow for functioning that is similar to the server.
+    <li><a href="https://issues.jboss.org/browse/TEIID-3630">TEIID-3630</a> <b>Merge/Upsert pushdown</b> is now supported.
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -47,11 +58,6 @@
   <li><a href="https://issues.jboss.org/browse/TEIID-4228">TEIID-4228</a> Precision and scale values greater than 32767 are deprecated.</li>  
 </ul>
 
-<h4>from 9.1</h4>
-<ul>
-    <li><a href="https://issues.jboss.org/browse/TEIID-4501">TEIID-4501</a> The salesforce-34 resource adapter defaults to the version 34 api rather than version 22 api.</li>
-</ul>
-
 <h4>from 9.0</h4>
 <ul>
    <li><a href="https://issues.jboss.org/browse/TEIID-4400">TEIID-4400</a> XML Document Models have been deprecated.  OData or SQL/XML should be used instead.</li>
@@ -63,6 +69,7 @@
    if the USER function returns a name with the security domain.  Finally the DatabaseMetaData and CommandContext getUserName will both return the simple user name without the domain.</li>
    <li><a href="https://issues.jboss.org/browse/TEIID-4228">TEIID-4228</a> Precision/scale will now be set consistently.  Values reported from JDBC/OData/ODBC metadata may be different if your current metadata declares a bigdecimal type with default precision.</li>
    <li><a href="https://issues.jboss.org/browse/TEIID-4423">TEIID-4423</a> Uncorrelated subqueries will be treated as deterministic regardless of functions used within them.  Prior releases treated most uncorrelated subqueries as non-deterministic if they contained a non-deterministic function.</li>  
+   <li><a href="https://issues.jboss.org/browse/TEIID-4501">TEIID-4501</a> The salesforce-34 resource adapter defaults to the version 34 api rather than version 22 api.</li>
 </ul>
 
 <h4>from 8.x</h4>
