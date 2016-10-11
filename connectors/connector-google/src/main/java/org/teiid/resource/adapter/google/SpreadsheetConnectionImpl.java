@@ -24,6 +24,7 @@ package org.teiid.resource.adapter.google;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -34,7 +35,6 @@ import org.teiid.resource.adapter.google.gdata.GDataClientLoginAPI;
 import org.teiid.resource.adapter.google.gdata.SpreadsheetMetadataExtractor;
 import org.teiid.resource.spi.BasicConnection;
 import org.teiid.translator.goole.api.GoogleSpreadsheetConnection;
-import org.teiid.translator.goole.api.SpreadsheetAuthException;
 import org.teiid.translator.goole.api.UpdateSet;
 import org.teiid.translator.goole.api.metadata.SpreadsheetInfo;
 import org.teiid.translator.goole.api.result.RowsResult;
@@ -46,16 +46,14 @@ import org.teiid.translator.goole.api.result.UpdateResult;
  * Represents a connection to an Google spreadsheet data source. 
  */
 public class SpreadsheetConnectionImpl extends BasicConnection implements GoogleSpreadsheetConnection  {  
-	private SpreadsheetInfo info = null;
 	private SpreadsheetManagedConnectionFactory config;
 	private GDataClientLoginAPI gdata = null;
 	private GoogleDataProtocolAPI dataProtocol = null;
+    private AtomicReference<SpreadsheetInfo> spreadsheetInfo;
 	
-	public SpreadsheetConnectionImpl(SpreadsheetManagedConnectionFactory config) {
+	public SpreadsheetConnectionImpl(SpreadsheetManagedConnectionFactory config, AtomicReference<SpreadsheetInfo> spreadsheetInfo) {
 		this.config = config;
-		
-		checkConfig();		
-		
+		this.spreadsheetInfo = spreadsheetInfo;
 		AuthHeaderFactory authHeaderFactory = new OAuth2HeaderFactory(config.getRefreshToken().trim());
 		gdata=new GDataClientLoginAPI();
 		dataProtocol = new GoogleDataProtocolAPI();
@@ -67,29 +65,6 @@ public class SpreadsheetConnectionImpl extends BasicConnection implements Google
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR,SpreadsheetManagedConnectionFactory.UTIL.getString("init") ); //$NON-NLS-1$
 	}
 	
-	private void checkConfig() {
-
-		//SpreadsheetName should be set
-		if (config.getSpreadsheetName()==null ||  config.getSpreadsheetName().trim().equals("")){ //$NON-NLS-1$
-			throw new SpreadsheetAuthException(SpreadsheetManagedConnectionFactory.UTIL.
-					getString("provide_spreadsheetname",SpreadsheetManagedConnectionFactory.SPREADSHEET_NAME));		 //$NON-NLS-1$
-		}
-		
-		//Auth method must be OAUTH2
-		if (config.getAuthMethod()!=null && !config.getAuthMethod().equals(SpreadsheetManagedConnectionFactory.OAUTH2_LOGIN)){
-			throw new SpreadsheetAuthException(SpreadsheetManagedConnectionFactory.UTIL.
-					getString("provide_auth", //$NON-NLS-1$
-							SpreadsheetManagedConnectionFactory.OAUTH2_LOGIN));		
-		}
-		
-		//OAuth login requires refreshToken
-		//if (config.getAuthMethod().equals(SpreadsheetManagedConnectionFactory.OAUTH2_LOGIN)){
-			if (config.getRefreshToken() == null || config.getRefreshToken().trim().equals("")){ //$NON-NLS-1$
-				throw new SpreadsheetAuthException(SpreadsheetManagedConnectionFactory.UTIL.getString("oauth_requires_pass"));	 //$NON-NLS-1$
-			}
-		//}
-	}
-
 	/** 
 	 * Closes Google spreadsheet context, effectively closing the connection to Google spreadsheet.
 	 * (non-Javadoc)
@@ -117,28 +92,35 @@ public class SpreadsheetConnectionImpl extends BasicConnection implements Google
 	}	
 	
 	@Override
-	public synchronized SpreadsheetInfo getSpreadsheetInfo() {
-		if (info == null) {
-			SpreadsheetMetadataExtractor metadataExtractor = new SpreadsheetMetadataExtractor();
-			metadataExtractor.setGdataAPI(gdata);
-			metadataExtractor.setVisualizationAPI(dataProtocol);
-			info = metadataExtractor.extractMetadata(config.getSpreadsheetName());
+	public SpreadsheetInfo getSpreadsheetInfo() {
+	    SpreadsheetInfo info = spreadsheetInfo.get();
+	    if (info == null) {
+	        synchronized (spreadsheetInfo) {
+	            info = spreadsheetInfo.get();
+	            if (info == null) {
+    	            SpreadsheetMetadataExtractor metadataExtractor = new SpreadsheetMetadataExtractor();
+    	            metadataExtractor.setGdataAPI(gdata);
+    	            metadataExtractor.setVisualizationAPI(dataProtocol);
+    	            info = metadataExtractor.extractMetadata(config.getSpreadsheetName());
+    	            spreadsheetInfo.set(info);
+	            }                
+            }
 		}
 		return info;
 	}
 
 	@Override
 	public UpdateResult executeListFeedUpdate(String worksheetID, String criteria, List<UpdateSet> set) {
-		return gdata.listFeedUpdate(info.getSpreadsheetKey(), worksheetID, criteria, set);
+		return gdata.listFeedUpdate(getSpreadsheetInfo().getSpreadsheetKey(), worksheetID, criteria, set);
 	}
 
 	@Override
 	public UpdateResult deleteRows(String worksheetID, String criteria) {
-		return gdata.listFeedDelete(info.getSpreadsheetKey(), worksheetID, criteria);
+		return gdata.listFeedDelete(getSpreadsheetInfo().getSpreadsheetKey(), worksheetID, criteria);
 	}
 	@Override
 	public UpdateResult executeRowInsert(String worksheetID, Map<String,String> pair){
-		return gdata.listFeedInsert(info.getSpreadsheetKey(), worksheetID, pair);
+		return gdata.listFeedInsert(getSpreadsheetInfo().getSpreadsheetKey(), worksheetID, pair);
 	}
 
 }
