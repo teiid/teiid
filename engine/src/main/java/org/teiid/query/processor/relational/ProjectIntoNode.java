@@ -219,19 +219,6 @@ public class ProjectIntoNode extends RelationalNode {
         return pullBatch();                                                           
     }
 
-	private void registerIteratorRequest() throws TeiidComponentException,
-			TeiidProcessingException {
-		Insert insert = new Insert(intoGroup, intoElements, null);
-		insert.setSourceHint(sourceHint);
-		buffer.close();
-		insert.setTupleSource(buffer.createIndexedTupleSource(true));
-		// Register insert command against source 
-		registerRequest(insert);
-        //remove the old buffer when the insert is complete
-        //last = buffer;
-        buffer = null;
-	}
-
     private void checkExitConditions()  throws TeiidComponentException, BlockedException, TeiidProcessingException {
     	if (tupleSource != null) {
 	    	Integer count = (Integer)tupleSource.nextTuple().get(0);
@@ -248,6 +235,7 @@ public class ProjectIntoNode extends RelationalNode {
     }
 
     private void registerRequest(Command command) throws TeiidComponentException, TeiidProcessingException {
+	command.setSourceHint(sourceHint);
     	tupleSource = getDataManager().registerRequest(getContext(), command, this.modelName, new RegisterRequestParameter(null, getID(), -1));        
     }
     
