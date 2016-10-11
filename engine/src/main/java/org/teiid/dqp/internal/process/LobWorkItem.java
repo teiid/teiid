@@ -31,6 +31,7 @@ import javax.resource.spi.work.Work;
 import org.teiid.client.lob.LobChunk;
 import org.teiid.client.util.ResultsReceiver;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.Streamable;
@@ -78,8 +79,9 @@ public class LobWorkItem implements Work {
         } catch (TeiidComponentException e) {            
             LogManager.logWarning(org.teiid.logging.LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30027));
             ex = e;
-        } catch (IOException e) {
-			ex = e;
+        } catch (IOException|SQLException e) {
+            //treat this as a processing exception
+			ex = new TeiidProcessingException(e);
 		} 
         
         synchronized (this) {
@@ -103,7 +105,7 @@ public class LobWorkItem implements Work {
 				stream.close();
 			}
 		} catch (IOException e) {
-			LogManager.logWarning(org.teiid.logging.LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30027));
+			LogManager.logDetail(org.teiid.logging.LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30027));
 		}
 		parent.removeLobStream(streamRequestId);
 	}    
@@ -111,28 +113,25 @@ public class LobWorkItem implements Work {
     /**
      * Create a object which can create a sequence of LobChunk objects on a given
      * LOB object 
+     * @throws SQLException 
      */
     private ByteLobChunkStream createLobStream(String referenceStreamId) 
-        throws TeiidComponentException, IOException {
+        throws TeiidComponentException, SQLException {
         
         // get the reference object in the buffer manager, and try to stream off
         // the original sources.
         Streamable<?> streamable = parent.resultsBuffer.getLobReference(referenceStreamId);
         
-        try {
-            if (streamable instanceof XMLType) {
-                XMLType xml = (XMLType)streamable;
-                return new ByteLobChunkStream(xml.getBinaryStream(), chunkSize);
-            }
-            else if (streamable instanceof ClobType) {
-                ClobType clob = (ClobType)streamable;
-                return new ByteLobChunkStream(new ReaderInputStream(clob.getCharacterStream(), Charset.forName(Streamable.ENCODING)), chunkSize);            
-            } 
-            BlobType blob = (BlobType)streamable;
-            return new ByteLobChunkStream(blob.getBinaryStream(), chunkSize);                        
-        } catch(SQLException e) {
-            throw new IOException(e);
+        if (streamable instanceof XMLType) {
+            XMLType xml = (XMLType)streamable;
+            return new ByteLobChunkStream(xml.getBinaryStream(), chunkSize);
         }
+        else if (streamable instanceof ClobType) {
+            ClobType clob = (ClobType)streamable;
+            return new ByteLobChunkStream(new ReaderInputStream(clob.getCharacterStream(), Charset.forName(Streamable.ENCODING)), chunkSize);            
+        } 
+        BlobType blob = (BlobType)streamable;
+        return new ByteLobChunkStream(blob.getBinaryStream(), chunkSize);                        
     }
     
     synchronized void setResultsReceiver(ResultsReceiver<LobChunk> resultsReceiver) {
