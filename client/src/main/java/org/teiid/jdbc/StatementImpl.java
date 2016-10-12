@@ -839,6 +839,9 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         if (this.updateCounts == null) {
         	return -1;
         }
+        if (this.updateCounts.length == 0) {
+            return 0;
+        }
         return this.updateCounts[0];
     }
 
