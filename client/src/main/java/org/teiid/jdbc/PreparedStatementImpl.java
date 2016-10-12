@@ -324,6 +324,9 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
         if (this.updateCounts == null) {
         	return 0;
         }
+        if (this.updateCounts.length == 0) {
+            return 0;
+        }
         return this.updateCounts[0];
     }
     

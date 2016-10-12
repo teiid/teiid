@@ -25,6 +25,7 @@ package org.teiid.dqp.internal.process;
 import java.lang.ref.WeakReference;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -949,7 +950,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	        }
 	        response.setUpdateResult(this.returnsUpdateCount);
 	        if (this.returnsUpdateCount) {
-	        	//batch updates can have special exceptions in addition to update count results
+	            //batch updates can have special exceptions in addition to update count results
 	        	Throwable t = this.processor.getContext().getBatchUpdateException();
 	        	if (t != null) {
 		        	t = logError(t);
@@ -971,6 +972,10 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 			    	response.setResults(keys.getKeys());
 			    	response.setLastRow(keys.getKeys().size());
 			    	finalRowCount = response.getLastRow();
+        		} else if (finalRowCount == 0) {
+        		    //anon block or other construct not setting an explicit update count
+        		    response.setResults(Arrays.asList(Arrays.asList(0)));
+        		    finalRowCount = 1;
         		}
 	        }
 	        // set final row
