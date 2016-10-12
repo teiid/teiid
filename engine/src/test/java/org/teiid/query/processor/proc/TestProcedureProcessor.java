@@ -1904,6 +1904,16 @@ public class TestProcedureProcessor {
         assertTrue(!plan.requiresTransaction(false));
     }
     
+    @Test public void testDDLProcTransaction() throws Exception {
+        String ddl = "create foreign procedure proc (x integer) options (updatecount 2);"; //$NON-NLS-1$
+            
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "x", "y");
+        String userQuery = "EXEC proc(1)"; //$NON-NLS-1$
+        ProcessorPlan plan = getProcedurePlan(userQuery, metadata);
+        
+        assertTrue(plan.requiresTransaction(false));
+    }
+    
     /**
      * Test the use of a procedure variable in the criteria of a LEFT OUTER
      * JOIN which will be optimized out as non-JOIN criteria.

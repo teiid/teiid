@@ -452,7 +452,7 @@ public class ODataSchemaBuilder {
     }
     
     private static boolean isFuntion(Procedure proc) {
-        if (doesProcedureReturn(proc) && proc.getUpdateCount() == 0
+        if (doesProcedureReturn(proc) && proc.getUpdateCount() < 1
                 && !isInputParameterLob(proc)) {
             return true;
         }
@@ -724,7 +724,7 @@ public class ODataSchemaBuilder {
         if (proc.getNameInSource() != null) {
             addStringAnnotation(operation, "teiid.NAMEINSOURCE", proc.getNameInSource());
         }
-        if (proc.getUpdateCount() != 1) {
+        if (proc.getUpdateCount() != Procedure.AUTO_UPDATECOUNT) {
             addIntAnnotation(operation, "teiid.UPDATECOUNT", proc.getUpdateCount());
         }   
         // add all custom properties
