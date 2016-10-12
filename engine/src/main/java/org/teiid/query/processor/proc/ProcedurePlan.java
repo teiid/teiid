@@ -137,7 +137,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
     
     private boolean evaluatedParams;
     
-    private boolean requiresTransaction = true;
+    private Boolean requiresTransaction = true;
     
     private TransactionContext blockContext;
     /**
@@ -865,14 +865,23 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
         return programs.peek();
     }
     
-    public void setRequiresTransaction(boolean requiresTransaction) {
-		this.requiresTransaction = requiresTransaction;
+    public void setRequiresTransaction(int updateCount) {
+        if (updateCount == 1) {
+            this.requiresTransaction = null;
+        } else if (updateCount < 1) {
+            this.requiresTransaction = false;
+        } else {
+            this.requiresTransaction = true;
+        }
 	}
     
     @Override
     public boolean requiresTransaction(boolean transactionalReads) {
     	//TODO: detect simple select case
-    	return requiresTransaction || transactionalReads;
+    	if (transactionalReads) {
+    	    return true;
+    	}
+    	return requiresTransaction == null || requiresTransaction;
     }
     
     /**

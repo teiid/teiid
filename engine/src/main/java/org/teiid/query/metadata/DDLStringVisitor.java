@@ -615,7 +615,7 @@ public class DDLStringVisitor {
 		StringBuilder options = new StringBuilder();
 		addCommonOptions(options, procedure);
 		
-		if (procedure.getUpdateCount() != 1) {
+		if (procedure.getUpdateCount() != Procedure.AUTO_UPDATECOUNT) {
 			addOption(options, UPDATECOUNT, procedure.getUpdateCount());
 		}	
 		

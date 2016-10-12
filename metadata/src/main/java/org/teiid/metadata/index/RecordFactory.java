@@ -736,7 +736,7 @@ public class RecordFactory {
         }
         
         if (includeProcedureUpdateCount(indexVersion)) {
-            procRd.setUpdateCount(Integer.parseInt(tokens.get(tokenIndex++)));
+            procRd.setUpdateCount(Integer.parseInt(tokens.get(tokenIndex++)) - 1);
         }
         
 		// The next tokens are footer values

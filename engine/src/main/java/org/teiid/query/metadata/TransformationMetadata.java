@@ -386,8 +386,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
                     procInfo.setQueryPlan(queryNode);
                 }
                 
-                //subtract 1, to match up with the server
-                procInfo.setUpdateCount(procRecord.getUpdateCount() -1);
+                procInfo.setUpdateCount(procRecord.getUpdateCount());
 				results.add(procInfo);
 			}
         	this.procedureCache.put(canonicalName, results);        	
