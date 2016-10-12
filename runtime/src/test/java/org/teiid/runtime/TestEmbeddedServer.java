@@ -1428,6 +1428,26 @@ public class TestEmbeddedServer {
 		assertEquals(77, rs.getBlob(1).length());
 	}
 	
+    @Test public void testUpdateCountAnonProc() throws Exception {
+        EmbeddedConfiguration ec = new EmbeddedConfiguration();
+        ec.setUseDisk(false);
+        es.start(ec);
+        
+        ModelMetaData mmd1 = new ModelMetaData();
+        mmd1.setName("b");
+        mmd1.setModelType(Type.VIRTUAL);
+        mmd1.addSourceMetadata("ddl", "create view v as select 1");
+        
+        es.deployVDB("vdb", mmd1);
+        
+        Connection c = es.getDriver().connect("jdbc:teiid:vdb", null);
+        Statement s = c.createStatement();
+        s.execute("set autoCommitTxn off");
+        PreparedStatement ps = c.prepareStatement("begin select 1 without return; end");
+        ps.execute();
+        assertEquals(0, ps.getUpdateCount());
+    }
+	
 	@Test public void testPreParser() throws Exception {
 		EmbeddedConfiguration ec = new EmbeddedConfiguration();
 		ec.setPreParser(new PreParser() {
