@@ -412,7 +412,7 @@ public class ODataSchemaBuilder {
     }
     
     private static boolean isFuntion(Procedure proc) {
-        if (doesProcedureReturn(proc) && proc.getUpdateCount() == 0
+        if (doesProcedureReturn(proc) && proc.getUpdateCount() < 1
                 && !isInputParameterLob(proc)) {
             return true;
         }
