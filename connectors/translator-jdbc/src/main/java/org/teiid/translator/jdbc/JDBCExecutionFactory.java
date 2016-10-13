@@ -943,12 +943,22 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         if (useStreamsForLobs()) {
         	if (param instanceof Blob) {
         		Blob blob = (Blob)param;
-        		stmt.setBinaryStream(i, blob.getBinaryStream(), blob.length());
+        		long length = blob.length();
+        		if (length <= Integer.MAX_VALUE) {
+        		    stmt.setBinaryStream(i, blob.getBinaryStream(), (int)length);
+        		} else {
+        		    stmt.setBinaryStream(i, blob.getBinaryStream(), length);
+        		}
         		return;
         	}
         	if (param instanceof Clob) {
         		Clob clob = (Clob)param;
-        		stmt.setCharacterStream(i, clob.getCharacterStream(), clob.length());
+        		long length = clob.length();
+        		if (length <= Integer.MAX_VALUE) {
+        		    stmt.setCharacterStream(i, clob.getCharacterStream(), (int)clob.length());
+        		} else {
+        		    stmt.setCharacterStream(i, clob.getCharacterStream(), length);
+        		}
         		return;
         	}
         }
