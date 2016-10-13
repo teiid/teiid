@@ -1448,8 +1448,10 @@ public class TestEmbeddedServer {
         Statement s = c.createStatement();
         s.execute("set autoCommitTxn off");
         PreparedStatement ps = c.prepareStatement("begin select 1 without return; end");
+        assertNull(ps.getMetaData());
         ps.execute();
         assertEquals(0, ps.getUpdateCount());
+        assertNull(ps.getMetaData());        
     }
 	
 	@Test public void testPreParser() throws Exception {

@@ -359,7 +359,7 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
 					this.resultSet = null;
 					return metadata;
 				} 
-				if (getMetadataResults().getColumnMetadata() == null) {
+				if (getMetadataResults().getColumnMetadata() == null || getMetadataResults().getColumnMetadata().length == 0) {
 					return null;
 				}
                 MetadataProvider provider = new MetadataProvider(getMetadataResults().getColumnMetadata());
