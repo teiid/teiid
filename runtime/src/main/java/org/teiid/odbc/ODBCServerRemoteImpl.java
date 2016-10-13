@@ -26,7 +26,6 @@ import static org.teiid.odbc.PGUtil.*;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.sql.ParameterMetaData;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -175,9 +174,9 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	private static Pattern closePattern = Pattern.compile("CLOSE (\\S+)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	
 	private static Pattern deallocatePattern = Pattern.compile("DEALLOCATE(?:\\s+PREPARE)?\\s+(.*)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-	private static Pattern releasePattern = Pattern.compile("RELEASE (\\w+\\d?_*)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-	private static Pattern savepointPattern = Pattern.compile("SAVEPOINT (\\w+\\d?_*)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-	private static Pattern rollbackPattern = Pattern.compile("ROLLBACK\\s+(to)?\\s+(\\w+\\d+_*)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+	private static Pattern releasePattern = Pattern.compile("RELEASE\\s+(\\w+\\d?_*)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+	private static Pattern savepointPattern = Pattern.compile("SAVEPOINT\\s+(\\w+\\d?_*)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+	private static Pattern rollbackPattern = Pattern.compile("ROLLBACK(\\s+to)?\\s+(\\w+\\d+_*)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	
 	private static Pattern txnPattern = Pattern.compile("(BEGIN|COMMIT|ROLLBACK)(\\s+(WORK|TRANSACTION))?", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	
@@ -515,15 +514,15 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 				//just pull the initial information - leave statement formation until binding 
 				String modfiedSQL = fixSQL(sql);
 				stmt = this.connection.prepareStatement(modfiedSQL);
-				if (paramType.length > 0) {
-					ParameterMetaData pmd = stmt.getParameterMetaData();
-					for (int i = 0; i < paramType.length; i++) {
-						if (paramType[i] == 0) {
+				//if (paramType.length > 0) {
+					//ParameterMetaData pmd = stmt.getParameterMetaData();
+					//for (int i = 0; i < paramType.length; i++) {
+						//if (paramType[i] == 0) {
 							//TODO: this is incorrect - should be oid
 							//paramType[i] = convertType(pmd.getParameterType(i + 1));
-						}
-					}
-				}
+						//}
+					//}
+				//}
 				Prepared prepared = new Prepared(prepareName, sql, modfiedSQL, paramType, getPgColInfo(stmt.getMetaData()));
 				this.preparedMap.put(prepareName, prepared);
 				this.client.prepareCompleted(prepareName);
