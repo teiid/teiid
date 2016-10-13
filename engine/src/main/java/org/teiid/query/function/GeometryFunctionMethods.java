@@ -470,6 +470,14 @@ public class GeometryFunctionMethods {
         return GeometryUtils.interiorRingN(geom, index - 1);
     }
     
+    @TeiidFunction(name=SourceSystemFunctions.ST_INTERSECTION,
+                   category=FunctionCategoryConstants.GEOMETRY,
+                   nullOnNull=true,
+                   pushdown=PushDown.CAN_PUSHDOWN)
+    public static GeometryType intersection(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
+    	return GeometryUtils.intersection(geom1, geom2);
+    }
+    
     @TeiidFunction(name=SourceSystemFunctions.ST_ISCLOSED,
             category=FunctionCategoryConstants.GEOMETRY,
             nullOnNull=true,

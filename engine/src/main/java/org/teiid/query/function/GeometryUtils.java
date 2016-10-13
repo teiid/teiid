@@ -569,6 +569,12 @@ public class GeometryUtils {
 		return getGeometryType(g1.difference(g2));
 	}
 
+	public static GeometryType intersection(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
+		Geometry g1 = getGeometry(geom1);
+		Geometry g2 = getGeometry(geom2);
+		return getGeometryType(g1.intersection(g2));
+	}
+
 	public static int dimension(GeometryType geom) throws FunctionExecutionException {
 		Geometry g = getGeometry(geom);
 		return g.getDimension();
