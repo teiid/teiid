@@ -73,6 +73,11 @@
         <scope>test</scope>
     </dependency>
     <dependency>
+        <groupId>org.jboss.teiid.connectors</groupId>
+        <artifactId>translator-jdbc</artifactId>
+        <scope>test</scope>
+    </dependency>    
+    <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-all</artifactId>
     </dependency>
@@ -120,6 +125,11 @@
         <groupId>org.postgresql</groupId>
         <artifactId>postgresql</artifactId>
         <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.picketbox</groupId>
+      <artifactId>picketbox</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 </project>

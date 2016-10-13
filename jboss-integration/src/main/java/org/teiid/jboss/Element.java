@@ -131,7 +131,12 @@ enum Element {
     TRANSLATOR_ELEMENT("translator"),
     TRANSLATOR_NAME_ATTRIBUTE("name", "name"),
     TRANSLATOR_MODULE_ATTRIBUTE("module", "module"),
-    TRANSLATOR_SLOT_ATTRIBUTE("slot", "slot");
+    TRANSLATOR_SLOT_ATTRIBUTE("slot", "slot"),
+    
+    // Repositories
+    DATABASE_STORAGE_ELEMENT("database-storage"),
+    DATABASE_STORAGE_MODULE_NAME_ATTRIBUTE("module", "database-storage-module"),
+    DATABASE_STORAGE_PROPERTIES_ATTRIBUTE("properties", "database-storage-properties");
     
     private final String xmlName;
     private final String modelName;

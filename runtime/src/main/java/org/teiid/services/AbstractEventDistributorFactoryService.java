@@ -22,14 +22,19 @@
 package org.teiid.services;
 
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
+import org.teiid.adminapi.Admin;
 import org.teiid.deployers.EventDistributorImpl;
 import org.teiid.deployers.VDBRepository;
+import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
+import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ExecutionFactoryProvider;
 import org.teiid.events.EventDistributor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.MetadataException;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.runtime.RuntimePlugin;
 
@@ -42,15 +47,38 @@ public abstract class AbstractEventDistributorFactoryService implements Internal
 		return this;
 	}
 	
+	protected abstract Admin getAdmin();
 	protected abstract VDBRepository getVdbRepository();
 	protected abstract ObjectReplicator getObjectReplicator();
-
+	protected abstract ConnectorManagerRepository getConnectorManagerRepository();
+	protected abstract ClassLoader getClassLoader(String[] path) throws MetadataException;
+	
 	public void start() {
 		final EventDistributor ed = new EventDistributorImpl() {
 			@Override
 			public VDBRepository getVdbRepository() {
 				return AbstractEventDistributorFactoryService.this.getVdbRepository();
 			}
+
+            @Override
+            public ExecutionFactoryProvider getExecutionFactoryProvider() {
+                return AbstractEventDistributorFactoryService.this.getConnectorManagerRepository().getProvider();
+            }
+
+            @Override
+            public ConnectorManagerRepository getConnectorManagerRepository() {
+                return AbstractEventDistributorFactoryService.this.getConnectorManagerRepository();
+            }
+
+            @Override
+            public Admin getAdmin() {
+                return AbstractEventDistributorFactoryService.this.getAdmin();
+            }
+
+            @Override
+            public ClassLoader getClassLoader(String[] path) {
+                return AbstractEventDistributorFactoryService.this.getClassLoader(path);
+            }
 		};
 		
 		ObjectReplicator objectReplicator = getObjectReplicator();
@@ -68,9 +96,13 @@ public abstract class AbstractEventDistributorFactoryService implements Internal
 			
 			@Override
 			public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-				method.invoke(ed, args);
-				if (replicatableEventDistributor != null) {
-					method.invoke(replicatableEventDistributor, args);
+				try {
+					method.invoke(ed, args);
+					if (replicatableEventDistributor != null) {
+						method.invoke(replicatableEventDistributor, args);
+					}
+				} catch (InvocationTargetException e) {
+					throw e.getTargetException();
 				}
 				return null;
 			}

@@ -49,9 +49,11 @@ import org.teiid.core.CoreConstants;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.deployers.VDBRepository;
+import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.service.SessionService;
 import org.teiid.dqp.service.SessionServiceException;
+import org.teiid.jdbc.JDBCURL;
 import org.teiid.logging.AuditMessage;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -157,6 +159,7 @@ public class SessionServiceImpl implements SessionService {
         String hostName = properties.getProperty(TeiidURL.CONNECTION.CLIENT_HOSTNAME);
         String ipAddress = properties.getProperty(TeiidURL.CONNECTION.CLIENT_IP_ADDRESS);
         String clientMac = properties.getProperty(TeiidURL.CONNECTION.CLIENT_MAC);
+        boolean vdbCreate = JDBCURL.isVDBInCreatetMode(properties.getProperty(TeiidURL.CONNECTION.VDBEDITMODE));
         boolean onlyAllowPassthrough = Boolean.valueOf(properties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION,
                 "false")); //$NON-NLS-1$
 
@@ -170,7 +173,7 @@ public class SessionServiceImpl implements SessionService {
 	        // Validate VDB and version if logging on to server product...
 	        VDBMetaData vdb = null;
 	        if (vdbName != null) {
-	        	vdb = getActiveVDB(vdbName, vdbVersion);
+	        	vdb = getActiveVDB(vdbName, vdbVersion, vdbCreate);
 	        }
 	
 	        if (sessionMaxLimit > 0 && getActiveSessionsCount() >= sessionMaxLimit) {
@@ -251,19 +254,24 @@ public class SessionServiceImpl implements SessionService {
         }
 	}
 	
-	protected VDBMetaData getActiveVDB(String vdbName, String vdbVersion) throws SessionServiceException {
+	protected VDBMetaData getActiveVDB(String vdbName, String vdbVersion, boolean createVDB) throws SessionServiceException {
 		VDBMetaData vdb = null;
 		
 		try {
 			if (vdbVersion == null) {
-				vdbVersion = "latest"; //$NON-NLS-1$
 				vdb = this.vdbRepository.getLiveVDB(vdbName);
 			}
 			else {
 				vdb = this.vdbRepository.getLiveVDB(vdbName, vdbVersion);
-			}         
+			}
+			if (vdb == null && createVDB) {
+				this.vdbRepository.createDB(vdbName, vdbVersion == null?"1":vdbVersion);
+				vdb = this.vdbRepository.getLiveVDB(vdbName, vdbVersion == null?"1":vdbVersion);
+			}
 		} catch (NumberFormatException e) {
 			 throw new SessionServiceException(RuntimePlugin.Event.TEIID40045, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40045, vdbVersion));
+		} catch (VirtualDatabaseException e) {
+			throw new SessionServiceException(RuntimePlugin.Event.TEIID40045, e, e.getMessage());			
 		}
 		if (vdb == null) {
 			 throw new SessionServiceException(RuntimePlugin.Event.TEIID40046, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40046, vdbName, vdbVersion));
@@ -442,30 +450,32 @@ public class SessionServiceImpl implements SessionService {
 			userName = CoreConstants.DEFAULT_ANON_USERNAME;
 		}
 		if (vdbName != null) {
-			VDB vdb;
+			VDB vdb = null;
 			try {
-				vdb = getActiveVDB(vdbName, version);
+				vdb = getActiveVDB(vdbName, version,false);
 			} catch (SessionServiceException e) {
-				throw new LogonException(e);
+				// ignore and return default, this only occur if the name and version are wrong, 
+				// or vdb does not exists
 			}
-			
-			String gssPattern = vdb.getPropertyValue(GSS_PATTERN_PROPERTY);
-			
-			//TODO: cache the patterns
-			
-			if (gssPattern != null && Pattern.matches(gssPattern, userName)) {
-				return AuthenticationType.GSS;
-			}
-			
-			String passwordPattern = vdb.getPropertyValue(PASSWORD_PATTERN_PROPERTY);
-			
-			if (passwordPattern != null && Pattern.matches(passwordPattern, userName)) {
-				return AuthenticationType.USERPASSWORD;
-			}
-			
-			String typeProperty = vdb.getPropertyValue(AUTHENTICATION_TYPE_PROPERTY);
-			if (typeProperty != null) {
-				return AuthenticationType.valueOf(typeProperty);
+			if (vdb != null) {
+				String gssPattern = vdb.getPropertyValue(GSS_PATTERN_PROPERTY);
+				
+				//TODO: cache the patterns
+				
+				if (gssPattern != null && Pattern.matches(gssPattern, userName)) {
+					return AuthenticationType.GSS;
+				}
+				
+				String passwordPattern = vdb.getPropertyValue(PASSWORD_PATTERN_PROPERTY);
+				
+				if (passwordPattern != null && Pattern.matches(passwordPattern, userName)) {
+					return AuthenticationType.USERPASSWORD;
+				}
+				
+				String typeProperty = vdb.getPropertyValue(AUTHENTICATION_TYPE_PROPERTY);
+				if (typeProperty != null) {
+					return AuthenticationType.valueOf(typeProperty);
+				}
 			}
 		}
 		return this.defaultAuthenticationType;
@@ -479,16 +489,18 @@ public class SessionServiceImpl implements SessionService {
 		if (vdbName != null) {
 	    	try {    		
 	    		if (vdb == null) {
-	    			vdb = getActiveVDB(vdbName, version);
+	    			vdb = getActiveVDB(vdbName, version, false);
 	    		}
-				String typeProperty = vdb.getPropertyValue(SECURITY_DOMAIN_PROPERTY);				
-				if (typeProperty != null) {
-					if (securityDomain != null && !typeProperty.equals(securityDomain)) {
-						//conflicting
-		    			throw new LoginException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40116));
+	    		if (vdb != null) {
+					String typeProperty = vdb.getPropertyValue(SECURITY_DOMAIN_PROPERTY);				
+					if (typeProperty != null) {
+						if (securityDomain != null && !typeProperty.equals(securityDomain)) {
+							//conflicting
+			    			throw new LoginException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40116));
+						}
+						return typeProperty;
 					}
-					return typeProperty;
-				}
+	    		}
 			} catch (SessionServiceException e) {
 				// ignore and return default, this only occur if the name and version are wrong 
 			}			

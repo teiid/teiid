@@ -17,7 +17,7 @@ CREATE FOREIGN TABLE "Sample.Asset.ElementCategory" (
 CREATE FOREIGN PROCEDURE "Sample.EventFrame.GetPIPoint"(
     IN EventFrameAttributeID string NOT NULL OPTIONS (NATIVE_TYPE 'Cti_Guid')) RETURNS TABLE
         (Path string(8000) OPTIONS (NATIVE_TYPE 'Cti_WString'), 
-        Server string(8000) OPTIONS (NATIVE_TYPE 'Cti_WString'), 
+        "Server" string(8000) OPTIONS (NATIVE_TYPE 'Cti_WString'), 
         Tag string(8000) OPTIONS (NATIVE_TYPE 'Cti_WString'),
         "Number of Computers" string(23) OPTIONS (NAMEINSOURCE '[Number of Computers]'))
     OPTIONS ("teiid_pi:TVF" 'TRUE', NAMEINSOUCE '[Sample].[EventFrame].[GetPIPoint]');

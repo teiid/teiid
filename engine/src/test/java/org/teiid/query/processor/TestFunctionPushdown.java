@@ -362,7 +362,7 @@ public class TestFunctionPushdown {
 	}
 	
 	@Test public void testDDLMetadataNameConflict() throws Exception {
-		String ddl = "CREATE foreign FUNCTION \"convert\"(msg integer, type varchar) RETURNS varchar " +
+		String ddl = "CREATE foreign FUNCTION \"convert\"(msg integer, \"type\" varchar) RETURNS varchar " +
 				"CREATE foreign table X (Y integer);";
 
 		QueryMetadataInterface metadata = RealMetadataFactory.fromDDL(ddl, "x", "phy");

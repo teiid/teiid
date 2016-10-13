@@ -23,6 +23,8 @@ package org.teiid.jboss;
 
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Blob;
@@ -36,6 +38,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.concurrent.Future;
+
+import javax.xml.stream.XMLStreamException;
+import javax.xml.transform.TransformerException;
 
 import org.jboss.as.connector.metadata.xmldescriptors.ConnectorXmlDescriptor;
 import org.jboss.as.connector.services.resourceadapters.deployment.InactiveResourceAdapterDeploymentService.InactiveResourceAdapterDeployment;
@@ -61,6 +66,7 @@ import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceRegistry;
 import org.teiid.adminapi.Admin;
+import org.teiid.adminapi.Admin.ExportFormat;
 import org.teiid.adminapi.Admin.SchemaObjectType;
 import org.teiid.adminapi.Admin.TranlatorPropertyType;
 import org.teiid.adminapi.AdminComponentException;
@@ -69,14 +75,7 @@ import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.VDB.Status;
-import org.teiid.adminapi.impl.CacheStatisticsMetadata;
-import org.teiid.adminapi.impl.EngineStatisticsMetadata;
-import org.teiid.adminapi.impl.RequestMetadata;
-import org.teiid.adminapi.impl.SessionMetadata;
-import org.teiid.adminapi.impl.TransactionMetadata;
-import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.adminapi.impl.VDBTranslatorMetaData;
-import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
+import org.teiid.adminapi.impl.*;
 import org.teiid.adminapi.jboss.VDBMetadataMapper;
 import org.teiid.adminapi.jboss.VDBMetadataMapper.TransactionMetadataMapper;
 import org.teiid.adminapi.jboss.VDBMetadataMapper.VDBTranslatorMetaDataMapper;
@@ -96,11 +95,17 @@ import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.jboss.TeiidServiceNames.InvalidServiceNameException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.Database;
+import org.teiid.metadata.MetadataException;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.query.metadata.DDLStringVisitor;
+import org.teiid.query.metadata.DatabaseStorage;
+import org.teiid.query.metadata.DatabaseStore;
+import org.teiid.query.metadata.DatabaseUtil;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.runtime.EmbeddedAdminFactory;
+import org.teiid.runtime.EmbeddedAdminImpl;
 import org.teiid.translator.TranslatorProperty.PropertyType;
 import org.teiid.vdb.runtime.VDBKey;
 
@@ -156,6 +161,14 @@ abstract class TeiidOperationHandler extends BaseOperationHandler<DQPCore> {
         return null;
 	}
 
+	protected DatabaseStorage getDatabaseStorage(OperationContext context) {
+	    ServiceController<?> repo = context.getServiceRegistry(isChangesRuntimes()).getRequiredService(TeiidServiceNames.DATABASE_STORAGE);
+	    if (repo != null) {
+	        return org.teiid.jboss.DatabaseStorageService.class.cast(repo.getService()).getValue();
+	    }
+	    return null;
+	}
+	
 	protected int getSessionCount(OperationContext context) throws AdminException {
 		try {
 			return getSessionService(context).getActiveSessionsCount();
@@ -902,14 +915,21 @@ class GetSchema extends BaseOperationHandler<VDBRepository>{
 		if (!operation.hasDefined(OperationsConstants.VDB_VERSION.getName())) {
 			throw new OperationFailedException(IntegrationPlugin.Util.getString(OperationsConstants.VDB_VERSION.getName()+MISSING));
 		}
-		if (!operation.hasDefined(OperationsConstants.MODEL_NAME.getName())) {
-			throw new OperationFailedException(IntegrationPlugin.Util.getString(OperationsConstants.MODEL_NAME.getName()+MISSING));
+		
+		String modelName = null;
+		if (operation.hasDefined(OperationsConstants.MODEL_NAME.getName())) {
+		    modelName = operation.get(OperationsConstants.MODEL_NAME.getName()).asString();	
 		}
-
+		
+		Admin.ExportFormat format = Admin.ExportFormat.XML;
+        if (operation.hasDefined(OperationsConstants.FORMAT.getName())) {
+            format = Admin.ExportFormat.valueOf(operation.get(OperationsConstants.FORMAT.getName()).asString()); 
+        }
+		
 		ModelNode result = context.getResult();
 		String vdbName = operation.get(OperationsConstants.VDB_NAME.getName()).asString();
 		String vdbVersion = operation.get(OperationsConstants.VDB_VERSION.getName()).asString();
-		String modelName = operation.get(OperationsConstants.MODEL_NAME.getName()).asString();
+		
 
 		VDBMetaData vdb = repo.getLiveVDB(vdbName, vdbVersion);
 		if (vdb == null || (vdb.getStatus() != VDB.Status.ACTIVE)) {
@@ -917,7 +937,7 @@ class GetSchema extends BaseOperationHandler<VDBRepository>{
 		}
 
 		EnumSet<SchemaObjectType> schemaTypes = null;
-		if (vdb.getModel(modelName) == null){
+		if (modelName != null && vdb.getModel(modelName) == null){
 			throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50097, vdbName, vdbVersion, modelName));
 		}
 
@@ -939,11 +959,34 @@ class GetSchema extends BaseOperationHandler<VDBRepository>{
 		if (operation.hasDefined(OperationsConstants.ENTITY_PATTERN.getName())) {
 			regEx = operation.get(OperationsConstants.ENTITY_PATTERN.getName()).asString();
 		}
-
 		MetadataStore metadataStore = vdb.getAttachment(TransformationMetadata.class).getMetadataStore();
-		Schema schema = metadataStore.getSchema(modelName);
-		String ddl = DDLStringVisitor.getDDLString(schema, schemaTypes, regEx);
-		result.set(ddl);
+		if (modelName != null) {
+    		Schema schema = metadataStore.getSchema(modelName);
+    		String ddl = DDLStringVisitor.getDDLString(schema, schemaTypes, regEx);
+    		result.set(ddl);
+		} else {
+            if (format == ExportFormat.XML) {
+                for (ModelMetaData m:vdb.getModelMetaDatas().values()) {
+                    Schema schema = metadataStore.getSchema(m.getName());
+                    String ddl = DDLStringVisitor.getDDLString(schema, schemaTypes, regEx);
+                    m.addSourceMetadata("DDL", ddl);
+                }
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                try {
+                    VDBMetadataParser.marshell(vdb, out);
+                    String xml = EmbeddedAdminImpl.prettyFormat(new String(out.toByteArray()));
+                    result.set(xml);
+                } catch (XMLStreamException | IOException | TransformerException e ) {
+                    throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50114, e,
+                            vdbName, vdbVersion));                    
+                }
+                
+            } else {
+                Database db = DatabaseUtil.convert(vdb, metadataStore);
+                String ddl = DDLStringVisitor.getDDLString(db);
+                result.set(ddl);
+            }		    
+		}
 	}
 
 	@Override
@@ -953,6 +996,7 @@ class GetSchema extends BaseOperationHandler<VDBRepository>{
 		builder.addParameter(OperationsConstants.MODEL_NAME);
 		builder.addParameter(OperationsConstants.ENTITY_TYPE);
 		builder.addParameter(OperationsConstants.ENTITY_PATTERN);
+		builder.addParameter(OperationsConstants.FORMAT);
 		builder.setReplyType(ModelType.STRING);
 	}
 }
@@ -1635,4 +1679,67 @@ class EngineStatistics extends TeiidOperationHandler {
 		builder.setReplyType(ModelType.LIST);
 		builder.setReplyParameters(VDBMetadataMapper.EngineStatisticsMetadataMapper.INSTANCE.getAttributeDefinitions());
 	}
+}
+
+class DDLExecutor extends TeiidOperationHandler {
+    protected DDLExecutor() {
+        super("ddl-exec"); //$NON-NLS-1$
+    }
+
+    @Override
+    protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation)
+            throws OperationFailedException {
+        
+        ModelNode result = context.getResult();
+        if (!operation.hasDefined(OperationsConstants.DDL.getName())) {
+            throw new OperationFailedException(
+                    IntegrationPlugin.Util.getString(OperationsConstants.DDL.getName() + MISSING));
+        }
+        
+        String dbName = null;
+        if (operation.hasDefined(OperationsConstants.DBNAME.getName())) {
+            dbName = operation.get(OperationsConstants.DBNAME.getName()).asString();    
+        }
+        
+        String version = "1";
+        if (operation.hasDefined(OperationsConstants.VERSION.getName())) {
+            version = operation.get(OperationsConstants.VERSION.getName()).asString();    
+        }
+
+        String schema = null;
+        if (operation.hasDefined(OperationsConstants.SCHEMA.getName())) {
+            schema = operation.get(OperationsConstants.SCHEMA.getName()).asString();    
+        }
+
+        boolean persist = true;
+        if (operation.hasDefined(OperationsConstants.PERSIST.getName())) {
+            persist = operation.get(OperationsConstants.PERSIST.getName()).asBoolean();    
+        }
+        
+        String ddl = operation.get(OperationsConstants.DDL.getName()).asString();
+        
+        DatabaseStorage storage = getDatabaseStorage(context);
+        if (storage == null) {
+            throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50110));
+        }
+        
+        String str = null;
+        try {
+            str = DatabaseStore.processDDL(storage, dbName, version, schema, ddl, persist);
+        } catch (MetadataException e) {
+            throw new OperationFailedException(
+                    IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50111, e.getMessage()), e);            
+        }
+        result.add(str);
+    }
+    
+    @Override
+    protected void describeParameters(SimpleOperationDefinitionBuilder builder) {
+        builder.addParameter(OperationsConstants.DBNAME);
+        builder.addParameter(OperationsConstants.VERSION);
+        builder.addParameter(OperationsConstants.SCHEMA);
+        builder.addParameter(OperationsConstants.DDL);
+        builder.addParameter(OperationsConstants.PERSIST);
+        builder.setReplyValueType(ModelType.STRING);
+    }    
 }

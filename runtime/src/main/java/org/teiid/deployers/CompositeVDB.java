@@ -73,8 +73,12 @@ public class CompositeVDB {
 	private VDBMetaData originalVDB;
 	private Collection<Future<?>> tasks = Collections.synchronizedSet(new HashSet<Future<?>>());
 	private VDBKey vdbKey;
+	private boolean reloading = false;
 	
-	public CompositeVDB(VDBMetaData vdb, MetadataStore metadataStore, LinkedHashMap<String, VDBResources.Resource> visibilityMap, UDFMetaData udf, FunctionTree systemFunctions, ConnectorManagerRepository cmr, VDBRepository vdbRepository, MetadataStore... additionalStores) throws VirtualDatabaseException {
+    public CompositeVDB(VDBMetaData vdb, MetadataStore metadataStore,
+            LinkedHashMap<String, VDBResources.Resource> visibilityMap, UDFMetaData udf, FunctionTree systemFunctions,
+            ConnectorManagerRepository cmr, VDBRepository vdbRepository, MetadataStore... additionalStores)
+            throws VirtualDatabaseException {
 		this.vdb = vdb;
 		this.store = metadataStore;
 		this.visibilityMap = visibilityMap;
@@ -88,8 +92,11 @@ public class CompositeVDB {
 		buildCompositeState(vdbRepository);
 	}
 	
-	private static TransformationMetadata buildTransformationMetaData(VDBMetaData vdb, LinkedHashMap<String, VDBResources.Resource> visibilityMap, MetadataStore store, UDFMetaData udf, FunctionTree systemFunctions, MetadataStore[] additionalStores) {
-		Collection <FunctionTree> udfs = new ArrayList<FunctionTree>();
+    private static TransformationMetadata buildTransformationMetaData(VDBMetaData vdb,
+            LinkedHashMap<String, VDBResources.Resource> visibilityMap, MetadataStore store, UDFMetaData udf,
+            FunctionTree systemFunctions, MetadataStore[] additionalStores) {
+
+        Collection <FunctionTree> udfs = new ArrayList<FunctionTree>();
 		if (udf != null) {			
 			for (Map.Entry<String, UDFSource> entry : udf.getFunctions().entrySet()) {
 				udfs.add(new FunctionTree(entry.getKey(), entry.getValue(), true));
@@ -333,4 +340,19 @@ public class CompositeVDB {
 		return this.vdbKey;
 	}
 	
+	public void addConnectorManager(String connectorName, ConnectorManager mgr) {
+	    this.cmr.addConnectorManager(connectorName, mgr);
+	}
+	
+    public void removeConnectorManager(String connectorName) {
+        this.cmr.removeConnectorManager(connectorName);
+    }
+	
+    public boolean isReloading() {
+        return this.reloading;
+    }
+    
+    void setReloading(boolean f) {
+        this.reloading = f;
+    }
 }

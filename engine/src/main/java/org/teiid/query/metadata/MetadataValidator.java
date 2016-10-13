@@ -114,7 +114,8 @@ public class MetadataValidator {
 				if (schema.getTables().isEmpty() 
 						&& schema.getProcedures().isEmpty()
 						&& schema.getFunctions().isEmpty()) {
-					metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31070, model.getName()));
+					// this allowed with new model
+				    //metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31070, model.getName()));
 				}
 				
 				for (Table t:schema.getTables().values()) {

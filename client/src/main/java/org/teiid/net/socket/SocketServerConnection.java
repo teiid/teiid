@@ -52,6 +52,7 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.gss.MakeGSS;
 import org.teiid.jdbc.JDBCPlugin;
+import org.teiid.jdbc.JDBCURL;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.HostInfo;
@@ -93,6 +94,10 @@ public class SocketServerConnection implements ServerConnection {
 		//ILogon that is allowed to failover
 		this.logon = this.getService(ILogon.class);
 		this.failOver = Boolean.valueOf(connProps.getProperty(TeiidURL.CONNECTION.AUTO_FAILOVER)).booleanValue();
+		final String vdbEditMode = connProps.getProperty(TeiidURL.CONNECTION.VDBEDITMODE);
+		if (JDBCURL.isVDBInEditMode(vdbEditMode)) {
+			this.failOver = true;
+		}
 		this.serverVersion = selectServerInstance(false).getServerVersion();
 	}
 	

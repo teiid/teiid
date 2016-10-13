@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<vdb name="Portfolio" version="1">
+
+    <description>A Dynamic VDB</description>
+    
+    <property name="UseConnectorMetadata" value="true" />
+    
+   <model name="MarketData">
+        <source name="text-connector" translator-name="file" connection-jndi-name="java:/marketdata-file"/>
+    </model>
+
+    <model name="Accounts">
+        <property name="importer.useFullSchemaName" value="false"/>
+        <source name="h2-connector" translator-name="h2" connection-jndi-name="java:/accounts-ds"/>
+        <metadata type="DDL"><![CDATA[
+        CREATE FOREIGN TABLE CUSTOMER
+			(
+			   SSN char(10),
+			   FIRSTNAME varchar(64),
+			   LASTNAME varchar(64),
+			   ST_ADDRESS varchar(256),
+			   APT_NUMBER varchar(32),
+			   CITY varchar(64),
+			   STATE varchar(32),
+			   ZIPCODE varchar(10),
+			   PHONE varchar(15),
+			   CONSTRAINT CUSTOMER_PK PRIMARY KEY(SSN)
+			);     
+			CREATE FOREIGN TABLE ACCOUNT
+			(
+			   ACCOUNT_ID integer,
+			   SSN char(10),
+			   STATUS char(10),
+			   "TYPE" char(10),
+			   DATEOPENED timestamp,
+			   DATECLOSED timestamp,
+			   CONSTRAINT ACCOUNT_PK PRIMARY KEY(ACCOUNT_ID)
+			);
+			CREATE FOREIGN TABLE  PRODUCT 
+			(
+			   ID integer,
+			   SYMBOL varchar(16),
+			   COMPANY_NAME varchar(256),
+			   CONSTRAINT PRODUCT_PK PRIMARY KEY(ID)
+			);
+         ]]> </metadata>
+    </model>   
+    
+    <model name="Stocks" type="VIRTUAL">
+        <metadata type="DDL"><![CDATA[
+                
+        CREATE VIEW StockPrices (
+            symbol string,
+            price bigdecimal
+            )
+            AS  
+               SELECT SP.symbol, SP.price
+                FROM (EXEC MarketData.getTextFiles('*.txt')) AS f, 
+                    TEXTTABLE(f.file COLUMNS symbol string, price bigdecimal HEADER) AS SP;
+
+        CREATE VIEW Stock (
+            product_id integer,
+            symbol string,
+            price bigdecimal,
+            company_name   varchar(256)
+            )
+            AS
+                SELECT  A.ID, S.symbol, S.price, A.COMPANY_NAME
+                    FROM StockPrices AS S, Accounts.PRODUCT AS A
+                    WHERE S.symbol = A.SYMBOL;                 
+        ]]> </metadata>
+    </model>  
+    
+    <data-role name="ReadOnly" any-authenticated="true">
+        <description>Allow ReadOnly Operations by default to any authenticated user</description>
+
+        <permission>
+            <resource-name>Accounts</resource-name>
+            <allow-read>true</allow-read>
+        </permission>
+        
+        <permission>
+            <resource-name>MarketData</resource-name>
+            <allow-read>true</allow-read>
+        </permission>                 
+    
+        <permission>
+            <resource-name>Accounts.Customer</resource-name>
+            <condition>state &lt;&gt; 'New York'</condition>
+        </permission>
+
+        <permission>
+            <resource-name>Accounts.Customer.SSN</resource-name>
+            <mask>null</mask>
+        </permission>
+        
+        <permission>
+            <resource-name>Accounts.Account.SSN</resource-name>
+            <mask>null</mask>
+        </permission>
+        
+        <permission>
+            <resource-name>Stocks</resource-name>
+            <allow-read>true</allow-read>
+        </permission>              
+
+        <permission>
+            <resource-name>Stocks.StockPrices.Price</resource-name>
+            <mask order="1">CASE WHEN hasRole('Prices') = true THEN Price END</mask>
+        </permission>        
+
+    </data-role>
+    <data-role name="Prices"  >
+        <description>Allow ReadOnly Operations to see pricing</description>
+        
+        <mapped-role-name>prices</mapped-role-name>
+    </data-role>
+    
+    <data-role name="ReadWrite">
+        <description>Allow Reads and Writes</description>
+
+        <permission>
+            <resource-name>Accounts</resource-name>
+            <allow-create>true</allow-create>
+            <allow-read>true</allow-read>
+            <allow-update>true</allow-update>
+        <allow-delete>true</allow-delete>
+        </permission>
+        
+        <permission>
+            <resource-name>MarketData</resource-name>
+            <allow-create>true</allow-create>
+            <allow-read>true</allow-read>
+            <allow-update>true</allow-update>
+            <allow-delete>true</allow-delete>
+        </permission> 
+        
+        <permission>
+            <resource-name>Accounts.Customer</resource-name>
+            <condition>true</condition>
+        </permission>
+        
+        <permission>
+            <resource-name>Accounts.Customer.SSN</resource-name>
+            <mask order="1">SSN</mask>
+        </permission>
+        
+        <permission>
+            <resource-name>Accounts.Account.SSN</resource-name>
+            <mask order="1">SSN</mask>
+        </permission>
+        <mapped-role-name>superuser</mapped-role-name>
+    </data-role>    
+
+</vdb>

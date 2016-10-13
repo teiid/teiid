@@ -32,9 +32,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.TeiidException;
@@ -43,6 +45,10 @@ import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.language.SortSpecification.NullOrdering;
+import org.teiid.metadata.Database;
+import org.teiid.metadata.Datatype;
+import org.teiid.query.metadata.DatabaseStorage;
+import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.TextTable.TextColumn;
@@ -72,6 +78,22 @@ public class TestParser {
 		assertEquals("Cloned command objects do not match: ", expectedCommand, actualCommand.clone());				 //$NON-NLS-1$
 	}
 
+	static void helpTest(String sql, String expectedString, Command expectedCommand, ParseInfo info,
+			DatabaseStorage storage, String vdbName, String vdbVersion, String schemaName) {
+		Command actualCommand = null;
+		String actualString = null;
+		try {
+			actualCommand = QueryParser.getQueryParser().parseCommand(sql, info, false, storage, vdbName, vdbVersion,
+					schemaName);
+			actualString = actualCommand.toString();
+		} catch(Throwable e) { 
+		    throw new RuntimeException(e);
+		}
+
+		assertEquals("Parse string does not match: ", expectedString, actualString); //$NON-NLS-1$
+		assertEquals("Command objects do not match: ", expectedCommand, actualCommand);				 //$NON-NLS-1$
+		assertEquals("Cloned command objects do not match: ", expectedCommand, actualCommand.clone());				 //$NON-NLS-1$
+	}	
 	public static void helpTestExpression(String sql, String expectedString, Expression expected) throws QueryParserException {
 		Expression	actual = QueryParser.getQueryParser().parseExpression(sql);
 		String actualString = actual.toString();
@@ -5273,4 +5295,28 @@ public class TestParser {
         helpTest(sql, "SELECT (1 && 2)", query);
     }
 
+    @Test public void testDDL() {
+    	String sql = "CREATE DATABASE FOO";
+    	Query query = new Query();
+    	query.setSelect(new Select(Arrays.asList(new Constant(sql))));
+    	
+    	DatabaseStore store = new DatabaseStore() {
+			@Override
+			public Map<String, Datatype> getRuntimeTypes() {
+				return null;
+			}
+			@Override
+			public Map<String, Datatype> getBuiltinDataTypes() {
+				return null;
+			}
+		};    	
+		
+		store.startEditing();
+    	store.databaseCreated(new Database("x", "1"));
+    	store.stopEditing();
+    	
+    	DatabaseStorage storage = Mockito.mock(DatabaseStorage.class);
+    	Mockito.stub(storage.getStore()).toReturn(store);
+        helpTest(sql, "SELECT 'CREATE DATABASE FOO'", query, new ParseInfo(), storage, "x", "1", null);
+    }
 }

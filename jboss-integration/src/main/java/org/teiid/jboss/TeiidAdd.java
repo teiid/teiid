@@ -22,8 +22,66 @@
 
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
-import static org.teiid.jboss.TeiidConstants.*;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.CONTENT;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEPLOYMENT;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ENABLED;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.PERSISTENT;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.URL;
+import static org.teiid.jboss.TeiidConstants.ALLOW_ENV_FUNCTION_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.ASYNC_THREAD_POOL_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_TYPE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.AUTHORIZATION_VALIDATOR_MODULE_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.DATABASE_STORAGE_MODULE_NAME_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.DATABASE_STORAGE_PROPERTIES_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.DATA_ROLES_REQUIRED_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.DC_STACK_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.DETECTING_CHANGE_EVENTS_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.ENCRYPT_FILES_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.INLINE_LOBS;
+import static org.teiid.jboss.TeiidConstants.LOB_CHUNK_SIZE_IN_KB_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.MAX_ACTIVE_PLANS_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.MAX_BUFFER_SPACE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.MAX_FILE_SIZE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.MAX_OPEN_FILES_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.MAX_PROCESSING_KB_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.MAX_RESERVED_KB_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.MAX_ROWS_FETCH_SIZE_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.MAX_SOURCE_ROWS_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.MAX_THREADS_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.MEMORY_BUFFER_OFFHEAP_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.MEMORY_BUFFER_SPACE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.POLICY_DECIDER_MODULE_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.PPC_CONTAINER_NAME_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.PPC_ENABLE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.PPC_NAME_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.PREPARSER_MODULE_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.PROCESSOR_BATCH_SIZE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.QUERY_THRESHOLD_IN_SECS_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.QUERY_TIMEOUT;
+import static org.teiid.jboss.TeiidConstants.RSC_CONTAINER_NAME_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.RSC_ENABLE_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.RSC_MAX_STALENESS_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.RSC_NAME_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.THREAD_COUNT_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.TIME_SLICE_IN_MILLI_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT;
+import static org.teiid.jboss.TeiidConstants.USE_DISK_ATTRIBUTE;
+import static org.teiid.jboss.TeiidConstants.WORKMANAGER;
+import static org.teiid.jboss.TeiidConstants.AUTHENTICATION_ALLOW_SECURITY_DOMAIN_QUALIFIER;
+import static org.teiid.jboss.TeiidConstants.asBoolean;
+import static org.teiid.jboss.TeiidConstants.asInt;
+import static org.teiid.jboss.TeiidConstants.asLong;
+import static org.teiid.jboss.TeiidConstants.asString;
+import static org.teiid.jboss.TeiidConstants.isDefined;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -35,6 +93,7 @@ import java.lang.reflect.Proxy;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.ServiceLoader;
 import java.util.concurrent.Executor;
@@ -45,6 +104,7 @@ import javax.transaction.TransactionManager;
 
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.jboss.as.controller.AbstractAddStepHandler;
+import org.jboss.as.controller.ModelController;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.OperationStepHandler;
@@ -62,24 +122,38 @@ import org.jboss.as.naming.deployment.ContextNames;
 import org.jboss.as.naming.service.BinderService;
 import org.jboss.as.server.AbstractDeploymentChainStep;
 import org.jboss.as.server.DeploymentProcessorTarget;
+import org.jboss.as.server.Services;
 import org.jboss.as.server.deployment.Phase;
+import org.jboss.as.server.moduleservice.ServiceModuleLoader;
 import org.jboss.as.threads.ThreadFactoryResolver;
 import org.jboss.as.threads.ThreadsServices;
 import org.jboss.dmr.ModelNode;
 import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoadException;
-import org.jboss.msc.service.*;
+import org.jboss.msc.service.Service;
+import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceBuilder.DependencyType;
+import org.jboss.msc.service.ServiceController;
+import org.jboss.msc.service.ServiceName;
+import org.jboss.msc.service.ServiceTarget;
+import org.jboss.msc.service.StartContext;
+import org.jboss.msc.service.StartException;
+import org.jboss.msc.service.StopContext;
+import org.jboss.msc.service.ValueService;
 import org.jboss.msc.value.InjectedValue;
 import org.teiid.CommandContext;
 import org.teiid.PolicyDecider;
 import org.teiid.PreParser;
+import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.cache.CacheFactory;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBufferCache;
+import org.teiid.deployers.TranslatorUtil;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VDBStatusChecker;
+import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
+import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.dqp.internal.process.AuthorizationValidator;
 import org.teiid.dqp.internal.process.CachedResults;
@@ -94,12 +168,15 @@ import org.teiid.logging.LogManager;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.function.SystemFunctionManager;
+import org.teiid.query.metadata.DatabaseStorage;
 import org.teiid.replication.jgroups.JGroupsObjectReplicator;
 import org.teiid.runtime.MaterializationManager;
 import org.teiid.services.InternalEventDistributorFactory;
 import org.teiid.services.SessionServiceImpl;
+import org.teiid.translator.ExecutionFactory;
 import org.wildfly.clustering.jgroups.ChannelFactory;
 import org.wildfly.clustering.jgroups.spi.service.ProtocolStackServiceName;
+import org.wildfly.clustering.singleton.SingletonPolicy;
 
 class TeiidAdd extends AbstractAddStepHandler {
 	
@@ -160,7 +237,9 @@ class TeiidAdd extends AbstractAddStepHandler {
 		TeiidConstants.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE,
 		TeiidConstants.AUTHENTICATION_TYPE_ATTRIBUTE,
 		TeiidConstants.AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE,
-		TeiidConstants.AUTHENTICATION_ALLOW_SECURITY_DOMAIN_QUALIFIER
+		TeiidConstants.AUTHENTICATION_ALLOW_SECURITY_DOMAIN_QUALIFIER,
+		TeiidConstants.DATABASE_STORAGE_MODULE_NAME_ATTRIBUTE,
+		TeiidConstants.DATABASE_STORAGE_PROPERTIES_ATTRIBUTE
 	};
 	
 	@Override
@@ -219,6 +298,9 @@ class TeiidAdd extends AbstractAddStepHandler {
 		
 		final String nodeName = getNodeName();
 		
+        Environment environment = context.getCallEnvironment();        
+		final JBossLifeCycleListener shutdownListener = new JBossLifeCycleListener(environment);
+		
 		// async thread-pool
 		int maxThreads = 10;
         if (isDefined(ASYNC_THREAD_POOL_ELEMENT, operation, context)) {
@@ -237,9 +319,12 @@ class TeiidAdd extends AbstractAddStepHandler {
 				return translatorRepo;
 			}
     	});
+        
         ServiceController<TranslatorRepository> service = target.addService(
                 TeiidServiceNames.TRANSLATOR_REPO, translatorService).install();
-    	
+        
+        ConnectorManagerRepository connectorManagerRepo = buildConnectorManagerRepository(translatorRepo);
+        
     	// system function tree
 		SystemFunctionManager systemFunctionManager = new SystemFunctionManager();
 		if (isDefined(ALLOW_ENV_FUNCTION_ELEMENT, operation, context)) {
@@ -258,7 +343,10 @@ class TeiidAdd extends AbstractAddStepHandler {
     	}
 
     	VDBRepositoryService vdbRepositoryService = new VDBRepositoryService(vdbRepository);
-    	target.addService(TeiidServiceNames.VDB_REPO, vdbRepositoryService).install();
+    	ServiceBuilder<VDBRepository> vdbRepoService = target.addService(TeiidServiceNames.VDB_REPO, vdbRepositoryService);
+    	vdbRepoService.addDependency(TeiidServiceNames.BUFFER_MGR, BufferManager.class, vdbRepositoryService.bufferManagerInjector);
+        vdbRepoService.addDependency(DependencyType.OPTIONAL, TeiidServiceNames.OBJECT_REPLICATOR, ObjectReplicator.class, vdbRepositoryService.objectReplicatorInjector);
+    	vdbRepoService.install();
 		
     	// VDB Status manager
     	final VDBStatusCheckerExecutorService statusChecker = new VDBStatusCheckerExecutorService();
@@ -309,10 +397,13 @@ class TeiidAdd extends AbstractAddStepHandler {
     	tupleBufferBuilder.install();
     	
     	
-    	EventDistributorFactoryService edfs = new EventDistributorFactoryService();
+    	EventDistributorFactoryService edfs = new EventDistributorFactoryService(connectorManagerRepo);
     	ServiceBuilder<InternalEventDistributorFactory> edfsServiceBuilder = target.addService(TeiidServiceNames.EVENT_DISTRIBUTOR_FACTORY, edfs);
     	edfsServiceBuilder.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class, edfs.vdbRepositoryInjector);
     	edfsServiceBuilder.addDependency(replicatorAvailable?DependencyType.REQUIRED:DependencyType.OPTIONAL, TeiidServiceNames.OBJECT_REPLICATOR, ObjectReplicator.class, edfs.objectReplicatorInjector);
+    	edfsServiceBuilder.addDependency(Services.JBOSS_SERVER_CONTROLLER, ModelController.class, edfs.controllerValueInjector);
+    	edfsServiceBuilder.addDependency(TeiidServiceNames.THREAD_POOL_SERVICE, Executor.class, edfs.executorInjector);
+    	edfsServiceBuilder.addDependency(Services.JBOSS_SERVICE_MODULE_LOADER, ServiceModuleLoader.class, edfs.serviceModuleLoader);
     	edfsServiceBuilder.install();
     	
     	PolicyDecider policyDecider = null;
@@ -425,7 +516,35 @@ class TeiidAdd extends AbstractAddStepHandler {
 	    	preparedPlanCacheBuilder.addDependency(TeiidServiceNames.PREPAREDPLAN_CACHE_FACTORY, CacheFactory.class, preparedPlanService.cacheFactoryInjector);
 	    	preparedPlanCacheBuilder.addDependency(ServiceName.JBOSS.append("infinispan", ispnName, cacheName)); //$NON-NLS-1$
 	    	preparedPlanCacheBuilder.install();
-    	}    	
+    	}
+    	
+   		// install metadata store service, this is special singleton service only runs at single node in a cluster
+        DatabaseStorage storage = null;
+        if (isDefined(DATABASE_STORAGE_MODULE_NAME_ATTRIBUTE, operation, context)) {
+            storage = buildService(DatabaseStorage.class,
+                    asString(DATABASE_STORAGE_MODULE_NAME_ATTRIBUTE, operation, context));
+            
+            if(isDefined(DATABASE_STORAGE_PROPERTIES_ATTRIBUTE, operation, context)) {
+                String properties = asString(DATABASE_STORAGE_PROPERTIES_ATTRIBUTE, operation, context);
+                storage.setProperties(properties);
+            }
+            vdbRepository.setDatabaseStorage(storage);
+            DatabaseStorageService dbStroageSvc = new DatabaseStorageService(storage, shutdownListener);
+            dbStroageSvc.setConnectorManagerRepo(connectorManagerRepo);
+            
+            try {
+            	SingletonPolicy policy = (SingletonPolicy) context.getServiceRegistry(true).getRequiredService(ServiceName.parse(SingletonPolicy.CAPABILITY_NAME)).awaitValue();
+            	ServiceBuilder<DatabaseStorage> databaseStorageBuilder = policy.createSingletonServiceBuilder(TeiidServiceNames.DATABASE_STORAGE, dbStroageSvc).build(context.getServiceTarget());
+                databaseStorageBuilder.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class,dbStroageSvc.vdbRepositoryInjector);
+                databaseStorageBuilder.addDependency(TeiidServiceNames.EVENT_DISTRIBUTOR_FACTORY,InternalEventDistributorFactory.class, dbStroageSvc.eventDistributorFactoryInjector);
+                databaseStorageBuilder.addDependency(TeiidServiceNames.THREAD_POOL_SERVICE, Executor.class,dbStroageSvc.executorInjector);
+                databaseStorageBuilder.addDependency(TeiidServiceNames.TRANSLATOR_REPO, TranslatorRepository.class, dbStroageSvc.translatorRepositoryInjector);
+                databaseStorageBuilder.setInitialMode(ServiceController.Mode.ACTIVE);
+                databaseStorageBuilder.install();
+            } catch(InterruptedException e) {
+            	throw new OperationFailedException(e.getMessage(), e);
+            }
+        }    	
     	
     	// Query Engine
     	final DQPCoreService engine = buildQueryEngine(context, operation);
@@ -446,12 +565,10 @@ class TeiidAdd extends AbstractAddStepHandler {
         engineBuilder.addDependency(rsCache?DependencyType.REQUIRED:DependencyType.OPTIONAL, TeiidServiceNames.CACHE_RESULTSET, SessionAwareCache.class, engine.getResultSetCacheInjector());
         engineBuilder.addDependency(TeiidServiceNames.CACHE_PREPAREDPLAN, SessionAwareCache.class, engine.getPreparedPlanCacheInjector());
         engineBuilder.addDependency(TeiidServiceNames.EVENT_DISTRIBUTOR_FACTORY, InternalEventDistributorFactory.class, engine.getEventDistributorFactoryInjector());
+        engineBuilder.addDependency(storage == null?DependencyType.OPTIONAL:DependencyType.REQUIRED, TeiidServiceNames.DATABASE_STORAGE, DatabaseStorage.class, engine.getDatabaseStorageInjector());
         
         engineBuilder.setInitialMode(ServiceController.Mode.ACTIVE);
         engineBuilder.install(); 
-        Environment environment = context.getCallEnvironment();
-        
-		final JBossLifeCycleListener shutdownListener = new JBossLifeCycleListener(environment);
             	
         // add JNDI for event distributor
 		final ReferenceFactoryService<EventDistributorFactory> referenceFactoryService = new ReferenceFactoryService<EventDistributorFactory>();
@@ -559,6 +676,39 @@ class TeiidAdd extends AbstractAddStepHandler {
    		
    		sessionServiceBuilder.install();
 	}
+
+    private ConnectorManagerRepository buildConnectorManagerRepository(final TranslatorRepository translatorRepo) {
+        ConnectorManagerRepository cmr = new ConnectorManagerRepository();
+        ConnectorManagerRepository.ExecutionFactoryProvider provider = new ConnectorManagerRepository.ExecutionFactoryProvider() {
+            HashMap<String, ExecutionFactory<Object, Object>> map = new HashMap<String, ExecutionFactory<Object, Object>>();
+            @Override
+            public ExecutionFactory<Object, Object> getExecutionFactory(String name) throws ConnectorManagerException {
+                VDBTranslatorMetaData translator = translatorRepo.getTranslatorMetaData(name);
+                if (translator == null) {
+                    throw new ConnectorManagerException(
+                            IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50110, name));                    
+                }
+                ExecutionFactory<Object, Object> ef = map.get(name);
+                if ( ef == null) {
+                    ef = TranslatorUtil.buildDelegateAwareExecutionFactory(translator, this);
+                    map.put(name, ef);
+                }
+                return ef;
+            }
+
+            @Override
+            public void addOverrideTranslator(VDBTranslatorMetaData translator) {
+                translatorRepo.addTranslatorMetadata(translator.getName(), translator);
+            }
+
+            @Override
+            public void removeOverrideTranslator(String translatorName) throws ConnectorManagerException {
+                translatorRepo.removeTranslatorMetadata(translatorName);
+            }
+        };
+        cmr.setProvider(provider);
+        return cmr;
+    }
 	
     private void buildThreadService(int maxThreads, ServiceTarget target) {
         ThreadExecutorService service = new ThreadExecutorService(maxThreads);

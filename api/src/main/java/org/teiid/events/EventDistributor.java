@@ -25,9 +25,7 @@ package org.teiid.events;
 import java.util.List;
 
 import org.teiid.Replicated;
-import org.teiid.metadata.ColumnStats;
-import org.teiid.metadata.Table;
-import org.teiid.metadata.TableStats;
+import org.teiid.metadata.*;
 
 /**
  * Distributes events across the Teiid cluster
@@ -245,4 +243,27 @@ public interface EventDistributor {
 	 * @param listener
 	 */
 	void unregister(EventListener listener);
+
+	@Replicated(remoteOnly=true)
+    void createDatabase(Database database);
+	
+	@Replicated(remoteOnly=true)
+    void reloadDatabase(Database database);
+	
+	@Replicated(remoteOnly=true)
+	void dropDatabase(Database database);
+	
+	@Replicated(remoteOnly=true)    
+    void createDataWrapper(String dbName, String version, DataWrapper dataWrapper);
+	
+	@Replicated(remoteOnly=true)
+    void dropDataWrapper(String dbName, String version, String dataWrapperName, boolean override);
+	
+	@Replicated(remoteOnly=true)
+    void createServer(String dbName, String version, Server server);
+	
+	@Replicated(remoteOnly=true)
+    void dropServer(String dbName, String version, Server server);
+	
+	void validateRecord(String dbName, String version, AbstractMetadataRecord record);
 }

@@ -1,7 +1,13 @@
 connect
 /extension=org.jboss.teiid:add(module=org.jboss.teiid)
+/extension=org.wildfly.extension.clustering.singleton:add(module=org.wildfly.extension.clustering.singleton)
 /socket-binding-group=standard-sockets/socket-binding=teiid-jdbc:add(port=31000)
 /socket-binding-group=standard-sockets/socket-binding=teiid-odbc:add(port=35432)
+
+
+/subsystem=singleton:add
+/subsystem=singleton/singleton-policy=teiid:add(cache-container=server)
+/subsystem=singleton/singleton-policy=teiid/election-policy=simple:add(position=-1)
 
 /subsystem=logging/logger=org.teiid:add 
 /subsystem=logging/logger=org.teiid:write-attribute(name="level", value="INFO")  
