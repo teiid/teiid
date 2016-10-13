@@ -102,5 +102,10 @@ public class CreateCursorResultSetInstruction extends ProgramInstruction {
 	public void setUsesLocalTemp(boolean b) {
 		this.usesLocalTemp = b;
 	}
+	
+	@Override
+	public Boolean requiresTransaction(boolean transactionalReads) {
+	    return plan.requiresTransaction(transactionalReads);
+	}
     
 }

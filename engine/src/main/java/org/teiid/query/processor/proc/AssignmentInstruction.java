@@ -33,9 +33,11 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.analysis.AnalysisRecord;
+import org.teiid.query.processor.relational.SubqueryAwareRelationalNode;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.util.VariableContext;
+import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 
 
 /**
@@ -126,6 +128,14 @@ public class AssignmentInstruction extends ProgramInstruction {
         clone.setVariable(this.variable);
         clone.setExpression(this.expression);
         return clone;
+    }
+    
+    @Override
+    public Boolean requiresTransaction(boolean transactionalReads) {
+        if (expression == null) {
+            return false;
+        }
+        return SubqueryAwareRelationalNode.requiresTransaction(transactionalReads, ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(expression));
     }
 
 }

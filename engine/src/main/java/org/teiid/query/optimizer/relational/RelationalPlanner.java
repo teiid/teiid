@@ -1712,7 +1712,7 @@ public class RelationalPlanner {
 				if (nestedCommand instanceof StoredProcedure && plan instanceof ProcedurePlan) {
 					StoredProcedure container = (StoredProcedure)nestedCommand;
 					ProcedurePlan pp = (ProcedurePlan)plan;
-					pp.setRequiresTransaction(container.getUpdateCount());
+					pp.setUpdateCount(container.getUpdateCount());
 	        		if (container.returnParameters()) {
 	        			List<ElementSymbol> outParams = new LinkedList<ElementSymbol>();
 	        			for (SPParameter param : container.getParameters()) {

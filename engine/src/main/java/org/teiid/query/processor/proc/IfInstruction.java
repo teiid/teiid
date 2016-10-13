@@ -29,7 +29,9 @@ import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.logging.LogManager;
+import org.teiid.query.processor.relational.SubqueryAwareRelationalNode;
 import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 
 
 /**
@@ -143,6 +145,31 @@ public class IfInstruction extends ProgramInstruction {
         	props.addProperty(PROP_ELSE, this.elseProgram.getDescriptionProperties());
         }
         return props;
+    }
+    
+    @Override
+    public Boolean requiresTransaction(boolean transactionalReads) {
+        Boolean conditionRequires = SubqueryAwareRelationalNode.requiresTransaction(transactionalReads, ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(condition));
+        if (conditionRequires != null && conditionRequires) {
+            return true;
+        }
+        Boolean requires = ifProgram.requiresTransaction(transactionalReads);
+        if (requires != null && requires) {
+            return true;
+        }
+        if (elseProgram != null) {
+            Boolean requiresElse = elseProgram.requiresTransaction(transactionalReads);
+            if (requiresElse != null && requiresElse) {
+                return true;
+            }
+            if (requiresElse == null) {
+                return conditionRequires==null?true:null;
+            }
+        }
+        if (requires == null) {
+            return conditionRequires==null?true:null;
+        }
+        return conditionRequires;
     }
     
 }

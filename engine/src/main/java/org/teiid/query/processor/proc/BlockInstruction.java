@@ -63,4 +63,9 @@ public class BlockInstruction extends ProgramInstruction {
         return props;
     }
     
+    @Override
+    public Boolean requiresTransaction(boolean transactionalReads) {
+        return program.requiresTransaction(transactionalReads);
+    }
+    
 }

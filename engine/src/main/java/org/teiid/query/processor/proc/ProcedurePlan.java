@@ -61,6 +61,7 @@ import org.teiid.events.EventDistributor;
 import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.Procedure;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -73,6 +74,7 @@ import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.processor.proc.CreateCursorResultSetInstruction.Mode;
 import org.teiid.query.processor.relational.SubqueryAwareEvaluator;
+import org.teiid.query.processor.relational.SubqueryAwareRelationalNode;
 import org.teiid.query.resolver.command.UpdateProcedureResolver;
 import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.Command;
@@ -81,6 +83,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.util.VariableContext;
+import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.util.CommandContext;
 
@@ -137,7 +140,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
     
     private boolean evaluatedParams;
     
-    private Boolean requiresTransaction = true;
+    private int updateCount = Procedure.AUTO_UPDATECOUNT;
     
     private TransactionContext blockContext;
     /**
@@ -486,7 +489,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
         plan.setParams(params);
         plan.setOutParams(outParams);
         plan.setMetadata(metadata);
-        plan.requiresTransaction = requiresTransaction;
+        plan.updateCount = updateCount;
         plan.runInContext = runInContext;
         return plan;
     }
@@ -858,23 +861,36 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
         return programs.peek();
     }
     
-    public void setRequiresTransaction(int updateCount) {
-        if (updateCount == 1) {
-            this.requiresTransaction = null;
-        } else if (updateCount < 1) {
-            this.requiresTransaction = false;
-        } else {
-            this.requiresTransaction = true;
-        }
+    public void setUpdateCount(int updateCount) {
+        this.updateCount = updateCount;
 	}
     
     @Override
     public Boolean requiresTransaction(boolean transactionalReads) {
-    	//TODO: detect simple select case
-    	if (transactionalReads) {
-    	    return true;
-    	}
-    	return requiresTransaction;
+        Boolean paramRequires = false;
+        if (params != null) {
+            paramRequires = SubqueryAwareRelationalNode.requiresTransaction(transactionalReads, ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(params.values()));
+            if (paramRequires != null && paramRequires) {
+                return true;
+            }
+        }
+        if ((transactionalReads && updateCount < 2) || updateCount == Procedure.AUTO_UPDATECOUNT) {
+            Boolean programRequires = this.originalProgram.requiresTransaction(transactionalReads);
+            if (programRequires == null) {
+                return paramRequires==null?true:null;
+            }
+            if (programRequires) {
+                return true;
+            }
+            return paramRequires;
+        }
+        if (updateCount == 0) {
+            return paramRequires;  
+        }
+        if (updateCount == 1) {
+            return paramRequires==null?true:null;
+        }
+        return true;
     }
     
     /**

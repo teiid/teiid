@@ -1914,6 +1914,32 @@ public class TestProcedureProcessor {
         assertTrue(plan.requiresTransaction(false));
     }
     
+    @Test public void testAnonProcTransaction() throws Exception {
+        ProcedurePlan plan = (ProcedurePlan) TestProcessor.helpGetPlan("begin select 1; end", RealMetadataFactory.example1Cached());
+        assertFalse(plan.requiresTransaction(false));
+        
+        plan = (ProcedurePlan) TestProcessor.helpGetPlan("begin select * from pm1.g1; end", RealMetadataFactory.example1Cached());
+        assertNull(plan.requiresTransaction(true));
+        
+        plan = (ProcedurePlan) TestProcessor.helpGetPlan("begin insert into pm1.g1 (e1) values ('a'); end", RealMetadataFactory.example1Cached());
+        assertNull(plan.requiresTransaction(false));
+        
+        plan = (ProcedurePlan) TestProcessor.helpGetPlan("begin if (true) insert into pm1.g1 (e1) values ('a'); else insert into pm1.g1 (e1) values ('b'); end", RealMetadataFactory.example1Cached());
+        assertNull(plan.requiresTransaction(false));
+        
+        plan = (ProcedurePlan) TestProcessor.helpGetPlan("begin loop on (select e1 from pm1.g1) as x begin insert into pm1.g1 (e1) values (x.e1); end end", RealMetadataFactory.example1Cached());
+        assertTrue(plan.requiresTransaction(false));
+        
+        plan = (ProcedurePlan) TestProcessor.helpGetPlan("begin execute immediate 'select 1'; end", RealMetadataFactory.example1Cached());
+        assertFalse(plan.requiresTransaction(false));
+        
+        plan = (ProcedurePlan) TestProcessor.helpGetPlan("begin execute immediate 'select 1'; end", RealMetadataFactory.example1Cached());
+        assertNull(plan.requiresTransaction(true));
+        
+        plan = (ProcedurePlan) TestProcessor.helpGetPlan("begin execute immediate 'select 1' update *; end", RealMetadataFactory.example1Cached());
+        assertTrue(plan.requiresTransaction(false));
+    }
+    
     /**
      * Test the use of a procedure variable in the criteria of a LEFT OUTER
      * JOIN which will be optimized out as non-JOIN criteria.

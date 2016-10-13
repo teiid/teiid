@@ -660,16 +660,19 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 		if (subqueryTxn > 1) {
 			return true;
 		}
+	    if ((multiSource && connectorBindingExpression == null) && (subqueryTxn > 0)) {
+	        return true;
+	    }
 		if (transactionSupport == TransactionSupport.NONE) {
 			return subqueryTxn > 0?null:false;
 		}
 		if ((command instanceof StoredProcedure && ((StoredProcedure)command).getUpdateCount() > 1)) {
 			return true;
 		}
-		if ((multiSource && connectorBindingExpression == null) && (subqueryTxn > 0 || transactionalReads || RelationalNodeUtil.isUpdate(command))) {
-			return true;
-		}
-		if (transactionalReads || RelationalNodeUtil.isUpdate(command)) {
+		if (transactionalReads || RelationalNodeUtil.isUpdate(command) || (command instanceof StoredProcedure && ((StoredProcedure)command).getUpdateCount() != 0)) {
+		    if ((multiSource && connectorBindingExpression == null)) {
+		        return true;
+		    }
 			return subqueryTxn > 0?true:null;
 		}
 		return false;
