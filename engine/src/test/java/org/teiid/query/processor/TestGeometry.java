@@ -110,6 +110,16 @@ public class TestGeometry {
 		assertFalse(b);
 	}
 
+	@Test public void testIntersection() throws Exception {
+		Expression ex = TestFunctionResolving.getExpression("ST_AsText(st_intersection(ST_GeomFromText('POLYGON ((0 50, 50 50, 40 0, 0 0, 0 50))'), ST_GeomFromText('POLYGON ((0 50, 40 50, 40 0, 0 0, 0 50))')))");
+		ClobType intersection = (ClobType) Evaluator.evaluate(ex);
+		assertEquals("POLYGON ((0 50, 40 50, 40 0, 0 0, 0 50))", ClobType.getString(intersection));
+
+		ex = TestFunctionResolving.getExpression("ST_AsText(st_intersection(ST_GeomFromText('POLYGON ((0 50, 50 50, 40 0, 0 0, 0 50))'), ST_GeomFromText('POLYGON ((150 50, 200 50, 190 0, 150 0, 150 50))')))");
+		intersection = (ClobType) Evaluator.evaluate(ex);
+		assertEquals("POLYGON EMPTY", ClobType.getString(intersection));
+	}
+
     @Test public void testAsGeoJson() throws Exception {        
         assertEval(
                 "ST_AsGeoJson(ST_GeomFromText('POINT (-48.23456 20.12345)'))",
