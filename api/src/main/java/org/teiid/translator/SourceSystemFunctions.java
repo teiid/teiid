@@ -179,6 +179,7 @@ public class SourceSystemFunctions {
     public static final String ST_GEOMFROMGEOJSON = "st_geomfromgeojson"; //$NON-NLS-1$
     public static final String ST_GEOMFROMGML = "st_geomfromgml"; //$NON-NLS-1$
     public static final String ST_INTERSECTS = "st_intersects"; //$NON-NLS-1$
+    public static final String ST_INTERSECTION = "st_intersection"; //$NON-NLS-1$
     public static final String ST_CONTAINS = "st_contains"; //$NON-NLS-1$
 	public static final String ST_CROSSES = "st_crosses"; //$NON-NLS-1$
 	public static final String ST_DISJOINT = "st_disjoint"; //$NON-NLS-1$
