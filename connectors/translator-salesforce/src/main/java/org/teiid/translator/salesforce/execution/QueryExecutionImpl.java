@@ -51,7 +51,6 @@ import org.teiid.translator.salesforce.execution.visitors.JoinQueryVisitor;
 import org.teiid.translator.salesforce.execution.visitors.SelectVisitor;
 
 import com.sforce.async.JobInfo;
-import com.sforce.async.OperationEnum;
 import com.sforce.soap.partner.QueryResult;
 import com.sforce.soap.partner.sobject.SObject;
 import com.sforce.ws.bind.XmlObject;
@@ -215,7 +214,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 				LogManager.logDetail(LogConstants.CTX_CONNECTOR,  getLogPreamble(), "Executing Query:", finalQuery); //$NON-NLS-1$
 				context.logCommand(finalQuery);
 				
-				if (!join && !visitor.getQueryAll() 
+				/*if (!join && !visitor.getQueryAll() 
 						&& (context.getSourceHints() != null && context.getSourceHints().contains("bulk"))) { //$NON-NLS-1$
 					BulkValidator bulkValidator = new BulkValidator();
 					query.acceptVisitor(bulkValidator);
@@ -224,7 +223,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 						batchInfo = connection.addBatch(finalQuery, this.activeJob);
 						return;
 					}
-				}
+				}*/
 				
 				results = connection.query(finalQuery, this.context.getBatchSize(), visitor.getQueryAll());
 			}
