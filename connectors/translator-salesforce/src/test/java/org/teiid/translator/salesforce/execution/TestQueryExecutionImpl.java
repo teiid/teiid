@@ -34,6 +34,7 @@ import java.util.TimeZone;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -126,6 +127,7 @@ public class TestQueryExecutionImpl {
 		assertNull(qei.next());
 	}
 	
+	@Ignore
 	@Test
 	public void testBulkFlow() throws Exception {
 		Select command = (Select)translationUtility.parseCommand("select Name from Account"); //$NON-NLS-1$
