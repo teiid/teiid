@@ -122,4 +122,17 @@ public class LoopInstruction extends CreateCursorResultSetInstruction implements
         procEnv.removeResults(rsName);
     }
     
+    @Override
+    public Boolean requiresTransaction(boolean transactionalReads) {
+        Boolean requires = super.requiresTransaction(transactionalReads);
+        if (requires != null && requires) {
+            return true;
+        }
+        Boolean loopRequires = loopProgram.requiresTransaction(transactionalReads);
+        if (loopRequires == null || loopRequires) {
+            return true;
+        }
+        return requires;
+    }
+    
 }

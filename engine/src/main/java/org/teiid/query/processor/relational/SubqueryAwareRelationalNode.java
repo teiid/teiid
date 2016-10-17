@@ -24,6 +24,7 @@ package org.teiid.query.processor.relational;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
@@ -87,7 +88,13 @@ public abstract class SubqueryAwareRelationalNode extends RelationalNode {
 	
 	@Override
 	public Boolean requiresTransaction(boolean transactionalReads) {
-		for (SubqueryContainer<?> subquery : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(getObjects())) {
+		List<SubqueryContainer<?>> valueIteratorProviders = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(getObjects());
+        return requiresTransaction(transactionalReads, valueIteratorProviders);
+	}
+
+    public static Boolean requiresTransaction(boolean transactionalReads,
+            List<SubqueryContainer<?>> valueIteratorProviders) {
+        for (SubqueryContainer<?> subquery : valueIteratorProviders) {
 			ProcessorPlan plan = subquery.getCommand().getProcessorPlan();
 			if (plan != null) {
 				Boolean txn = plan.requiresTransaction(transactionalReads);
@@ -97,6 +104,6 @@ public abstract class SubqueryAwareRelationalNode extends RelationalNode {
 			}
 		}
 		return false;
-	}
+    }
 
 }

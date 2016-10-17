@@ -29,7 +29,9 @@ import static org.teiid.query.analysis.AnalysisRecord.*;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.processor.relational.SubqueryAwareRelationalNode;
 import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 
 
 /**
@@ -99,6 +101,19 @@ public class WhileInstruction extends ProgramInstruction implements RepeatedInst
     }
 
     public void postInstruction(ProcedurePlan procEnv) throws TeiidComponentException {
+    }
+    
+    @Override
+    public Boolean requiresTransaction(boolean transactionalReads) {
+        Boolean conditionRequires = SubqueryAwareRelationalNode.requiresTransaction(transactionalReads, ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(condition));
+        if (conditionRequires == null || conditionRequires) {
+            return true;
+        }
+        Boolean requires = whileProgram.requiresTransaction(transactionalReads);
+        if (requires == null || requires) {
+            return true;
+        }
+        return false;
     }
     
 }

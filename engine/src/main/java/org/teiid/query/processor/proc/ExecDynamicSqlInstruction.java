@@ -57,6 +57,7 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.processor.proc.CreateCursorResultSetInstruction.Mode;
+import org.teiid.query.processor.relational.SubqueryAwareRelationalNode;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.ProcedureReservedWords;
@@ -73,6 +74,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.util.VariableContext;
+import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.ValidationVisitor;
 
@@ -421,6 +423,33 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 	
 	public void setReturnable(boolean returnable) {
 		this.returnable = returnable;
+	}
+	
+	@Override
+	public Boolean requiresTransaction(boolean transactionalReads) {
+	    Boolean expressionRequires = SubqueryAwareRelationalNode.requiresTransaction(transactionalReads, ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(dynamicCommand.getSql()));
+	    if (expressionRequires != null && expressionRequires) {
+	        return true;
+	    }
+	    if (this.dynamicCommand.getUsing() != null) {
+    	    Boolean setRequires = SubqueryAwareRelationalNode.requiresTransaction(transactionalReads, ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(this.dynamicCommand.getUsing().getClauseMap().values()));
+    	    if (setRequires == null) {
+    	        if (expressionRequires == null) {
+    	            return true;
+    	        }
+    	        expressionRequires = null;
+            } else if (setRequires) {
+                return true;
+            }
+	    }
+	    if ((dynamicCommand.getUpdatingModelCount() < 2 && transactionalReads)
+	            || dynamicCommand.getUpdatingModelCount() == 1) {
+	        return expressionRequires==null?true:null;
+	    }
+	    if (dynamicCommand.getUpdatingModelCount() > 1) {
+            return true;
+        }
+	    return expressionRequires;
 	}
 
 }

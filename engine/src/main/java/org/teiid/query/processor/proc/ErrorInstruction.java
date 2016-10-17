@@ -30,7 +30,9 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.processor.relational.SubqueryAwareRelationalNode;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 
 
 /**
@@ -89,6 +91,11 @@ public class ErrorInstruction extends ProgramInstruction {
         	throw new TeiidProcessingException(QueryPlugin.Event.TEIID31122, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31122));
         }
         throw TeiidSQLException.create((Exception)value);
+    }
+    
+    @Override
+    public Boolean requiresTransaction(boolean transactionalReads) {
+        return SubqueryAwareRelationalNode.requiresTransaction(transactionalReads, ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(expression));
     }
  
 }

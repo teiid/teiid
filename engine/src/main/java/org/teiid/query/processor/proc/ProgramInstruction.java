@@ -71,5 +71,9 @@ public abstract class ProgramInstruction implements Cloneable {
     }
 
 	public abstract PlanNode getDescriptionProperties();
+
+    public Boolean requiresTransaction(boolean transactionalReads) {
+        return false;
+    }
     
 }

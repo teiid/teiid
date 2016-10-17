@@ -155,7 +155,9 @@ public class MetaDataProcessor {
             case Command.TYPE_DROP:
                 break;    
             default:
-                columnMetadata = createProjectedSymbolMetadata(originalCommand);                   
+                if (originalCommand.returnsResultSet()) {
+                    columnMetadata = createProjectedSymbolMetadata(originalCommand);
+                }
         }
         
         Map<Reference, String> paramMap = Collections.emptyMap();

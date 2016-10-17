@@ -121,5 +121,14 @@ public class DependentProcedureExecutionNode extends PlanExecutionNode {
     		parent = parent.getParent();
     	}
 	}
+	
+	@Override
+	public Boolean requiresTransaction(boolean transactionalReads) {
+	    Boolean requires = super.requiresTransaction(transactionalReads);
+        if (requires == null || requires) {
+            return true;
+        }
+        return false;
+	}
 
 }

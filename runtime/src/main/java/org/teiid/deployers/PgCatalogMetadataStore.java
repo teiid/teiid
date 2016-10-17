@@ -71,6 +71,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		add_pg_user();
 		add_matpg_datatype();
 		add_pg_description();
+		add_pg_prepared_xacts();
 		addFunction("encode", "encode").setPushdown(PushDown.CAN_PUSHDOWN);; //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("postgisVersion", "PostGIS_Lib_Version"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("hasPerm", "has_function_privilege"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -83,7 +84,19 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		func.setDeterminism(Determinism.COMMAND_DETERMINISTIC);
 	}
 	
-	private Table createView(String name) {
+	private void add_pg_prepared_xacts() {
+	    Table t = createView("pg_prepared_xacts"); //$NON-NLS-1$ 
+	    //xid
+        addColumn("transaction", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
+        addColumn("gid", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("owner", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("database", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
+        
+        String transformation = "SELECT null, null, null, null from SYS.Tables WHERE 1=2"; //$NON-NLS-1$
+        t.setSelectTransformation(transformation);
+    }
+
+    private Table createView(String name) {
 		Table t = addTable(name);
 		t.setSystem(true);
 		t.setSupportsUpdate(false);
