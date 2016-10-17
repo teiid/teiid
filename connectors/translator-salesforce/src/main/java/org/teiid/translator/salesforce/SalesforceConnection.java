@@ -21,7 +21,9 @@
  */
 package org.teiid.translator.salesforce;
 
+import java.io.IOException;
 import java.util.Calendar;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import javax.resource.ResourceException;
@@ -31,6 +33,7 @@ import org.teiid.translator.salesforce.execution.DataPayload;
 import org.teiid.translator.salesforce.execution.DeletedResult;
 import org.teiid.translator.salesforce.execution.UpdatedResult;
 
+import com.sforce.async.BatchInfo;
 import com.sforce.async.BatchResult;
 import com.sforce.async.JobInfo;
 import com.sforce.async.OperationEnum;
@@ -43,29 +46,67 @@ public interface SalesforceConnection extends Connection {
 	
 	public static class BatchResultInfo {
 		private String batchId;
-		private String[] batchList;
-		private int batchNum;
+		private int waitCount;
+		
+		//batch state
+		private String[] resultList;
+		private int resultNum;
+        
+		//pk chunk state
+		private LinkedHashMap<String, BatchInfo> pkBatches;
 
 		public BatchResultInfo(String batchInfo) {
 			this.batchId = batchInfo;
 		}
 		
-		public String[] getBatchList() {
-			return batchList;
-		}
+		public String[] getResultList() {
+            return resultList;
+        }
 		
-		public void setBatchList(String[] batchList) {
-			this.batchList = batchList;
-		}
+		public void setResultList(String[] resultList) {
+            this.resultList = resultList;
+            this.resultNum = 0;
+        }
 		
-		public int getAndIncrementBatchNum() {
-			return batchNum++;
-		}
+		public int getAndIncrementResultNum() {
+            return resultNum++;
+        }
+		
+		public void setResultNum(int resultNum) {
+            this.resultNum = resultNum;
+        }
 		
 		public String getBatchId() {
 			return batchId;
 		}
 		
+		public void initPkBatches(BatchInfo[] pkChunks) {
+		    pkBatches = new LinkedHashMap<String, BatchInfo>();
+		    //ignore the first
+		    for (int i = 1; i < pkChunks.length; i++) {
+		        pkBatches.put(pkChunks[i].getId(), pkChunks[i]);
+		    }
+        }
+		
+		public LinkedHashMap<String, BatchInfo> getPkBatches() {
+            return pkBatches;
+        }
+		
+		public int incrementAndGetWaitCount() {
+		    return ++waitCount;
+		}
+        
+		public void resetWaitCount() {
+		    waitCount = 0;
+		}
+	}
+	
+	public interface BulkBatchResult {
+	    
+	    public List<String> nextRecord() throws IOException;
+	    
+	    public void close();
+	    
 	}
 
 	public QueryResult query(String queryString, int maxBatchSize, boolean queryAll) throws ResourceException;
@@ -99,7 +140,7 @@ public interface SalesforceConnection extends Connection {
 	String addBatch(List<SObject> payload, JobInfo job)
 			throws ResourceException;
 
-	JobInfo createBulkJob(String objectName, OperationEnum operation) throws ResourceException;
+	JobInfo createBulkJob(String objectName, OperationEnum operation, boolean usePkChunking) throws ResourceException;
 
 	Long getCardinality(String sobject) throws ResourceException;
 	
@@ -107,6 +148,6 @@ public interface SalesforceConnection extends Connection {
 
 	BatchResultInfo addBatch(String query, JobInfo job) throws ResourceException;
 
-	List<List<String>> getBatchQueryResults(String id, BatchResultInfo info) throws ResourceException;
+	BulkBatchResult getBatchQueryResults(String id, BatchResultInfo info) throws ResourceException;
 
 }

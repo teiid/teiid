@@ -21,6 +21,7 @@
  */
 package org.teiid.translator.salesforce.execution;
 
+import java.io.IOException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.*;
@@ -44,9 +45,11 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.salesforce.SalesForceExecutionFactory;
+import org.teiid.translator.salesforce.SalesForceMetadataProcessor;
 import org.teiid.translator.salesforce.SalesForcePlugin;
 import org.teiid.translator.salesforce.SalesforceConnection;
 import org.teiid.translator.salesforce.SalesforceConnection.BatchResultInfo;
+import org.teiid.translator.salesforce.SalesforceConnection.BulkBatchResult;
 import org.teiid.translator.salesforce.execution.visitors.JoinQueryVisitor;
 import org.teiid.translator.salesforce.execution.visitors.SelectVisitor;
 
@@ -65,6 +68,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 	 */
 	static final class BulkValidator extends HierarchyVisitor {
 		boolean bulkEligible = true;
+		boolean usePkChunking = true;
 		static Set<String> allowed = new HashSet<String>(
 				Arrays.asList("Account", "Campaign", "CampaignMember", "Case", "Contact", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 						"Lead", "LoginHistory", "Opportunity", "Task", "User")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
@@ -84,6 +88,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 			if (obj.isRollup()) { //not yet supported, but just in case
 				bulkEligible = false;
 			} else {
+			    usePkChunking = false;
 				super.visit(obj);
 			}
 		}
@@ -100,15 +105,24 @@ public class QueryExecutionImpl implements ResultSetExecution {
 		@Override
 		public void visit(NamedTable obj) {
 			//since this is hint driven we'll assume that it is used selectively
-			/*if (!allowed.contains(obj.getMetadataObject().getSourceName()) 
+			if (!allowed.contains(obj.getMetadataObject().getSourceName()) 
 					&& !Boolean.valueOf(obj.getMetadataObject().getProperty(SalesForceMetadataProcessor.TABLE_CUSTOM, false))) {
-				bulkEligible = false;
-			}*/
+				usePkChunking = false;
+			}
+		}
+		
+		@Override
+		public void visit(OrderBy obj) {
+		    usePkChunking = false;
 		}
 		
 		public boolean isBulkEligible() {
 			return bulkEligible;
 		}
+		
+		public boolean usePkChunking() {
+            return usePkChunking;
+        }
 	}
 
 	private static final String TYPE = "type"; //$NON-NLS-1$
@@ -153,7 +167,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 	//bulk support
 	private JobInfo activeJob;
 	private BatchResultInfo batchInfo;
-	private List<List<String>> batchResults;
+	private BulkBatchResult batchResults;
 	
 	
 	public QueryExecutionImpl(QueryExpression command, SalesforceConnection connection, RuntimeMetadata metadata, ExecutionContext context, SalesForceExecutionFactory salesForceExecutionFactory) {
@@ -189,6 +203,10 @@ public class QueryExecutionImpl implements ResultSetExecution {
 				LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Exception closing"); //$NON-NLS-1$
 			}
 		}
+		if (batchResults != null) {
+		    batchResults.close();
+		    batchResults = null;
+		}
 	}
 
 	@Override
@@ -220,7 +238,8 @@ public class QueryExecutionImpl implements ResultSetExecution {
 					BulkValidator bulkValidator = new BulkValidator();
 					query.acceptVisitor(bulkValidator);
 					if (bulkValidator.isBulkEligible()) {
-						this.activeJob = connection.createBulkJob(visitor.getTableName(), OperationEnum.query);
+					    LogManager.logDetail(LogConstants.CTX_CONNECTOR,  getLogPreamble(), "Using bulk logic", bulkValidator.usePkChunking()?"with":"without", "pk chunking"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    this.activeJob = connection.createBulkJob(visitor.getTableName(), OperationEnum.query, bulkValidator.usePkChunking());
 						batchInfo = connection.addBatch(finalQuery, this.activeJob);
 						return;
 					}
@@ -236,18 +255,28 @@ public class QueryExecutionImpl implements ResultSetExecution {
 	@Override
 	public List<?> next() throws TranslatorException, DataNotAvailableException {
 		if (activeJob != null) {
-			if (batchResults == null || topResultIndex >= batchResults.size()) {
-				try {
-					batchResults = connection.getBatchQueryResults(activeJob.getId(), batchInfo);
-					topResultIndex = 1; //ignore the header
-				} catch (ResourceException e) {
-					throw new TranslatorException(e);
-				}
-			}
-			if (topResultIndex >= batchResults.size()) {
-				return null;
-			}
-			List<String> row = batchResults.get(topResultIndex++);
+		    List<String> row = null;
+		    try {
+		        while (row == null) {
+    		        if (batchResults == null) {
+    					batchResults = connection.getBatchQueryResults(activeJob.getId(), batchInfo);
+    					if (batchResults == null) {
+    					    return null;
+    					}
+    					//throw the header away
+    					if (batchResults.nextRecord() == null) {
+    					    throw new AssertionError("Expected header row"); //$NON-NLS-1$
+    					}
+    		        }
+    		        row = batchResults.nextRecord();
+    		        if (row == null) {
+    		            batchResults.close();
+    		            batchResults = null;
+    		        }
+		        }
+            } catch (ResourceException|IOException e) {
+                throw new TranslatorException(e);
+            }
 			List<Object> result = new ArrayList<Object>();
 			for (int j = 0; j < visitor.getSelectSymbolCount(); j++) {
 				Expression ex = visitor.getSelectSymbolMetadata(j);

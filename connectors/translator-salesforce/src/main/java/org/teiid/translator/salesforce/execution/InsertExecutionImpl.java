@@ -93,7 +93,7 @@ public class InsertExecutionImpl extends AbstractUpdateExecution {
 			}
 			else {
 				if (this.activeJob == null) {
-					this.activeJob = getConnection().createBulkJob(this.objectName, OperationEnum.insert);
+					this.activeJob = getConnection().createBulkJob(this.objectName, OperationEnum.insert, false);
 					counts = new ArrayList<Integer>();
 				}
 				if (this.activeJob.getState() == JobStateEnum.Open) {

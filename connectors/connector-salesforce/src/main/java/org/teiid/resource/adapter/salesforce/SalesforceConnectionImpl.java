@@ -35,7 +35,9 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.zip.GZIPInputStream;
 
@@ -73,7 +75,8 @@ import com.sforce.ws.transport.JdkHttpTransport;
 
 public class SalesforceConnectionImpl extends BasicConnection implements SalesforceConnection {
 	
-	private static final int MAX_CHUNK_SIZE = 100000;
+	private static final String PK_CHUNKING_HEADER = "Sforce-Enable-PKChunking"; //$NON-NLS-1$
+    private static final int MAX_CHUNK_SIZE = 100000;
 	private BulkConnection bulkConnection; 
 	private PartnerConnection partnerConnection;
 	private SalesforceConnectorConfig config;
@@ -175,7 +178,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
         	throw new ResourceException(e);
 		}
         
-		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Login was successful for username " + username); //$NON-NLS-1$
+		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Login was successful for username", username); //$NON-NLS-1$
 	}
 	
 	@Override
@@ -501,14 +504,22 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 	}
 
 	@Override
-	public JobInfo createBulkJob(String objectName, OperationEnum operation) throws ResourceException {
+	public JobInfo createBulkJob(String objectName, OperationEnum operation, boolean usePkChunking) throws ResourceException {
         try {
 			JobInfo job = new JobInfo();
 			job.setObject(objectName);
 			job.setOperation(operation);
 			job.setContentType(operation==OperationEnum.insert?ContentType.XML:ContentType.CSV);
 			job.setConcurrencyMode(ConcurrencyMode.Parallel);
-			return this.bulkConnection.createJob(job);
+			if (operation == OperationEnum.query && usePkChunking) {
+			    this.bulkConnection.addHeader(PK_CHUNKING_HEADER, "chunkSize=" + MAX_CHUNK_SIZE); //$NON-NLS-1$
+			}
+			JobInfo info = this.bulkConnection.createJob(job);
+			//reset the header
+			if (operation == OperationEnum.query) {
+			    this.bulkConnection = new BulkConnection(config);
+			}
+			return info;
 		} catch (AsyncApiException e) {
 			throw new ResourceException(e);
 		}
@@ -528,7 +539,6 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 	@Override
 	public BatchResultInfo addBatch(String query, JobInfo job) throws ResourceException {
 		try {
-			this.bulkConnection.addHeader("Sforce-Enable-PKChunking", String.valueOf(MAX_CHUNK_SIZE)); //$NON-NLS-1$
 			BatchInfo batch = this.bulkConnection.createBatchFromStream(job, new ByteArrayInputStream(query.getBytes(Charset.forName("UTF-8")))); //$NON-NLS-1$
 			return new BatchResultInfo(batch.getId());
 		} catch (AsyncApiException e) {
@@ -537,42 +547,150 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 	}
 	
 	@Override
-	public List<List<String>> getBatchQueryResults(String jobId, BatchResultInfo info) throws ResourceException {
-		if (info.getBatchList() == null) {
+	public BulkBatchResult getBatchQueryResults(String jobId, BatchResultInfo info) throws ResourceException {
+		if (info.getResultList() == null && info.getPkBatches() == null) {
 			try {
 				BatchInfo batch = this.bulkConnection.getBatchInfo(jobId, info.getBatchId());
-				if (batch.getState() == BatchStateEnum.Completed) {
-					QueryResultList list = this.bulkConnection.getQueryResultList(jobId, info.getBatchId());
-					info.setBatchList(list.getResult());
-				} else if (batch.getState() == BatchStateEnum.Failed) {
-					throw new ResourceException(batch.getStateMessage());
-				} else {
-					throw new DataNotAvailableException(pollingInterval);
+                switch (batch.getState()) {
+    				case NotProcessed:
+                        // we need more checks to ensure that chunking is being used.  since
+    				    // we don't know, then we'll explicitly check
+    				    JobInfo jobStatus = this.bulkConnection.getJobStatus(jobId);
+    				    if (jobStatus.getState() == JobStateEnum.Aborted) {
+                            throw new ResourceException(JobStateEnum.Aborted.name());
+                        }
+    				    BatchInfoList batchInfoList = this.bulkConnection.getBatchInfoList(jobId);
+    				    LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Pk chunk batches", batchInfoList); //$NON-NLS-1$
+    				    BatchInfo[] batchInfo = batchInfoList.getBatchInfo();
+    				    boolean anyComplete = false;
+    		            for (int i = 1; i < batchInfo.length; i++) {
+    		                switch (batchInfo[i].getState()) {
+    		                case Failed:
+    		                case NotProcessed:
+                                throw new ResourceException(batchInfo[i].getStateMessage());
+    		                case Completed:
+    		                    anyComplete = true;
+    		                    break;
+    		                }
+    		            }
+    		            info.initPkBatches(batchInfo);
+    				    if (!anyComplete) {
+    				        throwDataNotAvailable(info);
+    				    }
+    				    break;
+    				case Completed:
+                    {
+				        QueryResultList list = this.bulkConnection.getQueryResultList(jobId, info.getBatchId());
+                        info.setResultList(list.getResult());
+                        break;
+				    }
+				    case InProgress:
+				    case Queued:
+                    throwDataNotAvailable(info);
+	                 default:
+	                    throw new ResourceException(batch.getStateMessage());
 				}
 			} catch (AsyncApiException e) {
 				throw new ResourceException(e);
 			}
 		}
-		List<List<String>> result = new ArrayList<List<String>>();
-		int index = info.getAndIncrementBatchNum();
-		if (index < info.getBatchList().length) {
-			try {
-				InputStream inputStream=bulkConnection.getQueryResultStream(jobId, info.getBatchId(), info.getBatchList()[index]);
-				CSVReader reader = new CSVReader(inputStream);
-				reader.setMaxRowsInFile(MAX_CHUNK_SIZE);
-				List<String> vals = null;
-				while ((vals = reader.nextRecord()) != null) {
-					result.add(vals);
-				}
-			} catch (AsyncApiException e) {
-				throw new ResourceException(e);
-			} catch (IOException e) {
-				throw new ResourceException(e);
-			}
+		try {
+		    BulkBatchResult result = null;
+		    if (info.getResultList() != null) {
+		        result = nextBulkBatch(jobId, info);
+		    }
+		    if (result == null && info.getPkBatches() != null) {
+    		    getNextPkChunkResultList(jobId, info);
+    		    result = nextBulkBatch(jobId, info);
+    		}
+		    info.resetWaitCount();
+		    return result;
+		} catch (AsyncApiException e) {
+		    throw new ResourceException(e);
 		}
-		return result;
 	}
+
+    private void throwDataNotAvailable(BatchResultInfo info) {
+        int waitCount = info.incrementAndGetWaitCount();
+        LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Waiting on queued/inprogress, wait number", waitCount); //$NON-NLS-1$
+        throw new DataNotAvailableException(pollingInterval * Math.min(8, waitCount));
+    }
+
+    private void getNextPkChunkResultList(String jobId,
+            BatchResultInfo info) throws AsyncApiException, ResourceException {
+        Map<String, BatchInfo> batches = info.getPkBatches();
+        if (batches.isEmpty()) {
+            return; //terminal condition
+        }
+        for (Iterator<Map.Entry<String, BatchInfo>> iter = batches.entrySet().iterator(); iter.hasNext();) {
+            Map.Entry<String, BatchInfo> entry = iter.next();
+            if (entry.getValue().getState() != BatchStateEnum.Completed) {
+                continue;
+            }
+            iter.remove();
+            QueryResultList list = this.bulkConnection.getQueryResultList(jobId, entry.getKey());
+            info.setResultList(list.getResult());
+            return;
+        }
+        
+        //update the batchInfo
+        BatchInfoList batchInfoList = this.bulkConnection.getBatchInfoList(jobId);
+        BatchInfo[] batchInfo = batchInfoList.getBatchInfo();
+        
+        String completedId = null;
+        for (BatchInfo bi : batchInfo) {
+            if (!batches.containsKey(bi.getId())) {
+                continue;
+            }
+            switch (bi.getState()) {
+            case Failed:
+            case NotProcessed:
+                throw new ResourceException(bi.getStateMessage());
+            case Completed:
+                if (completedId == null) {
+                    completedId = bi.getId();
+                    batches.remove(completedId);
+                } else {
+                    batches.put(bi.getId(), bi);
+                }
+                break;
+            }
+        }
+        
+        if (completedId == null) {
+            throwDataNotAvailable(info);
+        }
+        QueryResultList list = this.bulkConnection.getQueryResultList(jobId, completedId);
+        info.setResultList(list.getResult());
+    }
 	
+    private BulkBatchResult nextBulkBatch(String jobId, BatchResultInfo info)
+            throws AsyncApiException {
+		int index = info.getAndIncrementResultNum();
+		if (index < info.getResultList().length) {
+            String resultId = info.getResultList()[index];
+            final InputStream inputStream = bulkConnection.getQueryResultStream(jobId, info.getBatchId(), resultId);
+            final CSVReader reader = new CSVReader(inputStream);
+            //get rid of the limits as much as possible
+            reader.setMaxRowsInFile(Integer.MAX_VALUE);
+            reader.setMaxCharsInFile(Integer.MAX_VALUE);
+            return new BulkBatchResult() {
+                @Override
+                public List<String> nextRecord() throws IOException {
+                    return reader.nextRecord();
+                }
+                @Override
+                public void close() {
+                    try {
+                        inputStream.close();
+                    } catch (IOException e) {
+                    }
+                }
+            };
+		}
+		return null;
+    }
+
 	@Override 
 	public JobInfo closeJob(String jobId) throws ResourceException {
 		try {

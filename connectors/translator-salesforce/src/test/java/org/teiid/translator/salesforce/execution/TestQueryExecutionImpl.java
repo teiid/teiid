@@ -24,11 +24,12 @@ package org.teiid.translator.salesforce.execution;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -47,6 +48,7 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.salesforce.SalesForceExecutionFactory;
 import org.teiid.translator.salesforce.SalesforceConnection;
 import org.teiid.translator.salesforce.SalesforceConnection.BatchResultInfo;
+import org.teiid.translator.salesforce.SalesforceConnection.BulkBatchResult;
 import org.teiid.translator.salesforce.execution.visitors.TestVisitors;
 
 import com.sforce.async.JobInfo;
@@ -133,23 +135,38 @@ public class TestQueryExecutionImpl {
 		SalesforceConnection connection = Mockito.mock(SalesforceConnection.class);
 		JobInfo jobInfo = Mockito.mock(JobInfo.class);
 		
-		Mockito.when(connection.createBulkJob(Mockito.anyString(), Mockito.eq(OperationEnum.query))).thenReturn(jobInfo);
+		Mockito.when(connection.createBulkJob(Mockito.anyString(), Mockito.eq(OperationEnum.query), Mockito.eq(true))).thenReturn(jobInfo);
 		
 		final BatchResultInfo info = new BatchResultInfo("x");
 		
-		Mockito.when(connection.getBatchQueryResults(Mockito.anyString(), Mockito.eq(info))).thenAnswer(new Answer<List<List<String>>>() {
+		Mockito.when(connection.getBatchQueryResults(Mockito.anyString(), Mockito.eq(info))).thenAnswer(new Answer<BulkBatchResult>() {
 			boolean first = true;
 			@Override
-			public List<List<String>> answer(InvocationOnMock invocation)
+			public BulkBatchResult answer(InvocationOnMock invocation)
 					throws Throwable {
 				if (first) {
 					first = false;
 					throw new DataNotAvailableException();
 				}
-				if (info.getAndIncrementBatchNum() == 0) {
-					return Arrays.asList(Arrays.asList("Name"), Arrays.asList("X"));
+				if (info.getAndIncrementResultNum() == 0) {
+				    final Iterator<List<String>> i = Arrays.asList(Arrays.asList("Name"), Arrays.asList("X")).iterator();
+					return new BulkBatchResult() {
+                        
+                        @Override
+                        public List<String> nextRecord() throws IOException {
+                            if (!i.hasNext()) {
+                                return null;
+                            }
+                            return i.next();
+                        }
+                        
+                        @Override
+                        public void close() {
+                            
+                        }
+                    };
 				}
-				return Collections.emptyList();
+				return null;
 			}
 		});
 		
