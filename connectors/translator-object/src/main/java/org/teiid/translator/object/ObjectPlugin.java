@@ -56,6 +56,8 @@ public class ObjectPlugin {
 		TEIID21014,
 		TEIID21015,
 		TEIID21016,
+		TEIID21017,
+		TEIID21018,
 		TEIID21302,
     }
 }
