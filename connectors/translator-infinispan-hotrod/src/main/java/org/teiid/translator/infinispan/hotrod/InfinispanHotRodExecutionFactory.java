@@ -79,7 +79,7 @@ public class InfinispanHotRodExecutionFactory extends ObjectExecutionFactory {
 
 	@Override
 	public int getMaxFromGroups() {
-		return 2;
+		return 1;
 	}
 	
 	@Override
