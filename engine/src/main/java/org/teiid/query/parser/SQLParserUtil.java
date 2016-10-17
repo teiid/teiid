@@ -36,16 +36,37 @@ import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.language.SQLConstants;
-import org.teiid.metadata.*;
-import org.teiid.metadata.Column.SearchType;
+import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.BaseColumn;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.PushDown;
+import org.teiid.metadata.FunctionParameter;
+import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.MetadataException;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.ProcedureParameter.Type;
+import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.metadata.DDLConstants;
-import org.teiid.query.metadata.SystemMetadata;
-import org.teiid.query.sql.lang.*;
+import org.teiid.query.metadata.DatabaseStore;
+import org.teiid.query.sql.lang.AlterTrigger;
+import org.teiid.query.sql.lang.CacheHint;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
+import org.teiid.query.sql.lang.FromClause;
+import org.teiid.query.sql.lang.Limit;
+import org.teiid.query.sql.lang.Option;
+import org.teiid.query.sql.lang.QueryCommand;
+import org.teiid.query.sql.lang.SPParameter;
+import org.teiid.query.sql.lang.SetQuery;
+import org.teiid.query.sql.lang.SourceHint;
+import org.teiid.query.sql.lang.StoredProcedure;
+import org.teiid.query.sql.lang.WithQueryCommand;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.Statement;
 import org.teiid.query.sql.symbol.Constant;
@@ -54,9 +75,7 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 
 public class SQLParserUtil {
-	
-    static final Pattern udtPattern = Pattern.compile("(\\w+)\\s*\\(\\s*(\\d+),\\s*(\\d+),\\s*(\\d+)\\)"); //$NON-NLS-1$
-    
+	    
     static final Pattern hintPattern = Pattern.compile("\\s*(\\w+(?:\\(\\s*(max:\\d+)?\\s*((?:no)?\\s*join)\\s*\\))?)\\s*", Pattern.DOTALL | Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	
 	public static final boolean DECIMAL_AS_DOUBLE = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.decimalAsDouble", false); //$NON-NLS-1$
@@ -404,232 +423,11 @@ public class SQLParserUtil {
     	}
     	return new Block(stmt);
     }
-    
-    void setColumnOptions(BaseColumn c)  throws MetadataException {
-    	Map<String, String> props = c.getProperties();
-		setCommonProperties(c, props);
-		
-    	String v = props.remove(DDLConstants.RADIX); 
-    	if (v != null) {
-    		c.setRadix(Integer.parseInt(v));
-    	}
-    	
-    	v = props.remove(DDLConstants.NATIVE_TYPE);
-    	if (v != null) {
-    		c.setNativeType(v);
-    	}
-    	
-    	if (c instanceof Column) {
-    		setColumnOptions((Column)c, props);
-    	}
-    }
-    
-    void removeColumnOption(String key, BaseColumn c)  throws MetadataException {
-    	if (c.getProperty(key, false) != null) {
-    		c.setProperty(key, null);
-    	}    	
-		removeCommonProperty(key, c);
-		
-    	if (key.equals(DDLConstants.RADIX)) {
-    		c.setRadix(0);
-    	} else if (key.equals(DDLConstants.NATIVE_TYPE)) {
-    		c.setNativeType(null);
-    	} else if (c instanceof Column) {
-    		removeColumnOption(key, (Column)c);
-    	}
-    }    
-    
-    private void removeColumnOption(String key, Column c) {
-        if (key.equals(DDLConstants.CASE_SENSITIVE)) {
-        	c.setCaseSensitive(false);
-        } else if (key.equals(DDLConstants.SELECTABLE)) {
-    		c.setSelectable(true);
-    	} else if (key.equals(DDLConstants.UPDATABLE)) {
-    		c.setUpdatable(false);
-    	} else if (key.equals(DDLConstants.SIGNED)) {
-    		c.setSigned(false);
-    	} else if (key.equals(DDLConstants.CURRENCY)) {
-    		c.setSigned(false);
-    	} else if (key.equals(DDLConstants.FIXED_LENGTH)) {
-    		c.setFixedLength(false);
-    	} else if (key.equals(DDLConstants.SEARCHABLE)) {
-    		c.setSearchType(null);
-    	} else if (key.equals(DDLConstants.MIN_VALUE)) {
-    		c.setMinimumValue(null);
-    	} else if (key.equals(DDLConstants.MAX_VALUE)) {
-    		c.setMaximumValue(null);
-    	} else if (key.equals(DDLConstants.CHAR_OCTET_LENGTH)) {
-    		c.setCharOctetLength(0);
-    	} else if (key.equals(DDLConstants.NULL_VALUE_COUNT)) {
-    		c.setNullValues(-1);
-    	} else if (key.equals(DDLConstants.DISTINCT_VALUES)) {
-    		c.setDistinctValues(-1);
-    	} else if (key.equals(DDLConstants.UDT)) {
-			c.setDatatype(null);
-			c.setLength(0);
-			c.setPrecision(0);
-			c.setScale(0);
-    	}    	
-    }
-
-	private void setColumnOptions(Column c, Map<String, String> props) throws MetadataException {
-		String v = props.remove(DDLConstants.CASE_SENSITIVE); 
-        if (v != null) {
-        	c.setCaseSensitive(isTrue(v));
-        }
-    	
-    	v = props.remove(DDLConstants.SELECTABLE);
-    	if (v != null) {
-    		c.setSelectable(isTrue(v));
-    	}
-    	
-    	v = props.remove(DDLConstants.UPDATABLE); 
-    	if (v != null) {
-    		c.setUpdatable(isTrue(v));
-    	}
-    	
-    	v = props.remove(DDLConstants.SIGNED);
-    	if (v != null) {
-    		c.setSigned(isTrue(v));
-    	}
-    	
-    	v = props.remove(DDLConstants.CURRENCY);
-    	if (v != null) {
-    		c.setSigned(isTrue(v));
-    	}
-
-    	v = props.remove(DDLConstants.FIXED_LENGTH);
-    	if (v != null) {
-    		c.setFixedLength(isTrue(v));
-    	}
-    	
-    	v = props.remove(DDLConstants.SEARCHABLE);
-    	if (v != null) {
-    		c.setSearchType(StringUtil.caseInsensitiveValueOf(SearchType.class, v));
-    	}
-    	
-    	v = props.remove(DDLConstants.MIN_VALUE);
-    	if (v != null) {
-    		c.setMinimumValue(v);
-    	}
-    	
-    	v = props.remove(DDLConstants.MAX_VALUE);
-    	if (v != null) {
-    		c.setMaximumValue(v);
-    	}
-    	
-    	v = props.remove(DDLConstants.CHAR_OCTET_LENGTH);
-    	if (v != null) {
-    		c.setCharOctetLength(Integer.parseInt(v));
-    	}
         
-    	v = props.remove(DDLConstants.NULL_VALUE_COUNT); 
-    	if (v != null) {
-    		c.setNullValues(Integer.parseInt(v));
-    	}
-    	
-    	v = props.remove(DDLConstants.DISTINCT_VALUES); 
-    	if (v != null) {
-    		c.setDistinctValues(Integer.parseInt(v));
-    	}
-
-    	v = props.remove(DDLConstants.UDT); 
-    	if (v != null) {
-    		Matcher matcher = udtPattern.matcher(v);
-    		Map<String, Datatype> datatypes = SystemMetadata.getInstance().getSystemStore().getDatatypes();
-    		if (matcher.matches() && datatypes.get(matcher.group(1)) != null) {
-    			c.setDatatype(datatypes.get(matcher.group(1)));
-                c.setLength(Integer.parseInt(matcher.group(2)));
-    			ParsedDataType pdt = new ParsedDataType(matcher.group(1), Integer.parseInt(matcher.group(3)), Integer.parseInt(matcher.group(4)), true);
-    			setTypeInfo(pdt, c);
-    		}
-    		else {
-    			throw new MetadataException(QueryPlugin.Util.getString("udt_format_wrong", c.getName())); //$NON-NLS-1$
-    		}
-    	}
-    }
-
-	void setCommonProperties(AbstractMetadataRecord c, Map<String, String> props) {
-		String v = props.remove(DDLConstants.UUID); 
-		if (v != null) {
-			c.setUUID(v);
-		}
-		
-    	v = props.remove(DDLConstants.ANNOTATION); 
-    	if (v != null) {
-    		c.setAnnotation(v);
-    	}
-		
-		v = props.remove(DDLConstants.NAMEINSOURCE); 
-		if (v != null) {
-			c.setNameInSource(v);
-		}
-	}
-	
-	void removeCommonProperty(String key, AbstractMetadataRecord c) {
-		if (key.equals(DDLConstants.UUID)) {
-			c.setUUID(null);
-		} else if (key.equals(DDLConstants.ANNOTATION)) {
-    		c.setAnnotation(null);
-    	} else if (key.equals(DDLConstants.NAMEINSOURCE)) {
-			c.setNameInSource(null);
-		}
-	}	
-    
-    void setTableOptions(Table table) {
-    	Map<String, String> props = table.getProperties();
-    	setCommonProperties(table, props);
-    	
-    	String value = props.remove(DDLConstants.MATERIALIZED); 
-    	if (value != null) {
-    		table.setMaterialized(isTrue(value));
-    	}
-		
-		value = props.remove(DDLConstants.MATERIALIZED_TABLE); 
-		if (value != null) {
-    		Table mattable = new Table();
-    		mattable.setName(value);
-    		table.setMaterializedTable(mattable);
-    	}
-		
-		value = props.remove(DDLConstants.UPDATABLE); 
-		if (value != null) {
-			table.setSupportsUpdate(isTrue(value));
-		}
-		
-    	value = props.remove(DDLConstants.CARDINALITY); 
-    	if (value != null) {
-			table.setCardinality(Long.valueOf(value));
-    	}
-    }     
-    
-    void removeTableOption(String key, Table table) {
-    	if (table.getProperty(key, false) != null) {
-    		table.setProperty(key, null);
-    	}
-    	removeCommonProperty(key, table);
-    	
-    	if (key.equals(DDLConstants.MATERIALIZED)) {
-    		table.setMaterialized(false);
-    	}
-    	
-    	if (key.equals(DDLConstants.MATERIALIZED_TABLE)) {
-    		table.setMaterializedTable(null);
-    	}
-    	
-    	if (key.equals(DDLConstants.UPDATABLE)) {
-    		table.setSupportsUpdate(false);
-    	}
-    	
-    	if (key.equals(DDLConstants.CARDINALITY)) {
-    		table.setCardinality(-1);
-    	}    	
-    }
-    
-	static void replaceProcedureWithFunction(MetadataFactory factory,
+	static FunctionMethod replaceProcedureWithFunction(MetadataFactory factory,
 			Procedure proc) throws MetadataException {
 		if (proc.isFunction() && proc.getQueryPlan() != null) {
-			return;
+			return null;
 		}
 		FunctionMethod method = createFunctionMethod(proc);
 
@@ -638,6 +436,7 @@ public class SQLParserUtil {
 		factory.getSchema().getProcedures().remove(proc.getName());
 		
 		factory.getSchema().addFunction(method);
+		return method;
 	}
 
 	public static FunctionMethod createFunctionMethod(Procedure proc) {
@@ -707,53 +506,8 @@ public class SQLParserUtil {
     	}
 		return method;
 	}
-    
-    void setProcedureOptions(Procedure proc) {
-    	Map<String, String> props = proc.getProperties();
-    	setCommonProperties(proc, props);
-    	
-    	String value = props.remove("UPDATECOUNT"); //$NON-NLS-1$
-    	if (value != null) {
-    		proc.setUpdateCount(Integer.parseInt(value));
-    	}
-    }
-    
-    void removeOption(String option, AbstractMetadataRecord record) {
-    	if (record instanceof Table) {
-    		removeTableOption(option, (Table)record);
-    	}
-    	if (record instanceof Procedure) {
-    		removeProcedureOption(option, (Procedure)record);
-    	}
-    	if (record instanceof BaseColumn) {
-    		removeColumnOption(option, (BaseColumn)record);
-    	}
-    }
-    
-    void setOptions(AbstractMetadataRecord record) {
-    	if (record instanceof Table) {
-    		setTableOptions((Table)record);
-    	}
-    	if (record instanceof Procedure) {
-    		setProcedureOptions((Procedure)record);
-    	}
-    	if (record instanceof BaseColumn) {
-    		setColumnOptions((BaseColumn)record);
-    	}
-    }
-    
-    void removeProcedureOption(String key, Procedure proc) {
-    	if (proc.getProperty(key, false) != null) {
-    		proc.setProperty(key, null);
-    	}    	
-    	removeCommonProperty(key, proc);
-    	
-    	if (key.equals("UPDATECOUNT")) { //$NON-NLS-1$
-    		proc.setUpdateCount(1);
-    	}
-    }    
 
-    public static boolean isTrue(final String text) {
+	public static boolean isTrue(final String text) {
         return Boolean.valueOf(text);
     }    
     
@@ -804,22 +558,9 @@ public class SQLParserUtil {
 		throw new MetadataException(QueryPlugin.Util.getString("SQLParser.alter_function_param_doesnot_exist", paramName, func.getName())); //$NON-NLS-1$
 	}	
 	
-	void createDDLTrigger(MetadataFactory schema, AlterTrigger trigger) {
+	void createDDLTrigger(DatabaseStore events, AlterTrigger trigger) {
 		GroupSymbol group = trigger.getTarget();
-		
-		Table table = schema.getSchema().getTable(group.getName());
-		if (table == null || !table.isVirtual()) {
-			throw new MetadataException(QueryPlugin.Util.getString("SQLParser.view_doesnot_exist", group.getName())); //$NON-NLS-1$
-		}
-		if (trigger.getEvent().equals(Table.TriggerEvent.INSERT)) {
-			table.setInsertPlan(trigger.getDefinition().toString());
-		}
-		else if (trigger.getEvent().equals(Table.TriggerEvent.UPDATE)) {
-			table.setUpdatePlan(trigger.getDefinition().toString());
-		}
-		else if (trigger.getEvent().equals(Table.TriggerEvent.DELETE)) {
-			table.setDeletePlan(trigger.getDefinition().toString());
-		}
+		events.setTableTriggerPlan(group.getName(), trigger.getEvent(), trigger.getDefinition().toString());
 	}
 	
 	BaseColumn addProcColumn(MetadataFactory factory, Procedure proc, String name, ParsedDataType type, boolean rs) throws MetadataException {
@@ -844,7 +585,7 @@ public class SQLParserUtil {
 		return column;
 	}
 
-	void setTypeInfo(ParsedDataType type, BaseColumn column) {
+	static void setTypeInfo(ParsedDataType type, BaseColumn column) {
 		if (type.length != null){
 			column.setLength(type.length);
 		}

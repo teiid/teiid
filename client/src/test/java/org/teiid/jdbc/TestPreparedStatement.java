@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 import java.util.TimeZone;
 
 import org.junit.Test;
@@ -68,6 +69,7 @@ public class TestPreparedStatement {
 	@Test public void testBatchedUpdateExecution() throws Exception {
 		// Build up a fake connection instance for use with the prepared statement
 		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
+		Mockito.stub(conn.getConnectionProps()).toReturn(new Properties());
 		DQP dqp = Mockito.mock(DQP.class);
 		ServerConnection serverConn = Mockito.mock(ServerConnection.class);
 		LogonResult logonResult = Mockito.mock(LogonResult.class);

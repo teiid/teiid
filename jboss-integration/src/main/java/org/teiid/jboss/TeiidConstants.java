@@ -556,7 +556,20 @@ public class TeiidConstants {
             .setAllowExpression(false)
             .setAllowNull(true)
             .build();   
-    	
+
+    // Repository
+    public static SimpleAttributeDefinition DATABASE_STORAGE_MODULE_NAME_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.DATABASE_STORAGE_MODULE_NAME_ATTRIBUTE.getModelName(), ModelType.STRING)
+            .setXmlName(Element.DATABASE_STORAGE_MODULE_NAME_ATTRIBUTE.getXMLName())
+            .setAllowExpression(false)
+            .setAllowNull(true)
+            .build();    
+        
+    public static SimpleAttributeDefinition DATABASE_STORAGE_PROPERTIES_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.DATABASE_STORAGE_PROPERTIES_ATTRIBUTE.getModelName(), ModelType.STRING)
+        .setXmlName(Element.DATABASE_STORAGE_PROPERTIES_ATTRIBUTE.getXMLName())
+        .setAllowExpression(true)
+        .setAllowNull(true)
+        .build();    
+    
     public static boolean isDefined(final SimpleAttributeDefinition attr, final ModelNode  model, final OperationContext context) throws OperationFailedException {
         ModelNode resolvedNode = attr.resolveModelAttribute(context, model);
         return resolvedNode.isDefined();    	

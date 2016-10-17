@@ -29,6 +29,7 @@
         <extension module="org.wildfly.extension.request-controller"/>
         <extension module="org.wildfly.extension.security.manager"/>
         <extension module="org.wildfly.extension.undertow"/>
+        <extension module="org.wildfly.extension.clustering.singleton"/>
     </extensions>
     <management>
         <security-realms>
@@ -410,12 +411,20 @@
                 </security-domain>
             </security-domains>
         </subsystem>
+        <subsystem xmlns="urn:jboss:domain:singleton:1.0">
+            <singleton-policies default="default">
+                <singleton-policy name="default" cache-container="server">
+                    <simple-election-policy/>
+                </singleton-policy>
+            </singleton-policies>
+        </subsystem>        
         <subsystem xmlns="urn:jboss:domain:teiid:1.1">            
             <resultset-cache infinispan-container="teiid" name="resultset"/>
             <preparedplan-cache infinispan-container="teiid" name="preparedplan"/>
 
             <authentication security-domain="teiid-security"/>
-                        
+            <database-storage module="org.jboss.teiid"/>
+            
             <transport name="local"/>
             <transport name="odata"/>
             <transport name="jdbc" protocol="teiid" socket-binding="teiid-jdbc"/>

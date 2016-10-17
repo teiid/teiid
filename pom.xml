@@ -650,7 +650,7 @@
            </dependency>
 
       <!-- External dependencies -->
-<!-- 			<dependency>
+	  <!-- <dependency>
 				<groupId>javax.resource</groupId>
 				<artifactId>connector-api</artifactId>
 				<version>${version.connector-api}</version>

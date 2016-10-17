@@ -98,11 +98,16 @@ import org.teiid.transport.WireProtocol;
 
 @SuppressWarnings("nls")
 public class TestEmbeddedServer {
-	private static final class FakeTranslator extends
+    @Translator (name="y")
+	public static class FakeTranslator extends
 			ExecutionFactory<AtomicInteger, Object> {
 		
 		private boolean batch;
 		
+        public FakeTranslator() {
+            this.batch = false;
+        }
+        
 		public FakeTranslator(boolean batch) {
 			this.batch = batch;
 		}

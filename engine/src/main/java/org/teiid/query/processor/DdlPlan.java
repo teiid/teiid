@@ -39,11 +39,14 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.language.SQLConstants;
+import org.teiid.metadata.Database;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Table;
 import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.metadata.DatabaseStorage;
+import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.parser.QueryParser;
@@ -127,8 +130,9 @@ public class DdlPlan extends ProcessorPlan {
     	}
     }
 
-	public static void alterView(VDBMetaData vdb, Table t, String sql) {
+	public static void alterView(final VDBMetaData vdb, final Table t, final String sql) {
 		TransformationMetadata metadata = vdb.getAttachment(TransformationMetadata.class);
+		DatabaseStorage storage = vdb.getAttachment(DatabaseStorage.class);
 		
 		try {
 			Command command = QueryParser.getQueryParser().parseCommand(t.getSelectTransformation());
@@ -143,10 +147,39 @@ public class DdlPlan extends ProcessorPlan {
 		t.setSelectTransformation(sql);
 		t.setLastModified(System.currentTimeMillis());
 		metadata.addToMetadataCache(t, "transformation/"+SQLConstants.Reserved.SELECT, null); //$NON-NLS-1$
+		
+		if (storage != null) {
+			DatabaseStore store = storage.getStore();
+			alterDatabaseStore(store, vdb.getName(), vdb.getVersion(), new DDLChange() {
+				@Override
+				public void process(DatabaseStore store) {
+					store.databaseSwitched(vdb.getName(), vdb.getVersion());
+					store.schemaSwitched(t.getParent().getName());
+					store.tableModified(t);
+				}
+			});
+		}
+	}
+	
+	public interface DDLChange {
+		void process(DatabaseStore store);
+	}
+	public static void alterDatabaseStore(DatabaseStore store, String vdbName, String version, DDLChange change) {
+		Database db = store.getDatabase(vdbName, version);
+		if (db != null) {
+			store.startEditing();
+			try {
+				change.process(store);
+			} finally {
+				store.stopEditing();
+			}
+		}		
 	}
 
-	public static void alterProcedureDefinition(VDBMetaData vdb, Procedure p, String sql) {
+	public static void alterProcedureDefinition(final VDBMetaData vdb, final Procedure p, String sql) {
 		TransformationMetadata metadata = vdb.getAttachment(TransformationMetadata.class);
+		DatabaseStorage storage = vdb.getAttachment(DatabaseStorage.class);
+		
 		try {
 			Command command = QueryParser.getQueryParser().parseProcedure(p.getQueryPlan(), false);
 			QueryResolver.resolveCommand(command, new GroupSymbol(p.getFullName()), Command.TYPE_STORED_PROCEDURE, metadata, false);
@@ -160,10 +193,22 @@ public class DdlPlan extends ProcessorPlan {
 		p.setQueryPlan(sql);
 		p.setLastModified(System.currentTimeMillis());
 		metadata.addToMetadataCache(p, "transformation/"+StoredProcedure.class.getSimpleName().toUpperCase(), null); //$NON-NLS-1$
+		
+		if (storage != null) {
+			DatabaseStore store = storage.getStore();
+			alterDatabaseStore(store, vdb.getName(), vdb.getVersion(), new DDLChange() {
+				@Override
+				public void process(DatabaseStore store) {
+					store.databaseSwitched(vdb.getName(), vdb.getVersion());
+					store.schemaSwitched(p.getParent().getName());
+					store.procedureModified(p);
+				}
+			});
+		}		
 	}
 
-	public static void alterInsteadOfTrigger(VDBMetaData vdb, Table t,
-			String sql, Boolean enabled, TriggerEvent event) {
+	public static void alterInsteadOfTrigger(final VDBMetaData vdb, final Table t,
+			final String sql, final Boolean enabled, final TriggerEvent event) {
 		switch (event) {
 		case DELETE:
 			if (sql != null) {
@@ -190,6 +235,20 @@ public class DdlPlan extends ProcessorPlan {
 		TransformationMetadata indexMetadata = vdb.getAttachment(TransformationMetadata.class);
 		indexMetadata.addToMetadataCache(t, "transformation/"+event, null); //$NON-NLS-1$
 		t.setLastModified(System.currentTimeMillis());
+		
+		DatabaseStorage storage = vdb.getAttachment(DatabaseStorage.class);
+		if (storage != null) {
+			DatabaseStore store = storage.getStore();
+			alterDatabaseStore(store, vdb.getName(), vdb.getVersion(), new DDLChange() {
+				@Override
+				public void process(DatabaseStore store) {
+					store.databaseSwitched(vdb.getName(), vdb.getVersion());
+					store.schemaSwitched(t.getParent().getName());
+					store.setTableTriggerPlan(t.getName(), event, sql);
+					store.enableTableTriggerPlan(t.getName(), event, enabled);
+				}
+			});
+		}		
 	}
 	
 	private static String getPlanForEvent(Table t, TriggerEvent event) {

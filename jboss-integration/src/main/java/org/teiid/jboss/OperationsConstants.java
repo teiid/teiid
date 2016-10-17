@@ -55,9 +55,20 @@ class OperationsConstants {
 	public static final SimpleAttributeDefinition PROPERTY_TYPE = new SimpleAttributeDefinition("type", ModelType.STRING, false); //$NON-NLS-1$
 	public static final SimpleAttributeDefinition ENTITY_TYPE = new SimpleAttributeDefinition("entity-type", ModelType.STRING, true); //$NON-NLS-1$
 	public static final SimpleAttributeDefinition ENTITY_PATTERN = new SimpleAttributeDefinition("entity-pattern", ModelType.STRING, true); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition FORMAT = new SimpleAttributeDefinitionBuilder("format", ModelType.STRING) //$NON-NLS-1$
+	        .setAllowNull(true)
+	        .setAllowExpression(false)
+	        .setAllowedValues(Admin.ExportFormat.DDL.name(), Admin.ExportFormat.XML.name())
+	        .build();   
 	public static final SimpleAttributeDefinition INCLUDE_SOURCE = new SimpleAttributeDefinition("include-source", ModelType.STRING, true); //$NON-NLS-1$
 	
 	public static final SimpleAttributeDefinition OPTIONAL_VDB_NAME = new SimpleAttributeDefinition("vdb-name", ModelType.STRING, true); //$NON-NLS-1$
 	public static final SimpleAttributeDefinition OPTIONAL_VDB_VERSION = new SimpleAttributeDefinition("vdb-version", ModelType.STRING, true); //$NON-NLS-1$
 	
+	
+	public static final SimpleAttributeDefinition DBNAME = new SimpleAttributeDefinition("vdb-name", ModelType.STRING, true); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition VERSION = new SimpleAttributeDefinition("vdb-version", ModelType.STRING, true); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition SCHEMA = new SimpleAttributeDefinition("schema", ModelType.STRING, true); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition DDL = new SimpleAttributeDefinition("ddl", ModelType.STRING, false); //$NON-NLS-1$
+	public static final SimpleAttributeDefinition PERSIST = new SimpleAttributeDefinition("persist", ModelType.BOOLEAN, false); //$NON-NLS-1$	
 }

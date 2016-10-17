@@ -32,6 +32,7 @@ public class TeiidServiceNames {
 	public static ServiceName TRANSLATOR_REPO = ServiceName.JBOSS.append("teiid", "translator-repository");//$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName VDB_REPO = ServiceName.JBOSS.append("teiid", "vdb-repository");//$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName TRANSLATOR_BASE = ServiceName.JBOSS.append("teiid", "translator");//$NON-NLS-1$ //$NON-NLS-2$
+	public static ServiceName DATABASE_STORAGE = ServiceName.JBOSS.append("teiid", "database-storage");//$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName TRANSPORT_BASE = ServiceName.JBOSS.append("teiid", "transport");//$NON-NLS-1$ //$NON-NLS-2$
 	private static ServiceName LOCAL_TRANSPORT_BASE = ServiceName.JBOSS.append("teiid", "local", "transport");//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	public static ServiceName BUFFER_DIR = ServiceName.JBOSS.append("teiid", "buffer.dir");//$NON-NLS-1$ //$NON-NLS-2$

@@ -71,7 +71,8 @@ public class TestRequest {
         RequestMessage message = new RequestMessage();
         DQPWorkContext workContext = RealMetadataFactory.buildWorkContext(metadata, RealMetadataFactory.example1VDB());
         
-        request.initialize(message, BufferManagerFactory.getStandaloneBufferManager(), null,new FakeTransactionService(), TEMP_TABLE_STORE, workContext, null); 
+		request.initialize(message, BufferManagerFactory.getStandaloneBufferManager(), null,
+				new FakeTransactionService(), TEMP_TABLE_STORE, workContext, null, null); 
         request.initMetadata();
         DefaultAuthorizationValidator drav = new DefaultAuthorizationValidator();
         DataRolePolicyDecider drpd = new DataRolePolicyDecider();
@@ -131,7 +132,7 @@ public class TestRequest {
         Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(new AutoGenDataService());
         
         request.initialize(message, Mockito.mock(BufferManager.class),
-				new FakeDataManager(), new FakeTransactionService(), TEMP_TABLE_STORE, workContext, null);
+				new FakeDataManager(), new FakeTransactionService(), TEMP_TABLE_STORE, workContext, null, null);
         DefaultAuthorizationValidator drav = new DefaultAuthorizationValidator();
         request.setAuthorizationValidator(drav);
         request.processRequest();

@@ -54,8 +54,15 @@ import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataParser;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
-import org.teiid.common.buffer.BufferManager;
-import org.teiid.deployers.*;
+import org.teiid.deployers.CompositeVDB;
+import org.teiid.deployers.ContainerLifeCycleListener;
+import org.teiid.deployers.RuntimeVDB;
+import org.teiid.deployers.TranslatorUtil;
+import org.teiid.deployers.UDFMetaData;
+import org.teiid.deployers.VDBLifeCycleListener;
+import org.teiid.deployers.VDBRepository;
+import org.teiid.deployers.VDBStatusChecker;
+import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
@@ -68,9 +75,7 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.index.IndexMetadataRepository;
-import org.teiid.query.ObjectReplicator;
 import org.teiid.query.metadata.VDBResources;
-import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.runtime.AbstractVDBDeployer;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
@@ -83,8 +88,6 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 	protected final InjectedValue<TranslatorRepository> translatorRepositoryInjector = new InjectedValue<TranslatorRepository>();
 	protected final InjectedValue<Executor> executorInjector = new InjectedValue<Executor>();
 	protected final InjectedValue<ObjectSerializer> serializerInjector = new InjectedValue<ObjectSerializer>();
-	protected final InjectedValue<BufferManager> bufferManagerInjector = new InjectedValue<BufferManager>();
-	protected final InjectedValue<ObjectReplicator> objectReplicatorInjector = new InjectedValue<ObjectReplicator>();
 	protected final InjectedValue<VDBStatusChecker> vdbStatusCheckInjector = new InjectedValue<VDBStatusChecker>();
 	
 	// for REST deployment
@@ -148,10 +151,6 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 				repositories.put("index", new IndexMetadataRepository()); //$NON-NLS-1$ 
 				VDBMetaData vdbInstance = cvdb.getVDB();
 				if (vdbInstance.getStatus().equals(Status.ACTIVE)) {
-					// add object replication to temp/matview tables
-					GlobalTableStore gts = CompositeGlobalTableStore.createInstance(cvdb, getBuffermanager(), objectReplicatorInjector.getValue());
-
-					vdbInstance.addAttchment(GlobalTableStore.class, gts);
 					vdbService.install();
 				}				
 			}
@@ -256,11 +255,6 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 	}
 
     void cleanup(LifecycleContext context) {
-        // stop object replication
-        if (this.objectReplicatorInjector.getValue() != null) {
-            GlobalTableStore gts = vdb.getAttachment(GlobalTableStore.class);
-            this.objectReplicatorInjector.getValue().stop(gts);
-        }       
         getVDBRepository().removeVDB(this.vdb.getName(), this.vdb.getVersion());
         getVDBRepository().removeListener(this.vdbListener);
         //getVDBRepository().removeListener(this.restEasyListener);
@@ -291,6 +285,16 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 				public ExecutionFactory<Object, Object> getExecutionFactory(String name) throws ConnectorManagerException {
 					return TranslatorUtil.getExecutionFactory(name, repo, getTranslatorRepository(), deployment, map, new HashSet<String>());
 				}
+                @Override
+                public void addOverrideTranslator(VDBTranslatorMetaData translator) {
+                    // TODO: since the VDB scoped translators are already handled we do not need to do anything here
+                    // we can factor to current code to use this, if needs to be.
+                }
+                @Override
+                public void removeOverrideTranslator(String translatorName) throws ConnectorManagerException {
+                    // TODO: since the VDB scoped translators are already handled we do not need to do anything here
+                    // we can factor to current code to use this, if needs to be.                    
+                }
 			};
 			cmr.setProvider(provider);
 			cmr.createConnectorManagers(deployment, provider);
@@ -467,11 +471,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		return serializerInjector.getValue();
 	}
 	
-	private BufferManager getBuffermanager() {
-		return bufferManagerInjector.getValue();
-	}
-	
-	private void save() throws AdminProcessingException{
+	private void save() throws AdminProcessingException {
 		try {
 			ObjectSerializer os = getSerializer();
 			VDBMetadataParser.marshell(this.vdb, os.getVdbXmlOutputStream(this.vdb));

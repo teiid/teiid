@@ -58,7 +58,7 @@ public abstract class AbstractQueryTest {
     protected Connection internalConnection = null;
     protected ResultSet internalResultSet = null;
     protected Statement internalStatement = null;
-    private SQLException internalException = null;
+    protected SQLException internalException = null;
     protected int updateCount = -1;
     protected String DELIMITER = "    "; //$NON-NLS-1$ 
     

@@ -51,6 +51,7 @@ import org.teiid.dqp.service.TransactionService;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.query.metadata.DatabaseStorage;
 import org.teiid.services.InternalEventDistributorFactory;
 
 
@@ -71,6 +72,7 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 	private final InjectedValue<SessionAwareCache> preparedPlanCacheInjector = new InjectedValue<SessionAwareCache>();
 	private final InjectedValue<SessionAwareCache> resultSetCacheInjector = new InjectedValue<SessionAwareCache>();
 	private final InjectedValue<InternalEventDistributorFactory> eventDistributorFactoryInjector = new InjectedValue<InternalEventDistributorFactory>();
+	private final InjectedValue<DatabaseStorage> databaseStorageInjector = new InjectedValue<DatabaseStorage>();
 	
 	@Override
     public void start(final StartContext context) {
@@ -86,6 +88,7 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 		this.dqpCore.setEventDistributor(getEventDistributorFactoryInjector().getValue().getReplicatedEventDistributor());
 		this.dqpCore.setResultsetCache(getResultSetCacheInjector().getValue());
 		this.dqpCore.setPreparedPlanCache(getPreparedPlanCacheInjector().getValue());
+		this.dqpCore.setDatabaseStorage(getDatabaseStorageInjector().getValue());
 		this.dqpCore.start(this);
 
 		
@@ -94,11 +97,11 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 			
 			@Override
 			public void removed(String name, CompositeVDB vdb) {
-				// terminate all the previous sessions
+			    // terminate all the previous sessions
 				SessionService sessionService = (SessionService) context.getController().getServiceContainer().getService(TeiidServiceNames.SESSION).getValue();
     			Collection<SessionMetadata> sessions = sessionService.getSessionsLoggedInToVDB(vdb.getVDBKey());
 				for (SessionMetadata session:sessions) {
-					sessionService.terminateSession(session.getSessionId(), null);
+			        sessionService.terminateSession(session.getSessionId(), null);
 				}
 			        
 				// dump the caches. 
@@ -117,11 +120,16 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 			}
 			
 			@Override
-			public void added(String name, CompositeVDB vdb) {
+			public void added(String name, CompositeVDB vdb) {		    
 			}
 
 			@Override
 			public void finishedDeployment(String name, CompositeVDB cvdb) {
+                SessionService sessionService = (SessionService) context.getController().getServiceContainer().getService(TeiidServiceNames.SESSION).getValue();
+                Collection<SessionMetadata> sessions = sessionService.getSessionsLoggedInToVDB(cvdb.getVDBKey());
+                for (SessionMetadata session:sessions) {
+                    session.setVdb(cvdb.getVDB());
+                }   			    
 			}			
 			
 			@Override
@@ -195,4 +203,8 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 	public InjectedValue<InternalEventDistributorFactory> getEventDistributorFactoryInjector() {
 		return eventDistributorFactoryInjector;
 	}
+	
+	public InjectedValue<DatabaseStorage> getDatabaseStorageInjector() {
+		return databaseStorageInjector;
+	}	
 }

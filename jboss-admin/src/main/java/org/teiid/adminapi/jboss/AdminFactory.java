@@ -194,7 +194,7 @@ public class AdminFactory {
 		}
 	}
 
-    public class AdminImpl implements Admin{
+    public class AdminImpl implements Admin {
         private static final long CACHE_TIME = 5*1000;
     	private static final String CLASS_NAME = "class-name";
 		private static final String JAVA_CONTEXT = "java:/";
@@ -1151,6 +1151,7 @@ public class AdminFactory {
 			return templates;
 		}
 
+		@Override
 		public List<String> getDeployments(){
 			return Util.getDeployments(this.connection);
 		}
@@ -2071,9 +2072,16 @@ public class AdminFactory {
 		}
 
 		@Override
+        public String getSchema(String vdbName, String vdbVersion,
+                String modelName, EnumSet<SchemaObjectType> allowedTypes,
+                String typeNamePattern) throws AdminException {
+            return getSchema(vdbName, vdbVersion, modelName, allowedTypes, typeNamePattern, ExportFormat.XML);
+        }		
+        
+		@Override
 		public String getSchema(String vdbName, String vdbVersion,
 				String modelName, EnumSet<SchemaObjectType> allowedTypes,
-				String typeNamePattern) throws AdminException {
+				String typeNamePattern, ExportFormat format) throws AdminException {
 			ModelNode request = null;
 
 			ArrayList<String> params = new ArrayList<String>();
@@ -2081,9 +2089,14 @@ public class AdminFactory {
 			params.add(vdbName);
 			params.add("vdb-version");
 			params.add(vdbVersion);
-			params.add("model-name");
-			params.add(modelName);
+			if (modelName != null) {
+    			params.add("model-name");
+    			params.add(modelName);
+			}
+            params.add("format");
+            params.add(format.name());
 
+			
 			if (allowedTypes != null) {
 				params.add("entity-type");
 				StringBuilder sb = new StringBuilder();
@@ -2145,6 +2158,41 @@ public class AdminFactory {
 			this.deployedResourceAdaptorNames.set(null, 0);
 			this.installedResourceAdaptorNames.set(null, 0);
 		}
+
+        @Override
+        public String executeDDL(String vdbName, String vdbVersion, String schemaName, String ddlStmt, boolean persist)
+                throws AdminException {
+            ArrayList<String> params = new ArrayList<String>();
+            if (vdbName != null) {
+                params.add("vdb-name");
+                params.add(vdbName);
+                params.add("vdb-version");
+                params.add(vdbVersion);                
+            }
+            if (schemaName != null) {
+                params.add("schema");
+                params.add(schemaName);
+            }   
+
+            params.add("ddl");
+            params.add(ddlStmt);
+            
+            params.add("persist");
+            params.add(String.valueOf(persist));
+            
+            ModelNode request = buildRequest("teiid", "ddl-exec", params.toArray(new String[params.size()]));//$NON-NLS-1$ //$NON-NLS-2$
+
+            try {
+                ModelNode outcome = this.connection.execute(request);
+                if (!Util.isSuccess(outcome)) {
+                     throw new AdminProcessingException(AdminPlugin.Event.TEIID70045, Util.getFailureDescription(outcome));
+                } else {
+                    return outcome.get("result").asString();
+                }
+            } catch (IOException e) {
+                 throw new AdminComponentException(AdminPlugin.Event.TEIID70046, e);
+            }            
+        }
     }
     
     static class Expirable<T> {

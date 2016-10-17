@@ -70,6 +70,17 @@ public class ColumnSet<T extends AbstractMetadataRecord> extends AbstractMetadat
     	}
     }
 
+    public void removeColumn(Column column) {
+    	if (columns == null) {
+    		return;
+    	}
+    	columns.remove(column);
+    	Map<String, Column> map = columnMap;
+    	if (map != null) {
+    		map.remove(column.getName());
+    	}
+    }
+    
     public void setColumns(List<Column> columns) {
 		this.columns = columns;
 		columnMap = null;

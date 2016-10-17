@@ -113,7 +113,13 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 			AUTHENTICATION_ALLOW_SECURITY_DOMAIN_QUALIFIER.marshallAsAttribute(node, false, writer);
 			writer.writeEndElement();
     	}
-    	   	
+    	 
+        if (like(node, Element.DATABASE_STORAGE_ELEMENT)) {
+            writer.writeStartElement(Element.DATABASE_STORAGE_ELEMENT.getLocalName());
+            writeDatabaseStorage(writer, node);
+            writer.writeEndElement();               
+        } 
+        
     	if (has(node, Element.TRANSPORT_ELEMENT.getLocalName())) {
 	    	ArrayList<String> transports = new ArrayList<String>(node.get(Element.TRANSPORT_ELEMENT.getLocalName()).keys());
 	    	if (!transports.isEmpty()) {
@@ -135,6 +141,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 	    		}
 	    	}        
     	}
+    	   	
         writer.writeEndElement(); // End of subsystem element
     }
     
@@ -151,6 +158,11 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     	writer.writeAttribute(Element.TRANSLATOR_NAME_ATTRIBUTE.getLocalName(), translatorName);
     	TRANSLATOR_MODULE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
     	TRANSLATOR_SLOT_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+    }
+    
+    private void writeDatabaseStorage(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
+        DATABASE_STORAGE_MODULE_NAME_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+        DATABASE_STORAGE_PROPERTIES_ATTRIBUTE.marshallAsAttribute(node, false, writer);
     }
     
     // write the elements according to the schema defined.
@@ -273,7 +285,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     				case POLICY_DECIDER_MODULE_ELEMENT:
     				case AUTHORIZATION_VALIDATOR_MODULE_ELEMENT:
     				case PREPARSER_MODULE_ELEMENT:
-    				case WORKMANAGER:    					
+    				case WORKMANAGER:
     					bootServices.get(reader.getLocalName()).set(reader.getElementText());
     					break;
     				case TIME_SLICE_IN_MILL_ELEMENT:
@@ -291,6 +303,10 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     					bootServices.get(reader.getLocalName()).set(Integer.parseInt(reader.getElementText()));
     					break;
 
+    				case DATABASE_STORAGE_ELEMENT:
+    				    parseDatabaseStorage(reader, bootServices);
+    				    break;
+    				    
     				case ASYNC_THREAD_POOL_ELEMENT:
     				    parseAsyncThreadConfiguration(reader, bootServices);
     					break;
@@ -348,6 +364,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
                         	throw new XMLStreamException();
                     	}
                         break;
+                        
                     case AUTHENTICATION_ELEMENT:
     					parseAuthentication(reader, bootServices);
     					break;
@@ -383,6 +400,27 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
         return node;        
     }
 
+    private ModelNode parseDatabaseStorage(XMLExtendedStreamReader reader,
+            ModelNode node) throws XMLStreamException {
+        if (reader.getAttributeCount() > 0) {
+            for(int i=0; i<reader.getAttributeCount(); i++) {
+                String attrName = reader.getAttributeLocalName(i);
+                String attrValue = reader.getAttributeValue(i);
+                Element element = Element.forName(attrName, Element.DATABASE_STORAGE_ELEMENT);
+                switch(element) {
+                case DATABASE_STORAGE_MODULE_NAME_ATTRIBUTE:
+                case DATABASE_STORAGE_PROPERTIES_ATTRIBUTE:
+                    node.get(element.getModelName()).set(attrValue);
+                    break;
+                default: 
+                    throw ParseUtils.unexpectedAttribute(reader, i);
+                }               
+            }
+        }
+        while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT));
+        return node;        
+    }
+    
     private ModelNode parseObjectReplicator(XMLExtendedStreamReader reader, ModelNode node) throws XMLStreamException {
     	if (reader.getAttributeCount() > 0) {
     		for(int i=0; i<reader.getAttributeCount(); i++) {
