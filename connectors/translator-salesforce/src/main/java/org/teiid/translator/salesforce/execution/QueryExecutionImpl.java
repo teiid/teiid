@@ -98,6 +98,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 			if (obj.getRowOffset() > 0) {
 				bulkEligible = false;
 			} else {
+			    usePkChunking = false;
 				super.visit(obj);
 			}
 		}
@@ -114,6 +115,13 @@ public class QueryExecutionImpl implements ResultSetExecution {
 		@Override
 		public void visit(OrderBy obj) {
 		    usePkChunking = false;
+		}
+		
+		@Override
+		public void visit(Select obj) {
+		    if (obj.getHaving() != null) {
+		        usePkChunking = false;
+		    }
 		}
 		
 		public boolean isBulkEligible() {
@@ -238,7 +246,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 					BulkValidator bulkValidator = new BulkValidator();
 					query.acceptVisitor(bulkValidator);
 					if (bulkValidator.isBulkEligible()) {
-					    LogManager.logDetail(LogConstants.CTX_CONNECTOR,  getLogPreamble(), "Using bulk logic", bulkValidator.usePkChunking()?"with":"without", "pk chunking"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					    LogManager.logDetail(LogConstants.CTX_CONNECTOR,  getLogPreamble(), "Using bulk logic", bulkValidator.usePkChunking()?"with":"without", "pk chunking"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 					    this.activeJob = connection.createBulkJob(visitor.getTableName(), OperationEnum.query, bulkValidator.usePkChunking());
 						batchInfo = connection.addBatch(finalQuery, this.activeJob);
 						return;
