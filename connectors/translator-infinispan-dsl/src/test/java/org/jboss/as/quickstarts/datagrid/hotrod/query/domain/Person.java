@@ -16,7 +16,7 @@
  */
 package org.jboss.as.quickstarts.datagrid.hotrod.query.domain;
 
-import java.util.List;
+import java.util.ArrayList;
 
 import org.infinispan.protostream.annotations.ProtoDoc;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -32,8 +32,9 @@ public class Person {
    public String name;
    public int id;
    public String email;
+   public Address address;
 
-	public List<PhoneNumber> phones;
+	public ArrayList<PhoneNumber> phones;
 
 	@ProtoField(number = 2, required = true)
    public String getName() {
@@ -63,12 +64,22 @@ public class Person {
       this.email = email;
    }
 
-   public List<PhoneNumber> getPhones() {
+	@ProtoField(number = 4)
+   public ArrayList<PhoneNumber> getPhones() {
       return phones;
    }
 
-   public void setPhones(List<PhoneNumber> phones) {
+   public void setPhones(ArrayList<PhoneNumber> phones) {
       this.phones = phones;
+   }
+   
+	@ProtoField(number = 5)
+   public Address getAddress() {
+	   return this.address;
+   }
+   
+   public void setAddress(Address address) {
+	   this.address = address;
    }
 
    @Override

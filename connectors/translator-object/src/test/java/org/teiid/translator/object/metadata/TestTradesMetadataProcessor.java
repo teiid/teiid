@@ -25,58 +25,31 @@ public class TestTradesMetadataProcessor {
 	@Before public void beforeEach() throws Exception{	
 		 
 		TRANSLATOR = new SimpleMapCacheExecutionFactory();
-		TRANSLATOR.start();
     }
 
 	@Test
-	public void testTradeMetadata() throws Exception {
+	public void testTradeChildMetadata() throws Exception {
 
 		MetadataFactory mf = new MetadataFactory("vdb", 1, "objectvdb",
 				SystemMetadata.getInstance().getRuntimeTypeMap(),
 				new Properties(), null);
 
-		ObjectConnection conn = TradesCacheSource.createConnection();
+		ObjectConnection conn = TradesCacheSource.createConnection(false);
+
+		TRANSLATOR.initCapabilities(conn);
+		TRANSLATOR.start();
 
 		TRANSLATOR.getMetadataProcessor().process(mf, conn);
 
 		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
 				null, null);
-
-		String expected =  "CREATE FOREIGN TABLE Trade (\n"
-				+ "\tTradeObject object OPTIONS (NAMEINSOURCE 'this', SELECTABLE FALSE, UPDATABLE FALSE, SEARCHABLE 'Unsearchable', NATIVE_TYPE 'org.teiid.translator.object.testdata.trades.Trade'),\n"
-				+ "\ttradeId long NOT NULL OPTIONS (NAMEINSOURCE 'tradeId', SEARCHABLE 'Searchable', NATIVE_TYPE 'long'),\n"
-				+ "\tname string OPTIONS (NAMEINSOURCE 'name', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'java.lang.String'),\n"
-				+ "\tsettled boolean OPTIONS (NAMEINSOURCE 'settled', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'boolean'),\n"
-				+ "\ttradeDate date OPTIONS (NAMEINSOURCE 'tradeDate', SEARCHABLE 'Unsearchable', NATIVE_TYPE 'java.util.Date'),\n"
-				+ "\tCONSTRAINT PK_TRADEID PRIMARY KEY(tradeId)\n"
-				+ ") OPTIONS (UPDATABLE TRUE);"		
-				;
-		assertEquals(expected, metadataDDL);	
+		
+		assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("tradeChildMetadata.ddl")), metadataDDL );	
 
 	}
 	
 	@Test
 	public void testTradeMetadataFromVDB() throws Exception {
-		ObjectConnection conn = TradesCacheSource.createConnection();
-		
-		MetadataFactory mf = new MetadataFactory("vdb", 1, "ObjectSchema",
-				SystemMetadata.getInstance().getRuntimeTypeMap(),
-				new Properties(), null);		
-
-
-		TRANSLATOR.getMetadataProcessor().process(mf, conn);
-
-		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
-				null, null);
-		
-		System.out.println(metadataDDL);
-		
-		assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("tradeMetadataFromVDB.ddl")), metadataDDL );	
-
-	}	
-	
-	@Test
-	public void testMatTradeMetadataFromVDB() throws Exception {
 		ObjectConnection conn = TradesCacheSource.createConnection(true);
 		
 		MetadataFactory mf = new MetadataFactory("vdb", 1, "ObjectSchema",
@@ -84,12 +57,34 @@ public class TestTradesMetadataProcessor {
 				new Properties(), null);		
 
 
+		TRANSLATOR.initCapabilities(conn);
+		TRANSLATOR.start();
+
 		TRANSLATOR.getMetadataProcessor().process(mf, conn);
 
 		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
 				null, null);
 		
-		System.out.println(metadataDDL);
+		assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("tradeMetadataFromVDB.ddl")), metadataDDL );	
+
+	}	
+	
+	@Test
+	public void testMatTradeMetadataFromVDB() throws Exception {
+		ObjectConnection conn = TradesCacheSource.createConnection(true, true);
+		
+		MetadataFactory mf = new MetadataFactory("vdb", 1, "ObjectSchema",
+				SystemMetadata.getInstance().getRuntimeTypeMap(),
+				new Properties(), null);		
+
+
+		TRANSLATOR.initCapabilities(conn);
+		TRANSLATOR.start();
+
+		TRANSLATOR.getMetadataProcessor().process(mf, conn);
+
+		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
+				null, null);
 		
 		assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("tradeMatMetadataFromVDB.ddl")).trim(), metadataDDL.trim() );	
 

@@ -21,23 +21,25 @@
  */
 package org.teiid.resource.adapter.infinispan.dsl;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.util.Properties;
 
+import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.Address;
+import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PhoneNumber;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.core.util.PropertiesUtils;
-import org.teiid.translator.object.ObjectConnection;
+import org.teiid.translator.infinispan.dsl.InfinispanDSLConnection;
+import org.teiid.translator.object.Version;
+
 
 
 @SuppressWarnings("nls")
-@Ignore
 public class TestInfinispanConfigFileRemoteCache {
     
     private static InfinispanManagedConnectionFactory factory = null;
@@ -47,15 +49,13 @@ public class TestInfinispanConfigFileRemoteCache {
     public static void beforeEachClass() throws Exception {  
 		RemoteInfinispanTestHelper.startServer();
 		
-  		System.out.println("Hostaddress " + RemoteInfinispanTestHelper.hostAddress());
-  		
   		// read in the properties template file and set the server host:port and then save for use
   		File f = new File("./src/test/resources/jdg.properties");
   		
   		Properties props = PropertiesUtils.load(f.getAbsolutePath());
   		props.setProperty("infinispan.client.hotrod.server_list", RemoteInfinispanTestHelper.hostAddress() + ":" + RemoteInfinispanTestHelper.hostPort());
 		
-  		PropertiesUtils.print("./target/jdg.properties", props);
+  		PropertiesUtils.print("./target/hotrod-client.properties", props);
 
 		factory = new InfinispanManagedConnectionFactory();
 
@@ -74,7 +74,7 @@ public class TestInfinispanConfigFileRemoteCache {
     @Test
     public void testConnection() throws Exception {
     	try {
-    		ObjectConnection conn = factory.createConnectionFactory().getConnection();
+    		InfinispanDSLConnection conn = factory.createConnectionFactory().getConnection();
     		Class<?> clz = conn.getCacheClassType();
     
     		assertEquals(RemoteInfinispanTestHelper.PERSON_CLASS, clz);
@@ -86,6 +86,12 @@ public class TestInfinispanConfigFileRemoteCache {
     		 assertEquals(RemoteInfinispanTestHelper.PKEY_COLUMN, conn.getPkField());
     		
     		 assertNotNull(conn.getCache());
+    		 
+    		 assertEquals("Support For Compare is false", conn.getVersion().compareTo(Version.getVersion("6.6")) >= 0, false );
+ //   		 assertEquals("Version doesn't start with 7.2", conn.getVersion().startsWith("7.2"));
+
+    		 assertNotNull(conn.getDescriptor(Address.class));
+    		 assertNotNull(conn.getDescriptor(PhoneNumber.class));
     		 
     		 conn.cleanUp();
     		 

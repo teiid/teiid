@@ -21,27 +21,18 @@
  */
 package org.teiid.translator.object;
 
-import java.beans.BeanInfo;
-import java.beans.IndexedPropertyDescriptor;
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.MethodDescriptor;
-import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.script.ScriptException;
 
-import org.teiid.core.util.LRUCache;
 import org.teiid.core.util.StringUtil;
-import org.teiid.query.eval.TeiidScriptEngine;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.object.util.ObjectUtil;
 
 
 /**
@@ -56,65 +47,70 @@ public class ClassRegistry {
 	
 	public static final String OBJECT_NAME = "o"; //$NON-NLS-1$
 
-	private TeiidScriptEngine readEngine = new TeiidScriptEngine();
+	private ObjectScriptEngine readEngine = new ObjectScriptEngine(true);
+	private ObjectScriptEngine writeEngine = new ObjectScriptEngine(false);
 	
-	private Map<String, Class<?>> registeredClasses = new HashMap<String, Class<?>>(3); // fullClassName, Class
-	private Map<String, Class<?>> tableNameClassMap = new HashMap<String, Class<?>>(3); // simpleClassName(i.e., tableName), Class 
-	private Map<String, Map<String, Method>> classReadMethodMap = new HashMap<String, Map<String, Method>>(100);
-	private Map<String, Map<String, Method>> classWriteMethodMap = Collections.synchronizedMap(new LRUCache<String, Map<String,Method>>(100));
+	private Map<String, Class<?>> registeredClasses = new HashMap<String, Class<?>>(); // fullClassName, Class
+	private Map<String, Class<?>> tableNameClassMap = new HashMap<String, Class<?>>(); // simpleClassName(i.e., tableName), Class 
 
-	public synchronized void registerClass(Class<?> clz) throws TranslatorException {
-			// preload methods
-	
+
+	public synchronized void registerClass(Class<?> clz) {
+		 
 			registeredClasses.put(clz.getName(), clz);	
 			tableNameClassMap.put(clz.getSimpleName(), clz);
-			
-			try {
-				classReadMethodMap.put(clz.getName(),  readEngine.getMethodMap(registeredClasses.get(clz.getName())));
-			} catch (ScriptException e) {
-				throw new TranslatorException(e);
-			}
-
-			// using SimpleName, because that's what the table name should be called, or the nameinsource
-			classWriteMethodMap.put(clz.getSimpleName(),getWriteMethodMap(clz));
-
+		 	
 	}
 	
 	public synchronized void unregisterClass(Class<?> clz)  {
 			registeredClasses.remove(clz.getName());	
 			tableNameClassMap.remove(clz.getSimpleName());	
-			classReadMethodMap.remove(clz.getName());
 	}
 
 	
-	public TeiidScriptEngine getReadScriptEngine() {
+	public ObjectScriptEngine getReadScriptEngine() {
 		return readEngine;
 	}
 	
-	public synchronized Map<String, Method> getReadClassMethods(String className) throws TranslatorException {	
-		Map<String, Method> methodMap = null; 
-		methodMap = classReadMethodMap.get(className);
-		if (methodMap != null) {
-			return methodMap;
-		}		
+	public Map<String, Method> getReadClassMethods(String className) throws TranslatorException {	
+		Map<String, Method> methodMap = getClassMethods(readEngine, className);
+		
+		if (methodMap != null) return methodMap;
 
-		String msg = ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21000, "read", "class:" +className);
+		String msg = ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21001, "read", className);
 		throw new TranslatorException(msg);
 
 	}	
 	
-	public synchronized Map<String, Method> getWriteClassMethods(String tableName) throws TranslatorException {	
+	public Map<String, Method> getWriteClassMethods(String className) throws TranslatorException {	
+		
+		Map<String, Method> methodMap = getClassMethods(writeEngine, className);
+		
+		if (methodMap != null) return methodMap;
 
-		Map<String, Method> methodMap = null; 
-		methodMap = classWriteMethodMap.get(tableName);
-		if (methodMap != null) {
-			return methodMap;
+		String msg = ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21001, "write", className);
+		throw new TranslatorException(msg);
+
+	}	
+	
+	private synchronized Map<String, Method> getClassMethods(ObjectScriptEngine engine, String className) throws TranslatorException {	
+		
+		Class<?> clz = registeredClasses.get(className);
+		if (clz == null) {
+			clz = tableNameClassMap.get(className);
 		}
 		
-		String msg = ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21000, "write", "table:" + tableName);
-		throw new TranslatorException(msg);
-	}		
+		if (clz != null) {	
+			try {
+				return engine.getMethodMap(clz); 
 
+			} catch (ScriptException e) {
+				throw new TranslatorException(e);
+			}
+		}
+
+		return null;
+	}	
+	
 	public Class<?> getRegisteredClass(String className) {
 		return registeredClasses.get(className);
 	}
@@ -151,66 +147,35 @@ public class ClassRegistry {
     		
     	}
     } 
+	
+    /**
+     * Call to execute the getter method 
+     * @param m is the method to execute
+     * @param api is the object to execute the method on 
+     * @return Object return value
+     * @throws Exception
+     */
+	public static Object executeGetMethod(Method m, Object api) throws Exception {
+		Object[] params = new Object[] {};
+    	try {
+    		return m.invoke(api, params);
+    	} catch (java.lang.IllegalArgumentException ia) { 		
+			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21016, new Object[] {("N/A"), m.getName(), api.getClass().getName(), "N/A" }));    		
+    	}
+    } 
     
-    public  Map<String, Method> getWriteMethodMap(Class<?> clazz) throws TranslatorException {
-    	LinkedHashMap<String, Method> methodMap = new LinkedHashMap<String, Method>();
-    	
-		try {
-			BeanInfo info = Introspector.getBeanInfo(clazz);
-			PropertyDescriptor[] pds = info.getPropertyDescriptors();
-			
-			if (pds != null) {
-				for (int j = 0; j < pds.length; j++) {
-					PropertyDescriptor pd = pds[j];
-					if (pd.getWriteMethod() == null || pd instanceof IndexedPropertyDescriptor) {
-						continue;
-					}
-//					String name = pd.getName();
-					Method m = pd.getWriteMethod();
-						
-					registerWriteMethod(m, methodMap);
-						
-				}
-			}
-			MethodDescriptor[] mds = info.getMethodDescriptors();
-			if (pds != null) {
-				for (int j = 0; j < mds.length; j++) {
-					MethodDescriptor md = mds[j];
-								
-					if (md.getMethod() == null ) {
-						continue;
-					}
-					
-					registerWriteMethod(md.getMethod(), methodMap);
+	public static Method findMethod(Map<String, Method> mapMethods, String methodName, String className) throws TranslatorException {
+		
+		return ObjectUtil.findMethod(mapMethods, methodName);
 
-				}
-			}
-
-		} catch (IntrospectionException e) {
-			throw new TranslatorException(e);
-		}
-		return methodMap;
 	}
     
-    private void registerWriteMethod(Method method, LinkedHashMap<String, Method> methodMap) {
-		String name = method.getName();
-		
-		if (! name.startsWith("set") || method.getParameterTypes().length !=1 || (method.getReturnType() != Void.class && method.getReturnType() != void.class)) {
-			return;
-		}
-
-		methodMap.put(name, method);
-		
-		String nname = name.substring( 3 );
-		methodMap.put(nname.toLowerCase(), method);
-	
-    }
-    
     public void cleanUp() {
+		readEngine = null;
+		writeEngine = null;
+		
     	registeredClasses.clear();
     	tableNameClassMap.clear();
-    	classReadMethodMap.clear();
-    	classWriteMethodMap.clear();
 
     }
 

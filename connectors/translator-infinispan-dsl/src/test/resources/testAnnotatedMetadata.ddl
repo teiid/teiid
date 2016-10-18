@@ -1,9 +1,9 @@
 CREATE FOREIGN TABLE Address (
-	Address string NOT NULL OPTIONS (NAMEINSOURCE 'address.Address', SEARCHABLE 'Searchable', NATIVE_TYPE 'java.lang.String'),
-	City string NOT NULL OPTIONS (NAMEINSOURCE 'address.City', SEARCHABLE 'Searchable', NATIVE_TYPE 'java.lang.String'),
-	State string NOT NULL OPTIONS (NAMEINSOURCE 'address.State', SEARCHABLE 'Searchable', NATIVE_TYPE 'java.lang.String'),
+	Address string NOT NULL OPTIONS (NAMEINSOURCE 'Address.Address', SEARCHABLE 'Searchable', NATIVE_TYPE 'java.lang.String'),
+	City string NOT NULL OPTIONS (NAMEINSOURCE 'Address.City', SEARCHABLE 'Searchable', NATIVE_TYPE 'java.lang.String'),
+	State string NOT NULL OPTIONS (NAMEINSOURCE 'Address.State', SEARCHABLE 'Searchable', NATIVE_TYPE 'java.lang.String'),
 	id integer NOT NULL OPTIONS (NAMEINSOURCE 'id', SELECTABLE FALSE, SEARCHABLE 'Searchable', NATIVE_TYPE 'int'),
-	CONSTRAINT FK_PERSON FOREIGN KEY(id) REFERENCES Person (id) OPTIONS (NAMEINSOURCE 'address')
+	CONSTRAINT FK_PERSON FOREIGN KEY(id) REFERENCES Person (id) OPTIONS (NAMEINSOURCE 'Address')
 ) OPTIONS (UPDATABLE TRUE);
 
 CREATE FOREIGN TABLE Person (

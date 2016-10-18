@@ -1,2 +1,4 @@
 /subsystem=teiid/translator=infinispan-cache-dsl:add(module=org.jboss.teiid.translator.infinispan.dsl)
 
+/subsystem=resource-adapters/resource-adapter=infinispan-dsl:add(module=org.jboss.teiid.resource-adapter.infinispan.dsl)
+

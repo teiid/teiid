@@ -34,7 +34,7 @@ import org.teiid.translator.object.testdata.trades.VDBUtility;
 @SuppressWarnings("nls")
 public class TestTradesKeySearch extends BasicSearchTest {	      
 	   
-	private static ObjectConnection conn = TradesCacheSource.createConnection();
+	private static ObjectConnection conn = TradesCacheSource.createConnection(false);
 	private static ExecutionContext context;
 	
 	private ObjectExecutionFactory factory = null;

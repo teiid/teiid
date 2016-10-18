@@ -38,7 +38,6 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.simpleMap.SimpleMapCacheExecutionFactory;
 import org.teiid.translator.object.testdata.person.PersonCacheSource;
 import org.teiid.translator.object.testdata.person.PersonSchemaVDBUtility;
-import org.teiid.translator.object.testdata.trades.VDBUtility;
 
 /**
  * NOTES: 
@@ -55,9 +54,9 @@ import org.teiid.translator.object.testdata.trades.VDBUtility;
 @SuppressWarnings("nls")
 public class TestPersonKeySearch {
 	
-	private static ObjectConnection CONNECTION;
+	protected static ObjectConnection CONNECTION;
 	
-	private static TranslationUtility translationUtility = PersonSchemaVDBUtility.TRANSLATION_UTILITY;
+	protected static TranslationUtility translationUtility = PersonSchemaVDBUtility.TRANSLATION_UTILITY;
 	
 	static Map<?, ?> DATA = PersonCacheSource.loadCache();
 	
@@ -165,7 +164,15 @@ public class TestPersonKeySearch {
 	
 	protected List<Object> performTest(int rowcnt, int colCount, Select command, List<Object> expectedResults)
 			throws TranslatorException {
-		
+		//		ObjectExecutionFactory translator = new ObjectExecutionFactory() {
+//		@Override
+//		public List<Object> search(Select command, String cacheName,
+//				ObjectConnection connection, ExecutionContext executionContext) {
+//				List<Object> rows = new ArrayList<Object>(DATA.values());
+//    			return rows;
+//     	}
+//
+//    };
 		ObjectExecution exec = createExecution(command, rowcnt, colCount);
 
 		exec.execute();
@@ -197,18 +204,10 @@ public class TestPersonKeySearch {
 
 	protected ObjectExecution createExecution(Select command, int rowCount, int colCount) throws TranslatorException {
 		ObjectExecutionFactory translator = new SimpleMapCacheExecutionFactory();
-		//		ObjectExecutionFactory translator = new ObjectExecutionFactory() {
-//			@Override
-//			public List<Object> search(Select command, String cacheName,
-//					ObjectConnection connection, ExecutionContext executionContext) {
-//					List<Object> rows = new ArrayList<Object>(DATA.values());
-//        			return rows;
-//         	}
-//
-//        };
+
         translator.start();
 
 		
-		return (ObjectExecution) translator.createExecution(command, Mockito.mock(ExecutionContext.class), VDBUtility.RUNTIME_METADATA, CONNECTION);
+		return (ObjectExecution) translator.createExecution(command, Mockito.mock(ExecutionContext.class), translationUtility.createRuntimeMetadata(), CONNECTION);
 	}
 }

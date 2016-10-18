@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ASCII"?>
-<xmi:XMI xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:diagram="http://www.metamatrix.com/metamodels/Diagram" xmlns:mmcore="http://www.metamatrix.com/metamodels/Core" xmlns:relational="http://www.metamatrix.com/metamodels/Relational">
-  <mmcore:ModelAnnotation xmi:uuid="mmuuid:32809594-dd43-4ed3-8e2b-1ae8fb3ef9e8" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational" modelType="PHYSICAL" ProducerName="Teiid Designer" ProducerVersion="9.0.1.Beta2-v20141209-1542-B384">
+<xmi:XMI xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:diagram="http://www.metamatrix.com/metamodels/Diagram" xmlns:mmcore="http://www.metamatrix.com/metamodels/Core" xmlns:relational="http://www.metamatrix.com/metamodels/Relational">
+  <mmcore:ModelAnnotation xmi:uuid="mmuuid:32809594-dd43-4ed3-8e2b-1ae8fb3ef9e8" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational" modelType="PHYSICAL" ProducerName="Teiid Designer" ProducerVersion="10.0.2.Alpha1-v20160825-1645-B25">
     <modelImports xmi:uuid="mmuuid:7ceb50dd-db2e-4509-b742-4c02ba73d047" name="SimpleDatatypes-instance" modelLocation="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance" modelType="TYPE" primaryMetamodelUri="http://www.eclipse.org/xsd/2002/XSD"/>
     <modelImports xmi:uuid="mmuuid:1243f829-2693-41bb-be66-ed1f9e7fccae" name="XMLSchema" modelLocation="http://www.w3.org/2001/XMLSchema" modelType="TYPE" primaryMetamodelUri="http://www.eclipse.org/xsd/2002/XSD"/>
   </mmcore:ModelAnnotation>
@@ -350,7 +350,7 @@
       <tags xmi:uuid="mmuuid:5a093988-c98a-47a8-84c3-71204552eeac" key="en_US" value="Global Temp Table"/>
     </annotations>
   </mmcore:AnnotationContainer>
-  <relational:BaseTable xmi:uuid="mmuuid:1314d84d-52e0-4472-ab26-acd452f77146" name="Person" nameInSource="addressbook_indexed">
+  <relational:BaseTable xmi:uuid="mmuuid:1314d84d-52e0-4472-ab26-acd452f77146" name="Person" nameInSource="">
     <columns xmi:uuid="mmuuid:d2abfa58-1e2e-4fee-a5b8-b8f4d56b0f80" name="PersonObject" nameInSource="this" nativeType="java.lang.Object" fixedLength="true" updateable="false" searchability="UNSEARCHABLE" radix="0">
       <type href="http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#object"/>
     </columns>
@@ -363,9 +363,9 @@
     <columns xmi:uuid="mmuuid:971ad415-0152-414e-a5e7-3a8ff6b73304" name="email" nameInSource="email" nativeType="java.lang.String" length="10" fixedLength="true" searchability="UNSEARCHABLE" radix="0">
       <type href="http://www.w3.org/2001/XMLSchema#string"/>
     </columns>
-    <primaryKey xmi:uuid="mmuuid:42de0dc4-4bca-4852-b051-635f5df6c5ea" name="PK_ID" nameInSource="PK_ID" columns="mmuuid/eec769f8-18e3-4707-a0fc-65f90938c547" foreignKeys="mmuuid/34fd8cb2-dd95-4c21-a586-a2d0b57ca7d2"/>
+    <primaryKey xmi:uuid="mmuuid:42de0dc4-4bca-4852-b051-635f5df6c5ea" name="PK_ID" nameInSource="PK_ID" columns="mmuuid/eec769f8-18e3-4707-a0fc-65f90938c547" foreignKeys="mmuuid/34fd8cb2-dd95-4c21-a586-a2d0b57ca7d2 mmuuid/169aadd5-0a59-4154-b974-1fff4a5c6882"/>
   </relational:BaseTable>
-  <relational:BaseTable xmi:uuid="mmuuid:31e7bf0b-f0ed-45b0-9ab2-9a5cac28e543" name="PhoneNumber" nameInSource="addressbook_indexed">
+  <relational:BaseTable xmi:uuid="mmuuid:31e7bf0b-f0ed-45b0-9ab2-9a5cac28e543" name="PhoneNumber" nameInSource="">
     <columns xmi:uuid="mmuuid:8d95f7c4-4173-4582-8343-2bb151f73a42" name="number" nameInSource="phone.number" nativeType="java.lang.String" length="10" fixedLength="true" radix="0">
       <type href="http://www.w3.org/2001/XMLSchema#string"/>
     </columns>
@@ -379,8 +379,28 @@
   </relational:BaseTable>
   <diagram:DiagramContainer xmi:uuid="mmuuid:a41ded64-9c31-493e-b351-7875846e6ee7">
     <diagram xmi:uuid="mmuuid:018a2fe9-8df0-43ff-a589-e2302e02694c" type="packageDiagramType" target="mmuuid/32809594-dd43-4ed3-8e2b-1ae8fb3ef9e8">
-      <diagramEntity xmi:uuid="mmuuid:f70b4b4f-d1e8-4b3d-aa6b-d0486701ae9d" modelObject="mmuuid/1314d84d-52e0-4472-ab26-acd452f77146" xPosition="30" yPosition="30"/>
-      <diagramEntity xmi:uuid="mmuuid:60c6fba8-22b5-4286-af38-e78ab716f7eb" modelObject="mmuuid/31e7bf0b-f0ed-45b0-9ab2-9a5cac28e543" xPosition="291" yPosition="37"/>
+      <diagramEntity xmi:uuid="mmuuid:f70b4b4f-d1e8-4b3d-aa6b-d0486701ae9d" name="Person" modelObject="mmuuid/1314d84d-52e0-4472-ab26-acd452f77146" xPosition="30" yPosition="30"/>
+      <diagramEntity xmi:uuid="mmuuid:60c6fba8-22b5-4286-af38-e78ab716f7eb" name="PhoneNumber" modelObject="mmuuid/31e7bf0b-f0ed-45b0-9ab2-9a5cac28e543" xPosition="291" yPosition="37"/>
+      <diagramEntity xmi:uuid="mmuuid:0ac3251d-c6aa-472e-8da9-8bdbf6edeb1e" modelObject="mmuuid/f2d61cc1-0eb1-4a4a-b677-41146a6a93cc" xPosition="559" yPosition="148"/>
     </diagram>
   </diagram:DiagramContainer>
+  <relational:BaseTable xmi:uuid="mmuuid:f2d61cc1-0eb1-4a4a-b677-41146a6a93cc" name="Address">
+    <columns xmi:uuid="mmuuid:6e0e62b8-668c-455c-a1c0-d3d7f5dccb11" name="Address" nameInSource="Address.Address" length="4000" radix="0">
+      <nativeType xsi:nil="true"/>
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:25baf17a-57b1-4ecf-9ba6-a34bd2b1f97b" name="City" nameInSource="Address.City" length="100" radix="0">
+      <nativeType xsi:nil="true"/>
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:d2d9ab74-510c-449b-8fc4-3b84fa1b72a4" name="State" nameInSource="Address.State" length="100" radix="0">
+      <nativeType xsi:nil="true"/>
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:d6f6c1fd-71c7-4f98-8eda-a057278a9e0b" name="id" length="4000" precision="1" radix="0" foreignKeys="mmuuid/169aadd5-0a59-4154-b974-1fff4a5c6882">
+      <nativeType xsi:nil="true"/>
+      <type href="http://www.w3.org/2001/XMLSchema#int"/>
+    </columns>
+    <foreignKeys xmi:uuid="mmuuid:169aadd5-0a59-4154-b974-1fff4a5c6882" name="FK_Person" nameInSource="Address" foreignKeyMultiplicity="ONE" primaryKeyMultiplicity="UNSPECIFIED" columns="mmuuid/d6f6c1fd-71c7-4f98-8eda-a057278a9e0b" uniqueKey="mmuuid/42de0dc4-4bca-4852-b051-635f5df6c5ea"/>
+  </relational:BaseTable>
 </xmi:XMI>

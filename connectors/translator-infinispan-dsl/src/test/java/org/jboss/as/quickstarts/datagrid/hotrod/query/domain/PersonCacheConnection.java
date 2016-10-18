@@ -21,10 +21,6 @@
  */
 package org.jboss.as.quickstarts.datagrid.hotrod.query.domain;
 
-import java.lang.annotation.Annotation;
-
-import javax.resource.ResourceException;
-
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.descriptors.Descriptor;
@@ -34,6 +30,8 @@ import org.teiid.translator.infinispan.dsl.InfinispanDSLConnection;
 import org.teiid.translator.infinispan.dsl.TestInfinispanDSLConnection;
 import org.teiid.translator.object.CacheNameProxy;
 import org.teiid.translator.object.ClassRegistry;
+import org.teiid.translator.object.Version;
+
 
 /**
  * @author vanhalbert
@@ -41,13 +39,13 @@ import org.teiid.translator.object.ClassRegistry;
  */
 public class PersonCacheConnection extends TestInfinispanDSLConnection {
 	
-	protected Descriptor descriptor;
-	
-
-	public static InfinispanDSLConnection createConnection(RemoteCache map, boolean useKeyClassType, Descriptor descriptor) {
+	public static InfinispanDSLConnection createConnection(RemoteCache map, boolean useKeyClassType, Version version) {
 		CacheNameProxy proxy = new CacheNameProxy(PersonCacheSource.PERSON_CACHE_NAME);
 
-		return new PersonCacheConnection(map, PersonCacheSource.CLASS_REGISTRY, proxy, useKeyClassType, descriptor);
+		PersonCacheConnection conn = new PersonCacheConnection(map, PersonCacheSource.CLASS_REGISTRY, proxy, useKeyClassType);
+		conn.setVersion(version);
+		conn.setConfiguredUsingAnnotations(true);
+		return conn;
 	}
 	
 	/**
@@ -55,12 +53,10 @@ public class PersonCacheConnection extends TestInfinispanDSLConnection {
 	 * @param registry
 	 * @param proxy
 	 * @param useKeyClassType 
-	 * @param desc 
 	 */
 	public PersonCacheConnection(RemoteCache map,
-			ClassRegistry registry, CacheNameProxy proxy, boolean useKeyClassType, Descriptor desc) {
+			ClassRegistry registry, CacheNameProxy proxy, boolean useKeyClassType) {
 		super(map, registry, proxy);
-		this.descriptor = desc;
 		
 		setPkField("id");
 		if (useKeyClassType) {
@@ -80,16 +76,27 @@ public class PersonCacheConnection extends TestInfinispanDSLConnection {
 			return null;
 		}
 	}
+	
 
-		@Override
-		public Descriptor getDescriptor() throws TranslatorException {
-			return descriptor;
-		}
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.infinispan.dsl.InfinispanDSLConnection#getDescriptor(java.lang.Class)
+	 */
+	@Override
+	public Descriptor getDescriptor(Class<?> clz) throws TranslatorException {
+		return PersonCacheSource.DESCRIPTORS.get(clz.getName());
+	}
 
-		
-		@Override
-		public QueryFactory getQueryFactory() throws TranslatorException {
-			return null;
-		}
+	@Override
+	public Descriptor getDescriptor() throws TranslatorException {
+		return PersonCacheSource.DESCRIPTORS.get(PersonCacheSource.PERSON_CLASS_NAME);
+	}
+
+	
+	@Override
+	public QueryFactory getQueryFactory() throws TranslatorException {
+		return null;
+	}
 
 }

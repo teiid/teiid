@@ -36,7 +36,6 @@ import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.object.metadata.JavaBeanMetadataProcessor;
 
@@ -52,10 +51,10 @@ public abstract class ObjectExecutionFactory extends
 		ExecutionFactory<ConnectionFactory, ObjectConnection> {
 
 	public static final int MAX_SET_SIZE = 10000;
-	private boolean searchabilityBasedOnAnnotations = true;
+	private boolean searchabilityBasedOnAnnotations = false;
 	
 	public ObjectExecutionFactory() {
-		setSourceRequiredForMetadata(false);
+		setSourceRequiredForMetadata(true);
 		setMaxInCriteriaSize(MAX_SET_SIZE);
 		setMaxDependentInPredicates(1);
 
@@ -67,10 +66,15 @@ public abstract class ObjectExecutionFactory extends
 			
 	}
 	
+	@Override
+	public boolean isSourceRequiredForCapabilities() {
+		return true;
+	}
+	
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @see org.teiid.translator.ExecutionFactory#start()
+	 * @see org.teiid.translator.ExecutionFactory
 	 */
 	@Override
 	public void start() throws TranslatorException {
@@ -92,11 +96,10 @@ public abstract class ObjectExecutionFactory extends
 	}
     
 	@Override
-	public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, ObjectConnection connection) throws TranslatorException {
+	public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, ObjectConnection connection)  {
 		return new ObjectDirectExecution(arguments, command, connection, executionContext, this);
 	}   
 	
-	@TranslatorProperty(display="SearchabilityBasedOnAnnotations", description="If false, will turn off determining column searchability based on hibernate annotations", advanced=true)
 	public boolean supportsSearchabilityUsingAnnotations() {
 		return searchabilityBasedOnAnnotations;
 	}	
@@ -122,7 +125,7 @@ public abstract class ObjectExecutionFactory extends
 	
 	@Override
     public MetadataProcessor<ObjectConnection> getMetadataProcessor(){
-	    return new JavaBeanMetadataProcessor(searchabilityBasedOnAnnotations);
+	    return new JavaBeanMetadataProcessor(supportsSearchabilityUsingAnnotations());
 	}
 
 	/**
@@ -134,5 +137,14 @@ public abstract class ObjectExecutionFactory extends
 	public boolean supportsRowLimit() {
 		return true;
 	}
-
+	
+//	@Override
+//	public void initCapabilities(ObjectConnection connection) throws TranslatorException {
+//		if (connection == null) {
+//			return;
+//		}
+//
+//		this.setSupportsSearchabilityUsingAnnotations(connection.configuredUsingAnnotations());
+//
+//	}
 }

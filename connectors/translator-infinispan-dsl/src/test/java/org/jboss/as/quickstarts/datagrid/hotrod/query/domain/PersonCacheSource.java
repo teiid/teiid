@@ -32,20 +32,24 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+//import org.infinispan.client.hotrod.CacheTopologyInfo;
 import org.infinispan.client.hotrod.Flag;
 import org.infinispan.client.hotrod.MetadataValue;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.ServerStatistics;
 import org.infinispan.client.hotrod.VersionedValue;
+import org.infinispan.commons.util.CloseableIterator;
 import org.infinispan.commons.util.concurrent.NotifyingFuture;
 import org.infinispan.protostream.FileDescriptorSource;
 import org.infinispan.protostream.config.Configuration;
 import org.infinispan.protostream.descriptors.Descriptor;
 import org.infinispan.protostream.descriptors.FileDescriptor;
 import org.infinispan.protostream.impl.parser.SquareProtoParser;
+import org.infinispan.query.dsl.Query;
 import org.teiid.translator.infinispan.dsl.InfinispanDSLConnection;
 import org.teiid.translator.object.ClassRegistry;
+import org.teiid.translator.object.Version;
 
 
 /**
@@ -64,22 +68,25 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 	public static final String PERSON_CLASS_NAME = Person.class.getName();
 	public static final String PHONENUMBER_CLASS_NAME = PhoneNumber.class.getName();
 	public static final String PHONETYPE_CLASS_NAME = PhoneType.class.getName();
-	public static Descriptor DESCRIPTOR;
+	public static final String ADDRESSTYPE_CLASS_NAME = Address.class.getName();
+	
+	public static Map<String, Descriptor> DESCRIPTORS = new HashMap<String, Descriptor>();
 	
 	public static final int NUMPERSONS = 10;
 	public static final int NUMPHONES = 2;
 	
-	static ClassRegistry CLASS_REGISTRY = new ClassRegistry();
+	public static ClassRegistry CLASS_REGISTRY = new ClassRegistry();
 	
 	private Map<Object, Object> cache =  Collections.synchronizedMap(new HashMap<Object, Object>());
 	
 	static {
 		try {
-			DESCRIPTOR = createDescriptor();
+			createDescriptors();
 
 			CLASS_REGISTRY.registerClass(Person.class);
 			CLASS_REGISTRY.registerClass(PhoneNumber.class);
 			CLASS_REGISTRY.registerClass(PhoneType.class);
+			CLASS_REGISTRY.registerClass(Address.class);
 
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -90,7 +97,14 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 	public static InfinispanDSLConnection createConnection(final boolean useKeyClass) {
 		final RemoteCache objects = PersonCacheSource.loadCache();
 
-		return PersonCacheConnection.createConnection(objects, useKeyClass, DESCRIPTOR);
+		return PersonCacheConnection.createConnection(objects, useKeyClass, null);
+
+	}
+	
+	public static InfinispanDSLConnection createConnection(final boolean useKeyClass, Version version) {
+		final RemoteCache objects = PersonCacheSource.loadCache();
+
+		return PersonCacheConnection.createConnection(objects, useKeyClass, version);
 
 	}
 	
@@ -100,7 +114,7 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 		
 		for (int i = 1; i <= NUMPERSONS; i++) {
 			
-			List<PhoneNumber> pns = new ArrayList<PhoneNumber>();
+			ArrayList<PhoneNumber> pns = new ArrayList<PhoneNumber>();
 			double d = 0;
 			for (int j = 1; j <= NUMPHONES; j++) {
 				PhoneNumber pn = new PhoneNumber("(111)222-345" + j, types[t++]);
@@ -112,7 +126,13 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 			p.setId(i);
 			p.setName("Person " + i);
 			p.setPhones(pns);
-				
+			
+			Address a = new Address();
+			a.setAddress(p.getName() + " address");
+			a.setCity(p.getName() + " city");
+			a.setState("VA");	
+			p.setAddress(a);
+			
 			cache.put(new Integer(i), p);
 
 		}
@@ -130,7 +150,7 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 		return objs;
 	}	
 	
-	private static Descriptor createDescriptor() throws Exception {
+	private static void createDescriptors() throws Exception {
 		Configuration config = new Configuration.Builder().build();
 		
 		try {
@@ -141,23 +161,34 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 
 	      FileDescriptor descriptor = files.get("addressbook.proto");
 	      
-	      String descriptorName = "quickstart.Person";
 	      Map<String, Descriptor> messages = new HashMap<String, Descriptor>();
 	      for (Descriptor m : descriptor.getMessageTypes()) {
 	         messages.put(m.getFullName(), m);
-	         System.out.println("Descriptor Name: " + m.getFullName());
 	      }
 
-	      Descriptor testClass = messages.get(descriptorName);
+	      String descriptorName = "quickstart.Person";
+	      Descriptor personDesc = messages.get(descriptorName);
 	      
-	      if (testClass == null) {
+	      if (personDesc == null) {
 	    	  throw new Exception("Did not get descriptor: " + descriptorName );
 	      }
 	      
-	      return testClass;
+	      DESCRIPTORS.put(Person.class.getName(), personDesc);
+	      
+	      Descriptor addressDesc = messages.get("quickstart.Address");
+	      
+	      if (addressDesc == null) {
+	    	  throw new Exception("Did not get descriptor: " + "quickstart.Address" );
+	      }
+	      
+	      Descriptor phoneDesc = messages.get("quickstart.PhoneNumber");
+	      
+	      if (phoneDesc == null) {
+	    	  throw new Exception("Did not get descriptor: " + "quickstart.PhoneNumber" );
+	      }
+
 	      
 	  } catch (Exception e) {
-    	e.printStackTrace();
     	throw e;
 	  }
 		
@@ -887,7 +918,5 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 	public Map<K, V> getAll(Set<? extends K> keys) {
 		return null;
 	}
-	
-	
 	
 }

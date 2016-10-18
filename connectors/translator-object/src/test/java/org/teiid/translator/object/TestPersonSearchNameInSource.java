@@ -19,8 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-
-package org.teiid.translator.infinispan.dsl;
+package org.teiid.translator.object;
 
 import static org.junit.Assert.assertEquals;
 
@@ -28,42 +27,35 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PersonCacheSource;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.language.Select;
+import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.object.ObjectExecution;
-import org.teiid.translator.object.Version;
+import org.teiid.translator.object.simpleMap.SimpleMapCacheExecutionFactory;
+import org.teiid.translator.object.testdata.person.PersonCacheSource;
 import org.teiid.translator.object.testdata.person.PersonSchemaVDBUtility;
 
 /**
- * NOTES: 
- * 
- * <li>These test queries only test based on the source query.  A VIEW query will not 
- * resolve correctly to produce a source query that will be sent to the translator.
- * <li>The WHERE clause cannot be tested to confirm filtering at this time.
- * 
- * @author vanhalbert
+ * @author vhalbert
  *
  */
-@SuppressWarnings("nls")
-public class TestInfinispanExecution {
+public class TestPersonSearchNameInSource  {
+	protected static TranslationUtility translationUtility = PersonSchemaVDBUtility.createPersonMetadata();
+	protected static RuntimeMetadata RUNTIME = translationUtility.createRuntimeMetadata();
 	
-	private static InfinispanDSLConnection CONNECTION;
-	
-	private static TranslationUtility translationUtility = PersonSchemaVDBUtility.TRANSLATION_UTILITY;
+	protected static ObjectConnection CONNECTION;
 	
 	static Map<?, ?> DATA = PersonCacheSource.loadCache();
 	
 	
     @BeforeClass
     public static void setUp()  {
-        
-		CONNECTION = PersonCacheSource.createConnection(true, Version.getVersion("7.2.3"));
+    	translationUtility.createRuntimeMetadata();
+		CONNECTION = PersonCacheSource.createConnection();
 
     }	
 
@@ -75,19 +67,14 @@ public class TestInfinispanExecution {
 
 	}
 	
-	/**
-	 * Test that only the 'object' instance is returned in the result set
-	 * @throws Exception
-	 */
-	@Test public void testReturningObject() throws Exception {
-		Select command = (Select)translationUtility.parseCommand("select PersonObject From Person as T"); //$NON-NLS-1$
-
+	@Test public void testExecutionByKey() throws Exception {
+		Select command = (Select)translationUtility.parseCommand("select name, id, email From Person as T where id = 2"); //$NON-NLS-1$
 		
-		performTest(10, 1, command);
+		performTest(1, 3, command);
 
 	}
 	
-	@Test public void test1toManyOnlyChildColumn() throws Exception {
+	@Test public void test1toManyOnlyChild() throws Exception {
 		Select command = (Select)translationUtility.parseCommand("select number From PhoneNumber as T"); //$NON-NLS-1$
 
 		
@@ -95,45 +82,38 @@ public class TestInfinispanExecution {
 
 	}
 	
-	@Test public void test1toManyParentAndChildColumn() throws Exception {
-		Select command = (Select)translationUtility.parseCommand("select b.id, b.number From  PhoneNumber as b"); //$NON-NLS-1$
+	@Test public void test1toManyOnlyChildByKey() throws Exception {
+		Select command = (Select)translationUtility.parseCommand("select number From PhoneNumber as T where id = 3"); //$NON-NLS-1$
 
 		
-		performTest(20, 2, command);
+		performTest(2, 1, command);
+
+	}	
+	
+	@Test public void test1toManyA() throws Exception {
+		Select command = (Select)translationUtility.parseCommand("select b.number From  PhoneNumber as b"); //$NON-NLS-1$
+
+		
+		performTest(20, 1, command);
 
 	}
 	
 	@Test public void test1toManyB() throws Exception {
-		Select command = (Select)translationUtility.parseCommand("select a.name, a.id, a.email, b.number, b.type From Person as A, PhoneNumber as b where a.id = b.id"); //$NON-NLS-1$
+		Select command = (Select)translationUtility.parseCommand("select a.name, a.id, a.email, b.number, b.type From Person as A, PhoneNumber as b where a.id = b.id and a.id = 4"); //$NON-NLS-1$
 
 		
-		performTest(20, 5, command);
+		performTest(2, 5, command);
 
 	}	
-
-	@Test public void test1to1Child() throws Exception {
-		Select command = (Select)translationUtility.parseCommand("select City From Address as T"); //$NON-NLS-1$
-
-		
-		performTest(10, 1, command);
-
-	}
 	
-	@Test public void test1to1Child_B() throws Exception {
-		Select command = (Select)translationUtility.parseCommand("select id, City From Address as T"); //$NON-NLS-1$
+	@Test public void testLimit() throws Exception {
+		Select command = (Select)translationUtility.parseCommand("select name, id, email From Person  LIMIT 4"); //$NON-NLS-1$
 
 		
-		performTest(10, 2, command);
+		performTest(4, 3, command);
 
-	}
+	}	
 	
-	@Test public void test1to1Child_All() throws Exception {
-		Select command = (Select)translationUtility.parseCommand("select * From Address as T"); //$NON-NLS-1$
-
-		
-		performTest(10, 4, command);
-
-	}
 
 	protected List<Object> performTest(int rowcnt, int colCount, Select command)
 			throws TranslatorException {
@@ -162,7 +142,7 @@ public class TestInfinispanExecution {
 	
 	protected List<Object> performTest(int rowcnt, int colCount, Select command, List<Object> expectedResults)
 			throws TranslatorException {
-		
+
 		ObjectExecution exec = createExecution(command, rowcnt, colCount);
 
 		exec.execute();
@@ -193,12 +173,11 @@ public class TestInfinispanExecution {
 	}
 
 	protected ObjectExecution createExecution(Select command, int rowCount, int colCount) throws TranslatorException {
-		InfinispanExecutionFactory translator = new InfinispanExecutionFactory() {
+		ObjectExecutionFactory translator = new SimpleMapCacheExecutionFactory();
 
-        };
         translator.start();
 
 		
-		return (ObjectExecution) translator.createExecution(command, Mockito.mock(ExecutionContext.class), PersonSchemaVDBUtility.RUNTIME_METADATA, CONNECTION);
+		return (ObjectExecution) translator.createExecution(command, Mockito.mock(ExecutionContext.class), RUNTIME, CONNECTION);
 	}
 }

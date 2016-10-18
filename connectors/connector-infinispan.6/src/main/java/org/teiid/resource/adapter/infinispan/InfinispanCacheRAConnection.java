@@ -32,6 +32,7 @@ import org.teiid.translator.infinispan.cache.InfinispanCacheConnection;
 import org.teiid.translator.object.ClassRegistry;
 import org.teiid.translator.object.DDLHandler;
 import org.teiid.translator.object.SearchType;
+import org.teiid.translator.object.Version;
 
 /**
  * @author vanhalbert
@@ -190,6 +191,36 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	@Override
 	public SearchType getSearchType() {
 		return cacheWrapper.getSearchType();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#getVersion()
+	 */
+	@Override
+	public Version getVersion() throws TranslatorException {
+		return null;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#configuredUsingAnnotations()
+	 */
+	@Override
+	public boolean configuredUsingAnnotations() {
+		return false;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#configuredForMaterialization()
+	 */
+	@Override
+	public boolean configuredForMaterialization() {
+		return false;
 	}
 	
 

@@ -35,6 +35,7 @@ import org.hibernate.search.annotations.Indexed;
 import org.hibernate.search.annotations.IndexedEmbedded;
 import org.hibernate.search.annotations.Resolution;
 import org.hibernate.search.annotations.Store;
+import org.teiid.translator.object.testdata.trades.MetaData;
 
 
 @Indexed(index="Trade")
@@ -62,6 +63,9 @@ protected  Date tradeDate;
 protected  String description;
 
 protected boolean settled;
+
+@Field(index=Index.YES)
+protected   MetaData metaData;
 
    public Trade() {
    }
@@ -105,7 +109,7 @@ protected boolean settled;
 	   return this.settled;
    }
 
- //  @IndexedEmbedded  
+   @IndexedEmbedded  
    public List<Leg> getLegs() {
 	   if (legs == null) {
 		   return Collections.emptyList();
@@ -128,6 +132,20 @@ protected boolean settled;
    public void setDescription(String desc) {
 	   this.description = desc;
    }
+   
+   /**
+ * @return metaData
+ */
+public MetaData getMetaData() {
+	return metaData;
+}
+
+/**
+ * @param metaData Sets metaData to the specified value.
+ */
+public void setMetaData(MetaData metaData) {
+	this.metaData = metaData;
+}
   
    @Override
    public String toString() {

@@ -75,7 +75,7 @@ public class ObjectVisitor extends HierarchyVisitor {
 	private int limit;
 	private int numForeignKeys;
 	private ForeignKey fk = null;	
-	private String fkeyColNIS = null;
+	private String fkeyRefColumnName = null;
 	private Column pkkeyCol = null;
 	private BaseLanguageObject command=null;
 	private boolean isSelect = false;
@@ -113,7 +113,7 @@ public class ObjectVisitor extends HierarchyVisitor {
 	}
 	
 	private void setTable(NamedTable t) {
-		String tn = t.getName();
+		String tn = t.getName(); 
 		// remove any folders that exist within the model (these are not folders that the models rsides in).
 		if (tn.contains(".")) {
 			tn = StringUtil.getLastToken(tn, ".");
@@ -154,8 +154,8 @@ public class ObjectVisitor extends HierarchyVisitor {
 		return this.fk;
 	}
 	
-	public String getForeignKeyNameInSource() {
-		return this.fkeyColNIS;
+	public String getForeignKeyReferenceColName() {
+		return this.fkeyRefColumnName;
 	}
 	
 	public boolean isSelectCommand(){
@@ -194,8 +194,8 @@ public class ObjectVisitor extends HierarchyVisitor {
 			if (fkeys.size() > 0) { 
 				numForeignKeys++;
 				fk = fkeys.get(0);
-				fkeyColNIS = getForeignKeyNIS(obj, fk);
-				if (fkeyColNIS == null) {
+				fkeyRefColumnName = getForeignKeyRefcolumn(obj, fk);
+				if (fkeyRefColumnName == null) {
 					this.addException(new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21006, new Object[] { ( this.isSelect ? "Select" : "Update"), obj.getName()})));
 				}
 				
@@ -203,7 +203,7 @@ public class ObjectVisitor extends HierarchyVisitor {
 			}
 			
 			
-			if (fkeyColNIS == null && this.pkkeyCol == null) {
+			if (fkeyRefColumnName == null && this.pkkeyCol == null) {
 				addException( new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21006, new Object[] {( this.isSelect ? "Select" : "Update"),obj.getName()})));
 			}			
 		
@@ -372,7 +372,7 @@ public class ObjectVisitor extends HierarchyVisitor {
 	
 	}	
 	
-	protected String getForeignKeyNIS(NamedTable table, ForeignKey fk)  {
+	protected String getForeignKeyRefcolumn(NamedTable table, ForeignKey fk)  {
 
 		String fkeyColNIS = null;
 		
@@ -383,6 +383,24 @@ public class ObjectVisitor extends HierarchyVisitor {
 			} else if (fk.getReferenceColumns() != null) {
 				fkeyColNIS =fk.getReferenceColumns().get(0);
 			}
+		}
+		
+		return fkeyColNIS;
+
+	}
+	
+	protected String getForeignKeyColumnName(NamedTable table, ForeignKey fk)  {
+
+		String fkeyColNIS = null;
+		
+		if (fk != null) {
+			return fk.getNameInSource();
+//			if (fk.getReferenceKey() != null) {
+//				Column fkeyCol = fk.getReferenceKey().getColumns().get(0);
+//				fkeyColNIS = ObjectUtil.getRecordName(fkeyCol);
+//			} else if (fk.getReferenceColumns() != null) {
+//				fkeyColNIS =fk.getReferenceColumns().get(0);
+//			}
 		}
 		
 		return fkeyColNIS;

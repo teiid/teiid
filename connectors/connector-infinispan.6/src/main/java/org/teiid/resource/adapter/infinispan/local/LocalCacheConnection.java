@@ -43,6 +43,7 @@ import org.teiid.resource.adapter.infinispan.InfinispanCacheWrapper;
 import org.teiid.resource.adapter.infinispan.InfinispanManagedConnectionFactory;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.SearchType;
+import org.teiid.translator.object.Version;
 
 /**
  * This wrapper will contain a local Infinispan cache, and will the necessary logic
@@ -274,6 +275,36 @@ public class LocalCacheConnection<K,V>  extends InfinispanCacheWrapper<K,V> {
 	@Override
 	public SearchType getSearchType() {
 		return new DSLSearch(this);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#getVersion()
+	 */
+	@Override
+	public Version getVersion() throws TranslatorException {
+		return null;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#configuredUsingAnnotations()
+	 */
+	@Override
+	public boolean configuredUsingAnnotations() {
+		return false;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.object.ObjectConnection#configuredForMaterialization()
+	 */
+	@Override
+	public boolean configuredForMaterialization() {
+		return false;
 	}
 
 }

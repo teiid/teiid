@@ -23,6 +23,7 @@ package org.teiid.resource.adapter.infinispan.dsl;
 
 import java.io.IOException;
 
+import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
 import org.infinispan.server.hotrod.HotRodServer;
@@ -43,7 +44,6 @@ public class RemoteInfinispanTestHelper {
 	
 	protected static final int PORT = 11312;
 	protected static final int TIMEOUT = 0;
-	protected static final String CONFIG_FILE = "src/test/resources/infinispan_remote_config.xml";
 
 	private static HotRodServer server = null;
 	private static int count = 0;
@@ -52,8 +52,11 @@ public class RemoteInfinispanTestHelper {
 	private static synchronized HotRodServer createServer()  {
 		if (server == null) {
 			try {
-				
-				CACHEMANAGER = new DefaultCacheManager(CONFIG_FILE);
+								
+				CACHEMANAGER = new DefaultCacheManager(new ConfigurationBuilder()
+		            .eviction()
+		            .build());
+	
 				CACHEMANAGER.start();
 				
 				CACHEMANAGER.startCache(PERSON_CACHE_NAME);
@@ -62,8 +65,7 @@ public class RemoteInfinispanTestHelper {
 				PersonCacheSource.loadCache(CACHEMANAGER.getCache(PERSON_CACHE_NAME));
 				
 			} catch (Exception e) {
-				e.printStackTrace();
-				return null;
+				throw new RuntimeException(e);
 			}
 			
 			String hostAddress = hostAddress();
