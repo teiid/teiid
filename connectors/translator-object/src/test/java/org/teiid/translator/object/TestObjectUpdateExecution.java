@@ -32,33 +32,32 @@ public class TestObjectUpdateExecution {
 	@Mock
 	private ExecutionContext context;
 
+	@Before public void before() {
+		MockitoAnnotations.initMocks(this);
+	}
 
 	@BeforeClass public static void init() throws Exception{
 		
+		
 		// pre-test of the object connection 
-		ObjectConnection conn = TradesCacheSource.createConnection();
+		CONNECTION = TradesCacheSource.createConnection();
 		
-		Object p = conn.get(new Long(1).longValue());
-
-		assertNotNull(p);
-		
-		Object o = conn.remove(new Long(1).longValue());
-		assertNotNull(o);
-		assertTrue(p == o);
-		
-		Object p2 = conn.get(new Long(1).longValue());
-
-		assertNull(p2);
+//		Object p = CONNECTION.get(new Long(1).longValue());
+//
+//		assertNotNull(p);
+//		
+//		Object o = CONNECTION.remove(new Long(1).longValue());
+//		assertNotNull(o);
+//		assertTrue(p == o);
+//		
+//		Object p2 = CONNECTION.get(new Long(1).longValue());
+//
+//		assertNull(p2);
 		
 		 
-		CONNECTION = TradesCacheSource.createConnection();
+		
     }
 	
-
-	@Before public void before() throws Exception{	
-		 
-		MockitoAnnotations.initMocks(this);
-    }	
 
 	@Test
 	public void testInsertRootClass() throws Exception {
@@ -69,7 +68,7 @@ public class TestObjectUpdateExecution {
 		Command command = translationUtility
 				.parseCommand("Insert into Trade_Object.Trade (tradeId, TradeName, settled) VALUES (99, 'TestName', 'true')");
 
-		// no search required by the UpdateExecution logic
+		// no search required by the UpdateExecution logicconn
 		@SuppressWarnings("unchecked")
 		ObjectUpdateExecution ie = createExecution(command, Collections.EMPTY_LIST);
 

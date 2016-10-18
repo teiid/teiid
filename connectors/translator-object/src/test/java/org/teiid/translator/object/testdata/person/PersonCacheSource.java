@@ -51,14 +51,9 @@ public class PersonCacheSource extends HashMap <Object, Object> {
 
 	
 	static {
-		try {
 			CLASS_REGISTRY.registerClass(Person.class);
 			CLASS_REGISTRY.registerClass(PhoneNumber.class);
 			CLASS_REGISTRY.registerClass(PhoneType.class);
-
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
 	}
 
 	

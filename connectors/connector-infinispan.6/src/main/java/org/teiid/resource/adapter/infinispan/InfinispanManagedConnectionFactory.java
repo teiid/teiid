@@ -403,11 +403,11 @@ public class InfinispanManagedConnectionFactory extends
 		setCacheName(cn);
 		String className = cacheClassparm.get(1);
 		cacheTypeClass = loadClass(className);
-		try {
+//		try {
 			methodUtil.registerClass(cacheTypeClass);
-		} catch (TranslatorException e1) {
-			throw new ResourceException(e1);
-		}
+//		} catch (TranslatorException e1) {
+//			throw new ResourceException(e1);
+//		}
 			
 		if (parms.size() == 2) {
 			String rightside = parms.get(1);

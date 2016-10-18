@@ -88,4 +88,14 @@ public class TestInfinispanDSLConnection extends SimpleMapCacheConnection implem
 	public Descriptor getDescriptor() throws TranslatorException {
 		return null;
 	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.teiid.translator.infinispan.dsl.InfinispanDSLConnection#getDescriptor(java.lang.Class)
+	 */
+	@Override
+	public Descriptor getDescriptor(Class<?> clz) throws TranslatorException {
+		return null;
+	}
 }

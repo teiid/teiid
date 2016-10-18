@@ -19,45 +19,44 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.translator.infinispan.dsl;
+package org.teiid.resource.adapter.infinispan.dsl;
+
+import javax.resource.ResourceException;
 
 import org.infinispan.protostream.descriptors.Descriptor;
-import org.infinispan.query.dsl.QueryFactory;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.object.ObjectConnection;
+import org.teiid.translator.object.ClassRegistry;
 
 /**
- * Each InfinispanCacheConnection implementation represents a connection to a
- * local (i.e., embedded) cache
+ * The InfinispanSchemaDefintion interface is used to support the various options (i.e, protobuf files or annotations) for configuring
+ * the JDG schema.  Additionally, responsible for providing information based on how the schema was configured.
  * 
  * @author vhalbert
+ *
  */
-public interface InfinispanDSLConnection extends ObjectConnection {
-
+public interface InfinispanSchemaDefinition {
+	
 	/**
-	 * Call to return the QueryFactory that based on the type of Search used.
-	 * 
-	 * @return QueryFactory
-	 * @throws TranslatorException
+	 * Called to perform any initialization required by registering the classes. 
+	 * @param config
+	 * @param methodUtil
+	 * @throws ResourceException
 	 */
-	@SuppressWarnings("rawtypes")
-	public QueryFactory getQueryFactory() throws TranslatorException;
-
+	public void initialize(InfinispanManagedConnectionFactory config, ClassRegistry methodUtil) throws ResourceException ;
+	
 	/**
-	 * Call to return the Descriptor from JDG cache based on the root class.
-	 * 
-	 * @return Descriptor
-	 * @throws TranslatorException
+	 * Called to perform the JDG schema configuration by registering with the remote JDG cache. 
+	 * @param config
+	 * @throws ResourceException
 	 */
-	public Descriptor getDescriptor() throws TranslatorException;
+	public void registerSchema(InfinispanManagedConnectionFactory config)  throws ResourceException;
 
 	/**
-	 * Call to return the Descriptor from JDG cache based on the specified class
-	 * 
+	 * Called to obtain a <code>Descriptor</code> for the specified class.
+	 * @param config
 	 * @param clz
 	 * @return Descriptor
-	 * @throws TranslatorException
+	 * @throws TranslatorException if no descriptor is found.
 	 */
-	public Descriptor getDescriptor(Class<?> clz) throws TranslatorException;
-
+	public Descriptor getDecriptor(InfinispanManagedConnectionFactory config, Class<?> clz) throws TranslatorException;
 }

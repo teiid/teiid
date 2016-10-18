@@ -23,7 +23,6 @@ public class TestPersonMetadataProcessor {
 	@Before public void beforeEach() throws Exception{	
 		 
 		TRANSLATOR = new SimpleMapCacheExecutionFactory();
-		TRANSLATOR.start();
     }
 
 	@Test
@@ -34,6 +33,9 @@ public class TestPersonMetadataProcessor {
 				new Properties(), null);
 
 		ObjectConnection conn = PersonCacheSource.createConnection();
+
+		TRANSLATOR.initCapabilities(conn);
+		TRANSLATOR.start();
 
 		TRANSLATOR.getMetadataProcessor().process(mf, conn);
 

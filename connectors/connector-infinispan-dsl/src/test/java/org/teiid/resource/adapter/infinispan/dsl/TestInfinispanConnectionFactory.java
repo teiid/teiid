@@ -33,26 +33,18 @@ import org.infinispan.protostream.SerializationContext;
 import org.jboss.teiid.jdg_remote.pojo.AllTypes;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.teiid.translator.ExecutionContext;
 
 
 @SuppressWarnings("nls")
-public class TesttInfinispanConnectionFactory  {
+public class TestInfinispanConnectionFactory  {
 	protected static final String JNDI_NAME = "java/MyCacheManager";
 
-	@Mock
-	private static RemoteCacheManager REMOTE_CACHE_MGR;
-	
+
 	private static InfinispanManagedConnectionFactory afactory;
 	
 	@Before
-    public void beforeEach() throws Exception {  		
-			 
-		MockitoAnnotations.initMocks(this);
+    public void beforeEach() throws Exception {  
   
         afactory = new InfinispanManagedConnectionFactory() {
 			/**
@@ -60,27 +52,27 @@ public class TesttInfinispanConnectionFactory  {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			protected SerializationContext getContext() {
+			public SerializationContext getContext() {
 				// TODO Auto-generated method stub
 				return null;
 			}
 
 			@Override
-			protected RemoteCacheManager createRemoteCacheFromProperties(
+			public RemoteCacheManager createRemoteCacheFromProperties(
 					ClassLoader classLoader) throws ResourceException {
 				// TODO Auto-generated method stub
-				return REMOTE_CACHE_MGR;
+				return null;
 			}
 
 			@Override
-			protected RemoteCacheManager createRemoteCacheFromServerList(
+			public RemoteCacheManager createRemoteCacheFromServerList(
 					ClassLoader classLoader) throws ResourceException {
 				// TODO Auto-generated method stub
-				return REMOTE_CACHE_MGR;
+				return null;
 			}
 			
 			@Override
-			protected void registerWithCacheManager(SerializationContext ctx, RemoteCacheManager cc, ClassLoader cl, boolean useAnnotations) throws ResourceException {
+			protected void registerWithCacheManager() throws ResourceException {
 				// don't call JDG
 			}			
 

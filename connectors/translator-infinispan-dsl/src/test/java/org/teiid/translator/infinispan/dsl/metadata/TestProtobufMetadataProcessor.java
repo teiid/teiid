@@ -1,6 +1,6 @@
 package org.teiid.translator.infinispan.dsl.metadata;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Properties;
 
@@ -23,7 +23,7 @@ public class TestProtobufMetadataProcessor {
 	protected static InfinispanExecutionFactory TRANSLATOR;
 
 	@BeforeClass
-	public static void setUp() throws TranslatorException {
+	public static void setUp()  {
 	}
 	
 	@Before public void beforeEach() throws Exception{	

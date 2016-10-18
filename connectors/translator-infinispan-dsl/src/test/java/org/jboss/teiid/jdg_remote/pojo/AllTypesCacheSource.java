@@ -37,6 +37,9 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import org.infinispan.client.hotrod.Flag;
 import org.infinispan.client.hotrod.MetadataValue;
@@ -44,12 +47,14 @@ import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.ServerStatistics;
 import org.infinispan.client.hotrod.VersionedValue;
+import org.infinispan.commons.util.CloseableIterator;
 import org.infinispan.commons.util.concurrent.NotifyingFuture;
 import org.infinispan.protostream.FileDescriptorSource;
 import org.infinispan.protostream.config.Configuration;
 import org.infinispan.protostream.descriptors.Descriptor;
 import org.infinispan.protostream.descriptors.FileDescriptor;
 import org.infinispan.protostream.impl.parser.SquareProtoParser;
+import org.infinispan.query.dsl.Query;
 import org.teiid.translator.infinispan.dsl.InfinispanDSLConnection;
 import org.teiid.translator.object.ClassRegistry;
 
@@ -79,7 +84,7 @@ public class AllTypesCacheSource<K, V>  implements RemoteCache<K, V>{
 	
 	static {
 		try {
-			DESCRIPTOR = (Descriptor) createDescriptor();
+			DESCRIPTOR = createDescriptor();
 
 			CLASS_REGISTRY.registerClass(AllTypes.class);
 
@@ -87,7 +92,6 @@ public class AllTypesCacheSource<K, V>  implements RemoteCache<K, V>{
 			throw new RuntimeException(e);
 		}
 	}
-	
 	
 	public static InfinispanDSLConnection createConnection() {
 		return createConnection(true);
@@ -100,55 +104,6 @@ public class AllTypesCacheSource<K, V>  implements RemoteCache<K, V>{
 		final RemoteCache objects = AllTypesCacheSource.loadCache();
 		
 		return AllTypeCacheConnection.createConnection(objects, useKeyClassType, DESCRIPTOR);
-//
-//		return new TestInfinispanDSLConnection()   {
-//
-//			@Override
-//			public String getPkField() {
-//				return "intKey";
-//			}
-//
-//			@Override
-//			public Class<?> getCacheKeyClassType() throws TranslatorException {
-//				if (useKeyClassType) {
-//					return Integer.class;
-//				} 
-//				return null;
-//			}
-//			
-//			@Override
-//			public String getCacheName() {
-//				return AllTypesCacheSource.ALLTYPES_CACHE_NAME;
-//			}
-//
-//
-//			@Override
-//			public Class<?> getCacheClassType() throws TranslatorException {
-//				return AllTypes.class;
-//			}
-//
-//
-//			@Override
-//			public Descriptor getDescriptor() throws TranslatorException {
-//				return DESCRIPTOR;
-//			}
-//
-//
-//			@Override
-//			public RemoteCache getCache(String cacheName)  {
-//				return objects;
-//			}
-//			
-//			@Override
-//			public QueryFactory getQueryFactory() throws TranslatorException {
-//				return null;
-//			}
-//
-//			@Override
-//	        public ClassRegistry getClassRegistry() {
-//		        return AllTypesCacheSource.CLASS_REGISTRY;
-//		    }
-//		};
 	}
 	
 	public static void loadCache(Map<Object, Object> cache) {
@@ -243,7 +198,6 @@ public class AllTypesCacheSource<K, V>  implements RemoteCache<K, V>{
 	      Map<String, Descriptor> messages = new HashMap<String, Descriptor>();
 	      for (Descriptor m : descriptor.getMessageTypes()) {
 	         messages.put(m.getFullName(), m);
-	         System.out.println("Descriptor Name: " + m.getFullName());
 	      }
 
 	      Descriptor testClass = messages.get(descriptorName);
@@ -255,7 +209,6 @@ public class AllTypesCacheSource<K, V>  implements RemoteCache<K, V>{
 	      return testClass;
 	      
 	  } catch (Exception e) {
-    	e.printStackTrace();
     	throw e;
 	  }
 		
@@ -967,26 +920,23 @@ public class AllTypesCacheSource<K, V>  implements RemoteCache<K, V>{
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @see org.infinispan.client.hotrod.RemoteCache#replaceWithVersion(java.lang.Object, java.lang.Object, long, long, java.util.concurrent.TimeUnit, long, java.util.concurrent.TimeUnit)
-	 */
-	@Override
-	public boolean replaceWithVersion(K key, V newValue, long version,
-			long lifespan, TimeUnit lifespanTimeUnit, long maxIdle,
-			TimeUnit maxIdleTimeUnit) {
-		return false;
-	}
-
-
-	/**
-	 * {@inheritDoc}
-	 *
 	 * @see org.infinispan.client.hotrod.RemoteCache#getAll(java.util.Set)
 	 */
 	@Override
 	public Map<K, V> getAll(Set<? extends K> keys) {
 		return null;
 	}
-	
-	
-	
+
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.infinispan.client.hotrod.RemoteCache#replaceWithVersion(java.lang.Object, java.lang.Object, long, long, java.util.concurrent.TimeUnit, long, java.util.concurrent.TimeUnit)
+	 */
+	@Override
+	public boolean replaceWithVersion(K key, V newValue, long version, long lifespan, TimeUnit lifespanTimeUnit,
+			long maxIdle, TimeUnit maxIdleTimeUnit) {
+		return false;
+	}
+
 }

@@ -5,11 +5,12 @@ import java.util.Map;
 import org.teiid.translator.object.CacheNameProxy;
 import org.teiid.translator.object.ClassRegistry;
 import org.teiid.translator.object.ObjectConnection;
+import org.teiid.translator.object.Version;
 import org.teiid.translator.object.simpleMap.SimpleMapCacheConnection;
 
 public class TradeObjectConnection extends SimpleMapCacheConnection {
 
-	public static ObjectConnection createConnection(Map<Object,Object> map, boolean staging) {
+	public static ObjectConnection createConnection(Map<Object,Object> map, boolean staging, Version version, boolean annotations) {
 		CacheNameProxy proxy = null;
 		
 		if (staging) {
@@ -18,7 +19,10 @@ public class TradeObjectConnection extends SimpleMapCacheConnection {
 			proxy = new CacheNameProxy(TradesCacheSource.TRADES_CACHE_NAME);
 		}
 
-		return new TradeObjectConnection(map, TradesCacheSource.CLASS_REGISTRY, proxy);
+		TradeObjectConnection conn =  new TradeObjectConnection(map, TradesCacheSource.CLASS_REGISTRY, proxy);
+		conn.setVersion(version);
+		conn.setConfiguredUsingAnnotations(annotations);
+		return conn;
 	}
 
 	public TradeObjectConnection(Map<Object,Object> map, ClassRegistry registry, CacheNameProxy proxy) {

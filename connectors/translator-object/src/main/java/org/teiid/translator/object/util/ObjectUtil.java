@@ -21,12 +21,21 @@
  */
 package org.teiid.translator.object.util;
 
+import java.lang.reflect.Method;
+import java.util.Map;
+
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
+import org.teiid.core.util.StringUtil;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.object.ClassRegistry;
+import org.teiid.translator.object.ObjectPlugin;
+import org.teiid.translator.object.ObjectVisitor;
+import org.teiid.translator.object.metadata.JavaBeanMetadataProcessor;
 
 /**
  * @author vanhalbert
@@ -39,13 +48,13 @@ public class ObjectUtil {
 			return escapeReservedChars(value);
 		}
 		try {
-			value  = DataTypeManager.transformValue(value,  mdIDElement.getJavaType());
+			value = DataTypeManager.transformValue(value, mdIDElement.getJavaType());
 			return value;
 		} catch (TransformationException e) {
 			throw new TranslatorException(e);
 		}
 	}
-	
+
 	private static Object escapeReservedChars(final Object value) {
 
 		String expr = (String) value;
@@ -75,16 +84,75 @@ public class ObjectUtil {
 		}
 		return sb.toString();
 	}
-	
-	public static String getRecordName(Column col) {
-		return SQLStringVisitor.getRecordName(col);
+
+	public static String getRecordName(Column col) {	
+		return  SQLStringVisitor.getRecordName(col);	
 	}
-	
+
 	public static String getRecordName(ForeignKey c) {
-		String name = c.getNameInSource();
-		if (name == null || name.trim().isEmpty()) {
-			return c.getName();
-		}
-		return name;
+		return SQLStringVisitor.getRecordName(c);
 	}
+	
+	public static String getRecordName(Table table) {	
+		return  SQLStringVisitor.getRecordName(table);	
+	}
+
+	
+	public static Class<?> getRegisteredClass(ClassRegistry classRegistry, ObjectVisitor visitor) throws TranslatorException {
+		String tname = (visitor.getPrimaryTable() != null ? visitor.getPrimaryTable() :  visitor.getTableName());
+
+		Class<?> clz = classRegistry.getRegisteredClassUsingTableName(tname);
+		if (clz == null) {
+			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21005, new Object[] {visitor.getTableName()}));
+		}
+		return clz;
+	}
+
+	public static Method findMethod(Map<String, Method> mapMethods, String methodName)  {
+		if (methodName == null || methodName.length() == 0) {
+			return null;
+		}
+		
+		if (methodName.contains(".")) {
+			methodName = StringUtil.getLastToken(methodName, ".");
+		}
+
+		return searchMethodMap(mapMethods, methodName);
+	}
+	
+	public static Method searchMethodMap(Map<String, Method> mapMethods, String methodName)  {
+		Method m = mapMethods.get(methodName.toLowerCase());
+		if (m != null) {
+			return m;
+
+		} 
+		m = mapMethods.get(methodName);
+		if (m != null) {
+			return m;
+		}
+		
+		String nm = getNameFromMethodName(methodName);
+		if (! methodName.equals(nm)) {
+			return findMethod(mapMethods, nm);
+		}
+		
+		return null;
+
+	}
+	
+	/*
+	 * Utility method for stripping a GET, SET or IS prefix from the methodname before comparing
+	 */
+	public static String getNameFromMethodName(String name) {
+		String tolower = name.toLowerCase();
+		if (tolower.startsWith(JavaBeanMetadataProcessor.GET) || tolower.startsWith(JavaBeanMetadataProcessor.SET)) {
+			return name.substring(3);
+		}
+		if (tolower.startsWith(JavaBeanMetadataProcessor.IS)) {
+			return name.substring(2);
+		}
+		// return null to indicate no name was found within the name
+		return tolower;
+	}
+
 }

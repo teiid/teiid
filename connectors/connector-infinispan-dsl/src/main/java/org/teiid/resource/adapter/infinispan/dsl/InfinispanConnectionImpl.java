@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.resource.ResourceException;
 
@@ -35,7 +34,6 @@ import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.Search;
 import org.infinispan.protostream.descriptors.Descriptor;
 import org.infinispan.query.dsl.QueryFactory;
-import org.teiid.core.util.Assertion;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnection;
@@ -44,6 +42,8 @@ import org.teiid.translator.infinispan.dsl.InfinispanDSLConnection;
 import org.teiid.translator.infinispan.dsl.InfinispanPlugin;
 import org.teiid.translator.object.DDLHandler;
 import org.teiid.translator.object.SearchType;
+import org.teiid.translator.object.Version;
+
 
 /** 
  * Represents a connection to an Infinispan cache container. The <code>cacheName</code> that is specified will dictate the
@@ -52,14 +52,19 @@ import org.teiid.translator.object.SearchType;
  */
 public class InfinispanConnectionImpl extends BasicConnection implements InfinispanDSLConnection { 
 	
-	AbstractInfinispanManagedConnectionFactory config = null;
+	InfinispanManagedConnectionFactory config = null;
 
-	public InfinispanConnectionImpl(AbstractInfinispanManagedConnectionFactory config)  throws ResourceException {
+	public InfinispanConnectionImpl(InfinispanManagedConnectionFactory config)  throws ResourceException {
 		this.config = config;
 
 		this.config.createCacheContainer();
 		
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Infinispan Connection has been newly created "); //$NON-NLS-1$
+	}
+	
+	@Override
+	public Version getVersion() throws TranslatorException {
+		return this.config.getVersion();
 	}
 	
 	/** 
@@ -69,13 +74,6 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	@Override
     public void close() {
 		config = null;	
-	}
-	
-	private String getTargetCache() {
-		if (getDDLHandler().isStagingTarget()) {
-			return config.getCacheNameProxy().getStageCacheAliasName();
-		}
-		return config.getCacheNameProxy().getPrimaryCacheAliasName();
 	}
 
 	/** 
@@ -110,27 +108,35 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	@SuppressWarnings({ "rawtypes"})
 	@Override
 	public RemoteCache getCache() throws TranslatorException {
+
 		return config.getCache(getTargetCache());
+
 	}
 
 	/**
 	 * {@inheritDoc}
-	 *
+	 * Called to return the descriptor based on the root class
 	 */
 	@Override
 	public Descriptor getDescriptor()
 			throws TranslatorException {
-		Descriptor d = config.getContext().getMessageDescriptor(config.getMessageDescriptor());
-		if (d == null) {
-			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25028,  config.getMessageDescriptor(), getCacheName()));			
-		}
 		
-		return d;
+		return getDescriptor(config.getCacheClassType());
+
+	}
+	
+	@Override
+	public Descriptor getDescriptor(Class<?> clz)
+			throws TranslatorException {
+		
+		return config.getCacheSchemaConfigurator().getDecriptor(config, clz);
+
 	}
 	
 	@SuppressWarnings({ "rawtypes" })
 	@Override
 	public QueryFactory getQueryFactory() throws TranslatorException {
+		
 		return Search.getQueryFactory(getCache(getTargetCache()));
 	}
 
@@ -152,7 +158,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	 */
 	@Override
 	public Object remove(Object key) throws TranslatorException {
-		return getCache(getTargetCache()).removeAsync(key);
+		return getCache(getTargetCache()).remove(key);
 	}
 
 	/**
@@ -164,6 +170,13 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	@Override
 	public void update(Object key, Object value) throws TranslatorException {
 		getCache(getTargetCache()).replace(key, value);
+	}
+
+	private String getTargetCache() {
+		if (getDDLHandler().isStagingTarget()) {
+			return config.getCacheNameProxy().getStageCacheAliasName();
+		}
+		return config.getCacheNameProxy().getPrimaryCacheAliasName();
 	}
 
 	/**
@@ -266,5 +279,19 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	public SearchType getSearchType() {
 		return new DSLSearch(this);
 	}
+	
+	/**
+	* Call to determine if the JDG cache is configured using annotation (or using protobuf and marsharllers).
+	* @return true if annotations are used
+	*/
 
+	@Override
+	 public boolean configuredUsingAnnotations() {
+	        return config.configuredUsingAnnotations();
+	}
+
+	@Override
+	public boolean configuredForMaterialization() {
+		return (getDDLHandler().isStagingTarget());
+	}
 }

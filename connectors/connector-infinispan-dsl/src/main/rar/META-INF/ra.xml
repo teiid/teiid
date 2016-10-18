@@ -80,8 +80,14 @@
                <description>{$display:"Message Descriptor",$description:"Message descriptor class name for the root object in cache",$required="true"}</description>
                <config-property-name>MessageDescriptor</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
-            </config-property>     
-             
+            </config-property>
+ 
+            <config-property>
+               <description>{$display:"Child Class(s)",$description:"Child pojo classes, with annotations, that are accessible from the root class [className[;className];])",$required="false"}</description>
+               <config-property-name>ChildClasses</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>
+
             <config-property>
                 <description>{$display:"Staging Cache Name",$description:"Cache name for the staging cache used in materialization",$required="false"}</description>
                <config-property-name>StagingCacheName</config-property-name>
