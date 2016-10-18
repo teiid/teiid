@@ -83,6 +83,11 @@ public class InfinispanLibModeExecutionFactory extends ObjectExecutionFactory {
 
 	} 
 	
+	@Override
+	public int getMaxFromGroups() {
+		return 1;
+	}
+	
 	public boolean isFullQuerySupported() {
 		return this.supportsDSLSearching ;
 	}
