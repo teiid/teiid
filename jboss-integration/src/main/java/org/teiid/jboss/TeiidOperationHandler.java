@@ -65,14 +65,10 @@ import org.jboss.jca.common.api.metadata.spec.ResourceAdapter;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceRegistry;
-import org.teiid.adminapi.Admin;
+import org.teiid.adminapi.*;
 import org.teiid.adminapi.Admin.ExportFormat;
 import org.teiid.adminapi.Admin.SchemaObjectType;
 import org.teiid.adminapi.Admin.TranlatorPropertyType;
-import org.teiid.adminapi.AdminComponentException;
-import org.teiid.adminapi.AdminException;
-import org.teiid.adminapi.AdminProcessingException;
-import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.*;
@@ -100,7 +96,6 @@ import org.teiid.metadata.MetadataException;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.query.metadata.DDLStringVisitor;
-import org.teiid.query.metadata.DatabaseStorage;
 import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.metadata.DatabaseUtil;
 import org.teiid.query.metadata.TransformationMetadata;
@@ -161,7 +156,7 @@ abstract class TeiidOperationHandler extends BaseOperationHandler<DQPCore> {
         return null;
 	}
 
-	protected DatabaseStorage getDatabaseStorage(OperationContext context) {
+	protected DatabaseStore getDatabaseStore(OperationContext context) {
 	    ServiceController<?> repo = context.getServiceRegistry(isChangesRuntimes()).getRequiredService(TeiidServiceNames.DATABASE_STORAGE);
 	    if (repo != null) {
 	        return org.teiid.jboss.DatabaseStorageService.class.cast(repo.getService()).getValue();
@@ -1718,14 +1713,14 @@ class DDLExecutor extends TeiidOperationHandler {
         
         String ddl = operation.get(OperationsConstants.DDL.getName()).asString();
         
-        DatabaseStorage storage = getDatabaseStorage(context);
-        if (storage == null) {
+        DatabaseStore store = getDatabaseStore(context);
+        if (store == null) {
             throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50110));
         }
         
         String str = null;
         try {
-            str = DatabaseStore.processDDL(storage, dbName, version, schema, ddl, persist);
+            str = store.processDDL(dbName, version, schema, ddl, persist);
         } catch (MetadataException e) {
             throw new OperationFailedException(
                     IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50111, e.getMessage()), e);            

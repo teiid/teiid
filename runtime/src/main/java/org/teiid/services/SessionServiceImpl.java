@@ -173,7 +173,18 @@ public class SessionServiceImpl implements SessionService {
 	        // Validate VDB and version if logging on to server product...
 	        VDBMetaData vdb = null;
 	        if (vdbName != null) {
-	        	vdb = getActiveVDB(vdbName, vdbVersion, vdbCreate);
+	        	vdb = getActiveVDB(vdbName, vdbVersion);
+	        	if (vdb == null) {
+	        	    if (!vdbCreate) {
+	        	        throw new SessionServiceException(RuntimePlugin.Event.TEIID40046, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40046, vdbName, vdbVersion));
+	        	    }
+                    try {
+                        this.vdbRepository.createDB(vdbName, vdbVersion == null?"1":vdbVersion); //$NON-NLS-1$
+                    } catch (VirtualDatabaseException e) {
+                        throw new SessionServiceException(RuntimePlugin.Event.TEIID40045, e, e.getMessage());
+                    }
+                    vdb = this.vdbRepository.getLiveVDB(vdbName, vdbVersion == null?"1":vdbVersion); //$NON-NLS-1$
+	        	}
 	        }
 	
 	        if (sessionMaxLimit > 0 && getActiveSessionsCount() >= sessionMaxLimit) {
@@ -254,7 +265,14 @@ public class SessionServiceImpl implements SessionService {
         }
 	}
 	
-	protected VDBMetaData getActiveVDB(String vdbName, String vdbVersion, boolean createVDB) throws SessionServiceException {
+	/**
+	 * 
+	 * @param vdbName
+	 * @param vdbVersion
+	 * @return the vdb or null if it doesn't exist
+	 * @throws SessionServiceException if the version is not valid or the vdb doesn't accept connections
+	 */
+	protected VDBMetaData getActiveVDB(String vdbName, String vdbVersion) throws SessionServiceException {
 		VDBMetaData vdb = null;
 		
 		try {
@@ -264,17 +282,11 @@ public class SessionServiceImpl implements SessionService {
 			else {
 				vdb = this.vdbRepository.getLiveVDB(vdbName, vdbVersion);
 			}
-			if (vdb == null && createVDB) {
-				this.vdbRepository.createDB(vdbName, vdbVersion == null?"1":vdbVersion);
-				vdb = this.vdbRepository.getLiveVDB(vdbName, vdbVersion == null?"1":vdbVersion);
-			}
 		} catch (NumberFormatException e) {
 			 throw new SessionServiceException(RuntimePlugin.Event.TEIID40045, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40045, vdbVersion));
-		} catch (VirtualDatabaseException e) {
-			throw new SessionServiceException(RuntimePlugin.Event.TEIID40045, e, e.getMessage());			
 		}
 		if (vdb == null) {
-			 throw new SessionServiceException(RuntimePlugin.Event.TEIID40046, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40046, vdbName, vdbVersion));
+		    return null;
 		}
 		if (vdb.getConnectionType() == ConnectionType.NONE) {
 			 throw new SessionServiceException(RuntimePlugin.Event.TEIID40048, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40048, vdbName, vdbVersion));
@@ -452,10 +464,9 @@ public class SessionServiceImpl implements SessionService {
 		if (vdbName != null) {
 			VDB vdb = null;
 			try {
-				vdb = getActiveVDB(vdbName, version,false);
+				vdb = getActiveVDB(vdbName, version);
 			} catch (SessionServiceException e) {
-				// ignore and return default, this only occur if the name and version are wrong, 
-				// or vdb does not exists
+				throw new LogonException(e);
 			}
 			if (vdb != null) {
 				String gssPattern = vdb.getPropertyValue(GSS_PATTERN_PROPERTY);
@@ -489,7 +500,7 @@ public class SessionServiceImpl implements SessionService {
 		if (vdbName != null) {
 	    	try {    		
 	    		if (vdb == null) {
-	    			vdb = getActiveVDB(vdbName, version, false);
+	    			vdb = getActiveVDB(vdbName, version);
 	    		}
 	    		if (vdb != null) {
 					String typeProperty = vdb.getPropertyValue(SECURITY_DOMAIN_PROPERTY);				

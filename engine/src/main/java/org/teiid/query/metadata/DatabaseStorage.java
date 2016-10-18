@@ -23,20 +23,15 @@ package org.teiid.query.metadata;
 
 import org.teiid.metadata.Database;
 
-public interface DatabaseStorage {
-    public void load();
 
-    public void setStore(DatabaseStore store);
-    
-    public DatabaseStore getStore();
+public interface DatabaseStorage {
+    public void load(DatabaseStore store);
 
     public void setProperties(String properties);
 
-    public static interface PersistenceProxy {
-        void save(Database database);    
-        void drop(Database database);
-    }
+    public void save(Database database);    
+    public void drop(Database database);
+
+    public void restore(DatabaseStore store, Database database);
     
-    public void startRecording(boolean save);
-    public void stopRecording();
 }

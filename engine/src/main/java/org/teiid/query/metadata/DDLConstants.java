@@ -55,4 +55,6 @@ public interface DDLConstants {
 	public static final String CREATE_TRIGGER_ON = "CREATE TRIGGER ON";//$NON-NLS-1$
 	public static final String FOREIGN_TABLE = "FOREIGN TABLE";//$NON-NLS-1$
 	public static final String UDT = "UDT";//$NON-NLS-1$
+	public static final String VISIBLE = "VISIBLE";//$NON-NLS-1$
+	
 }

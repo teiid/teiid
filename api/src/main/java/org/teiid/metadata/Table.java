@@ -99,7 +99,6 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
     private volatile boolean deletePlanEnabled;
     private Table materializedStageTable;
     private Table materializedTable;
-    private String server;
 
     //XML specific
     private List<String> bindings;
@@ -405,12 +404,4 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
     	}
     	return super.getFullName();
     }
-
-    public String getServer() {
-        return server;
-    }
-
-    public void setServer(String name) {
-        this.server = name;
-    }    
 }

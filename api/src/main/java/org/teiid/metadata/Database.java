@@ -37,8 +37,6 @@ import org.teiid.metadata.Grant.Permission.Allowance;
 public class Database extends AbstractMetadataRecord {
     private static final long serialVersionUID = 7595765832848232840L;
     public enum ResourceType {DATABASE, SCHEMA, TABLE, PROCEDURE, FUNCTION, COLUMN, SERVER, DATAWRAPPER,PARAMETER};
-    private Map<String, Datatype> runtimeTypes;
-    private Map<String, Datatype> builtinDataTypes;
     protected MetadataStore store = new MetadataStore();
     protected NavigableMap<String, DataWrapper> wrappers = new TreeMap<String, DataWrapper>(String.CASE_INSENSITIVE_ORDER);
     protected NavigableMap<String, Server> servers = new TreeMap<String, Server>(String.CASE_INSENSITIVE_ORDER);    
@@ -53,14 +51,6 @@ public class Database extends AbstractMetadataRecord {
     public Database(String dbName, String version) {
         super.setName(dbName);
         this.version = version;
-    }
-    
-    public void setRuntimeTypes(Map<String, Datatype> types) {
-        this.runtimeTypes = types;
-    }
-
-    public void setBuiltinDataTypes(Map<String, Datatype> types) {
-        this.builtinDataTypes = types;
     }
     
     public void addSchema(Schema schema) {

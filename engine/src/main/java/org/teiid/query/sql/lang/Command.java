@@ -102,6 +102,8 @@ public abstract class Command implements LanguageObject {
     public static final int TYPE_ALTER_PROC = 15;
     
     public static final int TYPE_ALTER_TRIGGER = 16;
+    
+    public static final int TYPE_IMMEDIATE_DDL = 17;
 
     private static List<Expression> updateCommandSymbol;
     

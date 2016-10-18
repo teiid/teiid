@@ -45,7 +45,6 @@ import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Table;
 import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.metadata.DatabaseStorage;
 import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.TransformationMetadata;
@@ -132,7 +131,7 @@ public class DdlPlan extends ProcessorPlan {
 
 	public static void alterView(final VDBMetaData vdb, final Table t, final String sql) {
 		TransformationMetadata metadata = vdb.getAttachment(TransformationMetadata.class);
-		DatabaseStorage storage = vdb.getAttachment(DatabaseStorage.class);
+		DatabaseStore store = vdb.getAttachment(DatabaseStore.class);
 		
 		try {
 			Command command = QueryParser.getQueryParser().parseCommand(t.getSelectTransformation());
@@ -148,8 +147,7 @@ public class DdlPlan extends ProcessorPlan {
 		t.setLastModified(System.currentTimeMillis());
 		metadata.addToMetadataCache(t, "transformation/"+SQLConstants.Reserved.SELECT, null); //$NON-NLS-1$
 		
-		if (storage != null) {
-			DatabaseStore store = storage.getStore();
+		if (store != null) {
 			alterDatabaseStore(store, vdb.getName(), vdb.getVersion(), new DDLChange() {
 				@Override
 				public void process(DatabaseStore store) {
@@ -165,20 +163,20 @@ public class DdlPlan extends ProcessorPlan {
 		void process(DatabaseStore store);
 	}
 	public static void alterDatabaseStore(DatabaseStore store, String vdbName, String version, DDLChange change) {
-		Database db = store.getDatabase(vdbName, version);
-		if (db != null) {
-			store.startEditing();
-			try {
-				change.process(store);
-			} finally {
-				store.stopEditing();
-			}
-		}		
+	    Database db = store.getDatabase(vdbName, version);
+    	if (db != null) {
+    		store.startEditing(true);
+    		try {
+    			change.process(store);
+    		} finally {
+    			store.stopEditing();
+    		}
+	    }
 	}
 
 	public static void alterProcedureDefinition(final VDBMetaData vdb, final Procedure p, String sql) {
 		TransformationMetadata metadata = vdb.getAttachment(TransformationMetadata.class);
-		DatabaseStorage storage = vdb.getAttachment(DatabaseStorage.class);
+		DatabaseStore store = vdb.getAttachment(DatabaseStore.class);
 		
 		try {
 			Command command = QueryParser.getQueryParser().parseProcedure(p.getQueryPlan(), false);
@@ -194,8 +192,7 @@ public class DdlPlan extends ProcessorPlan {
 		p.setLastModified(System.currentTimeMillis());
 		metadata.addToMetadataCache(p, "transformation/"+StoredProcedure.class.getSimpleName().toUpperCase(), null); //$NON-NLS-1$
 		
-		if (storage != null) {
-			DatabaseStore store = storage.getStore();
+		if (store != null) {
 			alterDatabaseStore(store, vdb.getName(), vdb.getVersion(), new DDLChange() {
 				@Override
 				public void process(DatabaseStore store) {
@@ -236,9 +233,8 @@ public class DdlPlan extends ProcessorPlan {
 		indexMetadata.addToMetadataCache(t, "transformation/"+event, null); //$NON-NLS-1$
 		t.setLastModified(System.currentTimeMillis());
 		
-		DatabaseStorage storage = vdb.getAttachment(DatabaseStorage.class);
-		if (storage != null) {
-			DatabaseStore store = storage.getStore();
+		DatabaseStore store = vdb.getAttachment(DatabaseStore.class);
+		if (store != null) {
 			alterDatabaseStore(store, vdb.getName(), vdb.getVersion(), new DDLChange() {
 				@Override
 				public void process(DatabaseStore store) {

@@ -5,16 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.transform.OutputKeys;
@@ -25,19 +16,9 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import org.teiid.adminapi.Admin;
-import org.teiid.adminapi.AdminException;
-import org.teiid.adminapi.AdminProcessingException;
-import org.teiid.adminapi.CacheStatistics;
-import org.teiid.adminapi.EngineStatistics;
-import org.teiid.adminapi.PropertyDefinition;
-import org.teiid.adminapi.Request;
-import org.teiid.adminapi.Session;
-import org.teiid.adminapi.Transaction;
-import org.teiid.adminapi.VDB;
+import org.teiid.adminapi.*;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.VDB.Status;
-import org.teiid.adminapi.WorkerPoolStatistics;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.EngineStatisticsMetadata;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -60,8 +41,6 @@ import org.teiid.metadata.MetadataException;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.query.metadata.DDLStringVisitor;
-import org.teiid.query.metadata.DatabaseStorage;
-import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.metadata.DatabaseUtil;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.metadata.VDBResources;
@@ -614,14 +593,12 @@ public class EmbeddedAdminImpl implements Admin {
             throws AdminException {
         if (this.embeddedServer.getConfiguration().getDatabaseStorage() != null) {
             try {
-                DatabaseStorage storage = this.embeddedServer.getConfiguration().getDatabaseStorage();
-                return DatabaseStore.processDDL(storage, vdbName, vdbVersion, schema, ddlStmt, persist);
+                return this.embeddedServer.getDatabaseStore().processDDL(vdbName, vdbVersion, schema, ddlStmt, persist);
             } catch (MetadataException e) {
                 throw new AdminProcessingException(e);
             }
-        } else {
-            throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40156)); //$NON-NLS-1$            
         }
+        throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40156));           
     }
 
 	@Override

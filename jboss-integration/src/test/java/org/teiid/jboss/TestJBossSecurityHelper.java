@@ -130,7 +130,7 @@ public class TestJBossSecurityHelper extends TestCase {
 		
         SessionServiceImpl jss = new SessionServiceImpl() {
         	@Override
-        	protected VDBMetaData getActiveVDB(String vdbName, String vdbVersion, boolean create)
+        	protected VDBMetaData getActiveVDB(String vdbName, String vdbVersion)
         			throws SessionServiceException {
         		return Mockito.mock(VDBMetaData.class);
         	}

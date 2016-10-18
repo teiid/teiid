@@ -37,6 +37,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.teiid.adminapi.Model;
+import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
@@ -55,11 +56,11 @@ import org.teiid.net.ConnectionException;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.function.metadata.FunctionMetadataValidator;
-import org.teiid.query.metadata.DatabaseStorage;
 import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.VDBResources;
+import org.teiid.query.sql.visitor.SQLStringVisitor;
 import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.query.validator.ValidatorFailure;
 import org.teiid.query.validator.ValidatorReport;
@@ -91,7 +92,7 @@ public class VDBRepository implements Serializable{
 	private MetadataException odbcException;
     private BufferManager bufferManager;
     private ObjectReplicator objectReplictor;
-    private DatabaseStorage databaseStorage;
+    private DatabaseStore databaseStore;
 	
     public void addVDB(VDBMetaData vdb, MetadataStore metadataStore,
             LinkedHashMap<String, VDBResources.Resource> visibilityMap, UDFMetaData udf, ConnectorManagerRepository cmr)
@@ -244,7 +245,8 @@ public class VDBRepository implements Serializable{
     			result = vdb;
         		break;
         	case BY_VERSION:
-        		if (result == null) {
+        	case NONE:
+        		if (result == null || result.getConnectionType() == ConnectionType.NONE) {
             		result = vdb;
                 }            	
                 break;
@@ -282,15 +284,11 @@ public class VDBRepository implements Serializable{
 	}
 	
 	public VDBMetaData removeVDB(String vdbName, Object vdbVersion) {
-	    return removeVDB(vdbName, vdbVersion, false);
-	}
-
-	VDBMetaData removeVDB(String vdbName, Object vdbVersion, boolean reloading) {
         VDBKey key = new VDBKey(vdbName, vdbVersion);
-        return removeVDB(key, reloading);
+        return removeVDB(key);
     }
 
-	private VDBMetaData removeVDB(VDBKey key, boolean reloading) {
+	private VDBMetaData removeVDB(VDBKey key) {
 		notifyBeforeRemove(key.getName(), key.getVersion(), this.vdbRepo.get(key));
 		this.pendingDeployments.remove(key);
 		CompositeVDB removed = this.vdbRepo.remove(key);
@@ -303,7 +301,6 @@ public class VDBRepository implements Serializable{
             GlobalTableStore gts = removed.getVDB().getAttachment(GlobalTableStore.class);
             this.objectReplictor.stop(gts);
         }
-        removed.setReloading(reloading);
 		notifyRemove(key.getName(), key.getVersion(), removed);
 		return removed.getVDB();
 	}	
@@ -363,8 +360,8 @@ public class VDBRepository implements Serializable{
                 GlobalTableStore gts = CompositeGlobalTableStore.createInstance(v, this.bufferManager, this.objectReplictor);
                 metadataAwareVDB.addAttchment(GlobalTableStore.class, gts);
 				
-                if (this.databaseStorage != null) {
-                	metadataAwareVDB.addAttchment(DatabaseStorage.class, this.databaseStorage);
+                if (this.databaseStore != null) {
+                	metadataAwareVDB.addAttchment(DatabaseStore.class, this.databaseStore);
                 }
                 
 				notifyFinished(name, version, v);
@@ -489,18 +486,22 @@ public class VDBRepository implements Serializable{
         this.objectReplictor = value;
     }
 
-	public DatabaseStorage getDatabaseStorage() {
-		return databaseStorage;
+	public DatabaseStore getDatabaseStore() {
+		return databaseStore;
 	}
 
-	public void setDatabaseStorage(DatabaseStorage databaseStorage) {
-		this.databaseStorage = databaseStorage;
+	public void setDatabaseStore(DatabaseStore databaseStore) {
+		this.databaseStore = databaseStore;
 	}
 	
+	NavigableMap<VDBKey, CompositeVDB> getVdbRepo() {
+        return vdbRepo;
+    }
+	
 	public void createDB(String vdbName, String version) throws VirtualDatabaseException {
-		if (this.databaseStorage != null) {
-			DatabaseStore.processDDL(this.databaseStorage, null, null, null,
-					"CREATE DATABASE " + vdbName + " VERSION '" + version + "'", true);
+		if (this.databaseStore != null) {
+			this.databaseStore.processDDL(null, null, null,
+					"CREATE DATABASE " + SQLStringVisitor.escapeSinglePart(vdbName) + " VERSION '" + version + "'", true); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		} else {
             throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40157,
                     RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40157));			

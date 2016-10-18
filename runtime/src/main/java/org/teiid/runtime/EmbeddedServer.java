@@ -459,17 +459,21 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		if (storage != null) {
 		    DefaultDatabaseStore store = new DefaultDatabaseStore();
 		    store.setVDBRepository(getVDBRepository());
-		    getVDBRepository().setDatabaseStorage(storage);
+		    getVDBRepository().setDatabaseStore(store);
 		    store.setExecutionFactoryProvider(this);
 		    store.setConnectorManagerRepository(this.cmr);
 	        store.setFunctionalStore(getEventDistributor());
+	        store.setDatabaseStorage(storage);
             this.databaseStore = store;
-            storage.setStore(this.databaseStore);
-            storage.load();
-            this.dqp.setDatabaseStorage(storage);
+            storage.load(store);
+            this.dqp.setDatabaseStore(store);
 		}
 		running = true;
 	}
+	
+	protected DatabaseStore getDatabaseStore() {
+        return databaseStore;
+    }
 
 	private void setBufferManagerProperties(EmbeddedConfiguration config) {
 		

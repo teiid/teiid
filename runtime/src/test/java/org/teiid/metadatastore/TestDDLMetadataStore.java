@@ -21,16 +21,14 @@
  */
 package org.teiid.metadatastore;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collection;
 import java.util.Collections;
@@ -54,10 +52,13 @@ import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.PropertyDefinition;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataParser;
+import org.teiid.core.util.FileUtils;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.metadata.Database;
+import org.teiid.net.TeiidURL;
+import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.metadata.DatabaseUtil;
 import org.teiid.runtime.DDLFileDatabaseStorage;
 import org.teiid.runtime.EmbeddedAdminImpl;
@@ -72,17 +73,15 @@ import org.teiid.security.SecurityHelper;
 import org.teiid.translator.file.FileExecutionFactory;
 import org.teiid.translator.jdbc.h2.H2ExecutionFactory;
 
+@SuppressWarnings("nls")
 public class TestDDLMetadataStore {
 
-    EmbeddedServer es;
+    static ExtendedEmbeddedServer es;
     
     @Before 
     public void setup() {
-        es = new EmbeddedServer() {
-            public Admin getAdmin() {
-                return new DatasourceAwareEmbeddedAdmin(this);
-            }  
-        };
+        FileUtils.removeDirectoryAndChildren(new File(UnitTestUtil.getTestScratchPath()));
+        es = new ExtendedEmbeddedServer();
     }
     
     @After 
@@ -92,7 +91,19 @@ public class TestDDLMetadataStore {
         }
     }
     
-    private class DatasourceAwareEmbeddedAdmin extends EmbeddedAdminImpl {
+    static final class ExtendedEmbeddedServer extends EmbeddedServer {
+        @Override
+        public Admin getAdmin() {
+            return new DatasourceAwareEmbeddedAdmin(this);
+        }
+        
+        @Override
+        public DatabaseStore getDatabaseStore() {
+            return super.getDatabaseStore();
+        }
+    }
+
+    private static class DatasourceAwareEmbeddedAdmin extends EmbeddedAdminImpl {
         HashSet<String> datasourceNames = new HashSet<String>();
         
         public DatasourceAwareEmbeddedAdmin(EmbeddedServer embeddedServer) {
@@ -207,7 +218,7 @@ public class TestDDLMetadataStore {
         ec.setDatabaseStorage(store);
         es.start(ec);
 
-        Database db = store.getStore().getDatabase("empty", "2");
+        Database db = es.getDatabaseStore().getDatabase("empty", "2");
         VDBMetaData vdb = DatabaseUtil.convert(db);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         VDBMetadataParser.marshell(vdb, out);
@@ -274,5 +285,34 @@ public class TestDDLMetadataStore {
         String expected = ObjectConverterUtil
                 .convertFileToString(new File(UnitTestUtil.getTestDataPath() + "/" + "portfolio-vdb.ddl"));
         assertEquals(expected, content);
-    }    
+    } 
+    
+    @Test
+    public void testFailure() throws Exception {
+        EmbeddedConfiguration ec = new EmbeddedConfiguration();
+        ec.setUseDisk(false);
+        ec.setSecurityHelper(new ThreadLocalSecurityHelper());
+        es.addTranslator("y", new TestEmbeddedServer.FakeTranslator(false));
+        
+        DDLFileDatabaseStorage store = new DDLFileDatabaseStorage();
+        store.setProperties("location="+UnitTestUtil.getTestScratchPath());
+        ec.setDatabaseStorage(store);
+        es.start(ec);
+
+        Properties p = new Properties();
+        p.setProperty(TeiidURL.CONNECTION.VDBEDITMODE, "create");
+        Connection c = es.getDriver().connect("jdbc:teiid:empty", p);
+        Statement s = c.createStatement();
+        s.execute("create virtual schema s");
+        assertEquals(0, s.getUpdateCount());
+        s.execute("set schema s");
+        try {
+            s.execute("create view x as select 'a' from b;");
+            fail();
+        } catch (SQLException e) {
+            
+        }
+        s.execute("create view x as select 'a';");
+        assertEquals(0, s.getUpdateCount());
+    }  
 }

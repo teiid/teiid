@@ -50,7 +50,6 @@ public class Procedure extends AbstractMetadataRecord implements Modifiable {
     private List<ProcedureParameter> parameters = new ArrayList<ProcedureParameter>(2);
     private ColumnSet<Procedure> resultSet;
     private volatile String queryPlan;
-    private String server;
     
     private Schema parent;
     private volatile transient long lastModified;
@@ -151,11 +150,4 @@ public class Procedure extends AbstractMetadataRecord implements Modifiable {
 		this.lastModified = lastModified;
 	}
 
-	public void setServer(String server) {
-	    this.server = server;
-	}
-	
-	public String getServer() {
-	    return this.server;
-	}
 }

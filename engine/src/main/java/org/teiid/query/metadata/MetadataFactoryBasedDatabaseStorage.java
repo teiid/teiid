@@ -24,78 +24,59 @@ package org.teiid.query.metadata;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.teiid.metadata.DataWrapper;
 import org.teiid.metadata.Database;
-import org.teiid.metadata.Datatype;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Server;
 
 public class MetadataFactoryBasedDatabaseStorage implements DatabaseStorage {
+    private static final String NONE = "none"; //$NON-NLS-1$
     private MetadataFactory factory;
-    private DatabaseStore store;
 
     public MetadataFactoryBasedDatabaseStorage(final MetadataFactory factory) {
         this.factory = factory;
-        DatabaseStore store = new DatabaseStore() {
-            @Override
-            public Map<String, Datatype> getRuntimeTypes() {
-                return factory.getDataTypes();
-            }
-            @Override
-            public Map<String, Datatype> getBuiltinDataTypes() {
-                return factory.getBuiltinDataTypes();
-            } 
-            @Override
-            protected void deployCurrentVDB() {
-                // snub out default behavior
-            }            
-        };
-        setStore(store);
     }
 
     @Override
-    public void load() {  
+    public void load(DatabaseStore store) {  
         Database db = new Database(this.factory.getVdbName(), this.factory.getVdbVersion());
-        getStore().databaseCreated(db);
+        store.databaseCreated(db);
         
-        getStore().dataWrapperCreated(new DataWrapper("none"));
-        Server server = new Server("none");
-        server.setDataWrapper("none");
+        store.dataWrapperCreated(new DataWrapper(NONE));
+        Server server = new Server(NONE);
+        server.setDataWrapper(NONE);
         
-        getStore().serverCreated(server);
+        store.serverCreated(server);
         if (this.factory.getSchema().isPhysical()) {
             Server s = new Server(this.factory.getSchema().getName());
-            s.setDataWrapper("none");
-            getStore().serverCreated(s);
+            s.setDataWrapper(NONE);
+            store.serverCreated(s);
         }
         List<String> servers = Collections.emptyList();
         if (this.factory.getSchema().isPhysical()){
-        	servers = Arrays.asList("none");
+        	servers = Arrays.asList(NONE);
         }
-        getStore().schemaCreated(this.factory.getSchema(), servers);
+        store.schemaCreated(this.factory.getSchema(), servers);
     }
     
-    @Override
-    public void setStore(DatabaseStore store) {
-        this.store = store;
-    }
-    
-    @Override
-    public DatabaseStore getStore() {
-        return this.store;
-    }
-
     @Override
     public void setProperties(String properties) {
     }
-
+    
     @Override
-    public void startRecording(boolean save) {
+    public void drop(Database database) {
+        
+    }
+    
+    @Override
+    public void save(Database database) {
+        
+    }
+    
+    @Override
+    public void restore(DatabaseStore store, Database database) {
+        
     }
 
-    @Override
-    public void stopRecording() {
-    }
 }

@@ -299,21 +299,10 @@ public class TestStatement {
 		Mockito.verify(conn).setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
 	}
 	
-	@Test public void testUseStatement() {
-		Matcher m = StatementImpl.USE_STATEMENT.matcher("use schema \"foo\";");
-		assertTrue(m.matches());
-		assertEquals("\"foo\"", m.group(2));
-		
-		m = StatementImpl.USE_STATEMENT.matcher("create schema \"foo\";");
-		assertTrue(m.matches());
-		assertEquals("\"foo\"", m.group(2));
-		
-		m = StatementImpl.USE_STATEMENT.matcher("drop schema \"foo\";");
-		assertTrue(m.matches());
-		assertEquals("\"foo\"", m.group(2));		
-		
-		m = StatementImpl.USE_STATEMENT.matcher("create schema \"foo\" server x;");
-		assertTrue(m.matches());
-		assertEquals("\"foo\"", m.group(2));				
+	@Test public void testSetSchema() throws SQLException {
+	    ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
+        StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+        assertFalse(statement.execute("set schema 'bar'")); //$NON-NLS-1$
+        Mockito.verify(conn).setSchema("bar");
 	}	
 }

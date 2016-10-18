@@ -35,9 +35,10 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadatastore.DefaultDatabaseStore;
 import org.teiid.query.metadata.DatabaseStorage;
+import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.services.InternalEventDistributorFactory;
 
-class DatabaseStorageService implements Service<DatabaseStorage> {
+class DatabaseStorageService implements Service<DatabaseStore> {
     protected final InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
 	protected final InjectedValue<InternalEventDistributorFactory> eventDistributorFactoryInjector = new InjectedValue<InternalEventDistributorFactory>();
 	protected final InjectedValue<TranslatorRepository> translatorRepositoryInjector = new InjectedValue<TranslatorRepository>();
@@ -46,21 +47,21 @@ class DatabaseStorageService implements Service<DatabaseStorage> {
 	private DatabaseStorage storage;
 	private ConnectorManagerRepository connectorManagerRepo;
 	private final JBossLifeCycleListener lifeCycleListener;
+	private DefaultDatabaseStore store;
 	
-	public DatabaseStorageService(DatabaseStorage storage, JBossLifeCycleListener lifeCycleListener) {
+	public DatabaseStorageService(DatabaseStorage storage, DefaultDatabaseStore store, JBossLifeCycleListener lifeCycleListener) {
 	    this.storage = storage;
+	    this.store = store;
 	    this.lifeCycleListener = lifeCycleListener;
 	}
 	
 	@Override
 	public void start(StartContext context) throws StartException {
-        DefaultDatabaseStore store = new DefaultDatabaseStore();
         store.setVDBRepository(vdbRepositoryInjector.getValue());
         
         store.setExecutionFactoryProvider(this.connectorManagerRepo.getProvider());
         store.setConnectorManagerRepository(this.connectorManagerRepo);
         store.setFunctionalStore(eventDistributorFactoryInjector.getValue().getEventDistributor());
-        this.storage.setStore(store);
         
         //TODO: this is hack, we need to find a better way to see when the server is completely started
         this.executorInjector.getValue().execute(new Runnable() {
@@ -77,10 +78,10 @@ class DatabaseStorageService implements Service<DatabaseStorage> {
                     }
                 }
                 if (started) {
-                    storage.load();
+                    storage.load(store);
                 } else {
                     LogManager.logDetail(LogConstants.CTX_RUNTIME, 
-                            IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50112)); //$NON-NLS-1$
+                            IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50112));
                 }
             }
         });
@@ -91,8 +92,8 @@ class DatabaseStorageService implements Service<DatabaseStorage> {
 	}
 
 	@Override
-	public DatabaseStorage getValue() throws IllegalStateException, IllegalArgumentException {
-		return this.storage;
+	public DatabaseStore getValue() throws IllegalStateException, IllegalArgumentException {
+		return this.store;
 	}
 
     public void setConnectorManagerRepo(ConnectorManagerRepository connectorManagerRepo) {

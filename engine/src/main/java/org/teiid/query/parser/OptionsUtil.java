@@ -26,18 +26,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.teiid.core.util.StringUtil;
-import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.metadata.BaseColumn;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.DataWrapper;
+import org.teiid.metadata.*;
 import org.teiid.metadata.Column.SearchType;
-import org.teiid.metadata.Database;
-import org.teiid.metadata.Datatype;
-import org.teiid.metadata.MetadataException;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Server;
-import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.DDLConstants;
 import org.teiid.query.metadata.SystemMetadata;
@@ -97,7 +87,7 @@ public class OptionsUtil {
         Map<String, String> props = schema.getProperties();
         setCommonProperties(schema, props);
         
-        String value = props.remove("VISIBLE"); 
+        String value = props.remove(DDLConstants.VISIBLE); 
         if (value != null) {
             schema.setVisible(isTrue(value));
         }	
@@ -109,7 +99,7 @@ public class OptionsUtil {
         }       
         removeCommonProperty(key, schema);	
         
-        if (key.equals("VISIBLE")) {
+        if (key.equals(DDLConstants.VISIBLE)) {
         	schema.setVisible(false);
         }
 	}

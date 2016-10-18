@@ -96,7 +96,7 @@ public class IntegrationTestDeployment {
 	@Test
 	public void testVDBDeployment() throws Exception {
 		Collection<?> vdbs = admin.getVDBs();
-		assertTrue(vdbs.isEmpty());
+		assertTrue(vdbs.toString(), vdbs.isEmpty());
 		
 		Collection<String> dsNames = admin.getDataSourceNames();
 		if (dsNames.contains("Oracle11_PushDS")) {
@@ -599,7 +599,7 @@ public class IntegrationTestDeployment {
 				"</vdb>";
 		
 		Collection<?> vdbs = admin.getVDBs();
-		assertTrue(vdbs.isEmpty());
+		assertTrue(vdbs.toString(), vdbs.isEmpty());
 		
 		JavaArchive jar = getLoopyArchive();
 		admin.deploy("loopy.jar", jar.as(ZipExporter.class).exportAsInputStream());
@@ -650,7 +650,7 @@ public class IntegrationTestDeployment {
 				"</vdb>";
 		
 		Collection<?> vdbs = admin.getVDBs();
-		assertTrue(vdbs.isEmpty());
+		assertTrue(vdbs.toString(), vdbs.isEmpty());
 		
 		JavaArchive jar = getLoopyArchive();
 		admin.deploy("loopy.jar", jar.as(ZipExporter.class).exportAsInputStream());
@@ -671,7 +671,7 @@ public class IntegrationTestDeployment {
 	
 	@Test public void testErrorDeployment() throws Exception {
 		Collection<?> vdbs = admin.getVDBs();
-		assertTrue(vdbs.isEmpty());
+		assertTrue(vdbs.toString(), vdbs.isEmpty());
 		
 		admin.deploy("error-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("error-vdb.xml")));
 		
@@ -717,7 +717,7 @@ public class IntegrationTestDeployment {
 				"</vdb>";
 		
 		Collection<?> vdbs = admin.getVDBs();
-		assertTrue(vdbs.isEmpty());
+		assertTrue(vdbs.toString(), vdbs.isEmpty());
 		
 		JavaArchive jar = getLoopyArchive();
 		admin.deploy("loopy.jar", jar.as(ZipExporter.class).exportAsInputStream());

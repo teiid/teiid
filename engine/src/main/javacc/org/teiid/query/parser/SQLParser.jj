@@ -187,8 +187,6 @@ TOKEN : /* Reserved words */
 |   <CRITERIA: "criteria">
 |   <CROSS: "cross">
 |   <CURSOR: "cursor">
-|   <DATA: "data">
-|   <DATABASE: "database">
 |   <DAY: "day">
 |   <DEALLOCATE: "deallocate">
 |   <DEFAULT_KEYWORD: "default">
@@ -288,7 +286,6 @@ TOKEN : /* Reserved words */
 |   <PRECISION: "precision">
 |   <PREPARE: "prepare">
 |   <PRIMARY: "primary">
-|   <PRIVILEGES: "privileges">
 |   <PROCEDURE: "procedure">
 |   <RANGE: "range">
 |   <READS: "reads">
@@ -299,7 +296,6 @@ TOKEN : /* Reserved words */
 |   <RETURNS: "returns">
 |   <REVOKE: "REVOKE">
 |   <RIGHT: "right">
-|   <ROLE: "role">
 |   <ROLLBACK: "ROLLBACK">
 |   <ROLLUP: "ROLLUP">
 |   <ROW: "row">
@@ -308,7 +304,6 @@ TOKEN : /* Reserved words */
 |   <SCROLL: "scroll">
 |   <SEARCH: "search">
 |   <SECOND: "second">
-|   <SCHEMA: "schema">
 |   <SELECT: "select">
 |   <SENSITIVE: "sensitive">
 |   <SESSION_USER: "session_user">
@@ -337,7 +332,6 @@ TOKEN : /* Reserved words */
 |   <UNION: "union">
 |   <UNIQUE: "unique">
 |   <UNKNOWN: "unknown">
-|   <USE: "use">
 |   <USER: "user">
 |   <UPDATE: "update">
 |   <USING: "using">
@@ -421,8 +415,6 @@ TOKEN : /* SQL/MED Reserved words */
 |   <DLURLSERVER: "dlurlserver">
 |   <DLVALUE: "dlvalue">
 |   <IMPORT: "import">
-|   <SERVER: "server">
-|   <WRAPPER: "wrapper">
 }
 
 TOKEN : /* NonReserved words */
@@ -511,9 +503,17 @@ TOKEN : /* NonReserved words */
 |   <JAAS: "jaas">
 |   <CONDITION: "condition">
 |   <MASK: "mask">
-|   <NONE: "none">
 |   <ACCESS: "access">
 |   <CONTROL: "control">
+|   <NONE: "none">
+|   <DATA: "data">
+|   <DATABASE: "database">
+|   <PRIVILEGES: "privileges">
+|   <SCHEMA: "schema">
+|   <ROLE: "role">
+|   <USE: "use">
+|   <SERVER: "server">
+|   <WRAPPER: "wrapper">
 }
 /*
 name=all in group identifier
@@ -622,7 +622,7 @@ Token nonReserved() :
      |<SQL_TSI_SECOND>|<SQL_TSI_MINUTE>|<SQL_TSI_HOUR>|<SQL_TSI_DAY>|<SQL_TSI_WEEK>|<SQL_TSI_MONTH>|<SQL_TSI_QUARTER>|<SQL_TSI_YEAR>|<TEXTTABLE>|<ARRAYTABLE>
      |<SELECTOR>|<SKIP_KEYWORD>|<WIDTH>|<PASSING>|<NAME>|<ENCODING>|<COLUMNS>|<DELIMITER>|<QUOTE>|<HEADER>|<NULLS>|<OBJECTTABLE>
      |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>|<VARIADIC>|<RAISE>|<EXCEPTION>|<CHAIN>|<JSONARRAY_AGG>|<JSONOBJECT>|<PRESERVE>|<UPSERT>
-     |<TYPE>|<TRANSLATOR>|<JAAS>|<CONDITION>|<MASK>|<NONE>|<ACCESS>|<CONTROL>)
+     |<TYPE>|<TRANSLATOR>|<JAAS>|<CONDITION>|<MASK>|<ACCESS>|<CONTROL>|<NONE>|<DATA>|<DATABASE>|<PRIVILEGES>|<ROLE>|<SCHEMA>|<USE>)
     {
     	return getToken(0);
     }	
@@ -1047,6 +1047,7 @@ Statement statement(ParseInfo info) :
       stmt = delimitedStatement(info)
 	 )
 	)
+    
     {
         return stmt;
     }
@@ -5104,7 +5105,7 @@ void useSchema(DatabaseStore dbStore) :
     String name = null;
 }
 { 
-    <USE> <SCHEMA> (name = id(null) 
+    <SET> <SCHEMA> (name = id(null) 
     {
         dbStore.schemaSwitched(name);
     })
@@ -5452,13 +5453,6 @@ CreateProcedureCommand createDDLProcedure(DatabaseStore dbStore, ParseInfo info)
 	     |
 	     returnDataType = parseDataType())
 	    ]
-        [<SERVER> serverName=id(null) 
-            {
-                if (!virtual) {
-                    proc.setServer(serverName);
-                }
-            } 
-        ] 
 	    [ optionsClause(proc, factory)
 		   {
 		      OptionsUtil.setOptions(proc);
@@ -5720,13 +5714,6 @@ void createTableBody(Table table, MetadataFactory factory) :
 	]
     )*
     <RPAREN>
-    [<SERVER> serverName=id(null) 
-        {
-            if (!table.isVirtual()) {
-                table.setServer(serverName);
-            }
-        }
-    ]    
     [optionsClause(table, factory)
 	   {
 	      OptionsUtil.setOptions(table);

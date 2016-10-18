@@ -79,7 +79,7 @@ public class TestParser {
 	}
 
 	static void helpTest(String sql, String expectedString, Command expectedCommand, ParseInfo info,
-			DatabaseStorage storage, String vdbName, String vdbVersion, String schemaName) {
+			DatabaseStore storage, String vdbName, String vdbVersion, String schemaName) {
 		Command actualCommand = null;
 		String actualString = null;
 		try {
@@ -5297,8 +5297,6 @@ public class TestParser {
 
     @Test public void testDDL() {
     	String sql = "CREATE DATABASE FOO";
-    	Query query = new Query();
-    	query.setSelect(new Select(Arrays.asList(new Constant(sql))));
     	
     	DatabaseStore store = new DatabaseStore() {
 			@Override
@@ -5311,12 +5309,12 @@ public class TestParser {
 			}
 		};    	
 		
-		store.startEditing();
+		store.startEditing(true);
     	store.databaseCreated(new Database("x", "1"));
     	store.stopEditing();
     	
     	DatabaseStorage storage = Mockito.mock(DatabaseStorage.class);
-    	Mockito.stub(storage.getStore()).toReturn(store);
-        helpTest(sql, "SELECT 'CREATE DATABASE FOO'", query, new ParseInfo(), storage, "x", "1", null);
+    	store.setDatabaseStorage(storage);
+        helpTest(sql, "CREATE DATABASE FOO", new ImmediateDDLCommand(sql), new ParseInfo(), store, "x", "1", null);
     }
 }

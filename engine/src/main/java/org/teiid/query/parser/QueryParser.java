@@ -22,8 +22,8 @@
 
 package org.teiid.query.parser;
 
-import static org.teiid.query.parser.SQLParserConstants.tokenImage;
-import static org.teiid.query.parser.TeiidSQLParserTokenManager.INVALID_TOKEN;
+import static org.teiid.query.parser.SQLParserConstants.*;
+import static org.teiid.query.parser.TeiidSQLParserTokenManager.*;
 
 import java.io.Reader;
 import java.io.StringReader;
@@ -35,20 +35,17 @@ import java.util.TreeSet;
 
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.language.SQLConstants;
-import org.teiid.metadata.Database;
+import org.teiid.metadata.Datatype;
 import org.teiid.metadata.MetadataException;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Parser;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.metadata.DatabaseStorage;
 import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.metadata.MetadataFactoryBasedDatabaseStorage;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.Select;
-import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.lang.ImmediateDDLCommand;
 import org.teiid.query.sql.symbol.Expression;
 
 /**
@@ -150,10 +147,10 @@ public class QueryParser implements Parser {
     }
 
 	public Command parseCommand(String sql, ParseInfo parseInfo, boolean designerCommands) throws QueryParserException {
-		return parseCommand(sql, parseInfo, false, null, null, null, null);
+		return parseCommand(sql, parseInfo, designerCommands, null, null, null, null);
 	}    
 	
-	public Command parseCommand(String sql, ParseInfo parseInfo, boolean designerCommands, DatabaseStorage storage,
+	public Command parseCommand(final String sql, ParseInfo parseInfo, boolean designerCommands, DatabaseStore store,
 			String vdbName, String vdbVersion, String schemaName) throws QueryParserException {
         if(sql == null || sql.length() == 0) {
              throw new QueryParserException(QueryPlugin.Event.TEIID30377, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30377));
@@ -171,30 +168,23 @@ public class QueryParser implements Parser {
         	if(sql.startsWith(XML_OPEN_BRACKET) || sql.startsWith(XQUERY_DECLARE)) {
             	 throw new QueryParserException(QueryPlugin.Event.TEIID30378, convertParserException(pe), QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30378, sql));
             }
-        	if (storage != null && storage.getStore() != null && vdbName != null) {
-        		DatabaseStore store = storage.getStore();
-        		// only allow on existing databases
-        		Database db = store.getDatabase(vdbName, vdbVersion);
-        		if (db != null) {
-	        		try {
-	        			storage.startRecording(true);
-	        			store.startEditing();
-	        			store.databaseSwitched(vdbName, vdbVersion);
-	        			if (schemaName != null) {
-	        				store.schemaSwitched(schemaName);	        				
-	        			}
-	        			parseDDL(store, new StringReader(sql));
-	        	        Select select = new Select();
-	        	        select.addSymbol( new Constant( sql ) );    //$NON-NLS-1$
-	        	        Query query = new Query();
-	        	        query.setSelect(select);
-	        	        return query;
-	        		} catch (Exception e) {
-	        			throw e;
-	        		} finally {
-	        			store.stopEditing();
-	        			storage.stopRecording();
-	        		}
+        	if (store != null && vdbName != null) {
+        		try {
+        			store.startEditing(true);
+        			store.databaseSwitched(vdbName, vdbVersion);
+        			if (schemaName != null) {
+        			    store.schemaSwitched(schemaName);
+        			}
+        			parseDDL(store, new StringReader(sql));
+        			return new ImmediateDDLCommand(sql);
+        		} catch (MetadataException e) {
+        		    if (e.getCause() instanceof QueryParserException) {
+        		        throw (QueryParserException)e.getCause();
+        		    }
+        		    //hack to get a warning
+        			throw new QueryParserException(e, e.getMessage());
+        		} finally {
+        			store.stopEditing();
         		}
         	}
     		throw convertParserException(pe);
@@ -501,18 +491,33 @@ public class QueryParser implements Parser {
     	parseDDL(factory, new StringReader(ddl));
     }
     
-    public void parseDDL(MetadataFactory factory, Reader ddl) {
+    public void parseDDL(final MetadataFactory factory, Reader ddl) {
         MetadataFactoryBasedDatabaseStorage source = new MetadataFactoryBasedDatabaseStorage(factory);
-        source.getStore().startEditing();
+        DatabaseStore store = new DatabaseStore() {
+            @Override
+            public Map<String, Datatype> getRuntimeTypes() {
+                return factory.getDataTypes();
+            }
+            @Override
+            public Map<String, Datatype> getBuiltinDataTypes() {
+                return factory.getBuiltinDataTypes();
+            } 
+            @Override
+            protected void deployCurrentVDB() {
+                // snub out default behavior
+            }            
+        };
+        store.setDatabaseStorage(source);
+        store.startEditing(true);
         try {
-            source.load();
-            parseDDL(source.getStore(), ddl);
-            Map<String, String> colNs = ((DatabaseStore)source.getStore()).getNameSpaces();
+            source.load(store);
+            parseDDL(store, ddl);
+            Map<String, String> colNs = store.getNameSpaces();
             for (String key:colNs.keySet()) {
                 factory.addNamespace(key, colNs.get(key));    
             }
         } finally {
-            source.getStore().stopEditing();
+            store.stopEditing();
         }
     }
 

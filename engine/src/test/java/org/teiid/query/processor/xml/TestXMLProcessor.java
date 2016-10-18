@@ -610,17 +610,17 @@ public class TestXMLProcessor {
             new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING });
 
         // Create new XML recursion tests virtual groups
-        QueryNode xqtDataGroup = new QueryNode("SELECT intKey as key, intNum as \"data\", (intKey + 2) as nextKey FROM xqt.data"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode xqtDataGroup = new QueryNode("SELECT intKey as key, intNum as data, (intKey + 2) as nextKey FROM xqt.data"); //$NON-NLS-1$ //$NON-NLS-2$
         Table objData = RealMetadataFactory.createVirtualGroup("xqtData", xqttest, xqtDataGroup); //$NON-NLS-1$
         
-        QueryNode rsGroup = new QueryNode("SELECT key as ID, \"data\" as CODE, nextKey as supervisorID FROM xqttest.xqtData"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsGroup = new QueryNode("SELECT key as ID, data as CODE, nextKey as supervisorID FROM xqttest.xqtData"); //$NON-NLS-1$ //$NON-NLS-2$
         Table objGroup = RealMetadataFactory.createVirtualGroup("group", xqttest, rsGroup); //$NON-NLS-1$
         
-        QueryNode rsSupervisor = new QueryNode("SELECT key as ID, \"data\" as CODE, nextKey as groupID FROM xqttest.xqtData WHERE key = ?"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsSupervisor = new QueryNode("SELECT key as ID, data as CODE, nextKey as groupID FROM xqttest.xqtData WHERE key = ?"); //$NON-NLS-1$ //$NON-NLS-2$
         rsSupervisor.addBinding("xqttest.group.supervisorID"); //$NON-NLS-1$
         Table objSupervisor = RealMetadataFactory.createVirtualGroup("supervisor", xqttest, rsSupervisor); //$NON-NLS-1$
 
-        QueryNode rsGroup1 = new QueryNode("SELECT key as ID, \"data\" as CODE, nextKey as supervisorID FROM xqttest.xqtData WHERE key = ?"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode rsGroup1 = new QueryNode("SELECT key as ID, data as CODE, nextKey as supervisorID FROM xqttest.xqtData WHERE key = ?"); //$NON-NLS-1$ //$NON-NLS-2$
         rsGroup1.addBinding("xqttest.supervisor.groupID"); //$NON-NLS-1$
         Table objGroup1 = RealMetadataFactory.createVirtualGroup("group1", xqttest, rsGroup1); //$NON-NLS-1$
         

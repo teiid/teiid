@@ -23,10 +23,10 @@ package org.teiid.query.metadata;
 
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -35,26 +35,8 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.events.EventDistributor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.DataWrapper;
-import org.teiid.metadata.Database;
-import org.teiid.metadata.Datatype;
-import org.teiid.metadata.DuplicateRecordException;
-import org.teiid.metadata.FunctionMethod;
-import org.teiid.metadata.FunctionParameter;
-import org.teiid.metadata.Grant;
-import org.teiid.metadata.MetadataException;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.MetadataStore;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.ProcedureParameter;
-import org.teiid.metadata.Role;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Server;
-import org.teiid.metadata.Table;
+import org.teiid.metadata.*;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.metadata.DatabaseStorage.PersistenceProxy;
 import org.teiid.query.parser.OptionsUtil;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.util.ResolverUtil;
@@ -64,21 +46,23 @@ import org.teiid.query.validator.ValidatorReport;
 import org.teiid.vdb.runtime.VDBKey;
 
 public abstract class DatabaseStore {
-    private LinkedHashMap<VDBKey, Database> databases = new LinkedHashMap<VDBKey, Database>();
+    private ConcurrentHashMap<VDBKey, Database> databases = new ConcurrentHashMap<VDBKey, Database>();
     private Database currentDatabase;
     private Schema currentSchema;
     private ReentrantLock lock = new ReentrantLock();
     protected EventDistributor functionalStore; 
     private boolean metadataReloadRequired = false;
     protected int count;
-    private PersistenceProxy persistenceProxy;
+    private DatabaseStorage databaseStorage;
     private boolean save = false;
+    private boolean persist;
    
     public abstract Map<String, Datatype> getRuntimeTypes();
     public abstract Map<String, Datatype> getBuiltinDataTypes();
     
-    public void startEditing() {
+    public void startEditing(@SuppressWarnings("hiding") boolean persist) {
         this.lock.lock();
+        this.persist = persist;
     }
 
     public void stopEditing() {
@@ -86,6 +70,7 @@ public abstract class DatabaseStore {
         this.currentDatabase = null;
         this.currentSchema = null;
         this.metadataReloadRequired = false;
+        this.persist = false;
         lock.unlock();
     }
     
@@ -148,7 +133,6 @@ public abstract class DatabaseStore {
             try {
                 functionalStore.dropDatabase(db);
             } catch (MetadataException e) {
-                this.databases.put(vdbKey(db), db);
                 throw e;
             }
         }
@@ -161,9 +145,9 @@ public abstract class DatabaseStore {
         }
 
         // remove from persistence store
-        if (this.persistenceProxy != null) {
-            this.persistenceProxy.drop(db);
-        }        
+        if (persist && databaseStorage != null) {
+            this.databaseStorage.drop(db);
+        }
     }
 
     
@@ -173,13 +157,14 @@ public abstract class DatabaseStore {
         Database db = this.databases.get(new VDBKey(dbName, version));
         if (db == null) {
             throw new MetadataException(QueryPlugin.Event.TEIID31231,
-                    QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31231, dbName));                        
+                    QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31231, dbName, version));                        
         }
         
         if (currentDatabase != null && !this.currentDatabase.equals(db)) {
             // before switching make sure the db is valid
             deployCurrentVDB();            
         }
+        
         this.currentDatabase = db;
     }
     
@@ -189,8 +174,24 @@ public abstract class DatabaseStore {
             TransformationMetadata metadata = new TransformationMetadata(this.currentDatabase);
             VDBMetaData vdb = metadata.getVdbMetaData();
             vdb.addAttchment(QueryMetadataInterface.class, metadata);
-        	
-            checkValidity(metadata, this.currentDatabase.getMetadataStore());
+
+            boolean success = false;
+            try {
+                checkValidity(metadata, this.currentDatabase.getMetadataStore());
+                success = true;
+            } finally {
+                if (!success) {
+                    //remove as the current instance is corrupted
+                    this.databases.remove(new VDBKey(this.currentDatabase.getName(), this.currentDatabase.getVersion()));
+                    Database db = this.currentDatabase;
+                    this.currentDatabase = null;
+                    if (databaseStorage != null) {
+                        this.databaseStorage.restore(this, db);
+                    }
+                    metadataReloadRequired = false;
+                    save = false;
+                }
+            }
             
             if (this.metadataReloadRequired) {
                 if (this.functionalStore != null) {
@@ -199,8 +200,10 @@ public abstract class DatabaseStore {
                 this.metadataReloadRequired = false;
             } 
             
-            if (this.persistenceProxy != null && this.save) {
-                this.persistenceProxy.save(this.currentDatabase);
+            if (this.save) {
+                if (persist && databaseStorage != null) {
+                    this.databaseStorage.save(this.currentDatabase);
+                }
                 this.save = false;
             }
         }
@@ -446,12 +449,7 @@ public abstract class DatabaseStore {
     
     public Database getDatabase(String dbName, String version) {
         VDBKey key  =  new VDBKey(dbName, version);
-        Database db = this.databases.get(key);
-        if (db == null) {
-            throw new MetadataException(QueryPlugin.Event.TEIID31231,
-                    QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31231, dbName, version));                        
-        }
-        return db;
+        return this.databases.get(key);
     }
 
     public List<Database> getDatabases() {
@@ -887,7 +885,7 @@ public abstract class DatabaseStore {
     public static MetadataFactory createMF(DatabaseStore events) {
         MetadataFactory mf = new MetadataFactory(events.getCurrentDatabase().getName(), events.getCurrentDatabase().getVersion(),
                 events.getCurrentSchema().getName(), events.getRuntimeTypes(), new Properties(), null);
-        Map<String, String> nss = ((DatabaseStore)events).getNameSpaces();
+        Map<String, String> nss = events.getNameSpaces();
         for (String key:nss.keySet()) {
             mf.addNamespace(key, nss.get(key));    
         }
@@ -932,39 +930,36 @@ public abstract class DatabaseStore {
         schema.setUUID("tid:" + MetadataFactory.hex(msb, 12)); //$NON-NLS-1$        
     }
     
-    public void register(DatabaseStorage.PersistenceProxy proxy) {
-        this.persistenceProxy = proxy;
+    public void setDatabaseStorage(DatabaseStorage databaseStorage) {
+        this.databaseStorage = databaseStorage;
     }
     
-    public static String processDDL(DatabaseStorage storage, String dbName, String version, String schema, String ddl,
+    public String processDDL(String dbName, String version, String schema, String ddl,
             boolean persist) throws MetadataException {
         
         StringBuilder sb = new StringBuilder();
-        DatabaseStore store = storage.getStore();
-        storage.startRecording(persist);
-        store.startEditing();
+        startEditing(persist);
         try {
-            QueryParser parser = new QueryParser();
+            QueryParser parser = QueryParser.getQueryParser();
             if (dbName != null) {
-                String str = "USE DATABASE "+SQLStringVisitor.escapeSinglePart(dbName)+" VERSION '"+version+"'";
+                String str = "USE DATABASE "+SQLStringVisitor.escapeSinglePart(dbName)+" VERSION '"+version+"'"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 sb.append(str);
-                logNParse(parser, store, str);
+                logNParse(parser, this, str);
                 if (schema != null) {
-                    str = "USE SCHEMA "+SQLStringVisitor.escapeSinglePart(schema);
-                    sb.append(";");
+                    str = "SET SCHEMA "+SQLStringVisitor.escapeSinglePart(schema);  //$NON-NLS-1$
+                    sb.append(";"); //$NON-NLS-1$
                     sb.append(str);
-                    logNParse(parser, store, str);
+                    logNParse(parser, this, str);
                 }
             }
             if (sb.length() > 0) {
-                sb.append(";");
+                sb.append(";"); //$NON-NLS-1$
             }
             sb.append(ddl);
-            logNParse(parser, store, ddl);
+            logNParse(parser, this, ddl);
             return sb.toString();
         } finally {
-            store.stopEditing();
-            storage.stopRecording();
+            stopEditing();
         }        
     }
     private static void logNParse(QueryParser parser, DatabaseStore store, String sql) {

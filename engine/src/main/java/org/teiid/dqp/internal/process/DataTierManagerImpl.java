@@ -81,7 +81,6 @@ import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.CompositeMetadataStore.RecordHolder;
 import org.teiid.query.metadata.DDLConstants;
-import org.teiid.query.metadata.DatabaseStorage;
 import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.SystemMetadata;
@@ -1248,8 +1247,8 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 					if (getMetadataRepository(target, vdb) != null) {
 						getMetadataRepository(target, vdb).setProperty(vdbName, vdbVersion, target, key, strVal);
 					}
-					DatabaseStorage storage = vdb.getAttachment(DatabaseStorage.class);
-					if (storage != null) {
+					DatabaseStore store = vdb.getAttachment(DatabaseStore.class);
+					if (store != null) {
 						final String k = key;
 						final String v = strVal;
 						final Database.ResourceType type = (target == schema) ?  Database.ResourceType.SCHEMA :
@@ -1258,7 +1257,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 								(target instanceof FunctionMethod) ? Database.ResourceType.FUNCTION :
 								(target instanceof ProcedureParameter) ? Database.ResourceType.PARAMETER :
 								Database.ResourceType.COLUMN;
-						DatabaseStore store = storage.getStore();
 						DdlPlan.alterDatabaseStore(store, vdb.getName(), vdb.getVersion(), new DdlPlan.DDLChange() {
 							@Override
 							public void process(DatabaseStore store) {
@@ -1325,9 +1323,8 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				if (eventDistributor != null) {
 					eventDistributor.setColumnStats(vdbName, vdbVersion, table.getParent().getName(), table.getName(), columnName, columnStats);
 				}
-				DatabaseStorage storage = vdb.getAttachment(DatabaseStorage.class);
-				if (storage != null) {
-					DatabaseStore store = storage.getStore();
+                DatabaseStore store = vdb.getAttachment(DatabaseStore.class);
+				if (store != null) {
 					DdlPlan.alterDatabaseStore(store, vdb.getName(), vdb.getVersion(), new DdlPlan.DDLChange() {
 						@Override
 						public void process(DatabaseStore store) {
@@ -1360,9 +1357,8 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				if (eventDistributor != null) {
 					eventDistributor.setTableStats(vdbName, vdbVersion, table.getParent().getName(), table.getName(), tableStats);
 				}
-				storage = vdb.getAttachment(DatabaseStorage.class);
-				if (storage != null) {
-					DatabaseStore store = storage.getStore();
+				store = vdb.getAttachment(DatabaseStore.class);
+				if (store != null) {
 					DdlPlan.alterDatabaseStore(store, vdb.getName(), vdb.getVersion(), new DdlPlan.DDLChange() {
 						@Override
 						public void process(DatabaseStore store) {

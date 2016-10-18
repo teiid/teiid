@@ -22,9 +22,14 @@
 
 package org.teiid.query.optimizer;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.common.buffer.BlockedException;
+import org.teiid.common.buffer.TupleBatch;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
@@ -61,7 +66,44 @@ import org.teiid.query.util.CommandContext;
  */
 public class QueryOptimizer {
 	
-	private static final CommandPlanner XML_PLANNER = new XMLPlanner();
+    /**
+     * DDL is executed as a side effect of parsing, this dummy plan does nothing
+     */
+	private static ProcessorPlan DUMMY_UPDATE_PLAN = new ProcessorPlan() {
+        @Override
+        public void open() throws TeiidComponentException, TeiidProcessingException {
+            
+        }
+
+        @Override
+        public TupleBatch nextBatch() throws BlockedException,
+                TeiidComponentException, TeiidProcessingException {
+            TupleBatch zero = new TupleBatch(0, Arrays.asList(Arrays.asList(1)));
+            zero.setTerminationFlag(true);
+            return zero;
+        }
+
+        @Override
+        public List getOutputElements() {
+            return Command.getUpdateCommandSymbol();
+        }
+
+        @Override
+        public void close() throws TeiidComponentException {
+            
+        }
+
+        @Override
+        public ProcessorPlan clone() {
+            return this;
+        }
+        
+        public String toString() {
+            return "DDL"; //$NON-NLS-1$
+        };
+    };
+
+    private static final CommandPlanner XML_PLANNER = new XMLPlanner();
 	private static final CommandPlanner PROCEDURE_PLANNER = new ProcedurePlanner();
     private static final CommandPlanner BATCHED_UPDATE_PLANNER = new BatchedUpdatePlanner();
     private static final CommandPlanner DDL_PLANNER = new DdlPlanner();
@@ -176,6 +218,9 @@ public class QueryOptimizer {
 		case Command.TYPE_ALTER_VIEW:
 			result = DDL_PLANNER.optimize(command, idGenerator, metadata, capFinder, analysisRecord, context);
 			break;
+		case Command.TYPE_IMMEDIATE_DDL:
+		    result = DUMMY_UPDATE_PLAN;
+		    break;
 		default:
 			try {
 				if (command.getType() == Command.TYPE_QUERY && command instanceof Query && QueryResolver.isXMLQuery((Query)command, metadata)) {

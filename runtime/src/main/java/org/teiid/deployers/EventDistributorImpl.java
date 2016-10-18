@@ -335,7 +335,7 @@ public abstract class EventDistributorImpl implements EventDistributor {
 
     @Override
     public void reloadDatabase(Database database) {
-        getVdbRepository().removeVDB(database.getName(), database.getVersion(), true);
+        getVdbRepository().removeVDB(database.getName(), database.getVersion());
         createDatabase(database);
     }
     

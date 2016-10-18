@@ -57,7 +57,7 @@ import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.metadata.DatabaseStorage;
+import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempCapabilitiesFinder;
 import org.teiid.query.metadata.TempMetadataAdapter;
@@ -138,7 +138,8 @@ public class Request {
 	private Executor executor;
 	protected Options options;
 	protected PreParser preParser;
-	protected DatabaseStorage databaseStorage;
+	protected DatabaseStore databaseStore;
+    private boolean ddl;
 
     void initialize(RequestMessage requestMsg,
                               BufferManager bufferManager,
@@ -147,7 +148,7 @@ public class Request {
                               TempTableStore tempTableStore,
                               DQPWorkContext workContext,
                               SessionAwareCache<PreparedPlan> planCache,
-                              DatabaseStorage databaseStorage) {
+                              DatabaseStore databaseStore) {
 
         this.requestMsg = requestMsg;
         this.vdbName = workContext.getVdbName();        
@@ -160,7 +161,7 @@ public class Request {
         this.requestId = workContext.getRequestID(this.requestMsg.getExecutionId());
         this.connectorManagerRepo = workContext.getVDB().getAttachment(ConnectorManagerRepository.class);
         this.planCache = planCache;
-        this.databaseStorage = databaseStorage;
+        this.databaseStore = databaseStore;
     }
     
     public void setOptions(Options options) {
@@ -295,7 +296,7 @@ public class Request {
         validateWithVisitor(visitor, metadata, command);
     }
     
-    private Command parseCommand() throws QueryParserException {
+    private Command parseCommand(boolean prepared) throws QueryParserException {
     	if (requestMsg.getCommand() != null) {
     		return (Command)requestMsg.getCommand();
     	}
@@ -307,8 +308,9 @@ public class Request {
         	if (preParser != null) {
         		commandStr = preParser.preParse(commandStr, this.context);
         	}
-        	if (requestMsg.isVdbInEditMode()) {
-				return queryParser.parseCommand(commandStr, parseInfo, false, this.databaseStorage, vdbName, vdbVersion,
+        	if (requestMsg.isVdbEditMode() && !prepared) {
+        	    this.ddl = true;
+				return queryParser.parseCommand(commandStr, parseInfo, false, this.databaseStore, vdbName, vdbVersion,
 						requestMsg.getSchemaInContext());
         	}
         	return queryParser.parseCommand(commandStr, parseInfo, false);
@@ -410,9 +412,9 @@ public class Request {
      * @throws TeiidComponentException
      * @throws TeiidProcessingException 
      */
-    protected void generatePlan(boolean addLimit) throws TeiidComponentException, TeiidProcessingException {
+    protected void generatePlan(boolean prepared) throws TeiidComponentException, TeiidProcessingException {
     	createCommandContext();
-        Command command = parseCommand();
+        Command command = parseCommand(prepared);
         
         List<Reference> references = ReferenceCollectorVisitor.getReferences(command);
         
@@ -442,7 +444,7 @@ public class Request {
          * Adds a row limit to a query if Statement.setMaxRows has been called and the command
          * doesn't already have a limit clause.
          */
-        if (addLimit && requestMsg.getRowLimit() > 0 && command instanceof QueryCommand) {
+        if (!prepared && requestMsg.getRowLimit() > 0 && command instanceof QueryCommand) {
             QueryCommand query = (QueryCommand)command;
             if (query.getLimit() == null) {
                 query.setLimit(new Limit(null, new Constant(new Integer(requestMsg.getRowLimit()), DataTypeManager.DefaultDataClasses.INTEGER)));
@@ -486,7 +488,7 @@ public class Request {
     	
         initMetadata();
         
-        generatePlan(true);
+        generatePlan(false);
         
         postProcessXML();
         
@@ -528,5 +530,21 @@ public class Request {
 	public void setPreParser(PreParser preParser) {
 		this.preParser = preParser;
 	}
+	
+	public boolean isDdl() {
+        if (ddl) {
+            return true;
+        }
+        if (userCommand != null) {
+            switch (userCommand.getType()) {
+            case Command.TYPE_ALTER_PROC:
+            case Command.TYPE_ALTER_TRIGGER:
+            case Command.TYPE_ALTER_VIEW:
+            case Command.TYPE_IMMEDIATE_DDL:
+                return true;
+            }
+        }
+        return false;
+    }
 
 }

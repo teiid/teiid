@@ -51,7 +51,7 @@ import org.teiid.dqp.service.TransactionService;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.query.metadata.DatabaseStorage;
+import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.services.InternalEventDistributorFactory;
 
 
@@ -72,7 +72,7 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 	private final InjectedValue<SessionAwareCache> preparedPlanCacheInjector = new InjectedValue<SessionAwareCache>();
 	private final InjectedValue<SessionAwareCache> resultSetCacheInjector = new InjectedValue<SessionAwareCache>();
 	private final InjectedValue<InternalEventDistributorFactory> eventDistributorFactoryInjector = new InjectedValue<InternalEventDistributorFactory>();
-	private final InjectedValue<DatabaseStorage> databaseStorageInjector = new InjectedValue<DatabaseStorage>();
+	private final InjectedValue<DatabaseStore> databaseStoreInjector = new InjectedValue<DatabaseStore>();
 	
 	@Override
     public void start(final StartContext context) {
@@ -88,7 +88,7 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 		this.dqpCore.setEventDistributor(getEventDistributorFactoryInjector().getValue().getReplicatedEventDistributor());
 		this.dqpCore.setResultsetCache(getResultSetCacheInjector().getValue());
 		this.dqpCore.setPreparedPlanCache(getPreparedPlanCacheInjector().getValue());
-		this.dqpCore.setDatabaseStorage(getDatabaseStorageInjector().getValue());
+		this.dqpCore.setDatabaseStore(getDatabaseStoreInjector().getValue());
 		this.dqpCore.start(this);
 
 		
@@ -204,7 +204,7 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 		return eventDistributorFactoryInjector;
 	}
 	
-	public InjectedValue<DatabaseStorage> getDatabaseStorageInjector() {
-		return databaseStorageInjector;
+	public InjectedValue<DatabaseStore> getDatabaseStoreInjector() {
+		return databaseStoreInjector;
 	}	
 }

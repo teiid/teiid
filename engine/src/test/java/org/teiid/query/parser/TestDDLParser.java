@@ -785,7 +785,7 @@ public class TestDDLParser {
                 return getDataTypes();
             }
         }; 
-        store.startEditing();
+        store.startEditing(true);
         QueryParser.getQueryParser().parseDDL(store, new StringReader(ddl));
         store.stopEditing();
         if (store.getDatabases().isEmpty()) {
@@ -810,7 +810,7 @@ public class TestDDLParser {
 			helpParse("CREATE foreign FUNCTION convert(msg integer, type varchar) RETURNS varchar", "x");
 			fail();
 		} catch (org.teiid.metadata.ParseException e) {
-			assertEquals("TEIID30386 org.teiid.api.exception.query.QueryParserException: TEIID31100 Parsing error: Encountered \"CREATE foreign FUNCTION [*]convert[*](msg\" at line 1, column 25.\nWas expecting: \"none\" | id", e.getMessage());
+			assertEquals("TEIID30386 org.teiid.api.exception.query.QueryParserException: TEIID31100 Parsing error: Encountered \"CREATE foreign FUNCTION [*]convert[*](msg\" at line 1, column 25.\nWas expecting: id", e.getMessage());
 		}
 	}
 	

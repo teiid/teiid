@@ -144,7 +144,8 @@ public class SQLConstants {
 		
 		public static final String GEOMETRY = "GEOMETRY"; //$NON-NLS-1$
 		public static final String UPSERT = "UPSERT"; //$NON-NLS-1$
-		public static final String AUTHENTICATED = "AUTHENTICATED"; //$NON-NLS-1
+		//ddl
+		public static final String AUTHENTICATED = "AUTHENTICATED"; //$NON-NLS-1$
 	    public static final String TYPE = "TYPE"; //$NON-NLS-1$$
 	    public static final String TRANSLATOR = "TRANSLATOR"; //$NON-NLS-1$
         public static final String JAAS = "JAAS"; //$NON-NLS-1$
@@ -152,6 +153,15 @@ public class SQLConstants {
         public static final String MASK = "MASK"; //$NON-NLS-1$
         public static final String ACCESS = "ACCESS"; //$NON-NLS-1$
         public static final String CONTROL = "CONTROL"; //$NON-NLS-1$
+        public static final String DATABASE = "DATABASE"; //$NON-NLS-1$
+        public static final String DATA = "DATA"; //$NON-NLS-1$
+        public static final String PRIVILEGES = "PRIVILEGES"; //$NON-NLS-1$
+        public static final String ROLE = "ROLE"; //$NON-NLS-1$
+        public static final String SCHEMA = "SCHEMA"; //$NON-NLS-1$
+        public static final String USE = "USE"; //$NON-NLS-1$
+        public static final String SERVER = "SERVER"; //$NON-NLS-1$
+        public static final String WRAPPER = "WRAPPER"; //$NON-NLS-1$
+        public static final String NONE = "NONE"; //$NON-NLS-1$
 	}
 	
 	public interface Reserved {
@@ -221,7 +231,6 @@ public class SQLConstants {
 	    public static final String CURRENT_USER = "CURRENT_USER"; //$NON-NLS-1$
 	    public static final String CURSOR = "CURSOR"; //$NON-NLS-1$
 	    public static final String CYCLE = "CYCLE"; //$NON-NLS-1$
-	    public static final String DATABASE = "DATABASE"; //$NON-NLS-1$
 	    public static final String DATE = "DATE"; //$NON-NLS-1$
 	    public static final String DAY = "DAY"; //$NON-NLS-1$
 	    public static final String DEALLOCATE = "DEALLOCATE"; //$NON-NLS-1$
@@ -312,7 +321,6 @@ public class SQLConstants {
 		public static final String NCLOB = "NCLOB"; //$NON-NLS-1$
 		public static final String NEW = "NEW"; //$NON-NLS-1$
 		public static final String NO = "NO"; //$NON-NLS-1$
-	    public static final String NONE = "NONE"; //$NON-NLS-1$
 	    public static final String NOT = "NOT"; //$NON-NLS-1$
 	    public static final String NULL = "NULL"; //$NON-NLS-1$
 	    public static final String NUMERIC = "NUMERIC"; //$NON-NLS-1$
@@ -335,7 +343,6 @@ public class SQLConstants {
 	    public static final String PARAMETER = "PARAMETER"; //$NON-NLS-1$
 	    public static final String PARTITION = "PARTITION"; //$NON-NLS-1$
 	    public static final String PRECISION = "PRECISION"; //$NON-NLS-1$
-	    public static final String PRIVILEGES = "PRIVILEGES"; //$NON-NLS-1$	    
 	    public static final String PREPARE = "PREPARE"; //$NON-NLS-1$
 	    public static final String PRIMARY = "PRIMARY"; //$NON-NLS-1$
 	    public static final String PROCEDURE = "PROCEDURE"; //$NON-NLS-1$
@@ -350,13 +357,11 @@ public class SQLConstants {
 	    public static final String RETURNS = "RETURNS"; //$NON-NLS-1$
 	    public static final String REVOKE = "REVOKE"; //$NON-NLS-1$
 	    public static final String RIGHT = "RIGHT"; //$NON-NLS-1$
-	    public static final String ROLE = "ROLE"; //$NON-NLS-1$
 	    public static final String ROLLBACK = "ROLLBACK"; //$NON-NLS-1$
 	    public static final String ROLLUP = "ROLLUP"; //$NON-NLS-1$
 	    public static final String ROW = "ROW"; //$NON-NLS-1$
 	    public static final String ROWS = "ROWS"; //$NON-NLS-1$
 	    public static final String SAVEPOINT = "SAVEPOINT"; //$NON-NLS-1$
-	    public static final String SCHEMA = "SCHEMA"; //$NON-NLS-1$
 	    public static final String SCROLL = "SCROLL"; //$NON-NLS-1$
 	    public static final String SEARCH = "SEARCH"; //$NON-NLS-1$
 	    public static final String SECOND = "SECOND"; //$NON-NLS-1$
@@ -398,7 +403,6 @@ public class SQLConstants {
 	    public static final String UNIQUE = "UNIQUE"; //$NON-NLS-1$
 	    public static final String UNKNOWN = "UNKNOWN"; //$NON-NLS-1$
 		public static final String UPDATE = "UPDATE"; //$NON-NLS-1$
-		public static final String USE = "USE"; //$NON-NLS-1$
 		public static final String USER = "USER"; //$NON-NLS-1$
 		public static final String USING = "USING";	 //$NON-NLS-1$
 	    public static final String VALUE = "VALUE"; //$NON-NLS-1$
@@ -441,7 +445,6 @@ public class SQLConstants {
 	    public static final String XMLVALIDATE = "XMLVALIDATE"; //$NON-NLS-1$
 	    
 	    //SQL/MED
-	    public static final String DATA = "DATA"; //$NON-NLS-1$
 	    public static final String DATALINK = "DATALINK"; //$NON-NLS-1$
 	    public static final String DLNEWCOPY = "DLNEWCOPY"; //$NON-NLS-1$
 	    public static final String DLPREVIOUSCOPY = "DLPREVIOUSCOPY"; //$NON-NLS-1$
@@ -455,8 +458,6 @@ public class SQLConstants {
 	    public static final String DLURLSERVER = "DLURLSEVER"; //$NON-NLS-1$
 	    public static final String DLVALUE = "DLVALUE"; //$NON-NLS-1$
 	    public static final String IMPORT = "IMPORT"; //$NON-NLS-1$
-	    public static final String SERVER = "SERVER"; //$NON-NLS-1$
-	    public static final String WRAPPER = "WRAPPER"; //$NON-NLS-1$
 	}
         
     /**

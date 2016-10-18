@@ -73,7 +73,6 @@ public class CompositeVDB {
 	private VDBMetaData originalVDB;
 	private Collection<Future<?>> tasks = Collections.synchronizedSet(new HashSet<Future<?>>());
 	private VDBKey vdbKey;
-	private boolean reloading = false;
 	
     public CompositeVDB(VDBMetaData vdb, MetadataStore metadataStore,
             LinkedHashMap<String, VDBResources.Resource> visibilityMap, UDFMetaData udf, FunctionTree systemFunctions,
@@ -340,19 +339,4 @@ public class CompositeVDB {
 		return this.vdbKey;
 	}
 	
-	public void addConnectorManager(String connectorName, ConnectorManager mgr) {
-	    this.cmr.addConnectorManager(connectorName, mgr);
-	}
-	
-    public void removeConnectorManager(String connectorName) {
-        this.cmr.removeConnectorManager(connectorName);
-    }
-	
-    public boolean isReloading() {
-        return this.reloading;
-    }
-    
-    void setReloading(boolean f) {
-        this.reloading = f;
-    }
 }
