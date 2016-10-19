@@ -547,7 +547,11 @@ public final class FunctionMethods {
 		}
 		return Integer.valueOf(month/3 + 1);
 	}
-
+	
+	public static Object from_unixtime(Integer count) {
+	    return timestampAdd(NonReserved.SQL_TSI_SECOND, count, new Timestamp(0));
+	}
+	
 	//	================== Function = timestampadd =====================
 
 	public static Object timestampAdd(String intervalType, Integer count, Timestamp timestamp) {
