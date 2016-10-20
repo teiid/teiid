@@ -179,6 +179,8 @@ public class DDLStringVisitor {
 			if (table.isDeletePlanEnabled()) {
 				buildTrigger(name, DELETE, table.getDeletePlan());
 			}			
+		} else {
+		    append(SQLConstants.Tokens.SEMICOLON);
 		}
 	}
 
@@ -615,6 +617,8 @@ public class DDLStringVisitor {
 			String plan = procedure.getQueryPlan();
 			append(plan);
 		}
+		
+		append(SEMICOLON);
 	}
 
 	private String buildProcedureOptions(Procedure procedure) {
