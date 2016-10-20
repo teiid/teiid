@@ -249,10 +249,14 @@ public class CapabilitiesUtil {
         	
             if (!caps.supportsFunction(fullName)) {
             	//special handling for delayed rewrite of concat2
-            	return (schema == null && SourceSystemFunctions.CONCAT2.equalsIgnoreCase(fullName)
-                		&& caps.supportsFunction(SourceSystemFunctions.CONCAT) 
-                		&& caps.supportsFunction(SourceSystemFunctions.IFNULL)
-                		&& caps.supportsCapability(Capability.QUERY_SEARCHED_CASE));
+                if(SourceSystemFunctions.CONCAT2.equalsIgnoreCase(fullName)){
+                    return (schema == null
+                            && caps.supportsFunction(SourceSystemFunctions.CONCAT) 
+                            && caps.supportsFunction(SourceSystemFunctions.IFNULL)
+                            && caps.supportsCapability(Capability.QUERY_SEARCHED_CASE));
+                } else {
+                    return false;
+                }
             }
             if (FunctionLibrary.isConvert(function)) {
                 Class<?> fromType = function.getArg(0).getType();
