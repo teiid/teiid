@@ -111,7 +111,7 @@ public class TestRowBasedSecurity {
 	}
 	
 	@Test public void testSelectFilterOuterJoin1() throws Exception {
-		TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table t (x string, y integer); create foreign table t1 (x string, y integer) create view v as select t.x, t1.y from t left outer join t1 on t.y = t1.y", "x", "y");
+		TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table t (x string, y integer); create foreign table t1 (x string, y integer); create view v as select t.x, t1.y from t left outer join t1 on t.y = t1.y", "x", "y");
 		BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
 		caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, false);
 		caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, false);

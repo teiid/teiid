@@ -193,7 +193,7 @@ public class TestDDLStringVisitor {
 	
 	@Test
 	public void testMultipleCommands() throws Exception {
-		String ddl = "CREATE VIEW V1 AS SELECT * FROM PM1.G1 " +
+		String ddl = "CREATE VIEW V1 AS SELECT * FROM PM1.G1; " +
 				"CREATE PROCEDURE FOO(P1 integer) RETURNS (e1 integer, e2 varchar) AS SELECT * FROM PM1.G1;";
 		String expected = "CREATE VIEW V1\n" + 
 				"AS\n" + 
@@ -201,7 +201,7 @@ public class TestDDLStringVisitor {
 				"\n" + 
 				"CREATE VIRTUAL PROCEDURE FOO(IN P1 integer) RETURNS TABLE (e1 integer, e2 string)\n" + 
 				"AS\n" + 
-				"SELECT * FROM PM1.G1;";
+				"SELECT * FROM PM1.G1;;";
 		helpTest(ddl, expected);
 		
 	}	
@@ -249,7 +249,7 @@ public class TestDDLStringVisitor {
 				"OPTIONS(RANDOM 'any', UUID 'uuid', NAMEINSOURCE 'nis', ANNOTATION 'desc', UPDATECOUNT '2');";
 		
 		String expected = "CREATE FOREIGN PROCEDURE myProc(OUT p1 boolean OPTIONS (foo 'bar'), IN p2 string, INOUT p3 bigdecimal) RETURNS OPTIONS (x 'y') TABLE (r1 string, r2 bigdecimal)\n" + 
-				"OPTIONS (UUID 'uuid', ANNOTATION 'desc', NAMEINSOURCE 'nis', UPDATECOUNT 2, RANDOM 'any')";
+				"OPTIONS (UUID 'uuid', ANNOTATION 'desc', NAMEINSOURCE 'nis', UPDATECOUNT 2, RANDOM 'any');";
 		helpTest(ddl, expected);		
 	}
 	
@@ -284,7 +284,7 @@ public class TestDDLStringVisitor {
 	public void testNonPushdownFunction1() throws Exception {
 		String ddl = "CREATE VIRTUAL FUNCTION SourceFunc(p1 integer, p2 string) RETURNS integer\n" + 
 				"as return repeat(p2, p1);";
-		String expected = "CREATE VIRTUAL FUNCTION SourceFunc(OUT \"return\" integer RESULT, IN p1 integer, IN p2 string)\nAS\nRETURN repeat(p2, p1);";
+		String expected = "CREATE VIRTUAL FUNCTION SourceFunc(OUT \"return\" integer RESULT, IN p1 integer, IN p2 string)\nAS\nRETURN repeat(p2, p1);;";
 		helpTest(ddl, expected);
 	}
 
@@ -299,7 +299,7 @@ public class TestDDLStringVisitor {
 		String ddl = "CREATE FOREIGN PROCEDURE myProc(OUT p1 boolean, VARIADIC p3 decimal) " +
 				"RETURNS (r1 varchar, r2 decimal);";
 		
-		String expected = "CREATE FOREIGN PROCEDURE myProc(OUT p1 boolean, VARIADIC p3 bigdecimal) RETURNS TABLE (r1 string, r2 bigdecimal)";
+		String expected = "CREATE FOREIGN PROCEDURE myProc(OUT p1 boolean, VARIADIC p3 bigdecimal) RETURNS TABLE (r1 string, r2 bigdecimal);";
 		helpTest(ddl, expected);		
 	}	
 	
@@ -317,7 +317,7 @@ public class TestDDLStringVisitor {
 	
 	@Test public void testGlobalTemporaryTable() throws Exception {
 		String ddl = "create global temporary table myTemp (x string, y serial, primary key (x))";
-		String expected = "CREATE GLOBAL TEMPORARY TABLE myTemp (\n	x string,\n	y SERIAL,\n	PRIMARY KEY(x)\n)";
+		String expected = "CREATE GLOBAL TEMPORARY TABLE myTemp (\n	x string,\n	y SERIAL,\n	PRIMARY KEY(x)\n);";
 		helpTest(ddl, expected);
 	}
 	
@@ -325,7 +325,7 @@ public class TestDDLStringVisitor {
 		String ddl = "CREATE FOREIGN PROCEDURE myProc(OUT p1 boolean, p2 varchar, INOUT p3 decimal) " +
 				"RETURNS (r1 varchar(100)[], r2 decimal[][])";
 		
-		String expected = "CREATE FOREIGN PROCEDURE myProc(OUT p1 boolean, IN p2 string, INOUT p3 bigdecimal) RETURNS TABLE (r1 string(100)[], r2 bigdecimal[][])";
+		String expected = "CREATE FOREIGN PROCEDURE myProc(OUT p1 boolean, IN p2 string, INOUT p3 bigdecimal) RETURNS TABLE (r1 string(100)[], r2 bigdecimal[][]);";
 		helpTest(ddl, expected);		
 	}
 	

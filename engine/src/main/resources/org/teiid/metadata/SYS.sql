@@ -225,7 +225,7 @@ CREATE FOREIGN TABLE VirtualDatabases (
 );
 
 CREATE FOREIGN PROCEDURE getXMLSchemas(IN document string NOT NULL) RETURNS TABLE (schema xml)
-OPTIONS (UPDATECOUNT 0)
+OPTIONS (UPDATECOUNT 0);
 
 CREATE VIEW spatial_ref_sys (
     srid integer primary key,

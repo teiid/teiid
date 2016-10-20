@@ -2480,7 +2480,7 @@ public class TestProcedureProcessor {
     }
     
     @Test public void testUDFCorrelated() throws Exception {
-        TransformationMetadata metadata = RealMetadataFactory.fromDDL("CREATE VIRTUAL FUNCTION f1(x integer) RETURNS string as return (select e1 from g1 where e2 = x/2); create foreign table g1 (e1 string, e2 integer);", "x", "y");
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("CREATE VIRTUAL FUNCTION f1(x integer) RETURNS string as return (select e1 from g1 where e2 = x/2);; create foreign table g1 (e1 string, e2 integer);", "x", "y");
         
         ProcessorPlan plan = helpGetPlan("select * from g1, table ( select f1 (g1.e2)) t;", metadata);
         CommandContext cc = TestProcessor.createCommandContext();

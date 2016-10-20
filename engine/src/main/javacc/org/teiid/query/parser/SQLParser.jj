@@ -4896,7 +4896,8 @@ unused=true
 {
 }
 {
-    (ddlStmt(factory))*
+    (ddlStmt(factory))?
+    (<SEMICOLON> [ddlStmt(factory)])*
     <EOF>     
 }
 
@@ -4911,8 +4912,8 @@ void ddlStmt(MetadataFactory factory) :
 	Command command = null; 
 }
 {
-	(LOOKAHEAD(3) 	createTable(factory) | 
-	 LOOKAHEAD(4)	createDDLProcedure(factory, ParseInfo.DEFAULT_INSTANCE) |
+	(LOOKAHEAD(3) 	createTable(factory) [LOOKAHEAD(3) createTable(factory) | createDDLProcedure(factory, ParseInfo.DEFAULT_INSTANCE)]| 
+	 LOOKAHEAD(4)	createDDLProcedure(factory, ParseInfo.DEFAULT_INSTANCE) [ ddlStmt(factory) ] |
 	 LOOKAHEAD(2)	createNameSpace(factory) |
 	 LOOKAHEAD(4)	alterStatement(factory) |
 	 LOOKAHEAD(4) 	command=createTrigger(ParseInfo.DEFAULT_INSTANCE)
@@ -4920,7 +4921,6 @@ void ddlStmt(MetadataFactory factory) :
 	 	createDDLTrigger(factory, (AlterTrigger)command);
 	 }
 	)
-	[<SEMICOLON>]
 }
 
 /*
