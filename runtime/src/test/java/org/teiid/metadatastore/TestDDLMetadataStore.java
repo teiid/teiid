@@ -56,6 +56,7 @@ import org.teiid.core.util.FileUtils;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.TeiidDriver;
+import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.metadata.Database;
 import org.teiid.net.TeiidURL;
 import org.teiid.query.metadata.DatabaseStore;
@@ -314,5 +315,56 @@ public class TestDDLMetadataStore {
         }
         s.execute("create view x as select 'a';");
         assertEquals(0, s.getUpdateCount());
+    }  
+    
+    @Test
+    public void testAlterViewWithoutReload() throws Exception {
+        EmbeddedConfiguration ec = new EmbeddedConfiguration();
+        ec.setUseDisk(false);
+        ec.setSecurityHelper(new ThreadLocalSecurityHelper());
+        es.addTranslator("y", new TestEmbeddedServer.FakeTranslator(false));
+        
+        DDLFileDatabaseStorage store = new DDLFileDatabaseStorage();
+        store.setProperties("location="+UnitTestUtil.getTestScratchPath());
+        ec.setDatabaseStorage(store);
+        es.start(ec);
+
+        Properties p = new Properties();
+        p.setProperty(TeiidURL.CONNECTION.VDBEDITMODE, "create");
+        Connection c = es.getDriver().connect("jdbc:teiid:empty", p);
+        Statement s = c.createStatement();
+        s.execute("create virtual schema s");
+        assertEquals(0, s.getUpdateCount());
+        s.execute("set schema s");
+        s.execute("create view x as select 'a';");
+        assertEquals(0, s.getUpdateCount());
+        s.execute("select session_id()");
+        ResultSet rs = s.getResultSet();
+        rs.next();
+        String val = rs.getString(1); 
+        s.execute("alter view x as select 'b';");
+        s.execute("select session_id()");
+        rs = s.getResultSet();
+        rs.next();
+        assertEquals(val, rs.getString(1));
+    }
+    
+    @Test(expected=TeiidSQLException.class)
+    public void testCreateDatabaseFails() throws Exception {
+        EmbeddedConfiguration ec = new EmbeddedConfiguration();
+        ec.setUseDisk(false);
+        ec.setSecurityHelper(new ThreadLocalSecurityHelper());
+        es.addTranslator("y", new TestEmbeddedServer.FakeTranslator(false));
+        
+        DDLFileDatabaseStorage store = new DDLFileDatabaseStorage();
+        store.setProperties("location="+UnitTestUtil.getTestScratchPath());
+        ec.setDatabaseStorage(store);
+        es.start(ec);
+
+        Properties p = new Properties();
+        p.setProperty(TeiidURL.CONNECTION.VDBEDITMODE, "create");
+        Connection c = es.getDriver().connect("jdbc:teiid:empty", p);
+        Statement s = c.createStatement();
+        s.execute("create database x");
     }  
 }

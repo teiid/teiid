@@ -40,6 +40,7 @@ import org.teiid.metadata.MetadataException;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Parser;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.metadata.DDLProcessor;
 import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.metadata.MetadataFactoryBasedDatabaseStorage;
 import org.teiid.query.sql.lang.CacheHint;
@@ -150,7 +151,7 @@ public class QueryParser implements Parser {
 		return parseCommand(sql, parseInfo, designerCommands, null, null, null, null);
 	}    
 	
-	public Command parseCommand(final String sql, ParseInfo parseInfo, boolean designerCommands, DatabaseStore store,
+	public Command parseCommand(final String sql, ParseInfo parseInfo, boolean designerCommands, DDLProcessor store,
 			String vdbName, String vdbVersion, String schemaName) throws QueryParserException {
         if(sql == null || sql.length() == 0) {
              throw new QueryParserException(QueryPlugin.Event.TEIID30377, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30377));
@@ -170,12 +171,7 @@ public class QueryParser implements Parser {
             }
         	if (store != null && vdbName != null) {
         		try {
-        			store.startEditing(true);
-        			store.databaseSwitched(vdbName, vdbVersion);
-        			if (schemaName != null) {
-        			    store.schemaSwitched(schemaName);
-        			}
-        			parseDDL(store, new StringReader(sql));
+        		    store.processDDL(vdbName, vdbVersion, schemaName, sql, true);
         			return new ImmediateDDLCommand(sql);
         		} catch (MetadataException e) {
         		    if (e.getCause() instanceof QueryParserException) {
@@ -183,8 +179,6 @@ public class QueryParser implements Parser {
         		    }
         		    //hack to get a warning
         			throw new QueryParserException(e, e.getMessage());
-        		} finally {
-        			store.stopEditing();
         		}
         	}
     		throw convertParserException(pe);

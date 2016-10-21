@@ -34,11 +34,11 @@ import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadatastore.DefaultDatabaseStore;
+import org.teiid.query.metadata.DDLProcessor;
 import org.teiid.query.metadata.DatabaseStorage;
-import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.services.InternalEventDistributorFactory;
 
-class DatabaseStorageService implements Service<DatabaseStore> {
+class DatabaseStorageService implements Service<DDLProcessor> {
     protected final InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
 	protected final InjectedValue<InternalEventDistributorFactory> eventDistributorFactoryInjector = new InjectedValue<InternalEventDistributorFactory>();
 	protected final InjectedValue<TranslatorRepository> translatorRepositoryInjector = new InjectedValue<TranslatorRepository>();
@@ -92,7 +92,7 @@ class DatabaseStorageService implements Service<DatabaseStore> {
 	}
 
 	@Override
-	public DatabaseStore getValue() throws IllegalStateException, IllegalArgumentException {
+	public DDLProcessor getValue() throws IllegalStateException, IllegalArgumentException {
 		return this.store;
 	}
 

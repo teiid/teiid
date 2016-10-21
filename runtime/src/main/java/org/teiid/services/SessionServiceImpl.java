@@ -49,7 +49,6 @@ import org.teiid.core.CoreConstants;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.deployers.VDBRepository;
-import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.service.SessionService;
 import org.teiid.dqp.service.SessionServiceException;
@@ -61,6 +60,9 @@ import org.teiid.logging.MessageLevel;
 import org.teiid.net.ServerConnection;
 import org.teiid.net.TeiidURL;
 import org.teiid.net.socket.AuthenticationType;
+import org.teiid.query.metadata.DDLProcessor;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.visitor.SQLStringVisitor;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.security.Credentials;
 import org.teiid.security.GSSResult;
@@ -90,6 +92,7 @@ public class SessionServiceImpl implements SessionService {
 	 */
 	private VDBRepository vdbRepository;
     protected SecurityHelper securityHelper;
+    private DDLProcessor ddlProcessor;
 
     private DQPCore dqp;
 
@@ -178,12 +181,15 @@ public class SessionServiceImpl implements SessionService {
 	        	    if (!vdbCreate) {
 	        	        throw new SessionServiceException(RuntimePlugin.Event.TEIID40046, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40046, vdbName, vdbVersion));
 	        	    }
-                    try {
-                        this.vdbRepository.createDB(vdbName, vdbVersion == null?"1":vdbVersion); //$NON-NLS-1$
-                    } catch (VirtualDatabaseException e) {
-                        throw new SessionServiceException(RuntimePlugin.Event.TEIID40045, e, e.getMessage());
+	        	    String version = vdbVersion == null?"1":vdbVersion; //$NON-NLS-1$
+                    if (this.ddlProcessor != null) {
+                        this.ddlProcessor.processDDL(null, null, null,
+                                "CREATE DATABASE " + SQLStringVisitor.escapeSinglePart(vdbName) + " VERSION " + new Constant(version), true); //$NON-NLS-1$ //$NON-NLS-2$
+                    } else {
+                        throw new SessionServiceException(RuntimePlugin.Event.TEIID40157,
+                                RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40157));         
                     }
-                    vdb = this.vdbRepository.getLiveVDB(vdbName, vdbVersion == null?"1":vdbVersion); //$NON-NLS-1$
+                    vdb = this.vdbRepository.getLiveVDB(vdbName, version); 
 	        	}
 	        }
 	
@@ -565,6 +571,10 @@ public class SessionServiceImpl implements SessionService {
     
     public boolean isAllowSecurityDomainQualifier() {
         return allowSecurityDomainQualifier;
+    }
+    
+    public void setDdlProcessor(DDLProcessor ddlProcessor) {
+        this.ddlProcessor = ddlProcessor;
     }
         
 }

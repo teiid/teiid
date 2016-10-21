@@ -23,18 +23,18 @@ CREATE SERVER "text-connector" TYPE 'NONE' FOREIGN DATA WRAPPER file OPTIONS ("j
 CREATE  SCHEMA MarketData SERVER "text-connector";
 
 CREATE FOREIGN PROCEDURE deleteFile(IN filePath string)
-OPTIONS (ANNOTATION 'Delete the given file path. ')
+OPTIONS (ANNOTATION 'Delete the given file path. ');
 
 CREATE FOREIGN PROCEDURE getFiles(IN pathAndPattern string OPTIONS (ANNOTATION 'The path and pattern of what files to return.  Currently the only pattern supported is *.<ext>, which returns only the files matching the given extension at the given path.')) RETURNS TABLE (file blob, filePath string)
-OPTIONS (ANNOTATION 'Returns files that match the given path and pattern as BLOBs')
+OPTIONS (ANNOTATION 'Returns files that match the given path and pattern as BLOBs');
 
 CREATE FOREIGN PROCEDURE getTextFiles(IN pathAndPattern string OPTIONS (ANNOTATION 'The path and pattern of what files to return.  Currently the only pattern supported is *.<ext>, which returns only the files matching the given extension at the given path.')) RETURNS TABLE (file clob, filePath string)
-OPTIONS (ANNOTATION 'Returns text files that match the given path and pattern as CLOBs')
+OPTIONS (ANNOTATION 'Returns text files that match the given path and pattern as CLOBs');
 
 CREATE FOREIGN PROCEDURE saveFile(IN filePath string, IN file object OPTIONS (ANNOTATION 'The contents to save.  Can be one of CLOB, BLOB, or XML'))
-OPTIONS (ANNOTATION 'Saves the given value to the given path.  Any existing file will be overriden.')
+OPTIONS (ANNOTATION 'Saves the given value to the given path.  Any existing file will be overriden.');
 --############ Schema:Accounts ############
-CREATE  SCHEMA Accounts SERVER "h2-connector" "none" OPTIONS ("importer.useFullSchemaName" 'false');
+CREATE  SCHEMA Accounts SERVER "h2-connector" none OPTIONS ("importer.useFullSchemaName" 'false');
 
 CREATE FOREIGN TABLE ACCOUNT (
 	ACCOUNT_ID integer,

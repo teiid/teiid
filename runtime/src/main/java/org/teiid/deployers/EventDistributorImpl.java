@@ -48,7 +48,6 @@ import org.teiid.logging.LogManager;
 import org.teiid.metadata.*;
 import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.metadatastore.AdminAwareEventDistributor;
-import org.teiid.query.function.FunctionTree;
 import org.teiid.query.metadata.DDLMetadataRepository;
 import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.metadata.DatabaseUtil;
@@ -182,14 +181,14 @@ public abstract class EventDistributorImpl implements EventDistributor {
 	public void setColumnStats(String vdbName, String vdbVersion,
 			String schemaName, String tableName, String columnName,
 			ColumnStats stats) {
-		Table t = getTable(vdbName, vdbVersion, schemaName, tableName);
+	    VDBMetaData vdb = getVdbRepository().getLiveVDB(vdbName, vdbVersion);
+        Table t = getTable(vdbName, vdbVersion, schemaName, tableName);
 		if (t == null) {
 			return;
 		}
 		Column c = t.getColumnByName(columnName);
 		if (c != null) {
-			c.setColumnStats(stats);
-			t.setLastModified(System.currentTimeMillis());
+			DdlPlan.setColumnStats(vdb, c, stats);
 		}
 	}
 	
@@ -202,12 +201,12 @@ public abstract class EventDistributorImpl implements EventDistributor {
 	@Override
 	public void setTableStats(String vdbName, String vdbVersion,
 			String schemaName, String tableName, TableStats stats) {
+	    VDBMetaData vdb = getVdbRepository().getLiveVDB(vdbName, vdbVersion);
 		Table t = getTable(vdbName, vdbVersion, schemaName, tableName);
 		if (t == null) {
 			return;
 		}
-		t.setTableStats(stats);
-		t.setLastModified(System.currentTimeMillis());
+		DdlPlan.setTableStats(vdb, t, stats);
 	}
 
 	private Table getTable(String vdbName, String vdbVersion, String schemaName,
@@ -246,7 +245,7 @@ public abstract class EventDistributorImpl implements EventDistributor {
 		if (t == null) {
 			return;
 		}
-		DdlPlan.alterInsteadOfTrigger(getVdbRepository().getLiveVDB(vdbName, vdbVersion), t, triggerDefinition, enabled, triggerEvent);
+		DdlPlan.alterInsteadOfTrigger(getVdbRepository().getLiveVDB(vdbName, vdbVersion), t, triggerDefinition, enabled, triggerEvent, true);
 	}
 	
 	@Override
@@ -265,7 +264,7 @@ public abstract class EventDistributorImpl implements EventDistributor {
 		if (p == null) {
 			return;
 		}
-		DdlPlan.alterProcedureDefinition(getVdbRepository().getLiveVDB(vdbName, vdbVersion), p, definition);
+		DdlPlan.alterProcedureDefinition(getVdbRepository().getLiveVDB(vdbName, vdbVersion), p, definition, true);
 	}
 	
 	@Override
@@ -280,7 +279,7 @@ public abstract class EventDistributorImpl implements EventDistributor {
 		if (t == null) {
 			return;
 		}
-		DdlPlan.alterView(getVdbRepository().getLiveVDB(vdbName, vdbVersion), t, definition);
+		DdlPlan.alterView(getVdbRepository().getLiveVDB(vdbName, vdbVersion), t, definition, true);
 	}
 	
 	@Override
@@ -302,13 +301,7 @@ public abstract class EventDistributorImpl implements EventDistributor {
 		}
 		AbstractMetadataRecord record = DataTierManagerImpl.getByUuid(tm.getMetadataStore(), uuid);
 		if (record != null) {
-			record.setProperty(name, value);
-			tm.addToMetadataCache(record, "transformation/matview", null); //$NON-NLS-1$
-			if (record instanceof Table) {
-				((Table)record).setLastModified(System.currentTimeMillis());
-			} else if (record instanceof Procedure) {
-				((Procedure)record).setLastModified(System.currentTimeMillis());
-			}
+		    DdlPlan.setProperty(vdb, record, name, value);
 		}
 	}
 	
@@ -464,13 +457,5 @@ public abstract class EventDistributorImpl implements EventDistributor {
         this.adminEventDistributor.dropServer(dbName, version, server);
         getConnectorManagerRepository().removeConnectorManager(server.getName());
     }
-    
-    @Override
-    public void validateRecord(String dbName, String version, AbstractMetadataRecord record) {
-        VDBMetaData vdb = getVdbRepository().getLiveVDB(dbName, version);
-        if (record instanceof FunctionMethod) {
-            ClassLoader classLoader = vdb.getAttachment(ClassLoader.class);
-            FunctionTree.validateFunction((FunctionMethod)record, classLoader);
-        }
-    }
+   
 }

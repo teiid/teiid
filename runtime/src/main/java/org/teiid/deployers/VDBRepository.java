@@ -60,7 +60,6 @@ import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.VDBResources;
-import org.teiid.query.sql.visitor.SQLStringVisitor;
 import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.query.validator.ValidatorFailure;
 import org.teiid.query.validator.ValidatorReport;
@@ -486,25 +485,8 @@ public class VDBRepository implements Serializable{
         this.objectReplictor = value;
     }
 
-	public DatabaseStore getDatabaseStore() {
-		return databaseStore;
-	}
-
-	public void setDatabaseStore(DatabaseStore databaseStore) {
-		this.databaseStore = databaseStore;
-	}
-	
 	NavigableMap<VDBKey, CompositeVDB> getVdbRepo() {
         return vdbRepo;
     }
 	
-	public void createDB(String vdbName, String version) throws VirtualDatabaseException {
-		if (this.databaseStore != null) {
-			this.databaseStore.processDDL(null, null, null,
-					"CREATE DATABASE " + SQLStringVisitor.escapeSinglePart(vdbName) + " VERSION '" + version + "'", true); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		} else {
-            throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40157,
-                    RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40157));			
-		}
-	}
 }

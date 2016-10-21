@@ -109,7 +109,7 @@ public class TestPartialFilters {
 	}
 	
 	@Test public void testFilterPlanningJoin() throws Exception {
-		String ddl = "create foreign table People (UserID string options (nameinsource 'uid'), Name string options (nameinsource 'cn'), dn string, vals string[]) options (nameinsource 'ou=people,dc=metamatrix,dc=com')"
+		String ddl = "create foreign table People (UserID string options (nameinsource 'uid'), Name string options (nameinsource 'cn'), dn string, vals string[]) options (nameinsource 'ou=people,dc=metamatrix,dc=com');"
 				+ "create foreign table People_Groups (user_dn string options (nameinsource 'dn'), group_dn string options (nameinsource 'memberOf', \"teiid_rel:partial_filter\" true)) options (nameinsource 'ou=people,dc=metamatrix,dc=com')";
 		BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
 		caps.setCapabilitySupport(Capability.PARTIAL_FILTERS, true);

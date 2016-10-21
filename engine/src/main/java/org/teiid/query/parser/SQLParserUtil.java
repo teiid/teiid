@@ -36,37 +36,15 @@ import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.language.SQLConstants;
-import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.metadata.BaseColumn;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.*;
 import org.teiid.metadata.FunctionMethod.PushDown;
-import org.teiid.metadata.FunctionParameter;
-import org.teiid.metadata.KeyRecord;
-import org.teiid.metadata.MetadataException;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.ProcedureParameter.Type;
-import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.metadata.DDLConstants;
 import org.teiid.query.metadata.DatabaseStore;
-import org.teiid.query.sql.lang.AlterTrigger;
-import org.teiid.query.sql.lang.CacheHint;
-import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.CompareCriteria;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
-import org.teiid.query.sql.lang.FromClause;
-import org.teiid.query.sql.lang.Limit;
-import org.teiid.query.sql.lang.Option;
-import org.teiid.query.sql.lang.QueryCommand;
-import org.teiid.query.sql.lang.SPParameter;
-import org.teiid.query.sql.lang.SetQuery;
-import org.teiid.query.sql.lang.SourceHint;
-import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.sql.lang.WithQueryCommand;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.Statement;
 import org.teiid.query.sql.symbol.Constant;
@@ -560,7 +538,7 @@ public class SQLParserUtil {
 	
 	void createDDLTrigger(DatabaseStore events, AlterTrigger trigger) {
 		GroupSymbol group = trigger.getTarget();
-		events.setTableTriggerPlan(group.getName(), trigger.getEvent(), trigger.getDefinition().toString());
+		events.setTableTriggerPlan(group.getName(), trigger.getEvent(), trigger.getDefinition().toString(), true);
 	}
 	
 	BaseColumn addProcColumn(MetadataFactory factory, Procedure proc, String name, ParsedDataType type, boolean rs) throws MetadataException {

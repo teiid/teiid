@@ -25,7 +25,6 @@ import java.util.List;
 
 import org.teiid.events.EventDistributor;
 import org.teiid.events.EventListener;
-import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.ColumnStats;
 import org.teiid.metadata.DataWrapper;
 import org.teiid.metadata.Database;
@@ -145,7 +144,4 @@ public class BaseEventDistributor implements EventDistributor {
     public void reloadDatabase(Database database) {
     }
 
-    @Override
-    public void validateRecord(String dbName, String version, AbstractMetadataRecord record) {
-    }
 }

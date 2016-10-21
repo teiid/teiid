@@ -79,16 +79,10 @@ public class TestParser {
 	}
 
 	static void helpTest(String sql, String expectedString, Command expectedCommand, ParseInfo info,
-			DatabaseStore storage, String vdbName, String vdbVersion, String schemaName) {
-		Command actualCommand = null;
-		String actualString = null;
-		try {
-			actualCommand = QueryParser.getQueryParser().parseCommand(sql, info, false, storage, vdbName, vdbVersion,
-					schemaName);
-			actualString = actualCommand.toString();
-		} catch(Throwable e) { 
-		    throw new RuntimeException(e);
-		}
+			DatabaseStore storage, String vdbName, String vdbVersion, String schemaName) throws QueryParserException {
+		Command actualCommand = QueryParser.getQueryParser().parseCommand(sql, info, false, storage, vdbName, vdbVersion,
+                schemaName);
+		String actualString = actualCommand.toString();
 
 		assertEquals("Parse string does not match: ", expectedString, actualString); //$NON-NLS-1$
 		assertEquals("Command objects do not match: ", expectedCommand, actualCommand);				 //$NON-NLS-1$
@@ -5295,7 +5289,7 @@ public class TestParser {
         helpTest(sql, "SELECT (1 && 2)", query);
     }
 
-    @Test public void testDDL() {
+    @Test public void testDDL() throws QueryParserException {
     	String sql = "CREATE DATABASE FOO";
     	
     	DatabaseStore store = new DatabaseStore() {
@@ -5315,6 +5309,13 @@ public class TestParser {
     	
     	DatabaseStorage storage = Mockito.mock(DatabaseStorage.class);
     	store.setDatabaseStorage(storage);
-        helpTest(sql, "CREATE DATABASE FOO", new ImmediateDDLCommand(sql), new ParseInfo(), store, "x", "1", null);
+        try {
+            helpTest(sql, sql, new ImmediateDDLCommand(sql), new ParseInfo(), store, "x", "1", null);
+            fail();
+        } catch (QueryParserException e) {
+            //should fail as we are trying to create a database under an existing one
+        }
+        sql = "CREATE SCHEMA X";
+        helpTest(sql, sql, new ImmediateDDLCommand(sql), new ParseInfo(), store, "x", "1", null);
     }
 }

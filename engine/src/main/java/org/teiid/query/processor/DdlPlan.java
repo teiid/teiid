@@ -39,12 +39,12 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.language.SQLConstants;
-import org.teiid.metadata.Database;
-import org.teiid.metadata.MetadataRepository;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.Table;
+import org.teiid.metadata.*;
+import org.teiid.metadata.Database.ResourceType;
 import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.metadata.DDLConstants;
+import org.teiid.query.metadata.DDLProcessor;
 import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.TransformationMetadata;
@@ -62,7 +62,10 @@ import org.teiid.query.util.CommandContext;
 public class DdlPlan extends ProcessorPlan {
 	
     class AlterProcessor extends LanguageVisitor {
-    	DQPWorkContext workContext = DQPWorkContext.getWorkContext();
+        DQPWorkContext workContext = getContext().getDQPWorkContext();
+        VDBMetaData vdb = getContext().getVdb();
+        TransformationMetadata metadata = vdb.getAttachment(TransformationMetadata.class);
+        DDLProcessor processor = getContext().getDDLProcessor();
     	
     	private MetadataRepository getMetadataRepository(VDBMetaData vdb, String schemaName) {
     		ModelMetaData model = vdb.getModel(schemaName);
@@ -71,35 +74,42 @@ public class DdlPlan extends ProcessorPlan {
     	
     	@Override
     	public void visit(AlterView obj) {
-    		VDBMetaData vdb = workContext.getVDB();
     		Table t = (Table)obj.getTarget().getMetadataID();
     		String sql = obj.getDefinition().toString();
-			if (getMetadataRepository(vdb, t.getParent().getName()) != null) {
-				getMetadataRepository(vdb, t.getParent().getName()).setViewDefinition(workContext.getVdbName(), workContext.getVdbVersion(), t, sql);
-			}
-    		alterView(vdb, t, sql);
-    		if (pdm.getEventDistributor() != null) {
-    			pdm.getEventDistributor().setViewDefinition(workContext.getVdbName(), workContext.getVdbVersion(), t.getParent().getName(), t.getName(), sql);
-			}
+
+    		if (processor != null && processor.vdbExists(vdb.getName(), vdb.getVersion())) {
+    		    processor.processDDL(vdb.getName(), vdb.getVersion(), t.getParent().getName(), obj.toString(), true);
+    	    } else {
+    	        if (getMetadataRepository(vdb, t.getParent().getName()) != null) {
+                    getMetadataRepository(vdb, t.getParent().getName()).setViewDefinition(workContext.getVdbName(), workContext.getVdbVersion(), t, sql);
+                }
+                alterView(vdb, t, sql, false);
+                if (pdm.getEventDistributor() != null) {
+                    pdm.getEventDistributor().setViewDefinition(workContext.getVdbName(), workContext.getVdbVersion(), t.getParent().getName(), t.getName(), sql);
+                }
+    	    }
     	}
 
     	@Override
     	public void visit(AlterProcedure obj) {
-    		VDBMetaData vdb = workContext.getVDB();
     		Procedure p = (Procedure)obj.getTarget().getMetadataID();
     		String sql = obj.getDefinition().toString();
-			if (getMetadataRepository(vdb, p.getParent().getName()) != null) {
-				getMetadataRepository(vdb, p.getParent().getName()).setProcedureDefinition(workContext.getVdbName(), workContext.getVdbVersion(), p, sql);
-			}
-    		alterProcedureDefinition(vdb, p, sql);
-    		if (pdm.getEventDistributor() != null) {
-    			pdm.getEventDistributor().setProcedureDefinition(workContext.getVdbName(), workContext.getVdbVersion(), p.getParent().getName(), p.getName(), sql);
-			}
+
+    		if (processor != null && processor.vdbExists(vdb.getName(), vdb.getVersion())) {
+    		    processor.processDDL(vdb.getName(), vdb.getVersion(), p.getParent().getName(), obj.toString(), true);
+            } else {
+                if (getMetadataRepository(vdb, p.getParent().getName()) != null) {
+                    getMetadataRepository(vdb, p.getParent().getName()).setProcedureDefinition(workContext.getVdbName(), workContext.getVdbVersion(), p, sql);
+                }
+                alterProcedureDefinition(vdb, p, sql, false);
+                if (pdm.getEventDistributor() != null) {
+                    pdm.getEventDistributor().setProcedureDefinition(workContext.getVdbName(), workContext.getVdbVersion(), p.getParent().getName(), p.getName(), sql);
+                }
+            }
     	}
 
     	@Override
     	public void visit(AlterTrigger obj) {
-    		VDBMetaData vdb = workContext.getVDB();
     		Table t = (Table)obj.getTarget().getMetadataID();
     		String sql = null;
     		TriggerEvent event = obj.getEvent();
@@ -115,21 +125,25 @@ public class DdlPlan extends ProcessorPlan {
     		} else if (getPlanForEvent(t, event) == null) {
 				 throw new TeiidRuntimeException(new TeiidProcessingException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30158, t.getName(), obj.getEvent())));
     		}
-			if (getMetadataRepository(vdb, t.getParent().getName()) != null) {
-				if (sql != null) {
-					getMetadataRepository(vdb, t.getParent().getName()).setInsteadOfTriggerDefinition(workContext.getVdbName(), workContext.getVdbVersion(), t, obj.getEvent(), sql);
-				} else {
-					getMetadataRepository(vdb, t.getParent().getName()).setInsteadOfTriggerEnabled(workContext.getVdbName(), workContext.getVdbVersion(), t, obj.getEvent(), obj.getEnabled());
-				}
-			}
-    		alterInsteadOfTrigger(vdb, t, sql, obj.getEnabled(), event);
-    		if (pdm.getEventDistributor() != null) {
-    			pdm.getEventDistributor().setInsteadOfTriggerDefinition(workContext.getVdbName(), workContext.getVdbVersion(), t.getParent().getName(), t.getName(), obj.getEvent(), sql, obj.getEnabled());
-			}
+			if (processor != null && processor.vdbExists(vdb.getName(), vdb.getVersion())) {
+                processor.processDDL(vdb.getName(), vdb.getVersion(), t.getParent().getName(), obj.toString(), true);
+            } else {
+                if (getMetadataRepository(vdb, t.getParent().getName()) != null) {
+                    if (sql != null) {
+                        getMetadataRepository(vdb, t.getParent().getName()).setInsteadOfTriggerDefinition(workContext.getVdbName(), workContext.getVdbVersion(), t, obj.getEvent(), sql);
+                    } else {
+                        getMetadataRepository(vdb, t.getParent().getName()).setInsteadOfTriggerEnabled(workContext.getVdbName(), workContext.getVdbVersion(), t, obj.getEvent(), obj.getEnabled());
+                    }
+                }
+                alterInsteadOfTrigger(vdb, t, sql, obj.getEnabled(), event, false);
+                if (pdm.getEventDistributor() != null) {
+                    pdm.getEventDistributor().setInsteadOfTriggerDefinition(workContext.getVdbName(), workContext.getVdbVersion(), t.getParent().getName(), t.getName(), obj.getEvent(), sql, obj.getEnabled());
+                }
+            }
     	}
     }
 
-	public static void alterView(final VDBMetaData vdb, final Table t, final String sql) {
+	public static void alterView(final VDBMetaData vdb, final Table t, final String sql, boolean updateStore) {
 		TransformationMetadata metadata = vdb.getAttachment(TransformationMetadata.class);
 		DatabaseStore store = vdb.getAttachment(DatabaseStore.class);
 		
@@ -147,21 +161,109 @@ public class DdlPlan extends ProcessorPlan {
 		t.setLastModified(System.currentTimeMillis());
 		metadata.addToMetadataCache(t, "transformation/"+SQLConstants.Reserved.SELECT, null); //$NON-NLS-1$
 		
-		if (store != null) {
+		if (store != null && updateStore) {
 			alterDatabaseStore(store, vdb.getName(), vdb.getVersion(), new DDLChange() {
 				@Override
 				public void process(DatabaseStore store) {
 					store.databaseSwitched(vdb.getName(), vdb.getVersion());
 					store.schemaSwitched(t.getParent().getName());
-					store.tableModified(t);
+					store.setViewDefinition(t.getName(), sql, false);
 				}
 			});
 		}
 	}
 	
+	public static String setProperty(final VDBMetaData vdb, final AbstractMetadataRecord record, final String key, final String value) {
+       TransformationMetadata metadata = vdb.getAttachment(TransformationMetadata.class);
+       DatabaseStore store = vdb.getAttachment(DatabaseStore.class);
+       String result = record.setProperty(key, value);
+       metadata.addToMetadataCache(record, "transformation/matview", null); //$NON-NLS-1$
+       if (record instanceof Table) {
+           ((Table)record).setLastModified(System.currentTimeMillis());
+       } else if (record instanceof Procedure) {
+           ((Procedure)record).setLastModified(System.currentTimeMillis());
+       }
+       if (store != null) {
+           final Database.ResourceType type = (record instanceof Schema) ?  Database.ResourceType.SCHEMA :
+                   (record instanceof Table) ? Database.ResourceType.TABLE :
+                   (record instanceof Procedure) ? Database.ResourceType.PROCEDURE :
+                   (record instanceof FunctionMethod) ? Database.ResourceType.FUNCTION :
+                   (record instanceof ProcedureParameter) ? Database.ResourceType.PARAMETER :
+                   Database.ResourceType.COLUMN;
+
+           //double check that the object is targetable
+           //TODO: all objects should be targetable by ddl eventually
+           if (type != ResourceType.COLUMN || (record instanceof Column && record.getParent() instanceof Table)) {
+               DdlPlan.alterDatabaseStore(store, vdb.getName(), vdb.getVersion(), new DdlPlan.DDLChange() {
+                   @Override
+                   public void process(DatabaseStore store) {
+                       store.databaseSwitched(vdb.getName(), vdb.getVersion());
+                       if (type.equals(Database.ResourceType.COLUMN)) {
+                           store.addOrSetOption(record.getParent().getName(), Database.ResourceType.TABLE,
+                                   record.getName(), type, key, value, false);
+                       } else if (type.equals(Database.ResourceType.PARAMETER)) {
+                           store.addOrSetOption(record.getParent().getName(), Database.ResourceType.PROCEDURE,
+                                   record.getName(), type, key, value, false);                                   
+                       } else {
+                           store.addOrSetOption(record.getFullName(), type, key, value, false);
+                       }
+                   }
+               });
+           }
+       }
+       return result;
+    }
+	
+	public static void setColumnStats(final VDBMetaData vdb, Column column, final ColumnStats columnStats) {
+        column.setColumnStats(columnStats);
+        if (column.getParent() instanceof Table) {
+            ((Table)column.getParent()).setLastModified(System.currentTimeMillis());
+        }
+        DatabaseStore store = vdb.getAttachment(DatabaseStore.class);
+        if (store != null) {
+            final String tableName = column.getParent().getName();
+            final String columnName = column.getName();
+            DdlPlan.alterDatabaseStore(store, vdb.getName(), vdb.getVersion(), new DdlPlan.DDLChange() {
+                @Override
+                public void process(DatabaseStore store) {
+                    store.databaseSwitched(vdb.getName(), vdb.getVersion());
+                    store.addOrSetOption(tableName, Database.ResourceType.TABLE, columnName,
+                            Database.ResourceType.COLUMN, DDLConstants.DISTINCT_VALUES,
+                            columnStats.getDistinctValues().toString(), false);
+                    store.addOrSetOption(tableName, Database.ResourceType.TABLE, columnName,
+                            Database.ResourceType.COLUMN, DDLConstants.NULL_VALUE_COUNT,
+                            columnStats.getNullValues().toString(), false);
+                    store.addOrSetOption(tableName, Database.ResourceType.TABLE, columnName,
+                            Database.ResourceType.COLUMN, DDLConstants.MAX_VALUE,
+                            columnStats.getMaximumValue().toString(), false);
+                    store.addOrSetOption(tableName, Database.ResourceType.TABLE, columnName,
+                            Database.ResourceType.COLUMN, DDLConstants.MIN_VALUE,
+                            columnStats.getMinimumValue().toString(), false);                          
+                }
+            });
+        }               
+	}
+	
+	public static void setTableStats(final VDBMetaData vdb, final Table table, final TableStats tableStats) {
+        table.setTableStats(tableStats);
+        table.setLastModified(System.currentTimeMillis());
+        DatabaseStore store = vdb.getAttachment(DatabaseStore.class);
+        if (store != null) {
+            DdlPlan.alterDatabaseStore(store, vdb.getName(), vdb.getVersion(), new DdlPlan.DDLChange() {
+                @Override
+                public void process(DatabaseStore store) {
+                    store.databaseSwitched(vdb.getName(), vdb.getVersion());
+                    store.addOrSetOption(table.getName(), Database.ResourceType.TABLE, 
+                            DDLConstants.CARDINALITY, tableStats.getCardinality().toString(), false);
+                }
+            });
+        }               
+	}
+	
 	public interface DDLChange {
 		void process(DatabaseStore store);
 	}
+	
 	public static void alterDatabaseStore(DatabaseStore store, String vdbName, String version, DDLChange change) {
 	    Database db = store.getDatabase(vdbName, version);
     	if (db != null) {
@@ -174,7 +276,7 @@ public class DdlPlan extends ProcessorPlan {
 	    }
 	}
 
-	public static void alterProcedureDefinition(final VDBMetaData vdb, final Procedure p, String sql) {
+	public static void alterProcedureDefinition(final VDBMetaData vdb, final Procedure p, final String sql, boolean updateStore) {
 		TransformationMetadata metadata = vdb.getAttachment(TransformationMetadata.class);
 		DatabaseStore store = vdb.getAttachment(DatabaseStore.class);
 		
@@ -192,20 +294,20 @@ public class DdlPlan extends ProcessorPlan {
 		p.setLastModified(System.currentTimeMillis());
 		metadata.addToMetadataCache(p, "transformation/"+StoredProcedure.class.getSimpleName().toUpperCase(), null); //$NON-NLS-1$
 		
-		if (store != null) {
+		if (store != null && updateStore) {
 			alterDatabaseStore(store, vdb.getName(), vdb.getVersion(), new DDLChange() {
 				@Override
 				public void process(DatabaseStore store) {
 					store.databaseSwitched(vdb.getName(), vdb.getVersion());
 					store.schemaSwitched(p.getParent().getName());
-					store.procedureModified(p);
+					store.setProcedureDefinition(p.getName(), sql, false);
 				}
 			});
 		}		
 	}
 
 	public static void alterInsteadOfTrigger(final VDBMetaData vdb, final Table t,
-			final String sql, final Boolean enabled, final TriggerEvent event) {
+			final String sql, final Boolean enabled, final TriggerEvent event, boolean updateStore) {
 		switch (event) {
 		case DELETE:
 			if (sql != null) {
@@ -234,14 +336,17 @@ public class DdlPlan extends ProcessorPlan {
 		t.setLastModified(System.currentTimeMillis());
 		
 		DatabaseStore store = vdb.getAttachment(DatabaseStore.class);
-		if (store != null) {
+		if (store != null && updateStore) {
 			alterDatabaseStore(store, vdb.getName(), vdb.getVersion(), new DDLChange() {
 				@Override
 				public void process(DatabaseStore store) {
 					store.databaseSwitched(vdb.getName(), vdb.getVersion());
 					store.schemaSwitched(t.getParent().getName());
-					store.setTableTriggerPlan(t.getName(), event, sql);
-					store.enableTableTriggerPlan(t.getName(), event, enabled);
+					if (sql != null) {
+	                    store.setTableTriggerPlan(t.getName(), event, sql, false);
+					} else {
+					    store.enableTableTriggerPlan(t.getName(), event, enabled, false);
+					}
 				}
 			});
 		}		
@@ -298,11 +403,13 @@ public class DdlPlan extends ProcessorPlan {
 	@Override
 	public void open() throws TeiidComponentException, TeiidProcessingException {
 		AlterProcessor ap = new AlterProcessor();
-		ap.workContext = DQPWorkContext.getWorkContext();
 		try {
 			command.acceptVisitor(ap);
 		} catch (TeiidRuntimeException e) {
-			throw (TeiidProcessingException)e.getCause();
+		    if (e.getCause() instanceof TeiidProcessingException) {
+		        throw (TeiidProcessingException)e.getCause();
+		    }
+		    throw e;
 		}
 	}
 	

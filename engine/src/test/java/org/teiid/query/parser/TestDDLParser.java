@@ -401,7 +401,7 @@ public class TestDDLParser {
 	
 	@Test
 	public void testMultipleCommands() throws Exception {
-		String ddl = "CREATE VIEW V1 AS SELECT * FROM PM1.G1 " +
+		String ddl = "CREATE VIEW V1 AS SELECT * FROM PM1.G1; " +
 				"CREATE PROCEDURE FOO(P1 integer) RETURNS (e1 integer, e2 varchar) AS SELECT * FROM PM1.G1;";
 		
 		Schema s = helpParse(ddl, "model").getSchema();
@@ -905,7 +905,7 @@ public class TestDDLParser {
 		String ddl = "CREATE FOREIGN PROCEDURE myProc(OUT p1 boolean, p2 varchar, INOUT p3 decimal) " +
 				"RETURNS (r1 varchar, r2 decimal)" +
 				"OPTIONS(RANDOM 'any', UUID 'uuid', NAMEINSOURCE 'nis', ANNOTATION 'desc', UPDATECOUNT '2');" +
-				"ALTER FOREIGN PROCEDURE myProc OPTIONS(SET NAMEINSOURCE 'x')" +
+				"ALTER FOREIGN PROCEDURE myProc OPTIONS(SET NAMEINSOURCE 'x');" +
 				"ALTER FOREIGN PROCEDURE myProc ALTER PARAMETER p2 OPTIONS (ADD x 'y');" +
 				"ALTER FOREIGN PROCEDURE myProc OPTIONS(DROP UPDATECOUNT);";
 		

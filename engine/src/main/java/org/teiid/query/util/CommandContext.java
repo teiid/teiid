@@ -75,6 +75,7 @@ import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.net.ServerConnection;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.metadata.DDLProcessor;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.parser.ParseInfo;
@@ -200,6 +201,8 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		private LRUCache<AbstractMetadataRecord, Boolean> accessible;
 
 		private Throwable batchUpdateException;
+		
+		private DDLProcessor ddlProcessor;
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -1175,6 +1178,14 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	
 	public void setBatchUpdateException(Throwable t) {
 		this.globalState.batchUpdateException = t;
+	}
+	
+	public DDLProcessor getDDLProcessor() {
+	    return this.globalState.ddlProcessor;
+	}
+	
+    public void setDDLProcessor(DDLProcessor processor) {
+        this.globalState.ddlProcessor = processor;
 	}
 	
 }

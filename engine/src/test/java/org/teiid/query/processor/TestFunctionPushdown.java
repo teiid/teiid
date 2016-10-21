@@ -340,8 +340,8 @@ public class TestFunctionPushdown {
 	}
 	
 	@Test public void testDDLMetadata1() throws Exception {
-		String ddl = "CREATE foreign FUNCTION sourceFunc(msg varchar) RETURNS varchar options (nameinsource 'a.sourcefunc') " +
-		              "CREATE foreign FUNCTION b.sourceFunc(msg varchar) RETURNS varchar " +
+		String ddl = "CREATE foreign FUNCTION sourceFunc(msg varchar) RETURNS varchar options (nameinsource 'a.sourcefunc'); " +
+		              "CREATE foreign FUNCTION b.sourceFunc(msg varchar) RETURNS varchar; " +
 				"CREATE foreign table X (Y varchar);";
 
 		QueryMetadataInterface metadata = RealMetadataFactory.fromDDL(ddl, "x", "phy");
@@ -362,7 +362,7 @@ public class TestFunctionPushdown {
 	}
 	
 	@Test public void testDDLMetadataNameConflict() throws Exception {
-		String ddl = "CREATE foreign FUNCTION \"convert\"(msg integer, type varchar) RETURNS varchar " +
+		String ddl = "CREATE foreign FUNCTION \"convert\"(msg integer, type varchar) RETURNS varchar; " +
 				"CREATE foreign table X (Y integer);";
 
 		QueryMetadataInterface metadata = RealMetadataFactory.fromDDL(ddl, "x", "phy");

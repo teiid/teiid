@@ -57,7 +57,7 @@ import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.metadata.DatabaseStore;
+import org.teiid.query.metadata.DDLProcessor;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempCapabilitiesFinder;
 import org.teiid.query.metadata.TempMetadataAdapter;
@@ -138,7 +138,7 @@ public class Request {
 	private Executor executor;
 	protected Options options;
 	protected PreParser preParser;
-	protected DatabaseStore databaseStore;
+	protected DDLProcessor ddlProcessor;
     private boolean ddl;
 
     void initialize(RequestMessage requestMsg,
@@ -148,7 +148,7 @@ public class Request {
                               TempTableStore tempTableStore,
                               DQPWorkContext workContext,
                               SessionAwareCache<PreparedPlan> planCache,
-                              DatabaseStore databaseStore) {
+                              DDLProcessor ddlProcessor) {
 
         this.requestMsg = requestMsg;
         this.vdbName = workContext.getVdbName();        
@@ -161,7 +161,7 @@ public class Request {
         this.requestId = workContext.getRequestID(this.requestMsg.getExecutionId());
         this.connectorManagerRepo = workContext.getVDB().getAttachment(ConnectorManagerRepository.class);
         this.planCache = planCache;
-        this.databaseStore = databaseStore;
+        this.ddlProcessor = ddlProcessor;
     }
     
     public void setOptions(Options options) {
@@ -232,6 +232,7 @@ public class Request {
                 || LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.TRACE));
         this.context.setProcessorBatchSize(bufferManager.getProcessorBatchSize());
         this.context.setGlobalTableStore(this.globalTables);
+        this.context.setDDLProcessor(this.ddlProcessor);
         boolean autoCleanLobs = true;
         if (this.workContext.getSession().isEmbedded()) {
 	        Object value = this.workContext.getSession().getSessionVariables().get(CLEAN_LOBS_ONCLOSE);
@@ -310,7 +311,7 @@ public class Request {
         	}
         	if (requestMsg.isVdbEditMode() && !prepared) {
         	    this.ddl = true;
-				return queryParser.parseCommand(commandStr, parseInfo, false, this.databaseStore, vdbName, vdbVersion,
+				return queryParser.parseCommand(commandStr, parseInfo, false, this.ddlProcessor, vdbName, vdbVersion,
 						requestMsg.getSchemaInContext());
         	}
         	return queryParser.parseCommand(commandStr, parseInfo, false);

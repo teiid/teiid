@@ -4913,7 +4913,8 @@ void parseMetadata(DatabaseStore dbStore) :
 {
 }
 {
-    (ddlStmt(dbStore))*
+    (ddlStmt(dbStore))?
+    (<SEMICOLON> [ddlStmt(dbStore)])*
     <EOF>     
 }
 
@@ -4929,7 +4930,7 @@ void ddlStmt(DatabaseStore dbStore) :
 }
 {
 	(
-	 LOOKAHEAD(3) 	createTable(dbStore) | 
+	 LOOKAHEAD(3) 	createTable(dbStore) [LOOKAHEAD(3) createTable(dbStore) | createDDLProcedure(dbStore, ParseInfo.DEFAULT_INSTANCE)] | 
 	 LOOKAHEAD(2)	createNameSpace(dbStore) |
 	 LOOKAHEAD(4)	alterStatement(dbStore) |
 	 LOOKAHEAD(4) 	command=createTrigger(ParseInfo.DEFAULT_INSTANCE)
@@ -4951,12 +4952,11 @@ void ddlStmt(DatabaseStore dbStore) :
      LOOKAHEAD(2)  dropSchema(dbStore) |
      LOOKAHEAD(2)  useSchema(dbStore) |
      LOOKAHEAD(3)  createSchema(dbStore) |
-     LOOKAHEAD(3)  createDDLProcedure(dbStore, ParseInfo.DEFAULT_INSTANCE) |
+     LOOKAHEAD(3)  createDDLProcedure(dbStore, ParseInfo.DEFAULT_INSTANCE) [ ddlStmt(dbStore) ] |
      LOOKAHEAD(5)  createDataWrapper(dbStore)|
      LOOKAHEAD(5)  dropDataWrapper(dbStore) |
      LOOKAHEAD(3)  dropProcedure(dbStore)     
 	)
-	[<SEMICOLON>]
 }
 
 /*
@@ -5974,7 +5974,7 @@ void alterOptionPair(String objectName, Database.ResourceType type, DatabaseStor
         if (!value.isNull()) {
             val = value.getValue().toString();
         }
-        dbStore.addOrSetOption(objectName, type, key, val);
+        dbStore.addOrSetOption(objectName, type, key, val, true);
      } 
 }
 
@@ -6017,9 +6017,8 @@ void alterTable(DatabaseStore dbStore, boolean virtual, ParseInfo info) :
 	    {
 	        if (comment != null) {
 	            command.setCacheHint(getQueryCacheOption(comment.image));
-	        }        
-	        table.setSelectTransformation(command.toString());
-	        dbStore.tableModified(table); 
+	        }
+	        dbStore.setViewDefinition(table.getName(), command.toString(), true);        
 	    }
 	    [alterOptionsList(objectName, Database.ResourceType.TABLE, dbStore) |
 	    	alterColumn(objectName, Database.ResourceType.TABLE, dbStore)
@@ -6130,9 +6129,8 @@ void alterProcedure(DatabaseStore dbStore, boolean virtual, ParseInfo info) :
             CreateProcedureCommand cup = new CreateProcedureCommand(asBlock(stmt));
             if (comment != null) {
                 cup.setCacheHint(getQueryCacheOption(comment.image));
-            }        
-            procedure.setQueryPlan(cup.toString());
-            dbStore.procedureModified(procedure); 
+            }
+            dbStore.setProcedureDefinition(procedure.getName(), cup.toString(), true);
         }
     ]     
     [alterOptionsList(objectName, Database.ResourceType.PROCEDURE, dbStore) |   
@@ -6156,9 +6154,9 @@ void alterTrigger(DatabaseStore dbStore, ParseInfo info) :
     (<AS> triggerAction = forEachRowTriggerAction(info) | <ENABLED> {enabled=true;} | <DISABLED> {enabled=false;})
     {
         if (enabled != null){
-            dbStore.enableTableTriggerPlan(objectName, Table.TriggerEvent.valueOf(event.image.toUpperCase()), enabled);
+            dbStore.enableTableTriggerPlan(objectName, Table.TriggerEvent.valueOf(event.image.toUpperCase()), enabled, true);
         } else {
-            dbStore.setTableTriggerPlan(objectName, Table.TriggerEvent.valueOf(event.image.toUpperCase()), triggerAction.toString());
+            dbStore.setTableTriggerPlan(objectName, Table.TriggerEvent.valueOf(event.image.toUpperCase()), triggerAction.toString(), true);
         }                
     }
 }
@@ -6318,7 +6316,7 @@ void alterChildOptionPair(String objectName, Database.ResourceType type, String 
         if (!value.isNull()) {
             val = value.getValue().toString();
         }
-        dbStore.addOrSetOption(objectName, type, childName, childType, key, val);
+        dbStore.addOrSetOption(objectName, type, childName, childType, key, val, true);
      } 
 }
 

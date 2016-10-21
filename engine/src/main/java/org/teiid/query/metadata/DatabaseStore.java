@@ -40,12 +40,16 @@ import org.teiid.query.QueryPlugin;
 import org.teiid.query.parser.OptionsUtil;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.util.ResolverUtil;
+import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 import org.teiid.query.validator.ValidatorReport;
 import org.teiid.vdb.runtime.VDBKey;
 
-public abstract class DatabaseStore {
+/**
+ * This holds the local state of all Database instances.
+ */
+public abstract class DatabaseStore implements DDLProcessor {
     private ConcurrentHashMap<VDBKey, Database> databases = new ConcurrentHashMap<VDBKey, Database>();
     private Database currentDatabase;
     private Schema currentSchema;
@@ -56,22 +60,30 @@ public abstract class DatabaseStore {
     private DatabaseStorage databaseStorage;
     private boolean save = false;
     private boolean persist;
+    private ArrayList<Runnable> events = new ArrayList<Runnable>();
    
     public abstract Map<String, Datatype> getRuntimeTypes();
     public abstract Map<String, Datatype> getBuiltinDataTypes();
     
     public void startEditing(@SuppressWarnings("hiding") boolean persist) {
+        if (this.persist) {
+            throw new AssertionError();
+        }
         this.lock.lock();
         this.persist = persist;
     }
 
-    public void stopEditing() {
-        deployCurrentVDB();
-        this.currentDatabase = null;
-        this.currentSchema = null;
-        this.metadataReloadRequired = false;
-        this.persist = false;
-        lock.unlock();
+    public void stopEditing() throws MetadataException {
+        try {
+            deployCurrentVDB();
+        } finally {
+            this.currentDatabase = null;
+            this.currentSchema = null;
+            this.metadataReloadRequired = false;
+            this.persist = false;
+            this.events.clear();
+            lock.unlock();
+        }
     }
     
     public void setFunctionalStore(EventDistributor store) {
@@ -96,17 +108,17 @@ public abstract class DatabaseStore {
         if ( database != null) {
             throw new DuplicateRecordException(QueryPlugin.Event.TEIID31232,
                     QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31232, db.getName()));
-        } else {
-            this.metadataReloadRequired = true;
-            this.databases.put(vdbKey(db), db);
-            this.save = true;
-        }
-
-        // save the previous VDB if there was any.
+        } 
+        
         if (this.currentDatabase != null) {
-            deployCurrentVDB();
+            throw new MetadataException(QueryPlugin.Event.TEIID31242,
+                    QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31242));
         }
         
+        this.metadataReloadRequired = true;
+        this.databases.put(vdbKey(db), db);
+        this.save = true;
+
         this.currentDatabase = db;
     }
 
@@ -161,51 +173,54 @@ public abstract class DatabaseStore {
         }
         
         if (currentDatabase != null && !this.currentDatabase.equals(db)) {
-            // before switching make sure the db is valid
-            deployCurrentVDB();            
+            throw new MetadataException(QueryPlugin.Event.TEIID31242,
+                    QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31242));
         }
         
         this.currentDatabase = db;
     }
     
     protected void deployCurrentVDB() {
-        if (this.currentDatabase != null) {
-        	
-            TransformationMetadata metadata = new TransformationMetadata(this.currentDatabase);
-            VDBMetaData vdb = metadata.getVdbMetaData();
-            vdb.addAttchment(QueryMetadataInterface.class, metadata);
+        if (this.currentDatabase == null) {
+            return;
+        }
+    	
+        TransformationMetadata metadata = new TransformationMetadata(this.currentDatabase);
+        VDBMetaData vdb = metadata.getVdbMetaData();
+        vdb.addAttchment(QueryMetadataInterface.class, metadata);
 
-            boolean success = false;
-            try {
-                checkValidity(metadata, this.currentDatabase.getMetadataStore());
-                success = true;
-            } finally {
-                if (!success) {
-                    //remove as the current instance is corrupted
-                    this.databases.remove(new VDBKey(this.currentDatabase.getName(), this.currentDatabase.getVersion()));
-                    Database db = this.currentDatabase;
-                    this.currentDatabase = null;
-                    if (databaseStorage != null) {
-                        this.databaseStorage.restore(this, db);
-                    }
-                    metadataReloadRequired = false;
-                    save = false;
+        boolean success = false;
+        try {
+            checkValidity(metadata, this.currentDatabase.getMetadataStore());
+            success = true;
+        } finally {
+            if (!success) {
+                //remove as the current instance is corrupted
+                this.databases.remove(new VDBKey(this.currentDatabase.getName(), this.currentDatabase.getVersion()));
+                Database db = this.currentDatabase;
+                this.currentDatabase = null;
+                if (databaseStorage != null) {
+                    this.databaseStorage.restore(this, db);
                 }
             }
-            
-            if (this.metadataReloadRequired) {
-                if (this.functionalStore != null) {
-                    this.functionalStore.reloadDatabase(this.currentDatabase);
-                }
-                this.metadataReloadRequired = false;
-            } 
-            
-            if (this.save) {
-                if (persist && databaseStorage != null) {
-                    this.databaseStorage.save(this.currentDatabase);
-                }
-                this.save = false;
+        }
+        
+        if (this.metadataReloadRequired) {
+            if (this.functionalStore != null) {
+                this.functionalStore.reloadDatabase(this.currentDatabase);
             }
+            this.metadataReloadRequired = false;
+        } else if (!events.isEmpty()) {
+            for (Runnable r : events) {
+                r.run();
+            }
+        }
+        
+        if (this.save) {
+            if (persist && databaseStorage != null) {
+                this.databaseStorage.save(this.currentDatabase);
+            }
+            this.save = false;
         }
     }
     
@@ -424,13 +439,6 @@ public abstract class DatabaseStore {
         this.save = true;
     }
 
-    private void validateRecord(AbstractMetadataRecord record) throws MetadataException {
-        if (this.functionalStore != null) {
-            this.functionalStore.validateRecord(this.currentDatabase.getName(), this.currentDatabase.getVersion(),
-                    record);
-        }
-    }
-    
     protected Schema getCurrentSchema() {
         if (this.currentSchema == null) {
             throw new org.teiid.metadata.MetadataException(QueryPlugin.Event.TEIID31235,
@@ -461,18 +469,35 @@ public abstract class DatabaseStore {
         Schema s = getCurrentSchema();
         setUUID(s.getUUID(), table);
         
-        validateRecord(table);
-        
         s.addTable(table);
         this.metadataReloadRequired = true;
+        this.save = true;
+    }
+    
+    public void setViewDefinition(final String tableName, final String definition, boolean updateFunctional) {
+        assertInEditMode();
+        verifyTableExists(tableName).setSelectTransformation(definition);
+        
+        final String vdbName = this.currentDatabase.getName();
+        final String vdbVersion = this.currentDatabase.getVersion();
+        final String schema = this.currentSchema.getName();
+        
+        if (functionalStore != null && updateFunctional) {
+            this.events.add(new Runnable() {
+                @Override
+                public void run() {
+                    //TODO: this duplicates the change on the local
+                    functionalStore.setViewDefinition(vdbName, vdbVersion, schema, tableName, definition);
+                } 
+            });
+        }
+        
         this.save = true;
     }
     
     public void tableModified(Table table) {
         assertInEditMode();
         verifyTableExists(table.getName());
-        
-        validateRecord(table);
         
         this.metadataReloadRequired = true;
         this.save = true;
@@ -500,18 +525,35 @@ public abstract class DatabaseStore {
             setUUID(s.getUUID(), procedure.getResultSet());
         }
         
-        validateRecord(procedure);
-        
         s.addProcedure(procedure);
         this.metadataReloadRequired = true;
         this.save = true;
     }
     
+    public void setProcedureDefinition(final String procedureName, final String definition, boolean updateFunctional) {
+        assertInEditMode();
+        verifyProcedureExists(procedureName).setQueryPlan(definition);
+        
+        final String vdbName = this.currentDatabase.getName();
+        final String vdbVersion = this.currentDatabase.getVersion();
+        final String schema = this.currentSchema.getName();
+        
+        if (functionalStore != null && updateFunctional) {
+            this.events.add(new Runnable() {
+                @Override
+                public void run() {
+                    //TODO: this duplicates the change on the local
+                    functionalStore.setProcedureDefinition(vdbName, vdbVersion, schema, procedureName, definition);
+                } 
+            });
+        }
+        
+        this.save = true;
+    }
     
     public void procedureModified(Procedure procedure) {
         assertInEditMode();
         verifyProcedureExists(procedure.getName());
-        validateRecord(procedure);
         
         this.metadataReloadRequired = true;
         this.save = true;
@@ -538,8 +580,6 @@ public abstract class DatabaseStore {
         }
         setUUID(s.getUUID(), function.getOutputParameter());
         
-        validateRecord(function);
-        
         s.addFunction(function);
         this.metadataReloadRequired = true;
         this.save = true;
@@ -556,7 +596,7 @@ public abstract class DatabaseStore {
         this.save = true;        
     }
     
-    public void setTableTriggerPlan(String tableName, Table.TriggerEvent event, String triggerDefinition) {
+    public void setTableTriggerPlan(final String tableName, final Table.TriggerEvent event, final String triggerDefinition, boolean updateFunctional) {
         assertInEditMode();
         Table table = getCurrentSchema().getTable(tableName);
         if (table == null || !table.isVirtual()) {
@@ -564,37 +604,38 @@ public abstract class DatabaseStore {
                     QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31210, tableName));                                                    
         }
         
-        String previousPlan = null;
         switch(event) {
         case DELETE:
-            previousPlan = table.getDeletePlan();
             table.setDeletePlan(triggerDefinition);
             break;
         case INSERT:
-            previousPlan = table.getInsertPlan();
             table.setInsertPlan(triggerDefinition);
             break;
         case UPDATE:
-            previousPlan = table.getUpdatePlan();
             table.setUpdatePlan(triggerDefinition);
             break;
         default:
             break;
         }
         
-        if (this.functionalStore != null) {
-            try {
-                setTriggerEvent(event, table, triggerDefinition, functionalStore, true);
-            } catch (MetadataException e) {
-                setTriggerEvent(event, table, previousPlan, functionalStore, true);
-                throw e;
-            }
+        final String vdbName = this.currentDatabase.getName();
+        final String vdbVersion = this.currentDatabase.getVersion();
+        final String schema = this.currentSchema.getName();
+        
+        if (functionalStore != null && updateFunctional) {
+            this.events.add(new Runnable() {
+                @Override
+                public void run() {
+                    //TODO: this duplicates the change on the local
+                    functionalStore.setInsteadOfTriggerDefinition(vdbName, vdbVersion, schema, tableName, event, triggerDefinition, null);
+                } 
+            });
         }
-        this.metadataReloadRequired = true;
+        
         this.save = true;        
     }
     
-    public void enableTableTriggerPlan(String tableName, Table.TriggerEvent event, boolean enable) {
+    public void enableTableTriggerPlan(final String tableName, final Table.TriggerEvent event, final boolean enable, boolean updateFunctional) {
         assertInEditMode();
         Table table = getCurrentSchema().getTable(tableName);
         if (table == null || !table.isVirtual()) {
@@ -602,59 +643,37 @@ public abstract class DatabaseStore {
                     QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31210, tableName));                                                    
         }
         
-        String previousPlan = null;
         switch(event) {
         case DELETE:
-            previousPlan = table.getDeletePlan();
             table.setDeletePlanEnabled(enable);
             break;
         case INSERT:
-            previousPlan = table.getInsertPlan();
             table.setInsertPlanEnabled(enable);
             break;
         case UPDATE:
-            previousPlan = table.getUpdatePlan();
             table.setUpdatePlanEnabled(enable);
             break;
         default:
             break;
         }
         
-        if (this.functionalStore != null) {
-            try {
-                setTriggerEvent(event, table, previousPlan, functionalStore, enable);
-            } catch (MetadataException e) {
-                setTriggerEvent(event, table, previousPlan, functionalStore, enable);
-                throw e;
-            }
+        final String vdbName = this.currentDatabase.getName();
+        final String vdbVersion = this.currentDatabase.getVersion();
+        final String schema = this.currentSchema.getName();
+        
+        if (functionalStore != null && updateFunctional) {
+            this.events.add(new Runnable() {
+                @Override
+                public void run() {
+                    //TODO: this duplicates the change on the local
+                    functionalStore.setInsteadOfTriggerDefinition(vdbName, vdbVersion, schema, tableName, event, null, enable);
+                } 
+            });
         }
-        this.metadataReloadRequired = true;
+        
         this.save = true;        
     }    
 
-    private void setTriggerEvent(Table.TriggerEvent event, Table table, String triggerPlan,
-            EventDistributor functionalStore, boolean enable) {
-        switch(event) {
-        case DELETE:
-            functionalStore.setInsteadOfTriggerDefinition(this.currentDatabase.getName(),
-                    this.currentDatabase.getVersion(), this.currentSchema.getName(), table.getName(),
-                    Table.TriggerEvent.DELETE, triggerPlan, enable);
-            break;
-        case INSERT:
-            functionalStore.setInsteadOfTriggerDefinition(this.currentDatabase.getName(),
-                    this.currentDatabase.getVersion(), this.currentSchema.getName(), table.getName(),
-                    Table.TriggerEvent.INSERT, triggerPlan, enable);
-            break;
-        case UPDATE:
-            functionalStore.setInsteadOfTriggerDefinition(this.currentDatabase.getName(),
-                    this.currentDatabase.getVersion(), this.currentSchema.getName(), table.getName(),
-                    Table.TriggerEvent.UPDATE, triggerPlan, enable);
-            break;
-        default:
-            break;
-        }
-    }
-    
     public void createNameSpace(String prefix, String uri) {
         assertInEditMode();
         getCurrentDatabase().addNamespace(prefix, uri);
@@ -664,13 +683,13 @@ public abstract class DatabaseStore {
         return getCurrentDatabase().getNamespaces();
     }
     
-    public void addOrSetOption(String recordName, Database.ResourceType type, String key, String value) {
+    public void addOrSetOption(String recordName, Database.ResourceType type, String key, String value, boolean reload) {
         assertInEditMode();
         key = getCurrentDatabase().resolveNamespaceInPropertyKey(key);
         AbstractMetadataRecord record = getSchemaRecord(recordName, type);
         record.setProperty(key, value);
         OptionsUtil.setOptions(record);
-        this.metadataReloadRequired = true;
+        this.metadataReloadRequired |= reload;
         this.save = true;
     }
 
@@ -757,7 +776,7 @@ public abstract class DatabaseStore {
     
     
 	public void addOrSetOption(String recordName, Database.ResourceType type, String childName,
-			Database.ResourceType childType, String key, String value) {
+			Database.ResourceType childType, String key, String value, boolean reload) {
         assertInEditMode();
         key = getCurrentDatabase().resolveNamespaceInPropertyKey(key);
         AbstractMetadataRecord record = getSchemaRecord(recordName, type);
@@ -778,7 +797,7 @@ public abstract class DatabaseStore {
             p.setProperty(key, value);
             OptionsUtil.setOptions(p);            
         }
-        this.metadataReloadRequired = true;
+        this.metadataReloadRequired |= reload;
         this.save = true;
     }
     
@@ -934,6 +953,12 @@ public abstract class DatabaseStore {
         this.databaseStorage = databaseStorage;
     }
     
+    @Override
+    public boolean vdbExists(String dbName, String version) {
+        return getDatabase(dbName, version) != null;
+    }
+    
+    @Override
     public String processDDL(String dbName, String version, String schema, String ddl,
             boolean persist) throws MetadataException {
         
@@ -942,7 +967,7 @@ public abstract class DatabaseStore {
         try {
             QueryParser parser = QueryParser.getQueryParser();
             if (dbName != null) {
-                String str = "USE DATABASE "+SQLStringVisitor.escapeSinglePart(dbName)+" VERSION '"+version+"'"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                String str = "USE DATABASE "+SQLStringVisitor.escapeSinglePart(dbName)+" VERSION "+new Constant(version); //$NON-NLS-1$ //$NON-NLS-2$
                 sb.append(str);
                 logNParse(parser, this, str);
                 if (schema != null) {

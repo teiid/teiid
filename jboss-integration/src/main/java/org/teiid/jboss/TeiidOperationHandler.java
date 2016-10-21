@@ -95,8 +95,8 @@ import org.teiid.metadata.Database;
 import org.teiid.metadata.MetadataException;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
+import org.teiid.query.metadata.DDLProcessor;
 import org.teiid.query.metadata.DDLStringVisitor;
-import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.metadata.DatabaseUtil;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.runtime.EmbeddedAdminFactory;
@@ -156,8 +156,8 @@ abstract class TeiidOperationHandler extends BaseOperationHandler<DQPCore> {
         return null;
 	}
 
-	protected DatabaseStore getDatabaseStore(OperationContext context) {
-	    ServiceController<?> repo = context.getServiceRegistry(isChangesRuntimes()).getRequiredService(TeiidServiceNames.DATABASE_STORAGE);
+	protected DDLProcessor getDDLProcessor(OperationContext context) {
+	    ServiceController<?> repo = context.getServiceRegistry(isChangesRuntimes()).getRequiredService(TeiidServiceNames.DDL_PROCESSOR);
 	    if (repo != null) {
 	        return org.teiid.jboss.DatabaseStorageService.class.cast(repo.getService()).getValue();
 	    }
@@ -1713,14 +1713,14 @@ class DDLExecutor extends TeiidOperationHandler {
         
         String ddl = operation.get(OperationsConstants.DDL.getName()).asString();
         
-        DatabaseStore store = getDatabaseStore(context);
-        if (store == null) {
+        DDLProcessor ddlProcessor = getDDLProcessor(context);
+        if (ddlProcessor == null) {
             throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50110));
         }
         
         String str = null;
         try {
-            str = store.processDDL(dbName, version, schema, ddl, persist);
+            str = ddlProcessor.processDDL(dbName, version, schema, ddl, persist);
         } catch (MetadataException e) {
             throw new OperationFailedException(
                     IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50111, e.getMessage()), e);            

@@ -79,7 +79,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.metadata.DatabaseStore;
+import org.teiid.query.metadata.DDLProcessor;
 import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.tempdata.GlobalTableStoreImpl;
 import org.teiid.query.tempdata.TempTableDataManager;
@@ -106,7 +106,7 @@ public class DQPCore implements DQP {
     private SessionAwareCache<CachedResults> rsCache;
     private TransactionService transactionService;
     private EventDistributor eventDistributor;
-    private DatabaseStore databaseStore;
+    private DDLProcessor ddlProcessor;
     
     private DQPConfiguration config = new DQPConfiguration();
     
@@ -264,7 +264,7 @@ public class DQPCore implements DQP {
 	    }
 	    request.initialize(requestMsg, bufferManager,
 				dataTierMgr, transactionService, state.sessionTables,
-				workContext, this.prepPlanCache, this.databaseStore);
+				workContext, this.prepPlanCache, this.ddlProcessor);
 	    request.setOptions(options);
 	    request.setExecutor(this.processWorkerPool);
 		request.setResultSetCacheEnabled(this.rsCache != null);
@@ -683,8 +683,8 @@ public class DQPCore implements DQP {
 		this.eventDistributor = eventDistributor;
 	}
 	
-	public void setDatabaseStore(DatabaseStore store) {
-		this.databaseStore = store;
+	public void setDDLProcessor(DDLProcessor ddlProcessor) {
+		this.ddlProcessor = ddlProcessor;
 	}
 	
 	@Override

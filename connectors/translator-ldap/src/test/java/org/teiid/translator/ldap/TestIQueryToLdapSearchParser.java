@@ -304,7 +304,7 @@ public class TestIQueryToLdapSearchParser {
 	}
     
     public static QueryMetadataInterface exampleLdap() throws Exception {
-    	String ddl = "create foreign table People (UserID string options (nameinsource 'uid'), Name string options (nameinsource 'cn'), dn string, vals string[]) options (nameinsource 'ou=people,dc=metamatrix,dc=com')"
+    	String ddl = "create foreign table People (UserID string options (nameinsource 'uid'), Name string options (nameinsource 'cn'), dn string, vals string[]) options (nameinsource 'ou=people,dc=metamatrix,dc=com');"
     			+ "create foreign table People_Groups (user_dn string options (nameinsource 'dn'), groupname string options (nameinsource 'memberOf', \"teiid_ldap:dn_prefix\" 'ou=groups,dc=metamatrix,dc=com', \"teiid_ldap:rdn_type\" 'cn')) options (nameinsource 'ou=people,dc=metamatrix,dc=com')";
     	return RealMetadataFactory.fromDDL(ddl, "x", "LdapModel");
     }    

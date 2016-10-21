@@ -103,8 +103,8 @@ import org.teiid.metadatastore.DefaultDatabaseStore;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.function.SystemFunctionManager;
+import org.teiid.query.metadata.DDLProcessor;
 import org.teiid.query.metadata.DatabaseStorage;
-import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.replication.jgroups.JGroupsObjectReplicator;
 import org.teiid.runtime.MaterializationManager;
 import org.teiid.services.InternalEventDistributorFactory;
@@ -466,13 +466,12 @@ class TeiidAdd extends AbstractAddStepHandler {
             }
             DefaultDatabaseStore store = new DefaultDatabaseStore();
             store.setDatabaseStorage(storage);
-            vdbRepository.setDatabaseStore(store);
             DatabaseStorageService dbStroageSvc = new DatabaseStorageService(storage, store, shutdownListener);
             dbStroageSvc.setConnectorManagerRepo(connectorManagerRepo);
             
             try {
             	SingletonPolicy policy = (SingletonPolicy) context.getServiceRegistry(true).getRequiredService(ServiceName.parse(SingletonPolicy.CAPABILITY_NAME)).awaitValue();
-            	ServiceBuilder<DatabaseStore> databaseStorageBuilder = policy.createSingletonServiceBuilder(TeiidServiceNames.DATABASE_STORAGE, dbStroageSvc).build(context.getServiceTarget());
+            	ServiceBuilder<DDLProcessor> databaseStorageBuilder = policy.createSingletonServiceBuilder(TeiidServiceNames.DDL_PROCESSOR, dbStroageSvc).build(context.getServiceTarget());
                 databaseStorageBuilder.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class,dbStroageSvc.vdbRepositoryInjector);
                 databaseStorageBuilder.addDependency(TeiidServiceNames.EVENT_DISTRIBUTOR_FACTORY,InternalEventDistributorFactory.class, dbStroageSvc.eventDistributorFactoryInjector);
                 databaseStorageBuilder.addDependency(TeiidServiceNames.THREAD_POOL_SERVICE, Executor.class,dbStroageSvc.executorInjector);
@@ -503,7 +502,7 @@ class TeiidAdd extends AbstractAddStepHandler {
         engineBuilder.addDependency(rsCache?DependencyType.REQUIRED:DependencyType.OPTIONAL, TeiidServiceNames.CACHE_RESULTSET, SessionAwareCache.class, engine.getResultSetCacheInjector());
         engineBuilder.addDependency(TeiidServiceNames.CACHE_PREPAREDPLAN, SessionAwareCache.class, engine.getPreparedPlanCacheInjector());
         engineBuilder.addDependency(TeiidServiceNames.EVENT_DISTRIBUTOR_FACTORY, InternalEventDistributorFactory.class, engine.getEventDistributorFactoryInjector());
-        engineBuilder.addDependency(storage == null?DependencyType.OPTIONAL:DependencyType.REQUIRED, TeiidServiceNames.DATABASE_STORAGE, DatabaseStore.class, engine.getDatabaseStoreInjector());
+        engineBuilder.addDependency(storage == null?DependencyType.OPTIONAL:DependencyType.REQUIRED, TeiidServiceNames.DDL_PROCESSOR, DDLProcessor.class, engine.getDDLProcessorInjector());
         
         engineBuilder.setInitialMode(ServiceController.Mode.ACTIVE);
         engineBuilder.install(); 
@@ -594,24 +593,10 @@ class TeiidAdd extends AbstractAddStepHandler {
    		sessionServiceImpl.setSecurityHelper(new JBossSecurityHelper());
    		sessionServiceImpl.start();
    		
-   		ServiceBuilder<SessionService> sessionServiceBuilder = target.addService(TeiidServiceNames.SESSION, new Service<SessionService>() {
-   			@Override
-   			public SessionService getValue() throws IllegalStateException,
-   					IllegalArgumentException {
-   				return sessionServiceImpl;
-   			}
-   			
-   			@Override
-   			public void stop(StopContext context) {
-   				sessionServiceImpl.stop();
-   			}
-
-			@Override
-			public void start(StartContext context) throws StartException {
-						
-			}
-   		});
+   		ContainerSessionService containerSessionService = new ContainerSessionService(sessionServiceImpl);
+        ServiceBuilder<SessionService> sessionServiceBuilder = target.addService(TeiidServiceNames.SESSION, containerSessionService);
    		
+   		sessionServiceBuilder.addDependency(storage == null?DependencyType.OPTIONAL:DependencyType.REQUIRED, TeiidServiceNames.DDL_PROCESSOR, DDLProcessor.class, containerSessionService.getDDLProcessorInjector());
    		sessionServiceBuilder.install();
 	}
 
@@ -652,6 +637,36 @@ class TeiidAdd extends AbstractAddStepHandler {
         ThreadExecutorService service = new ThreadExecutorService(maxThreads);
         final ServiceBuilder<?> serviceBuilder = target.addService(TeiidServiceNames.THREAD_POOL_SERVICE, service);
         serviceBuilder.install();
+    }
+
+    private static final class ContainerSessionService implements
+            Service<SessionService> {
+        private final SessionServiceImpl sessionServiceImpl;
+        protected final InjectedValue<DDLProcessor> ddlProcessorInjector = new InjectedValue<DDLProcessor>();
+
+        private ContainerSessionService(SessionServiceImpl sessionServiceImpl) {
+            this.sessionServiceImpl = sessionServiceImpl;
+        }
+
+        @Override
+        public SessionService getValue() throws IllegalStateException,
+        		IllegalArgumentException {
+        	return sessionServiceImpl;
+        }
+
+        @Override
+        public void stop(StopContext context) {
+        	sessionServiceImpl.stop();
+        }
+
+        @Override
+        public void start(StartContext context) throws StartException {
+            sessionServiceImpl.setDdlProcessor(ddlProcessorInjector.getValue());
+        }
+
+        public InjectedValue<DDLProcessor> getDDLProcessorInjector() {
+            return ddlProcessorInjector;
+        }
     }
 
     static class TeiidThreadFactoryResolver extends ThreadFactoryResolver.SimpleResolver{
