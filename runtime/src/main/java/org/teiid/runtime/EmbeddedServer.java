@@ -345,15 +345,16 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		}
 		this.shutdownListener.setBootInProgress(true);
 		this.config = config;
-		this.eventDistributorFactoryService = new EmbeddedEventDistributorFactoryService();
-		this.eventDistributorFactoryService.start();
-		this.dqp.setEventDistributor(this.eventDistributorFactoryService.getReplicatedEventDistributor());
 		this.scheduler = Executors.newScheduledThreadPool(config.getMaxAsyncThreads(), new NamedThreadFactory("Asynch Worker")); //$NON-NLS-1$
 		this.replicator = config.getObjectReplicator();
 		if (this.replicator == null && config.getJgroupsConfigFile() != null) {
 			channelFactory = new SimpleChannelFactory(config);
 			this.replicator = new JGroupsObjectReplicator(channelFactory, this.scheduler);			
 		}
+		this.eventDistributorFactoryService = new EmbeddedEventDistributorFactoryService();
+		//must be called after the replicator is set
+        this.eventDistributorFactoryService.start();
+        this.dqp.setEventDistributor(this.eventDistributorFactoryService.getReplicatedEventDistributor());
 		if (config.getTransactionManager() == null) {
 			LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40089));
 			this.transactionService.setTransactionManager((TransactionManager) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class<?>[] {TransactionManager.class}, new InvocationHandler() {
