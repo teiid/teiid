@@ -254,6 +254,9 @@ public class CapabilitiesUtil {
                             && caps.supportsFunction(SourceSystemFunctions.CONCAT) 
                             && caps.supportsFunction(SourceSystemFunctions.IFNULL)
                             && caps.supportsCapability(Capability.QUERY_SEARCHED_CASE));
+                } else if(SourceSystemFunctions.FROM_UNIXTIME.equalsIgnoreCase(fullName)) {
+                    return (schema == null 
+                            && caps.supportsFunction(SourceSystemFunctions.TIMESTAMPADD));
                 } else {
                     return false;
                 }
