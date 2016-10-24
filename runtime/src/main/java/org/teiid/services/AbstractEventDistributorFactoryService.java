@@ -72,7 +72,8 @@ public abstract class AbstractEventDistributorFactoryService implements Internal
 			    Replicated annotation = method.getAnnotation(Replicated.class);
                 if (replicatableEventDistributor == null || (annotation != null && annotation.remoteOnly())) {
                     method.invoke(ed, args);
-                } else if (replicatableEventDistributor != null) {
+                } 
+                if (replicatableEventDistributor != null) {
 					method.invoke(replicatableEventDistributor, args);
 				}
 				return null;
