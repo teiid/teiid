@@ -153,6 +153,9 @@ public class TestReplication {
 		stmt.getResultSet().next();
 		long val = stmt.getResultSet().getLong(1);
 		assertEquals(1, val);
+		
+		Thread.sleep(1000);
+		
 		stmt2.execute("select Cardinality from sys.tables where UPPER(name) = 'RANDOMVIEW'");
         stmt2.getResultSet().next();
         long val2 = stmt2.getResultSet().getLong(1);
