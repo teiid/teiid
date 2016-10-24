@@ -52,6 +52,7 @@ import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.FunctionParameter;
+import org.teiid.metadata.TableStats;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.ReplicatedObject;
 import org.teiid.runtime.EmbeddedConfiguration;
@@ -144,6 +145,18 @@ public class TestReplication {
 		d2 = rs2.getDouble(1);
 		
 		assertEquals(d1, d2, 0);
+		
+		TableStats stats = new TableStats();
+		stats.setCardinality(1f);
+        server1.getEventDistributor().setTableStats("matviews", "1", "TEST", "RANDOMVIEW", stats);
+		stmt.execute("select Cardinality from sys.tables where UPPER(name) = 'RANDOMVIEW'");
+		stmt.getResultSet().next();
+		long val = stmt.getResultSet().getLong(1);
+		assertEquals(1, val);
+		stmt2.execute("select Cardinality from sys.tables where UPPER(name) = 'RANDOMVIEW'");
+        stmt2.getResultSet().next();
+        long val2 = stmt2.getResultSet().getLong(1);
+        assertEquals(1, val2);
     }
     
     @Test(timeout=180000) public void testReplicationStartTimeout() throws Exception {
