@@ -190,6 +190,11 @@ specified and isSourceRequired should return false (see setSourceRequired).  If 
 
 See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on configuration and installation.
 
+<h4>from 9.1</h4>
+<ul>
+   <li><a href="https://issues.jboss.org/browse/TEIID-4533">TEIID-4533</a> The default for the max-staleness of the resultset cache was changed from 60 seconds to 0 seconds.  You may use the cli to alter this new default if necessary.</li>
+</ul>
+
 <h4>from 9.0</h4>
 <ul>
    <li><a href="https://issues.jboss.org/browse/TEIID-4129">TEIID-4129</a> in order to prevent invalid results from a sort/merge join, the sort operation will undergo additional checks.  If org.teiid.assumeMatchingCollation is false (the default) and a translator does not specify a collationLocale, then the sort for a sort/merge join will not be pushed.  

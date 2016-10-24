@@ -57,7 +57,7 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	private boolean useDisk = true;
 	private String bufferDirectory;
 	private CacheFactory cacheFactory;
-	private int maxResultSetCacheStaleness = 60;
+	private int maxResultSetCacheStaleness = DEFAULT_MAX_STALENESS_SECONDS;
 	private String infinispanConfigFile = "infinispan-config.xml"; //$NON-NLS-1$
 	private String jgroupsConfigFile; // from infinispan-core
 	private List<SocketConfiguration> transports;

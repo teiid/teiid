@@ -83,6 +83,7 @@ import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.dqp.internal.process.AuthorizationValidator;
 import org.teiid.dqp.internal.process.CachedResults;
+import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.DefaultAuthorizationValidator;
 import org.teiid.dqp.internal.process.PreparedPlan;
@@ -383,7 +384,7 @@ class TeiidAdd extends AbstractAddStepHandler {
 	    	cacheFactoryBuilder.addDependency(ServiceName.JBOSS.append("infinispan", ispnName), EmbeddedCacheManager.class, cfs.cacheContainerInjector); //$NON-NLS-1$
 	    	cacheFactoryBuilder.install();
 	    	
-	    	int maxStaleness = 60;
+	    	int maxStaleness = DQPConfiguration.DEFAULT_MAX_STALENESS_SECONDS;
 	    	if (isDefined(RSC_MAX_STALENESS_ATTRIBUTE, operation, context)) {
 	    		maxStaleness = asInt(RSC_MAX_STALENESS_ATTRIBUTE, operation, context);
 	    	}

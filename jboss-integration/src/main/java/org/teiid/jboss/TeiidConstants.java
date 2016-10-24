@@ -28,6 +28,7 @@ import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
 import org.jboss.as.controller.client.helpers.MeasurementUnit;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
+import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.net.socket.SocketUtil;
 import org.teiid.transport.SSLConfiguration;
@@ -333,7 +334,7 @@ public class TeiidConstants {
         .setXmlName(Element.RSC_MAX_STALENESS_ATTRIBUTE.getXMLName())
         .setAllowNull(true)
         .setAllowExpression(false)
-        .setDefaultValue(new ModelNode(60))
+        .setDefaultValue(new ModelNode(DQPConfiguration.DEFAULT_MAX_STALENESS_SECONDS))
         .build();   
 	
 	//transport
