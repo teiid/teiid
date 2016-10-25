@@ -52,6 +52,7 @@ import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPCore;
+import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.service.SessionService;
 import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.logging.AuditMessage;
@@ -194,7 +195,7 @@ public class SessionServiceImpl implements SessionService {
 	    		if (onlyAllowPassthrough || authType.equals(AuthenticationType.GSS)) {
 	        		subject = this.securityHelper.getSubjectInContext(securityDomain);
 	    	        if (subject == null) {
-	    	        	if ((!onlyAllowPassthrough || !trustAllLocal)) {
+	    	        	if ((!onlyAllowPassthrough || !(trustAllLocal && DQPWorkContext.getWorkContext().isLocal()))) {
 	    	        		throw new LoginException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40087));
 	    	        	}
 	    	        } else {
