@@ -106,6 +106,10 @@ public class DQPWorkContext implements Serializable {
 			}
 			return v.getValue();
 		}
+		
+		public static Version latest() {
+		    return versionMap.lastEntry().getValue();
+		}
 	}
 	
 	private static ThreadLocal<DQPWorkContext> CONTEXTS = new ThreadLocal<DQPWorkContext>() {
@@ -140,7 +144,7 @@ public class DQPWorkContext implements Serializable {
     private SecurityHelper securityHelper;
     private HashMap<String, DataPolicy> policies;
     private boolean useCallingThread;
-    private Version clientVersion = Version.SEVEN_4;
+    private Version clientVersion = Version.latest();
     private boolean admin;
     private MetadataFactory metadataFactory;
 

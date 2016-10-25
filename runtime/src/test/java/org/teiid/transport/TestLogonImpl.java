@@ -134,17 +134,13 @@ public class TestLogonImpl {
 		result = fimpl.logon(p);
 		assertEquals("GSS@SC", result.getUserName());
 		
-		// if the transport default defined as GSS, then preference is USERPASSWORD, throw exception
+		// if the transport default defined as GSS, then preference is USERPASSWORD, additional challenge
 		ssi.setAuthenticationType(AuthenticationType.GSS); 		
-		try {
-			DQPWorkContext.setWorkContext(new DQPWorkContext());
-			p = buildProperties("fred", "name");		
-			impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
-			result = impl.logon(p);
-			fail("should have failed due server does not support USERPASSWORD");
-		} catch(LogonException e) {
-			// pass
-		}
+		DQPWorkContext.setWorkContext(new DQPWorkContext());
+		p = buildProperties("fred", "name");		
+		impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
+		result = impl.logon(p);
+		assertEquals(AuthenticationType.GSS, result.getProperty("authType"));
 	}
 	
 	@Test
@@ -189,18 +185,15 @@ public class TestLogonImpl {
 			
 		}
 				
-		// if the transport default defined as GSS, then preference is USERPASSWORD, throw exception
-		try {
-			addVdb(repo, "name2", "SC", "GSS");		
-			DQPWorkContext.setWorkContext(new DQPWorkContext());
-			impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
-			p = buildProperties("fred", "name2");		
-			result = impl.logon(p);
-			fail("should have failed due server does not support USERPASSWORD");
-		} catch(LogonException e) {
-			// pass
-		}
-		
+		// if the transport default defined as GSS, then preference is USERPASSWORD, additional challenge
+		addVdb(repo, "name2", "SC", "GSS");		
+		DQPWorkContext.setWorkContext(new DQPWorkContext());
+		impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
+		p = buildProperties("fred", "name2");		
+		result = impl.logon(p);
+		assertEquals(AuthenticationType.GSS, result.getProperty("authType"));
+
+	    // doesn't match gss pattern
 		metadata.addProperty(SessionServiceImpl.GSS_PATTERN_PROPERTY, "GSS");
 		DQPWorkContext.setWorkContext(new DQPWorkContext());
 		impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$

@@ -85,7 +85,7 @@ public class TestQueryPlans {
 		assertNotNull(s.unwrap(TeiidStatement.class).getDebugLog());
 		PlanNode node = s.unwrap(TeiidStatement.class).getPlanDescription();
 		Property p = node.getProperty(AnalysisRecord.PROP_DATA_BYTES_SENT);
-		assertEquals("21", p.getValues().get(0));
+		assertEquals("20", p.getValues().get(0));
 		
 		rs = s.executeQuery("show plan");
 		assertTrue(rs.next());
