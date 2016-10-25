@@ -22,6 +22,8 @@
 
 package org.teiid.transport;
 
+import static org.junit.Assert.*;
+
 import java.net.InetSocketAddress;
 import java.sql.Connection;
 import java.util.Properties;
@@ -38,6 +40,7 @@ import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.net.TeiidURL;
+import org.teiid.net.socket.AuthenticationType;
 import org.teiid.runtime.DoNothingSecurityHelper;
 import org.teiid.runtime.EmbeddedConfiguration;
 
@@ -120,6 +123,17 @@ public class TestJDBCSocketAuthentication {
         p.setProperty("user", "testuser");
         p.setProperty("password", "testpassword");
         conn = TeiidDriver.getInstance().connect("jdbc:teiid:parts@mm://"+addr.getHostName()+":" +jdbcTransport.getPort(), p);
+    }
+    
+    @Test public void testSetAuthType() throws Exception {
+        FakeServer es = new FakeServer(false);
+        EmbeddedConfiguration ec = new EmbeddedConfiguration();
+        ec.setAuthenticationType(AuthenticationType.GSS);
+        es.start(ec);
+        es.deployVDB("parts", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
+        assertEquals(AuthenticationType.GSS, es.getSessionService().getAuthenticationType("parts", null, "testuser"));
+        assertEquals(AuthenticationType.GSS, es.getClientServiceRegistry().getAuthenticationType());
+        es.stop();
     }
 	
 }
