@@ -25,12 +25,15 @@ package org.teiid.query.processor;
 import static org.junit.Assert.*;
 import static org.teiid.query.optimizer.TestOptimizer.*;
 
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.junit.Test;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataStore;
@@ -404,6 +407,40 @@ public class TestFunctionPushdown {
         //will get replaced in the LanguageBridgeFactory
         helpPlan(sql, metadata, null, capFinder, 
                 new String[] {"SELECT concat2(g_0.e1, g_0.e1) FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+	}
+	
+	@Test
+	public void testFromUnitTime() throws Exception {
+	    QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+	    
+	    FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+	    BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+	    capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+	    
+	    String sql = "SELECT from_unixtime(x.e2) from pm1.g1 as x"; //$NON-NLS-1$
+	    
+	    // can pushdown
+	    String expected = "SELECT from_unixtime(g_0.e2) FROM pm1.g1 AS g_0"; //$NON-NLS-1$ 
+	    caps.setFunctionSupport(SourceSystemFunctions.FROM_UNIXTIME, true);
+	    helpPlan(sql, metadata, null, capFinder, new String[] {expected}, ComparisonMode.EXACT_COMMAND_STRING);
+	    
+	    // can not pushdown
+	    expected = "SELECT g_0.e2 FROM pm1.g1 AS g_0"; //$NON-NLS-1$
+	    caps.setFunctionSupport(SourceSystemFunctions.FROM_UNIXTIME, false);
+	    ProcessorPlan plan = helpPlan(sql, metadata, null, capFinder, new String[] {expected}, ComparisonMode.EXACT_COMMAND_STRING);
+	    HardcodedDataManager dataManager = new HardcodedDataManager();
+	    dataManager.addData(expected, new List[] {Arrays.asList(1500000000)});
+	    TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$
+	    try {
+            TestProcessor.helpProcess(plan, dataManager, new List[] {Arrays.asList(Timestamp.valueOf("2017-07-13 20:40:00.0"))}); //$NON-NLS-1$
+        } finally {
+            TimestampWithTimezone.resetCalendar(null);
+        }
+	    
+	    // will get replaced in the LanguageBridgeFactory
+	    expected = "SELECT from_unixtime(g_0.e2) FROM pm1.g1 AS g_0"; //$NON-NLS-1$
+	    caps.setFunctionSupport(SourceSystemFunctions.TIMESTAMPADD, true);
+	    helpPlan(sql, metadata, null, capFinder, new String[] {expected}, ComparisonMode.EXACT_COMMAND_STRING);
 	}
 	
 	@Test public void testPartialProjectPushdown() throws Exception {
