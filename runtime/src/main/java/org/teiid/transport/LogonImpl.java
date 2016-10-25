@@ -116,7 +116,7 @@ public class LogonImpl implements ILogon {
 				return result;
 			}
 			//throw an exception
-			throw new LogonException(RuntimePlugin.Event.TEIID40055, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40055, authType));
+			throw new LogonException(RuntimePlugin.Event.TEIID40149, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40149));
 		}
 		
 		//default to username password
