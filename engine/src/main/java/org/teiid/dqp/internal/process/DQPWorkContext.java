@@ -145,6 +145,8 @@ public class DQPWorkContext implements Serializable {
     private MetadataFactory metadataFactory;
 
 	private transient LocalProfile connectionProfile = new LocalProfile();
+
+    private boolean local = true;
     
     public DQPWorkContext() {
 	}
@@ -366,5 +368,13 @@ public class DQPWorkContext implements Serializable {
 	public LocalProfile getConnectionProfile() {
 		return connectionProfile;
 	}
+
+    public boolean isLocal() {
+        return this.local;
+    }
 	
+    public DQPWorkContext local(boolean b) {
+        this.local = b;
+        return this;
+    }
 }

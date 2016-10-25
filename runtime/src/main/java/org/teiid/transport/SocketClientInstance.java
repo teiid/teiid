@@ -65,7 +65,7 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
     private ClientServiceRegistryImpl csr;
     private boolean usingEncryption; 
     private DhKeyGenerator keyGen;
-    private DQPWorkContext workContext = new DQPWorkContext();
+    private DQPWorkContext workContext = new DQPWorkContext().local(false);
         
     public SocketClientInstance(ObjectChannel objectSocket, ClientServiceRegistryImpl csr, boolean isClientEncryptionEnabled) {
         this.objectSocket = objectSocket;
