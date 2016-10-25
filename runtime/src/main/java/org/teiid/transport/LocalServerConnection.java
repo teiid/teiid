@@ -47,6 +47,8 @@ import org.teiid.core.util.PropertiesUtils;
 import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.gss.MakeGSS;
+import org.teiid.jdbc.JDBCPlugin;
 import org.teiid.jdbc.LocalProfile;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -54,6 +56,7 @@ import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.ServerConnection;
 import org.teiid.net.TeiidURL;
+import org.teiid.net.socket.AuthenticationType;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.vdb.runtime.VDBKey;
 
@@ -137,7 +140,28 @@ public class LocalServerConnection implements ServerConnection {
 		workContext.setSecurityContext(previousSecurityContext);
         try {
         	this.result = this.getService(ILogon.class).logon(this.connectionProperties);
+        	
+        	AuthenticationType type = (AuthenticationType) this.result.getProperty(ILogon.AUTH_TYPE);
+            
+            if (type != null) {
+                //server has issued an additional challenge
+                if (type == AuthenticationType.GSS) {
+                    try {
+                        this.result = MakeGSS.authenticate(this.getService(ILogon.class), this.connectionProperties);
+                    } catch (LogonException e) {
+                        if (!passthrough) {
+                            throw new LogonException(RuntimePlugin.Event.TEIID40150, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40150));
+                        }
+                        throw e;
+                    }
+                } else {
+                    throw new LogonException(JDBCPlugin.Event.TEIID20034, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20034, type));
+                }
+            }
+        	
         } catch (LogonException e) {
+            //TODO: above we make a special check for gss if not passthrough, we could do the same in general here or in sessionserviceimpl
+            
             // Propagate the original message as it contains the message we want
             // to give to the user
              throw new ConnectionException(e);
