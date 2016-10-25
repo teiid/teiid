@@ -406,6 +406,24 @@ public class TestFunctionPushdown {
                 new String[] {"SELECT concat2(g_0.e1, g_0.e1) FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 	}
 	
+	@Test
+	public void testFromUnitTime() throws Exception {
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        
+        String sql = "SELECT from_unixtime(x.e2) from pm1.g1 as x"; //$NON-NLS-1$
+        String expected = "SELECT from_unixtime(g_0.e2) FROM pm1.g1 AS g_0"; //$NON-NLS-1$ 
+        caps.setFunctionSupport(SourceSystemFunctions.FROM_UNIXTIME, true);
+        helpPlan(sql, metadata, null, capFinder, new String[] {expected}, ComparisonMode.EXACT_COMMAND_STRING);
+        
+        expected = "SELECT g_0.e2 FROM pm1.g1 AS g_0"; //$NON-NLS-1$
+        caps.setFunctionSupport(SourceSystemFunctions.FROM_UNIXTIME, false);
+        helpPlan(sql, metadata, null, capFinder, new String[] {expected}, ComparisonMode.EXACT_COMMAND_STRING); 
+	} 
+	
 	@Test public void testPartialProjectPushdown() throws Exception {
 		QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 		
