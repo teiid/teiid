@@ -138,6 +138,13 @@ public class TestSQLConversionVisitor {
     }
     
     @Test
+    public void testSelectLimit_2() throws TranslatorException {
+        String sql = "SELECT product FROM Customer LIMIT 3, 3";
+        String expected = "SELECT \"Customer\".\"product\" FROM \"Customer\" LIMIT 3 OFFSET 3";
+        helpTest(sql, expected);
+    }
+    
+    @Test
     public void testBooleanLiterals() throws Exception {
     	String sql = "SELECT true, false FROM Customer";
         String expected = "SELECT true, false FROM \"Customer\"";
