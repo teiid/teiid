@@ -47,9 +47,13 @@ import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.JDBCMetdataProcessor;
 import org.teiid.translator.jdbc.JDBCUpdateExecution;
+import org.teiid.util.Version;
 
 @Translator(name="hbase", description="HBase Translator, reads and writes the data to HBase")
 public class HBaseExecutionFactory extends JDBCExecutionFactory {
+    
+    public static String HBASE = "hbase"; //$NON-NLS-1$
+    public static final Version V_4_8 = Version.getVersion("4.8"); //$NON-NLS-1$
     
     public HBaseExecutionFactory() {
         super();
@@ -304,6 +308,17 @@ public class HBaseExecutionFactory extends JDBCExecutionFactory {
     }
     
     @Override
+    public List<?> translateLimit(Limit limit, ExecutionContext context) {
+        
+        if(limit.getRowOffset() > 0) {
+            return Arrays.asList("LIMIT ", limit.getRowLimit(), " OFFSET ", limit.getRowOffset()); //$NON-NLS-1$ //$NON-NLS-2$
+        }
+        
+        return super.translateLimit(limit, context);
+    }
+
+
+    @Override
     public boolean supportsRowLimit() {
     	return true;
     }
@@ -316,6 +331,16 @@ public class HBaseExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsUpsert() {
         return true;
+    }
+
+    @Override
+    protected boolean usesDatabaseVersion() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsRowOffset() {
+        return getVersion().compareTo(V_4_8) >= 0;
     }
     
 }
