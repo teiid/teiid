@@ -28,26 +28,7 @@
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>translator-jdbc</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-runtime</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-admin</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-client</artifactId>
-            <scope>test</scope>
-        </dependency>
-	<dependency>
-            <groupId>org.codehaus.btm</groupId>
-            <artifactId>btm</artifactId>
-            <scope>test</scope>
-        </dependency>
+        
     </dependencies>
 
     <build>
