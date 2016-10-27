@@ -57,6 +57,9 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
 	protected ConvertModifier convert = new ConvertModifier();
 	
     public TeradataExecutionFactory() {
+        setMaxDependentInPredicates(5);
+        //teradata documentation does not make it clear that there is a hard limit. this value comes from hibernate
+        setMaxInCriteriaSize(1024); 
     }
     
 	@Override
@@ -429,6 +432,19 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
             }
             return target;
         }
-    }    
+    }
+    
+    @Override
+    protected boolean usesDatabaseVersion() {
+        return true;
+    }
+    
+    @Override
+    public String getHibernateDialectClassName() {
+        if (getVersion().getMajorVersion() >= 14) {
+            return "org.hibernate.dialect.Teradata14Dialect"; //$NON-NLS-1$
+        }
+        return "org.hibernate.dialect.TeradataDialect"; //$NON-NLS-1$
+    }
     
 }
