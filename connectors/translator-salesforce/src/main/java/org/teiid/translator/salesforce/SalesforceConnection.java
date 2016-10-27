@@ -80,12 +80,8 @@ public interface SalesforceConnection extends Connection {
 			return batchId;
 		}
 		
-		public void initPkBatches(BatchInfo[] pkChunks) {
-		    pkBatches = new LinkedHashMap<String, BatchInfo>();
-		    //ignore the first
-		    for (int i = 1; i < pkChunks.length; i++) {
-		        pkBatches.put(pkChunks[i].getId(), pkChunks[i]);
-		    }
+		public void setPkBatches(LinkedHashMap<String, BatchInfo> pkBatches) {
+		    this.pkBatches = pkBatches;
         }
 		
 		public LinkedHashMap<String, BatchInfo> getPkBatches() {

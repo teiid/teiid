@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -562,18 +563,24 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
     				    BatchInfoList batchInfoList = this.bulkConnection.getBatchInfoList(jobId);
     				    LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Pk chunk batches", batchInfoList); //$NON-NLS-1$
     				    BatchInfo[] batchInfo = batchInfoList.getBatchInfo();
+    				    LinkedHashMap<String, BatchInfo> pkBactches = new LinkedHashMap<String, BatchInfo>();
     				    boolean anyComplete = false;
-    		            for (int i = 1; i < batchInfo.length; i++) {
-    		                switch (batchInfo[i].getState()) {
+    		            for (int i = 0; i < batchInfo.length; i++) {
+    		                BatchInfo batchInfoItem = batchInfo[i];
+                            if (batchInfoItem.getId().equals(info.getBatchId())) {
+    		                    continue; //disregard the initial batch
+    		                }
+    		                switch (batchInfoItem.getState()) {
     		                case Failed:
     		                case NotProcessed:
-                                throw new ResourceException(batchInfo[i].getStateMessage());
+                                throw new ResourceException(batchInfoItem.getStateMessage());
     		                case Completed:
     		                    anyComplete = true;
-    		                    break;
+		                    default:
+		                        pkBactches.put(batchInfoItem.getId(), batchInfoItem);
     		                }
     		            }
-    		            info.initPkBatches(batchInfo);
+    		            info.setPkBatches(pkBactches);
     				    if (!anyComplete) {
     				        throwDataNotAvailable(info);
     				    }
