@@ -49,6 +49,7 @@ import org.teiid.translator.salesforce.SalesForceExecutionFactory;
 import org.teiid.translator.salesforce.SalesforceConnection;
 import org.teiid.translator.salesforce.SalesforceConnection.BatchResultInfo;
 import org.teiid.translator.salesforce.SalesforceConnection.BulkBatchResult;
+import org.teiid.translator.salesforce.execution.QueryExecutionImpl.BulkValidator;
 import org.teiid.translator.salesforce.execution.visitors.TestVisitors;
 
 import com.sforce.async.JobInfo;
@@ -127,6 +128,21 @@ public class TestQueryExecutionImpl {
 		qei.execute();
 		assertNull(qei.next());
 	}
+	
+	@Test public void testBulkValidator() throws Exception {
+        helpTestBulkValidator("select Name from Account where id = 'abc'", true, true);
+        helpTestBulkValidator("select max(Name) from Account", false, false);
+        helpTestBulkValidator("select Name from Account limit 1", true, false);
+        helpTestBulkValidator("select Name from Account limit 1,1", false, false);
+    }
+
+    private void helpTestBulkValidator(String sql, boolean bulk, boolean pkChunk) {
+        Select command = (Select)translationUtility.parseCommand(sql); //$NON-NLS-1$
+        BulkValidator validator = new BulkValidator();
+        validator.visit(command);
+        assertEquals(bulk, validator.isBulkEligible());
+        assertEquals(pkChunk, validator.usePkChunking());
+    }
 	
 	@Test
 	public void testBulkFlow() throws Exception {

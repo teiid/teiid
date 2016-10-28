@@ -75,22 +75,24 @@ public class QueryExecutionImpl implements ResultSetExecution {
 
 		@Override
 		public void visit(AggregateFunction obj) {
-			//sum, count
-			if (obj.getName().equalsIgnoreCase(SQLConstants.NonReserved.COUNT) || obj.getName().equalsIgnoreCase(SQLConstants.NonReserved.SUM)) {
+			//the documentation implies only sum, count are not allowed, but in testing all are 
+			//if (obj.getName().equalsIgnoreCase(SQLConstants.NonReserved.COUNT) || obj.getName().equalsIgnoreCase(SQLConstants.NonReserved.SUM)) {
 				bulkEligible = false;
-			} else {
-				super.visit(obj);
-			}
+			//} else {
+			//    usePkChunking = false;
+			//	super.visit(obj);
+			//}
 		}
 
 		@Override
 		public void visit(GroupBy obj) {
-			if (obj.isRollup()) { //not yet supported, but just in case
+		    //the documentation implies only rollup is not allowed, but in testing any grouping is
+			//if (obj.isRollup()) { //not yet supported, but just in case
 				bulkEligible = false;
-			} else {
-			    usePkChunking = false;
-				super.visit(obj);
-			}
+			//} else {
+			//    usePkChunking = false;
+			//	super.visit(obj);
+			//}
 		}
 
 		@Override
@@ -122,6 +124,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 		    if (obj.getHaving() != null) {
 		        usePkChunking = false;
 		    }
+		    super.visit(obj);
 		}
 		
 		public boolean isBulkEligible() {
@@ -129,7 +132,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 		}
 		
 		public boolean usePkChunking() {
-            return usePkChunking;
+            return usePkChunking && bulkEligible;
         }
 	}
 
@@ -251,6 +254,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 						batchInfo = connection.addBatch(finalQuery, this.activeJob);
 						return;
 					}
+                    LogManager.logDetail(LogConstants.CTX_CONNECTOR,  getLogPreamble(), "Ingoring bulk hint as the query is not bulk eligible"); //$NON-NLS-1$
 				}
 				
 				results = connection.query(finalQuery, this.context.getBatchSize(), visitor.getQueryAll());
