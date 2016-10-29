@@ -377,6 +377,9 @@ public class IntegrationTestDeployment {
 			assertEquals("select * from source.smalla", r.getCommand());
 			assertNotNull(r.getExecutionId());
 			assertNotNull(r.getSessionId());
+			
+			String plan = admin.getQueryPlan(r.getSessionId(), r.getExecutionId());
+			assertNotNull(plan);
 
 			stmt.execute("select * from source.smalla");
 			Collection<? extends Request> requests2 = admin.getRequestsForSession(session);
