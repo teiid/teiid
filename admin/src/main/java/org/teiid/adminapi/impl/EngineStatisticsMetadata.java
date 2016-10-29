@@ -141,16 +141,16 @@ public class EngineStatisticsMetadata extends AdminObjectImpl implements EngineS
 		StringBuilder sb = new StringBuilder();
 		sb.append("EngineStatistics:"); //$NON-NLS-1$
 		sb.append("sessionCount").append(sessionCount);//$NON-NLS-1$
-		sb.append("; totalMemoryUsedInKB").append(totalMemoryUsedInKB);//$NON-NLS-1$
-		sb.append("; memoryUsedByActivePlansInKB").append(memoryUsedByActivePlansInKB);//$NON-NLS-1$
-		sb.append("; diskWriteCount").append(diskWriteCount); //$NON-NLS-1$
-		sb.append("; diskReadCount").append(diskReadCount); //$NON-NLS-1$
-		sb.append("; cacheWriteCount").append(cacheWriteCount); //$NON-NLS-1$
-		sb.append("; cacheReadCount").append(cacheReadCount); //$NON-NLS-1$	
-		sb.append("; diskSpaceUsedInMB").append(diskSpaceUsedInMB); //$NON-NLS-1$
-		sb.append("; activePlanCount").append(activePlanCount); //$NON-NLS-1$
-		sb.append("; waitPlanCount").append(waitPlanCount); //$NON-NLS-1$
-		sb.append("; maxWaitPlanCount").append(maxWaitPlanCount); //$NON-NLS-1$
+		sb.append("; totalMemoryUsedInKB ").append(totalMemoryUsedInKB);//$NON-NLS-1$
+		sb.append("; memoryUsedByActivePlansInKB ").append(memoryUsedByActivePlansInKB);//$NON-NLS-1$
+		sb.append("; diskWriteCount ").append(diskWriteCount); //$NON-NLS-1$
+		sb.append("; diskReadCount ").append(diskReadCount); //$NON-NLS-1$
+		sb.append("; cacheWriteCount ").append(cacheWriteCount); //$NON-NLS-1$
+		sb.append("; cacheReadCount ").append(cacheReadCount); //$NON-NLS-1$	
+		sb.append("; diskSpaceUsedInMB ").append(diskSpaceUsedInMB); //$NON-NLS-1$
+		sb.append("; activePlanCount ").append(activePlanCount); //$NON-NLS-1$
+		sb.append("; waitPlanCount ").append(waitPlanCount); //$NON-NLS-1$
+		sb.append("; maxWaitPlanCount ").append(maxWaitPlanCount); //$NON-NLS-1$
 		return sb.toString();
 	}
 }

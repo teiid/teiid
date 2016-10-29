@@ -507,7 +507,7 @@ public interface Admin {
      * @param executionId
      * @return
      */
-    String getQueryPlan(String sessionId, int executionId) throws AdminException;
+    String getQueryPlan(String sessionId, long executionId) throws AdminException;
 
     /**
      * Restart the Server
