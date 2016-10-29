@@ -61,7 +61,11 @@ public class AdminShell {
 			@Doc(text = "username") String username,
 			@Doc(text = "password") String password,
 			@Doc(text = "connection name") String connectionName) throws AdminException {
-		internalAdmin = AdminFactory.getInstance().createAdmin(host, port, username, password.toCharArray());
+		Admin admin = AdminFactory.getInstance().createAdmin(host, port, username, password.toCharArray());
+		if (admin == null) {
+		    throw new AdminProcessingException("Connection was not successful"); //$NON-NLS-1$
+		}
+		internalAdmin = admin;
 		currentName = connectionName;
 		Admin old = connections.put(connectionName, internalAdmin);
 		if (old != null) {

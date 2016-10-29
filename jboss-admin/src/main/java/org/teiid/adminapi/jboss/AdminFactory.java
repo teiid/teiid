@@ -193,7 +193,24 @@ public class AdminFactory {
 			throw new AdminProcessingException(AdminPlugin.Event.TEIID70006, msg);
 		}
 	}
-
+	
+	private static final MetadataMapper<String> STRINGMAPPER = new MetadataMapper<String>() {
+        @Override
+        public String unwrap(ModelNode node) {
+            return node.asString();
+        }
+        
+        @Override
+        public ModelNode describe(ModelNode node) {
+            return null;
+        }
+        
+        @Override
+        public ModelNode wrap(String obj, ModelNode node) {
+            return null;
+        }
+    };
+	
     public class AdminImpl implements Admin{
         private static final long CACHE_TIME = 5*1000;
     	private static final String CLASS_NAME = "class-name";
@@ -398,7 +415,7 @@ public class AdminFactory {
 		}
 
 		public Set<String> getInstalledJDBCDrivers() throws AdminException {
-			HashSet<String> driverList = new HashSet<String>();
+			HashSet<String> driverList = new LinkedHashSet<String>();
 			driverList.addAll(getChildNodeNames("datasources", "jdbc-driver"));
 
 			if (!this.domainMode) {
@@ -969,13 +986,7 @@ public class AdminFactory {
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (Util.isSuccess(outcome)) {
-	            	if (this.domainMode) {
-	            		return getDomainAwareList(outcome, VDBMetadataMapper.CacheStatisticsMetadataMapper.INSTANCE);
-	            	}
-	            	if (outcome.hasDefined("result")) {
-	            		ModelNode result = outcome.get("result");
-	            		return Arrays.asList(VDBMetadataMapper.CacheStatisticsMetadataMapper.INSTANCE.unwrap(result));
-	            	}
+            		return getDomainAwareList(outcome, VDBMetadataMapper.CacheStatisticsMetadataMapper.INSTANCE, false, false);
 	            }
 	        } catch (IOException e) {
 	        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70013, e);
@@ -989,13 +1000,7 @@ public class AdminFactory {
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (Util.isSuccess(outcome)) {
-	            	if (this.domainMode) {
-	            		return getDomainAwareList(outcome, VDBMetadataMapper.EngineStatisticsMetadataMapper.INSTANCE);
-	            	}
-	            	if (outcome.hasDefined("result")) {
-	            		ModelNode result = outcome.get("result");
-	            		return Arrays.asList(VDBMetadataMapper.EngineStatisticsMetadataMapper.INSTANCE.unwrap(result));
-	            	}
+            		return getDomainAwareList(outcome, VDBMetadataMapper.EngineStatisticsMetadataMapper.INSTANCE, false, false);
 	            }
 	        } catch (IOException e) {
 	        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70013, e);
@@ -1006,14 +1011,14 @@ public class AdminFactory {
 		@Override
 		public Collection<String> getCacheTypes() throws AdminException {
 	        final ModelNode request = buildRequest("teiid", "cache-types");//$NON-NLS-1$ //$NON-NLS-2$
-	        return new HashSet<String>(executeList(request));
+	        return new LinkedHashSet<String>(executeList(request));
 		}
 
 		private Collection<String> executeList(final ModelNode request)	throws AdminException {
 			try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (Util.isSuccess(outcome)) {
-	            	return Util.getList(outcome);
+                    return getDomainAwareList(outcome, STRINGMAPPER, true, true);
 	            }
 	        } catch (IOException e) {
 	        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70014, e);
@@ -1050,7 +1055,7 @@ public class AdminFactory {
 		private Collection<String> getDataSourceNames(
 				Map<String, String> connectionFactoryNames)
 				throws AdminException {
-			Set<String> datasourceNames = new HashSet<String>();
+			Set<String> datasourceNames = new LinkedHashSet<String>();
 			datasourceNames.addAll(getChildNodeNames("datasources", "data-source"));
 			datasourceNames.addAll(getChildNodeNames("datasources", "xa-data-source"));
 			if (connectionFactoryNames == null) {
@@ -1058,7 +1063,7 @@ public class AdminFactory {
 			}
 			datasourceNames.addAll(connectionFactoryNames.keySet());
 
-			Set<String> dsNames = new HashSet<String>();
+			Set<String> dsNames = new LinkedHashSet<String>();
 			for (String s:datasourceNames) {
 				if (s.startsWith(JAVA_CONTEXT)) {
 					dsNames.add(s.substring(6));
@@ -1073,7 +1078,7 @@ public class AdminFactory {
 		private Map<String, String> getConnectionFactoryNames() throws AdminException {
 			Map<String, String> datasourceNames = this.connectionFactoryNames.get();
 		    if (datasourceNames == null) {
-		    	datasourceNames = new HashMap<String, String>();
+		    	datasourceNames = new LinkedHashMap<String, String>();
     			Set<String> resourceAdapters = getInstalledResourceAdaptorNames();
     			for (String resource:resourceAdapters) {
     				getRAConnections(datasourceNames, resource);
@@ -1113,7 +1118,7 @@ public class AdminFactory {
 		private Set<String> getInstalledResourceAdaptorNames() throws AdminException {
 		    Set<String> templates = this.installedResourceAdaptorNames.get();
 			if (templates == null) {
-    			templates = new HashSet<String>();
+    			templates = new LinkedHashSet<String>();
     			templates.addAll(getChildNodeNames("resource-adapters", "resource-adapter"));
     	        this.installedResourceAdaptorNames.set(templates, CACHE_TIME);
 		    }
@@ -1139,7 +1144,7 @@ public class AdminFactory {
 		private Set<String> getDeployedResourceAdaptorNames() throws AdminException {
 		    Set<String> templates = this.deployedResourceAdaptorNames.get();
 			if (templates == null) {
-    			templates = new HashSet<String>();
+    			templates = new LinkedHashSet<String>();
     			List<String> deployments = getChildNodeNames(null, "deployment");
                 for (String deployment:deployments) {
                 	if (deployment.endsWith(".rar")) {
@@ -1157,7 +1162,7 @@ public class AdminFactory {
 
 		@Override
 		public Set<String> getDataSourceTemplateNames() throws AdminException {
-			Set<String> templates = new HashSet<String>();
+			Set<String> templates = new LinkedHashSet<String>();
 			templates.addAll(getInstalledJDBCDrivers());
 			templates.addAll(getResourceAdapterNames(null));
 			return templates;
@@ -1170,13 +1175,7 @@ public class AdminFactory {
 		        try {
 		            ModelNode outcome = this.connection.execute(request);
 		            if (Util.isSuccess(outcome)) {
-		            	if (this.domainMode) {
-		            		return getDomainAwareList(outcome, VDBMetadataMapper.WorkerPoolStatisticsMetadataMapper.INSTANCE);
-		            	}
-		            	if (outcome.hasDefined("result")) {
-		            		ModelNode result = outcome.get("result");
-		            		return Arrays.asList(VDBMetadataMapper.WorkerPoolStatisticsMetadataMapper.INSTANCE.unwrap(result));
-		            	}
+	            		return getDomainAwareList(outcome, VDBMetadataMapper.WorkerPoolStatisticsMetadataMapper.INSTANCE, false, false);
 		            }
 		        } catch (IOException e) {
 		        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70020, e);
@@ -1209,7 +1208,7 @@ public class AdminFactory {
 		        try {
 		            ModelNode outcome = this.connection.execute(request);
 		            if (Util.isSuccess(outcome)) {
-		                return getDomainAwareList(outcome, RequestMetadataMapper.INSTANCE);
+		                return getDomainAwareList(outcome, RequestMetadataMapper.INSTANCE, false, true);
 		            }
 
 		        } catch (IOException e) {
@@ -1226,7 +1225,7 @@ public class AdminFactory {
 		        try {
 		            ModelNode outcome = this.connection.execute(request);
 		            if (Util.isSuccess(outcome)) {
-		                return getDomainAwareList(outcome, RequestMetadataMapper.INSTANCE);
+		                return getDomainAwareList(outcome, RequestMetadataMapper.INSTANCE, false, true);
 		            }
 		        } catch (IOException e) {
 		        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70024, e);
@@ -1242,7 +1241,7 @@ public class AdminFactory {
 		        try {
 		            ModelNode outcome = this.connection.execute(request);
 		            if (Util.isSuccess(outcome)) {
-		                return getDomainAwareList(outcome, SessionMetadataMapper.INSTANCE);
+		                return getDomainAwareList(outcome, SessionMetadataMapper.INSTANCE, false, true);
 		            }
 		        } catch (IOException e) {
 		        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70025, e);
@@ -1559,7 +1558,7 @@ public class AdminFactory {
 		        try {
 		            ModelNode outcome = this.connection.execute(request);
 		            if (Util.isSuccess(outcome)) {
-		                return getDomainAwareList(outcome, TransactionMetadataMapper.INSTANCE);
+		                return getDomainAwareList(outcome, TransactionMetadataMapper.INSTANCE, false, true);
 		            }
 		        } catch (IOException e) {
 		        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70028, e);
@@ -1609,18 +1608,10 @@ public class AdminFactory {
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (Util.isSuccess(outcome)) {
-	            	if (outcome.hasDefined("result")) {
-	            		if (this.domainMode) {
-		            		List<VDBTranslatorMetaData> list = getDomainAwareList(outcome, VDBMetadataMapper.VDBTranslatorMetaDataMapper.INSTANCE);
-		            		if (list != null && !list.isEmpty()) {
-		            			return list.get(0);
-		            		}
-	            		}
-	            		else {
-		            		ModelNode result = outcome.get("result");
-		            		return VDBMetadataMapper.VDBTranslatorMetaDataMapper.INSTANCE.unwrap(result);
-	            		}
-	            	}
+            		List<VDBTranslatorMetaData> list = getDomainAwareList(outcome, VDBMetadataMapper.VDBTranslatorMetaDataMapper.INSTANCE, true, false);
+            		if (!list.isEmpty()) {
+            			return list.get(0);
+            		}
 	            }
 
 	        } catch (IOException e) {
@@ -1635,7 +1626,7 @@ public class AdminFactory {
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (Util.isSuccess(outcome)) {
-	                return getDomainAwareList(outcome, VDBMetadataMapper.VDBTranslatorMetaDataMapper.INSTANCE);
+	                return getDomainAwareList(outcome, VDBMetadataMapper.VDBTranslatorMetaDataMapper.INSTANCE, true, true);
 	            }
 	        } catch (IOException e) {
 	        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70034, e);
@@ -1723,13 +1714,15 @@ public class AdminFactory {
             return request;
         }
 
-		private <T> List<T> getDomainAwareList(ModelNode operationResult,  MetadataMapper<T> mapper) {
+		private <T> List<T> getDomainAwareList(ModelNode operationResult,  MetadataMapper<T> mapper, boolean singleInstance, boolean listResult) throws AdminComponentException {
 	    	if (this.domainMode) {
 	    		List<T> returnList = new ArrayList<T>();
-
+	    		if (!operationResult.has("server-groups")) {
+	    		    throw new AdminComponentException(AdminPlugin.Event.TEIID70058, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70058, operationResult));
+	    		}
 	    		ModelNode serverGroups = operationResult.get("server-groups");
 	    		Set<String> serverGroupNames = serverGroups.keys();
-	    		for (String serverGroupName:serverGroupNames) {
+	    		outer: for (String serverGroupName:serverGroupNames) {
 	    			ModelNode serverGroup = serverGroups.get(serverGroupName);
 	    			ModelNode hostGroups = serverGroup.get("host");
 	    			Set<String> hostKeys = hostGroups.keys();
@@ -1739,19 +1732,25 @@ public class AdminFactory {
 		    			for (String serverName:serverNames) {
 		    				ModelNode server = hostGroup.get(serverName);
 		    				if (server.get("response", "outcome").asString().equals(Util.SUCCESS)) {
-		    					ModelNode result = server.get("response", "result");
+		    					ModelNode result = server.get("response", RESULT);
 		    					if (result.isDefined()) {
-		    				        List<ModelNode> nodeList = result.asList(); 
-		    				        for(ModelNode node : nodeList) {
-		    				        	T anObj = mapper.unwrap(node);
-		    				        	if (anObj instanceof DomainAware) {
-		    				        		((AdminObjectImpl)anObj).setServerGroup(serverGroupName);
-		    				        		((AdminObjectImpl)anObj).setServerName(serverName);
-		    				        		((AdminObjectImpl)anObj).setHostName(hostName);
-		    				        	}
-		    				        	returnList.add(anObj);
+		    					    if (listResult) {
+    		    				        List<ModelNode> nodeList = result.asList(); 
+    		    				        for(ModelNode node : nodeList) {
+    		    				        	T anObj = mapper.unwrap(node);
+    		    				        	if (anObj instanceof DomainAware) {
+    		    				        		((AdminObjectImpl)anObj).setServerGroup(serverGroupName);
+    		    				        		((AdminObjectImpl)anObj).setServerName(serverName);
+    		    				        		((AdminObjectImpl)anObj).setHostName(hostName);
+    		    				        	}
+    		    				        	returnList.add(anObj);
+    		    				        }
+		    					    } else {
+		    					        returnList.add(mapper.unwrap(result));
+		    					    }
+		    				        if (singleInstance) {
+		    				            break outer;
 		    				        }
-
 		    					}
 		    				}
 		    			}
@@ -1759,15 +1758,21 @@ public class AdminFactory {
 	    		}
 	    		return returnList;
 	    	}
+	    	if (!listResult) {
+	    	    if(!operationResult.hasDefined(RESULT)) {
+	                return Collections.emptyList();
+	            }
+	    	    return Arrays.asList(mapper.unwrap(operationResult.get(RESULT)));
+	    	}
 	    	return getList(operationResult, mapper);
 		}
 
 	    private <T> List<T> getList(ModelNode operationResult,  MetadataMapper<T> mapper) {
-	        if(!operationResult.hasDefined("result")) {
+	        if(!operationResult.hasDefined(RESULT)) {
 				return Collections.emptyList();
 			}
 
-	        List<ModelNode> nodeList = operationResult.get("result").asList(); //$NON-NLS-1$
+	        List<ModelNode> nodeList = operationResult.get(RESULT).asList(); //$NON-NLS-1$
 	        if(nodeList.isEmpty()) {
 				return Collections.emptyList();
 			}
@@ -1788,17 +1793,9 @@ public class AdminFactory {
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (Util.isSuccess(outcome)) {
-	            	if (this.domainMode) {
-		            	List<VDBMetaData> list = getDomainAwareList(outcome, VDBMetadataMapper.INSTANCE);
-		            	if (list != null && !list.isEmpty()) {
-		            		return list.get(0);
-		            	}
-	            	}
-	            	else {
-		            	if (outcome.hasDefined("result")) {
-		            		ModelNode result = outcome.get("result");
-		            		return VDBMetadataMapper.INSTANCE.unwrap(result);
-		            	}
+	            	List<VDBMetaData> list = getDomainAwareList(outcome, VDBMetadataMapper.INSTANCE, true, false);
+	            	if (!list.isEmpty()) {
+	            		return list.get(0);
 	            	}
 	            }
 	        } catch (IOException e) {
@@ -1813,7 +1810,7 @@ public class AdminFactory {
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (Util.isSuccess(outcome)) {
-	                return getDomainAwareList(outcome, VDBMetadataMapper.INSTANCE);
+	                return getDomainAwareList(outcome, VDBMetadataMapper.INSTANCE, true, true);
 	            }
 	        } catch (IOException e) {
 	        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70036, e);
@@ -2108,15 +2105,19 @@ public class AdminFactory {
 	            if (!Util.isSuccess(outcome)) {
 	            	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70045, Util.getFailureDescription(outcome));
 	            }
-	            return outcome.get(RESULT).asString();
+                List<String> vals = getDomainAwareList(outcome, STRINGMAPPER, true, false);
+                if (!vals.isEmpty()) {
+                    return vals.get(0);
+                }
+                return null;
 	        } catch (IOException e) {
 	        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70046, e);
 	        }
 		}
 
 		@Override
-		public String getQueryPlan(String sessionId, int executionId)  throws AdminException {
-			final ModelNode request = buildRequest("teiid", "get-plan", "session", sessionId, "execution-id", String.valueOf(executionId));//$NON-NLS-1$
+		public String getQueryPlan(String sessionId, long executionId)  throws AdminException {
+			final ModelNode request = buildRequest("teiid", "get-query-plan", "session", sessionId, "execution-id", String.valueOf(executionId));//$NON-NLS-1$
 			if (request == null) {
 				return null;
 			}
@@ -2125,7 +2126,11 @@ public class AdminFactory {
 	            if (!Util.isSuccess(outcome)) {
 	            	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70021, Util.getFailureDescription(outcome));
 	            }
-	            return outcome.get(RESULT).asString();
+                List<String> vals = getDomainAwareList(outcome, STRINGMAPPER, true, false);
+                if (!vals.isEmpty()) {
+                    return vals.get(0);
+                }
+                return null;
 	        } catch (IOException e) {
 	        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70022, e);
 	        }

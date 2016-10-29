@@ -584,7 +584,7 @@ public class EmbeddedAdminFactory {
 		}
 
 		@Override
-		public String getQueryPlan(String sessionId, int executionId)throws AdminException {
+		public String getQueryPlan(String sessionId, long executionId)throws AdminException {
 			PlanNode plan = this.embeddedServer.dqp.getPlan(sessionId, executionId);
 			if (plan == null) {
 				return null;
