@@ -423,28 +423,29 @@ public class AdminFactory {
 				final ModelNode request = buildRequest("datasources", "installed-drivers-list");
 		        try {
 		            ModelNode outcome = this.connection.execute(request);
-		            if (Util.isSuccess(outcome)) {
-			            List<String> drivers = getList(outcome, new AbstractMetadatMapper() {
-							@Override
-							public String unwrap(ModelNode node) {
-								if (node.hasDefined("driver-name")) {
-									return node.get("driver-name").asString();
-								}
-								return null;
+		            if (!Util.isSuccess(outcome)) {
+	                    throw new AdminProcessingException(AdminPlugin.Event.TEIID70039, Util.getFailureDescription(outcome));
+	                }
+		            List<String> drivers = getList(outcome, new AbstractMetadatMapper() {
+						@Override
+						public String unwrap(ModelNode node) {
+							if (node.hasDefined("driver-name")) {
+								return node.get("driver-name").asString();
 							}
-						});
-                        List<String> xadrivers = getList(outcome, new AbstractMetadatMapper() {
-                            @Override
-                            public String unwrap(ModelNode node) {
-                                if (node.hasDefined("driver-name") && node.hasDefined("driver-xa-datasource-class-name")) {
-                                    return node.get("driver-name").asString()+"-xa";
-                                }
-                                return null;
+							return null;
+						}
+					});
+                    List<String> xadrivers = getList(outcome, new AbstractMetadatMapper() {
+                        @Override
+                        public String unwrap(ModelNode node) {
+                            if (node.hasDefined("driver-name") && node.hasDefined("driver-xa-datasource-class-name")) {
+                                return node.get("driver-name").asString()+"-xa";
                             }
-                        });			            
-			            driverList.addAll(drivers);
-			            driverList.addAll(xadrivers);
-		            }
+                            return null;
+                        }
+                    });			            
+		            driverList.addAll(drivers);
+		            driverList.addAll(xadrivers);
 		        } catch (IOException e) {
 		        	throw new AdminComponentException(AdminPlugin.Event.TEIID70052, e);
 		        }
@@ -985,13 +986,13 @@ public class AdminFactory {
 	        final ModelNode request = buildRequest("teiid", "cache-statistics",	"cache-type", cacheType);//$NON-NLS-1$ //$NON-NLS-2$
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
-	            if (Util.isSuccess(outcome)) {
-            		return getDomainAwareList(outcome, VDBMetadataMapper.CacheStatisticsMetadataMapper.INSTANCE, false, false);
-	            }
+	            if (!Util.isSuccess(outcome)) {
+                    throw new AdminProcessingException(AdminPlugin.Event.TEIID70039, Util.getFailureDescription(outcome));
+                }
+        		return getDomainAwareList(outcome, VDBMetadataMapper.CacheStatisticsMetadataMapper.INSTANCE, false, false);
 	        } catch (IOException e) {
 	        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70013, e);
 	        }
-	        return null;
 		}
 
 		@Override
@@ -999,13 +1000,13 @@ public class AdminFactory {
 	        final ModelNode request = buildRequest("teiid", "engine-statistics");//$NON-NLS-1$ //$NON-NLS-2$
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
-	            if (Util.isSuccess(outcome)) {
-            		return getDomainAwareList(outcome, VDBMetadataMapper.EngineStatisticsMetadataMapper.INSTANCE, false, false);
-	            }
+	            if (!Util.isSuccess(outcome)) {
+                    throw new AdminProcessingException(AdminPlugin.Event.TEIID70039, Util.getFailureDescription(outcome));
+                }
+        		return getDomainAwareList(outcome, VDBMetadataMapper.EngineStatisticsMetadataMapper.INSTANCE, false, false);
 	        } catch (IOException e) {
 	        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70013, e);
 	        }
-	        return null;
 		}
 
 		@Override
@@ -1017,27 +1018,26 @@ public class AdminFactory {
 		private Collection<String> executeList(final ModelNode request)	throws AdminException {
 			try {
 	            ModelNode outcome = this.connection.execute(request);
-	            if (Util.isSuccess(outcome)) {
-                    return getDomainAwareList(outcome, STRINGMAPPER, true, true);
-	            }
+	            if (!Util.isSuccess(outcome)) {
+                    throw new AdminProcessingException(AdminPlugin.Event.TEIID70039, Util.getFailureDescription(outcome));
+                }
+                return getDomainAwareList(outcome, STRINGMAPPER, true, true);
 	        } catch (IOException e) {
 	        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70014, e);
 	        }
-	        return Collections.emptyList();
 		}
 
 		private List<String> getChildNodeNames(String subsystem, String childNode) throws AdminException {
 	        final ModelNode request = buildRequest(subsystem, "read-children-names", "child-type", childNode);//$NON-NLS-1$
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
-	            if (Util.isSuccess(outcome)) {
-	                return Util.getList(outcome);
-	            }
+	            if (!Util.isSuccess(outcome)) {
+                    throw new AdminProcessingException(AdminPlugin.Event.TEIID70039, Util.getFailureDescription(outcome));
+                }
+                return Util.getList(outcome);
 	        } catch (IOException e) {
 	        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70015, e);
 	        }
-	        return Collections.emptyList();
-
 		}
 
 		/**
@@ -1171,26 +1171,21 @@ public class AdminFactory {
 		@Override
 		public Collection<? extends WorkerPoolStatistics> getWorkerPoolStats() throws AdminException {
 			final ModelNode request = buildRequest("teiid", "workerpool-statistics");//$NON-NLS-1$
-			if (request != null) {
-		        try {
-		            ModelNode outcome = this.connection.execute(request);
-		            if (Util.isSuccess(outcome)) {
-	            		return getDomainAwareList(outcome, VDBMetadataMapper.WorkerPoolStatisticsMetadataMapper.INSTANCE, false, false);
-		            }
-		        } catch (IOException e) {
-		        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70020, e);
-		        }
-			}
-	        return null;
+	        try {
+	            ModelNode outcome = this.connection.execute(request);
+	            if (!Util.isSuccess(outcome)) {
+                    throw new AdminProcessingException(AdminPlugin.Event.TEIID70039, Util.getFailureDescription(outcome));
+                }
+        		return getDomainAwareList(outcome, VDBMetadataMapper.WorkerPoolStatisticsMetadataMapper.INSTANCE, false, false);
+	        } catch (IOException e) {
+	        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70020, e);
+	        }
 		}
 
 
 		@Override
 		public void cancelRequest(String sessionId, long executionId) throws AdminException {
 			final ModelNode request = buildRequest("teiid", "cancel-request", "session", sessionId, "execution-id", String.valueOf(executionId));//$NON-NLS-1$
-			if (request == null) {
-				return;
-			}
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (!Util.isSuccess(outcome)) {
@@ -1204,50 +1199,43 @@ public class AdminFactory {
 		@Override
 		public Collection<? extends Request> getRequests() throws AdminException {
 			final ModelNode request = buildRequest("teiid", "list-requests");//$NON-NLS-1$
-			if (request != null) {
-		        try {
-		            ModelNode outcome = this.connection.execute(request);
-		            if (Util.isSuccess(outcome)) {
-		                return getDomainAwareList(outcome, RequestMetadataMapper.INSTANCE, false, true);
-		            }
-
-		        } catch (IOException e) {
-		        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70023, e);
-		        }
-			}
-	        return Collections.emptyList();
+	        try {
+	            ModelNode outcome = this.connection.execute(request);
+	            if (!Util.isSuccess(outcome)) {
+                    throw new AdminProcessingException(AdminPlugin.Event.TEIID70039, Util.getFailureDescription(outcome));
+                }
+                return getDomainAwareList(outcome, RequestMetadataMapper.INSTANCE, false, true);
+	        } catch (IOException e) {
+	        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70023, e);
+	        }
 		}
 
 		@Override
 		public Collection<? extends Request> getRequestsForSession(String sessionId) throws AdminException {
 			final ModelNode request = buildRequest("teiid", "list-requests-per-session", "session", sessionId);//$NON-NLS-1$
-			if (request != null) {
-		        try {
-		            ModelNode outcome = this.connection.execute(request);
-		            if (Util.isSuccess(outcome)) {
-		                return getDomainAwareList(outcome, RequestMetadataMapper.INSTANCE, false, true);
-		            }
-		        } catch (IOException e) {
-		        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70024, e);
-		        }
-			}
-	        return Collections.emptyList();
+	        try {
+	            ModelNode outcome = this.connection.execute(request);
+	            if (!Util.isSuccess(outcome)) {
+                    throw new AdminProcessingException(AdminPlugin.Event.TEIID70039, Util.getFailureDescription(outcome));
+                }
+                return getDomainAwareList(outcome, RequestMetadataMapper.INSTANCE, false, true);
+	        } catch (IOException e) {
+	        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70024, e);
+	        }
 		}
 
 		@Override
 		public Collection<? extends Session> getSessions() throws AdminException {
 			final ModelNode request = buildRequest("teiid", "list-sessions");//$NON-NLS-1$
-			if (request != null) {
-		        try {
-		            ModelNode outcome = this.connection.execute(request);
-		            if (Util.isSuccess(outcome)) {
-		                return getDomainAwareList(outcome, SessionMetadataMapper.INSTANCE, false, true);
-		            }
-		        } catch (IOException e) {
-		        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70025, e);
-		        }
-			}
-	        return Collections.emptyList();
+	        try {
+	            ModelNode outcome = this.connection.execute(request);
+	            if (!Util.isSuccess(outcome)) {
+                    throw new AdminProcessingException(AdminPlugin.Event.TEIID70039, Util.getFailureDescription(outcome));
+                }
+                return getDomainAwareList(outcome, SessionMetadataMapper.INSTANCE, false, true);
+	        } catch (IOException e) {
+	        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70025, e);
+	        }
 		}
 
 		/**
@@ -1554,25 +1542,20 @@ public class AdminFactory {
 		@Override
 		public Collection<? extends Transaction> getTransactions() throws AdminException {
 			final ModelNode request = buildRequest("teiid", "list-transactions");//$NON-NLS-1$
-			if (request != null) {
-		        try {
-		            ModelNode outcome = this.connection.execute(request);
-		            if (Util.isSuccess(outcome)) {
-		                return getDomainAwareList(outcome, TransactionMetadataMapper.INSTANCE, false, true);
-		            }
-		        } catch (IOException e) {
-		        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70028, e);
-		        }
-			}
-	        return Collections.emptyList();
+	        try {
+	            ModelNode outcome = this.connection.execute(request);
+	            if (!Util.isSuccess(outcome)) {
+                    throw new AdminProcessingException(AdminPlugin.Event.TEIID70039, Util.getFailureDescription(outcome));
+                }
+                return getDomainAwareList(outcome, TransactionMetadataMapper.INSTANCE, false, true);
+	        } catch (IOException e) {
+	        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70028, e);
+	        }
 		}
 
 		@Override
 		public void terminateSession(String sessionId) throws AdminException {
 			final ModelNode request = buildRequest("teiid", "terminate-session", "session", sessionId);//$NON-NLS-1$
-			if (request == null) {
-				return;
-			}
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (!Util.isSuccess(outcome)) {
@@ -1602,22 +1585,19 @@ public class AdminFactory {
 		@Override
 		public Translator getTranslator(String deployedName) throws AdminException {
 			final ModelNode request = buildRequest("teiid", "get-translator", "translator-name", deployedName);//$NON-NLS-1$
-			if (request == null) {
-				return null;
-			}
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
-	            if (Util.isSuccess(outcome)) {
-            		List<VDBTranslatorMetaData> list = getDomainAwareList(outcome, VDBMetadataMapper.VDBTranslatorMetaDataMapper.INSTANCE, true, false);
-            		if (!list.isEmpty()) {
-            			return list.get(0);
-            		}
-	            }
-
+	            if (!Util.isSuccess(outcome)) {
+                    throw new AdminProcessingException(AdminPlugin.Event.TEIID70039, Util.getFailureDescription(outcome));
+                }
+        		List<VDBTranslatorMetaData> list = getDomainAwareList(outcome, VDBMetadataMapper.VDBTranslatorMetaDataMapper.INSTANCE, true, false);
+        		if (!list.isEmpty()) {
+        			return list.get(0);
+        		}
+        		return null;
 	        } catch (IOException e) {
 	        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70033, e);
 	        }
-			return null;
 		}
 
 		@Override
@@ -1625,14 +1605,13 @@ public class AdminFactory {
 	        final ModelNode request = buildRequest("teiid", "list-translators");//$NON-NLS-1$ //$NON-NLS-2$
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
-	            if (Util.isSuccess(outcome)) {
-	                return getDomainAwareList(outcome, VDBMetadataMapper.VDBTranslatorMetaDataMapper.INSTANCE, true, true);
-	            }
+	            if (!Util.isSuccess(outcome)) {
+                    throw new AdminProcessingException(AdminPlugin.Event.TEIID70039, Util.getFailureDescription(outcome));
+                }
+                return getDomainAwareList(outcome, VDBMetadataMapper.VDBTranslatorMetaDataMapper.INSTANCE, true, true);
 	        } catch (IOException e) {
 	        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70034, e);
 	        }
-
-	        return Collections.emptyList();
 		}
 		private ModelNode buildRequest(String subsystem, String operationName, String... params) throws AdminException {
 			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
@@ -1792,16 +1771,17 @@ public class AdminFactory {
 			}
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
-	            if (Util.isSuccess(outcome)) {
-	            	List<VDBMetaData> list = getDomainAwareList(outcome, VDBMetadataMapper.INSTANCE, true, false);
-	            	if (!list.isEmpty()) {
-	            		return list.get(0);
-	            	}
+	            if (!Util.isSuccess(outcome)) {
+                    throw new AdminProcessingException(AdminPlugin.Event.TEIID70039, Util.getFailureDescription(outcome));
 	            }
+            	List<VDBMetaData> list = getDomainAwareList(outcome, VDBMetadataMapper.INSTANCE, true, false);
+            	if (!list.isEmpty()) {
+            		return list.get(0);
+            	}
+            	return null;
 	        } catch (IOException e) {
 	        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70035, e);
 	        }
-			return null;
 		}
 
 		@Override
@@ -1809,14 +1789,13 @@ public class AdminFactory {
 	        final ModelNode request = buildRequest("teiid", "list-vdbs");//$NON-NLS-1$ //$NON-NLS-2$
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
-	            if (Util.isSuccess(outcome)) {
-	                return getDomainAwareList(outcome, VDBMetadataMapper.INSTANCE, true, true);
-	            }
+	            if (!Util.isSuccess(outcome)) {
+                    throw new AdminProcessingException(AdminPlugin.Event.TEIID70039, Util.getFailureDescription(outcome));
+                }
+                return getDomainAwareList(outcome, VDBMetadataMapper.INSTANCE, true, true);
 	        } catch (IOException e) {
 	        	 throw new AdminComponentException(AdminPlugin.Event.TEIID70036, e);
 	        }
-
-	        return Collections.emptyList();
 		}
 		
 		@Override

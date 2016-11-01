@@ -593,28 +593,29 @@ abstract class BaseCachehandler extends BaseOperationHandler<SessionAwareCache>{
 		}
 
 		ServiceController<?> sc;
-		if (SessionAwareCache.isResultsetCache(cacheType)) {
-			sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.CACHE_RESULTSET);
-		}
-		else {
-			sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.CACHE_PREPAREDPLAN);
+		try {
+    		if (Admin.Cache.valueOf(cacheType) == Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE) {
+    			sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.CACHE_RESULTSET);
+    		}
+    		else {
+    			sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.CACHE_PREPAREDPLAN);
+    		}
+		} catch (IllegalArgumentException e) {
+            throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50071, cacheType));
 		}
 
-		if (sc != null) {
-			return SessionAwareCache.class.cast(sc.getValue());
-		}
-		return null;
+		return SessionAwareCache.class.cast(sc.getValue());
 	}
 }
 
 
-class CacheTypes extends BaseCachehandler {
+class CacheTypes extends BaseOperationHandler<Void> {
 	protected CacheTypes() {
 		super("cache-types"); //$NON-NLS-1$
 	}
 
 	@Override
-	protected void executeOperation(OperationContext context, SessionAwareCache cache, ModelNode operation) throws OperationFailedException {
+	protected void executeOperation(OperationContext context, Void cache, ModelNode operation) throws OperationFailedException {
 		ModelNode result = context.getResult();
 		Collection<String> types = SessionAwareCache.getCacheTypes();
 		for (String type:types) {
@@ -642,9 +643,6 @@ class ClearCache extends BaseCachehandler {
 		}
 
 		String cacheType = operation.get(OperationsConstants.CACHE_TYPE.getName()).asString();
-		if (cache == null) {
-			throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50071, cacheType));
-		}
 
 		if (operation.hasDefined(OperationsConstants.VDB_NAME.getName()) && operation.hasDefined(OperationsConstants.VDB_VERSION.getName())) {
 			String vdbName = operation.get(OperationsConstants.VDB_NAME.getName()).asString();
@@ -679,9 +677,6 @@ class CacheStatistics extends BaseCachehandler {
 			throw new OperationFailedException(IntegrationPlugin.Util.getString(OperationsConstants.CACHE_TYPE.getName()+MISSING));
 		}
 		String cacheType = operation.get(OperationsConstants.CACHE_TYPE.getName()).asString();
-		if (cache == null) {
-			throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50071, cacheType));
-		}
 
 		ModelNode result = context.getResult();
 		CacheStatisticsMetadata stats = cache.buildCacheStats(cacheType);
@@ -855,9 +850,6 @@ class GetVDB extends BaseOperationHandler<VDBRepository>{
 		VDBMetaData vdb = repo.getVDB(vdbName, vdbVersion);
 		if (vdb != null) {
 			VDBMetadataMapper.INSTANCE.wrap(vdb, result);
-		}
-		else {
-			throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50096, vdbName, vdbVersion));
 		}
 	}
 
@@ -1034,7 +1026,9 @@ class GetTranslator extends TranslatorOperationHandler{
 		ModelNode result = context.getResult();
 		String translatorName = operation.get(OperationsConstants.TRANSLATOR_NAME.getName()).asString();
 		VDBTranslatorMetaData translator = repo.getTranslatorMetaData(translatorName);
-		VDBMetadataMapper.VDBTranslatorMetaDataMapper.INSTANCE.wrap(translator, result);
+		if (translator != null) {
+		    VDBMetadataMapper.VDBTranslatorMetaDataMapper.INSTANCE.wrap(translator, result);
+		}
 	}
 
 	@Override
