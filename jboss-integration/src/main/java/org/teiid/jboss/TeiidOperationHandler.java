@@ -1563,16 +1563,13 @@ class ReadRARDescription extends TeiidOperationHandler {
 			ConnectorXmlDescriptor cd = du.getAttachment(ConnectorXmlDescriptor.ATTACHMENT_KEY);
 			ra = cd.getConnector().getResourceadapter();
 		}
-		if (ra instanceof ResourceAdapter) {
-			ResourceAdapter ra1516 = (ResourceAdapter)ra;
-			result.add(buildReadOnlyNode("resourceadapter-class", ra1516.getResourceadapterClass())); //$NON-NLS-1$
-			List<ConnectionDefinition> connDefinitions = ra1516.getOutboundResourceadapter().getConnectionDefinitions();
-			for (ConnectionDefinition p:connDefinitions) {
-				result.add(buildReadOnlyNode("managedconnectionfactory-class", p.getManagedConnectionFactoryClass().getValue())); //$NON-NLS-1$
-				List<? extends ConfigProperty> props = p.getConfigProperties();
-				for (ConfigProperty prop:props) {
-					result.add(buildNode(prop));
-				}
+		result.add(buildReadOnlyNode("resourceadapter-class", ra.getResourceadapterClass())); //$NON-NLS-1$
+		List<ConnectionDefinition> connDefinitions = ra.getOutboundResourceadapter().getConnectionDefinitions();
+		for (ConnectionDefinition p:connDefinitions) {
+			result.add(buildReadOnlyNode("managedconnectionfactory-class", p.getManagedConnectionFactoryClass().getValue())); //$NON-NLS-1$
+			List<? extends ConfigProperty> props = p.getConfigProperties();
+			for (ConfigProperty prop:props) {
+				result.add(buildNode(prop));
 			}
 		}
 	}
@@ -1609,7 +1606,7 @@ class ReadRARDescription extends TeiidOperationHandler {
 	protected void describeParameters(SimpleOperationDefinitionBuilder builder) {
 		builder.addParameter(OperationsConstants.RAR_NAME);
 		builder.setReplyType(ModelType.LIST);
-		builder.setReplyValueType(ModelType.STRING);
+		builder.setReplyValueType(ModelType.PROPERTY);
 	}
 }
 
