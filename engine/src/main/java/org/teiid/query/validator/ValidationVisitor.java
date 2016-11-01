@@ -694,7 +694,8 @@ public class ValidationVisitor extends AbstractValidationVisitor {
             boolean multiSource = getMetadata().isMultiSource(getMetadata().getModelID(insertGroup.getMetadataID()));
             // Validate that all elements in variable list are updatable
         	for (ElementSymbol insertElem : vars) {
-                if(! getMetadata().elementSupports(insertElem.getMetadataID(), SupportConstants.Element.UPDATE)) {
+                if(! getMetadata().elementSupports(insertElem.getMetadataID(), SupportConstants.Element.UPDATE)
+                        && !isUpsertKeyColumn(obj, insertElem)) {
                     handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0052", insertElem), insertElem); //$NON-NLS-1$
                 }
                 if (multiSource && getMetadata().isMultiSourceElement(insertElem.getMetadataID())) {
@@ -733,7 +734,12 @@ public class ValidationVisitor extends AbstractValidationVisitor {
                         // If nextValue is an expression, evaluate it before checking for null
                         Object evaluatedValue = Evaluator.evaluate(nextValue);
                         if(evaluatedValue == null && ! getMetadata().elementSupports(nextVar.getMetadataID(), SupportConstants.Element.NULL)) {
-                            handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0055", nextVar), nextVar); //$NON-NLS-1$
+                            //as an upsert key it can mean an insert
+                            if (!isUpsertKeyColumn(obj, nextVar) 
+                                    || !(getMetadata().elementSupports(nextVar.getMetadataID(), SupportConstants.Element.AUTO_INCREMENT)
+                                            || getMetadata().elementSupports(nextVar.getMetadataID(), SupportConstants.Element.DEFAULT_VALUE))) { 
+                                handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0055", nextVar), nextVar); //$NON-NLS-1$
+                            }
                         }
                     } catch(ExpressionEvaluationException e) {
                         //ignore for now, we don't have the context which could be the problem
@@ -743,6 +749,16 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         } catch(TeiidComponentException e) {
             handleException(e, obj);
         } 
+    }
+
+    private boolean isUpsertKeyColumn(Insert obj, ElementSymbol insertElem)
+            throws TeiidComponentException, QueryMetadataException {
+        if (!obj.isUpsert()) {
+            return false;
+        }
+        Collection keys = getMetadata().getUniqueKeysInGroup(obj.getGroup().getMetadataID());
+        //not an actual update, but a modification of existing row
+        return !keys.isEmpty() && getMetadata().getElementIDsInKey(keys.iterator().next()).contains(insertElem.getMetadataID());
     }
     
     protected void validateSetClauseList(SetClauseList list) {

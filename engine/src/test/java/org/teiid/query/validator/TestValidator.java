@@ -1791,6 +1791,18 @@ public class TestValidator {
         helpValidate(userUpdateStr, new String[]{"UPSERT INTO pm1.g2 (e1) VALUES ('x')"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
     }
     
+    @Test public void testUpsertWithNonUpdatableKey() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table g1 (e1 integer not null auto_increment primary key options (updatable false), e2 integer) options (updatable true)", "x", "y");
+        
+        String userUpdateStr = "UPSERT into g1 (e1, e2) values (1, 1)"; //$NON-NLS-1$
+        
+        helpValidate(userUpdateStr, new String[]{}, metadata); //$NON-NLS-1$
+        
+        userUpdateStr = "UPSERT into g1 (e1, e2) values (null, 1)"; //$NON-NLS-1$
+        
+        helpValidate(userUpdateStr, new String[]{}, metadata); //$NON-NLS-1$
+    }
+    
     @Test public void testDeleteError() {
         String userUpdateStr = "DELETE from vm1.g2 where e1='x'"; //$NON-NLS-1$
         
