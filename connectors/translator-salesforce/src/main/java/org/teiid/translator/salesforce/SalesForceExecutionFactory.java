@@ -277,5 +277,10 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
         result.setDone(true);
         return result;
     }
+    
+    @Override
+    public boolean supportsUpsert() {
+        return true;
+    }
 
 }

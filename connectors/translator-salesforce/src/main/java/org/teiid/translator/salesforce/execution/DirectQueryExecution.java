@@ -102,6 +102,9 @@ public class DirectQueryExecution implements ProcedureExecution  {
 		else if (query.startsWith("create;")) { //$NON-NLS-1$
 			doInsert(query.substring(7));
 		}
+		else if (query.startsWith("upsert;")) { //$NON-NLS-1$
+		    doUpsert(query.substring(7));
+		}
 		else if (query.startsWith("update;")) { //$NON-NLS-1$
 			doUpdate(query.substring(7));
 		}
@@ -148,6 +151,16 @@ public class DirectQueryExecution implements ProcedureExecution  {
 			throw new TranslatorException(e);
 		}
 	}
+	
+	private void doUpsert(String upsert) throws TranslatorException {
+        DataPayload payload = buildDataPlayload(upsert);
+        try {
+            this.updateCount = this.connection.upsert(payload); //$NON-NLS-1$
+            this.updateQuery = true;
+        } catch (ResourceException e) {
+            throw new TranslatorException(e);
+        }
+    }
 
 	private void doSelect(String select) throws TranslatorException {
 		try {

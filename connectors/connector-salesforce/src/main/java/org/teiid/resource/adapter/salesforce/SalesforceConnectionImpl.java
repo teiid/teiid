@@ -76,7 +76,8 @@ import com.sforce.ws.transport.JdkHttpTransport;
 
 public class SalesforceConnectionImpl extends BasicConnection implements SalesforceConnection {
 	
-	private static final String PK_CHUNKING_HEADER = "Sforce-Enable-PKChunking"; //$NON-NLS-1$
+	private static final String ID_FIELD_NAME = "id"; //$NON-NLS-1$
+    private static final String PK_CHUNKING_HEADER = "Sforce-Enable-PKChunking"; //$NON-NLS-1$
     private static final int MAX_CHUNK_SIZE = 100000;
 	private BulkConnection bulkConnection; 
 	private PartnerConnection partnerConnection;
@@ -344,6 +345,35 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 		}
 		return results.length;
 	}
+	
+	public int upsert(DataPayload data) throws ResourceException {
+	    SObject toCreate = new SObject();
+        toCreate.setType(data.getType());
+        for (DataPayload.Field field : data.getMessageElements()) {
+            toCreate.addField(field.name, field.value);
+        }
+        SObject[] objects = new SObject[] {toCreate};
+        UpsertResult[] results;
+        try {
+            results = partnerConnection.upsert(ID_FIELD_NAME, objects);
+        } catch (InvalidFieldFault e) {
+            throw new ResourceException(e);
+        } catch (InvalidSObjectFault e) {
+            throw new ResourceException(e);
+        } catch (InvalidIdFault e) {
+            throw new ResourceException(e);
+        } catch (UnexpectedErrorFault e) {
+            throw new ResourceException(e);
+        } catch (ConnectionException e) {
+            throw new ResourceException(e);
+        }
+        for (UpsertResult result : results) {
+            if(!result.isSuccess()) {
+                throw new ResourceException(result.getErrors()[0].getMessage());
+            }
+        }
+        return results.length;
+	}
 
 	public int create(DataPayload data) throws ResourceException {
 		SObject toCreate = new SObject();
@@ -510,7 +540,10 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			JobInfo job = new JobInfo();
 			job.setObject(objectName);
 			job.setOperation(operation);
-			job.setContentType(operation==OperationEnum.insert?ContentType.XML:ContentType.CSV);
+			job.setContentType((operation==OperationEnum.insert||operation==OperationEnum.upsert)?ContentType.XML:ContentType.CSV);
+			if (operation==OperationEnum.upsert) {
+			    job.setExternalIdFieldName(ID_FIELD_NAME);
+			}
 			job.setConcurrencyMode(ConcurrencyMode.Parallel);
 			if (operation == OperationEnum.query && usePkChunking) {
 			    this.bulkConnection.addHeader(PK_CHUNKING_HEADER, "chunkSize=" + MAX_CHUNK_SIZE); //$NON-NLS-1$

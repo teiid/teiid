@@ -114,6 +114,8 @@ public interface SalesforceConnection extends Connection {
 	public int delete(String[] ids) throws ResourceException ;
 
 	public int create(DataPayload data) throws ResourceException;
+	
+	public int upsert(DataPayload data) throws ResourceException;
 
 	public int update(List<DataPayload> updateDataList) throws ResourceException;
 

@@ -89,11 +89,15 @@ public class InsertExecutionImpl extends AbstractUpdateExecution {
 				DataPayload data = new DataPayload();
 				data.setType(this.objectName);
 				buildSingleRowInsertPayload(insert, data);
-				result = getConnection().create(data);
+				if (insert.isUpsert()) {
+				    result = getConnection().upsert(data); 
+				} else {
+				    result = getConnection().create(data);
+				}
 			}
 			else {
 				if (this.activeJob == null) {
-					this.activeJob = getConnection().createBulkJob(this.objectName, OperationEnum.insert, false);
+					this.activeJob = getConnection().createBulkJob(this.objectName, insert.isUpsert()?OperationEnum.upsert:OperationEnum.insert, false);
 					counts = new ArrayList<Integer>();
 				}
 				if (this.activeJob.getState() == JobStateEnum.Open) {

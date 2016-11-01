@@ -103,6 +103,8 @@ public class TestSingleInsert {
             }
         });
         
+        Mockito.stub(connection.upsert(Mockito.any(DataPayload.class))).toReturn(1);
+        
         SalesForceExecutionFactory config = new SalesForceExecutionFactory();
         config.setMaxBulkInsertBatchSize(1);
         
@@ -116,5 +118,18 @@ public class TestSingleInsert {
                 continue;
             }
         }
+        
+        insert.setUpsert(true);
+        updateExecution = new InsertExecutionImpl(config, insert, connection, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class));
+        while(true) {
+            try {
+                updateExecution.execute();
+                org.junit.Assert.assertArrayEquals(new int[] {1}, updateExecution.getUpdateCounts());
+                break;
+            } catch(DataNotAvailableException e) {
+                continue;
+            }
+        }
+        Mockito.verify(connection).upsert(Mockito.any(DataPayload.class));
     }
 }
