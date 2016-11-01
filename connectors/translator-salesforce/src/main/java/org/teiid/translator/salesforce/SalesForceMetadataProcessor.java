@@ -192,7 +192,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 				Table table = this.tableMap.get(objectMetadata.getName());
 				boolean hasUpdateableColumn = addColumns(objectMetadata, table);
 				// Some SF objects return true for isUpdateable() but have no updateable columns.
-				if(hasUpdateableColumn && objectMetadata.isUpdateable()) {
+				if(objectMetadata.isDeletable() || (hasUpdateableColumn && (objectMetadata.isUpdateable() || objectMetadata.isCreateable()))) {
 					table.setSupportsUpdate(true);
 				}
 			}
@@ -314,16 +314,17 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 				continue;
 			}
 			String sfTypeName = fieldType.name();
-			Column column = null;
-			if(sfTypeName.equals(FieldType.string.name()) || //string
-					sfTypeName.equals(FieldType.combobox.name()) || //"combobox"
-					sfTypeName.equals(FieldType.reference.name()) || //"reference"
-					sfTypeName.equals(FieldType.phone.name()) || //"phone"
-					sfTypeName.equals(FieldType.id.name()) || //"id"
-					sfTypeName.equals(FieldType.url.name()) || //"url"
-					sfTypeName.equals(FieldType.email.name()) || //"email"
-					sfTypeName.equals(FieldType.encryptedstring.name()) || //"encryptedstring"
-					sfTypeName.equals(FieldType.anyType.name())) {  //"anytype"
+            Column column = null;
+			switch (fieldType) {
+			case string:
+			case combobox:
+			case reference:
+			case phone:
+			case id:
+			case url:
+			case email:
+			case encryptedstring:
+			case anyType:
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.STRING, table);
 				column.setNativeType(sfTypeName);
 				if(sfTypeName.equals(FieldType.id.name())) {
@@ -332,8 +333,8 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 					columnNames.add(field.getName());
 					metadataFactory.addPrimaryKey(field.getName()+"_PK", columnNames, table); //$NON-NLS-1$
 				}
-			}
-			else if(sfTypeName.equals(FieldType.picklist.name())) { // "picklist"
+				break;
+			case picklist:
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.STRING, table);
 				if(field.isRestrictedPicklist()) {
 					column.setNativeType("restrictedpicklist"); //$NON-NLS-1$
@@ -342,8 +343,8 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 				}
 				
 				column.setProperty(COLUMN_PICKLIST_VALUES, getPicklistValues(field));
-			}
-			else if(sfTypeName.equals(FieldType.multipicklist.name())) { //"multipicklist"
+				break;
+			case multipicklist:
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.STRING, table);
 				if(field.isRestrictedPicklist()) {
 					column.setNativeType("restrictedmultiselectpicklist");//$NON-NLS-1$
@@ -351,56 +352,59 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 					column.setNativeType(sfTypeName);
 				}
 				column.setProperty(COLUMN_PICKLIST_VALUES, getPicklistValues(field));
-			}
-			else if(sfTypeName.equals(FieldType.base64.name())) { //"base64"
+				break;
+			case base64:
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.BLOB, table);
 				column.setNativeType(sfTypeName);
-			}
-			else if(sfTypeName.equals(FieldType._boolean.name())) { //"boolean"
+				break;
+			case _boolean:
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.BOOLEAN, table);
 				column.setNativeType(sfTypeName);
-			}
-			else if(sfTypeName.equals(FieldType.currency.name())) { //"currency"
+				break;
+			case currency:
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.DOUBLE, table);
 				column.setNativeType(sfTypeName);
 				column.setCurrency(true);
 				column.setScale(field.getScale());
 				column.setPrecision(field.getPrecision());
-			}
-			else if(sfTypeName.equals(FieldType.textarea.name())) { //"textarea"
+				break;
+			case textarea:
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.STRING, table);
 				column.setNativeType(sfTypeName);
 				column.setSearchType(SearchType.Unsearchable);
-			}
-			else if(sfTypeName.equals(FieldType._int.name())) { //"int"
+				break;
+			case _int:
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.INTEGER, table);
 				column.setNativeType(sfTypeName);
 				column.setPrecision(field.getPrecision());
-			}
-			else if(sfTypeName.equals(FieldType._double.name()) || //"double"
-					sfTypeName.equals(FieldType.percent.name())) { //"percent"
+				break;
+			case _double:
+			case percent:
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.DOUBLE, table);
 				column.setNativeType(sfTypeName);
 				column.setScale(field.getScale());
 				column.setPrecision(field.getPrecision());
-			}
-			else if(sfTypeName.equals(FieldType.date.name())) { //"date"
+				break;
+			case date:
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.DATE, table);
 				column.setNativeType(sfTypeName);
-			}
-			else if(sfTypeName.equals(FieldType.datetime.name())) { //"datetime"
+				break;
+			case datetime:
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.TIMESTAMP, table);
 				column.setNativeType(sfTypeName);
-			}
-			else if(sfTypeName.equals(FieldType.time.name())) { //"time"
+				break;
+			case time:
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.TIME, table);
 				column.setNativeType(sfTypeName);
+				break;
+			default:
+			    if (sfTypeName.equals("address")) { //$NON-NLS-1$
+			        LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Ignoring composite address field", normalizedName); //$NON-NLS-1$
+			    } else {
+			        LogManager.logWarning(LogConstants.CTX_CONNECTOR, SalesForcePlugin.Util.gs(SalesForcePlugin.Event.TEIID13001, sfTypeName));
+			    }
+                continue;			    
 			}
-			
-			if(column == null) {
-				LogManager.logError(LogConstants.CTX_CONNECTOR, SalesForcePlugin.Util.gs(SalesForcePlugin.Event.TEIID13001, sfTypeName));
-				continue;
-			} 
 			
 			column.setNameInSource(field.getName());
 			column.setLength(field.getLength());
@@ -411,6 +415,10 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 			column.setProperty(COLUMN_CALCULATED, String.valueOf(field.isCalculated()));
 			column.setProperty(COLUMN_CUSTOM, String.valueOf(field.isCustom()));
 			column.setProperty(COLUMN_DEFAULTED, String.valueOf(field.isDefaultedOnCreate()));
+			if (field.isDefaultedOnCreate()) {
+			    column.setDefaultValue("sf default"); //$NON-NLS-1$
+			}
+			column.setNullType(field.isNillable()?NullType.Nullable:NullType.No_Nulls);
 		}		
 		return hasUpdateableColumn;
 	}
