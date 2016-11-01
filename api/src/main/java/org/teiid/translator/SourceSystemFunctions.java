@@ -139,8 +139,6 @@ public class SourceSystemFunctions {
 	public static final String MONTHNAME = "monthname"; //$NON-NLS-1$
 	public static final String NOW = "now"; //$NON-NLS-1$
 	public static final String PARSETIMESTAMP = "parsetimestamp"; //$NON-NLS-1$
-	public static final String PARSEDATE = "parsedate"; //$NON-NLS-1$
-	public static final String PARSETIME = "parsetime"; //$NON-NLS-1$
 	public static final String QUARTER = "quarter"; //$NON-NLS-1$
 	public static final String SECOND = "second"; //$NON-NLS-1$
 	public static final String TIMESTAMPADD = "timestampadd"; //$NON-NLS-1$

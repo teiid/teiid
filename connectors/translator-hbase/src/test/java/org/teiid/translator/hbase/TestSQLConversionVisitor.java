@@ -231,7 +231,7 @@ public class TestSQLConversionVisitor {
         
         Command command = translationUtility.parseCommand(sql);
         
-        HBaseExecutionFactory ef = new HBaseExecutionFactory();
+        PhoenixExecutionFactory ef = new PhoenixExecutionFactory();
         ef.start();
         
         SQLConversionVisitor vistor = ef.getSQLConversionVisitor();
