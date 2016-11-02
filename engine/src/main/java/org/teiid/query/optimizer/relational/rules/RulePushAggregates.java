@@ -63,6 +63,7 @@ import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
+import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.util.CommandContext;
@@ -525,7 +526,7 @@ public class RulePushAggregates implements
 			for (AggregateSymbol agg : aggregates) {
 	        	agg = (AggregateSymbol)agg.clone();
 	    		if (agg.getAggregateFunction() == Type.COUNT) {
-	    			if (agg.getArgs().length == 0) {
+	    			if (isCountStar(agg)) {
 	    				allSymbols.addSymbol(new ExpressionSymbol("stagedAgg", new Constant(1))); //$NON-NLS-1$
 	    			} else { 
 	        			SearchedCaseExpression count = new SearchedCaseExpression(Arrays.asList(new IsNullCriteria(agg.getArg(0))), Arrays.asList(new Constant(Integer.valueOf(0))));
@@ -1040,9 +1041,7 @@ public class RulePushAggregates implements
         		if ((!as.canStage() && as.isCardinalityDependent())) {
             		return null;
         		}
-        		if (as.getAggregateFunction() == Type.COUNT && as.getArgs().length == 0) {
-        			countStar = true;
-        		}
+        		countStar = isCountStar(as);
         	}
         	PlanNode originatingNode = null;
         	Set<GroupSymbol> groups = null;
@@ -1109,6 +1108,10 @@ public class RulePushAggregates implements
         return result;
     }
 
+    private static boolean isCountStar(AggregateSymbol as) {
+        return as.getAggregateFunction() == Type.COUNT && (as.getArgs().length == 0 || EvaluatableVisitor.willBecomeConstant(as.getArg(0)));
+    }
+
     private static Map<AggregateSymbol, Expression> buildAggregateMap(Collection<? extends AggregateSymbol> aggregateExpressions,
                                                                         QueryMetadataInterface metadata, Set<AggregateSymbol> nestedAggregates, boolean join) throws QueryResolverException,
                                                                                                         TeiidComponentException {
@@ -1121,7 +1124,7 @@ public class RulePushAggregates implements
             if (aggFunction == Type.COUNT) {
                 //COUNT(x) -> IFNULL(CONVERT(SUM(COUNT(x)), INTEGER), 0)
             	AggregateSymbol newAgg = null;
-            	if (partitionAgg.getArgs().length == 0 && join) {
+            	if (isCountStar(partitionAgg) && join) {
             		//count * case (if on the inner side of an outer join)
             		Function ifnull = new Function(FunctionLibrary.IFNULL, new Expression[] {partitionAgg, new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER)});
             		newAgg = new AggregateSymbol(NonReserved.SUM, false, ifnull);
