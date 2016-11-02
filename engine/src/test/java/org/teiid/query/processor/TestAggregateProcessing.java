@@ -1241,5 +1241,25 @@ public class TestAggregateProcessing {
 		
 		TestProcessor.helpProcess(plan, TestProcessor.createCommandContext(), hdm, new List<?>[] { Arrays.asList(new ClobType(new ClobImpl("c,b,b,a")), new ClobType(new ClobImpl("a,b,b,c")), new ClobType(new ClobImpl("c,b,a")), new ClobType(new ClobImpl("a,b,c")))});
 	}
-
+    
+    @Test public void testCountConstantWithoutStats() throws Exception {
+        String sql = "select count(1) from test_count_1 t1 join test_count_2 t2 on t1.a=t2.a group by t1.a";
+        
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table test_count_1 (a string); create foreign table test_count_2 (a string)", "x", "y");
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        
+        hdm.addData("SELECT g_0.a FROM y.test_count_1 AS g_0", Arrays.asList("a"), Arrays.asList("a"));
+        hdm.addData("SELECT g_0.a FROM y.test_count_2 AS g_0", Arrays.asList("a"), Arrays.asList("a"));
+        
+        BasicSourceCapabilities bsc = TestAggregatePushdown.getAggregateCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, false);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, false);
+        bsc.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
+        bsc.setCapabilitySupport(Capability.QUERY_GROUP_BY, false);
+        
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder(bsc));
+        TestProcessor.helpProcess(plan, TestProcessor.createCommandContext(),
+                hdm, new List<?>[] {Arrays.asList(4)});
+    }
+    
 }
