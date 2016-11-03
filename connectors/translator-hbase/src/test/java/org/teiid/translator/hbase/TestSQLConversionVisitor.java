@@ -145,6 +145,42 @@ public class TestSQLConversionVisitor {
     }
     
     @Test
+    public void testFuntionSubstring() throws TranslatorException {
+        String sql = "SELECT SUBSTRING(q1, 10) FROM TypesTest";
+        String expected = "SELECT SUBSTR(TypesTest.q1, 10) FROM TypesTest";
+        helpTest(sql, expected);
+        
+        sql = "SELECT SUBSTRING(q1, 10, 5) FROM TypesTest";
+        expected = "SELECT SUBSTR(TypesTest.q1, 10, 5) FROM TypesTest";
+        helpTest(sql, expected);
+    }
+    
+    @Test
+    public void testFuntionUcaseLcase() throws TranslatorException {
+        String sql = "SELECT UCASE(q1) FROM TypesTest";
+        String expected = "SELECT UPPER(TypesTest.q1) FROM TypesTest";
+        helpTest(sql, expected);
+        
+        sql = "SELECT LCASE(q1) FROM TypesTest";
+        expected = "SELECT LOWER(TypesTest.q1) FROM TypesTest";
+        helpTest(sql, expected);
+    }
+    
+    @Test
+    public void testFuntionLocate() throws TranslatorException {
+        String sql = "SELECT LOCATE(q1, 'foo') FROM TypesTest";
+        String expected = "SELECT INSTR(TypesTest.q1, 'foo') FROM TypesTest";
+        helpTest(sql, expected);
+    }
+    
+    @Test
+    public void testFunctionCurtime() throws TranslatorException {
+        String sql = "SELECT q1, CURTIME() FROM TypesTest";
+        String expected = "SELECT TypesTest.q1, CURRENT_TIME() FROM TypesTest";
+        helpTest(sql, expected);
+    }
+    
+    @Test
     public void testBooleanLiterals() throws Exception {
     	String sql = "SELECT true, false FROM Customer";
         String expected = "SELECT true, false FROM \"Customer\"";
@@ -195,7 +231,7 @@ public class TestSQLConversionVisitor {
         
         Command command = translationUtility.parseCommand(sql);
         
-        HBaseExecutionFactory ef = new HBaseExecutionFactory();
+        PhoenixExecutionFactory ef = new PhoenixExecutionFactory();
         ef.start();
         
         SQLConversionVisitor vistor = ef.getSQLConversionVisitor();
