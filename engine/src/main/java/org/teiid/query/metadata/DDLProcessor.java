@@ -23,6 +23,7 @@
 package org.teiid.query.metadata;
 
 import org.teiid.metadata.MetadataException;
+import org.teiid.query.util.CommandContext;
 
 /**
  * Represents the singleton store responsible for processing ddl in a consistent manner
@@ -31,7 +32,7 @@ public interface DDLProcessor {
 
     boolean vdbExists(String dbName, String version);
     
-    String processDDL(String dbName, String version, String schema, String ddl,
-            boolean persist) throws MetadataException;
+	String processDDL(String dbName, String version, String schema, String ddl, boolean persist,
+			CommandContext commandContext) throws MetadataException;
 
 }

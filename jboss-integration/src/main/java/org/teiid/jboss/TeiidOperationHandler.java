@@ -1720,7 +1720,7 @@ class DDLExecutor extends TeiidOperationHandler {
         
         String str = null;
         try {
-            str = ddlProcessor.processDDL(dbName, version, schema, ddl, persist);
+            str = ddlProcessor.processDDL(dbName, version, schema, ddl, persist, null);
         } catch (MetadataException e) {
             throw new OperationFailedException(
                     IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50111, e.getMessage()), e);            

@@ -329,7 +329,7 @@ public class JDBCURL {
 
     public static boolean isVDBInEditMode(String editMode) {
     	if (editMode != null) {
-    		if (editMode.equalsIgnoreCase("create") || editMode.equalsIgnoreCase("true")) {
+    		if (editMode.equalsIgnoreCase("true")) {
     			return true;
     		}
     	}
@@ -337,7 +337,7 @@ public class JDBCURL {
     }
     public static boolean isVDBInCreatetMode(String editMode) {
     	if (editMode != null) {
-    		if (editMode.equalsIgnoreCase("create")) {
+    		if (editMode.equalsIgnoreCase("true")) {
     			return true;
     		}
     	}

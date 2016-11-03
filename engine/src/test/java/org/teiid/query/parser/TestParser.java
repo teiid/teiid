@@ -81,7 +81,7 @@ public class TestParser {
 	static void helpTest(String sql, String expectedString, Command expectedCommand, ParseInfo info,
 			DatabaseStore storage, String vdbName, String vdbVersion, String schemaName) throws QueryParserException {
 		Command actualCommand = QueryParser.getQueryParser().parseCommand(sql, info, false, storage, vdbName, vdbVersion,
-                schemaName);
+                schemaName, null);
 		String actualString = actualCommand.toString();
 
 		assertEquals("Parse string does not match: ", expectedString, actualString); //$NON-NLS-1$

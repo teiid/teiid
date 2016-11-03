@@ -38,7 +38,9 @@ import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.dqp.internal.process.multisource.MultiSourceElement;
 import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.Database.ResourceType;
 import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.Grant.Permission.Allowance;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Schema;
 import org.teiid.query.QueryPlugin;
@@ -174,6 +176,15 @@ public class DefaultAuthorizationValidator implements AuthorizationValidator {
 		result = this.policyDecider.getInaccessibleResources(action, resources, Context.METADATA, commandContext).isEmpty();
 		commandContext.setAccessible(record, result);
 		return result;
+	}
+
+	@Override
+	public boolean allowDDLEvent(CommandContext commandContext, Allowance allowence, ResourceType type,
+			AbstractMetadataRecord record) {
+		if (commandContext.getDQPWorkContext().isAdmin()) {
+			return true;
+		}
+		return this.policyDecider.allowDDLEvent(commandContext, allowence, type, record);
 	}
 	
 }

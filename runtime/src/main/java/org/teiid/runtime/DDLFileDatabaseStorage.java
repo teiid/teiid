@@ -72,6 +72,7 @@ public class DDLFileDatabaseStorage implements DatabaseStorage {
         }
         if (f.isDirectory()) {
             if (f.listFiles(new DDLFiles()).length == 0) {
+            	/*
                 try {
                     FileWriter fw = new FileWriter(new File(f, "ADMIN.1-vdb.ddl")); //$NON-NLS-1$
                     fw.write("CREATE DATABASE ADMIN VERSION '1';"); //$NON-NLS-1$
@@ -80,6 +81,7 @@ public class DDLFileDatabaseStorage implements DatabaseStorage {
                     throw new MetadataException(RuntimePlugin.Event.TEIID40149,
                             RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40149, location));
                 }
+                */
             }
             return f.listFiles(new DDLFiles());
         }

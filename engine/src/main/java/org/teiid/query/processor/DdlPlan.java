@@ -78,7 +78,7 @@ public class DdlPlan extends ProcessorPlan {
     		String sql = obj.getDefinition().toString();
 
     		if (processor != null && processor.vdbExists(vdb.getName(), vdb.getVersion())) {
-    		    processor.processDDL(vdb.getName(), vdb.getVersion(), t.getParent().getName(), obj.toString(), true);
+    		    processor.processDDL(vdb.getName(), vdb.getVersion(), t.getParent().getName(), obj.toString(), true, getContext());
     	    } else {
     	        if (getMetadataRepository(vdb, t.getParent().getName()) != null) {
                     getMetadataRepository(vdb, t.getParent().getName()).setViewDefinition(workContext.getVdbName(), workContext.getVdbVersion(), t, sql);
@@ -96,7 +96,7 @@ public class DdlPlan extends ProcessorPlan {
     		String sql = obj.getDefinition().toString();
 
     		if (processor != null && processor.vdbExists(vdb.getName(), vdb.getVersion())) {
-    		    processor.processDDL(vdb.getName(), vdb.getVersion(), p.getParent().getName(), obj.toString(), true);
+    		    processor.processDDL(vdb.getName(), vdb.getVersion(), p.getParent().getName(), obj.toString(), true, getContext());
             } else {
                 if (getMetadataRepository(vdb, p.getParent().getName()) != null) {
                     getMetadataRepository(vdb, p.getParent().getName()).setProcedureDefinition(workContext.getVdbName(), workContext.getVdbVersion(), p, sql);
@@ -126,7 +126,7 @@ public class DdlPlan extends ProcessorPlan {
 				 throw new TeiidRuntimeException(new TeiidProcessingException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30158, t.getName(), obj.getEvent())));
     		}
 			if (processor != null && processor.vdbExists(vdb.getName(), vdb.getVersion())) {
-                processor.processDDL(vdb.getName(), vdb.getVersion(), t.getParent().getName(), obj.toString(), true);
+                processor.processDDL(vdb.getName(), vdb.getVersion(), t.getParent().getName(), obj.toString(), true, getContext());
             } else {
                 if (getMetadataRepository(vdb, t.getParent().getName()) != null) {
                     if (sql != null) {

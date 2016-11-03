@@ -31,6 +31,8 @@ import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.dqp.internal.process.AuthorizationValidator;
 import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.Database.ResourceType;
+import org.teiid.metadata.Grant.Permission.Allowance;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.sql.lang.Command;
@@ -102,7 +104,12 @@ public class TestSecurityFunctions extends TestCase {
 					CommandContext commandContext) {
 				return true;
 			}
-			
+
+			@Override
+			public boolean allowDDLEvent(CommandContext commandContext, Allowance allowence, ResourceType type,
+					AbstractMetadataRecord record) {
+				return false;
+			}
         });
         
         Command command = TestProcessor.helpParse(sql);   

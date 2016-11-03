@@ -165,6 +165,7 @@ public class RuntimePlugin {
         TEIID40156,
         TEIID40157,
         TEIID40158,
-        TEIID40159
+        TEIID40159,
+        TEIID40160
     }
 }

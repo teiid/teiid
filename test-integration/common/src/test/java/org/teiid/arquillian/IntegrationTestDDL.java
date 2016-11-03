@@ -37,8 +37,6 @@ import org.junit.runner.RunWith;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.jboss.AdminFactory;
-import org.teiid.client.security.InvalidSessionException;
-import org.teiid.core.TeiidProcessingException;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
 import org.teiid.jdbc.TeiidDriver;
 
@@ -64,16 +62,6 @@ public class IntegrationTestDDL extends AbstractMMQueryTestCase {
         try {
 			return super.execute(sql, new Object[] {});
 		} catch (SQLException e) {
-//			if (e.getCause() instanceof InvalidSessionException){
-//				e.printStackTrace();
-//				System.out.println("********************exception swallowed IVS");
-//				return false;
-//			}
-//			if (e.getCause() instanceof TeiidProcessingException && (e.getCause().getMessage().contains("TEIID30563"))) {
-//				e.printStackTrace();
-//				System.out.println("********************exception swallowed Cancell stmt");
-//				return false;
-//			}
 			throw e;
 		}
     }	
@@ -106,24 +94,24 @@ public class IntegrationTestDDL extends AbstractMMQueryTestCase {
         } catch (Exception e) {
         }
         
-        closeConnection();
-        
         // add table
         admin.executeDDL("foo", "1", "test", "CREATE FOREIGN TABLE G2 (e1 integer PRIMARY KEY, "
                 + "e2 varchar(25), e3 double)", false);
-        
-        // and execute, using the same connection
+
+        // THIS SHOULD BE REMOVED, AUTOFAILOVER NOT WORKING
         this.internalConnection = TeiidDriver.getInstance()
                 .connect("jdbc:teiid:foo@mm://localhost:31000;user=user;password=user;autoFailover=true", null);
-        
+
+        // and execute, using the same connection
     	execute("SELECT * FROM test.G2"); //$NON-NLS-1$
         assertRowCount(1);
         printResults();
         closeConnection();
         admin.executeDDL("foo", "1", null, "drop database foo", false);
 	}
+
 	@Test
-    public void testOverrideTranslator() throws Exception {        
+	public void testOverrideTranslator() throws Exception {        
         admin.executeDDL(null, null, null, "create database foo", false);
         admin.executeDDL("foo", "1", null, "create foreign data wrapper loopy type loopback OPTIONS(IncrementRows true, RowCount 500)", false);
         admin.executeDDL("foo", "1", null, "create server serverOne type 'NONE' foreign data wrapper loopy", false);
@@ -139,7 +127,7 @@ public class IntegrationTestDDL extends AbstractMMQueryTestCase {
         closeConnection();
     }
 
-    @Test
+	@Test
     public void testVDBImport() throws Exception {        
         admin.executeDDL(null, null, null, "create database foo", false);
         admin.executeDDL("foo", "1", null, "create foreign data wrapper loopy type loopback OPTIONS(IncrementRows true, RowCount 500)", false);
@@ -156,10 +144,11 @@ public class IntegrationTestDDL extends AbstractMMQueryTestCase {
         execute("SELECT * FROM test.G1"); //$NON-NLS-1$
         assertRowCount(500);        
         admin.executeDDL("foo", "1", null, "drop database foo", false);
+        admin.executeDDL("BAR", "1", null, "drop database BAR", false);
         closeConnection();
     }    
     
-    @Test 
+	@Test
     public void testUdfClasspath() throws Exception {
         JavaArchive jar = ShrinkWrap.create(JavaArchive.class, "func.jar")
                   .addClasses(SampleFunctions.class);
@@ -179,14 +168,19 @@ public class IntegrationTestDDL extends AbstractMMQueryTestCase {
         closeConnection();
     }
 
+	@Test
     public void testDDLOverJDBC() throws Exception {	 
         this.internalConnection = TeiidDriver.getInstance()
-                .connect("jdbc:teiid:foo2@mm://localhost:31000;user=user;password=user;autoFailover=true;vdbEdit=create", null);
+                .connect("jdbc:teiid:foo2@mm://localhost:31000;user=user;password=user;autoFailover=true;vdbEdit=true", null);
         
         execute("create foreign data wrapper loopback"); //$NON-NLS-1$
         execute("create server NONE type 'NONE' foreign data wrapper loopback");
         execute("create schema test server NONE");
+        execute("SET schema test");
         execute("CREATE FOREIGN TABLE G1 (e1 integer PRIMARY KEY, e2 varchar(25), e3 double)");
+
+        this.internalConnection = TeiidDriver.getInstance()
+                .connect("jdbc:teiid:foo2@mm://localhost:31000;user=user;password=user;autoFailover=true;vdbEdit=true", null);
         
         execute("SELECT * FROM test.G1"); //$NON-NLS-1$
         assertRowCount(1);        
@@ -195,22 +189,30 @@ public class IntegrationTestDDL extends AbstractMMQueryTestCase {
             fail("should have failed as there is no G2 Table");
         } catch (Exception e) {
         }
-        
-        try {
+        System.out.println("****************before set schema");
+        execute("SET schema test");
+        System.out.println("****************before CREAte");
         // add table
-        execute("foo", "1", "test", "CREATE FOREIGN TABLE G2 (e1 integer PRIMARY KEY, "
-                + "e2 varchar(25), e3 double)", false);
-        } catch (SQLException e) {
-        	
-        }
-        this.internalConnection = TeiidDriver.getInstance()
-                .connect("jdbc:teiid:foo2@mm://localhost:31000;user=user;password=user;autoFailover=true;vdbEdit=create", null);
+        execute("CREATE FOREIGN TABLE G2 (e1 integer PRIMARY KEY, "
+                + "e2 varchar(25), e3 double)");
+
+        System.out.println("****************before CONNECTION");
         
+        // THIS SHOULD BE REMOVED, AUTOFAILOVER NOT WORKING
+        this.internalConnection = TeiidDriver.getInstance()
+                .connect("jdbc:teiid:foo2@mm://localhost:31000;user=user;password=user;autoFailover=true;vdbEdit=true", null);
+        
+        System.out.println("****************before SELECT");
         // and execute, using the same connection
         execute("SELECT * FROM test.G2"); //$NON-NLS-1$
         assertRowCount(1);        
-        execute("drop database foo2");
         closeConnection();
         admin.executeDDL("foo2", "1", null, "drop database foo2", false);
  	}
+	
+	@Test(expected=SQLException.class)
+    public void testDDLOverJDBCNoAuth() throws Exception {	 
+        this.internalConnection = TeiidDriver.getInstance()
+                .connect("jdbc:teiid:foo2@mm://localhost:31000;user=dummy;password=user;autoFailover=true;vdbEdit=true", null);
+	}
 }

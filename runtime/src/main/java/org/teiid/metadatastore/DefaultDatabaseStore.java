@@ -81,6 +81,7 @@ public class DefaultDatabaseStore extends DatabaseStore {
         
         verifySchemaExists(schemaName);
         verifyServerExists(serverName);
+        schemaSwitched(schemaName);
         
         Schema schema = getSchema(schemaName);
         Server server = getServer(serverName);
@@ -115,8 +116,6 @@ public class DefaultDatabaseStore extends DatabaseStore {
 
             throw new MetadataException(e);
         }
-
-        schemaSwitched(schemaName);
         
         importSchema(mf.getSchema());
     }

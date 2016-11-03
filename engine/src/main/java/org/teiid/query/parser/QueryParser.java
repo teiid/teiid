@@ -22,8 +22,8 @@
 
 package org.teiid.query.parser;
 
-import static org.teiid.query.parser.SQLParserConstants.*;
-import static org.teiid.query.parser.TeiidSQLParserTokenManager.*;
+import static org.teiid.query.parser.SQLParserConstants.tokenImage;
+import static org.teiid.query.parser.TeiidSQLParserTokenManager.INVALID_TOKEN;
 
 import java.io.Reader;
 import java.io.StringReader;
@@ -48,6 +48,7 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.ImmediateDDLCommand;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.util.CommandContext;
 
 /**
  * <p>Converts a SQL-string to an object version of a query.  This
@@ -148,11 +149,12 @@ public class QueryParser implements Parser {
     }
 
 	public Command parseCommand(String sql, ParseInfo parseInfo, boolean designerCommands) throws QueryParserException {
-		return parseCommand(sql, parseInfo, designerCommands, null, null, null, null);
+		return parseCommand(sql, parseInfo, designerCommands, null, null, null, null, null);
 	}    
 	
 	public Command parseCommand(final String sql, ParseInfo parseInfo, boolean designerCommands, DDLProcessor store,
-			String vdbName, String vdbVersion, String schemaName) throws QueryParserException {
+			String vdbName, String vdbVersion, String schemaName, CommandContext commandContext)
+			throws QueryParserException {
         if(sql == null || sql.length() == 0) {
              throw new QueryParserException(QueryPlugin.Event.TEIID30377, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30377));
         }
@@ -171,7 +173,7 @@ public class QueryParser implements Parser {
             }
         	if (store != null && vdbName != null) {
         		try {
-        		    store.processDDL(vdbName, vdbVersion, schemaName, sql, true);
+        		    store.processDDL(vdbName, vdbVersion, schemaName, sql, true, commandContext);
         			return new ImmediateDDLCommand(sql);
         		} catch (MetadataException e) {
         		    if (e.getCause() instanceof QueryParserException) {

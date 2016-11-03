@@ -190,6 +190,7 @@ public class TestDDLMetadataStore {
             
             SimpleGroup rolesGroup = new SimpleGroup("Roles");
             rolesGroup.addMember(new SimplePrincipal("superuser"));
+            rolesGroup.addMember(new SimplePrincipal("admin"));
             subject.getPrincipals().add(rolesGroup);
             return subject;
         }
@@ -301,11 +302,11 @@ public class TestDDLMetadataStore {
         es.start(ec);
 
         Properties p = new Properties();
-        p.setProperty(TeiidURL.CONNECTION.VDBEDITMODE, "create");
+        p.setProperty(TeiidURL.CONNECTION.VDBEDITMODE, "true");
         Connection c = es.getDriver().connect("jdbc:teiid:empty", p);
         Statement s = c.createStatement();
         s.execute("create virtual schema s");
-        assertEquals(0, s.getUpdateCount());
+        assertEquals(1, s.getUpdateCount());
         s.execute("set schema s");
         try {
             s.execute("create view x as select 'a' from b;");
@@ -314,7 +315,7 @@ public class TestDDLMetadataStore {
             
         }
         s.execute("create view x as select 'a';");
-        assertEquals(0, s.getUpdateCount());
+        assertEquals(1, s.getUpdateCount());
     }  
     
     @Test
@@ -330,14 +331,14 @@ public class TestDDLMetadataStore {
         es.start(ec);
 
         Properties p = new Properties();
-        p.setProperty(TeiidURL.CONNECTION.VDBEDITMODE, "create");
+        p.setProperty(TeiidURL.CONNECTION.VDBEDITMODE, "true");
         Connection c = es.getDriver().connect("jdbc:teiid:empty", p);
         Statement s = c.createStatement();
         s.execute("create virtual schema s");
-        assertEquals(0, s.getUpdateCount());
+        assertEquals(1, s.getUpdateCount());
         s.execute("set schema s");
         s.execute("create view x as select 'a';");
-        assertEquals(0, s.getUpdateCount());
+        assertEquals(1, s.getUpdateCount());
         s.execute("select session_id()");
         ResultSet rs = s.getResultSet();
         rs.next();
@@ -362,7 +363,7 @@ public class TestDDLMetadataStore {
         es.start(ec);
 
         Properties p = new Properties();
-        p.setProperty(TeiidURL.CONNECTION.VDBEDITMODE, "create");
+        p.setProperty(TeiidURL.CONNECTION.VDBEDITMODE, "true");
         Connection c = es.getDriver().connect("jdbc:teiid:empty", p);
         Statement s = c.createStatement();
         s.execute("create database x");

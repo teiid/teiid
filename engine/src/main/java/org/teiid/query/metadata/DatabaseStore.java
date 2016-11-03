@@ -32,10 +32,31 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.dqp.internal.process.AuthorizationValidator;
 import org.teiid.events.EventDistributor;
+import org.teiid.logging.AuditMessage;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.*;
+import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.DataWrapper;
+import org.teiid.metadata.Database;
+import org.teiid.metadata.Database.ResourceType;
+import org.teiid.metadata.Datatype;
+import org.teiid.metadata.DuplicateRecordException;
+import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionParameter;
+import org.teiid.metadata.Grant;
+import org.teiid.metadata.Grant.Permission.Allowance;
+import org.teiid.metadata.MetadataException;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
+import org.teiid.metadata.Role;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Server;
+import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.parser.OptionsUtil;
 import org.teiid.query.parser.QueryParser;
@@ -43,6 +64,7 @@ import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
+import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.ValidatorReport;
 import org.teiid.vdb.runtime.VDBKey;
 
@@ -52,7 +74,7 @@ import org.teiid.vdb.runtime.VDBKey;
 public abstract class DatabaseStore implements DDLProcessor {
     private ConcurrentHashMap<VDBKey, Database> databases = new ConcurrentHashMap<VDBKey, Database>();
     private Database currentDatabase;
-    private Schema currentSchema;
+    protected Schema currentSchema;
     private ReentrantLock lock = new ReentrantLock();
     protected EventDistributor functionalStore; 
     private boolean metadataReloadRequired = false;
@@ -61,6 +83,7 @@ public abstract class DatabaseStore implements DDLProcessor {
     private boolean save = false;
     private boolean persist;
     private ArrayList<Runnable> events = new ArrayList<Runnable>();
+    private CommandContext commandContext;
    
     public abstract Map<String, Datatype> getRuntimeTypes();
     public abstract Map<String, Datatype> getBuiltinDataTypes();
@@ -103,7 +126,8 @@ public abstract class DatabaseStore implements DDLProcessor {
     
     public void databaseCreated(Database db) {
         assertInEditMode();
-                
+        assertGrant(Grant.Permission.Allowance.CREATE, Database.ResourceType.DATABASE, db);
+        
         Database database = this.databases.get(vdbKey(db)); 
         if ( database != null) {
             throw new DuplicateRecordException(QueryPlugin.Event.TEIID31232,
@@ -140,7 +164,8 @@ public abstract class DatabaseStore implements DDLProcessor {
             throw new MetadataException(QueryPlugin.Event.TEIID31231,
                     QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31231, dbName));                        
         }
-        
+
+        assertGrant(Grant.Permission.Allowance.DROP, Database.ResourceType.DATABASE, db);
         if (this.functionalStore != null) {
             try {
                 functionalStore.dropDatabase(db);
@@ -226,6 +251,8 @@ public abstract class DatabaseStore implements DDLProcessor {
     
     public void schemaCreated(Schema schema, List<String> serverNames) {
         assertInEditMode();
+        assertGrant(Grant.Permission.Allowance.CREATE, Database.ResourceType.SCHEMA, schema);
+        
         verifyDatabaseExists();
         setUUID(this.currentDatabase.getName(), this.currentDatabase.getVersion(), schema);
         this.currentDatabase.addSchema(schema);
@@ -249,6 +276,8 @@ public abstract class DatabaseStore implements DDLProcessor {
     public void schemaDropped(String schemaName) {
         assertInEditMode();
         verifySchemaExists(schemaName);
+        assertGrant(Grant.Permission.Allowance.DROP, Database.ResourceType.SCHEMA, this.currentDatabase.getSchema(schemaName));
+        
         this.currentDatabase.removeSchema(schemaName);
 
         if (this.currentSchema != null && this.currentSchema.getName().equalsIgnoreCase(schemaName)) {
@@ -285,20 +314,17 @@ public abstract class DatabaseStore implements DDLProcessor {
         return previous;
     }    
 
-    protected void verifyFunctionExists(String functionName) {        
+    protected FunctionMethod verifyFunctionExists(String functionName) {        
         verifyDatabaseExists();
         Schema schema = this.getCurrentSchema();
         
-        boolean found = false;
         for (FunctionMethod fm:schema.getFunctions().values()){
         	if (fm.getName().equalsIgnoreCase(functionName)){
-        		found = true;
+        		return fm;
         	}
         }
-        if (!found){
-            throw new org.teiid.metadata.MetadataException(QueryPlugin.Event.TEIID31240,
-                    QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31240, functionName, this.currentDatabase.getName()));        	
-        }
+        throw new org.teiid.metadata.MetadataException(QueryPlugin.Event.TEIID31240,
+                QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31240, functionName, this.currentDatabase.getName()));        	
     }
     
     protected Schema verifySchemaExists(String schemaName) {        
@@ -348,6 +374,8 @@ public abstract class DatabaseStore implements DDLProcessor {
     
     public void dataWrapperCreated(DataWrapper wrapper) {
         assertInEditMode();
+        assertGrant(Grant.Permission.Allowance.CREATE, Database.ResourceType.DATAWRAPPER, wrapper);
+        
         verifyDatabaseExists();
         this.currentDatabase.addDataWrapper(wrapper);
 
@@ -367,6 +395,8 @@ public abstract class DatabaseStore implements DDLProcessor {
         assertInEditMode();
         verifyDatabaseExists();
         verifyDataWrapperExists(wrapperName);
+        
+        assertGrant(Grant.Permission.Allowance.DROP, Database.ResourceType.DATAWRAPPER, this.currentDatabase.getDataWrapper(wrapperName));
         
         for (Server s:this.currentDatabase.getServers()) {
             if (s.getDataWrapper().equalsIgnoreCase(wrapperName)) {
@@ -392,6 +422,8 @@ public abstract class DatabaseStore implements DDLProcessor {
         verifyDatabaseExists();
         verifyDataWrapperExists(server.getDataWrapper());
         
+        assertGrant(Grant.Permission.Allowance.CREATE, Database.ResourceType.SERVER, server);
+        
         if (this.functionalStore != null) {
             try {
                 functionalStore.createServer(this.currentDatabase.getName(), this.currentDatabase.getVersion(), server);
@@ -416,6 +448,7 @@ public abstract class DatabaseStore implements DDLProcessor {
         assertInEditMode();
         verifyDatabaseExists();
         verifyServerExists(serverName);
+        assertGrant(Grant.Permission.Allowance.DROP, Database.ResourceType.SERVER, this.currentDatabase.getServer(serverName));
         
         for (Schema s : this.currentDatabase.getSchemas()) {
             for (Server server : s.getServers()) {
@@ -466,6 +499,8 @@ public abstract class DatabaseStore implements DDLProcessor {
     
     public void tableCreated(Table table) {
         assertInEditMode();
+        assertGrant(Grant.Permission.Allowance.CREATE, Database.ResourceType.TABLE, table);
+        
         Schema s = getCurrentSchema();
         setUUID(s.getUUID(), table);
         
@@ -477,6 +512,7 @@ public abstract class DatabaseStore implements DDLProcessor {
     public void setViewDefinition(final String tableName, final String definition, boolean updateFunctional) {
         assertInEditMode();
         verifyTableExists(tableName).setSelectTransformation(definition);
+        assertGrant(Grant.Permission.Allowance.ALTER, Database.ResourceType.TABLE, getCurrentSchema().getTable(tableName));
         
         final String vdbName = this.currentDatabase.getName();
         final String vdbVersion = this.currentDatabase.getVersion();
@@ -497,6 +533,8 @@ public abstract class DatabaseStore implements DDLProcessor {
     
     public void tableModified(Table table) {
         assertInEditMode();
+        assertGrant(Grant.Permission.Allowance.ALTER, Database.ResourceType.TABLE, table);
+        
         verifyTableExists(table.getName());
         
         this.metadataReloadRequired = true;
@@ -506,7 +544,8 @@ public abstract class DatabaseStore implements DDLProcessor {
     public void tableDropped(String tableName) {
         assertInEditMode();
         verifyTableExists(tableName);
-
+        assertGrant(Grant.Permission.Allowance.DROP, Database.ResourceType.TABLE, getCurrentSchema().getTable(tableName));
+        
         Schema s = getCurrentSchema();
         s.removeTable(tableName);
         
@@ -516,6 +555,8 @@ public abstract class DatabaseStore implements DDLProcessor {
 
     public void procedureCreated(Procedure procedure) {
         assertInEditMode();
+        assertGrant(Grant.Permission.Allowance.CREATE, Database.ResourceType.PROCEDURE, procedure);
+        
         Schema s = getCurrentSchema();
         setUUID(s.getUUID(), procedure);
         for (ProcedureParameter param : procedure.getParameters()) {
@@ -532,7 +573,11 @@ public abstract class DatabaseStore implements DDLProcessor {
     
     public void setProcedureDefinition(final String procedureName, final String definition, boolean updateFunctional) {
         assertInEditMode();
-        verifyProcedureExists(procedureName).setQueryPlan(definition);
+        Procedure procedure = verifyProcedureExists(procedureName);
+        
+        assertGrant(Grant.Permission.Allowance.CREATE, Database.ResourceType.PROCEDURE, procedure);
+        
+        procedure.setQueryPlan(definition);
         
         final String vdbName = this.currentDatabase.getName();
         final String vdbVersion = this.currentDatabase.getVersion();
@@ -554,6 +599,7 @@ public abstract class DatabaseStore implements DDLProcessor {
     public void procedureModified(Procedure procedure) {
         assertInEditMode();
         verifyProcedureExists(procedure.getName());
+        assertGrant(Grant.Permission.Allowance.ALTER, Database.ResourceType.PROCEDURE, procedure);
         
         this.metadataReloadRequired = true;
         this.save = true;
@@ -562,6 +608,8 @@ public abstract class DatabaseStore implements DDLProcessor {
     public void procedureDropped(String procedureName) {
         assertInEditMode();
         verifyProcedureExists(procedureName);
+		assertGrant(Grant.Permission.Allowance.DROP, Database.ResourceType.PROCEDURE,
+				getCurrentSchema().getProcedure(procedureName));
 
         Schema s = getCurrentSchema();
         s.removeProcedure(procedureName);
@@ -572,6 +620,8 @@ public abstract class DatabaseStore implements DDLProcessor {
     
     public void functionCreated(FunctionMethod function) {
         assertInEditMode();
+		assertGrant(Grant.Permission.Allowance.CREATE, Database.ResourceType.FUNCTION, function);
+        
         Schema s = getCurrentSchema();
         
       	setUUID(s.getUUID(), function);
@@ -587,7 +637,8 @@ public abstract class DatabaseStore implements DDLProcessor {
 
     public void functionDropped(String functionName) {
         assertInEditMode();
-        verifyFunctionExists(functionName);
+        FunctionMethod fm = verifyFunctionExists(functionName);
+        assertGrant(Grant.Permission.Allowance.DROP, Database.ResourceType.FUNCTION, fm);
 
         Schema s = getCurrentSchema();
         s.removeFunctions(functionName);
@@ -603,7 +654,7 @@ public abstract class DatabaseStore implements DDLProcessor {
             throw new org.teiid.metadata.MetadataException(QueryPlugin.Event.TEIID31210,
                     QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31210, tableName));                                                    
         }
-        
+        assertGrant(Grant.Permission.Allowance.ALTER, Database.ResourceType.TABLE, table);
         switch(event) {
         case DELETE:
             table.setDeletePlan(triggerDefinition);
@@ -635,13 +686,15 @@ public abstract class DatabaseStore implements DDLProcessor {
         this.save = true;        
     }
     
-    public void enableTableTriggerPlan(final String tableName, final Table.TriggerEvent event, final boolean enable, boolean updateFunctional) {
+	public void enableTableTriggerPlan(final String tableName, final Table.TriggerEvent event, final boolean enable,
+			boolean updateFunctional) {
         assertInEditMode();
         Table table = getCurrentSchema().getTable(tableName);
         if (table == null || !table.isVirtual()) {
             throw new org.teiid.metadata.MetadataException(QueryPlugin.Event.TEIID31210,
                     QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31210, tableName));                                                    
         }
+        assertGrant(Grant.Permission.Allowance.ALTER, Database.ResourceType.TABLE, table);
         
         switch(event) {
         case DELETE:
@@ -859,22 +912,26 @@ public abstract class DatabaseStore implements DDLProcessor {
     public void roleCreated(Role role) {
         assertInEditMode();
         verifyDatabaseExists();
+        assertGrant(Grant.Permission.Allowance.CREATE, Database.ResourceType.ROLE, role);
+        
         this.currentDatabase.addRole(role);
         this.save = true;
     }
     
     public void roleDropped(String roleName) {
         assertInEditMode();
-        verifyRoleExists(roleName);
+        Role role = verifyRoleExists(roleName);
+        assertGrant(Grant.Permission.Allowance.DROP, Database.ResourceType.ROLE, role);
         
         this.currentDatabase.removeRole(roleName);
         this.save = true;
     }
     
-    public void grantCreated(Grant grant) {
+	public void grantCreated(Grant grant) {
         assertInEditMode();
         verifyDatabaseExists();
         verifyRoleExists(grant.getRole());
+        assertGrant(Grant.Permission.Allowance.CREATE, Database.ResourceType.GRANT, grant);
         
         for (Grant.Permission p:grant.getPermissions()) {
             AbstractMetadataRecord record = getSchemaRecord(p.getResourceName(), p.getResourceType());
@@ -890,6 +947,7 @@ public abstract class DatabaseStore implements DDLProcessor {
         assertInEditMode();
         verifyDatabaseExists();
         verifyRoleExists(grant.getRole());
+        assertGrant(Grant.Permission.Allowance.DROP, Database.ResourceType.GRANT, grant);
         
         for (Grant.Permission p:grant.getPermissions()) {
             AbstractMetadataRecord record = getSchemaRecord(p.getResourceName(), p.getResourceType());
@@ -959,12 +1017,13 @@ public abstract class DatabaseStore implements DDLProcessor {
     }
     
     @Override
-    public String processDDL(String dbName, String version, String schema, String ddl,
-            boolean persist) throws MetadataException {
+	public String processDDL(String dbName, String version, String schema, String ddl, boolean persist,
+			CommandContext commandContext) throws MetadataException {
         
         StringBuilder sb = new StringBuilder();
         startEditing(persist);
         try {
+        	this.commandContext = commandContext;
             QueryParser parser = QueryParser.getQueryParser();
             if (dbName != null) {
                 String str = "USE DATABASE "+SQLStringVisitor.escapeSinglePart(dbName)+" VERSION "+new Constant(version); //$NON-NLS-1$ //$NON-NLS-2$
@@ -984,6 +1043,7 @@ public abstract class DatabaseStore implements DDLProcessor {
             logNParse(parser, this, ddl);
             return sb.toString();
         } finally {
+        	this.commandContext = null;
             stopEditing();
         }        
     }
@@ -991,4 +1051,25 @@ public abstract class DatabaseStore implements DDLProcessor {
         LogManager.logDetail(LogConstants.CTX_METASTORE, "DDL: ", sql); //$NON-NLS-1$
         parser.parseDDL(store, new StringReader(sql));
     }
+    
+	private void assertGrant(Allowance allowence, ResourceType type, AbstractMetadataRecord record) {
+		if (this.commandContext != null) {
+			AuthorizationValidator validator = this.commandContext.getAuthorizationValidator();
+			String[] resources = new String[] { record.getName() };
+
+			if (validator.allowDDLEvent(this.commandContext, allowence, type, record)) {
+				AuditMessage msg = new AuditMessage(allowence.name(), "ddl execution-granted", resources, //$NON-NLS-1$
+						commandContext);
+				LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, msg);
+			} else {
+				AuditMessage msg = new AuditMessage(allowence.name(), "ddl execution-denied", resources, //$NON-NLS-1$
+						commandContext);
+				LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, msg);
+
+				throw new org.teiid.metadata.MetadataException(QueryPlugin.Event.TEIID31243,
+						QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31243, allowence.name(), type.name(),
+								record.getName(), this.commandContext.getUserName()));
+			}
+		}
+	}    
 }

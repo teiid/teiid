@@ -410,7 +410,8 @@ public class RequestMessage implements Externalizable {
 			this.delaySerialization = (options & 2) == 2;
 			//9.2 property
 			if ((options & 4) == 4) {
-			    this.schemaInContext = in.readUTF();
+				this.vdbEditMode = true;
+			    this.schemaInContext = (String)in.readObject();
 			}
 		} catch (OptionalDataException e) {
 		} catch (EOFException e) {
@@ -451,7 +452,7 @@ public class RequestMessage implements Externalizable {
 		}
 		out.writeByte(options);
 		if (vdbEditMode) {
-		    out.writeUTF(schemaInContext);
+		    out.writeObject(schemaInContext);
 		}
 	}
 

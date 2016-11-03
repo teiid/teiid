@@ -312,7 +312,7 @@ public class Request {
         	if (requestMsg.isVdbEditMode() && !prepared) {
         	    this.ddl = true;
 				return queryParser.parseCommand(commandStr, parseInfo, false, this.ddlProcessor, vdbName, vdbVersion,
-						requestMsg.getSchemaInContext());
+						requestMsg.getSchemaInContext(), this.context);
         	}
         	return queryParser.parseCommand(commandStr, parseInfo, false);
         } 

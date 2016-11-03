@@ -31,7 +31,7 @@ public class Grant extends AbstractMetadataRecord {
 
     public static class Permission {
         public enum Allowance {
-            SELECT, INSERT, UPDATE, DELETE, EXECUTE, LANGUAGE, ALTER, DROP, ALL_PRIVILEGES, TEMPORARY_TABLE
+            SELECT, INSERT, UPDATE, DELETE, EXECUTE, LANGUAGE, ALTER, DROP, ALL_PRIVILEGES, TEMPORARY_TABLE, CREATE
         }        
         private Database.ResourceType resourceType= null;
         private String resource = null;

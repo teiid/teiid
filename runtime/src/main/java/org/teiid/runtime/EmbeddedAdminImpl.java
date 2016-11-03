@@ -593,7 +593,7 @@ public class EmbeddedAdminImpl implements Admin {
             throws AdminException {
         if (this.embeddedServer.getConfiguration().getDatabaseStorage() != null) {
             try {
-                return this.embeddedServer.getDatabaseStore().processDDL(vdbName, vdbVersion, schema, ddlStmt, persist);
+                return this.embeddedServer.getDatabaseStore().processDDL(vdbName, vdbVersion, schema, ddlStmt, persist, null);
             } catch (MetadataException e) {
                 throw new AdminProcessingException(e);
             }

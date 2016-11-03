@@ -78,7 +78,7 @@ public class QueryOptimizer {
         @Override
         public TupleBatch nextBatch() throws BlockedException,
                 TeiidComponentException, TeiidProcessingException {
-            TupleBatch zero = new TupleBatch(0, Arrays.asList(Arrays.asList(1)));
+            TupleBatch zero = new TupleBatch(1, Arrays.asList(Arrays.asList(1)));
             zero.setTerminationFlag(true);
             return zero;
         }

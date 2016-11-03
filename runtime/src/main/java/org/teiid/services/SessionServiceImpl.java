@@ -27,6 +27,8 @@ import java.security.Principal;
 import java.security.acl.Group;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -175,6 +177,8 @@ public class SessionServiceImpl implements SessionService {
         
 	        // Validate VDB and version if logging on to server product...
 	        VDBMetaData vdb = null;
+	        boolean inlineVDB = false;
+	        boolean hasAdminRole = true;
 	        if (vdbName != null) {
 	        	vdb = getActiveVDB(vdbName, vdbVersion);
 	        	if (vdb == null) {
@@ -184,7 +188,8 @@ public class SessionServiceImpl implements SessionService {
 	        	    String version = vdbVersion == null?"1":vdbVersion; //$NON-NLS-1$
                     if (this.ddlProcessor != null) {
                         this.ddlProcessor.processDDL(null, null, null,
-                                "CREATE DATABASE " + SQLStringVisitor.escapeSinglePart(vdbName) + " VERSION " + new Constant(version), true); //$NON-NLS-1$ //$NON-NLS-2$
+                                "CREATE DATABASE " + SQLStringVisitor.escapeSinglePart(vdbName) + " VERSION " + new Constant(version), true, null); //$NON-NLS-1$ //$NON-NLS-2$
+                        inlineVDB = true;
                     } else {
                         throw new SessionServiceException(RuntimePlugin.Event.TEIID40157,
                                 RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40157));         
@@ -200,6 +205,7 @@ public class SessionServiceImpl implements SessionService {
 	        String securityDomain = getSecurityDomain(userName, vdbName, vdbVersion, vdb);
 	        
 			if (securityDomain != null) {
+				hasAdminRole = false;
 		        // Authenticate user...
 		        // if not authenticated, this method throws exception
 	            LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"authenticateUser", userName, applicationName}); //$NON-NLS-1$
@@ -223,6 +229,28 @@ public class SessionServiceImpl implements SessionService {
 	        		securityContext = this.securityHelper.authenticate(securityDomain, baseUserName, credentials, applicationName);
 	        		subject = this.securityHelper.getSubjectInContext(securityContext);
 	        	}
+
+    			Group group = getSubjectRoles(subject);
+    			if (group != null) {
+	    			Enumeration<? extends Principal> en = group.members();
+	    			while(en.hasMoreElements()) {
+	    				Principal p = en.nextElement();
+	    				if (p.getName().equals("admin")) {
+	    					hasAdminRole = true;
+	    					break;
+	    				}
+	    			}
+    			}
+    			
+	    		// if vdb is created make sure the user has admin permission
+	    		if (inlineVDB) {
+	    			if (!hasAdminRole && this.ddlProcessor != null) {
+						this.ddlProcessor.processDDL(vdb.getName(), vdb.getVersion(), null, "DROP DATABASE "
+								+ SQLStringVisitor.escapeSinglePart(vdb.getName()) + " VERSION " + new Constant(vdb.getVersion()),
+								true, null);
+						throw new SessionServiceException(RuntimePlugin.Event.TEIID40160, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40160));
+	    			}
+	    		}
 			}
 			else {
 	        	LogManager.logDetail(LogConstants.CTX_SECURITY, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40117)); 
@@ -250,6 +278,8 @@ public class SessionServiceImpl implements SessionService {
 	        newSession.setSubject(subject);
 	        newSession.setSecurityContext(securityContext);
 	        newSession.setVdb(vdb);
+	        newSession.addProperty("HasAdminRole", Boolean.toString(hasAdminRole));
+	        
 	        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_SECURITY, MessageLevel.DETAIL)) {
 	        	LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful, created", newSession }); //$NON-NLS-1$
 	        }
@@ -269,6 +299,23 @@ public class SessionServiceImpl implements SessionService {
 	        }
         	throw e;
         }
+	}
+	
+	public static Group getSubjectRoles(Subject theSubject) {
+		if (theSubject == null) {
+			return null;
+		}
+		Set<Group> subjectGroups = theSubject.getPrincipals(Group.class);
+		Iterator<Group> iter = subjectGroups.iterator();
+		Group roles = null;
+		while (iter.hasNext()) {
+			Group grp = iter.next();
+			String name = grp.getName();
+			if (name.equals("Roles")) {
+				roles = grp;
+			}
+		}
+		return roles;
 	}
 	
 	/**
