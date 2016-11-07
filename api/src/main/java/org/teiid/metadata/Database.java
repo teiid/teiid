@@ -32,7 +32,7 @@ import java.util.TreeMap;
 
 import org.teiid.connector.DataPlugin;
 import org.teiid.core.util.StringUtil;
-import org.teiid.metadata.Grant.Permission.Allowance;
+import org.teiid.metadata.Grant.Permission.Privilege;
 
 public class Database extends AbstractMetadataRecord {
     private static final long serialVersionUID = 7595765832848232840L;
@@ -265,12 +265,12 @@ public class Database extends AbstractMetadataRecord {
             if (g.getRole().equalsIgnoreCase(grant.getRole())) {
             	Database.ResourceType resourceType = grant.getPermissions().iterator().next().getResourceType();
             	String resourceName = grant.getPermissions().iterator().next().getResourceName();
-            	EnumSet<Allowance> allowence = grant.getPermissions().iterator().next().getAllowances();
-            	boolean all = allowence.contains(Allowance.ALL_PRIVILEGES);
+            	EnumSet<Privilege> allowence = grant.getPermissions().iterator().next().getPrivileges();
+            	boolean all = allowence.contains(Privilege.ALL_PRIVILEGES);
             	for (Grant.Permission p : g.getPermissions()) {
 					if (p.getResourceType() == resourceType && 
 							p.getResourceName().equals(resourceName) &&
-							(all || p.getAllowances().containsAll(allowence))) {
+							(all || p.getPrivileges().containsAll(allowence))) {
             			found = true;            			
             		}
             	}

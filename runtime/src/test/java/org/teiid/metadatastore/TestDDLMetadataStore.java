@@ -306,7 +306,7 @@ public class TestDDLMetadataStore {
         Connection c = es.getDriver().connect("jdbc:teiid:empty", p);
         Statement s = c.createStatement();
         s.execute("create virtual schema s");
-        assertEquals(1, s.getUpdateCount());
+        assertEquals(0, s.getUpdateCount());
         s.execute("set schema s");
         try {
             s.execute("create view x as select 'a' from b;");
@@ -315,7 +315,7 @@ public class TestDDLMetadataStore {
             
         }
         s.execute("create view x as select 'a';");
-        assertEquals(1, s.getUpdateCount());
+        assertEquals(0, s.getUpdateCount());
     }  
     
     @Test
@@ -335,10 +335,10 @@ public class TestDDLMetadataStore {
         Connection c = es.getDriver().connect("jdbc:teiid:empty", p);
         Statement s = c.createStatement();
         s.execute("create virtual schema s");
-        assertEquals(1, s.getUpdateCount());
+        assertEquals(0, s.getUpdateCount());
         s.execute("set schema s");
         s.execute("create view x as select 'a';");
-        assertEquals(1, s.getUpdateCount());
+        assertEquals(0, s.getUpdateCount());
         s.execute("select session_id()");
         ResultSet rs = s.getResultSet();
         rs.next();

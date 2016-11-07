@@ -28,7 +28,7 @@ import org.teiid.adminapi.DataPolicy.Context;
 import org.teiid.adminapi.DataPolicy.PermissionType;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Database.ResourceType;
-import org.teiid.metadata.Grant.Permission.Allowance;
+import org.teiid.metadata.Grant.Permission.Privilege;
 
 /**
  * A policy decider that reports authorization decisions for further action.  
@@ -80,6 +80,6 @@ public interface PolicyDecider {
 	boolean validateCommand(CommandContext commandContext);
 
 	
-	boolean allowDDLEvent(CommandContext commandContext, Allowance allowence, ResourceType type,
+	boolean allowDDLEvent(CommandContext commandContext, Privilege privilege, ResourceType type,
 			AbstractMetadataRecord record);
 }

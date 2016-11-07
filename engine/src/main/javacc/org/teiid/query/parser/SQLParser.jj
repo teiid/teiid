@@ -5243,11 +5243,11 @@ void grantOption(DatabaseStore dbStore) :
     String condition = null;
     boolean isConstraint = false;
     String to = null;
-    ArrayList<Grant.Permission.Allowance> allowances = new ArrayList<Grant.Permission.Allowance>();
+    ArrayList<Grant.Permission.Privilege> privileges = new ArrayList<Grant.Permission.Privilege>();
     Grant.Permission permission = new Grant.Permission();
 }
 {
-    <GRANT> readGrantTypes(allowances) (<COMMA> readGrantTypes(allowances))*
+    <GRANT> readGrantTypes(privileges) (<COMMA> readGrantTypes(privileges))*
     <ON> ( 
         <DATABASE> [resource = id(null)] {on = Database.ResourceType.DATABASE;} |
         <TABLE> resource = id(null) {on = Database.ResourceType.TABLE;} 
@@ -5264,7 +5264,7 @@ void grantOption(DatabaseStore dbStore) :
             if (resource != null) {
                 permission.setResourceName(resource);
             }
-            permission.setAllowances(allowances);
+            permission.setPrivileges(privileges);
             permission.setResourceType(on);            
             if (mask != null) {
                 permission.setMask(mask);
@@ -5306,11 +5306,11 @@ void revokeGrantOption(DatabaseStore dbStore) :
     String condition = null;
     boolean isConstraint = false;
     String to = null;
-    ArrayList<Grant.Permission.Allowance> allowances = new ArrayList<Grant.Permission.Allowance>();
+    ArrayList<Grant.Permission.Privilege> privileges = new ArrayList<Grant.Permission.Privilege>();
     Grant.Permission permission = new Grant.Permission();
 }
 {
-    <REVOKE> <GRANT> readGrantTypes(allowances) (<COMMA> readGrantTypes(allowances))*
+    <REVOKE> <GRANT> readGrantTypes(privileges) (<COMMA> readGrantTypes(privileges))*
     <ON> ( 
         <DATABASE> [resource = id(null)] {on = Database.ResourceType.DATABASE;} |
         <TABLE> resource = id(null) {on = Database.ResourceType.TABLE;} 
@@ -5327,7 +5327,7 @@ void revokeGrantOption(DatabaseStore dbStore) :
             if (resource != null) {
                 permission.setResourceName(resource);
             }
-            permission.setAllowances(allowances);
+            permission.setPrivileges(privileges);
             permission.setResourceType(on);            
             if (mask != null) {
                 permission.setMask(mask);
@@ -6396,18 +6396,18 @@ void readCSVString(List<String> strings) :
 /*
 name=notused
 */
-void readGrantTypes(ArrayList<Grant.Permission.Allowance> allowances) :
+void readGrantTypes(ArrayList<Grant.Permission.Privilege> privileges) :
 {
 }
 {        
-    <SELECT> {allowances.add(Grant.Permission.Allowance.SELECT);} |
-    <INSERT> {allowances.add(Grant.Permission.Allowance.INSERT);} |
-    <UPDATE> {allowances.add(Grant.Permission.Allowance.UPDATE);} |
-    <DELETE> {allowances.add(Grant.Permission.Allowance.DELETE);} |
-    <EXECUTE> {allowances.add(Grant.Permission.Allowance.EXECUTE);} |
-    <LANGUAGE> {allowances.add(Grant.Permission.Allowance.LANGUAGE);} |
-    <ALTER> {allowances.add(Grant.Permission.Allowance.ALTER);} |
-    <DROP> {allowances.add(Grant.Permission.Allowance.DROP);} |
-    <ALL> <PRIVILEGES> {allowances.add(Grant.Permission.Allowance.ALL_PRIVILEGES);} |
-    <TEMPORARY> <TABLE> {allowances.add(Grant.Permission.Allowance.TEMPORARY_TABLE);}
+    <SELECT> {privileges.add(Grant.Permission.Privilege.SELECT);} |
+    <INSERT> {privileges.add(Grant.Permission.Privilege.INSERT);} |
+    <UPDATE> {privileges.add(Grant.Permission.Privilege.UPDATE);} |
+    <DELETE> {privileges.add(Grant.Permission.Privilege.DELETE);} |
+    <EXECUTE> {privileges.add(Grant.Permission.Privilege.EXECUTE);} |
+    <LANGUAGE> {privileges.add(Grant.Permission.Privilege.LANGUAGE);} |
+    <ALTER> {privileges.add(Grant.Permission.Privilege.ALTER);} |
+    <DROP> {privileges.add(Grant.Permission.Privilege.DROP);} |
+    <ALL> <PRIVILEGES> {privileges.add(Grant.Permission.Privilege.ALL_PRIVILEGES);} |
+    <TEMPORARY> <TABLE> {privileges.add(Grant.Permission.Privilege.TEMPORARY_TABLE);}
 }

@@ -46,7 +46,7 @@ import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Database.ResourceType;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.Grant.Permission;
-import org.teiid.metadata.Grant.Permission.Allowance;
+import org.teiid.metadata.Grant.Permission.Privilege;
 import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -209,7 +209,7 @@ public class DDLStringVisitor {
         for (Permission permission : grant.getPermissions()) {
             append(GRANT);
             boolean first = true;
-            for (Allowance allowance:permission.getAllowances()) {
+            for (Privilege allowance:permission.getPrivileges()) {
                 if (first) {
                     first = false;
                     append(SPACE);

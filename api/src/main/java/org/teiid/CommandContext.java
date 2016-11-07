@@ -223,4 +223,10 @@ public interface CommandContext {
 	 * @throws TeiidSQLException 
 	 */
 	TeiidConnection getConnection() throws TeiidSQLException;
+
+	/**
+	 * Return true if the user has the admin role.
+	 * @return
+	 */
+    boolean hasAdminRole();
 }

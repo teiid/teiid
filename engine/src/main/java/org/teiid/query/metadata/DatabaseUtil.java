@@ -40,7 +40,7 @@ import org.teiid.metadata.Database;
 import org.teiid.metadata.Database.ResourceType;
 import org.teiid.metadata.Grant;
 import org.teiid.metadata.Grant.Permission;
-import org.teiid.metadata.Grant.Permission.Allowance;
+import org.teiid.metadata.Grant.Permission.Privilege;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Role;
 import org.teiid.metadata.Schema;
@@ -273,25 +273,25 @@ public class DatabaseUtil {
         pmd.setResourceName(from.getResourceName());
         
         // NOTE: PMD even though you set false, it can interpret it wrong, use null or true only
-        if (from.hasAllowance(Allowance.ALTER)) {
+        if (from.hasPrivilege(Privilege.ALTER)) {
             pmd.setAllowAlter(true);
         }
-        if (from.hasAllowance(Allowance.INSERT)) {
+        if (from.hasPrivilege(Privilege.INSERT)) {
             pmd.setAllowCreate(true);
         }
-        if (from.hasAllowance(Allowance.DELETE)) {
+        if (from.hasPrivilege(Privilege.DELETE)) {
             pmd.setAllowDelete(true);
         }
-        if(from.hasAllowance(Allowance.EXECUTE)) {
+        if(from.hasPrivilege(Privilege.EXECUTE)) {
             pmd.setAllowExecute(true);
         }
-        if (from.hasAllowance(Allowance.SELECT)) {
+        if (from.hasPrivilege(Privilege.SELECT)) {
             pmd.setAllowRead(true);
         }
-        if(from.hasAllowance(Allowance.UPDATE)) {
+        if(from.hasPrivilege(Privilege.UPDATE)) {
             pmd.setAllowUpdate(true);
         }
-        if (from.hasAllowance(Allowance.LANGUAGE)) {
+        if (from.hasPrivilege(Privilege.LANGUAGE)) {
             pmd.setAllowLanguage(true);
         }
         
@@ -308,10 +308,10 @@ public class DatabaseUtil {
         dpm.setName(from.getRole());
         
         for (Permission p : from.getPermissions()) {
-            if (p.hasAllowance(Allowance.ALL_PRIVILEGES)) {
+            if (p.hasPrivilege(Privilege.ALL_PRIVILEGES)) {
                 dpm.setGrantAll(true);
                 continue;
-            } else if (p.hasAllowance(Allowance.TEMPORARY_TABLE)) {
+            } else if (p.hasPrivilege(Privilege.TEMPORARY_TABLE)) {
                 dpm.setAllowCreateTemporaryTables(true);
                 continue;
             }

@@ -40,7 +40,7 @@ import org.teiid.dqp.internal.process.multisource.MultiSourceElement;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Database.ResourceType;
 import org.teiid.metadata.FunctionMethod;
-import org.teiid.metadata.Grant.Permission.Allowance;
+import org.teiid.metadata.Grant.Permission.Privilege;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Schema;
 import org.teiid.query.QueryPlugin;
@@ -179,7 +179,7 @@ public class DefaultAuthorizationValidator implements AuthorizationValidator {
 	}
 
 	@Override
-	public boolean allowDDLEvent(CommandContext commandContext, Allowance allowence, ResourceType type,
+	public boolean allowDDLEvent(CommandContext commandContext, Privilege allowence, ResourceType type,
 			AbstractMetadataRecord record) {
 		if (commandContext.getDQPWorkContext().isAdmin()) {
 			return true;

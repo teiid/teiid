@@ -702,6 +702,14 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	}
 	
 	@Override
+	public boolean hasAdminRole() {
+	    if (this.vdbState.dqpWorkContext == null) {
+            return false;
+        }
+        return this.vdbState.dqpWorkContext.hasAdminRole();
+	}
+	
+	@Override
 	public VDBMetaData getVdb() {
 		if (this.vdbState.dqpWorkContext == null) {
 			return null;

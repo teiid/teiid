@@ -33,7 +33,7 @@ import java.util.TreeMap;
 
 import org.teiid.connector.DataPlugin;
 import org.teiid.metadata.Grant.Permission;
-import org.teiid.metadata.Grant.Permission.Allowance;
+import org.teiid.metadata.Grant.Permission.Privilege;
 
 /**
  * Simple holder for metadata.
@@ -124,7 +124,7 @@ public class MetadataStore implements Serializable {
 	            for (Permission oldP : previous.getPermissions()) {
                     if (oldP.getResourceName().equalsIgnoreCase(newP.getResourceName())
                             && oldP.getResourceType() == newP.getResourceType()) {
-	                    oldP.appendAllowances(newP.getAllowances());
+	                    oldP.appendPrivileges(newP.getPrivileges());
 	                    found = true;
 	                }
 	            }
@@ -146,14 +146,14 @@ public class MetadataStore implements Serializable {
 	            for (Permission currentPermission : previous.getPermissions()) {
                     if (currentPermission.getResourceName().equalsIgnoreCase(removePermission.getResourceName())
                             && currentPermission.getResourceType() == removePermission.getResourceType()) {
-                    	boolean all = removePermission.getAllowances().contains(Allowance.ALL_PRIVILEGES);
+                    	boolean all = removePermission.getPrivileges().contains(Privilege.ALL_PRIVILEGES);
                     	if (all) {
-                    		currentPermission.removeAllowances(currentPermission.getAllowances());
+                    		currentPermission.removePrivileges(currentPermission.getPrivileges());
                     	} else {
-                    		currentPermission.removeAllowances(removePermission.getAllowances());
+                    		currentPermission.removePrivileges(removePermission.getPrivileges());
                     	}
 	                }
-                    if (currentPermission.getAllowances().isEmpty()) {
+                    if (currentPermission.getPrivileges().isEmpty()) {
                     	emptyPermissions.add(currentPermission);
                     }
 	            }

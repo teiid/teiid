@@ -30,7 +30,7 @@ public class Grant extends AbstractMetadataRecord {
     private static final long serialVersionUID = 3728259393244582775L;
 
     public static class Permission {
-        public enum Allowance {
+        public enum Privilege {
             SELECT, INSERT, UPDATE, DELETE, EXECUTE, LANGUAGE, ALTER, DROP, ALL_PRIVILEGES, TEMPORARY_TABLE, CREATE
         }        
         private Database.ResourceType resourceType= null;
@@ -39,7 +39,7 @@ public class Grant extends AbstractMetadataRecord {
         private Integer maskOrder;
         private String condition = null;
         private Boolean isConstraint;
-        private EnumSet<Allowance> allowances = EnumSet.noneOf(Allowance.class);
+        private EnumSet<Privilege> privileges = EnumSet.noneOf(Privilege.class);
         
         public Database.ResourceType getResourceType() {
             return resourceType;
@@ -86,95 +86,85 @@ public class Grant extends AbstractMetadataRecord {
             return isConstraint;
         }
 
-        public EnumSet<Allowance> getAllowances() {
-            return allowances;
+        public EnumSet<Privilege> getPrivileges() {
+            return privileges;
         }
         
-        public boolean hasAllowance(Allowance allow) {
-            return this.allowances.contains(allow);
+        public boolean hasPrivilege(Privilege allow) {
+            return this.privileges.contains(allow);
         }
         
-        public void setAllowances(List<Allowance> types) {
+        public void setPrivileges(List<Privilege> types) {
             if (types == null ||types.isEmpty()) {
                 return;
             }
-            this.allowances = EnumSet.copyOf(types);
+            this.privileges = EnumSet.copyOf(types);
         }
 
-        public void appendAllowances(EnumSet<Allowance> types) {
+        public void appendPrivileges(EnumSet<Privilege> types) {
             if (types == null ||types.isEmpty()) {
                 return;
             }
-            for (Allowance a:types) {
-                this.allowances.add(a);
+            for (Privilege a:types) {
+                this.privileges.add(a);
             }
         }
         
-        public void removeAllowances(EnumSet<Allowance> types) {
+        public void removePrivileges(EnumSet<Privilege> types) {
             if (types == null ||types.isEmpty()) {
                 return;
             }
-            for (Allowance a:types) {
-                this.allowances.remove(a);
+            for (Privilege a:types) {
+                this.privileges.remove(a);
+            }
+        }
+        
+        private void setAllows(Boolean allow, Privilege privilege) {
+            if(allow!= null) {
+                if (allow) {
+                    this.privileges.add(privilege);
+                } else {
+                    this.privileges.remove(privilege);
+                }
             }
         }
 
         public void setAllowSelect(Boolean allow) {
-            if(allow!= null && allow) {
-                this.allowances.add(Allowance.SELECT);
-            }
+            setAllows(allow, Privilege.SELECT);
         }
         
         public void setAllowAlter(Boolean allow) {
-            if(allow!= null && allow) {
-                this.allowances.add(Allowance.ALTER);
-            }
+            setAllows(allow, Privilege.ALTER);
         }
 
         public void setAllowInsert(Boolean allow) {
-            if(allow!= null && allow) {
-                this.allowances.add(Allowance.INSERT);
-            }
+            setAllows(allow, Privilege.INSERT);
         }
 
         public void setAllowDelete(Boolean allow) {
-            if(allow!= null && allow) {
-                this.allowances.add(Allowance.DELETE);
-            }
+            setAllows(allow, Privilege.DELETE);
         }
 
         public void setAllowExecute(Boolean allow) {
-            if(allow!= null && allow) {
-                this.allowances.add(Allowance.EXECUTE);
-            }
+            setAllows(allow, Privilege.EXECUTE);
         }
 
         public void setAllowUpdate(Boolean allow) {
-            if(allow!= null && allow) {
-                this.allowances.add(Allowance.UPDATE);
-            }
+            setAllows(allow, Privilege.UPDATE);
         }
         
         public void setAllowDrop(Boolean allow) {
-            if(allow!= null && allow) {
-                this.allowances.add(Allowance.DROP);
-            }
+            setAllows(allow, Privilege.DROP);
         }        
 
         public void setAllowLanguage(Boolean allow) {
-            if(allow!= null && allow) {
-                this.allowances.add(Allowance.LANGUAGE);
-            }
+            setAllows(allow, Privilege.LANGUAGE);
         }        
         public void setAllowAllPrivileges(Boolean allow) {
-            if(allow!= null && allow) {
-                this.allowances.add(Allowance.ALL_PRIVILEGES);
-            }
+            setAllows(allow, Privilege.ALL_PRIVILEGES);
         }
         public void setAllowTemporyTables(Boolean allow) {
-            if(allow!= null && allow) {
-                this.allowances.add(Allowance.TEMPORARY_TABLE);
-            }
+            setAllows(allow, Privilege.TEMPORARY_TABLE);
         }        
     }
     

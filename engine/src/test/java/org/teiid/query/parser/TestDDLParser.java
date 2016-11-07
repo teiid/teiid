@@ -35,7 +35,7 @@ import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.*;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.Grant.Permission;
-import org.teiid.metadata.Grant.Permission.Allowance;
+import org.teiid.metadata.Grant.Permission.Privilege;
 import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.SystemMetadata;
@@ -1099,11 +1099,11 @@ public class TestDDLParser {
         Grant g = grants.iterator().next();
         assertEquals(1, g.getPermissions().size());
         Permission p = g.getPermissions().iterator().next();
-        assertTrue(p.hasAllowance(Allowance.SELECT));
-        assertTrue(p.hasAllowance(Allowance.INSERT));
-        assertTrue(p.hasAllowance(Allowance.DELETE));
-        assertTrue(p.hasAllowance(Allowance.UPDATE));
-        assertFalse(p.hasAllowance(Allowance.DROP));
+        assertTrue(p.hasPrivilege(Privilege.SELECT));
+        assertTrue(p.hasPrivilege(Privilege.INSERT));
+        assertTrue(p.hasPrivilege(Privilege.DELETE));
+        assertTrue(p.hasPrivilege(Privilege.UPDATE));
+        assertFalse(p.hasPrivilege(Privilege.DROP));
     }
     
     @Test 
@@ -1125,7 +1125,7 @@ public class TestDDLParser {
         Grant g = grants.iterator().next();
         assertEquals(1, g.getPermissions().size());
         Permission p = g.getPermissions().iterator().next();
-        assertTrue(p.hasAllowance(Allowance.ALL_PRIVILEGES));
+        assertTrue(p.hasPrivilege(Privilege.ALL_PRIVILEGES));
     }  
     
     @Test 
@@ -1147,7 +1147,7 @@ public class TestDDLParser {
         Grant g = grants.iterator().next();
         assertEquals(1, g.getPermissions().size());
         Permission p = g.getPermissions().iterator().next();
-        assertTrue(p.hasAllowance(Allowance.ALL_PRIVILEGES));
+        assertTrue(p.hasPrivilege(Privilege.ALL_PRIVILEGES));
         assertEquals("foo=bar", p.getCondition());
         assertTrue(p.isConditionAConstraint());
     }     
@@ -1173,11 +1173,11 @@ public class TestDDLParser {
         Grant g = grants.iterator().next();
         assertEquals(1, g.getPermissions().size());
         Permission p = g.getPermissions().iterator().next();
-        assertFalse(p.hasAllowance(Allowance.SELECT));
-        assertTrue(p.hasAllowance(Allowance.INSERT));
-        assertTrue(p.hasAllowance(Allowance.DELETE));
-        assertTrue(p.hasAllowance(Allowance.UPDATE));
-        assertFalse(p.hasAllowance(Allowance.DROP));
+        assertFalse(p.hasPrivilege(Privilege.SELECT));
+        assertTrue(p.hasPrivilege(Privilege.INSERT));
+        assertTrue(p.hasPrivilege(Privilege.DELETE));
+        assertTrue(p.hasPrivilege(Privilege.UPDATE));
+        assertFalse(p.hasPrivilege(Privilege.DROP));
     }  
     
     @Test 

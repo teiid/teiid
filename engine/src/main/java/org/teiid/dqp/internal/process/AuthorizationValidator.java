@@ -26,7 +26,7 @@ import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Database.ResourceType;
-import org.teiid.metadata.Grant.Permission.Allowance;
+import org.teiid.metadata.Grant.Permission.Privilege;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.util.CommandContext;
@@ -82,6 +82,6 @@ public interface AuthorizationValidator {
 	 * @param record
 	 * @return
 	 */
-	boolean allowDDLEvent(CommandContext commandContext, Allowance allowence, ResourceType type,
+	boolean allowDDLEvent(CommandContext commandContext, Privilege allowence, ResourceType type,
 			AbstractMetadataRecord record);
 }
