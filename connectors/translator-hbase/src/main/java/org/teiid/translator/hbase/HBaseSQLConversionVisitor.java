@@ -34,9 +34,9 @@ import org.teiid.metadata.KeyRecord;
 
 public class HBaseSQLConversionVisitor extends org.teiid.translator.jdbc.SQLConversionVisitor {
     
-    private HBaseExecutionFactory executionFactory ;
+    private PhoenixExecutionFactory executionFactory ;
     
-    public HBaseSQLConversionVisitor(HBaseExecutionFactory ef) {
+    public HBaseSQLConversionVisitor(PhoenixExecutionFactory ef) {
         super(ef);
         this.executionFactory = ef;
     }

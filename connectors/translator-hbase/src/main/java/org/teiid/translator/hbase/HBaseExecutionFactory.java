@@ -44,13 +44,13 @@ import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
-import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.JDBCMetdataProcessor;
 import org.teiid.translator.jdbc.JDBCUpdateExecution;
 import org.teiid.util.Version;
 
-@Translator(name="hbase", description="HBase Translator, reads and writes the data to HBase")
-public class HBaseExecutionFactory extends JDBCExecutionFactory {
+@Deprecated
+@Translator(name="hbase", description="HBase Translator, reads and writes the data to HBase", deprecated="phoenix")
+public class HBaseExecutionFactory extends PhoenixExecutionFactory {
     
     public static String HBASE = "hbase"; //$NON-NLS-1$
     public static final Version V_4_8 = Version.getVersion("4.8"); //$NON-NLS-1$
