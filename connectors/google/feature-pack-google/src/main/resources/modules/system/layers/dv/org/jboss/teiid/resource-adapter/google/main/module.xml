@@ -5,7 +5,6 @@
        
     <resources>
         <artifact name="${org.jboss.teiid.connectors:connector-google}"/>
-        <artifact name="${com.google.gdata:core}" />
         <resource-root path="."/>
         <!-- Insert resources here -->
     </resources>
