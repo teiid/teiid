@@ -104,7 +104,7 @@ connect
 /subsystem=resource-adapters/resource-adapter=google:add(module=org.jboss.teiid.resource-adapter.google)
 /subsystem=resource-adapters/resource-adapter=ldap:add(module=org.jboss.teiid.resource-adapter.ldap)
 /subsystem=resource-adapters/resource-adapter=salesforce:add(module=org.jboss.teiid.resource-adapter.salesforce)
-#/subsystem=resource-adapters/resource-adapter=salesforce-34:add(module=org.jboss.teiid.resource-adapter.salesforce-34)
+/subsystem=resource-adapters/resource-adapter=salesforce-34:add(module=org.jboss.teiid.resource-adapter.salesforce-34)
 /subsystem=resource-adapters/resource-adapter=webservice:add(module=org.jboss.teiid.resource-adapter.webservice)
 /subsystem=resource-adapters/resource-adapter=mongodb:add(module=org.jboss.teiid.resource-adapter.mongodb)
 /subsystem=resource-adapters/resource-adapter=cassandra:add(module=org.jboss.teiid.resource-adapter.cassandra)
