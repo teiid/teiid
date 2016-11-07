@@ -645,10 +645,46 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
             supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMEWKB);
             supportedFunctions.add(SourceSystemFunctions.ST_ASEWKB);
             supportedFunctions.add(SourceSystemFunctions.ST_ASEWKT);
+            supportedFunctions.add(SourceSystemFunctions.ST_AREA);
+            supportedFunctions.add(SourceSystemFunctions.ST_BOUNDARY);
+            supportedFunctions.add(SourceSystemFunctions.ST_BUFFER);
+            supportedFunctions.add(SourceSystemFunctions.ST_CENTROID);
+            supportedFunctions.add(SourceSystemFunctions.ST_COORDDIM);
+            supportedFunctions.add(SourceSystemFunctions.ST_CONVEXHULL);
+            supportedFunctions.add(SourceSystemFunctions.ST_DIFFERENCE);
+            supportedFunctions.add(SourceSystemFunctions.ST_DIMENSION);
+            supportedFunctions.add(SourceSystemFunctions.ST_ENDPOINT);
+            supportedFunctions.add(SourceSystemFunctions.ST_EXTERIORRING);
+            supportedFunctions.add(SourceSystemFunctions.ST_GEOMETRYN);
+            supportedFunctions.add(SourceSystemFunctions.ST_GEOMETRYTYPE);
+            supportedFunctions.add(SourceSystemFunctions.ST_INTERIORRINGN);
+            supportedFunctions.add(SourceSystemFunctions.ST_ISCLOSED);
+            supportedFunctions.add(SourceSystemFunctions.ST_ISEMPTY);
+            supportedFunctions.add(SourceSystemFunctions.ST_ISRING);
+            supportedFunctions.add(SourceSystemFunctions.ST_ISSIMPLE);
+            supportedFunctions.add(SourceSystemFunctions.ST_ISVALID);
+            supportedFunctions.add(SourceSystemFunctions.ST_LENGTH);
+            supportedFunctions.add(SourceSystemFunctions.ST_NUMGEOMETRIES);
+            supportedFunctions.add(SourceSystemFunctions.ST_NUMINTERIORRINGS);
+            supportedFunctions.add(SourceSystemFunctions.ST_NUMPOINTS);
+            supportedFunctions.add(SourceSystemFunctions.ST_ORDERINGEQUALS);
+            supportedFunctions.add(SourceSystemFunctions.ST_PERIMETER);
+            supportedFunctions.add(SourceSystemFunctions.ST_POINT);
+            supportedFunctions.add(SourceSystemFunctions.ST_POINTN);
+            supportedFunctions.add(SourceSystemFunctions.ST_POINTONSURFACE);
+            supportedFunctions.add(SourceSystemFunctions.ST_POLYGON);
+            supportedFunctions.add(SourceSystemFunctions.ST_RELATE);
+            supportedFunctions.add(SourceSystemFunctions.ST_STARTPOINT);
+            supportedFunctions.add(SourceSystemFunctions.ST_SYMDIFFERENCE);
+            supportedFunctions.add(SourceSystemFunctions.ST_UNION);
+            supportedFunctions.add(SourceSystemFunctions.ST_X);
+            supportedFunctions.add(SourceSystemFunctions.ST_Y);
         }
         if (this.postGisVersion.compareTo(ONE_4) >= 0) {
         	supportedFunctions.add(SourceSystemFunctions.ST_ASGEOJSON);
         	supportedFunctions.add(SourceSystemFunctions.ST_ASGML);
+        	supportedFunctions.add(SourceSystemFunctions.ST_CURVETOLINE);
+        	supportedFunctions.add(SourceSystemFunctions.ST_Z);
         }
         if (this.postGisVersion.compareTo(ONE_5) >= 0) {
         	supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMGML);
