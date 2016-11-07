@@ -150,7 +150,15 @@ public interface Admin {
      */
     public void deploy(String deployName, InputStream content) throws AdminException;
 
-
+    /**
+     * Deploy a artifact (VDB, JAR, RAR files)
+     * @param deployName  Name of the VDB file to save under
+     * @param content
+     * @param persistent the deployed artifact is persisted or not
+     * @throws AdminException
+     */    
+    public void deploy(String deployName, InputStream content, boolean persistent) throws AdminException;
+    
     /**
      * Undeploy artifact (VDB, JAR, RAR files)
      * @param deployedName

@@ -6,6 +6,7 @@
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
+    <groupId>org.jboss.teiid</groupId>
     <artifactId>teiid-olingo-common</artifactId>
     <name>teiid-olingo-common</name>
     <description>Teiid OData4 Common module</description>
@@ -22,24 +23,6 @@
                </instructions>
               </configuration>
             </plugin>      
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <descriptors>
-                        <!-- Assembly plugin does not allow multiple DependencySets see MASSEMBLY-577 thus needed to do here-->
-                        <descriptor>kits/wildfly-dist.xml</descriptor>
-                    </descriptors>
-                </configuration>
-                <executions>
-                  <execution>
-                    <id>create-assemblies</id>
-                    <phase>package</phase>
-                    <goals>
-                      <goal>single</goal>
-                    </goals>
-                  </execution>
-                </executions>
-            </plugin>              
         </plugins>
     </build>
 

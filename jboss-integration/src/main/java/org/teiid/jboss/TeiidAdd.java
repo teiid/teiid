@@ -75,6 +75,8 @@ import org.jboss.msc.value.InjectedValue;
 import org.teiid.CommandContext;
 import org.teiid.PolicyDecider;
 import org.teiid.PreParser;
+import org.teiid.adminapi.Admin;
+import org.teiid.adminapi.jboss.AdminFactory;
 import org.teiid.cache.CacheFactory;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBufferCache;
@@ -559,6 +561,8 @@ class TeiidAdd extends AbstractAddStepHandler {
    		});
    		
    		sessionServiceBuilder.install();
+   		
+  		
 	}
 	
     private void buildThreadService(int maxThreads, ServiceTarget target) {

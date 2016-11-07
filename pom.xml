@@ -105,7 +105,9 @@
         <version.commons-configuration>1.6</version.commons-configuration>
         <version.org.apache.ant>1.8.2</version.org.apache.ant>
         <version.com.fasterxml.jackson.dataformat>2.4.5</version.com.fasterxml.jackson.dataformat>	 
-        <version.javax.validation>1.1.0.Final</version.javax.validation>   	    
+        <version.javax.validation>1.1.0.Final</version.javax.validation>
+        <version.org.wildfly.build-tools>1.1.6.Final</version.org.wildfly.build-tools>
+        <version.com.googlecode.json-simple>1.1.1</version.com.googlecode.json-simple>   	    
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -246,7 +248,12 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-rar-plugin</artifactId>
                 <version>2.3</version>
-               </plugin>                
+               </plugin>
+                <plugin>
+                    <groupId>org.wildfly.build</groupId>
+                    <artifactId>wildfly-feature-pack-build-maven-plugin</artifactId>
+                    <version>${version.org.wildfly.build-tools}</version>
+                </plugin>                
 			</plugins>
 		</pluginManagement>
 		<plugins>
@@ -471,7 +478,12 @@
             	<groupId>org.jboss.teiid.connectors</groupId>
            		<artifactId>translator-jdbc</artifactId>
 				<version>${project.version}</version>
-			</dependency>        	      	   
+			</dependency>
+      		<dependency>
+            	<groupId>org.jboss.teiid</groupId>
+           		<artifactId>teiid-hibernate-dialect</artifactId>
+				<version>${project.version}</version>
+			</dependency>        	      	   			        	      	   
             <dependency>
       	    	<groupId>org.jboss.teiid.connectors</groupId>
             	<artifactId>google-api</artifactId>
@@ -648,7 +660,11 @@
                <artifactId>connector-file</artifactId>
                <version>${project.version}</version>
            </dependency>
-
+           <dependency>
+               <groupId>org.jboss.teiid</groupId>
+               <artifactId>teiid-data-quality</artifactId>
+               <version>${project.version}</version>
+           </dependency>
       <!-- External dependencies -->
 <!-- 			<dependency>
 				<groupId>javax.resource</groupId>
@@ -1642,7 +1658,8 @@
                 <artifactId>proj4j</artifactId>
                 <version>${version.proj4j}</version>
             </dependency>
-	       <dependency>
+            <!-- swargger dependencies start-->
+            <dependency>
                 <groupId>io.swagger</groupId>
                 <artifactId>swagger-jaxrs</artifactId>
                 <version>${version.io.swagger}</version>
@@ -1653,11 +1670,27 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-		    <dependency>
-				<groupId>io.swagger</groupId>
-				<artifactId>swagger-parser</artifactId>
-				<version>${version.swagger-parser}</version>
-		    </dependency> 
+            <dependency>
+                <groupId>io.swagger</groupId>
+                <artifactId>swagger-core</artifactId>
+                <version>${version.io.swagger}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.swagger</groupId>
+                <artifactId>swagger-annotations</artifactId>
+                <version>${version.io.swagger}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.swagger</groupId>
+                <artifactId>swagger-models</artifactId>
+                <version>${version.io.swagger}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.swagger</groupId>
+                <artifactId>swagger-parser</artifactId>
+                <version>${version.swagger-parser}</version>
+            </dependency> 
+            <!-- swargger dependencies end-->
             <dependency>
                 <groupId>org.jboss.narayana.jta</groupId>
                 <artifactId>narayana-jta</artifactId>
@@ -1679,6 +1712,16 @@
 			    <version>${version.org.reflections}</version>
 			</dependency>
             
+			<dependency>
+			    <groupId>com.googlecode.json-simple</groupId>
+			    <artifactId>json-simple</artifactId>
+			    <version>${version.com.googlecode.json-simple}</version>
+			</dependency>
+			<dependency>
+			    <groupId>com.google.code.findbugs</groupId>
+			    <artifactId>annotations</artifactId>
+			    <version>${version.com.google.code.findbugs}</version>
+			</dependency>			            
         </dependencies>
 	</dependencyManagement>
 	<modules>
@@ -1688,7 +1731,6 @@
 		<module>admin</module>
 		<module>data-quality</module>
 		<module>engine</module>
-		<module>connectors</module>
 		<module>metadata</module>
 		<module>runtime</module>
 		<module>adminshell</module>
@@ -1701,6 +1743,8 @@
 		<module>jboss-integration</module>
 		<module>jboss-security</module>
 		<module>rest-service</module>
+		<module>teiid-feature-pack</module>
+                <module>connectors</module>
 		<module>test-integration</module>
 	</modules>
 </project>

@@ -6,6 +6,7 @@
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
+    <groupId>org.jboss.teiid</groupId>
     <artifactId>teiid-olingo-patches</artifactId>
     <name>teiid-olingo-patches</name>
     <description>Teiid OData4 patches module</description>

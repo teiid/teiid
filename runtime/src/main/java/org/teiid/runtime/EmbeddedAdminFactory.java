@@ -282,6 +282,11 @@ public class EmbeddedAdminFactory {
 			}*/ 
 		}
 
+        @Override
+        public void deploy(String deployName, InputStream content, boolean peristent) throws AdminException {
+            throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40137, "deploy")); //$NON-NLS-1$
+        }
+        
 		@Override
 		public void undeploy(String deployedName) throws AdminException {
 			

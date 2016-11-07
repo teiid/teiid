@@ -1,0 +1,1 @@
+Dependencies: javax.jws.api,javax.wsdl4j.api,org.jboss.teiid.common-core,org.jboss.teiid.api,javax.api,org.jboss.teiid.translator.salesforce-34

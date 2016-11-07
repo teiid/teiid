@@ -22,9 +22,9 @@
 
 package org.teiid.jboss.rest;
 
-import org.jboss.as.controller.ModelController;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.core.util.ExecutorUtils;
@@ -39,7 +39,7 @@ import org.teiid.metadata.MetadataStore;
 public class TestResteasyEnabler {
 
 	@Test public void testOtherModels() throws VirtualDatabaseException {
-		ResteasyEnabler resteasyEnabler = new ResteasyEnabler("x", "1", Mockito.mock(ModelController.class), ExecutorUtils.getDirectExecutor(), Mockito.mock(ContainerLifeCycleListener.class));
+		ResteasyEnabler resteasyEnabler = new ResteasyEnabler(Mockito.mock(Admin.class), ExecutorUtils.getDirectExecutor());
 		
 		MetadataStore ms = new MetadataStore();
 		
