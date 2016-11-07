@@ -49,7 +49,7 @@ import org.teiid.translator.jdbc.JDBCUpdateExecution;
 import org.teiid.util.Version;
 
 @Deprecated
-@Translator(name="hbase", description="HBase Translator, reads and writes the data to HBase")
+@Translator(name="hbase", description="HBase Translator, reads and writes the data to HBase", deprecated="phoenix")
 public class HBaseExecutionFactory extends PhoenixExecutionFactory {
     
     public static String HBASE = "hbase"; //$NON-NLS-1$
