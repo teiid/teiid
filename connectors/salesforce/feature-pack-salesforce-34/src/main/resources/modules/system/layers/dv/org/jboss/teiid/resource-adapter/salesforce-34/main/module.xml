@@ -4,8 +4,7 @@
     </properties>
        
     <resources>
-        <resource-root path="connector-salesforce-34-${project.version}.jar"/>
-        <resource-root path="connector-salesforce-${project.version}.jar"/>
+        <artifact name="${org.jboss.teiid.connectors:connector-salesforce-34}"/>
         <resource-root path="."/>
         <!-- Insert resources here -->
     </resources>
