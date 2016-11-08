@@ -15,7 +15,7 @@ connect
 
 /socket-binding-group=full-ha-sockets/socket-binding=teiid-jdbc:add(port=31000)
 /socket-binding-group=full-ha-sockets/socket-binding=teiid-odbc:add(port=35432)
-/server-group=other-server-group:write-attribute(name=profile, value=ha)
+/server-group=other-server-group:write-attribute(name=profile, value=full-ha)
 /server-group=other-server-group:write-attribute(name=socket-binding-group, value=full-ha-sockets)
 
 /profile=full-ha/subsystem=logging/logger=org.teiid:add 
