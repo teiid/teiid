@@ -39,7 +39,7 @@ public class HBaseUpdateExecution extends JDBCUpdateExecution {
                                 ExecutionContext executionContext, 
                                 RuntimeMetadata metadata,
                                 Connection conn, 
-                                HBaseExecutionFactory executionFactory) throws TranslatorException {
+                                PhoenixExecutionFactory executionFactory) throws TranslatorException {
         super(command, conn, executionContext, executionFactory);
         
         setCommitMode(conn);

@@ -60,7 +60,7 @@
         <translator name="excel" module="org.jboss.teiid.translator.excel"/>
         <translator name="impala" module="org.jboss.teiid.translator.hive"/>
         <translator name="prestodb" module="org.jboss.teiid.translator.prestodb"/>
-        <translator name="hbase" module="org.jboss.teiid.translator.hbase"/>
+        <translator name="phoenix" module="org.jboss.teiid.translator.hbase"/>
         <translator name="ucanaccess" module="org.jboss.teiid.translator.jdbc"/>
         <translator name="vertica" module="org.jboss.teiid.translator.jdbc"/>
         <translator name="actian-vector" module="org.jboss.teiid.translator.jdbc"/>
