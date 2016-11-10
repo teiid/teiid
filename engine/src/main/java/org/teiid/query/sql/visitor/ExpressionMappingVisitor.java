@@ -145,7 +145,7 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
 		if (!(replacmentSymbol instanceof Symbol)) {
 			replacmentSymbol = new ExpressionSymbol(name, replacmentSymbol);
 		} else if (alias && createAliases() && !Symbol.getShortName(replacmentSymbol).equals(name)) {
-		    replacmentSymbol = new AliasSymbol(name, replacmentSymbol);
+	        replacmentSymbol = new AliasSymbol(name, replacmentSymbol);
 		}
 		return replacmentSymbol;
 	}
