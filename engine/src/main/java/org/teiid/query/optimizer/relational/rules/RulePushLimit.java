@@ -235,6 +235,15 @@ public class RulePushLimit implements OptimizerRule {
             			for (int i = 0; i < virtual.size(); i++) {
             				symbolMap.put(virtual.get(i), projected.get(i));
             			}
+            			//map the expression directly to avoid issues with naming logic in the general node conversion
+            			OrderBy orderBy = (OrderBy) child.getProperty(Info.SORT_ORDER);
+            			for (OrderByItem item : orderBy.getOrderByItems()) {
+            			    Expression ex = symbolMap.get(item.getSymbol());
+            			    if (ex != null) {
+            			        item.setSymbol(ex);
+                                item.setExpressionPosition(projected.indexOf(ex));
+            			    }
+            			}
             			FrameUtil.convertNode(child, sourceNode.getGroups().iterator().next(), null, symbolMap, metadata, false);
             			sourceNode.getFirstChild().addAsParent(child);
             			child.addAsParent(limitNode);
