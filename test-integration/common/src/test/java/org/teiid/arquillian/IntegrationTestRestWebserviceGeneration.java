@@ -245,6 +245,7 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		Thread.sleep(2000);
     }
 	
+	@Ignore
 	@Test
     public void testSemanticVersion() throws Exception {
 		String vdb = ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("sample-vdb.xml"));

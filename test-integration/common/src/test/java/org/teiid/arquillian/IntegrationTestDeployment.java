@@ -367,6 +367,8 @@ public class IntegrationTestDeployment {
 			String session = rs.getString(1);
 			rs.close();
 			
+			Thread.sleep(500);
+			
 			Collection<? extends Request> requests = admin.getRequestsForSession(session);
 			
 			assertEquals(0, requests.size());
