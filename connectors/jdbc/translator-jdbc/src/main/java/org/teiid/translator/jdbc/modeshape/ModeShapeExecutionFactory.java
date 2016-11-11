@@ -22,8 +22,7 @@
 
 package org.teiid.translator.jdbc.modeshape;
 
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.BOOLEAN;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.STRING;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 
 import java.sql.Connection;
 import java.sql.Date;
@@ -35,9 +34,15 @@ import java.util.List;
 
 import org.teiid.language.*;
 import org.teiid.language.Comparison.Operator;
+import org.teiid.language.Join.JoinType;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.translator.*;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.MetadataProcessor;
+import org.teiid.translator.SourceSystemFunctions;
+import org.teiid.translator.Translator;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.JDBCMetdataProcessor;
@@ -268,4 +273,38 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
 	public boolean useAnsiJoin() {
 		return true;
 	}
+	
+	public List<?> translateCommand(Command command, ExecutionContext context) {
+	    if (!(command instanceof Select)) {
+	        return null;
+	    }
+	    Select select = (Select)command;
+	    TableReference tableReference = select.getFrom().get(0);
+        moveCondition(select, tableReference);
+	    return null;
+	}
+
+	/**
+	 * only a single join predicate is supported, so move up conditions if possible
+	 */
+    private void moveCondition(Select select, TableReference tableReference) {
+        if (!(tableReference instanceof Join)) {
+            return;
+        }
+        Join join = (Join)tableReference;
+        if (join.getJoinType() != JoinType.INNER_JOIN) {
+            return;
+        }
+        while (join.getCondition() instanceof AndOr) {
+            AndOr andOr = (AndOr) join.getCondition();
+            if (andOr.getOperator() == AndOr.Operator.OR) {
+                break;
+            }
+            Condition c = andOr.getLeftCondition();
+            select.setWhere(LanguageUtil.combineCriteria(select.getWhere(), c, getLanguageFactory()));
+            join.setCondition(andOr.getRightCondition());
+        }
+        moveCondition(select, join.getLeftItem());
+        moveCondition(select, join.getRightItem());
+    }
 }

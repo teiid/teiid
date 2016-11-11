@@ -139,7 +139,19 @@ public class TestModeShapeSqlTranslator {
 		String output = "SELECT g_0.\"jcr:path\" FROM \"nt:base\" AS g_0 INNER JOIN \"nt:version\" AS g_1 ON ISCHILDNODE(g_0, g_1)"; //$NON-NLS-1$
 
 		helpTestVisitor(input, output);
-
 	}		
 	
+    @Test
+    public void testOnCondition() throws Exception {
+        String input = "select nt_base.jcr_path from nt_base join nt_version  ON JCR_ISCHILDNODE(nt_base.jcr_path, nt_version.jcr_path) and nt_base.jcr_path = nt_version.jcr_path"; //$NON-NLS-1$
+        String output = "SELECT g_0.\"jcr:path\" FROM \"nt:base\" AS g_0 INNER JOIN \"nt:version\" AS g_1 ON g_0.\"jcr:path\" = g_1.\"jcr:path\" WHERE ISCHILDNODE(g_0, g_1)"; //$NON-NLS-1$
+        
+        helpTestVisitor(input, output);
+        
+        input = "select nt_base.jcr_path from nt_base join nt_version  ON JCR_ISCHILDNODE(nt_base.jcr_path, nt_version.jcr_path) or nt_base.jcr_path = nt_version.jcr_path"; //$NON-NLS-1$
+        output = "SELECT g_0.\"jcr:path\" FROM \"nt:base\" AS g_0 INNER JOIN \"nt:version\" AS g_1 ON ISCHILDNODE(g_0, g_1) OR g_0.\"jcr:path\" = g_1.\"jcr:path\""; //$NON-NLS-1$
+
+        helpTestVisitor(input, output);
+    }
+    
 }
