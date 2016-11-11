@@ -320,7 +320,17 @@
                     <xs:attribute name="name" type="xs:string" use="required"/>
                     <xs:attribute name="module" type="xs:string" use="required"/>
                 </xs:complexType>
-            </xs:element>            
+            </xs:element>
+            
+            <xs:element name="vdb-listener" maxOccurs="unbounded" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>VDB listener defined in the system</xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                    <xs:attribute name="module" type="xs:string" use="required"/>
+                    <xs:attribute name="slot" type="xs:string"/>
+                </xs:complexType>
+            </xs:element>              
         </xs:sequence>
     </xs:complexType>
 

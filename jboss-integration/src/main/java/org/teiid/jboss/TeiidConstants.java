@@ -556,7 +556,19 @@ public class TeiidConstants {
             .setXmlName(Element.TRANSLATOR_SLOT_ATTRIBUTE.getXMLName())
             .setAllowExpression(false)
             .setAllowNull(true)
-            .build();   
+            .build();
+    
+    public static SimpleAttributeDefinition VDB_LISTENER_MODULE_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.VDB_LISTENER_MODULE_ATTRIBUTE.getModelName(), ModelType.STRING)
+            .setXmlName(Element.VDB_LISTENER_MODULE_ATTRIBUTE.getXMLName())
+            .setAllowExpression(false)
+            .setAllowNull(true)
+            .build();    
+
+    public static SimpleAttributeDefinition VDB_LISTENER_SLOT_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.VDB_LISTENER_SLOT_ATTRIBUTE.getModelName(), ModelType.STRING)
+            .setXmlName(Element.VDB_LISTENER_SLOT_ATTRIBUTE.getXMLName())
+            .setAllowExpression(false)
+            .setAllowNull(true)
+            .build(); 
     	
     public static boolean isDefined(final SimpleAttributeDefinition attr, final ModelNode  model, final OperationContext context) throws OperationFailedException {
         ModelNode resolvedNode = attr.resolveModelAttribute(context, model);

@@ -135,6 +135,18 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 	    		}
 	    	}        
     	}
+    	
+    	if (has(node, Element.VDB_LISTENER_ELEMENT.getLocalName())) {
+    	    ArrayList<String> listeners = new ArrayList<>(node.get(Element.VDB_LISTENER_ELEMENT.getLocalName()).keys());
+    	    if (!listeners.isEmpty()){
+    	        for (String listener : listeners) {
+    	            writer.writeStartElement(Element.VDB_LISTENER_ELEMENT.getLocalName());
+    	            writeVDBlistener(writer, node.get(Element.VDB_LISTENER_ELEMENT.getLocalName(), listener), listener);
+    	            writer.writeEndElement(); 
+    	        }
+    	    }
+    	}
+    	
         writer.writeEndElement(); // End of subsystem element
     }
     
@@ -151,6 +163,11 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     	writer.writeAttribute(Element.TRANSLATOR_NAME_ATTRIBUTE.getLocalName(), translatorName);
     	TRANSLATOR_MODULE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
     	TRANSLATOR_SLOT_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+    }
+	
+	private void writeVDBlistener(XMLExtendedStreamWriter writer, ModelNode node, String listener) throws XMLStreamException {
+	    VDB_LISTENER_MODULE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+	    VDB_LISTENER_SLOT_ATTRIBUTE.marshallAsAttribute(node, false, writer);
     }
     
     // write the elements according to the schema defined.
@@ -351,6 +368,9 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
                     case AUTHENTICATION_ELEMENT:
     					parseAuthentication(reader, bootServices);
     					break;
+                    case VDB_LISTENER_ELEMENT:
+                        parseVDBlistener(reader, bootServices);
+                        break;
                      default: 
                         throw ParseUtils.unexpectedElement(reader);
                     }
@@ -362,7 +382,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
             }
         }  
     }
-    
+
     private ModelNode parseAsyncThreadConfiguration(XMLExtendedStreamReader reader,
             ModelNode node) throws XMLStreamException {
         if (reader.getAttributeCount() > 0) {
@@ -751,5 +771,28 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     		throw ParseUtils.unexpectedElement(reader);
     	}
     	return translatorName;
+    }
+    
+    private ModelNode parseVDBlistener(XMLExtendedStreamReader reader, ModelNode node) throws XMLStreamException {
+
+        if (reader.getAttributeCount() > 0) {
+            for(int i=0; i<reader.getAttributeCount(); i++) {
+                String attrName = reader.getAttributeLocalName(i);
+                String attrValue = reader.getAttributeValue(i);
+                Element element = Element.forName(attrName, Element.VDB_LISTENER_ELEMENT);
+                switch(element) {
+                case VDB_LISTENER_MODULE_ATTRIBUTE:
+                    node.get(element.getModelName()).set(attrValue);
+                    break;
+                case VDB_LISTENER_SLOT_ATTRIBUTE:
+                    node.get(element.getModelName()).set(attrValue);
+                    break;
+                default:
+                    throw ParseUtils.unexpectedAttribute(reader, i);
+                }
+            }
+        }    
+        while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT));
+        return node;
     }
 }
