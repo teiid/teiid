@@ -14,7 +14,7 @@
   
   <modules>
     <module>translator-jdbc</module>
-    <module>translator-hbase</module>
+    <module>translator-phoenix</module>
     <module>translator-hive</module>
     <module>translator-prestodb</module>
     <module>feature-pack-jdbc</module>
