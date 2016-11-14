@@ -29,6 +29,9 @@ import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OUTCOME;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUBSYSTEM;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUCCESS;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.NAME;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.READ_ATTRIBUTE_OPERATION;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.RESULT;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -48,6 +51,7 @@ import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
 import org.jboss.as.cli.Util;
+import org.jboss.as.cli.operation.impl.DefaultOperationRequestBuilder;
 import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.PathElement;
 import org.jboss.as.subsystem.test.AbstractSubsystemBaseTest;
@@ -193,6 +197,25 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
         PathElement element = addr.getElement(0);
         Assert.assertEquals(SUBSYSTEM, element.getKey());
         Assert.assertEquals(TeiidExtension.TEIID_SUBSYSTEM, element.getValue());
+    }
+    
+    @Test
+    public void testVDBlistenerOperations() throws Exception {
+        KernelServices services = standardSubsystemTest(null, true);
+        
+        PathAddress addr = PathAddress.pathAddress(PathElement.pathElement(SUBSYSTEM, TeiidExtension.TEIID_SUBSYSTEM));
+        ModelNode request = new ModelNode();
+        request.get(OP_ADDR).set(addr.toModelNode());
+        request.get(OP).set(READ_ATTRIBUTE_OPERATION);
+        request.get(NAME).set("vdb-listener-module");
+        ModelNode result = services.executeOperation(request);
+        Assert.assertEquals(SUCCESS, result.get(OUTCOME).asString());
+        Assert.assertEquals("org.jboss.rest-service", result.get(RESULT).asString());
+        
+        request.get(NAME).set("vdb-listener-slot");
+        result = services.executeOperation(request);
+        Assert.assertEquals(SUCCESS, result.get(OUTCOME).asString());
+        Assert.assertEquals("undefined", result.get(RESULT).asString());
     }
     
     @Test

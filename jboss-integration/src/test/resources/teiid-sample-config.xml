@@ -44,4 +44,5 @@
     
     <translator name="jdbc-simple" module="org.jboss.teiid.translator.jdbc"/>
     <translator name="jdbc-ansi" module="org.jboss.teiid.translator.jdbc"/>
+    <vdb-listener module="org.jboss.rest-service"/>
 </subsystem>

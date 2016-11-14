@@ -131,7 +131,12 @@ enum Element {
     TRANSLATOR_ELEMENT("translator"),
     TRANSLATOR_NAME_ATTRIBUTE("name", "name"),
     TRANSLATOR_MODULE_ATTRIBUTE("module", "module"),
-    TRANSLATOR_SLOT_ATTRIBUTE("slot", "slot");
+    TRANSLATOR_SLOT_ATTRIBUTE("slot", "slot"),
+    
+    // vdb-listener
+    VDB_LISTENER_ELEMENT("vdb-listener"),
+    VDB_LISTENER_MODULE_ATTRIBUTE("module", "vdb-listener-module"),
+    VDB_LISTENER_SLOT_ATTRIBUTE("slot", "vdb-listener-slot");
     
     private final String xmlName;
     private final String modelName;
