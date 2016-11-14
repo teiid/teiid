@@ -126,8 +126,6 @@ enum Element {
 	SSL_TRUSTSTORE_NAME_ATTRIBUTE("name", "truststore-name"),
 	SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE("password", "truststore-password"),	
 	SSL_TRUSTSTORE_CHECK_EXIRIED_ATTRIBUTE("check-expired", "truststore-check-expired"),
-	
-	REST_ENABLE_MODULE_ELEMENT("rest-enable-module", "rest-enable-module"),
 
 	// Translator
     TRANSLATOR_ELEMENT("translator"),

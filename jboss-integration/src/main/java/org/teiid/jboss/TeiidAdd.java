@@ -169,10 +169,7 @@ class TeiidAdd extends AbstractAddStepHandler {
 		TeiidConstants.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE,
 		TeiidConstants.AUTHENTICATION_TYPE_ATTRIBUTE,
 		TeiidConstants.AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE,
-		TeiidConstants.AUTHENTICATION_ALLOW_SECURITY_DOMAIN_QUALIFIER,
-		
-		// rest enable
-		TeiidConstants.REST_ENABLE_MODULE_ELEMENT
+		TeiidConstants.AUTHENTICATION_ALLOW_SECURITY_DOMAIN_QUALIFIER
 	};
 	
 	@Override
@@ -577,7 +574,7 @@ class TeiidAdd extends AbstractAddStepHandler {
     
     private void registerVDBlistener(OperationContext context, ModelNode operation) throws OperationFailedException {
 
-        String moduleName = TeiidConstants.REST_ENABLE_MODULE_ELEMENT.getDefaultValue().asString();
+        String moduleName = "org.jboss.teiid.rest-service"; //$NON-NLS-1$
         
         final Module module;
         ClassLoader vdbListenerLoader = this.getClass().getClassLoader();

@@ -29,9 +29,6 @@ import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OUTCOME;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUBSYSTEM;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUCCESS;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.NAME;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.READ_ATTRIBUTE_OPERATION;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.RESULT;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -228,21 +225,6 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
 		        "terminate-transaction", "undefine-attribute", "update-source", "workerpool-statistics", 
 		        "write-attribute"};
 		Assert.assertArrayEquals(opNames.toString(), ops, opNames.toArray(new String[opNames.size()]));
-    }
-    
-    @Test
-    public void testRestEnableOperations() throws Exception {
-        KernelServices services = standardSubsystemTest(null, true);
-        
-        PathAddress addr = PathAddress.pathAddress(PathElement.pathElement(SUBSYSTEM, TeiidExtension.TEIID_SUBSYSTEM));
-        ModelNode request = new ModelNode();
-        request.get(OP_ADDR).set(addr.toModelNode());
-        request.get(OP).set(READ_ATTRIBUTE_OPERATION);
-        request.get(NAME).set("rest-enable-module");
-        
-        ModelNode result = services.executeOperation(request);
-        Assert.assertEquals(SUCCESS, result.get(OUTCOME).asString());
-        Assert.assertEquals("org.jboss.teiid.rest-service", result.get(RESULT).asString());
     }
     
     @Test
