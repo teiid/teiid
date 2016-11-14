@@ -20,7 +20,9 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.jboss.rest;
+package org.teiid.jboss;
+
+import java.util.concurrent.Executor;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -29,17 +31,25 @@ import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.core.util.ExecutorUtils;
 import org.teiid.deployers.CompositeVDB;
-import org.teiid.deployers.ContainerLifeCycleListener;
+import org.teiid.deployers.RestWarGenerator;
 import org.teiid.deployers.TestCompositeVDB;
 import org.teiid.deployers.VirtualDatabaseException;
-import org.teiid.jboss.rest.ResteasyEnabler;
 import org.teiid.metadata.MetadataStore;
 
 @SuppressWarnings("nls")
 public class TestResteasyEnabler {
 
 	@Test public void testOtherModels() throws VirtualDatabaseException {
-		ResteasyEnabler resteasyEnabler = new ResteasyEnabler(Mockito.mock(Admin.class), ExecutorUtils.getDirectExecutor());
+		RestWarGenerator generator = Mockito.mock(RestWarGenerator.class);
+		ResteasyEnabler resteasyEnabler = new ResteasyEnabler(generator) {
+			Admin getAdmin() {
+				return Mockito.mock(Admin.class);
+			}
+			
+			Executor getExecutor() {
+				return ExecutorUtils.getDirectExecutor();
+			}			
+		};
 		
 		MetadataStore ms = new MetadataStore();
 		

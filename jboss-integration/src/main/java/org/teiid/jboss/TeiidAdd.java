@@ -45,6 +45,7 @@ import javax.transaction.TransactionManager;
 
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.jboss.as.controller.AbstractAddStepHandler;
+import org.jboss.as.controller.ModelController;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.OperationStepHandler;
@@ -62,6 +63,7 @@ import org.jboss.as.naming.deployment.ContextNames;
 import org.jboss.as.naming.service.BinderService;
 import org.jboss.as.server.AbstractDeploymentChainStep;
 import org.jboss.as.server.DeploymentProcessorTarget;
+import org.jboss.as.server.Services;
 import org.jboss.as.server.deployment.Phase;
 import org.jboss.as.threads.ThreadFactoryResolver;
 import org.jboss.as.threads.ThreadsServices;
@@ -75,11 +77,10 @@ import org.jboss.msc.value.InjectedValue;
 import org.teiid.CommandContext;
 import org.teiid.PolicyDecider;
 import org.teiid.PreParser;
-import org.teiid.adminapi.Admin;
-import org.teiid.adminapi.jboss.AdminFactory;
 import org.teiid.cache.CacheFactory;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBufferCache;
+import org.teiid.deployers.RestWarGenerator;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
@@ -562,7 +563,14 @@ class TeiidAdd extends AbstractAddStepHandler {
    		
    		sessionServiceBuilder.install();
    		
-  		
+  		// rest war service
+   		RestWarGenerator warGenerator= TeiidAdd.buildService(RestWarGenerator.class, "org.jboss.teiid.rest-service");
+   		ResteasyEnabler restEnabler = new ResteasyEnabler(warGenerator);
+		ServiceBuilder<Void> warGeneratorSvc = target.addService(TeiidServiceNames.REST_WAR_SERVICE, restEnabler);
+		warGeneratorSvc.addDependency(Services.JBOSS_SERVER_CONTROLLER, ModelController.class, restEnabler.controllerValue);
+		warGeneratorSvc.addDependency(TeiidServiceNames.THREAD_POOL_SERVICE, Executor.class,  restEnabler.executorInjector);
+		warGeneratorSvc.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class, restEnabler.vdbRepoInjector);
+		warGeneratorSvc.install();
 	}
 	
     private void buildThreadService(int maxThreads, ServiceTarget target) {

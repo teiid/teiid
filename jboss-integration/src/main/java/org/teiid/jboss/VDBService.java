@@ -34,7 +34,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.as.controller.ModelController;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.msc.service.LifecycleContext;
 import org.jboss.msc.service.Service;
@@ -55,7 +54,16 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataParser;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.common.buffer.BufferManager;
-import org.teiid.deployers.*;
+import org.teiid.deployers.CompositeGlobalTableStore;
+import org.teiid.deployers.CompositeVDB;
+import org.teiid.deployers.ContainerLifeCycleListener;
+import org.teiid.deployers.RuntimeVDB;
+import org.teiid.deployers.TranslatorUtil;
+import org.teiid.deployers.UDFMetaData;
+import org.teiid.deployers.VDBLifeCycleListener;
+import org.teiid.deployers.VDBRepository;
+import org.teiid.deployers.VDBStatusChecker;
+import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
@@ -85,10 +93,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 	protected final InjectedValue<BufferManager> bufferManagerInjector = new InjectedValue<BufferManager>();
 	protected final InjectedValue<ObjectReplicator> objectReplicatorInjector = new InjectedValue<ObjectReplicator>();
 	protected final InjectedValue<VDBStatusChecker> vdbStatusCheckInjector = new InjectedValue<VDBStatusChecker>();
-	
-	// for REST deployment
-	protected final InjectedValue<ModelController> controllerValue = new InjectedValue<ModelController>();
-	
+			
 	private VDBLifeCycleListener vdbListener;
 	private VDBResources vdbResources;
 	private VDBKey vdbKey;
