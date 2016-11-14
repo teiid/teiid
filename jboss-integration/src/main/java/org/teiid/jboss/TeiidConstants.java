@@ -162,6 +162,14 @@ public class TeiidConstants {
         .setAllowExpression(false)
         .build();
     
+    public static SimpleAttributeDefinition REST_ENABLE_MODULE_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.REST_ENABLE_MODULE_ELEMENT.getModelName(), ModelType.STRING)
+        .setXmlName(Element.REST_ENABLE_MODULE_ELEMENT.getXMLName())
+        .setAllowNull(false)
+        .setAllowExpression(false)
+        .setDefaultValue(new ModelNode("org.jboss.teiid.rest-service"))
+        .setResourceOnly()
+        .build();
+    
     public static SimpleAttributeDefinition DATA_ROLES_REQUIRED_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.DATA_ROLES_REQUIRED_ELEMENT.getModelName(), ModelType.BOOLEAN)
     	.setXmlName(Element.DATA_ROLES_REQUIRED_ELEMENT.getXMLName())
     	.setAllowNull(true)

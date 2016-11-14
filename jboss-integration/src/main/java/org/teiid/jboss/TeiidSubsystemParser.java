@@ -273,7 +273,8 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     				case POLICY_DECIDER_MODULE_ELEMENT:
     				case AUTHORIZATION_VALIDATOR_MODULE_ELEMENT:
     				case PREPARSER_MODULE_ELEMENT:
-    				case WORKMANAGER:    					
+    				case WORKMANAGER:    	
+    				case REST_ENABLE_MODULE_ELEMENT:
     					bootServices.get(reader.getLocalName()).set(reader.getElementText());
     					break;
     				case TIME_SLICE_IN_MILL_ELEMENT:
