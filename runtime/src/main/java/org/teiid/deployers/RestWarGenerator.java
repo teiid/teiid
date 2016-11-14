@@ -19,29 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.jboss.rest;
+package org.teiid.deployers;
 
-import java.util.Locale;
-import java.util.ResourceBundle;
+import java.io.IOException;
 
-import org.teiid.core.BundleUtil;
+import org.teiid.adminapi.impl.VDBMetaData;
 
-
-public class RestServicePlugin {
-    private static final String PLUGIN_ID = "org.teiid.jboss.rest" ; //$NON-NLS-1$
-    static final String BUNDLE_NAME = PLUGIN_ID + ".i18n"; //$NON-NLS-1$
-    public static final BundleUtil Util = new BundleUtil(PLUGIN_ID,BUNDLE_NAME,ResourceBundle.getBundle(BUNDLE_NAME));
-    
-    public static ResourceBundle getResourceBundle(Locale locale) {
-        if (locale == null) {
-            locale = Locale.getDefault();
-        }
-        return ResourceBundle.getBundle(RestServicePlugin.BUNDLE_NAME, locale);
-    }
-    
-    public static enum Event implements BundleUtil.Event {
-    	TEIID28001,
-    	TEIID28002,
-    	TEIID28003,
-    }
+public interface RestWarGenerator {
+	static final String REST_NAMESPACE = "{http://teiid.org/rest}"; //$NON-NLS-1$
+	byte[] getContent(VDBMetaData vdb) throws IOException;
+	boolean hasRestMetadata(VDBMetaData vdb);
 }

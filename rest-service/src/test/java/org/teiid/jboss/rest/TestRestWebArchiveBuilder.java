@@ -21,8 +21,8 @@
  */
 package org.teiid.jboss.rest;
 
-import static org.junit.Assert.*;
-import io.swagger.annotations.ApiOperation;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
@@ -38,10 +38,13 @@ import java.util.zip.ZipInputStream;
 import javax.xml.stream.XMLStreamException;
 
 import org.junit.Test;
+import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataParser;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.deployers.CompositeVDB;
+import org.teiid.deployers.TestCompositeVDB;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
@@ -49,6 +52,8 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.parser.TestDDLParser;
 import org.teiid.query.unittest.RealMetadataFactory;
+
+import io.swagger.annotations.ApiOperation;
 
 @SuppressWarnings("nls")
 public class TestRestWebArchiveBuilder {
@@ -92,7 +97,7 @@ public class TestRestWebArchiveBuilder {
         
         VDBMetaData vdb = getTestVDBMetaData();
         RestASMBasedWebArchiveBuilder builder = new RestASMBasedWebArchiveBuilder();
-        byte[] contents = builder.createRestArchive(vdb);
+        byte[] contents = builder.getContent(vdb);
         
         ArrayList<String> files = new ArrayList<String>();
         files.add("WEB-INF/web.xml");
@@ -189,4 +194,20 @@ public class TestRestWebArchiveBuilder {
         assertEquals(cls, obj.getClass());
     }
 
+    
+	@Test 
+	public void testOtherModels() throws Exception {
+		
+		MetadataStore ms = new MetadataStore();
+		
+		CompositeVDB vdb = TestCompositeVDB.createCompositeVDB(ms, "x");
+		vdb.getVDB().addProperty("{http://teiid.org/rest}auto-generate", "true");
+		ModelMetaData model = new ModelMetaData();
+		model.setName("other");
+		model.setModelType(Type.OTHER);
+		vdb.getVDB().addModel(model);
+		
+		RestASMBasedWebArchiveBuilder builder = new RestASMBasedWebArchiveBuilder();
+		builder.getContent(vdb.getVDB());
+	}
 }

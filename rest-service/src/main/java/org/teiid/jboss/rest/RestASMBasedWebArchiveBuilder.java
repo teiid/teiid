@@ -21,13 +21,41 @@
  */
 package org.teiid.jboss.rest;
 
-import static org.objectweb.asm.Opcodes.*;
-import io.swagger.annotations.ApiResponse;
+import static org.objectweb.asm.Opcodes.AASTORE;
+import static org.objectweb.asm.Opcodes.ACC_ENUM;
+import static org.objectweb.asm.Opcodes.ACC_FINAL;
+import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
+import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
+import static org.objectweb.asm.Opcodes.ACC_STATIC;
+import static org.objectweb.asm.Opcodes.ACC_SUPER;
+import static org.objectweb.asm.Opcodes.ALOAD;
+import static org.objectweb.asm.Opcodes.ANEWARRAY;
+import static org.objectweb.asm.Opcodes.ARETURN;
+import static org.objectweb.asm.Opcodes.ASTORE;
+import static org.objectweb.asm.Opcodes.ATHROW;
+import static org.objectweb.asm.Opcodes.DUP;
+import static org.objectweb.asm.Opcodes.F_SAME1;
+import static org.objectweb.asm.Opcodes.GETFIELD;
+import static org.objectweb.asm.Opcodes.GETSTATIC;
+import static org.objectweb.asm.Opcodes.ICONST_0;
+import static org.objectweb.asm.Opcodes.ICONST_1;
+import static org.objectweb.asm.Opcodes.ICONST_2;
+import static org.objectweb.asm.Opcodes.ICONST_3;
+import static org.objectweb.asm.Opcodes.ICONST_4;
+import static org.objectweb.asm.Opcodes.ICONST_5;
+import static org.objectweb.asm.Opcodes.INVOKEINTERFACE;
+import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
+import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
+import static org.objectweb.asm.Opcodes.NEW;
+import static org.objectweb.asm.Opcodes.POP;
+import static org.objectweb.asm.Opcodes.PUTFIELD;
+import static org.objectweb.asm.Opcodes.RETURN;
+import static org.objectweb.asm.Opcodes.V1_5;
+import static org.objectweb.asm.Opcodes.V1_6;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -56,6 +84,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.FileUtils;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.StringUtil;
+import org.teiid.deployers.RestWarGenerator;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ColumnSet;
 import org.teiid.metadata.MetadataStore;
@@ -66,13 +95,44 @@ import org.teiid.metadata.Schema;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.vdb.runtime.VDBKey;
 
-
+import io.swagger.annotations.ApiResponse;
 
 @SuppressWarnings("nls")
-public class RestASMBasedWebArchiveBuilder {
-	 
+public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
 
-	public byte[] createRestArchive(VDBMetaData vdb) throws FileNotFoundException, IOException  {
+	@Override
+	public boolean hasRestMetadata(VDBMetaData vdb) {
+		String generate = vdb.getPropertyValue(REST_NAMESPACE+"auto-generate"); //$NON-NLS-1$
+		if (generate == null || !Boolean.parseBoolean(generate)) {
+			return false;
+		}
+				
+		String securityType = vdb.getPropertyValue(REST_NAMESPACE+"security-type"); //$NON-NLS-1$
+		if (securityType != null && !securityType.equalsIgnoreCase("none") && !securityType.equalsIgnoreCase("httpbasic")) { //$NON-NLS-1$ //$NON-NLS-2$
+			return false;
+		}
+		
+		MetadataStore metadataStore = vdb.getAttachment(TransformationMetadata.class).getMetadataStore();
+		for (ModelMetaData model: vdb.getModelMetaDatas().values()) {
+			Schema schema = metadataStore.getSchema(model.getName());
+			if (schema == null) {
+				continue; //OTHER type, which does not have a corresponding Teiid schema
+			}
+			Collection<Procedure> procedures = schema.getProcedures().values();
+			for (Procedure procedure:procedures) {
+				String uri = procedure.getProperty(REST_NAMESPACE+"URI", false); //$NON-NLS-1$
+				String method = procedure.getProperty(REST_NAMESPACE+"METHOD", false); //$NON-NLS-1$
+				if (uri != null && method != null) {
+					return true;
+				}
+			}    	
+			
+		}
+		return false;
+	}
+	
+	@Override
+	public byte[] getContent(VDBMetaData vdb) throws IOException  {
 		MetadataStore metadataStore = vdb.getAttachment(TransformationMetadata.class).getMetadataStore();
 		
 		Properties props = new Properties();
@@ -83,9 +143,9 @@ public class RestASMBasedWebArchiveBuilder {
 		props.setProperty("${vdb-version}", String.valueOf(vdb.getVersion()));
 		props.setProperty("${api-page-title}", fullName + " API");
 		
-		String securityType = vdb.getPropertyValue(ResteasyEnabler.REST_NAMESPACE+"security-type");
-		String securityDomain = vdb.getPropertyValue(ResteasyEnabler.REST_NAMESPACE+"security-domain");
-		String securityRole = vdb.getPropertyValue(ResteasyEnabler.REST_NAMESPACE+"security-role");
+		String securityType = vdb.getPropertyValue(REST_NAMESPACE+"security-type");
+		String securityDomain = vdb.getPropertyValue(REST_NAMESPACE+"security-domain");
+		String securityRole = vdb.getPropertyValue(REST_NAMESPACE+"security-role");
 		
 		props.setProperty("${security-role}", ((securityRole == null)?"rest":securityRole));
 		props.setProperty("${security-domain}", ((securityDomain == null)?"teiid-security":securityDomain));
@@ -115,6 +175,10 @@ public class RestASMBasedWebArchiveBuilder {
 		ArrayList<String> applicationViews = new ArrayList<String>();
 		for (ModelMetaData model:vdb.getModelMetaDatas().values()) {
 			Schema schema = metadataStore.getSchema(model.getName());
+			if (schema == null) {
+				continue; //OTHER type, which does not have a corresponding Teiid schema
+			}
+			
 			byte[] viewContents = getViewClass(vdb.getName(), version, model.getName(), schema, true);
 			if (viewContents != null) {
 				writeEntry("WEB-INF/classes/org/teiid/jboss/rest/"+model.getName()+".class", out, viewContents);
@@ -379,10 +443,10 @@ public class RestASMBasedWebArchiveBuilder {
     	
 		Collection<Procedure> procedures = schema.getProcedures().values();
 		for (Procedure procedure:procedures) {
-			String uri = procedure.getProperty(ResteasyEnabler.REST_NAMESPACE+"URI", false);
-			String method = procedure.getProperty(ResteasyEnabler.REST_NAMESPACE+"METHOD", false);
-			String contentType = procedure.getProperty(ResteasyEnabler.REST_NAMESPACE+"PRODUCES", false);
-			String charSet = procedure.getProperty(ResteasyEnabler.REST_NAMESPACE+"CHARSET", false);
+			String uri = procedure.getProperty(REST_NAMESPACE+"URI", false);
+			String method = procedure.getProperty(REST_NAMESPACE+"METHOD", false);
+			String contentType = procedure.getProperty(REST_NAMESPACE+"PRODUCES", false);
+			String charSet = procedure.getProperty(REST_NAMESPACE+"CHARSET", false);
 			
 			if (uri != null && method != null) {
 				if (contentType == null) {
