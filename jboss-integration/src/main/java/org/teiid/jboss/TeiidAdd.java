@@ -28,6 +28,7 @@ import static org.teiid.jboss.TeiidConstants.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -45,6 +46,7 @@ import javax.transaction.TransactionManager;
 
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.jboss.as.controller.AbstractAddStepHandler;
+import org.jboss.as.controller.ModelController;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.OperationStepHandler;
@@ -53,6 +55,7 @@ import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.ProcessType;
 import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.as.controller.access.Environment;
+import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.as.controller.registry.ImmutableManagementResourceRegistration;
 import org.jboss.as.controller.registry.Resource;
 import org.jboss.as.controller.services.path.RelativePathService;
@@ -62,6 +65,7 @@ import org.jboss.as.naming.deployment.ContextNames;
 import org.jboss.as.naming.service.BinderService;
 import org.jboss.as.server.AbstractDeploymentChainStep;
 import org.jboss.as.server.DeploymentProcessorTarget;
+import org.jboss.as.server.Services;
 import org.jboss.as.server.deployment.Phase;
 import org.jboss.as.threads.ThreadFactoryResolver;
 import org.jboss.as.threads.ThreadsServices;
@@ -69,6 +73,7 @@ import org.jboss.dmr.ModelNode;
 import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoadException;
+import org.jboss.modules.ModuleLoader;
 import org.jboss.msc.service.*;
 import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.value.InjectedValue;
@@ -80,6 +85,7 @@ import org.teiid.adminapi.jboss.AdminFactory;
 import org.teiid.cache.CacheFactory;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBufferCache;
+import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
@@ -206,6 +212,7 @@ class TeiidAdd extends AbstractAddStepHandler {
 			}
 			Thread.currentThread().setContextClassLoader(classloader);
 			initilaizeTeiidEngine(context, operation);
+			registerVDBlistener(context, operation);
 		} finally {
 			Thread.currentThread().setContextClassLoader(classloader);
 		}
@@ -568,6 +575,64 @@ class TeiidAdd extends AbstractAddStepHandler {
    		
   		
 	}
+    
+    private void registerVDBlistener(OperationContext context, ModelNode operation) throws OperationFailedException {
+        
+        String moduleName = null;
+        if (isDefined(VDB_LISTENER_MODULE_ATTRIBUTE, operation, context)) {
+            moduleName = asString(VDB_LISTENER_MODULE_ATTRIBUTE, operation, context);
+        }
+        
+        if(moduleName == null){
+            return;
+        }
+        
+        String slot = null;
+        if (isDefined(VDB_LISTENER_SLOT_ATTRIBUTE, operation, context)) {
+            slot = asString(VDB_LISTENER_SLOT_ATTRIBUTE, operation, context);
+        }  
+        
+        final Module module;
+        ClassLoader vdbListenerLoader = this.getClass().getClassLoader();
+        ModuleLoader ml = Module.getCallerModuleLoader();
+        if (ml != null) {
+            try {
+                ModuleIdentifier id = ModuleIdentifier.create(moduleName);
+                if (slot != null) {
+                    id = ModuleIdentifier.create(moduleName, slot);
+                }
+                module = ml.loadModule(id);
+                vdbListenerLoader = module.getClassLoader();
+            } catch (ModuleLoadException e) {
+                throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50058, moduleName), e); 
+            }
+        }
+        
+        ServiceController<?> sc = context.getServiceRegistry(false).getRequiredService(Services.JBOSS_SERVER_EXECUTOR);
+        Executor executor = Executor.class.cast(sc.getValue());      
+        
+        sc = context.getServiceRegistry(false).getRequiredService(Services.JBOSS_SERVER_CONTROLLER);
+        ModelController controller = ModelController.class.cast(sc.getValue());       
+        ModelControllerClient client = controller.createClient(executor);
+        
+        Admin admin = AdminFactory.getInstance().createAdmin(client);
+        Object[] params = new Object[]{admin, executor};
+        VDBLifeCycleListener restEasyListener = null;
+        
+        try {
+            //TODO-- class name should load from class path
+            Class<?> clas = vdbListenerLoader.loadClass("org.teiid.jboss.rest.ResteasyEnabler");
+            Constructor<?> cons = clas.getConstructor(new Class[]{Admin.class, Executor.class});
+            restEasyListener = (VDBLifeCycleListener) cons.newInstance(params);
+        } catch (Exception e) {
+            throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50059, vdbListenerLoader, moduleName), e); 
+        } 
+        
+        if(restEasyListener != null) {
+            VDBRepository vdbRepo = (VDBRepository) context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.VDB_REPO).getValue();
+            vdbRepo.addListener(restEasyListener);
+        }
+    }
 	
     private void buildThreadService(int maxThreads, ServiceTarget target) {
         ThreadExecutorService service = new ThreadExecutorService(maxThreads);

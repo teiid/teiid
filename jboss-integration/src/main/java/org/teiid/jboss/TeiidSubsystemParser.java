@@ -136,15 +136,11 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 	    	}        
     	}
     	
-    	if (has(node, Element.VDB_LISTENER_ELEMENT.getLocalName())) {
-    	    ArrayList<String> listeners = new ArrayList<>(node.get(Element.VDB_LISTENER_ELEMENT.getLocalName()).keys());
-    	    if (!listeners.isEmpty()){
-    	        for (String listener : listeners) {
-    	            writer.writeStartElement(Element.VDB_LISTENER_ELEMENT.getLocalName());
-    	            writeVDBlistener(writer, node.get(Element.VDB_LISTENER_ELEMENT.getLocalName(), listener), listener);
-    	            writer.writeEndElement(); 
-    	        }
-    	    }
+    	if (like(node, Element.VDB_LISTENER_ELEMENT)) {
+    	    writer.writeStartElement(Element.VDB_LISTENER_ELEMENT.getLocalName());
+    	    VDB_LISTENER_MODULE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+            VDB_LISTENER_SLOT_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+            writer.writeEndElement(); 
     	}
     	
         writer.writeEndElement(); // End of subsystem element
@@ -163,11 +159,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     	writer.writeAttribute(Element.TRANSLATOR_NAME_ATTRIBUTE.getLocalName(), translatorName);
     	TRANSLATOR_MODULE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
     	TRANSLATOR_SLOT_ATTRIBUTE.marshallAsAttribute(node, false, writer);
-    }
-	
-	private void writeVDBlistener(XMLExtendedStreamWriter writer, ModelNode node, String listener) throws XMLStreamException {
-	    VDB_LISTENER_MODULE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
-	    VDB_LISTENER_SLOT_ATTRIBUTE.marshallAsAttribute(node, false, writer);
     }
     
     // write the elements according to the schema defined.

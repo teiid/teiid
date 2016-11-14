@@ -135,8 +135,8 @@ enum Element {
     
     // vdb-listener
     VDB_LISTENER_ELEMENT("vdb-listener"),
-    VDB_LISTENER_MODULE_ATTRIBUTE("vdb-listener-module", "vdb-listener-module"),
-    VDB_LISTENER_SLOT_ATTRIBUTE("vdb-listener-slot", "vdb-listener-slot");
+    VDB_LISTENER_MODULE_ATTRIBUTE("module", "vdb-listener-module"),
+    VDB_LISTENER_SLOT_ATTRIBUTE("slot", "vdb-listener-slot");
     
     private final String xmlName;
     private final String modelName;

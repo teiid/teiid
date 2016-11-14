@@ -17,6 +17,7 @@
         <module name="org.jboss.teiid.client" />
         <module name="org.jboss.teiid.api"/>
         <module name="org.jboss.teiid.admin"/>
+        <module name="org.jboss.teiid" /> <!-- for teiid runtime api 'VDBLifeCycleListener' -->
                 
         <module name="org.jboss.resteasy.resteasy-jaxrs"/> <!--  REST Web Service --> 
         <module name="org.jboss.resteasy.resteasy-multipart-provider"/> <!--  REST Web Service -->

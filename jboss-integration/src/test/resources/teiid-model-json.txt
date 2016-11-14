@@ -38,6 +38,7 @@
         "jdbc-simple" : {"module" : "org.jboss.teiid.translator.jdbc"},
         "jdbc-ansi" : {"module" : "org.jboss.teiid.translator.jdbc"}
     },
+    "vdb-listener-module" : "org.jboss.rest-service",
     "authentication-sessions-expiration-timelimit" : 2,
     "authentication-max-sessions-allowed" : 5,
     "authentication-security-domain" : "teiid-security,teiid-security2",
