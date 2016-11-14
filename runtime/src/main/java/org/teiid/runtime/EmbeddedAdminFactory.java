@@ -104,6 +104,11 @@ public class EmbeddedAdminFactory {
 		}
 		
 		@Override
+		public void setProfileName(String name) {
+		    //no op
+		}
+		
+		@Override
 		public void clearCache(String cacheType, String vdbName, int vdbVersion)
 				throws AdminException {
 			clearCache(cacheType, vdbName, String.valueOf(vdbVersion));

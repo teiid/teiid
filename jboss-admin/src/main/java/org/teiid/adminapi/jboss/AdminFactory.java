@@ -86,9 +86,7 @@ public class AdminFactory {
      */
     public Admin createAdmin(String host, int port, String userName, char[] password, String profileName) throws AdminException {
     	AdminImpl admin = (AdminImpl)createAdmin(host, port, userName, password);
-    	if (admin != null) {
-    		admin.setProfileName(profileName);
-    	}
+		admin.setProfileName(profileName);
     	return admin;
     }
 
@@ -231,8 +229,13 @@ public class AdminFactory {
             }
     	}
 
+    	@Override
 		public void setProfileName(String name) {
-			this.profileName = name;
+		    if (name == null) {
+		        this.profileName = "ha";
+		    } else {
+		        this.profileName = name;
+		    }
 		}
 
 		@Override
@@ -462,12 +465,9 @@ public class AdminFactory {
 	        return driverList;
 		}
 
-		public String getProfileName() throws AdminException {
+		public String getProfileName() {
 			if (!this.domainMode) {
 				return null;
-			}
-			if (this.profileName == null) {
-				this.profileName = getChildNodeNames(null, "profile").get(0);
 			}
 			return this.profileName;
 		}
