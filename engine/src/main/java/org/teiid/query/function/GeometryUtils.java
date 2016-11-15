@@ -723,11 +723,10 @@ public class GeometryUtils {
 
 	public static GeometryType pointOnSurface(GeometryType geom) throws FunctionExecutionException {
 		Geometry g = getGeometry(geom);
-		Coordinate c = g.getCoordinate();
-		if (c == null) {
+		Point point = g.getInteriorPoint();
+		if (point == null) {
 			return null;
 		}
-		Point point = GEOMETRY_FACTORY.createPoint(c);
 		point.setSRID(geom.getSrid());
 		return getGeometryType(point);
 	}

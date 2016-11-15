@@ -109,6 +109,16 @@ public class TestGeometry {
 		assertEquals("POLYGON EMPTY", ClobType.getString(intersection));
 	}
 
+	@Test public void testPointOnSurface() throws Exception {
+		Expression ex = TestFunctionResolving.getExpression("ST_AsText(ST_PointOnSurface(ST_GeomFromText('POLYGON ((67 13, 67 18, 59 18, 59 13, 67 13))')));");
+		ClobType pointOnSurface = (ClobType) Evaluator.evaluate(ex);
+		assertEquals("POINT (63 15.5)", ClobType.getString(pointOnSurface));
+
+		ex = TestFunctionResolving.getExpression("ST_AsText(ST_PointOnSurface(ST_GeomFromText('POLYGON ((50 0, 50 10, 10 10, 10 50, 50 50, 50 60, 0 60, 0 0, 50 0))')));");
+		pointOnSurface = (ClobType) Evaluator.evaluate(ex);
+		assertEquals("POINT (5 30)", ClobType.getString(pointOnSurface));
+	}
+
     @Test public void testAsGeoJson() throws Exception {        
         assertEval(
                 "ST_AsGeoJson(ST_GeomFromText('POINT (-48.23456 20.12345)'))",
