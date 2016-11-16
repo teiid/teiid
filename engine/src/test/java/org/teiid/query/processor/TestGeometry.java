@@ -428,5 +428,10 @@ public class TestGeometry {
         ex = TestFunctionResolving.getExpression("ST_AsText(ST_GeomFromGeoJson(ST_AsGeoJSON(ST_GeomFromText('LINESTRING (30 10, 10 30, 40 40)'))))");
         assertEquals("LINESTRING (30 10, 10 30, 40 40)", ClobType.getString((ClobType)Evaluator.evaluate(ex)));
     }
+
+    @Test public void testMakeEnvelope() throws Exception {
+        Expression ex = TestFunctionResolving.getExpression("ST_ASEWKT(st_makeenvelope(-1.73431370972209553,-0.71846435100548445,1.31749469692502075,1.28153564899451555,2908))");
+        assertEquals("SRID=2908;POLYGON ((-1.7343137097220955 -0.7184643510054844, -1.7343137097220955 1.2815356489945156, 1.3174946969250207 1.2815356489945156, 1.3174946969250207 -0.7184643510054844, -1.7343137097220955 -0.7184643510054844))", ClobType.getString((ClobType)Evaluator.evaluate(ex)));
+    }
     
 }

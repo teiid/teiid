@@ -760,4 +760,15 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		assertTrue(rs.next());
 	}
 	
+	@Test public void testRegClass() throws Exception {
+        Statement s = conn.createStatement();
+        ResultSet rs = s.executeQuery("select '\"pg_catalog.pg_class\"'::regclass");
+        rs.next();
+        int oid = rs.getInt(1);
+        rs = s.executeQuery("select oid from pg_class where relname='pg_class'");
+        rs.next();
+        int oid1 = rs.getInt(1);
+        assertEquals(oid, oid1);
+    }
+	
 }

@@ -243,13 +243,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         	this.inQuery = true;
             validateAggregates(obj);
 
-            //if it is select with no from, should not have ScalarSubQuery
-            if(obj.getSelect() != null && obj.getFrom() == null){
-                if(!ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(obj.getSelect()).isEmpty()){
-                    handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0067"),obj); //$NON-NLS-1$
-                }
-            }
-            
             if (obj.getInto() != null) {
                 validateSelectInto(obj);
             }                        
@@ -269,14 +262,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 			handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0027", obj, DataTypeManager.getDataTypeName(obj.getExpression().getType())),obj); //$NON-NLS-1$
     	}
         this.validateRowLimitFunctionNotInInvalidCriteria(obj);
-        
-		Collection<Expression> projSymbols = obj.getCommand().getProjectedSymbols();
-
-		//Subcommand should have one projected symbol (query with one expression
-		//in SELECT or stored procedure execution that returns a single value).
-		if(projSymbols.size() != 1) {
-			handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0011"),obj); //$NON-NLS-1$
-		}
 	}
 	
 	@Override

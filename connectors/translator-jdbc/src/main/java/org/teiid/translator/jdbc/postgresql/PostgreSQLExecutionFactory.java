@@ -688,6 +688,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
         }
         if (this.postGisVersion.compareTo(ONE_5) >= 0) {
         	supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMGML);
+        	supportedFunctions.add(SourceSystemFunctions.ST_MAKEENVELOPE);
         }
         if (this.postGisVersion.compareTo(TWO_0) >= 0) {
         	supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMGEOJSON);

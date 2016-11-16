@@ -374,9 +374,13 @@ public class GeometryUtils {
     }
     
     public static GeometryType getGeometryType(Geometry jtsGeom, int srid) {
-        WKBWriter writer = new WKBWriter();
-        byte[] bytes = writer.write(jtsGeom);
-        return new GeometryType(bytes, srid);        
+        byte[] bytes = getBytes(jtsGeom, true);
+        return new GeometryType(bytes, srid);
+    }
+    
+    public static byte[] getBytes(Geometry jtsGeom, boolean bigEndian) {
+        WKBWriter writer = new WKBWriter(2, bigEndian?ByteOrderValues.BIG_ENDIAN:ByteOrderValues.LITTLE_ENDIAN);
+        return writer.write(jtsGeom);
     }
     
     public static Geometry getGeometry(GeometryType geom)
@@ -782,6 +786,15 @@ public class GeometryUtils {
             return null;
         }
         return value;
+    }
+
+    public static GeometryType makeEnvelope(double xmin, double ymin,
+            double xmax, double ymax, Integer srid) {
+        Geometry geom = GEOMETRY_FACTORY.createPolygon(new Coordinate[] {new Coordinate(xmin, ymin), new Coordinate(xmin, ymax), new Coordinate(xmax, ymax), new Coordinate(xmax, ymin), new Coordinate(xmin, ymin)});
+        if (srid != null) {
+            geom.setSRID(srid);
+        }
+        return getGeometryType(geom);
     }
 
 }

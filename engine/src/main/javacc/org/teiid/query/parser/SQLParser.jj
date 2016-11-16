@@ -4065,6 +4065,8 @@ Expression unsignedValueExpressionPrimary(ParseInfo info) :
 		|
 		expression = nestedExpression(info)
 		|
+		expression = arrayExpression(info)
+		|
 		// Searched CASE expressions
 		LOOKAHEAD(2) expression = searchedCaseExpression(info)
 		|
@@ -4075,6 +4077,29 @@ Expression unsignedValueExpressionPrimary(ParseInfo info) :
 		return expression;
 	}
 }
+
+/*
+name=ARRAY expression constructor
+description=Creates and array of the given expressions.
+example=[source,sql]\n----\ARRAY[1,2]\n----\n
+*/
+Expression arrayExpression(ParseInfo info) :
+{
+    Expression arrayExpression = null;
+    List<Expression> arrayExpressions = new ArrayList<Expression>();
+}
+{
+    ( <ARRAY> <LSBRACE> 
+        [arrayExpression = expression(info) {arrayExpressions.add(arrayExpression);}
+         (<COMMA> arrayExpression = expression(info) {arrayExpressions.add(arrayExpression);})*
+        ]
+      <RSBRACE>
+    )
+    {
+        return new Array(arrayExpressions);
+    }
+}    
+
 
 /*
 name=window specification

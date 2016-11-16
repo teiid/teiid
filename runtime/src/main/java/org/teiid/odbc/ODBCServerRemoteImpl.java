@@ -162,7 +162,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			"\\s+and cn.contype = 'p'\\)" +  //$NON-NLS-1$
 			"\\s+order by ref.oid, ref.i", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 		
-	private static Pattern cursorSelectPattern = Pattern.compile("DECLARE\\s+(\\S+)(?:\\s+INSENSITIVE)?(\\s+(NO\\s+)?SCROLL)?\\s+CURSOR\\s+(?:WITH(?:OUT)? HOLD\\s+)?FOR\\s+(.*)", Pattern.CASE_INSENSITIVE|Pattern.DOTALL); //$NON-NLS-1$
+	private static Pattern cursorSelectPattern = Pattern.compile("DECLARE\\s+(\\S+)(\\s+BINARY)?(?:\\s+INSENSITIVE)?(\\s+(NO\\s+)?SCROLL)?\\s+CURSOR\\s+(?:WITH(?:OUT)? HOLD\\s+)?FOR\\s+(.*)", Pattern.CASE_INSENSITIVE|Pattern.DOTALL); //$NON-NLS-1$
 	private static Pattern fetchPattern = Pattern.compile("FETCH(?:(?:\\s+(FORWARD|ABSOLUTE|RELATIVE))?\\s+(\\d+)\\s+(?:IN|FROM))?\\s+(\\S+)\\s*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	private static Pattern fetchFirstLastPattern = Pattern.compile("FETCH\\s+(FIRST|LAST)\\s+(?:IN|FROM)\\s+(\\S+)\\s*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	private static Pattern movePattern = Pattern.compile("MOVE(?:\\s+(FORWARD|BACKWARD))?\\s+(\\d+)\\s+(?:IN|FROM)\\s+(\\S+)\\s*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
@@ -173,7 +173,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	private static Pattern savepointPattern = Pattern.compile("SAVEPOINT (\\w+\\d?_*)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	private static Pattern rollbackPattern = Pattern.compile("ROLLBACK\\s*(to)*\\s*(\\w+\\d+_*)*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	
-	private static Pattern txnPattern = Pattern.compile("(BEGIN|COMMIT|ROLLBACK)(\\s+(WORK|TRANSACTION))?", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+	private static Pattern txnPattern = Pattern.compile("(BEGIN(?:\\s+READ\\s+ONLY)?|COMMIT|ROLLBACK)(\\s+(WORK|TRANSACTION))?", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	
 	private TeiidDriver driver;
 	private ODBCClientRemote client;
@@ -327,7 +327,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		}
 	}	
 	
-	private void cursorExecute(String cursorName, final String sql, final ResultsFuture<Integer> completion, boolean scroll) {
+	private void cursorExecute(String cursorName, final String sql, final ResultsFuture<Integer> completion, boolean scroll, final boolean binary) {
 		try {
 			// close if the name is already used or the unnamed prepare; otherwise
 			// stmt is alive until session ends.
@@ -355,7 +355,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
                     try {
                         if (future.get()) {
 		                	List<PgColInfo> cols = getPgColInfo(stmt.getResultSet().getMetaData());
-	                        cursorMap.put(name, new Cursor(name, sql, stmt, stmt.getResultSet(), cols));
+	                        cursorMap.put(name, new Cursor(name, sql, stmt, stmt.getResultSet(), cols, binary));
     						client.sendCommandComplete("DECLARE CURSOR", null); //$NON-NLS-1$		                            
 							completion.getResultsReceiver().receiveResults(0);
 						}
@@ -377,7 +377,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		if (rows < 1) {
 			throw new SQLException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40112, cursorName, rows));
 		}
-		this.client.sendResults("FETCH", cursor.rs, cursor.prepared.columnMetadata, completion, direction, rows, true); //$NON-NLS-1$
+		this.client.sendResults("FETCH", cursor.rs, cursor.prepared.columnMetadata, completion, direction, rows, true, cursor.resultColumnFormat); //$NON-NLS-1$
 	}
 	
         private void cursorMove(String prepareName, String direction, final int rows, final ResultsFuture<Integer> completion) throws SQLException {
@@ -470,7 +470,8 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
     			try {
 	                if (future.get()) {
                 		List<PgColInfo> cols = getPgColInfo(stmt.getResultSet().getMetaData());
-                                client.sendResults(sql, stmt.getResultSet(), cols, completion, CursorDirection.FORWARD, -1, true);
+                		String tag = PgBackendProtocol.getCompletionTag(sql, null);
+                        client.sendResults(sql, stmt.getResultSet(), cols, completion, CursorDirection.FORWARD, -1, tag.equals("SELECT") || tag.equals("SHOW"), null); //$NON-NLS-1$ //$NON-NLS-2$
 	                } else {
 	                	client.sendUpdateCount(sql, stmt.getUpdateCount());
 	                	setEncoding();
@@ -545,7 +546,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	}
 	
 	@Override
-	public void bindParameters(String bindName, String prepareName, Object[] params, int resultCodeCount, int[] resultColumnFormat) {
+	public void bindParameters(String bindName, String prepareName, Object[] params, int resultCodeCount, short[] resultColumnFormat) {
 		// An unnamed portal is destroyed at the end of the transaction, or as soon as 
 		// the next Bind statement specifying the unnamed portal as destination is issued. 
 		if (bindName == null || bindName.length() == 0) {
@@ -699,7 +700,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 
 	private void sendCursorResults(final Portal cursor, final int fetchSize) {
 		ResultsFuture<Integer> result = new ResultsFuture<Integer>();
-		this.client.sendResults(null, cursor.rs, cursor.prepared.columnMetadata, result, CursorDirection.FORWARD, fetchSize, false);
+		this.client.sendResults(null, cursor.rs, cursor.prepared.columnMetadata, result, CursorDirection.FORWARD, fetchSize, false, cursor.resultColumnFormat);
 		result.addCompletionListener(new ResultsFuture.CompletionListener<Integer>() {
 			public void onCompletion(ResultsFuture<Integer> future) {
 				try {
@@ -793,7 +794,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			return "SET " + m.group(1) + " " + m.group(2); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		else if ((m = txnPattern.matcher(sql)).matches()) {
-			if (m.group(1).equalsIgnoreCase("BEGIN")) { //$NON-NLS-1$
+			if (StringUtil.startsWithIgnoreCase(m.group(1), "BEGIN")) { //$NON-NLS-1$
 				return "START TRANSACTION"; //$NON-NLS-1$
 			}
 			return m.group(1);
@@ -879,7 +880,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		
 		// followed by a RowDescription message describing the rows that will be returned when the statement  
 		// is eventually executed (or a NoData message if the statement will not return rows).
-		this.client.sendResultSetDescription(query.columnMetadata);
+		this.client.sendResultSetDescription(query.columnMetadata, null);
 	}
 	
 	private void errorOccurred(String error) {
@@ -908,7 +909,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			errorOccurred(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40078, bindName));
 		}
 		else {
-			this.client.sendResultSetDescription(query.prepared.columnMetadata);
+			this.client.sendResultSetDescription(query.prepared.columnMetadata, query.resultColumnFormat);
 		}
 	}
 
@@ -1119,10 +1120,10 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		            	Matcher m = null;
 		    	        if ((m = cursorSelectPattern.matcher(sql)).matches()){
 		    	        	boolean scroll = false;
-		    	        	if (m.group(2) != null && m.group(3) == null ) {
+		    	        	if (m.group(3) != null && m.group(4) == null ) {
 	    	        			scroll = true;
 		    	        	}
-		    				cursorExecute(normalizeName(m.group(1)), fixSQL(m.group(4)), results, scroll);
+		    				cursorExecute(normalizeName(m.group(1)), fixSQL(m.group(5)), results, scroll, m.group(2) != null);
 		    			}
 		    			else if ((m = fetchPattern.matcher(sql)).matches()){
 		    				int rowCount = 1;
@@ -1269,7 +1270,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
      */
     static class Portal {
 
-    	public Portal(String name, Prepared prepared, int[] resultColumnformat, PreparedStatementImpl stmt) {
+    	public Portal(String name, Prepared prepared,short[] resultColumnformat, PreparedStatementImpl stmt) {
     		this.name = name;
     		this.prepared = prepared;
     		this.resultColumnFormat = resultColumnformat;
@@ -1283,7 +1284,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
         /**
          * The format used in the result set columns (if set).
          */
-        final int[] resultColumnFormat;
+        final short[] resultColumnFormat;
 
         final Prepared prepared;
         
@@ -1297,8 +1298,8 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
     
     static class Cursor extends Portal {
     	
-    	public Cursor (String name, String sql, PreparedStatementImpl stmt, ResultSetImpl rs, List<PgColInfo> colMetadata) {
-    		super(name, new Prepared(UNNAMED, sql, sql, null, colMetadata), null, stmt);
+    	public Cursor (String name, String sql, PreparedStatementImpl stmt, ResultSetImpl rs, List<PgColInfo> colMetadata, boolean binary) {
+    		super(name, new Prepared(UNNAMED, sql, sql, null, colMetadata), binary?new short[] {1}:null, stmt);
     		this.rs = rs;
     	}
     }    

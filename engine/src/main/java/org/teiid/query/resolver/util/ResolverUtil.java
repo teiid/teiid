@@ -257,7 +257,13 @@ public class ResolverUtil {
 	        if (!DataTypeManager.isTransformable(targetTypeName, sourceTypeName)) {
 	        	return null;
 	        }
-        
+
+            //allow implicit conversion of literal values to floating
+            if (Number.class.isAssignableFrom(constant.getType()) &&
+                    (result.getType() == DataTypeManager.DefaultDataClasses.DOUBLE || result.getType() == DataTypeManager.DefaultDataClasses.FLOAT)) {
+                return result;
+            }
+
 	        if (!(constant.getValue() instanceof Comparable)) {
 	        	return null; //this is the case for xml constants
 	        }
@@ -803,23 +809,45 @@ public class ResolverUtil {
 	 * @return implicit conversion Function, or null if none is necessary
 	 * @throws QueryResolverException if a conversion is necessary but none can
 	 * be found
+	 * @throws TeiidComponentException 
+	 * @throws QueryMetadataException 
 	 */
 	static Expression resolveSubqueryPredicateCriteria(Expression expression, SubqueryContainer crit, QueryMetadataInterface metadata)
-		throws QueryResolverException {
+		throws QueryResolverException, QueryMetadataException, TeiidComponentException {
 	
-		// Check that type of the expression is same as the type of the
-		// single projected symbol of the subquery
-		Class<?> exprType = expression.getType();
-		if(exprType == null) {
-	         throw new QueryResolverException(QueryPlugin.Event.TEIID30075, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30075, expression));
-		}
-		String exprTypeName = DataTypeManager.getDataTypeName(exprType);
-	
-		Collection<Expression> projectedSymbols = crit.getCommand().getProjectedSymbols();
-		if (projectedSymbols.size() != 1){
-	         throw new QueryResolverException(QueryPlugin.Event.TEIID30093, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30093, crit.getCommand()));
+		List<Expression> projectedSymbols = crit.getCommand().getProjectedSymbols();
+		int size = projectedSymbols.size();
+        if (size != 1){
+		    //special handling for array comparison, we don't require the subquery to be wrapped explicitly
+		    if (expression instanceof Array) {
+		        Array array = (Array)expression;
+		        if (array.getExpressions().size() != size) {
+		            throw new QueryResolverException(QueryPlugin.Event.TEIID31210, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31210, size, array.getExpressions().size(), crit));
+		        }
+		        for (int i = 0; i < size; i++) {
+		            array.getExpressions().set(i, resolveComparision(array.getExpressions().get(i), crit, metadata, projectedSymbols.get(i).getType()));
+		        }
+		        return array;
+		    }
+	        throw new QueryResolverException(QueryPlugin.Event.TEIID30093, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30093, crit.getCommand()));
 		}
 		Class<?> subqueryType = projectedSymbols.iterator().next().getType();
+		
+        return resolveComparision(expression, crit, metadata,
+                subqueryType);
+	}
+
+    private static Expression resolveComparision(Expression expression,
+            SubqueryContainer crit, QueryMetadataInterface metadata,
+            Class<?> subqueryType) throws QueryResolverException {
+        // Check that type of the expression is same as the type of the
+        // single projected symbol of the subquery
+        Class<?> exprType = expression.getType();
+        if(exprType == null) {
+             throw new QueryResolverException(QueryPlugin.Event.TEIID30075, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30075, expression));
+        }
+        String exprTypeName = DataTypeManager.getDataTypeName(exprType);
+
 		String subqueryTypeName = DataTypeManager.getDataTypeName(subqueryType);
 		Expression result = null;
 	    try {
@@ -830,8 +858,8 @@ public class ResolverUtil {
 	    } catch (QueryResolverException qre) {
 	         throw new QueryResolverException(QueryPlugin.Event.TEIID30094, qre, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30094, crit));
 	    }
-	    return result;
-	}
+        return result;
+    }
 
 	public static ResolvedLookup resolveLookup(Function lookup, QueryMetadataInterface metadata) throws QueryResolverException, TeiidComponentException {
 		Expression[] args = lookup.getArgs();

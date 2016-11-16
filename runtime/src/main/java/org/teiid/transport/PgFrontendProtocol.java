@@ -273,9 +273,12 @@ public class PgFrontendProtocol extends FrameDecoder {
         }
         
         int resultCodeCount = data.readShort();
-        int[] resultColumnFormat = new int[resultCodeCount];
-        for (int i = 0; i < resultCodeCount; i++) {
-            resultColumnFormat[i] = data.readShort();
+        short[] resultColumnFormat = null;
+        if (resultCodeCount != 0) {
+            resultColumnFormat = new short[resultCodeCount];
+            for (int i = 0; i < resultCodeCount; i++) {
+                resultColumnFormat[i] = data.readShort();
+            }
         }
         this.odbcProxy.bindParameters(bindName, prepName, params, resultCodeCount, resultColumnFormat);
         return message;

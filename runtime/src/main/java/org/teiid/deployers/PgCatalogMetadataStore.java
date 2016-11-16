@@ -25,6 +25,9 @@ import static org.teiid.odbc.PGUtil.*;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Map;
@@ -32,10 +35,14 @@ import java.util.Properties;
 
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.GeometryType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Datatype;
 import org.teiid.metadata.FunctionMethod;
@@ -45,8 +52,13 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.metadata.Table.Type;
 import org.teiid.odbc.ODBCServerRemoteImpl;
+import org.teiid.query.function.GeometryFunctionMethods;
+import org.teiid.query.metadata.MaterializationMetadataRepository;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.parser.SQLParserUtil;
+import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
+import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.transport.PgBackendProtocol;
 
 public class PgCatalogMetadataStore extends MetadataFactory {
@@ -71,8 +83,25 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		add_matpg_relatt();
 		add_matpg_datatype();
 		add_pg_description();
-		addFunction("encode", "encode").setPushdown(PushDown.CAN_PUSHDOWN);; //$NON-NLS-1$ //$NON-NLS-2$
-		addFunction("postgisVersion", "PostGIS_Lib_Version"); //$NON-NLS-1$ //$NON-NLS-2$
+		add_pg_prepared_xacts();
+		add_pg_inherits();
+		add_pg_stats();
+		add_geography_columns();
+		addFunction("regClass", "regclass").setNullOnNull(true); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("encode", "encode").setPushdown(PushDown.CAN_PUSHDOWN); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("objDescription", "obj_description"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("hasSchemaPrivilege", "has_schema_privilege").setNullOnNull(true); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("hasTablePrivilege", "has_table_privilege").setNullOnNull(true); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("formatType", "format_type").setNullOnNull(true); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("currentSchema", "current_schema"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("getUserById", "pg_get_userbyid"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("colDescription", "col_description"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("pgHasRole", "pg_has_role"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("asBinary2", "ST_asBinary"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("postgisLibVersion", "PostGIS_Lib_Version"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("postgisGeosVersion", "postgis_geos_version"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("postgisProjVersion", "postgis_proj_version"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("postgisVersion", "postgis_version"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("hasPerm", "has_function_privilege"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("getExpr2", "pg_get_expr"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("getExpr3", "pg_get_expr"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -83,7 +112,53 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		func.setDeterminism(Determinism.COMMAND_DETERMINISTIC);
 	}
 	
-	private Table createView(String name) {
+	private void add_pg_prepared_xacts() {
+	    Table t = createView("pg_prepared_xacts"); //$NON-NLS-1$ 
+	    //xid
+        addColumn("transaction", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
+        addColumn("gid", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("owner", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("database", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
+        
+        String transformation = "SELECT null, null, null, null from SYS.Tables WHERE 1=2"; //$NON-NLS-1$
+        t.setSelectTransformation(transformation);
+    }
+	
+	private void add_pg_inherits() {
+        Table t = createView("pg_inherits"); //$NON-NLS-1$ 
+        addColumn("inhrelid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
+        addColumn("inhparent", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+        addColumn("inhseqno", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+        
+        String transformation = "SELECT null, null, null from SYS.Tables WHERE 1=2"; //$NON-NLS-1$
+        t.setSelectTransformation(transformation);
+    }
+	
+	private void add_pg_stats() {
+        Table t = createView("pg_stats"); //$NON-NLS-1$ 
+        addColumn("schemaname", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
+        addColumn("tablename", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("attname", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        
+        String transformation = "SELECT null, null, null from SYS.Tables WHERE 1=2"; //$NON-NLS-1$
+        t.setSelectTransformation(transformation);
+    }
+	
+	private void add_geography_columns() {
+        Table t = createView("geography_columns"); //$NON-NLS-1$ 
+        addColumn("f_table_catalog", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
+        addColumn("f_table_schema", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("f_table_name", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("f_geography_column", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("coord_dimension", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+        addColumn("srid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+        addColumn("type", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+
+        String transformation = "SELECT null, null, null, null, null, null, null from SYS.Tables WHERE 1=2"; //$NON-NLS-1$
+        t.setSelectTransformation(transformation);
+	}
+
+    private Table createView(String name) {
 		Table t = addTable(name);
 		t.setSystem(true);
 		t.setSupportsUpdate(false);
@@ -216,6 +291,8 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		// r = ordinary table, i = index, S = sequence, v = view, c = composite type, t = TOAST table
 		addColumn("relkind", DataTypeManager.DefaultDataTypes.CHAR, t); //$NON-NLS-1$ 
 		
+        addColumn("relowner", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
+
 		// 	If this is an index, the access method used (B-tree, hash, etc.)
 		addColumn("relam", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
 		
@@ -238,6 +315,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		String transformation = "SELECT pg_catalog.getOid(t1.uid) as oid, t1.name as relname, " +  //$NON-NLS-1$
 				"(SELECT pg_catalog.getOid(uid) FROM SYS.Schemas WHERE Name = t1.SchemaName) as relnamespace, " + //$NON-NLS-1$
 				"convert((CASE t1.isPhysical WHEN true THEN 'r' ELSE 'v' END), char) as relkind," + //$NON-NLS-1$
+				"0 as relowner, " + //$NON-NLS-1$
 				"0 as relam, " + //$NON-NLS-1$
 				"convert(0, float) as reltuples, " + //$NON-NLS-1$
 				"0 as relpages, " + //$NON-NLS-1$
@@ -246,6 +324,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"FROM SYS.Tables t1 UNION ALL SELECT pg_catalog.getOid(t1.uid) as oid, t1.name as relname, " +  //$NON-NLS-1$
 				"(SELECT pg_catalog.getOid(uid) FROM SYS.Schemas WHERE Name = t1.SchemaName) as relnamespace, " + //$NON-NLS-1$
 				"convert('i', char) as relkind," + //$NON-NLS-1$
+				"0 as relowner, " + //$NON-NLS-1$
 				"0 as relam, " + //$NON-NLS-1$
 				"convert(0, float) as reltuples, " + //$NON-NLS-1$
 				"0 as relpages, " + //$NON-NLS-1$
@@ -309,8 +388,9 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		Table t = createView("pg_namespace"); //$NON-NLS-1$ 
 		addColumn("oid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
 		addColumn("nspname", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
+		addColumn("nspowner", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
 		
-		String transformation = "SELECT pg_catalog.getOid(uid) as oid, t1.Name as nspname " + //$NON-NLS-1$
+		String transformation = "SELECT pg_catalog.getOid(uid) as oid, t1.Name as nspname, 0 as nspowner " + //$NON-NLS-1$
 		"FROM SYS.Schemas as t1"; //$NON-NLS-1$
 
 		t.setSelectTransformation(transformation);
@@ -596,14 +676,27 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		throw new AssertionError("Could not find function"); //$NON-NLS-1$
 	}
 	
+	//TODO use the TeiidFunction annotation instead
 	public static class FunctionMethods {
 		public static ClobType encode(BlobType value, String encoding) throws SQLException, IOException {
 			return org.teiid.query.function.FunctionMethods.toChars(value, encoding);
 		}
 		
-		public static String postgisVersion() {
-			return "1.4.0"; //$NON-NLS-1$
+		public static String postgisLibVersion() {
+			return "2.0.0 USE_GEOS=0 USE_PROJ=1 USE_STATS=0"; //$NON-NLS-1$
 		}
+		
+		public static String postgisVersion() {
+            return "2.0.0"; //$NON-NLS-1$
+        }
+		
+		public static String postgisGeosVersion() {
+		    return null;
+		}
+		
+        public static String postgisProjVersion() {
+            return "Rel. 4.8.0"; //$NON-NLS-1$
+	    }
 		
 		public static Boolean hasPerm(@SuppressWarnings("unused") Integer oid,
 				@SuppressWarnings("unused") String permission) {
@@ -646,5 +739,76 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 			}
 			return encoding;
 		}
+		
+		public static Integer regClass(org.teiid.CommandContext cc, String name) throws TeiidComponentException, QueryResolverException {
+            VDBMetaData metadata = (VDBMetaData) cc.getVdb();
+            TransformationMetadata tm = metadata.getAttachment(TransformationMetadata.class);
+            GroupSymbol symbol = new GroupSymbol(SQLParserUtil.normalizeId(name));
+            ResolverUtil.resolveGroup(symbol, tm);
+            return tm.getMetadataStore().getOid(((Table)symbol.getMetadataID()).getUUID());
+        }
+
+		public static String objDescription(org.teiid.CommandContext cc, int oid) {
+		    //TODO need a reverse lookup by oid at least for schema or add the annotation to pg_namespace
+		    return null;
+		}
+		
+		public static String getUserById(int user) {
+		    return "pgadmin"; //$NON-NLS-1$
+		}
+		
+		public static boolean hasSchemaPrivilege(org.teiid.CommandContext cc, String name, String privilege) {
+		    //TODO: could check if the schema exists
+		    return "usage".equalsIgnoreCase(privilege); //$NON-NLS-1$
+		}
+		
+		public static boolean hasTablePrivilege(org.teiid.CommandContext cc, String name, String privilege) {
+		    //TODO: check against authorizationvalidator
+		    return true;
+		}
+		
+		public static String currentSchema(org.teiid.CommandContext cc) {
+            return "SYS"; //$NON-NLS-1$
+        }
+		
+		public static String formatType(org.teiid.CommandContext cc, int oid, int typmod) throws SQLException {
+		    Connection c = cc.getConnection();
+            try {
+                PreparedStatement ps = c.prepareStatement("select typname from pg_catalog.pg_type where oid = ?"); //$NON-NLS-1$
+                ps.setInt(1, oid);
+                ps.execute();
+                ResultSet rs = ps.getResultSet();
+                if (rs.next()) {
+                    String name = rs.getString(1);
+                    if (typmod > 4) {
+                        if (name.equals("numeric")) {  //$NON-NLS-1$
+                            name += "("+((typmod-4)>>16)+","+((typmod-4)&0xffff)+")";  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                        } else if (name.equals("bpchar") || name.equals("varchar")) { //$NON-NLS-1$ //$NON-NLS-2$
+                            name += "("+(typmod-4)+")";  //$NON-NLS-1$ //$NON-NLS-2$
+                        }
+                    }
+                    return name;
+                }
+                return "???"; //$NON-NLS-1$
+            } finally {
+                if (c != null) {
+                    c.close();
+                }
+            }
+		}
+		
+		public static String colDescription(org.teiid.CommandContext cc, int oid, int column_number) {
+		    //TODO need a reverse lookup by oid or add the annotation to pg_attribute
+		    return null;
+		}
+		
+		public static boolean pgHasRole(org.teiid.CommandContext cc, int userOid, String privilege) {
+		    return true;
+		}
+		
+		public static BlobType asBinary2(GeometryType geom, String encoding) throws FunctionExecutionException {
+		    return GeometryFunctionMethods.asBlob(geom, encoding);
+		}
+		
 	}
 }

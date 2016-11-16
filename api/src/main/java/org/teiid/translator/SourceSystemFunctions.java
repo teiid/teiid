@@ -237,5 +237,6 @@ public class SourceSystemFunctions {
     public static final String ST_X = "st_x"; //$NON-NLS-1$
     public static final String ST_Y = "st_y"; //$NON-NLS-1$
     public static final String ST_Z = "st_z"; //$NON-NLS-1$
+    public static final String ST_MAKEENVELOPE = "st_makeenvelope"; //$NON-NLS-1$
 	
 }
