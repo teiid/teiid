@@ -75,9 +75,9 @@ public class TestScriptReader {
 	
 	@Test public void testRegClassCast() throws Exception {
 		ScriptReader sr = new ScriptReader("where oid='\"a\"'::regclass");
-		sr.setRewrite(true);;
+		sr.setRewrite(true);
 		String result = sr.readStatement();
-		assertEquals("where oid=(SELECT oid FROM pg_class WHERE upper(relname) = 'A')", result);
+		assertEquals("where oid=regclass('\"a\"')", result);
 	}
 	
 	@Test public void testExtraDelim() throws Exception {

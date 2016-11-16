@@ -911,6 +911,14 @@ public class TestValidator {
     @Test public void testValidateInClauseSubquery() {        
         helpValidate("SELECT e2 FROM test.group2 WHERE e1 IN (SELECT e1 FROM test.group)", new String[] {"e1"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
     }
+    
+    @Test public void testValidateInClauseSubqueryPasses() {        
+        helpValidate("SELECT e2 FROM test.group2 WHERE e1 IN (SELECT e2 FROM test.group)", new String[] {}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testValidateInClauseSubqueryArray() {        
+        helpValidate("SELECT e2 FROM pm1.g1 WHERE (e2, e3) IN (SELECT e2, e3 FROM pm1.g2)", new String[] {}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
 
     @Test public void testValidateExec1() {
         helpValidate("EXEC pm1.sq1()", new String[] {}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$

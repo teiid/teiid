@@ -21,6 +21,11 @@
  */
 package org.teiid.transport;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.ByteToMessageDecoder;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -34,11 +39,6 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Properties;
-
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.ByteToMessageDecoder;
 
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -279,9 +279,12 @@ public class PgFrontendProtocol extends ByteToMessageDecoder {
         }
         
         int resultCodeCount = data.readShort();
-        int[] resultColumnFormat = new int[resultCodeCount];
-        for (int i = 0; i < resultCodeCount; i++) {
-            resultColumnFormat[i] = data.readShort();
+        short[] resultColumnFormat = null;
+        if (resultCodeCount != 0) {
+            resultColumnFormat = new short[resultCodeCount];
+            for (int i = 0; i < resultCodeCount; i++) {
+                resultColumnFormat[i] = data.readShort();
+            }
         }
         this.odbcProxy.bindParameters(bindName, prepName, params, resultCodeCount, resultColumnFormat);
         return message;
