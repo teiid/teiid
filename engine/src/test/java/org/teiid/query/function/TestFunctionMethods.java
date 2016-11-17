@@ -224,10 +224,10 @@ public class TestFunctionMethods {
     }
     
     @Test public void testHashes() throws Exception {
-        assertEquals("900150983CD24FB0D6963F7D28E17F72", PropertiesUtils.toHex(FunctionMethods.md5("abc")));
-        assertEquals("A9993E364706816ABA3E25717850C26C9CD0D89D", PropertiesUtils.toHex(FunctionMethods.sha1("abc")));
-        assertEquals("BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD", PropertiesUtils.toHex(FunctionMethods.sha2_256("abc")));
-        assertEquals("DDAF35A193617ABACC417349AE20413112E6FA4E89A97EA20A9EEEE64B55D39A2192992A274FC1A836BA3C23A3FEEBBD454D4423643CE80E2A9AC94FA54CA49F", PropertiesUtils.toHex(FunctionMethods.sha2_512("abc")));
+        assertEquals("900150983CD24FB0D6963F7D28E17F72", PropertiesUtils.toHex(FunctionMethods.md5("abc").getBytesDirect()));
+        assertEquals("A9993E364706816ABA3E25717850C26C9CD0D89D", PropertiesUtils.toHex(FunctionMethods.sha1("abc").getBytesDirect()));
+        assertEquals("BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD", PropertiesUtils.toHex(FunctionMethods.sha2_256("abc").getBytesDirect()));
+        assertEquals("DDAF35A193617ABACC417349AE20413112E6FA4E89A97EA20A9EEEE64B55D39A2192992A274FC1A836BA3C23A3FEEBBD454D4423643CE80E2A9AC94FA54CA49F", PropertiesUtils.toHex(FunctionMethods.sha2_512("abc").getBytesDirect()));
     }
     
 }

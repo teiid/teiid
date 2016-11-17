@@ -67,6 +67,7 @@ import org.teiid.client.util.ExceptionUtil;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.CorePlugin;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
@@ -1691,48 +1692,48 @@ public final class FunctionMethods {
     //SHA1 | SHA2_256 | SHA2_512
     
     @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
-    public static byte[] md5(String plainText) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+    public static BinaryType md5(String plainText) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         return digest(plainText.getBytes("UTF-8"), "md5"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
-    public static byte[] sha1(String plainText) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+    public static BinaryType sha1(String plainText) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         return digest(plainText.getBytes("UTF-8"), "sha-1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
-    public static byte[] sha2_256(String plainText) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+    public static BinaryType sha2_256(String plainText) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         return digest(plainText.getBytes("UTF-8"), "sha-256"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
-    public static byte[] sha2_512(String plainText) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+    public static BinaryType sha2_512(String plainText) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         return digest(plainText.getBytes("UTF-8"), "sha-512"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
-    public static byte[] md5(byte[] plainText) throws NoSuchAlgorithmException {
-        return digest(plainText, "md5"); //$NON-NLS-1$
+    public static BinaryType md5(BinaryType plainText) throws NoSuchAlgorithmException {
+        return digest(plainText.getBytesDirect(), "md5"); //$NON-NLS-1$
     }
     
     @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
-    public static byte[] sha1(byte[] plainText) throws NoSuchAlgorithmException {
-        return digest(plainText, "sha-1"); //$NON-NLS-1$
+    public static BinaryType sha1(BinaryType plainText) throws NoSuchAlgorithmException {
+        return digest(plainText.getBytesDirect(), "sha-1"); //$NON-NLS-1$
     }
     
     @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
-    public static byte[] sha2_256(byte[] plainText) throws NoSuchAlgorithmException {
-        return digest(plainText, "sha-256"); //$NON-NLS-1$
+    public static BinaryType sha2_256(BinaryType plainText) throws NoSuchAlgorithmException {
+        return digest(plainText.getBytesDirect(), "sha-256"); //$NON-NLS-1$
     }
     
     @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
-    public static byte[] sha2_512(byte[] plainText) throws NoSuchAlgorithmException {
-        return digest(plainText, "sha-512"); //$NON-NLS-1$
+    public static BinaryType sha2_512(BinaryType plainText) throws NoSuchAlgorithmException {
+        return digest(plainText.getBytesDirect(), "sha-512"); //$NON-NLS-1$
     }
     
-    public static byte[] digest(byte[] plainText, String algorithm) throws NoSuchAlgorithmException {
+    public static BinaryType digest(byte[] plainText, String algorithm) throws NoSuchAlgorithmException {
         MessageDigest messageDigest = MessageDigest.getInstance(algorithm);        
-        return messageDigest.digest(plainText);
+        return new BinaryType(messageDigest.digest(plainText));
     }
     
 }
