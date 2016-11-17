@@ -53,6 +53,7 @@ import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.JDBCMetdataProcessor;
 import org.teiid.translator.jdbc.Version;
+import org.teiid.translator.jdbc.TemplateFunctionModifier;
 import org.teiid.translator.jdbc.sybase.SybaseExecutionFactory;
 
 /**
@@ -91,6 +92,10 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 		});
 		registerFunctionModifier(SourceSystemFunctions.LOCATE, new AliasModifier("CHARINDEX")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.ASCII, new AliasModifier("unicode")); //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.MD5, new TemplateFunctionModifier("HASHBYTES('MD5', ", 0, ")")); //$NON-NLS-1$ //$NON-NLS-2$
+		registerFunctionModifier(SourceSystemFunctions.SHA1, new TemplateFunctionModifier("HASHBYTES('SHA1', ", 0, ")")); //$NON-NLS-1$ //$NON-NLS-2$
+		registerFunctionModifier(SourceSystemFunctions.SHA2_256, new TemplateFunctionModifier("HASHBYTES('SHA2_256', ", 0, ")")); //$NON-NLS-1$ //$NON-NLS-2$
+		registerFunctionModifier(SourceSystemFunctions.SHA2_512, new TemplateFunctionModifier("HASHBYTES('SHA2_512', ", 0, ")")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
 	@Override
@@ -303,6 +308,17 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
         supportedFunctions.add("NVL");      //$NON-NLS-1$ 
         supportedFunctions.add(SourceSystemFunctions.FORMATTIMESTAMP);
         supportedFunctions.add(SourceSystemFunctions.PARSETIMESTAMP);
+        
+        if (getVersion().compareTo(TEN_0) >= 0) {
+            supportedFunctions.add(SourceSystemFunctions.SHA2_256);
+            supportedFunctions.add(SourceSystemFunctions.SHA2_512);
+        }
+        
+        if (getVersion().compareTo(NINE_0) >= 0) {
+            supportedFunctions.add(SourceSystemFunctions.MD5);
+            supportedFunctions.add(SourceSystemFunctions.SHA1);
+        }
+        
         return supportedFunctions;
     }
     

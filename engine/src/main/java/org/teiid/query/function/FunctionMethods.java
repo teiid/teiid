@@ -26,6 +26,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.io.Writer;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -33,6 +35,8 @@ import java.math.RoundingMode;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.CodingErrorAction;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -1683,4 +1687,52 @@ public final class FunctionMethods {
 
         return result;
     }
+
+    //SHA1 | SHA2_256 | SHA2_512
+    
+    @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
+    public static byte[] md5(String plainText) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+        return digest(plainText.getBytes("UTF-8"), "md5"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
+    public static byte[] sha1(String plainText) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+        return digest(plainText.getBytes("UTF-8"), "sha-1"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
+    public static byte[] sha2_256(String plainText) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+        return digest(plainText.getBytes("UTF-8"), "sha-256"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
+    public static byte[] sha2_512(String plainText) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+        return digest(plainText.getBytes("UTF-8"), "sha-512"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
+    public static byte[] md5(byte[] plainText) throws NoSuchAlgorithmException {
+        return digest(plainText, "md5"); //$NON-NLS-1$
+    }
+    
+    @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
+    public static byte[] sha1(byte[] plainText) throws NoSuchAlgorithmException {
+        return digest(plainText, "sha-1"); //$NON-NLS-1$
+    }
+    
+    @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
+    public static byte[] sha2_256(byte[] plainText) throws NoSuchAlgorithmException {
+        return digest(plainText, "sha-256"); //$NON-NLS-1$
+    }
+    
+    @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
+    public static byte[] sha2_512(byte[] plainText) throws NoSuchAlgorithmException {
+        return digest(plainText, "sha-512"); //$NON-NLS-1$
+    }
+    
+    public static byte[] digest(byte[] plainText, String algorithm) throws NoSuchAlgorithmException {
+        MessageDigest messageDigest = MessageDigest.getInstance(algorithm);        
+        return messageDigest.digest(plainText);
+    }
+    
 }
