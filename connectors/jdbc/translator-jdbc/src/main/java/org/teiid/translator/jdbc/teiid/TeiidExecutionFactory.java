@@ -266,6 +266,10 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
         
         if (getVersion().compareTo(NINE_2) >= 0) {
             supportedFunctions.add(SourceSystemFunctions.ST_MAKEENVELOPE);
+            supportedFunctions.add(SourceSystemFunctions.MD5);
+            supportedFunctions.add(SourceSystemFunctions.SHA1);
+            supportedFunctions.add(SourceSystemFunctions.SHA2_256);
+            supportedFunctions.add(SourceSystemFunctions.SHA2_512);
         }
         
         return supportedFunctions;
