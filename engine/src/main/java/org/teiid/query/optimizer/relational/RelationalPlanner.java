@@ -1436,7 +1436,7 @@ public class RelationalPlanner {
             // No join required
             UnaryFromClause ufc = (UnaryFromClause)clause;
             GroupSymbol group = ufc.getGroup();
-            if (metadata.isVirtualGroup(group.getMetadataID())) {
+            if (metadata.isVirtualGroup(group.getMetadataID()) && !group.isTempGroupSymbol()) {
             	hints.hasVirtualGroups = true;
             }
             if (!hints.hasRowBasedSecurity && RowBasedSecurityHelper.applyRowSecurity(metadata, group, context)) {

@@ -73,4 +73,15 @@ public class TestGlobalTemp {
 		harness.execute("select * from temp", new List<?>[] {});
 	}
 	
+	@Test public void testInsertMultipleValues() throws Exception {
+        TempTableTestHarness harness = new TempTableTestHarness();
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("CREATE GLOBAL TEMPORARY TABLE tabglob (id integer PRIMARY KEY, name string) OPTIONS (UPDATABLE 'TRUE');" +
+                "", "x", "y");
+        HardcodedDataManager dm = new HardcodedDataManager();
+        harness.setUp(metadata, dm);
+        
+        harness.execute("INSERT INTO tabglob (id, name) VALUES (1, 'name1'), (2, 'name2')", new List<?>[] {Arrays.asList(2)});
+        harness.execute("select count(*) from tabglob", new List<?>[] {Arrays.asList(2)});
+    }
+	
 }
