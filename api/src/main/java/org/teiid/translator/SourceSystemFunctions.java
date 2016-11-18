@@ -168,6 +168,11 @@ public class SourceSystemFunctions {
 	public static final String JSONTOXML = "jsontoxml"; //$NON-NLS-1$
 	
 	public static final String UUID = "uuid"; //$NON-NLS-1$
+	
+	public static final String MD5 = "md5"; //$NON-NLS-1$
+	public static final String SHA1 = "sha1"; //$NON-NLS-1$
+	public static final String SHA2_256 = "sha2_256"; //$NON-NLS-1$
+	public static final String SHA2_512 = "sha2_512"; //$NON-NLS-1$
 
     public static final String ST_ASTEXT = "st_astext"; //$NON-NLS-1$
     public static final String ST_ASEWKT = "st_asewkt"; //$NON-NLS-1$
@@ -238,5 +243,6 @@ public class SourceSystemFunctions {
     public static final String ST_X = "st_x"; //$NON-NLS-1$
     public static final String ST_Y = "st_y"; //$NON-NLS-1$
     public static final String ST_Z = "st_z"; //$NON-NLS-1$
+    public static final String ST_MAKEENVELOPE = "st_makeenvelope"; //$NON-NLS-1$
 	
 }

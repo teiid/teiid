@@ -91,6 +91,8 @@ public class AnalysisRecord {
     //Table functions
 	public static final String PROP_TABLE_FUNCTION = "Table Function"; //$NON-NLS-1$
 	
+	public static final String PROP_STREAMING = "Streaming"; //$NON-NLS-1$
+	
     // XML
     public static final String PROP_MESSAGE = "Message"; //$NON-NLS-1$
     public static final String PROP_TAG = "Tag"; //$NON-NLS-1$

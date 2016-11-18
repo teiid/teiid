@@ -429,6 +429,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 	public PlanNode getDescriptionProperties() {
 		PlanNode props = super.getDescriptionProperties();
         AnalysisRecord.addLanaguageObjects(props, AnalysisRecord.PROP_TABLE_FUNCTION, Arrays.asList(this.table));
+        props.addProperty(AnalysisRecord.PROP_STREAMING, String.valueOf(this.table.getXQueryExpression().isStreaming()));
         return props;
 	}
 

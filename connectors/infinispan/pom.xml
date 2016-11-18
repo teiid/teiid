@@ -4,13 +4,13 @@
   <parent>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>connectors</artifactId>
-      <version>9.2.0.Alpha1-SNAPSHOT</version>
+      <version>9.2.0.Alpha2-SNAPSHOT</version>
   </parent>
   <groupId>org.jboss.teiid.connectors</groupId>
   <artifactId>infinispan</artifactId>
   <packaging>pom</packaging>
   <name>Infinispan Extension</name>
-  <description/>
+  <description />
   
   <modules>
     <module>translator-infinispan-libmode</module>

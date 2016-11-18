@@ -72,6 +72,7 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
 	public static final Version EIGHT_10 = Version.getVersion("8.10"); //$NON-NLS-1$
 	public static final Version NINE_0 = Version.getVersion("9.0"); //$NON-NLS-1$
 	public static final Version NINE_1 = Version.getVersion("9.1"); //$NON-NLS-1$
+	public static final Version NINE_2 = Version.getVersion("9.2"); //$NON-NLS-1$
 	
 	public TeiidExecutionFactory() {
 	}
@@ -261,6 +262,14 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
             supportedFunctions.add(SourceSystemFunctions.ST_X);
             supportedFunctions.add(SourceSystemFunctions.ST_Y);
             supportedFunctions.add(SourceSystemFunctions.ST_Z);
+        }
+        
+        if (getVersion().compareTo(NINE_2) >= 0) {
+            supportedFunctions.add(SourceSystemFunctions.ST_MAKEENVELOPE);
+            supportedFunctions.add(SourceSystemFunctions.MD5);
+            supportedFunctions.add(SourceSystemFunctions.SHA1);
+            supportedFunctions.add(SourceSystemFunctions.SHA2_256);
+            supportedFunctions.add(SourceSystemFunctions.SHA2_512);
         }
         
         return supportedFunctions;

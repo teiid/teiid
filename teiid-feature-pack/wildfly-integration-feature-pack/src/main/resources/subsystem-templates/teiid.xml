@@ -60,7 +60,8 @@
         <translator name="excel" module="org.jboss.teiid.translator.excel"/>
         <translator name="impala" module="org.jboss.teiid.translator.hive"/>
         <translator name="prestodb" module="org.jboss.teiid.translator.prestodb"/>
-        <translator name="hbase" module="org.jboss.teiid.translator.hbase"/>
+        <translator name="phoenix" module="org.jboss.teiid.translator.phoenix"/>
+        <translator name="hbase" module="org.jboss.teiid.translator.phoenix"/>
         <translator name="ucanaccess" module="org.jboss.teiid.translator.jdbc"/>
         <translator name="vertica" module="org.jboss.teiid.translator.jdbc"/>
         <translator name="actian-vector" module="org.jboss.teiid.translator.jdbc"/>
@@ -68,6 +69,7 @@
         <translator name="odata4" module="org.jboss.teiid.translator.odata4"/>
         <translator name="redshift" module="org.jboss.teiid.translator.jdbc"/>
         <translator name="swagger" module="org.jboss.teiid.translator.swagger"/>
+        <translator name="delegator" module="org.jboss.teiid.api"/>
     </subsystem>
     <socket-binding name="teiid-jdbc" port="31000"/>
     <socket-binding name="teiid-odbc" port="35432"/>        

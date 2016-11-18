@@ -26,6 +26,9 @@
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <ul>
     <li><a href="https://issues.jboss.org/browse/TEIID-4284">TEIID-4284</a> <b>Salesforce Bulk API</b> for SELECT queries.
+    <li><a href="https://issues.jboss.org/browse/TEIID-4556">TEIID-4556</a> <a href="https://issues.jboss.org/browse/TEIID-4545">TEIID-4545</a> <a href="https://issues.jboss.org/browse/TEIID-4515">TEIID-4515</a> Phoenix/Hbase Translator now supports joins
+    , more system functions/pushdown functions, and offset</li>
+    <li><a href="https://issues.jboss.org/browse/TEIID-4532">TEIID-4532</a> <b>Hashing Functions</b> were added for md5, sha1, sha2-256, and sha2-512.
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -37,6 +40,11 @@
   <li><a href="https://issues.jboss.org/browse/TEIID-4240">TEIID-4240</a> The usage of ; delimited statements for materialization scripts has been deprecated.  An anonymous procedure block should be used instead if multiple statements are needed.</li>
   <li><a href="https://issues.jboss.org/browse/TEIID-4228">TEIID-4228</a> Precision and scale values greater than 32767 are deprecated.</li>
   <li><a href="https://issues.jboss.org/browse/TEIID-4228">TEIID-4228</a> Not using a semicolon delimiter between statements is deprecated and should only be relied on for backwards compatibility.  
+</ul>
+
+<h4>from 9.2</h4>
+<ul>
+  <li><a href="https://issues.jboss.org/browse/TEIID-4574">TEIID-4574</a> Phoenix/Hbase Translator has been renamed phoenix and the usage of the HBaseExecutionFactory and the hbase translator name has been deprecated.</li>
 </ul>
 
 <h4>from 9.1</h4>

@@ -47,18 +47,6 @@ public class OSDQFunctions {
 
     /**
      * @param a
-     * This function will retrun MD5 hashcode of the string
-     * @return String
-     */
-    @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
-    public static String hash(String sourceValue) {
-        if (sourceValue == null)
-            return "d41d8cd98f00b204e9800998ecf8427e"; // null MD5 value
-        return ResultsetToRTM.getMD5(sourceValue).toString();
-    }
-
-    /**
-     * @param a
      * This function will return digit characters of the string
      * @return
      * 

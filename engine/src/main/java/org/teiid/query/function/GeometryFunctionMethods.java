@@ -65,6 +65,14 @@ public class GeometryFunctionMethods {
         return new BlobType(b);
     }
     
+    public static BlobType asBlob(GeometryType geometry, String encoding) throws FunctionExecutionException {
+        if ("NDR".equals(encoding)) { //$NON-NLS-1$
+            return new BlobType(GeometryUtils.getBytes(GeometryUtils.getGeometry(geometry), false)); 
+        } 
+        Blob b = geometry.getReference();
+        return new BlobType(b);
+    }
+    
     @TeiidFunction(name=SourceSystemFunctions.ST_ASEWKB,
             category=FunctionCategoryConstants.GEOMETRY,
             nullOnNull=true,
@@ -678,6 +686,22 @@ public class GeometryFunctionMethods {
     public static Double ordinateZ(GeometryType geom) 
          throws FunctionExecutionException {
         return GeometryUtils.ordinate(geom, GeometryUtils.Ordinate.Z);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_MAKEENVELOPE,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static GeometryType makeEnvelope(double xmin, double ymin, double xmax, double ymax) {
+        return GeometryUtils.makeEnvelope(xmin, ymin, xmax, ymax, null);
+    }
+    
+    @TeiidFunction(name=SourceSystemFunctions.ST_MAKEENVELOPE,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static GeometryType makeEnvelope(double xmin, double ymin, double xmax, double ymax, int srid) {
+        return GeometryUtils.makeEnvelope(xmin, ymin, xmax, ymax, srid);
     }
     
 }

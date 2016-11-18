@@ -536,6 +536,8 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 						
 						CommandContext cc = this.processor.getContext();
 						cc.close();
+					} catch (Throwable t) {
+					    handleThrowable(t); //guard against unexpected exceptions in close
 					} finally {
 						CommandContext.popThreadLocalContext();
 					}

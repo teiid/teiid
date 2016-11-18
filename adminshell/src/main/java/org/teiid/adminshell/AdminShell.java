@@ -472,4 +472,10 @@ public class AdminShell {
 			@Doc(text = "method name") String method) {
 		help.help(method);
 	}
+	
+	@Doc(text = "Set the profile name for domain mode")
+    public static void setProfileName(
+            @Doc(text = "profile name") String profileName) {
+        getAdmin().setProfileName(profileName);
+    }
 }

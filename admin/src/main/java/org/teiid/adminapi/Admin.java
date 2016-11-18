@@ -522,4 +522,10 @@ public interface Admin {
      * @throws AdminException
      */
     void restart();
+
+    /**
+     * Set the profile name.  A null value will set the default profile name.
+     * @param name
+     */
+    void setProfileName(String name);
 }

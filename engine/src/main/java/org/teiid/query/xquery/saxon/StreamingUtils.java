@@ -86,7 +86,7 @@ final class StreamingUtils {
 					"QName must not contain more than one colon: " //$NON-NLS-1$
 					+ "qname='" + localNames[i] + "', path='" + path + "'"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			if (k <= 0) {
-				fixedPath += SaxonXQueryExpression.DEFAULT_PREFIX+":"; //$NON-NLS-1$
+				fixedPath += "*:"; //$NON-NLS-1$
 			} else {
 				String prefix = localNames[i].substring(0, k).trim();
 				if (k >= localNames[i].length() - 1)
@@ -98,7 +98,7 @@ final class StreamingUtils {
 			
 			localNames[i] = localNames[i].substring(k + 1).trim();
 			if (!localNames[i].equals("*") && !Name11Checker.getInstance().isValidNCName(localNames[i])) { //$NON-NLS-1$
-				throw new IllegalArgumentException(localNames[i] + " is not a valid local name."); //$NON-NLS-1$
+			    throw new IllegalArgumentException(localNames[i] + " is not a valid local name."); //$NON-NLS-1$
 			}
 			fixedPath += localNames[i];
 		}

@@ -192,7 +192,7 @@ public class IntegrationTestDeployment {
 	@Test
 	public void testTraslators() throws Exception {
 		Collection<? extends Translator> translators = admin.getTranslators();
-		assertEquals(translators.toString(), 56, translators.size());
+		assertEquals(translators.toString(), 57, translators.size());
 
 		JavaArchive jar = getLoopyArchive();
 		
@@ -366,6 +366,8 @@ public class IntegrationTestDeployment {
 			rs.next();
 			String session = rs.getString(1);
 			rs.close();
+			
+			Thread.sleep(500);
 			
 			Collection<? extends Request> requests = admin.getRequestsForSession(session);
 			

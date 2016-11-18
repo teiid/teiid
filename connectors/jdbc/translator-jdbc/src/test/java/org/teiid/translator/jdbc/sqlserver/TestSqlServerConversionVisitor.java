@@ -389,5 +389,17 @@ public class TestSqlServerConversionVisitor {
         
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, trans1);
     } 
+    
+    @Test
+    public void testHashFunctions() throws Exception {
+        String input = "select md5(stringkey), sha2_256(stringkey) from bqt1.smalla"; //$NON-NLS-1$
+        String output = "SELECT HASHBYTES('MD5', SmallA.StringKey), HASHBYTES('SHA2_256', SmallA.StringKey) FROM SmallA"; //$NON-NLS-1$
+
+        SQLServerExecutionFactory trans1 = new SQLServerExecutionFactory();
+        trans1.setDatabaseVersion(SQLServerExecutionFactory.V_2012);
+        trans1.start();
+        
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, trans1);
+    }
        
 }

@@ -274,7 +274,9 @@ public class ResolverVisitor extends LanguageVisitor {
 	            obj.setLeftExpression(ResolverUtil.resolveSubqueryPredicateCriteria(obj.getLeftExpression(), obj, metadata));
 	        } catch(QueryResolverException e) {
 	            handleException(e);
-	        }
+            } catch (TeiidComponentException e) {
+                handleException(e);
+            }
     	} else {
     		try {
 	    		resolveQuantifiedCompareArray(obj);
@@ -343,6 +345,8 @@ public class ResolverVisitor extends LanguageVisitor {
             obj.setExpression(ResolverUtil.resolveSubqueryPredicateCriteria(obj.getExpression(), obj, metadata));
         } catch(QueryResolverException e) {
             handleException(e);
+        } catch (TeiidComponentException e) {
+            handleException(e);
         }
     }
 
@@ -399,29 +403,33 @@ public class ResolverVisitor extends LanguageVisitor {
 	    			}
 	    		}
 	    	} else {
-	    		Class<?> type = null;
-	    		for (int i = 0; i < array.getExpressions().size(); i++) {
-	    			Expression expr = array.getExpressions().get(i);
-	    			Class<?> baseType = expr.getType();
-	    			while (baseType != null && baseType.isArray()) {
-	    				baseType = baseType.getComponentType();
-	    			}
-	    			if (baseType != DefaultDataClasses.NULL) {
-		    			if (type == null) {
-		    				type = expr.getType();
-		    			} else if (type != expr.getType()) {
-		    				type = DataTypeManager.DefaultDataClasses.OBJECT;
-		    			}
-	    			}
-	    		}
-	    		if (type == null) {
-	    			type = DataTypeManager.DefaultDataClasses.NULL;
-	    		}
-	    		array.setComponentType(type);
+	    		resolveComponentType(array);
 	    	}
     	} catch (QueryResolverException e) {
     		handleException(e);
     	}
+    }
+
+    public static void resolveComponentType(Array array) {
+        Class<?> type = null;
+        for (int i = 0; i < array.getExpressions().size(); i++) {
+        	Expression expr = array.getExpressions().get(i);
+        	Class<?> baseType = expr.getType();
+        	while (baseType != null && baseType.isArray()) {
+        		baseType = baseType.getComponentType();
+        	}
+        	if (baseType != DefaultDataClasses.NULL) {
+        		if (type == null) {
+        			type = expr.getType();
+        		} else if (type != expr.getType()) {
+        			type = DataTypeManager.DefaultDataClasses.OBJECT;
+        		}
+        	}
+        }
+        if (type == null) {
+        	type = DataTypeManager.DefaultDataClasses.NULL;
+        }
+        array.setComponentType(type);
     }
 
     public void visit(CaseExpression obj) {

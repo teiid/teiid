@@ -4,17 +4,17 @@
    <parent>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>connectors</artifactId>
-      <version>9.2.0.Alpha1-SNAPSHOT</version>
+      <version>9.2.0.Alpha2-SNAPSHOT</version>
   </parent>
   <groupId>org.jboss.teiid.connectors</groupId>
   <artifactId>jdbc</artifactId>
   <packaging>pom</packaging>
   <name>JDBC Extensions</name>
-  <description/>
+  <description />
   
   <modules>
     <module>translator-jdbc</module>
-    <module>translator-hbase</module>
+    <module>translator-phoenix</module>
     <module>translator-hive</module>
     <module>translator-prestodb</module>
     <module>feature-pack-jdbc</module>
