@@ -195,9 +195,11 @@ public class PlanToProcessConverter {
                         Object groupID = intoGroup.getMetadataID();
                         Object modelID = metadata.getModelID(groupID);
                         String modelName = metadata.getFullName(modelID);
-                        if (metadata.isVirtualGroup(groupID)) {
+                        if (metadata.isVirtualGroup(groupID) && !metadata.isTemporaryTable(groupID)) {
                         	InsertPlanExecutionNode ipen = new InsertPlanExecutionNode(getID(), metadata);
-                        	ipen.setProcessorPlan((ProcessorPlan)node.getFirstChild().getProperty(Info.PROCESSOR_PLAN));
+                        	ProcessorPlan plan = (ProcessorPlan)node.getFirstChild().getProperty(Info.PROCESSOR_PLAN);
+                        	Assertion.isNotNull(plan);
+                        	ipen.setProcessorPlan(plan);
                         	ipen.setReferences(insert.getValues());
                         	processNode = ipen;
                         } else {
