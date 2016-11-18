@@ -46,8 +46,6 @@ import org.teiid.transport.SocketConfiguration;
 
 public class EmbeddedConfiguration extends DQPConfiguration {
 	
-	private static final String DEFAULT_NODE_NAME = "localhost"; //$NON-NLS-1$
-	private static final String JBOSS_NODE_NAME = "jboss.node.name"; //$NON-NLS-1$
 	static final int DEFAULT_MAX_ASYNC_WORKERS = 10;
 	private SecurityHelper securityHelper;
 	private String securityDomain;
