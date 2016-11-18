@@ -34,18 +34,15 @@ public class GSSResult {
 	private boolean authenticated;
 	private Object securityContext;
 	private String userName;
-	private GSSCredential delegationCredential;
 	
-	public GSSResult(byte[] token, boolean authenticated, GSSCredential cred) {
+	public GSSResult(byte[] token, boolean authenticated) {
 		this.serviceToken = token;
 		this.authenticated = authenticated;
-		this.delegationCredential = cred;
 	}
 	
 	public GSSResult(boolean authenticated, GSSCredential cred) {
         this.serviceToken = (NULL_TOKEN + COUNT.getAndIncrement()).getBytes();
         this.authenticated = authenticated;
-        this.delegationCredential = cred;
 	}
 	
 	public boolean isNullContinuationToken() {
@@ -75,13 +72,5 @@ public class GSSResult {
 	
 	public void setUserName(String name) {
 		this.userName = name;
-	}
-
-    public GSSCredential getDelegationCredential() {
-        return delegationCredential;
-    }
-
-    public void setDelegationCredential(GSSCredential delegationCredentail) {
-        this.delegationCredential = delegationCredentail;
-    }	
+	}	
 }
