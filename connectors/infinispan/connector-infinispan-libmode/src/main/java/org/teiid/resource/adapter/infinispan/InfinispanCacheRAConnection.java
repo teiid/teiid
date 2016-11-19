@@ -21,7 +21,6 @@
  */
 package org.teiid.resource.adapter.infinispan;
 
-import java.util.ArrayList;
 import java.util.Collection;
 
 import javax.naming.Context;
@@ -157,13 +156,12 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	}	
 
 	@Override
-	public Collection<Object> getAll() {
-		Collection<Object> objs = new ArrayList<Object>();
-		Cache c = getCache(getTargetCacheName());
-		for (Object k : c.keySet()) {
-			objs.add(c.get(k));
-		}
-		return objs;
+	public Collection<Object> getAll() throws TranslatorException {
+		
+		DSLSearch s = (DSLSearch) getSearchType();
+		
+		return s.getAll();
+
 	}
 
 	/* split out for testing purposes */
