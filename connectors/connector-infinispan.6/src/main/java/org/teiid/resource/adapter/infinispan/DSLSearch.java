@@ -134,6 +134,17 @@ public final class DSLSearch implements SearchType   {
 		
 	}
 
+	public List<Object> getAll() throws TranslatorException  {	
+		QueryBuilder qb = getQueryBuilder(conn);
+		
+		Query query = qb.build();
+		List<Object> results = query.list();
+		if (results == null) {
+               return Collections.emptyList();
+		}
+
+		return results;
+	}
 	
 	private List<Object> performSearch(ObjectVisitor visitor) throws TranslatorException {
 		
@@ -171,17 +182,12 @@ public final class DSLSearch implements SearchType   {
 			if (results == null) {
 				return Collections.emptyList();
 			}
-		} else if (orderby != null || visitor.getLimit() > 0) {
+		} else  {
 			   query = qb.build();
 	           results = query.list();
 	           if (results == null) {
 	                   return Collections.emptyList();
 	           }			
-		} else {
-			results = new ArrayList<Object>();
-			Collection<Object> all = conn.getAll();
-			results.addAll(all);
-			return results;
 		}
 
 		return results;
