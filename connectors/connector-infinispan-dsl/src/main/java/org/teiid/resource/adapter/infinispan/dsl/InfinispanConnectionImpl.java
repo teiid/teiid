@@ -206,18 +206,9 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	 */
 	@Override
 	public Collection<Object> getAll() throws TranslatorException {
-		@SuppressWarnings("rawtypes")
-		RemoteCache cache = getCache(getTargetCache());
-
-		Map<Object, Object> c = cache.getBulk();
-		List<Object> results = new ArrayList<Object>();
-		for (Object k:c.keySet()) {
-			Object v = cache.get(k);
-			results.add(v);
-			
-		}
-
-		return results;
+		DSLSearch s = (DSLSearch) getSearchType();
+		
+		return s.getAll();
 	}
 
 	/**
@@ -292,6 +283,6 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 
 	@Override
 	public boolean configuredForMaterialization() {
-		return (getDDLHandler().isStagingTarget());
+		return (config.getStagingCacheName() != null);
 	}
 }
