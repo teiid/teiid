@@ -1207,28 +1207,28 @@ public class TestOracleTranslator {
     @Test
     public void testGeometryDistance() throws Exception {
         String input = "select ST_Distance(shape, shape) from cola_markets"; //$NON-NLS-1$
-        String output = "SELECT SDO_GEOM.DISTANCE(COLA_MARKETS.SHAPE, COLA_MARKETS.SHAPE, 0.005) FROM COLA_MARKETS"; //$NON-NLS-1$
+        String output = "SELECT SDO_GEOM.SDO_DISTANCE(COLA_MARKETS.SHAPE, COLA_MARKETS.SHAPE, 0.005) FROM COLA_MARKETS"; //$NON-NLS-1$
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
 
     @Test
     public void testGeometryDisjoint() throws Exception {
         String input = "select ST_Disjoint(shape, shape) from cola_markets"; //$NON-NLS-1$
-        String output = "SELECT SDO_GEOM.RELATE(COLA_MARKETS.SHAPE, 'disjoint', COLA_MARKETS.SHAPE, 0.005) FROM COLA_MARKETS"; //$NON-NLS-1$
+        String output = "SELECT CASE SDO_GEOM.RELATE(COLA_MARKETS.SHAPE, 'disjoint', COLA_MARKETS.SHAPE, 0.005) WHEN 'DISJOINT' THEN 'TRUE' ELSE 'FALSE' END FROM COLA_MARKETS"; //$NON-NLS-1$
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
 
     @Test
     public void testGeometryIntersects() throws Exception {
         String input = "select ST_Intersects(shape, shape) from cola_markets"; //$NON-NLS-1$
-        String output = "SELECT SDO_RELATE(COLA_MARKETS.SHAPE, COLA_MARKETS.SHAPE, 'mask=anyinteract') FROM COLA_MARKETS"; //$NON-NLS-1$
+        String output = "SELECT CASE WHEN SDO_RELATE(COLA_MARKETS.SHAPE, COLA_MARKETS.SHAPE, 'mask=anyinteract') = 'TRUE' THEN 'TRUE' ELSE 'FALSE' END FROM COLA_MARKETS"; //$NON-NLS-1$
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
     
     @Test
     public void testGeometryComparison() throws Exception {
         String input = "select shape from cola_markets where ST_Contains(shape, shape) and NOT ST_Intersects(shape, shape)"; //$NON-NLS-1$
-        String output = "SELECT SDO_UTIL.TO_GMLGEOMETRY(COLA_MARKETS.SHAPE) FROM COLA_MARKETS WHERE SDO_RELATE(COLA_MARKETS.SHAPE, COLA_MARKETS.SHAPE, 'mask=contains') = 'TRUE' AND SDO_RELATE(COLA_MARKETS.SHAPE, COLA_MARKETS.SHAPE, 'mask=anyinteract') <> 'TRUE'"; //$NON-NLS-1$
+        String output = "SELECT SDO_UTIL.TO_GMLGEOMETRY(COLA_MARKETS.SHAPE) FROM COLA_MARKETS WHERE CASE WHEN SDO_RELATE(COLA_MARKETS.SHAPE, COLA_MARKETS.SHAPE, 'mask=contains') = 'CONTAINS' THEN 'TRUE' ELSE 'FALSE' END = 'TRUE' AND CASE WHEN SDO_RELATE(COLA_MARKETS.SHAPE, COLA_MARKETS.SHAPE, 'mask=anyinteract') = 'TRUE' THEN 'TRUE' ELSE 'FALSE' END <> 'TRUE'"; //$NON-NLS-1$
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
     
