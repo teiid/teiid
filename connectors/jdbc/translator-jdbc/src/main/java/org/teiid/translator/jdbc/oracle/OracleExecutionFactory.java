@@ -290,15 +290,15 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 			}
     	}); 
 
-        registerFunctionModifier(SourceSystemFunctions.ST_DISTANCE, new TemplateFunctionModifier("SDO_GEOM.DISTANCE(", 0, ", ", 1, ", 0.005)")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$  
+        registerFunctionModifier(SourceSystemFunctions.ST_DISTANCE, new TemplateFunctionModifier("SDO_GEOM.SDO_DISTANCE(", 0, ", ", 1, ", 0.005)")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
         // Disjoint mask cannot be used with SDO_RELATE (says docs).
-        registerFunctionModifier(SourceSystemFunctions.ST_DISJOINT, new TemplateFunctionModifier("SDO_GEOM.RELATE(", 0, ", 'disjoint', ", 1,", 0.005)")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        registerFunctionModifier(SourceSystemFunctions.ST_DISJOINT, new TemplateFunctionModifier("CASE SDO_GEOM.RELATE(", 0, ", 'disjoint', ", 1,", 0.005) WHEN 'DISJOINT' THEN 'TRUE' ELSE 'FALSE' END")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
         registerFunctionModifier(SourceSystemFunctions.ST_CONTAINS, new OracleRelateModifier("contains")); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.ST_CROSSES, new OracleRelateModifier("overlapbydisjoint")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_CROSSES, new OracleRelateModifier("overlapbdydisjoint")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_INTERSECTS, new OracleRelateModifier("anyinteract")); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.ST_OVERLAPS, new OracleRelateModifier("overlapbydisjoint")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_OVERLAPS, new OracleRelateModifier("overlapbdyintersect")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_TOUCHES, new OracleRelateModifier("touch")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_EQUALS, new OracleRelateModifier("EQUAL")); //$NON-NLS-1$
         //registerFunctionModifier(SourceSystemFunctions.ST_WITHIN, new OracleRelateModifier("inside")); //$NON-NLS-1$

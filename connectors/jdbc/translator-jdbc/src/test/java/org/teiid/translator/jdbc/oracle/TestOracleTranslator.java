@@ -1207,14 +1207,14 @@ public class TestOracleTranslator {
     @Test
     public void testGeometryDistance() throws Exception {
         String input = "select ST_Distance(shape, shape) from cola_markets"; //$NON-NLS-1$
-        String output = "SELECT SDO_GEOM.DISTANCE(COLA_MARKETS.SHAPE, COLA_MARKETS.SHAPE, 0.005) FROM COLA_MARKETS"; //$NON-NLS-1$
+        String output = "SELECT SDO_GEOM.SDO_DISTANCE(COLA_MARKETS.SHAPE, COLA_MARKETS.SHAPE, 0.005) FROM COLA_MARKETS"; //$NON-NLS-1$
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
 
     @Test
     public void testGeometryDisjoint() throws Exception {
         String input = "select ST_Disjoint(shape, shape) from cola_markets"; //$NON-NLS-1$
-        String output = "SELECT SDO_GEOM.RELATE(COLA_MARKETS.SHAPE, 'disjoint', COLA_MARKETS.SHAPE, 0.005) FROM COLA_MARKETS"; //$NON-NLS-1$
+        String output = "SELECT CASE SDO_GEOM.RELATE(COLA_MARKETS.SHAPE, 'disjoint', COLA_MARKETS.SHAPE, 0.005) WHEN 'DISJOINT' THEN 'TRUE' ELSE 'FALSE' END FROM COLA_MARKETS"; //$NON-NLS-1$
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
 
