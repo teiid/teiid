@@ -1072,7 +1072,7 @@ public class TestOracleTranslator {
     }
     
     @Test public void testWith() throws Exception {
-        String input = "with a (col) as (select intkey from bqt1.smallb) select intkey, col from bqt1.smalla, a where intkey = 5"; //$NON-NLS-1$
+        String input = "with a (col) as /*+ no_inline */ (select intkey from bqt1.smallb) select intkey, col from bqt1.smalla, a where intkey = 5"; //$NON-NLS-1$
         String output = "WITH a AS (SELECT SmallB.IntKey AS col FROM SmallB) SELECT SmallA.IntKey, a.col FROM SmallA, a WHERE SmallA.IntKey = 5"; //$NON-NLS-1$
                
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, null,
@@ -1081,7 +1081,7 @@ public class TestOracleTranslator {
     }
     
     @Test public void testWithAndLimit() throws Exception {
-        String input = "with a (col) as (select intkey from bqt1.smallb) select intkey, col from bqt1.smalla, a where intkey = 5 limit 10"; //$NON-NLS-1$
+        String input = "with a (col) as /*+ no_inline */ (select intkey from bqt1.smallb) select intkey, col from bqt1.smalla, a where intkey = 5 limit 10"; //$NON-NLS-1$
         String output = "WITH a AS (SELECT SmallB.IntKey AS col FROM SmallB) SELECT * FROM (SELECT SmallA.IntKey, a.col FROM SmallA, a WHERE SmallA.IntKey = 5) WHERE ROWNUM <= 10"; //$NON-NLS-1$
                
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, null,
@@ -1207,14 +1207,14 @@ public class TestOracleTranslator {
     @Test
     public void testGeometryDistance() throws Exception {
         String input = "select ST_Distance(shape, shape) from cola_markets"; //$NON-NLS-1$
-        String output = "SELECT SDO_GEOM.DISTANCE(COLA_MARKETS.SHAPE, COLA_MARKETS.SHAPE, 0.005) FROM COLA_MARKETS"; //$NON-NLS-1$
+        String output = "SELECT SDO_GEOM.SDO_DISTANCE(COLA_MARKETS.SHAPE, COLA_MARKETS.SHAPE, 0.005) FROM COLA_MARKETS"; //$NON-NLS-1$
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
 
     @Test
     public void testGeometryDisjoint() throws Exception {
         String input = "select ST_Disjoint(shape, shape) from cola_markets"; //$NON-NLS-1$
-        String output = "SELECT SDO_GEOM.RELATE(COLA_MARKETS.SHAPE, 'disjoint', COLA_MARKETS.SHAPE, 0.005) FROM COLA_MARKETS"; //$NON-NLS-1$
+        String output = "SELECT CASE SDO_GEOM.RELATE(COLA_MARKETS.SHAPE, 'disjoint', COLA_MARKETS.SHAPE, 0.005) WHEN 'DISJOINT' THEN 'TRUE' ELSE 'FALSE' END FROM COLA_MARKETS"; //$NON-NLS-1$
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
 

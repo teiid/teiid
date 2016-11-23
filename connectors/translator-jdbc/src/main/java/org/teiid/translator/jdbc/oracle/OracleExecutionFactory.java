@@ -61,8 +61,8 @@ import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
+import org.teiid.translator.TypeFacility.RUNTIME_CODES;
 import org.teiid.translator.jdbc.*;
-
 
 @Translator(name="oracle", description="A translator for Oracle 9i Database or later")
 public class OracleExecutionFactory extends JDBCExecutionFactory {
@@ -218,6 +218,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.DATE, new ConvertModifier.FormatModifier("to_date", DATE_FORMAT)); //$NON-NLS-1$ 
     	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIME, new ConvertModifier.FormatModifier("to_date", TIME_FORMAT)); //$NON-NLS-1$ 
     	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIMESTAMP, new ConvertModifier.FormatModifier("to_timestamp", TIMESTAMP_FORMAT)); //$NON-NLS-1$ 
+    	convertModifier.addConvert(FunctionModifier.CLOB, FunctionModifier.STRING, new TemplateFunctionModifier("DBMS_LOB.substr(", 0, ", 4000)")); //$NON-NLS-1$ //$NON-NLS-2$
     	convertModifier.addTypeConversion(new ConvertModifier.FormatModifier("to_char"), FunctionModifier.STRING); //$NON-NLS-1$
     	//NOTE: numeric handling in Oracle is split only between integral vs. floating/decimal types
     	convertModifier.addTypeConversion(new ConvertModifier.FormatModifier("to_number"), //$NON-NLS-1$
@@ -280,10 +281,10 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 			}
     	}); 
 
-        registerFunctionModifier(SourceSystemFunctions.ST_DISTANCE, new TemplateFunctionModifier("SDO_GEOM.DISTANCE(", 0, ", ", 1, ", 0.005)")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$  
+        registerFunctionModifier(SourceSystemFunctions.ST_DISTANCE, new TemplateFunctionModifier("SDO_GEOM.SDO_DISTANCE(", 0, ", ", 1, ", 0.005)")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
         // Disjoint mask cannot be used with SDO_RELATE (says docs).
-        registerFunctionModifier(SourceSystemFunctions.ST_DISJOINT, new TemplateFunctionModifier("SDO_GEOM.RELATE(", 0, ", 'disjoint', ", 1,", 0.005)")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        registerFunctionModifier(SourceSystemFunctions.ST_DISJOINT, new TemplateFunctionModifier("CASE SDO_GEOM.RELATE(", 0, ", 'disjoint', ", 1,", 0.005) WHEN 'DISJOINT' THEN 'TRUE' ELSE 'FALSE' END")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
         registerFunctionModifier(SourceSystemFunctions.ST_CONTAINS, new AliasModifier("SDO_CONTAINS")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_INTERSECTS, new AliasModifier("SDO_ANYINTERACT")); //$NON-NLS-1$
@@ -814,14 +815,14 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add("SECOND"); //$NON-NLS-1$
         supportedFunctions.add("QUARTER"); //$NON-NLS-1$
         supportedFunctions.add("WEEK"); //$NON-NLS-1$
-        supportedFunctions.add(SourceSystemFunctions.FORMATTIMESTAMP);
-        //TEIID-4656
-        //supportedFunctions.add(SourceSystemFunctions.PARSETIMESTAMP);
+        supportedFunctions.add(SourceSystemFunctions.FORMATTIMESTAMP); 
+        supportedFunctions.add(SourceSystemFunctions.PARSETIMESTAMP);
         supportedFunctions.add("CAST"); //$NON-NLS-1$
         supportedFunctions.add("CONVERT"); //$NON-NLS-1$
         supportedFunctions.add("IFNULL"); //$NON-NLS-1$
         supportedFunctions.add("NVL");      //$NON-NLS-1$ 
         supportedFunctions.add("COALESCE"); //$NON-NLS-1$
+        supportedFunctions.add(SourceSystemFunctions.ROUND); 
         supportedFunctions.add(RELATE);
         supportedFunctions.add(NEAREST_NEIGHBOR);
         supportedFunctions.add(NEAREST_NEIGHBOR_DISTANCE);
@@ -1107,4 +1108,12 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsSubqueryInOn() {
     	return false; //even oracle 12 still has issues if a with clause is also in the source query
     }
+    
+    public boolean supportsConvert(int fromType, int toType) {
+    	//allow conversion from clob to string
+		if (fromType == RUNTIME_CODES.OBJECT || fromType == RUNTIME_CODES.XML || fromType == RUNTIME_CODES.BLOB || toType == RUNTIME_CODES.CLOB || toType == RUNTIME_CODES.XML || toType == RUNTIME_CODES.BLOB) {
+			return false;
+		}
+		return true;
+	}
 }
