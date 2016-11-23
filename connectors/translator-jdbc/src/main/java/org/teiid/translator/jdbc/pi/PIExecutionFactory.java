@@ -108,7 +108,6 @@ public class PIExecutionFactory extends JDBCExecutionFactory {
         addPushDownFunction(PI, "DIGSTRING", STRING, INTEGER); //$NON-NLS-1$
         addPushDownFunction(PI, "PE", STRING, OBJECT); //$NON-NLS-1$
         
-        addPushDownFunction(PI, "ParentName", STRING, STRING, INTEGER); //$NON-NLS-1$
         addPushDownFunction(PI, "VarType", STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(PI, "UOMID", STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(PI, "UOMName", STRING, STRING); //$NON-NLS-1$
