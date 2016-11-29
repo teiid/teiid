@@ -102,6 +102,7 @@
         <version.org.springframework>3.2.12.RELEASE</version.org.springframework>
         <version.org.springframework.asm>3.1.4.RELEASE</version.org.springframework.asm>
         <version.commons-logging>1.1</version.commons-logging>
+        <version.commons-net>3.5</version.commons-net>
         <version.commons-configuration>1.6</version.commons-configuration>
         <version.org.apache.ant>1.8.2</version.org.apache.ant>
         <version.com.fasterxml.jackson.dataformat>2.4.5</version.com.fasterxml.jackson.dataformat>	 
@@ -1722,6 +1723,11 @@
 			    <artifactId>annotations</artifactId>
 			    <version>${version.com.google.code.findbugs}</version>
 			</dependency>			            
+            <dependency>
+                <groupId>commons-net</groupId>
+                <artifactId>commons-net</artifactId>
+                <version>${version.commons-net}</version>
+            </dependency>
         </dependencies>
 	</dependencyManagement>
 	<modules>

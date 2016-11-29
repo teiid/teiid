@@ -16,6 +16,7 @@
     <module>translator-file</module>
     <module>translator-excel</module>
     <module>connector-file</module>
+    <module>connector-ftp</module>
     <module>feature-pack-file</module>
   </modules>
 
