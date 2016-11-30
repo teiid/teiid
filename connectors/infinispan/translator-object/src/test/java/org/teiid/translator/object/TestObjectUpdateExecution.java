@@ -41,21 +41,7 @@ public class TestObjectUpdateExecution {
 		
 		// pre-test of the object connection 
 		CONNECTION = TradesCacheSource.createConnection();
-		
-//		Object p = CONNECTION.get(new Long(1).longValue());
-//
-//		assertNotNull(p);
-//		
-//		Object o = CONNECTION.remove(new Long(1).longValue());
-//		assertNotNull(o);
-//		assertTrue(p == o);
-//		
-//		Object p2 = CONNECTION.get(new Long(1).longValue());
-//
-//		assertNull(p2);
-		
-		 
-		
+
     }
 	
 
@@ -81,6 +67,20 @@ public class TestObjectUpdateExecution {
 		assertTrue(p.getTradeId() == 99);
 		assertTrue(p.isSettled());
 	
+	}
+	
+	@Test( expected = TranslatorException.class )
+	public void testInsertOfDuplicateRootObject() throws Exception {
+		Object o = CONNECTION.get(new Long(2).longValue());
+		assertNotNull(o);
+		Command command = translationUtility
+				.parseCommand("Insert into Trade_Mat.Trade_Mat.Trade (tradeId, TradeName, settled) VALUES (2, 'Duplicate 2', 'true')");
+		// no search required by the UpdateExecution logic
+		@SuppressWarnings("unchecked")
+		ObjectUpdateExecution ie = createExecution(command, Collections.EMPTY_LIST);
+
+		ie.execute();
+
 	}
 	
 	@Test
@@ -110,16 +110,6 @@ public class TestObjectUpdateExecution {
 	@Test
 	public void testInsertChildClass() throws Exception {
 		CONNECTION = TradesCacheSource.createConnection();
-		insertChildClass();
-	}
-//
-//	@Test
-//	public void testInsertChildClassNoClassTypeDefined() throws Exception {
-//		CONNECTION = TradesCacheSource.createConnection();
-//		insertChildClass();
-//	}
-		
-	private void insertChildClass() throws Exception {
 		assertNotNull(CONNECTION.get((new Long(2).longValue())));
 
 		Command command = translationUtility
