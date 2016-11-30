@@ -24,7 +24,6 @@ package org.teiid.resource.adapter.infinispan.hotrod;
 import static org.teiid.language.visitor.SQLStringVisitor.getRecordName;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -95,14 +94,14 @@ public final class DSLSearch implements SearchType  {
 			Object value,   ExecutionContext executionContext) throws TranslatorException  {	
 		
 		try {
-			return performSearch(columnNameInSource, value);
+			return performSearch(columnNameInSource, value, conn);
 		} finally {
 			conn = null;
 		}
 	}
 	
-	private Object performSearch(String columnNameInSource,
-			Object value)  throws TranslatorException  {	
+	private static Object performSearch(String columnNameInSource,
+			Object value, ObjectConnection conn)  throws TranslatorException  {	
 		
 		@SuppressWarnings("rawtypes")
 		QueryBuilder qb = getQueryBuilder(conn);
@@ -115,9 +114,7 @@ public final class DSLSearch implements SearchType  {
 		List<Object> results = query.list();
 		if (results.size() == 1) {
 			return results.get(0);
-		} else if (results.size() > 1) {
-//			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID21504, value.toString()));
-		}
+		} 
 		
 		return null;
 	}
@@ -127,7 +124,7 @@ public final class DSLSearch implements SearchType  {
 	public List<Object> performSearch(ObjectVisitor visitor,
 		  ExecutionContext executionContext) throws TranslatorException  {			
 		try {
-			return performSearch(visitor);
+			return performSearch(visitor, conn);
 		} finally {
 			conn = null;
 		}
@@ -146,7 +143,7 @@ public final class DSLSearch implements SearchType  {
 		return results;
 	}
 	
-	private List<Object> performSearch(ObjectVisitor visitor) throws TranslatorException  {			
+	private static List<Object> performSearch(ObjectVisitor visitor, ObjectConnection conn) throws TranslatorException  {			
 
 		Condition where = visitor.getWhereCriteria();
 		OrderBy orderby = visitor.getOrderBy();		
@@ -276,7 +273,7 @@ public final class DSLSearch implements SearchType  {
 	}
 
 	@SuppressWarnings("rawtypes")
-	public static FilterConditionContext visit(Comparison obj, QueryBuilder queryBuilder, FilterConditionBeginContext fcbc) throws TranslatorException {
+	private static FilterConditionContext visit(Comparison obj, QueryBuilder queryBuilder, FilterConditionBeginContext fcbc) throws TranslatorException {
 
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
 				"Parsing Comparison criteria."); //$NON-NLS-1$
@@ -360,7 +357,7 @@ public final class DSLSearch implements SearchType  {
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static FilterConditionContext visit(In obj, QueryBuilder queryBuilder, FilterConditionBeginContext fcbc) throws TranslatorException {
+	private static FilterConditionContext visit(In obj, QueryBuilder queryBuilder, FilterConditionBeginContext fcbc) throws TranslatorException {
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Parsing IN criteria."); //$NON-NLS-1$
 
 		Expression lhs = obj.getLeftExpression();
@@ -403,7 +400,7 @@ public final class DSLSearch implements SearchType  {
 	}
 
 	@SuppressWarnings("rawtypes")
-	public static FilterConditionContext visit(Like obj, QueryBuilder queryBuilder, FilterConditionBeginContext fcbc) throws TranslatorException {
+	private static FilterConditionContext visit(Like obj, QueryBuilder queryBuilder, FilterConditionBeginContext fcbc) throws TranslatorException {
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
 				"Parsing LIKE criteria."); //$NON-NLS-1$
 
@@ -443,7 +440,7 @@ public final class DSLSearch implements SearchType  {
 	}
 	
 	@SuppressWarnings("rawtypes")
-	public static FilterConditionContext visit(IsNull obj, QueryBuilder queryBuilder, FilterConditionBeginContext fcbc)  {
+	private static FilterConditionContext visit(IsNull obj, QueryBuilder queryBuilder, FilterConditionBeginContext fcbc)  {
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
 				"Parsing IsNull criteria."); //$NON-NLS-1$
 

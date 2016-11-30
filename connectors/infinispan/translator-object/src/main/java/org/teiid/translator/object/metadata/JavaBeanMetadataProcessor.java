@@ -53,6 +53,7 @@ import org.teiid.translator.object.ObjectPlugin;
 public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnection>{
 	
 	private static final String PRIMARY_TABLE="primary_table"; //$NON-NLS-1$
+	private static final String STAGING_TABLE_PREFIX = "ST_";
 
 	public static final String OBJECT_URI = "{http://www.teiid.org/translator/object/2016}"; //$NON-NLS-1$
 	
@@ -66,12 +67,11 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 	public static final String VIEWTABLE_SUFFIX = "View"; //$NON-NLS-1$
 	public static final String OBJECT_COL_SUFFIX = "Object"; //$NON-NLS-1$
 	
-	protected boolean isUpdatable = false;
 	protected boolean useAnnotations = false;
 	protected Table rootTable = null;
 	protected Method pkMethod=null;
 	protected boolean materializedSource=false;
-
+	private Table stagingTable = null;
 	
 	public JavaBeanMetadataProcessor(boolean useAnnotations) {
 		this.useAnnotations = useAnnotations;
@@ -83,26 +83,17 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 		this.materializedSource = conn.configuredForMaterialization();
 		Class<?> type = conn.getCacheClassType();
 
-		rootTable =createRootTable(mf, type, conn, false);
+		createRootTable(mf, type, conn);
 				
 		if (materializedSource) {
-			
-			Table stageTable = createTable(mf, type, true);
-						
-			stageTable.setColumns(rootTable.getColumns());
-			stageTable.setForiegnKeys(rootTable.getForeignKeys());
-			stageTable.setFunctionBasedIndexes(rootTable.getFunctionBasedIndexes());
-			stageTable.setIndexes(rootTable.getIndexes());
-			stageTable.setParent(rootTable.getParent());
-			stageTable.setSupportsUpdate(true);
-			stageTable.setUniqueKeys(rootTable.getUniqueKeys());
-			stageTable.setPrimaryKey(rootTable.getPrimaryKey());
-			stageTable.setProperty(JavaBeanMetadataProcessor.PRIMARY_TABLE_PROPERTY, rootTable.getFullName());
+			stagingTable.setParent(rootTable.getParent());
+			stagingTable.setSupportsUpdate(true);
+			stagingTable.setProperty(JavaBeanMetadataProcessor.PRIMARY_TABLE_PROPERTY, rootTable.getFullName());
 		}
 	}
 	
 	
-	private Table createRootTable(MetadataFactory mf, Class<?> entity,  ObjectConnection conn, boolean staging ) throws TranslatorException {
+	private void createRootTable(MetadataFactory mf, Class<?> entity,  ObjectConnection conn ) throws TranslatorException {
 				
 
 		Map<String, Method> methods=null;
@@ -118,30 +109,45 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 		}		
 		
 		String pkField = conn.getPkField();
-		determineUpdatable(conn, pkField, entity.getSimpleName(), methods);
-	
-		Table t = createTable(mf, entity, staging);
-		if (! staging) {
-			this.rootTable = t;
+		boolean updatable = determineUpdatable(conn, pkField, entity.getSimpleName(), methods);
+
+		rootTable = createTable(mf, entity, updatable, false);
+
+		if (materializedSource) {
+			stagingTable = createTable(mf, entity, true, true);
 		}
 
-		String columnName = t.getName() + OBJECT_COL_SUFFIX;
-		addColumn(mf, entity, columnName, "this", SearchType.Unsearchable, t, false, NullType.Nullable, false); //$NON-NLS-1$				
+		if (!materializedSource) {
+			String columnName = rootTable.getName() + OBJECT_COL_SUFFIX;
+			addColumn(mf, entity, columnName, "this", SearchType.Unsearchable, rootTable, false, NullType.Nullable, false); //$NON-NLS-1$	
+		}
 		
 		String colname = getNameFromMethodName(pkMethod.getName());
         if (pkMethod != null) {
 
-            addColumn(mf, pkMethod.getReturnType(), pkField, pkField, SearchType.Searchable, this.rootTable, true, NullType.No_Nulls, this.isUpdatable);
+            addColumn(mf, pkMethod.getReturnType(), pkField, pkField, SearchType.Searchable, this.rootTable, true, NullType.No_Nulls, updatable);
+            
+    		if (materializedSource) {
+ 	           addColumn(mf, pkMethod.getReturnType(), pkField, pkField, SearchType.Searchable, stagingTable, true, NullType.No_Nulls, true);
+    		}
         } else {
         	// add a column so the PKey can be created, but make it not selectable
-            addColumn(mf, java.lang.String.class, pkField, pkField, SearchType.Searchable, this.rootTable, false, NullType.Unknown, this.isUpdatable);
+            addColumn(mf, java.lang.String.class, pkField, pkField, SearchType.Searchable, this.rootTable, false, NullType.Unknown, updatable);
+    		if (materializedSource) {
+                addColumn(mf, java.lang.String.class, pkField, pkField, SearchType.Searchable, stagingTable, false, NullType.Unknown, true);
+    		}
         }
                      
-        addPrimaryKey(mf, colname,t);
+        addPrimaryKey(mf, colname, rootTable);
 
-		addTableContents(mf, t, entity, colname, conn, staging, methods, writeMethods);
-		
-		return t;
+		if (materializedSource) {
+	        addPrimaryKey(mf, colname , stagingTable);
+		}
+
+		addTableContents(mf, rootTable, entity, colname, conn, false, updatable, methods, writeMethods);
+		if (materializedSource) {
+			addTableContents(mf, stagingTable, entity, colname, conn, true, updatable, methods, writeMethods);
+		}
 
 	}
 	
@@ -155,8 +161,7 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 
 	}
 	
-	private String determineUpdatable(ObjectConnection conn, String pkField, String entityName, Map<String, Method> methods) {
-		setIsUpdateable(pkField != null ? true : false);
+	private boolean determineUpdatable(ObjectConnection conn, String pkField, String entityName, Map<String, Method> methods) {
 		
 	    this.pkMethod = null;
 	    if (pkField != null) {
@@ -166,31 +171,27 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 			LogManager.logWarning(LogConstants.CTX_CONNECTOR, ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21000, entityName));				
         }
 	    
-	    if (pkMethod != null) {
-	    	return getNameFromMethodName(pkMethod.getName());
-	    } 
-	    
-	    return "pkField";
+	    return (materializedSource ? true : (pkField != null ? true : false));
 	}
 	
-	private Table createTable(MetadataFactory mf, Class<?> entity, boolean staging) {
+	private Table createTable(MetadataFactory mf, Class<?> entity, boolean updatable, boolean staging) {
 			
 		String tableName = getTableName(entity);
 		if (staging) {
 			tableName = "ST_" + tableName; //$NON-NLS-1$
 		}
-		Table table = mf.getSchema().getTable(tableName);
+			
+		Table table = doesTableExist(mf, tableName, staging);
 		if (table != null) {
-			//TODO: probably an error
 			return table;
 		}
 		table = mf.addTable(tableName);
-		table.setSupportsUpdate(this.isUpdatable);
+		table.setSupportsUpdate(updatable);
 	
 		return table;
 	}
 	
-	private void addTableContents(MetadataFactory mf, Table table, Class<?> entity, String pkField, ObjectConnection conn, boolean staging, Map<String, Method> readMethods, Map<String, Method> writeMethods) throws TranslatorException {
+	private void addTableContents(MetadataFactory mf, Table table, Class<?> entity, String pkField, ObjectConnection conn, boolean staging, boolean updatable, Map<String, Method> readMethods, Map<String, Method> writeMethods) throws TranslatorException {
         
 		List<Class<?>> regClasses = conn.getClassRegistry().getRegisteredClasses();
 		
@@ -214,7 +215,7 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 						
 					if (regClasses.contains(entry.getValue().getReturnType())) {
 						
-						Table childTable = createChildTable(mf, entry.getValue().getReturnType(), pkField, conn);
+						Table childTable = createChildTable(mf, entry.getValue().getReturnType(), pkField, updatable, conn);
 						createRelationShip(mf, childTable, (Method) o, this.rootTable, this.pkMethod, conn);
 
 					} else {
@@ -230,7 +231,7 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 			
 			// only if there's a corresponding set method is the column set to updatable
 			boolean columnUpdatable = false;
-			if (this.isUpdatable) {
+			if (updatable) {
 				if (doesSetMethodExist(writeMethods, m)){
 					columnUpdatable = true;
 				} 
@@ -264,22 +265,16 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 			// getNameFromMethodName(m.getName())
 			addColumn(mf, m.getReturnType(), entry.getValue(), entry.getValue(), st, table, true, nt, columnUpdatable);			
 		}
-		
-		if (staging) {
-			table.setProperty(PRIMARY_TABLE_PROPERTY, rootTable.getFullName());
-
-		}
-
 	}
 	
 	// this should not be performed when the data source is being used for staging.
 	// children tables are not supported for materializaton
-	private Table createChildTable(MetadataFactory mf, Class<?> entity,  String pkField, ObjectConnection conn ) throws TranslatorException {
+	private Table createChildTable(MetadataFactory mf, Class<?> entity,  String pkField, boolean updatable, ObjectConnection conn ) throws TranslatorException {
 		Map<String, Method> methods=null;
 		Map<String, Method> writeMethods=null;
 		try {
 			ClassRegistry registry = conn.getClassRegistry();
-			// only read methods are used for determining what columns will be defined
+			// only read methods are used for determining what columns will be defined, boolean staging
 			methods = registry.getReadClassMethods(entity.getName());
 			
 			writeMethods = registry.getWriteClassMethods(entity.getName());
@@ -287,12 +282,25 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 			throw new MetadataException(e);
 		}		
 
-		Table childTable = createTable(mf, entity, false);
+		Table childTable = createTable(mf, entity, updatable, false);
 
-		addTableContents(mf, childTable, entity, pkField, conn, false, methods, writeMethods);
+		addTableContents(mf, childTable, entity, pkField, conn, false, updatable, methods, writeMethods);
 	
 		return childTable;
 
+	}
+	
+	private Table doesTableExist(MetadataFactory mf, String tableName, boolean staging) {
+		if (staging) {
+			tableName = STAGING_TABLE_PREFIX + tableName; //$NON-NLS-1$
+		}
+		Table table = mf.getSchema().getTable(tableName);
+
+		if (table != null) {
+			//TODO: probably an error
+			return table;
+		}
+		return null;
 	}
 		
 	protected boolean isMethodSearchable(Class<?> entity, Method m) {
@@ -371,10 +379,6 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 	 */
 	protected String getTableName(Class<?> entity) {
 		return entity.getSimpleName();
-	}
-	
-	protected void setIsUpdateable(boolean isUpdateable) {
-		this.isUpdatable = isUpdateable;
 	}
 	
 	protected Column addColumn(MetadataFactory mf,  Class<?> type, String attributeName, String nis, SearchType searchType, Table entityTable, boolean selectable, NullType nt, boolean updatable) {

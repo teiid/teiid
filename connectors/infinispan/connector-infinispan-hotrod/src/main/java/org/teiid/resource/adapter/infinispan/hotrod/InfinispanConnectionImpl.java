@@ -23,10 +23,7 @@
 package org.teiid.resource.adapter.infinispan.hotrod;
 
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 import javax.resource.ResourceException;
 
@@ -286,6 +283,6 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 
 	@Override
 	public boolean configuredForMaterialization() {
-		return (getDDLHandler().isStagingTarget());
+		return (config.getStagingCacheName() != null);
 	}
 }
