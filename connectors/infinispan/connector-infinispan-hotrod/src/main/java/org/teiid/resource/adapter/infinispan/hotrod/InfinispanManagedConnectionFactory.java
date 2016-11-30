@@ -177,10 +177,10 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 	}	
 
 	/**
-	 * Get the <code>cacheName:className[;pkFieldName[:cacheJavaType]]</code> cache
+	 * Get the <code>cacheName:className[:pkFieldName[:cacheJavaType]]</code> cache
 	 * type mappings.
 	 * 
-	 * @return <code>cacheName:className[;pkFieldName[:cacheJavaType]]</code> cache
+	 * @return <code>cacheName:className[:pkFieldName[:cacheJavaType]]</code> cache
 	 *         type mappings
 	 * @see #setCacheTypeMap(String)
 	 */
@@ -188,12 +188,14 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 		return cacheTypes;
 	}
 
+	// 	 TEIID-4582 support all colon separators
 	/**
 	 * Set the cache type mapping
+	 * <code>cacheName:className[:pkFieldName[:cacheJavaType]]</code> or 
 	 * <code>cacheName:className[;pkFieldName[:cacheJavaType]]</code> that represent
 	 * the root node class type for an available cache for access.
 	 * The following is how the string parsed:
-	 * <li>cacheNam = is the name used to retrieve the named cache
+	 * <li>cacheName = is the name used to retrieve the named cache
 	 * <li>className = is the class that is stored in the cache, and will used to create new instances
 	 * <li> [optional] pkFieldName = defined which attribute is defined as the key to the cache, this will be 
 	 * the key used to access the cache for updates.  If not defined, updates will be disabled.
@@ -204,7 +206,7 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 	 * 
 	 * @param cacheTypeMap
 	 *            the cache type mappings passed in the form of
-	 *            <code>cacheName:className[;pkFieldName[:cacheJavaType]]</code>
+	 *            <code>cacheName:className[:pkFieldName[:cacheJavaType]]</code>
 	 * @see #getCacheTypeMap()
 	 */
 	public void setCacheTypeMap(String cacheTypeMap) {
@@ -531,33 +533,56 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 		 * Parsing based on format:  cacheName:className[;pkFieldName[:cacheKeyJavaType]]
 		 * 
 		 */
+		String cacheName = null;
+		String className = null;
+		String pkFieldName = null;
+		String cacheKeyJavaType = null;
 		
-		List<String> parms = StringUtil.getTokens(getCacheTypeMap(), ";"); //$NON-NLS-1$
-		String leftside = parms.get(0);
-		List<String> cacheClassparm = StringUtil.getTokens(leftside, ":");
-		
-		if (cacheClassparm.size() != 2) {
-			throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25022));
+		if (getCacheTypeMap().contains(";")) {
+			List<String> p = StringUtil.getTokens(getCacheTypeMap(), ";"); //$NON-NLS-1$
+			String leftside = p.get(0);
+			List<String> cacheClassparm = StringUtil.getTokens(leftside, ":");
+						
+			if (cacheClassparm.size() != 2) {
+				throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25022));
+			}
+			
+			cacheName = cacheClassparm.get(0);
+			className = cacheClassparm.get(1);
+			
+			if (p.size() == 2) {
+				String rightside = p.get(1);
+				List<String> pkKeyparm = StringUtil.getTokens(rightside, ":");
+				pkFieldName = pkKeyparm.get(0);
+				if (pkKeyparm.size() == 2) {
+					cacheKeyJavaType = pkKeyparm.get(1);
+				}
+			}
+
+		} else {
+			List<String> parms = StringUtil.getTokens(getCacheTypeMap(), ":"); //$NON-NLS-1$
+			if (parms.size() < 2) {
+				throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25022));
+			}
+			
+			cacheName = parms.get(0);
+			className = parms.get(1);
+			
+			if (parms.size() > 2) {
+				pkFieldName = parms.get(2);
+				if (parms.size() == 4) {
+					cacheKeyJavaType = parms.get(3);
+				}
+			}
+			
 		}
-		
-		String cn = cacheClassparm.get(0);
-		setCacheName(cn);
-		String className = cacheClassparm.get(1);
+		setCacheName(cacheName);
 		cacheTypeClass = loadClass(className);
 	
 		methodUtil.registerClass(cacheTypeClass);
-			
-		if (parms.size() == 2) {
-			String rightside = parms.get(1);
-			List<String> pkKeyparm = StringUtil.getTokens(rightside, ":");
-			pkKey = pkKeyparm.get(0);
-			if (pkKeyparm.size() == 2) {
-				String pktype = pkKeyparm.get(1);
-				if (pktype != null) {
-					pkCacheKeyJavaType = loadClass(pktype);
-				}
-			}
-		}
+		
+		if (pkFieldName != null) pkKey = pkFieldName;
+		if (cacheKeyJavaType != null) pkCacheKeyJavaType = getPrimitiveClass(cacheKeyJavaType);
 		
 		cacheSchemaConfigurator.initialize(this, methodUtil);
 
@@ -775,6 +800,35 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 		cl = null;
 		methodUtil.cleanUp();
 
+	}
+	
+	private Class<?> getPrimitiveClass(String className) throws ResourceException {
+		if (className.contains(".")) {
+			return loadClass(className);
+		}
+		if (className.equalsIgnoreCase("int")) {
+			return int.class;
+		}
+		if (className.equalsIgnoreCase("long")) {
+			return long.class;
+		}
+		if (className.equalsIgnoreCase("double")) {
+			return double.class;
+		}
+		if (className.equalsIgnoreCase("short")) {
+			return short.class;
+		}
+		if (className.equalsIgnoreCase("char")) {
+			return char.class;
+		}		
+		if (className.equalsIgnoreCase("float")) {
+			return float.class;
+		}
+		if (className.equalsIgnoreCase("boolean")) {
+			return boolean.class;
+		}
+		
+		return loadClass(className);
 	}
 	
 }

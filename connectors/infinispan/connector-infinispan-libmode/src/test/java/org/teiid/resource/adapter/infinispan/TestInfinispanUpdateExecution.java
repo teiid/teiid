@@ -15,7 +15,7 @@ import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.language.Command;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.infinispan.libmode.InfinispanCacheExecutionFactory;
+import org.teiid.translator.infinispan.libmode.InfinispanLibModeExecutionFactory;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectUpdateExecution;
 import org.teiid.translator.object.testdata.annotated.Trade;
@@ -30,7 +30,7 @@ public class TestInfinispanUpdateExecution {
 	private static ExecutionContext context;
 	private static ObjectConnection CONNECTION;
 	
-	private static InfinispanCacheExecutionFactory TRANS_FACTORY = null;
+	private static InfinispanLibModeExecutionFactory TRANS_FACTORY = null;
 
 	@BeforeClass
     public static void beforeEachClass() throws Exception {  
@@ -39,10 +39,10 @@ public class TestInfinispanUpdateExecution {
 		factory = new InfinispanManagedConnectionFactory();
 
 		factory.setConfigurationFileNameForLocalCache("./src/test/resources/infinispan_persistent_config.xml");
-		factory.setCacheTypeMap(InfinispanTestHelper.TRADE_CACHE_NAME + ":" + "org.teiid.translator.object.testdata.annotated.Trade;longValue:long");
+		factory.setCacheTypeMap(InfinispanTestHelper.TRADE_CACHE_NAME + ":" + "org.teiid.translator.object.testdata.annotated.Trade:longValue:long");
 
 		
-		TRANS_FACTORY = new InfinispanCacheExecutionFactory();
+		TRANS_FACTORY = new InfinispanLibModeExecutionFactory();
 		TRANS_FACTORY.start();
 		
 		CONNECTION = factory.createConnectionFactory().getConnection();

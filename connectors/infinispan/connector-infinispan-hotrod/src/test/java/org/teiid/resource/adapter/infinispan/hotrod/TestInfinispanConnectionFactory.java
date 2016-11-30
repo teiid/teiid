@@ -111,6 +111,26 @@ public class TestInfinispanConnectionFactory  {
 	}
 	
 	 /**
+	 * TEIID-4582 support all colon delimiters
+     * @throws Exception
+     */
+	@Test public void testtCacheTypeMap11a() throws Exception {
+		afactory.setProtobufDefinitionFile("allTypes.proto");
+		afactory.setMessageMarshallers("org.jboss.teiid.jdg_remote.pojo.AllTypes:org.jboss.teiid.jdg_remote.pojo.marshaller.AllTypesMarshaller");
+		afactory.setMessageDescriptor("org.jboss.teiid.jdg_remote.pojo.AllTypes");
+		afactory.setCacheTypeMap("AllTypesCache:org.jboss.teiid.jdg_remote.pojo.AllTypes:intKey:" + Integer.class.getName());
+		afactory.setHotRodClientPropertiesFile("");
+		
+		
+		afactory.createConnectionFactory().getConnection();
+		
+		assertEquals("CacheClass Type not the same", AllTypes.class, afactory.getCacheClassType());
+		assertEquals("Cache name not the same", "AllTypesCache", afactory.getCacheName());
+		
+		assertEquals("CacheKeyTypeClass not the same", afactory.getCacheKeyClassType(), Integer.class);
+	}
+	
+	 /**
      * Test tCacheTypeMap 2:
      * - cache key type is different, meaning transformation will be needed for updates
      * - 
@@ -166,6 +186,26 @@ public class TestInfinispanConnectionFactory  {
 		afactory.setMessageMarshallers("org.jboss.teiid.jdg_remote.pojo.AllTypes:org.jboss.teiid.jdg_remote.pojo.marshaller.AllTypesMarshaller");
 		afactory.setMessageDescriptor("org.jboss.teiid.jdg_remote.pojo.AllTypes");
 		afactory.setCacheTypeMap("AllTypesCache:org.jboss.teiid.jdg_remote.pojo.AllTypes;intKey");
+		afactory.setHotRodClientPropertiesFile("");
+		
+		
+		afactory.createConnectionFactory().getConnection();
+		
+		assertEquals("CacheClass Type not the same", AllTypes.class, afactory.getCacheClassType());
+		assertEquals("Cache name not the same", "AllTypesCache", afactory.getCacheName());
+		
+		assertNull(afactory.getCacheKeyClassType());
+	}
+	
+	/**
+	 * Test all colon delimiter for cacheTypeMap
+	 * @throws Exception
+	 */
+	@Test public void testCacheTypeMapNoCacheKeytypeB() throws Exception {
+		afactory.setProtobufDefinitionFile("allTypes.proto");
+		afactory.setMessageMarshallers("org.jboss.teiid.jdg_remote.pojo.AllTypes:org.jboss.teiid.jdg_remote.pojo.marshaller.AllTypesMarshaller");
+		afactory.setMessageDescriptor("org.jboss.teiid.jdg_remote.pojo.AllTypes");
+		afactory.setCacheTypeMap("AllTypesCache:org.jboss.teiid.jdg_remote.pojo.AllTypes:intKey");
 		afactory.setHotRodClientPropertiesFile("");
 		
 		
