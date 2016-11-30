@@ -29,11 +29,14 @@ import static org.apache.commons.net.ftp.FTP.EBCDIC_FILE_TYPE;
 import static org.apache.commons.net.ftp.FTP.BINARY_FILE_TYPE;
 import static org.apache.commons.net.ftp.FTP.LOCAL_FILE_TYPE;
 
+import java.io.IOException;
+
 import javax.resource.ResourceException;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPClientConfig;
+import org.apache.commons.net.ftp.FTPReply;
 import org.teiid.core.BundleUtil;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
@@ -43,6 +46,8 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
     private static final long serialVersionUID = -687763504336137294L;
     
     public static final BundleUtil UTIL = BundleUtil.getBundleUtil(FtpManagedConnectionFactory.class);
+    
+    private String parentDirectory;
     
     protected FTPClientConfig config;
 
@@ -72,6 +77,15 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         return config;
     }
 
+    public String getParentDirectory() {
+        return parentDirectory;
+    }
+
+    public void setParentDirectory(String parentDirectory) {
+        isNotNull(parentDirectory, UTIL.getString("parentdirectory_not_null"));//$NON-NLS-1$
+        this.parentDirectory = parentDirectory;
+    }
+
     public void setConfig(FTPClientConfig config) {
         isNotNull(config, UTIL.getString("ftp_client_config"));//$NON-NLS-1$
         this.config = config;
@@ -82,7 +96,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
     }
 
     public void setUsername(String username) {
-        isNotNull(config, UTIL.getString("ftp_client_username"));//$NON-NLS-1$
+        isNotNull(username, UTIL.getString("ftp_client_username"));//$NON-NLS-1$
         this.username = username;
     }
 
@@ -182,22 +196,100 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         this.dataTimeout = dataTimeout;
     }
 
+    @SuppressWarnings("serial")
     @Override
-    public BasicConnectionFactory<FtpConnectionImpl> createConnectionFactory()throws ResourceException {
-        // TODO Auto-generated method stub
-        return null;
+    public BasicConnectionFactory<FtpFileConnectionImpl> createConnectionFactory()throws ResourceException {
+                
+        return new BasicConnectionFactory<FtpFileConnectionImpl>() {
+
+            @Override
+            public FtpFileConnectionImpl getConnection() throws ResourceException {
+                try {
+                    return new FtpFileConnectionImpl(createClient(), parentDirectory);
+                } catch (IOException e) {
+                    throw new ResourceException(e);
+                }
+            }};
     }
     
-    private FTPClient createClient() {
+    private FTPClient createClient() throws IOException, ResourceException {
         
         FTPClient client = createClientInstance();
+        client.configure(this.config);
+        if (this.connectTimeout != null) {
+            client.setConnectTimeout(this.connectTimeout);
+        }
+        if (this.defaultTimeout != null) {
+            client.setDefaultTimeout(this.defaultTimeout);
+        }
+        if (this.dataTimeout != null) {
+            client.setDataTimeout(this.dataTimeout);
+        }
+        client.setControlEncoding(this.controlEncoding);
+        
+        this.postProcessClientBeforeConnect(client);
+        
+        client.connect(this.host, this.port);
+        
+        if (!FTPReply.isPositiveCompletion(client.getReplyCode())) {
+            throw new ResourceException(UTIL.getString("ftp_connect_failed", this.host, this.port)); //$NON-NLS-1$
+        }
+        
+        if (!client.login(this.username, this.password)) {
+            throw new IllegalStateException(UTIL.getString("ftp_login_failed", client.getReplyString())); //$NON-NLS-1$
+        }
+        
+        this.postProcessClientAfterConnect(client);
+        
+        this.updateClientMode(client);
+        client.setFileType(this.fileType);
+        client.setBufferSize(this.bufferSize);
         
         return client;
         
+    }
+    
+    private void updateClientMode(FTPClient client) {
+        switch (this.clientMode) {
+            case ACTIVE_LOCAL_DATA_CONNECTION_MODE:
+                client.enterLocalActiveMode();
+                break;
+            case PASSIVE_LOCAL_DATA_CONNECTION_MODE:
+                client.enterLocalPassiveMode();
+                break;
+            default:
+                break;
+        }
     }
 
     protected FTPClient createClientInstance() {
         return new FTPClient();
     }
-
+    
+    /**
+     * Will handle additional initialization before client.connect() method was invoked.
+     *
+     * @param client The client.
+     * @throws IOException Any IOException.
+     */
+    protected void postProcessClientBeforeConnect(FTPClient client) throws IOException {
+    }
+    
+    /**
+     * Will handle additional initialization after client.connect() method was invoked,
+     * but before any action on the client has been taken
+     *
+     * @param t The client.
+     * @throws IOException Any IOException
+     */
+    protected void postProcessClientAfterConnect(FTPClient client) throws IOException {
+        if (this.parentDirectory == null) {
+            throw new IOException(UTIL.getString("parentdirectory_not_set")); //$NON-NLS-1$
+        }
+        
+        if(!client.changeWorkingDirectory(this.getParentDirectory())){
+            throw new IOException(UTIL.getString("ftp_dir_not_exist", this.getParentDirectory())); //$NON-NLS-1$
+        }
+    }
+    
 }

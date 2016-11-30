@@ -21,11 +21,10 @@
  */
 package org.teiid.resource.adapter.ftp;
 
-import javax.resource.ResourceException;
+import java.io.IOException;
 
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPSClient;
-import org.teiid.resource.spi.BasicConnectionFactory;
 
 public class FtpsManagedConnectionFactory extends FtpManagedConnectionFactory {
 
@@ -37,8 +36,14 @@ public class FtpsManagedConnectionFactory extends FtpManagedConnectionFactory {
     }
 
     @Override
-    public BasicConnectionFactory<FtpConnectionImpl> createConnectionFactory() throws ResourceException {
-        return null;
+    protected void postProcessClientBeforeConnect(FTPClient client) throws IOException {
+        FTPSClient sClient  = (FTPSClient) client;
+        super.postProcessClientBeforeConnect(sClient);
     }
 
+    @Override
+    protected void postProcessClientAfterConnect(FTPClient client) throws IOException {
+        FTPSClient sClient  = (FTPSClient) client;
+        super.postProcessClientAfterConnect(sClient);
+    }
 }

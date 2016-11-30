@@ -26,6 +26,10 @@
             <artifactId>jboss-connector-api_1.7_spec</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>file-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>commons-net</groupId>
             <artifactId>commons-net</artifactId>
         </dependency>

@@ -505,6 +505,11 @@
                 <artifactId>document-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.jboss.teiid.connectors</groupId>
+                <artifactId>file-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         	<dependency>
            	 	<groupId>org.jboss.teiid.connectors</groupId>
             	<artifactId>translator-jdbc</artifactId>    
