@@ -25,6 +25,7 @@ import static org.junit.Assert.*;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.StringReader;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -1791,11 +1792,11 @@ public class TestODataIntegration {
                 		        "{" + 
                 		          "\"a\":\"y\"," + 
                 		          "\"b\":\"a\"," + 
-                		          "\"FKX\":[" + 
+                		          "\"FKX\":" + 
                 		            "{" + 
                 		              "\"@odata.id\":\""+baseURL+"/northwind/m/x('a')\"" + 
                 		            "}" + 
-                		          "]," + 
+                		          "," + 
                 		          "\"z_FKY\":[" + 
                 		            "{" + 
                 		              "\"a\":\"a\"," + 
@@ -1803,22 +1804,22 @@ public class TestODataIntegration {
                 		              "\"FKX\":{" + 
                 		                "\"@odata.id\":\""+baseURL+"/northwind/m/x('a')\"" + 
                 		              "}," + 
-                		              "\"FKY\":[" + 
+                		              "\"FKY\":" + 
                 		                "{" + 
                 		                  "\"@odata.id\":\""+baseURL+"/northwind/m/y('y')\"" + 
                 		                "}" + 
-                		              "]" + 
+                		              "" + 
                 		            "}" + 
                 		          "]" + 
                 		        "}," + 
                 		        "{" + 
                 		          "\"a\":\"y1\"," + 
                 		          "\"b\":\"a\"," + 
-                		          "\"FKX\":[" + 
+                		          "\"FKX\":" + 
                 		            "{" + 
                 		              "\"@odata.id\":\""+baseURL+"/northwind/m/x('a')\"" + 
                 		            "}" + 
-                		          "]," + 
+                		          "," + 
                 		          "\"z_FKY\":[" + 
                 		          "]" + 
                 		        "}" + 
@@ -1829,22 +1830,22 @@ public class TestODataIntegration {
                 		        "\"FKX\":{" + 
                 		          "\"@odata.id\":\""+baseURL+"/northwind/m/x('a')\"" + 
                 		        "}," + 
-                		        "\"FKY\":[" + 
+                		        "\"FKY\":" + 
                 		          "{" + 
                 		            "\"a\":\"y\"," + 
                 		            "\"b\":\"a\"," + 
-                		            "\"FKX\":[" + 
+                		            "\"FKX\":" + 
                 		              "{" + 
                 		                "\"@odata.id\":\""+baseURL+"/northwind/m/x('a')\"" + 
                 		              "}" + 
-                		            "]," + 
+                		            "," + 
                 		            "\"z_FKY\":[" + 
                 		              "{" + 
                 		                "\"@odata.id\":\""+baseURL+"/northwind/m/z('a')\"" + 
                 		              "}" + 
                 		            "]" + 
                 		          "}" + 
-                		        "]" + 
+                		        "" + 
                 		      "}" + 
                 		    "}" + 
                 		  "]" + 
@@ -2619,7 +2620,14 @@ public class TestODataIntegration {
                 Arrays.asList(Arrays.asList(1, 1, "town"), Arrays.asList(2, 1, "state"),
                 Arrays.asList(3, 1,"country"), Arrays.asList(4, 1, "abroad"),
                 Arrays.asList(5,2, "state"), Arrays.asList(6,2, "country"),
-                Arrays.asList(7,3,"town"), Arrays.asList(8,3, "town")));        
+                Arrays.asList(7,3,"town"), Arrays.asList(8,3, "town")));
+
+        hc.addData("SELECT Orders.customerid, Orders.id, Orders.place FROM Orders", 
+                Arrays.asList(Arrays.asList(1, 1, "town"), Arrays.asList(1, 2, "state"),
+                Arrays.asList(1,3, "country"), Arrays.asList(1, 4, "abroad"),
+                Arrays.asList(2,5, "state"), Arrays.asList(2, 6, "country"),
+                Arrays.asList(3,7,"town"), Arrays.asList(3,8, "town")));        
+        
         
         teiid.addTranslator("x12", hc);
         
@@ -2642,13 +2650,12 @@ public class TestODataIntegration {
             localClient = getClient(teiid.getDriver(), "northwind", new Properties());
 
             ContentResponse response = null;
-            
             response = http.newRequest(baseURL + "/northwind/m/Orders(1)/Customer")
                     .method("GET")
                     .send();
             assertEquals(200, response.getStatus());
-            assertEquals("{\"@odata.context\":\"$metadata#Customers\","
-                    + "\"value\":[{\"id\":1,\"name\":\"customer1\"}]}", 
+            assertEquals("{\"@odata.context\":\"$metadata#Customers/$entity\","
+                    + "\"id\":1,\"name\":\"customer1\"}", 
                     response.getContentAsString());
             
             response = http.newRequest(baseURL + "/northwind/m/Orders(1)?$expand=Customer")
@@ -2657,9 +2664,18 @@ public class TestODataIntegration {
             assertEquals(200, response.getStatus());
             assertEquals("{\"@odata.context\":\"$metadata#Orders/$entity\","
                     + "\"id\":1,\"customerid\":1,\"place\":\"town\","
-                    + "\"Customer\":[{\"id\":1,\"name\":\"customer1\"}]}", 
+                    + "\"Customer\":{\"id\":1,\"name\":\"customer1\"}}", 
                     response.getContentAsString());
-            
+            response = http.newRequest(baseURL + "/northwind/m/Orders(1)/Customer/Orders_Customer")
+                    .method("GET")
+                    .send();
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#Customers\","
+            		+ "\"value\":[{\"id\":1,\"customerid\":1,\"place\":\"town\"},"
+            		+ "{\"id\":2,\"customerid\":1,\"place\":\"state\"},"
+            		+ "{\"id\":3,\"customerid\":1,\"place\":\"country\"},"
+            		+ "{\"id\":4,\"customerid\":1,\"place\":\"abroad\"}]}", 
+                    response.getContentAsString());
         } finally {
             localClient = null;
             teiid.undeployVDB("northwind");            
