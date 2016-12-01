@@ -46,6 +46,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.infinispan.libmode.InfinispanPlugin;
 import org.teiid.translator.object.CacheNameProxy;
 import org.teiid.translator.object.ClassRegistry;
 import org.teiid.util.Version;
@@ -106,15 +107,6 @@ public class InfinispanManagedConnectionFactory extends
 		};
 
 	}
-	
-//	public String getCacheName() {
-//		// return the cacheName that is mapped as the alias
-//		return cacheNameProxy.getPrimaryCacheAliasName();
-//	}
-//
-//	public String getCacheStagingName() {
-//		return cacheNameProxy.getStageCacheAliasName();
-//	}
 	
 	/** 
 	 * Call to set the name of the cache to access when calling getCache
@@ -344,32 +336,56 @@ public class InfinispanManagedConnectionFactory extends
 		 * 
 		 */
 		
-		List<String> parms = StringUtil.getTokens(getCacheTypeMap(), ";"); //$NON-NLS-1$
-		String leftside = parms.get(0);
-		List<String> cacheClassparm = StringUtil.getTokens(leftside, ":");
+		String cacheName = null;
+		String className = null;
+		String pkFieldName = null;
+		String cacheKeyJavaType = null;
 		
-		if (cacheClassparm.size() != 2) {
-			throw new InvalidPropertyException(UTIL.gs("TEIID25022"));
-		}
-		
-		String cn = cacheClassparm.get(0);
-		setCacheName(cn);
-		String className = cacheClassparm.get(1);
-		cacheTypeClass = loadClass(className);
-		
-		methodUtil.registerClass(cacheTypeClass);
-
-		if (parms.size() == 2) {
-			String rightside = parms.get(1);
-			List<String> pkKeyparm = StringUtil.getTokens(rightside, ":");
-			pkKey = pkKeyparm.get(0);
-			if (pkKeyparm.size() == 2) {
-				String pktype = pkKeyparm.get(1);
-				if (pktype != null) {
-					pkCacheKeyJavaType = getPrimitiveClass(pktype);
+		if (getCacheTypeMap().contains(";")) {
+			List<String> p = StringUtil.getTokens(getCacheTypeMap(), ";"); //$NON-NLS-1$
+			String leftside = p.get(0);
+			List<String> cacheClassparm = StringUtil.getTokens(leftside, ":");
+						
+			if (cacheClassparm.size() != 2) {
+				throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID21522));
+			}
+			
+			cacheName = cacheClassparm.get(0);
+			className = cacheClassparm.get(1);
+			
+			if (p.size() == 2) {
+				String rightside = p.get(1);
+				List<String> pkKeyparm = StringUtil.getTokens(rightside, ":");
+				pkFieldName = pkKeyparm.get(0);
+				if (pkKeyparm.size() == 2) {
+					cacheKeyJavaType = pkKeyparm.get(1);
 				}
 			}
-		}		
+
+		} else {
+			List<String> parms = StringUtil.getTokens(getCacheTypeMap(), ":"); //$NON-NLS-1$
+			if (parms.size() < 2) {
+				throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID21522));
+			}
+			
+			cacheName = parms.get(0);
+			className = parms.get(1);
+			
+			if (parms.size() > 2) {
+				pkFieldName = parms.get(2);
+				if (parms.size() == 4) {
+					cacheKeyJavaType = parms.get(3);
+				}
+			}
+			
+		}
+		setCacheName(cacheName);
+		cacheTypeClass = loadClass(className);
+	
+		methodUtil.registerClass(cacheTypeClass);
+		
+		if (pkFieldName != null) pkKey = pkFieldName;
+		if (cacheKeyJavaType != null) pkCacheKeyJavaType = getPrimitiveClass(cacheKeyJavaType);
 		
 		return cl;
 
