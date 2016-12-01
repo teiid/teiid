@@ -214,8 +214,8 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 		
 		//TODO: for 1.8 use putIfAbsent
 		
-		Object rootObject = connection.getSearchType().performKeySearch(ObjectUtil.getRecordName(keyCol), keyValue, executionContext) ;
-				//env.performKeySearch(ObjectUtil.getRecordName(keyCol), keyValue, connection, executionContext);
+		//TEIID-4603 dont use DSLSearch, but use the direct key to the cache to lookup the object
+		Object rootObject = connection.get(keyValue);
 
 		if (rootObject != null) {
 			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21007, new Object[] {insert.getTable().getName(), keyValue}));
@@ -275,8 +275,9 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 		
 		fkeyValue = convertKeyValue(fkeyValue, visitor.getPrimaryKeyCol());
 
-		// don't perform a search when doing inserts for materialization
-						
+		// dont get the object based on key to the cache, do the DSL search so that its ensured the object
+		// exist for this root object type.  Using the get(key) could return an invalid object type if 
+		// keys overlap, so the exception thrown here will alert to a possible issue
 		Object rootObject = connection.getSearchType().performKeySearch(fkeyRefColumnName, fkeyValue, executionContext) ; 
 
 		if (rootObject == null) {
