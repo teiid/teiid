@@ -136,13 +136,6 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 		setUseBindingsForDependentJoin(false);
 	}
 
-    
-    private static class OracleRelateModifier extends TemplateFunctionModifier {
-        public OracleRelateModifier(String mask) {
-            super("SDO_RELATE(", 0, ", ", 1, ", 'mask=" + mask + "')"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        }
-    }
-    
     @Override
     public void start() throws TranslatorException {
         super.start();
@@ -292,12 +285,12 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         // Disjoint mask cannot be used with SDO_RELATE (says docs).
         registerFunctionModifier(SourceSystemFunctions.ST_DISJOINT, new TemplateFunctionModifier("SDO_GEOM.RELATE(", 0, ", 'disjoint', ", 1,", 0.005)")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
-        registerFunctionModifier(SourceSystemFunctions.ST_CONTAINS, new OracleRelateModifier("contains")); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.ST_CROSSES, new OracleRelateModifier("overlapbydisjoint")); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.ST_INTERSECTS, new OracleRelateModifier("anyinteract")); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.ST_OVERLAPS, new OracleRelateModifier("overlapbydisjoint")); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.ST_TOUCHES, new OracleRelateModifier("touch")); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.ST_EQUALS, new OracleRelateModifier("EQUAL")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_CONTAINS, new AliasModifier("SDO_CONTAINS")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_INTERSECTS, new AliasModifier("SDO_ANYINTERACT")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_OVERLAPS, new AliasModifier("SDO_OVERLAPBDYINTERSECT")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_CROSSES, new AliasModifier("SDO_OVERLAPBDYDISJOINT")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_TOUCHES, new AliasModifier("SDO_TOUCHES")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_EQUALS, new AliasModifier("SDO_EQUALS")); //$NON-NLS-1$
         //registerFunctionModifier(SourceSystemFunctions.ST_WITHIN, new OracleRelateModifier("inside")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_SRID, new TemplateFunctionModifier("nvl(", 0, ".sdo_srid, 0)")); //$NON-NLS-1$ //$NON-NLS-2$
     }

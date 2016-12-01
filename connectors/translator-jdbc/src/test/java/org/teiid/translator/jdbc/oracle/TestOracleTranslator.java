@@ -1221,14 +1221,14 @@ public class TestOracleTranslator {
     @Test
     public void testGeometryIntersects() throws Exception {
         String input = "select ST_Intersects(shape, shape) from cola_markets"; //$NON-NLS-1$
-        String output = "SELECT SDO_RELATE(COLA_MARKETS.SHAPE, COLA_MARKETS.SHAPE, 'mask=anyinteract') FROM COLA_MARKETS"; //$NON-NLS-1$
+        String output = "SELECT SDO_ANYINTERACT(COLA_MARKETS.SHAPE, COLA_MARKETS.SHAPE) FROM COLA_MARKETS"; //$NON-NLS-1$
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
     
     @Test
     public void testGeometryComparison() throws Exception {
         String input = "select shape from cola_markets where ST_Contains(shape, shape) and NOT ST_Intersects(shape, shape)"; //$NON-NLS-1$
-        String output = "SELECT SDO_UTIL.TO_GMLGEOMETRY(COLA_MARKETS.SHAPE) FROM COLA_MARKETS WHERE SDO_RELATE(COLA_MARKETS.SHAPE, COLA_MARKETS.SHAPE, 'mask=contains') = 'TRUE' AND SDO_RELATE(COLA_MARKETS.SHAPE, COLA_MARKETS.SHAPE, 'mask=anyinteract') <> 'TRUE'"; //$NON-NLS-1$
+        String output = "SELECT SDO_UTIL.TO_GMLGEOMETRY(COLA_MARKETS.SHAPE) FROM COLA_MARKETS WHERE SDO_CONTAINS(COLA_MARKETS.SHAPE, COLA_MARKETS.SHAPE) = 'TRUE' AND SDO_ANYINTERACT(COLA_MARKETS.SHAPE, COLA_MARKETS.SHAPE) <> 'TRUE'"; //$NON-NLS-1$
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
     
