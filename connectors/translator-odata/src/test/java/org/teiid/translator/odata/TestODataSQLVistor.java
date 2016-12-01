@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
 import java.net.URLDecoder;
+import java.util.ArrayList;
 import java.util.Properties;
 
 import org.junit.Before;
@@ -79,12 +80,13 @@ public class TestODataSQLVistor {
     	utility = new TranslationUtility(metadata);
     }
     
-    private void helpExecute(String query, String expected) throws Exception {
+    private ArrayList<TranslatorException> helpExecute(String query, String expected) throws Exception {
     	Select cmd = (Select)this.utility.parseCommand(query);
     	ODataSQLVisitor visitor = new ODataSQLVisitor(this.translator, utility.createRuntimeMetadata());
     	visitor.visitNode(cmd); 
     	String actual = URLDecoder.decode(visitor.buildURL(), "UTF-8");
     	assertEquals(expected, actual);
+    	return visitor.exceptions;
     }
 
     @Test
@@ -150,6 +152,28 @@ public class TestODataSQLVistor {
     @Test
     public void testFunction() throws Exception {
     	helpExecute("SELECT ContactName FROM Customers WHERE odata.startswith(CompanyName, 'CN')", "Customers?$filter=startswith(CompanyName,'CN') eq true&$select=ContactName");
+    }
+    
+    @Test
+    public void testBooleanFunction() throws Exception {
+    	this.translator.setSupportsOdataBooleanFunctionsWithComparison(false);
+    	try {
+    		helpExecute("SELECT ContactName FROM Customers WHERE odata.startswith(CompanyName, 'CN')", "Customers?$filter=startswith(CompanyName,'CN')&$select=ContactName");
+    		helpExecute("SELECT ContactName FROM Customers WHERE odata.startswith(CompanyName, 'CN') = 0", "Customers?$filter=NOT (startswith(CompanyName,'CN'))&$select=ContactName");
+    		helpExecute("SELECT ContactName FROM Customers WHERE odata.startswith(CompanyName, 'CN') <> 1", "Customers?$filter=NOT (startswith(CompanyName,'CN'))&$select=ContactName");
+    		helpExecute("SELECT ContactName FROM Customers WHERE odata.startswith(CompanyName, 'CN') <> 0", "Customers?$filter=startswith(CompanyName,'CN')&$select=ContactName");
+    		
+    		helpExecute("SELECT ContactName FROM Customers WHERE endswith('CN', CompanyName)", "Customers?$filter=endswith(CompanyName,'CN')&$select=ContactName");
+    		helpExecute("SELECT ContactName FROM Customers WHERE odata.substringof(CompanyName, 'CN')", "Customers?$filter=substringof(CompanyName,'CN')&$select=ContactName");
+    		
+    		
+    		ArrayList<TranslatorException> exceptions = 
+    				helpExecute("SELECT ContactName FROM Customers WHERE odata.startswith(CompanyName, 'CN') < 1", "Customers?$filter=startswith(CompanyName,'CN')&$select=ContactName");
+    		assertTrue(!exceptions.isEmpty());
+    		assertTrue(exceptions.get(0).getMessage().contains(ODataPlugin.Event.TEIID17018.name()));    		
+    	} finally {
+    		this.translator.setSupportsOdataBooleanFunctionsWithComparison(true);
+    	}
     }
     
     @Test
