@@ -217,6 +217,27 @@ public class ODataSchemaBuilder {
         return false;
     }
     
+    static boolean isPrimaryKey(Table table, List<String> columnNames) {
+        KeyRecord pk = table.getPrimaryKey();
+        boolean isPK = true;
+        for (String columnName:columnNames) {
+	        if (!hasColumn(pk, columnName)) {
+	            isPK = false;
+	        }
+        }
+        if (!isPK) {
+        	isPK = true;
+	        for (KeyRecord key:table.getUniqueKeys()) {
+	        	for (String columnName:columnNames) {
+		            if (!hasColumn(key, columnName)) {
+		                isPK = false;
+		            }
+	        	}
+	        }
+        }
+        return isPK;
+    }
+    
     static boolean hasColumn(KeyRecord pk, String columnName) {
         if (pk != null) {
             for (Column column : pk.getColumns()) {
@@ -253,10 +274,11 @@ public class ODataSchemaBuilder {
             for (ForeignKey fk : table.getForeignKeys()) {
     
                 // check to see if fk is part of this table's pk, then it is 1 to 1 relation
-                boolean onetoone = sameColumnSet(getIdentifier(table), fk);
-
-                addForwardNavigation(entityTypes, entitySets, table, fk, onetoone);
-                addReverseNavigation(entityTypes, entitySets, table, fk, onetoone);
+                boolean fkPKSame = sameColumnSet(getIdentifier(table), fk);
+                boolean fkIsPK= isPrimaryKey(schema.getTable(fk.getReferenceTableName()), fk.getReferenceColumns());
+                
+                addForwardNavigation(entityTypes, entitySets, table, fk, fkPKSame || fkIsPK);
+                addReverseNavigation(entityTypes, entitySets, table, fk, fkPKSame && fkIsPK);
             }
         }
     }
@@ -266,18 +288,16 @@ public class ODataSchemaBuilder {
         CsdlNavigationProperty navigaton = null;
         CsdlNavigationPropertyBinding navigationBinding = null;
         String entityTypeName = null;
-        if (onetoone) {
-            entityTypeName = table.getName();
-            navigaton = buildNavigation(fk);                
-            navigationBinding = buildNavigationBinding(fk);                    
+        
+        entityTypeName = table.getName();
+        navigaton = buildNavigation(fk);                
+        navigationBinding = buildNavigationBinding(fk);                    
+        
+        if (onetoone ) {
             navigaton.setNullable(false);
         } else {
-            entityTypeName = fk.getReferenceTableName();
-            navigaton = buildReverseNavigation(table, fk);                
-            navigationBinding = buildReverseNavigationBinding(table,fk);                                        
             navigaton.setCollection(true);
         }                
-   
         
         CsdlEntityType entityType = entityTypes.get(entityTypeName);
         entityType.getNavigationProperties().add(navigaton);
@@ -291,16 +311,14 @@ public class ODataSchemaBuilder {
         CsdlNavigationProperty navigaton = null;
         CsdlNavigationPropertyBinding navigationBinding = null;
         String entityTypeName = null;
+
+        entityTypeName = fk.getReferenceTableName();
+        navigaton = buildReverseNavigation(table, fk);                
+        navigationBinding = buildReverseNavigationBinding(table,fk);                                        
         
         if (onetoone) {
-            entityTypeName = fk.getReferenceTableName();
-            navigaton = buildReverseNavigation(table, fk);                
-            navigationBinding = buildReverseNavigationBinding(table,fk);                                        
             navigaton.setNullable(false);
         } else {
-            entityTypeName = table.getName();
-            navigaton = buildNavigation(fk);                
-            navigationBinding = buildNavigationBinding(fk);
             navigaton.setCollection(true);
         }                
         
