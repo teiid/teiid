@@ -290,7 +290,8 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 
         registerFunctionModifier(SourceSystemFunctions.ST_CONTAINS, new AliasModifier("SDO_CONTAINS")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_INTERSECTS, new AliasModifier("SDO_ANYINTERACT")); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.ST_OVERLAPS, new AliasModifier("SDO_OVERLAPS")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_OVERLAPS, new AliasModifier("SDO_OVERLAPBDYINTERSECT")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_CROSSES, new AliasModifier("SDO_OVERLAPBDYDISJOINT")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_TOUCHES, new AliasModifier("SDO_TOUCHES")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_EQUALS, new AliasModifier("SDO_EQUALS")); //$NON-NLS-1$
         //registerFunctionModifier(SourceSystemFunctions.ST_WITHIN, new OracleRelateModifier("inside")); //$NON-NLS-1$
@@ -835,6 +836,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.ST_ASTEXT);
         supportedFunctions.add(SourceSystemFunctions.ST_ASGML);
         supportedFunctions.add(SourceSystemFunctions.ST_CONTAINS);
+        supportedFunctions.add(SourceSystemFunctions.ST_CROSSES);
         supportedFunctions.add(SourceSystemFunctions.ST_DISJOINT);
         supportedFunctions.add(SourceSystemFunctions.ST_DISTANCE);
         supportedFunctions.add(SourceSystemFunctions.ST_INTERSECTS);
