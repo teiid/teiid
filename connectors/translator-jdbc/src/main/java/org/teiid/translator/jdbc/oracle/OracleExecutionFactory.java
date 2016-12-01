@@ -138,13 +138,6 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 		setUseBindingsForDependentJoin(false);
 	}
 
-    
-    private static class OracleRelateModifier extends TemplateFunctionModifier {
-        public OracleRelateModifier(String mask, String trueValue) {
-            super("CASE WHEN SDO_RELATE(", 0, ", ", 1, ", 'mask=" + mask + "') = '" + trueValue + "' THEN 'TRUE' ELSE 'FALSE' END"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-        }
-    }
-    
     @Override
     public void start() throws TranslatorException {
         super.start();
@@ -295,11 +288,11 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         // Disjoint mask cannot be used with SDO_RELATE (says docs).
         registerFunctionModifier(SourceSystemFunctions.ST_DISJOINT, new TemplateFunctionModifier("CASE SDO_GEOM.RELATE(", 0, ", 'disjoint', ", 1,", 0.005) WHEN 'DISJOINT' THEN 'TRUE' ELSE 'FALSE' END")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
-        registerFunctionModifier(SourceSystemFunctions.ST_CONTAINS, new OracleRelateModifier("contains", "CONTAINS")); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.ST_INTERSECTS, new OracleRelateModifier("anyinteract", "TRUE")); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.ST_CONTAINS, new AliasModifier("SDO_CONTAINS")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_INTERSECTS, new AliasModifier("SDO_ANYINTERACT")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_OVERLAPS, new AliasModifier("SDO_OVERLAPS")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_TOUCHES, new AliasModifier("SDO_TOUCHES")); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.ST_EQUALS, new OracleRelateModifier("EQUAL", "EQUAL")); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.ST_EQUALS, new AliasModifier("SDO_EQUALS")); //$NON-NLS-1$
         //registerFunctionModifier(SourceSystemFunctions.ST_WITHIN, new OracleRelateModifier("inside")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_SRID, new TemplateFunctionModifier("nvl(", 0, ".sdo_srid, 0)")); //$NON-NLS-1$ //$NON-NLS-2$
     }
