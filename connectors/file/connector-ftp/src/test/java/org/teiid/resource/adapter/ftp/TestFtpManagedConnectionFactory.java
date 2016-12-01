@@ -29,8 +29,9 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.nio.file.FileSystems;
+import java.nio.file.PathMatcher;
+import java.nio.file.Paths;
 
 import javax.resource.ResourceException;
 
@@ -53,7 +54,7 @@ public class TestFtpManagedConnectionFactory {
     
     @Ignore
     @Test
-    public void testListNames() throws ResourceException, IOException {
+    public void testListNames() throws ResourceException {
         FtpFileConnection conn = sample().createConnectionFactory().getConnection();
         String[] names = conn.listNames();
         assertTrue(names != null && names.length > 0);
@@ -62,7 +63,7 @@ public class TestFtpManagedConnectionFactory {
     
     @Ignore
     @Test
-    public void testExist() throws ResourceException, IOException {
+    public void testExist() throws ResourceException {
         FtpFileConnection conn = sample().createConnectionFactory().getConnection();
         assertTrue(conn.exists("marketdata-price.txt")); //$NON-NLS-1$
         assertFalse(conn.exists("marketdata-price.txt-")); //$NON-NLS-1$
@@ -71,7 +72,7 @@ public class TestFtpManagedConnectionFactory {
     
     @Ignore
     @Test
-    public void testAddRemove() throws ResourceException, FileNotFoundException, IOException {
+    public void testAddRemove() throws ResourceException, FileNotFoundException {
         FtpFileConnection conn = sample().createConnectionFactory().getConnection();
         String file = "pom.xml"; //$NON-NLS-1$ 
         assertFalse(conn.exists(file)); 
@@ -84,7 +85,7 @@ public class TestFtpManagedConnectionFactory {
     
     @Ignore
     @Test
-    public void testRead() throws ResourceException, FileNotFoundException, IOException {
+    public void testRead() throws ResourceException, IOException {
         FtpFileConnection conn = sample().createConnectionFactory().getConnection();
         String file = "pom.xml"; //$NON-NLS-1$
         File localFile = new File(file);
@@ -101,7 +102,7 @@ public class TestFtpManagedConnectionFactory {
     
     @Ignore
     @Test(expected = IOException.class)
-    public void testReadNotExist() throws ResourceException, FileNotFoundException, IOException {
+    public void testReadNotExist() throws ResourceException, IOException {
         FtpFileConnection conn = sample().createConnectionFactory().getConnection();
         File remoteFile = File.createTempFile(String.valueOf(System.currentTimeMillis()), ".tmp"); //$NON-NLS-1$
         remoteFile.deleteOnExit(); 
@@ -111,7 +112,7 @@ public class TestFtpManagedConnectionFactory {
     
     @Ignore
     @Test
-    public void testAppend() throws ResourceException, FileNotFoundException, IOException {
+    public void testAppend() throws ResourceException, IOException {
         FtpFileConnection conn = sample().createConnectionFactory().getConnection();
         String file = "pom.xml"; //$NON-NLS-1$
         File localFile = new File(file);
@@ -129,7 +130,7 @@ public class TestFtpManagedConnectionFactory {
     
     @Ignore
     @Test
-    public void testRename() throws ResourceException, IOException {
+    public void testRename() throws ResourceException, FileNotFoundException {
         FtpFileConnection conn = sample().createConnectionFactory().getConnection();
         String file = "pom.xml"; //$NON-NLS-1$
         String fileName = "pom-new.xml"; //$NON-NLS-1$
@@ -155,16 +156,26 @@ public class TestFtpManagedConnectionFactory {
     
     @Test
     public void testPattern() {
-        String pattern = "[^a-zA-Z0-9].txt";
-        Pattern namePattern = Pattern.compile(pattern);
-        Matcher m = namePattern.matcher("t.txt");
-        System.out.println(m.matches());
+        String fileName = "*.txt"; //$NON-NLS-1$
+        PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:" + fileName); //$NON-NLS-1$ 
+        String[] array = new String[]{"marketdata-price.txt", "marketdata-price1.txt"}; //$NON-NLS-1$ //$NON-NLS-2$
+        for(String name : array) {
+            assertTrue(matcher.matches(Paths.get(name)));
+        }
+        
+        fileName = "*data*"; //$NON-NLS-1$
+        matcher = FileSystems.getDefault().getPathMatcher("glob:" + fileName);  //$NON-NLS-1$
+        for(String name : array) {
+            assertTrue(matcher.matches(Paths.get(name)));
+        }
     }
     
+    @Ignore
     @Test
     public void testGetFiles() throws ResourceException {
         FtpFileConnection conn = sample().createConnectionFactory().getConnection();
-        File[] files = FtpFileConnection.Util.getFiles("*.txt", conn, true);
+        File[] files = FtpFileConnection.Util.getFiles("*.txt", conn, true); //$NON-NLS-1$
+        assertEquals(2, files.length);
     }
 
 }

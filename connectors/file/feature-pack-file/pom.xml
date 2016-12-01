@@ -43,6 +43,16 @@
             <artifactId>connector-file</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>connector-ftp</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>file-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <build>

@@ -291,5 +291,75 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
             throw new IOException(UTIL.getString("ftp_dir_not_exist", this.getParentDirectory())); //$NON-NLS-1$
         }
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((this.parentDirectory == null) ? 0 : this.parentDirectory.hashCode());
+        result = prime * result + ((this.username == null) ? 0 : this.username.hashCode());
+        result = prime * result + ((this.password == null) ? 0 : this.password.hashCode());
+        result = prime * result + ((this.host == null) ? 0 : this.host.hashCode());
+        result = prime * result + ((this.controlEncoding == null) ? 0 : this.controlEncoding.hashCode());
+        result = prime * result + ((this.connectTimeout == null) ? 0 : this.connectTimeout.hashCode());
+        result = prime * result + ((this.dataTimeout == null) ? 0 : this.dataTimeout.hashCode());
+        result = prime * result + ((this.defaultTimeout == null) ? 0 : this.defaultTimeout.hashCode());
+        result = prime * result + this.port;
+        result = prime * result + this.fileType;
+        result = prime * result + this.clientMode;
+        result = prime * result + this.bufferSize;
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj) {
+            return true;
+        }
+        if(null == obj) {
+            return false;
+        }
+        if(getClass() != obj.getClass()) {
+            return false;
+        }
+        FtpManagedConnectionFactory other = (FtpManagedConnectionFactory) obj;
+        if (!checkEquals(this.parentDirectory, other.parentDirectory)) {
+            return false;
+        }
+        if (!checkEquals(this.username, other.username)) {
+            return false;
+        }
+        if (!checkEquals(this.password, other.password)) {
+            return false;
+        }
+        if (!checkEquals(this.host, other.host)) {
+            return false;
+        }
+        if (!checkEquals(this.controlEncoding, other.controlEncoding)) {
+            return false;
+        }
+        if(this.connectTimeout != other.connectTimeout) {
+            return false;
+        }
+        if(this.dataTimeout != other.dataTimeout) {
+            return false;
+        }
+        if(this.defaultTimeout != other.defaultTimeout) {
+            return false;
+        }
+        if(this.port != other.port) {
+            return false;
+        }
+        if(this.fileType != other.fileType) {
+            return false;
+        }
+        if(this.clientMode != other.clientMode) {
+            return false;
+        }
+        if(this.bufferSize != other.bufferSize) {
+            return false;
+        }
+        return true;
+    }
     
 }

@@ -25,19 +25,24 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
 import javax.resource.ResourceException;
-
 import org.teiid.translator.FileConnection;
 
 /**
  * A interface used to operate a specific path of a FTP Server.
- * @author kylin
  *
  */
 public interface FtpFileConnection extends FileConnection {
     
-    boolean remove(String path) throws IOException;
+    /**
+     * Return a list of files by a give file pattern 
+     * @param pattern the syntax and pattern
+     * @return
+     * @throws IOException
+     */
+    File[] getFiles(String pattern) throws ResourceException;
+    
+    boolean remove(String name) throws ResourceException;
     
     /**
      * Read file 'name' from remote FTP server
@@ -45,7 +50,7 @@ public interface FtpFileConnection extends FileConnection {
      * @param out
      * @throws IOException
      */
-    void read(String name, OutputStream out) throws IOException;
+    void read(String name, OutputStream out) throws ResourceException;
 
     /**
      * Create file 'name' under remote FTP server
@@ -53,11 +58,11 @@ public interface FtpFileConnection extends FileConnection {
      * @param name file name to created
      * @throws IOException
      */
-    void write(InputStream in, String name) throws IOException;
+    void write(InputStream in, String name) throws ResourceException;
     
-    void append(InputStream in, String name) throws IOException;
+    void append(InputStream in, String name) throws ResourceException;
     
-    void rename(String oldName, String newName) throws IOException;
+    void rename(String oldName, String newName) throws ResourceException;
     
     /**
      * Check if the remote file exists
@@ -65,34 +70,13 @@ public interface FtpFileConnection extends FileConnection {
      * @return {@code true} or {@code false} if remote file exists or not.
      * @throws IOException
      */
-    boolean exists(String name) throws IOException;
+    boolean exists(String name) throws ResourceException;
 
     /**
      * List all file names under remote FTP server
      * @return
      * @throws IOException
      */
-    String[] listNames() throws IOException;
+    String[] listNames() throws ResourceException;
     
-    public static class Util {
-        
-        public static File[] getFiles(String fileName, FtpFileConnection fc, boolean exceptionIfFileNotFound) throws ResourceException {
-            
-            File datafile = fc.getFile(fileName);
-            if(datafile != null) {
-                return new File[] {datafile};
-            }
-            
-            if (fileName.contains("*")) {
-                fileName = fileName.replaceAll("\\\\", "\\\\\\\\"); //$NON-NLS-1$ //$NON-NLS-2$ 
-                fileName = fileName.replaceAll("\\?", "\\\\?"); //$NON-NLS-1$ //$NON-NLS-2$
-                fileName = fileName.replaceAll("\\[", "\\\\["); //$NON-NLS-1$ //$NON-NLS-2$
-                fileName = fileName.replaceAll("\\{", "\\\\{"); //$NON-NLS-1$ //$NON-NLS-2$
-            }
-            
-//            String[] allFiles = fc.listNames();
-            
-            return null;
-        }
-    }
 }

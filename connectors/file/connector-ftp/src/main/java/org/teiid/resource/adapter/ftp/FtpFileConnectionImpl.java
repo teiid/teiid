@@ -27,6 +27,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.FileSystems;
+import java.nio.file.PathMatcher;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.resource.ResourceException;
 
@@ -61,6 +66,41 @@ public class FtpFileConnectionImpl extends BasicConnection implements FtpFileCon
     }
 
 	@Override
+    public File[] getFiles(String pattern) throws ResourceException {
+	    
+	    File datafile = this.getFile(pattern);
+        if(datafile != null) {
+            return new File[] {datafile};
+        }
+        
+        if (pattern.contains("*"))  { //$NON-NLS-1$ 
+            pattern = pattern.replaceAll("\\\\", "\\\\\\\\"); //$NON-NLS-1$ //$NON-NLS-2$ 
+            pattern = pattern.replaceAll("\\?", "\\\\?"); //$NON-NLS-1$ //$NON-NLS-2$
+            pattern = pattern.replaceAll("\\[", "\\\\["); //$NON-NLS-1$ //$NON-NLS-2$
+            pattern = pattern.replaceAll("\\{", "\\\\{"); //$NON-NLS-1$ //$NON-NLS-2$
+            
+            try {
+                PathMatcher matcher =  FileSystems.getDefault().getPathMatcher("glob:" + pattern); //$NON-NLS-1$
+                String[] allFiles = this.listNames();
+                List<File> files = new ArrayList<>(allFiles.length);
+                for(String name : allFiles) {
+                    if(matcher.matches(Paths.get(name))) {
+                        File remoteFile = File.createTempFile(String.valueOf(System.currentTimeMillis()), ".tmp"); //$NON-NLS-1$
+                        remoteFile.deleteOnExit();
+                        FileOutputStream fos = new FileOutputStream(remoteFile);
+                        this.read(name, fos);
+                        files.add(remoteFile);
+                    }
+                }
+                return files.toArray(new File[files.size()]);
+            } catch (IOException e) {
+                throw new ResourceException(e);
+            } 
+        }
+        return null;
+    }
+
+    @Override
 	public void close() throws ResourceException {
 		try {
             this.client.disconnect();
@@ -70,60 +110,88 @@ public class FtpFileConnectionImpl extends BasicConnection implements FtpFileCon
 	}
 
     @Override
-    public boolean remove(String name) throws IOException {
-        return this.client.deleteFile(name);
-    }
-
-    @Override
-    public void read(String name, OutputStream out) throws IOException {
-        boolean completed = this.client.retrieveFile(name, out);
-        if(!completed) {
-            throw new IOException(UTIL.getString("ftp_failed_read", name, this.client.getReplyString())); //$NON-NLS-1$
+    public boolean remove(String name) throws ResourceException {
+        try {
+            return this.client.deleteFile(name);
+        } catch (IOException e) {
+            throw new ResourceException(e);
         }
     }
 
     @Override
-    public void write(InputStream in, String name) throws IOException {
-        boolean completed = this.client.storeFile(name, in);
-        if(!completed) {
-            throw new IOException(UTIL.getString("ftp_failed_write", name, this.client.getReplyString())); //$NON-NLS-1$
+    public void read(String name, OutputStream out) throws ResourceException {
+        try {
+            boolean completed = this.client.retrieveFile(name, out);
+            if(!completed) {
+                throw new IOException(UTIL.getString("ftp_failed_read", name, this.client.getReplyString())); //$NON-NLS-1$
+            }
+        } catch (IOException e) {
+            throw new ResourceException(e);
         }
     }
 
     @Override
-    public void append(InputStream in, String name) throws IOException {
-        boolean completed = this.client.appendFile(name, in);
-        if(!completed) {
-            throw new IOException(UTIL.getString("ftp_failed_append", name, this.client.getReplyString())); //$NON-NLS-1$
+    public void write(InputStream in, String name) throws ResourceException {
+        try {
+            boolean completed = this.client.storeFile(name, in);
+            if(!completed) {
+                throw new IOException(UTIL.getString("ftp_failed_write", name, this.client.getReplyString())); //$NON-NLS-1$
+            }
+        } catch (IOException e) {
+            throw new ResourceException(e);
         }
     }
 
     @Override
-    public void rename(String oldName, String newName) throws IOException {
-        boolean completed = this.client.rename(oldName, newName);
-        if(!completed) {
-            throw new IOException(UTIL.getString("ftp_failed_rename", oldName, newName, this.client.getReplyString())); //$NON-NLS-1$
+    public void append(InputStream in, String name) throws ResourceException {
+        try {
+            boolean completed = this.client.appendFile(name, in);
+            if(!completed) {
+                throw new IOException(UTIL.getString("ftp_failed_append", name, this.client.getReplyString())); //$NON-NLS-1$
+            }
+        } catch (IOException e) {
+            throw new ResourceException(e);
         }
     }
 
     @Override
-    public boolean exists(String name) throws IOException {
-        String[] names = this.client.listNames();
-        boolean exists = false;
-        if (names != null && names.length > 0){
-            for(String n : names) {
-                if(n.equals(name)) {
-                    exists = true;
-                    break;
+    public void rename(String oldName, String newName) throws ResourceException {
+        try {
+            boolean completed = this.client.rename(oldName, newName);
+            if(!completed) {
+                throw new IOException(UTIL.getString("ftp_failed_rename", oldName, newName, this.client.getReplyString())); //$NON-NLS-1$
+            }
+        } catch (IOException e) {
+            throw new ResourceException(e);
+        }
+    }
+
+    @Override
+    public boolean exists(String name) throws ResourceException {
+        try {
+            String[] names = this.client.listNames();
+            boolean exists = false;
+            if (names != null && names.length > 0){
+                for(String n : names) {
+                    if(n.equals(name)) {
+                        exists = true;
+                        break;
+                    }
                 }
             }
+            return exists;
+        } catch (IOException e) {
+            throw new ResourceException(e);
         }
-        return exists;
     }
 
     @Override
-    public String[] listNames() throws IOException {
-        return this.client.listNames();
+    public String[] listNames() throws ResourceException {
+        try {
+            return this.client.listNames();
+        } catch (IOException e) {
+            throw new ResourceException(e);
+        }
     }
 	
 }
