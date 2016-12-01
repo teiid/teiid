@@ -84,6 +84,8 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 	private Method pkMethod = null;
 	private Map<String, FieldDescriptor> descriptorMap = new HashMap<String, FieldDescriptor>();
 	protected boolean classObjectColumn = false;
+	private boolean materialized = false;
+	private Table stagingTable = null;
 	
 	@TranslatorProperty(display = "Class Object As Column", category = PropertyType.IMPORT, description = "If true, and when the translator provides the metadata, a column of object data type will be created that represents the stored object in the cache", advanced = true)
 	public boolean isClassObjectColumn() {
@@ -98,23 +100,13 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 	public void process(MetadataFactory metadataFactory, ObjectConnection connection) throws TranslatorException {
 		InfinispanHotRodConnection conn = (InfinispanHotRodConnection) connection;		
 
+		materialized = conn.configuredForMaterialization();
 		createRootTable(metadataFactory, conn.getCacheClassType(), conn.getDescriptor(), conn.getCacheName() ,conn);
 
-		boolean materializied = conn.getDDLHandler().isStagingTarget();
-		if (materializied) {
-										
-			Table stageTable = addTable(metadataFactory, conn.getCacheClassType(), true, true);
-						
-			stageTable.setColumns(rootTable.getColumns());
-			stageTable.setForiegnKeys(rootTable.getForeignKeys());
-			stageTable.setFunctionBasedIndexes(rootTable.getFunctionBasedIndexes());
-			stageTable.setIndexes(rootTable.getIndexes());
-			stageTable.setParent(rootTable.getParent());
-			stageTable.setSupportsUpdate(true);
-			stageTable.setUniqueKeys(rootTable.getUniqueKeys());
-			stageTable.setPrimaryKey(rootTable.getPrimaryKey());
-			stageTable.setProperty(JavaBeanMetadataProcessor.PRIMARY_TABLE_PROPERTY, rootTable.getFullName());	
-			
+		if (materialized) {
+				stagingTable.setParent(rootTable.getParent());
+				stagingTable.setSupportsUpdate(true);
+				stagingTable.setProperty(JavaBeanMetadataProcessor.PRIMARY_TABLE_PROPERTY, rootTable.getFullName());	
 		}
 
 	}
@@ -123,11 +115,14 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 	private void createRootTable(MetadataFactory mf, Class<?> entity, Descriptor descriptor, String cacheName, InfinispanHotRodConnection conn) throws TranslatorException {
 			
 		String pkField = conn.getPkField();
-		boolean updatable = (pkField != null ? true : false);
+		boolean updatable = (materialized ? true : (pkField != null ? true : false));
 		
 		rootTable = addTable(mf, entity, updatable, false);
+		if (materialized) {
+			stagingTable = addTable(mf, entity, true, true);
+		}
 		
-		if (classObjectColumn) {
+		if (classObjectColumn && !materialized) {
 	    // add column for cache Object, set to non-selectable by default so that select * queries don't fail by default
 			addRootColumn(mf, Object.class, entity, null, null, SearchType.Unsearchable, rootTable.getName(), rootTable, false, false, NullType.Nullable); //$NON-NLS-1$	
 		}
@@ -171,6 +166,10 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 				}
 				// dont make primary key updatable, the object must be deleted and readded in order to change the key
 				addRootColumn(mf, returnType, getProtobufNativeType(fd), fd.getFullName(), fd.getName(), st, rootTable.getName(), rootTable, true, true, nt);	
+				if (materialized) {
+					addRootColumn(mf, returnType, getProtobufNativeType(fd), fd.getFullName(), fd.getName(), st, stagingTable.getName(), stagingTable, true, true, nt);	
+					
+				}
 		}
 			
 		if (pkMethod != null) {
@@ -178,7 +177,10 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 			String pkName = "PK_" + pkField.toUpperCase(); //$NON-NLS-1$
 	        ArrayList<String> x = new ArrayList<String>(1) ;
 	        x.add(pkField);
-	        mf.addPrimaryKey(pkName, x , rootTable);		    
+	        mf.addPrimaryKey(pkName, x , rootTable);	
+			if (materialized) {
+		        mf.addPrimaryKey(pkName, x , stagingTable);
+			}
 
 		}
 	
@@ -210,6 +212,18 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 
 		return t;
 		
+	}
+	
+	private  boolean doesStagingTableExist(MetadataFactory mf, Class<?> entity) {
+		String tName = entity.getSimpleName();
+		tName = "ST_" + tName; //$NON-NLS-1$
+		Table t = mf.getSchema().getTable(tName);
+		if (t != null) {
+			//already loaded
+			return true;
+		}
+		return false;
+
 	}
 	
     private static Method findMethod(String className, String methodName, InfinispanHotRodConnection conn) throws TranslatorException {
@@ -388,7 +402,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 	
 	private Column addColumn(MetadataFactory mf, Class<?> type, Class<?> nativeType,  String attributeName, String nis, SearchType searchType, Table rootTable, boolean selectable, boolean updateable, NullType nt) {
 		if (rootTable.getColumnByName(attributeName) != null) return rootTable.getColumnByName(attributeName);
-		
+	
 		boolean isEnum = false;
 		Class<?> datatype = type;
 		if (type.isEnum()) {
@@ -400,7 +414,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 		}
 		
 		Column c = mf.addColumn(attributeName, TypeFacility.getDataTypeName(datatype), rootTable);
-		
+
 		if (nis != null) {
 			c.setNameInSource(nis);
 		}

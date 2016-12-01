@@ -256,7 +256,7 @@ public class InfinispanCacheRAConnection extends BasicConnection
 
 	@Override
 	public boolean configuredForMaterialization() {
-		return false;
+		return (config.getStagingCacheName() != null);
 	}
 
 }
