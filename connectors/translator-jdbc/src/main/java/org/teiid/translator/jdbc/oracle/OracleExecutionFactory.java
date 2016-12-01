@@ -842,7 +842,6 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.ST_ASTEXT);
         supportedFunctions.add(SourceSystemFunctions.ST_ASGML);
         supportedFunctions.add(SourceSystemFunctions.ST_CONTAINS);
-        supportedFunctions.add(SourceSystemFunctions.ST_CROSSES);
         supportedFunctions.add(SourceSystemFunctions.ST_DISJOINT);
         supportedFunctions.add(SourceSystemFunctions.ST_DISTANCE);
         supportedFunctions.add(SourceSystemFunctions.ST_INTERSECTS);
