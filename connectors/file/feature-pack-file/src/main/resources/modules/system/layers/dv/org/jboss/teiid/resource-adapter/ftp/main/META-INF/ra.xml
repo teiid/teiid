@@ -113,6 +113,87 @@
                <config-property-type>java.lang.Integer</config-property-type>
             </config-property>
             
+            <config-property>
+               <description>{$display:"Is Secured Ftps Server"}</description>
+               <config-property-name>IsFtps</config-property-name>
+               <config-property-type>java.lang.Boolean</config-property-type>
+               <config-property-value>false</config-property-value>
+            </config-property>
+            
+            <config-property>
+               <description>{$display:"Ftps Server Use ClientMode"}</description>
+               <config-property-name>UseClientMode</config-property-name>
+               <config-property-type>java.lang.Boolean</config-property-type>
+            </config-property>
+            
+            <config-property>
+               <description>{$display:"Ftps Server Session Creation"}</description>
+               <config-property-name>SessionCreation</config-property-name>
+               <config-property-type>java.lang.Boolean</config-property-type>
+            </config-property>
+            
+            <config-property>
+               <description>{$display:"Ftps Server AuthValue"}</description>
+               <config-property-name>AuthValue</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>
+            
+            <config-property>
+               <description>{$display:"Ftps Server TrustManager"}</description>
+               <config-property-name>TrustManager</config-property-name>
+               <config-property-type>javax.net.ssl.TrustManager</config-property-type>
+            </config-property>
+            
+            <config-property>
+               <description>{$display:"Ftps Server CipherSuites"}</description>
+               <config-property-name>CipherSuites</config-property-name>
+               <config-property-type>[Ljava.lang.String</config-property-type>
+            </config-property>
+            
+            <config-property>
+               <description>{$display:"Ftps Server Protocols"}</description>
+               <config-property-name>Protocols</config-property-name>
+               <config-property-type>[Ljava.lang.String</config-property-type>
+            </config-property>
+            
+            <config-property>
+               <description>{$display:"Ftps Server KeyManager"}</description>
+               <config-property-name>KeyManager</config-property-name>
+               <config-property-type>javax.net.ssl.KeyManager</config-property-type>
+            </config-property>
+            
+            <config-property>
+               <description>{$display:"Ftps Server Need ClientAuth"}</description>
+               <config-property-name>NeedClientAuth</config-property-name>
+               <config-property-type>java.lang.Boolean</config-property-type>
+            </config-property>
+            
+            <config-property>
+               <description>{$display:"Ftps Server Wants ClientAuth"}</description>
+               <config-property-name>WantsClientAuth</config-property-name>
+               <config-property-type>java.lang.Boolean</config-property-type>
+            </config-property>
+            
+            <config-property>
+               <description>{$display:"Ftps Server Implicit"}</description>
+               <config-property-name>Implicit</config-property-name>
+               <config-property-type>java.lang.Boolean</config-property-type>
+               <config-property-value>false</config-property-value>
+            </config-property>
+            
+            <config-property>
+               <description>{$display:"Ftps Server ExecProt"}</description>
+               <config-property-name>ExecProt</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+               <config-property-value>P</config-property-value>
+            </config-property>
+            
+            <config-property>
+               <description>{$display:"Ftps Server Protocol"}</description>
+               <config-property-name>Protocol</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>
+            
             <connectionfactory-interface>javax.resource.cci.ConnectionFactory</connectionfactory-interface>
             <connectionfactory-impl-class>org.teiid.resource.spi.WrappedConnectionFactory</connectionfactory-impl-class>
             <connection-interface>javax.resource.cci.Connection</connection-interface>

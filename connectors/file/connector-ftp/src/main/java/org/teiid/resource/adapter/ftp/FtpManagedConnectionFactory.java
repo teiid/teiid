@@ -30,13 +30,17 @@ import static org.apache.commons.net.ftp.FTP.BINARY_FILE_TYPE;
 import static org.apache.commons.net.ftp.FTP.LOCAL_FILE_TYPE;
 
 import java.io.IOException;
+import java.util.Arrays;
 
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.TrustManager;
 import javax.resource.ResourceException;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPClientConfig;
 import org.apache.commons.net.ftp.FTPReply;
+import org.apache.commons.net.ftp.FTPSClient;
 import org.teiid.core.BundleUtil;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
@@ -72,6 +76,32 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
     private Integer defaultTimeout;
 
     private Integer dataTimeout;
+    
+    private Boolean isFtps = false;
+    
+    private Boolean useClientMode;
+
+    private Boolean sessionCreation;
+
+    private String authValue;
+
+    private TrustManager trustManager;
+
+    private String[] cipherSuites;
+
+    private String[] protocols;
+
+    private KeyManager keyManager;
+
+    private Boolean needClientAuth;
+
+    private Boolean wantsClientAuth;
+
+    private boolean implicit = false;
+
+    private String execProt = "P"; //$NON-NLS-1$
+
+    private String protocol;
 
     public FTPClientConfig getConfig() {
         return config;
@@ -195,6 +225,113 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
     public void setDataTimeout(Integer dataTimeout) {
         this.dataTimeout = dataTimeout;
     }
+    
+    public Boolean getIsFtps() {
+        return isFtps;
+    }
+
+    public void setIsFtps(Boolean isFtps) {
+        this.isFtps = isFtps;
+    }
+
+    public Boolean getUseClientMode() {
+        return useClientMode;
+    }
+
+    public void setUseClientMode(Boolean useClientMode) {
+        this.useClientMode = useClientMode;
+    }
+
+    public Boolean getSessionCreation() {
+        return sessionCreation;
+    }
+
+    public void setSessionCreation(Boolean sessionCreation) {
+        this.sessionCreation = sessionCreation;
+    }
+
+    public String getAuthValue() {
+        return authValue;
+    }
+
+    public void setAuthValue(String authValue) {
+        isNotNull(authValue);
+        this.authValue = authValue;
+    }
+
+    public TrustManager getTrustManager() {
+        return trustManager;
+    }
+
+    public void setTrustManager(TrustManager trustManager) {
+        this.trustManager = trustManager;
+    }
+
+    public String[] getCipherSuites() {
+        return cipherSuites;
+    }
+
+    public void setCipherSuites(String[] cipherSuites) {
+        this.cipherSuites = cipherSuites;
+    }
+
+    public String[] getProtocols() {
+        return protocols;
+    }
+
+    public void setProtocols(String[] protocols) {
+        this.protocols = protocols;
+    }
+
+    public KeyManager getKeyManager() {
+        return keyManager;
+    }
+
+    public void setKeyManager(KeyManager keyManager) {
+        this.keyManager = keyManager;
+    }
+
+    public Boolean getNeedClientAuth() {
+        return needClientAuth;
+    }
+
+    public void setNeedClientAuth(Boolean needClientAuth) {
+        this.needClientAuth = needClientAuth;
+    }
+
+    public Boolean getWantsClientAuth() {
+        return wantsClientAuth;
+    }
+
+    public void setWantsClientAuth(Boolean wantsClientAuth) {
+        this.wantsClientAuth = wantsClientAuth;
+    }
+
+    public boolean isImplicit() {
+        return implicit;
+    }
+
+    public void setImplicit(boolean implicit) {
+        this.implicit = implicit;
+    }
+
+    public String getExecProt() {
+        return execProt;
+    }
+
+    public void setExecProt(String execProt) {
+        this.execProt = execProt;
+    }
+
+    public String getProtocol() {
+        return protocol;
+    }
+
+    public void setProtocol(String protocol) {
+        // TODO: add more validation for a valid protocol
+        assertTrue(protocol != null && protocol.length() > 0 && !protocol.contains(" ")); //$NON-NLS-1$
+        this.protocol = protocol;
+    }
 
     @SuppressWarnings("serial")
     @Override
@@ -215,6 +352,37 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
     private FTPClient createClient() throws IOException, ResourceException {
         
         FTPClient client = createClientInstance();
+           
+        beforeConnectProcessing(client);
+        
+        client.connect(this.host, this.port);
+        
+        if (!FTPReply.isPositiveCompletion(client.getReplyCode())) {
+            throw new ResourceException(UTIL.getString("ftp_connect_failed", this.host, this.port)); //$NON-NLS-1$
+        }
+        
+        if (!client.login(this.username, this.password)) {
+            throw new IllegalStateException(UTIL.getString("ftp_login_failed", client.getReplyString())); //$NON-NLS-1$
+        }
+        
+        afterConnectProcessing(client);
+        
+        return client;
+        
+    }
+    
+    private FTPClient createClientInstance() {
+        if(this.isFtps) {
+            if(this.getProtocol() != null) {
+                return new FTPSClient(this.protocol, this.implicit);
+            }
+            return new FTPSClient(this.implicit);
+        }
+        return new FTPClient();
+    }
+
+    private void beforeConnectProcessing(FTPClient client) throws IOException {
+        
         client.configure(this.config);
         if (this.connectTimeout != null) {
             client.setConnectTimeout(this.connectTimeout);
@@ -227,26 +395,62 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         }
         client.setControlEncoding(this.controlEncoding);
         
-        this.postProcessClientBeforeConnect(client);
+        if(this.isFtps){
+            FTPSClient ftpsClient  = (FTPSClient) client;
+            ftpsClient.execPBSZ(0);
+            ftpsClient.execPROT(this.execProt);
+        }    
+    }
+    
+
+    private void afterConnectProcessing(FTPClient client) throws IOException {
         
-        client.connect(this.host, this.port);
-        
-        if (!FTPReply.isPositiveCompletion(client.getReplyCode())) {
-            throw new ResourceException(UTIL.getString("ftp_connect_failed", this.host, this.port)); //$NON-NLS-1$
+        if (this.parentDirectory == null) {
+            throw new IOException(UTIL.getString("parentdirectory_not_set")); //$NON-NLS-1$
         }
         
-        if (!client.login(this.username, this.password)) {
-            throw new IllegalStateException(UTIL.getString("ftp_login_failed", client.getReplyString())); //$NON-NLS-1$
+        if(!client.changeWorkingDirectory(this.getParentDirectory())){
+            throw new IOException(UTIL.getString("ftp_dir_not_exist", this.getParentDirectory())); //$NON-NLS-1$
         }
         
-        this.postProcessClientAfterConnect(client);
+        updateClientMode(client);
         
-        this.updateClientMode(client);
         client.setFileType(this.fileType);
         client.setBufferSize(this.bufferSize);
         
-        return client;
-        
+        if(this.isFtps) {
+            FTPSClient ftpsClient  = (FTPSClient) client;
+            if(this.getAuthValue() != null) {
+                ftpsClient.setAuthValue(this.authValue);
+            }
+            if (this.trustManager != null) {
+                ftpsClient.setTrustManager(this.trustManager);
+            }
+            if (this.cipherSuites != null) {
+                ftpsClient.setEnabledCipherSuites(this.cipherSuites);
+            }
+            if (this.protocols != null) {
+                ftpsClient.setEnabledProtocols(this.protocols);
+            }
+            if (this.sessionCreation != null) {
+                ftpsClient.setEnabledSessionCreation(this.sessionCreation);
+            }
+            if (this.useClientMode != null) {
+                ftpsClient.setUseClientMode(this.useClientMode);
+            }
+            if (this.sessionCreation != null) {
+                ftpsClient.setEnabledSessionCreation(this.sessionCreation);
+            }
+            if (this.keyManager != null) {
+                ftpsClient.setKeyManager(this.keyManager);
+            }
+            if (this.needClientAuth != null) {
+                ftpsClient.setNeedClientAuth(this.needClientAuth);
+            }
+            if (this.wantsClientAuth != null) {
+                ftpsClient.setWantClientAuth(this.wantsClientAuth);
+            }
+        }
     }
     
     private void updateClientMode(FTPClient client) {
@@ -259,36 +463,6 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
                 break;
             default:
                 break;
-        }
-    }
-
-    protected FTPClient createClientInstance() {
-        return new FTPClient();
-    }
-    
-    /**
-     * Will handle additional initialization before client.connect() method was invoked.
-     *
-     * @param client The client.
-     * @throws IOException Any IOException.
-     */
-    protected void postProcessClientBeforeConnect(FTPClient client) throws IOException {
-    }
-    
-    /**
-     * Will handle additional initialization after client.connect() method was invoked,
-     * but before any action on the client has been taken
-     *
-     * @param t The client.
-     * @throws IOException Any IOException
-     */
-    protected void postProcessClientAfterConnect(FTPClient client) throws IOException {
-        if (this.parentDirectory == null) {
-            throw new IOException(UTIL.getString("parentdirectory_not_set")); //$NON-NLS-1$
-        }
-        
-        if(!client.changeWorkingDirectory(this.getParentDirectory())){
-            throw new IOException(UTIL.getString("ftp_dir_not_exist", this.getParentDirectory())); //$NON-NLS-1$
         }
     }
 
@@ -308,6 +482,18 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         result = prime * result + this.fileType;
         result = prime * result + this.clientMode;
         result = prime * result + this.bufferSize;
+        if(this.isFtps) {
+            result = prime * result + ((this.authValue == null) ? 0 : this.authValue.hashCode());
+            result = prime * result + ((this.protocol == null) ? 0 : this.protocol.hashCode());
+            result = prime * result + ((this.execProt == null) ? 0 : this.execProt.hashCode());
+            result = prime * result + ((this.useClientMode == null) ? 0 : this.useClientMode.hashCode());
+            result = prime * result + ((this.sessionCreation == null) ? 0 : this.sessionCreation.hashCode());
+            result = prime * result + ((this.needClientAuth == null) ? 0 : this.needClientAuth.hashCode());
+            result = prime * result + ((this.wantsClientAuth == null) ? 0 : this.wantsClientAuth.hashCode());
+            result = prime * result + ((this.implicit) ? 1231 : 1237);
+            result = prime * result + ((this.cipherSuites == null) ? 0 : Arrays.hashCode(this.cipherSuites));
+            result = prime * result + ((this.protocols == null) ? 0 : Arrays.hashCode(this.protocols));
+        }
         return result;
     }
 
@@ -358,6 +544,38 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         }
         if(this.bufferSize != other.bufferSize) {
             return false;
+        }
+        if(this.isFtps) {
+            if (!checkEquals(this.authValue, other.authValue)) {
+                return false;
+            }
+            if (!checkEquals(this.protocol, other.protocol)) {
+                return false;
+            }
+            if (!checkEquals(this.execProt, other.execProt)) {
+                return false;
+            }
+            if(!this.useClientMode.equals(other.useClientMode)) {
+                return false;
+            }
+            if(!this.sessionCreation.equals(other.sessionCreation)) {
+                return false;
+            }
+            if(!this.needClientAuth.equals(other.needClientAuth)) {
+                return false;
+            }
+            if(!this.wantsClientAuth.equals(other.wantsClientAuth)) {
+                return false;
+            }
+            if(this.implicit != other.implicit) {
+                return false;
+            }
+            if(!Arrays.equals(this.cipherSuites, other.cipherSuites)) {
+                return false;
+            }
+            if(!Arrays.equals(this.protocols, other.protocols)) {
+                return false;
+            }
         }
         return true;
     }
