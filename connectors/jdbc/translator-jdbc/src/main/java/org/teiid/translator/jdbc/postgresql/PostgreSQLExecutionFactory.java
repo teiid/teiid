@@ -989,4 +989,14 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     	return getVersion().compareTo(NINE_3) >= 0;
     }
     
+    @Override
+    public void bindValue(PreparedStatement stmt, Object param,
+            Class<?> paramType, int i) throws SQLException {
+        if (param == null && paramType == TypeFacility.RUNTIME_TYPES.BLOB) {
+            //the blob sql type causes a failure with nulls
+            paramType = TypeFacility.RUNTIME_TYPES.VARBINARY;
+        }
+        super.bindValue(stmt, param, paramType, i);
+    }
+    
 }
