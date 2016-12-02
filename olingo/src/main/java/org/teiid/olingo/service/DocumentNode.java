@@ -125,13 +125,13 @@ public class DocumentNode {
             UniqueNameGenerator nameGenerator, URLParseService parseService)
             throws TeiidException {
         
-        KeyRecord pk = resource.getTable().getPrimaryKey();
+    	List<Column> pk = getPKColumns(resource.getTable());
         if (resource.getKeyPredicates().size() == 1) {
-            if (pk.getColumns().size() != 1) {
+            if (pk.size() != 1) {
                 throw new TeiidException(ODataPlugin.Event.TEIID16015,
                         ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16015, resource.getTable().getFullName()));
             }
-            Column column = resource.getTable().getPrimaryKey().getColumns().get(0);
+            Column column = pk.get(0);
             
             ODataExpressionToSQLVisitor visitor = new ODataExpressionToSQLVisitor(
                     resource, false, uriInfo, store, odata, nameGenerator, null, parseService);
@@ -145,7 +145,7 @@ public class DocumentNode {
 
         // complex (multi-keyed)
         List<Criteria> critList = new ArrayList<Criteria>();
-        if (pk.getColumns().size() != resource.getKeyPredicates().size()) {
+        if (pk.size() != resource.getKeyPredicates().size()) {
             throw new TeiidException(ODataPlugin.Event.TEIID16015,
                     ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16015, resource.getTable().getFullName()));
         }
@@ -246,7 +246,8 @@ public class DocumentNode {
     
     protected void addAllColumns(boolean onlyPK) {
         if (onlyPK) {
-            for (final Column column : getTable().getPrimaryKey().getColumns()) {
+        	List<Column> columns = getPKColumns(getTable());
+            for (final Column column : columns) {
                 if (column.isSelectable()) {
                     addProjectedColumn(column.getName(), new ElementSymbol(column.getName(), getGroupSymbol()));
                 }
@@ -479,16 +480,20 @@ public class DocumentNode {
             if (fk.getReferenceKey().getParent().equals(to.getTable())) {
                 List<String> fkColumns = DocumentNode.getColumnNames(fk.getColumns());
                 if (fkColumns == null) {
-                    fkColumns = DocumentNode.getColumnNames(from.getTable().getPrimaryKey().getColumns());
+                    fkColumns = DocumentNode.getColumnNames(getPKColumns(from.getTable()));
                 }                   
                 
-                List<String> pkColumns = DocumentNode.getColumnNames(to.getTable().getPrimaryKey().getColumns());
+                List<String> pkColumns = DocumentNode.getColumnNames(getPKColumns(to.getTable()));
                 criteria = DocumentNode.buildJoinCriteria(
                         from.getGroupSymbol(),
                         to.getGroupSymbol(), pkColumns, fkColumns);
             }
         } 
         return criteria;
+    }
+    
+    static List<Column> getPKColumns(Table table){
+        return ODataSchemaBuilder.getIdentifier(table).getColumns();
     }
     
     static Criteria buildJoinCriteria(final GroupSymbol joinGroup,

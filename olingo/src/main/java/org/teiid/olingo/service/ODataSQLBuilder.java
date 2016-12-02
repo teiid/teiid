@@ -646,7 +646,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         
         Criteria criteria = null;
 
-        KeyRecord pk = table.getPrimaryKey();
+        KeyRecord pk = ODataSchemaBuilder.getIdentifier(table);
         for (Column c:pk.getColumns()) {
             Property prop = entity.getProperty(c.getName());
             Constant right = null;
