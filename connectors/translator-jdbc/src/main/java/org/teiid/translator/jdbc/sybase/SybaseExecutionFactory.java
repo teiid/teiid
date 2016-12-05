@@ -66,10 +66,13 @@ import org.teiid.util.Version;
 @Translator(name="sybase", description="A translator for Sybase Database")
 public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 
-	private final class SybaseFormatFunctionModifier extends
+	public static final class SybaseFormatFunctionModifier extends
 			ParseFormatFunctionModifier {
-		private SybaseFormatFunctionModifier(String prefix) {
+	    private Map<String, Object> formatMap;
+	    
+	    public SybaseFormatFunctionModifier(String prefix, Map<String, Object> formatMap) {
 			super(prefix);
+			this.formatMap = formatMap;
 		}
 
 		@Override
@@ -238,8 +241,8 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 		});
     	convertModifier.addNumericBooleanConversions();
     	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
-		registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, new SybaseFormatFunctionModifier("CONVERT(DATETIME, ")); //$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new SybaseFormatFunctionModifier("CONVERT(VARCHAR, ")); //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, new SybaseFormatFunctionModifier("CONVERT(DATETIME, ", formatMap)); //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new SybaseFormatFunctionModifier("CONVERT(VARCHAR, ", formatMap)); //$NON-NLS-1$
     }
 
 	private void handleTimeConversions() {

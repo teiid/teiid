@@ -97,6 +97,7 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 			throws TranslatorException {
 		super.initCapabilities(connection);
 		if (getVersion().compareTo(TEN_0) >= 0) {
+		    //date support
 			convertModifier.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
 			formatMap.put("yyyy-MM-dd", "DATE"); //$NON-NLS-1$ //$NON-NLS-2$
 			convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.DATE, new FunctionModifier() {
@@ -109,6 +110,9 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 					return result;
 				}
 			});
+			//timestamp/datetime2
+			convertModifier.addTypeMapping("datetime2", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+			registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, new SybaseFormatFunctionModifier("CONVERT(DATETIME2, ", formatMap)); //$NON-NLS-1$
 		}
 	}
 
@@ -651,6 +655,14 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     @Override
     public boolean useSelectLimit() {
     	return getVersion().compareTo(ELEVEN_0) < 0;
+    }
+    
+    @Override
+    public String translateLiteralTimestamp(Timestamp timestampValue) {
+        if (getVersion().compareTo(TEN_0) < 0) {
+            return super.translateLiteralTimestamp(timestampValue);
+        }
+        return "{ts '" + formatDateValue(timestampValue) + "'}"; //$NON-NLS-1$ //$NON-NLS-2$
     }
     
 }

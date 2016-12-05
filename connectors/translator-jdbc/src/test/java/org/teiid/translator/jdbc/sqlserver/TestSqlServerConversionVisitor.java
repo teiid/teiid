@@ -326,7 +326,7 @@ public class TestSqlServerConversionVisitor {
     	trans.initCapabilities(c);
     	
     	String input = "select cast(smalla.stringkey as date), formatdate(smalla.datevalue, 'yyyy-MM-dd'), parsedate(smalla.stringkey, 'yyyy-MM-dd') from bqt1.smalla where smalla.datevalue = {d'2000-01-01'}"; //$NON-NLS-1$
-        String output = "SELECT cast(SmallA.StringKey AS date), CONVERT(VARCHAR, convert(DATE, cast(SmallA.DateValue AS datetime))), cast(CONVERT(DATETIME, convert(DATE, SmallA.StringKey)) AS DATE) FROM SmallA WHERE SmallA.DateValue = CAST('2000-01-01' AS DATE)"; //$NON-NLS-1$
+        String output = "SELECT cast(SmallA.StringKey AS date), CONVERT(VARCHAR, convert(DATE, cast(SmallA.DateValue AS datetime2))), cast(CONVERT(DATETIME2, convert(DATE, SmallA.StringKey)) AS DATE) FROM SmallA WHERE SmallA.DateValue = CAST('2000-01-01' AS DATE)"; //$NON-NLS-1$
                
         helpTestVisitor(getBQTVDB(),
             input, 
@@ -389,5 +389,17 @@ public class TestSqlServerConversionVisitor {
         
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, trans1);
     } 
+    
+    @Test
+    public void testDateTime2() throws Exception {
+        String input = "insert into bqt1.smalla (timestampvalue) values ('2001-01-01')"; //$NON-NLS-1$
+        String output = "INSERT INTO SmallA (TimestampValue) VALUES ({ts '2001-01-01 00:00:00.0'})"; //$NON-NLS-1$
+
+        SQLServerExecutionFactory trans1 = new SQLServerExecutionFactory();
+        trans1.setDatabaseVersion(SQLServerExecutionFactory.V_2008);
+        trans1.start();
+        
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, trans1);
+    }
        
 }
