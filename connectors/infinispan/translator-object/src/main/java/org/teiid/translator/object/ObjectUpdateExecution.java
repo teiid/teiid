@@ -373,14 +373,7 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 				Object v = cs.eval(sc);
 
 				v = convertKeyValue(v, keyCol);
-				Object removed = connection.remove(v);
-				if (removed == null) {
-					if (connection.get(v) == null) {
-						LogManager.logWarning(LogConstants.CTX_CONNECTOR, ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21013, new Object[] {visitor.getTableName(), v}));
-					} 
-					throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21012, new Object[] {visitor.getTableName(), v}));
-						
-				}
+				connection.remove(v);
 				++cnt;
 
 			}

@@ -1,13 +1,15 @@
 package org.teiid.translator.object;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -36,7 +38,7 @@ public class TestObjectUpdateExecution {
 		MockitoAnnotations.initMocks(this);
 	}
 
-	@BeforeClass public static void init() throws Exception{
+	@Before public void init() throws Exception{
 		
 		
 		// pre-test of the object connection 
@@ -175,6 +177,26 @@ public class TestObjectUpdateExecution {
 
 		ie.execute();
 		assertNull(CONNECTION.get(new Long(1).longValue()));
+
+	}
+	
+	@Test
+	public void testDeleteAll() throws Exception {
+		
+		Object o = CONNECTION.get(new Long(1).longValue());
+		assertNotNull(o);
+
+		Command command = translationUtility
+				.parseCommand("Delete From Trade_Object.Trade");
+
+		List<Object> rows = new ArrayList<Object>();
+
+		ObjectUpdateExecution ie = createExecution(command, rows);
+
+		ie.execute();
+		
+		Collection<Object> all = CONNECTION.getAll();
+		assertTrue(all.size() == 0);
 
 	}
 
