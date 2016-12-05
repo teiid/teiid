@@ -5,8 +5,7 @@
     </properties>
     
     <resources>
-        <artifact name="${org.jboss.teiid.connectors:simpledb-api}"/>
-        <artifact name="${com.amazonaws:aws-java-sdk}"/>
+        <artifact name="${org.jboss.teiid.connectors:simpledb-api}"/>        
     </resources>
     
     <dependencies>
@@ -14,8 +13,6 @@
         <module name="javax.resource.api" />
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.api" />
-        <module name="org.apache.commons.logging" />
-        <module name="org.apache.httpcomponents" />
-        <module name="org.apache.commons.codec" />
+        <module name="com.amazonaws"/>
     </dependencies>
 </module>
