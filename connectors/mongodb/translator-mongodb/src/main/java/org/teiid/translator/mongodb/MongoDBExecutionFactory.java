@@ -589,7 +589,7 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 		}
 		else if (value instanceof org.bson.types.ObjectId) {
 		    org.bson.types.ObjectId id = (org.bson.types.ObjectId) value;
-		    value = id.toStringBabble();
+		    value = id.toHexString();
 		}
 		else {
 		    Transform transform = DataTypeManager.getTransform(value.getClass(), expectedClass);

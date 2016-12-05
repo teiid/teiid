@@ -157,6 +157,7 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
         }
         else {
             column = metadataFactory.addColumn(columnKey, getDataType(value), table);
+            setNativeType(column, value);
         }
         
         // create a PK out of _id
@@ -176,7 +177,7 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
         return column;
     }
     
-    private void addForeignKey(MetadataFactory metadataFactory, Table childTable, Table table) {
+	private void addForeignKey(MetadataFactory metadataFactory, Table childTable, Table table) {
         MergeDetails.Association association = MergeDetails.Association.valueOf(childTable.getProperty(ASSOSIATION, false));
         childTable.setProperty(ASSOSIATION, null);
         if (association == MergeDetails.Association.ONE) {
@@ -232,8 +233,21 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
         else if (value instanceof Binary || value instanceof byte[]) {
             return TypeFacility.RUNTIME_NAMES.VARBINARY;
         }
+        else if (value instanceof org.bson.types.ObjectId ) {
+            return TypeFacility.RUNTIME_NAMES.STRING;
+        }        
         else {
             return TypeFacility.RUNTIME_NAMES.OBJECT;
         }        
     }
+    
+    private void setNativeType(Column column, Object value) {
+        if (value instanceof Binary ) {
+        	column.setNativeType(Binary.class.getName());
+        }
+        else if (column.getName().equals("_id") && value instanceof org.bson.types.ObjectId ) {
+        	column.setNativeType(org.bson.types.ObjectId.class.getName());
+        	column.setAutoIncremented(true);
+        }		
+	}    
 }

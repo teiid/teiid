@@ -21,13 +21,14 @@
  */
 package org.teiid.translator.mongodb;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.sql.Date;
 import java.util.LinkedHashSet;
 import java.util.Properties;
 
 import org.bson.types.Binary;
+import org.bson.types.ObjectId;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.metadata.MetadataFactory;
@@ -84,7 +85,7 @@ public class TestMongoDBMetadataProcessor {
         row.append("child", child);
 
         BasicDBObject emptyFirstRow = new BasicDBObject();
-        emptyFirstRow.append("_id", new Integer(1));
+        emptyFirstRow.append("_id", new ObjectId("5835a598944716c40d2f26ae"));
         emptyFirstRow.append("col2", new Double(2.0));
         emptyFirstRow.append("col3", new Long(3L));
         
@@ -142,7 +143,7 @@ public class TestMongoDBMetadataProcessor {
         		") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:EMBEDDABLE\" 'true');\n" + 
         		"\n" +
         		"CREATE FOREIGN TABLE emptyFirst (\n" + 
-        		"\t\"_id\" integer,\n" + 
+        		"\t\"_id\" string AUTO_INCREMENT OPTIONS (NATIVE_TYPE 'org.bson.types.ObjectId'),\n" + 
         		"\tcol2 double,\n" + 
         		"\tcol3 long,\n" + 
         		"\tCONSTRAINT PK0 PRIMARY KEY(\"_id\")\n" + 
@@ -155,7 +156,7 @@ public class TestMongoDBMetadataProcessor {
         		"\tcol5 boolean,\n" + 
         		"\tcol6 string,\n" + 
         		"\tcol7 object[] OPTIONS (SEARCHABLE 'Unsearchable'),\n"+
-        		"\tcol8 varbinary,\n"+
+        		"\tcol8 varbinary OPTIONS (NATIVE_TYPE 'org.bson.types.Binary'),\n"+
         		"\tCONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
         		"\tCONSTRAINT FK_col6 FOREIGN KEY(col6) REFERENCES ns \n" + 
         		") OPTIONS (UPDATABLE TRUE);";

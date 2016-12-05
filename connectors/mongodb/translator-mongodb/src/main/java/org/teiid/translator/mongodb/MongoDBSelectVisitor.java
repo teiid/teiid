@@ -28,6 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
+import org.bson.types.ObjectId;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.GeometryType;
@@ -656,6 +657,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
         }
 
         QueryBuilder query = leftExprDetails.getQueryBuilder();
+        rightExpr = checkAndConvertToObjectId(obj.getLeftExpression(), obj.getRightExpression(), rightExpr);
         buildComparisionQuery(obj, rightExpr, query);
 
 		if (leftExprDetails.partOfProject || obj.getLeftExpression() instanceof ColumnReference) {
@@ -669,6 +671,16 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
             ColumnReference column = (ColumnReference)obj.getLeftExpression();
             this.mongoDoc.updateReferenceColumnValue(column.getTable().getName(), column.getName(), rightExpr);
         }
+	}
+
+	private Object checkAndConvertToObjectId(Expression left, Expression right, Object rightValue) {
+		if (left instanceof ColumnReference && right instanceof Literal) {
+			String navtiveType = ((ColumnReference)left).getMetadataObject().getNativeType();
+        	if (navtiveType != null && navtiveType.equals(ObjectId.class.getName())) {
+        		return new ObjectId((String)rightValue);
+        	}
+        }
+		return rightValue;
 	}
 
 	protected BasicDBObject buildFunctionQuery(Comparison obj, BasicDBObject leftExpr, Object rightExpr) {
@@ -798,7 +810,9 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
         append(obj.getRightExpressions());
         BasicDBList values = new BasicDBList();
         for (int i = 0; i < obj.getRightExpressions().size(); i++) {
-            values.add(0, this.onGoingExpression.pop());
+        	Object rightExpr = this.onGoingExpression.pop();
+        	rightExpr = checkAndConvertToObjectId(obj.getLeftExpression(), obj.getRightExpressions().get(i), rightExpr);
+            values.add(0, rightExpr);
         }
         if (obj.isNegated()) {
             query.notIn(values);
