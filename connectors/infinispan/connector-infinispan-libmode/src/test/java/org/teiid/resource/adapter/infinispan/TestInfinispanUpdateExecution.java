@@ -6,9 +6,11 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
+import java.util.Collection;
 import java.util.Map;
 
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.cdk.api.TranslationUtility;
@@ -35,16 +37,18 @@ public class TestInfinispanUpdateExecution {
 	@BeforeClass
     public static void beforeEachClass() throws Exception {  
 		context = mock(ExecutionContext.class);
+		
+		TRANS_FACTORY = new InfinispanLibModeExecutionFactory();
+		TRANS_FACTORY.start();	
 
+	}
+	
+	@Before
+	public void before() throws Exception {
 		factory = new InfinispanManagedConnectionFactory();
 
 		factory.setConfigurationFileNameForLocalCache("./src/test/resources/infinispan_persistent_config.xml");
 		factory.setCacheTypeMap(InfinispanTestHelper.TRADE_CACHE_NAME + ":" + "org.teiid.translator.object.testdata.annotated.Trade:longValue:long");
-
-		
-		TRANS_FACTORY = new InfinispanLibModeExecutionFactory();
-		TRANS_FACTORY.start();
-		
 		CONNECTION = factory.createConnectionFactory().getConnection();
 		
 		TradesAnnotatedCacheSource.loadCache(  (Map<Object,Object>)CONNECTION.getCache(InfinispanTestHelper.TRADE_CACHE_NAME ));
@@ -208,6 +212,30 @@ public class TestInfinispanUpdateExecution {
 		
 		assertNull(CONNECTION.get(Long.valueOf(2)));
 		assertNull(CONNECTION.get(Long.valueOf(3)));
+
+		
+		
+	}
+	
+	@Test
+	public void testDeleteAll() throws Exception {
+		
+		Object o = CONNECTION.get(Long.valueOf(99));
+		assertNotNull(o);
+
+		Command command = translationUtility
+				.parseCommand("Delete From Trade");
+
+		ObjectUpdateExecution ie = createExecution(command);
+
+		ie.execute();
+		
+		// sleep so that the async delete is completed
+		Thread.sleep(3000);
+
+		Collection<Object> all = CONNECTION.getAll();
+		assertTrue(all.size() == 0);
+
 
 	}
 //
