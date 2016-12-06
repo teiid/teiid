@@ -6,8 +6,6 @@
     
     <resources>
         <resource-root path="simpledb-api-${project.version}.jar" />
-        <resource-root path="aws-java-sdk-${version.aws-java-sdk}.jar" />
-        <!-- Insert resources here -->
     </resources>
     
     <dependencies>
@@ -15,8 +13,6 @@
         <module name="javax.resource.api" />
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.api" />
-        <module name="org.apache.commons.logging" />
-        <module name="org.apache.httpcomponents" />
-        <module name="org.apache.commons.codec" />
+        <module name="com.amazonaws"/>
     </dependencies>
 </module>

@@ -35,9 +35,23 @@
           <useTransitiveDependencies>true</useTransitiveDependencies>
           <includes>
               <include>org.jboss.teiid.connectors:simpledb-api</include>
-              <include>com.amazonaws:aws-java-sdk</include>
           </includes>          
       </dependencySet>
+      <dependencySet>      
+          <outputDirectory>${wildfly-module-root}/com/amazonaws/main</outputDirectory>
+          <useTransitiveDependencies>true</useTransitiveDependencies>
+          <includes>
+              <include>com.amazonaws:aws-java-sdk-simpledb</include>
+              <include>com.amazonaws:aws-java-sdk-core</include>
+          </includes>          
+      </dependencySet>  
+      <dependencySet>      
+          <outputDirectory>${wildfly-module-root}/com/fasterxml/jackson/dataformat/cbor/main</outputDirectory>
+          <useTransitiveDependencies>true</useTransitiveDependencies>
+          <includes>
+              <include>com.fasterxml.jackson.dataformat:jackson-dataformat-cbor</include>
+          </includes>          
+      </dependencySet>           
       <dependencySet>
           <outputDirectory>${wildfly-module-root}/org/jboss/teiid/translator/simpledb/main</outputDirectory>
           <useTransitiveDependencies>false</useTransitiveDependencies>
