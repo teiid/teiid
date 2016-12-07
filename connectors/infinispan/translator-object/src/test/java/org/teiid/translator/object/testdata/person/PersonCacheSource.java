@@ -78,6 +78,14 @@ public class PersonCacheSource extends HashMap <Object, Object> {
 
 	}
 	
+	public static ObjectConnection createConnection(String pkKeyField) {
+		final Map <Object, Object> objects = PersonCacheSource.loadCache();
+
+		ObjectConnection toc = PersonObjectConnection.createConnection(objects, pkKeyField);
+		return toc;
+
+	}
+	
 	public static void loadCache(Map<Object, Object> cache) {
 		PhoneType[] types = new PhoneType[] {PhoneType.HOME, PhoneType.MOBILE, PhoneType.WORK};
 		int t = 0;

@@ -115,7 +115,8 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 	private void createRootTable(MetadataFactory mf, Class<?> entity, Descriptor descriptor, String cacheName, InfinispanHotRodConnection conn) throws TranslatorException {
 			
 		String pkField = conn.getPkField();
-		boolean updatable = (materialized ? true : (pkField != null ? true : false));
+		// the table can only be updateable if it has the pkField defined, even if its materialized)
+		boolean updatable = (pkField != null ? true : false);
 		
 		rootTable = addTable(mf, entity, updatable, false);
 		if (materialized) {
@@ -131,8 +132,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 		if (updatable) {
 		    pkMethod = findMethod(entity.getName(), pkField, conn);
 		    if (pkMethod == null) {
-				throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25008, new Object[] {pkField, cacheName, entity.getName()}));
-		    	
+				throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25008, new Object[] {pkField, cacheName, entity.getName()}));		    	
 		    }	
 		}
 		
@@ -148,8 +148,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 				NullType nt = NullType.Nullable;
 				SearchType st = isSearchable(fd);
 				Class<?> returnType = getJavaType( fd,entity, conn);
-//				String j = fd.getJavaType().name();
-				if (fd.getName().equalsIgnoreCase(pkField)) {
+				if (updatable && fd.getName().equalsIgnoreCase(pkField)) {
 					addKey = true;
 					st = SearchType.Searchable;
 					nt = NullType.No_Nulls;
@@ -165,14 +164,15 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 					}
 				}
 				// dont make primary key updatable, the object must be deleted and readded in order to change the key
-				addRootColumn(mf, returnType, getProtobufNativeType(fd), fd.getFullName(), fd.getName(), st, rootTable.getName(), rootTable, true, true, nt);	
+				addRootColumn(mf, returnType, getProtobufNativeType(fd), fd.getFullName(), fd.getName(), st, rootTable.getName(), rootTable, true, updatable, nt);	
 				if (materialized) {
 					addRootColumn(mf, returnType, getProtobufNativeType(fd), fd.getFullName(), fd.getName(), st, stagingTable.getName(), stagingTable, true, true, nt);	
 					
 				}
 		}
-			
-		if (pkMethod != null) {
+		
+		
+		if (updatable) {		    
 			@SuppressWarnings("null")
 			String pkName = "PK_" + pkField.toUpperCase(); //$NON-NLS-1$
 	        ArrayList<String> x = new ArrayList<String>(1) ;
@@ -181,18 +181,17 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 			if (materialized) {
 		        mf.addPrimaryKey(pkName, x , stagingTable);
 			}
+		}
 
-		}
-	
-		if (!addKey) {
-				addRootColumn(mf, pkMethod.getReturnType(), pkMethod.getReturnType(), pkField, pkField, SearchType.Searchable, rootTable.getName(), rootTable, true, true, NullType.No_Nulls);
-		}
 		
-		for (String key : descriptorMap.keySet()) {
-			FieldDescriptor fd = descriptorMap.get(key);
-			Descriptor d = fd.getMessageType();
-			createInnerTable(mf, d, key, rootTable, pkMethod, conn);
-
+		// if materialized, child objects (relationships) are not supported, so no need to create them
+		if (!materialized && updatable) {
+			for (String key : descriptorMap.keySet()) {
+				FieldDescriptor fd = descriptorMap.get(key);
+				Descriptor d = fd.getMessageType();
+				createInnerTable(mf, d, key, rootTable, pkMethod, conn);
+	
+			}
 		}
 			
 	}

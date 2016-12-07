@@ -105,14 +105,12 @@ public class TestObjectExecutionFactory {
 		assertNotNull(physicalTable);
 		assertTrue(physicalTable.isPhysical());
 		assertTrue(!physicalTable.isVirtual());
-		assertEquals(6, physicalTable.getColumns().size());
+		assertEquals(5, physicalTable.getColumns().size());
 		//this
-		assertEquals("object", physicalTable.getColumns().get(0).getRuntimeType());
-		//trade id key
-		assertEquals("long", physicalTable.getColumns().get(1).getRuntimeType());
-		assertEquals(NullType.No_Nulls, physicalTable.getColumns().get(1).getNullType());
+		assertEquals("long", physicalTable.getColumns().get(0).getRuntimeType());
+		assertEquals(NullType.No_Nulls, physicalTable.getColumns().get(0).getNullType());
 		//name
-		assertEquals("object", physicalTable.getColumns().get(2).getRuntimeType());
+		assertEquals("object", physicalTable.getColumns().get(1).getRuntimeType());
 		
 		assertEquals(1, physicalTable.getAllKeys().size());
 	}	

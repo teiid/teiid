@@ -39,7 +39,9 @@ public class TestTradesMetadataProcessor {
 		TRANSLATOR.initCapabilities(conn);
 		TRANSLATOR.start();
 
-		TRANSLATOR.getMetadataProcessor().process(mf, conn);
+		JavaBeanMetadataProcessor mp = (JavaBeanMetadataProcessor) TRANSLATOR.getMetadataProcessor();
+		mp.setClassObjectColumn(true);
+		mp.process(mf, conn);
 
 		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
 				null, null);
@@ -60,7 +62,9 @@ public class TestTradesMetadataProcessor {
 		TRANSLATOR.initCapabilities(conn);
 		TRANSLATOR.start();
 
-		TRANSLATOR.getMetadataProcessor().process(mf, conn);
+		JavaBeanMetadataProcessor mp = (JavaBeanMetadataProcessor) TRANSLATOR.getMetadataProcessor();
+		mp.setClassObjectColumn(true);
+		mp.process(mf, conn);
 
 		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
 				null, null);
@@ -81,7 +85,9 @@ public class TestTradesMetadataProcessor {
 		TRANSLATOR.initCapabilities(conn);
 		TRANSLATOR.start();
 
-		TRANSLATOR.getMetadataProcessor().process(mf, conn);
+		JavaBeanMetadataProcessor mp = (JavaBeanMetadataProcessor) TRANSLATOR.getMetadataProcessor();
+		mp.setClassObjectColumn(true);
+		mp.process(mf, conn);
 
 		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
 				null, null);

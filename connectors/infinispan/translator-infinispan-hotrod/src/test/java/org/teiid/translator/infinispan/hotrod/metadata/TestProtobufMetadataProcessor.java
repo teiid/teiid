@@ -17,6 +17,8 @@ import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.translator.infinispan.hotrod.InfinispanHotRodConnection;
 import org.teiid.translator.infinispan.hotrod.InfinispanHotRodExecutionFactory;
+import org.teiid.translator.object.ObjectConnection;
+import org.teiid.translator.object.testdata.trades.TradesCacheSource;
 
 @SuppressWarnings("nls")
 public class TestProtobufMetadataProcessor {
@@ -47,7 +49,7 @@ public class TestProtobufMetadataProcessor {
 		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
 				null, null);
 
-		assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("personMetadata.ddl")), metadataDDL);	
+		assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("personMetadata.ddl")).trim(), metadataDDL.trim());	
 
 	}
 	
@@ -58,14 +60,14 @@ public class TestProtobufMetadataProcessor {
 				SystemMetadata.getInstance().getRuntimeTypeMap(),
 				new Properties(), null);
 
-		InfinispanHotRodConnection conn = PersonCacheConnection.createConnection(PersonCacheSource.loadCache(), "ID", false, null);
-
+		InfinispanHotRodConnection conn = PersonCacheSource.createConnection("ID", false, null);
+				
 		TRANSLATOR.getMetadataProcessor().process(mf, conn);
 
 		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
 				null, null);
 
-		assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("personMetadata.ddl")), metadataDDL);	
+		assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("personMetadata.ddl")).trim(), metadataDDL.trim());	
 	}
 	
 	@Test
@@ -75,14 +77,14 @@ public class TestProtobufMetadataProcessor {
 				SystemMetadata.getInstance().getRuntimeTypeMap(),
 				new Properties(), null);
 
-		InfinispanHotRodConnection conn = PersonCacheConnection.createConnection(PersonCacheSource.loadCache(), "Id", false, null);
-
+		InfinispanHotRodConnection conn = PersonCacheSource.createConnection("Id", false, null);
+				
 		TRANSLATOR.getMetadataProcessor().process(mf, conn);
 
 		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
 				null, null);
 
-		assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("personMetadata.ddl")), metadataDDL);	
+		assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("personMetadata.ddl")).trim(), metadataDDL.trim());	
 	}
 	
 	@Test
@@ -99,8 +101,44 @@ public class TestProtobufMetadataProcessor {
 		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
 				null, null);
 
-		assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("allTypesMetadata.ddl")), metadataDDL );	
+		assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("allTypesMetadata.ddl")).trim(), metadataDDL.trim() );	
 
 	}	
+	
+	@Test
+	public void testMatPersonMetadata() throws Exception {
+		ObjectConnection conn = PersonCacheSource.createConnection(true, true, null);
+		
+		MetadataFactory mf = new MetadataFactory("vdb", 1, "objectvdb",
+				SystemMetadata.getInstance().getRuntimeTypeMap(),
+				new Properties(), null);		
+
+		TRANSLATOR.getMetadataProcessor().process(mf, conn);
+
+		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
+				null, null);
+		
+		assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("personMatMetadata.ddl")).trim(), metadataDDL.trim() );	
+
+	}	
+	
+	@Test
+	public void testPersonMetadataNoPKKey() throws Exception {
+		ObjectConnection conn = PersonCacheSource.createConnection(null, false, null);
+		
+		MetadataFactory mf = new MetadataFactory("vdb", 1, "objectvdb",
+				SystemMetadata.getInstance().getRuntimeTypeMap(),
+				new Properties(), null);		
+
+
+		TRANSLATOR.getMetadataProcessor().process(mf, conn);
+
+		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
+				null, null);
+		
+		assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("personNoKey.ddl")).trim(), metadataDDL.trim() );	
+
+	}	
+
 
 }

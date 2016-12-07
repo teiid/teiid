@@ -25,6 +25,7 @@ package org.teiid.translator.object.metadata;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +42,9 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
+import org.teiid.translator.TranslatorProperty.PropertyType;
 import org.teiid.translator.object.ClassRegistry;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectPlugin;
@@ -67,11 +70,21 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 	public static final String VIEWTABLE_SUFFIX = "View"; //$NON-NLS-1$
 	public static final String OBJECT_COL_SUFFIX = "Object"; //$NON-NLS-1$
 	
+	protected boolean classObjectColumn = false;
 	protected boolean useAnnotations = false;
 	protected Table rootTable = null;
 	protected Method pkMethod=null;
 	protected boolean materializedSource=false;
 	private Table stagingTable = null;
+	
+	@TranslatorProperty(display = "Class Object As Column", category = PropertyType.IMPORT, description = "If true, and when the translator provides the metadata, a column of object data type will be created that represents the stored object in the cache", advanced = true)
+	public boolean isClassObjectColumn() {
+		return classObjectColumn;
+	} 
+	
+	public void setClassObjectColumn(boolean classObjectAsColumn) {
+		this.classObjectColumn = classObjectAsColumn;
+	}
 	
 	public JavaBeanMetadataProcessor(boolean useAnnotations) {
 		this.useAnnotations = useAnnotations;
@@ -109,44 +122,50 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 		}		
 		
 		String pkField = conn.getPkField();
-		boolean updatable = determineUpdatable(conn, pkField, entity.getSimpleName(), methods);
+		// the table can only be updateable if it has the pkField defined, even if its materialized)
+		boolean updatable = (pkField != null ? true : false);
 
+		pkMethod = null;
+		if (updatable) {
+		    pkMethod = findMethod(entity.getName(), pkField, conn);
+		    if (pkMethod == null) {
+				throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21017, new Object[] {pkField, conn.getCacheName(), entity.getName()}));		    	
+		    }	
+		}
+		
 		rootTable = createTable(mf, entity, updatable, false);
 
 		if (materializedSource) {
 			stagingTable = createTable(mf, entity, true, true);
 		}
 
-		if (!materializedSource) {
+		if (classObjectColumn && !materializedSource) {
 			String columnName = rootTable.getName() + OBJECT_COL_SUFFIX;
 			addColumn(mf, entity, columnName, "this", SearchType.Unsearchable, rootTable, false, NullType.Nullable, false); //$NON-NLS-1$	
 		}
 		
-		String colname = getNameFromMethodName(pkMethod.getName());
-        if (pkMethod != null) {
 
-            addColumn(mf, pkMethod.getReturnType(), pkField, pkField, SearchType.Searchable, this.rootTable, true, NullType.No_Nulls, updatable);
-            
-    		if (materializedSource) {
+ 		if (updatable) {
+ 			// add the primary key field information; column and primary key 
+ 			addColumn(mf, pkMethod.getReturnType(), pkField, pkField, SearchType.Searchable, this.rootTable, true, NullType.No_Nulls, updatable);
+ 	        
+ 			if (materializedSource) {
  	           addColumn(mf, pkMethod.getReturnType(), pkField, pkField, SearchType.Searchable, stagingTable, true, NullType.No_Nulls, true);
-    		}
-        } else {
-        	// add a column so the PKey can be created, but make it not selectable
-            addColumn(mf, java.lang.String.class, pkField, pkField, SearchType.Searchable, this.rootTable, false, NullType.Unknown, updatable);
+ 			}
+ 						
+			String colname = getNameFromMethodName(pkMethod.getName());
+            addPrimaryKey(mf, colname, rootTable);
+            
+
     		if (materializedSource) {
-                addColumn(mf, java.lang.String.class, pkField, pkField, SearchType.Searchable, stagingTable, false, NullType.Unknown, true);
+    	        addPrimaryKey(mf, colname , stagingTable);
     		}
-        }
-                     
-        addPrimaryKey(mf, colname, rootTable);
-
-		if (materializedSource) {
-	        addPrimaryKey(mf, colname , stagingTable);
 		}
+              
 
-		addTableContents(mf, rootTable, entity, colname, conn, false, updatable, methods, writeMethods);
+		addTableContents(mf, rootTable, entity, pkField, conn, false, updatable, methods, writeMethods);
 		if (materializedSource) {
-			addTableContents(mf, stagingTable, entity, colname, conn, true, updatable, methods, writeMethods);
+			addTableContents(mf, stagingTable, entity, pkField, conn, true, updatable, methods, writeMethods);
 		}
 
 	}
@@ -159,19 +178,6 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 		x.add(pkn);
 		mf.addPrimaryKey(pkName, x , t);
 
-	}
-	
-	private boolean determineUpdatable(ObjectConnection conn, String pkField, String entityName, Map<String, Method> methods) {
-		
-	    this.pkMethod = null;
-	    if (pkField != null) {
-	    	pkMethod = methods.get(pkField);
-        } else {
-			// warn if no pk is defined
-			LogManager.logWarning(LogConstants.CTX_CONNECTOR, ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21000, entityName));				
-        }
-	    
-	    return (materializedSource ? true : (pkField != null ? true : false));
 	}
 	
 	private Table createTable(MetadataFactory mf, Class<?> entity, boolean updatable, boolean staging) {
@@ -215,8 +221,11 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 						
 					if (regClasses.contains(entry.getValue().getReturnType())) {
 						
-						Table childTable = createChildTable(mf, entry.getValue().getReturnType(), pkField, updatable, conn);
-						createRelationShip(mf, childTable, (Method) o, this.rootTable, this.pkMethod, conn);
+						// only if pkfield is defined can children be defined
+						if (pkField != null) {
+							Table childTable = createChildTable(mf, entry.getValue().getReturnType(), pkField, updatable, conn);
+							createRelationShip(mf, childTable, (Method) o, this.rootTable, this.pkMethod, conn);
+						}
 
 					} else {
 						continue;
@@ -262,7 +271,6 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 				}					
 				
 			}
-			// getNameFromMethodName(m.getName())
 			addColumn(mf, m.getReturnType(), entry.getValue(), entry.getValue(), st, table, true, nt, columnUpdatable);			
 		}
 	}
@@ -430,5 +438,27 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 
 		}
 	}	
+	
+    private static Method findMethod(String className, String methodName, ObjectConnection conn) throws TranslatorException {
+        Map<String, Method> mapMethods = conn.getClassRegistry().getReadClassMethods(className);
+
+        
+        Method m = ClassRegistry.findMethod(mapMethods, methodName, className);
+
+        if (m != null) return m;
+         
+        // because the class 'methods' contains 2 different references
+        //  get'Name'  and 'Name', this will look for the 'Name' version
+        for (Iterator<String> it=mapMethods.keySet().iterator(); it.hasNext();) {
+        	String mName = it.next();
+        	if (mName.toLowerCase().startsWith(methodName.toLowerCase()) ) {
+        		m = mapMethods.get(mName);
+        		return m;
+        	} 
+        }
+		throw new TranslatorException("Program Error: unable to find method " + methodName + " on class " + className);
+
+    }
+
 
 }

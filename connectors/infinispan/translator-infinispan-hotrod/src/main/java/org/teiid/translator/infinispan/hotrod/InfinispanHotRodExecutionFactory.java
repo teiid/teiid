@@ -162,16 +162,6 @@ public class InfinispanHotRodExecutionFactory extends ObjectExecutionFactory {
 
 	@Override
     public MetadataProcessor<ObjectConnection> getMetadataProcessor(){
-		// commenting out as the  config of protobuf annotations will trigger JDG
-		// to auto create the protobuf file and marshallers, and therefore,
-		// the descriptor info will be available for metadatda creation.
-		// this is important because the correct NIS is assigned to the
-		// child object/tables so that they are correctly searched via DSL.
-		
-		
-//		if (this.supportsSearchabilityUsingAnnotations()) {
-//			return new AnnotationMetadataProcessor(true);
-//		}
 	    return new ProtobufMetadataProcessor();
 	}
 

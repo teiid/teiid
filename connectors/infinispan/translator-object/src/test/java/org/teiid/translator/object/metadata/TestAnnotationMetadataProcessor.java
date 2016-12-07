@@ -38,6 +38,7 @@ public class TestAnnotationMetadataProcessor {
 
 
 		JavaBeanMetadataProcessor mp = (JavaBeanMetadataProcessor) TRANSLATOR.getMetadataProcessor();
+		mp.setClassObjectColumn(true);
 		mp.process(mf, conn);
 
 		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
@@ -70,7 +71,9 @@ public class TestAnnotationMetadataProcessor {
 		TRANSLATOR.initCapabilities(conn);
 		TRANSLATOR.start();
 
-		TRANSLATOR.getMetadataProcessor().process(mf, conn);
+		JavaBeanMetadataProcessor mp = (JavaBeanMetadataProcessor) TRANSLATOR.getMetadataProcessor();
+		mp.setClassObjectColumn(true);
+		mp.process(mf, conn);
 
 		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
 				null, null);

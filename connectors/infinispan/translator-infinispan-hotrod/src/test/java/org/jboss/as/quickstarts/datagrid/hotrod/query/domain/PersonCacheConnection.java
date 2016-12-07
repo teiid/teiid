@@ -38,17 +38,14 @@ import org.teiid.util.Version;
  */
 public class PersonCacheConnection extends TestInfinispanHotRodConnection {
 	
-	public static InfinispanHotRodConnection createConnection(RemoteCache map, boolean useKeyClassType, Version version) {
-		CacheNameProxy proxy = new CacheNameProxy(PersonCacheSource.PERSON_CACHE_NAME);
-
-		PersonCacheConnection conn = new PersonCacheConnection(map, PersonCacheSource.CLASS_REGISTRY, proxy, useKeyClassType);
-		conn.setVersion(version);
-		conn.setConfiguredUsingAnnotations(true);
-		return conn;
-	}
-	
-	public static InfinispanHotRodConnection createConnection(RemoteCache map, final String keyField, boolean useKeyClassType, Version version) {
-		CacheNameProxy proxy = new CacheNameProxy(PersonCacheSource.PERSON_CACHE_NAME);
+	public static InfinispanHotRodConnection createConnection(RemoteCache map, final String keyField, boolean useKeyClassType, boolean staging, Version version) {
+		CacheNameProxy proxy = null;
+		
+		if (staging) {
+			proxy = new CacheNameProxy(PersonCacheSource.PERSON_CACHE_NAME, "ST_" + PersonCacheSource.PERSON_CACHE_NAME, "aliasCacheName");
+		} else { 
+			proxy = new CacheNameProxy(PersonCacheSource.PERSON_CACHE_NAME);
+		}
 
 		PersonCacheConnection conn = new PersonCacheConnection(map, PersonCacheSource.CLASS_REGISTRY, proxy, useKeyClassType) {
 			
@@ -60,6 +57,32 @@ public class PersonCacheConnection extends TestInfinispanHotRodConnection {
 		conn.setVersion(version);
 		conn.setConfiguredUsingAnnotations(true);
 		return conn;
+	}
+	
+	public static InfinispanHotRodConnection createConnection(RemoteCache map, boolean useKeyClassType, Version version) {
+		return createConnection(map, "id", useKeyClassType, version);
+//		CacheNameProxy proxy = new CacheNameProxy(PersonCacheSource.PERSON_CACHE_NAME);
+//
+//		PersonCacheConnection conn = new PersonCacheConnection(map, PersonCacheSource.CLASS_REGISTRY, proxy, useKeyClassType);
+//		conn.setVersion(version);
+//		conn.setConfiguredUsingAnnotations(true);
+//		return conn;
+	}
+	
+	public static InfinispanHotRodConnection createConnection(RemoteCache map, final String keyField, boolean useKeyClassType, Version version) {
+		return createConnection(map, keyField, useKeyClassType, false, version);
+//		CacheNameProxy proxy = new CacheNameProxy(PersonCacheSource.PERSON_CACHE_NAME);
+//		PersonCacheConnection conn = new PersonCacheConnection(map, PersonCacheSource.CLASS_REGISTRY, proxy, useKeyClassType) {
+//			
+//			@Override
+//			public void setPkField(String keyfield) {
+//				super.setPkField(keyField);
+//			}
+//		};
+//		conn.setVersion(version);
+//		conn.setConfiguredUsingAnnotations(true);
+//		return conn;
+
 	}
 	
 	/**

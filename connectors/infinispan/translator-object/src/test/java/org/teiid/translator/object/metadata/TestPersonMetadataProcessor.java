@@ -6,6 +6,8 @@ import java.util.Properties;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.UnitTestUtil;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.metadata.SystemMetadata;
@@ -37,7 +39,9 @@ public class TestPersonMetadataProcessor {
 		TRANSLATOR.initCapabilities(conn);
 		TRANSLATOR.start();
 
-		TRANSLATOR.getMetadataProcessor().process(mf, conn);
+		JavaBeanMetadataProcessor mp = (JavaBeanMetadataProcessor) TRANSLATOR.getMetadataProcessor();
+		mp.setClassObjectColumn(true);
+		mp.process(mf, conn);
 
 		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
 				null, null);
@@ -54,6 +58,26 @@ public class TestPersonMetadataProcessor {
 
 	}
 	
+	@Test
+	public void testPersonMetadataNoKey() throws Exception {
+
+		MetadataFactory mf = new MetadataFactory("vdb", 1, "objectvdb",
+				SystemMetadata.getInstance().getRuntimeTypeMap(),
+				new Properties(), null);
+
+		ObjectConnection conn = PersonCacheSource.createConnection(null);
+
+		TRANSLATOR.initCapabilities(conn);
+		TRANSLATOR.start();
+
+		TRANSLATOR.getMetadataProcessor().process(mf, conn);
+
+		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
+				null, null);
+		
+		assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("personMetadataNoKey.ddl")).trim(), metadataDDL.trim() );	
+
+	}
 
 
 }

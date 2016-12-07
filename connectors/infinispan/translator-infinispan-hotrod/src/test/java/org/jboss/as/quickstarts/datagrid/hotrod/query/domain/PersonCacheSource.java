@@ -49,6 +49,7 @@ import org.infinispan.protostream.impl.parser.SquareProtoParser;
 import org.infinispan.query.dsl.Query;
 import org.teiid.translator.infinispan.hotrod.InfinispanHotRodConnection;
 import org.teiid.translator.object.ClassRegistry;
+import org.teiid.translator.object.ObjectConnection;
 import org.teiid.util.Version;
 
 /**
@@ -96,17 +97,23 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 	
 	
 	public static InfinispanHotRodConnection createConnection(final boolean useKeyClass) {
-		final RemoteCache objects = PersonCacheSource.loadCache();
-
-		return PersonCacheConnection.createConnection(objects, useKeyClass, null);
-
+		return createConnection(useKeyClass, null);
 	}
 	
 	public static InfinispanHotRodConnection createConnection(final boolean useKeyClass, Version version) {
+		return createConnection("id", useKeyClass, version);
+	}
+	
+	public static InfinispanHotRodConnection createConnection(final String keyField, final boolean useKeyClass, Version version) {
 		final RemoteCache objects = PersonCacheSource.loadCache();
 
-		return PersonCacheConnection.createConnection(objects, useKeyClass, version);
+		return PersonCacheConnection.createConnection(objects, keyField, useKeyClass, version);
 
+	}
+	public static ObjectConnection createConnection(final boolean useKeyClass, boolean staging, Version version) {
+		final RemoteCache objects = PersonCacheSource.loadCache();
+
+		return PersonCacheConnection.createConnection(objects, "id", useKeyClass, staging, version);
 	}
 	
 	public static void loadCache(Map<Object, Object> cache) {
