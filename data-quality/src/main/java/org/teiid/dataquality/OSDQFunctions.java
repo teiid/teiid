@@ -23,14 +23,10 @@
 package org.teiid.dataquality;
 
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.TimeZone;
 
 import org.arrah.framework.analytics.PIIValidator;
 import org.arrah.framework.datagen.EncryptRTM;
 import org.arrah.framework.datagen.ShuffleRTM;
-import org.arrah.framework.datagen.TimeUtil;
-import org.arrah.framework.dataquality.FormatCheck;
 import org.arrah.framework.profile.StatisticalAnalysis;
 import org.arrah.framework.util.StringCaseFormatUtil;
 import org.simmetrics.metrics.CosineSimilarity;
@@ -74,7 +70,7 @@ public class OSDQFunctions {
      * @return String array after encryption
      */
     @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
-    public static String encryptStr(String val, String key) {
+    public static String encrypt_AES16(String val, String key) {
         String[] results = new EncryptRTM().encryptStrArray(new String[]{val}, key);
         return (results != null && results.length == 1) ? results[0] : null;
     }
@@ -85,7 +81,7 @@ public class OSDQFunctions {
      * @return String array after decryption
      */
     @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
-    public static String decryptStr(String val, String key) {
+    public static String decrypt_AES16(String val, String key) {
         String[] results = new EncryptRTM().decryptStrArray(new String[]{val}, key);
         return (results != null && results.length == 1) ? results[0] : null;
     }
@@ -96,7 +92,7 @@ public class OSDQFunctions {
      * @return String array after encryption
      */
     @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
-    public static String[] encryptStrArray(String[]val, String key) {
+    public static String[] encrypt_AES16(String[]val, String key) {
         return new EncryptRTM().encryptStrArray(val,key);
     }
     
@@ -106,7 +102,7 @@ public class OSDQFunctions {
      * @return String array after decryption
      */
     @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
-    public static String[] decryptStrArray(String[]val, String key) {
+    public static String[] decrypt_AES16(String[]val, String key) {
         return new EncryptRTM().decryptStrArray(val,key);
     }
     
@@ -124,7 +120,7 @@ public class OSDQFunctions {
      * @return boolean if matches credit card logic and checksum
      */
     @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
-    public static boolean isValidCreditCard(String cc) {
+    public static boolean validCreditCard(String cc) {
         return new PIIValidator().isCreditCard(cc);
     }
     
@@ -133,7 +129,7 @@ public class OSDQFunctions {
      * @return boolean if matches ssn logic
      */
     @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
-    public static boolean isValidSSN(String ssn) {
+    public static boolean validSSN(String ssn) {
         return new PIIValidator().isSSN(ssn);
     }
     
@@ -143,7 +139,7 @@ public class OSDQFunctions {
      * can't start with 000
      */
     @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
-    public static boolean isValidPhone(String phone) {
+    public static boolean validPhone(String phone) {
         return new PIIValidator().isPhone(phone);
     }
     
@@ -152,7 +148,7 @@ public class OSDQFunctions {
      * @return boolean if valid email
      */
     @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
-    public static boolean isValidEmail(String email) {
+    public static boolean validEmail(String email) {
         return new PIIValidator().isEmail(email);
     }
     
@@ -202,66 +198,6 @@ public class OSDQFunctions {
     @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
     public static float levenshteinDistance(String a, String b) {
         return new Levenshtein().compare(a, b);
-    }
-    
-    /**
-     * @param date to be converted into long
-     * @return long value of date since Epoch in default timezone
-     */
-    @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
-    public static long dateToEpoch(Date date){
-        return TimeUtil.dateIntoSecond(date);
-    }
-    
-    /**
-     * @param date to be converted into long
-     * @param timezone - String TimeZone 
-     * @return long value of date since Epoch
-     */
-    @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
-    public static long dateToEpoch(Date date, String timezone){
-        TimeZone tz = TimeZone.getTimeZone(timezone);
-        return TimeUtil.dateIntoSecond(date, tz);
-    }
-    
-    /**
-     * @param millsec - time since epoch
-     * @return Date of default timezone
-     */
-    @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
-    public static Date epochToDate(long millsec) {
-        return TimeUtil.secondIntoDate(millsec);
-    }
-    
-    /**
-     * @param millsec - time since epoch
-     * @param timezone - String TimeZone 
-     * @return Date of given timezone
-     */
-    @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
-    public static Date epochToDate(long millsec, String timezone) {
-        TimeZone tz = TimeZone.getTimeZone(timezone);
-        return TimeUtil.secondIntoDate(millsec, tz);
-    }
-    
-    /**
-     * @param a - Date
-     * @param b - Date
-     * @return difference in milli seconds
-     */
-    @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
-    public static long diffInSec(Date a, Date b) {
-        return TimeUtil.diffIntoMilliSecond(a,b);
-    }
-    
-    /**
-     * @param date - Date
-     * @param format - The format of date
-     * @return formated date string
-     */
-    @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
-    public static String convertToFormat (Date date, String format) {
-        return FormatCheck.toFormatDate(date, format);
     }
     
     /**
