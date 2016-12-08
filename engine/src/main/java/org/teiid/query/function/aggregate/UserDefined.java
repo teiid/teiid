@@ -39,7 +39,7 @@ public class UserDefined extends AggregateFunction {
 	private ExposedStateUserDefinedAggregate<?> exposed;
 	private Object[] values;
 	
-	public UserDefined(FunctionDescriptor functionDescriptor) {
+	public UserDefined(FunctionDescriptor functionDescriptor) throws FunctionExecutionException {
 		this.fd = functionDescriptor;
 		this.instance = (UserDefinedAggregate<?>) fd.newInstance();
 		if (instance instanceof ExposedStateUserDefinedAggregate) {
