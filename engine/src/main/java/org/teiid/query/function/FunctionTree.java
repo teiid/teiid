@@ -27,6 +27,7 @@ import java.lang.reflect.Modifier;
 import java.util.*;
 
 import org.teiid.UserDefinedAggregate;
+import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.ReflectionHelper;
@@ -363,7 +364,12 @@ public class FunctionTree {
         FunctionDescriptor result = new FunctionDescriptor(method, types, outputType, invocationMethod, requiresContext,
                 source.getClassLoader());
         if (validateClass && method.getAggregateAttributes() != null && (method.getPushdown() == PushDown.CAN_PUSHDOWN || method.getPushdown() == PushDown.CANNOT_PUSHDOWN)) {
-        	result.newInstance();
+            try {
+                result.newInstance();
+            } catch (FunctionExecutionException e) {
+                //should only happen if the method is null / not found
+                throw new MetadataException(QueryPlugin.Event.TEIID30387, e,QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30387, method.getName(), method.getInvocationClass()));
+            }
         }
         result.setHasWrappedArgs(hasWrappedArg);
         return result;
