@@ -25,9 +25,7 @@ package org.teiid.dataquality;
 import java.util.ArrayList;
 
 import org.arrah.framework.analytics.PIIValidator;
-import org.arrah.framework.datagen.EncryptRTM;
 import org.arrah.framework.datagen.ShuffleRTM;
-import org.arrah.framework.profile.StatisticalAnalysis;
 import org.arrah.framework.util.StringCaseFormatUtil;
 import org.simmetrics.metrics.CosineSimilarity;
 import org.simmetrics.metrics.JaccardSimilarity;
@@ -62,48 +60,6 @@ public class OSDQFunctions {
     @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
     public static String digit(String sourceValue) {
         return StringCaseFormatUtil.digitString(sourceValue);
-    }
-    
-    /**
-     * @param val - String that need to be encrpyted
-     * @param key - key given to encrypt
-     * @return String array after encryption
-     */
-    @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
-    public static String encrypt_AES16(String val, String key) {
-        String[] results = new EncryptRTM().encryptStrArray(new String[]{val}, key);
-        return (results != null && results.length == 1) ? results[0] : null;
-    }
-    
-    /**
-     * @param val - String that need to be decrpyted
-     * @param key - key given to decrypt
-     * @return String array after decryption
-     */
-    @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
-    public static String decrypt_AES16(String val, String key) {
-        String[] results = new EncryptRTM().decryptStrArray(new String[]{val}, key);
-        return (results != null && results.length == 1) ? results[0] : null;
-    }
-    
-    /**
-     * @param val - String array that need to be encrpyted
-     * @param key - key given to encrypt
-     * @return String array after encryption
-     */
-    @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
-    public static String[] encrypt_AES16(String[]val, String key) {
-        return new EncryptRTM().encryptStrArray(val,key);
-    }
-    
-    /**
-     * @param val - String array that need to be decrpyted
-     * @param key - key given to decrypt
-     * @return String array after decryption
-     */
-    @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
-    public static String[] decrypt_AES16(String[]val, String key) {
-        return new EncryptRTM().decryptStrArray(val,key);
     }
     
     /**
@@ -198,42 +154,6 @@ public class OSDQFunctions {
     @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
     public static float levenshteinDistance(String a, String b) {
         return new Levenshtein().compare(a, b);
-    }
-    
-    /**
-     * @param numseries - series of numbers
-     * @return standard deviation of the series
-     */
-    @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
-    public static double stdDev (Number[] numseries){
-        return new StatisticalAnalysis(numseries).getSDev() ;
-    }
-    
-    /**
-     * @param numseries - series of numbers
-     * @return range maxiumn - minimum
-     */
-    @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
-    public static double range (Number[] numseries) {
-        return new StatisticalAnalysis(numseries).rangeObject() ;
-    }
-    
-    /**
-     * @param numseries
-     * @return median or avg of the number series
-     */
-    @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
-    public static double median (Number[] numseries) {
-        return new StatisticalAnalysis(numseries).getMean() ;
-    }
-    
-    /**
-     * @param numseries
-     * @return variance of the number series
-     */
-    @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
-    public static double variance (Number[] numseries) {
-        return new StatisticalAnalysis(numseries).getVariance() ;
     }
     
 }
