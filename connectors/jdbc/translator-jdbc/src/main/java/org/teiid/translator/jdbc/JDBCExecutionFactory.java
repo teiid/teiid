@@ -578,9 +578,31 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
                 return translateGeometryLiteral(l);
             }
         }
+    	if (!supportsBooleanExpressions() && obj instanceof Condition) {
+            Condition c = (Condition)obj;
+            if (c.isExpression()) {
+                if (c instanceof IsNull) {
+                    return Arrays.asList(new SearchedCase(Arrays.asList(
+                            new SearchedWhenClause(c, new Literal(1, TypeFacility.RUNTIME_TYPES.INTEGER))), 
+                            new Literal(0, TypeFacility.RUNTIME_TYPES.INTEGER), TypeFacility.RUNTIME_TYPES.BOOLEAN));
+                }
+                return Arrays.asList(new SearchedCase(Arrays.asList(
+                        new SearchedWhenClause(c, new Literal(1, TypeFacility.RUNTIME_TYPES.INTEGER)),
+                        new SearchedWhenClause(new Not(c), new Literal(0, TypeFacility.RUNTIME_TYPES.INTEGER))), null, TypeFacility.RUNTIME_TYPES.BOOLEAN));
+            }
+        }
     	return parts;
     }
     
+    /**
+     * if boolean expressions are directly supported.
+     * will generally be false if there is no boolean datatype
+     * @return
+     */
+    protected boolean supportsBooleanExpressions() {
+        return true;
+    }
+
     /**
      * Translate GEOMETRY column reference into an expression that 
      * will return SRID & WKB.

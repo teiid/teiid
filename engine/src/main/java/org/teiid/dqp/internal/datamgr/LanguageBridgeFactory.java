@@ -674,7 +674,9 @@ public class LanguageBridgeFactory {
         } else if (expr instanceof ExpressionSymbol) {
             return translate((ExpressionSymbol)expr);
         } else if (expr instanceof Criteria) {
-        	return translate((Criteria)expr);
+        	Condition c = translate((Criteria)expr);
+        	c.setExpression(true);
+        	return c;
         } else if (expr instanceof WindowFunction) {
         	return translate((WindowFunction)expr);
         } else if (expr instanceof Array) {

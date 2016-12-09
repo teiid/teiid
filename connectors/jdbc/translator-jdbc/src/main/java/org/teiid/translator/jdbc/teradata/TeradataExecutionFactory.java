@@ -447,4 +447,9 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
         return "org.hibernate.dialect.TeradataDialect"; //$NON-NLS-1$
     }
     
+    @Override
+    protected boolean supportsBooleanExpressions() {
+        return false;
+    }
+    
 }

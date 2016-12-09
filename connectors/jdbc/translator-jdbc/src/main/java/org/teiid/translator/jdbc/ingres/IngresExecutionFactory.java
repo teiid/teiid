@@ -191,4 +191,9 @@ public class IngresExecutionFactory extends JDBCExecutionFactory {
         return true;
     } 
     
+    @Override
+    protected boolean supportsBooleanExpressions() {
+        return false;
+    }
+    
 }
