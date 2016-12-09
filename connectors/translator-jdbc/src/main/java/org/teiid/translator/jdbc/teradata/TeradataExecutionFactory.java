@@ -431,4 +431,9 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
         }
     }    
     
+    @Override
+    protected boolean supportsBooleanExpressions() {
+        return false;
+    }
+    
 }

@@ -401,5 +401,19 @@ public class TestSqlServerConversionVisitor {
         
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, trans1);
     }
+    
+    /**
+     * the first column expression needs converted to a single clause case
+     * the second column condition in the case should not be altered
+     * the third column nested boolean expression needs converted accounting for 3 level logic
+     */
+    @Test public void testBooleanExpression() throws Exception {
+        String input = "select stringkey is null, case when stringkey = 'b' then 1 end, coalesce(intkey = 1, true) from bqt1.smalla"; //$NON-NLS-1$
+        String output = "SELECT CASE WHEN g_0.StringKey IS NULL THEN 1 ELSE 0 END, CASE WHEN g_0.StringKey = 'b' THEN 1 END, isnull(CASE WHEN g_0.IntKey = 1 THEN 1 WHEN NOT (g_0.IntKey = 1) THEN 0 END, 1) FROM SmallA g_0"; //$NON-NLS-1$
+               
+        CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
+        Command obj = commandBuilder.getCommand(input, true, true);
+        TranslationHelper.helpTestVisitor(output, trans, obj);
+    }
        
 }

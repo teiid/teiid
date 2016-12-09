@@ -202,4 +202,9 @@ public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {
 		return true;
 	}
 	
+    @Override
+    protected boolean supportsBooleanExpressions() {
+        return false;
+    }
+	
 }

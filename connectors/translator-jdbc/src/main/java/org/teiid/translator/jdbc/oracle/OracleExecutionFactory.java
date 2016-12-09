@@ -1118,4 +1118,9 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 		}
 		return true;
 	}
+    
+    @Override
+    protected boolean supportsBooleanExpressions() {
+        return false;
+    }
 }
