@@ -110,6 +110,26 @@ public class TestGeometry {
 		assertFalse(b);
 	}
 
+	@Test public void testIntersection() throws Exception {
+		Expression ex = TestFunctionResolving.getExpression("ST_AsText(st_intersection(ST_GeomFromText('POLYGON ((0 50, 50 50, 40 0, 0 0, 0 50))'), ST_GeomFromText('POLYGON ((0 50, 40 50, 40 0, 0 0, 0 50))')))");
+		ClobType intersection = (ClobType) Evaluator.evaluate(ex);
+		assertEquals("POLYGON ((0 50, 40 50, 40 0, 0 0, 0 50))", ClobType.getString(intersection));
+
+		ex = TestFunctionResolving.getExpression("ST_AsText(st_intersection(ST_GeomFromText('POLYGON ((0 50, 50 50, 40 0, 0 0, 0 50))'), ST_GeomFromText('POLYGON ((150 50, 200 50, 190 0, 150 0, 150 50))')))");
+		intersection = (ClobType) Evaluator.evaluate(ex);
+		assertEquals("POLYGON EMPTY", ClobType.getString(intersection));
+	}
+
+	@Test public void testPointOnSurface() throws Exception {
+		Expression ex = TestFunctionResolving.getExpression("ST_AsText(ST_PointOnSurface(ST_GeomFromText('POLYGON ((67 13, 67 18, 59 18, 59 13, 67 13))')));");
+		ClobType pointOnSurface = (ClobType) Evaluator.evaluate(ex);
+		assertEquals("POINT (63 15.5)", ClobType.getString(pointOnSurface));
+
+		ex = TestFunctionResolving.getExpression("ST_AsText(ST_PointOnSurface(ST_GeomFromText('POLYGON ((50 0, 50 10, 10 10, 10 50, 50 50, 50 60, 0 60, 0 0, 50 0))')));");
+		pointOnSurface = (ClobType) Evaluator.evaluate(ex);
+		assertEquals("POINT (5 30)", ClobType.getString(pointOnSurface));
+	}
+
     @Test public void testAsGeoJson() throws Exception {        
         assertEval(
                 "ST_AsGeoJson(ST_GeomFromText('POINT (-48.23456 20.12345)'))",
@@ -352,5 +372,65 @@ public class TestGeometry {
 		Expression ex = TestFunctionResolving.getExpression("(st_hasarc(ST_GEOMFROMTEXT('LINESTRING(0 0, 1 3)')))");
 		assertFalse((Boolean)Evaluator.evaluate(ex));
 	}
+    
+    @Test public void testEndPoint() throws Exception {
+		Expression ex = TestFunctionResolving.getExpression("ST_AsText(st_endpoint(ST_GEOMFROMTEXT('LINESTRING(0 0, 1 3)'))))");
+		assertEquals("POINT (1 3)", ClobType.getString((ClobType)Evaluator.evaluate(ex)));
+	}
+    
+    @Test public void testStartPoint() throws Exception {
+        Expression ex = TestFunctionResolving.getExpression("ST_AsText(st_startpoint(ST_GEOMFROMTEXT('LINESTRING(0 0, 1 3)'))))");
+        assertEquals("POINT (0 0)", ClobType.getString((ClobType)Evaluator.evaluate(ex)));
+    }
+    
+    @Test public void testCoordDims() throws Exception {
+		Expression ex = TestFunctionResolving.getExpression("ST_CoordDim(ST_GEOMFROMTEXT('LINESTRING EMPTY'))");
+		assertEquals(2, Evaluator.evaluate(ex));
+	}
+    
+    @Test public void testOrderingEquals() throws Exception {
+		Expression ex = TestFunctionResolving.getExpression("ST_OrderingEquals(ST_GeomFromText('LINESTRING(0 0, 10 10)'),ST_GeomFromText('LINESTRING(0 0, 0 0, 10 10)'))");
+		assertFalse((Boolean)Evaluator.evaluate(ex));
+	}
+    
+    @Test public void testPointN() throws Exception {
+		Expression ex = TestFunctionResolving.getExpression("ST_AsText(ST_PointN(ST_GeomFromText('LINESTRING(1 2, 3 2, 1 2)'),4))");
+		assertNull(Evaluator.evaluate(ex));
+	}
+    
+    @Test public void testPolygon() throws Exception {
+        Expression ex = TestFunctionResolving.getExpression("ST_ASEWKT(ST_Polygon(ST_GeomFromText('LINESTRING(75.15 29.53,77 29,77.6 29.5, 75.15 29.53)'), 4326))");
+        assertEquals("SRID=4326;POLYGON ((75.15 29.53, 77 29, 77.6 29.5, 75.15 29.53))", ClobType.getString((ClobType)Evaluator.evaluate(ex)));
+    }
+    
+    @Test public void testRelate() throws Exception {
+        Expression ex = TestFunctionResolving.getExpression("ST_Relate(ST_GeomFromText('POINT(1 2)'), ST_Buffer(ST_GeomFromText('POINT(1 2)'),2))");
+        assertEquals("0FFFFF212", Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testRelatePattern() throws Exception {
+        Expression ex = TestFunctionResolving.getExpression("ST_Relate(ST_GeomFromText('POINT(1 2)'), ST_Buffer(ST_GeomFromText('POINT(1 2)'),2), '*FF*FF212')");
+        assertEquals(true, Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testX() throws Exception {
+        Expression ex = TestFunctionResolving.getExpression("ST_X(ST_GeomFromText('POINT(1 2)'))");
+        assertEquals(1.0, Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testY() throws Exception {
+        Expression ex = TestFunctionResolving.getExpression("ST_Y(ST_GeomFromText('POINT(1 2)'))");
+        assertEquals(2.0, Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testZ() throws Exception {
+        Expression ex = TestFunctionResolving.getExpression("ST_Z(ST_GeomFromText('POINT(1 2)'))");
+        assertNull(Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testMakeEnvelope() throws Exception {
+        Expression ex = TestFunctionResolving.getExpression("ST_ASEWKT(st_makeenvelope(-1.73431370972209553,-0.71846435100548445,1.31749469692502075,1.28153564899451555,2908))");
+        assertEquals("SRID=2908;POLYGON ((-1.7343137097220955 -0.7184643510054844, -1.7343137097220955 1.2815356489945156, 1.3174946969250207 1.2815356489945156, 1.3174946969250207 -0.7184643510054844, -1.7343137097220955 -0.7184643510054844))", ClobType.getString((ClobType)Evaluator.evaluate(ex)));
+    }
     
 }

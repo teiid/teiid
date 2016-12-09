@@ -213,18 +213,19 @@ public class SQLParserUtil {
     	}
     }
     
-    boolean isNoInline(Token paren){
+    void parseWithHints(Token paren, WithQueryCommand with){
     	String comment = getComment(paren);
     	if (comment == null || comment.isEmpty()) {
-    		return false;
+    		return;
     	}
     	String[] parts = comment.split("\\s"); //$NON-NLS-1$
     	for (String part : parts) {
     		if (WithQueryCommand.NO_INLINE.equalsIgnoreCase(part)) {
-    			return true;
+    			with.setNoInline(true);
+    		} else if (WithQueryCommand.MATERIALIZE.equalsIgnoreCase(part)) {
+    		    with.setMaterialize(true);
     		}
     	}
-    	return false;
     }
 
 	//([max:val] [[no] join])
@@ -538,9 +539,9 @@ public class SQLParserUtil {
     		Map<String, Datatype> datatypes = SystemMetadata.getInstance().getSystemStore().getDatatypes();
     		if (matcher.matches() && datatypes.get(matcher.group(1)) != null) {
     			c.setDatatype(datatypes.get(matcher.group(1)));
-    			c.setLength(Integer.parseInt(matcher.group(2)));
-    			c.setPrecision(Integer.parseInt(matcher.group(3)));
-    			c.setScale(Integer.parseInt(matcher.group(4)));
+                c.setLength(Integer.parseInt(matcher.group(2)));
+    			ParsedDataType pdt = new ParsedDataType(matcher.group(1), Integer.parseInt(matcher.group(3)), Integer.parseInt(matcher.group(4)), true);
+    			setTypeInfo(pdt, c);
     		}
     		else {
     			throw new MetadataException(QueryPlugin.Util.getString("udt_format_wrong", c.getName())); //$NON-NLS-1$
@@ -847,11 +848,19 @@ public class SQLParserUtil {
 		if (type.length != null){
 			column.setLength(type.length);
 		}
-		if (type.scale != null){
-			column.setScale(type.scale);
-		}	
 		if (type.precision != null){
+		    if (type.precision == 0) {
+		        throw new MetadataException(QueryPlugin.Util.getString("SQLParser.zero_precision")); //$NON-NLS-1$
+		    }
 			column.setPrecision(type.precision);
+		    if (type.scale != null){
+		        if (Math.abs(type.scale) > type.precision) {
+		            throw new MetadataException(QueryPlugin.Util.getString("SQLParser.invalid_scale", type.scale, type.precision)); //$NON-NLS-1$
+		        }
+		        column.setScale(type.scale);
+		    } else {
+		        column.setScale(0);
+		    }
 		}
 	}	
 	

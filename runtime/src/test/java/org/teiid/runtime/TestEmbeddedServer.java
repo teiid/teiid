@@ -35,8 +35,10 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -85,6 +87,7 @@ import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorBatchException;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
@@ -1429,6 +1432,28 @@ public class TestEmbeddedServer {
 		assertEquals(77, rs.getBlob(1).length());
 	}
 	
+    @Test public void testUpdateCountAnonProc() throws Exception {
+        EmbeddedConfiguration ec = new EmbeddedConfiguration();
+        ec.setUseDisk(false);
+        es.start(ec);
+        
+        ModelMetaData mmd1 = new ModelMetaData();
+        mmd1.setName("b");
+        mmd1.setModelType(Type.VIRTUAL);
+        mmd1.addSourceMetadata("ddl", "create view v as select 1");
+        
+        es.deployVDB("vdb", mmd1);
+        
+        Connection c = es.getDriver().connect("jdbc:teiid:vdb", null);
+        Statement s = c.createStatement();
+        s.execute("set autoCommitTxn off");
+        PreparedStatement ps = c.prepareStatement("begin select 1 without return; end");
+        assertNull(ps.getMetaData());
+        ps.execute();
+        assertEquals(0, ps.getUpdateCount());
+        assertNull(ps.getMetaData());        
+    }
+	
 	@Test public void testPreParser() throws Exception {
 		EmbeddedConfiguration ec = new EmbeddedConfiguration();
 		ec.setPreParser(new PreParser() {
@@ -1473,6 +1498,26 @@ public class TestEmbeddedServer {
 		rs.close();
 		assertEquals(73906, val.getString().length());
 	}
+	
+	@Test public void testDefaultEscape() throws Exception {
+        EmbeddedConfiguration ec = new EmbeddedConfiguration();
+        es.start(ec);
+        ModelMetaData mmd = new ModelMetaData();
+        mmd.setName("y");
+        mmd.setModelType(Type.VIRTUAL);
+        mmd.addSourceMetadata("ddl", "create view dummy as select 1;");
+        es.deployVDB("x", mmd);
+
+        Connection c = es.getDriver().connect("jdbc:teiid:x", null);
+        Statement s = c.createStatement();
+        ResultSet rs = s.executeQuery("select '_a' like '\\_a'");
+        rs.next();
+        assertFalse(rs.getBoolean(1));
+        s.execute("select teiid_session_set('backslashDefaultMatchEscape', true)");
+        rs = s.executeQuery("select '_a' like '\\_a'");
+        rs.next();
+        assertTrue(rs.getBoolean(1));
+    }
 	
 	@Test
 	public void testBufferManagerProperties() throws TranslatorException {
@@ -1892,5 +1937,68 @@ public class TestEmbeddedServer {
 			assertEquals(-1, s.getUpdateCount());
 		}
 	}
+	
+	@Translator(name="dummy")
+	public static class DummyExecutionFactory extends ExecutionFactory {
+
+	    static AtomicInteger INSTANCES = new AtomicInteger();
+	    
+	    int instance = INSTANCES.getAndIncrement();
+	    
+	    @Override
+	    public void getMetadata(MetadataFactory metadataFactory, Object conn)
+	            throws TranslatorException {
+	        Table t = metadataFactory.addTable("test"+ String.valueOf(instance));
+	        if (this.supportsOrderBy()) {
+	            metadataFactory.addColumn("y", "integer", t);
+	        } else {
+	            metadataFactory.addColumn("x", "integer", t);
+	        }
+	    }
+	    
+	    @Override
+	    public boolean isSourceRequiredForMetadata() {
+	        return false;
+	    }
+	    
+	};
+	
+    @Test public void testTranslatorCreation() throws Exception {
+        EmbeddedConfiguration ec = new EmbeddedConfiguration();
+        ec.setUseDisk(false);
+        es.start(ec);
+        
+        es.addTranslator(DummyExecutionFactory.class);
+
+        Map<String, String> props = new HashMap<String, String>();
+        props.put("supportsOrderBy", "true");
+        
+        es.addTranslator("dummy-override", "dummy", props);
+
+        ModelMetaData mmd = new ModelMetaData();
+        mmd.setName("test-one");
+        mmd.addSourceMapping("one", "dummy", null);
+        
+        ModelMetaData mmd2 = new ModelMetaData();
+        mmd2.setName("test-two");
+        mmd2.addSourceMapping("two", "dummy", null);
+        
+        ModelMetaData mmd3 = new ModelMetaData();
+        mmd3.setName("test-three");
+        mmd3.addSourceMapping("three", "dummy-override", null);
+        
+        es.deployVDB("test", mmd, mmd2, mmd3);
+
+        TeiidDriver td = es.getDriver();
+        Connection c = td.connect("jdbc:teiid:test", null);
+        Statement s = c.createStatement();
+        s.execute("select count(distinct name) from sys.tables where name like 'test%'");
+        s.getResultSet().next();
+        assertEquals(3, s.getResultSet().getInt(1));
+        
+        s.execute("select count(distinct name) from sys.columns where tablename like 'test%'");
+        s.getResultSet().next();
+        assertEquals(2, s.getResultSet().getInt(1));
+    }
 
 }

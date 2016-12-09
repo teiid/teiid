@@ -143,6 +143,8 @@ public class SQLConstants {
 		public static final String PRESERVE = "PRESERVE"; //$NON-NLS-1$
 		
 		public static final String GEOMETRY = "GEOMETRY"; //$NON-NLS-1$
+		
+		public static final String UPSERT = "UPSERT"; //$NON-NLS-1$
 	}
 	
 	public interface Reserved {

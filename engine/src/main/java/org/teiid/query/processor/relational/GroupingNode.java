@@ -45,6 +45,7 @@ import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.SortSpecification.NullOrdering;
 import org.teiid.query.eval.Evaluator;
@@ -288,7 +289,11 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
 			result = new StringAgg(aggSymbol.getType() == DataTypeManager.DefaultDataClasses.BLOB);
 			break;     
 		case USER_DEFINED:
-			result = new UserDefined(aggSymbol.getFunctionDescriptor());
+			try {
+                result = new UserDefined(aggSymbol.getFunctionDescriptor());
+            } catch (FunctionExecutionException e) {
+                throw new TeiidRuntimeException(e);
+            }
 			break;
 		default:
 			result = new StatsFunction(function);
@@ -380,7 +385,7 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
 	}
 	
 	@Override
-	protected Collection<? extends LanguageObject> getObjects() {
+	public Collection<? extends LanguageObject> getObjects() {
 		return this.getChildren()[0].getOutputElements();
 	}
 

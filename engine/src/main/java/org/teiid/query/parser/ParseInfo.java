@@ -41,6 +41,7 @@ public class ParseInfo implements Serializable{
 
     // treat a double quoted variable as variable instead of string 
     public boolean ansiQuotedIdentifiers=ANSI_QUOTED_DEFAULT;
+    boolean backslashDefaultMatchEscape=false;
     
 	public ParseInfo() { }
 	
@@ -62,6 +63,16 @@ public class ParseInfo implements Serializable{
 			return false;
 		}
 		ParseInfo other = (ParseInfo)obj;
-		return this.ansiQuotedIdentifiers == other.ansiQuotedIdentifiers;
+		return this.ansiQuotedIdentifiers == other.ansiQuotedIdentifiers
+		        && this.backslashDefaultMatchEscape == other.backslashDefaultMatchEscape;
 	}
+	
+	public boolean isBackslashDefaultMatchEscape() {
+        return backslashDefaultMatchEscape;
+    }
+	
+	public void setBackslashDefaultMatchEscape(
+            boolean backslashDefaultMatchEscape) {
+        this.backslashDefaultMatchEscape = backslashDefaultMatchEscape;
+    }
 }

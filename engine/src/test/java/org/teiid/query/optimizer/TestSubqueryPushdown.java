@@ -720,7 +720,7 @@ public class TestSubqueryPushdown {
     /*
      * Expressions containing subqueries can be pushed down
      */
-    @Test public void testProjectSubqueryPushdown() {
+    @Test public void testProjectSubqueryPushdown() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
@@ -735,7 +735,16 @@ public class TestSubqueryPushdown {
         
         ProcessorPlan plan = helpPlan("select pm1.g1.e1, convert((select max(vm1.g1.e1) from vm1.g1), integer) + 1 from pm1.g1", metadata,  //$NON-NLS-1$
                                       null, capFinder,
-            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, SHOULD_SUCCEED); //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1, (convert((SELECT MAX(g_0.e1) FROM pm1.g1 AS g_0), integer) + 1) FROM pm1.g1 AS g_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+
+        assertNotNull(plan.getDescriptionProperties().getProperty("Query Subplan 0"));
+        
+        HardcodedDataManager hcdm = new HardcodedDataManager(true);
+        hcdm.addData("SELECT MAX(g_0.e1) FROM pm1.g1 AS g_0", Arrays.asList("13"));
+        hcdm.addData("SELECT g_0.e1 FROM pm1.g1 AS g_0", Arrays.asList("10"), Arrays.asList("13"));
+        CommandContext cc = TestProcessor.createCommandContext();
+        cc.setMetadata(metadata);
+        TestProcessor.helpProcess(plan, cc, hcdm, new List<?>[] {Arrays.asList("10", 14), Arrays.asList("13", 14)});
         
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, true);
         
@@ -743,6 +752,8 @@ public class TestSubqueryPushdown {
                 null, capFinder,
 		new String[] { "SELECT g_0.e1, (convert((SELECT MAX(g_1.e1) FROM pm1.g1 AS g_1), integer) + 1) FROM pm1.g1 AS g_0" }, SHOULD_SUCCEED); //$NON-NLS-1$
 		checkNodeTypes(plan, FULL_PUSHDOWN);
+		
+		assertNull(plan.getDescriptionProperties().getProperty("Query Subplan 0"));
     }
     
     @Test public void testScalarSubquery2() {
@@ -1688,5 +1699,69 @@ public class TestSubqueryPushdown {
         	assert(e.getMessage().contains("something's wrong"));
         }
     }
+    
+	@Test public void testAggNestedSubquery() throws Exception {
+		String sql = "SELECT g0.a, g0.b, (SELECT max((SELECT g2.a FROM m.z AS g2 WHERE g2.b = g1.a)) FROM m.y AS g1 WHERE g0.a = g1.b) FROM m.x AS g0"; //$NON-NLS-1$
+		
+		TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table x ("
+                + " a string, "
+                + " b string, "
+                + " primary key (a)"
+                + ") options (updatable true);"
+                + "create foreign table y ("
+                + " a string, "
+                + " b string, "
+                + " primary key (a)"
+                + ") options (updatable true);"
+                + "create foreign table z ("
+                + " a string, "
+                + " b string, "
+                + " primary key (a)"
+                + ") options (updatable true);", "x", "m");
+		
+		ProcessorPlan pp = TestProcessor.helpGetPlan(sql, metadata, TestOptimizer.getGenericFinder());
+	    HardcodedDataManager dataManager = new HardcodedDataManager();
+	    dataManager.addData("SELECT g_0.a, g_0.b FROM m.x AS g_0", Arrays.asList("a", "b"), Arrays.asList("a1", "b1"));
+	    dataManager.addData("SELECT g_0.a FROM m.y AS g_0 WHERE g_0.b = 'a'", Arrays.asList("a"));
+	    dataManager.addData("SELECT g_0.a FROM m.y AS g_0 WHERE g_0.b = 'a1'", Arrays.asList("b"));
+	    dataManager.addData("SELECT g_0.a FROM m.z AS g_0 WHERE g_0.b = 'b'", Arrays.asList("b2"));
+	    dataManager.addData("SELECT g_0.a FROM m.z AS g_0 WHERE g_0.b = 'a'", Arrays.asList("a2"));
+		TestProcessor.helpProcess(pp, dataManager, new List[] {Arrays.asList("a", "b", "a2"), Arrays.asList("a1", "b1", "b2")});
+	}
+	
+    @Test public void testAggSubqueryAsJoin() throws Exception {
+        String sql = "SELECT INTKEY, LONGNUM FROM BQT1.SMALLA AS A WHERE LONGNUM > (SELECT SUM(LONGNUM) FROM BQT1.SMALLA AS B WHERE A.INTKEY = B.INTKEY) ORDER BY INTKEY"; //$NON-NLS-1$
+        
+        TransformationMetadata metadata = RealMetadataFactory.exampleBQT();
+        RealMetadataFactory.setCardinality("BQT1.smalla", 1000, metadata);
 
+        HardcodedDataManager dataMgr = new HardcodedDataManager();
+    
+        dataMgr.addData("SELECT g_0.LongNum AS c_0, g_0.IntKey AS c_1 FROM BQT1.SmallA AS g_0 ORDER BY c_1", Arrays.asList(1l, 1));
+        dataMgr.addData("SELECT SUM(g_0.LongNum) AS c_0, g_0.IntKey AS c_1 FROM BQT1.SmallA AS g_0 GROUP BY g_0.IntKey ORDER BY c_1", Arrays.asList(1l, 1));
+
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
+        bsc.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+        bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
+        
+        ProcessorPlan pp = TestProcessor.helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder(bsc));
+        
+        TestProcessor.helpProcess(pp, dataMgr, new List[] {});
+    }
+    
+    @Test public void testProjectSubqueryRewriteToJoin() throws Exception {
+        TestQueryRewriter.helpTestRewriteCommand("Select e1, /*+ mj */ (select max(pm1.g1.e1) as x FROM pm1.g1 where e2 = pm2.g1.e2) as e2 from pm2.g1", 
+                "SELECT e1, X__1.x AS e2 FROM pm2.g1 LEFT OUTER JOIN (SELECT MAX(pm1.g1.e1) AS x, e2 FROM pm1.g1 GROUP BY e2) AS X__1 ON pm2.g1.e2 = X__1.e2", RealMetadataFactory.example1Cached());
+    }
+    
+    @Test public void testProjectSubqueryRewriteToJoin1() throws Exception {
+        String sql = "SELECT A.INTKEY, C.LONGNUM, "
+                + "/*+ mj */ (SELECT SUM(LONGNUM) FROM BQT1.SMALLB AS B WHERE A.INTKEY = B.INTKEY), "
+                + "/*+ mj */ (SELECT MIN(LONGNUM) FROM BQT1.SMALLB AS B WHERE A.INTKEY = B.INTKEY) "
+                + " FROM BQT1.SMALLA AS A, BQT2.SMALLA AS C WHERE A.INTNUM = C.INTNUM ORDER BY INTKEY"; //$NON-NLS-1$
+        
+        TestQueryRewriter.helpTestRewriteCommand(sql, 
+                "SELECT A.INTKEY, C.LONGNUM, X__1.expr1 AS expr3, X__2.expr1 AS expr4 FROM ((BQT1.SMALLA AS A CROSS JOIN BQT2.SMALLA AS C) LEFT OUTER JOIN (SELECT SUM(LONGNUM) AS expr1, B.INTKEY FROM BQT1.SMALLB AS B GROUP BY B.INTKEY) AS X__1 ON A.INTKEY = X__1.IntKey) LEFT OUTER JOIN (SELECT MIN(LONGNUM) AS expr1, B.INTKEY FROM BQT1.SMALLB AS B GROUP BY B.INTKEY) AS X__2 ON A.INTKEY = X__2.IntKey WHERE A.INTNUM = C.INTNUM ORDER BY A.INTKEY", RealMetadataFactory.exampleBQTCached());
+    }
 }

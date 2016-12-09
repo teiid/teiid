@@ -49,6 +49,7 @@ public class TempCapabilitiesFinder implements CapabilitiesFinder {
 		tempCaps.setCapabilitySupport(Capability.CRITERIA_SIMILAR, true);
 		tempCaps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
 		tempCaps.setCapabilitySupport(Capability.ARRAY_TYPE, true);
+		tempCaps.setCapabilitySupport(Capability.UPSERT, true);
 		tempCaps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 100000);
 		tempCaps.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, 1);
 		tempCaps.setSourceProperty(Capability.TRANSACTION_SUPPORT, TransactionSupport.XA);

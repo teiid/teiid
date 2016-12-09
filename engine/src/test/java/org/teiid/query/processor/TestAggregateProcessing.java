@@ -1038,18 +1038,18 @@ public class TestAggregateProcessing {
 		helpProcess(plan, hdm, expected);
 	}
 	
-	@Test public void testAggregateNVL() throws Exception {
+	@Test public void testAggregateGroupByFunctionDependent() throws Exception {
         String sql = "select count(x.e2), nvl(x.e1, '') from pm1.g1 x makedep, pm2.g2 where x.e3 = pm2.g2.e3 group by nvl(x.e1, '')"; //$NON-NLS-1$
 
         List[] expected = new List[] {
         		Arrays.asList(1, "a"),
 		};
 
-		HardcodedDataManager dataManager = new HardcodedDataManager();
-		dataManager.addData("SELECT g_0.e3 AS c_0 FROM pm2.g2 AS g_0 ORDER BY c_0", new List[] {
+		HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+		dataManager.addData("SELECT g_0.e3 AS c_0 FROM g2 AS g_0 ORDER BY c_0", new List[] {
 				Arrays.asList(1.0),
 		});
-		dataManager.addData("SELECT v_0.c_0, v_0.c_1, COUNT(v_0.c_2) FROM (SELECT g_0.e3 AS c_0, ifnull(g_0.e1, '') AS c_1, g_0.e2 AS c_2 FROM pm1.g1 AS g_0 WHERE g_0.e3 IN (<dependent values>)) AS v_0 GROUP BY v_0.c_0, v_0.c_1", new List[] {
+		dataManager.addData("SELECT v_0.c_0, v_0.c_1, COUNT(v_0.c_2) FROM (SELECT g_0.e3 AS c_0, ifnull(g_0.e1, '') AS c_1, g_0.e2 AS c_2 FROM g1 AS g_0) AS v_0 WHERE v_0.c_0 = 1.0 GROUP BY v_0.c_0, v_0.c_1", new List[] {
 				Arrays.asList(1.0, "a", 1)
 		});
 		BasicSourceCapabilities capabilities = TestAggregatePushdown.getAggregateCapabilities();
@@ -1241,5 +1241,43 @@ public class TestAggregateProcessing {
 		
 		TestProcessor.helpProcess(plan, TestProcessor.createCommandContext(), hdm, new List<?>[] { Arrays.asList(new ClobType(new ClobImpl("c,b,b,a")), new ClobType(new ClobImpl("a,b,b,c")), new ClobType(new ClobImpl("c,b,a")), new ClobType(new ClobImpl("a,b,c")))});
 	}
+	
+    @Test public void testStringAggOverJoin() throws Exception {
+        String sql = "select string_agg(pm1.g1.e1, ',') from pm1.g1, pm2.g1 where pm1.g1.e2 = pm2.g1.e2 group by pm2.g1.e3, pm1.g1.e3";
 
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        
+        hdm.addData("SELECT g_0.e2 AS c_0, g_0.e3 AS c_1, g_0.e1 AS c_2 FROM pm1.g1 AS g_0 ORDER BY c_0", Arrays.asList(1, true, "a"), Arrays.asList(1, false, "b"));
+        hdm.addData("SELECT g_0.e2 AS c_0, g_0.e3 AS c_1 FROM pm2.g1 AS g_0 ORDER BY c_0", Arrays.asList(1, true), Arrays.asList(1, true));
+        
+        BasicSourceCapabilities bsc = TestAggregatePushdown.getAggregateCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_STRING, true);
+        
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder(bsc));
+        
+        TestProcessor.helpProcess(plan, TestProcessor.createCommandContext(),
+                hdm, new List<?>[] {Arrays.asList("b,b"), Arrays.asList("a,a")});
+    }
+    
+    @Test public void testCountConstantWithoutStats() throws Exception {
+        String sql = "select count(1) from test_count_1 t1 join test_count_2 t2 on t1.a=t2.a group by t1.a";
+        
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table test_count_1 (a string); create foreign table test_count_2 (a string)", "x", "y");
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        
+        hdm.addData("SELECT g_0.a FROM y.test_count_1 AS g_0", Arrays.asList("a"), Arrays.asList("a"));
+        hdm.addData("SELECT g_0.a FROM y.test_count_2 AS g_0", Arrays.asList("a"), Arrays.asList("a"));
+        
+        BasicSourceCapabilities bsc = TestAggregatePushdown.getAggregateCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, false);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, false);
+        bsc.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
+        bsc.setCapabilitySupport(Capability.QUERY_GROUP_BY, false);
+        
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder(bsc));
+        TestProcessor.helpProcess(plan, TestProcessor.createCommandContext(),
+                hdm, new List<?>[] {Arrays.asList(4)});
+    }
+    
 }

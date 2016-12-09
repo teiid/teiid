@@ -28,6 +28,7 @@ import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
 import org.jboss.as.controller.client.helpers.MeasurementUnit;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
+import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.net.socket.SocketUtil;
 import org.teiid.transport.SSLConfiguration;
@@ -333,7 +334,7 @@ public class TeiidConstants {
         .setXmlName(Element.RSC_MAX_STALENESS_ATTRIBUTE.getXMLName())
         .setAllowNull(true)
         .setAllowExpression(false)
-        .setDefaultValue(new ModelNode(60))
+        .setDefaultValue(new ModelNode(DQPConfiguration.DEFAULT_MAX_STALENESS_SECONDS))
         .build();   
 	
 	//transport
@@ -415,7 +416,14 @@ public class TeiidConstants {
     	.setAllowNull(true)
     	.setAllowExpression(false)
     	.setDefaultValue(new ModelNode(true))
-    	.build();	
+    	.build();
+	
+	public static SimpleAttributeDefinition AUTHENTICATION_ALLOW_SECURITY_DOMAIN_QUALIFIER = new SimpleAttributeDefinitionBuilder(Element.AUTHENTICATION_ALLOW_SECURITY_DOMAIN_QUALIFIER.getModelName(), ModelType.BOOLEAN)
+        .setXmlName(Element.AUTHENTICATION_ALLOW_SECURITY_DOMAIN_QUALIFIER.getXMLName())
+        .setAllowNull(true)
+        .setAllowExpression(false)
+        .setDefaultValue(new ModelNode(true))
+        .build();
 	
 	//PG_ELEMENT("pg"), //$NON-NLS-1$
 	public static SimpleAttributeDefinition PG_MAX_LOB_SIZE_ALLOWED_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.PG_MAX_LOB_SIZE_ALLOWED_ELEMENT.getModelName(), ModelType.INT)

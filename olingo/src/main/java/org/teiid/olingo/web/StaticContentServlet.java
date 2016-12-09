@@ -57,7 +57,7 @@ public class StaticContentServlet extends HttpServlet {
             }
             throw new TeiidProcessingException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16055, pathInfo));
         } catch (TeiidProcessingException e) {
-            ODataFilter.writeError(request, e, response);
+            ODataFilter.writeError(request, e, response, 404);
         }
     }
     

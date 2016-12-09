@@ -284,7 +284,7 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		VariableContext currentContext = null;
 		boolean shouldClose = false;
 		boolean deterministic = true;
-		if (state.processor != null) {
+		if (state.processor != null && correlatedRefs != null) {
 			Determinism determinism = state.processor.getContext().getDeterminismLevel();
 			deterministic = Determinism.COMMAND_DETERMINISTIC.compareTo(determinism) <= 0;
 		}

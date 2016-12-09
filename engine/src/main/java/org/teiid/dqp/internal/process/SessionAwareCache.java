@@ -412,10 +412,6 @@ public class SessionAwareCache<T> {
     	return caches;
     }    
     
-    public static boolean isResultsetCache(String cacheType) {
-    	return (Admin.Cache.valueOf(cacheType) == Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE);
-    }
-
 	public boolean isTransactional() {
 		return this.localCache.isTransactional() || this.distributedCache.isTransactional();
 	}

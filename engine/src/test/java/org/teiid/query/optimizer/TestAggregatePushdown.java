@@ -539,6 +539,13 @@ public class TestAggregatePushdown {
         hdm.addData("SELECT g_0.e3, g_0.e1 FROM pm2.g1 AS g_0", Arrays.asList(false, "a"), Arrays.asList(true, "b"), Arrays.asList(true, "b"));
         
         TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(null, "a", 1), Arrays.asList(1, "b", 6), Arrays.asList(2, "b", 4), Arrays.asList(3, null, 4)});
+        
+        sql = "SELECT x.e2, y.e1, count(1) from pm1.g1 x full outer join pm2.g1 y on x.e3 = y.e3 group by x.e2, y.e1"; //$NON-NLS-1$
+        plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
+                                      new String[] {"SELECT g_0.e3, g_0.e2, COUNT(1) FROM pm1.g1 AS g_0 GROUP BY g_0.e3, g_0.e2", "SELECT g_0.e3, g_0.e1 FROM pm2.g1 AS g_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
+        
+        hdm.addData("SELECT g_0.e3, g_0.e2, COUNT(1) FROM pm1.g1 AS g_0 GROUP BY g_0.e3, g_0.e2", Arrays.asList(true, 1, 3), Arrays.asList(true, 2, 2), Arrays.asList(null, 3, 4));
+        TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(null, "a", 1), Arrays.asList(1, "b", 6), Arrays.asList(2, "b", 4), Arrays.asList(3, null, 4)});
     }
     
     /**
@@ -1507,4 +1514,31 @@ public class TestAggregatePushdown {
         TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
             new String[]{"SELECT DISTINCT g_0.IntKey AS c_0, g_0.DoubleNum AS c_1 FROM BQT1.SmallA AS g_0 ORDER BY c_0", "SELECT DISTINCT g_0.IntKey AS c_0, g_0.ByteNum AS c_1, g_0.StringNum AS c_2, g_0.StringKey AS c_3 FROM BQT1.SmallB AS g_0 ORDER BY c_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); 
     }
+    
+    @Test public void testMultipleDistinct() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = getAggregateCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_GROUP_BY_MULTIPLE_DISTINCT_AGGREGATES, false);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_DISTINCT, true);
+        capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
+        String sql = "SELECT count(distinct bqt1.smallb.stringkey), count(distinct bqt1.smallb.stringnum) from bqt1.smallb group by intkey";
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
+            new String[]{"SELECT g_0.IntKey, g_0.StringKey, g_0.StringNum FROM BQT1.SmallB AS g_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); 
+        
+        //same distinct args are fine
+        sql = "SELECT count(distinct bqt1.smallb.intkey), avg(distinct bqt1.smallb.intkey) from bqt1.smallb group by stringnum";
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
+            new String[]{"SELECT COUNT(DISTINCT g_0.IntKey), AVG(DISTINCT g_0.IntKey) FROM BQT1.SmallB AS g_0 GROUP BY g_0.StringNum"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING);
+    }
+    
+    @Test public void testSinglePredicatePushedWithUnionAndGrouping() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = getAggregateCapabilities();
+        capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
+        String sql = "select * from (select intnum as a from bqt1.smalla group by intnum union all select 1 as a) as x where a = 1;";
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), //$NON-NLS-1$
+            new String[]{"SELECT g_0.IntNum FROM BQT1.SmallA AS g_0 WHERE g_0.IntNum = 1 GROUP BY g_0.IntNum"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); 
+    }
+    
+
 }

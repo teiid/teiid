@@ -35,9 +35,9 @@ import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.unittest.TimestampUtil;
-import org.teiid.translator.jdbc.Version;
 import org.teiid.translator.jdbc.oracle.OracleExecutionFactory;
 import org.teiid.translator.jdbc.sqlserver.SQLServerExecutionFactory;
+import org.teiid.util.Version;
 
 
 

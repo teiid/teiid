@@ -46,10 +46,8 @@ import org.teiid.client.plan.PlanNode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.deployers.ExtendedPropertyMetadata;
 import org.teiid.deployers.ExtendedPropertyMetadataList;
-import org.teiid.deployers.TranslatorUtil;
 import org.teiid.deployers.UDFMetaData;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
-import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.SessionAwareCache;
@@ -60,7 +58,6 @@ import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.metadata.VDBResources;
 import org.teiid.services.BufferServiceImpl;
-import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorProperty.PropertyType;
 import org.teiid.vdb.runtime.VDBKey;
 
@@ -104,6 +101,11 @@ public class EmbeddedAdminFactory {
 
 		public AdminImpl(EmbeddedServer embeddedServer) {
 			this.embeddedServer = embeddedServer;
+		}
+		
+		@Override
+		public void setProfileName(String name) {
+		    //no op
 		}
 		
 		@Override
@@ -285,6 +287,11 @@ public class EmbeddedAdminFactory {
 			}*/ 
 		}
 
+        @Override
+        public void deploy(String deployName, InputStream content, boolean peristent) throws AdminException {
+            throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40137, "deploy")); //$NON-NLS-1$
+        }
+        
 		@Override
 		public void undeploy(String deployedName) throws AdminException {
 			
@@ -331,24 +338,12 @@ public class EmbeddedAdminFactory {
 
 		@Override
 		public Collection<? extends org.teiid.adminapi.Translator> getTranslators() throws AdminException {
-			
-			List<org.teiid.adminapi.Translator> list = new ArrayList<org.teiid.adminapi.Translator>();
-			for(ExecutionFactory<?,?> ef : this.embeddedServer.getTranslators().values()){
-				list.add(TranslatorUtil.buildTranslatorMetadata(ef, null));
-			}
-			return list;
+			return this.embeddedServer.getTranslatorRepository().getTranslators();
 		}
 
 		@Override
 		public org.teiid.adminapi.Translator getTranslator(String deployedName) throws AdminException {
-			
-			try {
-				ExecutionFactory<?,?> ef = this.embeddedServer.getExecutionFactory(deployedName);
-				VDBTranslatorMetaData metadata = TranslatorUtil.buildTranslatorMetadata(ef, null);
-				return metadata;
-			} catch (ConnectorManagerException e) {
-				throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40136, deployedName, e));
-			}
+			return this.embeddedServer.getTranslatorRepository().getTranslatorMetaData(deployedName);
 		}
 
 		@Override
@@ -400,30 +395,22 @@ public class EmbeddedAdminFactory {
 		public Collection<? extends PropertyDefinition> getTranslatorPropertyDefinitions(String translatorName, TranlatorPropertyType type) throws AdminException {
 			
 			List<PropertyDefinition> list = new ArrayList<PropertyDefinition>();
-			try {
-				ExecutionFactory<?,?> ef = this.embeddedServer.getExecutionFactory(translatorName);
-				if (ef == null) {
-					return null;
-				}
-				VDBTranslatorMetaData translator = TranslatorUtil.buildTranslatorMetadata(ef, null);
-				TranlatorPropertyType translatorPropertyType = TranlatorPropertyType.valueOf(type.toString().toUpperCase());
-				if (translator != null) {
-					ExtendedPropertyMetadataList properties = translator.getAttachment(ExtendedPropertyMetadataList.class);					
-		            if (translatorPropertyType.equals(TranlatorPropertyType.ALL)) {
-		                for (ExtendedPropertyMetadata epm:properties) {
+			VDBTranslatorMetaData translator = this.embeddedServer.getTranslatorRepository().getTranslatorMetaData(translatorName);
+			TranlatorPropertyType translatorPropertyType = TranlatorPropertyType.valueOf(type.toString().toUpperCase());
+			if (translator != null) {
+				ExtendedPropertyMetadataList properties = translator.getAttachment(ExtendedPropertyMetadataList.class);					
+	            if (translatorPropertyType.equals(TranlatorPropertyType.ALL)) {
+	                for (ExtendedPropertyMetadata epm:properties) {
+                        list.add(buildNode(epm));
+	                }
+	            } else {
+	                PropertyType propType = PropertyType.valueOf(type.toString().toUpperCase());
+                    for (ExtendedPropertyMetadata epm:properties) {
+                        if (PropertyType.valueOf(epm.category()).equals(propType)) {
                             list.add(buildNode(epm));
-		                }
-		            } else {
-		                PropertyType propType = PropertyType.valueOf(type.toString().toUpperCase());
-	                    for (ExtendedPropertyMetadata epm:properties) {
-	                        if (PropertyType.valueOf(epm.category()).equals(propType)) {
-	                            list.add(buildNode(epm));
-	                        }
-	                    }    
-		            }
-				}
-			} catch (ConnectorManagerException e) {
-				throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40138, translatorName, type, e));
+                        }
+                    }    
+	            }
 			}
 			return list;
 		}
@@ -607,7 +594,7 @@ public class EmbeddedAdminFactory {
 		}
 
 		@Override
-		public String getQueryPlan(String sessionId, int executionId)throws AdminException {
+		public String getQueryPlan(String sessionId, long executionId)throws AdminException {
 			PlanNode plan = this.embeddedServer.dqp.getPlan(sessionId, executionId);
 			if (plan == null) {
 				return null;

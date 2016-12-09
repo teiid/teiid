@@ -30,6 +30,7 @@ import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
+import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.symbol.Function;
@@ -143,12 +144,23 @@ public class FunctionCollectorVisitor extends LanguageVisitor {
         return functions;
     }
     
+    /**
+     * Checks to see if the object is non-deterministic
+     * iff all function are non-deterministic, and all correlated subqueries are deterministic
+     * @param ex
+     * @return
+     */
 	public static boolean isNonDeterministic(LanguageObject ex) {
 		Collection<Function> functions = FunctionCollectorVisitor.getFunctions(ex, true, false);
 		for (Function function : functions) {
 			if ( function.getFunctionDescriptor().getDeterministic() == Determinism.NONDETERMINISTIC) {
 				return true;
 			}
+		}
+		for (SubqueryContainer<?> container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(ex)) {
+		    if (container.getCommand().getCorrelatedReferences() != null && isNonDeterministic(container.getCommand())) {
+	            return true;
+		    }
 		}
 		return false;
 	}

@@ -1,5 +1,6 @@
 package org.teiid.query.processor;
 
+import static org.junit.Assert.*;
 import static org.teiid.query.processor.TestProcessor.*;
 
 import java.util.Arrays;
@@ -203,15 +204,12 @@ public class TestWithClauseProcessing {
 		        Arrays.asList("a", 1, "a"),
 		    };    
 
-	    dataManager.addData("WITH a (x, y, z) AS (SELECT g_0.e1, g_0.e2, NULL FROM g1 AS g_0) SELECT g_1.x, g_0.y, g_0.x FROM a AS g_0, a AS g_1", expected);
-	    dataManager.addData("WITH b__1 (e1) AS (SELECT NULL FROM g1 AS g_0), a (x, y, z) AS (SELECT g_0.e1, g_0.e2, NULL FROM g1 AS g_0) SELECT g_0.y FROM a AS g_0, b__1 AS g_1 WHERE g_0.x = 'a'", 
-	    		new List[] {Arrays.asList(2)});
+	    dataManager.addData("SELECT g_0.e1, g_0.e2 FROM g1 AS g_0", Arrays.asList("a", 1));
+	    dataManager.addData("WITH b__3 (e1) AS (SELECT NULL FROM g1 AS g_0) SELECT 1 FROM b__3 AS g_0", Arrays.asList(1));
 	    
-	    ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, new String[] {"WITH a (x, y, z) AS /*+ no_inline */ (SELECT g_0.e1, g_0.e2, UNKNOWN FROM pm1.g1 AS g_0) SELECT g_1.x, g_0.y, g_0.x FROM a AS g_0, a AS g_1"}, ComparisonMode.EXACT_COMMAND_STRING);
+	    ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, new String[] {"SELECT a.x FROM a", "SELECT a.y, a.x FROM a"}, ComparisonMode.EXACT_COMMAND_STRING);
 	    
-	    helpProcess(plan, dataManager, new List[] { 
-		        Arrays.asList(1, 1),
-		    });
+	    helpProcess(plan, dataManager, new List[] {});
 	}
 	
 	/**
@@ -432,6 +430,25 @@ public class TestWithClauseProcessing {
 	    helpProcess(plan, cc, dataManager, expected);
 	}
 	
+	@Test public void testMaterialize() throws Exception {
+        String sql = "with test as /*+ materialize */ (select user() as u from pm1.g1) select u from test, pm1.g2";
+        
+        List<?>[] expected = new List[] {Arrays.asList("user")};    
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+        dataManager.addData("SELECT 'user' FROM g1 AS g_0", Arrays.asList("user"));
+        dataManager.addData("SELECT 1 FROM g2 AS g_0", Arrays.asList(1));
+        CommandContext cc = TestProcessor.createCommandContext();
+        Command command = helpParse(sql);
+        assertEquals("WITH test AS /*+ materialize */ (SELECT user() AS u FROM pm1.g1) SELECT u FROM test, pm1.g2", command.toString());
+        assertEquals("WITH test AS /*+ materialize */ (SELECT user() AS u FROM pm1.g1) SELECT u FROM test, pm1.g2", command.clone().toString());
+        ProcessorPlan plan = helpGetPlan(command, RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(caps), cc);
+        
+        helpProcess(plan, cc, dataManager, expected);
+    }
+	
 	@Test public void testRecursive() throws Exception {
 	    String sql = "WITH t(n) AS ( VALUES (1) UNION ALL SELECT n+1 FROM t WHERE n < 64 ) SELECT sum(n) FROM t;"; //$NON-NLS-1$
 	    
@@ -501,13 +518,24 @@ public class TestWithClauseProcessing {
 	    TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT 1 FROM pm1.g1 AS g_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING);
 	}
 
-	@Test public void testWithAndUncorrelatedSubquery() throws TeiidComponentException, TeiidProcessingException {
+	@Test public void testWithAndUncorrelatedSubquery() throws Exception {
 	    String sql = "WITH t(n) AS /*+ no_inline */ ( select e1 from pm2.g1 ) SELECT n FROM t as t1, pm1.g1 where e1 = (select n from t)"; //$NON-NLS-1$
 
 	    BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
 	    bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
 	    CapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
-	    TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT 1 FROM pm1.g1 AS g_0 WHERE g_0.e1 = (WITH t (n) AS /*+ no_inline */ (SELECT g_0.e1 FROM pm2.g1 AS g_0) SELECT g_0.n FROM t AS g_0)", "WITH t (n) AS /*+ no_inline */ (SELECT g_0.e1 FROM pm2.g1 AS g_0) SELECT g_0.n FROM t AS g_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING);
+	    ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT t.n FROM t", "SELECT 1 FROM pm1.g1 AS g_0 WHERE g_0.e1 = (SELECT t.n FROM t)"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING);
+	    
+	    HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+	    
+	    dataManager.addData("SELECT g_0.e1 FROM g1 AS g_0", Arrays.asList("a"));
+	    dataManager.addData("SELECT 1 FROM g1 AS g_0 WHERE g_0.e1 = 'a'", Arrays.asList(1));
+	    
+	    List<?>[] expected = new List[] { 
+                Arrays.asList("a"),
+            };
+	    
+	    helpProcess(plan, TestProcessor.createCommandContext(), dataManager, expected);
 	}
 	
 	@Test public void testWithPushdownNested() throws TeiidException {
@@ -526,7 +554,7 @@ public class TestWithClauseProcessing {
        
 	    String sql = "SELECT (with b (x) as /*+ no_inline */ (select e1 from pm1.g1) select b.x || c.x from b,b b1), x from (with a (x, b, c) as /*+ no_inline */  (select e1, e2, e3 from pm1.g1) select * from a limit 1) as c"; //$NON-NLS-1$
 	    
-	    TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, new String[] {"WITH a (x, b, c) AS /*+ no_inline */ (SELECT g_0.e1, g_0.e2, g_0.e3 FROM pm1.g1 AS g_0) SELECT (WITH b (x) AS /*+ no_inline */ (SELECT g_0.e1 FROM pm1.g1 AS g_0) SELECT concat(g_1.x, v_0.c_0) FROM b AS g_1, b AS g_2), v_0.c_0 FROM (SELECT g_0.x AS c_0 FROM a AS g_0 LIMIT 1) AS v_0"}, ComparisonMode.EXACT_COMMAND_STRING);
+	    TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, new String[] {"WITH a (x, b, c) AS /*+ no_inline */ (SELECT g_0.e1, g_0.e2, g_0.e3 FROM pm1.g1 AS g_0) SELECT (WITH b (x) AS /*+ no_inline */ (SELECT g_1.e1 FROM pm1.g1 AS g_1) SELECT concat(g_2.x, v_0.c_0) FROM b AS g_2, b AS g_3), v_0.c_0 FROM (SELECT g_0.x AS c_0 FROM a AS g_0 LIMIT 1) AS v_0"}, ComparisonMode.EXACT_COMMAND_STRING);
 	    
 	    caps.setCapabilitySupport(Capability.SUBQUERY_COMMON_TABLE_EXPRESSIONS, false);
 	    
@@ -536,7 +564,7 @@ public class TestWithClauseProcessing {
 	    
 	    caps.setCapabilitySupport(Capability.SUBQUERY_COMMON_TABLE_EXPRESSIONS, true);
 	    
-	    TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, new String[] {"SELECT (WITH b (x) AS (SELECT g_0.e1 FROM pm1.g1 AS g_0) SELECT concat(g_1.x, v_0.c_0) FROM b AS g_1, b AS g_2), v_0.c_0 FROM (SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 LIMIT 1) AS v_0"}, ComparisonMode.EXACT_COMMAND_STRING);
+	    TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, new String[] {"SELECT (WITH b (x) AS (SELECT g_1.e1 FROM pm1.g1 AS g_1) SELECT concat(g_2.x, v_0.c_0) FROM b AS g_2, b AS g_3), v_0.c_0 FROM (SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 LIMIT 1) AS v_0"}, ComparisonMode.EXACT_COMMAND_STRING);
 	}
 	
 	@Test public void testWithPushdownNestedInsert() throws Exception {
@@ -750,16 +778,17 @@ public class TestWithClauseProcessing {
 	    CommandContext cc = TestProcessor.createCommandContext();
 	    BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
 		bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+		bsc.setCapabilitySupport(Capability.ROW_LIMIT, true);
 		
-		String sql = "WITH cte1 as /*+ no_inline */ (SELECT e1, e2 from pm1.g1), cte2 as /*+ no_inline */ (select * from cte1), cte3 as /*+ no_inline */ (select * from cte1) "
+		String sql = "WITH cte1 as /*+ no_inline */ (SELECT e1, e2 from pm1.g1), cte2 as /*+ no_inline */ (select * from cte1), cte3 as /*+ no_inline */ (select * from cte1 limit 1) "
 				+ "SELECT * FROM cte2 join cte3 on cte2.e1=cte3.e1";
 	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), cc);
 	    HardcodedDataManager hdm = new HardcodedDataManager(RealMetadataFactory.example1Cached());
 	    
 	    //cte1 should appear once
 	    hdm.addData("WITH cte1 (e1, e2) AS (SELECT g_0.e1, g_0.e2 FROM g1 AS g_0), "
-	    		+ "cte2 (e1, e2) AS (SELECT g_0.e1, g_0.e2 FROM cte1 AS g_0), "
-	    		+ "cte3 (e1, e2) AS (SELECT g_0.e1, g_0.e2 FROM cte1 AS g_0) SELECT g_1.e1, g_1.e2, g_0.e1, g_0.e2 FROM cte2 AS g_0, cte3 AS g_1 WHERE g_0.e1 = g_1.e1", Arrays.asList("a", 1, "b", 2));
+	            + "cte2 (e1, e2) AS (SELECT g_0.e1, g_0.e2 FROM cte1 AS g_0), "
+	            + "cte3 (e1, e2) AS (SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM cte1 AS g_0 LIMIT 1) SELECT g_1.e1, g_1.e2, g_0.e1, g_0.e2 FROM cte2 AS g_0, cte3 AS g_1 WHERE g_0.e1 = g_1.e1", Arrays.asList("a", 1, "b", 2));
 	    TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("a", 1, "b", 2)});
 	}
 	
@@ -892,9 +921,8 @@ public class TestWithClauseProcessing {
 	    ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
 	    HardcodedDataManager hdm = new HardcodedDataManager(metadata);
 	    
-	    hdm.addData("WITH alias (a) AS (SELECT g_0.a FROM test_a AS g_0), alias2 (a1, a) AS (SELECT NULL, g_0.a FROM alias AS g_0, test_a AS g_1 WHERE g_0.a = g_1.a) SELECT g_0.a AS c_0 FROM alias2 AS g_0 ORDER BY c_0", Arrays.asList("a"));
-	    hdm.addData("WITH alias (a) AS (SELECT g_0.a FROM test_a AS g_0), alias2 (a1, a) AS (SELECT NULL, g_0.a FROM alias AS g_0, test_a AS g_1 WHERE g_0.a = g_1.a) SELECT g_1.a AS c_0, g_0.a AS c_1 FROM alias AS g_0, alias2 AS g_1 WHERE g_0.a = g_1.a ORDER BY c_0", Arrays.asList("a", "a"));
-	    hdm.addData("WITH alias (a) AS (SELECT g_0.a FROM test_a AS g_0), alias2 (a1, a) AS (SELECT NULL, g_0.a FROM alias AS g_0, test_a AS g_1 WHERE g_0.a = g_1.a) SELECT g_0.a AS c_0, g_1.a AS c_1 FROM alias AS g_0, alias2 AS g_1 WHERE g_0.a = g_1.a ORDER BY c_0", Arrays.asList("a", "a"));
+	    hdm.addData("SELECT g_0.a FROM test_a AS g_0", Arrays.asList("a"));
+	    hdm.addData("SELECT g_0.a AS c_0 FROM test_a AS g_0 WHERE g_0.a = 'a' ORDER BY c_0", Arrays.asList("a"));
 	    
 	    TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("a", "a")});
 	}
@@ -972,6 +1000,143 @@ public class TestWithClauseProcessing {
 	    
 	    TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList(1, 1), Arrays.asList(1, 1), Arrays.asList(1, 1), Arrays.asList(1, 1)});
 	}
+	
+    @Test public void testPullupNestedSubquery() throws Exception {
+        CommandContext cc = TestProcessor.createCommandContext();
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+        bsc.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
+        bsc.setCapabilitySupport(Capability.SUBQUERY_COMMON_TABLE_EXPRESSIONS, true);
+        bsc.setCapabilitySupport(Capability.QUERY_UNION, true);
+        
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        
+        String sql = "with CTE1 as (SELECT e1 from pm1.g1) select * from pm1.g2 where e1 in (select e1 from CTE1) union all select * from pm1.g3 where e1 in (select e1 from CTE1)";
+
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
+        HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+        hdm.addData("WITH CTE1 (e1) AS (SELECT g_0.e1 FROM g1 AS g_0) SELECT g_2.e1 AS c_0, g_2.e2 AS c_1, g_2.e3 AS c_2, g_2.e4 AS c_3 FROM g2 AS g_2 WHERE g_2.e1 IN (SELECT g_3.e1 FROM CTE1 AS g_3) UNION ALL SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2, g_0.e4 AS c_3 FROM g3 AS g_0 WHERE g_0.e1 IN (SELECT g_1.e1 FROM CTE1 AS g_1)", Arrays.asList("a", 1, false, 1.0));
+        
+        TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("a", 1, false, 1.0)});
+   }
+      
+   @Test public void testPullupNestedSubquery1() throws Exception {
+        CommandContext cc = TestProcessor.createCommandContext();
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+        bsc.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
+        bsc.setCapabilitySupport(Capability.QUERY_UNION, true);
+        bsc.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        bsc.setCapabilitySupport(Capability.SUBQUERY_COMMON_TABLE_EXPRESSIONS, true);
+        
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        
+        String sql = "with CTE1 as (SELECT e1 from pm1.g1) select distinct e1 from (select * from pm1.g2 where e1 in (select e1 from CTE1) order by e1 limit 10) x union all select e1 from pm1.g3 where e1 in (select e1 from CTE1)";
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
+        HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+        hdm.addData("WITH CTE1 (e1) AS (SELECT g_0.e1 FROM g1 AS g_0) SELECT DISTINCT v_0.c_0 FROM (SELECT g_2.e1 AS c_0 FROM g2 AS g_2 WHERE g_2.e1 IN (SELECT g_3.e1 FROM CTE1 AS g_3) ORDER BY c_0 LIMIT 10) AS v_0 UNION ALL SELECT g_0.e1 AS c_0 FROM g3 AS g_0 WHERE g_0.e1 IN (SELECT g_1.e1 FROM CTE1 AS g_1)", Arrays.asList("a"));
+         
+        TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("a")});
+    }
+   
+    @Test public void testNestedSubqueryPreeval() throws Exception {
+        CommandContext cc = TestProcessor.createCommandContext();
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+        bsc.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
+        bsc.setCapabilitySupport(Capability.QUERY_UNION, true);
+        bsc.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        bsc.setCapabilitySupport(Capability.SUBQUERY_COMMON_TABLE_EXPRESSIONS, true);
+        
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        
+        String sql = "with CTE1 as (SELECT e1 from pm1.g1) select distinct e1 from (select * from pm1.g2 where e1 = (select e1 from CTE1) order by e1 limit 10) x union all select e1 from pm1.g3 where e1 = (select e1 from CTE1)";
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
+        HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+        hdm.addData("SELECT g_0.e1 FROM g1 AS g_0", Arrays.asList("a"));
+        hdm.addData("SELECT DISTINCT v_0.c_0 FROM (SELECT g_1.e1 AS c_0 FROM g2 AS g_1 WHERE g_1.e1 = 'a' ORDER BY c_0 LIMIT 10) AS v_0 UNION ALL SELECT g_0.e1 AS c_0 FROM g3 AS g_0 WHERE g_0.e1 = 'a'", Arrays.asList("b"));
+        TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("b")});
+    }
+    
+    @Test public void testDeeplyNestedSubqueryPreeval() throws Exception {
+        CommandContext cc = TestProcessor.createCommandContext();
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+        bsc.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
+        bsc.setCapabilitySupport(Capability.QUERY_UNION, true);
+        bsc.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        bsc.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
+        bsc.setCapabilitySupport(Capability.SUBQUERY_COMMON_TABLE_EXPRESSIONS, true);
+        
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        
+        String sql = "with CTE1 as /*+ no_inline */ (SELECT e1 from pm1.g1) select e1 from pm1.g2 where e1 in (select e1 from pm1.g1 where e1 = (select e1 from CTE1))";
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
+        HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+        hdm.addData("WITH CTE1 (e1) AS (SELECT g_0.e1 FROM g1 AS g_0) SELECT g_0.e1 AS c_0 FROM CTE1 AS g_0 LIMIT 2", Arrays.asList("a"));
+        hdm.addData("SELECT g_0.e1 FROM g2 AS g_0 WHERE g_0.e1 IN (SELECT g_1.e1 FROM g1 AS g_1 WHERE g_1.e1 = 'a')", Arrays.asList("a"));
+        TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("a")});
+    }
+    
+    /**
+     * make sure that we don't pull up correlated
+     * and that the references are correct
+     * @throws Exception
+     */
+    @Test public void testNestedWithCorrelatedPushdown() throws Exception {
+        CommandContext cc = TestProcessor.createCommandContext();
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+        bsc.setCapabilitySupport(Capability.SUBQUERY_COMMON_TABLE_EXPRESSIONS, true);
+        bsc.setCapabilitySupport(Capability.QUERY_UNION, true);
+        
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        
+        String sql = "select e1, e2 from pm1.g2 where e1 = (with g_0 as /*+ no_inline */ (SELECT pm1.g2.e1 from pm1.g1) select e1 from g_0)";
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
+        HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+        hdm.addData("SELECT g_0.e1, g_0.e2 FROM g2 AS g_0 WHERE g_0.e1 = (WITH g_0__1 (e1) AS (SELECT g_0.e1 FROM g1 AS g_1) SELECT g_2.e1 FROM g_0__1 AS g_2)", Arrays.asList("a", 1), Arrays.asList("b", 2));
+        
+        TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("a", 1), Arrays.asList("b", 2)});
+    }
+    
+    @Test public void testNestedWithCorrelatedPushdown1() throws Exception {
+        CommandContext cc = TestProcessor.createCommandContext();
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+        bsc.setCapabilitySupport(Capability.SUBQUERY_COMMON_TABLE_EXPRESSIONS, true);
+        bsc.setCapabilitySupport(Capability.QUERY_UNION, true);
+        
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        
+        String sql = "with g_1 as /*+ no_inline */ (SELECT e1, e2 from pm1.g1) select e1, e2 from g_1 where e1 = (with g_0 as /*+ no_inline */ (SELECT g_1.e1 from pm1.g1) select e1 from g_0)";
+        
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(bsc), cc);
+        HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+        hdm.addData("WITH g_1__1 (e1, e2) AS (SELECT g_0.e1, g_0.e2 FROM g1 AS g_0) SELECT g_0.e1, g_0.e2 FROM g_1__1 AS g_0 WHERE g_0.e1 = (WITH g_0__1 (e1) AS (SELECT g_0.e1 FROM g1 AS g_1) SELECT g_2.e1 FROM g_0__1 AS g_2)", Arrays.asList("a", 1), Arrays.asList("b", 2));
+        
+        TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("a", 1), Arrays.asList("b", 2)});
+    }
 	
 }
 

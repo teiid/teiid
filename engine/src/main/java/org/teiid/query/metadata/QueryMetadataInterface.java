@@ -377,6 +377,7 @@ public interface QueryMetadataInterface {
         	
 	/**
 	 * Get the unique keys for the specified group (primary and unique keys)
+	 * The primary key if present will be first in the collection
 	 * @param groupID Metadata identifier specifying group
 	 * @return Collection of Object (never null), each object representing a unique key
      * @throws QueryMetadataException Metadata implementation detected a problem during the request

@@ -122,6 +122,7 @@ public class VDBRepository implements Serializable{
 			}
 			vdb.setVersion(vdbKey.getVersion()); //canonicalize the version
 			vdb.addAttchment(VDBKey.class, vdbKey); //save the key for comparisons
+			vdb.setStatus(Status.LOADING);
 			this.vdbRepo.put(vdbKey, cvdb);
 			this.pendingDeployments.remove(vdbKey);
 			vdbAdded.signalAll();
@@ -155,11 +156,12 @@ public class VDBRepository implements Serializable{
 		long finishNanos = System.nanoTime() + timeOutNanos;
 		synchronized (vdb) {
 			while (vdb.getStatus() != Status.ACTIVE) {
-				if (timeOutNanos <= 0) {
+				long millis = timeOutNanos/1000000;
+				if (millis <= 0) {
 					throw new ConnectionException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40097, timeOutMillis, key.getName(), key.getVersion(), vdb.getValidityErrors())); 
 				}
 				try {
-					vdb.wait(timeOutNanos);
+					vdb.wait(millis);
 				} catch (InterruptedException e) {
 					return;
 				}
@@ -422,6 +424,7 @@ public class VDBRepository implements Serializable{
 	}
 
 	public void addPendingDeployment(VDBMetaData deployment) {
+		deployment.setStatus(Status.LOADING);
 		VDBKey key = new VDBKey(deployment.getName(), deployment.getVersion());
 		this.pendingDeployments.put(key, deployment);
 	}

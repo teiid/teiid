@@ -25,6 +25,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
+import org.teiid.Replicated;
 import org.teiid.deployers.EventDistributorImpl;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.events.EventDistributor;
@@ -68,8 +69,11 @@ public abstract class AbstractEventDistributorFactoryService implements Internal
 			
 			@Override
 			public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-				method.invoke(ed, args);
-				if (replicatableEventDistributor != null) {
+			    Replicated annotation = method.getAnnotation(Replicated.class);
+                if (replicatableEventDistributor == null || (annotation != null && annotation.remoteOnly())) {
+                    method.invoke(ed, args);
+                } 
+                if (replicatableEventDistributor != null) {
 					method.invoke(replicatableEventDistributor, args);
 				}
 				return null;

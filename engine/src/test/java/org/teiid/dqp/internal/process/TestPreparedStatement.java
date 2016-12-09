@@ -480,6 +480,24 @@ public class TestPreparedStatement {
 		helpTestProcessing(preparedSql, values, expected, dataManager, new DefaultCapabilitiesFinder(caps), metadata, null, false, false, false, RealMetadataFactory.example1VDB());
     }
     
+    @Test public void testInsertWithMultipleValues() throws Exception {
+        String preparedSql = "insert into pm1.g1 (e1, e2) values (?, ?), (?, ?)"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] { 
+            Arrays.asList(2),
+        };    
+    
+        List<?> values = Arrays.asList("a", "1", "b", "2"); //$NON-NLS-1$
+        
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        HardcodedDataManager dataManager = new HardcodedDataManager(metadata);
+        dataManager.addData("INSERT INTO g1 (e1, e2) VALUES ('a', 1)", new List<?>[] {Arrays.asList(1)});
+        dataManager.addData("INSERT INTO g1 (e1, e2) VALUES ('b', 2)", new List<?>[] {Arrays.asList(1)});
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        
+        helpTestProcessing(preparedSql, values, expected, dataManager, new DefaultCapabilitiesFinder(caps), metadata, null, false, false, false, RealMetadataFactory.example1VDB());
+    }
+    
     @Test public void testAnonBlockIn() throws Exception {
     	String preparedSql = "begin insert into pm1.g1 (e1, e2) select ?, ?; select rowcount; end;"; //$NON-NLS-1$
         

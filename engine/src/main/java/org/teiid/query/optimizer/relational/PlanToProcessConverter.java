@@ -36,6 +36,7 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.id.IDGenerator;
 import org.teiid.core.util.Assertion;
 import org.teiid.metadata.FunctionMethod.Determinism;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -65,6 +66,7 @@ import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.SourceHint.SpecificHint;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
+import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -195,9 +197,11 @@ public class PlanToProcessConverter {
                         Object groupID = intoGroup.getMetadataID();
                         Object modelID = metadata.getModelID(groupID);
                         String modelName = metadata.getFullName(modelID);
-                        if (metadata.isVirtualGroup(groupID)) {
+                        if (metadata.isVirtualGroup(groupID) && !metadata.isTemporaryTable(groupID)) {
                         	InsertPlanExecutionNode ipen = new InsertPlanExecutionNode(getID(), metadata);
-                        	ipen.setProcessorPlan((ProcessorPlan)node.getFirstChild().getProperty(Info.PROCESSOR_PLAN));
+                        	ProcessorPlan plan = (ProcessorPlan)node.getFirstChild().getProperty(Info.PROCESSOR_PLAN);
+                        	Assertion.isNotNull(plan);
+                        	ipen.setProcessorPlan(plan);
                         	ipen.setReferences(insert.getValues());
                         	processNode = ipen;
                         } else {
@@ -206,6 +210,10 @@ public class PlanToProcessConverter {
 	                        pinode.setIntoElements(allIntoElements);
 	                        pinode.setModelName(modelName);
 	                        pinode.setConstraint((Criteria) node.getProperty(Info.CONSTRAINT));
+	                        pinode.setSourceHint((SourceHint) node.getProperty(Info.SOURCE_HINT));
+	                        if (node.hasBooleanProperty(Info.UPSERT)) {
+	                            pinode.setUpsert(true);
+	                        }
 	                        processNode = pinode;
                             SourceCapabilities caps = capFinder.findCapabilities(modelName);
                             if (caps.supportsCapability(Capability.INSERT_WITH_ITERATOR)) {
@@ -252,6 +260,9 @@ public class PlanToProcessConverter {
 	            			wfpn.setElements(outputElements);
 	            			wfpn.init();
 	            			pnode.addChild(wfpn);
+	            			for (WindowFunction wf : windowFunctions) {
+	            			    validateAggregateFunctionEvaluation(wf.getFunction());
+	            			}
             			}
             		}
                 }
@@ -569,6 +580,11 @@ public class PlanToProcessConverter {
 				if (orderBy != null) {
 			        gnode.setOrderBy(orderBy.getOrderByItems());
 				}
+				for (Expression ex : groupingMap!=null?groupingMap.getValues():(List<Expression>)node.getFirstChild().getProperty(NodeConstants.Info.PROJECT_COLS)) {
+				    if (ex instanceof AggregateSymbol) {
+				        validateAggregateFunctionEvaluation((AggregateSymbol)ex);
+				    }
+                }
 				processNode = gnode;
 				break;
 
@@ -695,6 +711,12 @@ public class PlanToProcessConverter {
 
 		return processNode;
 	}
+
+    private void validateAggregateFunctionEvaluation(AggregateSymbol as) throws QueryPlannerException {
+        if (as.getFunctionDescriptor() != null && as.getFunctionDescriptor().getPushdown() == PushDown.MUST_PUSHDOWN) {
+            throw new QueryPlannerException(QueryPlugin.Event.TEIID31211, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31211, as.getFunctionDescriptor().getFullName()));
+        }
+    }
 
 	private Command aliasCommand(AccessNode aNode, Command command,
 			Object modelID) throws TeiidComponentException,

@@ -75,11 +75,11 @@ public interface ODBCClientRemote {
 
 	//	RowDescription (B)
 	//	NoData (B)
-	void sendResultSetDescription(List<PgColInfo> cols);
+	void sendResultSetDescription(List<PgColInfo> cols, short[] resultColumnFormat);
 	
 	//	DataRow (B)
 	//	CommandComplete (B)
-	void sendResults(String sql, ResultSetImpl rs, List<PgColInfo> cols, ResultsFuture<Integer> result, CursorDirection direction, int rowCount, boolean describeRows);
+	void sendResults(String sql, ResultSetImpl rs, List<PgColInfo> cols, ResultsFuture<Integer> result, CursorDirection direction, int rowCount, boolean describeRows, short[] resultColumnFormat);
 	
 	void sendCommandComplete(String sql, Integer count);	
 

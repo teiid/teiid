@@ -24,6 +24,8 @@ package org.teiid.query.processor.proc;
 
 import static org.teiid.query.analysis.AnalysisRecord.*;
 
+import java.sql.Clob;
+import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -55,6 +57,7 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.processor.proc.CreateCursorResultSetInstruction.Mode;
+import org.teiid.query.processor.relational.SubqueryAwareRelationalNode;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.ProcedureReservedWords;
@@ -71,6 +74,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.util.VariableContext;
+import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.ValidationVisitor;
 
@@ -85,6 +89,8 @@ import org.teiid.query.validator.ValidationVisitor;
  */
 public class ExecDynamicSqlInstruction extends ProgramInstruction {
     
+	private static final int MAX_SQL_LENGTH = 1 << 18; //based roughly on what could be the default max over JDBC 
+
 	// the DynamicCommand
 	private DynamicCommand dynamicCommand;
 
@@ -137,17 +143,23 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 		String query = null;
 		
 		try {
-			Object value = procEnv.evaluateExpression(dynamicCommand.getSql());
-
+			Clob value = (Clob)procEnv.evaluateExpression(dynamicCommand.getSql());
+			
 			if (value == null) {
 				throw new QueryProcessingException(QueryPlugin.Util
 						.getString("ExecDynamicSqlInstruction.0")); //$NON-NLS-1$
 			}
+			
+			if (value.length() > MAX_SQL_LENGTH) {
+				throw new QueryProcessingException(QueryPlugin.Util
+						.gs(QueryPlugin.Event.TEIID31204, MAX_SQL_LENGTH));
+			}
+			
+			query = value.getSubString(1, MAX_SQL_LENGTH);
 
 			LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP,
-					new Object[] { "Executing dynamic sql ", value }); //$NON-NLS-1$
+					new Object[] { "Executing dynamic sql ", query }); //$NON-NLS-1$
 			
-			query = value.toString();
 			
 			Command command = QueryParser.getQueryParser().parseCommand(query);
 			command.setExternalGroupContexts(dynamicCommand.getExternalGroupContexts());
@@ -276,6 +288,9 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
     		}
 
             procEnv.push(dynamicProgram);
+		} catch (SQLException e) {
+			Object[] params = {dynamicCommand, dynamicCommand.getSql(), e.getMessage()};
+			throw new QueryProcessingException(QueryPlugin.Event.TEIID30168, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30168, params));
 		} catch (TeiidProcessingException e) {
 			Object[] params = {dynamicCommand, query == null?dynamicCommand.getSql():query, e.getMessage()};
 			 throw new QueryProcessingException(QueryPlugin.Event.TEIID30168, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30168, params));
@@ -408,6 +423,33 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 	
 	public void setReturnable(boolean returnable) {
 		this.returnable = returnable;
+	}
+	
+	@Override
+	public Boolean requiresTransaction(boolean transactionalReads) {
+	    Boolean expressionRequires = SubqueryAwareRelationalNode.requiresTransaction(transactionalReads, ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(dynamicCommand.getSql()));
+	    if (expressionRequires != null && expressionRequires) {
+	        return true;
+	    }
+	    if (this.dynamicCommand.getUsing() != null) {
+    	    Boolean setRequires = SubqueryAwareRelationalNode.requiresTransaction(transactionalReads, ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(this.dynamicCommand.getUsing().getClauseMap().values()));
+    	    if (setRequires == null) {
+    	        if (expressionRequires == null) {
+    	            return true;
+    	        }
+    	        expressionRequires = null;
+            } else if (setRequires) {
+                return true;
+            }
+	    }
+	    if ((dynamicCommand.getUpdatingModelCount() < 2 && transactionalReads)
+	            || dynamicCommand.getUpdatingModelCount() == 1) {
+	        return expressionRequires==null?true:null;
+	    }
+	    if (dynamicCommand.getUpdatingModelCount() > 1) {
+            return true;
+        }
+	    return expressionRequires;
 	}
 
 }

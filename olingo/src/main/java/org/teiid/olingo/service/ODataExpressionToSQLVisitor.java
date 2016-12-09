@@ -21,11 +21,11 @@
  */
 package org.teiid.olingo.service;
 
-import static org.teiid.language.SQLConstants.Reserved.CAST;
-import static org.teiid.language.SQLConstants.Reserved.CONVERT;
+import static org.teiid.language.SQLConstants.Reserved.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Stack;
 
@@ -40,12 +40,14 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.JDBCSQLTypeInfo;
+import org.teiid.core.util.Assertion;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.odata.api.SQLParameter;
 import org.teiid.olingo.ODataExpressionVisitor;
 import org.teiid.olingo.ODataPlugin;
+import org.teiid.olingo.ProjectedColumn;
 import org.teiid.olingo.common.ODataTypeManager;
 import org.teiid.olingo.service.ODataSQLBuilder.URLParseService;
 import org.teiid.olingo.service.TeiidServiceHandler.UniqueNameGenerator;
@@ -62,8 +64,6 @@ import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.translator.SourceSystemFunctions;
 
 public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor implements  ODataExpressionVisitor{
-    static enum ExpressionType{LAMBDAALL, LAMBDAANY, ROOT, ANY}
-    
     private final Stack<org.teiid.query.sql.symbol.Expression> stack = new Stack<org.teiid.query.sql.symbol.Expression>();
     private List<SQLParameter> params;
     private boolean prepared = false;
@@ -71,11 +71,12 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
     private MetadataStore metadata;
     private DocumentNode ctxQuery;
     private DocumentNode ctxExpression;
+    private DocumentNode ctxLambda;
     private UniqueNameGenerator nameGenerator;
     private URLParseService parseService;
-    private ExpressionType exprType = ExpressionType.ANY;
     private String lastPropertyType;
     private OData odata;
+    private boolean root;
     
     public ODataExpressionToSQLVisitor(DocumentNode resource,
             boolean prepared, UriInfo info, MetadataStore metadata, OData odata,
@@ -120,10 +121,6 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
         return this.ctxQuery;
     }
 
-    public DocumentNode getExpresionEntityResource() {
-        return this.ctxExpression;
-    }
-    
     @Override
     public void visit(Alias expr) {
         String strValue = this.uriInfo.getValueForAlias(expr.getParameterName());
@@ -186,65 +183,26 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             binaryExpr  = new Function("-", new org.teiid.query.sql.symbol.Expression[] { lhs, rhs }); //$NON-NLS-1$
             break;
         case GT:
-            if (this.exprType == ExpressionType.LAMBDAALL) {
-                // lamba operator is reversed
-                binaryExpr = new SubqueryCompareCriteria(rhs, buildSubquery(
-                        this.ctxExpression, lhs), CompareCriteria.LT,
-                        SubqueryCompareCriteria.ALL);
-            }
-            else {
-                binaryExpr  = new CompareCriteria(lhs, CompareCriteria.GT, rhs);
-            }
+            binaryExpr  = new CompareCriteria(lhs, CompareCriteria.GT, rhs);
             break;
         case GE:
-            if (this.exprType == ExpressionType.LAMBDAALL) {
-                binaryExpr = new SubqueryCompareCriteria(rhs, buildSubquery(
-                        this.ctxExpression, lhs), CompareCriteria.LE,
-                        SubqueryCompareCriteria.ALL);
-            }
-            else {            
-                binaryExpr  = new CompareCriteria(lhs, CompareCriteria.GE, rhs);
-            }
+            binaryExpr  = new CompareCriteria(lhs, CompareCriteria.GE, rhs);
             break;
         case LT:
-            if (this.exprType == ExpressionType.LAMBDAALL) {
-                binaryExpr = new SubqueryCompareCriteria(rhs, buildSubquery(
-                        this.ctxExpression, lhs), CompareCriteria.GT,
-                        SubqueryCompareCriteria.ALL);
-            }
-            else {            
-                binaryExpr  = new CompareCriteria(lhs, CompareCriteria.LT, rhs);
-            }
+            binaryExpr  = new CompareCriteria(lhs, CompareCriteria.LT, rhs);
             break;
         case LE:
-            if (this.exprType == ExpressionType.LAMBDAALL) {
-                binaryExpr = new SubqueryCompareCriteria(rhs, buildSubquery(
-                        this.ctxExpression, lhs), CompareCriteria.GE,
-                        SubqueryCompareCriteria.ALL);
-            }
-            else {            
-                binaryExpr  = new CompareCriteria(lhs, CompareCriteria.LE, rhs);
-            }
+            binaryExpr  = new CompareCriteria(lhs, CompareCriteria.LE, rhs);
             break;
         case EQ:
-            if (this.exprType == ExpressionType.LAMBDAALL) {
-                binaryExpr = new SubqueryCompareCriteria(rhs, buildSubquery(
-                        this.ctxExpression, lhs), CompareCriteria.EQ,
-                        SubqueryCompareCriteria.ALL);
-            }            
-            else if (rhs instanceof Constant && ((Constant) rhs).getType() == DataTypeManager.DefaultDataClasses.NULL) {
+            if (rhs instanceof Constant && ((Constant) rhs).getType() == DataTypeManager.DefaultDataClasses.NULL) {
                 binaryExpr  = new IsNullCriteria(lhs);
             } else {
                 binaryExpr  = new CompareCriteria(lhs, CompareCriteria.EQ, rhs);
             }
             break;
         case NE:
-            if (this.exprType == ExpressionType.LAMBDAALL) {
-                binaryExpr = new SubqueryCompareCriteria(rhs, buildSubquery(
-                        this.ctxExpression, lhs), CompareCriteria.NE,
-                        SubqueryCompareCriteria.ALL);
-            }
-            else if (rhs instanceof Constant && ((Constant) rhs).getType() == DataTypeManager.DefaultDataClasses.NULL) {
+            if (rhs instanceof Constant && ((Constant) rhs).getType() == DataTypeManager.DefaultDataClasses.NULL) {
                 IsNullCriteria crit = new IsNullCriteria(lhs);
                 crit.setNegated(true);
                 binaryExpr  = crit;
@@ -259,7 +217,6 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             binaryExpr  = new CompoundCriteria(CompoundCriteria.OR, (Criteria) lhs, (Criteria) rhs);
             break;
         }
-        
         this.stack.push(binaryExpr);
     }
 
@@ -501,16 +458,18 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
     /////////////////////////////////////////////////////////////////////////
     @Override
     public void visit(UriResourcePrimitiveProperty info) {
-        if (this.exprType == ExpressionType.ROOT) {
+        if (this.root) {
             this.stack.add(new ScalarSubquery(buildRootSubQuery(info.getProperty().getName(), this.ctxExpression)));
+            root = false;
         }
         else {
             this.stack.add(new ElementSymbol(info.getProperty().getName(), this.ctxExpression.getGroupSymbol()));
         }
-        
         // hack to resolve the property type.
         Column c = this.ctxExpression.getColumnByName(info.getProperty().getName());
         this.lastPropertyType = c.getRuntimeType();
+        //revert back to the query context
+        this.ctxExpression = this.ctxQuery;
     }
     
     @Override
@@ -568,49 +527,57 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
     }
     
     @Override
-    public void visit(UriResourceLambdaAll resource) {
-        this.exprType = ExpressionType.LAMBDAALL;
-        UriResourceLambdaAll all = (UriResourceLambdaAll)resource;
+    public void visit(UriResourceLambdaAll all) {
         accept(all.getExpression());
+        if (this.ctxLambda != null) {
+            org.teiid.query.sql.symbol.Expression predicate = this.stack.pop();
+                predicate = new SubqueryCompareCriteria(new Constant(true), buildSubquery(
+                        this.ctxLambda, predicate), CompareCriteria.EQ,
+                        SubqueryCompareCriteria.ALL);
+                this.stack.push(predicate);
+        }
+        this.ctxLambda = null;
     }
 
     @Override
-    public void visit(UriResourceLambdaAny resource) {
-        this.exprType = ExpressionType.LAMBDAANY;
-        UriResourceLambdaAny any = (UriResourceLambdaAny) resource;
+    public void visit(UriResourceLambdaAny any) {
         accept(any.getExpression());
+        if (this.ctxLambda != null) {
+            org.teiid.query.sql.symbol.Expression predicate = this.stack.pop();
+            Query q = buildSubquery(this.ctxLambda, new Constant(1));
+            Criteria crit = null;
+            if (predicate instanceof Criteria) {
+                crit = (Criteria)predicate;
+            } else {
+                crit = new ExpressionCriteria(predicate);
+            }
+            q.setCriteria(Criteria.combineCriteria(q.getCriteria(), crit));
+            predicate = new ExistsCriteria(q);
+            this.stack.push(predicate);
+        }
+        this.ctxLambda = null;
     }
 
     @Override
     public void visit(UriResourceLambdaVariable resource) {
         try {
-            DocumentNode lambda = DocumentNode.build(
-                    (EdmEntityType) resource.getType(), null, this.metadata, this.odata,
-                    this.nameGenerator, false, this.uriInfo,
-                    this.parseService);
-            lambda.setGroupSymbol(new GroupSymbol(resource.getVariableName(), lambda.getFullName()));
-            
-            if (this.exprType == ExpressionType.LAMBDAALL) {
-                // ALL - needs to modeled as subquery
-                this.ctxExpression = lambda;
-            } 
-            else {
-                //ANY - Needs to be joined to resource.
-                this.ctxQuery.joinTable(
-                        lambda, 
-                        (DocumentNode.joinFK(this.ctxQuery, lambda) == null), 
-                        JoinType.JOIN_INNER);
-                lambda.addCriteria(this.ctxQuery.getCriteria());
-                lambda.setDistinct(true);
-                this.ctxExpression = lambda;
-                this.ctxQuery = lambda;
+            if (this.ctxLambda == null) {
+                DocumentNode lambda = DocumentNode.build(
+                        (EdmEntityType) resource.getType(), null, this.metadata, this.odata,
+                        this.nameGenerator, false, this.uriInfo,
+                        this.parseService);
+                lambda.setGroupSymbol(new GroupSymbol(resource.getVariableName(), lambda.getFullName()));
+                
+                this.ctxLambda = lambda;
             }
+            
+            this.ctxExpression = ctxLambda;
         } catch (TeiidException e) {
         	throw new TeiidRuntimeException(e);
         }
     }    
     
-    private QueryCommand buildSubquery(DocumentNode eResource,
+    private Query buildSubquery(DocumentNode eResource,
             org.teiid.query.sql.symbol.Expression projected) {
         Select s1 = new Select();
         s1.addSymbol(projected); 
@@ -628,52 +595,83 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
     @Override
     public void visit(UriResourceIt info) {
         if (info.getType() instanceof SingletonPrimitiveType) {
-            String group = this.nameGenerator.getNextGroup();
-            GroupSymbol groupSymbol = new GroupSymbol(group);
-            ElementSymbol es = new ElementSymbol("col", groupSymbol);
-            String type = ODataTypeManager.teiidType((SingletonPrimitiveType)info.getType(), false);
-            Function castFunction = new Function(CAST,new org.teiid.query.sql.symbol.Expression[] {es, new Constant(type)});            
-            this.stack.push(castFunction);
+        	org.teiid.query.sql.symbol.Expression ex = null;
+        	if (this.ctxQuery.getIterator() == null) {
+                String group = this.nameGenerator.getNextGroup();
+                GroupSymbol groupSymbol = new GroupSymbol(group);
+
+                StoredProcedure procedure = new StoredProcedure();
+                procedure.setProcedureName("arrayiterate");
+                
+                //the projected should only be the collection property at this point
+                //we may need more checks here to ensure that is valid
+                Collection<ProjectedColumn> values = this.ctxQuery.getProjectedColumns().values();
+                Assertion.assertTrue(values.size() == 1);
+				ProjectedColumn projectedColumn = values.iterator().next();
+				ElementSymbol projectedEs = (ElementSymbol)projectedColumn.getExpression();
+                List<SPParameter> params = new ArrayList<SPParameter>();
+                SPParameter param = new SPParameter(1, SPParameter.IN, "val");
+                param.setExpression(projectedEs);
+                params.add(param);
+                
+                procedure.setParameter(param);
+                
+                SubqueryFromClause fromClause = new SubqueryFromClause(group, procedure);
+                fromClause.setLateral(true);
             
-            StoredProcedure procedure = new StoredProcedure();
-            procedure.setProcedureName("arrayiterate");
-            
-            ElementSymbol projectedEs = (ElementSymbol)this.ctxQuery.getProjectedColumns().get(0).getExpression();
-            List<SPParameter> params = new ArrayList<SPParameter>();
-            SPParameter param = new SPParameter(1, SPParameter.IN, "val");
-            param.setExpression(projectedEs);
-            params.add(param);
-            
-            procedure.setParameter(param);
-            
-            SubqueryFromClause fromClause = new SubqueryFromClause(group, procedure);
-            fromClause.setLateral(true);
-            
-            DocumentNode itResource = new DocumentNode();
-            AliasSymbol expression = new AliasSymbol(projectedEs.getShortName(), castFunction);
-            itResource.setFromClause(fromClause);
-            itResource.setGroupSymbol(groupSymbol);            
-            itResource.addProjectedColumn(expression, true, info.getType(), true);
-            
-            this.ctxQuery.getProjectedColumns().remove(0);
-            this.ctxQuery.addSibiling(itResource);
+                ElementSymbol es = new ElementSymbol("col", groupSymbol);
+                String type = ODataTypeManager.teiidType((SingletonPrimitiveType)info.getType(), false);
+                Function castFunction = new Function(CAST,new org.teiid.query.sql.symbol.Expression[] {es, new Constant(type)});            
+
+                DocumentNode itResource = new DocumentNode();
+                org.teiid.query.sql.symbol.Expression clone = (org.teiid.query.sql.symbol.Expression) castFunction.clone();
+                AggregateSymbol symbol = new AggregateSymbol(AggregateSymbol.Type.ARRAY_AGG.name(), false, clone);
+				AliasSymbol expression = new AliasSymbol(projectedEs.getShortName(), symbol);
+                
+                itResource.setFromClause(fromClause);
+                itResource.setGroupSymbol(groupSymbol);            
+                itResource.addProjectedColumn(expression, info.getType(), projectedColumn.getProperty(), true);
+
+                this.ctxQuery.getProjectedColumns().remove(projectedColumn.getExpression());
+                this.ctxQuery.setIterator(itResource);
+                
+                ex = castFunction;
+        	} else {
+        		GroupSymbol groupSymbol = this.ctxQuery.getIterator().getGroupSymbol();
+                ElementSymbol es = new ElementSymbol("col", groupSymbol);
+                String type = ODataTypeManager.teiidType((SingletonPrimitiveType)info.getType(), false);
+                ex = new Function(CAST,new org.teiid.query.sql.symbol.Expression[] {es, new Constant(type)});            
+        	}
+        	
+            this.stack.push(ex);
         }
         else {
-            throw new TeiidRuntimeException(new TeiidNotImplementedException(
-                    ODataPlugin.Event.TEIID16010,
-                    ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16010)));
+            boolean ex = true;
+            if (this.ctxQuery instanceof ExpandDocumentNode) {
+                ExpandDocumentNode node = (ExpandDocumentNode)this.ctxQuery;
+                DocumentNode parent = node.getCollectionContext();
+                if (parent != null) {
+                    this.ctxExpression = parent;
+                    ex = false;
+                }
+            }
+            if (ex) {
+                throw new TeiidRuntimeException(new TeiidNotImplementedException(
+                        ODataPlugin.Event.TEIID16010,
+                        ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16010)));
+            }
         }
     }
     
     @Override
     public void visit(UriResourceRoot info) {
-        this.exprType = ExpressionType.ROOT;
+        this.root = true;
     }
     
     @Override
     public void visit(UriResourceEntitySet info) {
         EdmEntityType edmEntityType = info.getEntitySet().getEntityType();
-        if (this.exprType == ExpressionType.ROOT) {
+        if (this.root) {
             try {
                 this.ctxExpression = DocumentNode.build(edmEntityType,
                         info.getKeyPredicates(), this.metadata, this.odata, this.nameGenerator,

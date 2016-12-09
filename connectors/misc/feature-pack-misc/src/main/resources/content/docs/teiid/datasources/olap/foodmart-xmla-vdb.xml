@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<vdb name="foodmart" version="1">
+    <description>Connects to FoodMart Mondrian database</description>
+    <property name="cache-metadata" value="true" />
+
+    <model name="xmla">
+        <!-- This model introduces a invokeMDX procedure when deployed -->
+        <source name="foodmart" translator-name="olap" connection-jndi-name="java:/xmlaDS"/>
+    </model>
+
+    <model name="anylytics" type="VIRTUAL">
+      <metadata type="DDL"><![CDATA[
+        CREATE VIEW UnitSales ( 
+             unit string, 
+             amount decimal
+        )  AS SELECT x.col1 as unit, x.col2 as amount FROM (call xmla.invokeMDX('SELECT {[Measures].[Unit Sales]} ON 0,{[Product].Children} ON 1 FROM [Sales]')) w, 
+            ARRAYTABLE(w.tuple COLUMNS "col1" string , "col2" decimal) AS x;
+
+      ]]> </metadata>
+    </model>
+</vdb>

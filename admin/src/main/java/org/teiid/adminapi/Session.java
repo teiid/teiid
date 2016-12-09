@@ -55,7 +55,7 @@ public interface Session extends AdminObject, DomainAware {
 
     /**
      * Get User Name for this Session
-     * 
+     * <br>It will not include the Security Domain, see {@link #getSecurityDomain()}
      * @return String of UserName
      */
     public String getUserName();

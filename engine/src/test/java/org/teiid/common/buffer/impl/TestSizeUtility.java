@@ -52,7 +52,7 @@ public class TestSizeUtility {
     }
 
     public void helpTestGetSize(Object obj, long expectedSize) {  
-        long actualSize = new SizeUtility(null).getSize(obj, DataTypeManager.determineDataTypeClass(obj), true, false);
+        long actualSize = SizeUtility.getSize(obj, false);
         assertEquals("Got unexpected size: ", expectedSize, actualSize); //$NON-NLS-1$
     }
 
@@ -111,9 +111,6 @@ public class TestSizeUtility {
     @Test public void testGetSizeObject() {
         helpTestGetStaticSize(new SomeObject(null), 16);
         helpTestGetStaticSize(new SomeObject("Hello world"), 56);  //$NON-NLS-1$
-        Object obj = new SomeObject(null);
-        //still biased toward the initial estimate
-        assertEquals(160, new SizeUtility(null).getSize(obj, DataTypeManager.determineDataTypeClass(obj), false, false));
     }
 
     @Test public void testGetSizeRow1() {

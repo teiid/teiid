@@ -192,7 +192,7 @@ public class IntegrationTestDeployment {
 	@Test
 	public void testTraslators() throws Exception {
 		Collection<? extends Translator> translators = admin.getTranslators();
-		assertEquals(translators.toString(), 55, translators.size());
+		assertEquals(translators.toString(), 57, translators.size());
 
 		JavaArchive jar = getLoopyArchive();
 		
@@ -313,7 +313,7 @@ public class IntegrationTestDeployment {
 		assertEquals (1, sessions.size());
 		Session s = sessions.iterator().next();
 		
-		assertEquals("user@teiid-security", s.getUserName());
+		assertEquals("user", s.getUserName());
 		assertEquals("test", s.getApplicationName());
 		assertEquals("bqt", s.getVDBName());
 		assertEquals("1", s.getVDBVersion());
@@ -367,6 +367,8 @@ public class IntegrationTestDeployment {
 			String session = rs.getString(1);
 			rs.close();
 			
+			Thread.sleep(500);
+			
 			Collection<? extends Request> requests = admin.getRequestsForSession(session);
 			
 			assertEquals(0, requests.size());
@@ -380,6 +382,9 @@ public class IntegrationTestDeployment {
 			assertEquals("select * from source.smalla", r.getCommand());
 			assertNotNull(r.getExecutionId());
 			assertNotNull(r.getSessionId());
+			
+			String plan = admin.getQueryPlan(r.getSessionId(), r.getExecutionId());
+			assertNotNull(plan);
 
 			stmt.execute("select * from source.smalla");
 			Collection<? extends Request> requests2 = admin.getRequestsForSession(session);
@@ -556,7 +561,7 @@ public class IntegrationTestDeployment {
         String deployedName = "fooXA";
         String testVDB = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" + 
                 "<vdb name=\"test\" version=\"1\">\n" + 
-                "    <property name=\"UseConnectorMetadata\" value=\"cached\" />\n" + 
+                "    <property name=\"cache-metadata\" value=\"true\" />\n" + 
                 "    <model name=\"loopy\">\n" + 
                 "        <source name=\"loop\" translator-name=\"loopback\" />\n" + 
                 "    </model>\n" + 
@@ -592,7 +597,7 @@ public class IntegrationTestDeployment {
 		String vdbName = "test";
 		String testVDB = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" + 
 				"<vdb name=\"test\" version=\"1\">\n" + 
-				"    <property name=\"UseConnectorMetadata\" value=\"cached\" />\n" + 
+				"    <property name=\"cache-metadata\" value=\"true\" />\n" + 
 				"    <model name=\"loopy\">\n" + 
 				"        <source name=\"loop\" translator-name=\"loopy\" />\n" + 
 				"    </model>\n" + 
@@ -643,7 +648,7 @@ public class IntegrationTestDeployment {
 		String vdbName = "test";
 		String testVDB = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" + 
 				"<vdb name=\"test\" version=\"1\">\n" + 
-				"    <property name=\"UseConnectorMetadata\" value=\"cached\" />\n" + 
+				"    <property name=\"cache-metadata\" value=\"true\" />\n" + 
 				"    <model name=\"loopy\">\n" + 
 				"        <source name=\"loop\" translator-name=\"loopy\" />\n" + 
 				"    </model>\n" + 
@@ -710,7 +715,7 @@ public class IntegrationTestDeployment {
 		String vdbName = "test";
 		String testVDB = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" + 
 				"<vdb name=\"test\" version=\"1\">\n" + 
-				"    <property name=\"UseConnectorMetadata\" value=\"${teiid.vdb.UseConnectorMetadata:none}\" />\n" + 
+				"    <property name=\"cache-metadata\" value=\"${teiid.vdb.UseConnectorMetadata:false}\" />\n" + 
 				"    <model name=\"loopy\">\n" + 
 				"        <source name=\"loop\" translator-name=\"loopy\" />\n" + 
 				"    </model>\n" + 
@@ -727,10 +732,10 @@ public class IntegrationTestDeployment {
 		AdminUtil.waitForVDBLoad(admin, vdbName, 1, 3);
 		
 		VDB vdb = admin.getVDB(vdbName, 1);
-		String value = vdb.getPropertyValue("UseConnectorMetadata");
+		String value = vdb.getPropertyValue("cache-metadata");
 
 		// see the arquillian.zml file in resources in the JVM proeprties section for the expected value
-		assertEquals("custom", value);
+		assertEquals("true", value);
 		
 		admin.undeploy("loopy.jar");
 		admin.undeploy("test-vdb.xml");

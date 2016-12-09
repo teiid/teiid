@@ -111,7 +111,7 @@ public class TestRowBasedSecurity {
 	}
 	
 	@Test public void testSelectFilterOuterJoin1() throws Exception {
-		TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table t (x string, y integer); create foreign table t1 (x string, y integer) create view v as select t.x, t1.y from t left outer join t1 on t.y = t1.y", "x", "y");
+		TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table t (x string, y integer); create foreign table t1 (x string, y integer); create view v as select t.x, t1.y from t left outer join t1 on t.y = t1.y", "x", "y");
 		BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
 		caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, false);
 		caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, false);
@@ -141,7 +141,7 @@ public class TestRowBasedSecurity {
 		helpProcess(plan, context, dataManager, expectedResults);
 		
 		plan = helpGetPlan(helpParse("select count(1) from v where y is not null"), tm, new DefaultCapabilitiesFinder(caps), context);
-		dataManager.addData("SELECT g_0.y AS c_0 FROM y.t AS g_0 WHERE g_0.x = 'user' ORDER BY c_0", new List<?>[] {Arrays.asList(1), Arrays.asList(2)});
+		dataManager.addData("SELECT g_0.y FROM y.t AS g_0 WHERE g_0.x = 'user'", new List<?>[] {Arrays.asList(1), Arrays.asList(2)});
 		dataManager.addData("SELECT g_0.y AS c_0 FROM y.t1 AS g_0 WHERE g_0.y IS NOT NULL ORDER BY c_0", Arrays.asList(1));
 		expectedResults = new List<?>[] {Arrays.asList(1)};
 		helpProcess(plan, context, dataManager, expectedResults);

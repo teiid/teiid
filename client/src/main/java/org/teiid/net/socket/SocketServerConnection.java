@@ -121,7 +121,11 @@ public class SocketServerConnection implements ServerConnection {
 			Exception ex = null;
 			try {
 				if (!hostInfo.isResolved()) {
-					hostInfo = new HostInfo(hostInfo.getHostName(), new InetSocketAddress(hostInfo.getInetAddress(), hostInfo.getPortNumber()));
+					InetAddress inetAddress = hostInfo.getInetAddress();
+					if (!hostInfo.isResolved()) {
+						//create a resolved version
+						hostInfo = new HostInfo(hostInfo.getHostName(), new InetSocketAddress(inetAddress, hostInfo.getPortNumber()));
+					}
 				}
 				ILogon newLogon = connect(hostInfo);
 				if (this.logonResult == null) {

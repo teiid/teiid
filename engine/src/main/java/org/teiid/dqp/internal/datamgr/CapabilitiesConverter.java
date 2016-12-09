@@ -129,6 +129,8 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_LATERAL, srcCaps.supportsLateralJoin());
         tgtCaps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_LATERAL_CONDITION, srcCaps.supportsLateralJoin() && srcCaps.supportsLateralJoinCondition());
         tgtCaps.setCapabilitySupport(Capability.QUERY_FROM_PROCEDURE_TABLE, srcCaps.supportsProcedureTable());
+        tgtCaps.setCapabilitySupport(Capability.QUERY_GROUP_BY_MULTIPLE_DISTINCT_AGGREGATES, srcCaps.supportsGroupByMultipleDistinctAggregates());
+        tgtCaps.setCapabilitySupport(Capability.UPSERT, srcCaps.supportsUpsert());
         if (srcCaps.supportsPartialFiltering()) {
         	//disable supports that could end up being not filterable
         	tgtCaps.setCapabilitySupport(Capability.PARTIAL_FILTERS, true);

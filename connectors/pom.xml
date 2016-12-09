@@ -3,7 +3,7 @@
   <parent>
     <artifactId>teiid-parent</artifactId>
     <groupId>org.jboss.teiid</groupId>
-    <version>9.1.0.Alpha3-SNAPSHOT</version>
+    <version>9.2.0.Alpha2-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>connectors</artifactId>
@@ -77,49 +77,23 @@
   </dependencies>
   
   <modules>
-    <module>google-api</module>
-    <module>mongodb-api</module>
-    <module>simpledb-api</module>
     <module>document-api</module>      
     
-    <module>translator-jdbc</module>
-    <module>translator-google</module>
-    <module>translator-ldap</module>
-    <module>translator-loopback</module>
-    <module>translator-file</module>
-    <module>translator-salesforce</module>
-    <module>translator-salesforce-34</module>
-    <module>translator-mongodb</module>
-    <module>translator-cassandra</module>
-    <module>translator-simpledb</module>
-    <module>translator-accumulo</module>
-    <module>translator-solr</module>
-    <module>translator-excel</module>
-    <module>translator-ws</module>
-    <module>translator-olap</module>
-    <module>translator-hive</module>
-    <module>translator-jpa</module>
-    <module>translator-object</module>
-    <module>translator-odata</module>
-    <module>translator-odata4</module>
-    <module>translator-infinispan-libmode</module>
-    <module>translator-infinispan-hotrod</module>
-    <module>connector-file</module>
-    <module>connector-google</module>
-    <module>connector-salesforce</module>
-    <module>connector-salesforce-34</module>    
-    <module>connector-ldap</module>
-    <module>connector-ws</module>
-    <module>connector-mongodb</module>
-    <module>connector-cassandra</module>
-    <module>connector-simpledb</module>
-    <module>connector-accumulo</module>
-    <module>connector-solr</module>
-    <module>connector-infinispan-hotrod</module>
-    <module>connector-infinispan-libmode</module>
-    <module>translator-prestodb</module>
+    <module>accumulo</module>
+    <module>cassandra</module>
+    <module>file</module> 
+    <module>google</module>
+    <module>infinispan</module>
+    <module>ldap</module>
+    <module>jdbc</module>
+    <module>mongodb</module>
+    <module>simpledb</module>
+    <module>webservice</module>
+    <module>salesforce</module>
+    <module>solr</module>
+    <module>odata</module>
+    <module>swagger</module>
+    <module>misc</module>
     <module>sandbox</module>
-    <module>translator-swagger</module>
-    <module>translator-hbase</module>
   </modules>
 </project>

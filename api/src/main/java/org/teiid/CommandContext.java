@@ -43,7 +43,8 @@ import org.teiid.jdbc.TeiidSQLWarning;
 public interface CommandContext {
 	
 	/**
-	 * Get the current user name
+	 * Get the current user name, which will just be the base user name
+	 * and not include the security domain.  See also {@link #getSession()} - {@link Session#getSecurityDomain()}
 	 * @return
 	 */
 	String getUserName();

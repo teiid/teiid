@@ -69,7 +69,6 @@ import org.teiid.vdb.runtime.VDBKey;
 public class TransportService extends ClientServiceRegistryImpl implements Service<ClientServiceRegistry> {
 	private transient LogonImpl logon;
 	private SocketConfiguration socketConfig;
-	private String authenticationDomain;	
 	private SocketListener socketListener;
 	private AuthenticationType authenticationType;
 	private int maxODBCLobSizeAllowed = 5*1024*1024; // 5 MB
@@ -137,7 +136,7 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
     		}
     		if (socketConfig.getProtocol() == WireProtocol.teiid) {
     	    	this.socketListener = new SocketListener(address, this.socketConfig, this, getBufferManagerInjector().getValue());
-    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50012, this.transportName, address.getHostName(), String.valueOf(address.getPort()), (sslEnabled?"ON":"OFF"), this.authenticationDomain)); //$NON-NLS-1$ //$NON-NLS-2$ 
+    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50012, this.transportName, address.getHostName(), String.valueOf(address.getPort()), (sslEnabled?"ON":"OFF"))); //$NON-NLS-1$ //$NON-NLS-2$ 
     		}
     		else if (socketConfig.getProtocol() == WireProtocol.pg) {
         		TeiidDriver driver = new TeiidDriver();
@@ -161,7 +160,7 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
 				});
         		ODBCSocketListener odbc = new ODBCSocketListener(address, this.socketConfig, this, getBufferManagerInjector().getValue(), getMaxODBCLobSizeAllowed(), this.logon, driver);
         		this.socketListener = odbc;
-    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50037, this.transportName, address.getHostName(), String.valueOf(address.getPort()), (sslEnabled?"ON":"OFF"), this.authenticationDomain)); //$NON-NLS-1$ //$NON-NLS-2$
+    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50037, this.transportName, address.getHostName(), String.valueOf(address.getPort()), (sslEnabled?"ON":"OFF"))); //$NON-NLS-1$ //$NON-NLS-2$
     		}
     		else {
     			throw new StartException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50013));
@@ -239,14 +238,6 @@ public class TransportService extends ClientServiceRegistryImpl implements Servi
 
 	public void setSocketConfig(SocketConfiguration socketConfig) {
 		this.socketConfig = socketConfig;
-	}
-	
-	public String getAuthenticationDomain() {
-		return authenticationDomain;
-	}
-
-	public void setAuthenticationDomain(String authenticationDomain) {
-		this.authenticationDomain = authenticationDomain;
 	}
 	
 	public InjectedValue<VDBRepository> getVdbRepositoryInjector() {

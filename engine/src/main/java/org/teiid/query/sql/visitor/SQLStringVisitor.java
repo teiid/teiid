@@ -297,8 +297,8 @@ public class SQLStringVisitor extends LanguageVisitor {
 
     @Override
     public void visit( Insert obj ) {
-    	if (obj.isMerge()) {
-    		append(MERGE);
+    	if (obj.isUpsert()) {
+    		append(NonReserved.UPSERT);
     	} else {
     		append(INSERT);
     	}
@@ -826,7 +826,14 @@ public class SQLStringVisitor extends LanguageVisitor {
     		append(SPACE);
     	}
     	append(AS);
-    	if (obj.isNoInline()) {
+    	if (obj.isMaterialize()) {
+    	    append(SPACE);
+            append(BEGIN_HINT);
+            append(SPACE);
+            append(WithQueryCommand.MATERIALIZE);
+            append(SPACE);
+            append(END_HINT);    	    
+    	} else if (obj.isNoInline()) {
     		append(SPACE);
         	append(BEGIN_HINT);
             append(SPACE);
@@ -2040,7 +2047,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         	append(SPACE);
         	append(NonReserved.SELECTOR);
         	append(SPACE);
-        	append(escapeSinglePart(obj.getSelector()));
+        	outputLiteral(String.class, false, obj.getSelector());
         }
         append(SPACE);
         append(NonReserved.COLUMNS);
@@ -2078,7 +2085,7 @@ public class SQLStringVisitor extends LanguageVisitor {
 	            	append(SPACE);
 	            	append(NonReserved.SELECTOR);
 	            	append(SPACE);
-	            	append(escapeSinglePart(col.getSelector()));
+	            	outputLiteral(String.class, false, col.getSelector());
 	            	append(SPACE);
 	            	append(col.getPosition());
 	            }

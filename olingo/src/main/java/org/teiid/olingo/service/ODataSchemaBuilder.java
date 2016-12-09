@@ -21,7 +21,7 @@
  */
 package org.teiid.olingo.service;
 
-import static org.teiid.language.visitor.SQLStringVisitor.getRecordName;
+import static org.teiid.language.visitor.SQLStringVisitor.*;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -185,12 +185,13 @@ public class ODataSchemaBuilder {
 
         if (c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.STRING)) {
             property.setMaxLength(c.getLength()).setUnicode(true);
-        } else if (c.getRuntimeType().equals(
-                DataTypeManager.DefaultDataTypes.DOUBLE)
-                || c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.FLOAT)
-                || c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.BIG_DECIMAL)) {
-            property.setPrecision(c.getPrecision());
-            property.setScale(c.getScale());
+        } else if (c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.BIG_DECIMAL)) {
+            if (c.getScale() < 0) {
+                property.setPrecision((int)Math.min(Integer.MAX_VALUE, (long)c.getPrecision() - c.getScale()));
+            } else {
+                property.setPrecision(c.getPrecision());
+            }
+            property.setScale(Math.max(0, c.getScale()));
         } else if (c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.TIMESTAMP)
                 || c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.TIME)) {
             property.setPrecision(c.getPrecision() == 0?new Integer(4):c.getPrecision());
@@ -216,6 +217,31 @@ public class ODataSchemaBuilder {
         return false;
     }
     
+    static boolean isPrimaryKey(Table table, List<String> columnNames) {
+        KeyRecord pk = table.getPrimaryKey();
+        boolean isPK = true;
+        for (String columnName:columnNames) {
+	        if (!hasColumn(pk, columnName)) {
+	            isPK = false;
+	            break;
+	        }
+        }
+        if (!isPK) {        	
+	        for (KeyRecord key:table.getUniqueKeys()) {
+	        	isPK = true;
+	        	for (String columnName:columnNames) {
+		            if (!hasColumn(key, columnName)) {
+		                isPK = false;
+		            }
+	        	}
+	        	if (isPK) {
+	        		break;
+	        	}
+	        }
+        }
+        return isPK;
+    }
+    
     static boolean hasColumn(KeyRecord pk, String columnName) {
         if (pk != null) {
             for (Column column : pk.getColumns()) {
@@ -227,7 +253,7 @@ public class ODataSchemaBuilder {
         return false;
     }
     
-    private static KeyRecord getIdentifier(Table table) {
+    static KeyRecord getIdentifier(Table table) {
         if (table.getPrimaryKey() != null) {
             return table.getPrimaryKey();
         }
@@ -252,10 +278,11 @@ public class ODataSchemaBuilder {
             for (ForeignKey fk : table.getForeignKeys()) {
     
                 // check to see if fk is part of this table's pk, then it is 1 to 1 relation
-                boolean onetoone = sameColumnSet(getIdentifier(table), fk);
-
-                addForwardNavigation(entityTypes, entitySets, table, fk, onetoone);
-                addReverseNavigation(entityTypes, entitySets, table, fk, onetoone);
+                boolean fkPKSame = sameColumnSet(getIdentifier(table), fk);
+                boolean fkIsPK= isPrimaryKey(schema.getTable(fk.getReferenceTableName()), fk.getReferenceColumns());
+                
+                addForwardNavigation(entityTypes, entitySets, table, fk, fkPKSame || fkIsPK);
+                addReverseNavigation(entityTypes, entitySets, table, fk, fkPKSame && fkIsPK);
             }
         }
     }
@@ -265,18 +292,16 @@ public class ODataSchemaBuilder {
         CsdlNavigationProperty navigaton = null;
         CsdlNavigationPropertyBinding navigationBinding = null;
         String entityTypeName = null;
-        if (onetoone) {
-            entityTypeName = table.getName();
-            navigaton = buildNavigation(fk);                
-            navigationBinding = buildNavigationBinding(fk);                    
+        
+        entityTypeName = table.getName();
+        navigaton = buildNavigation(fk);                
+        navigationBinding = buildNavigationBinding(fk);                    
+        
+        if (onetoone ) {
             navigaton.setNullable(false);
         } else {
-            entityTypeName = fk.getReferenceTableName();
-            navigaton = buildReverseNavigation(table, fk);                
-            navigationBinding = buildReverseNavigationBinding(table,fk);                                        
             navigaton.setCollection(true);
         }                
-   
         
         CsdlEntityType entityType = entityTypes.get(entityTypeName);
         entityType.getNavigationProperties().add(navigaton);
@@ -290,16 +315,14 @@ public class ODataSchemaBuilder {
         CsdlNavigationProperty navigaton = null;
         CsdlNavigationPropertyBinding navigationBinding = null;
         String entityTypeName = null;
+
+        entityTypeName = fk.getReferenceTableName();
+        navigaton = buildReverseNavigation(table, fk);                
+        navigationBinding = buildReverseNavigationBinding(table,fk);                                        
         
         if (onetoone) {
-            entityTypeName = fk.getReferenceTableName();
-            navigaton = buildReverseNavigation(table, fk);                
-            navigationBinding = buildReverseNavigationBinding(table,fk);                                        
             navigaton.setNullable(false);
         } else {
-            entityTypeName = table.getName();
-            navigaton = buildNavigation(fk);                
-            navigationBinding = buildNavigationBinding(fk);
             navigaton.setCollection(true);
         }                
         
@@ -451,7 +474,7 @@ public class ODataSchemaBuilder {
     }
     
     private static boolean isFuntion(Procedure proc) {
-        if (doesProcedureReturn(proc) && proc.getUpdateCount() == 0
+        if (doesProcedureReturn(proc) && proc.getUpdateCount() < 1
                 && !isInputParameterLob(proc)) {
             return true;
         }
@@ -512,11 +535,13 @@ public class ODataSchemaBuilder {
         
         if (pp.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.STRING)) {
             param.setMaxLength(pp.getLength());
-        } else if (pp.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.DOUBLE)
-                || pp.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.FLOAT)
-                || pp.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.BIG_DECIMAL)) {
-            param.setPrecision(pp.getPrecision());
-            param.setScale(pp.getScale());
+        } else if (pp.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.BIG_DECIMAL)) {
+            if (pp.getScale() < 0) {
+                param.setPrecision((int)Math.min(Integer.MAX_VALUE, (long)pp.getPrecision() - pp.getScale()));
+            } else {
+                param.setPrecision(pp.getPrecision());
+            }
+            param.setScale(Math.max(0, pp.getScale()));
         } else {
             if (pp.getDefaultValue() != null) {
                 //param.setDefaultValue(pp.getDefaultValue());
@@ -658,7 +683,7 @@ public class ODataSchemaBuilder {
         
         // add all custom properties
         for (String property:table.getProperties().keySet()) {
-            addTerm(normalizeTermName(property), "EntityType", csdlSchema);
+            addTerm(normalizeTermName(property), new String[] {"EntityType"}, csdlSchema);
             addStringAnnotation(entityType, csdlSchema.getAlias()+"."+normalizeTermName(property), table.getProperties().get(property));
         }
     }
@@ -707,7 +732,7 @@ public class ODataSchemaBuilder {
         
         // add all custom properties
         for (String str:column.getProperties().keySet()) {
-            addTerm(normalizeTermName(str), "Property", csdlSchema);
+            addTerm(normalizeTermName(str), new String[] {"Property"}, csdlSchema);
             addStringAnnotation(property, csdlSchema.getAlias()+"."+normalizeTermName(str), column.getProperties().get(str));
         }        
     }
@@ -721,12 +746,12 @@ public class ODataSchemaBuilder {
         if (proc.getNameInSource() != null) {
             addStringAnnotation(operation, "teiid.NAMEINSOURCE", proc.getNameInSource());
         }
-        if (proc.getUpdateCount() != 1) {
+        if (proc.getUpdateCount() != Procedure.AUTO_UPDATECOUNT) {
             addIntAnnotation(operation, "teiid.UPDATECOUNT", proc.getUpdateCount());
         }   
         // add all custom properties
         for (String str:proc.getProperties().keySet()) {
-            addTerm(normalizeTermName(str), "Action Function", csdlSchema);
+            addTerm(normalizeTermName(str), new String[] {"Action", "Function"}, csdlSchema);
             addStringAnnotation(operation, csdlSchema.getAlias()+"."+normalizeTermName(str), proc.getProperties().get(str));
         }         
     }    
@@ -745,7 +770,7 @@ public class ODataSchemaBuilder {
         
         // add all custom properties
         for (String str:procedure.getProperties().keySet()) {
-            addTerm(normalizeTermName(str), "Parameter", csdlSchema);
+            addTerm(normalizeTermName(str), new String[] {"Parameter"}, csdlSchema);
             addStringAnnotation(parameter, csdlSchema.getAlias()+"."+normalizeTermName(str), procedure.getProperties().get(str));
         } 
     }    
@@ -781,7 +806,7 @@ public class ODataSchemaBuilder {
         recipent.getAnnotations().add(annotation);  
     }  
     
-    private static void addTerm(String property, String appliesTo, CsdlSchema schema) {
+    private static void addTerm(String property, String[] appliesTo, CsdlSchema schema) {
         CsdlTerm term = schema.getTerm(property);
         if ( term == null) {
             term = new CsdlTerm();
@@ -790,7 +815,9 @@ public class ODataSchemaBuilder {
             schema.getTerms().add(term);            
         }
         if (term.getAppliesTo().isEmpty() || !term.getAppliesTo().contains(appliesTo)) {
-            term.getAppliesTo().add(appliesTo);
+            for (int i = 0; i < appliesTo.length; i++) {
+                term.getAppliesTo().add(appliesTo[i]);
+            }
         }
     }     
     

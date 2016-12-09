@@ -24,6 +24,7 @@ package org.teiid.query.optimizer;
 
 import static org.junit.Assert.*;
 import static org.teiid.query.optimizer.TestOptimizer.*;
+import static org.teiid.query.processor.TestProcessor.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -32,6 +33,7 @@ import org.junit.Test;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.TestOptimizer.DupRemoveSortNode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
@@ -541,6 +543,43 @@ public class TestSortOptimization {
         List<?>[] expectedResults = new List[] {Arrays.asList("a", 1, 1, 2), Arrays.asList("b", 2, 1, 2)};
         
         TestProcessor.helpProcess(plan, dataManager, expectedResults);
+    }
+    
+    @Test public void testOffsetWithOrderBy() throws Exception{
+        String sql = "select e1 from pm1.g1 order by e1 offset 2 rows";
+        
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
+        
+        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps), 
+                new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT g_0.e1 FROM pm1.g1 AS g_0", Arrays.asList("a"), Arrays.asList("b"), Arrays.asList("c"));
+        
+        List<?>[] expectedResults = new List[] {Arrays.asList("c")};
+        
+        TestProcessor.helpProcess(plan, dataManager, expectedResults);
+    }
+    
+    @Test public void testOrderedLimitOvewPreservedView() throws Exception {
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table x (a string, b string, c integer, primary key (a, b)) options (updatable true); "
+                + "create view SvcView (RowId integer PRIMARY KEY, code string, name string) as select c as x, a, b from x limit 2;", "x", "y");
+        String sql = "select rowid, code, name from svcview order by rowid limit 1 ";
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+         
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, 
+                tm, null, new DefaultCapabilitiesFinder(bsc),
+                new String[] {
+                    "SELECT g_0.c, g_0.a, g_0.b FROM y.x AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT g_0.c, g_0.a, g_0.b FROM y.x AS g_0", Arrays.asList(1, "x", "a"), Arrays.asList(2, "z", "b"));
+        List<?>[] expected = new List<?>[] {
+                Arrays.asList(1, "x", "a"),
+        }; 
+        helpProcess(plan, dataManager, expected);
     }
 
 }

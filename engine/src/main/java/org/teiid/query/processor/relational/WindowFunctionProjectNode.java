@@ -484,7 +484,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 	}
 	
 	@Override
-	protected Collection<? extends LanguageObject> getObjects() {
+	public Collection<? extends LanguageObject> getObjects() {
 		return getElements();
 	}
 	

@@ -172,6 +172,9 @@ public class RulePushLimit implements OptimizerRule {
                 return false;
             }
             case NodeConstants.Types.JOIN:
+                if (parentLimit == null) {
+                    return false;
+                }
             	JoinType joinType = (JoinType)child.getProperty(Info.JOIN_TYPE);
             	boolean pushLeft = false;
             	boolean pushRight = false;
@@ -232,6 +235,15 @@ public class RulePushLimit implements OptimizerRule {
             			for (int i = 0; i < virtual.size(); i++) {
             				symbolMap.put(virtual.get(i), projected.get(i));
             			}
+            			//map the expression directly to avoid issues with naming logic in the general node conversion
+            			OrderBy orderBy = (OrderBy) child.getProperty(Info.SORT_ORDER);
+            			for (OrderByItem item : orderBy.getOrderByItems()) {
+            			    Expression ex = symbolMap.get(item.getSymbol());
+            			    if (ex != null) {
+            			        item.setSymbol(ex);
+                                item.setExpressionPosition(projected.indexOf(ex));
+            			    }
+            			}
             			FrameUtil.convertNode(child, sourceNode.getGroups().iterator().next(), null, symbolMap, metadata, false);
             			sourceNode.getFirstChild().addAsParent(child);
             			child.addAsParent(limitNode);
@@ -252,6 +264,9 @@ public class RulePushLimit implements OptimizerRule {
             	}
             	case NodeConstants.Types.JOIN:
             	{
+            	    if (parentLimit == null) {
+                        return false;
+                    }
             		PlanNode join = child.getFirstChild();
             		JoinType jt = (JoinType)join.getProperty(NodeConstants.Info.JOIN_TYPE);
             		if (!jt.isOuter()) {
@@ -453,6 +468,9 @@ public class RulePushLimit implements OptimizerRule {
 	}
 
 	private boolean canPushToBranches(PlanNode limitNode, PlanNode child) {
+	    if (!limitNode.hasProperty(Info.MAX_TUPLE_LIMIT)) {
+	        return false;
+	    }
 		if (!SetQuery.Operation.UNION.equals(child.getProperty(NodeConstants.Info.SET_OPERATION))) {
 			return false;
 		}   

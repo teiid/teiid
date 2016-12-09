@@ -593,28 +593,29 @@ abstract class BaseCachehandler extends BaseOperationHandler<SessionAwareCache>{
 		}
 
 		ServiceController<?> sc;
-		if (SessionAwareCache.isResultsetCache(cacheType)) {
-			sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.CACHE_RESULTSET);
-		}
-		else {
-			sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.CACHE_PREPAREDPLAN);
+		try {
+    		if (Admin.Cache.valueOf(cacheType) == Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE) {
+    			sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.CACHE_RESULTSET);
+    		}
+    		else {
+    			sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.CACHE_PREPAREDPLAN);
+    		}
+		} catch (IllegalArgumentException e) {
+            throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50071, cacheType));
 		}
 
-		if (sc != null) {
-			return SessionAwareCache.class.cast(sc.getValue());
-		}
-		return null;
+		return SessionAwareCache.class.cast(sc.getValue());
 	}
 }
 
 
-class CacheTypes extends BaseCachehandler {
+class CacheTypes extends BaseOperationHandler<Void> {
 	protected CacheTypes() {
 		super("cache-types"); //$NON-NLS-1$
 	}
 
 	@Override
-	protected void executeOperation(OperationContext context, SessionAwareCache cache, ModelNode operation) throws OperationFailedException {
+	protected void executeOperation(OperationContext context, Void cache, ModelNode operation) throws OperationFailedException {
 		ModelNode result = context.getResult();
 		Collection<String> types = SessionAwareCache.getCacheTypes();
 		for (String type:types) {
@@ -642,9 +643,6 @@ class ClearCache extends BaseCachehandler {
 		}
 
 		String cacheType = operation.get(OperationsConstants.CACHE_TYPE.getName()).asString();
-		if (cache == null) {
-			throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50071, cacheType));
-		}
 
 		if (operation.hasDefined(OperationsConstants.VDB_NAME.getName()) && operation.hasDefined(OperationsConstants.VDB_VERSION.getName())) {
 			String vdbName = operation.get(OperationsConstants.VDB_NAME.getName()).asString();
@@ -679,9 +677,6 @@ class CacheStatistics extends BaseCachehandler {
 			throw new OperationFailedException(IntegrationPlugin.Util.getString(OperationsConstants.CACHE_TYPE.getName()+MISSING));
 		}
 		String cacheType = operation.get(OperationsConstants.CACHE_TYPE.getName()).asString();
-		if (cache == null) {
-			throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50071, cacheType));
-		}
 
 		ModelNode result = context.getResult();
 		CacheStatisticsMetadata stats = cache.buildCacheStats(cacheType);
@@ -855,9 +850,6 @@ class GetVDB extends BaseOperationHandler<VDBRepository>{
 		VDBMetaData vdb = repo.getVDB(vdbName, vdbVersion);
 		if (vdb != null) {
 			VDBMetadataMapper.INSTANCE.wrap(vdb, result);
-		}
-		else {
-			throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50096, vdbName, vdbVersion));
 		}
 	}
 
@@ -1034,7 +1026,9 @@ class GetTranslator extends TranslatorOperationHandler{
 		ModelNode result = context.getResult();
 		String translatorName = operation.get(OperationsConstants.TRANSLATOR_NAME.getName()).asString();
 		VDBTranslatorMetaData translator = repo.getTranslatorMetaData(translatorName);
-		VDBMetadataMapper.VDBTranslatorMetaDataMapper.INSTANCE.wrap(translator, result);
+		if (translator != null) {
+		    VDBMetadataMapper.VDBTranslatorMetaDataMapper.INSTANCE.wrap(translator, result);
+		}
 	}
 
 	@Override
@@ -1563,16 +1557,13 @@ class ReadRARDescription extends TeiidOperationHandler {
 			ConnectorXmlDescriptor cd = du.getAttachment(ConnectorXmlDescriptor.ATTACHMENT_KEY);
 			ra = cd.getConnector().getResourceadapter();
 		}
-		if (ra instanceof ResourceAdapter) {
-			ResourceAdapter ra1516 = (ResourceAdapter)ra;
-			result.add(buildReadOnlyNode("resourceadapter-class", ra1516.getResourceadapterClass())); //$NON-NLS-1$
-			List<ConnectionDefinition> connDefinitions = ra1516.getOutboundResourceadapter().getConnectionDefinitions();
-			for (ConnectionDefinition p:connDefinitions) {
-				result.add(buildReadOnlyNode("managedconnectionfactory-class", p.getManagedConnectionFactoryClass().getValue())); //$NON-NLS-1$
-				List<? extends ConfigProperty> props = p.getConfigProperties();
-				for (ConfigProperty prop:props) {
-					result.add(buildNode(prop));
-				}
+		result.add(buildReadOnlyNode("resourceadapter-class", ra.getResourceadapterClass())); //$NON-NLS-1$
+		List<ConnectionDefinition> connDefinitions = ra.getOutboundResourceadapter().getConnectionDefinitions();
+		for (ConnectionDefinition p:connDefinitions) {
+			result.add(buildReadOnlyNode("managedconnectionfactory-class", p.getManagedConnectionFactoryClass().getValue())); //$NON-NLS-1$
+			List<? extends ConfigProperty> props = p.getConfigProperties();
+			for (ConfigProperty prop:props) {
+				result.add(buildNode(prop));
 			}
 		}
 	}
@@ -1609,7 +1600,7 @@ class ReadRARDescription extends TeiidOperationHandler {
 	protected void describeParameters(SimpleOperationDefinitionBuilder builder) {
 		builder.addParameter(OperationsConstants.RAR_NAME);
 		builder.setReplyType(ModelType.LIST);
-		builder.setReplyValueType(ModelType.STRING);
+		builder.setReplyValueType(ModelType.PROPERTY);
 	}
 }
 

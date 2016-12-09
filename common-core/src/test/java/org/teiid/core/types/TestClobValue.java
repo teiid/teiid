@@ -135,7 +135,7 @@ public class TestClobValue {
     	assertEquals("orld", clob.getSubString(8, 5));
     }
     
-    public void testClobCompare() throws Exception {
+    @Test public void testClobCompare() throws Exception {
         String testString = "this is test clob"; //$NON-NLS-1$
         SerialClob clob = new SerialClob(testString.toCharArray());
         ClobType ct = new ClobType(clob);
@@ -143,6 +143,14 @@ public class TestClobValue {
         SerialClob clob1 = new SerialClob(testString.toCharArray());
         ClobType ct1 = new ClobType(clob1);
         assertEquals(0, ct1.compareTo(ct));
+    }
+    
+    @Test public void testClobHashError() throws Exception {
+        String testString = "this is test clob"; //$NON-NLS-1$
+        SerialClob clob = new SerialClob(testString.toCharArray());
+        clob.free();
+        ClobType ct = new ClobType(clob);
+        assertEquals(0, ct.hashCode());
     }
     
 }

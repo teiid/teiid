@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <vdb version="1" name="Chorus">
-     <property name="UseConnectorMetadata" value="true"/>
+     <property name="cache-metadata" value="true"/>
 
      <model type="PHYSICAL" visible="true" name="timeseries">
          <property name="importer.useFullSchemaName" value="false"/>

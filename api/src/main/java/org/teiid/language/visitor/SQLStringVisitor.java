@@ -519,7 +519,11 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
 
     public void visit(Insert obj) {
-    	buffer.append(getInsertKeyword()).append(Tokens.SPACE);
+        if (obj.isUpsert()) {
+            buffer.append(getUpsertKeyword()).append(Tokens.SPACE);
+        } else {
+            buffer.append(getInsertKeyword()).append(Tokens.SPACE);
+        }
 		appendSourceComment(obj);
 		buffer.append(INTO).append(Tokens.SPACE);
 		append(obj.getTable());
@@ -537,6 +541,10 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
 	protected String getInsertKeyword() {
 		return INSERT;
 	}
+	
+    protected String getUpsertKeyword() {
+        return NonReserved.UPSERT;
+    }
     
     @Override
 	public void visit(ExpressionValueSource obj) {

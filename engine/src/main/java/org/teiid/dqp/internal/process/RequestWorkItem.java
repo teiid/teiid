@@ -25,6 +25,7 @@ package org.teiid.dqp.internal.process;
 import java.lang.ref.WeakReference;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -159,7 +160,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	}
 
 	private enum ProcessingState {NEW, PROCESSING, CLOSE}
-	private ProcessingState state = ProcessingState.NEW;
+	private volatile ProcessingState state = ProcessingState.NEW;
     
 	private enum TransactionState {NONE, ACTIVE, DONE}
 	private TransactionState transactionState = TransactionState.NONE;
@@ -346,8 +347,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
             if (this.state == ProcessingState.PROCESSING) {
             	if (!this.closeRequested) {
             		processMore();
-            	}
-            	if (this.closeRequested) {
+            	} else {
             		this.state = ProcessingState.CLOSE;
             	}
             }                  	            
@@ -536,6 +536,8 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 						
 						CommandContext cc = this.processor.getContext();
 						cc.close();
+					} catch (Throwable t) {
+					    handleThrowable(t); //guard against unexpected exceptions in close
 					} finally {
 						CommandContext.popThreadLocalContext();
 					}
@@ -618,7 +620,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 				LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Command has no cache hint and result set cache mode is not on."); //$NON-NLS-1$
 			}
 			if (canUseCache) {
-				ParseInfo pi = Request.createParseInfo(requestMsg);
+				ParseInfo pi = Request.createParseInfo(requestMsg, this.dqpWorkContext.getSession());
 				cacheId = new CacheID(this.dqpWorkContext, pi, requestMsg.getCommandString());
 		    	cachable = cacheId.setParameters(requestMsg.getParameterValues());
 				if (cachable) {
@@ -950,7 +952,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	        }
 	        response.setUpdateResult(this.returnsUpdateCount);
 	        if (this.returnsUpdateCount) {
-	        	//batch updates can have special exceptions in addition to update count results
+	            //batch updates can have special exceptions in addition to update count results
 	        	Throwable t = this.processor.getContext().getBatchUpdateException();
 	        	if (t != null) {
 		        	t = logError(t);
@@ -972,6 +974,10 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 			    	response.setResults(keys.getKeys());
 			    	response.setLastRow(keys.getKeys().size());
 			    	finalRowCount = response.getLastRow();
+        		} else if (finalRowCount == 0) {
+        		    //anon block or other construct not setting an explicit update count
+        		    response.setResults(Arrays.asList(Arrays.asList(0)));
+        		    finalRowCount = 1;
         		}
 	        }
 	        // set final row
@@ -1207,19 +1213,24 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     }
     
     public void requestClose() throws TeiidComponentException {
-    	synchronized (this) {
-        	if (this.state == ProcessingState.CLOSE || this.closeRequested) {
-        		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-        			LogManager.logDetail(LogConstants.CTX_DQP, "Request already closing" + requestID); //$NON-NLS-1$
-        		}
-        		return;
-        	}
-		}
+    	if (this.state == ProcessingState.CLOSE || this.closeRequested) {
+    		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+    			LogManager.logDetail(LogConstants.CTX_DQP, "Request already closing" + requestID); //$NON-NLS-1$
+    		}
+    		return;
+    	}
     	if (!this.doneProducingBatches) {
     		this.requestCancel(); //pending work should be canceled for fastest clean up
+    	} else {
+    	    //it's safe to transition directly to close
+    	    this.state = ProcessingState.CLOSE;
     	}
     	this.closeRequested = true;
     	this.doMoreWork();
+    }
+    
+    public boolean isCloseRequested() {
+        return closeRequested;
     }
     
     public void requestMore(int batchFirst, int batchLast, ResultsReceiver<ResultsMessage> receiver) {

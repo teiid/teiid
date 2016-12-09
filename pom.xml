@@ -12,7 +12,7 @@
 	<packaging>pom</packaging>
 	<name>Teiid</name>
 
-    <version>9.1.0.Alpha3-SNAPSHOT</version>
+    <version>9.2.0.Alpha2-SNAPSHOT</version>
 	<description>Federated SQL and XML query engine.</description>
 	<properties>
 	    <site.url>http://www.jboss.org/teiid</site.url>
@@ -29,17 +29,18 @@
 	    <version.commons-codec>1.10</version.commons-codec>
         <version.com.google.guava>18.0</version.com.google.guava>
         <version.dom4j>1.6.1</version.dom4j>
-        <version.org.hibernate.search>5.5.1.Final</version.org.hibernate.search>
-        <version.org.hibernate>5.0.7.Final</version.org.hibernate>
-        <version.org.infinispan.hibernate.search>4.6.3.Final-redhat-1</version.org.infinispan.hibernate.search> 
+        <version.org.hibernate.search>5.6.0.Alpha2</version.org.hibernate.search> <!-- 5.5.1.Final -->
+        <version.org.hibernate>5.0.9.Final</version.org.hibernate> <!-- 5.0.7.Final -->
+        <version.org.infinispan.hibernate.search>4.6.3.Final</version.org.infinispan.hibernate.search> 
         
         <!--  with wildfly parent version 2.5.4 the build is failing -->
         <version.bundle.plugin>2.5.0</version.bundle.plugin>
 
         <!-- JDG module slot to use  -->
-        <jdg.slot>jdg-6.6</jdg.slot>  
-        <version.org.infinispan.6>7.2.3.Final</version.org.infinispan.6> 
-        <version.org.apache.lucene.infinispan>7.2.3.Final</version.org.apache.lucene.infinispan>
+        <jdg.slot>jdg-7.0</jdg.slot>  
+        <version.org.infinispan.ds>8.2.4.Final</version.org.infinispan.ds> 
+        <version.org.apache.lucene.infinispan>5.5.0</version.org.apache.lucene.infinispan> <!--  8.2.4.Final -->
+
         <version.com.squareup.protoparser>3.1.5</version.com.squareup.protoparser>
         <version.org.infinispan.protostream>3.0.5.Final</version.org.infinispan.protostream>        
         
@@ -67,7 +68,7 @@
         <version.accumulo>1.6.4</version.accumulo>
         <version.solr>4.6.0</version.solr>
         <version.noggit>0.5</version.noggit>
-        <version.aws-java-sdk>1.10.11</version.aws-java-sdk>
+        <version.aws-java-sdk>1.11.0</version.aws-java-sdk>
         <version.cassandra-driver-core>2.1.3</version.cassandra-driver-core>
         <version.org.jboss.resteasy.tjws>3.0.11.Final</version.org.jboss.resteasy.tjws>        
         <version.postgresql>9.2-1004-jdbc4</version.postgresql>
@@ -78,10 +79,10 @@
         <version.com.codahale.metrics.metrics-core>3.0.2</version.com.codahale.metrics.metrics-core>
         <version.de.flapdoodle.embed.mongo>1.46.0</version.de.flapdoodle.embed.mongo>
         <version.org.eclipse.persistence>2.5.0</version.org.eclipse.persistence>
-        <version.org.apache.olingo>4.2.0-teiid-5</version.org.apache.olingo>
+        <version.org.apache.olingo>4.3.0</version.org.apache.olingo>
         <version.org.eclipse.jetty>9.2.7.v20150116</version.org.eclipse.jetty>
         <version.com.fasterxml.jackson.core>2.4.5</version.com.fasterxml.jackson.core>
-	    <version.com.fasterxml.aalto-xml>0.9.10</version.com.fasterxml.aalto-xml>
+	<version.com.fasterxml.aalto-xml>0.9.10</version.com.fasterxml.aalto-xml>
         <version.org.reflections>0.9.9</version.org.reflections>
         <version.com.google.code.findbugs>2.0.1</version.com.google.code.findbugs>
         <version.com.facebook.presto>0.89</version.com.facebook.presto>
@@ -92,7 +93,6 @@
 	    <version.swagger-parser>1.0.10</version.swagger-parser>
 	    <version.io.swagger>1.5.8</version.io.swagger>
         <version.org.apache.phoenix.phoenix-core>4.2.1</version.org.apache.phoenix.phoenix-core>
-        <version.net.sf.retrotranslator>1.2.9</version.net.sf.retrotranslator>
         <version.org.apache.cxf>3.1.4</version.org.apache.cxf>
         <version.org.codehaus.woodstox>4.2.0</version.org.codehaus.woodstox>
         <version.ant-contrib>1.0b3</version.ant-contrib>
@@ -105,7 +105,9 @@
         <version.commons-configuration>1.6</version.commons-configuration>
         <version.org.apache.ant>1.8.2</version.org.apache.ant>
         <version.com.fasterxml.jackson.dataformat>2.4.5</version.com.fasterxml.jackson.dataformat>	 
-        <version.javax.validation>1.1.0.Final</version.javax.validation>   	    
+        <version.javax.validation>1.1.0.Final</version.javax.validation>
+        <version.org.wildfly.build-tools>1.1.6.Final</version.org.wildfly.build-tools>
+        <version.com.googlecode.json-simple>1.1.1</version.com.googlecode.json-simple>   	    
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -246,7 +248,12 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-rar-plugin</artifactId>
                 <version>2.3</version>
-               </plugin>                
+               </plugin>
+                <plugin>
+                    <groupId>org.wildfly.build</groupId>
+                    <artifactId>wildfly-feature-pack-build-maven-plugin</artifactId>
+                    <version>${version.org.wildfly.build-tools}</version>
+                </plugin>                
 			</plugins>
 		</pluginManagement>
 		<plugins>
@@ -471,7 +478,12 @@
             	<groupId>org.jboss.teiid.connectors</groupId>
            		<artifactId>translator-jdbc</artifactId>
 				<version>${project.version}</version>
-			</dependency>        	      	   
+			</dependency>
+      		<dependency>
+            	<groupId>org.jboss.teiid</groupId>
+           		<artifactId>teiid-hibernate-dialect</artifactId>
+				<version>${project.version}</version>
+			</dependency>        	      	   			        	      	   
             <dependency>
       	    	<groupId>org.jboss.teiid.connectors</groupId>
             	<artifactId>google-api</artifactId>
@@ -648,18 +660,12 @@
                <artifactId>connector-file</artifactId>
                <version>${project.version}</version>
            </dependency>
-
+           <dependency>
+               <groupId>org.jboss.teiid</groupId>
+               <artifactId>teiid-data-quality</artifactId>
+               <version>${project.version}</version>
+           </dependency>
       <!-- External dependencies -->
-			<dependency>
-				<groupId>net.sf.retrotranslator</groupId>
-				<artifactId>retrotranslator-runtime</artifactId>
-				<version>${version.net.sf.retrotranslator}</version>
-			</dependency>
-			<dependency>
-				<groupId>net.sf.retrotranslator</groupId>
-				<artifactId>retrotranslator-transformer</artifactId>
-				<version>${version.net.sf.retrotranslator}</version>
-			</dependency> 
 <!-- 			<dependency>
 				<groupId>javax.resource</groupId>
 				<artifactId>connector-api</artifactId>
@@ -1281,11 +1287,16 @@
                 <artifactId>log4j</artifactId>
                 <version>${version.log4j}</version>
             </dependency>  -->                                    
-            <dependency>
-                <groupId>com.amazonaws</groupId>
-                <artifactId>aws-java-sdk</artifactId>
-                <version>${version.aws-java-sdk}</version>
-            </dependency>            
+			<dependency>
+				<groupId>com.amazonaws</groupId>
+				<artifactId>aws-java-sdk-simpledb</artifactId>
+				<version>${version.aws-java-sdk}</version>
+			</dependency>  
+			<dependency>
+			    <groupId>com.amazonaws</groupId>
+			    <artifactId>aws-java-sdk-core</artifactId>
+			    <version>${version.aws-java-sdk}</version>
+			</dependency>
             <dependency>
                 <groupId>org.apache.accumulo</groupId>
                 <artifactId>accumulo-core</artifactId>
@@ -1344,7 +1355,7 @@
             <!--dependency>
               <groupId>org.infinispan</groupId>
               <artifactId>infinispan-query</artifactId>
-              <version>${version.org.infinispan.6}</version-->
+              <version>${version.org.infinispan.ds}</version-->
               <!-- 
                 <exclusions>                
                     <exclusion>
@@ -1412,7 +1423,7 @@
             <!--dependency>
                 <groupId>org.infinispan</groupId>
                 <artifactId>infinispan-client-hotrod</artifactId>
-                <version>${version.org.infinispan.6}</version>
+                <version>${version.org.infinispan.ds}</version>
             </dependency-->
             <dependency>
               <groupId>org.mongodb</groupId>
@@ -1567,6 +1578,11 @@
                 <artifactId>jackson-dataformat-yaml</artifactId>
                 <version>${version.com.fasterxml.jackson.dataformat}</version>
             </dependency>
+			<dependency>
+			    <groupId>com.fasterxml.jackson.dataformat</groupId>
+			    <artifactId>jackson-dataformat-cbor</artifactId>
+			    <version>${version.com.fasterxml.jackson.dataformat}</version>
+			</dependency>            
             <dependency>
                 <groupId>com.fasterxml.jackson.dataformat</groupId>
                 <artifactId>jackson-dataformat-xml</artifactId>
@@ -1652,7 +1668,8 @@
                 <artifactId>proj4j</artifactId>
                 <version>${version.proj4j}</version>
             </dependency>
-	       <dependency>
+            <!-- swargger dependencies start-->
+            <dependency>
                 <groupId>io.swagger</groupId>
                 <artifactId>swagger-jaxrs</artifactId>
                 <version>${version.io.swagger}</version>
@@ -1663,11 +1680,27 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-		    <dependency>
-				<groupId>io.swagger</groupId>
-				<artifactId>swagger-parser</artifactId>
-				<version>${version.swagger-parser}</version>
-		    </dependency> 
+            <dependency>
+                <groupId>io.swagger</groupId>
+                <artifactId>swagger-core</artifactId>
+                <version>${version.io.swagger}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.swagger</groupId>
+                <artifactId>swagger-annotations</artifactId>
+                <version>${version.io.swagger}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.swagger</groupId>
+                <artifactId>swagger-models</artifactId>
+                <version>${version.io.swagger}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.swagger</groupId>
+                <artifactId>swagger-parser</artifactId>
+                <version>${version.swagger-parser}</version>
+            </dependency> 
+            <!-- swargger dependencies end-->
             <dependency>
                 <groupId>org.jboss.narayana.jta</groupId>
                 <artifactId>narayana-jta</artifactId>
@@ -1689,6 +1722,16 @@
 			    <version>${version.org.reflections}</version>
 			</dependency>
             
+			<dependency>
+			    <groupId>com.googlecode.json-simple</groupId>
+			    <artifactId>json-simple</artifactId>
+			    <version>${version.com.googlecode.json-simple}</version>
+			</dependency>
+			<dependency>
+			    <groupId>com.google.code.findbugs</groupId>
+			    <artifactId>annotations</artifactId>
+			    <version>${version.com.google.code.findbugs}</version>
+			</dependency>			            
         </dependencies>
 	</dependencyManagement>
 	<modules>
@@ -1696,8 +1739,8 @@
 		<module>api</module>
 		<module>client</module>
 		<module>admin</module>
+		<module>data-quality</module>
 		<module>engine</module>
-		<module>connectors</module>
 		<module>metadata</module>
 		<module>runtime</module>
 		<module>adminshell</module>
@@ -1710,6 +1753,8 @@
 		<module>jboss-integration</module>
 		<module>jboss-security</module>
 		<module>rest-service</module>
+		<module>teiid-feature-pack</module>
+                <module>connectors</module>
 		<module>test-integration</module>
 	</modules>
 </project>

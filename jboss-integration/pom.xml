@@ -2,7 +2,7 @@
 	<parent>
 		<artifactId>teiid-parent</artifactId>
 		<groupId>org.jboss.teiid</groupId>
-		<version>9.1.0.Alpha3-SNAPSHOT</version>
+		<version>9.2.0.Alpha2-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>teiid-jboss-integration</artifactId>
@@ -45,11 +45,6 @@
 			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-metadata</artifactId>
 		</dependency>
-        
-        <dependency>
-            <groupId>org.jboss.teiid</groupId>
-            <artifactId>rest-service</artifactId>
-        </dependency>
         
 		<dependency>
 			<groupId>org.jboss</groupId>
@@ -110,6 +105,12 @@
 			<groupId>org.picketbox</groupId>
 			<artifactId>picketbox</artifactId>
 		</dependency>
+		
+        <dependency>
+            <groupId>com.vividsolutions</groupId>
+            <artifactId>jts</artifactId>
+        </dependency>		
+		
 		<dependency>
 			<groupId>org.wildfly.core</groupId>
 			<artifactId>wildfly-subsystem-test-framework</artifactId>
@@ -143,28 +144,4 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
-
-	<build>
-		<plugins>
-			<plugin>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<configuration>
-					<descriptors>
-						<!-- Assembly plugin does not allow multiple DependencySets see MASSEMBLY-577 
-							thus needed to do here -->
-						<descriptor>kits/wildfly-dist.xml</descriptor>
-					</descriptors>
-				</configuration>
-				<executions>
-					<execution>
-						<id>create-assemblies</id>
-						<phase>package</phase>
-						<goals>
-							<goal>single</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
 </project>

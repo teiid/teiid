@@ -354,7 +354,9 @@ public interface SourceCapabilities {
         TRANSACTION_SUPPORT,
         QUERY_FROM_JOIN_LATERAL, 
         QUERY_FROM_JOIN_LATERAL_CONDITION, 
-        QUERY_FROM_PROCEDURE_TABLE;
+        QUERY_FROM_PROCEDURE_TABLE, 
+        QUERY_GROUP_BY_MULTIPLE_DISTINCT_AGGREGATES, 
+        UPSERT;
         
         private final String toString;
         

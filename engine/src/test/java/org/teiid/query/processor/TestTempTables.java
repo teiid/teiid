@@ -233,6 +233,27 @@ public class TestTempTables extends TempTableTestHarness {
 		execute("insert into x (e2, e1) values (1, 'one')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
 	}
 	
+    @Test public void testUpsert() throws Exception {
+        execute("create local temporary table x (e1 string, e2 integer, e3 integer, primary key (e2))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+        execute("insert into x (e2, e1, e3) values (1, 'one', 2)", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+        execute("upsert into x (e2, e1) values (1, 'x')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+        execute("upsert into x (e2, e1) values (2, 'two')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+        execute("select e1, e2, e3 from x", new List[] {Arrays.asList("x", 1, 2), Arrays.asList("two", 2, null)}); //$NON-NLS-1$
+    }
+    
+    @Test public void testUpsertFails() throws Exception {
+        execute("create local temporary table x (e1 string not null, e2 integer, primary key (e2))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+        execute("insert into x (e2, e1) values (1, 'one')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+        execute("upsert into x (e2, e1) values (1, 'two'), (2, 'three')", new List[] {Arrays.asList(2)}); //$NON-NLS-1$
+        try {
+            execute("upsert into x (e2, e1) values (1, 3), (1, 4), (1, rand() || null)", new List[] {Arrays.asList(2)}); //$NON-NLS-1$
+            fail();
+        } catch (TeiidProcessingException e) {
+            
+        }
+        execute("select e1, e2 from x", new List[] {Arrays.asList("3", 1), Arrays.asList("three", 2)}); //$NON-NLS-1$
+    }
+	
 	@Test public void testAtomicUpdate() throws Exception {
 		execute("create local temporary table x (e1 string, e2 integer, primary key (e2))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
 		execute("insert into x (e2, e1) values (1, 'one')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
@@ -435,6 +456,17 @@ public class TestTempTables extends TempTableTestHarness {
 		execute("insert into x (e2) values ((select null))", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
 	}
 	
+	@Test(expected=TeiidProcessingException.class) public void testNotNull2() throws Exception {
+        execute("create local temporary table x (e1 string not null, e2 integer, e3 integer, primary key (e2))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+        execute("insert into x (e2, e1) values (2, (select null))", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+    }
+	
+    @Test(expected=TeiidProcessingException.class) public void testNotNullUpdate() throws Exception {
+        execute("create local temporary table x (e1 string not null, e2 integer, e3 integer, primary key (e2))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+        execute("insert into x (e2, e1) values (2, 'a')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+        execute("update x set e1 = (select null)", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+    }
+	
 	/**
 	 * If the session metadata is still visible, then the procedure will fail due to the conflicting
 	 * definitions of temp_table
@@ -610,7 +642,27 @@ public class TestTempTables extends TempTableTestHarness {
 	}
 	
 	@Test public void testDeleteRemovingPage() throws Exception {
-		execute("insert into #tmp_params "
+	    helpTestDelete();
+	    
+	    //test under other buffer scenarios - with restricted memory / small batch
+	    
+        FakeDataManager fdm = new FakeDataManager();
+        TestProcessor.sampleData1(fdm);
+        BufferManager bm = BufferManagerFactory.getTestBufferManager(100000, 10);
+        setUp(RealMetadataFactory.example1Cached(), fdm, bm);
+		
+        helpTestDelete();
+        
+        //with restricted memory / normal batch
+        
+        bm = BufferManagerFactory.getTestBufferManager(100000, 250);
+        setUp(RealMetadataFactory.example1Cached(), fdm, bm);
+        
+        helpTestDelete();
+	}
+
+    private void helpTestDelete() throws Exception {
+        execute("insert into #tmp_params "
 				+ "select parsetimestamp('2016-04-01','yyyy-MM-dd') as starttime, parsetimestamp('2016-04-15','yyyy-MM-dd') as endtime", new List[] {Arrays.asList(1)});
 		execute("insert into #tmp_dates "
 				+ "select cast(parsetimestamp('2016-03-20','yyyy-MM-dd') as date) as datum, 'somevalue' as somevalue "
@@ -619,9 +671,10 @@ public class TestTempTables extends TempTableTestHarness {
 		for (int i = 0; i < 1277; i++) {
 			execute("insert into #tmp_dates select DATE '2016-05-01' as datum, 'somevalue' as somevalue", new List[] {Arrays.asList(1)});
 		}
-		execute("delete from #tmp_dates where datum > (select cast(endtime as date) from #tmp_params)", new List[] {Arrays.asList(1024)});
+		execute("delete from #tmp_dates where datum > (select cast(endtime as date) from #tmp_params)", new List[] {Arrays.asList(1278)});
 		execute("delete from #tmp_dates where datum < (select cast(starttime as date) from #tmp_params)", new List[] {Arrays.asList(1)});
-	}
+		execute("select count(*) from #tmp_dates", new List[] {Arrays.asList(1)});
+    }
 	
 	@Test public void testImplicitResolvingWithoutColumns() throws Exception {
 		execute("insert into #tmp_dates "
@@ -630,5 +683,24 @@ public class TestTempTables extends TempTableTestHarness {
 				+ "UNION select cast(parsetimestamp('2016-04-20','yyyy-MM-dd') as date) as datum, 'somevalue' as somevalue", new List[] {Arrays.asList(3)});
 		execute("insert into #tmp_dates select DATE '2016-05-01', somevalue from #tmp_dates", new List[] {Arrays.asList(3)});
 	}
+	
+	@Test public void testNotInPredicateDelete() throws Exception {
+        execute("create local temporary table x (e1 string, e2 integer, primary key (e1))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+
+        for (int i = 0; i < 2048; i++) {
+            execute("insert into x (e2, e1) values ("+i+", '"+i+"')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+        }
+
+        execute("delete from x where e1 not in ('2000', '1')", new List[] {Arrays.asList(2046)}); //$NON-NLS-1$
+        
+        execute("drop table x", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+        execute("create local temporary table x (e1 string, e2 integer)", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+
+        for (int i = 0; i < 2048; i++) {
+            execute("insert into x (e2, e1) values ("+i+", '"+i+"')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+        }
+
+        execute("delete from x where e1 not in ('2000', '1')", new List[] {Arrays.asList(2046)}); //$NON-NLS-1$
+    }
 	
 }

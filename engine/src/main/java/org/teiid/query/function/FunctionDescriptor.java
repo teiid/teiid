@@ -41,6 +41,7 @@ import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
+import org.teiid.metadata.MetadataException;
 import org.teiid.metadata.Procedure;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.util.CommandContext;
@@ -86,13 +87,14 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         this.classLoader = classloader;
 	}
 	
-	public Object newInstance() {
+	public Object newInstance() throws FunctionExecutionException {
+	    checkMethod();
 		try {
 			return invocationMethod.getDeclaringClass().newInstance();
 		} catch (InstantiationException e) {
-			throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30602, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30602, method.getName(), method.getInvocationClass()));
+			throw new MetadataException(QueryPlugin.Event.TEIID30602, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30602, method.getName(), method.getInvocationClass()));
 		} catch (IllegalAccessException e) {
-			throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30602, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30602, method.getName(), method.getInvocationClass()));
+			throw new MetadataException(QueryPlugin.Event.TEIID30602, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30602, method.getName(), method.getInvocationClass()));
 		}
 	}
 	
@@ -214,11 +216,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
 			}
         }
 
-        // If descriptor is missing invokable method, find this VM's descriptor
-        // give name and types from fd
-        if(invocationMethod == null) {
-        	 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30382, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30382, getFullName()));
-        }
+        checkMethod();
         
         // Invoke the method and return the result
         try {
@@ -300,6 +298,14 @@ public class FunctionDescriptor implements Serializable, Cloneable {
 		}
 	}
 
+    private void checkMethod() throws FunctionExecutionException {
+        // If descriptor is missing invokable method, find this VM's descriptor
+        // give name and types from fd
+        if(invocationMethod == null) {
+        	 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30382, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30382, getFullName()));
+        }
+    }
+
 	public static Object importValue(Object result, Class<?> expectedType)
 			throws ArithmeticException, TransformationException {
 		if (!ALLOW_NAN_INFINITY) {
@@ -320,7 +326,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
 			return result;
 		}
 		result = DataTypeManager.transformValue(result, expectedType);
-		if (result instanceof String) {
+		if (result != null && expectedType == DataTypeManager.DefaultDataClasses.STRING) {
 			String s = (String)result;
 			if (s.length() > DataTypeManager.MAX_STRING_LENGTH) {
 				return s.substring(0, DataTypeManager.MAX_STRING_LENGTH);

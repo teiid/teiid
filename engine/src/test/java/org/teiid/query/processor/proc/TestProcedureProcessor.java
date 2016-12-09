@@ -1904,6 +1904,42 @@ public class TestProcedureProcessor {
         assertTrue(!plan.requiresTransaction(false));
     }
     
+    @Test public void testDDLProcTransaction() throws Exception {
+        String ddl = "create foreign procedure proc (x integer) options (updatecount 2);"; //$NON-NLS-1$
+            
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "x", "y");
+        String userQuery = "EXEC proc(1)"; //$NON-NLS-1$
+        ProcessorPlan plan = getProcedurePlan(userQuery, metadata);
+        
+        assertTrue(plan.requiresTransaction(false));
+    }
+    
+    @Test public void testAnonProcTransaction() throws Exception {
+        ProcedurePlan plan = (ProcedurePlan) TestProcessor.helpGetPlan("begin select 1; end", RealMetadataFactory.example1Cached());
+        assertFalse(plan.requiresTransaction(false));
+        
+        plan = (ProcedurePlan) TestProcessor.helpGetPlan("begin select * from pm1.g1; end", RealMetadataFactory.example1Cached());
+        assertNull(plan.requiresTransaction(true));
+        
+        plan = (ProcedurePlan) TestProcessor.helpGetPlan("begin insert into pm1.g1 (e1) values ('a'); end", RealMetadataFactory.example1Cached());
+        assertNull(plan.requiresTransaction(false));
+        
+        plan = (ProcedurePlan) TestProcessor.helpGetPlan("begin if (true) insert into pm1.g1 (e1) values ('a'); else insert into pm1.g1 (e1) values ('b'); end", RealMetadataFactory.example1Cached());
+        assertNull(plan.requiresTransaction(false));
+        
+        plan = (ProcedurePlan) TestProcessor.helpGetPlan("begin loop on (select e1 from pm1.g1) as x begin insert into pm1.g1 (e1) values (x.e1); end end", RealMetadataFactory.example1Cached());
+        assertTrue(plan.requiresTransaction(false));
+        
+        plan = (ProcedurePlan) TestProcessor.helpGetPlan("begin execute immediate 'select 1'; end", RealMetadataFactory.example1Cached());
+        assertFalse(plan.requiresTransaction(false));
+        
+        plan = (ProcedurePlan) TestProcessor.helpGetPlan("begin execute immediate 'select 1'; end", RealMetadataFactory.example1Cached());
+        assertNull(plan.requiresTransaction(true));
+        
+        plan = (ProcedurePlan) TestProcessor.helpGetPlan("begin execute immediate 'select 1' update *; end", RealMetadataFactory.example1Cached());
+        assertTrue(plan.requiresTransaction(false));
+    }
+    
     /**
      * Test the use of a procedure variable in the criteria of a LEFT OUTER
      * JOIN which will be optimized out as non-JOIN criteria.
@@ -2444,7 +2480,7 @@ public class TestProcedureProcessor {
     }
     
     @Test public void testUDFCorrelated() throws Exception {
-        TransformationMetadata metadata = RealMetadataFactory.fromDDL("CREATE VIRTUAL FUNCTION f1(x integer) RETURNS string as return (select e1 from g1 where e2 = x/2); create foreign table g1 (e1 string, e2 integer);", "x", "y");
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("CREATE VIRTUAL FUNCTION f1(x integer) RETURNS string as return (select e1 from g1 where e2 = x/2);; create foreign table g1 (e1 string, e2 integer);", "x", "y");
         
         ProcessorPlan plan = helpGetPlan("select * from g1, table ( select f1 (g1.e2)) t;", metadata);
         CommandContext cc = TestProcessor.createCommandContext();
@@ -2502,6 +2538,17 @@ public class TestProcedureProcessor {
         
         HardcodedDataManager hdm = new HardcodedDataManager(metadata);
         helpProcess(plan, cc, hdm, new List[] {Arrays.asList(expected)});
+    }
+    
+    @Test public void testDynamicClob() throws Exception {
+        String sql = "exec p1()"; //$NON-NLS-1$
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("create virtual procedure p1() as "
+        		+ "begin create local temporary table t (x string); execute immediate cast('select * from t' as clob); end;", "x", "y");
+        ProcessorPlan plan = getProcedurePlan(sql, tm);
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        List[] expected = new List[] {  }; //$NON-NLS-1$
+        helpTestProcess(plan, expected, dataManager, tm);
     }
     
     private static final boolean DEBUG = false;

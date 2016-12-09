@@ -4,8 +4,6 @@ import static org.junit.Assert.*;
 
 import java.util.Properties;
 
-import javax.security.auth.login.LoginException;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -173,34 +171,25 @@ public class TestSessionServiceImpl {
 		Mockito.stub(repo.getLiveVDB("name", "1")).toReturn(vdb);
 		
 		ssi.setVDBRepository(repo);
-		ssi.setSecurityDomain("sd1,sd");
+		ssi.setSecurityDomain("sd");
 		Properties properties = new Properties();
 		properties.setProperty(TeiidURL.JDBC.VDB_NAME, "name.1");
 		SessionMetadata s = ssi.createSession("name", "1", AuthenticationType.USERPASSWORD, "x@sd", new Credentials(new char[] {'y'}), "z", properties);
 		assertEquals("sd", s.getSecurityDomain());
 		
 		s = ssi.createSession("name", "1", AuthenticationType.USERPASSWORD, "x", new Credentials(new char[] {'y'}), "z", properties);
-		assertEquals("sd1", s.getSecurityDomain());
+		assertEquals("sd", s.getSecurityDomain());
 		
-		try {
-			ssi.createSession("name", "1", AuthenticationType.USERPASSWORD, "x@sd2", new Credentials(new char[] {'y'}), "z", properties);
-		} catch (LoginException e) {
-			
-		}
-		
+		ssi.setAllowSecurityDomainQualifier(true);
 		ssi.setSecurityDomain("sd");
 		s = ssi.createSession("name", "1", AuthenticationType.USERPASSWORD, "x@sd", new Credentials(new char[] {'y'}), "z", properties);
 		assertEquals("sd", s.getSecurityDomain());
+		assertEquals("x", s.getUserName());
 		
-		vdb.addProperty(SessionServiceImpl.SECURITY_DOMAIN_PROPERTY, "domain");
-
-		try {
-			//conflict
-			ssi.createSession("name", "1", AuthenticationType.USERPASSWORD, "x@sd", new Credentials(new char[] {'y'}), "z", properties);
-		} catch (LoginException e) {
-			
-		}		
-		
+		ssi.setAllowSecurityDomainQualifier(false);
+        s = ssi.createSession("name", "1", AuthenticationType.USERPASSWORD, "x@sd", new Credentials(new char[] {'y'}), "z", properties);
+        assertEquals("sd", s.getSecurityDomain());
+        assertEquals("x@sd", s.getUserName());
 	}
 	
 	@Test public void testAuthenticationType() throws Exception {

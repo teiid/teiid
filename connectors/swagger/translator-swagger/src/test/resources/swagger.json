@@ -1,0 +1,1333 @@
+{
+   "swagger":"2.0",
+   "info":{
+      "description":"Teiid Examples Customer JAX-RS WebService With Swagger",
+      "version":"1.0",
+      "title":"Customer",
+      "contact":{
+         "name":"teiid.org"
+      },
+      "license":{
+         "name":"Apache 2.0",
+         "url":"http://www.apache.org/licenses/LICENSE-2.0.html"
+      }
+   },
+   "host":"localhost:8080",
+   "basePath":"/",
+   "tags":[
+      {
+         "name":"test"
+      },
+      {
+         "name":"customer"
+      }
+   ],
+   "schemes":[
+      "http",
+      "https"
+   ],
+   "paths":{
+      "/customer":{
+         "post":{
+            "tags":[
+               "customer"
+            ],
+            "summary":"Add a Customer",
+            "description":"",
+            "operationId":"addCustomer",
+            "consumes":[
+               "application/xml",
+               "application/json"
+            ],
+            "produces":[
+               "application/xml",
+               "application/json"
+            ],
+            "parameters":[
+               {
+                  "in":"body",
+                  "name":"body",
+                  "description":"Customer Object need be passed",
+                  "required":true,
+                  "schema":{
+                     "$ref":"#/definitions/Customer"
+                  }
+               }
+            ],
+            "responses":{
+               "400":{
+                  "description":"Invalid Customer"
+               }
+            }
+         }
+      },
+      "/customer/add":{
+         "post":{
+            "tags":[
+               "customer"
+            ],
+            "summary":"Add a Customer",
+            "description":"",
+            "operationId":"addOneCustomer",
+            "consumes":[
+               "application/xml",
+               "application/json"
+            ],
+            "produces":[
+               "application/xml",
+               "application/json"
+            ],
+            "parameters":[
+               {
+                  "in":"body",
+                  "name":"body",
+                  "description":"Customer Object need be passed",
+                  "required":true,
+                  "schema":{
+                     "$ref":"#/definitions/Customer"
+                  }
+               }
+            ],
+            "responses":{
+               "400":{
+                  "description":"Invalid Customer"
+               }
+            }
+         }
+      },
+      "/customer/addList":{
+         "post":{
+            "tags":[
+               "customer"
+            ],
+            "summary":"Add Customer List",
+            "description":"",
+            "operationId":"addCustomerList",
+            "consumes":[
+               "application/xml",
+               "application/json"
+            ],
+            "produces":[
+               "application/xml",
+               "application/json"
+            ],
+            "parameters":[
+               {
+                  "in":"body",
+                  "name":"body",
+                  "description":"Customer Object need be passed",
+                  "required":true,
+                  "schema":{
+                     "type":"array",
+                     "items":{
+                        "$ref":"#/definitions/Customer"
+                     }
+                  }
+               }
+            ],
+            "responses":{
+               "400":{
+                  "description":"Invalid Customer"
+               }
+            }
+         }
+      },
+      "/customer/customerList":{
+         "get":{
+            "tags":[
+               "customer"
+            ],
+            "summary":"get customer list",
+            "description":"get customer list as xml",
+            "operationId":"getCustomers",
+            "produces":[
+               "application/xml"
+            ],
+            "parameters":[
+
+            ],
+            "responses":{
+               "200":{
+                  "description":"successful operation",
+                  "schema":{
+                     "type":"string"
+                  }
+               },
+               "404":{
+                  "description":"Customer not found"
+               }
+            }
+         }
+      },
+      "/customer/delete/{id}":{
+         "delete":{
+            "tags":[
+               "customer"
+            ],
+            "summary":"Delete customer by ID",
+            "description":"Delete customer by ID",
+            "operationId":"removeCustomer",
+            "produces":[
+               "application/xml",
+               "application/json"
+            ],
+            "parameters":[
+               {
+                  "name":"id",
+                  "in":"path",
+                  "description":"id",
+                  "required":true,
+                  "type":"string"
+               }
+            ],
+            "responses":{
+               "404":{
+                  "description":"Customer not found"
+               }
+            }
+         }
+      },
+      "/customer/deleteByCity":{
+         "delete":{
+            "tags":[
+               "customer"
+            ],
+            "summary":"Delete customer by City",
+            "description":"Delete customer by City",
+            "operationId":"removeCustomerByCity",
+            "produces":[
+               "application/xml",
+               "application/json"
+            ],
+            "parameters":[
+               {
+                  "name":"city",
+                  "in":"query",
+                  "description":"city",
+                  "required":true,
+                  "type":"string"
+               }
+            ],
+            "responses":{
+               "404":{
+                  "description":"Customer not found"
+               }
+            }
+         }
+      },
+      "/customer/deleteByCountry":{
+         "delete":{
+            "tags":[
+               "customer"
+            ],
+            "summary":"Delete customer by Country",
+            "description":"Delete customer by Country",
+            "operationId":"removeCustomerByCountry",
+            "produces":[
+               "application/xml",
+               "application/json"
+            ],
+            "parameters":[
+               {
+                  "name":"country",
+                  "in":"query",
+                  "description":"country",
+                  "required":true,
+                  "type":"string"
+               }
+            ],
+            "responses":{
+               "404":{
+                  "description":"Customer not found"
+               }
+            }
+         }
+      },
+      "/customer/deleteByName/{customername}":{
+         "delete":{
+            "tags":[
+               "customer"
+            ],
+            "summary":"Delete customer by Name",
+            "description":"Delete customer by Name",
+            "operationId":"removeCustomerByName",
+            "produces":[
+               "application/xml",
+               "application/json"
+            ],
+            "parameters":[
+               {
+                  "name":"customername",
+                  "in":"path",
+                  "description":"customername",
+                  "required":true,
+                  "type":"string"
+               }
+            ],
+            "responses":{
+               "404":{
+                  "description":"Customer not found"
+               }
+            }
+         }
+      },
+      "/customer/deleteByNumCityCountry":{
+         "delete":{
+            "tags":[
+               "customer"
+            ],
+            "summary":"Delete customer by Number, Name, Country",
+            "description":"Delete customer by Number, Name, Country",
+            "operationId":"removeCustomerByNumCityCountry",
+            "produces":[
+               "application/xml",
+               "application/json"
+            ],
+            "parameters":[
+               {
+                  "name":"customernumber",
+                  "in":"query",
+                  "description":"customernumber",
+                  "required":true,
+                  "type":"string"
+               },
+               {
+                  "name":"city",
+                  "in":"query",
+                  "description":"city",
+                  "required":true,
+                  "type":"string"
+               },
+               {
+                  "name":"country",
+                  "in":"query",
+                  "description":"country",
+                  "required":true,
+                  "type":"string"
+               }
+            ],
+            "responses":{
+               "404":{
+                  "description":"Customer not found"
+               }
+            }
+         }
+      },
+      "/customer/deleteByNumber/{customernumber}":{
+         "delete":{
+            "tags":[
+               "customer"
+            ],
+            "summary":"Delete customer by Number",
+            "description":"Delete customer by Number",
+            "operationId":"removeCustomerByNumber",
+            "produces":[
+               "application/xml",
+               "application/json"
+            ],
+            "parameters":[
+               {
+                  "name":"customernumber",
+                  "in":"path",
+                  "description":"customernumber",
+                  "required":true,
+                  "type":"string"
+               }
+            ],
+            "responses":{
+               "404":{
+                  "description":"Customer not found"
+               }
+            }
+         }
+      },
+      "/customer/getAll":{
+         "get":{
+            "tags":[
+               "customer"
+            ],
+            "summary":"get customers",
+            "description":"get customers as xml/json",
+            "operationId":"getCustomerList",
+            "produces":[
+               "application/xml",
+               "application/json"
+            ],
+            "parameters":[
+
+            ],
+            "responses":{
+               "200":{
+                  "description":"successful operation",
+                  "schema":{
+                     "type":"array",
+                     "items":{
+                        "$ref":"#/definitions/Customer"
+                     }
+                  }
+               },
+               "404":{
+                  "description":"Customer not found"
+               }
+            }
+         }
+      },
+      "/customer/getByCity":{
+         "get":{
+            "tags":[
+               "customer"
+            ],
+            "summary":"get customer by city",
+            "description":"get customer by city as return xml/json",
+            "operationId":"getCustomerByCity",
+            "produces":[
+               "application/xml",
+               "application/json"
+            ],
+            "parameters":[
+               {
+                  "name":"city",
+                  "in":"query",
+                  "description":"city",
+                  "required":true,
+                  "type":"string"
+               }
+            ],
+            "responses":{
+               "200":{
+                  "description":"successful operation",
+                  "schema":{
+                     "$ref":"#/definitions/Customer"
+                  }
+               },
+               "404":{
+                  "description":"Customer not found"
+               }
+            }
+         }
+      },
+      "/customer/getByCountry":{
+         "get":{
+            "tags":[
+               "customer"
+            ],
+            "summary":"get customer by country",
+            "description":"get customer by country as return xml/json",
+            "operationId":"getCustomerByCountry",
+            "produces":[
+               "application/xml",
+               "application/json"
+            ],
+            "parameters":[
+               {
+                  "name":"country",
+                  "in":"query",
+                  "description":"country",
+                  "required":true,
+                  "type":"string"
+               }
+            ],
+            "responses":{
+               "200":{
+                  "description":"successful operation",
+                  "schema":{
+                     "$ref":"#/definitions/Customer"
+                  }
+               },
+               "404":{
+                  "description":"Customer not found"
+               }
+            }
+         }
+      },
+      "/customer/getByName/{customername}":{
+         "get":{
+            "tags":[
+               "customer"
+            ],
+            "summary":"get customer by name",
+            "description":"get customer by name as return xml/json",
+            "operationId":"getCustomerByName",
+            "produces":[
+               "application/xml",
+               "application/json"
+            ],
+            "parameters":[
+               {
+                  "name":"customername",
+                  "in":"path",
+                  "description":"customername",
+                  "required":true,
+                  "type":"string"
+               }
+            ],
+            "responses":{
+               "200":{
+                  "description":"successful operation",
+                  "schema":{
+                     "$ref":"#/definitions/Customer"
+                  }
+               },
+               "404":{
+                  "description":"Customer not found"
+               }
+            }
+         }
+      },
+      "/customer/getByNumCityCountry":{
+         "get":{
+            "tags":[
+               "customer"
+            ],
+            "summary":"get customer by Number, City, Country",
+            "description":"get customer by Number, City, Country as return xml/json",
+            "operationId":"getByNumCityCountry",
+            "produces":[
+               "application/xml",
+               "application/json"
+            ],
+            "parameters":[
+               {
+                  "name":"customernumber",
+                  "in":"query",
+                  "description":"customernumber",
+                  "required":true,
+                  "type":"string"
+               },
+               {
+                  "name":"city",
+                  "in":"query",
+                  "description":"city",
+                  "required":true,
+                  "type":"string"
+               },
+               {
+                  "name":"country",
+                  "in":"query",
+                  "description":"country",
+                  "required":true,
+                  "type":"string"
+               }
+            ],
+            "responses":{
+               "200":{
+                  "description":"successful operation",
+                  "schema":{
+                     "$ref":"#/definitions/Customer"
+                  }
+               },
+               "404":{
+                  "description":"Customer not found"
+               }
+            }
+         }
+      },
+      "/customer/getByNumber/{customernumber}":{
+         "get":{
+            "tags":[
+               "customer"
+            ],
+            "summary":"get customer by number",
+            "description":"get customer by number as return xml/json",
+            "operationId":"getCustomerByNumber",
+            "produces":[
+               "application/xml",
+               "application/json"
+            ],
+            "parameters":[
+               {
+                  "name":"customernumber",
+                  "in":"path",
+                  "description":"customernumber",
+                  "required":true,
+                  "type":"string"
+               }
+            ],
+            "responses":{
+               "200":{
+                  "description":"successful operation",
+                  "schema":{
+                     "$ref":"#/definitions/Customer"
+                  }
+               },
+               "404":{
+                  "description":"Customer not found"
+               }
+            }
+         }
+      },
+      "/customer/status":{
+         "get":{
+            "tags":[
+               "customer"
+            ],
+            "summary":"get customer status",
+            "description":"get customer status as xml/json",
+            "operationId":"size",
+            "produces":[
+               "application/xml",
+               "application/json"
+            ],
+            "parameters":[
+
+            ],
+            "responses":{
+               "200":{
+                  "description":"successful operation",
+                  "schema":{
+                     "$ref":"#/definitions/CustomerStatus"
+                  }
+               },
+               "404":{
+                  "description":"Customer not found"
+               }
+            }
+         }
+      },
+      "/customer/update":{
+         "put":{
+            "tags":[
+               "customer"
+            ],
+            "summary":"Update an existing customer",
+            "description":"",
+            "operationId":"updateCustomer",
+            "produces":[
+               "application/xml",
+               "application/json"
+            ],
+            "parameters":[
+               {
+                  "in":"body",
+                  "name":"body",
+                  "description":"Customer object that needs to be passed",
+                  "required":true,
+                  "schema":{
+                     "$ref":"#/definitions/Customer"
+                  }
+               }
+            ],
+            "responses":{
+               "400":{
+                  "description":"Invalid Customer supplied"
+               }
+            }
+         }
+      },
+      "/customer/updateByCity":{
+         "put":{
+            "tags":[
+               "customer"
+            ],
+            "summary":"Update an existing customer",
+            "description":"",
+            "operationId":"updateCustomerByCity",
+            "produces":[
+               "application/xml",
+               "application/json"
+            ],
+            "parameters":[
+               {
+                  "name":"city",
+                  "in":"query",
+                  "description":"city",
+                  "required":true,
+                  "type":"string"
+               },
+               {
+                  "in":"body",
+                  "name":"body",
+                  "description":"Customer object that needs to be passed",
+                  "required":true,
+                  "schema":{
+                     "$ref":"#/definitions/Customer"
+                  }
+               }
+            ],
+            "responses":{
+               "400":{
+                  "description":"Invalid Customer supplied"
+               }
+            }
+         }
+      },
+      "/customer/updateByCountry":{
+         "put":{
+            "tags":[
+               "customer"
+            ],
+            "summary":"Update an existing customer",
+            "description":"",
+            "operationId":"updateCustomerByCountry",
+            "produces":[
+               "application/xml",
+               "application/json"
+            ],
+            "parameters":[
+               {
+                  "name":"country",
+                  "in":"query",
+                  "description":"country",
+                  "required":true,
+                  "type":"string"
+               },
+               {
+                  "in":"body",
+                  "name":"body",
+                  "description":"Customer object that needs to be passed",
+                  "required":true,
+                  "schema":{
+                     "$ref":"#/definitions/Customer"
+                  }
+               }
+            ],
+            "responses":{
+               "400":{
+                  "description":"Invalid Customer supplied"
+               }
+            }
+         }
+      },
+      "/customer/updateByName/{customername}":{
+         "put":{
+            "tags":[
+               "customer"
+            ],
+            "summary":"Update an existing customer",
+            "description":"",
+            "operationId":"updateCustomerByName",
+            "produces":[
+               "application/xml",
+               "application/json"
+            ],
+            "parameters":[
+               {
+                  "name":"customername",
+                  "in":"path",
+                  "description":"customername",
+                  "required":true,
+                  "type":"string"
+               },
+               {
+                  "in":"body",
+                  "name":"body",
+                  "description":"Customer object that needs to be passed",
+                  "required":true,
+                  "schema":{
+                     "$ref":"#/definitions/Customer"
+                  }
+               }
+            ],
+            "responses":{
+               "400":{
+                  "description":"Invalid Customer supplied"
+               }
+            }
+         }
+      },
+      "/customer/updateByNumCityCountry":{
+         "put":{
+            "tags":[
+               "customer"
+            ],
+            "summary":"Update an existing customer",
+            "description":"",
+            "operationId":"updateCustomerByNumCityCountry",
+            "produces":[
+               "application/xml",
+               "application/json"
+            ],
+            "parameters":[
+               {
+                  "name":"customernumber",
+                  "in":"query",
+                  "description":"customernumber",
+                  "required":true,
+                  "type":"string"
+               },
+               {
+                  "name":"city",
+                  "in":"query",
+                  "description":"city",
+                  "required":true,
+                  "type":"string"
+               },
+               {
+                  "name":"country",
+                  "in":"query",
+                  "description":"country",
+                  "required":true,
+                  "type":"string"
+               },
+               {
+                  "in":"body",
+                  "name":"body",
+                  "description":"Customer object that needs to be passed",
+                  "required":true,
+                  "schema":{
+                     "$ref":"#/definitions/Customer"
+                  }
+               }
+            ],
+            "responses":{
+               "400":{
+                  "description":"Invalid Customer supplied"
+               }
+            }
+         }
+      },
+      "/customer/updateByNumber/{customernumber}":{
+         "put":{
+            "tags":[
+               "customer"
+            ],
+            "summary":"Update an existing customer",
+            "description":"",
+            "operationId":"updateCustomerByNumber",
+            "produces":[
+               "application/xml",
+               "application/json"
+            ],
+            "parameters":[
+               {
+                  "name":"customernumber",
+                  "in":"path",
+                  "description":"customernumber",
+                  "required":true,
+                  "type":"string"
+               },
+               {
+                  "in":"body",
+                  "name":"body",
+                  "description":"Customer object that needs to be passed",
+                  "required":true,
+                  "schema":{
+                     "$ref":"#/definitions/Customer"
+                  }
+               }
+            ],
+            "responses":{
+               "400":{
+                  "description":"Invalid Customer supplied"
+               }
+            }
+         }
+      },
+        "/operation/{operationId}": {
+            "put": {
+                "security": [
+                    {
+                        "basicAuth": []
+                    }
+                ],
+                "tags": [
+                    "operations"
+                ],
+                "summary": "Execute an operation created from a definition",
+                "operationId": "executeOperation",
+                "parameters": [
+                    {
+                        "name": "operationId",
+                        "description": "The Id of a resource schedule",
+                        "in": "path",
+                        "type": "integer",
+                        "format": "int64",
+                        "required": true
+                    },
+                    {
+                        "name": "executePayload",
+                        "description": "Payload required to execute the operation",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "integer",
+                                    "format": "int64"
+                                },
+                                "name": {
+                                    "type": "string"
+                                },
+                                "resourceId": {
+                                    "type": "integer",
+                                    "format": "int64"
+                                },
+                                "definitionId": {
+                                    "type": "integer",
+                                    "format": "int64"
+                                },
+                                "readyToSubmit": {
+                                    "type": "boolean"
+                                },
+                                "params": {
+                                    "type": "object",
+                                    "properties": {
+                                        "arguments": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Job Status for id returned",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "integer",
+                                    "format": "int64"
+                                },
+                                "name": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },      
+      "/test/ping":{
+         "get":{
+            "tags":[
+               "test"
+            ],
+            "summary":"ping",
+            "description":"ping",
+            "operationId":"ping",
+            "produces":[
+               "application/xml",
+               "application/json"
+            ],
+            "parameters":[
+
+            ],
+            "responses":{
+               "200":{
+                  "description":"successful operation",
+                  "schema":{
+                     "$ref":"#/definitions/Success"
+                  }
+               },
+               "404":{
+                  "description":"ping"
+               }
+            }
+         }
+      },
+      "/test/testModelFacade":{
+         "get":{
+            "tags":[
+               "test"
+            ],
+            "summary":"testModelFacade",
+            "description":"testModelFacade",
+            "operationId":"testModelFacade",
+            "produces":[
+               "application/xml",
+               "application/json"
+            ],
+            "parameters":[
+
+            ],
+            "responses":{
+               "200":{
+                  "description":"successful operation",
+                  "schema":{
+                     "$ref":"#/definitions/ModelFacade"
+                  }
+               },
+               "404":{
+                  "description":"testModelFacade"
+               }
+            }
+         }
+      },
+      "/test/testReturnTypes":{
+         "get":{
+            "tags":[
+               "test"
+            ],
+            "summary":"testReturnTypes",
+            "description":"testReturnTypes",
+            "operationId":"testReturnTypes",
+            "produces":[
+               "application/xml",
+               "application/json"
+            ],
+            "parameters":[
+
+            ],
+            "responses":{
+               "200":{
+                  "description":"successful operation",
+                  "schema":{
+                     "$ref":"#/definitions/Types"
+                  }
+               },
+               "404":{
+                  "description":"testReturnTypes"
+               }
+            }
+         }
+      },
+      "/test/testTimeTypes":{
+         "get":{
+            "tags":[
+               "test"
+            ],
+            "summary":"testTimeTypes",
+            "description":"testTimeTypes",
+            "operationId":"testTimeTypes",
+            "produces":[
+               "application/xml",
+               "application/json"
+            ],
+            "parameters":[
+
+            ],
+            "responses":{
+               "200":{
+                  "description":"successful operation",
+                  "schema":{
+                     "$ref":"#/definitions/TimeTypes"
+                  }
+               },
+               "404":{
+                  "description":"testTimeTypes"
+               }
+            }
+         }
+      },
+      "/test/testTypes":{
+         "get":{
+            "tags":[
+               "test"
+            ],
+            "summary":"testTypes",
+            "description":"testTypes",
+            "operationId":"testTypes",
+            "produces":[
+               "application/xml",
+               "application/json"
+            ],
+            "parameters":[
+               {
+                  "name":"a",
+                  "in":"query",
+                  "description":"a",
+                  "required":true,
+                  "type":"integer",
+                  "format":"int32"
+               },
+               {
+                  "name":"b",
+                  "in":"query",
+                  "description":"b",
+                  "required":true,
+                  "type":"integer",
+                  "format":"int64"
+               },
+               {
+                  "name":"c",
+                  "in":"query",
+                  "description":"c",
+                  "required":true,
+                  "type":"number",
+                  "format":"float"
+               },
+               {
+                  "name":"d",
+                  "in":"query",
+                  "description":"d",
+                  "required":true,
+                  "type":"number",
+                  "format":"double"
+               },
+               {
+                  "name":"e",
+                  "in":"query",
+                  "description":"e",
+                  "required":true,
+                  "type":"string"
+               },
+               {
+                  "name":"f",
+                  "in":"query",
+                  "description":"f",
+                  "required":true,
+                  "type":"string",
+                  "format":"byte"
+               },
+               {
+                  "name":"g",
+                  "in":"query",
+                  "description":"g",
+                  "required":true,
+                  "type":"array",
+                  "items":{
+                     "type":"string",
+                     "format":"byte"
+                  },
+                  "collectionFormat":"multi"
+               },
+               {
+                  "name":"h",
+                  "in":"query",
+                  "description":"h",
+                  "required":true,
+                  "type":"boolean"
+               },
+               {
+                  "name":"i",
+                  "in":"query",
+                  "description":"i",
+                  "required":true,
+                  "type":"string",
+                  "format":"date-time"
+               },
+               {
+                  "name":"j",
+                  "in":"query",
+                  "description":"j",
+                  "required":true,
+                  "type":"string",
+                  "format":"date-time"
+               }
+            ],
+            "responses":{
+               "200":{
+                  "description":"successful operation",
+                  "schema":{
+                     "$ref":"#/definitions/Success"
+                  }
+               },
+               "404":{
+                  "description":"testTypes"
+               }
+            }
+         }
+      }
+   },
+   "definitions":{
+      "Types":{
+         "type":"object",
+         "properties":{
+            "a":{
+               "type":"string",
+               "format":"byte"
+            },
+            "b":{
+               "type":"integer",
+               "format":"int32"
+            },
+            "c":{
+               "type":"integer",
+               "format":"int32"
+            },
+            "d":{
+               "type":"integer",
+               "format":"int64"
+            },
+            "e":{
+               "type":"number",
+               "format":"float"
+            },
+            "f":{
+               "type":"number",
+               "format":"double"
+            },
+            "g":{
+               "type":"boolean",
+               "default":false
+            },
+            "h":{
+               "type":"string"
+            },
+            "i":{
+               "type":"array",
+               "items":{
+                  "type":"string",
+                  "format":"byte"
+               }
+            },
+            "j":{
+               "type":"string"
+            },
+            "k":{
+               "type":"integer",
+               "format":"int32"
+            },
+            "l":{
+               "type":"string",
+               "format":"date-time"
+            },
+            "m":{
+               "type":"string",
+               "format":"date-time"
+            },
+            "n":{
+               "type":"string",
+               "format":"date-time"
+            }
+         },
+         "xml":{
+            "name":"types"
+         }
+      },
+      "TimeTypes":{
+         "type":"object",
+         "properties":{
+            "date":{
+               "type":"string",
+               "format":"date-time"
+            },
+            "sqlDate":{
+               "type":"string",
+               "format":"date-time"
+            },
+            "sqlTime":{
+               "type":"string",
+               "format":"date-time"
+            },
+            "sqlTimestamp":{
+               "type":"string",
+               "format":"date-time"
+            }
+         },
+         "xml":{
+            "name":"time-types"
+         }
+      },
+      "Customer":{
+         "type":"object",
+         "properties":{
+            "customernumber":{
+               "type":"string"
+            },
+            "customername":{
+               "type":"string"
+            },
+            "contactlastname":{
+               "type":"string"
+            },
+            "contactfirstname":{
+               "type":"string"
+            },
+            "phone":{
+               "type":"string"
+            },
+            "addressline1":{
+               "type":"string"
+            },
+            "addressline2":{
+               "type":"string"
+            },
+            "city":{
+               "type":"string"
+            },
+            "state":{
+               "type":"string"
+            },
+            "postalcode":{
+               "type":"string"
+            },
+            "country":{
+               "type":"string"
+            },
+            "salesrepemployeenumber":{
+               "type":"string"
+            },
+            "creditlimit":{
+               "type":"string"
+            }
+         },
+         "xml":{
+            "name":"customer"
+         }
+      },
+      "CustomerStatus":{
+         "type":"object",
+         "properties":{
+            "size":{
+               "type":"integer",
+               "format":"int32"
+            },
+            "heap":{
+               "$ref":"#/definitions/HeapSize"
+            }
+         },
+         "xml":{
+            "name":"status"
+         }
+      },
+      "HeapSize":{
+         "type":"object",
+         "properties":{
+            "maxMemory":{
+               "type":"integer",
+               "format":"int64"
+            },
+            "allocatedMemory":{
+               "type":"integer",
+               "format":"int64"
+            },
+            "freeMemory":{
+               "type":"integer",
+               "format":"int64"
+            }
+         },
+         "xml":{
+            "name":"heap"
+         }
+      },
+      "ModelFacade":{
+         "type":"object",
+         "properties":{
+            "customer":{
+               "$ref":"#/definitions/Customer"
+            },
+            "customerStatus":{
+               "$ref":"#/definitions/CustomerStatus"
+            },
+            "types":{
+               "$ref":"#/definitions/Types"
+            },
+            "success":{
+               "$ref":"#/definitions/Success"
+            },
+            "successlist":{
+               "type":"array",
+               "items":{
+                  "$ref":"#/definitions/Success"
+               }
+            },
+            "successset":{
+               "type":"array",
+               "uniqueItems":true,
+               "items":{
+                  "$ref":"#/definitions/Success"
+               }
+            }
+         },
+         "xml":{
+            "name":"facade"
+         }
+      },
+      "Success":{
+         "type":"object",
+         "properties":{
+            "success":{
+               "type":"string"
+            }
+         },
+         "xml":{
+            "name":"success"
+         }
+      }
+   }
+}

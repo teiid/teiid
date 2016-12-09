@@ -53,8 +53,7 @@ import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.*;
 import com.vividsolutions.jts.io.ByteOrderValues;
 import com.vividsolutions.jts.io.InputStreamInStream;
 import com.vividsolutions.jts.io.ParseException;
@@ -70,6 +69,12 @@ import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
  * TODO: determine if we should use buffermanager to minimize memory footprint
  */
 public class GeometryUtils {
+    
+    public static enum Ordinate {
+        X, Y, Z
+    }
+	
+	private static GeometryFactory GEOMETRY_FACTORY = new GeometryFactory();
 	
     private static final int SRID_4326 = 4326;
 
@@ -95,7 +100,7 @@ public class GeometryUtils {
             throws FunctionExecutionException {
     	Reader r = null;
         try {
-            WKTReader reader = new WKTReader();
+            WKTReader reader = new WKTReader(GEOMETRY_FACTORY);
             r = wkt.getCharacterStream();
             if (allowEwkt) {
             	PushbackReader pbr = new PushbackReader(r, 1);
@@ -265,7 +270,6 @@ public class GeometryUtils {
     
     public static GeometryType geometryFromGml(Reader reader, Integer srid) 
             throws FunctionExecutionException {
-        GeometryFactory gf = new GeometryFactory();        
         Geometry jtsGeometry = null;
         try {            
             SAXParserFactory factory = SAXParserFactory.newInstance();
@@ -273,7 +277,7 @@ public class GeometryUtils {
             factory.setValidating(false);            
             SAXParser parser = factory.newSAXParser();            
             
-            GmlSridHandler handler = new GmlSridHandler(gf, null);
+            GmlSridHandler handler = new GmlSridHandler(GEOMETRY_FACTORY, null);
             parser.parse(new InputSource(reader), handler);
             
             jtsGeometry = handler.getGeometry();
@@ -365,9 +369,13 @@ public class GeometryUtils {
     }
     
     public static GeometryType getGeometryType(Geometry jtsGeom, int srid) {
-        WKBWriter writer = new WKBWriter();
-        byte[] bytes = writer.write(jtsGeom);
-        return new GeometryType(bytes, srid);        
+        byte[] bytes = getBytes(jtsGeom, true);
+        return new GeometryType(bytes, srid);
+    }
+    
+    public static byte[] getBytes(Geometry jtsGeom, boolean bigEndian) {
+        WKBWriter writer = new WKBWriter(2, bigEndian?ByteOrderValues.BIG_ENDIAN:ByteOrderValues.LITTLE_ENDIAN);
+        return writer.write(jtsGeom);
     }
     
     public static Geometry getGeometry(GeometryType geom)
@@ -443,31 +451,36 @@ public class GeometryUtils {
 	
 	public static class Extent implements UserDefinedAggregate<GeometryType> {
 		
-		private Geometry g;
+		private Envelope e;
 		
 		public Extent() {
 		}
 		
 		@Override
 		public void reset() {
-			g = null;
+			e = null;
 		}
 		
 		public void addInput(GeometryType geom) throws FunctionExecutionException {
 			Geometry g1 = getGeometry(geom);
-			if (g == null) {
-				g = g1.getEnvelope();
-			} else {
-				g = g.union(g1.getEnvelope());
-			}
+			if (e == null) {
+				e = new Envelope();
+			} 
+		    e.expandToInclude(g1.getEnvelopeInternal());
 		}
 		
 		@Override
 		public GeometryType getResult(CommandContext commandContext) {
-			if (g == null) {
+			if (e == null) {
 				return null;
 			}
-			return getGeometryType(g.getEnvelope());
+			//created a closed polygon box result
+			return getGeometryType(GEOMETRY_FACTORY.createPolygon(new Coordinate[] {
+			        new Coordinate(e.getMinX(), e.getMinY()),
+			        new Coordinate(e.getMinX(), e.getMaxY()),
+			        new Coordinate(e.getMaxX(), e.getMaxY()),
+			        new Coordinate(e.getMaxX(), e.getMinY()),
+			        new Coordinate(e.getMinX(), e.getMinY())}));
 		}
 
 	}
@@ -509,5 +522,274 @@ public class GeometryUtils {
 		});
     	return new BlobType(blobImpl);
 	}
+
+	public static double area(GeometryType geom) throws FunctionExecutionException {
+		Geometry g = getGeometry(geom);
+		return g.getArea();
+	}
+
+	public static GeometryType boundary(GeometryType geom) throws FunctionExecutionException {
+		Geometry g = getGeometry(geom);
+		return getGeometryType(g.getBoundary());
+	}
+	
+	public static GeometryType buffer(GeometryType geom, double distance)  throws FunctionExecutionException {
+		Geometry g = getGeometry(geom);
+		return getGeometryType(g.buffer(distance));
+	}
+	
+	public static GeometryType buffer(GeometryType geom, double distance, int quadrantSegments)  throws FunctionExecutionException {
+		Geometry g = getGeometry(geom);
+		return getGeometryType(g.buffer(distance, quadrantSegments));
+	}
+
+	public static GeometryType centroid(GeometryType geom) throws FunctionExecutionException {
+		Geometry g = getGeometry(geom);
+		return getGeometryType(g.getCentroid());
+	}
+	
+	public static GeometryType convexHull(GeometryType geom) throws FunctionExecutionException {
+		Geometry g = getGeometry(geom);
+		return getGeometryType(g.convexHull());
+	}
+
+	public static Integer coordDim(GeometryType geom) throws FunctionExecutionException {
+		Geometry g = getGeometry(geom);
+		Coordinate c = g.getCoordinate();
+		if (c != null && !Double.isNaN(c.z)) {
+			return 3;
+		}
+		return 2;
+	}
+
+	public static GeometryType difference(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
+		Geometry g1 = getGeometry(geom1);
+        Geometry g2 = getGeometry(geom2);
+		return getGeometryType(g1.difference(g2));
+	}
+
+	public static GeometryType intersection(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
+		Geometry g1 = getGeometry(geom1);
+		Geometry g2 = getGeometry(geom2);
+		return getGeometryType(g1.intersection(g2));
+	}
+
+	public static int dimension(GeometryType geom) throws FunctionExecutionException {
+		Geometry g = getGeometry(geom);
+		return g.getDimension();
+	}
+
+	public static GeometryType startEndPoint(GeometryType geom, boolean start) throws FunctionExecutionException {
+		Geometry g = getGeometry(geom);
+		if (g instanceof LineString) {
+			LineString lineString = (LineString)g;
+			Geometry p = null;
+			if (start) {
+				p = lineString.getStartPoint();
+			} else {
+				p = lineString.getEndPoint();
+			}
+			if (p == null) {
+				//can be empty
+				return null;
+			}
+			return getGeometryType(p);
+		}
+		return null;
+	}
+	
+	public static GeometryType exteriorRing(GeometryType geom) throws FunctionExecutionException {
+		Geometry g = getGeometry(geom);
+		if (!(g instanceof Polygon)) {
+			return null;
+		}
+		return getGeometryType(((Polygon)g).getExteriorRing());
+	}
+	
+	public static GeometryType geometryN(GeometryType geom, int index) throws FunctionExecutionException {
+		Geometry g = getGeometry(geom);
+		int num = g.getNumGeometries();
+		if (index < 0 || index >= num) {
+			return null;
+		}
+		Geometry n = g.getGeometryN(index);
+		return getGeometryType(n);
+	}
+
+	public static String geometryType(GeometryType geom) throws FunctionExecutionException {
+		Geometry g = getGeometry(geom);
+		return "ST_" + g.getGeometryType(); //$NON-NLS-1$
+	}
+
+	public static Boolean isClosed(GeometryType geom) throws FunctionExecutionException {
+		Geometry g = getGeometry(geom);
+		if (!(g instanceof LineString)) {
+			return false;
+		}
+		LineString lineString = ((LineString)g);
+		return lineString.isClosed();
+	}
+	
+	public static Boolean isEmpty(GeometryType geom) throws FunctionExecutionException {
+		Geometry g = getGeometry(geom);
+		return g.isEmpty();
+	}
+	
+	public static Boolean isRing(GeometryType geom) throws FunctionExecutionException {
+		Geometry g = getGeometry(geom);
+		if (!(g instanceof LineString)) {
+			return false;
+		}
+		LineString lineString = ((LineString)g);
+		return lineString.isClosed() && lineString.isSimple();
+	}
+
+	public static Boolean isSimple(GeometryType geom) throws FunctionExecutionException {
+		Geometry g = getGeometry(geom);
+		return g.isSimple();
+	}
+	
+	public static Boolean isValid(GeometryType geom) throws FunctionExecutionException {
+		Geometry g = getGeometry(geom);
+		return g.isValid();
+	}
+	
+	public static Double length(GeometryType geom) throws FunctionExecutionException {
+		Geometry g = getGeometry(geom);
+		if (g instanceof LineString || g instanceof MultiLineString) {
+			return g.getLength();
+		}
+		return 0.0;
+	}
+	
+	public static Integer numInteriorRings(GeometryType geom) throws FunctionExecutionException {
+		Geometry g = getGeometry(geom);
+		if (!(g instanceof Polygon)) {
+			return null;
+		}
+		return ((Polygon)g).getNumInteriorRing();
+	}
+
+	public static int numGeometries(GeometryType geom) throws FunctionExecutionException {
+		Geometry g = getGeometry(geom);
+		return g.getNumGeometries();
+	}
+
+	public static int numPoints(GeometryType geom) throws FunctionExecutionException {
+		Geometry g = getGeometry(geom);
+		return g.getNumPoints();
+	}
+
+	public static GeometryType interiorRingN(GeometryType geom, int i) throws FunctionExecutionException {
+		Geometry g = getGeometry(geom);
+		if (!(g instanceof Polygon)) {
+			return null;
+		}
+		Polygon g2 = (Polygon)g;
+		if (i < 0 || i >= g2.getNumInteriorRing()) {
+			return null;
+		}
+		return getGeometryType(g2.getInteriorRingN(i));
+	}
+
+	public static Boolean orderingEquals(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
+		return getGeometry(geom1).equalsExact(getGeometry(geom2));
+	}
+
+	public static GeometryType point(double x, double y) {
+		return getGeometryType(GEOMETRY_FACTORY.createPoint(new Coordinate(x, y)));
+	}
+
+	public static GeometryType pointN(GeometryType geom, int i) throws FunctionExecutionException {
+		Geometry g = getGeometry(geom);
+		if (!(g instanceof LineString)) {
+			return null;
+		}
+		LineString g2 = (LineString)g;
+		if (i < 0 || i >= g2.getNumPoints()) {
+			return null;
+		}
+		return getGeometryType(g2.getPointN(i));
+	}
+	
+	public static Double perimeter(GeometryType geom) throws FunctionExecutionException {
+		Geometry g = getGeometry(geom);
+		if (g instanceof Polygon || g instanceof MultiPolygon) {
+			return g.getLength();
+		}
+		return 0.0;
+	}
+
+	public static GeometryType pointOnSurface(GeometryType geom) throws FunctionExecutionException {
+		Geometry g = getGeometry(geom);
+		Point point = g.getInteriorPoint();
+		if (point == null) {
+			return null;
+		}
+		point.setSRID(geom.getSrid());
+		return getGeometryType(point);
+	}
+	
+	public static GeometryType polygon(GeometryType geom, int srid) throws FunctionExecutionException {
+        Geometry g = getGeometry(geom);
+        if (!(g instanceof LineString)) {
+            throw new FunctionExecutionException(QueryPlugin.Event.TEIID31207, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31207));
+        }
+        LineString ls = (LineString)g;
+        Geometry result = GEOMETRY_FACTORY.createPolygon(ls.getCoordinateSequence());
+        result.setSRID(srid);
+        return getGeometryType(result);
+    }
+
+    public static Boolean relate(GeometryType geom1, GeometryType geom2, String intersectionPattern) throws FunctionExecutionException {
+        Geometry g1 = getGeometry(geom1);
+        Geometry g2 = getGeometry(geom2);
+        return g1.relate(g2, intersectionPattern);
+    }
+    
+    public static String relate(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
+        Geometry g1 = getGeometry(geom1);
+        Geometry g2 = getGeometry(geom2);
+        IntersectionMatrix im = g1.relate(g2);
+        return im.toString();
+    }
+    
+    public static GeometryType symDifference(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
+        Geometry g1 = getGeometry(geom1);
+        Geometry g2 = getGeometry(geom2);
+        return getGeometryType(g1.symDifference(g2));
+    }
+    
+    public static GeometryType union(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
+        Geometry g1 = getGeometry(geom1);
+        Geometry g2 = getGeometry(geom2);
+        return getGeometryType(g1.union(g2));
+    }
+    
+    public static Double ordinate(GeometryType geom, Ordinate ordinate) throws FunctionExecutionException {
+        Geometry g = getGeometry(geom);
+        if (!(g instanceof Point)) {
+            throw new FunctionExecutionException(QueryPlugin.Event.TEIID31208, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31208));
+        }
+        Point p = (Point)g;
+        Coordinate c = p.getCoordinate();
+        if (c == null) {
+            return null;
+        }
+        double value = c.getOrdinate(ordinate.ordinal());
+        if (Double.isNaN(value)) {
+            return null;
+        }
+        return value;
+    }
+
+    public static GeometryType makeEnvelope(double xmin, double ymin,
+            double xmax, double ymax, Integer srid) {
+        Geometry geom = GEOMETRY_FACTORY.createPolygon(new Coordinate[] {new Coordinate(xmin, ymin), new Coordinate(xmin, ymax), new Coordinate(xmax, ymax), new Coordinate(xmax, ymin), new Coordinate(xmin, ymin)});
+        if (srid != null) {
+            geom.setSRID(srid);
+        }
+        return getGeometryType(geom);
+    }
 
 }

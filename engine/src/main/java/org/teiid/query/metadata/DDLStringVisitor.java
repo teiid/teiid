@@ -179,6 +179,8 @@ public class DDLStringVisitor {
 			if (table.isDeletePlanEnabled()) {
 				buildTrigger(name, DELETE, table.getDeletePlan());
 			}			
+		} else {
+		    append(SQLConstants.Tokens.SEMICOLON);
 		}
 	}
 
@@ -408,7 +410,7 @@ public class DDLStringVisitor {
 					append(LPAREN).append(column.getLength()).append(RPAREN);
 				}
 			} else if (PRECISION_DATATYPES.contains(runtimeTypeName) 
-					&& (datatype == null || column.getPrecision() != datatype.getPrecision() || column.getScale() != datatype.getScale())) {
+					&& !column.isDefaultPrecisionScale()) {
 				append(LPAREN).append(column.getPrecision());
 				if (column.getScale() != 0) {
 					append(COMMA).append(column.getScale());
@@ -615,13 +617,15 @@ public class DDLStringVisitor {
 			String plan = procedure.getQueryPlan();
 			append(plan);
 		}
+		
+		append(SEMICOLON);
 	}
 
 	private String buildProcedureOptions(Procedure procedure) {
 		StringBuilder options = new StringBuilder();
 		addCommonOptions(options, procedure);
 		
-		if (procedure.getUpdateCount() != 1) {
+		if (procedure.getUpdateCount() != Procedure.AUTO_UPDATECOUNT) {
 			addOption(options, UPDATECOUNT, procedure.getUpdateCount());
 		}	
 		

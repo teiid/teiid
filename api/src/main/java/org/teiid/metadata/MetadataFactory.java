@@ -591,7 +591,7 @@ public class MetadataFactory implements Serializable {
 		FunctionMethod func = FunctionMethod.createFunctionMethod(name, null, null, returnType, paramTypes);
 		func.setAggregateAttributes(aa);
 		func.setInvocationMethod(method.getName());
-		func.setPushdown(PushDown.CANNOT_PUSHDOWN);
+		func.setPushdown(PushDown.CAN_PUSHDOWN);
 		func.setMethod(method);
 		func.setInvocationClass(method.getDeclaringClass().getName());
 		func.setNullOnNull(nullOnNull);

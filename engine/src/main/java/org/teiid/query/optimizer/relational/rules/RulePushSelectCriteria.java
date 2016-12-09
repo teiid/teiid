@@ -56,6 +56,7 @@ import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.symbol.WindowSpecification;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
+import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
@@ -162,6 +163,26 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 		if (critNode.hasBooleanProperty(NodeConstants.Info.IS_HAVING)) {
 			return false;
 		}
+		if (critNode.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET)) {
+            PlanNode accessNode = NodeEditor.findParent(critNode, NodeConstants.Types.ACCESS);
+            if (accessNode != null) {
+                List<Expression> cols = (List<Expression>) sourceNode.getProperty(Info.GROUP_COLS);
+                if (cols != null) {
+                    boolean hasExpression = false;
+                    boolean hasLiteral = false;
+                    for (final Iterator<Expression> iterator = cols.iterator(); iterator.hasNext();) {
+                        Expression ex = iterator.next();
+                        hasExpression |= !(ex instanceof ElementSymbol);
+                        hasLiteral |= EvaluatableVisitor.willBecomeConstant(ex, true);
+                    } 
+                    if (hasLiteral || (hasExpression && !CapabilitiesUtil.supports(Capability.QUERY_FUNCTIONS_IN_GROUP_BY, RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata), metadata, capFinder))) {
+                        markDependent(critNode, accessNode, metadata, capFinder);
+                        critNode.setProperty(Info.IS_HAVING, true);
+                        return false;
+                    }
+                }
+            }
+        }
 		if (sourceNode.hasBooleanProperty(Info.ROLLUP)) {
 			//there is a pre/post affect.  we can push, but then there is
 			//null filtering that may need to occur
@@ -801,7 +822,8 @@ public final class RulePushSelectCriteria implements OptimizerRule {
         }
         //otherwise mark it as pushed so we don't consider it again
         critNode.setProperty(NodeConstants.Info.IS_PUSHED, Boolean.TRUE);
-        return false;
+        //if any moved, then we need to continue
+        return movedCount != 0;
 	}
 
 	static void collectUnionChildren(PlanNode unionNode, List<PlanNode> unionChildren) {

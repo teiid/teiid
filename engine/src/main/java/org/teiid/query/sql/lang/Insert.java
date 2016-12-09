@@ -54,7 +54,7 @@ public class Insert extends ProcedureContainer {
     private TupleSource tupleSource;
     private Criteria constraint;
     
-    private boolean merge;
+    private boolean upsert;
 
     /**
      * Constructs a default instance of this class.
@@ -223,7 +223,7 @@ public class Insert extends ProcedureContainer {
                EquivalenceUtil.areEqual(getVariables(), other.getVariables()) &&
                sameOptionAndHint(other) &&
                EquivalenceUtil.areEqual(getQueryExpression(), other.getQueryExpression()) &&
-               this.merge == other.merge;
+               this.upsert == other.upsert;
                
     }
     
@@ -253,7 +253,7 @@ public class Insert extends ProcedureContainer {
         if (this.constraint != null) {
         	copy.constraint = (Criteria) this.constraint.clone();
         }
-        copy.merge = this.merge;
+        copy.upsert = this.upsert;
 		return copy;
 	}
 	
@@ -290,12 +290,12 @@ public class Insert extends ProcedureContainer {
 		this.constraint = constraint;
 	}
 	
-	public boolean isMerge() {
-		return merge;
+	public boolean isUpsert() {
+		return upsert;
 	}
 	
-	public void setMerge(boolean merge) {
-		this.merge = merge;
+	public void setUpsert(boolean merge) {
+		this.upsert = merge;
 	}
     
 }

@@ -131,7 +131,8 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
 		addStringFunction("upper", QueryPlugin.Util.getString("SystemSource.Upper_result"), "upperCase", DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         addStringFunction(SourceSystemFunctions.LTRIM, QueryPlugin.Util.getString("SystemSource.Left_result"), "leftTrim", DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
         addStringFunction(SourceSystemFunctions.RTRIM, QueryPlugin.Util.getString("SystemSource.Right_result"), "rightTrim", DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
-        addConcatFunction();    
+        addConcatFunction(DataTypeManager.DefaultDataTypes.STRING);    
+        addConcatFunction(DataTypeManager.DefaultDataTypes.CLOB);
         addSubstringFunction(SourceSystemFunctions.SUBSTRING); 
         addSubstringFunction("substr"); //$NON-NLS-1$
         addLeftRightFunctions();
@@ -208,6 +209,8 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
         addFunctions(SystemFunctionMethods.class);
         addFunctions(FunctionMethods.class);
         addFunctions(XMLSystemFunctions.class);
+        addOSDQLibrary();
+        
 		try {
 			FunctionMethod fm = MetadataFactory.createFunctionFromMethod("st_extent", GeometryUtils.Extent.class.getMethod("addInput", GeometryType.class)); //$NON-NLS-1$ //$NON-NLS-2$
 			this.functions.add(fm);
@@ -216,6 +219,17 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
 		} catch (SecurityException e) {
 			throw new AssertionError("Could not find function"); //$NON-NLS-1$
 		}
+    }
+    
+    private void addOSDQLibrary() {
+        try {
+            Class<?> osdqFunctions = Class.forName(
+                    "org.teiid.dataquality.OSDQFunctions", false,
+                    this.getClass().getClassLoader());
+            addFunctions(osdqFunctions);
+        } catch (ClassNotFoundException e) {
+            // ignore the add
+        }
     }
     
     private void addFunctions(Class<?> clazz) {
@@ -588,25 +602,25 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
                 new FunctionParameter("result", returnType, description), true, Determinism.DETERMINISTIC ) );                 //$NON-NLS-1$
     }
 
-    private void addConcatFunction() {
+    private void addConcatFunction(String type) {
         functions.add(
             new FunctionMethod(SourceSystemFunctions.CONCAT, QueryPlugin.Util.getString("SystemSource.Concat_desc"), STRING, FUNCTION_CLASS, "concat", //$NON-NLS-1$ //$NON-NLS-2$ 
                 new FunctionParameter[] {
-                    new FunctionParameter("string1", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Concat_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
-                    new FunctionParameter("string2", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Concat_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Concat_result_desc")) ) );                 //$NON-NLS-1$ //$NON-NLS-2$
+                    new FunctionParameter("string1", type, QueryPlugin.Util.getString("SystemSource.Concat_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
+                    new FunctionParameter("string2", type, QueryPlugin.Util.getString("SystemSource.Concat_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
+                new FunctionParameter("result", type, QueryPlugin.Util.getString("SystemSource.Concat_result_desc")) ) );                 //$NON-NLS-1$ //$NON-NLS-2$
         functions.add(
             new FunctionMethod("||", QueryPlugin.Util.getString("SystemSource.Concatop_desc"), STRING, FUNCTION_CLASS, "concat", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 new FunctionParameter[] {
-                    new FunctionParameter("string1", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Concatop_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
-                    new FunctionParameter("string2", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Concatop_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Concatop_result_desc")) ) );                 //$NON-NLS-1$ //$NON-NLS-2$
+                    new FunctionParameter("string1", type, QueryPlugin.Util.getString("SystemSource.Concatop_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
+                    new FunctionParameter("string2", type, QueryPlugin.Util.getString("SystemSource.Concatop_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
+                new FunctionParameter("result", type, QueryPlugin.Util.getString("SystemSource.Concatop_result_desc")) ) );                 //$NON-NLS-1$ //$NON-NLS-2$
         
         FunctionMethod concat2 = new FunctionMethod(SourceSystemFunctions.CONCAT2, QueryPlugin.Util.getString("SystemSource.Concat_desc"), STRING, FUNCTION_CLASS, "concat2", //$NON-NLS-1$ //$NON-NLS-2$ 
                 new FunctionParameter[] {
-            		new FunctionParameter("string1", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Concat_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
-            		new FunctionParameter("string2", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Concat_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
-            	new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Concat_result_desc")) );                 //$NON-NLS-1$ //$NON-NLS-2$
+            		new FunctionParameter("string1", type, QueryPlugin.Util.getString("SystemSource.Concat_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
+            		new FunctionParameter("string2", type, QueryPlugin.Util.getString("SystemSource.Concat_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
+            	new FunctionParameter("result", type, QueryPlugin.Util.getString("SystemSource.Concat_result_desc")) );                 //$NON-NLS-1$ //$NON-NLS-2$
         concat2.setNullOnNull(false);
         functions.add(concat2);                         
     }
@@ -876,6 +890,13 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
         functions.add(
             new FunctionMethod("user", QueryPlugin.Util.getString("SystemSource.User_desc"), MISCELLANEOUS, PushDown.CANNOT_PUSHDOWN, FUNCTION_CLASS, "user", null, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.User_result")), true, Determinism.USER_DETERMINISTIC) );                     //$NON-NLS-1$ //$NON-NLS-2$
+        
+        functions.add(
+                new FunctionMethod("user", QueryPlugin.Util.getString("SystemSource.User_desc"), MISCELLANEOUS, PushDown.CANNOT_PUSHDOWN, FUNCTION_CLASS, "user", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                        Arrays.asList(
+                                new FunctionParameter("includeSecurityDomain", DataTypeManager.DefaultDataTypes.BOOLEAN, QueryPlugin.Util.getString("SystemSource.User_param1")) //$NON-NLS-1$ //$NON-NLS-2$
+                                 ),
+                    new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.User_result")), true, Determinism.USER_DETERMINISTIC) );                     //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     private void addCurrentDatabaseFunction() {
@@ -1113,11 +1134,10 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
     }
     
     private void addUnixTimeFunctions() {
-    	functions.add(new FunctionMethod(FunctionLibrary.FROM_UNIXTIME, QueryPlugin.Util.getString("SystemSource.from_unixtime_description"), DATETIME, PushDown.SYNTHETIC, null, null, //$NON-NLS-1$ 
-    			Arrays.asList(
-    				new FunctionParameter("unix_timestamp", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.from_unixtime_param1")) //$NON-NLS-1$ //$NON-NLS-2$
-    			),
-                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.TIMESTAMP, QueryPlugin.Util.getString("SystemSource.from_unixtime_result")), true, Determinism.DETERMINISTIC )); //$NON-NLS-1$ //$NON-NLS-2$
+        functions.add(new FunctionMethod(SourceSystemFunctions.FROM_UNIXTIME, QueryPlugin.Util.getString("SystemSource.from_unixtime_description"), DATETIME, FUNCTION_CLASS, "from_unixtime", //$NON-NLS-1$ //$NON-NLS-2$
+                new FunctionParameter[]{
+                    new FunctionParameter("unix_timestamp", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.from_unixtime_param1"))}, //$NON-NLS-1$ //$NON-NLS-2$
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.TIMESTAMP, QueryPlugin.Util.getString("SystemSource.from_unixtime_result")))); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     private void addTypedNullIfFunction(String type) {

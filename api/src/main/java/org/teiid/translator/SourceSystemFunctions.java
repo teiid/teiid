@@ -146,6 +146,7 @@ public class SourceSystemFunctions {
 	public static final String TIMESTAMPDIFF = "timestampdiff"; //$NON-NLS-1$
 	public static final String WEEK = "week"; //$NON-NLS-1$
 	public static final String YEAR = "year"; //$NON-NLS-1$
+	public static final String FROM_UNIXTIME = "from_unixtime"; //$NON-NLS-1$
 	
 	//system functions
 	public static final String IFNULL = "ifnull"; //$NON-NLS-1$
@@ -167,6 +168,11 @@ public class SourceSystemFunctions {
 	public static final String JSONTOXML = "jsontoxml"; //$NON-NLS-1$
 	
 	public static final String UUID = "uuid"; //$NON-NLS-1$
+	
+	public static final String MD5 = "md5"; //$NON-NLS-1$
+	public static final String SHA1 = "sha1"; //$NON-NLS-1$
+	public static final String SHA2_256 = "sha2_256"; //$NON-NLS-1$
+	public static final String SHA2_512 = "sha2_512"; //$NON-NLS-1$
 
     public static final String ST_ASTEXT = "st_astext"; //$NON-NLS-1$
     public static final String ST_ASEWKT = "st_asewkt"; //$NON-NLS-1$
@@ -179,6 +185,7 @@ public class SourceSystemFunctions {
     public static final String ST_GEOMFROMGEOJSON = "st_geomfromgeojson"; //$NON-NLS-1$
     public static final String ST_GEOMFROMGML = "st_geomfromgml"; //$NON-NLS-1$
     public static final String ST_INTERSECTS = "st_intersects"; //$NON-NLS-1$
+    public static final String ST_INTERSECTION = "st_intersection"; //$NON-NLS-1$
     public static final String ST_CONTAINS = "st_contains"; //$NON-NLS-1$
 	public static final String ST_CROSSES = "st_crosses"; //$NON-NLS-1$
 	public static final String ST_DISJOINT = "st_disjoint"; //$NON-NLS-1$
@@ -200,4 +207,42 @@ public class SourceSystemFunctions {
 	public static final String ST_GEOMFROMEWKT = "st_geomfromewkt"; //$NON-NLS-1$
 	public static final String ST_ASEWKB = "st_asewkb"; //$NON-NLS-1$
 	public static final String ST_GEOMFROMEWKB = "st_geomfromewkb"; //$NON-NLS-1$
+	public static final String ST_AREA = "st_area"; //$NON-NLS-1$
+	public static final String ST_BOUNDARY = "st_boundary"; //$NON-NLS-1$
+	public static final String ST_BUFFER = "st_buffer"; //$NON-NLS-1$
+	public static final String ST_CENTROID = "st_centroid"; //$NON-NLS-1$
+	public static final String ST_CONVEXHULL = "st_convexhull"; //$NON-NLS-1$
+	public static final String ST_COORDDIM = "st_coorddim"; //$NON-NLS-1$
+	public static final String ST_CURVETOLINE = "st_curvetoline"; //$NON-NLS-1$
+	public static final String ST_DIFFERENCE = "st_difference"; //$NON-NLS-1$
+	public static final String ST_DIMENSION = "st_dimension"; //$NON-NLS-1$
+	public static final String ST_ENDPOINT = "st_endpoint"; //$NON-NLS-1$
+	public static final String ST_EXTERIORRING = "st_exteriorring"; //$NON-NLS-1$
+	public static final String ST_GEOMETRYN = "st_geometryn"; //$NON-NLS-1$
+	public static final String ST_GEOMETRYTYPE = "st_geometrytype"; //$NON-NLS-1$
+	public static final String ST_INTERIORRINGN = "st_interiorringn"; //$NON-NLS-1$
+	public static final String ST_ISCLOSED = "st_isclosed"; //$NON-NLS-1$
+	public static final String ST_ISEMPTY = "st_isempty"; //$NON-NLS-1$
+	public static final String ST_ISRING = "st_isring"; //$NON-NLS-1$
+	public static final String ST_ISSIMPLE = "st_issimple"; //$NON-NLS-1$
+	public static final String ST_ISVALID = "st_isvalid"; //$NON-NLS-1$
+	public static final String ST_LENGTH = "st_length"; //$NON-NLS-1$
+	public static final String ST_NUMGEOMETRIES = "st_numgeometries"; //$NON-NLS-1$
+	public static final String ST_NUMINTERIORRINGS = "st_numinteriorrings"; //$NON-NLS-1$
+	public static final String ST_NUMPOINTS = "st_numpoints"; //$NON-NLS-1$
+	public static final String ST_ORDERINGEQUALS = "st_orderingequals"; //$NON-NLS-1$
+	public static final String ST_PERIMETER = "st_perimeter"; //$NON-NLS-1$
+	public static final String ST_POINT = "st_point"; //$NON-NLS-1$
+	public static final String ST_POINTN = "st_pointn"; //$NON-NLS-1$
+	public static final String ST_POINTONSURFACE = "st_pointonsurface"; //$NON-NLS-1$
+	public static final String ST_POLYGON = "st_polygon"; //$NON-NLS-1$
+    public static final String ST_RELATE = "st_relate"; //$NON-NLS-1$
+    public static final String ST_STARTPOINT = "st_startpoint"; //$NON-NLS-1$
+    public static final String ST_SYMDIFFERENCE = "st_symdifference"; //$NON-NLS-1$
+    public static final String ST_UNION = "st_union"; //$NON-NLS-1$
+    public static final String ST_X = "st_x"; //$NON-NLS-1$
+    public static final String ST_Y = "st_y"; //$NON-NLS-1$
+    public static final String ST_Z = "st_z"; //$NON-NLS-1$
+    public static final String ST_MAKEENVELOPE = "st_makeenvelope"; //$NON-NLS-1$
+	
 }

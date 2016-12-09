@@ -3804,6 +3804,34 @@ public class TestProcessor {
         // Run query
         helpProcess(plan, dataManager, expected);
     }
+    
+    @Test public void testUpsert() throws Exception {
+        String sql = "upsert into pm1.g1 (pm1.g1.e1, pm1.g1.e2) values ('MyString', 1)"; //$NON-NLS-1$
+
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] { new Integer(1)})
+        };    
+        
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table g1 (e1 string, e2 integer, primary key (e1)) options (updatable true)", "x", "pm1");
+
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT 1 FROM pm1.g1 AS g_0 WHERE g_0.e1 = 'MyString'", new List[] {Arrays.asList(1)});
+        dataManager.addData("UPDATE pm1.g1 SET e2 = 1 WHERE pm1.g1.e1 = 'MyString'", new List[] {Arrays.asList(1)});
+
+        BasicSourceCapabilities bsc = getTypicalCapabilities();
+        ProcessorPlan plan = helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder(bsc));
+
+        helpProcess(plan, dataManager, expected);
+        
+        dataManager.clearData();
+        
+        //plan again with upsert pushdown
+
+        dataManager.addData("UPSERT INTO pm1.g1 (e1, e2) VALUES ('MyString', 1)", Arrays.asList(1));
+        bsc.setCapabilitySupport(Capability.UPSERT, true);
+        plan = helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder(bsc));
+        helpProcess(plan, dataManager, expected);
+    }
 
      /** SELECT BQT1.SmallA.IntKey AS SmallA_IntKey, BQT2.MediumB.IntKey AS MediumB_IntKey FROM BQT1.SmallA FULL OUTER JOIN BQT2.MediumB ON BQT1.SmallA.IntKey = BQT2.MediumB.IntKey WHERE (BQT1.SmallA.IntKey >= 0) AND (BQT1.SmallA.IntKey <= 15) AND (BQT2.MediumB.IntKey >= 5) AND (BQT2.MediumB.IntKey <= 20) */
      @Test public void testDefect7770_FullOuter() { 
@@ -7489,7 +7517,7 @@ public class TestProcessor {
         helpProcess(plan, hdm, expected);
     }
     
-    @Test public void testNonDeterministicScalarSubquery() throws Exception {
+    @Test public void testNonDeterministicView() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
@@ -7499,7 +7527,7 @@ public class TestProcessor {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
-        ProcessorPlan plan = helpPlan("select count(distinct x) from (select (select uuid()) as x from pm1.g1) as v", metadata,  //$NON-NLS-1
+        ProcessorPlan plan = helpPlan("select count(distinct x) from (select uuid() as x from pm1.g1) as v", metadata,  //$NON-NLS-1
                                       null, capFinder,
             new String[] { "SELECT 1 FROM pm1.g1 AS g_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         
@@ -7582,6 +7610,31 @@ public class TestProcessor {
         ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example4(), TestOptimizer.getGenericFinder());
         
         helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testUpdateNonDeterministic() {
+        String sql = "update pm1.g2 set e1 = (with u (id) as (select uuid()) select id from u) where e1 = 'xxxx'";
+        
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        BasicSourceCapabilities caps = getTypicalCapabilities();
+        
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(caps));
+        helpProcess(plan, dataManager, new List[] {Arrays.asList(0)});
+        
+        //same as above
+        sql = "update pm1.g2 set e1 = (select uuid()) where e1 = 'xxxx'";
+        plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(caps));
+        helpProcess(plan, dataManager, new List[] {Arrays.asList(0)});
+        
+        sql = "update pm1.g2 set e1 = uuid() where e1 = 'xxxx'";
+        try {
+            helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(caps), createCommandContext());
+            fail();
+        } catch (TeiidException e) {
+            //no primary key
+        }
     }
     
     @Test public void testUpdateCompensation() {
@@ -7785,13 +7838,13 @@ public class TestProcessor {
     
     
     @Test public void testNonDeterministicBlockingSubquery() {
-        String sql = "select count(distinct x) from (select (select rand() from pm1.g1 limit 1) as x from pm1.g1) as y"; //$NON-NLS-1$
+        String sql = "select count(distinct x) from (select (select rand() from pm1.g2 where e1 = pm1.g1.e1 limit 1) as x from pm1.g1) as y"; //$NON-NLS-1$
 
         ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         FakeDataManager fdm = new FakeDataManager();
         fdm.setBlockOnce();
         sampleData1(fdm);
-        helpProcess(plan, fdm, new List[] {Arrays.asList(6)});
+        helpProcess(plan, fdm, new List[] {Arrays.asList(5)});
     }
     
     @Test public void testRenaming() {

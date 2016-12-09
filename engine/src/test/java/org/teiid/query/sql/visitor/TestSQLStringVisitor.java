@@ -309,7 +309,7 @@ public class TestSQLStringVisitor {
     
     @Test public void testMerge1() {
    		Insert insert = new Insert();
-   		insert.setMerge(true);
+   		insert.setUpsert(true);
    		insert.setGroup(new GroupSymbol("m.g1"));      //$NON-NLS-1$
    		
    		List<ElementSymbol> vars = new ArrayList<ElementSymbol>();
@@ -321,7 +321,7 @@ public class TestSQLStringVisitor {
    		values.add(new Constant("abc")); //$NON-NLS-1$
    		insert.setValues(values);
    		
-   		helpTest(insert, "MERGE INTO m.g1 (e1, e2) VALUES (5, 'abc')"); //$NON-NLS-1$
+   		helpTest(insert, "UPSERT INTO m.g1 (e1, e2) VALUES (5, 'abc')"); //$NON-NLS-1$
     }
   
   	@Test public void testIsNullCriteria1() {

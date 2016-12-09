@@ -96,7 +96,6 @@ public class SaxonXQueryExpression {
 	
 	private static final String XQUERY_PLANNING = "XQuery Planning"; //$NON-NLS-1$
 	private static final String EMPTY_STRING = ""; //$NON-NLS-1$
-	static final String DEFAULT_PREFIX = "-"; //$NON-NLS-1$
 
 	public static final Properties DEFAULT_OUTPUT_PROPERTIES = new Properties();
 	{
@@ -209,7 +208,6 @@ public class SaxonXQueryExpression {
         		}
 			}
         }
-        namespaceMap.put(DEFAULT_PREFIX, namespaceMap.get(EMPTY_STRING));
         for (DerivedColumn derivedColumn : passing) {
         	if (derivedColumn.getAlias() == null) {
         		continue;

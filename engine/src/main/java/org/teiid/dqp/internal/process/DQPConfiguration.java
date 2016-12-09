@@ -40,6 +40,8 @@ public class DQPConfiguration{
 	public static final int DEFAULT_MAX_SOURCE_ROWS = -1;
 	public static final int DEFAULT_MAX_ACTIVE_PLANS = 20;
 	public static final int DEFAULT_USER_REQUEST_SOURCE_CONCURRENCY = 0;
+	public static final int DEFAULT_MAX_STALENESS_SECONDS = 0;
+
     
 	private int maxThreads = DEFAULT_MAX_PROCESS_WORKERS;
 	private int timeSliceInMilli = DEFAULT_PROCESSOR_TIMESLICE;

@@ -3,7 +3,7 @@
     <VDBInfo>
         <Property Name="Name" Value="VDBLess" />
         <Property Name="Version" Value="2" />
-        <Property Name="UseConnectorMetadata" Value="cached" />
+        <Property Name="cache-metadata" Value="true" />
     </VDBInfo>
     <Model>
         <Property Name="Name" Value="SummitData" />

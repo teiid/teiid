@@ -1210,7 +1210,9 @@ public class TestFunctionLibrary {
     @Test public void testInvokeUser() throws Exception {
         CommandContext c = new CommandContext();
         c.setUserName("foodude"); //$NON-NLS-1$
-        helpInvokeMethod("user", new Class<?>[] {}, new Object[] {}, c, "foodude"); //$NON-NLS-1$ //$NON-NLS-2$
+        c.setSession(new SessionMetadata());
+        c.getSession().setSecurityDomain("x");
+        helpInvokeMethod("user", new Class<?>[] {}, new Object[] {}, c, "foodude@x"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testInvokeEnv() throws Exception {
@@ -1423,6 +1425,10 @@ public class TestFunctionLibrary {
 		assertEquals(1, helpInvokeMethod("array_get", new Class<?>[] {DefaultDataClasses.OBJECT, DefaultDataClasses.INTEGER}, new Object[] {new Object[] {1}, 1}, null)); //$NON-NLS-1$
 	}
 	
+	@Test() public void testArrayGetClob() throws Exception {
+	    assertEquals(new String(new char[5000]), helpInvokeMethod("array_get", new Class<?>[] {DefaultDataClasses.OBJECT, DefaultDataClasses.INTEGER}, new Object[] {new Object[] {new String(new char[5000])}, 1}, null)); //$NON-NLS-1$
+	}
+	
 	@Test() public void testTrim() throws Exception {
 		helpInvokeMethod("trim", new Object[] {"leading", "x", "xaxx"}, "axx"); //$NON-NLS-1$
 	}
@@ -1465,5 +1471,18 @@ public class TestFunctionLibrary {
 	@Test public void testGetBuiltin() throws Exception {
 		assertEquals(17, RealMetadataFactory.SFM.getSystemFunctionLibrary().getBuiltInAggregateFunctions(false).size());
 	}
+	
+	@Test public void testClobConcat() throws Exception {
+        CommandContext c = new CommandContext();
+        c.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
+        ClobType result = (ClobType)helpInvokeMethod("concat", new Class<?>[] {DataTypeManager.DefaultDataClasses.CLOB, DataTypeManager.DefaultDataClasses.CLOB}, 
+        		new Object[] {DataTypeManager.transformValue("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\"><Name>Lamp</Name><Quantity>5</Quantity></Item></Items></Catalog></Catalogs>", DataTypeManager.DefaultDataClasses.CLOB), 
+        		DataTypeManager.transformValue("<?xml version=\"1.0\" encoding=\"UTF-8\"?><xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"><xsl:template match=\"@*|node()\"><xsl:copy><xsl:apply-templates select=\"@*|node()\"/></xsl:copy></xsl:template><xsl:template match=\"Quantity\"/></xsl:stylesheet>", DataTypeManager.DefaultDataClasses.CLOB)}, c);
+        
+        String xml = ObjectConverterUtil.convertToString(result.getCharacterStream());
+        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\">"
+        		+ "<Name>Lamp</Name><Quantity>5</Quantity></Item></Items></Catalog></Catalogs><?xml version=\"1.0\" encoding=\"UTF-8\"?><xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\">"
+        		+ "<xsl:template match=\"@*|node()\"><xsl:copy><xsl:apply-templates select=\"@*|node()\"/></xsl:copy></xsl:template><xsl:template match=\"Quantity\"/></xsl:stylesheet>", xml);
+    }
 
 }

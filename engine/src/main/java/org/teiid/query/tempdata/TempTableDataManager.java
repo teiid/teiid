@@ -224,7 +224,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 							}
 		        			ts = new CollectionTupleSource(Arrays.asList(values).iterator());
 		        		}
-		        		return table.insert(ts, insert.getVariables(), true, context);
+		        		return table.insert(ts, insert.getVariables(), true, insert.isUpsert(), context);
 		        	}
 		        	if (command instanceof Update) {
 		        		final Update update = (Update)command;
@@ -719,7 +719,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 						qp = context.getQueryProcessorFactory().createQueryProcessor(transformation, fullName, context);
 						insertTupleSource = new BatchCollector.BatchProducerTupleSource(qp);
 					}
-					table.insert(insertTupleSource, allColumns, false, null);
+					table.insert(insertTupleSource, allColumns, false, false, null);
 					table.getTree().compact();
 					rowCount = table.getRowCount();
 					Determinism determinism = qp.getContext().getDeterminismLevel();

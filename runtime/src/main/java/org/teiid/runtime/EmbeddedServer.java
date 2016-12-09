@@ -39,8 +39,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -57,6 +60,7 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataParser;
+import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
 import org.teiid.client.security.InvalidSessionException;
@@ -70,6 +74,7 @@ import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.deployers.CompositeGlobalTableStore;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.ContainerLifeCycleListener;
+import org.teiid.deployers.TranslatorUtil;
 import org.teiid.deployers.UDFMetaData;
 import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.deployers.VDBRepository;
@@ -78,6 +83,7 @@ import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ExecutionFactoryProvider;
+import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.dqp.internal.process.CachedResults;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.PreparedPlan;
@@ -281,6 +287,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	
 	protected boolean throwMetadataErrors = true;
 	private ConcurrentHashMap<String, ExecutionFactory<?, ?>> translators = new ConcurrentHashMap<String, ExecutionFactory<?, ?>>();
+	private TranslatorRepository translatorRepository = new TranslatorRepository();
 	private ConcurrentHashMap<String, ConnectionFactoryProvider<?>> connectionFactoryProviders = new ConcurrentHashMap<String, ConnectionFactoryProvider<?>>();
 	protected SessionServiceImpl sessionService = new SessionServiceImpl();
 	protected ObjectReplicator replicator;
@@ -345,15 +352,16 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		}
 		this.shutdownListener.setBootInProgress(true);
 		this.config = config;
-		this.eventDistributorFactoryService = new EmbeddedEventDistributorFactoryService();
-		this.eventDistributorFactoryService.start();
-		this.dqp.setEventDistributor(this.eventDistributorFactoryService.getReplicatedEventDistributor());
 		this.scheduler = Executors.newScheduledThreadPool(config.getMaxAsyncThreads(), new NamedThreadFactory("Asynch Worker")); //$NON-NLS-1$
 		this.replicator = config.getObjectReplicator();
 		if (this.replicator == null && config.getJgroupsConfigFile() != null) {
 			channelFactory = new SimpleChannelFactory(config);
 			this.replicator = new JGroupsObjectReplicator(channelFactory, this.scheduler);			
 		}
+		this.eventDistributorFactoryService = new EmbeddedEventDistributorFactoryService();
+		//must be called after the replicator is set
+        this.eventDistributorFactoryService.start();
+        this.dqp.setEventDistributor(this.eventDistributorFactoryService.getReplicatedEventDistributor());
 		if (config.getTransactionManager() == null) {
 			LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40089));
 			this.transactionService.setTransactionManager((TransactionManager) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class<?>[] {TransactionManager.class}, new InvocationHandler() {
@@ -400,7 +408,8 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		this.sessionService.setDqp(this.dqp);
 		this.services.setSecurityHelper(this.sessionService.getSecurityHelper());
 		if (this.config.getAuthenticationType() != null) {
-			this.services.setAuthenticationType(this.config.getAuthenticationType());
+		    this.services.setAuthenticationType(this.config.getAuthenticationType());
+		    this.sessionService.setAuthenticationType(this.config.getAuthenticationType());
 		}
 		this.services.setVDBRepository(this.repo);
 		this.materializationMgr = getMaterializationManager();
@@ -578,52 +587,62 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	}
 
 	/**
-	 * Adds a default instance of the {@link ExecutionFactory} using the default name either from the {@link Translator} annotation or the class name.  
+	 * Adds a definition of the {@link ExecutionFactory} using the default name either from the {@link Translator} annotation or the class name.
+	 * Only {@link ExecutionFactory} classes with a {@link Translator} annotation can be referenced by {@link #addTranslator(String, String, Map)}
 	 * @param ef
 	 * @throws TranslatorException 
 	 */
 	public void addTranslator(Class<? extends ExecutionFactory> clazz) throws TranslatorException {
-		Translator t = clazz.getAnnotation(Translator.class);
-		String name = clazz.getName();
-		if (t != null) {
-			name = t.name();
-		}
 		try {
-			ExecutionFactory<?, ?> instance = clazz.newInstance();
-			instance.start();
-			addTranslator(name, instance);
-		} catch (InstantiationException e) {
-			throw new TeiidRuntimeException(e);
-		} catch (IllegalAccessException e) {
-			throw new TeiidRuntimeException(e);
-		}
+            VDBTranslatorMetaData vdbTranslatorMetaData = TranslatorUtil.buildTranslatorMetadata(clazz.newInstance(), null);
+            if (vdbTranslatorMetaData != null) {
+                translatorRepository.addTranslatorMetadata(vdbTranslatorMetaData.getName(), vdbTranslatorMetaData);
+            } else {
+                //not a well defined translator
+                ExecutionFactory<?, ?> instance = clazz.newInstance();
+                instance.start();
+                addTranslator(clazz.getName(), instance);
+            }
+        } catch (InstantiationException | IllegalAccessException e) {
+            throw new TranslatorException(e);
+        }
 	}
 	
 	/**
-	 * Add an {@link ExecutionFactory} using the default name either from the {@link Translator} annotation or the class name.
-	 * @param ef the already started ExecutionFactory
-	 * @deprecated
-	 * @see {@link #addTranslator(String, ExecutionFactory)} or {@link #addTranslator(Class)}
-	 * if the translator has overrides or multiple translators of a given type are needed.
-	 */
-	@Deprecated
-	public void addTranslator(ExecutionFactory<?, ?> ef) {
-		Translator t = ef.getClass().getAnnotation(Translator.class);
-		String name = ef.getClass().getName();
-		if (t != null) {
-			name = t.name();
-		}
-		addTranslator(name, ef);
-	}
-	
-	/**
-	 * Add a named {@link ExecutionFactory}.
+	 * Add an override translator
 	 * @param name
-	 * @param ef the already started ExecutionFactory
+	 * @param type the name of an existing translator to override
+	 * @param properties
 	 */
-	public void addTranslator(String name, ExecutionFactory<?, ?> ef) {
-		translators.put(name, ef);
+	public void addTranslator(String name, String type, Map<String, String> properties) throws TranslatorException {
+	    VDBTranslatorMetaData vdbTranslatorMetaData = new VDBTranslatorMetaData();
+	    vdbTranslatorMetaData.setName(name);
+	    VDBTranslatorMetaData parent = translatorRepository.getTranslatorMetaData(type);
+	    if (parent == null) {
+	        throw new TranslatorException(RuntimePlugin.Event.TEIID40136, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40136, type));
+	    }
+	    vdbTranslatorMetaData.setParent(parent);
+	    if (properties != null) {
+            Properties p = new Properties();
+    	    p.putAll(properties);
+    	    vdbTranslatorMetaData.setProperties(p);
+	    }
+	    this.translatorRepository.addTranslatorMetadata(name, vdbTranslatorMetaData);
 	}
+	
+	/**
+     * Add a named {@link ExecutionFactory}. NOTE: Only this single instance will be shared for all usage.
+     * @param name
+     * @param ef the already started ExecutionFactory
+     * @see {@link #addTranslator(String, String, Map)} or {@link #addTranslator(Class)}
+     */
+    public void addTranslator(String name, ExecutionFactory<?, ?> ef) {
+        translators.put(name, ef);
+        VDBTranslatorMetaData vdbTranslatorMetaData = TranslatorUtil.buildTranslatorMetadata(ef, null);
+        if (vdbTranslatorMetaData != null) {
+            this.translatorRepository.addTranslatorMetadata(name, vdbTranslatorMetaData);
+        }
+    }
 
 	/**
 	 * Deploy the given set of models as vdb name.1
@@ -868,6 +887,10 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	public ExecutionFactory<Object, Object> getExecutionFactory(String name)
 			throws ConnectorManagerException {
 		ExecutionFactory<?, ?> ef = translators.get(name);
+		if (ef == null) {
+		    return TranslatorUtil.getExecutionFactory(name, this.translatorRepository, this.translatorRepository, 
+		            null, new IdentityHashMap<org.teiid.adminapi.Translator, ExecutionFactory<Object,Object>>(), new HashSet<String>());
+		}
 		return (ExecutionFactory<Object, Object>) ef;
 	}
 	
@@ -907,8 +930,8 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		return this.transports.get(transport).getPort();
 	}
 	
-	protected ConcurrentHashMap<String, ExecutionFactory<?, ?>> getTranslators() {
-		return this.translators;
+	TranslatorRepository getTranslatorRepository() {
+	    return translatorRepository;
 	}
 	
 	protected SessionAwareCache<CachedResults> getRsCache() {

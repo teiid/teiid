@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.3" name="com.googlecode.json-simple">
+    <properties>
+        <property name="jboss.api" value="private"/>
+    </properties>
+    
+    <resources>
+        <artifact name="${com.googlecode.json-simple:json-simple}"/>
+    </resources>
+
+    <dependencies>
+        <module name="javax.api" />
+    </dependencies>
+</module>

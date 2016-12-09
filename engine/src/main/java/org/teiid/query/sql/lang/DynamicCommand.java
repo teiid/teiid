@@ -22,13 +22,12 @@
 
 package org.teiid.query.sql.lang;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -70,16 +69,12 @@ public class DynamicCommand extends Command {
         
         clone.setSql((Expression)getSql().clone());
         if (asColumns != null) {
-            List cloneColumns = new ArrayList(asColumns.size());
-            Iterator i = asColumns.iterator();
-            while (i.hasNext()) {
-                cloneColumns.add(((ElementSymbol)i.next()).clone());
-            }
+            List<ElementSymbol> cloneColumns = LanguageObject.Util.deepClone(asColumns, ElementSymbol.class);
             clone.setAsColumns(cloneColumns);
         }
         
         if (intoGroup != null) {
-            clone.setIntoGroup((GroupSymbol)intoGroup.clone());
+            clone.setIntoGroup(intoGroup.clone());
         }
 
         if (using != null) {

@@ -25,6 +25,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Array;
@@ -73,8 +75,13 @@ import org.teiid.olingo.common.ODataTypeManager;
 import org.teiid.query.sql.symbol.Symbol;
 
 public class EntityCollectionResponse extends EntityCollection implements QueryResponse {
+	
+	interface Row {
+    	Object getObject(int column) throws SQLException;
+		Object[] getArray(int columnIndex) throws SQLException;
+    }
+	
     private String nextToken;
-    private Entity currentEntity;
     private DocumentNode documentNode;
     private String baseURL;
     private Map<String, Object> streams;
@@ -88,36 +95,27 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
     }
     
     @Override
-    public void addRow(ResultSet rs, boolean sameEntity) throws SQLException {
-        Entity entity = null;
-        boolean add = true;
+    public void addRow(ResultSet rs) throws SQLException {
+        Entity entity = createEntity(rs, this.documentNode, this.baseURL, this);
         
-        if (this.currentEntity == null) {
-            entity = createEntity(rs, this.documentNode, this.baseURL, this);
-            this.currentEntity = entity;
-        } else {
-            if(sameEntity) {
-                entity = this.currentEntity;
-                add = false;
-            } else {
-                entity = createEntity(rs, this.documentNode, this.baseURL, this);
-                this.currentEntity = entity;            
+    	processExpands(asRow(rs), entity, this.documentNode);
+        getEntities().add(entity);
+    }
+
+	private void processExpands(Row vals, Entity entity, DocumentNode node)
+			throws SQLException {
+		if (node.getExpands() == null || node.getExpands().isEmpty()) {
+			return;
+		}
+        for (ExpandDocumentNode expandNode : node.getExpands()) {
+            Object[] expandedVals = vals.getArray(expandNode.getColumnIndex());
+            if (expandedVals == null) {
+            	continue;
             }
-        }
-        
-        if (this.documentNode.getExpands() != null && !this.documentNode.getExpands().isEmpty()) {
-            // right now it can do only one expand, when more than one this logic
-            // need to be re-done.
-            for (DocumentNode resource : this.documentNode.getExpands()) {
-                ExpandDocumentNode expandNode = (ExpandDocumentNode)resource;
-                Entity expandEntity = createEntity(rs, expandNode, this.baseURL, this);
+            for (Object o : expandedVals) {
+            	Object[] expandedVal = (Object[])o;
+    			Entity expandEntity = createEntity(expandedVal, expandNode, this.baseURL, this);
                 
-                // make sure the expanded entity has valid key, otherwise it is just nulls on right side
-                boolean valid = (expandEntity != null);
-                if (!valid) {
-                    continue;
-                }
-                                               
                 Link link = entity.getNavigationLink(expandNode.getNavigationName());
                 if (expandNode.isCollection()) {
                     if (link.getInlineEntitySet() == null) {
@@ -134,69 +132,25 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                 else {
                     link.setInlineEntity(expandEntity);
                 }
+                
+                processExpands(asRow(expandedVal), expandEntity, expandNode);
             }
         }
-        
-        if (add) {
-            getEntities().add(entity);
-        } else {
-            // this is property update incase of collection return 
-            updateEntity(rs, entity, this.documentNode);            
-        }
-    }
+	}
     
-    @Override
-    public boolean isSameEntity(ResultSet rs) throws SQLException {
-        if (this.currentEntity == null) {
-            this.currentEntity = createEntity(rs, this.documentNode,this.baseURL, this);
-            return false;
-        } else {
-            if (isSameRow(rs, this.documentNode, this.currentEntity)) {
-                return true;
-            } else {
-                this.currentEntity = createEntity(rs, this.documentNode,this.baseURL, this);
-                return false;
-            }
-        }
-    }    
-    
-    @Override
-    public void advanceRow(ResultSet rs, boolean sameEntity) throws SQLException {
-        if (this.currentEntity == null) {
-            this.currentEntity = createEntity(rs, this.documentNode, this.baseURL, this);
-        } else {
-            if (!sameEntity) {
-                this.currentEntity = createEntity(rs, this.documentNode, this.baseURL, this);
-            }
-        }
-    }
-    
-    private boolean isSameRow(ResultSet rs,  DocumentNode node, Entity other) throws SQLException {
-        List<ProjectedColumn> projected = node.getAllProjectedColumns();
-        EdmEntityType entityType = node.getEdmEntityType();
-        
-        for (String name:entityType.getKeyPredicateNames()) {
-            ProjectedColumn pc = getProjectedColumn(name, projected);
-            if (!(rs.getObject(pc.getOrdinal()).equals(other.getProperty(name).getValue()))) {
-                return false;
-            }
-        }
-        return true;
-    }
-    
-    private ProjectedColumn getProjectedColumn(String name, List<ProjectedColumn> projected){
-        for (ProjectedColumn pc:projected) {
-            String propertyName = Symbol.getShortName(pc.getExpression());
-            if (name.equals(propertyName)) {
-                return pc;
-            }
-        }
-        return null;
+    static Entity createEntity(final Object[] vals, DocumentNode node, String baseURL, EntityCollectionResponse response)
+            throws SQLException {
+    	return createEntity(asRow(vals), node, baseURL, response);
     }
 
-    static Entity createEntity(ResultSet rs, DocumentNode node, String baseURL, EntityCollectionResponse response)
+    static Entity createEntity(final ResultSet vals, DocumentNode node, String baseURL, EntityCollectionResponse response)
             throws SQLException {
-        
+    	return createEntity(asRow(vals), node, baseURL, response);
+    }
+    
+    static Entity createEntity(Row row, DocumentNode node, String baseURL, EntityCollectionResponse response)
+            throws SQLException {
+    	
         List<ProjectedColumn> projected = node.getAllProjectedColumns();
         EdmEntityType entityType = node.getEdmEntityType();
         
@@ -213,7 +167,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
             }*/
             
             String propertyName = Symbol.getShortName(column.getExpression());
-            Object value = rs.getObject(column.getOrdinal());
+            Object value = row.getObject(column.getOrdinal());
             if (value != null) {
                 allNulls = false;
             }
@@ -227,7 +181,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                     }
                 }
                 else {
-                    Property property = buildPropery(propertyName, type,
+                    Property property = buildPropery(propertyName, type, column.getPrecision(), column.getScale(),
                             column.isCollection(), value);
                     entity.addProperty(property);
                 }
@@ -276,7 +230,37 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
         }            
         
         return entity;
-    }    
+    }
+
+	private static Row asRow(final ResultSet vals) {
+		return new Row() {
+			@Override
+			public Object getObject(int column) throws SQLException {
+				return vals.getObject(column);
+			}
+			@Override
+			public Object[] getArray(int columnIndex) throws SQLException {
+				Array array = vals.getArray(columnIndex);
+				if (array == null) {
+					return null;
+				}
+				return (Object[]) array.getArray();
+			}
+		};
+	}
+	
+	private static Row asRow(final Object[] vals) {
+    	return new Row() {
+			@Override
+			public Object getObject(int column) throws SQLException {
+				return vals[column - 1];
+			}
+			@Override
+			public Object[] getArray(int columnIndex) {
+				return (Object[]) vals[columnIndex - 1];
+			}
+		};
+	}    
     
     void setStream(String propertyName, Object value) {
     	if (this.streams == null) {
@@ -290,49 +274,6 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
     		return null;
     	}
     	return streams.get(propertyName);
-    }
-
-	private static void updateEntity(ResultSet rs, Entity entity, DocumentNode node)
-            throws SQLException {
-        
-        List<ProjectedColumn> projected = node.getAllProjectedColumns();
-        EdmEntityType entityType = node.getEdmEntityType();
-        
-        for (ProjectedColumn column: projected) {
-
-            String propertyName = Symbol.getShortName(column.getExpression());
-            if (entityType.getKeyPredicateNames().contains(propertyName)) {
-                // no reason to update the identity keys
-                continue;
-            }
-            
-            Object value = rs.getObject(column.getOrdinal());
-            
-            try {
-                SingletonPrimitiveType type = (SingletonPrimitiveType) column.getEdmType();
-                if (column.isCollection()) {
-                    Property previousProperty = entity.getProperty(propertyName);
-                    Property property = buildPropery(propertyName, type,
-                            column.isCollection(), value);
-                    
-                    property = mergeProperties(propertyName, type, previousProperty, property);
-                    entity.getProperties().remove(previousProperty);
-                    entity.addProperty(property);
-                }                
-            } catch (IOException e) {
-                throw new SQLException(e);
-            } catch (TeiidProcessingException e) {
-                throw new SQLException(e);
-            }
-        }
-    }    
-
-    private static Property mergeProperties(String propName,
-            SingletonPrimitiveType type, Property one, Property two) {
-        ArrayList<Object> values = new ArrayList<Object>();
-        values.addAll(one.asCollection());
-        values.addAll(two.asCollection());
-        return createCollection(propName, type, values);
     }
 
     private static void buildStreamLink(LinkedHashMap<String, Link> streamProperties,
@@ -356,7 +297,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
     }
 
     static Property buildPropery(String propName,
-            SingletonPrimitiveType type, boolean isArray, Object value) throws TeiidProcessingException,
+            SingletonPrimitiveType type, Integer precision, Integer scale, boolean isArray, Object value) throws TeiidProcessingException,
             SQLException, IOException {
 
         if (value instanceof Array) {
@@ -370,17 +311,17 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                     throw new TeiidNotImplementedException(ODataPlugin.Event.TEIID16029, 
                             ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16029, propName));
                 }
-                Object p = getPropertyValue(type, isArray,  o);
+                Object p = getPropertyValue(type, precision, scale, isArray,  o);
                 values.add(p);
             }
             return createCollection(propName, type, values);
         }
         if (isArray) {
             ArrayList<Object> values = new ArrayList<Object>();
-            values.add(getPropertyValue(type, isArray, value));
+            values.add(getPropertyValue(type, precision, scale, isArray, value));
             return createCollection(propName, type, values);
         }
-        return createPrimitive(propName, type, getPropertyValue(type, isArray, value));
+        return createPrimitive(propName, type, getPropertyValue(type, precision, scale, isArray, value));
     }
 
     private static Property createPrimitive(final String name,
@@ -422,14 +363,36 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
         return value;
     }
 */
-    
-    static Object getPropertyValue(SingletonPrimitiveType expectedType, boolean isArray,
+
+    static Object getPropertyValue(SingletonPrimitiveType expectedType, Integer precision, Integer scale, boolean isArray,
             Object value)
             throws TransformationException, SQLException, IOException {
-        if (value == null) {
-            return null;
-        }
-                
+    	if (value == null) {
+    		return null;
+    	}
+    	value = getPropertyValueInternal(expectedType, isArray, value);
+    	if (value instanceof BigDecimal) {
+    		BigDecimal bigDecimalValue = (BigDecimal)value;
+    		
+    		//if precision is set, then try to set an appropriate scale to pass the facet check
+    		if (precision != null) {
+	    		final int digits = bigDecimalValue.scale() >= 0
+	    		          ? Math.max(bigDecimalValue.precision(), bigDecimalValue.scale())
+	    		              : bigDecimalValue.precision() - bigDecimalValue.scale();
+	    		
+	            if (bigDecimalValue.scale() > (scale == null ? 0 : scale) || (digits > precision)) {
+	            	bigDecimalValue = bigDecimalValue.setScale(Math.min(digits > precision ? bigDecimalValue.scale() - digits + precision : bigDecimalValue.scale(), scale == null ? 0 : scale), RoundingMode.HALF_UP);
+	            }
+    		}
+
+    		value = bigDecimalValue;
+    	}
+    	return value;
+    }
+    
+    private static Object getPropertyValueInternal(SingletonPrimitiveType expectedType, boolean isArray,
+            Object value)
+            throws TransformationException, SQLException, IOException {
         Class<?> sourceType = DataTypeManager.getRuntimeType(value.getClass());
         if (sourceType.isAssignableFrom(expectedType.getDefaultType())) {
             return value;
@@ -443,7 +406,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
             return value;
         } else if (expectedType instanceof EdmBinary) {
             // there could be memory implications here, should have been modeled as EdmStream
-            LogManager.logDetail(LogConstants.CTX_ODATA, "Possible OOM when inlining the stream based values");
+            LogManager.logDetail(LogConstants.CTX_ODATA, "Possible OOM when inlining the stream based values"); //$NON-NLS-1$
             if (sourceType == ClobType.class) {
                 return ClobType.getString((Clob) value).getBytes();
             }
@@ -503,13 +466,12 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
             return false;
         }
         
-        if (top > 0 ) {
+        if (top > -1 ) {
             if (this.topCount < top) {
                 this.topCount++;                
                 return true;
-            } else {
-                return false;
-            }
+            } 
+            return false;
         }
         return true;
     }

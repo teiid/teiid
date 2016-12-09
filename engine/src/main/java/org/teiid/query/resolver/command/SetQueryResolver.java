@@ -151,11 +151,18 @@ public class SetQueryResolver implements CommandResolver {
         return false;
     }
     
-	static void checkSymbolTypes(List firstProjectTypes, List projSymbols) {
+	static void checkSymbolTypes(List<Class<?>> firstProjectTypes, List<Expression> projSymbols) throws QueryResolverException {
         for(int j=0; j<projSymbols.size(); j++){
-            Class firstProjType = (Class)firstProjectTypes.get(j);
-    		Expression projSymbol = (Expression)projSymbols.get(j);
-            Class projType = projSymbol.getType();
+            Class<?> firstProjType = firstProjectTypes.get(j);
+    		Expression projSymbol = projSymbols.get(j);
+            Class<?> projType = projSymbol.getType();
+            
+            if (firstProjType == null) {
+                if (projType != null) {
+                    firstProjectTypes.set(j, projType);
+                }
+                continue;
+            }
             
             if(firstProjType.equals(projType)){
                 continue;

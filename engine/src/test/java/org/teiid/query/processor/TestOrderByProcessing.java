@@ -472,4 +472,20 @@ public class TestOrderByProcessing {
 		TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("a", 1, "1|1", 1), Arrays.asList("a", null, "1|0", 1), Arrays.asList(null, 1, "0|1", 1), Arrays.asList(null, null, "0|0", 1)});
 	}
 	
+	@Test public void testNonDeterministicOrderByPushdown() throws Exception {
+		String sql = "SELECT xscore() FROM customer ORDER BY xscore() ASC";
+		
+		String ddl = "CREATE FOREIGN FUNCTION XSCORE() RETURNS FLOAT  OPTIONS (DETERMINISM 'NONDETERMINISTIC');"
+				+ "CREATE foreign table customer (y string primary key)";
+
+		QueryMetadataInterface metadata = RealMetadataFactory.fromDDL(ddl, "x", "phy");
+		
+		BasicSourceCapabilities bsc = new BasicSourceCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
+        bsc.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
+		
+		TestOptimizer.helpPlan(sql, metadata, new String[] {"SELECT xscore() AS c_0 FROM phy.customer ORDER BY c_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+		
+	}
+	
 }

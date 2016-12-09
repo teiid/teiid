@@ -44,39 +44,41 @@ public class FakeConnector extends ExecutionFactory<Object, Object> {
     private int executionCount;
     private int closeCount;
     private boolean returnSingleUpdate;
+    private List<Command> commands = new ArrayList<Command>();
 
     public int getConnectionCount() {
-		return connectionCount;
-	}
+        return connectionCount;
+    }
     
     public int getExecutionCount() {
-		return executionCount;
-	}
+        return executionCount;
+    }
     
     @Override
     public Execution createExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connection) throws TranslatorException {
-    	executionCount++;
+        executionCount++;
+        commands.add(command);
         FakeExecution result = new FakeExecution(executionContext);
         if (command instanceof BatchedUpdates || (command instanceof BatchedCommand && ((BatchedCommand)command).getParameterValues() != null)) {
-        	result.batchOrBulk = true;
+            result.batchOrBulk = true;
         } 
         return result;
     }
     
     @Override
     public Object getConnection(Object factory) throws TranslatorException {
-    	connectionCount++;
-    	return factory;
+        connectionCount++;
+        return factory;
     }
     
     @Override
     public void closeConnection(Object connection, Object factory) {
-    	closeCount++;
+        closeCount++;
     }
     
     public int getCloseCount() {
-		return closeCount;
-	}
+        return closeCount;
+    }
     
     public final class FakeExecution implements ResultSetExecution, UpdateExecution {
         private int rowCount;
@@ -93,40 +95,52 @@ public class FakeConnector extends ExecutionFactory<Object, Object> {
         @Override
         public List<?> next() throws TranslatorException, DataNotAvailableException {
             if (this.rowCount == 1) {
-            	return null;
+                return null;
             }
             this.rowCount++;
             return new ArrayList<Object>(Arrays.asList(this.rowCount - 1));
         }
-		@Override
-		public int[] getUpdateCounts() throws DataNotAvailableException,
-				TranslatorException {
-			if (batchOrBulk) {
-				if (returnSingleUpdate) {
-					return new int[] {2};
-				}
-				return new int[] {1, 1};
-			}
-			return new int[] {1};
-		}
-		
-		@Override
-		public void close() {
-		}
-		
-		@Override
-		public void cancel() throws TranslatorException {
-		}
+        @Override
+        public int[] getUpdateCounts() throws DataNotAvailableException,
+                TranslatorException {
+            if (batchOrBulk) {
+                if (returnSingleUpdate) {
+                    return new int[] {2};
+                }
+                return new int[] {1, 1};
+            }
+            return new int[] {1};
+        }
+        
+        @Override
+        public void close() {
+        }
+        
+        @Override
+        public void cancel() throws TranslatorException {
+        }
     }
     
     public void setReturnSingleUpdate(boolean returnSingleUpdate) {
-		this.returnSingleUpdate = returnSingleUpdate;
-	}
+        this.returnSingleUpdate = returnSingleUpdate;
+    }
     
     @Override
     public boolean returnsSingleUpdateCount() {
-    	return returnSingleUpdate;
+        return returnSingleUpdate;
     }
 
-	
+    public List<Command> getCommands() {
+        return commands;
+    }
+    
+    @Override
+    public boolean supportsCompareCriteriaEquals() {
+        return true;
+    }
+    
+    @Override
+    public boolean supportsOrCriteria() {
+        return true;
+    }
 }

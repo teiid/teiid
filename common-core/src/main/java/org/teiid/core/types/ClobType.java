@@ -302,7 +302,11 @@ public final class ClobType extends Streamable<Clob> implements NClob, Sequencab
 	
 	@Override
 	public int hashCode() {
-		return HashCodeUtil.expHashCode(this.getCharSequence());
+	    try {
+	        return HashCodeUtil.expHashCode(this.getCharSequence());
+	    } catch (TeiidRuntimeException e) {
+	        return 0;
+	    }
 	}
 	
 	public Type getType() {

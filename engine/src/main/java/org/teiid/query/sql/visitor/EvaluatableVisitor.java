@@ -248,7 +248,7 @@ public class EvaluatableVisitor extends LanguageVisitor {
         EvaluatableVisitor visitor = new EvaluatableVisitor();
         visitor.targetLevel = EvaluationLevel.PROCESSING;
         PreOrderNavigator.doVisit(obj, visitor);
-        if (pushdown && (visitor.hasCorrelatedReferences || visitor.determinismLevel == Determinism.NONDETERMINISTIC)) {
+        if ((pushdown && visitor.hasCorrelatedReferences) || visitor.determinismLevel == Determinism.NONDETERMINISTIC) {
         	return false;
         }
         return visitor.isEvaluationPossible();

@@ -42,9 +42,11 @@ public class Procedure extends AbstractMetadataRecord implements Modifiable {
 		StoredQuery
 	}
 	
+	public static final int AUTO_UPDATECOUNT = -1;
+	
     private boolean isFunction;
     private boolean isVirtual;
-    private int updateCount = 1;
+    private int updateCount = AUTO_UPDATECOUNT;
     private List<ProcedureParameter> parameters = new ArrayList<ProcedureParameter>(2);
     private ColumnSet<Procedure> resultSet;
     private volatile String queryPlan;

@@ -43,6 +43,5 @@ public class RestServicePlugin {
     	TEIID28001,
     	TEIID28002,
     	TEIID28003,
-    	TEIID28004
     }
 }

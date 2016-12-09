@@ -114,7 +114,7 @@ public class TestLogonImpl {
 		Properties p = buildProperties("fred", "name");		
 		LogonImpl impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
 		LogonResult result = impl.logon(p);
-		assertEquals("fred@SC", result.getUserName());
+		assertEquals("fred", result.getUserName());
 		
 		// if no preference then choose USERPASSWORD
 		ssi.setAuthenticationType(AuthenticationType.USERPASSWORD); // this is transport default		
@@ -122,7 +122,7 @@ public class TestLogonImpl {
 		p = buildProperties("fred", "name");		
 		impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
 		result = impl.logon(p);
-		assertEquals("fred@SC", result.getUserName());
+		assertEquals("fred", result.getUserName());
 
 		// if user name is set to "GSS", then the preference is set to "GSS"
 		ssi.setAuthenticationType(AuthenticationType.USERPASSWORD); // this is transport default		
@@ -132,19 +132,15 @@ public class TestLogonImpl {
 		fimpl.addToken("bytes".getBytes(), new Subject());
 		p.put(ILogon.KRB5TOKEN, "bytes".getBytes());
 		result = fimpl.logon(p);
-		assertEquals("GSS@SC", result.getUserName());
+		assertEquals("GSS", result.getUserName());
 		
-		// if the transport default defined as GSS, then preference is USERPASSWORD, throw exception
+		// if the transport default defined as GSS, then preference is USERPASSWORD, additional challenge
 		ssi.setAuthenticationType(AuthenticationType.GSS); 		
-		try {
-			DQPWorkContext.setWorkContext(new DQPWorkContext());
-			p = buildProperties("fred", "name");		
-			impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
-			result = impl.logon(p);
-			fail("should have failed due server does not support USERPASSWORD");
-		} catch(LogonException e) {
-			// pass
-		}
+		DQPWorkContext.setWorkContext(new DQPWorkContext());
+		p = buildProperties("fred", "name");		
+		impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
+		result = impl.logon(p);
+		assertEquals(AuthenticationType.GSS, result.getProperty("authType"));
 	}
 	
 	@Test
@@ -161,7 +157,7 @@ public class TestLogonImpl {
 		Properties p = buildProperties("fred", "name");		
 		LogonImpl impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
 		LogonResult result = impl.logon(p);
-		assertEquals("fred@SC", result.getUserName());
+		assertEquals("fred", result.getUserName());
 		
 		// if no preference then choose USERPASSWORD
 		VDBMetaData metadata = addVdb(repo, "name1", "SC", AuthenticationType.USERPASSWORD.name());
@@ -170,43 +166,39 @@ public class TestLogonImpl {
 		impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
 		p = buildProperties("fred", "name1");		
 		result = impl.logon(p);
-		assertEquals("fred@SC", result.getUserName());
+		assertEquals("fred", result.getUserName());
 
 		p = buildProperties("GSS", "name1");
 		FakeGssLogonImpl fimpl = new FakeGssLogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
 		fimpl.addToken("bytes".getBytes(), new Subject());
 		p.put(ILogon.KRB5TOKEN, "bytes".getBytes());
 		result = fimpl.logon(p);
-		assertEquals("GSS@SC", result.getUserName());
-				
+		assertEquals("GSS", result.getUserName());
 		
 		// here preference is GSS
 		try {
 			p = buildProperties("GSS", "name");		
 			result = impl.logon(p);
-			assertEquals("GSS@SC", result.getUserName());
+			assertEquals("GSS", result.getUserName());
 		} catch(LogonException e) {
 			
 		}
 				
-		// if the transport default defined as GSS, then preference is USERPASSWORD, throw exception
-		try {
-			addVdb(repo, "name2", "SC", "GSS");		
-			DQPWorkContext.setWorkContext(new DQPWorkContext());
-			impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
-			p = buildProperties("fred", "name2");		
-			result = impl.logon(p);
-			fail("should have failed due server does not support USERPASSWORD");
-		} catch(LogonException e) {
-			// pass
-		}
-		
+		// if the transport default defined as GSS, then preference is USERPASSWORD, additional challenge
+		addVdb(repo, "name2", "SC", "GSS");		
+		DQPWorkContext.setWorkContext(new DQPWorkContext());
+		impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
+		p = buildProperties("fred", "name2");		
+		result = impl.logon(p);
+		assertEquals(AuthenticationType.GSS, result.getProperty("authType"));
+
+	    // doesn't match gss pattern
 		metadata.addProperty(SessionServiceImpl.GSS_PATTERN_PROPERTY, "GSS");
 		DQPWorkContext.setWorkContext(new DQPWorkContext());
 		impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
 		p = buildProperties(null, "name1");		
 		result = impl.logon(p);
-		assertEquals("anonymous@SC", result.getUserName());
+		assertEquals("anonymous", result.getUserName());
 	}	
 
 	private Properties buildProperties(String userName, String vdbName) {

@@ -911,6 +911,14 @@ public class TestValidator {
     @Test public void testValidateInClauseSubquery() {        
         helpValidate("SELECT e2 FROM test.group2 WHERE e1 IN (SELECT e1 FROM test.group)", new String[] {"e1"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
     }
+    
+    @Test public void testValidateInClauseSubqueryPasses() {        
+        helpValidate("SELECT e2 FROM test.group2 WHERE e1 IN (SELECT e2 FROM test.group)", new String[] {}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testValidateInClauseSubqueryArray() {        
+        helpValidate("SELECT e2 FROM pm1.g1 WHERE (e2, e3) IN (SELECT e2, e3 FROM pm1.g2)", new String[] {}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
 
     @Test public void testValidateExec1() {
         helpValidate("EXEC pm1.sq1()", new String[] {}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
@@ -1788,7 +1796,19 @@ public class TestValidator {
     @Test public void testMergeNoKey() {
         String userUpdateStr = "MERGE into pm1.g2 (e1) values ('x')"; //$NON-NLS-1$
         
-        helpValidate(userUpdateStr, new String[]{"MERGE INTO pm1.g2 (e1) VALUES ('x')"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+        helpValidate(userUpdateStr, new String[]{"UPSERT INTO pm1.g2 (e1) VALUES ('x')"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+    }
+    
+    @Test public void testUpsertWithNonUpdatableKey() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table g1 (e1 integer not null auto_increment primary key options (updatable false), e2 integer) options (updatable true)", "x", "y");
+        
+        String userUpdateStr = "UPSERT into g1 (e1, e2) values (1, 1)"; //$NON-NLS-1$
+        
+        helpValidate(userUpdateStr, new String[]{}, metadata); //$NON-NLS-1$
+        
+        userUpdateStr = "UPSERT into g1 (e1, e2) values (null, 1)"; //$NON-NLS-1$
+        
+        helpValidate(userUpdateStr, new String[]{}, metadata); //$NON-NLS-1$
     }
     
     @Test public void testDeleteError() {

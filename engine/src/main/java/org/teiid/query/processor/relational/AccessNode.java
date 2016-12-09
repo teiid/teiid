@@ -53,14 +53,13 @@ import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.processor.relational.SubqueryAwareEvaluator.SubqueryState;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
-import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.lang.SubqueryContainer.Evaluatable;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
@@ -580,6 +579,14 @@ public class AccessNode extends SubqueryAwareRelationalNode {
     	PlanNode props = super.getDescriptionProperties();
         props.addProperty(PROP_SQL, this.command.toString());
         props.addProperty(PROP_MODEL_NAME, this.modelName);
+        Collection<? extends SubqueryContainer<?>> objects = getObjects();
+        if (!objects.isEmpty()) {
+            int index = 0;
+            for (Iterator<? extends SubqueryContainer<?>> iterator = objects.iterator(); iterator.hasNext();) {
+                SubqueryContainer<?> subqueryContainer = iterator.next();
+                props.addProperty(PROP_SQL + " Subplan " + index++, subqueryContainer.getCommand().getProcessorPlan().getDescriptionProperties()); //$NON-NLS-1$
+            }
+        }
         if (this.projection != null && this.projection.length > 0 && this.originalSelect != null) {
         	props.addProperty(PROP_SELECT_COLS, this.originalSelect.toString());
         }
@@ -612,21 +619,24 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 	}
 	
 	@Override
-	protected Collection<? extends LanguageObject> getObjects() {
-		ArrayList<LanguageObject> list = new ArrayList<LanguageObject>();
+	public Collection<? extends SubqueryContainer<?>> getObjects() {
+		ArrayList<SubqueryContainer<?>> list = new ArrayList<SubqueryContainer<?>>();
 		if (shouldEvaluate) {
 			//collect any evaluatable subqueries
-			for (SubqueryContainer<?> container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(this.command)) {
-				if (container instanceof ExistsCriteria && ((ExistsCriteria)container).shouldEvaluate()) {
-					list.add(container);
-				}
-				if (container instanceof ScalarSubquery && ((ScalarSubquery)container).shouldEvaluate()) {
-					list.add(container);
-				}
-			}
+			collectEvaluatable(list, this.command);
 		}
 		return list;
 	}
+
+    private void collectEvaluatable(ArrayList<SubqueryContainer<?>> list, Command cmd) {
+        for (SubqueryContainer<?> container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(cmd)) {
+        	if (container instanceof Evaluatable<?> && ((Evaluatable<?>)container).shouldEvaluate()) {
+        		list.add(container);
+        	} else {
+        	    collectEvaluatable(list, container.getCommand());
+        	}
+        }
+    }
 	
 	@Override
 	public Boolean requiresTransaction(boolean transactionalReads) {
@@ -650,16 +660,19 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 		if (subqueryTxn > 1) {
 			return true;
 		}
+	    if ((multiSource && connectorBindingExpression == null) && (subqueryTxn > 0)) {
+	        return true;
+	    }
 		if (transactionSupport == TransactionSupport.NONE) {
 			return subqueryTxn > 0?null:false;
 		}
 		if ((command instanceof StoredProcedure && ((StoredProcedure)command).getUpdateCount() > 1)) {
 			return true;
 		}
-		if ((multiSource && connectorBindingExpression == null) && (subqueryTxn > 0 || transactionalReads || RelationalNodeUtil.isUpdate(command))) {
-			return true;
-		}
-		if (transactionalReads || RelationalNodeUtil.isUpdate(command)) {
+		if (transactionalReads || RelationalNodeUtil.isUpdate(command) || (command instanceof StoredProcedure && ((StoredProcedure)command).getUpdateCount() != 0)) {
+		    if ((multiSource && connectorBindingExpression == null)) {
+		        return true;
+		    }
 			return subqueryTxn > 0?true:null;
 		}
 		return false;

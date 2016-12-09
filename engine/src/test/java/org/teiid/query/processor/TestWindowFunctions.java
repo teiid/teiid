@@ -32,6 +32,7 @@ import java.util.List;
 import org.junit.Test;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
@@ -41,6 +42,7 @@ import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.processor.relational.ProjectNode;
 import org.teiid.query.processor.relational.WindowFunctionProjectNode;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.util.CommandContext;
 import org.teiid.translator.ExecutionFactory.NullOrder;
 
 @SuppressWarnings({"nls", "unchecked"})
@@ -466,6 +468,19 @@ public class TestWindowFunctions {
                     "SELECT AVG(g_0.e2) OVER () FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
     	checkNodeTypes(plan, new int[] {1, 1}, new Class<?>[] {AccessNode.class, ProjectNode.class});
+    }
+    
+    @Test public void testSourceWindowFunction() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table team_target (amount integer, team integer, \"year\" integer); "
+                + "create foreign function lead (arg string) returns string options (\"teiid_rel:aggregate\" true, \"teiid_rel:analytic\" true)", "x", "y");
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        
+        String sql = "SELECT LEAD(ALL convert(amount, string)) OVER (PARTITION BY team ORDER BY \"year\") FROM team_target";
+        
+        TestOptimizer.getPlan(helpGetCommand(sql, metadata, null), 
+                metadata, new DefaultCapabilitiesFinder(bsc), 
+                null, false, new CommandContext()); //$NON-NLS-1$
     }
     
 }

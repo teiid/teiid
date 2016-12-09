@@ -31,6 +31,7 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
@@ -44,7 +45,9 @@ import org.mockito.Mockito;
 import org.postgresql.Driver;
 import org.postgresql.core.v3.ExtendedQueryExectutorImpl;
 import org.teiid.adminapi.Model.Type;
+import org.teiid.adminapi.Request.ProcessingState;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.util.ObjectConverterUtil;
@@ -649,6 +652,32 @@ public class TestODBCSocketTransport {
 		assertEquals("bar", value);
 	}
 	
+	@Test public void testDecimalPrecision() throws Exception {
+        VDBMetaData vdb = new VDBMetaData();
+        vdb.setName("decimal");
+        vdb.addProperty("connection.foo", "bar");
+        ModelMetaData mmd = new ModelMetaData();
+        mmd.setName("x");
+        mmd.setModelType(Type.VIRTUAL);
+        mmd.addSourceMetadata("ddl", "create view v (x decimal(2), y decimal) as select 1.0, 2.0");
+        vdb.addModel(mmd);
+        odbcServer.server.deployVDB(vdb);
+        this.conn.close();
+        connect("decimal");
+        Statement s = conn.createStatement();
+        s.execute("select * from v");
+        ResultSetMetaData metadata = s.getResultSet().getMetaData();
+        assertEquals(2, metadata.getPrecision(1));
+        assertEquals(0, metadata.getScale(1));
+        
+        assertEquals(32767, metadata.getPrecision(2));
+        assertEquals(16383, metadata.getScale(2));
+        
+        s.execute("select atttypmod from pg_attribute where attname = 'y'");
+        s.getResultSet().next();
+        assertEquals(2147434499, s.getResultSet().getInt(1));
+    }
+	
 	@Test public void testTransactionCycleDisabled() throws Exception {
 		Statement s = conn.createStatement();
 		s.execute("set disableLocalTxn true");
@@ -675,7 +704,15 @@ public class TestODBCSocketTransport {
 		s.executeQuery();
 		s.executeQuery();
 		
-		assertEquals(1, odbcServer.server.getDqp().getRequestsForSession(id).size());
+		//due to asynch close, there may be several requests
+		int runningCount = 0;
+		for (RequestMetadata request : odbcServer.server.getDqp().getRequestsForSession(id)) {
+		   if (request.getState() == ProcessingState.PROCESSING) {
+		       runningCount++;
+		   }
+		}
+		assertEquals(1, runningCount);
+		s.close();
 	}
 	
 	@Test public void testExportedKey() throws Exception {
@@ -688,5 +725,16 @@ public class TestODBCSocketTransport {
 		assertEquals("STATUS_ID", rs.getString(4));
 		assertFalse(rs.next());
 	}
+	
+	@Test public void testRegClass() throws Exception {
+        Statement s = conn.createStatement();
+        ResultSet rs = s.executeQuery("select '\"pg_catalog.pg_class\"'::regclass");
+        rs.next();
+        int oid = rs.getInt(1);
+        rs = s.executeQuery("select oid from pg_class where relname='pg_class'");
+        rs.next();
+        int oid1 = rs.getInt(1);
+        assertEquals(oid, oid1);
+    }
 	
 }

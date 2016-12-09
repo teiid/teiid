@@ -40,15 +40,11 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
-import org.teiid.common.buffer.BlockedException;
-import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.*;
 import org.teiid.common.buffer.BufferManager.BufferReserveMode;
 import org.teiid.common.buffer.BufferManager.TupleSourceType;
-import org.teiid.common.buffer.STree;
 import org.teiid.common.buffer.STree.InsertMode;
-import org.teiid.common.buffer.TupleBrowser;
-import org.teiid.common.buffer.TupleBuffer;
-import org.teiid.common.buffer.TupleSource;
+import org.teiid.common.buffer.TupleBuffer.TupleBufferTupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
@@ -87,12 +83,21 @@ public class TempTable implements Cloneable, SearchableTable {
 		private boolean addRowId;
 		private int[] indexes;
 		private GeneratedKeysImpl keys;
+		private boolean upsert;
+        private TupleBuffer upsertUndoLog;
 		
-		private InsertUpdateProcessor(TupleSource ts, boolean addRowId, int[] indexes, boolean canUndo)
+		private InsertUpdateProcessor(TupleSource ts, boolean addRowId, int[] indexes, boolean canUndo, boolean upsert)
 				throws TeiidComponentException {
 			super(null, ts, canUndo);
+			if (upsert && addRowId) {
+			    throw new AssertionError("invalid state"); //$NON-NLS-1$
+			}
 			this.addRowId = addRowId;
 			this.indexes = indexes;
+			this.upsert = upsert;
+			if (canUndo && upsert) {
+			    this.upsertUndoLog = bm.createTupleBuffer(columns, sessionID, TupleSourceType.PROCESSOR);
+			}
 		}
 		
 		@Override
@@ -103,7 +108,25 @@ public class TempTable implements Cloneable, SearchableTable {
 		}
 		
 		@Override
-		protected void afterCompletion() throws TeiidComponentException {
+		protected void afterCompletion(boolean success) throws TeiidComponentException {
+		    if (!success && upsertUndoLog != null) {
+		        upsertUndoLog.setFinal(true);
+                TupleBufferTupleSource undoTs = upsertUndoLog.createIndexedTupleSource();
+                undoTs.setReverse(true);
+                List<?> tuple = null;
+                try {
+                    while ((tuple = undoTs.nextTuple()) != null) {
+                        try {
+                            updateTuple(tuple);
+                        } catch (TeiidException e) {
+                            LogManager.logError(LogConstants.CTX_DQP, e, e.getMessage());                               
+                        }
+                    }
+                } catch (TeiidProcessingException e) {
+                    //shouldn't happen
+                    throw new TeiidComponentException(e);
+                }
+		    }
 			tree.setBatchInsert(false);
 		}
 		
@@ -142,10 +165,25 @@ public class TempTable implements Cloneable, SearchableTable {
 			}
 			currentTuple = tuple;
 			
-			for (int i = 0; i < notNull.length; i++) {
-				if (tuple.get(notNull[i]) == null) {
-					 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30236, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30236, columns.get(i)));
-				}
+			validateNotNull(tuple);
+			if (upsert) {
+			    //TODO: we're potentially wasting a sequence value here
+			    List<?> existing = tree.insert(tuple, indexes == null?InsertMode.UPDATE:InsertMode.NEW, -1);
+			    if (existing != null && indexes != null) {
+			        for (int i = 0; i < indexes.length; i++) {
+	                    if (indexes[i] == -1) {
+	                        AtomicInteger sequence = sequences.get(i + (addRowId?1:0));
+	                        if (sequence == null) {
+	                            tuple.set(i, existing.get(i));
+	                        }
+	                    }
+	                }
+			        tree.insert(tuple, InsertMode.UPDATE, -1);
+			    }
+			    upsertUndoLog.addTuple(tuple);
+			    //don't add to main undo log
+			    currentTuple = null;
+			    return;
 			}
 			insertTuple(tuple, addRowId, true);
 			if (generatedKey != null) {
@@ -161,6 +199,14 @@ public class TempTable implements Cloneable, SearchableTable {
 
 		public void setGeneratedKeys(GeneratedKeysImpl keys) {
 			this.keys = keys;
+		}
+		
+		@Override
+		public void close() {
+		    super.close();
+		    if (this.upsertUndoLog != null) {
+		        this.upsertUndoLog.remove();
+		    }
 		}
 	}
 
@@ -256,7 +302,7 @@ public class TempTable implements Cloneable, SearchableTable {
 					if (crit == null || eval.evaluate(crit, currentTuple)) {
 						tuplePassed(currentTuple);
 						updateCount++;
-						if (undoLog != null) {
+						if (undoLog != null && currentTuple != null) {
 							undoLog.addTuple(currentTuple);
 						}
 					}
@@ -268,10 +314,11 @@ public class TempTable implements Cloneable, SearchableTable {
 				success = true;
 			} finally {
 				try {
-					afterCompletion();
+					afterCompletion(success);
 					if (!success && undoLog != null) {
 						undoLog.setFinal(true);
-						TupleSource undoTs = undoLog.createIndexedTupleSource();
+						TupleBufferTupleSource undoTs = undoLog.createIndexedTupleSource();
+						undoTs.setReverse(true);
 						List<?> tuple = null;
 						while ((tuple = undoTs.nextTuple()) != null) {
 							try {
@@ -292,9 +339,10 @@ public class TempTable implements Cloneable, SearchableTable {
 
 		/**
 		 * 
+		 * @param success 
 		 * @throws TeiidComponentException
 		 */
-		protected void afterCompletion() throws TeiidComponentException {
+		protected void afterCompletion(boolean success) throws TeiidComponentException {
 			
 		}
 
@@ -359,7 +407,10 @@ public class TempTable implements Cloneable, SearchableTable {
 		if (!tid.getElements().isEmpty()) {
 			//not relevant for indexes
 			for (int i = startIndex; i < columns.size(); i++) {
-				TempMetadataID col = tid.getElements().get(i - startIndex);
+				TempMetadataID col = (TempMetadataID) columns.get(i).getMetadataID();
+				if (col == null) {
+				    continue;
+				}
 				if (col.isAutoIncrement()) {
 					if (this.sequences == null) {
 						this.sequences = new HashMap<Integer, AtomicInteger>();
@@ -380,6 +431,15 @@ public class TempTable implements Cloneable, SearchableTable {
 		this.leafBatchSize = bm.getSchemaSize(columns);
 		tid.setCardinality(0);
 	}
+	
+    private void validateNotNull(List tuple)
+            throws TeiidProcessingException {
+        for (int i = 0; i < notNull.length; i++) {
+            if (tuple.get(notNull[i]) == null) {
+                 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30236, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30236, columns.get(i)));
+            }
+        }
+    }
 	
 	public TempTable clone() {
 		lock.readLock().lock();
@@ -416,7 +476,7 @@ public class TempTable implements Cloneable, SearchableTable {
 		TempTable indexTable = createIndexTable(indexColumns, unique);
 		//TODO: ordered insert optimization
 		TupleSource ts = createTupleSource(indexTable.getColumns(), null, null);
-		indexTable.insert(ts, indexTable.getColumns(), false, null);
+		indexTable.insert(ts, indexTable.getColumns(), false, false, null);
 		indexTable.getTree().compact();
 	}
 
@@ -504,7 +564,7 @@ public class TempTable implements Cloneable, SearchableTable {
 			final List<? extends Expression> projectedCols,
 			final Criteria condition, OrderBy orderBy, IndexInfo ii, boolean agg)
 			throws TeiidComponentException, TeiidProcessingException {
-		TupleBrowser browser = ii.createTupleBrowser(bm.getOptions().getDefaultNullOrder());
+		TupleBrowser browser = ii.createTupleBrowser(bm.getOptions().getDefaultNullOrder(), true);
 		TupleSource ts = new QueryTupleSource(browser, columnMap, agg?getColumns():projectedCols, condition);
 		
 		boolean usingQueryTupleSource = false;
@@ -589,7 +649,7 @@ public class TempTable implements Cloneable, SearchableTable {
 	private TupleBrowser createTupleBrower(Criteria condition, boolean direction) throws TeiidComponentException {
 		IndexInfo ii = new IndexInfo(this, null, condition, null, true);
 		ii.ordering = direction;
-		return ii.createTupleBrowser(bm.getOptions().getDefaultNullOrder());
+		return ii.createTupleBrowser(bm.getOptions().getDefaultNullOrder(), false);
 	}
 	
 	public long getRowCount() {
@@ -654,7 +714,7 @@ public class TempTable implements Cloneable, SearchableTable {
 		return columns;
 	}
 	
-	public TupleSource insert(TupleSource tuples, final List<ElementSymbol> variables, boolean canUndo, CommandContext context) throws TeiidComponentException, ExpressionEvaluationException, TeiidProcessingException {
+	public TupleSource insert(TupleSource tuples, final List<ElementSymbol> variables, boolean canUndo, boolean upsert, CommandContext context) throws TeiidComponentException, ExpressionEvaluationException, TeiidProcessingException {
 		List<ElementSymbol> cols = getColumns();
 		final int[] indexes = new int[cols.size()];
 		boolean shouldProject = false;
@@ -662,7 +722,7 @@ public class TempTable implements Cloneable, SearchableTable {
 			indexes[i] = variables.indexOf(cols.get(i));
 			shouldProject |= (indexes[i] != i);
 		}
-		InsertUpdateProcessor up = new InsertUpdateProcessor(tuples, rowId != null, shouldProject?indexes:null, canUndo);
+		InsertUpdateProcessor up = new InsertUpdateProcessor(tuples, rowId != null, shouldProject?indexes:null, canUndo, upsert);
 		if (context != null && context.isReturnAutoGeneratedKeys() && rowId == null) {
 			List<String> colNames = null;
 			List<Class<?>> colTypes = null;
@@ -699,12 +759,12 @@ public class TempTable implements Cloneable, SearchableTable {
 			
 			@Override
 			protected void tuplePassed(List tuple)
-					throws ExpressionEvaluationException,
-					BlockedException, TeiidComponentException {
+					throws BlockedException, TeiidComponentException, TeiidProcessingException {
 				List<Object> newTuple = new ArrayList<Object>(tuple);
     			for (Map.Entry<ElementSymbol, Expression> entry : update.getClauseMap().entrySet()) {
     				newTuple.set(columnMap.get(entry.getKey()), eval.evaluate(entry.getValue(), tuple));
     			}
+    			validateNotNull(newTuple);
     			if (primaryKeyChangePossible) {
     				browser.removed();
     				deleteTuple(tuple);
@@ -732,7 +792,7 @@ public class TempTable implements Cloneable, SearchableTable {
 				//changeSet contains possible updates
 				if (primaryKeyChangePossible) {
 					if (changeSetProcessor == null) {
-						changeSetProcessor = new InsertUpdateProcessor(changeSet.createIndexedTupleSource(true), false, null, true);
+						changeSetProcessor = new InsertUpdateProcessor(changeSet.createIndexedTupleSource(true), false, null, true, false);
 					}
 					changeSetProcessor.process(); //when this returns, we're up to date
 				}

@@ -293,5 +293,29 @@ public class Program implements Cloneable, Labeled {
 	public void setTrappingExceptions(boolean trappingExceptions) {
 		this.trappingExceptions = trappingExceptions;
 	}
+
+    public Boolean requiresTransaction(boolean transactionalReads) {
+        if (!transactionalReads && this.isAtomic()) {
+            return false;
+        }
+        boolean possiblyRequired = false;
+        for (ProgramInstruction instruction : this.programInstructions) {
+            Boolean instructionRequires = instruction.requiresTransaction(transactionalReads);
+            if (instructionRequires == null) {
+                if (possiblyRequired) {
+                    return true;
+                }
+                possiblyRequired = true;
+                continue;
+            }
+            if (instructionRequires) {
+                return true;
+            }
+        }
+        if (possiblyRequired) {
+            return null;
+        }
+        return false;
+    }
         
 }

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <vdb name="sample" version="1">
-    <property name="UseConnectorMetadata" value="true" />
+    <property name="cache-metadata" value="true" />
     <property name="{http://teiid.org/rest}auto-generate" value="true"/>
     
     <model name="Txns">

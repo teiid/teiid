@@ -514,7 +514,7 @@ public class TestMetadataValidator {
     }
     
     @Test public void testFunctionProcedureValidation() throws Exception {
-    	buildModel("phy1", true, this.vdb, this.store, "CREATE VIRTUAL FUNCTION f1(VARIADIC x integer) RETURNS integer as return (select e1 from g1 where e2 = array_length(x)); create foreign table g1 (e1 string, e2 integer);");
+    	buildModel("phy1", true, this.vdb, this.store, "CREATE VIRTUAL FUNCTION f1(VARIADIC x integer) RETURNS integer as return (select e1 from g1 where e2 = array_length(x));; create foreign table g1 (e1 string, e2 integer);");
     	
 		buildTransformationMetadata();
 		

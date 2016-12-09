@@ -107,6 +107,7 @@ public final class NodeConstants {
         INTO_GROUP,         // GroupSymbol
         HAS_WINDOW_FUNCTIONS,		// Boolean
         CONSTRAINT,
+        UPSERT, //Boolean
 
         // Select node properties
         SELECT_CRITERIA,    // Criteria

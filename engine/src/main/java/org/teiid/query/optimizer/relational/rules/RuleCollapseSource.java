@@ -468,6 +468,18 @@ public final class RuleCollapseSource implements OptimizerRule {
 			    if ((hasExpression && !CapabilitiesUtil.supports(Capability.QUERY_FUNCTIONS_IN_GROUP_BY, modelID, metadata, capFinder)) || hasLiteral) {
 			    	//if group by expressions are not support, add an inline view to compensate
 					query = RuleCollapseSource.rewriteGroupByAsView(query, metadata, false);
+					if (query.getHaving() != null) {
+					    //dependent sets will have been added a having 
+					    List<Criteria> crits = Criteria.separateCriteriaByAnd(query.getHaving());
+					    for (Iterator<Criteria> iter = crits.iterator(); iter.hasNext();) {
+					        Criteria crit = iter.next();
+					        if (crit instanceof DependentSetCriteria) {
+					            query.setCriteria(Criteria.combineCriteria(query.getCriteria(), crit));
+					            iter.remove();
+					        }
+					    }
+					    query.setHaving(Criteria.combineCriteria(crits));
+					}
 			    }
 				if (query.getOrderBy() != null 
 						&& groupNode.hasBooleanProperty(Info.ROLLUP) 

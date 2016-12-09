@@ -53,7 +53,7 @@ import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor.EvaluationLevel;
-import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
+import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.ExecutionFactory.Format;
 import org.teiid.translator.SourceSystemFunctions;
@@ -603,21 +603,42 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     @Override
     public void visit(ScalarSubquery obj) {
     	try {    
-    		if(!this.caps.supportsCapability(Capability.QUERY_SUBQUERIES_SCALAR) 
-            		|| validateSubqueryPushdown(obj, modelID, metadata, capFinder, analysisRecord) == null) {
-            	if (obj.getCommand().getCorrelatedReferences() == null && !FunctionCollectorVisitor.isNonDeterministic(obj.getCommand())) {
-            		obj.setShouldEvaluate(true);
-            	} else {
-            		markInvalid(obj.getCommand(), !this.caps.supportsCapability(Capability.QUERY_SUBQUERIES_SCALAR)?
-            				"Correlated ScalarSubquery is not supported":"Subquery cannot be pushed down"); //$NON-NLS-1$ //$NON-NLS-2$
-            	}
-            } else if (this.isSelectClause && !this.caps.supportsCapability(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION)) {
-        		markInvalid(obj.getCommand(), "Correlated ScalarSubquery projection is not supported"); //$NON-NLS-1$
+    	    if (obj.shouldEvaluate()) {
+    	        return;
+    	    }
+    	    boolean canPreEval = obj.getCommand().getCorrelatedReferences() == null;
+    		if(!this.caps.supportsCapability(Capability.QUERY_SUBQUERIES_SCALAR)) {  
+    		    markEvaluatable(obj, canPreEval, "Correlated/nonDeterministic ScalarSubquery is not supported"); //$NON-NLS-1$
+    	    } else if (validateSubqueryPushdown(obj, modelID, metadata, capFinder, analysisRecord) == null) {
+    	        markEvaluatable(obj, canPreEval, "Subquery cannot be pushed down"); //$NON-NLS-1$
+    	    } else if (this.isSelectClause && !this.caps.supportsCapability(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION)) {
+            	markEvaluatable(obj, canPreEval, "Correlated/nonDeterministic ScalarSubquery cannot be used in the SELECT clause"); //$NON-NLS-1$
+            } else if (canPreEval) {
+                //preserve the prior behavior of always pre-evaluating against a with temp group
+                Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroupsIgnoreInlineViews(obj.getCommand(), true);
+                boolean allTemp = true;
+                for (GroupSymbol gs : groups) {
+                    if (!gs.isPushedCommonTable()) {
+                        allTemp = false;
+                        break;
+                    }
+                }
+                if (allTemp) {
+                    obj.setShouldEvaluate(true);
+                }
             }
         } catch(QueryMetadataException e) {
             handleException(new TeiidComponentException(e));
         } catch(TeiidComponentException e) {
             handleException(e);            
+        }
+    }
+
+    private void markEvaluatable(ScalarSubquery obj, boolean canPreEval, String reasonWhyInvalid) {
+        if (canPreEval) {
+        	obj.setShouldEvaluate(true);
+        } else {
+        	markInvalid(obj.getCommand(), reasonWhyInvalid);
         }
     }
 

@@ -95,9 +95,9 @@ public abstract class BaseOperationHandler<T> implements OperationStepHandler {
         SimpleOperationDefinitionBuilder builder = new SimpleOperationDefinitionBuilder(this.operationName, new TeiidResourceDescriptionResolver(this.operationName));
         builder.setRuntimeOnly();
         /*builder.setAccessConstraints(ACCESS_CONTROL_DEF);*/
-        if (!isChangesRuntimes()) {
-            builder.setReadOnly();
-        }
+        //if (!isChangesRuntimes()) {
+        //    builder.setReadOnly();
+        //}
         describeParameters(builder);
         return builder.build();
     }	

@@ -45,6 +45,7 @@ import javax.transaction.TransactionManager;
 
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.jboss.as.controller.AbstractAddStepHandler;
+import org.jboss.as.controller.ModelController;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.OperationStepHandler;
@@ -62,6 +63,7 @@ import org.jboss.as.naming.deployment.ContextNames;
 import org.jboss.as.naming.service.BinderService;
 import org.jboss.as.server.AbstractDeploymentChainStep;
 import org.jboss.as.server.DeploymentProcessorTarget;
+import org.jboss.as.server.Services;
 import org.jboss.as.server.deployment.Phase;
 import org.jboss.as.threads.ThreadFactoryResolver;
 import org.jboss.as.threads.ThreadsServices;
@@ -78,11 +80,13 @@ import org.teiid.PreParser;
 import org.teiid.cache.CacheFactory;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBufferCache;
+import org.teiid.deployers.RestWarGenerator;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.dqp.internal.process.AuthorizationValidator;
 import org.teiid.dqp.internal.process.CachedResults;
+import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.DefaultAuthorizationValidator;
 import org.teiid.dqp.internal.process.PreparedPlan;
@@ -159,7 +163,8 @@ class TeiidAdd extends AbstractAddStepHandler {
 		TeiidConstants.AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE,
 		TeiidConstants.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE,
 		TeiidConstants.AUTHENTICATION_TYPE_ATTRIBUTE,
-		TeiidConstants.AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE
+		TeiidConstants.AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE,
+		TeiidConstants.AUTHENTICATION_ALLOW_SECURITY_DOMAIN_QUALIFIER
 	};
 	
 	@Override
@@ -382,7 +387,7 @@ class TeiidAdd extends AbstractAddStepHandler {
 	    	cacheFactoryBuilder.addDependency(ServiceName.JBOSS.append("infinispan", ispnName), EmbeddedCacheManager.class, cfs.cacheContainerInjector); //$NON-NLS-1$
 	    	cacheFactoryBuilder.install();
 	    	
-	    	int maxStaleness = 60;
+	    	int maxStaleness = DQPConfiguration.DEFAULT_MAX_STALENESS_SECONDS;
 	    	if (isDefined(RSC_MAX_STALENESS_ATTRIBUTE, operation, context)) {
 	    		maxStaleness = asInt(RSC_MAX_STALENESS_ATTRIBUTE, operation, context);
 	    	}
@@ -528,6 +533,11 @@ class TeiidAdd extends AbstractAddStepHandler {
    			sessionServiceImpl.setTrustAllLocal(allowUnauthenticated);
 		}
    		
+   		if (isDefined(AUTHENTICATION_ALLOW_SECURITY_DOMAIN_QUALIFIER, operation, context)) {
+            boolean allowSecurityDomainQualifier = asBoolean(AUTHENTICATION_ALLOW_SECURITY_DOMAIN_QUALIFIER, operation, context);
+            sessionServiceImpl.setAllowSecurityDomainQualifier(allowSecurityDomainQualifier);
+        }
+   		
    		sessionServiceImpl.setDqp(engine.getValue());
    		sessionServiceImpl.setVDBRepository(vdbRepository);
    		sessionServiceImpl.setSecurityHelper(new JBossSecurityHelper());
@@ -552,6 +562,15 @@ class TeiidAdd extends AbstractAddStepHandler {
    		});
    		
    		sessionServiceBuilder.install();
+   		
+  		// rest war service
+   		RestWarGenerator warGenerator= TeiidAdd.buildService(RestWarGenerator.class, "org.jboss.teiid.rest-service");
+   		ResteasyEnabler restEnabler = new ResteasyEnabler(warGenerator);
+		ServiceBuilder<Void> warGeneratorSvc = target.addService(TeiidServiceNames.REST_WAR_SERVICE, restEnabler);
+		warGeneratorSvc.addDependency(Services.JBOSS_SERVER_CONTROLLER, ModelController.class, restEnabler.controllerValue);
+		warGeneratorSvc.addDependency(TeiidServiceNames.THREAD_POOL_SERVICE, Executor.class,  restEnabler.executorInjector);
+		warGeneratorSvc.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class, restEnabler.vdbRepoInjector);
+		warGeneratorSvc.install();
 	}
 	
     private void buildThreadService(int maxThreads, ServiceTarget target) {

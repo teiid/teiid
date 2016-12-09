@@ -2,7 +2,7 @@
   <parent>
     <artifactId>teiid-parent</artifactId>
     <groupId>org.jboss.teiid</groupId>
-        <version>9.1.0.Alpha3-SNAPSHOT</version>
+        <version>9.2.0.Alpha2-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   
@@ -61,6 +61,23 @@
         
         <plugins>                        
             <plugin>
+                <groupId>org.wildfly.build</groupId>
+                <artifactId>wildfly-server-provisioning-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>dist-provisioning</id>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                        <phase>compile</phase>
+                        <configuration>
+                            <config-file>server-provisioning.xml</config-file>
+                            <serverName>teiid-${project.version}-wildfly-dist</serverName>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
@@ -73,19 +90,19 @@
                         <configuration>
                             <artifactItems>
                                 <artifactItem>
-									<groupId>org.wildfly</groupId>
-									<artifactId>wildfly-dist</artifactId>
+                                    <groupId>org.wildfly</groupId>
+                                    <artifactId>wildfly-dist</artifactId>
                                     <version>${version.org.wildfly}</version>
                                     <type>zip</type>
                                     <outputDirectory>${project.build.directory}</outputDirectory>
                                 </artifactItem>
                                 <artifactItem>
-									  <groupId>org.jboss.teiid.hal</groupId>
-									  <artifactId>dist</artifactId>
-									  <version>${version.teiid.console}</version>
-									  <classifier>overlay</classifier>
-									  <type>zip</type>
-	                                  <outputDirectory>${project.build.directory}/${dir.wildfly}</outputDirectory>
+                                    <groupId>org.jboss.teiid.hal</groupId>
+                                    <artifactId>dist</artifactId>
+                                    <version>${version.teiid.console}</version>
+                                    <classifier>overlay</classifier>
+                                    <type>zip</type>
+                                    <outputDirectory>${project.build.directory}/${dir.wildfly}</outputDirectory>
                                 </artifactItem>
                             </artifactItems>
                         </configuration>
@@ -102,7 +119,7 @@
                         <descriptor>assembly/wildfly-dist.xml</descriptor>
                         <descriptor>assembly/adminshell-dist.xml</descriptor>
                         <descriptor>assembly/wildfly-server.xml</descriptor>
-                        <descriptor>assembly/docker.xml</descriptor>            
+                        <descriptor>assembly/docker.xml</descriptor>
                     </descriptors>
                 </configuration>
                 <executions>
