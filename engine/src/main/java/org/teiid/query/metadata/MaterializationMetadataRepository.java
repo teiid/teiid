@@ -50,7 +50,7 @@ public class MaterializationMetadataRepository extends MetadataRepository {
 	public static final String MATVIEW_UPDATABLE = "{http://www.teiid.org/ext/relational/2012}MATVIEW_UPDATABLE"; //$NON-NLS-1$
 	public static final String MATVIEW_PREFER_MEMORY = "{http://www.teiid.org/ext/relational/2012}MATVIEW_PREFER_MEMORY"; //$NON-NLS-1$
 	public static final String MATVIEW_SCOPE = "{http://www.teiid.org/ext/relational/2012}MATVIEW_SCOPE"; //$NON-NLS-1$
-	
+	public static final String MATVIEW_LOADNUMBER_COLUMN = "{http://www.teiid.org/ext/relational/2012}MATVIEW_LOADNUMBER_COLUMN"; //$NON-NLS-1$
 	public enum LoadStates {NEEDS_LOADING, LOADING, LOADED, FAILED_LOAD};
 	public enum Scope {NONE, VDB, SCHEMA};
 	public enum ErrorAction {THROW_EXCEPTION, IGNORE, WAIT}

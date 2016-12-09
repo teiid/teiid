@@ -301,18 +301,35 @@ public class MetadataValidator {
     					if (beforeScript == null || afterScript == null) {
     						metadataValidator.log(report, model, Severity.WARNING, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31155, t.getFullName()));
     					}
-                        
-                        verifyTableColumns(model, report, metadataValidator, t, matTable);
+
+    					String matViewLoadNumberColumn = t.getProperty(MATVIEW_LOADNUMBER_COLUMN, false);
+                        verifyTableColumns(model, report, metadataValidator, t, matTable, matViewLoadNumberColumn);
                         if(stageTable != null) {
-                            verifyTableColumns(model, report, metadataValidator, t, stageTable);
+                            verifyTableColumns(model, report, metadataValidator, t, stageTable, matViewLoadNumberColumn);
+                        }
+                        if (matViewLoadNumberColumn != null) {
+                        	Column column = matTable.getColumnByName(matViewLoadNumberColumn);
+                        	if (column == null) {
+                        		metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31215, t.getFullName(), matTable.getFullName(), matViewLoadNumberColumn));
+                        		continue;
+                        	} else if (!column.getRuntimeType().equalsIgnoreCase(DataTypeManager.DefaultDataTypes.LONG)) {
+								metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31212, t.getFullName(), matTable.getFullName(), matViewLoadNumberColumn, column.getRuntimeType()));
+								continue;
+                        	}
                         }
 
                         String status = t.getProperty(MATVIEW_STATUS_TABLE, false);
                         String loadScript = t.getProperty(MATVIEW_LOAD_SCRIPT, false);
-                        if (status == null || (stageTable == null && loadScript == null)) {
+                        if (status == null) {
                         	metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31154, t.getFullName()));
                         	continue; 
                         }
+                        
+                        if (matViewLoadNumberColumn == null && stageTable == null && loadScript == null) {
+                        	metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31213, t.getFullName()));
+                        	continue; 
+                        }
+                        
 						Table statusTable = findTableByName(store, status);
 						if (statusTable == null) {
 							metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31197, t.getFullName(), status));
@@ -359,8 +376,19 @@ public class MetadataValidator {
                         loadScriptsValidation(vdb, report, metadataValidator, model, t, t.getProperty(MATVIEW_BEFORE_LOAD_SCRIPT, false), "MATVIEW_BEFORE_LOAD_SCRIPT");//$NON-NLS-1$
                         loadScriptsValidation(vdb, report, metadataValidator, model, t, t.getProperty(MATVIEW_LOAD_SCRIPT, false), "MATVIEW_LOAD_SCRIPT");//$NON-NLS-1$
                         loadScriptsValidation(vdb, report, metadataValidator, model, t, t.getProperty(MATVIEW_AFTER_LOAD_SCRIPT, false), "MATVIEW_AFTER_LOAD_SCRIPT");//$NON-NLS-1$
+                    } else if (t.isVirtual() && t.isMaterialized() && t.getMaterializedTable() == null) {
+                    	// internal materialization
+                    	String manage = t.getProperty(ALLOW_MATVIEW_MANAGEMENT, false);
+                    	if (!Boolean.valueOf(manage)) {
+                    		continue;
+                    	}
+                    	
+                    	String updatable = t.getProperty(MATVIEW_UPDATABLE, false);
+                    	if (updatable == null || !Boolean.parseBoolean(updatable)) {
+                    		metadataValidator.log(report, model, Severity.WARNING, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31214, t.getFullName()));
+                    	}
                     }
-                }
+                } 
             }
         }
         
@@ -384,22 +412,19 @@ public class MetadataValidator {
             } 
         }
 
-        private void verifyTableColumns(ModelMetaData model, ValidatorReport report, MetadataValidator metadataValidator, Table view , Table table) {
-            
-            List<Column> matViewColumns = view.getColumns();
-            
-	        for(int i = 0 ; i < matViewColumns.size() ; i ++) {
-	            Column matViewColumn = matViewColumns.get(i);
-	            
-	            Column tableColumn = table.getColumnByName(matViewColumn.getName());
-	            if (tableColumn == null) {
-	            	metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31193, matViewColumn.getName(), table.getFullName(), view.getFullName()));
-	            } else if(!matViewColumn.getDatatypeUUID().equals(tableColumn.getDatatypeUUID())){
-	                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31194, tableColumn.getName(), table.getFullName(), matViewColumn.getName(), view.getFullName()));
+		private void verifyTableColumns(ModelMetaData model, ValidatorReport report,
+				MetadataValidator metadataValidator, Table view, Table matView, String ignoreColumnOnMatView) {
+            List<Column> columns = view.getColumns();
+	        for(int i = 0 ; i < columns.size() ; i ++) {
+	            Column column = columns.get(i);
+	            Column matViewColumn = matView.getColumnByName(column.getName());
+	            if (matViewColumn == null) {
+	            	metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31193, column.getName(), matView.getFullName(), view.getFullName()));
+	            } else if(!column.getDatatypeUUID().equals(matViewColumn.getDatatypeUUID())){
+	                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31194, matViewColumn.getName(), matView.getFullName(), column.getName(), view.getFullName()));
 	            }
 	        }
         }
-	    
 	}
 
 	public void log(ValidatorReport report, ModelMetaData model, String msg) {
@@ -498,10 +523,23 @@ public class MetadataValidator {
     			QueryNode node = QueryResolver.resolveView(symbol, new QueryNode(selectTransformation), SQLConstants.Reserved.SELECT, metadata, true);
     			CacheHint cacheHint = node.getCommand().getCacheHint();
 				Long ttl = -1L;
-				if (cacheHint != null && cacheHint.getTtl() != null && addCacheHint && t.getProperty(MaterializationMetadataRepository.MATVIEW_TTL, false) == null) {
+				if (cacheHint != null && cacheHint.getTtl() != null && addCacheHint
+						&& t.getProperty(MaterializationMetadataRepository.MATVIEW_TTL, false) == null) {
 					ttl = cacheHint.getTtl();
 					t.setProperty(MaterializationMetadataRepository.MATVIEW_TTL, String.valueOf(ttl));
 				}
+				if (cacheHint != null && cacheHint.getUpdatable() != null && addCacheHint
+						&& t.getProperty(MaterializationMetadataRepository.MATVIEW_UPDATABLE, false) == null) {
+					t.setProperty(MaterializationMetadataRepository.MATVIEW_UPDATABLE, String.valueOf(cacheHint.getUpdatable()));
+				}
+				if (cacheHint != null && cacheHint.getPrefersMemory() != null && addCacheHint
+						&& t.getProperty(MaterializationMetadataRepository.MATVIEW_PREFER_MEMORY, false) == null) {
+					t.setProperty(MaterializationMetadataRepository.MATVIEW_PREFER_MEMORY, String.valueOf(cacheHint.getPrefersMemory()));
+				}
+				if (cacheHint != null && cacheHint.getScope() != null && addCacheHint
+						&& t.getProperty(MaterializationMetadataRepository.MATVIEW_SCOPE, false) == null) {
+					t.setProperty(MaterializationMetadataRepository.MATVIEW_SCOPE, cacheHint.getScope().name());
+				}				
     		}
 			processReport(model, record, report, resolverReport);
 		} catch (TeiidException e) {
