@@ -1471,7 +1471,11 @@ public class RelationalPlanner {
             if (nestedCommand != null) {
             	UpdateInfo info = ProcedureContainerResolver.getUpdateInfo(group, metadata);
             	if (info != null && info.getPartitionInfo() != null && !info.getPartitionInfo().isEmpty()) {
-            		node.setProperty(NodeConstants.Info.PARTITION_INFO, info.getPartitionInfo());
+            	    Map<ElementSymbol, List<Set<Constant>>> partitionInfo = info.getPartitionInfo();
+            	    if (group.getDefinition() != null) {
+            	        partitionInfo = remapPartitionInfo(group, partitionInfo);
+            	    }
+            		node.setProperty(NodeConstants.Info.PARTITION_INFO, partitionInfo);
             	}
             	SourceHint previous = this.sourceHint;
             	if (nestedCommand.getSourceHint() != null) {
@@ -1621,6 +1625,18 @@ public class RelationalPlanner {
         if (clause.getMakeInd() != null) {
         	node.setProperty(NodeConstants.Info.MAKE_IND, clause.getMakeInd());
         }
+    }
+
+    public static Map<ElementSymbol, List<Set<Constant>>> remapPartitionInfo(
+            GroupSymbol group,
+            Map<ElementSymbol, List<Set<Constant>>> partitionInfo) {
+        Map<ElementSymbol, List<Set<Constant>>> aliasedPartitionInfo = new LinkedHashMap<ElementSymbol, List<Set<Constant>>>();
+        for (Map.Entry<ElementSymbol, List<Set<Constant>>> entry : partitionInfo.entrySet()) {
+            ElementSymbol es = entry.getKey().clone();
+            es.setGroupSymbol(group.clone());
+            aliasedPartitionInfo.put(es, entry.getValue());
+        }
+        return aliasedPartitionInfo;
     }
 
 	public static Object getTrackableGroup(GroupSymbol group, QueryMetadataInterface metadata)
