@@ -214,6 +214,39 @@ public class TestUnionPlanning {
         });                                    
     }
     
+    @Test public void testUnionPushDownWithViewAliases() throws Exception {
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table smalla (intkey integer); "
+                + " create foreign table smallb (intkey integer);"
+                + " create view v as SELECT 1 as part, IntKey FROM SmallA as t1 UNION ALL "
+                + "  SELECT 2 as part, intkey FROM SmallB as t2", "x", "y");
+        
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan(
+                "select * from v as t1 inner join v as t2 on t1.part = t2.part and t1.intkey = t2.intkey", tm, 
+                new String[] {"SELECT g_1.intkey, g_0.intkey FROM y.smalla AS g_0, y.smalla AS g_1 WHERE g_0.intkey = g_1.intkey", 
+                        "SELECT g_1.intkey, g_0.intkey FROM y.smallb AS g_0, y.smallb AS g_1 WHERE g_0.intkey = g_1.intkey"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); 
+
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            2,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            0,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            0,      // Project
+            0,      // Select
+            0,      // Sort
+            1       // UnionAll
+        });                                    
+    }
+    
     @Test public void testUnionPushDownWithJoinNoMatches() {
         TestOptimizer.helpPlan("select * from (SELECT IntKey FROM BQT1.SmallA where intkey in (1, 2) UNION ALL SELECT intkey FROM BQT2.SmallA where intkey in (3, 4)) A inner join (SELECT intkey FROM BQT1.SmallB where intkey in (5, 6) UNION ALL SELECT intkey FROM BQT2.SmallB where intkey in (7, 8)) B on a.intkey = b.intkey", RealMetadataFactory.exampleBQTCached(), null, TestOptimizer.getGenericFinder(),//$NON-NLS-1$
             new String[] {}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$  

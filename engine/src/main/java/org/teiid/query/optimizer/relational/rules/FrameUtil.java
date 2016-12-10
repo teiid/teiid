@@ -31,6 +31,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.Assertion;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
@@ -68,6 +69,14 @@ public class FrameUtil {
         throws QueryPlannerException {
 
         PlanNode current = startNode;
+        
+        //correct the partition info keys
+        if (oldGroup != null && newGroups != null && newGroups.size() == 1 && startNode.getType() == NodeConstants.Types.SOURCE) {
+            Map<ElementSymbol, List<Set<Constant>>> partitionInfo = (Map<ElementSymbol, List<Set<Constant>>>)startNode.getProperty(Info.PARTITION_INFO);
+            if (partitionInfo != null) {
+                startNode.setProperty(Info.PARTITION_INFO, RelationalPlanner.remapPartitionInfo(newGroups.iterator().next(), partitionInfo));
+            }
+        }
         
         PlanNode endNode = NodeEditor.findParent(startNode.getType()==NodeConstants.Types.SOURCE?startNode.getParent():startNode, NodeConstants.Types.SOURCE);
         
