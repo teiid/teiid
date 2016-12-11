@@ -22,9 +22,15 @@
 
 package org.teiid.dataquality;
 
+import java.util.ArrayList;
+
+import org.arrah.framework.analytics.PIIValidator;
 import org.arrah.framework.datagen.ShuffleRTM;
-import org.arrah.framework.ndtable.ResultsetToRTM;
 import org.arrah.framework.util.StringCaseFormatUtil;
+import org.simmetrics.metrics.CosineSimilarity;
+import org.simmetrics.metrics.JaccardSimilarity;
+import org.simmetrics.metrics.JaroWinkler;
+import org.simmetrics.metrics.Levenshtein;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.function.TeiidFunction;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
@@ -55,4 +61,99 @@ public class OSDQFunctions {
     public static String digit(String sourceValue) {
         return StringCaseFormatUtil.digitString(sourceValue);
     }
+    
+    /**
+     * @param val
+     * @return -1 of no match otherwise index of the first match
+     */
+    @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
+    public static int whitespaceIndex(String val) {
+        return StringCaseFormatUtil.whitespaceIndex(val);
+    }
+    
+    /**
+     * @param Credit Card number
+     * @return boolean if matches credit card logic and checksum
+     */
+    @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
+    public static boolean validCreditCard(String cc) {
+        return new PIIValidator().isCreditCard(cc);
+    }
+    
+    /**
+     * @param ssn number
+     * @return boolean if matches ssn logic
+     */
+    @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
+    public static boolean validSSN(String ssn) {
+        return new PIIValidator().isSSN(ssn);
+    }
+    
+    /**
+     * @param phone number
+     * @return boolean if matches phone  logic more than 8 character less than 12 character
+     * can't start with 000
+     */
+    @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
+    public static boolean validPhone(String phone) {
+        return new PIIValidator().isPhone(phone);
+    }
+    
+    /**
+     * @param email
+     * @return boolean if valid email
+     */
+    @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
+    public static boolean validEmail(String email) {
+        return new PIIValidator().isEmail(email);
+    }
+    
+    /**
+     * @param String a
+     * @param String b
+     * @return float distance
+     */
+    @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
+    public static float cosineDistance(String a, String b) {
+        ArrayList<Character> alist = StringCaseFormatUtil.toArrayListChar(a);
+        ArrayList<Character> blist = StringCaseFormatUtil.toArrayListChar(b);
+        java.util.Set<Character> aset = new java.util.HashSet<Character>(alist);
+        java.util.Set<Character> bset = new java.util.HashSet<Character>(blist);
+        return new CosineSimilarity<Character>().compare(aset, bset);
+    }
+    
+    /**
+     * @param String a
+     * @param String b
+     * @return float distance
+     */
+    @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
+    public static float jaccardDistance(String a, String b) {
+        ArrayList<Character> alist = StringCaseFormatUtil.toArrayListChar(a);
+        ArrayList<Character> blist = StringCaseFormatUtil.toArrayListChar(b);
+        java.util.Set<Character> aset = new java.util.HashSet<Character>(alist);
+        java.util.Set<Character> bset = new java.util.HashSet<Character>(blist);
+        return new JaccardSimilarity<Character>().compare(aset, bset);
+    }
+    
+    /**
+     * @param String a
+     * @param String b
+     * @return float distance
+     */
+    @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
+    public static float jaroWinklerDistance(String a, String b) {
+        return new JaroWinkler().compare(a, b);
+    }
+    
+    /**
+     * @param String a
+     * @param String b
+     * @return float distance
+     */
+    @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
+    public static float levenshteinDistance(String a, String b) {
+        return new Levenshtein().compare(a, b);
+    }
+    
 }
