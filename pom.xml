@@ -103,6 +103,7 @@
         <version.org.springframework.asm>3.1.4.RELEASE</version.org.springframework.asm>
         <version.commons-logging>1.1</version.commons-logging>
         <version.commons-configuration>1.6</version.commons-configuration>
+        <version.commons-net>3.5</version.commons-net>
         <version.org.apache.ant>1.8.2</version.org.apache.ant>
         <version.com.fasterxml.jackson.dataformat>2.4.5</version.com.fasterxml.jackson.dataformat>	 
         <version.javax.validation>1.1.0.Final</version.javax.validation>
@@ -502,6 +503,11 @@
             <dependency>
                 <groupId>org.jboss.teiid.connectors</groupId>
                 <artifactId>document-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.teiid.connectors</groupId>
+                <artifactId>file-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
         	<dependency>
@@ -1732,6 +1738,11 @@
 			    <artifactId>annotations</artifactId>
 			    <version>${version.com.google.code.findbugs}</version>
 			</dependency>			            
+            <dependency>
+                <groupId>commons-net</groupId>
+                <artifactId>commons-net</artifactId>
+                <version>${version.commons-net}</version>
+            </dependency>
         </dependencies>
 	</dependencyManagement>
 	<modules>
