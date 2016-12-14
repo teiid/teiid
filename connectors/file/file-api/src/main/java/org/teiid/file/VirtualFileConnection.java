@@ -21,6 +21,8 @@
  */
 package org.teiid.file;
 
+import java.io.InputStream;
+
 import javax.resource.ResourceException;
 import javax.resource.cci.Connection;
 
@@ -54,7 +56,7 @@ public interface VirtualFileConnection extends Connection {
      * @param file
      * @throws ResourceException
      */
-    boolean add(VirtualFile file) throws ResourceException;
+    boolean add(InputStream in, VirtualFile file) throws ResourceException;
     
     /**
      * Remove a file from JBoss VFS by given path

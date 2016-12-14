@@ -1,1 +1,2 @@
 org.teiid.translator.file.FileExecutionFactory
+org.teiid.translator.file.VirtualExecutionFactory

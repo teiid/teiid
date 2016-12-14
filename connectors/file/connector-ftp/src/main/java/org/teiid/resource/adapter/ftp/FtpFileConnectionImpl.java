@@ -23,11 +23,8 @@ package org.teiid.resource.adapter.ftp;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.PathMatcher;
-import java.nio.file.Paths;
+import java.io.InputStream;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 import javax.resource.ResourceException;
@@ -36,7 +33,6 @@ import javax.resource.spi.InvalidPropertyException;
 import org.apache.commons.net.ftp.FTPClient;
 import org.jboss.vfs.VFS;
 import org.jboss.vfs.VirtualFile;
-import org.jboss.vfs.VirtualFileFilter;
 import org.teiid.core.BundleUtil;
 import org.teiid.file.VirtualFileConnection;
 import org.teiid.resource.spi.BasicConnection;
@@ -86,26 +82,28 @@ public class FtpFileConnectionImpl extends BasicConnection implements VirtualFil
             return new VirtualFile[]{this.getFile(pattern)};
         }
         
-        if (pattern.contains("*")){ //$NON-NLS-1$ 
-            pattern = pattern.replaceAll("\\\\", "\\\\\\\\"); //$NON-NLS-1$ //$NON-NLS-2$ 
-            pattern = pattern.replaceAll("\\?", "\\\\?"); //$NON-NLS-1$ //$NON-NLS-2$
-            pattern = pattern.replaceAll("\\[", "\\\\["); //$NON-NLS-1$ //$NON-NLS-2$
-            pattern = pattern.replaceAll("\\{", "\\\\{"); //$NON-NLS-1$ //$NON-NLS-2$
-            final PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:*" + pattern); //$NON-NLS-1$
-            try {
-                List<VirtualFile> list = this.mountPoint.getChildren(new VirtualFileFilter(){
-
-                    @Override
-                    public boolean accepts(VirtualFile file) {
-                        return matcher.matches(Paths.get(file.getName()));
-                    }});
-                return list.toArray(new VirtualFile[list.size()]);
-            } catch (IOException e) {
-                throw new ResourceException(e);
-            }
-        }
-
-        return new VirtualFile[]{};
+        throw new ResourceException("Can not open multiple ftp stream based file in one connection"); //$NON-NLS-1$ 
+        
+//        if (pattern.contains("*")){ //$NON-NLS-1$ 
+//            pattern = pattern.replaceAll("\\\\", "\\\\\\\\"); //$NON-NLS-1$ //$NON-NLS-2$ 
+//            pattern = pattern.replaceAll("\\?", "\\\\?"); //$NON-NLS-1$ //$NON-NLS-2$
+//            pattern = pattern.replaceAll("\\[", "\\\\["); //$NON-NLS-1$ //$NON-NLS-2$
+//            pattern = pattern.replaceAll("\\{", "\\\\{"); //$NON-NLS-1$ //$NON-NLS-2$
+//            final PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:*" + pattern); //$NON-NLS-1$
+//            try {
+//                List<VirtualFile> list = this.mountPoint.getChildren(new VirtualFileFilter(){
+//
+//                    @Override
+//                    public boolean accepts(VirtualFile file) {
+//                        return matcher.matches(Paths.get(file.getName()));
+//                    }});
+//                return list.toArray(new VirtualFile[list.size()]);
+//            } catch (IOException e) {
+//                throw new ResourceException(e);
+//            }
+//        }
+//
+//        return new VirtualFile[]{};
     }
 
     @Override
@@ -121,9 +119,9 @@ public class FtpFileConnectionImpl extends BasicConnection implements VirtualFil
     }
 
     @Override
-    public boolean add(VirtualFile file) throws ResourceException {
+    public boolean add(InputStream in, VirtualFile file) throws ResourceException {
         try {
-            return this.client.storeFile(file.getName(), file.openStream());
+            return this.client.storeFile(file.getName(), in);
         } catch (IOException e) {
             throw new ResourceException(UTIL.getString("ftp_failed_write", file.getName(), this.client.getReplyString()), e); //$NON-NLS-1$
         }
@@ -131,7 +129,7 @@ public class FtpFileConnectionImpl extends BasicConnection implements VirtualFil
 
     @Override
     public boolean remove(String path) throws ResourceException {
-        return VFS.getChild(path).delete();
+        return this.mountPoint.getChild(path).delete();
     }
     
 }

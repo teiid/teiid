@@ -23,6 +23,7 @@ package org.teiid.resource.adapter.ftp;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.PathMatcher;
@@ -30,10 +31,13 @@ import java.nio.file.Paths;
 
 import javax.resource.ResourceException;
 
+import org.jboss.vfs.VFS;
 import org.jboss.vfs.VirtualFile;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.file.VirtualFileConnection;
 
+@Ignore("Ignore due to this test depend on remote ftp server and reference configuration")
 public class TestFtpFileConnection {
     
     private static VirtualFileConnection sample() throws ResourceException {
@@ -67,14 +71,38 @@ public class TestFtpFileConnection {
         }
     }
     
-    @Test
+    @Test(expected = ResourceException.class)
     public void testGetFiles() throws ResourceException, IOException {
         VirtualFileConnection conn = sample();
         VirtualFile[] files = conn.getFiles("*.txt");
         assertEquals(2, files.length); //$NON-NLS-1$ 
-        for(VirtualFile file : files) {
-            System.out.println(file.openStream());
-        }
+        conn.close();
+    }
+    
+    @Test
+    public void testAdd() throws IOException, ResourceException {
+        VirtualFileConnection conn = sample();
+        VirtualFile file = conn.getFile("pom.xml"); //$NON-NLS-1$
+        assertFalse(file.exists());
+        VirtualFile pom = VFS.getChild(new File("pom.xml").getAbsolutePath()); //$NON-NLS-1$
+        conn.add(pom.openStream(), pom);
+        assertTrue(file.exists());
+        conn.close();
+        conn = sample();
+        assertTrue(file.isFile());
+        assertNotNull(file.openStream());
+        conn.close();
+    }
+    
+    @Test
+    public void testRemove() throws ResourceException, IOException {
+        VirtualFileConnection conn = sample();
+        VirtualFile pom = VFS.getChild(new File("pom.xml").getAbsolutePath()); //$NON-NLS-1$
+        VirtualFile file = conn.getFile("pom.xml"); //$NON-NLS-1$
+        conn.add(pom.openStream(), pom);
+        assertTrue(file.exists());
+        conn.remove("pom.xml"); //$NON-NLS-1$
+        assertFalse(file.exists());
         conn.close();
     }
 

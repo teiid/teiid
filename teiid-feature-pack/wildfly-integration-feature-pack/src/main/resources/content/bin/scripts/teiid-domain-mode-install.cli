@@ -146,6 +146,7 @@ connect
 /profile=ha/subsystem=datasources/jdbc-driver=teiid-local:add(driver-name=teiid-local, driver-module-name=org.jboss.teiid, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)
 
 /profile=ha/subsystem=resource-adapters/resource-adapter=file:add(module=org.jboss.teiid.resource-adapter.file)
+/profile=ha/subsystem=resource-adapters/resource-adapter=ftp:add(module=org.jboss.teiid.resource-adapter.ftp)
 /profile=ha/subsystem=resource-adapters/resource-adapter=google:add(module=org.jboss.teiid.resource-adapter.google)
 /profile=ha/subsystem=resource-adapters/resource-adapter=ldap:add(module=org.jboss.teiid.resource-adapter.ldap)
 /profile=ha/subsystem=resource-adapters/resource-adapter=salesforce:add(module=org.jboss.teiid.resource-adapter.salesforce)
@@ -225,6 +226,7 @@ connect
 /profile=full-ha/subsystem=datasources/jdbc-driver=teiid-local:add(driver-name=teiid-local, driver-module-name=org.jboss.teiid, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)
 
 /profile=full-ha/subsystem=resource-adapters/resource-adapter=file:add(module=org.jboss.teiid.resource-adapter.file)
+/profile=full-ha/subsystem=resource-adapters/resource-adapter=ftp:add(module=org.jboss.teiid.resource-adapter.ftp)
 /profile=full-ha/subsystem=resource-adapters/resource-adapter=google:add(module=org.jboss.teiid.resource-adapter.google)
 /profile=full-ha/subsystem=resource-adapters/resource-adapter=ldap:add(module=org.jboss.teiid.resource-adapter.ldap)
 /profile=full-ha/subsystem=resource-adapters/resource-adapter=salesforce:add(module=org.jboss.teiid.resource-adapter.salesforce)

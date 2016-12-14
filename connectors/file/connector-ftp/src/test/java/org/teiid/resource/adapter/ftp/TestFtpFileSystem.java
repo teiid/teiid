@@ -57,13 +57,13 @@ public class TestFtpFileSystem {
     
     @Test
     public void testGetFile() throws IOException, ResourceException {
-        File file = VFS.getChild("/home/kylin/vsftpd/not-exist.txt").getPhysicalFile();
+        File file = VFS.getChild("/home/kylin/vsftpd/not-exist.txt").getPhysicalFile(); //$NON-NLS-1$
         assertNull(file);
     }
     
     @Test
     public void testOpenStream() throws IOException, ResourceException {
-        InputStream in = VFS.getChild("/home/kylin/vsftpd/not-exist.txt").openStream();
+        InputStream in = VFS.getChild("/home/kylin/vsftpd/not-exist.txt").openStream(); //$NON-NLS-1$
         assertNull(in);
         in = VFS.getChild("/home/kylin/vsftpd/marketdata-price.txt").openStream(); //$NON-NLS-1$
         assertNotNull(in);
@@ -94,38 +94,41 @@ public class TestFtpFileSystem {
     
     @Test
     public void testGetSize() {
-        assertEquals(-1, VFS.getChild("/home/kylin/vsftpd/marketdata-price.txt").getSize());
-        assertEquals(-1, VFS.getChild("/home/kylin/vsftpd/sub").getSize());
-
+        assertEquals(-1, VFS.getChild("/home/kylin/vsftpd/marketdata-price.txt").getSize()); //$NON-NLS-1$
+        assertEquals(-1, VFS.getChild("/home/kylin/vsftpd/sub").getSize()); //$NON-NLS-1$
+ 
     }
     
     @Test
     public void testGetLastModified() {
-        assertEquals(1480314470000l, VFS.getChild("/home/kylin/vsftpd/marketdata-price.txt").getLastModified());
-        assertEquals(-1, VFS.getChild("/home/kylin/vsftpd/sub").getLastModified());
+        assertEquals(1480314470000l, VFS.getChild("/home/kylin/vsftpd/marketdata-price.txt").getLastModified()); //$NON-NLS-1$
+        assertEquals(-1, VFS.getChild("/home/kylin/vsftpd/sub").getLastModified()); //$NON-NLS-1$
     }
     
     @Test
     public void testExists(){
-        assertTrue(VFS.getChild("/home/kylin/vsftpd/marketdata-price.txt").exists());
-        assertTrue(VFS.getChild("/home/kylin/vsftpd/sub").exists());
+        assertTrue(VFS.getChild("/home/kylin/vsftpd/marketdata-price.txt").exists()); //$NON-NLS-1$
+        assertTrue(VFS.getChild("/home/kylin/vsftpd/marketdata-price1.txt").exists()); //$NON-NLS-1$
+        assertTrue(VFS.getChild("/home/kylin/vsftpd/sub").exists()); //$NON-NLS-1$
     }
     
     @Test
     public void testIsFile() {
-        assertTrue(VFS.getChild("/home/kylin/vsftpd/marketdata-price.txt").isFile());
-        assertFalse(VFS.getChild("/home/kylin/vsftpd/sub").isFile());
+        assertTrue(VFS.getChild("/home/kylin/vsftpd/marketdata-price.txt").isFile()); //$NON-NLS-1$
+        assertTrue(VFS.getChild("/home/kylin/vsftpd/marketdata-price1.txt").isFile()); //$NON-NLS-1$
+        assertFalse(VFS.getChild("/home/kylin/vsftpd/sub").isFile()); //$NON-NLS-1$
     }
     
     @Test
     public void testIsDirectory() {
-        assertFalse(VFS.getChild("/home/kylin/vsftpd/marketdata-price.txt").isDirectory());
-        assertTrue(VFS.getChild("/home/kylin/vsftpd/sub").isDirectory());
+        assertFalse(VFS.getChild("/home/kylin/vsftpd/marketdata-price.txt").isDirectory()); //$NON-NLS-1$
+        assertFalse(VFS.getChild("/home/kylin/vsftpd/marketdata-price1.txt").isDirectory()); //$NON-NLS-1$
+        assertTrue(VFS.getChild("/home/kylin/vsftpd/sub").isDirectory()); //$NON-NLS-1$
     }
     
     @Test
     public void testNamelist() {
-        assertTrue(VFS.getChild("/home/kylin/vsftpd").getChildren().size() > 0);
+        assertTrue(VFS.getChild("/home/kylin/vsftpd").getChildren().size() > 0); //$NON-NLS-1$
     }
 
 }

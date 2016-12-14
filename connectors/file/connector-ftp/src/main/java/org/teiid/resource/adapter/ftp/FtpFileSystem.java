@@ -109,6 +109,7 @@ public class FtpFileSystem implements FileSystem {
             if(null != in) {
                 try {
                     in.close();
+                    this.client.completePendingCommand();
                 } catch (IOException e) {
                     throw new FtpOperationException(e);
                 }
