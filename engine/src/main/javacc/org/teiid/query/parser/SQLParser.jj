@@ -819,7 +819,7 @@ Command userCommand(ParseInfo info) :
 /*
 name=drop table
 description=Drop the given table.
-example=[source,sql]\n----\nDROP #temp\n----\n
+example=[source,sql]\n----\nDROP TABLE #temp\n----\n
 */
 Command dropTable(ParseInfo info) :
 {
