@@ -814,8 +814,9 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add("SECOND"); //$NON-NLS-1$
         supportedFunctions.add("QUARTER"); //$NON-NLS-1$
         supportedFunctions.add("WEEK"); //$NON-NLS-1$
-        supportedFunctions.add(SourceSystemFunctions.FORMATTIMESTAMP); 
-        supportedFunctions.add(SourceSystemFunctions.PARSETIMESTAMP);
+        supportedFunctions.add(SourceSystemFunctions.FORMATTIMESTAMP);
+        //TEIID-4656
+        //supportedFunctions.add(SourceSystemFunctions.PARSETIMESTAMP);
         supportedFunctions.add("CAST"); //$NON-NLS-1$
         supportedFunctions.add("CONVERT"); //$NON-NLS-1$
         supportedFunctions.add("IFNULL"); //$NON-NLS-1$
