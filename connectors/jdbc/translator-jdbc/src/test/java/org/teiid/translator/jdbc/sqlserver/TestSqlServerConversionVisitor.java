@@ -388,6 +388,26 @@ public class TestSqlServerConversionVisitor {
         output = "SELECT SmallA.IntKey FROM SmallA ORDER BY SmallA.StringKey OFFSET 0 ROWS FETCH NEXT 20 ROWS ONLY"; //$NON-NLS-1$
         
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, trans1);
+        
+        input = "select distinct intkey c1 from bqt1.smalla limit 10, 20"; //$NON-NLS-1$
+        output = "SELECT c1 FROM (SELECT v.*, ROW_NUMBER() OVER (ORDER BY @@version) ROWNUM_ FROM (SELECT DISTINCT SmallA.IntKey AS c1 FROM SmallA) v) v WHERE ROWNUM_ <= 30 AND ROWNUM_ > 10"; //$NON-NLS-1$
+        
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, trans1);
+        
+        input = "select distinct intkey c1 from bqt1.smalla limit 20"; //$NON-NLS-1$
+        output = "SELECT c1 FROM (SELECT v.*, ROW_NUMBER() OVER (ORDER BY @@version) ROWNUM_ FROM (SELECT DISTINCT SmallA.IntKey AS c1 FROM SmallA) v) v WHERE ROWNUM_ <= 20 AND ROWNUM_ > 0"; //$NON-NLS-1$
+        
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, trans1);
+        
+        input = "select intkey c1 from bqt1.smalla union select intkey c1 from bqt1.smalla limit 10"; //$NON-NLS-1$
+        output = "SELECT c1 FROM (SELECT v.*, ROW_NUMBER() OVER (ORDER BY @@version) ROWNUM_ FROM (SELECT SmallA.IntKey AS c1 FROM SmallA UNION SELECT SmallA.IntKey AS c1 FROM SmallA) v) v WHERE ROWNUM_ <= 10 AND ROWNUM_ > 0"; //$NON-NLS-1$
+        
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, trans1);
+        
+        input = "select intkey c1 from bqt1.smalla union select intkey c1 from bqt1.smalla limit 1, 10"; //$NON-NLS-1$
+        output = "SELECT c1 FROM (SELECT v.*, ROW_NUMBER() OVER (ORDER BY @@version) ROWNUM_ FROM (SELECT SmallA.IntKey AS c1 FROM SmallA UNION SELECT SmallA.IntKey AS c1 FROM SmallA) v) v WHERE ROWNUM_ <= 11 AND ROWNUM_ > 1"; //$NON-NLS-1$
+        
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, trans1);
     } 
     
     @Test

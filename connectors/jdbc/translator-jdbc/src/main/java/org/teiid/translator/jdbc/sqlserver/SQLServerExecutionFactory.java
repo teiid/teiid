@@ -557,25 +557,34 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     	}
     	
     	//handle offset support
+    	boolean useRowNumber = false;
     	if (getVersion().compareTo(ELEVEN_0) >= 0 || !(command instanceof QueryExpression)) {
     		if (getVersion().compareTo(ELEVEN_0) >= 0 && command instanceof QueryExpression) {
     			QueryExpression queryCommand = (QueryExpression)command;
     			if (queryCommand.getLimit() != null && queryCommand.getOrderBy() == null) {
     				//an order by is required
     				//we could use top if offset is 0, but that would require contextual knowledge in useSelectLimit
-    				List<Object> parts = new ArrayList<Object>();
-    				Limit limit = queryCommand.getLimit();
-    				queryCommand.setLimit(null);
-    				parts.add(queryCommand);
-    				parts.add(" ORDER BY @@version "); //$NON-NLS-1$
-    				parts.add(limit);
-    				return parts;
+    			    if (((queryCommand instanceof Select && ((Select)queryCommand).isDistinct()) 
+                            || (queryCommand instanceof SetQuery && !((SetQuery)queryCommand).isAll()))) {
+    			        //can't use the @@version with distinct
+    			        useRowNumber = true;
+    			    } else {
+        				List<Object> parts = new ArrayList<Object>();
+        				Limit limit = queryCommand.getLimit();
+        				queryCommand.setLimit(null);
+        				parts.add(queryCommand);
+        				parts.add(" ORDER BY @@version "); //$NON-NLS-1$
+        				parts.add(limit);
+        				return parts;
+    			    }
     			}
     		}
-    		return super.translateCommand(command, context);
+    	    if (!useRowNumber) {
+    	        return super.translateCommand(command, context);
+    	    }
     	}
 		QueryExpression queryCommand = (QueryExpression)command;
-		if (queryCommand.getLimit() == null || queryCommand.getLimit().getRowOffset() == 0) {
+		if (!useRowNumber && (queryCommand.getLimit() == null || queryCommand.getLimit().getRowOffset() == 0)) {
 			return super.translateCommand(command, context);
     	}
 		Limit limit = queryCommand.getLimit();
