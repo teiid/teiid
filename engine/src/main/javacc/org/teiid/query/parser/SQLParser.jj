@@ -818,8 +818,8 @@ Command userCommand(ParseInfo info) :
 
 /*
 name=drop table
-description=Creates a trigger action on the given target.
-example=[source,sql]\n----\nCREATE TRIGGER ON vw INSTEAD OF INSERT AS FOR EACH ROW BEGIN ATOMIC ... END\n----\n
+description=Drop the given table.
+example=[source,sql]\n----\nDROP #temp\n----\n
 */
 Command dropTable(ParseInfo info) :
 {
