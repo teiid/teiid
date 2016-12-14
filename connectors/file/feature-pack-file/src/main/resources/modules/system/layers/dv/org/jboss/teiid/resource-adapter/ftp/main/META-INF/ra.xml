@@ -30,7 +30,7 @@
       <license-required>true</license-required>
    </license>
    <resourceadapter>
-      <resourceadapter-class>org.teiid.resource.adapter.ftp.FtpResourceAdapter<</resourceadapter-class>
+      <resourceadapter-class>org.teiid.resource.adapter.ftp.FtpResourceAdapter</resourceadapter-class>
 
       <outbound-resourceadapter>
          <connection-definition>
