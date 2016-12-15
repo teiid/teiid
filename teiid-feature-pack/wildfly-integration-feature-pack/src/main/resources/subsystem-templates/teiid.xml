@@ -39,6 +39,7 @@
         <translator name="intersystems-cache" module="org.jboss.teiid.translator.jdbc"/>
         <translator name="netezza" module="org.jboss.teiid.translator.jdbc"/>
         <translator name="file" module="org.jboss.teiid.translator.file"/>
+        <translator name="vfsfile" module="org.jboss.teiid.translator.file"/>
         <translator name="google-spreadsheet" module="org.jboss.teiid.translator.google"/>
         <translator name="ldap" module="org.jboss.teiid.translator.ldap"/>
         <translator name="loopback" module="org.jboss.teiid.translator.loopback"/>

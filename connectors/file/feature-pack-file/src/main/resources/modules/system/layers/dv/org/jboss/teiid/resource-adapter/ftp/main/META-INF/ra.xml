@@ -41,21 +41,27 @@
                <config-property-name>ParentDirectory</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
             </config-property>
+
+            <config-property>
+               <description>{$display:"File Mapping"}</description>
+               <config-property-name>FileMapping</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>
             
             <config-property>
-               <description>{$display:"Ftp Server User,$required:"true""}</description>
+               <description>{$display:"Ftp Server User,$required:"true"}</description>
                <config-property-name>Username</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
             </config-property>
             
             <config-property>
-               <description>{$display:"Ftp Server Password,$required:"true""}</description>
+               <description>{$display:"Ftp Server Password,$required:"true"}</description>
                <config-property-name>Password</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
             </config-property>
             
             <config-property>
-               <description>{$display:"Ftp Server Host,$required:"true""}</description>
+               <description>{$display:"Ftp Server Host,$required:"true"}</description>
                <config-property-name>Host</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
             </config-property>
@@ -141,25 +147,25 @@
             <config-property>
                <description>{$display:"Ftps Server TrustManager"}</description>
                <config-property-name>TrustManager</config-property-name>
-               <config-property-type>javax.net.ssl.TrustManager</config-property-type>
+               <config-property-type>java.lang.String</config-property-type>
             </config-property>
             
             <config-property>
-               <description>{$display:"Ftps Server CipherSuites"}</description>
+               <description>{$display:"Ftps Server CipherSuites(comma separate string list)"}</description>
                <config-property-name>CipherSuites</config-property-name>
-               <config-property-type>[Ljava.lang.String</config-property-type>
+               <config-property-type>java.lang.String</config-property-type>
             </config-property>
             
             <config-property>
-               <description>{$display:"Ftps Server Protocols"}</description>
+               <description>{$display:"Ftps Server Protocols(comma separate string list)"}</description>
                <config-property-name>Protocols</config-property-name>
-               <config-property-type>[Ljava.lang.String</config-property-type>
+               <config-property-type>java.lang.String</config-property-type>
             </config-property>
             
             <config-property>
                <description>{$display:"Ftps Server KeyManager"}</description>
                <config-property-name>KeyManager</config-property-name>
-               <config-property-type>javax.net.ssl.KeyManager</config-property-type>
+               <config-property-type>java.lang.String</config-property-type>
             </config-property>
             
             <config-property>

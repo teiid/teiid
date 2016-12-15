@@ -65,13 +65,13 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
 
     protected String password;
 
-    protected int port = FTP.DEFAULT_PORT;
+    protected Integer port = FTP.DEFAULT_PORT;
 
-    protected int bufferSize = 2048;
+    protected Integer bufferSize = 2048;
 
-    protected int clientMode = ACTIVE_LOCAL_DATA_CONNECTION_MODE;
+    protected Integer clientMode = ACTIVE_LOCAL_DATA_CONNECTION_MODE;
 
-    protected int fileType = BINARY_FILE_TYPE;
+    protected Integer fileType = BINARY_FILE_TYPE;
 
     protected String controlEncoding = FTP.DEFAULT_CONTROL_ENCODING;
 
@@ -101,7 +101,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
 
     private Boolean wantsClientAuth;
 
-    private boolean implicit = false;
+    private Boolean implicit = false;
 
     private String execProt = "P"; //$NON-NLS-1$
 
@@ -160,33 +160,33 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         this.password = password;
     }
 
-    public int getPort() {
+    public Integer getPort() {
         return port;
     }
 
-    public void setPort(int port) {
+    public void setPort(Integer port) {
         assertTrue(port > 0, UTIL.getString("ftp_client_port"));//$NON-NLS-1$
         this.port = port;
     }
 
-    public int getBufferSize() {
+    public Integer getBufferSize() {
         return bufferSize;
     }
 
-    public void setBufferSize(int bufferSize) {
+    public void setBufferSize(Integer bufferSize) {
         this.bufferSize = bufferSize;
     }
 
-    public int getClientMode() {
+    public Integer getClientMode() {
         return clientMode;
     }
 
-    public void setClientMode(int clientMode) {
+    public void setClientMode(Integer clientMode) {
         assertTrue(clientMode == ACTIVE_LOCAL_DATA_CONNECTION_MODE || clientMode == PASSIVE_LOCAL_DATA_CONNECTION_MODE, UTIL.getString("ftp_client_clientMode", clientMode));//$NON-NLS-1$
         this.clientMode = clientMode;
     }
 
-    public int getFileType() {
+    public Integer getFileType() {
         return fileType;
     }
 
@@ -200,7 +200,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
      * </ul>
      * @param fileType The file type.
      */
-    public void setFileType(int fileType) {
+    public void setFileType(Integer fileType) {
         assertTrue(fileType == ASCII_FILE_TYPE || fileType == EBCDIC_FILE_TYPE || fileType == BINARY_FILE_TYPE || fileType == LOCAL_FILE_TYPE);
         this.fileType = fileType;
     }
@@ -271,36 +271,46 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         this.authValue = authValue;
     }
 
-    public TrustManager getTrustManager() {
-        return trustManager;
+    public String getTrustManager() {
+        return trustManager.getClass().getName();
     }
 
-    public void setTrustManager(TrustManager trustManager) {
-        this.trustManager = trustManager;
+    public void setTrustManager(String trustManager) {
+//        this.trustManager = trustManager;
     }
 
-    public String[] getCipherSuites() {
-        return cipherSuites;
+    public String getCipherSuites() {
+        return formStringFromArray(cipherSuites);
     }
 
-    public void setCipherSuites(String[] cipherSuites) {
-        this.cipherSuites = cipherSuites;
+    private String formStringFromArray(String[] cipherSuites) {
+        String result = ""; //$NON-NLS-1$
+        for(String str : cipherSuites) {
+            result = result + str + ","; //$NON-NLS-1$
+        }
+        return result.substring(0, result.length() - 1);
     }
 
-    public String[] getProtocols() {
-        return protocols;
+    public void setCipherSuites(String cipherSuites) {
+        assertTrue(cipherSuites != null && cipherSuites.length() > 0, UTIL.getString("ftp_client_invalid_array", cipherSuites, "cipherSuites"));//$NON-NLS-1$ //$NON-NLS-12$
+        this.cipherSuites = cipherSuites.split(","); //$NON-NLS-1$
     }
 
-    public void setProtocols(String[] protocols) {
-        this.protocols = protocols;
+    public String getProtocols() {
+        return formStringFromArray(protocols);
     }
 
-    public KeyManager getKeyManager() {
-        return keyManager;
+    public void setProtocols(String protocols) {
+        assertTrue(protocols != null && protocols.length() > 0, UTIL.getString("ftp_client_invalid_array", protocols, "protocols"));//$NON-NLS-1$ //$NON-NLS-12$
+        this.protocols = protocols.split(","); //$NON-NLS-1$
     }
 
-    public void setKeyManager(KeyManager keyManager) {
-        this.keyManager = keyManager;
+    public String getKeyManager() {
+        return keyManager.getClass().getName();
+    }
+
+    public void setKeyManager(String keyManager) {
+//        this.keyManager = keyManager;
     }
 
     public Boolean getNeedClientAuth() {
@@ -319,11 +329,11 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         this.wantsClientAuth = wantsClientAuth;
     }
 
-    public boolean isImplicit() {
+    public Boolean isImplicit() {
         return implicit;
     }
 
-    public void setImplicit(boolean implicit) {
+    public void setImplicit(Boolean implicit) {
         this.implicit = implicit;
     }
 

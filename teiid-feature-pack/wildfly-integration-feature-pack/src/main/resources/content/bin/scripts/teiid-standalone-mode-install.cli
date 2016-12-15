@@ -65,6 +65,7 @@ connect
 /subsystem=teiid/translator=intersystems-cache:add(module=org.jboss.teiid.translator.jdbc)
 /subsystem=teiid/translator=netezza:add(module=org.jboss.teiid.translator.jdbc)
 /subsystem=teiid/translator=file:add(module=org.jboss.teiid.translator.file)
+/subsystem=teiid/translator=vfsfile:add(module=org.jboss.teiid.translator.file)
 /subsystem=teiid/translator=ldap:add(module=org.jboss.teiid.translator.ldap)
 /subsystem=teiid/translator=loopback:add(module=org.jboss.teiid.translator.loopback)
 /subsystem=teiid/translator=olap:add(module=org.jboss.teiid.translator.olap)
