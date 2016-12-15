@@ -2260,6 +2260,16 @@ public class QueryRewriter {
 				result.setFunctionDescriptor(descriptor);
 				result.setType(DataTypeManager.DefaultDataClasses.BIG_DECIMAL);
 				return rewriteFunction(ResolverUtil.getConversion(result, DataTypeManager.DefaultDataTypes.BIG_DECIMAL, DataTypeManager.getDataTypeName(function.getType()), false, metadata.getFunctionLibrary()));
+            } else if ((DataTypeManager.DefaultDataTypes.DATE.equalsIgnoreCase(type) 
+                    || DataTypeManager.DefaultDataTypes.TIME.equalsIgnoreCase(type)) && function.getArg(1) instanceof Constant) {
+                String format = "yyyy-MM-dd"; //$NON-NLS-1$
+                if (DataTypeManager.DefaultDataTypes.TIME.equalsIgnoreCase(type)) {
+                    format = "hh:mm:ss"; //$NON-NLS-1$
+                } 
+                Constant c = (Constant) function.getArg(1);
+                if (format.equals(c.getValue())) {
+                    return rewriteExpressionDirect(ResolverUtil.getConversion(function.getArg(0), DataTypeManager.getDataTypeName(function.getArg(0).getType()), type, false, metadata.getFunctionLibrary()));
+                }
             }
         } else if(StringUtil.startsWithIgnoreCase(functionName, "format")) { //$NON-NLS-1$
             String type = functionName.substring(6);
@@ -2271,6 +2281,16 @@ public class QueryRewriter {
 				result.setFunctionDescriptor(descriptor);
 				result.setType(DataTypeManager.DefaultDataClasses.STRING);
 				return rewriteFunction(result);
+            } else if ((DataTypeManager.DefaultDataTypes.DATE.equalsIgnoreCase(type) 
+                    || DataTypeManager.DefaultDataTypes.TIME.equalsIgnoreCase(type)) && function.getArg(1) instanceof Constant) {
+                String format = "yyyy-MM-dd"; //$NON-NLS-1$
+                if (DataTypeManager.DefaultDataTypes.TIME.equalsIgnoreCase(type)) {
+                    format = "hh:mm:ss"; //$NON-NLS-1$
+                }
+                Constant c = (Constant) function.getArg(1);
+                if (format.equals(c.getValue())) {
+                    return rewriteExpressionDirect(ResolverUtil.getConversion(function.getArg(0), DataTypeManager.getDataTypeName(function.getArg(0).getType()), DataTypeManager.DefaultDataTypes.STRING, false, metadata.getFunctionLibrary()));
+                }
             }
         }
 		
