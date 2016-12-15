@@ -136,6 +136,10 @@ public class TestQueryRewriter {
     	elements = null;
     	tuples = new ArrayList<List<? extends Object>>();
     }
+    
+    private Criteria helpTestRewriteCriteria(String original, String expectedCrit, QueryMetadataInterface metadata) {
+        return helpTestRewriteCriteria(original, parseCriteria(expectedCrit, metadata), metadata);
+    }
 
     private Criteria helpTestRewriteCriteria(String original, Criteria expectedCrit, QueryMetadataInterface metadata) {
         Criteria origCrit = parseCriteria(original, metadata);
@@ -487,6 +491,31 @@ public class TestQueryRewriter {
         } catch(TeiidException e) { 
             assertEquals("Error Code:ERR.015.001.0003 Message:Error simplifying criteria: PARSEDATE(pm3.g1.e1, '''') = {d'2003-05-01'}", e.getMessage());     //$NON-NLS-1$
         }
+    }
+    
+    @Test public void testRewriteParseDateCast() {
+        helpTestRewriteCriteria("PARSEDATE(bqt1.smalla.timestampvalue, 'yyyy-MM-dd') = {d'2011-01-10'}", //$NON-NLS-1$
+                                "convert(bqt1.smalla.timestampvalue, date) = {d'2011-01-10'}", RealMetadataFactory.exampleBQTCached() );         //$NON-NLS-1$
+    }
+    
+    @Test public void testRewriteParseDateCastString() {
+        helpTestRewriteCriteria("PARSEDATE(bqt1.smalla.stringkey, 'yyyy-MM-dd') = {d'2011-01-10'}", //$NON-NLS-1$
+                                "convert(bqt1.smalla.stringkey, DATE) = {d'2011-01-10'}", RealMetadataFactory.exampleBQTCached() );         //$NON-NLS-1$
+    }
+    
+    @Test public void testRewriteParseTimeCast() {
+        helpTestRewriteCriteria("PARSETIME(bqt1.smalla.timestampvalue, 'hh:mm:ss') = {t'12:00:00'}", //$NON-NLS-1$
+                                "convert(bqt1.smalla.timestampvalue, time) = {t'12:00:00'}", RealMetadataFactory.exampleBQTCached() );         //$NON-NLS-1$
+    }
+    
+    @Test public void testRewriteFormatDateCast() {
+        helpTestRewriteCriteria("FormatDATE(bqt1.smalla.datevalue, 'yyyy-MM-dd') = {d'2011-01-10'}", //$NON-NLS-1$
+                                "bqt1.smalla.datevalue = {d'2011-01-10'}", RealMetadataFactory.exampleBQTCached() );         //$NON-NLS-1$
+    }
+    
+    @Test public void testRewriteFormatTimeCast() {
+        helpTestRewriteCriteria("FormatTIME(bqt1.smalla.timevalue, 'hh:mm:ss') = {t'12:00:00'}", //$NON-NLS-1$
+                                "bqt1.smalla.timevalue = {t'12:00:00'}", RealMetadataFactory.exampleBQTCached() );         //$NON-NLS-1$
     }
     
     @Ignore(value="It's not generally possible to invert a narrowing conversion")
