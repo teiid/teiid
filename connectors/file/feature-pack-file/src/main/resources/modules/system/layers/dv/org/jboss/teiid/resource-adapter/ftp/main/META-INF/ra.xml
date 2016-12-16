@@ -145,8 +145,8 @@
             </config-property>
             
             <config-property>
-               <description>{$display:"Ftps Server TrustManager"}</description>
-               <config-property-name>TrustManager</config-property-name>
+               <description>{$display:"Ftps Server Certificate Path"}</description>
+               <config-property-name>Certificate</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
             </config-property>
             
@@ -163,8 +163,14 @@
             </config-property>
             
             <config-property>
-               <description>{$display:"Ftps Server KeyManager"}</description>
-               <config-property-name>KeyManager</config-property-name>
+               <description>{$display:"Ftps Server KeyStore Path"}</description>
+               <config-property-name>KeyPath</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>
+
+            <config-property>
+               <description>{$display:"Ftps Server KeyStore Password"}</description>
+               <config-property-name>KeyPassword</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
             </config-property>
             

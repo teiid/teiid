@@ -30,6 +30,13 @@ import static org.apache.commons.net.ftp.FTP.BINARY_FILE_TYPE;
 import static org.apache.commons.net.ftp.FTP.LOCAL_FILE_TYPE;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -42,7 +49,10 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPClientConfig;
 import org.apache.commons.net.ftp.FTPReply;
 import org.apache.commons.net.ftp.FTPSClient;
+import org.apache.commons.net.util.KeyManagerUtils;
+import org.apache.commons.net.util.TrustManagerUtils;
 import org.teiid.core.BundleUtil;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.StringUtil;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
@@ -89,12 +99,18 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
 
     private String authValue;
 
+    private String certificate;
+    
     private TrustManager trustManager;
 
     private String[] cipherSuites;
 
     private String[] protocols;
 
+    private String keyPath;
+    
+    private String keyPassword;
+    
     private KeyManager keyManager;
 
     private Boolean needClientAuth;
@@ -271,12 +287,25 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         this.authValue = authValue;
     }
 
-    public String getTrustManager() {
-        return trustManager.getClass().getName();
+    public String getCertificate() {
+        return certificate;
     }
 
-    public void setTrustManager(String trustManager) {
-//        this.trustManager = trustManager;
+    public void setCertificate(String certificate) {
+        this.certificate = certificate;
+        if(this.certificate != null && Files.exists(Paths.get(this.certificate))) {
+            try {
+                CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509"); //$NON-NLS-1$
+                InputStream in = Files.newInputStream(Paths.get(this.certificate));
+                Certificate cert = certificateFactory.generateCertificate(in);
+                KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+                keyStore.load(null);
+                keyStore.setCertificateEntry("alias", cert); //$NON-NLS-1$
+                trustManager = TrustManagerUtils.getDefaultTrustManager(keyStore);
+            } catch (IOException | GeneralSecurityException e) {
+                throw new TeiidRuntimeException(UTIL.getString("ftp_certificate_path", certificate, e));  //$NON-NLS-1$
+            }
+        }
     }
 
     public String getCipherSuites() {
@@ -305,14 +334,32 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         this.protocols = protocols.split(","); //$NON-NLS-1$
     }
 
-    public String getKeyManager() {
-        return keyManager.getClass().getName();
+    public String getKeyPath() {
+        return keyPath;
     }
 
-    public void setKeyManager(String keyManager) {
-//        this.keyManager = keyManager;
+    public void setKeyPath(String keyPath) {
+        this.keyPath = keyPath;
+        if(this.keyPath != null && Files.exists(Paths.get(this.keyPath))) {
+            if(this.keyPassword == null){
+                this.keyPassword = ""; //$NON-NLS-1$
+            }
+            try {
+                this.keyManager = KeyManagerUtils.createClientKeyManager(Paths.get(this.keyPath).toFile(), this.keyPassword);
+            } catch (IOException | GeneralSecurityException e) {
+                throw new TeiidRuntimeException(UTIL.getString("ftp_ketstore_path", this.keyPath, e));  //$NON-NLS-1$
+            }
+        }
     }
 
+    public String getKeyPassword() {
+        return keyPassword;
+    }
+
+    public void setKeyPassword(String keyPassword) {
+        this.keyPassword = keyPassword;
+    }
+    
     public Boolean getNeedClientAuth() {
         return needClientAuth;
     }
@@ -507,6 +554,9 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         result = prime * result + this.clientMode;
         result = prime * result + this.bufferSize;
         if(this.isFtps) {
+            result = prime * result + ((this.certificate == null) ? 0 : this.certificate.hashCode());
+            result = prime * result + ((this.keyPath == null) ? 0 : this.keyPath.hashCode());
+            result = prime * result + ((this.keyPassword == null) ? 0 : this.keyPassword.hashCode());
             result = prime * result + ((this.authValue == null) ? 0 : this.authValue.hashCode());
             result = prime * result + ((this.protocol == null) ? 0 : this.protocol.hashCode());
             result = prime * result + ((this.execProt == null) ? 0 : this.execProt.hashCode());
@@ -570,6 +620,15 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
             return false;
         }
         if(this.isFtps) {
+            if (!checkEquals(this.certificate, other.certificate)) {
+                return false;
+            }
+            if (!checkEquals(this.keyPath, other.keyPath)) {
+                return false;
+            }
+            if (!checkEquals(this.keyPassword, other.keyPassword)) {
+                return false;
+            }
             if (!checkEquals(this.authValue, other.authValue)) {
                 return false;
             }
