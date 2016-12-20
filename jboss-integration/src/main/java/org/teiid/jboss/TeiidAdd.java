@@ -312,14 +312,6 @@ class TeiidAdd extends AbstractAddStepHandler {
     	tupleBufferBuilder.addDependency(replicatorAvailable?DependencyType.REQUIRED:DependencyType.OPTIONAL, TeiidServiceNames.OBJECT_REPLICATOR, ObjectReplicator.class, tupleBufferService.replicatorInjector);
     	tupleBufferBuilder.install();
     	
-    	
-    	EventDistributorFactoryService edfs = new EventDistributorFactoryService();
-    	ServiceBuilder<InternalEventDistributorFactory> edfsServiceBuilder = target.addService(TeiidServiceNames.EVENT_DISTRIBUTOR_FACTORY, edfs);
-    	edfsServiceBuilder.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class, edfs.vdbRepositoryInjector);
-    	edfsServiceBuilder.addDependency(replicatorAvailable?DependencyType.REQUIRED:DependencyType.OPTIONAL, TeiidServiceNames.OBJECT_REPLICATOR, ObjectReplicator.class, edfs.objectReplicatorInjector);
-    	edfsServiceBuilder.addDependency(TeiidServiceNames.ENGINE, DQPCore.class, edfs.dqpCoreInjector);
-    	edfsServiceBuilder.install();
-    	
     	PolicyDecider policyDecider = null;
     	if (isDefined(POLICY_DECIDER_MODULE_ELEMENT, operation, context)) {
     		policyDecider = buildService(PolicyDecider.class, asString(POLICY_DECIDER_MODULE_ELEMENT, operation, context));    		
@@ -434,6 +426,14 @@ class TeiidAdd extends AbstractAddStepHandler {
     	
     	// Query Engine
     	final DQPCoreService engine = buildQueryEngine(context, operation);
+    	
+        EventDistributorFactoryService edfs = new EventDistributorFactoryService();
+        ServiceBuilder<InternalEventDistributorFactory> edfsServiceBuilder = target.addService(TeiidServiceNames.EVENT_DISTRIBUTOR_FACTORY, edfs);
+        edfsServiceBuilder.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class, edfs.vdbRepositoryInjector);
+        edfsServiceBuilder.addDependency(replicatorAvailable?DependencyType.REQUIRED:DependencyType.OPTIONAL, TeiidServiceNames.OBJECT_REPLICATOR, ObjectReplicator.class, edfs.objectReplicatorInjector);
+        edfs.dqpCore = engine.getValue();
+        edfsServiceBuilder.install();
+    	
     	String workManager = "default"; //$NON-NLS-1$
     	if (isDefined(WORKMANAGER, operation, context)) {
     		workManager = asString(WORKMANAGER, operation, context);

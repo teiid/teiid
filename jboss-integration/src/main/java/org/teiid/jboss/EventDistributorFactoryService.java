@@ -36,7 +36,7 @@ public class EventDistributorFactoryService extends AbstractEventDistributorFact
 	
 	InjectedValue<ObjectReplicator> objectReplicatorInjector = new InjectedValue<ObjectReplicator>();
 	InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
-	InjectedValue<DQPCore> dqpCoreInjector = new InjectedValue<DQPCore>();
+	DQPCore dqpCore;
 		
 	@Override
 	public void start(StartContext context) throws StartException {
@@ -60,7 +60,7 @@ public class EventDistributorFactoryService extends AbstractEventDistributorFact
 	
 	@Override
     protected DQPCore getDQPCore() {
-        return dqpCoreInjector.getValue();
+        return dqpCore;
     }
 
 }
