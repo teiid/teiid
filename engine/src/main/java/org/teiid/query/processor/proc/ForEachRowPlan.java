@@ -174,8 +174,10 @@ public class ForEachRowPlan extends ProcessorPlan {
     		this.getContext().getTransactionServer().begin(tc);
     		this.planContext = tc;
     	}
-		queryProcessor = new QueryProcessor(queryPlan, getContext(), this.bufferMgr, this.dataMgr);
-		tupleSource = new BatchCollector.BatchProducerTupleSource(queryProcessor);
+    	if (queryPlan != null) {
+    		queryProcessor = new QueryProcessor(queryPlan, getContext(), this.bufferMgr, this.dataMgr);
+    		tupleSource = new BatchCollector.BatchProducerTupleSource(queryProcessor);
+    	}
 	}
 	
 	public void setQueryPlan(ProcessorPlan queryPlan) {
@@ -219,5 +221,9 @@ public class ForEachRowPlan extends ProcessorPlan {
         val.append("}\n"); //$NON-NLS-1$
         return val.toString(); 
 	}
+	
+	public void setTupleSource(TupleSource tupleSource) {
+        this.tupleSource = tupleSource;
+    }
 	
 }

@@ -22,6 +22,7 @@
 
 package org.teiid.runtime;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -45,6 +46,8 @@ public class HardCodedExecutionFactory extends ExecutionFactory<Object, Object> 
 	Map<String, List<? extends List<?>>> dataMap = new HashMap<String, List<? extends List<?>>>();
 	Map<String, Object> updateMap = new HashMap<String, Object>();
 	
+	private List<Command> commands = new ArrayList<Command>();
+	
 	public HardCodedExecutionFactory() {
 		setSourceRequired(false);
 	}
@@ -53,6 +56,7 @@ public class HardCodedExecutionFactory extends ExecutionFactory<Object, Object> 
 	public ProcedureExecution createProcedureExecution(Call command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
 			Object connection) throws TranslatorException {
+	    this.commands.add(command);
 		List<? extends List<?>> list = getData(command);
 		if (list == null) {
 			throw new RuntimeException(command.toString());
@@ -96,6 +100,7 @@ public class HardCodedExecutionFactory extends ExecutionFactory<Object, Object> 
 			final QueryExpression command, ExecutionContext executionContext,
 			RuntimeMetadata metadata, Object connection)
 			throws TranslatorException {
+	    this.commands.add(command);
 		List<? extends List<?>> list = getData(command);
 		if (list == null) {
 			throw new RuntimeException(command.toString());
@@ -140,6 +145,7 @@ public class HardCodedExecutionFactory extends ExecutionFactory<Object, Object> 
 	public UpdateExecution createUpdateExecution(Command command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
 			Object connection) throws TranslatorException {
+	    this.commands.add(command);
 		Object response = updateMap.get(command.toString());
 		if (response == null) {
 			throw new RuntimeException(command.toString());
@@ -185,5 +191,9 @@ public class HardCodedExecutionFactory extends ExecutionFactory<Object, Object> 
 	public void addUpdate(String key, TranslatorException exception) {
 		this.updateMap.put(key, exception);
 	}
+	
+	public List<Command> getCommands() {
+        return commands;
+    }
 	
 }

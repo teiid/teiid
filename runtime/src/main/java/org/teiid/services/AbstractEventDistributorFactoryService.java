@@ -22,12 +22,14 @@
 package org.teiid.services;
 
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
 import org.teiid.Replicated;
 import org.teiid.deployers.EventDistributorImpl;
 import org.teiid.deployers.VDBRepository;
+import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.events.EventDistributor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -45,12 +47,18 @@ public abstract class AbstractEventDistributorFactoryService implements Internal
 	
 	protected abstract VDBRepository getVdbRepository();
 	protected abstract ObjectReplicator getObjectReplicator();
+	protected abstract DQPCore getDQPCore();
 
 	public void start() {
 		final EventDistributor ed = new EventDistributorImpl() {
 			@Override
 			public VDBRepository getVdbRepository() {
 				return AbstractEventDistributorFactoryService.this.getVdbRepository();
+			}
+			
+			@Override
+			public DQPCore getDQPCore() {
+                return AbstractEventDistributorFactoryService.this.getDQPCore();
 			}
 		};
 		
@@ -70,12 +78,16 @@ public abstract class AbstractEventDistributorFactoryService implements Internal
 			@Override
 			public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 			    Replicated annotation = method.getAnnotation(Replicated.class);
-                if (replicatableEventDistributor == null || (annotation != null && annotation.remoteOnly())) {
-                    method.invoke(ed, args);
-                } 
-                if (replicatableEventDistributor != null) {
-					method.invoke(replicatableEventDistributor, args);
-				}
+			    try {
+                    if (replicatableEventDistributor == null || (annotation != null && annotation.remoteOnly())) {
+                        method.invoke(ed, args);
+                    } 
+                    if (replicatableEventDistributor != null) {
+    					method.invoke(replicatableEventDistributor, args);
+    				}
+			    } catch (InvocationTargetException e) {
+			        throw e.getTargetException();
+			    }
 				return null;
 			}
 		});		

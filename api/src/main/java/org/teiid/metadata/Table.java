@@ -25,8 +25,10 @@ package org.teiid.metadata;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.AbstractMetadataRecord.DataModifiable;
@@ -88,6 +90,9 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
     private List<KeyRecord> uniqueKeys = new ArrayList<KeyRecord>(2);
     private List<KeyRecord> accessPatterns = new ArrayList<KeyRecord>(2);
     private KeyRecord primaryKey;
+    
+    //table information
+    private Map<String, Trigger> triggers = new LinkedHashMap<String, Trigger>();
 
     //view information
 	private volatile String selectTransformation;
@@ -404,5 +409,9 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
     	}
     	return super.getFullName();
     }
-	
+    
+    public Map<String, Trigger> getTriggers() {
+        return triggers;
+    }
+    
 }

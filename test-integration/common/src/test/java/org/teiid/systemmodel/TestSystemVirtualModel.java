@@ -33,6 +33,8 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -44,6 +46,7 @@ import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
+import org.teiid.runtime.HardCodedExecutionFactory;
 
 
 /**
@@ -263,6 +266,35 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 	@Test public void testFunctionParameters() throws Exception {
 		checkResult("testFunctionParams", "select * from FunctionParams"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
+	
+	@Test public void testTriggers() throws Exception {
+	    this.internalConnection.close();
+	    
+        ModelMetaData mmd3 = new ModelMetaData();
+        mmd3.setName("x");
+        mmd3.setModelType(Type.PHYSICAL);
+        mmd3.addSourceMapping("x", "x", null);
+        mmd3.addSourceMetadata("DDL", "create foreign table t (intkey integer); create trigger tr on t after insert as for each row begin select intkey from t where intkey = new.intkey; end");
+        HardCodedExecutionFactory ef = new HardCodedExecutionFactory() {
+            @Override
+            public boolean supportsCompareCriteriaEquals() {
+                return true;
+            }
+        };
+        ef.addData("SELECT t.intkey FROM t WHERE t.intkey = 1", new ArrayList<List<?>>());
+        server.addTranslator("x", ef);
+        server.deployVDB("test3", mmd3);
+	    
+        this.internalConnection = server.createConnection("jdbc:teiid:test3");
+        checkResult("testTriggers", "select * from sysadmin.triggers"); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        //insert event
+        server.getEventDistributor().dataModification("test3", "1", "x", "t", null, new Object[] {1}, null);
+        
+        Thread.sleep(2000);
+        
+        assertEquals("SELECT t.intkey FROM t WHERE t.intkey = 1", ef.getCommands().get(0).toString());
+    }
 	
 	@Test public void testSpatial() throws Exception {
 		checkResult("testSpatial", "select * from spatial_ref_sys"); //$NON-NLS-1$ //$NON-NLS-2$

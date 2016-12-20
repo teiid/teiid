@@ -65,6 +65,7 @@ public class QueryOptimizer {
 	private static final CommandPlanner PROCEDURE_PLANNER = new ProcedurePlanner();
     private static final CommandPlanner BATCHED_UPDATE_PLANNER = new BatchedUpdatePlanner();
     private static final CommandPlanner DDL_PLANNER = new DdlPlanner();
+    private static final CommandPlanner SOURCE_EVENT_PLANNER = new SourceTriggerActionPlanner();
 
 	// Can't construct	
 	private QueryOptimizer() {}
@@ -176,6 +177,9 @@ public class QueryOptimizer {
 		case Command.TYPE_ALTER_VIEW:
 			result = DDL_PLANNER.optimize(command, idGenerator, metadata, capFinder, analysisRecord, context);
 			break;
+		case Command.TYPE_SOURCE_EVENT:
+		    result = SOURCE_EVENT_PLANNER.optimize(command, idGenerator, metadata, capFinder, analysisRecord, context);
+		    break;
 		default:
 			try {
 				if (command.getType() == Command.TYPE_QUERY && command instanceof Query && QueryResolver.isXMLQuery((Query)command, metadata)) {

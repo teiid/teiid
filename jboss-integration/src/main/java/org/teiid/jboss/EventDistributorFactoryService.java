@@ -27,6 +27,7 @@ import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 import org.teiid.deployers.VDBRepository;
+import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.services.AbstractEventDistributorFactoryService;
 import org.teiid.services.InternalEventDistributorFactory;
@@ -35,6 +36,7 @@ public class EventDistributorFactoryService extends AbstractEventDistributorFact
 	
 	InjectedValue<ObjectReplicator> objectReplicatorInjector = new InjectedValue<ObjectReplicator>();
 	InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
+	InjectedValue<DQPCore> dqpCoreInjector = new InjectedValue<DQPCore>();
 		
 	@Override
 	public void start(StartContext context) throws StartException {
@@ -55,5 +57,10 @@ public class EventDistributorFactoryService extends AbstractEventDistributorFact
 	protected VDBRepository getVdbRepository() {
 		return vdbRepositoryInjector.getValue();
 	}
+	
+	@Override
+    protected DQPCore getDQPCore() {
+        return dqpCoreInjector.getValue();
+    }
 
 }

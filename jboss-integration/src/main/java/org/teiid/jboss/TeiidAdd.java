@@ -317,6 +317,7 @@ class TeiidAdd extends AbstractAddStepHandler {
     	ServiceBuilder<InternalEventDistributorFactory> edfsServiceBuilder = target.addService(TeiidServiceNames.EVENT_DISTRIBUTOR_FACTORY, edfs);
     	edfsServiceBuilder.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class, edfs.vdbRepositoryInjector);
     	edfsServiceBuilder.addDependency(replicatorAvailable?DependencyType.REQUIRED:DependencyType.OPTIONAL, TeiidServiceNames.OBJECT_REPLICATOR, ObjectReplicator.class, edfs.objectReplicatorInjector);
+    	edfsServiceBuilder.addDependency(TeiidServiceNames.ENGINE, DQPCore.class, edfs.dqpCoreInjector);
     	edfsServiceBuilder.install();
     	
     	PolicyDecider policyDecider = null;

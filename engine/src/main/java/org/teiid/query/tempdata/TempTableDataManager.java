@@ -30,6 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
 
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -604,21 +605,22 @@ public class TempTableDataManager implements ProcessorDataManager {
 
 				private void load() throws TeiidComponentException,
 						TeiidProcessingException {
-					if (newWorkContext != null) {
-						try {
-							newWorkContext.runInContext(new Callable<Void>() {
-								@Override
-								public Void call() throws Exception {
-									loadingTupleSource.nextTuple();
-									return null;
-								}
-							});
-						} catch (Throwable e) {
-							rethrow(e);
-						}
-					} else {
-						loadingTupleSource.nextTuple();
-					}
+				    try {
+    					if (newWorkContext != null) {
+    						
+    							newWorkContext.runInContext(new Callable<Void>() {
+    								@Override
+    								public Void call() throws Exception {
+    									loadingTupleSource.nextTuple();
+    									return null;
+    								}
+    							});
+    					} else {
+    						loadingTupleSource.nextTuple();
+    					}
+				    } catch (Throwable e) {
+                        rethrow(e);
+                    }
 				}
 
 				private void cancelMoreWork() {
@@ -853,6 +855,9 @@ public class TempTableDataManager implements ProcessorDataManager {
 		if (e instanceof TeiidProcessingException) {
 			throw (TeiidProcessingException)e;
 		}
+        if (e instanceof RejectedExecutionException) {
+	        throw new TeiidComponentException(e);
+	    }
 		if (e instanceof RuntimeException) {
 			throw (RuntimeException)e;
 		}

@@ -1646,7 +1646,11 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     @Override
     public void visit(AlterTrigger obj) {
     	validateAlterTarget(obj);
-    	validateGroupSupportsUpdate(obj.getTarget());
+    	if (obj.isAfter()) {
+    	    handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.after_not_alterable"), obj); //$NON-NLS-1$
+    	} else {
+    	    validateGroupSupportsUpdate(obj.getTarget());
+    	}
 		try {
 			if (obj.getDefinition() != null) {
 				Validator.validate(obj.getDefinition(), getMetadata(), this);

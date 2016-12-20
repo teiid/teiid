@@ -41,6 +41,7 @@ import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.ProcedureParameter.Type;
+import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionMetadataValidator;
 import org.teiid.query.mapping.relational.QueryNode;
@@ -255,14 +256,31 @@ public class MetadataValidator {
 								|| t.getTableType() == Table.Type.XmlStagingTable) {
 							continue;
 						}
-						if (t.isVirtual() && t.getTableType() != Table.Type.TemporaryTable) {
+						if (t.getTableType() == Table.Type.TemporaryTable) {
+						    continue;
+						}
+						if (t.isVirtual()) {
 							if (t.getSelectTransformation() == null) {
 								metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31079, t.getFullName(), model.getName()));
 							}
 							else {
 								metadataValidator.validate(vdb, model, t, report, metadata, mf);
 							}
-						}						
+						} else {
+						    for (Trigger tr : t.getTriggers().values()) {
+		                        int commandType = Command.TYPE_INSERT;
+		                        if (tr.getEvent() == TriggerEvent.DELETE) {
+		                            commandType = Command.TYPE_DELETE;
+		                        } else if (tr.getEvent() == TriggerEvent.UPDATE) {
+		                            commandType = Command.TYPE_UPDATE;
+		                        }
+		                        try {
+		                            metadataValidator.validateUpdatePlan(model, report, metadata, t, tr.getPlan(), commandType);
+    						    } catch (TeiidException e) {
+    						        metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31080, record.getFullName(), e.getMessage()));
+    					        }
+		                    }
+						}
 					} else if (record instanceof Procedure) {
 						Procedure p = (Procedure)record;
 						if (p.isVirtual()) {

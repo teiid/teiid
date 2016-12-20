@@ -2478,14 +2478,23 @@ public class SQLStringVisitor extends LanguageVisitor {
     	append(SPACE);
     	append(TRIGGER);
     	append(SPACE);
+    	if (alterTrigger.getName() != null) {
+    	    append(escapeSinglePart(alterTrigger.getName()));
+    	    append(SPACE);
+    	}
     	append(ON);
     	append(SPACE);
     	append(alterTrigger.getTarget());
     	beginClause(0);
-    	append(NonReserved.INSTEAD);
-    	append(SPACE);
-    	append(OF);
-    	append(SPACE);
+    	if (alterTrigger.isAfter()) {
+    	    append(NonReserved.AFTER);
+    	    append(SPACE);
+    	} else {
+        	append(NonReserved.INSTEAD);
+        	append(SPACE);
+        	append(OF);
+        	append(SPACE);
+    	}
     	append(alterTrigger.getEvent());
     	if (alterTrigger.getDefinition() != null) {
 	    	beginClause(0);

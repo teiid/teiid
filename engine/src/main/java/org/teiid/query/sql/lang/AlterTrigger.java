@@ -32,6 +32,8 @@ public class AlterTrigger extends Alter<TriggerAction> {
 	private Table.TriggerEvent event;
 	private Boolean enabled;
 	private boolean create;
+	private boolean after;
+    private String name;
 	
 	public Table.TriggerEvent getEvent() {
 		return event;
@@ -53,6 +55,8 @@ public class AlterTrigger extends Alter<TriggerAction> {
 		clone.event = event;
 		clone.enabled = this.enabled;
 		clone.create = this.create;
+		clone.after = this.after;
+		clone.name = this.name;
 		return clone;
 	}
 	
@@ -71,8 +75,10 @@ public class AlterTrigger extends Alter<TriggerAction> {
 		}
 		AlterTrigger other = (AlterTrigger)obj;
 		return EquivalenceUtil.areEqual(this.enabled, other.enabled) 
+        && EquivalenceUtil.areEqual(this.name, other.name)
 		&& this.create == other.create
-		&& other.event == this.event;
+		&& other.event == this.event
+		&& other.after == this.after;
 	}
 	
 	public void setEnabled(Boolean enabled) {
@@ -89,5 +95,21 @@ public class AlterTrigger extends Alter<TriggerAction> {
 	
 	public void setCreate(boolean create) {
 		this.create = create;
+	}
+	
+	public boolean isAfter() {
+        return after;
+    }
+	
+	public void setAfter(boolean after) {
+        this.after = after;
+    }
+	
+	public String getName() {
+	    return name;
+	}
+	
+	public void setName(String name) {
+	    this.name = name;
 	}
 }

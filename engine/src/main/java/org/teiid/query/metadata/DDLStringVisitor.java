@@ -169,16 +169,20 @@ public class DDLStringVisitor {
 			append(SQLConstants.Tokens.SEMICOLON);
 			
 			if (table.isInsertPlanEnabled()) {
-				buildTrigger(name, INSERT, table.getInsertPlan());
+				buildTrigger(name, null, INSERT, table.getInsertPlan());
 			}
 			
 			if (table.isUpdatePlanEnabled()) {
-				buildTrigger(name, UPDATE, table.getUpdatePlan());
+				buildTrigger(name, null, UPDATE, table.getUpdatePlan());
 			}	
 			
 			if (table.isDeletePlanEnabled()) {
-				buildTrigger(name, DELETE, table.getDeletePlan());
-			}			
+				buildTrigger(name, null, DELETE, table.getDeletePlan());
+			}	
+			
+			for (Trigger tr : table.getTriggers().values()) {
+			    buildTrigger(name, tr.getName(), tr.getEvent().name(), tr.getPlan());   
+			}
 		} else {
 		    append(SQLConstants.Tokens.SEMICOLON);
 		}
@@ -219,11 +223,14 @@ public class DDLStringVisitor {
 		return this;
 	}
 
-	private void buildTrigger(String name, String type, String plan) {
+	private void buildTrigger(String name, String trigger_name, String type, String plan) {
 		append(NEWLINE);
 		append(NEWLINE);
-		append(CREATE_TRIGGER_ON).append(SPACE);
-		append(name).append(SPACE).append(INSTEAD_OF).append(SPACE).append(type).append(SPACE).append(SQLConstants.Reserved.AS).append(NEWLINE);
+		append(SQLConstants.Reserved.CREATE).append(SPACE).append(TRIGGER).append(SPACE);
+		if (trigger_name != null) {
+		    append(SQLStringVisitor.escapeSinglePart(trigger_name)).append(SPACE);
+		}
+		append(SQLConstants.Reserved.ON).append(SPACE).append(name).append(SPACE).append(INSTEAD_OF).append(SPACE).append(type).append(SPACE).append(SQLConstants.Reserved.AS).append(NEWLINE);
 		append(plan);
 		append(SQLConstants.Tokens.SEMICOLON);
 	}

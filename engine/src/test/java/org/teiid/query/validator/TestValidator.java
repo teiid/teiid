@@ -1861,4 +1861,10 @@ public class TestValidator {
         helpValidate(sql, new String[] {"e1"}, qmi);
     }
     
+    @Test public void testAlterAfterTrigger() {
+        String userUpdateStr = "ALTER TRIGGER tr ON pm1.g2 AFTER INSERT DISABLED;"; //$NON-NLS-1$
+        
+        helpValidate(userUpdateStr, new String[]{"ALTER TRIGGER tr ON pm1.g2 AFTER INSERT DISABLED"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+    }
+    
 }

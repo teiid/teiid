@@ -52,7 +52,6 @@ public interface DDLConstants {
 	public static final String MATERIALIZED_TABLE = "MATERIALIZED_TABLE";//$NON-NLS-1$
 	public static final String MATERIALIZED = "MATERIALIZED";//$NON-NLS-1$
 	public static final String INSTEAD_OF = "INSTEAD OF";//$NON-NLS-1$
-	public static final String CREATE_TRIGGER_ON = "CREATE TRIGGER ON";//$NON-NLS-1$
 	public static final String FOREIGN_TABLE = "FOREIGN TABLE";//$NON-NLS-1$
 	public static final String UDT = "UDT";//$NON-NLS-1$
 }

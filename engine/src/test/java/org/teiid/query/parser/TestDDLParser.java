@@ -32,6 +32,7 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.*;
 import org.teiid.metadata.Column.SearchType;
+import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.validator.ValidatorReport;
@@ -929,4 +930,34 @@ public class TestDDLParser {
 		assertEquals("string[]", t.getColumns().get(0).getRuntimeType());
 		assertEquals(String[].class, t.getColumns().get(0).getJavaType());
 	}
+
+   @Test(expected=MetadataException.class) public void testAfterTriggerNameRequired() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE T ( e1 integer, e2 varchar);" +
+                "CREATE TRIGGER ON T AFTER UPDATE AS " +
+                "FOR EACH ROW \n" +
+                "BEGIN ATOMIC \n" +
+                "if (\"new\" is not distinct from \"old\") raise sqlexception 'error';\n" +
+                "END;";
+
+        
+        helpParse(ddl, "model").getSchema();
+    }
+	        
+	@Test public void testAfterTrigger() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE T ( e1 integer, e2 varchar);" +
+                "CREATE TRIGGER tr ON T AFTER UPDATE AS " +
+                "FOR EACH ROW \n" +
+                "BEGIN ATOMIC \n" +
+                "if (\"new\" is not distinct from \"old\") raise sqlexception 'error';\n" +
+                "END;";
+
+        
+        Schema s = helpParse(ddl, "model").getSchema();
+        Table t = s.getTable("T");
+        assertEquals(1, t.getTriggers().size());
+        Trigger tr = t.getTriggers().values().iterator().next();
+        assertEquals("tr", tr.getName());
+        assertEquals(TriggerEvent.UPDATE, tr.getEvent());
+        assertNotNull(tr.getPlan());
+    }
 }

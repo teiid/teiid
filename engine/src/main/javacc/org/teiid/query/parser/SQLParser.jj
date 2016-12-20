@@ -497,6 +497,7 @@ TOKEN : /* NonReserved words */
 |   <PRESERVE: "preserve">
 |   <GEOMETRY: "geometry">
 |   <UPSERT: "upsert">
+|   <AFTER: "after">
 
 }
 /*
@@ -605,7 +606,7 @@ Token nonReserved() :
      |<TO_BYTES>|<TIMESTAMPADD>|<TIMESTAMPDIFF>|<QUERYSTRING>|<NAMESPACE>|<RESULT>|<INDEX>|<ACCESSPATTERN>|<AUTO_INCREMENT>|<WELLFORMED>|<SQL_TSI_FRAC_SECOND>
      |<SQL_TSI_SECOND>|<SQL_TSI_MINUTE>|<SQL_TSI_HOUR>|<SQL_TSI_DAY>|<SQL_TSI_WEEK>|<SQL_TSI_MONTH>|<SQL_TSI_QUARTER>|<SQL_TSI_YEAR>|<TEXTTABLE>|<ARRAYTABLE>
      |<SELECTOR>|<SKIP_KEYWORD>|<WIDTH>|<PASSING>|<NAME>|<ENCODING>|<COLUMNS>|<DELIMITER>|<QUOTE>|<HEADER>|<NULLS>|<OBJECTTABLE>
-     |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>|<VARIADIC>|<RAISE>|<EXCEPTION>|<CHAIN>|<JSONARRAY_AGG>|<JSONOBJECT>|<PRESERVE>|<UPSERT>)
+     |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>|<VARIADIC>|<RAISE>|<EXCEPTION>|<CHAIN>|<JSONARRAY_AGG>|<JSONOBJECT>|<PRESERVE>|<UPSERT>|<AFTER>)
     {
     	return getToken(0);
     }	
@@ -678,10 +679,12 @@ Command createTrigger(ParseInfo info) :
   	String target = null;
   	TriggerAction triggerAction = null;
   	Token event = null;
-  	
+  	boolean after = false;
+  	String name = null;
 }
 {
-	<CREATE> <TRIGGER> <ON> target = id(null) <INSTEAD> <OF> 
+	<CREATE> <TRIGGER> [name = id(Boolean.TRUE)] <ON> target = id(null) 
+	((<INSTEAD> <OF>)|(<AFTER> {after = true;}))
 	(event = <INSERT> | event = <UPDATE> | event = <DELETE>) 
 	<AS> triggerAction = forEachRowTriggerAction(info)
 	{
@@ -690,6 +693,8 @@ Command createTrigger(ParseInfo info) :
 		alterTrigger.setDefinition(triggerAction);
 		alterTrigger.setEvent(Table.TriggerEvent.valueOf(event.image.toUpperCase()));
 		alterTrigger.setCreate(true);
+		alterTrigger.setAfter(after);
+		alterTrigger.setName(name);
 		return alterTrigger;				
 	}
 }
@@ -708,6 +713,8 @@ Command alter(ParseInfo info) :
   	Token comment = null;
   	Token event = null;
   	Boolean enabled = null;
+  	boolean after = false;
+  	String name = null;
 }
 {
 	<ALTER>
@@ -733,7 +740,8 @@ Command alter(ParseInfo info) :
 			alterProc.setDefinition(cup);
 			return alterProc;
 		}
-		| (<TRIGGER> <ON> target = id(null) <INSTEAD> <OF> 
+		| (<TRIGGER> [name = id(Boolean.TRUE)] <ON> target = id(null) 
+		  ((<INSTEAD> <OF>)|(<AFTER> {after = true;}))
 		  (event = <INSERT> | event = <UPDATE> | event = <DELETE>) 
 		  ((<AS> triggerAction = forEachRowTriggerAction(info))
 		  |<ENABLED> {enabled=true;}| <DISABLED> {enabled=false;}))
@@ -745,6 +753,8 @@ Command alter(ParseInfo info) :
 			if (enabled != null) {
 				alterTrigger.setEnabled(enabled);
 			}
+			alterTrigger.setName(name);
+			alterTrigger.setAfter(after);
 			return alterTrigger;				
 		}
 	)

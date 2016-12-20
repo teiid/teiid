@@ -808,8 +808,29 @@ public class SQLParserUtil {
 		GroupSymbol group = trigger.getTarget();
 		
 		Table table = schema.getSchema().getTable(group.getName());
-		if (table == null || !table.isVirtual()) {
-			throw new MetadataException(QueryPlugin.Util.getString("SQLParser.view_doesnot_exist", group.getName())); //$NON-NLS-1$
+		if (table == null) {
+			throw new MetadataException(QueryPlugin.Util.getString("SQLParser.group_doesnot_exist", group.getName())); //$NON-NLS-1$
+		}
+		if (!table.isVirtual()) {
+		    if (!trigger.isAfter()) {
+		        throw new MetadataException(QueryPlugin.Util.getString("SQLParser.not_view", group.getName())); //$NON-NLS-1$
+		    }
+		    if (trigger.getName() == null) {
+		        throw new MetadataException(QueryPlugin.Event.TEIID31213, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31213));
+		    } else if (table.getTriggers().containsKey(trigger.getName())) {
+		        throw new DuplicateRecordException(QueryPlugin.Event.TEIID31212, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31212, trigger.getName(), table.getFullName()));
+		    }
+		    //add a named trigger
+		    Trigger t = new Trigger();
+		    t.setName(trigger.getName());
+		    t.setEvent(trigger.getEvent());
+		    t.setPlan(trigger.getDefinition().toString());
+		    //TODO: uid
+		    table.getTriggers().put(trigger.getName(), t);
+		    return;
+		} 
+		if (trigger.isAfter()) {
+		    throw new MetadataException(QueryPlugin.Util.getString("SQLParser.view_not_allowed", group.getName())); //$NON-NLS-1$
 		}
 		if (trigger.getEvent().equals(Table.TriggerEvent.INSERT)) {
 			table.setInsertPlan(trigger.getDefinition().toString());

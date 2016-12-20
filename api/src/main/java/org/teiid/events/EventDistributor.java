@@ -245,4 +245,16 @@ public interface EventDistributor {
 	 * @param listener
 	 */
 	void unregister(EventListener listener);
+	
+	/**
+     * Notify that the table data has changed.
+     * <br>For an insert only the newValues are provided.
+     * <br>For a delete only the oldValues are provided.
+     * <br>For an update both are provided.
+     * @param vdbName
+     * @param vdbVersion
+     * @param schema
+     * @param tableNames
+     */
+    void dataModification(String vdbName, String vdbVersion, String schema, String tableName, Object[] oldValues, Object[] newValues, String[] columnNames);
 }

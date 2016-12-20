@@ -59,6 +59,9 @@ public class AlterResolver implements CommandResolver {
 				type = Command.TYPE_UPDATE;
 				break;
 			}
+			if (((AlterTrigger)alter).isAfter()) {
+			    viewTarget = false;
+			}
 		} else if (alter instanceof AlterProcedure) {
 			type = Command.TYPE_STORED_PROCEDURE;
 			viewTarget = false;

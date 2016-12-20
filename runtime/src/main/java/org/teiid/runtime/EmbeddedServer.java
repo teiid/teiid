@@ -283,6 +283,11 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
         protected ObjectReplicator getObjectReplicator() {
             return replicator;
         }
+        
+        @Override
+        protected DQPCore getDQPCore() {
+            return dqp;
+        }
     };	
 	
 	protected boolean throwMetadataErrors = true;

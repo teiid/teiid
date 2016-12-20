@@ -70,6 +70,7 @@ import org.teiid.dqp.internal.process.TupleSourceCache.CachableVisitor;
 import org.teiid.dqp.internal.process.TupleSourceCache.CopyOnReadTupleSource;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.events.EventDistributor;
+import org.teiid.language.SQLConstants;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
@@ -620,6 +621,10 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         			if (table.getDeletePlan() != null) {
         				cols.add(new Trigger("dt", TriggerEvent.DELETE.name(), table.isDeletePlanEnabled(), null, table.getDeletePlan())); //$NON-NLS-1$ 
         			}        			
+        		} else {
+        		    for (org.teiid.metadata.Trigger trigger : table.getTriggers().values()) {
+        		        cols.add(new Trigger(trigger.getName(), trigger.getEvent().name(), true, SQLConstants.NonReserved.AFTER, trigger.getPlan()));
+        		    }
         		}
         		return cols;
         	}
@@ -1437,11 +1442,14 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		String status;
 		String body;
 		
-		Trigger(String name, String event, boolean status, String time, String body){
+		Trigger(String name, String event, boolean status, String triggerType, String body){
 			this.name = name;
 			this.triggerEvent = event;
 			this.status = status?"ENABLED":"DISABLED"; //$NON-NLS-1$ //$NON-NLS-2$  
 			this.body = body;
+			if (triggerType != null) {
+			    this.triggerType = triggerType;
+			}
 		}
 	}    
 }

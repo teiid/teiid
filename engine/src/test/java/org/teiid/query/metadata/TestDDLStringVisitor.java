@@ -346,4 +346,23 @@ public class TestDDLStringVisitor {
 		assertEquals("CREATE VIRTUAL FUNCTION x(param1 integer) RETURNS string[]"
 				+ "\nOPTIONS (NAMEINSOURCE 'x', JAVA_CLASS 'org.teiid.query.metadata.TestDDLStringVisitor', JAVA_METHOD 'someMethod');", metadataDDL);
 	}
+	
+	@Test public void testAfterTrigger() throws Exception {
+	    String ddl = "CREATE FOREIGN TABLE T ( e1 integer, e2 varchar);" +
+                "CREATE TRIGGER \"table\" ON T AFTER UPDATE AS " +
+                "FOR EACH ROW \n" +
+                "BEGIN ATOMIC \n" +
+                "if (\"new\" is not distinct from \"old\") raise sqlexception 'error';\n" +
+                "END;"+
+                "CREATE TRIGGER \"table1\" ON T AFTER UPDATE AS " +
+                "FOR EACH ROW \n" +
+                "BEGIN ATOMIC \n" +
+                "if (\"new\" is not distinct from \"old\") raise sqlexception 'error';\n" +
+                "END;";
+	    
+	    String expected = "CREATE FOREIGN TABLE T (\n\te1 integer,\n\te2 string\n);\n"
+	            + "\nCREATE TRIGGER \"table\" ON T INSTEAD OF UPDATE AS\nFOR EACH ROW\nBEGIN ATOMIC\nIF(\"new\" IS NOT DISTINCT FROM \"old\")\nBEGIN\nRAISE SQLEXCEPTION 'error';\nEND\nEND;\n"
+	            + "\nCREATE TRIGGER table1 ON T INSTEAD OF UPDATE AS\nFOR EACH ROW\nBEGIN ATOMIC\nIF(\"new\" IS NOT DISTINCT FROM \"old\")\nBEGIN\nRAISE SQLEXCEPTION 'error';\nEND\nEND;";
+	    helpTest(ddl, expected);
+	}
 }

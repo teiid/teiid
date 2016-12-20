@@ -898,7 +898,7 @@ public class DQPCore implements DQP {
 	 * @return
 	 * @throws Throwable
 	 */
-    public static ResultsFuture<?> executeQuery(final String command, final VDBMetaData vdb, final String user, final String app,
+    public static ResultsFuture<?> executeQuery(final Object command, final VDBMetaData vdb, final String user, final String app,
             final long timeoutInMilli, final DQPCore engine, final ResultsListener listener) throws Throwable {
         final SessionMetadata session = TempTableDataManager.createTemporarySession(user, app, vdb); 
 
@@ -934,7 +934,13 @@ public class DQPCore implements DQP {
         workContext.runInContext(new Callable<Void>() {
             @Override
             public Void call() throws Exception {
-                RequestMessage request = new RequestMessage(command);
+                RequestMessage request = new RequestMessage();
+                if (command instanceof String) {
+                    request.setCommands((String)command);
+                } else {
+                    request.setCommands(command.toString());
+                    request.setCommand(command);
+                }
                 request.setExecutionId(requestID);
                 request.setRowLimit(engine.getMaxRowsFetchSize()); // this would limit the number of rows that are returned.
                 ResultsFuture<ResultsMessage> message = engine.executeRequest(requestID, request, timeoutInMilli);

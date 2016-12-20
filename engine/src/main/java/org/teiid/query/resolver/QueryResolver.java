@@ -98,6 +98,14 @@ public class QueryResolver {
     private static final CommandResolver DYNAMIC_COMMAND_RESOLVER = new DynamicCommandResolver();
     private static final CommandResolver TEMP_TABLE_RESOLVER = new TempTableResolver();
     private static final CommandResolver ALTER_RESOLVER = new AlterResolver();
+    private static final CommandResolver DUMMY_RESOLVER = new CommandResolver() {
+        
+        @Override
+        public void resolveCommand(Command command, TempMetadataAdapter metadata,
+                boolean resolveNullLiterals) throws QueryMetadataException,
+                QueryResolverException, TeiidComponentException {
+        }
+    };
     
     public static Command expandCommand(ProcedureContainer proc, QueryMetadataInterface metadata, AnalysisRecord analysisRecord) throws QueryResolverException, QueryMetadataException, TeiidComponentException {
     	ProcedureContainerResolver cr = (ProcedureContainerResolver)chooseResolver(proc, metadata);
@@ -320,6 +328,7 @@ public class QueryResolver {
             case Command.TYPE_ALTER_PROC:           
             case Command.TYPE_ALTER_TRIGGER:        
             case Command.TYPE_ALTER_VIEW:           return ALTER_RESOLVER;
+            case Command.TYPE_SOURCE_EVENT:         return DUMMY_RESOLVER; 
             default:
                 throw new AssertionError("Unknown command type"); //$NON-NLS-1$
         }

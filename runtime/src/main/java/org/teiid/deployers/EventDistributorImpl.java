@@ -29,6 +29,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidRuntimeException;
+import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.DataTierManagerImpl;
 import org.teiid.events.EventDistributor;
 import org.teiid.events.EventListener;
@@ -43,6 +45,7 @@ import org.teiid.metadata.Table;
 import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.metadata.TableStats;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.optimizer.SourceTriggerActionPlanner.SourceEventCommand;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.processor.DdlPlan;
 import org.teiid.query.tempdata.GlobalTableStore;
@@ -52,6 +55,8 @@ public abstract class EventDistributorImpl implements EventDistributor {
 	private Set<EventListener> listeners = Collections.newSetFromMap(new ConcurrentHashMap<EventListener, Boolean>());
 
 	public abstract VDBRepository getVdbRepository();
+	
+	public abstract DQPCore getDQPCore();
 	
 	public EventDistributorImpl() {
 		getVdbRepository().addListener(new VDBLifeCycleListener() {
@@ -288,6 +293,56 @@ public abstract class EventDistributorImpl implements EventDistributor {
 				((Procedure)record).setLastModified(System.currentTimeMillis());
 			}
 		}
+	}
+	
+	@Override
+	public void dataModification(String vdbName, String vdbVersion,
+	        String schema, String tableName, Object[] oldValues, Object[] newValues,
+	        String[] columnNames) {
+	    VDBMetaData vdb = getVdbRepository().getLiveVDB(vdbName, vdbVersion);
+        if (vdb == null) {
+            return;
+        }
+        TransformationMetadata tm = vdb.getAttachment(TransformationMetadata.class);
+        if (tm == null) {
+            return;
+        }
+	    //lookup, call triggers
+	    Table t = getTable(vdbName, vdbVersion, schema, tableName);
+	    if (t == null) {
+	        return;
+	    }
+	    //notify of just the table modification
+	    dataModification(vdbName, vdbVersion, schema, tableName);
+	    if (oldValues == null && newValues == null) {
+	        return;
+	    }
+	    if (!t.getTriggers().isEmpty()) {
+	        if (columnNames != null) {
+	            if ((oldValues != null && oldValues.length != columnNames.length) 
+                        || (newValues != null && newValues.length != columnNames.length)) {
+                    throw new AssertionError();
+                }
+	        } else {
+               if ((oldValues != null && oldValues.length != t.getColumns().size()) 
+                        || (newValues != null && newValues.length != t.getColumns().size())) {
+                    throw new AssertionError();
+                }
+	        }
+	        
+    	    //create command
+	        SourceEventCommand sec = new SourceEventCommand(t, oldValues, newValues, columnNames);
+	        try {
+                DQPCore.executeQuery(sec, vdb, "admin", "event-distributor", -1, getDQPCore(), new DQPCore.ResultsListener() { //$NON-NLS-1$ //$NON-NLS-2$
+                    @Override
+                    public void onResults(List<String> columns, List<? extends List<?>> results) throws Exception {
+                        //no result
+                    }
+                }); 
+	        } catch (Throwable throwable) {
+	            throw new TeiidRuntimeException(throwable);
+	        }
+	    }
 	}
 	
 	@Override
