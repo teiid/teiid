@@ -601,7 +601,6 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
 		}
 		BasicDBObject options = new BasicDBObject();
         options.put( "name" , record.getName()); //$NON-NLS-1$
-        options.put( "ns" , collection.getName()); //$NON-NLS-1$
         if (unique) {
             options.put( "unique" , Boolean.TRUE); //$NON-NLS-1$
         }

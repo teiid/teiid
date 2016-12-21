@@ -347,14 +347,18 @@ public class TestMongoDBQueryExecution {
 
     @Test
     public void testSelectNestedEmbedding()  throws Exception {
-    	String query = "select T1.e1, T2.e1, T3.e1 from T1 JOIN T2 ON T1.e1=T2.e1 JOIN T3 ON T2.e1 = T3.e1";
+    	String query = "select T1.e1, T1.e2, T2.t2e1, T2.t2e2, T3.t3e1, T3.t3e2 from T1 "
+    			+ "JOIN T2 ON T1.e1=T2.t2e1 JOIN T3 ON T2.t2e1 = T3.t3e1";
 
 		DBCollection dbCollection = helpExecute(query, new String[]{"T1", "T2", "T3"}, 2);
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$e1");
-	    result.append( "_m1","$e1");
+	    result.append( "_m1","$_id");
 	    result.append( "_m2","$e1");
+	    result.append( "_m3","$T2.t2e2");
+	    result.append( "_m4","$e1");
+	    result.append( "_m5","$T3.t3e2");
 
 	    DBObject t2 = QueryBuilder.start("T2").exists("true").notEquals(null).get();
 	    DBObject t3 = QueryBuilder.start("T3").exists("true").notEquals(null).get();
