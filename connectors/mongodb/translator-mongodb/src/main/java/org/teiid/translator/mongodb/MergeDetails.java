@@ -61,15 +61,10 @@ public class MergeDetails implements Cloneable {
 		this.alias = alias;
 	}
 
-	public String getReferenceName() {
-		// this is name of the reference key in the document that the embedded document represents.
-		return this.referenceName;
+	public MongoDocument getDocument() {
+		return this.document;
 	}
-
-	public void setReferenceName(String name) {
-		this.referenceName = name;
-	}
-
+	
 	public String getName() {
 		return this.name;
 	}

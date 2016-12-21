@@ -402,13 +402,13 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 	public boolean supportsAggregatesMax() {
     	return true;
     }
-
-    @TranslatorProperty(display="Supports Count(expr)", description="Supports Aggregate function count with expression", advanced=true)
+    
     public void setSupportsAggregatesCount(boolean value) {
         this.supportsAggregatesCount = value;
     }
     
     @Override
+    @TranslatorProperty(display="Supports Count(expr)", description="Supports Aggregate function count with expression", advanced=true)
 	public boolean supportsAggregatesCount() {
     	return supportsAggregatesCount;
     }
