@@ -549,7 +549,7 @@ public class TestMatViews {
         
         rs = s.executeQuery("select * from (call sysadmin.updateMatView('view1', 'v1', 'col = 1 AND col1 = ''comp''')) p");
         rs.next();
-        assertEquals(1, rs.getInt(1));
+        assertEquals(1, rs.getInt(1)); 
 	    
         rs = s.executeQuery("select * from v1");
         rs.next();
@@ -599,7 +599,7 @@ public class TestMatViews {
 		//ensure that we are preloaded
 		ResultSet rs = s.executeQuery("select * from MatViews where name = 'v1'");
 		assertTrue(rs.next());
-		assertTrue("LOADED".equals(rs.getString("loadstate")) || "NEEDS_LOADING".equals(rs.getString("loadstate")));
+		assertTrue("LOADED".equals(rs.getString("loadstate")));
 		assertEquals(true, rs.getBoolean("valid"));
 		Timestamp ts = rs.getTimestamp("updated");
 
