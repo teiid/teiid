@@ -47,6 +47,7 @@ import org.teiid.core.types.ClobType;
 import org.teiid.core.types.InputStreamFactory.FileInputStreamFactory;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.ReaderInputStream;
+import org.teiid.file.FtpFileConnection;
 import org.teiid.language.Call;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -74,25 +75,32 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 		private File[] files = null;
 		boolean isText = false;
 		private int index;
+		boolean isFtp = false;
 
-		private FileProcedureExecution(Call command, FileConnection fc) {
+		private FileProcedureExecution(Call command, FileConnection fc, boolean isFtp) {
 			this.command = command;
 			this.fc = fc;
+			this.isFtp = isFtp;
 		}
 
 		@Override
 		public void execute() throws TranslatorException {
 			String path = (String)command.getArguments().get(0).getArgumentValue().getValue();
 			try {
-				files = FileConnection.Util.getFiles(path, fc, exceptionIfFileNotFound);
+			    if(isFtp) {
+			        FtpFileConnection ftpConn = (FtpFileConnection) fc; 
+			        files = ftpConn.getFiles(path);
+			    } else {
+			        files = FileConnection.Util.getFiles(path, fc, exceptionIfFileNotFound);
+			    }
 			} catch (ResourceException e) {
 				throw new TranslatorException(e);
 			}
 			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Getting", files != null ? files.length : 0, "file(s)"); //$NON-NLS-1$ //$NON-NLS-2$
 			String name = command.getProcedureName();
-			if (name.equalsIgnoreCase(GETTEXTFILES)) {
+			if (name.equalsIgnoreCase(GETTEXTFILES) || name.equalsIgnoreCase(GETFTPTEXTFILES)) {
 				isText = true;
-			} else if (!name.equalsIgnoreCase(GETFILES)) {
+			} else if (!name.equalsIgnoreCase(GETFILES) || !name.equalsIgnoreCase(GETFTPFILES)) {
 				throw new TeiidRuntimeException("Unknown procedure name " + name); //$NON-NLS-1$
 			}
 		}
@@ -142,6 +150,11 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 	public static final String GETFILES = "getFiles"; //$NON-NLS-1$
 	public static final String SAVEFILE = "saveFile"; //$NON-NLS-1$
 	public static final String DELETEFILE = "deleteFile"; //$NON-NLS-1$
+	public static final String GETFTPTEXTFILES = "getFtpTextFiles"; //$NON-NLS-1$
+    public static final String GETFTPFILES = "getFtpFiles"; //$NON-NLS-1$
+    public static final String SAVEFTPFILE = "saveFtpFile"; //$NON-NLS-1$
+    public static final String DELETEFTPFILE = "deleteFtpFile"; //$NON-NLS-1$
+    public static final String RENAMEFTPFILE = "renameFtpFile"; //$NON-NLS-1$
 	
 	private Charset encoding = Charset.defaultCharset();
 	private boolean exceptionIfFileNotFound = true;
@@ -173,11 +186,14 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 	public ProcedureExecution createProcedureExecution(final Call command,
 			final ExecutionContext executionContext, final RuntimeMetadata metadata,
 			final FileConnection fc) throws TranslatorException {
-		if (command.getProcedureName().equalsIgnoreCase(SAVEFILE)) {
+		if (command.getProcedureName().equalsIgnoreCase(GETFTPTEXTFILES) || command.getProcedureName().equalsIgnoreCase(GETFTPFILES)) {
+		    return new FileProcedureExecution(command, fc, true);
+		} else if(command.getProcedureName().equalsIgnoreCase(SAVEFILE) || command.getProcedureName().equalsIgnoreCase(SAVEFTPFILE)) {
 			return new ProcedureExecution() {
 				
 				@Override
 				public void execute() throws TranslatorException {
+				    String procName = command.getProcedureName();
 					String filePath = (String)command.getArguments().get(0).getArgumentValue().getValue();
 					Object file = command.getArguments().get(1).getArgumentValue().getValue();
 					if (file == null || filePath == null) {
@@ -196,7 +212,12 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 							throw new TranslatorException(UTIL.getString("unknown_type")); //$NON-NLS-1$
 						}
 					
-						ObjectConverterUtil.write(is, fc.getFile(filePath));
+						if(procName.equalsIgnoreCase(SAVEFTPFILE)){
+						    FtpFileConnection ftpConn = (FtpFileConnection) fc; 
+						    ftpConn.write(is, filePath);
+						} else {
+						    ObjectConverterUtil.write(is, fc.getFile(filePath));
+						}
 					} catch (IOException e) {
 						throw new TranslatorException(e, UTIL.getString("error_writing")); //$NON-NLS-1$
 					} catch (SQLException e) {
@@ -224,11 +245,12 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 					return Collections.emptyList();
 				}
 			};
-		} else if (command.getProcedureName().equalsIgnoreCase(DELETEFILE)) {
+		} else if (command.getProcedureName().equalsIgnoreCase(DELETEFILE) || command.getProcedureName().equalsIgnoreCase(DELETEFTPFILE)) {
 			return new ProcedureExecution() {
 				
 				@Override
 				public void execute() throws TranslatorException {
+				    String procName = command.getProcedureName();
 					String filePath = (String)command.getArguments().get(0).getArgumentValue().getValue();
 					
 					if ( filePath == null) {
@@ -237,15 +259,19 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 					LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Deleting", filePath); //$NON-NLS-1$
 					
 					try {
-						File f = fc.getFile(filePath);
-						if (!f.exists()) {
-							if (exceptionIfFileNotFound) {
-								throw new TranslatorException(DataPlugin.Util.gs("file_not_found", filePath)); //$NON-NLS-1$
-							}
-						} else if(!f.delete()){
-							throw new TranslatorException(UTIL.getString("error_deleting")); //$NON-NLS-1$
-						}
-						
+					    if(procName.equalsIgnoreCase(DELETEFTPFILE)) {
+					        FtpFileConnection ftpConn = (FtpFileConnection) fc; 
+					        ftpConn.remove(filePath);
+					    } else {
+					        File f = fc.getFile(filePath);
+	                        if (!f.exists()) {
+	                            if (exceptionIfFileNotFound) {
+	                                throw new TranslatorException(DataPlugin.Util.gs("file_not_found", filePath)); //$NON-NLS-1$
+	                            }
+	                        } else if(!f.delete()){
+	                            throw new TranslatorException(UTIL.getString("error_deleting")); //$NON-NLS-1$
+	                        }
+					    }				
 					} catch (ResourceException e) {
 						throw new TranslatorException(e, UTIL.getString("error_deleting")); //$NON-NLS-1$
 					}
@@ -269,8 +295,46 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 					return Collections.emptyList();
 				}
 			};
+		} else if (command.getProcedureName().equalsIgnoreCase(RENAMEFTPFILE)) {
+		    return new ProcedureExecution() {
+
+                @Override
+                public List<?> next() throws TranslatorException, DataNotAvailableException {
+                    return null;
+                }
+
+                @Override
+                public void close() {                    
+                }
+
+                @Override
+                public void cancel() throws TranslatorException {                    
+                }
+
+                @Override
+                public void execute() throws TranslatorException {
+                    String oldPath = (String)command.getArguments().get(0).getArgumentValue().getValue();
+                    String newPath = (String)command.getArguments().get(1).getArgumentValue().getValue();
+                    if ( oldPath == null || newPath == null) {
+                        throw new TranslatorException(UTIL.getString("non_null")); //$NON-NLS-1$
+                    }
+                    LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Renaming", oldPath, newPath); //$NON-NLS-1$
+                    FtpFileConnection ftpConn = (FtpFileConnection) fc; 
+                    try {
+                        ftpConn.rename(oldPath, newPath);
+                    } catch (ResourceException e) {
+                        throw new TranslatorException(e, UTIL.getString("error_renaming")); //$NON-NLS-1$
+                    }
+                }
+
+                @Override
+                public List<?> getOutputParameterValues() throws TranslatorException {
+                    return Collections.emptyList();
+                }
+		        
+		    };
 		}
-		return new FileProcedureExecution(command, fc);
+		return new FileProcedureExecution(command, fc, false);
 	}
 
 	@Override
@@ -297,7 +361,36 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 		
 		Procedure p3 = metadataFactory.addProcedure(DELETEFILE);
 		p3.setAnnotation("Delete the given file path. "); //$NON-NLS-1$
-		metadataFactory.addProcedureParameter("filePath", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p3); //$NON-NLS-1$	
+		metadataFactory.addProcedureParameter("filePath", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p3); //$NON-NLS-1$
+		
+		Procedure p4 = metadataFactory.addProcedure(GETFTPTEXTFILES);
+        p4.setAnnotation("Returns text files that match the given path and pattern as CLOBs"); //$NON-NLS-1$
+        param = metadataFactory.addProcedureParameter("pathAndPattern", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p4); //$NON-NLS-1$
+        param.setAnnotation("The path and pattern of what files to return.  Currently the only pattern supported is *.<ext>, which returns only the files matching the given extension at the given path."); //$NON-NLS-1$
+        metadataFactory.addProcedureResultSetColumn("file", TypeFacility.RUNTIME_NAMES.CLOB, p4); //$NON-NLS-1$
+        metadataFactory.addProcedureResultSetColumn("filePath", TypeFacility.RUNTIME_NAMES.STRING, p4); //$NON-NLS-1$
+        
+        Procedure p5 = metadataFactory.addProcedure(GETFTPFILES);
+        p5.setAnnotation("Returns files that match the given path and pattern as BLOBs"); //$NON-NLS-1$
+        param = metadataFactory.addProcedureParameter("pathAndPattern", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p5); //$NON-NLS-1$
+        param.setAnnotation("The path and pattern of what files to return.  Currently the only pattern supported is *.<ext>, which returns only the files matching the given extension at the given path."); //$NON-NLS-1$
+        metadataFactory.addProcedureResultSetColumn("file", TypeFacility.RUNTIME_NAMES.BLOB, p5); //$NON-NLS-1$
+        metadataFactory.addProcedureResultSetColumn("filePath", TypeFacility.RUNTIME_NAMES.STRING, p5); //$NON-NLS-1$
+        
+        Procedure p6 = metadataFactory.addProcedure(SAVEFTPFILE);
+        p6.setAnnotation("Saves the given value to the given path.  Any existing file will be overriden."); //$NON-NLS-1$
+        metadataFactory.addProcedureParameter("filePath", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p6); //$NON-NLS-1$
+        param = metadataFactory.addProcedureParameter("file", TypeFacility.RUNTIME_NAMES.OBJECT, Type.In, p6); //$NON-NLS-1$
+        param.setAnnotation("The contents to save.  Can be one of CLOB, BLOB, or XML"); //$NON-NLS-1$
+        
+        Procedure p7 = metadataFactory.addProcedure(DELETEFTPFILE);
+        p7.setAnnotation("Delete the given file path. "); //$NON-NLS-1$
+        metadataFactory.addProcedureParameter("filePath", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p7); //$NON-NLS-1$   
+        
+        Procedure p8 = metadataFactory.addProcedure(RENAMEFTPFILE);
+        p8.setAnnotation("Rename the given file."); //$NON-NLS-1$
+        metadataFactory.addProcedureParameter("oldPath", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p8); //$NON-NLS-1$
+        metadataFactory.addProcedureParameter("newPath", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p8); //$NON-NLS-1$
 	} 
 	
 	@Override
