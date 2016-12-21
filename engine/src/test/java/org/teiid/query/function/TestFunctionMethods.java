@@ -31,6 +31,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.util.PropertiesUtils;
@@ -232,6 +233,17 @@ public class TestFunctionMethods {
         assertEquals("A9993E364706816ABA3E25717850C26C9CD0D89D", PropertiesUtils.toHex(FunctionMethods.sha1("abc").getBytesDirect()));
         assertEquals("BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD", PropertiesUtils.toHex(FunctionMethods.sha2_256("abc").getBytesDirect()));
         assertEquals("DDAF35A193617ABACC417349AE20413112E6FA4E89A97EA20A9EEEE64B55D39A2192992A274FC1A836BA3C23A3FEEBBD454D4423643CE80E2A9AC94FA54CA49F", PropertiesUtils.toHex(FunctionMethods.sha2_512("abc").getBytesDirect()));
+    }
+    
+    @Test
+    public void testEncryption() throws Exception {
+        String key = "redhat"; //$NON-NLS-1$
+        String data = "jboss teiid"; //$NON-NLS-1$
+        String encrypted = "hWDBQwmPWFjf4jC2x+Mmew==" ; //$NON-NLS-1$
+        BinaryType enBytes = FunctionMethods.aes_encrypt(key, data);
+        assertEquals(encrypted, new String(enBytes.getBytesDirect())); 
+        BinaryType deBytes = FunctionMethods.aes_decrypt(key, encrypted);
+        assertEquals(data, new String(deBytes.getBytesDirect()));
     }
     
 }
