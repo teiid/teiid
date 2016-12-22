@@ -46,7 +46,7 @@ public class FtpFileSystem implements FileSystem {
 
     @Override
     public File getFile(VirtualFile mountPoint, VirtualFile target) throws IOException {
-        return null;
+        throw new IOException();
     }
 
     @Override

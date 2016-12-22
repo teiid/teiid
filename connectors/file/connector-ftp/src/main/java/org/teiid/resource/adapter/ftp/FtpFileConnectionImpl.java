@@ -83,27 +83,6 @@ public class FtpFileConnectionImpl extends BasicConnection implements VirtualFil
         }
         
         throw new ResourceException("Can not open multiple ftp stream based file in one connection"); //$NON-NLS-1$ 
-        
-//        if (pattern.contains("*")){ //$NON-NLS-1$ 
-//            pattern = pattern.replaceAll("\\\\", "\\\\\\\\"); //$NON-NLS-1$ //$NON-NLS-2$ 
-//            pattern = pattern.replaceAll("\\?", "\\\\?"); //$NON-NLS-1$ //$NON-NLS-2$
-//            pattern = pattern.replaceAll("\\[", "\\\\["); //$NON-NLS-1$ //$NON-NLS-2$
-//            pattern = pattern.replaceAll("\\{", "\\\\{"); //$NON-NLS-1$ //$NON-NLS-2$
-//            final PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:*" + pattern); //$NON-NLS-1$
-//            try {
-//                List<VirtualFile> list = this.mountPoint.getChildren(new VirtualFileFilter(){
-//
-//                    @Override
-//                    public boolean accepts(VirtualFile file) {
-//                        return matcher.matches(Paths.get(file.getName()));
-//                    }});
-//                return list.toArray(new VirtualFile[list.size()]);
-//            } catch (IOException e) {
-//                throw new ResourceException(e);
-//            }
-//        }
-//
-//        return new VirtualFile[]{};
     }
 
     @Override
