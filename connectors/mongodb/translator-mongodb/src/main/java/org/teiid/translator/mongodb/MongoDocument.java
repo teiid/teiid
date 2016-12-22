@@ -148,27 +148,10 @@ class MongoDocument {
         				key.setColumns(MongoDBSelectVisitor.getColumnNames(fk.getColumns()));
         				key.setReferenceColumns(fk.getReferenceColumns());
         				key.setAssociation(Association.ONE);
-        				setReferenceName(key, t, MongoDBSelectVisitor.getColumnNames(fk.getColumns()));
         				this.copyto.add(key);
         			}
         		}
         	}
-		}
-	}
-
-	private void setReferenceName(MergeDetails key, Table table, List<String> columnNames) {
-		boolean ispartofPK = false;
-		for(String column:columnNames) {
-			if (MongoDBSelectVisitor.isPartOfPrimaryKey(table, column)) {
-				ispartofPK = true;
-			}
-		}
-
-		if (ispartofPK) {
-			key.setReferenceName("_id"); //$NON-NLS-1$
-		}
-		else {
-			key.setReferenceName(columnNames.get(0));
 		}
 	}
 
@@ -187,14 +170,14 @@ class MongoDocument {
 				MergeDetails key = new MergeDetails(this);
 				key.setName(fk.getReferenceTableName());
 				key.setParentTable(this.table.getName());
-				key.setColumns(MongoDBSelectVisitor.getColumnNames(fk.getColumns()));
-				key.setReferenceColumns(fk.getReferenceColumns());
+				key.setReferenceColumns(MongoDBSelectVisitor.getColumnNames(fk.getColumns()));
+				key.setColumns(fk.getReferenceColumns());
 				key.setEmbeddedTable(fk.getReferenceTableName());
+
 				// if the primary is reference, then it needs to built as such during the fetch
 				if (MongoDBSelectVisitor.isPartOfForeignKey(referenceTable, fk.getReferenceColumns().get(0))) {
 					key.setIdReference(MongoDBSelectVisitor.getForeignKeyRefTable(referenceTable, fk.getReferenceColumns().get(0)));
 				}
-				setReferenceName(key, this.table, MongoDBSelectVisitor.getColumnNames(fk.getColumns()));
 				this.embeddedKeys.add(key);
 			}
     	}
@@ -208,8 +191,6 @@ class MongoDocument {
 			key.setName(fk.getName());
 			key.setColumns(MongoDBSelectVisitor.getColumnNames(fk.getColumns()));
 			key.setReferenceColumns(fk.getReferenceColumns());
-			Table refTable = this.metadata.getTable(this.table.getParent().getName(), fk.getReferenceTableName());
-			setReferenceName(key, refTable, MongoDBSelectVisitor.getColumnNames(fk.getColumns()));
 			this.foreignKeys.put(MongoDBSelectVisitor.getColumnNames(fk.getColumns()), key);
     	}
 	}
@@ -228,7 +209,6 @@ class MongoDocument {
 				key.setReferenceColumns(fk.getReferenceColumns());
 				key.setEmbeddedTable(this.table.getName());
 				key.setAssociation(Association.MANY);
-				setReferenceName(key, mergeTable, MongoDBSelectVisitor.getColumnNames(fk.getColumns()));
 
 				// check to see if the parent table has relation to this table, if yes
 				// then it is one-to-one, other wise many-to-one
@@ -289,11 +269,11 @@ class MongoDocument {
 		// child table selection query
 		if (!this.embeddedKeys.isEmpty()) {
 			for (MergeDetails ref:this.embeddedKeys) {
-				if (ref.getColumns().contains(columnName) && ref.getParentTable().equals(tableName)) {
-					for (int i = 0; i < ref.getColumns().size(); i++) {
-						String column = ref.getColumns().get(i);
+				if (ref.getReferenceColumns().contains(columnName) && ref.getParentTable().equals(tableName)) {
+					for (int i = 0; i < ref.getReferenceColumns().size(); i++) {
+						String column = ref.getReferenceColumns().get(i);
 						if (column.equals(columnName)) {
-							String referenceColumn = ref.getReferenceColumns().get(i);
+							String referenceColumn = ref.getColumns().get(i);
 							ref.setId(referenceColumn, value);
 						}
 					}
