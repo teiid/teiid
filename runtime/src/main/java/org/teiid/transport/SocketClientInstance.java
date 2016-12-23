@@ -206,8 +206,9 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
             if (LogManager.isMessageToBeRecorded(LogConstants.CTX_TRANSPORT, MessageLevel.DETAIL)) { 
     			LogManager.logDetail(LogConstants.CTX_TRANSPORT, large?"2048":"1024", "key exchange being used."); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             }
+            boolean useCbc = handshake.isCbc();
             try {
-				this.cryptor = keyGen.getSymmetricCryptor(returnedPublicKey, "08.03".compareTo(clientVersion) > 0, SocketClientInstance.class.getClassLoader(), large); //$NON-NLS-1$
+				this.cryptor = keyGen.getSymmetricCryptor(returnedPublicKey, "08.03".compareTo(clientVersion) > 0, SocketClientInstance.class.getClassLoader(), large, useCbc); //$NON-NLS-1$
 			} catch (CryptoException e) {
 				 throw new CommunicationException(RuntimePlugin.Event.TEIID40053, e);
 			}

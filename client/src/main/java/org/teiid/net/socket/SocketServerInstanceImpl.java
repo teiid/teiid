@@ -181,7 +181,8 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
             		handshake.setPublicKey(publicKey);
             		handshake.setPublicKeyLarge(null);
             	}
-                this.cryptor = keyGen.getSymmetricCryptor(serverPublicKey, "08.03".compareTo(serverVersion) > 0, this.getClass().getClassLoader(), large);  //$NON-NLS-1$
+            	boolean useCbc = handshake.isCbc();
+                this.cryptor = keyGen.getSymmetricCryptor(serverPublicKey, "08.03".compareTo(serverVersion) > 0, this.getClass().getClassLoader(), large, useCbc);  //$NON-NLS-1$
             } else {
                 this.cryptor = new NullCryptor();
             }
