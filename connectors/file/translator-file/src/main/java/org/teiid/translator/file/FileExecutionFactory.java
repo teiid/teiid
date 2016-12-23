@@ -35,8 +35,11 @@ import java.util.Collections;
 import java.util.List;
 
 import javax.resource.ResourceException;
+import javax.resource.cci.Connection;
 import javax.resource.cci.ConnectionFactory;
 
+import org.jboss.vfs.VFS;
+import org.jboss.vfs.VirtualFile;
 import org.teiid.connector.DataPlugin;
 import org.teiid.core.BundleUtil;
 import org.teiid.core.TeiidRuntimeException;
@@ -44,9 +47,11 @@ import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
+import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.InputStreamFactory.FileInputStreamFactory;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.ReaderInputStream;
+import org.teiid.file.VirtualFileConnection;
 import org.teiid.language.Call;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -66,7 +71,7 @@ import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
 
 @Translator(name="file", description="File Translator, reads contents of files or writes to them")
-public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, FileConnection> {
+public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Connection> {
 	
 	private final class FileProcedureExecution implements ProcedureExecution {
 		private final Call command;
@@ -135,6 +140,112 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 			return Collections.emptyList();
 		}
 	}
+	
+    private final class VirtualFileProcedureExecution implements ProcedureExecution {
+        
+        private final Call command;
+        private final VirtualFileConnection conn;
+        private VirtualFile[] files = null;
+        boolean isText = false;
+        private int index;
+        
+        private VirtualFileProcedureExecution(Call command, VirtualFileConnection conn) {
+            this.command = command;
+            this.conn = conn;
+        }
+
+        @Override
+        public void execute() throws TranslatorException {
+            String filePath = (String)command.getArguments().get(0).getArgumentValue().getValue();
+            if(this.command.getProcedureName().equalsIgnoreCase(SAVEFILE)){
+                Object file = command.getArguments().get(1).getArgumentValue().getValue();
+                if (file == null || filePath == null) {
+                    throw new TranslatorException(UTIL.getString("non_null")); //$NON-NLS-1$
+                }
+                LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Saving", filePath); //$NON-NLS-1$
+                InputStream is = null;
+                try {
+                    if (file instanceof SQLXML){
+                        is = ((SQLXML)file).getBinaryStream();
+                    } else if (file instanceof Clob) {
+                        is = new ReaderInputStream(((Clob)file).getCharacterStream(), encoding);
+                    } else if (file instanceof Blob) {
+                        is = ((Blob)file).getBinaryStream();
+                    } else {
+                        throw new TranslatorException(UTIL.getString("unknown_type")); //$NON-NLS-1$
+                    }
+                    this.conn.add(is, VFS.getChild(filePath));
+                } catch (SQLException | ResourceException e) {
+                    throw new TranslatorException(e, UTIL.getString("error_writing")); //$NON-NLS-1$
+                }
+            } else  if(this.command.getProcedureName().equalsIgnoreCase(DELETEFILE)) {
+                if (filePath == null) {
+                    throw new TranslatorException(UTIL.getString("non_null")); //$NON-NLS-1$
+                }
+                LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Deleting", filePath); //$NON-NLS-1$
+                try {
+                    if(!this.conn.remove(filePath)) {
+                        throw new TranslatorException(UTIL.getString("error_deleting")); //$NON-NLS-1$
+                    }
+                } catch (ResourceException e) {
+                    throw new TranslatorException(UTIL.getString("error_deleting")); //$NON-NLS-1$
+                }
+            } else {
+                try {
+                    this.files = this.conn.getFiles(filePath);
+                } catch (ResourceException e) {
+                    throw new TranslatorException(e);
+                }
+                LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Getting", files != null ? files.length : 0, "file(s)"); //$NON-NLS-1$ //$NON-NLS-2$
+                String name = command.getProcedureName();
+                if(name.equalsIgnoreCase(GETTEXTFILES)) {
+                    this.isText = true;
+                } else if (!name.equalsIgnoreCase(GETFILES)) {
+                    throw new TeiidRuntimeException("Unknown procedure name " + name); //$NON-NLS-1$
+                }
+            }
+        }
+        
+        @Override
+        public List<?> next() throws TranslatorException, DataNotAvailableException {
+            if(this.command.getProcedureName().equalsIgnoreCase(SAVEFILE) || this.command.getProcedureName().equalsIgnoreCase(DELETEFILE)){
+                return null;
+            }
+            ArrayList<Object> result = new ArrayList<>(2);
+            final VirtualFile file = files[index++];
+            LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Getting", file.getName()); //$NON-NLS-1$
+            InputStreamFactory isf = new InputStreamFactory() {
+                @Override
+                public InputStream getInputStream() throws IOException {
+                    return file.openStream(); // vfs file always can open as stream
+                }  
+            };
+            Object value = null;
+            if (isText) {
+                ClobImpl clob = new ClobImpl(isf, -1);
+                clob.setCharset(encoding);
+                value = new ClobType(clob);
+            } else {
+                value = new BlobType(new BlobImpl(isf));
+            }
+            result.add(value);
+            result.add(file.getName());
+            return result;
+        }
+
+        @Override
+        public void close() {            
+        }
+
+        @Override
+        public void cancel() throws TranslatorException {            
+        }
+
+        @Override
+        public List<?> getOutputParameterValues() throws TranslatorException {
+            return Collections.emptyList();
+        }
+    }
 
 	public static BundleUtil UTIL = BundleUtil.getBundleUtil(FileExecutionFactory.class);
 	
@@ -172,7 +283,11 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 	//@Override
 	public ProcedureExecution createProcedureExecution(final Call command,
 			final ExecutionContext executionContext, final RuntimeMetadata metadata,
-			final FileConnection fc) throws TranslatorException {
+			final Connection conn) throws TranslatorException {
+	    if(conn instanceof VirtualFileConnection) {
+	        return new VirtualFileProcedureExecution(command, (VirtualFileConnection) conn);
+	    }
+	    final FileConnection fc = (FileConnection) conn;
 		if (command.getProcedureName().equalsIgnoreCase(SAVEFILE)) {
 			return new ProcedureExecution() {
 				
@@ -274,7 +389,7 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 	}
 
 	@Override
-	public void getMetadata(MetadataFactory metadataFactory, FileConnection connection) throws TranslatorException {
+	public void getMetadata(MetadataFactory metadataFactory, Connection connection) throws TranslatorException {
 		Procedure p = metadataFactory.addProcedure(GETTEXTFILES);
 		p.setAnnotation("Returns text files that match the given path and pattern as CLOBs"); //$NON-NLS-1$
 		ProcedureParameter param = metadataFactory.addProcedureParameter("pathAndPattern", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
