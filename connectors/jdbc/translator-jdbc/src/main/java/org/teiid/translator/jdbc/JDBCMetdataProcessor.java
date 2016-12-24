@@ -41,16 +41,9 @@ import java.util.regex.Pattern;
 import org.teiid.core.util.StringUtil;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.metadata.BaseColumn;
+import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.ForeignKey;
-import org.teiid.metadata.KeyRecord;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter.Type;
-import org.teiid.metadata.Table;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
@@ -156,7 +149,7 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 				while (rs.next()) {
 					String name = rs.getString(1);
 					boolean unsigned = rs.getBoolean(10);
-					if (unsigned) {
+					if (unsigned && isUnsignedTypeName(name)) {
 						unsignedTypes.add(name);
 					}
 				}
@@ -194,6 +187,15 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 			getProcedures(metadataFactory, metadata);
 		}
 		
+	}
+	
+	/**
+	 * Determine if the type name represents an unsigned type
+	 * @param name
+	 * @return
+	 */
+	protected boolean isUnsignedTypeName(String name) {
+	    return true;
 	}
 
 	/**
