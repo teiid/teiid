@@ -65,7 +65,8 @@ public class SybaseIQExecutionFactory extends BaseSybaseExecutionFactory {
                 params.set(0, param2);
                 return null;
             }
-        });       
+        });
+        
         //add in type conversion
         ConvertModifier convertModifier = new ConvertModifier();
         convertModifier.setBooleanNullable(booleanNullable());
