@@ -191,6 +191,8 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
 		byte[] bytes = getBootstrapServletClass(vdb.getName(), vdb.getDescription() == null ? vdb.getName() : vdb.getDescription(), vdbKey.getSemanticVersion(), new String[]{"http"}, File.separator + props.getProperty("${context-name}"), "org.teiid.jboss.rest", true);
 		writeEntry("WEB-INF/classes/org/teiid/jboss/rest/Bootstrap.class", out, bytes);
 		
+		writeEntry("images/teiid_logo_450px.png", out, getBinaryFileContents("rest-war/teiid_logo_450px.png"));
+		
 		out.close();
 		return byteStream.toByteArray();
 	}
@@ -295,6 +297,11 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
 		Reader reader = new InputStreamReader(in); 
 		String webXML = ObjectConverterUtil.convertToString(reader);
 		return webXML;
+	}
+	
+	private byte[] getBinaryFileContents(String file) throws IOException {
+	    InputStream in = this.getClass().getClassLoader().getResourceAsStream(file);
+	    return IOUtils.toByteArray(in);
 	}
 	
 	private String replaceTemplates(String orig, Properties replacements) {

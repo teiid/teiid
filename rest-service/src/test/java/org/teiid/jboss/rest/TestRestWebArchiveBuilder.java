@@ -108,6 +108,7 @@ public class TestRestWebArchiveBuilder {
         files.add("META-INF/MANIFEST.MF");
         
         files.add("api.html");
+        files.add("images/teiid_logo_450px.png");
         
         files.add("swagger/swagger-ui.js");
         
