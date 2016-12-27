@@ -140,20 +140,20 @@ CREATE FOREIGN TABLE T1 (
     e1 integer NOT NULL,
     e2 integer NOT NULL PRIMARY KEY,
     e3 integer,
-    FOREIGN KEY (e1) REFERENCES T2 (e1)
+    FOREIGN KEY (e1) REFERENCES T2 (t2e1)
 ) OPTIONS(UPDATABLE 'TRUE');
 
 CREATE FOREIGN TABLE T2 (
-    e1 integer NOT NULL PRIMARY KEY,
-    e2 integer NOT NULL,
-    e3 integer,
-    FOREIGN KEY (e1) REFERENCES T3 (e1)
+    t2e1 integer NOT NULL PRIMARY KEY,
+    t2e2 integer NOT NULL,
+    t2e3 integer,
+    FOREIGN KEY (t2e1) REFERENCES T3 (t3e1)
 ) OPTIONS(UPDATABLE 'TRUE', "teiid_mongo:EMBEDDABLE" 'TRUE');
 
 CREATE FOREIGN TABLE T3 (
-    e1 integer NOT NULL PRIMARY KEY,
-    e2 integer NOT NULL,
-    e3 integer
+    t3e1 integer NOT NULL PRIMARY KEY,
+    t3e2 integer NOT NULL,
+    t3e3 integer
 ) OPTIONS(UPDATABLE 'TRUE', "teiid_mongo:EMBEDDABLE" 'TRUE');
 
 CREATE FOREIGN TABLE payment (

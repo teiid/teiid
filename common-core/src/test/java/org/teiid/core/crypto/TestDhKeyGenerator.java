@@ -36,8 +36,8 @@ public class TestDhKeyGenerator {
 		DhKeyGenerator keyGenClient = new DhKeyGenerator();
 		byte[] serverKey = keyGenServer.createPublicKey(true);
 		byte[] clientKey = keyGenClient.createPublicKey(true);
-		SymmetricCryptor serverCryptor = keyGenServer.getSymmetricCryptor(clientKey, false, TestDhKeyGenerator.class.getClassLoader(), true);
-		SymmetricCryptor clientCryptor = keyGenClient.getSymmetricCryptor(serverKey, false, TestDhKeyGenerator.class.getClassLoader(), true);
+		SymmetricCryptor serverCryptor = keyGenServer.getSymmetricCryptor(clientKey, false, TestDhKeyGenerator.class.getClassLoader(), true, true);
+		SymmetricCryptor clientCryptor = keyGenClient.getSymmetricCryptor(serverKey, false, TestDhKeyGenerator.class.getClassLoader(), true, true);
 		
 		String cleartext = "cleartext!"; //$NON-NLS-1$
 		

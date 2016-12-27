@@ -462,6 +462,14 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
 		            }
 		        }
     		}
+    		
+    		@Override
+    		protected boolean isUnsignedTypeName(String name) {
+    		    if (!name.contains("UNSIGNED")) { //$NON-NLS-1$
+    		        return false;
+    		    }
+    		    return super.isUnsignedTypeName(name);
+    		}
     	};
     }
     

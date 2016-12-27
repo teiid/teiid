@@ -248,6 +248,11 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
             MergeDetails ref = targetDocument.getEmbeddedDocumentReferenceKey(columnDocument);
             String parentColumnName = ref.getParentColumnName(columnName);
             if (parentColumnName != null) {
+            	while(ref.isNested()) {
+            		columnDocument = ref.getDocument();
+            		ref = targetDocument.getEmbeddedDocumentReferenceKey(columnDocument);
+            		parentColumnName = ref.getParentColumnName(parentColumnName);
+            	}
                 documentFieldName = targetDocument.getColumnName(parentColumnName);
             }
             else {
@@ -255,7 +260,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
             }
         }
         else if (targetDocument.merges(columnDocument)){
-            documentFieldName = columnDocument.getColumnName(columnName);
+	    	documentFieldName = columnDocument.getColumnName(columnName);
         }
 
         ColumnDetail detail = new ColumnDetail();

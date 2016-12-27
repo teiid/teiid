@@ -185,7 +185,7 @@ public class TranslatorUtil {
 	
 	public static String getPropertyName(Method method) {
 		String result = method.getName();
-		if (result.startsWith("get") || result.startsWith("set")) { //$NON-NLS-1$ //$NON-NLS-2$
+		if (result.startsWith("get")) { //$NON-NLS-1$
 			return result.substring(3);
 		}
 		else if (result.startsWith("is")) { //$NON-NLS-1$
