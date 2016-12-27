@@ -35,8 +35,6 @@ import java.math.RoundingMode;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.CodingErrorAction;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
@@ -62,14 +60,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
-
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -80,6 +70,8 @@ import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.FileStoreInputStreamFactory;
 import org.teiid.core.CorePlugin;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.crypto.CryptoException;
+import org.teiid.core.crypto.SymmetricCryptor;
 import org.teiid.core.types.*;
 import org.teiid.core.types.InputStreamFactory.BlobInputStreamFactory;
 import org.teiid.core.types.InputStreamFactory.ClobInputStreamFactory;
@@ -1841,55 +1833,80 @@ public final class FunctionMethods {
         return new BinaryType(messageDigest.digest(plainText));
     }
     
-    // Initializing vector
-    private static byte iv[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
-    
     @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
-    public static BinaryType aes_encrypt(String key, String data) throws FunctionExecutionException, UnsupportedEncodingException {
-        return aes_encrypt(new BinaryType(key.getBytes("UTF-8")), new BinaryType(data.getBytes("UTF-8"))); //$NON-NLS-1$ //$NON-NLS-2$
+    public static String encrypt_AES128_CBC_PKCS5Padding(String data, String key) throws FunctionExecutionException {
+        try {
+            return SymmetricCryptor.getSymmectricCryptor(padkey(key.getBytes("UTF-8")), true).encrypt(data); //$NON-NLS-1$
+        } catch (CryptoException | UnsupportedEncodingException e) {
+            throw new FunctionExecutionException(e);
+        } 
     }
     
     @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
-    public static BinaryType aes_encrypt(BinaryType keyBytes, BinaryType dataBytes) throws FunctionExecutionException, UnsupportedEncodingException {
-        
+    public static BinaryType encrypt_AES128_CBC_PKCS5Padding(BinaryType dataBytes, BinaryType keyBytes) throws FunctionExecutionException {       
         try {
-            IvParameterSpec ivspec = new IvParameterSpec(iv);
-            byte[] keyval = padkey(keyBytes);
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding"); //$NON-NLS-1$
-            SecretKey keyValue = new SecretKeySpec(keyval,"AES"); //$NON-NLS-1$
-            cipher.init(Cipher.ENCRYPT_MODE, keyValue, ivspec);
-            byte[] encryptedByte = cipher.doFinal(dataBytes.getBytes());
-            return new BinaryType(org.teiid.core.util.Base64.encodeBytes(encryptedByte).getBytes("UTF-8")); //$NON-NLS-1$
-        } catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException e) {
+            return new BinaryType(SymmetricCryptor.getSymmectricCryptor(padkey(keyBytes.getBytesDirect()), true).encrypt(dataBytes.getBytesDirect()));
+        } catch (CryptoException e) {
             throw new FunctionExecutionException(e);
-        }
-        
+        }      
+    }
+    
+    @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
+    public static String encrypt_AES128_ECB_PKCS5Padding(String data, String key) throws FunctionExecutionException {
+        try {
+            return SymmetricCryptor.getSymmectricCryptor(padkey(key.getBytes("UTF-8")), false).encrypt(data); //$NON-NLS-1$
+        } catch (CryptoException | UnsupportedEncodingException e) {
+            throw new FunctionExecutionException(e);
+        } 
+    }
+    
+    @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
+    public static BinaryType encrypt_AES128_ECB_PKCS5Padding(BinaryType dataBytes, BinaryType keyBytes) throws FunctionExecutionException {       
+        try {
+            return new BinaryType(SymmetricCryptor.getSymmectricCryptor(padkey(keyBytes.getBytesDirect()), false).encrypt(dataBytes.getBytesDirect()));
+        } catch (CryptoException e) {
+            throw new FunctionExecutionException(e);
+        }      
     }
 
     @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
-    public static BinaryType aes_decrypt(String key, String data) throws UnsupportedEncodingException, FunctionExecutionException {
-        return aes_decrypt(new BinaryType(key.getBytes("UTF-8")), new BinaryType(data.getBytes("UTF-8"))); //$NON-NLS-1$ //$NON-NLS-2$
+    public static String decrypt_AES128_CBC_PKCS5Padding(String data, String key) throws FunctionExecutionException {
+        try {
+            return SymmetricCryptor.getSymmectricCryptor(padkey(key.getBytes("UTF-8")), true).decrypt(data); //$NON-NLS-1$
+        } catch (CryptoException | UnsupportedEncodingException e) {
+            throw new FunctionExecutionException(e);
+        } 
     }
     
     @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
-    public static BinaryType aes_decrypt(BinaryType keyBytes, BinaryType dataBytes) throws FunctionExecutionException {
+    public static BinaryType decrypt_AES128_CBC_PKCS5Padding(BinaryType dataBytes, BinaryType keyBytes) throws FunctionExecutionException {
         try {
-            IvParameterSpec ivspec = new IvParameterSpec(iv);
-            byte[] keyval = padkey(keyBytes);
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding"); //$NON-NLS-1$
-            SecretKey keyValue = new SecretKeySpec(keyval,"AES"); //$NON-NLS-1$
-            cipher.init(Cipher.DECRYPT_MODE, keyValue, ivspec);
-            byte[] encryptedTextByte = org.teiid.core.util.Base64.decode(new String(dataBytes.getBytes()));
-            byte[] decryptedByte = cipher.doFinal(encryptedTextByte);
-            return new BinaryType(decryptedByte);
-        } catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException e) {
+            return new BinaryType(SymmetricCryptor.getSymmectricCryptor(padkey(keyBytes.getBytesDirect()), true).decrypt(dataBytes.getBytesDirect()));
+        } catch (CryptoException e) {
             throw new FunctionExecutionException(e);
         }
     }
     
-    private static byte[] padkey(BinaryType keyBytes) {
+    @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
+    public static String decrypt_AES128_ECB_PKCS5Padding(String data, String key) throws FunctionExecutionException {
+        try {
+            return SymmetricCryptor.getSymmectricCryptor(padkey(key.getBytes("UTF-8")), false).decrypt(data); //$NON-NLS-1$
+        } catch (CryptoException | UnsupportedEncodingException e) {
+            throw new FunctionExecutionException(e);
+        } 
+    }
+    
+    @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
+    public static BinaryType decrypt_AES128_ECB_PKCS5Padding(BinaryType dataBytes, BinaryType keyBytes) throws FunctionExecutionException {
+        try {
+            return new BinaryType(SymmetricCryptor.getSymmectricCryptor(padkey(keyBytes.getBytesDirect()), false).decrypt(dataBytes.getBytesDirect()));
+        } catch (CryptoException e) {
+            throw new FunctionExecutionException(e);
+        }
+    }
+    
+    private static byte[] padkey(byte[] bytes) {
         byte[] padding = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-        byte[] bytes = keyBytes.getBytesDirect();
         if(bytes == null || bytes.length == 0) {
             return padding;
         }
