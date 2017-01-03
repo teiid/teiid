@@ -21,6 +21,27 @@
  */
 package org.teiid.sizing;
 
+/**
+ * This is the sizing application(https://access.redhat.com/labs/jbossdvsat/) formula simulation class, primary purpose of this class
+ * is used to test and verify the web sizing application, whether the sizing recommendation are base on formula.
+ * 
+ * The {@link #heapCaculation} method use to calculate the JVM heap size base on formula 
+ * <pre> {@code
+ * Size = #concurrency * (5mb)  * #source queries + 300mb
+ * </pre>
+ * 
+ * The {@link #coreCaculation} method use to calculate the core size base on formula
+ * <pre> {@code
+ *   cpu_time = sum(source_processing) + engine_time + client_processing
+ *   wall_time = low(source_latency) + cpu_time + additional_latency
+ *   cpu_utilization_per_query = cpu_time/wall_time
+ *   total_cpu_time_available = cpu_core_count * 2 * 1000ms
+ *   queries/sec = total_cpu_time_available / (threads_used_per_query * cpu_utilization_per_query * cpu_time)
+ * </pre>
+ * 
+ * @author kylin
+ *
+ */
 public class Caculation {
     
     // 1. How many data sources do you want to integrate?
@@ -28,6 +49,9 @@ public class Caculation {
     
     // 2. How many concurrent queries (at peak load time) do you want to support?
     private int queries_concurrent;
+    
+    // 3. Does the JBoss Data Virtualization run on a cloud platform?
+    private boolean isRunOnCloud;
     
     // 1. How many client queries per second do you want to support?
     private int queries_per_sec;
@@ -65,9 +89,9 @@ public class Caculation {
         int total_in_mb = concurrent * 5 * sources + 300 ;
         int heap = total_in_mb/1024 + 1;
         
-//        if(heap < 16) {
-//            heap = 16 ;
-//        }
+        if(heap < 16 && !isRunOnCloud) {
+            heap = 16 ;
+        }
         
         return heap;
     }
@@ -108,7 +132,7 @@ public class Caculation {
      *   queries/sec = total_cpu_time_available / (threads_used_per_query * cpu_utilization_per_query * cpu_time)
      *   
      */
-    public long getcorenumbers(int source_latency, 
+    private long getcorenumbers(int source_latency, 
                                 int sources,
                                 long source_processing, 
                                 long initial_latency,
@@ -124,15 +148,14 @@ public class Caculation {
         
         double cores = (cpu_time * queries_per_sec * cpu_utilization_per_query * threads_used_per_query)/(1000 * 2);
         
-//        if (cores < 16) {
-//            cores = 16;
-//        }
-//        
-//        if(cores > 128) {
-//            cores = 128 ;
-//        }
-
+        if (cores < 16 && !isRunOnCloud) {
+            cores = 16;
+        }
         
+        if(cores > 128) {
+            cores = 128 ;
+        }
+  
         return Math.round(cores);
     }
     
@@ -143,7 +166,7 @@ public class Caculation {
      * 
      * based on that time, and sorting and aggregation, we can say low, medium or high processing (< 25%, 60%, > 90%) of times
      */
-    public long getEngineTime( boolean isAggregation
+    private long getEngineTime( boolean isAggregation
                               , int sources
                               , int row_count_each
                               , int row_size_each
@@ -189,7 +212,7 @@ public class Caculation {
      *  TODO: need more trial, collect more tuples (time, size), use algorithm to get the K and V
      *        TEIID-3398
      */
-    public long getClientProcessing(int row_count_federdated, int row_size_federdated) {
+    private long getClientProcessing(int row_count_federdated, int row_size_federdated) {
         
         double total_byte = row_count_federdated * row_size_federdated;
         double client_procesing = 0;
@@ -224,7 +247,7 @@ public class Caculation {
      * 
      * in serialized situations (XA) this will be 1. So, typically this should be 0.5(high(source_latency) - low(source_latency)) or in XA it should be 1 * sum(source_latency).
      */
-    public long getAdditionalLatency(int sources, int source_latency) {
+    private long getAdditionalLatency(int sources, int source_latency) {
         
         double additional_latency = 0 ;
 
@@ -242,7 +265,7 @@ public class Caculation {
      * 
      * 'source_latency' is average source latency for each data source, so the formula used to estimate source latency like below method
      */
-    public long getInitialLatency(int row_count_each, int row_size_each, int sources, int source_latency) {
+    private long getInitialLatency(int row_count_each, int row_size_each, int sources, int source_latency) {
         
         long total_byte = row_count_each * row_size_each;
         double initial_latency = 0 ;
@@ -264,39 +287,24 @@ public class Caculation {
      *  The Source Deserialize Processing Time(time) and Total Deserialize Processing Size(size) are in a Linear Regression trend,
      *      time = K * time + V
      *  
-     *  In previous test, 
-     *    if size > 1 MB, the K is 4.6, the V is 100, the formula like: time = 4.6 * size + 100
-     *    if size < 1 MB, it's more complex, not get a precise value of K and V, 80 and 18 in below are come from test
-     *    
-     *  TODO: need more trial, collect more tuples (time, size), use algorithm to get the K and V
-     *        TEIID-3398
+     *  https://github.com/kylinsoong/sizing-application/blob/master/deserialization-regression.adoc#conclusion
      * 
      */
     private long getSourceProcessingTime(int row_count_each, int row_size_each, int sources) {
 
         double total_byte = row_count_each * row_size_each * sources;
-        double source_processing = 0;
-        
-        if (total_byte > 1000000) {
-            double size_in_mb = total_byte / 1000000;
-            source_processing = 100 + 4.6 * size_in_mb;
-        } else if (total_byte > 100000 && total_byte <= 1000000) {
-            double percentage = 80.0 / 900000.0 ;
-            source_processing = percentage * (total_byte - 100000) + 20;
-        } else if (total_byte > 10000 && total_byte <= 100000) {
-            double percentage = 18.0 / 90000.0 ;
-            source_processing = percentage * (total_byte - 10000) + 2;
-        } else {
-            source_processing = 0;
-        }
-        
+        double source_processing = 0.0000075 * total_byte;
         return Math.round(source_processing);
     }
 
     public Caculation(int source_count, int queries_concurrent) {
-        super();
+        this(source_count, queries_concurrent, false);
+    }
+    
+    public Caculation(int source_count, int queries_concurrent, boolean isRunOnCloud) {
         this.source_count = source_count;
         this.queries_concurrent = queries_concurrent;
+        this.isRunOnCloud = isRunOnCloud; 
     }
 
     public Caculation(int source_count
@@ -309,9 +317,23 @@ public class Caculation {
                     , int row_size_federated
                     , int avg_time_sample
                     , boolean isAggregation) {
-        super();
+        this(source_count, queries_concurrent, false, queries_per_sec, row_count_each, row_size_each, avg_time_each, row_count_federated, row_size_federated, avg_time_sample, isAggregation);
+    }
+    
+    public Caculation(int source_count
+            , int queries_concurrent
+            , boolean isRunOnCloud
+            , int queries_per_sec
+            , int row_count_each
+            , int row_size_each
+            , int avg_time_each
+            , int row_count_federated
+            , int row_size_federated
+            , int avg_time_sample
+            , boolean isAggregation) {
         this.source_count = source_count;
         this.queries_concurrent = queries_concurrent;
+        this.isRunOnCloud = isRunOnCloud; 
         this.queries_per_sec = queries_per_sec;
         this.row_count_each = row_count_each;
         this.row_size_each = row_size_each;
@@ -400,6 +422,14 @@ public class Caculation {
 
     public void setAggregation(boolean isAggregation) {
         this.isAggregation = isAggregation;
+    }
+
+    public boolean isRunOnCloud() {
+        return isRunOnCloud;
+    }
+
+    public void setRunOnCloud(boolean isRunOnCloud) {
+        this.isRunOnCloud = isRunOnCloud;
     }
 
 }
