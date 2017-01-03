@@ -4,7 +4,9 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -70,15 +72,58 @@ public class SybaseIQExecutionFactory extends BaseSybaseExecutionFactory {
         //add in type conversion
         ConvertModifier convertModifier = new ConvertModifier();
         convertModifier.setBooleanNullable(booleanNullable());
+        convertModifier.addNumericBooleanConversions();
         //boolean isn't treated as bit, since it doesn't support null
         //byte is treated as smallint, since tinyint is unsigned
     	convertModifier.addTypeMapping("smallint", FunctionModifier.BYTE, FunctionModifier.SHORT); //$NON-NLS-1$
     	convertModifier.addTypeMapping("bigint", FunctionModifier.LONG); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("int", FunctionModifier.INTEGER); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("double", FunctionModifier.DOUBLE); //$NON-NLS-1$
     	convertModifier.addTypeMapping("real", FunctionModifier.FLOAT); //$NON-NLS-1$
     	convertModifier.addTypeMapping("numeric(38, 0)", FunctionModifier.BIGINTEGER); //$NON-NLS-1$
     	convertModifier.addTypeMapping("numeric(38, 19)", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
     	convertModifier.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("varchar(40)", FunctionModifier.STRING); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("varchar(4000)", FunctionModifier.STRING); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("varbinary", FunctionModifier.VARBINARY); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("time", FunctionModifier.TIME); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+    	convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.STRING, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                return convertTimeToString(function);
+            }
+        }); 
+        convertModifier.addConvert(FunctionModifier.DATE, FunctionModifier.STRING, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                return convertDateToString(function);
+            }
+        });
+        convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.STRING, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                return convertTimestampToString(function);
+            }
+        });
+    	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
+    }
+    
+    private List<Object> convertTimeToString(Function function) {
+        return Arrays.asList("convert(varchar, ", function.getParameters().get(0), ", 8)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    protected List<Object> convertDateToString(Function function) {
+        return Arrays.asList("stuff(stuff(convert(varchar, ", function.getParameters().get(0), ", 102), 5, 1, '-'), 8, 1, '-')"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    //TODO: this looses the milliseconds
+    protected List<?> convertTimestampToString(Function function) {
+        LinkedList<Object> result = new LinkedList<Object>();
+        result.addAll(convertDateToString(function));
+        result.add('+');
+        result.addAll(convertTimeToString(function));
+        return result;
     }
     
     @Override
