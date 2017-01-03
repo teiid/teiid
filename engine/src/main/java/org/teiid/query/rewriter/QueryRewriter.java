@@ -2392,12 +2392,35 @@ public class QueryRewriter {
             } else if ((DataTypeManager.DefaultDataTypes.DATE.equalsIgnoreCase(type) 
                     || DataTypeManager.DefaultDataTypes.TIME.equalsIgnoreCase(type)) && function.getArg(1) instanceof Constant) {
                 String format = "yyyy-MM-dd"; //$NON-NLS-1$
+                int length = 10;
                 if (DataTypeManager.DefaultDataTypes.TIME.equalsIgnoreCase(type)) {
                     format = "hh:mm:ss"; //$NON-NLS-1$
+                    length = 8;
                 } 
                 Constant c = (Constant) function.getArg(1);
                 if (format.equals(c.getValue())) {
-                    return rewriteExpressionDirect(ResolverUtil.getConversion(function.getArg(0), DataTypeManager.getDataTypeName(function.getArg(0).getType()), type, false, metadata.getFunctionLibrary()));
+                    Expression arg = function.getArg(0);
+                    //if not a date/time cast, then we need to account for trailing chars allowed by parse, but not by cast
+                    //TODO: this won't work for non-space whitespace
+                    if (!(arg instanceof Function) 
+                            || !FunctionLibrary.isConvert((Function)arg) 
+                            || !java.util.Date.class.isAssignableFrom(((Function)arg).getArg(0).getType())) {
+                        //ltrim
+                        Function trim = new Function(SourceSystemFunctions.LTRIM, new Expression[] {arg});
+                        FunctionDescriptor descriptor = 
+                            funcLibrary.findFunction(SourceSystemFunctions.LTRIM, new Class[] { DataTypeManager.DefaultDataClasses.STRING });
+                        trim.setFunctionDescriptor(descriptor);
+                        trim.setType(DataTypeManager.DefaultDataClasses.STRING);
+                        //substring
+                        Function substring = new Function(SourceSystemFunctions.SUBSTRING, new Expression[] {trim, new Constant(1), new Constant(length)});
+                        descriptor = 
+                            funcLibrary.findFunction(SourceSystemFunctions.SUBSTRING, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.INTEGER, DataTypeManager.DefaultDataClasses.INTEGER});
+                        substring.setFunctionDescriptor(descriptor);
+                        substring.setType(DataTypeManager.DefaultDataClasses.STRING);
+                        arg = substring;
+                    }
+                    
+                    return rewriteExpressionDirect(ResolverUtil.getConversion(arg, DataTypeManager.DefaultDataTypes.STRING, type, false, metadata.getFunctionLibrary()));
                 }
             }
         } else if(StringUtil.startsWithIgnoreCase(functionName, "format")) { //$NON-NLS-1$
