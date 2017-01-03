@@ -317,7 +317,7 @@ public class ResolverVisitor extends LanguageVisitor {
 		boolean rightChar = isCharacter(rightType, true);
 		
 		// Special cases when left expression is a constant
-		if(leftExpression instanceof Constant && !rightChar) {
+		if(leftExpression instanceof Constant && (!rightChar || leftChar)) {
 		    // Auto-convert constant string on left to expected type on right
 		    try {
 		        obj.setLeftExpression(ResolverUtil.convertExpression(leftExpression, leftTypeName, rightTypeName, metadata));
@@ -976,7 +976,7 @@ public class ResolverVisitor extends LanguageVisitor {
 		boolean rightChar = isCharacter(rightExpression, true);
 		
 	    // Special cases when right expression is a constant
-	    if(rightExpression instanceof Constant && !leftChar) {
+	    if(rightExpression instanceof Constant && (!leftChar || rightChar)) {
 	        // Auto-convert constant string on right to expected type on left
 	        try {
 	            ccrit.setRightExpression(ResolverUtil.convertExpression(rightExpression, rightTypeName, leftTypeName, metadata));
@@ -989,7 +989,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	    } 
 	    
 	    // Special cases when left expression is a constant
-	    if(leftExpression instanceof Constant && !rightChar) {
+	    if(leftExpression instanceof Constant && (!rightChar || leftChar)) {
 	        // Auto-convert constant string on left to expected type on right
 	        try {
 	            ccrit.setLeftExpression(ResolverUtil.convertExpression(leftExpression, leftTypeName, rightTypeName, metadata));

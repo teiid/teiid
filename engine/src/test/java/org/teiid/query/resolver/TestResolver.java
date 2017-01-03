@@ -3005,7 +3005,9 @@ public class TestResolver {
     @Test public void testCharCompareString() {
     	TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
     	tm.setWidenComparisonToString(false);
-    	helpResolve("select * from bqt1.smalla where bqt1.smalla.charValue = 'a'", tm);
+    	Command c = helpResolve("select * from bqt1.smalla where bqt1.smalla.charValue = 'a'", tm);
+    	Query q = (Query)c;
+    	assertTrue(((CompareCriteria)q.getCriteria()).getLeftExpression() instanceof ElementSymbol);
     }
     
     private void helpTestWidenToString(String sql) {
