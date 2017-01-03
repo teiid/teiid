@@ -2400,27 +2400,11 @@ public class QueryRewriter {
                 Constant c = (Constant) function.getArg(1);
                 if (format.equals(c.getValue())) {
                     Expression arg = function.getArg(0);
-                    //if not a date/time cast, then we need to account for trailing chars allowed by parse, but not by cast
-                    //TODO: this won't work for non-space whitespace
-                    if (!(arg instanceof Function) 
-                            || !FunctionLibrary.isConvert((Function)arg) 
-                            || !java.util.Date.class.isAssignableFrom(((Function)arg).getArg(0).getType())) {
-                        //ltrim
-                        Function trim = new Function(SourceSystemFunctions.LTRIM, new Expression[] {arg});
-                        FunctionDescriptor descriptor = 
-                            funcLibrary.findFunction(SourceSystemFunctions.LTRIM, new Class[] { DataTypeManager.DefaultDataClasses.STRING });
-                        trim.setFunctionDescriptor(descriptor);
-                        trim.setType(DataTypeManager.DefaultDataClasses.STRING);
-                        //substring
-                        Function substring = new Function(SourceSystemFunctions.SUBSTRING, new Expression[] {trim, new Constant(1), new Constant(length)});
-                        descriptor = 
-                            funcLibrary.findFunction(SourceSystemFunctions.SUBSTRING, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.INTEGER, DataTypeManager.DefaultDataClasses.INTEGER});
-                        substring.setFunctionDescriptor(descriptor);
-                        substring.setType(DataTypeManager.DefaultDataClasses.STRING);
-                        arg = substring;
+                    if ((arg instanceof Function) 
+                            && FunctionLibrary.isConvert((Function)arg) 
+                            && java.util.Date.class.isAssignableFrom(((Function)arg).getArg(0).getType())) {
+                        return rewriteExpressionDirect(ResolverUtil.getConversion(arg, DataTypeManager.DefaultDataTypes.STRING, type, false, metadata.getFunctionLibrary()));
                     }
-                    
-                    return rewriteExpressionDirect(ResolverUtil.getConversion(arg, DataTypeManager.DefaultDataTypes.STRING, type, false, metadata.getFunctionLibrary()));
                 }
             }
         } else if(StringUtil.startsWithIgnoreCase(functionName, "format")) { //$NON-NLS-1$
