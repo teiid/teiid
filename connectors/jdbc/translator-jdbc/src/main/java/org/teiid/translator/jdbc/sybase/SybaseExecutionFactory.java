@@ -356,8 +356,8 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
         supportedFunctions.add("CONVERT"); //$NON-NLS-1$
         supportedFunctions.add("IFNULL"); //$NON-NLS-1$
         supportedFunctions.add("NVL");      //$NON-NLS-1$ 
-        //supportedFunctions.add("FORMATTIMESTAMP");   //$NON-NLS-1$
-        
+        supportedFunctions.add(SourceSystemFunctions.PARSETIMESTAMP);
+        supportedFunctions.add(SourceSystemFunctions.FORMATTIMESTAMP);
         return supportedFunctions;
     }
     
