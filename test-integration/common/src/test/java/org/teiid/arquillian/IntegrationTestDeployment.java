@@ -408,7 +408,7 @@ public class IntegrationTestDeployment {
 	@Test
 	public void getDatasourceTemplateNames() throws Exception {
 		Set<String> vals  = new HashSet<String>(Arrays.asList(new String[]{"teiid-local", "google", "teiid", "ldap", 
-				"accumulo", "file", "cassandra", "salesforce", "salesforce-34", "mongodb", "solr", "webservice", 
+				"accumulo", "file", "ftp", "cassandra", "salesforce", "salesforce-34", "mongodb", "solr", "webservice", 
 				"simpledb", "h2", "teiid-xa", "h2-xa", "teiid-local-xa"}));
 		deployVdb();
 		Set<String> templates = admin.getDataSourceTemplateNames();
