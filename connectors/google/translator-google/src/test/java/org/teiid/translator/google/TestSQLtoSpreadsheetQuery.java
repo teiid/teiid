@@ -222,7 +222,7 @@ public class TestSQLtoSpreadsheetQuery {
 	
 	@Test
 	public void testUpdateVisitor() throws Exception {
-		String sql="UPDATE PeopleList set A = 'String,String', C = 1.5 where A='Str,Str'";
+		String sql="UPDATE PeopleList set A = 'String,String', C = 1.5";
         SpreadsheetUpdateVisitor visitor=new SpreadsheetUpdateVisitor(people);
         visitor.visit((Update)getCommand(sql));
         assertEquals(2,visitor.getChanges().size());
@@ -230,7 +230,7 @@ public class TestSQLtoSpreadsheetQuery {
         assertEquals("'String,String", visitor.getChanges().get(0).getValue());
         assertEquals("C", visitor.getChanges().get(1).getColumnID());
         assertEquals("1.5", visitor.getChanges().get(1).getValue());
-        assertEquals("a = \"Str,Str\"", visitor.getCriteriaQuery());
+        assertNull(visitor.getCriteriaQuery());
 	}
 	
     @Test

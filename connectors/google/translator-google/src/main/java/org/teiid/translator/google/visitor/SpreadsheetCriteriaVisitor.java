@@ -114,9 +114,7 @@ public class SpreadsheetCriteriaVisitor extends SQLStringVisitor {
 	}
 	
 	public void translateWhere(Condition condition) {
-	    if (condition == null) {
-	        this.criteriaQuery = ""; //$NON-NLS-1$
-	    } else {
+	    if (condition != null) {
 	        StringBuilder temp = this.buffer;
 	        this.buffer = new StringBuilder();
 	        append(condition);

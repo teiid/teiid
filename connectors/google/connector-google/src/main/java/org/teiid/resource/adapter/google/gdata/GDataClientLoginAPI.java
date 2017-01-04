@@ -121,7 +121,9 @@ public class GDataClientLoginAPI implements GDataAPI {
 		SpreadsheetQuery query = null;
 		try {
 			query = new SpreadsheetQuery(factory.getListFeedUrl(spreadsheetKey, worksheetID, "private", "full")); //$NON-NLS-1$ //$NON-NLS-2$
-			query.setStringCustomParameter("sq", criteria); //$NON-NLS-1$
+			if (criteria != null) {
+			    query.setStringCustomParameter("sq", criteria); //$NON-NLS-1$
+			}
 
 		} catch (MalformedURLException e) {
 			throw new SpreadsheetOperationException("Error getting spreadsheet URL: " + e);
@@ -157,9 +159,9 @@ public class GDataClientLoginAPI implements GDataAPI {
 		SpreadsheetQuery query = null;
 		try {
 			query = new SpreadsheetQuery(factory.getListFeedUrl(spreadsheetKey, worksheetID, "private", "full")); //$NON-NLS-1$ //$NON-NLS-2$
-			query.setStringCustomParameter("sq", criteria); //$NON-NLS-1$
-			
-
+			if (criteria != null) {
+			    query.setStringCustomParameter("sq", criteria); //$NON-NLS-1$
+			}
 		} catch (MalformedURLException e) {
 			throw new SpreadsheetOperationException("Error getting spreadsheet URL: " + e);
 		}
