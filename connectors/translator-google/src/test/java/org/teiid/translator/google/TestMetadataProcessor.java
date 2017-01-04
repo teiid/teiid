@@ -62,7 +62,9 @@ public class TestMetadataProcessor {
         GoogleMetadataProcessor processor = new GoogleMetadataProcessor();
         processor.process(factory, conn);
         Table t = factory.getSchema().getTables().get("PeopleList");
+        assertTrue(t.supportsUpdate());
         assertEquals(3, t.getColumns().size());
+        assertTrue(t.getColumns().get(0).isUpdatable());
     }
     
 }
