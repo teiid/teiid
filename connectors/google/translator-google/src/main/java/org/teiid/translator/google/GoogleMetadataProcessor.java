@@ -62,10 +62,10 @@ public class GoogleMetadataProcessor implements MetadataProcessor<GoogleSpreadsh
 		}
 		Table table = mf.addTable(worksheet.getName());
 		table.setNameInSource(worksheet.getName()); 
-		addColumnsToTable(mf, table, worksheet);
 		if (worksheet.isHeaderEnabled()) {
-			table.setSupportsUpdate(true);
-		}
+            table.setSupportsUpdate(true);
+        }
+		addColumnsToTable(mf, table, worksheet);
 	}
 	
 	/**
@@ -106,6 +106,9 @@ public class GoogleMetadataProcessor implements MetadataProcessor<GoogleSpreadsh
 			    }
 			}
 			org.teiid.metadata.Column c = mf.addColumn(name, type, table);
+			if (table.supportsUpdate()) {
+			    c.setUpdatable(true);
+			}
 			c.setNameInSource(worksheet.isHeaderEnabled()?column.getLabel():column.getAlphaName());
 			c.setNativeType(column.getDataType().name());
 		}    
