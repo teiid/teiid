@@ -22,12 +22,16 @@
 
 package org.teiid.translator.google.visitor;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.language.Expression;
+import org.teiid.language.Literal;
 import org.teiid.language.SetClause;
 import org.teiid.language.Update;
+import org.teiid.resource.adapter.google.common.SpreadsheetOperationException;
 import org.teiid.resource.adapter.google.common.UpdateSet;
 import org.teiid.resource.adapter.google.metadata.SpreadsheetInfo;
 
@@ -60,11 +64,7 @@ public class SpreadsheetUpdateVisitor extends SpreadsheetCriteriaVisitor {
 			}else{
 				columnName=s.getSymbol().getMetadataObject().getName();
 			}
-			if (s.getSymbol().getType().equals(DataTypeManager.DefaultDataClasses.STRING)) {
-				changes.add(new UpdateSet(columnName,"'"+getStringValue(s.getValue()))); //$NON-NLS-1$
-			} else {
-				changes.add(new UpdateSet(columnName, getStringValue(s.getValue())));
-			}
+			changes.add(new UpdateSet(columnName, getStringValue(s.getValue())));
 		}
 		if (obj.getWhere() != null) {
 			append(obj.getWhere());
@@ -74,6 +74,30 @@ public class SpreadsheetUpdateVisitor extends SpreadsheetCriteriaVisitor {
 		}
 
 	}
+	
+	protected String getStringValue(Expression obj) {
+        Literal literal;
+        if (obj instanceof Literal) {
+            literal = (Literal) obj;
+        } else {
+            throw new SpreadsheetOperationException("Spreadsheet translator internal error: Expression is not allowed in the set clause"); //$NON-NLS-1$
+        }
+        if (literal.getValue() == null) {
+            if (literal.getType().equals(DataTypeManager.DefaultDataClasses.STRING)) {
+                throw new SpreadsheetOperationException("Spreadsheet translator error: String values cannot be set to null"); //$NON-NLS-1$
+            }
+            return ""; //$NON-NLS-1$
+        }
+        if (literal.getType().equals(DataTypeManager.DefaultDataClasses.DATE)) {
+            return new java.text.SimpleDateFormat("MM/dd/yyyy").format(literal.getValue());
+        } else if (literal.getType().equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
+            return new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format(literal.getValue());
+        } 
+        if (literal.getType().equals(DataTypeManager.DefaultDataClasses.STRING)) {
+            return "'"+literal.getValue().toString();
+        }
+        return literal.getValue().toString();
+    }
 
 	public List<UpdateSet> getChanges() {
 		return changes;

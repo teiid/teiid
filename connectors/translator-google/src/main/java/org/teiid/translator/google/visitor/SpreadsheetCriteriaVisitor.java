@@ -24,11 +24,12 @@ package org.teiid.translator.google.visitor;
 
 import static org.teiid.language.SQLConstants.Reserved.*;
 
-import java.text.SimpleDateFormat;
-
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.StringUtil;
-import org.teiid.language.Expression;
+import org.teiid.language.Comparison;
+import org.teiid.language.Comparison.Operator;
+import org.teiid.language.Condition;
+import org.teiid.language.Function;
 import org.teiid.language.Like;
 import org.teiid.language.Literal;
 import org.teiid.language.visitor.SQLStringVisitor;
@@ -71,21 +72,6 @@ public class SpreadsheetCriteriaVisitor extends SQLStringVisitor {
 			buffer.append("\""); //$NON-NLS-1$
 			return;
 		}
-	}
-
-	protected String getStringValue(Expression obj) {
-		Literal literal;
-		if (obj instanceof Literal) {
-			literal = (Literal) obj;
-		} else {
-			throw new SpreadsheetOperationException("Spreadsheet translator internal error: Expression is not allowed in the set clause"); //$NON-NLS-1$
-		}
-		if (literal.getType().equals(DataTypeManager.DefaultDataClasses.DATE)) {
-			return new java.text.SimpleDateFormat("MM/dd/yyyy").format(literal.getValue());
-		} else if (literal.getType().equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
-			return new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format(literal.getValue());
-		} else
-			return literal.getValue().toString();
 	}
 
 	public void visit(Like obj) {

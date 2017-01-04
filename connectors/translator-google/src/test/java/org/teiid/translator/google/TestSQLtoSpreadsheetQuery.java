@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
 
 import java.util.Properties;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.api.exception.query.QueryParserException;
@@ -45,6 +46,7 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.resource.adapter.google.GoogleSpreadsheetConnection;
+import org.teiid.resource.adapter.google.common.SpreadsheetOperationException;
 import org.teiid.resource.adapter.google.common.Util;
 import org.teiid.resource.adapter.google.metadata.Column;
 import org.teiid.resource.adapter.google.metadata.SpreadsheetColumnType;
@@ -63,19 +65,23 @@ import org.teiid.translator.google.visitor.SpreadsheetUpdateVisitor;
  */
 @SuppressWarnings("nls")
 public class TestSQLtoSpreadsheetQuery {
-	SpreadsheetInfo people;
+	static SpreadsheetInfo people;
+	
+	@BeforeClass
+	public static void createSpreadSheetInfo() {
+	    people=  new SpreadsheetInfo("People");
+        Worksheet worksheet = people.createWorksheet("PeopleList");
+        for (int i = 1; i <= 3; i++) {
+            Column newCol = new Column();
+            newCol.setAlphaName(Util.convertColumnIDtoString(i));
+            worksheet.addColumn(newCol.getAlphaName(), newCol);
+        }
+        worksheet.getColumns().get("C").setDataType(SpreadsheetColumnType.NUMBER);
+	}
 	
 	private QueryMetadataInterface dummySpreadsheetMetadata() throws Exception {
 	    GoogleSpreadsheetConnection conn = Mockito.mock(GoogleSpreadsheetConnection.class);
 	    
-		people=  new SpreadsheetInfo("People");
-		Worksheet worksheet = people.createWorksheet("PeopleList");
-		for (int i = 1; i <= 3; i++) {
-			Column newCol = new Column();
-			newCol.setAlphaName(Util.convertColumnIDtoString(i));
-			worksheet.addColumn(newCol.getAlphaName(), newCol);
-		}
-		worksheet.getColumns().get("C").setDataType(SpreadsheetColumnType.NUMBER);
 		Mockito.stub(conn.getSpreadsheetInfo()).toReturn(people);
 
 		MetadataFactory factory = new MetadataFactory("", 1, "", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), "");
@@ -195,9 +201,6 @@ public class TestSQLtoSpreadsheetQuery {
 	
 	@Test
 	public void testInsertVisitor() throws Exception {
-		if(people==null){
-			dummySpreadsheetMetadata();
-		}
 		String sql="insert into PeopleList(A,B,C) values ('String,String', 'String@String', 15.5)";
         SpreadsheetInsertVisitor visitor=new SpreadsheetInsertVisitor(people);
         visitor.visit((Insert)getCommand(sql));
@@ -208,10 +211,17 @@ public class TestSQLtoSpreadsheetQuery {
 	}
 	
 	@Test
+    public void testInsertVisitorNull() throws Exception {
+        String sql="insert into PeopleList(A,B,C) values ('String,String', null, 15.5)";
+        SpreadsheetInsertVisitor visitor=new SpreadsheetInsertVisitor(people);
+        visitor.visit((Insert)getCommand(sql));
+        assertEquals(2, visitor.getColumnNameValuePair().size());
+        assertEquals("'String,String",visitor.getColumnNameValuePair().get("A"));
+        assertEquals("15.5",visitor.getColumnNameValuePair().get("C"));
+    }
+	
+	@Test
 	public void testUpdateVisitor() throws Exception {
-		if(people==null){
-			dummySpreadsheetMetadata();
-		}
 		String sql="UPDATE PeopleList set A = 'String,String', C = 1.5 where A='Str,Str'";
         SpreadsheetUpdateVisitor visitor=new SpreadsheetUpdateVisitor(people);
         visitor.visit((Update)getCommand(sql));
@@ -223,5 +233,25 @@ public class TestSQLtoSpreadsheetQuery {
         assertEquals("a = \"Str,Str\"", visitor.getCriteriaQuery());
 	}
 	
+    @Test
+    public void testUpdateVisitorNull() throws Exception {
+        String sql="UPDATE PeopleList set A = 'String,String', C = null where A='Str,Str'";
+        SpreadsheetUpdateVisitor visitor=new SpreadsheetUpdateVisitor(people);
+        visitor.visit((Update)getCommand(sql));
+        assertEquals(2,visitor.getChanges().size());
+        assertEquals("A", visitor.getChanges().get(0).getColumnID());
+        assertEquals("'String,String", visitor.getChanges().get(0).getValue());
+        assertEquals("C", visitor.getChanges().get(1).getColumnID());
+        assertEquals("", visitor.getChanges().get(1).getValue());
+        assertEquals("a = \"Str,Str\"", visitor.getCriteriaQuery());
+    }
+    
+    //should fail as the null string would be treated as empty
+    @Test(expected=SpreadsheetOperationException.class)
+    public void testUpdateVisitorNullString() throws Exception {
+        String sql="UPDATE PeopleList set A = null where A='Str,Str'";
+        SpreadsheetUpdateVisitor visitor=new SpreadsheetUpdateVisitor(people);
+        visitor.visit((Update)getCommand(sql));
+    }
 	
 }

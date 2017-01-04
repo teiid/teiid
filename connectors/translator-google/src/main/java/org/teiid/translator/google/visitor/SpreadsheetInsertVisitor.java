@@ -22,11 +22,7 @@
 
 package org.teiid.translator.google.visitor;
 
-import static org.teiid.language.SQLConstants.Reserved.*;
-
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.teiid.core.types.DataTypeManager;
@@ -47,8 +43,6 @@ import org.teiid.resource.adapter.google.metadata.SpreadsheetInfo;
  */
 public class SpreadsheetInsertVisitor extends SQLStringVisitor {
 	private String worksheetKey;
-	private List<String> columns;
-	private List<String> values;
 	private Map<String, String> columnNameValuePair;
 	SpreadsheetInfo info;
 	private String worksheetTitle;
@@ -56,8 +50,6 @@ public class SpreadsheetInsertVisitor extends SQLStringVisitor {
 	public SpreadsheetInsertVisitor(SpreadsheetInfo info) {
 		this.info = info;
 		columnNameValuePair = new HashMap<String, String>();
-		columns = new ArrayList<String>();
-		values = new ArrayList<String>();
 	}
 
 	public void visit(Insert obj) {
@@ -66,47 +58,27 @@ public class SpreadsheetInsertVisitor extends SQLStringVisitor {
 			worksheetTitle = obj.getTable().getMetadataObject().getNameInSource();
 		}
 		worksheetKey = info.getWorksheetByName(worksheetTitle).getId();
-		super.visit(obj);
-		for (int i = 0; i < values.size() && i < columns.size(); i++) {
-			columnNameValuePair.put(columns.get(i), values.get(i));
-		}
-	}
-
-	@Override
-	public void visit(ColumnReference obj) {
-		if(obj.getMetadataObject().getNameInSource()!=null){
-			columns.add(obj.getMetadataObject().getNameInSource());
-		}else{
-			columns.add(obj.getMetadataObject().getName());
-		}
-		super.visit(obj);
-	}
-
-	@Override
-	public void visit(ExpressionValueSource obj) {
-		for (Expression e : obj.getValues()) {
-			if (!(e instanceof Literal)) {
-				throw new SpreadsheetOperationException("Only literals are allowed in the values section");
-			}
-		}
-		super.visit(obj);
-
-	}
-
-	public void visit(Literal obj) {
-		if (obj.getValue() == null) {
-			buffer.append(NULL);
-			return;
-		}
-		Class<?> type = obj.getType();
-		if (Number.class.isAssignableFrom(type)) {
-			values.add(obj.getValue().toString());
-			return;
-		} else if (type.equals(DataTypeManager.DefaultDataClasses.STRING)) {
-			values.add("'"+obj.getValue().toString());
-		} else {
-			values.add(obj.getValue().toString());
-			return;
+		ExpressionValueSource evs = (ExpressionValueSource)obj.getValueSource();
+		for (int i = 0; i < evs.getValues().size(); i++) {
+		    Expression e = evs.getValues().get(i);
+		    if (!(e instanceof Literal)) {
+                throw new SpreadsheetOperationException("Only literals are allowed in the values section");
+            }
+		    Literal l = (Literal)e;
+		    if (l.getValue() == null) {
+		        continue;
+	        }
+	        Class<?> type = l.getType();
+	        String value = null;
+	        if (Number.class.isAssignableFrom(type)) {
+	            value = l.getValue().toString();
+	        } else if (type.equals(DataTypeManager.DefaultDataClasses.STRING)) {
+	            value = "'"+l.getValue().toString();
+	        } else {
+	            value = l.getValue().toString();
+	        }		
+	        ColumnReference columnReference = obj.getColumns().get(i);
+	        columnNameValuePair.put(columnReference.getMetadataObject().getSourceName(), value);
 		}
 	}
 
