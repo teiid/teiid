@@ -41,6 +41,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.deployers.VirtualDatabaseException;
@@ -247,6 +248,37 @@ public class TestReplication {
 		
 		assertEquals(rowCount, rowCount2);
     }
+    
+    @Test public void testLazyTtl() throws Exception {
+        server1 = createServer("infinispan-replicated-config.xml", "tcp-shared.xml");
+        deployTtlVDB(server1);        
+
+        server2 = createServer("infinispan-replicated-config-1.xml", "tcp-shared-1.xml");
+        deployTtlVDB(server2);  
+
+        Thread.sleep(1000);
+
+        Connection c1 = server1.createConnection("jdbc:teiid:ttl");
+
+        Statement stmt = c1.createStatement();
+        //force the load
+        stmt.execute("select * from c");
+        ResultSet rs2 = stmt.executeQuery("select * from matviews where name = 'c'");
+        assertTrue(rs2.next());
+        assertEquals("LOADED", rs2.getString("loadstate"));
+
+        //expire the ttl
+        Thread.sleep(2000);
+        
+        //trigger the refresh
+        stmt.execute("select * from c");
+
+        //expire the ttl
+        Thread.sleep(2000);
+        
+        //make sure that it's still accessible
+        stmt.execute("select * from c");
+    }
 
 	private FakeServer createServer(String ispn, String jgroups) throws Exception {
 		FakeServer server = new FakeServer(false);
@@ -257,6 +289,21 @@ public class TestReplication {
 		server.start(config, true);
 		return server;
 	}
+	
+	private void deployTtlVDB(FakeServer server)
+            throws ConnectorManagerException, VirtualDatabaseException,
+            TranslatorException {
+        ModelMetaData mmd = new ModelMetaData();
+        mmd.setName("mv");
+        mmd.setModelType(Type.VIRTUAL);
+        mmd.addSourceMetadata("ddl", "create view c options (materialized true) as /*+ cache(ttl:1000) */ select 'hello world'");
+        VDBMetaData vdb = new VDBMetaData();
+        vdb.setXmlDeployment(true);
+        vdb.setName("ttl");
+        vdb.setModels(Arrays.asList(mmd));
+        vdb.addProperty("lazy-invalidate", "true");
+        server.deployVDB(vdb);
+    }
 
 	private void deployLargeVDB(FakeServer server)
 			throws ConnectorManagerException, VirtualDatabaseException,

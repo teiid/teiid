@@ -174,7 +174,7 @@ public class TestMatViews {
 		}
 		rs = s.executeQuery("select * from MatViews where name = 'MatView'");
 		assertTrue(rs.next());
-		assertEquals("NEEDS_LOADING", rs.getString("loadstate"));
+		assertEquals("LOADING", rs.getString("loadstate"));
 		assertEquals(false, rs.getBoolean("valid"));
 
 		synchronized (TestMatViews.class) {

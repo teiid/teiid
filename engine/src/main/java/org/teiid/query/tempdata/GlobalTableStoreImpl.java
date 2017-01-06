@@ -119,9 +119,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 				}
 				return true;
 			case LOADING:
-				if ((!firstPass && localAddress instanceof Comparable<?> && ((Comparable)localAddress).compareTo(possibleLoadingAddress) < 0)
-						|| (refresh && asynch)) {
-					this.asynch = false;
+				if (!firstPass && localAddress instanceof Comparable<?> && ((Comparable)localAddress).compareTo(possibleLoadingAddress) < 0) {
 					this.loadingAddress = possibleLoadingAddress; //ties go to the lowest address
 					return true;
 				}
@@ -198,6 +196,12 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 		public synchronized void addWaiter(RequestWorkItem waiter) {
 			waiters.put(waiter.getRequestID(), new WeakReference<RequestWorkItem>(waiter));
 		}
+
+        public synchronized boolean getAndClearAsynch() {
+            boolean result = asynch;
+            asynch = false;
+            return result;
+        }
 		
 	}
 	
