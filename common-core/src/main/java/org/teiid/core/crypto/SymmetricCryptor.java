@@ -114,6 +114,11 @@ public class SymmetricCryptor extends BasicCryptor {
         return new SymmetricCryptor(secretKey, cbc);
     }
     
+    public static SymmetricCryptor getSymmectricCryptor(byte[] key, String algorithm, String cipherAlgorithm, IvParameterSpec iv) throws CryptoException {
+        Key secretKey = new SecretKeySpec(key, algorithm);
+        return new SymmetricCryptor(secretKey, cipherAlgorithm, iv);
+    }
+    
     public static void generateAndSaveKey(String file) throws CryptoException, IOException {
     	SecretKey key = generateKey();
     	saveKey(file, key);
@@ -136,6 +141,10 @@ public class SymmetricCryptor extends BasicCryptor {
     
     SymmetricCryptor(Key key, boolean cbc) throws CryptoException {
         super(key, key, cbc?CBC_SYM_ALGORITHM:ECB_SYM_ALGORITHM, cbc?new IvParameterSpec(new byte[] {0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf}):null);
+    }
+    
+    SymmetricCryptor(Key key, String cipherAlgorithm, IvParameterSpec iv) throws CryptoException {
+        super(key, key, cipherAlgorithm, iv);
     }
 
     public byte[] getEncodedKey() {

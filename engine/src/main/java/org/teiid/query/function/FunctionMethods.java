@@ -60,6 +60,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import javax.crypto.spec.IvParameterSpec;
+
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -70,6 +72,8 @@ import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.FileStoreInputStreamFactory;
 import org.teiid.core.CorePlugin;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.crypto.CryptoException;
+import org.teiid.core.crypto.SymmetricCryptor;
 import org.teiid.core.types.*;
 import org.teiid.core.types.InputStreamFactory.BlobInputStreamFactory;
 import org.teiid.core.types.InputStreamFactory.ClobInputStreamFactory;
@@ -1829,6 +1833,62 @@ public final class FunctionMethods {
     public static BinaryType digest(byte[] plainText, String algorithm) throws NoSuchAlgorithmException {
         MessageDigest messageDigest = MessageDigest.getInstance(algorithm);        
         return new BinaryType(messageDigest.digest(plainText));
+    }
+    
+    @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
+    public static String aes_encrypt(String data, String key) throws FunctionExecutionException {
+        try {
+            return SymmetricCryptor.getSymmectricCryptor(padkey(key.getBytes("UTF-8")), "AES", "AES/CBC/PKCS5Padding", new IvParameterSpec(iv)).encrypt(data); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        } catch (CryptoException | UnsupportedEncodingException e) {
+            throw new FunctionExecutionException(e);
+        } 
+    }
+    
+    @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
+    public static BinaryType aes_encrypt(BinaryType dataBytes, BinaryType keyBytes) throws FunctionExecutionException {       
+        try {
+            byte[] encryptResult = SymmetricCryptor.getSymmectricCryptor(padkey(keyBytes.getBytesDirect()), "AES", "AES/CBC/PKCS5Padding", new IvParameterSpec(iv)).encrypt(dataBytes.getBytesDirect()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            return new BinaryType(encryptResult);
+        } catch (CryptoException e) {
+            throw new FunctionExecutionException(e);
+        }      
+    }
+
+    @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
+    public static String aes_decrypt(String data, String key) throws FunctionExecutionException {
+        try {
+            return SymmetricCryptor.getSymmectricCryptor(padkey(key.getBytes("UTF-8")), "AES", "AES/CBC/PKCS5Padding", new IvParameterSpec(iv)).decrypt(data); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        } catch (CryptoException | UnsupportedEncodingException e) {
+            throw new FunctionExecutionException(e);
+        } 
+    }
+    
+    @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
+    public static BinaryType aes_decrypt(BinaryType dataBytes, BinaryType keyBytes) throws FunctionExecutionException {
+        try {
+            byte[] decryptResult = SymmetricCryptor.getSymmectricCryptor(padkey(keyBytes.getBytesDirect()), "AES", "AES/CBC/PKCS5Padding", new IvParameterSpec(iv)).decrypt(dataBytes.getBytesDirect()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            return new BinaryType(decryptResult);
+        } catch (CryptoException e) {
+            throw new FunctionExecutionException(e);
+        }
+    }
+    
+    private static byte iv[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
+    
+    private static byte[] padkey(byte[] bytes) {
+        byte[] padding = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+        if(bytes == null || bytes.length == 0) {
+            return padding;
+        }
+        int len = bytes.length;
+        if(len == 16) {
+            return bytes;
+        } else {
+            for (int i=0; i < 16 && i < len ; i++ ) {
+                padding[i] = bytes[i];
+            }
+            return padding;
+        }
     }
     
 }

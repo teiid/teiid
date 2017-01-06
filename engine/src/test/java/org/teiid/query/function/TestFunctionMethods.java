@@ -31,6 +31,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.util.PropertiesUtils;
@@ -232,6 +233,21 @@ public class TestFunctionMethods {
         assertEquals("A9993E364706816ABA3E25717850C26C9CD0D89D", PropertiesUtils.toHex(FunctionMethods.sha1("abc").getBytesDirect()));
         assertEquals("BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD", PropertiesUtils.toHex(FunctionMethods.sha2_256("abc").getBytesDirect()));
         assertEquals("DDAF35A193617ABACC417349AE20413112E6FA4E89A97EA20A9EEEE64B55D39A2192992A274FC1A836BA3C23A3FEEBBD454D4423643CE80E2A9AC94FA54CA49F", PropertiesUtils.toHex(FunctionMethods.sha2_512("abc").getBytesDirect()));
+    }
+    
+    @Test
+    public void testEncryptDecrypt() throws Exception {
+        
+        String key = "redhat"; //$NON-NLS-1$
+        String data = "jboss teiid"; //$NON-NLS-1$
+        
+        String encrypted = FunctionMethods.aes_encrypt(data, key);
+        String decrypted = FunctionMethods.aes_decrypt(encrypted, key);
+        assertEquals(data, decrypted);
+        
+        BinaryType encryptedBytes = FunctionMethods.aes_encrypt(new BinaryType(data.getBytes("UTF-8")), new BinaryType(key.getBytes("UTF-8"))); //$NON-NLS-1$ //$NON-NLS-2$
+        BinaryType decryptedBytes = FunctionMethods.aes_decrypt(encryptedBytes, new BinaryType(key.getBytes("UTF-8"))); //$NON-NLS-1$ 
+        assertArrayEquals(data.getBytes("UTF-8"), decryptedBytes.getBytesDirect()); //$NON-NLS-1$     
     }
     
 }
