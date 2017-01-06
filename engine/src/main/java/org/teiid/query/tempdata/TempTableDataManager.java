@@ -360,7 +360,13 @@ public class TempTableDataManager implements ProcessorDataManager {
 			String matTableName = metadata.getFullName(matTableId);
 			LogManager.logDetail(LogConstants.CTX_MATVIEWS, "processing refreshmatview for", matViewName); //$NON-NLS-1$
 			boolean invalidate = Boolean.TRUE.equals(((Constant)proc.getParameter(3).getExpression()).getValue());
-			boolean needsLoading = globalStore.needsLoading(matTableName, globalStore.getAddress(), true, true, invalidate);
+			boolean needsLoading = globalStore.getMatTableInfo(matTableName).getAndClearAsynch(); 
+			if (!needsLoading) {
+			    needsLoading = globalStore.needsLoading(matTableName, globalStore.getAddress(), true, true, invalidate);
+			    if (needsLoading) {
+			        needsLoading = globalStore.needsLoading(matTableName, globalStore.getAddress(), false, false, invalidate);
+			    }
+			}
 			if (!needsLoading) {
 				return CollectionTupleSource.createUpdateCountTupleSource(-1);
 			}
