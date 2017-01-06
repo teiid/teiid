@@ -241,22 +241,13 @@ public class TestFunctionMethods {
         String key = "redhat"; //$NON-NLS-1$
         String data = "jboss teiid"; //$NON-NLS-1$
         
-        String encrypted = FunctionMethods.encrypt_AES128_CBC_PKCS5Padding(data, key);
-        String decrypted = FunctionMethods.decrypt_AES128_CBC_PKCS5Padding(encrypted, key);
+        String encrypted = FunctionMethods.aes_encrypt(data, key);
+        String decrypted = FunctionMethods.aes_decrypt(encrypted, key);
         assertEquals(data, decrypted);
         
-        BinaryType encryptedBytes = FunctionMethods.encrypt_AES128_CBC_PKCS5Padding(new BinaryType(data.getBytes("UTF-8")), new BinaryType(key.getBytes("UTF-8"))); //$NON-NLS-1$ //$NON-NLS-2$
-        BinaryType decryptedBytes = FunctionMethods.decrypt_AES128_CBC_PKCS5Padding(encryptedBytes, new BinaryType(key.getBytes("UTF-8")));
-        assertArrayEquals(data.getBytes("UTF-8"), decryptedBytes.getBytesDirect()); //$NON-NLS-1$
-        
-        encrypted = FunctionMethods.encrypt_AES128_ECB_PKCS5Padding(data, key);
-        decrypted = FunctionMethods.decrypt_AES128_ECB_PKCS5Padding(encrypted, key);
-        assertEquals(data, decrypted);
-        
-        encryptedBytes = FunctionMethods.encrypt_AES128_ECB_PKCS5Padding(new BinaryType(data.getBytes("UTF-8")), new BinaryType(key.getBytes("UTF-8")));
-        decryptedBytes = FunctionMethods.decrypt_AES128_ECB_PKCS5Padding(encryptedBytes, new BinaryType(key.getBytes("UTF-8")));
-        assertArrayEquals(data.getBytes("UTF-8"), decryptedBytes.getBytesDirect()); //$NON-NLS-1$
-        
+        BinaryType encryptedBytes = FunctionMethods.aes_encrypt(new BinaryType(data.getBytes("UTF-8")), new BinaryType(key.getBytes("UTF-8"))); //$NON-NLS-1$ //$NON-NLS-2$
+        BinaryType decryptedBytes = FunctionMethods.aes_decrypt(encryptedBytes, new BinaryType(key.getBytes("UTF-8"))); //$NON-NLS-1$ 
+        assertArrayEquals(data.getBytes("UTF-8"), decryptedBytes.getBytesDirect()); //$NON-NLS-1$     
     }
     
 }

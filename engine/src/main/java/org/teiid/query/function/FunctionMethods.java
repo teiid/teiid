@@ -60,6 +60,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import javax.crypto.spec.IvParameterSpec;
+
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -1834,76 +1836,44 @@ public final class FunctionMethods {
     }
     
     @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
-    public static String encrypt_AES128_CBC_PKCS5Padding(String data, String key) throws FunctionExecutionException {
+    public static String aes_encrypt(String data, String key) throws FunctionExecutionException {
         try {
-            return SymmetricCryptor.getSymmectricCryptor(padkey(key.getBytes("UTF-8")), true).encrypt(data); //$NON-NLS-1$
+            return SymmetricCryptor.getSymmectricCryptor(padkey(key.getBytes("UTF-8")), "AES", "AES/CBC/PKCS5Padding", new IvParameterSpec(iv)).encrypt(data); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         } catch (CryptoException | UnsupportedEncodingException e) {
             throw new FunctionExecutionException(e);
         } 
     }
     
     @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
-    public static BinaryType encrypt_AES128_CBC_PKCS5Padding(BinaryType dataBytes, BinaryType keyBytes) throws FunctionExecutionException {       
+    public static BinaryType aes_encrypt(BinaryType dataBytes, BinaryType keyBytes) throws FunctionExecutionException {       
         try {
-            return new BinaryType(SymmetricCryptor.getSymmectricCryptor(padkey(keyBytes.getBytesDirect()), true).encrypt(dataBytes.getBytesDirect()));
-        } catch (CryptoException e) {
-            throw new FunctionExecutionException(e);
-        }      
-    }
-    
-    @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
-    public static String encrypt_AES128_ECB_PKCS5Padding(String data, String key) throws FunctionExecutionException {
-        try {
-            return SymmetricCryptor.getSymmectricCryptor(padkey(key.getBytes("UTF-8")), false).encrypt(data); //$NON-NLS-1$
-        } catch (CryptoException | UnsupportedEncodingException e) {
-            throw new FunctionExecutionException(e);
-        } 
-    }
-    
-    @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
-    public static BinaryType encrypt_AES128_ECB_PKCS5Padding(BinaryType dataBytes, BinaryType keyBytes) throws FunctionExecutionException {       
-        try {
-            return new BinaryType(SymmetricCryptor.getSymmectricCryptor(padkey(keyBytes.getBytesDirect()), false).encrypt(dataBytes.getBytesDirect()));
+            byte[] encryptResult = SymmetricCryptor.getSymmectricCryptor(padkey(keyBytes.getBytesDirect()), "AES", "AES/CBC/PKCS5Padding", new IvParameterSpec(iv)).encrypt(dataBytes.getBytesDirect()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            return new BinaryType(encryptResult);
         } catch (CryptoException e) {
             throw new FunctionExecutionException(e);
         }      
     }
 
     @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
-    public static String decrypt_AES128_CBC_PKCS5Padding(String data, String key) throws FunctionExecutionException {
+    public static String aes_decrypt(String data, String key) throws FunctionExecutionException {
         try {
-            return SymmetricCryptor.getSymmectricCryptor(padkey(key.getBytes("UTF-8")), true).decrypt(data); //$NON-NLS-1$
+            return SymmetricCryptor.getSymmectricCryptor(padkey(key.getBytes("UTF-8")), "AES", "AES/CBC/PKCS5Padding", new IvParameterSpec(iv)).decrypt(data); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         } catch (CryptoException | UnsupportedEncodingException e) {
             throw new FunctionExecutionException(e);
         } 
     }
     
     @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
-    public static BinaryType decrypt_AES128_CBC_PKCS5Padding(BinaryType dataBytes, BinaryType keyBytes) throws FunctionExecutionException {
+    public static BinaryType aes_decrypt(BinaryType dataBytes, BinaryType keyBytes) throws FunctionExecutionException {
         try {
-            return new BinaryType(SymmetricCryptor.getSymmectricCryptor(padkey(keyBytes.getBytesDirect()), true).decrypt(dataBytes.getBytesDirect()));
+            byte[] decryptResult = SymmetricCryptor.getSymmectricCryptor(padkey(keyBytes.getBytesDirect()), "AES", "AES/CBC/PKCS5Padding", new IvParameterSpec(iv)).decrypt(dataBytes.getBytesDirect()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            return new BinaryType(decryptResult);
         } catch (CryptoException e) {
             throw new FunctionExecutionException(e);
         }
     }
     
-    @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
-    public static String decrypt_AES128_ECB_PKCS5Padding(String data, String key) throws FunctionExecutionException {
-        try {
-            return SymmetricCryptor.getSymmectricCryptor(padkey(key.getBytes("UTF-8")), false).decrypt(data); //$NON-NLS-1$
-        } catch (CryptoException | UnsupportedEncodingException e) {
-            throw new FunctionExecutionException(e);
-        } 
-    }
-    
-    @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
-    public static BinaryType decrypt_AES128_ECB_PKCS5Padding(BinaryType dataBytes, BinaryType keyBytes) throws FunctionExecutionException {
-        try {
-            return new BinaryType(SymmetricCryptor.getSymmectricCryptor(padkey(keyBytes.getBytesDirect()), false).decrypt(dataBytes.getBytesDirect()));
-        } catch (CryptoException e) {
-            throw new FunctionExecutionException(e);
-        }
-    }
+    private static byte iv[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
     
     private static byte[] padkey(byte[] bytes) {
         byte[] padding = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
