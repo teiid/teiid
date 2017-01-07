@@ -35,13 +35,6 @@ public interface Cryptor {
      */
     byte[] encrypt( byte[] cleartext ) throws CryptoException;
 
-    /**
-     * Encrypt the cleartext
-     * @param cleartext The text to be encrypted
-     * @param The encrypted ciphertext
-     */
-    String encrypt( String cleartext ) throws CryptoException;
-    
     Object sealObject(Object object) throws CryptoException;
     
     /**
@@ -52,14 +45,6 @@ public interface Cryptor {
      */
     byte[] decrypt( byte[] ciphertext ) throws CryptoException;
 
-    /**
-     * Decrypt the ciphertext to yield the original
-     * cleartext.
-     * @param ciphertext The text to be encrypted
-     * @param The decrypted cleartext
-     */
-    String decrypt( String ciphertext ) throws CryptoException;
-    
     Object unsealObject(Object object) throws CryptoException;
     
 }

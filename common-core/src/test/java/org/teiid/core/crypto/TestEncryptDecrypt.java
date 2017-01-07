@@ -29,6 +29,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -67,12 +68,10 @@ public class TestEncryptDecrypt {
      */
     public void helpTestEncryptDecrypt( String cleartext ) throws CryptoException {
 //      Encrypt the cleartext into ciphertext
-        String ciphertext = cryptor.encrypt( cleartext );
-        String cleartext2 = cryptor.decrypt( ciphertext );
+        byte[] ciphertext = cryptor.encrypt( cleartext.getBytes(Charset.forName("UTF-8")));
+        byte[] cleartext2 = cryptor.decrypt( ciphertext );
 
-        assertTrue(ciphertext.startsWith(BasicCryptor.ENCRYPT_PREFIX));
-        
-        assertEquals(cleartext, cleartext2);
+        assertArrayEquals(cleartext.getBytes(Charset.forName("UTF-8")), cleartext2);
     }
 
     // =========================================================================
@@ -122,72 +121,17 @@ public class TestEncryptDecrypt {
 
     /**
      * Test the {@link Cryptor#encrypt} method.
-     * @throws CryptoException 
-     */
-    @Test public void testNeg_DecryptNonEncryptedStringLen10() throws CryptoException {
-        String ciphertext = "abcdefghij";    // Will not decode //$NON-NLS-1$
-
-        try {
-            cryptor.decrypt( ciphertext );
-            fail("expected exception"); //$NON-NLS-1$
-        } catch ( CryptoException e ) {
-        } 
-    }
-
-    /**
-     * Test the {@link Cryptor#encrypt} method.
      */
     @Test public void testNeg_DecryptNullString() throws Exception {
         // Decrypt the Base64 encoded ciphertext back to the original cleartext
         try {
-            cryptor.decrypt( (String)null );
+            cryptor.decrypt( null );
             fail("expected exception"); //$NON-NLS-1$
         } catch ( CryptoException e ) {
             //expected
         } 
     }
 
-
-    /**
-     * Test the {@link Cryptor#encrypt} method.
-     * @throws CryptoException 
-     */
-    @Test public void testNeg_EncryptZeroLengthString() throws CryptoException {
-        // Encrypt the cleartext and leave ciphertext in Base64 encoded char array
-        try {
-            cryptor.encrypt( "" ); //$NON-NLS-1$
-            fail("expected exception"); //$NON-NLS-1$
-        } catch ( CryptoException e ) {
-            assertEquals("TEIID10015 Attempt to encrypt zero-length cleartext.", e.getMessage()); //$NON-NLS-1$
-        } 
-    }
-
-    /**
-     * Test the {@link Cryptor#encrypt} method.
-     * @throws CryptoException 
-     */
-    @Test public void testNeg_EncryptNullCharArray() throws CryptoException {
-        // Encrypt the cleartext and leave ciphertext in Base64 encoded char array
-        try {
-            cryptor.encrypt( (String)null );
-            fail("expected exception"); //$NON-NLS-1$
-        } catch ( CryptoException e ) {
-            assertEquals("TEIID10014 Attempt to encrypt null cleartext.", e.getMessage()); //$NON-NLS-1$
-        } 
-    }
-
-    /**
-     * Test the {@link Cryptor#encrypt} method.
-     */
-    @Test public void testPos_EncryptAfterException() throws Exception {
-        try {
-            cryptor.encrypt( "" );
-        } catch ( CryptoException e ) {
-            // This valid test case should work after a failure!
-            helpTestEncryptDecrypt( CLEARTEXT );
-        } 
-    }
-        
     @Test public void testLongEncryption() throws Exception {
         helpTestEncryptDecrypt(CLEARTEXT + CLEARTEXT + CLEARTEXT);
     }

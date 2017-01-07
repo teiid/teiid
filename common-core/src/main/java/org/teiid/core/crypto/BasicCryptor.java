@@ -40,7 +40,6 @@ import javax.crypto.spec.IvParameterSpec;
 
 import org.teiid.core.CorePlugin;
 import org.teiid.core.util.AccessibleByteArrayOutputStream;
-import org.teiid.core.util.Base64;
 import org.teiid.core.util.ObjectInputStreamWithClassloader;
 
 
@@ -111,35 +110,6 @@ public class BasicCryptor implements Cryptor {
               throw new CryptoException(CorePlugin.Event.TEIID10006,  CorePlugin.Util.gs(CorePlugin.Event.TEIID10006, e.getClass().getName(), e.getMessage()));
         }
     }
-
-    public String decrypt( String ciphertext ) throws CryptoException {
-        if ( ciphertext == null ) {
-              throw new CryptoException(CorePlugin.Event.TEIID10007,  CorePlugin.Util.gs(CorePlugin.Event.TEIID10007));
-        }
-        
-        ciphertext = stripEncryptionPrefix(ciphertext);
-       
-        // Decode the previously encoded text into bytes...
-        byte[] cipherBytes = null;
-        try {
-            cipherBytes = Base64.decode(ciphertext);
-        } catch ( IllegalArgumentException e ) {
-              throw new CryptoException(CorePlugin.Event.TEIID10008,  CorePlugin.Util.gs(CorePlugin.Event.TEIID10008, e.getMessage()));
-        }
-        // Perform standard decryption
-        byte[] cleartext = decrypt( cipherBytes );
-        // Perform "standard" Java encoding and return the result
-        return new String(cleartext);
-    }
-
-	public static String stripEncryptionPrefix(String ciphertext) {
-        if (ciphertext.startsWith(BasicCryptor.ENCRYPT_PREFIX)) {
-            ciphertext = ciphertext.substring(BasicCryptor.ENCRYPT_PREFIX.length()); 
-        } else if (ciphertext.startsWith(BasicCryptor.OLD_ENCRYPT_PREFIX)) {
-        	ciphertext = ciphertext.substring(BasicCryptor.OLD_ENCRYPT_PREFIX.length());
-        }
-        return ciphertext;
-	}
 
     /**
      * Initialize the ciphers used for encryption and decryption.  The ciphers
@@ -233,24 +203,6 @@ public class BasicCryptor implements Cryptor {
             }
               throw new CryptoException(CorePlugin.Event.TEIID10013, CorePlugin.Util.gs(CorePlugin.Event.TEIID10013, e.getMessage()));
         }
-    }
-
-    public String encrypt( String cleartext ) throws CryptoException {
-        if ( cleartext == null ) {
-              throw new CryptoException(CorePlugin.Event.TEIID10014,  CorePlugin.Util.gs(CorePlugin.Event.TEIID10014));
-        }
-        String clearString = new String(cleartext);
-        if ( clearString.trim().length() == 0 && clearString.length() == 0 ) {
-              throw new CryptoException(CorePlugin.Event.TEIID10015,  CorePlugin.Util.gs(CorePlugin.Event.TEIID10015));
-        }
-        // Turn char array into string and get its bytes using "standard" encoding
-        byte[] clearBytes = clearString.getBytes();
-        // Perform standard encryption
-        byte[] cipherBytes = encrypt( clearBytes );
-        // Perform specialized encoding now, and return result
-        
-        String encoded = Base64.encodeBytes( cipherBytes );
-        return BasicCryptor.ENCRYPT_PREFIX + encoded;
     }
 
     /**

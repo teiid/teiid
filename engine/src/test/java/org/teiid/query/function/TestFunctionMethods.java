@@ -237,13 +237,8 @@ public class TestFunctionMethods {
     
     @Test
     public void testEncryptDecrypt() throws Exception {
-        
         String key = "redhat"; //$NON-NLS-1$
         String data = "jboss teiid"; //$NON-NLS-1$
-        
-        String encrypted = FunctionMethods.aes_encrypt(data, key);
-        String decrypted = FunctionMethods.aes_decrypt(encrypted, key);
-        assertEquals(data, decrypted);
         
         BinaryType encryptedBytes = FunctionMethods.aes_encrypt(new BinaryType(data.getBytes("UTF-8")), new BinaryType(key.getBytes("UTF-8"))); //$NON-NLS-1$ //$NON-NLS-2$
         BinaryType decryptedBytes = FunctionMethods.aes_decrypt(encryptedBytes, new BinaryType(key.getBytes("UTF-8"))); //$NON-NLS-1$ 

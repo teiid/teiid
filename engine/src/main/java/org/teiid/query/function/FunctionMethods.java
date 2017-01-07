@@ -1836,18 +1836,9 @@ public final class FunctionMethods {
     }
     
     @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
-    public static String aes_encrypt(String data, String key) throws FunctionExecutionException {
-        try {
-            return SymmetricCryptor.getSymmectricCryptor(padkey(key.getBytes("UTF-8")), "AES", "AES/CBC/PKCS5Padding", new IvParameterSpec(iv)).encrypt(data); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        } catch (CryptoException | UnsupportedEncodingException e) {
-            throw new FunctionExecutionException(e);
-        } 
-    }
-    
-    @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
     public static BinaryType aes_encrypt(BinaryType dataBytes, BinaryType keyBytes) throws FunctionExecutionException {       
         try {
-            byte[] encryptResult = SymmetricCryptor.getSymmectricCryptor(padkey(keyBytes.getBytesDirect()), "AES", "AES/CBC/PKCS5Padding", new IvParameterSpec(iv)).encrypt(dataBytes.getBytesDirect()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            byte[] encryptResult = SymmetricCryptor.getSymmectricCryptor(padkey(keyBytes.getBytesDirect()), "AES", "AES/CBC/PKCS5Padding", new IvParameterSpec(iv)).encrypt(dataBytes.getBytesDirect()); //$NON-NLS-1$ //$NON-NLS-2$
             return new BinaryType(encryptResult);
         } catch (CryptoException e) {
             throw new FunctionExecutionException(e);
@@ -1855,18 +1846,9 @@ public final class FunctionMethods {
     }
 
     @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
-    public static String aes_decrypt(String data, String key) throws FunctionExecutionException {
-        try {
-            return SymmetricCryptor.getSymmectricCryptor(padkey(key.getBytes("UTF-8")), "AES", "AES/CBC/PKCS5Padding", new IvParameterSpec(iv)).decrypt(data); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        } catch (CryptoException | UnsupportedEncodingException e) {
-            throw new FunctionExecutionException(e);
-        } 
-    }
-    
-    @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
     public static BinaryType aes_decrypt(BinaryType dataBytes, BinaryType keyBytes) throws FunctionExecutionException {
         try {
-            byte[] decryptResult = SymmetricCryptor.getSymmectricCryptor(padkey(keyBytes.getBytesDirect()), "AES", "AES/CBC/PKCS5Padding", new IvParameterSpec(iv)).decrypt(dataBytes.getBytesDirect()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            byte[] decryptResult = SymmetricCryptor.getSymmectricCryptor(padkey(keyBytes.getBytesDirect()), "AES", "AES/CBC/PKCS5Padding", new IvParameterSpec(iv)).decrypt(dataBytes.getBytesDirect()); //$NON-NLS-1$ //$NON-NLS-2$ 
             return new BinaryType(decryptResult);
         } catch (CryptoException e) {
             throw new FunctionExecutionException(e);

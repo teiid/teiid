@@ -24,10 +24,12 @@ package org.teiid.core.crypto;
 
 import static org.junit.Assert.*;
 
+import java.nio.charset.Charset;
+
 import org.junit.Test;
 
 
-
+@SuppressWarnings("nls")
 public class TestDhKeyGenerator {
 	
 	@Test
@@ -41,10 +43,10 @@ public class TestDhKeyGenerator {
 		
 		String cleartext = "cleartext!"; //$NON-NLS-1$
 		
-		String ciphertext = serverCryptor.encrypt(cleartext);
-		String cleartext2 = clientCryptor.decrypt(ciphertext);
+		byte[] ciphertext = serverCryptor.encrypt(cleartext.getBytes(Charset.forName("UTF-8")));
+		byte[] cleartext2 = clientCryptor.decrypt(ciphertext);
 		
-		assertEquals(cleartext, cleartext2);
+		assertArrayEquals(cleartext.getBytes(Charset.forName("UTF-8")), cleartext2);
 		assertTrue(!ciphertext.equals(cleartext));
 		
 		Object sealed = serverCryptor.sealObject(cleartext);
