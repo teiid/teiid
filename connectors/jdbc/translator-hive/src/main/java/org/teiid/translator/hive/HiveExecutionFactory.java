@@ -197,11 +197,6 @@ public class HiveExecutionFactory extends BaseHiveExecutionFactory {
     public org.teiid.translator.ExecutionFactory.SupportedJoinCriteria getSupportedJoinCriteria() {
     	return SupportedJoinCriteria.EQUI;
     }
-    
-    @Override
-    public boolean useParensForJoins() {
-    	return true;
-    }
         
     @Override
     public String translateLiteralDate(java.sql.Date dateValue) {
