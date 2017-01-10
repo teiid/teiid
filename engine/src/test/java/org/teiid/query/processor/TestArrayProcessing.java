@@ -280,6 +280,22 @@ public class TestArrayProcessing {
         cc.setSessionVariable(TempTableStore.TEIID_MAX_RECURSION, 100000);
         helpProcess(plan, cc, dataManager, expected);
     }
+    
+    @Test public void testArrayProjection() throws Exception {
+        String sql = "SELECT e1, (e2, e3) FROM pm1.g1";
+        BasicSourceCapabilities bsc = new BasicSourceCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
+        bsc.setCapabilitySupport(Capability.ARRAY_TYPE, true);
+        ProcessorPlan pp = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc));
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3 FROM pm1.g1", Arrays.asList("a", 1, false));
+        TestProcessor.helpProcess(pp, dataManager, new List[] {Arrays.asList("a", new ArrayImpl(1, false))});
+        
+        bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION_ARRAY_TYPE, true);
+        pp = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc));
+        dataManager.addData("SELECT pm1.g1.e1, (pm1.g1.e2, pm1.g1.e3) FROM pm1.g1", Arrays.asList("a", new ArrayImpl(1, false)));
+        TestProcessor.helpProcess(pp, dataManager, new List[] {Arrays.asList("a", new ArrayImpl(1, false))});
+    }
 	
 	/**
 	 * TODO

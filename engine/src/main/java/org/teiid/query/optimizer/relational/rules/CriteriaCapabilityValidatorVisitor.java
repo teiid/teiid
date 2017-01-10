@@ -195,6 +195,9 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     	try {
 			if (!CapabilitiesUtil.supports(Capability.ARRAY_TYPE, modelID, metadata, capFinder)) {
 				markInvalid(array, "Array type not supported by source"); //$NON-NLS-1$
+			} else if (isSelectClause && !CapabilitiesUtil.supports(Capability.QUERY_SELECT_EXPRESSION_ARRAY_TYPE, modelID, metadata, capFinder)) {
+			    //TODO: this is just a workaround of sorts - as a comparison could be nested where this is allowed
+			    markInvalid(array, "Array type expression projection not supported by source"); //$NON-NLS-1$
 			}
 		} catch (QueryMetadataException e) {
             handleException(new TeiidComponentException(e));
