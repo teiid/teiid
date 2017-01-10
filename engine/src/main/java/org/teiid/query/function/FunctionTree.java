@@ -426,5 +426,9 @@ public class FunctionTree {
 		}
 		return ft;
 	}
+    
+    public boolean hasFunctionWithName(String name) {
+        return functionsByName.containsKey(name);
+    }
 
 }

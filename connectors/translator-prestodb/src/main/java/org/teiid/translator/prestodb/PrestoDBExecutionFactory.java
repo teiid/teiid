@@ -22,14 +22,7 @@
 
 package org.teiid.translator.prestodb;
 
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.BIG_INTEGER;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.BOOLEAN;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.CHAR;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.DOUBLE;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.INTEGER;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.STRING;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.TIMESTAMP;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.VARBINARY;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 
 import java.sql.Connection;
 import java.util.ArrayList;
@@ -129,9 +122,9 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.LOCATE, new AliasModifier("strpos")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr")); //$NON-NLS-1$
         
         addPushDownFunction(PRESTODB, "cbrt", DOUBLE, DOUBLE); //$NON-NLS-1$
-        addPushDownFunction(PRESTODB, "chr", STRING, CHAR); //$NON-NLS-1$
         addPushDownFunction(PRESTODB, "ceil", INTEGER, DOUBLE); //$NON-NLS-1$
         addPushDownFunction(PRESTODB, "current_timestamp", TIMESTAMP); //$NON-NLS-1$
         addPushDownFunction(PRESTODB, "current_timezone", STRING); //$NON-NLS-1$
@@ -190,6 +183,7 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
         //supportedFunctions.add(SourceSystemFunctions.BITOR);
         //supportedFunctions.add(SourceSystemFunctions.BITXOR);
         supportedFunctions.add(SourceSystemFunctions.CEILING);
+        supportedFunctions.add(SourceSystemFunctions.CHAR);
         supportedFunctions.add(SourceSystemFunctions.COALESCE);
         supportedFunctions.add(SourceSystemFunctions.CONCAT);
         supportedFunctions.add(SourceSystemFunctions.COS);        
