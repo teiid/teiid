@@ -115,12 +115,11 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
         
         registerFunctionModifier(SourceSystemFunctions.CURDATE, new AliasModifier("current_date")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.CURTIME, new AliasModifier("current_time")); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("nullif")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new AliasModifier("format_datetime")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, new AliasModifier("parse_datetime")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.POWER, new AliasModifier("pow")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.LOCATE, new AliasModifier("strpos")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr")); //$NON-NLS-1$
         
@@ -201,7 +200,8 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.HOUR);
         supportedFunctions.add(SourceSystemFunctions.IFNULL);
         supportedFunctions.add(SourceSystemFunctions.LCASE);
-        supportedFunctions.add(SourceSystemFunctions.LOCATE);
+          //TEIID-4680 TEIID-4679 3 arg locate is not supported
+//        supportedFunctions.add(SourceSystemFunctions.LOCATE);
 //        supportedFunctions.add(SourceSystemFunctions.LPAD);
         supportedFunctions.add(SourceSystemFunctions.LENGTH);
         supportedFunctions.add(SourceSystemFunctions.LTRIM);
