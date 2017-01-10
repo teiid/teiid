@@ -1409,7 +1409,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
         if (supportsUpsert != null) {
             return supportsUpsert;
         }
-        return delegate.supportsGroupByMultipleDistinctAggregates();
+        return delegate.supportsUpsert();
     }
     public void setSupportsUpsert(boolean value) {
         supportsUpsert = value;
