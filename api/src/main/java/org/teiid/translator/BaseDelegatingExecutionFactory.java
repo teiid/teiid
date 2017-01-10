@@ -707,7 +707,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	}
 	
 	Boolean supportsSelectExpression;
-	@TranslatorProperty(display="Supports SELECT", advanced=true)
+	@TranslatorProperty(display="Supports SELECT expressions", advanced=true)
 	@Override
 	public boolean supportsSelectExpression() {
 		if (supportsSelectExpression != null) {
@@ -1413,5 +1413,18 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
     }
     public void setSupportsUpsert(boolean value) {
         supportsUpsert = value;
+    }
+    
+    Boolean supportsSelectExpressionArrayType;
+    @TranslatorProperty(display="Supports SELECT array type expressions", advanced=true)
+    @Override
+    public boolean supportsSelectExpressionArrayType() {
+        if (supportsSelectExpressionArrayType != null) {
+            return supportsSelectExpressionArrayType;
+        }
+        return delegate.supportsSelectExpressionArrayType();
+    }
+    public void setSupportsSelectExpressionArrayType(boolean value) {
+        supportsSelectExpressionArrayType = value;
     }
 }
