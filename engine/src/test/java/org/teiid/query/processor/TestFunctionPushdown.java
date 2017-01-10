@@ -619,5 +619,22 @@ public class TestFunctionPushdown {
                 0       // UnionAll
             });                                    
     }
+    
+    @Test public void testSystemNameConflict() throws Exception {
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table t (x char); create foreign function chr(x char) returns string", "x", "y");
+        
+        HardcodedDataManager dataMgr = new HardcodedDataManager();
+
+        String sql = "SELECT chr(x) from t";
+        
+        BasicSourceCapabilities bsc = new BasicSourceCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
+        
+        dataMgr.addData("SELECT y.chr(y.t.x) FROM y.t", Arrays.asList("a"));
+        
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, tm, new DefaultCapabilitiesFinder(bsc));
+        TestProcessor.helpProcess(plan, TestProcessor.createCommandContext(),
+                dataMgr, new List<?>[] {Arrays.asList("a")});
+    }
 	
 }

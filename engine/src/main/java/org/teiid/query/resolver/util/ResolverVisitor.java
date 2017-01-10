@@ -759,8 +759,13 @@ public class ResolverVisitor extends LanguageVisitor {
 	
 	    function.setFunctionDescriptor(fd);
 	    function.setType(fd.getReturnType());
-	    if (CoreConstants.SYSTEM_MODEL.equals(fd.getSchema()) && StringUtil.startsWithIgnoreCase(function.getName(), SYS_PREFIX)) {
-	    	function.setName(function.getName().substring(SYS_PREFIX.length()));
+	    if (CoreConstants.SYSTEM_MODEL.equals(fd.getSchema())) {
+	        if (StringUtil.startsWithIgnoreCase(function.getName(), SYS_PREFIX)) {
+	            function.setName(function.getName().substring(SYS_PREFIX.length()));
+	        }
+	    } else if (library.getSystemFunctions().hasFunctionWithName(function.getName()) 
+	            && !StringUtil.startsWithIgnoreCase(function.getName(), function.getFunctionDescriptor().getSchema() + ElementSymbol.SEPARATOR)) {
+            function.setName(function.getFunctionDescriptor().getSchema() + ElementSymbol.SEPARATOR + function.getName());
 	    }
 	}
 
