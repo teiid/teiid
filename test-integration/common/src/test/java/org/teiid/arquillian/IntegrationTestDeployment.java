@@ -346,6 +346,20 @@ public class IntegrationTestDeployment {
 	}
 	
 	@Test
+    public void testOSDQ() throws Exception {
+        deployVdb();
+
+        Connection conn = TeiidDriver.getInstance().connect("jdbc:teiid:bqt@mm://localhost:31000;user=user;password=user;ApplicationName=test", null);
+
+        Statement s = conn.createStatement();
+        ResultSet rs = s.executeQuery("select osdq.validemail('not really'), validemail('user@teiid.org')");
+        rs.next();
+        assertFalse(rs.getBoolean(1));
+        assertTrue(rs.getBoolean(2));
+        conn.close();
+    }
+	
+	@Test
 	public void testGetRequests() throws Exception {
 		JavaArchive jar = getLoopyArchive();
 

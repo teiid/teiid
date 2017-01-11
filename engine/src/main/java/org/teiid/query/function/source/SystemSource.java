@@ -224,15 +224,19 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
     private void addOSDQLibrary() {
         try {
             Class<?> osdqFunctions = Class.forName(
-                    "org.teiid.dataquality.OSDQFunctions", false,
+                    "org.teiid.dataquality.OSDQFunctions", false, //$NON-NLS-1$
                     this.getClass().getClassLoader());
-            addFunctions(osdqFunctions);
+            addFunctions(osdqFunctions, "osdq."); //$NON-NLS-1$
         } catch (ClassNotFoundException e) {
             // ignore the add
         }
     }
     
     private void addFunctions(Class<?> clazz) {
+        addFunctions(clazz, null);
+    }
+        
+    private void addFunctions(Class<?> clazz, String prefix) {
 		Method[] methods = clazz.getMethods();
 		//need a consistent order for tests
 		Arrays.sort(methods, new Comparator<Method>() {
@@ -249,6 +253,9 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
 			String name = f.name();
 			if (name.isEmpty()) {
 				name = method.getName();
+			}
+			if (prefix != null) {
+			    name = prefix + name;
 			}
 			addFunction(method, f, name);
 			if (!f.alias().isEmpty()) {
