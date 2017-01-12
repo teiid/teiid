@@ -82,4 +82,11 @@ public class TestMySQL5Translator {
         String output = "SELECT COLA_MARKETS.MKT_ID FROM COLA_MARKETS WHERE st_contains(GeomFromWKB(?, 8307), COLA_MARKETS.SHAPE) = 1"; //$NON-NLS-1$
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
+    
+    @Test public void testTinyintBoolean() throws Exception {
+        String input = "select boolcol from x where boolcol = false"; //$NON-NLS-1$
+        String output = "SELECT case when x.boolcol is null then null when x.boolcol = -1 or x.boolcol > 0 then 1 else 0 end FROM x WHERE case when x.boolcol is null then null when x.boolcol = -1 or x.boolcol > 0 then 1 else 0 end = 0"; //$NON-NLS-1$
+        String ddl = "create foreign table x (boolcol boolean options (native_type 'tinyint(1)'))";
+        TranslationHelper.helpTestVisitor(ddl, input, output, TRANSLATOR);
+    }
 }
