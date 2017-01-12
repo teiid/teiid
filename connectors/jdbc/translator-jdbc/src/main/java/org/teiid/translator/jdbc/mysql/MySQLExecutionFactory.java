@@ -40,14 +40,9 @@ import java.util.List;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.GeometryType;
 import org.teiid.core.types.InputStreamFactory;
-import org.teiid.language.Command;
-import org.teiid.language.DerivedColumn;
-import org.teiid.language.Expression;
-import org.teiid.language.Function;
-import org.teiid.language.QueryExpression;
-import org.teiid.language.SQLConstants;
-import org.teiid.language.Select;
-import org.teiid.language.SetQuery;
+import org.teiid.language.*;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.MetadataProcessor;
@@ -69,7 +64,9 @@ import org.teiid.translator.jdbc.LocateFunctionModifier;
 @Translator(name="mysql", description="A translator for open source MySQL Database, used with any version lower than 5")
 public class MySQLExecutionFactory extends JDBCExecutionFactory {
 	
-	public MySQLExecutionFactory() {
+	private static final String TINYINT = "tinyint(1)"; //$NON-NLS-1$
+
+    public MySQLExecutionFactory() {
 		setSupportsFullOuterJoins(false);
 	}
 	
@@ -432,6 +429,17 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
                 }                
                 return super.getRuntimeType(type, typeName, precision);                    
             }
+            
+            @Override
+            protected Column addColumn(ResultSet columns, Table table,
+                    MetadataFactory metadataFactory, int rsColumns)
+                    throws SQLException {
+                Column c = super.addColumn(columns, table, metadataFactory, rsColumns);
+                if (c.getPrecision() == 0 && "bit".equalsIgnoreCase(c.getNativeType())) { //$NON-NLS-1$
+                    c.setNativeType(TINYINT); 
+                }
+                return c;
+            }
                 
     		@Override
     		protected void getTableStatistics(Connection conn, String catalog, String schema, String name, Table table) throws SQLException {
@@ -557,6 +565,18 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
 		GeometryType geom = new GeometryType(b);
         geom.setSrid(srid);
         return geom;
+	}
+	
+	@Override
+	public List<?> translate(LanguageObject obj, ExecutionContext context) {
+	    if (obj instanceof ColumnReference) {
+            ColumnReference elem = (ColumnReference)obj;
+            if (elem.getType() == TypeFacility.RUNTIME_TYPES.BOOLEAN && elem.getMetadataObject() != null
+                    && TINYINT.equalsIgnoreCase(elem.getMetadataObject().getNativeType())) { 
+                return Arrays.asList("case when ", elem, " is null then null when ", elem, " = -1 or ", elem, " > 0 then 1 else 0 end"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            }
+	    }
+	    return super.translate(obj, context);
 	}
 	
 	@Override
