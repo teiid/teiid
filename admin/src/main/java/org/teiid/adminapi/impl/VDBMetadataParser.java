@@ -619,6 +619,9 @@ public class VDBMetadataParser {
 		
 		// model validation errors
 		for (Message ve:model.getMessages(false)) {
+		    if (ve.getSeverity() == Severity.INFO) {
+		        continue; //info should be ephemeral
+		    }
 			writer.writeStartElement(Element.VALIDATION_ERROR.getLocalName());
 			writeAttribute(writer, Element.VALIDATION_SEVERITY_ATTR.getLocalName(), ve.getSeverity().name());
 			writeAttribute(writer, Element.PATH.getLocalName(), ve.getPath());
