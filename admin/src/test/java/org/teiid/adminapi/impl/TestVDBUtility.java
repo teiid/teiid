@@ -149,6 +149,7 @@ public class TestVDBUtility {
         modelOne.addProperty("model-prop", "model-value-override"); //$NON-NLS-1$ //$NON-NLS-2$
         modelOne.setVisible(false);
         modelOne.addMessage("ERROR", "There is an error in VDB"); //$NON-NLS-1$ //$NON-NLS-2$
+        modelOne.addMessage("INFO", "Nothing to see here"); //$NON-NLS-1$ //$NON-NLS-2$
         modelOne.setDescription("model description");
         modelOne.addSourceMetadata("DDL", "DDL Here");
         modelOne.addSourceMetadata("OTHER", "other text");
