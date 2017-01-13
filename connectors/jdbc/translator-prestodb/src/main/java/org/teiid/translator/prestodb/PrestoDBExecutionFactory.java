@@ -25,6 +25,9 @@ package org.teiid.translator.prestodb;
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 
 import java.sql.Connection;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -115,6 +118,9 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
         
         registerFunctionModifier(SourceSystemFunctions.CURDATE, new AliasModifier("current_date")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.CURTIME, new AliasModifier("current_time")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day_of_month")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new AliasModifier("day_of_week")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new AliasModifier("day_of_year")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new AliasModifier("format_datetime")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, new AliasModifier("parse_datetime")); //$NON-NLS-1$
@@ -234,6 +240,25 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.YEAR);
         return supportedFunctions;
     }     
+
+    /**
+     * Base on https://prestodb.io/docs/current/functions/datetime.html, the support format are
+     * date '2012-08-08', time '01:00', timestamp '2012-08-08 01:00'
+     */
+    @Override
+    public String translateLiteralDate(Date dateValue) {
+        return "date '" + formatDateValue(dateValue) + "'"; //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    @Override
+    public String translateLiteralTime(Time timeValue) {
+        return "time '" + formatDateValue(timeValue) + "'"; //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    @Override
+    public String translateLiteralTimestamp(Timestamp timestampValue) {
+        return "timestamp '" + formatDateValue(timestampValue) + "'"; //$NON-NLS-1$ //$NON-NLS-2$
+    }
 
     @Override
     public boolean supportsSelectWithoutFrom() {

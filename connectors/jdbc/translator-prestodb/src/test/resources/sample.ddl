@@ -1,0 +1,22 @@
+CREATE FOREIGN TABLE smalla (
+    varcharKey varchar,
+    varbinaryKey varbinary,
+    charKey char,
+    booleanKey boolean,
+    bytenum byte,
+    tinyintKey tinyint,
+    shortKey short,
+    smallintKey smallint,
+    intKey integer,
+    serialKey serial,
+    longKey long,
+    bigintKey bigint,
+    floatnum float,
+    realKey real,
+    doublenum double,
+    bigdecimalKey bigdecimal,
+    decimalKey decimal,
+    dateValue date,
+    timeValue time,
+    timestampValue timestamp
+) OPTIONS("UPDATABLE" 'TRUE');
