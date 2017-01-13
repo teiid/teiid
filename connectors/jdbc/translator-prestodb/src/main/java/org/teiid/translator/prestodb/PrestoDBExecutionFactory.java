@@ -115,6 +115,9 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
         
         registerFunctionModifier(SourceSystemFunctions.CURDATE, new AliasModifier("current_date")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.CURTIME, new AliasModifier("current_time")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day_of_month")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new AliasModifier("day_of_week")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new AliasModifier("day_of_year")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new AliasModifier("format_datetime")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, new AliasModifier("parse_datetime")); //$NON-NLS-1$
