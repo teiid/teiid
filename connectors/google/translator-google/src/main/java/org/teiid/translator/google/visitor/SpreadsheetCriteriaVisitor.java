@@ -33,6 +33,7 @@ import org.teiid.language.Function;
 import org.teiid.language.Like;
 import org.teiid.language.Literal;
 import org.teiid.language.visitor.SQLStringVisitor;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.goole.api.SpreadsheetOperationException;
 import org.teiid.translator.goole.api.metadata.SpreadsheetInfo;
 
@@ -125,8 +126,11 @@ public class SpreadsheetCriteriaVisitor extends SQLStringVisitor {
 	
 	public void visit(Comparison obj) {
 	    boolean addNot = false;
-	    if (obj.getOperator() == Operator.NE 
-	            || (obj.getOperator() == Operator.EQ && !(obj.getRightExpression() instanceof Literal))) {
+	    if ((!isUpdate() || obj.getLeftExpression().getType() != TypeFacility.RUNTIME_TYPES.STRING)
+	            && (obj.getOperator() == Operator.NE 
+	            || obj.getOperator() == Operator.LT 
+	            || obj.getOperator() == Operator.LE
+	            || (obj.getOperator() == Operator.EQ && !(obj.getRightExpression() instanceof Literal)))) {
 	        addNot = true;
 	        buffer.append("("); //$NON-NLS-1$
 	    }
@@ -134,7 +138,11 @@ public class SpreadsheetCriteriaVisitor extends SQLStringVisitor {
 	    if (addNot) {
     	    buffer.append(" AND "); //$NON-NLS-1$
             visitNode(obj.getLeftExpression());
-            buffer.append(" IS NOT NULL)"); //$NON-NLS-1$
+            if (!isUpdate()) {
+                buffer.append(" IS NOT NULL)"); //$NON-NLS-1$
+            } else {
+                buffer.append(" <> \"\")"); //$NON-NLS-1$
+            }
 	    }
 	}
 	
