@@ -1,6 +1,5 @@
 package org.teiid.translator.prestodb;
 
-import static org.teiid.translator.jdbc.TranslationHelper.*;
 import static org.junit.Assert.*;
 
 import java.io.FileNotFoundException;
@@ -8,7 +7,6 @@ import java.io.FileReader;
 import java.sql.Timestamp;
 import java.util.Arrays;
 
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.cdk.api.TranslationUtility;
@@ -115,6 +113,23 @@ public class TestSQLConversionVisitor {
         sql = "SELECT intkey FROM prestodbModel.smalla WHERE smalla.timestampValue = cast('2017-01-13 15:50:02.0' as timestamp)";
         expected = "SELECT smalla.intKey FROM smalla WHERE smalla.timestampValue = timestamp '2017-01-13 15:50:02.0'";
         helpTest(sql, expected);
+    }
+    
+    @Test
+    public void testFormatDateTime() throws TranslatorException {
+        
+        String sql = "SELECT FORMATDATE(datevalue, 'MM-dd-yy') FROM prestodbModel.smalla";
+        String expected = "SELECT format_datetime(cast(smalla.dateValue AS timestamp with timezone), 'MM-dd-yy') FROM smalla";
+        helpTest(sql, expected);
+        
+        sql = "SELECT FORMATTIME(timeValue, 'HH:MI:SS') FROM prestodbModel.smalla";
+        expected = "SELECT format_datetime(cast(smalla.timeValue AS timestamp with timezone), 'HH:MI:SS') FROM smalla";
+        helpTest(sql, expected);
+        
+        sql = "SELECT FORMATTIMESTAMP(timestampValue, 'YYYY-MM-DD HH:MI:SS') FROM prestodbModel.smalla";
+        expected = "SELECT format_datetime(smalla.timestampValue, 'YYYY-MM-DD HH:MI:SS') FROM smalla";
+        helpTest(sql, expected);
+        
     }
     
     
