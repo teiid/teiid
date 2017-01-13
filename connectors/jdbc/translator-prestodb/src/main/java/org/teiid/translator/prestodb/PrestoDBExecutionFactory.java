@@ -25,6 +25,9 @@ package org.teiid.translator.prestodb;
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 
 import java.sql.Connection;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -237,6 +240,25 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.YEAR);
         return supportedFunctions;
     }     
+
+    /**
+     * Base on https://prestodb.io/docs/current/functions/datetime.html, the support format are
+     * date '2012-08-08', time '01:00', timestamp '2012-08-08 01:00'
+     */
+    @Override
+    public String translateLiteralDate(Date dateValue) {
+        return "date '" + formatDateValue(new Timestamp(dateValue.getTime())) + "'"; //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    @Override
+    public String translateLiteralTime(Time timeValue) {
+        return "time '" + formatDateValue(new Timestamp(timeValue.getTime())) + "'"; //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    @Override
+    public String translateLiteralTimestamp(Timestamp timestampValue) {
+        return "timestamp '" + formatDateValue(new Timestamp(timestampValue.getTime())) + "'"; //$NON-NLS-1$ //$NON-NLS-2$
+    }
 
     @Override
     public boolean supportsSelectWithoutFrom() {
