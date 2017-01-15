@@ -22,6 +22,7 @@
 
 package org.teiid.query.function;
 
+import java.io.FilterReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -100,7 +101,53 @@ import org.teiid.translator.SourceSystemFunctions;
  */
 public final class FunctionMethods {
 	
-	private static final boolean CALENDAR_TIMESTAMPDIFF = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.calendarTimestampDiff", true); //$NON-NLS-1$
+	private static final class UpperLowerReader extends FilterReader {
+        int c1 = -1;
+        private boolean upper;
+
+        private UpperLowerReader(Reader in, boolean upper) {
+            super(in);
+            this.upper = upper;
+        }
+
+        @Override
+        public int read() throws IOException {
+            if (c1 != -1) {
+                int c = c1;
+                c1 = -1;
+                return c;
+            }
+            int c = super.read();
+            if ((char)c >= Character.MIN_HIGH_SURROGATE
+                    && (char)c <= Character.MAX_HIGH_SURROGATE) {
+                c1 = super.read();
+                if (Character.isLowSurrogate((char)c1)) {
+                    int codePoint = Character.toCodePoint((char)c, (char)c1);
+                    codePoint = modifyChar(codePoint);
+                    int count = Character.charCount(codePoint);
+                    if (count == 1) {
+                        c1 = -1;
+                        return codePoint;
+                    }
+                    char[] chars = Character.toChars(codePoint);
+                    c1 = chars[1];
+                    return chars[0];
+                }
+                c1 = modifyChar(c1);
+                
+            }
+            return modifyChar(c);
+        }
+
+        private int modifyChar(int c) {
+            if (upper) {
+                return Character.toUpperCase(c);
+            }
+            return Character.toLowerCase(c);
+        }
+    }
+
+    private static final boolean CALENDAR_TIMESTAMPDIFF = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.calendarTimestampDiff", true); //$NON-NLS-1$
 
 	public static final String AT = "@"; //$NON-NLS-1$
 	
@@ -885,12 +932,30 @@ public final class FunctionMethods {
 	public static Object lowerCase(String str) {
 		return str.toLowerCase();
 	}
+	
+	public static ClobType lowerCase(ClobType str) {
+	    return new ClobType(new ClobImpl(new ClobInputStreamFactory(str) {
+            @Override
+            public Reader getReader(Reader reader) {
+                return new UpperLowerReader(reader, false);
+            }
+        }, str.getLength()));
+    }
 
 	// ================== Function = uppercase =====================
 
 	public static Object upperCase(String str) {
 		return str.toUpperCase();
 	}
+	
+    public static ClobType upperCase(ClobType str) {
+        return new ClobType(new ClobImpl(new ClobInputStreamFactory(str) {
+            @Override
+            public Reader getReader(Reader reader) {
+                return new UpperLowerReader(reader, true);
+            }
+        }, str.getLength()));
+    }
 
 	// ================== Function = locate =====================
 

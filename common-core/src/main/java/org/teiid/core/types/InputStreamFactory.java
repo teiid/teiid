@@ -152,7 +152,7 @@ public abstract class InputStreamFactory implements Source {
     	@Override
     	public InputStream getInputStream() throws IOException {
     		try {
-				return new ReaderInputStream(clob.getCharacterStream(), charset);
+				return new ReaderInputStream(getReader(clob.getCharacterStream()), charset);
 			} catch (SQLException e) {
 				throw new IOException(e);
 			}
@@ -161,7 +161,7 @@ public abstract class InputStreamFactory implements Source {
     	@Override
     	public Reader getCharacterStream() throws IOException {
     		try {
-				return clob.getCharacterStream();
+				return getReader(clob.getCharacterStream());
 			} catch (SQLException e) {
 				throw new IOException(e);
 			}
@@ -185,6 +185,10 @@ public abstract class InputStreamFactory implements Source {
 		@Override
 		public StorageMode getStorageMode() {
 			return getStorageMode(clob);
+		}
+		
+		public Reader getReader(Reader reader) {
+		    return reader;
 		}
     	
     }

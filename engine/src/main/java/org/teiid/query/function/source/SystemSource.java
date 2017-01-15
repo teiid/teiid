@@ -603,10 +603,10 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
     
     private void addClobFunction(String name, String description, String methodName, String returnType) {
         functions.add(
-            new FunctionMethod(name, description, STRING, PushDown.MUST_PUSHDOWN, FUNCTION_CLASS, methodName,
-                Arrays.asList(
-                    new FunctionParameter("clob", DataTypeManager.DefaultDataTypes.CLOB, QueryPlugin.Util.getString("SystemSource.Clobfunc_arg1")) ), //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("result", returnType, description), true, Determinism.DETERMINISTIC ) );                 //$NON-NLS-1$
+            new FunctionMethod(name, description, STRING, FUNCTION_CLASS, methodName,
+                new FunctionParameter[] {
+                    new FunctionParameter("clob", DataTypeManager.DefaultDataTypes.CLOB, QueryPlugin.Util.getString("SystemSource.Clobfunc_arg1")) }, //$NON-NLS-1$ //$NON-NLS-2$
+                new FunctionParameter("result", returnType, description)) );                 //$NON-NLS-1$
     }
 
     private void addConcatFunction(String type) {

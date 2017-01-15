@@ -245,4 +245,12 @@ public class TestFunctionMethods {
         assertArrayEquals(data.getBytes("UTF-8"), decryptedBytes.getBytesDirect()); //$NON-NLS-1$     
     }
     
+    @Test
+    public void testUpperLowerClob() throws Exception {
+        char[] val = new char[] {87, 122, 147, 0xD801, 0xDC37};
+        
+        assertEquals(new String(val).toUpperCase(), ClobType.getString(FunctionMethods.upperCase(new ClobType(ClobImpl.createClob(val)))));
+        assertEquals(new String(val).toLowerCase(), ClobType.getString(FunctionMethods.lowerCase(new ClobType(ClobImpl.createClob(val)))));
+    }
+    
 }

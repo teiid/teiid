@@ -49,6 +49,7 @@ import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.BlobType;
+import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
@@ -954,6 +955,10 @@ public class TestFunctionLibrary {
 	@Test public void testInvokeUpper() {
 		helpInvokeMethod("upper", new Object[] {new String("upper")}, new String("UPPER"));	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
+	
+    @Test public void testInvokeUpperClob() {
+        helpInvokeMethod("upper", new Object[] {new ClobType(new ClobImpl("upper"))}, new ClobType(new ClobImpl("UPPER")));  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    }
 
 	@Test public void testInvokeRepeat() {
 		helpInvokeMethod("repeat", new Object[] {new String("cat"), new Integer(3)}, new String("catcatcat"));	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
