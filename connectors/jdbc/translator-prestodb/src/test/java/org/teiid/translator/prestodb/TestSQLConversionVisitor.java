@@ -113,18 +113,18 @@ public class TestSQLConversionVisitor {
     
     @Test
     public void testDateTimeLiterals() throws Exception {
-        TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("UTC"));
+        TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("UTC")); //$NON-NLS-1$   
         try {
-            String sql = "SELECT intkey FROM prestodbModel.smalla WHERE datevalue = cast('2017-01-13' as date)";
-            String expected = "SELECT smalla.intKey FROM smalla WHERE smalla.dateValue = date '2017-01-13'";
+            String sql = "SELECT intkey FROM prestodbModel.smalla WHERE datevalue = cast('2017-01-13' as date)"; //$NON-NLS-1$   
+            String expected = "SELECT smalla.intKey FROM smalla WHERE smalla.dateValue = date '2017-01-13'"; //$NON-NLS-1$   
             helpTest(sql, expected);
             
-            sql = "SELECT intkey FROM prestodbModel.smalla WHERE smalla.timeValue = cast('15:50:02' as time)";
-            expected = "SELECT smalla.intKey FROM smalla WHERE smalla.timeValue = time '15:50:02'";
+            sql = "SELECT intkey FROM prestodbModel.smalla WHERE smalla.timeValue = cast('15:50:02' as time)"; //$NON-NLS-1$   
+            expected = "SELECT smalla.intKey FROM smalla WHERE smalla.timeValue = time '15:50:02'"; //$NON-NLS-1$   
             helpTest(sql, expected);
             
-            sql = "SELECT intkey FROM prestodbModel.smalla WHERE smalla.timestampValue = cast('2017-01-13 15:50:02.0' as timestamp)";
-            expected = "SELECT smalla.intKey FROM smalla WHERE smalla.timestampValue = timestamp '2017-01-13 15:50:02.0'";
+            sql = "SELECT intkey FROM prestodbModel.smalla WHERE smalla.timestampValue = cast('2017-01-13 15:50:02.0' as timestamp)"; //$NON-NLS-1$   
+            expected = "SELECT smalla.intKey FROM smalla WHERE smalla.timestampValue = timestamp '2017-01-13 15:50:02.0'"; //$NON-NLS-1$   
             helpTest(sql, expected);
         } finally {
             TimestampWithTimezone.resetCalendar(null);
@@ -134,36 +134,36 @@ public class TestSQLConversionVisitor {
     @Test
     public void testFormatDateTime() throws TranslatorException {
         
-        String sql = "SELECT FORMATDATE(datevalue, 'MM-dd-yy') FROM prestodbModel.smalla";
-        String expected = "SELECT format_datetime(cast(smalla.dateValue AS timestamp), 'MM-dd-yy') FROM smalla";
+        String sql = "SELECT FORMATDATE(datevalue, 'MM-dd-yy') FROM prestodbModel.smalla"; //$NON-NLS-1$   
+        String expected = "SELECT format_datetime(cast(smalla.dateValue AS timestamp), 'MM-dd-yy') FROM smalla"; //$NON-NLS-1$   
         helpTest(sql, expected);
         
-        sql = "SELECT FORMATTIME(timeValue, 'HH:MI:SS') FROM prestodbModel.smalla";
-        expected = "SELECT format_datetime(cast(smalla.timeValue AS timestamp), 'HH:MI:SS') FROM smalla";
+        sql = "SELECT FORMATTIME(timeValue, 'HH:MI:SS') FROM prestodbModel.smalla"; //$NON-NLS-1$   
+        expected = "SELECT format_datetime(cast(smalla.timeValue AS timestamp), 'HH:MI:SS') FROM smalla"; //$NON-NLS-1$   
         helpTest(sql, expected);
         
-        sql = "SELECT FORMATTIMESTAMP(timestampValue, 'YYYY-MM-DD HH:MI:SS') FROM prestodbModel.smalla";
-        expected = "SELECT format_datetime(smalla.timestampValue, 'YYYY-MM-DD HH:MI:SS') FROM smalla";
+        sql = "SELECT FORMATTIMESTAMP(timestampValue, 'YYYY-MM-DD HH:MI:SS') FROM prestodbModel.smalla"; //$NON-NLS-1$   
+        expected = "SELECT format_datetime(smalla.timestampValue, 'YYYY-MM-DD HH:MI:SS') FROM smalla"; //$NON-NLS-1$   
         helpTest(sql, expected);   
     }
     
     @Test
     public void testConvertCast() throws TranslatorException {
         
-        String sql = "SELECT convert(stringnum, integer) FROM prestodbModel.smalla";
-        String expected = "SELECT cast(smalla.stringnum AS integer) FROM smalla";
+        String sql = "SELECT convert(stringnum, integer) FROM prestodbModel.smalla"; //$NON-NLS-1$   
+        String expected = "SELECT cast(smalla.stringnum AS integer) FROM smalla"; //$NON-NLS-1$   
         helpTest(sql, expected);
         
-        sql = "SELECT booleanValue, (booleanValue + 1) AS BooleanValuePlus2 FROM prestodbModel.SmallA";
-        expected = "SELECT smalla.booleanValue, (cast(smalla.booleanValue AS integer) + 1) AS BooleanValuePlus2 FROM smalla";
+        sql = "SELECT booleanValue, (booleanValue + 1) AS BooleanValuePlus2 FROM prestodbModel.SmallA"; //$NON-NLS-1$   
+        expected = "SELECT smalla.booleanValue, (cast(smalla.booleanValue AS integer) + 1) AS BooleanValuePlus2 FROM smalla"; //$NON-NLS-1$   
         helpTest(sql, expected);
         
-        sql = "SELECT convert(dateValue, timestamp) FROM prestodbModel.smalla";
-        expected = "SELECT cast(smalla.dateValue AS timestamp) FROM smalla";
+        sql = "SELECT convert(dateValue, timestamp) FROM prestodbModel.smalla"; //$NON-NLS-1$   
+        expected = "SELECT cast(smalla.dateValue AS timestamp) FROM smalla"; //$NON-NLS-1$   
         helpTest(sql, expected);
         
-        sql = "SELECT convert(timeValue, timestamp) FROM prestodbModel.smalla";
-        expected = "SELECT cast(smalla.timeValue AS timestamp) FROM smalla";
+        sql = "SELECT convert(timeValue, timestamp) FROM prestodbModel.smalla"; //$NON-NLS-1$   
+        expected = "SELECT cast(smalla.timeValue AS timestamp) FROM smalla"; //$NON-NLS-1$   
         helpTest(sql, expected);
     }
     
@@ -171,23 +171,30 @@ public class TestSQLConversionVisitor {
     public void testLogarithmFunctions() throws TranslatorException {
   
         // natural logarithm
-        String sql = "SELECT log(doublenum) FROM prestodbModel.smalla";
-        String expected = "SELECT ln(smalla.doublenum) FROM smalla";
+        String sql = "SELECT log(doublenum) FROM prestodbModel.smalla"; //$NON-NLS-1$   
+        String expected = "SELECT ln(smalla.doublenum) FROM smalla"; //$NON-NLS-1$   
         helpTest(sql, expected);
         
         // base 10 logarithm
-        sql = "SELECT log10(doublenum) FROM prestodbModel.smalla";
-        expected = "SELECT log10(smalla.doublenum) FROM smalla";
+        sql = "SELECT log10(doublenum) FROM prestodbModel.smalla"; //$NON-NLS-1$   
+        expected = "SELECT log10(smalla.doublenum) FROM smalla"; //$NON-NLS-1$   
         helpTest(sql, expected);
         
         // base 2 logarithm
-        sql = "SELECT prestodb.log2(doublenum) FROM prestodbModel.smalla";
-        expected = "SELECT log2(smalla.doublenum) FROM smalla";
+        sql = "SELECT prestodb.log2(doublenum) FROM prestodbModel.smalla"; //$NON-NLS-1$   
+        expected = "SELECT log2(smalla.doublenum) FROM smalla"; //$NON-NLS-1$   
         helpTest(sql, expected);
         
         // base b logarithm
-        sql = "SELECT prestodb.log(doublenum, 2) FROM prestodbModel.smalla";
-        expected = "SELECT log(smalla.doublenum, 2) FROM smalla";
+        sql = "SELECT prestodb.log(doublenum, 2) FROM prestodbModel.smalla"; //$NON-NLS-1$   
+        expected = "SELECT log(smalla.doublenum, 2) FROM smalla"; //$NON-NLS-1$   
+        helpTest(sql, expected);
+    }
+    
+    @Test
+    public void testCorelatedSubquery() throws TranslatorException {
+        String sql = "SELECT intkey, bytenum, (SELECT bytenum FROM prestodbModel.smalla AS b WHERE (bytenum = a.longnum) AND (intkey = '10')) AS longnum FROM prestodbModel.smalla AS a"; //$NON-NLS-1$   
+        String expected = "SELECT a.intKey, a.bytenum, (SELECT b.bytenum FROM smalla AS b WHERE cast(b.bytenum AS bigint) = a.longnum AND b.intKey = '10' LIMIT 2) AS longnum FROM smalla AS a"; //$NON-NLS-1$  
         helpTest(sql, expected);
     }
     
