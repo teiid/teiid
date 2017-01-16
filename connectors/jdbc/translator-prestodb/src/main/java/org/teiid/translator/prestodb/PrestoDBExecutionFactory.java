@@ -29,11 +29,14 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.Argument;
 import org.teiid.language.Call;
 import org.teiid.language.Command;
+import org.teiid.language.Function;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.MetadataProcessor;
@@ -109,10 +112,38 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
         convert.addTypeMapping("double", FunctionModifier.DOUBLE); //$NON-NLS-1$
         convert.addTypeMapping("varchar", FunctionModifier.STRING); //$NON-NLS-1$
         convert.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
-        convert.addTypeMapping("time with timezone", FunctionModifier.TIME); //$NON-NLS-1$
-        convert.addTypeMapping("timestamp with timezone", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+        convert.addTypeMapping("time", FunctionModifier.TIME); //$NON-NLS-1$
+        convert.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
         convert.addTypeMapping("varbinary", FunctionModifier.BLOB); //$NON-NLS-1$
         convert.addTypeMapping("json", FunctionModifier.BLOB); //$NON-NLS-1$
+        convert.addConvert(DataTypeManager.DefaultTypeCodes.DATE, DataTypeManager.DefaultTypeCodes.TIMESTAMP, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                return Arrays.asList("cast(", function.getParameters().get(0), " AS timestamp)");    //$NON-NLS-1$ //$NON-NLS-2$
+            }
+            
+        });
+        convert.addConvert(DataTypeManager.DefaultTypeCodes.TIME, DataTypeManager.DefaultTypeCodes.TIMESTAMP, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                return Arrays.asList("cast(", function.getParameters().get(0), " AS timestamp)");    //$NON-NLS-1$ //$NON-NLS-2$
+            }
+            
+        });
+        convert.addConvert(DataTypeManager.DefaultTypeCodes.STRING, DataTypeManager.DefaultTypeCodes.INTEGER, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                return Arrays.asList("cast(", function.getParameters().get(0), " AS integer)");    //$NON-NLS-1$ //$NON-NLS-2$
+            }
+            
+        });
+        convert.addConvert(DataTypeManager.DefaultTypeCodes.BOOLEAN, DataTypeManager.DefaultTypeCodes.INTEGER, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                return Arrays.asList("cast(", function.getParameters().get(0), " AS integer)");    //$NON-NLS-1$ //$NON-NLS-2$
+            }
+            
+        });
         
         registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);        
         
@@ -128,6 +159,13 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.LOG, new AliasModifier("ln"){ //$NON-NLS-1$
+            @Override
+            protected void modify(Function function) {
+                if(function.getParameters().size() == 1){
+                    super.modify(function);
+                }
+            }}); 
         
         addPushDownFunction(PRESTODB, "cbrt", DOUBLE, DOUBLE); //$NON-NLS-1$
         addPushDownFunction(PRESTODB, "ceil", INTEGER, DOUBLE); //$NON-NLS-1$
@@ -136,6 +174,7 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
         addPushDownFunction(PRESTODB, "e", DOUBLE); //$NON-NLS-1$
         addPushDownFunction(PRESTODB, "ln", DOUBLE, DOUBLE); //$NON-NLS-1$
         addPushDownFunction(PRESTODB, "log2", DOUBLE, DOUBLE); //$NON-NLS-1$
+        addPushDownFunction(PRESTODB, "log", DOUBLE, DOUBLE, INTEGER); //$NON-NLS-1$
         addPushDownFunction(PRESTODB, "random", DOUBLE); //$NON-NLS-1$
         addPushDownFunction(PRESTODB, "cosh", DOUBLE, DOUBLE); //$NON-NLS-1$
         addPushDownFunction(PRESTODB, "tanh", DOUBLE, DOUBLE); //$NON-NLS-1$
