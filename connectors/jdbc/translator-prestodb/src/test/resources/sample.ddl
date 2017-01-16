@@ -1,8 +1,9 @@
 CREATE FOREIGN TABLE smalla (
     varcharKey varchar,
+    stringnum string,
     varbinaryKey varbinary,
     charKey char,
-    booleanKey boolean,
+    booleanValue boolean,
     bytenum byte,
     tinyintKey tinyint,
     shortKey short,

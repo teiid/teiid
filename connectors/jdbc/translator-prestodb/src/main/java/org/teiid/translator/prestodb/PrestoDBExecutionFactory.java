@@ -29,11 +29,14 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.Argument;
 import org.teiid.language.Call;
 import org.teiid.language.Command;
+import org.teiid.language.Function;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.MetadataProcessor;
@@ -113,6 +116,34 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
         convert.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
         convert.addTypeMapping("varbinary", FunctionModifier.BLOB); //$NON-NLS-1$
         convert.addTypeMapping("json", FunctionModifier.BLOB); //$NON-NLS-1$
+        convert.addConvert(DataTypeManager.DefaultTypeCodes.DATE, DataTypeManager.DefaultTypeCodes.TIMESTAMP, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                return Arrays.asList("cast(", function.getParameters().get(0), " AS timestamp)");    //$NON-NLS-1$ //$NON-NLS-2$
+            }
+            
+        });
+        convert.addConvert(DataTypeManager.DefaultTypeCodes.TIME, DataTypeManager.DefaultTypeCodes.TIMESTAMP, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                return Arrays.asList("cast(", function.getParameters().get(0), " AS timestamp)");    //$NON-NLS-1$ //$NON-NLS-2$
+            }
+            
+        });
+        convert.addConvert(DataTypeManager.DefaultTypeCodes.STRING, DataTypeManager.DefaultTypeCodes.INTEGER, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                return Arrays.asList("cast(", function.getParameters().get(0), " AS integer)");    //$NON-NLS-1$ //$NON-NLS-2$
+            }
+            
+        });
+        convert.addConvert(DataTypeManager.DefaultTypeCodes.BOOLEAN, DataTypeManager.DefaultTypeCodes.INTEGER, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                return Arrays.asList("cast(", function.getParameters().get(0), " AS integer)");    //$NON-NLS-1$ //$NON-NLS-2$
+            }
+            
+        });
         
         registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);        
         

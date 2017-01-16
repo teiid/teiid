@@ -135,8 +135,27 @@ public class TestSQLConversionVisitor {
         
         sql = "SELECT FORMATTIMESTAMP(timestampValue, 'YYYY-MM-DD HH:MI:SS') FROM prestodbModel.smalla";
         expected = "SELECT format_datetime(smalla.timestampValue, 'YYYY-MM-DD HH:MI:SS') FROM smalla";
+        helpTest(sql, expected);   
+    }
+    
+    @Test
+    public void testConvertCast() throws TranslatorException {
+        
+        String sql = "SELECT convert(stringnum, integer) FROM prestodbModel.smalla";
+        String expected = "SELECT cast(smalla.stringnum AS integer) FROM smalla";
         helpTest(sql, expected);
         
+        sql = "SELECT booleanValue, (booleanValue + 1) AS BooleanValuePlus2 FROM prestodbModel.SmallA";
+        expected = "SELECT smalla.booleanValue, (cast(smalla.booleanValue AS integer) + 1) AS BooleanValuePlus2 FROM smalla";
+        helpTest(sql, expected);
+        
+        sql = "SELECT convert(dateValue, timestamp) FROM prestodbModel.smalla";
+        expected = "SELECT cast(smalla.dateValue AS timestamp) FROM smalla";
+        helpTest(sql, expected);
+        
+        sql = "SELECT convert(timeValue, timestamp) FROM prestodbModel.smalla";
+        expected = "SELECT cast(smalla.timeValue AS timestamp) FROM smalla";
+        helpTest(sql, expected);
     }
     
     
