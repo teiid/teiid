@@ -126,11 +126,11 @@ public class TestSQLConversionVisitor {
     public void testFormatDateTime() throws TranslatorException {
         
         String sql = "SELECT FORMATDATE(datevalue, 'MM-dd-yy') FROM prestodbModel.smalla";
-        String expected = "SELECT format_datetime(cast(smalla.dateValue AS timestamp with timezone), 'MM-dd-yy') FROM smalla";
+        String expected = "SELECT format_datetime(cast(smalla.dateValue AS timestamp), 'MM-dd-yy') FROM smalla";
         helpTest(sql, expected);
         
         sql = "SELECT FORMATTIME(timeValue, 'HH:MI:SS') FROM prestodbModel.smalla";
-        expected = "SELECT format_datetime(cast(smalla.timeValue AS timestamp with timezone), 'HH:MI:SS') FROM smalla";
+        expected = "SELECT format_datetime(cast(smalla.timeValue AS timestamp), 'HH:MI:SS') FROM smalla";
         helpTest(sql, expected);
         
         sql = "SELECT FORMATTIMESTAMP(timestampValue, 'YYYY-MM-DD HH:MI:SS') FROM prestodbModel.smalla";

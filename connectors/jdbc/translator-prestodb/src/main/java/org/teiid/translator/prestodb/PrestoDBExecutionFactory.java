@@ -109,8 +109,8 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
         convert.addTypeMapping("double", FunctionModifier.DOUBLE); //$NON-NLS-1$
         convert.addTypeMapping("varchar", FunctionModifier.STRING); //$NON-NLS-1$
         convert.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
-        convert.addTypeMapping("time with timezone", FunctionModifier.TIME); //$NON-NLS-1$
-        convert.addTypeMapping("timestamp with timezone", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+        convert.addTypeMapping("time", FunctionModifier.TIME); //$NON-NLS-1$
+        convert.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
         convert.addTypeMapping("varbinary", FunctionModifier.BLOB); //$NON-NLS-1$
         convert.addTypeMapping("json", FunctionModifier.BLOB); //$NON-NLS-1$
         
