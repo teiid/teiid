@@ -8,9 +8,11 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.TimeZone;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.cdk.api.TranslationUtility;
+import org.teiid.core.CoreConstants;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.language.Command;
@@ -35,7 +37,16 @@ public class TestSQLConversionVisitor {
     
     private static final LanguageFactory LANG_FACTORY = new LanguageFactory();
     
+    private static PrestoDBExecutionFactory TRANSLATOR; 
+    
     private static TranslationUtility translationUtility = new TranslationUtility(queryMetadataInterface());
+    
+    @BeforeClass
+    public static void init() throws TranslatorException {
+        TRANSLATOR = new PrestoDBExecutionFactory();
+        TRANSLATOR.start();
+        translationUtility.addUDF(CoreConstants.SYSTEM_MODEL, TRANSLATOR.getPushDownFunctions());
+    }
     
     private static TransformationMetadata queryMetadataInterface() {
         try {
@@ -58,12 +69,10 @@ public class TestSQLConversionVisitor {
     }
     
     private void helpTest(String sql, String expected) throws TranslatorException {
+      
         Command command = translationUtility.parseCommand(sql);
-        
-        PrestoDBExecutionFactory ef= new PrestoDBExecutionFactory();
-        ef.start();
-        
-        SQLConversionVisitor vistor = ef.getSQLConversionVisitor();
+                
+        SQLConversionVisitor vistor = TRANSLATOR.getSQLConversionVisitor();
         vistor.append(command);
 
 //        System.out.println(vistor.toString());
@@ -155,6 +164,30 @@ public class TestSQLConversionVisitor {
         
         sql = "SELECT convert(timeValue, timestamp) FROM prestodbModel.smalla";
         expected = "SELECT cast(smalla.timeValue AS timestamp) FROM smalla";
+        helpTest(sql, expected);
+    }
+    
+    @Test
+    public void testLogarithmFunctions() throws TranslatorException {
+  
+        // natural logarithm
+        String sql = "SELECT log(doublenum) FROM prestodbModel.smalla";
+        String expected = "SELECT ln(smalla.doublenum) FROM smalla";
+        helpTest(sql, expected);
+        
+        // base 10 logarithm
+        sql = "SELECT log10(doublenum) FROM prestodbModel.smalla";
+        expected = "SELECT log10(smalla.doublenum) FROM smalla";
+        helpTest(sql, expected);
+        
+        // base 2 logarithm
+        sql = "SELECT prestodb.log2(doublenum) FROM prestodbModel.smalla";
+        expected = "SELECT log2(smalla.doublenum) FROM smalla";
+        helpTest(sql, expected);
+        
+        // base b logarithm
+        sql = "SELECT prestodb.log(doublenum, 2) FROM prestodbModel.smalla";
+        expected = "SELECT log(smalla.doublenum, 2) FROM smalla";
         helpTest(sql, expected);
     }
     
