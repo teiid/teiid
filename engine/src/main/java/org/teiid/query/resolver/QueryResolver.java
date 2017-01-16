@@ -329,6 +329,7 @@ public class QueryResolver {
             case Command.TYPE_ALTER_TRIGGER:        
             case Command.TYPE_ALTER_VIEW:           return ALTER_RESOLVER;
             case Command.TYPE_SOURCE_EVENT:         return DUMMY_RESOLVER; 
+            case Command.TYPE_IMMEDIATE_DDL:        return DUMMY_RESOLVER; 
             default:
                 throw new AssertionError("Unknown command type"); //$NON-NLS-1$
         }

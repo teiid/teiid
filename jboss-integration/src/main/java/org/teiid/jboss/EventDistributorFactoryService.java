@@ -32,7 +32,8 @@ import org.teiid.query.ObjectReplicator;
 import org.teiid.services.AbstractEventDistributorFactoryService;
 import org.teiid.services.InternalEventDistributorFactory;
 
-public class EventDistributorFactoryService extends AbstractEventDistributorFactoryService implements Service<InternalEventDistributorFactory> {
+public class EventDistributorFactoryService extends AbstractEventDistributorFactoryService
+		implements Service<InternalEventDistributorFactory> {
 	
 	InjectedValue<ObjectReplicator> objectReplicatorInjector = new InjectedValue<ObjectReplicator>();
 	InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
@@ -62,5 +63,4 @@ public class EventDistributorFactoryService extends AbstractEventDistributorFact
     protected DQPCore getDQPCore() {
         return dqpCore;
     }
-
 }

@@ -34,6 +34,7 @@ import org.teiid.query.metadata.VDBResources;
 class VDBStructureDeployer  implements DeploymentUnitProcessor {
 	private static final String VDB_EXTENSION = ".vdb"; //$NON-NLS-1$
 	private static final String DYNAMIC_VDB_STRUCTURE = "-vdb.xml"; //$NON-NLS-1$
+	private static final String DDL_VDB_STRUCTURE = "-vdb.ddl"; //$NON-NLS-1$
 	
 	@Override
 	public void deploy(final DeploymentPhaseContext phaseContext)  throws DeploymentUnitProcessingException {
@@ -61,6 +62,9 @@ class VDBStructureDeployer  implements DeploymentUnitProcessor {
         else if (deploymentName.toLowerCase().endsWith(DYNAMIC_VDB_STRUCTURE)) {
 	        TeiidAttachments.setAsVDBXMLDeployment(deploymentUnit);			        	
         }
+        else if (deploymentName.toLowerCase().endsWith(DDL_VDB_STRUCTURE)) {
+	        TeiidAttachments.setAsVDBDDLDeployment(deploymentUnit);			        	
+        }        
 	}
 	
 	

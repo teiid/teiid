@@ -41,6 +41,7 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
+import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ExecutionFactoryProvider;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -145,6 +146,30 @@ public class TranslatorUtil {
 			throw new TeiidException(CorePlugin.Event.TEIID10036, e);
 		}
 	}
+	
+    public static ExecutionFactory<Object, Object> buildDelegateAwareExecutionFactory(
+            VDBTranslatorMetaData translator, ExecutionFactoryProvider provider)
+            throws ConnectorManagerException {
+        ExecutionFactory<Object, Object> ef = null;
+        try {
+            ef = buildExecutionFactory(translator);
+        } catch (TeiidException e) {
+            throw new ConnectorManagerException(e);
+        }
+        if (ef instanceof DelegatingExecutionFactory) {
+            DelegatingExecutionFactory delegator = (DelegatingExecutionFactory)ef;
+            String delegateName = delegator.getDelegateName();
+            if (delegateName != null) {
+                ExecutionFactory<Object, Object> delegate = provider.getExecutionFactory(delegateName);
+                if (delegate == null) {
+                    throw new ConnectorManagerException(
+                            RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40155, delegateName));
+                }
+                ((DelegatingExecutionFactory<Object, Object>) ef).setDelegate(delegate);
+            }
+        }
+        return ef;
+    }	
 	
 	private static void injectProperties(ExecutionFactory ef, final VDBTranslatorMetaData data) throws InvocationTargetException, IllegalAccessException, TeiidException{
 		Map<Method, TranslatorProperty> props = TranslatorUtil.getTranslatorProperties(ef.getClass());

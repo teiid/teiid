@@ -137,6 +137,7 @@ public class Request {
 	private Executor executor;
 	protected Options options;
 	protected PreParser preParser;
+    private boolean ddl;
 
     void initialize(RequestMessage requestMsg,
                               BufferManager bufferManager,
@@ -291,7 +292,7 @@ public class Request {
         validateWithVisitor(visitor, metadata, command);
     }
     
-    private Command parseCommand() throws QueryParserException {
+    private Command parseCommand(boolean prepared) throws QueryParserException {
     	if (requestMsg.getCommand() != null) {
     		return (Command)requestMsg.getCommand();
     	}
@@ -303,7 +304,7 @@ public class Request {
         	if (preParser != null) {
         		commandStr = preParser.preParse(commandStr, this.context);
         	}
-            return queryParser.parseCommand(commandStr, parseInfo);
+        	return queryParser.parseCommand(commandStr, parseInfo, false);
         } 
         List<Command> parsedCommands = new ArrayList<Command>(commands.length);
         for (int i = 0; i < commands.length; i++) {
@@ -311,7 +312,7 @@ public class Request {
         	if (preParser != null) {
         		updateCommand = preParser.preParse(updateCommand, this.context);
         	}
-            parsedCommands.add(queryParser.parseCommand(updateCommand, parseInfo));
+			parsedCommands.add(queryParser.parseCommand(updateCommand, parseInfo, false));
         }
         return new BatchedUpdateCommand(parsedCommands);
     }
@@ -402,9 +403,9 @@ public class Request {
      * @throws TeiidComponentException
      * @throws TeiidProcessingException 
      */
-    protected void generatePlan(boolean addLimit) throws TeiidComponentException, TeiidProcessingException {
+    protected void generatePlan(boolean prepared) throws TeiidComponentException, TeiidProcessingException {
     	createCommandContext();
-        Command command = parseCommand();
+        Command command = parseCommand(prepared);
         
         List<Reference> references = ReferenceCollectorVisitor.getReferences(command);
         
@@ -434,7 +435,7 @@ public class Request {
          * Adds a row limit to a query if Statement.setMaxRows has been called and the command
          * doesn't already have a limit clause.
          */
-        if (addLimit && requestMsg.getRowLimit() > 0 && command instanceof QueryCommand) {
+        if (!prepared && requestMsg.getRowLimit() > 0 && command instanceof QueryCommand) {
             QueryCommand query = (QueryCommand)command;
             if (query.getLimit() == null) {
                 query.setLimit(new Limit(null, new Constant(new Integer(requestMsg.getRowLimit()), DataTypeManager.DefaultDataClasses.INTEGER)));
@@ -478,7 +479,7 @@ public class Request {
     	
         initMetadata();
         
-        generatePlan(true);
+        generatePlan(false);
         
         postProcessXML();
         
@@ -520,5 +521,21 @@ public class Request {
 	public void setPreParser(PreParser preParser) {
 		this.preParser = preParser;
 	}
+	
+	public boolean isDdl() {
+        if (ddl) {
+            return true;
+        }
+        if (userCommand != null) {
+            switch (userCommand.getType()) {
+            case Command.TYPE_ALTER_PROC:
+            case Command.TYPE_ALTER_TRIGGER:
+            case Command.TYPE_ALTER_VIEW:
+            case Command.TYPE_IMMEDIATE_DDL:
+                return true;
+            }
+        }
+        return false;
+    }
 
 }

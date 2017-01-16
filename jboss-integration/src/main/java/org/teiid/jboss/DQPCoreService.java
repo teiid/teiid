@@ -51,6 +51,7 @@ import org.teiid.dqp.service.TransactionService;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.query.metadata.DDLProcessor;
 import org.teiid.services.InternalEventDistributorFactory;
 
 
@@ -94,11 +95,11 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 			
 			@Override
 			public void removed(String name, CompositeVDB vdb) {
-				// terminate all the previous sessions
+			    // terminate all the previous sessions
 				SessionService sessionService = (SessionService) context.getController().getServiceContainer().getService(TeiidServiceNames.SESSION).getValue();
     			Collection<SessionMetadata> sessions = sessionService.getSessionsLoggedInToVDB(vdb.getVDBKey());
 				for (SessionMetadata session:sessions) {
-					sessionService.terminateSession(session.getSessionId(), null);
+			        sessionService.terminateSession(session.getSessionId(), null);
 				}
 			        
 				// dump the caches. 
@@ -117,11 +118,16 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 			}
 			
 			@Override
-			public void added(String name, CompositeVDB vdb) {
+			public void added(String name, CompositeVDB vdb) {		    
 			}
 
 			@Override
 			public void finishedDeployment(String name, CompositeVDB cvdb) {
+                SessionService sessionService = (SessionService) context.getController().getServiceContainer().getService(TeiidServiceNames.SESSION).getValue();
+                Collection<SessionMetadata> sessions = sessionService.getSessionsLoggedInToVDB(cvdb.getVDBKey());
+                for (SessionMetadata session:sessions) {
+                    session.setVdb(cvdb.getVDB());
+                }   			    
 			}			
 			
 			@Override

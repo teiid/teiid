@@ -1,4 +1,4 @@
-CREATE FOREIGN TABLE account (type string, ACCOUNT_ID integer) OPTIONS (UPDATABLE true);
+CREATE FOREIGN TABLE account ("type" string, ACCOUNT_ID integer) OPTIONS (UPDATABLE true);
 
 CREATE VIEW hello1 (
 SchemaName varchar(255) PRIMARY KEY ,

@@ -61,7 +61,7 @@ public class TestRowBasedSecurity {
 		es.stop();
 	}
 
-	@Test public void testSecurity() throws Exception {
+	public void testSecurity() throws Exception {
 		es = new EmbeddedServer();
 		EmbeddedConfiguration ec = new EmbeddedConfiguration();
 		final Vector<Principal> v = new Vector<Principal>();

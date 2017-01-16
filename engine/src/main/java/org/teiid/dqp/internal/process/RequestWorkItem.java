@@ -192,6 +192,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     private TransactionContext transactionContext;
     TupleBuffer resultsBuffer;
     private boolean returnsUpdateCount;
+    private boolean ddl;
     
     /*
      * maintained during processing
@@ -227,7 +228,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	private long planningEnd;
 	
 	private ThreadCpuTimer timer = new ThreadCpuTimer();
-    
+
     public RequestWorkItem(DQPCore dqpCore, RequestMessage requestMsg, Request request, ResultsReceiver<ResultsMessage> receiver, RequestID requestID, DQPWorkContext workContext) {
         this.requestMsg = requestMsg;
         this.requestID = requestID;
@@ -780,6 +781,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
             this.cid = null;
 		}
 	    this.returnsUpdateCount = request.returnsUpdateCount;
+	    this.ddl = request.isDdl();
 	    if (this.returnsUpdateCount && this.requestMsg.getRequestOptions().isContinuous()) {
 			throw new IllegalStateException("Continuous requests are not allowed to be updates."); //$NON-NLS-1$
 	    }
@@ -1164,6 +1166,12 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     } 
     
     public boolean requestCancel() throws TeiidComponentException {
+        Request req = this.request;
+        if (this.ddl || req != null && req.isDdl()) {
+            //prevent the ddl statement from being marked as cancelled
+            //the assumption being that it's causing the cancellation
+            return false;
+        }
     	synchronized (this) {
         	if (this.isCanceled || this.closeRequested) {
         		return false;

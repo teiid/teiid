@@ -36,6 +36,9 @@ import org.teiid.adminapi.DataPolicy.Context;
 import org.teiid.adminapi.DataPolicy.PermissionType;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.core.util.PropertiesUtils;
+import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.Database.ResourceType;
+import org.teiid.metadata.Grant.Permission.Privilege;
 
 public class DataRolePolicyDecider implements PolicyDecider {
 
@@ -144,4 +147,11 @@ public class DataRolePolicyDecider implements PolicyDecider {
     	return !commandContext.getVdb().getDataPolicies().isEmpty();
     }
 
+	@Override
+	public boolean allowDDLEvent(CommandContext commandContext, Privilege allowence, ResourceType type,
+			AbstractMetadataRecord record) {
+
+		// user has admin role
+		return commandContext.hasAdminRole();
+	}
 }

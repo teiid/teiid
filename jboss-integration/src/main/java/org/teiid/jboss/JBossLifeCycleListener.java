@@ -36,5 +36,15 @@ class JBossLifeCycleListener implements ContainerLifeCycleListener {
 	public boolean isShutdownInProgress() {
 		return environment.getProcessState() == State.STOPPING;
 	}
+
+	@Override
+	public boolean isBootInProgress() {
+		return environment.getProcessState() == State.STARTING;
+	}
 	
+	@Override
+    public boolean isStarted() {
+        return environment.getProcessState() == State.RUNNING || environment.getProcessState() == State.RELOAD_REQUIRED
+                || environment.getProcessState() == State.RESTART_REQUIRED;
+    }	
 }

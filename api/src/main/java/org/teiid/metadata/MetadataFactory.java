@@ -29,6 +29,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -38,15 +39,14 @@ import java.util.TreeMap;
 import org.teiid.CommandContext;
 import org.teiid.UserDefinedAggregate;
 import org.teiid.adminapi.Model;
-import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.connector.DataPlugin;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.StringUtil;
 import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.Database.ResourceType;
 import org.teiid.metadata.FunctionMethod.PushDown;
-import org.teiid.metadata.MetadataStore.Grant;
 import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.translator.TypeFacility;
 
@@ -59,7 +59,7 @@ import org.teiid.translator.TypeFacility;
  */
 public class MetadataFactory implements Serializable {
 
-	private static final String TEIID_RESERVED = "teiid_"; //$NON-NLS-1$
+	static final String TEIID_RESERVED = "teiid_"; //$NON-NLS-1$
 	private static final String TEIID_SF = "teiid_sf"; //$NON-NLS-1$
 	private static final String TEIID_RELATIONAL = "teiid_rel"; //$NON-NLS-1$
 	private static final String TEIID_WS = "teiid_ws"; //$NON-NLS-1$
@@ -90,7 +90,7 @@ public class MetadataFactory implements Serializable {
 	private transient Parser parser;
 	private transient ModelMetaData model;
 	private transient Map<String, ? extends VDBResource> vdbResources;
-	private List<Grant> grants;
+	private Map<String, Grant> grants;
 
 	public static final String SF_URI = "{http://www.teiid.org/translator/salesforce/2012}"; //$NON-NLS-1$
 	public static final String WS_URI = "{http://www.teiid.org/translator/ws/2012}"; //$NON-NLS-1$
@@ -633,7 +633,9 @@ public class MetadataFactory implements Serializable {
 		if (this.enterpriseTypes != null) {
 			store.addDataTypes(this.enterpriseTypes.values());
 		}
-		store.addGrants(this.grants);
+		if (this.grants != null) {
+		    store.addGrants(this.grants.values());
+		}
 	}
 
 	public MetadataStore asMetadataStore() {
@@ -796,6 +798,13 @@ public class MetadataFactory implements Serializable {
 	 */
 	public void parse(Reader ddl) throws MetadataException {
 		this.parser.parseDDL(this, ddl);
+        HashSet<FunctionMethod> functions = new HashSet<FunctionMethod>();
+        for (FunctionMethod functionMethod : getSchema().getFunctions().values()) {
+            if (!functions.add(functionMethod)) {
+                throw new DuplicateRecordException(DataPlugin.Event.TEIID60015, 
+                        DataPlugin.Util.gs(DataPlugin.Event.TEIID60015, functionMethod.getName()));
+            }
+        }		
 	}
 
 	public void setParser(Parser parser) {
@@ -833,16 +842,20 @@ public class MetadataFactory implements Serializable {
 	 */
 	public void addPermission(String role, AbstractMetadataRecord resource, Boolean allowAlter, Boolean allowCreate, Boolean allowRead, Boolean allowUpdate,
 			Boolean allowDelete, Boolean allowExecute, String condition, Boolean constraint) {
-		PermissionMetaData pmd = new PermissionMetaData();
+		Grant.Permission pmd = new Grant.Permission();
 		pmd.setResourceName(resource.getFullName());
+		if (resource instanceof Table) {
+		    pmd.setResourceType(ResourceType.TABLE);
+		} else {
+		    pmd.setResourceType(ResourceType.PROCEDURE);
+		}
 		pmd.setAllowAlter(allowAlter);
-		pmd.setAllowCreate(allowCreate);
+		pmd.setAllowInsert(allowCreate);
 		pmd.setAllowDelete(allowDelete);
 		pmd.setAllowExecute(allowExecute);
-		pmd.setAllowRead(allowRead);
+		pmd.setAllowSelect(allowRead);
 		pmd.setAllowUpdate(allowUpdate);
-		pmd.setCondition(condition);
-		pmd.setConstraint(constraint);
+		pmd.setCondition(condition, constraint);
 		addPermission(pmd, role);
 	}
 
@@ -858,13 +871,15 @@ public class MetadataFactory implements Serializable {
 	 */
 	public void addSchemaPermission(String role, Boolean allowAlter, Boolean allowCreate, Boolean allowRead, Boolean allowUpdate,
 			Boolean allowDelete, Boolean allowExecute) {
-		PermissionMetaData pmd = new PermissionMetaData();
-		pmd.setResourceName(this.schema.getFullName());
+        Grant.Permission pmd = new Grant.Permission();
+        pmd.setResourceName(this.schema.getFullName());
+        pmd.setResourceType(ResourceType.SCHEMA);
+		
 		pmd.setAllowAlter(allowAlter);
-		pmd.setAllowCreate(allowCreate);
+		pmd.setAllowInsert(allowCreate);
 		pmd.setAllowDelete(allowDelete);
 		pmd.setAllowExecute(allowExecute);
-		pmd.setAllowRead(allowRead);
+		pmd.setAllowSelect(allowRead);
 		pmd.setAllowUpdate(allowUpdate);
 		addPermission(pmd, role);
 	}
@@ -882,28 +897,36 @@ public class MetadataFactory implements Serializable {
 	 */
 	public void addColumnPermission(String role, Column resource, Boolean allowCreate, Boolean allowRead, Boolean allowUpdate,
 			String condition, String mask, Integer order) {
-		PermissionMetaData pmd = new PermissionMetaData();
-	    String resourceName = null;
+        Grant.Permission pmd = new Grant.Permission();
+        pmd.setResourceType(ResourceType.COLUMN);
+	    
+        String resourceName = null;
     	if (resource.getParent() != null && resource.getParent().getParent() instanceof Procedure) {
     		resourceName = resource.getParent().getParent().getFullName() + '.' + resource.getName();
     	} else {
     		resourceName = resource.getFullName();
     	}
 		pmd.setResourceName(resourceName);
-		pmd.setAllowCreate(allowCreate);
-		pmd.setAllowRead(allowRead);
+		pmd.setAllowInsert(allowCreate);
+		pmd.setAllowSelect(allowRead);
 		pmd.setAllowUpdate(allowUpdate);
-		pmd.setCondition(condition);
+		pmd.setCondition(condition, null);
 		pmd.setMask(mask);
-		pmd.setOrder(order);
+		pmd.setMaskOrder(order);
 		addPermission(pmd, role);
 	}
 
-	private void addPermission(PermissionMetaData pmd, String role) {
+	private void addPermission(Grant.Permission pmd, String role) {
 		if (this.grants == null) {
-			this.grants = new ArrayList<Grant>();
+			this.grants = new TreeMap<String, Grant>();
 		}
-		this.grants.add(new Grant(role, pmd));
+		Grant g = this.grants.get(role);
+		if (g == null) {
+		    g = new Grant();
+		    g.setRole(role);
+		    this.grants.put(role, g);
+		}
+		g.addPermission(pmd);
 	}
 
 	public void addFunction(FunctionMethod functionMethod) {

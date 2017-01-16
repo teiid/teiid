@@ -111,11 +111,22 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 	public void removed(String name, CompositeVDB cvdb) {
 	}
 
+	private boolean shouldEagerLoadMatViews(VDBMetaData vdb) {
+	    String value = vdb.getPropertyValue("load-matviews");
+	    if (value != null && value.equalsIgnoreCase("false")) {
+	        return false;
+	    }
+	    return true;
+	}
+	
 	@Override
 	public void finishedDeployment(String name, final CompositeVDB cvdb) {
 
 		// execute start triggers
 		final VDBMetaData vdb = cvdb.getVDB();
+		if (!shouldEagerLoadMatViews(vdb)) {
+		    return;
+		}
 			doMaterializationActions(vdb, new MaterializationAction() {
 				@Override
 				public void process(final Table table) {

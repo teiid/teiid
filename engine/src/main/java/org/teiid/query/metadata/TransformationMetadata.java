@@ -34,6 +34,7 @@ import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 
 import org.teiid.adminapi.impl.DataPolicyMetadata;
+import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
@@ -50,10 +51,12 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column.SearchType;
+import org.teiid.metadata.Grant.Permission;
 import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionTree;
+import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingDocument;
 import org.teiid.query.mapping.xml.MappingLoader;
@@ -151,7 +154,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 	private boolean widenComparisonToString = true;
     /**
      * TransformationMetadata constructor
-     * @param context Object containing the info needed to lookup metadta.
+     * @param context Object containing the info needed to lookup metadata.
      */
     public TransformationMetadata(VDBMetaData vdbMetadata, final CompositeMetadataStore store, Map<String, VDBResources.Resource> vdbEntries, FunctionTree systemFunctions, Collection<FunctionTree> functionTrees) {
     	ArgCheck.isNotNull(store);
@@ -167,7 +170,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     			policy = policy.clone();
     			policies.put(policy.getName(), policy);
     		}
-    		store.processGrants(policies);
+    		processGrants(store, policies);
     	} else {
     		this.importedModels = Collections.emptySet();
     	}
@@ -184,6 +187,32 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         }
     }
     
+    public TransformationMetadata(Database database, SystemFunctionManager systemFunctionMgr) {
+        this(DatabaseUtil.convert(database), new CompositeMetadataStore(database.getMetadataStore()), null,
+        		systemFunctionMgr.getSystemFunctions(), null);
+    }
+    
+    private void processGrants(MetadataStore store, Map<String, DataPolicyMetadata> policies) {
+        if (store.getGrants() == null || store.getGrants().isEmpty() || policies == null) {
+            return;
+        }
+        for (Grant grant : store.getGrants()) {
+            DataPolicyMetadata dpm = policies.get(grant.getRole());
+            if (dpm != null) {
+                for (Permission p:grant.getPermissions()) {
+                    PermissionMetaData pmd = DatabaseUtil.convert(p);
+                    if (pmd != null) {
+                        dpm.addPermission(pmd);
+                    }
+                }
+            } else {
+                // Convert from Grant to DataPolicyMetadata
+                dpm = DatabaseUtil.convert(grant, store.getRole(grant.getRole()));
+                policies.put(grant.getRole(), dpm);
+            }
+        }
+    }
+        
     private TransformationMetadata(final CompositeMetadataStore store, FunctionLibrary functionLibrary) {
         this.store = store;
     	this.vdbEntries = Collections.emptyMap();

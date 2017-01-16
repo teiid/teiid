@@ -44,11 +44,13 @@ import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.PropertiesUtils;
+import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.gss.MakeGSS;
 import org.teiid.jdbc.JDBCPlugin;
+import org.teiid.jdbc.JDBCURL;
 import org.teiid.jdbc.LocalProfile;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -75,6 +77,9 @@ public class LocalServerConnection implements ServerConnection {
     private static String serverVersion = new Handshake().getVersion();
     
     private Method cancelMethod;
+
+    private boolean shouldReconnect;
+    private VDBLifeCycleListener reconnectListener;
     
     public static String jndiNameForRuntime(String embeddedTransportName) {
     	return TEIID_RUNTIME_CONTEXT+"/"+embeddedTransportName; //$NON-NLS-1$
@@ -83,7 +88,6 @@ public class LocalServerConnection implements ServerConnection {
 	public LocalServerConnection(Properties connectionProperties, boolean useCallingThread) throws CommunicationException, ConnectionException{
 		this.connectionProperties = connectionProperties;
 		this.csr = getClientServiceRegistry(connectionProperties.getProperty(LocalProfile.TRANSPORT_NAME, "local")); //$NON-NLS-1$
-		
 		DQPWorkContext context = (DQPWorkContext)connectionProperties.get(LocalProfile.DQP_WORK_CONTEXT);
 		if (context == null) {
 			String vdbVersion = connectionProperties.getProperty(TeiidURL.JDBC.VDB_VERSION);
@@ -195,6 +199,9 @@ public class LocalServerConnection implements ServerConnection {
 						//TODO: this is an implicit changeUser - we may want to make this explicit, but that would require pools to explicitly use changeUser
 						LogManager.logInfo(LogConstants.CTX_SECURITY, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40115, workContext.getSession().getSessionId()));
 						authenticate();
+					} else if (shouldReconnect) {
+					    shouldReconnect = false;
+                        authenticate();
 					}
 					
 					final T service = csr.getClientService(iface);
@@ -243,6 +250,10 @@ public class LocalServerConnection implements ServerConnection {
 	}
 
 	public void close() {
+	    if (this.reconnectListener != null) {
+	        this.removeListener(this.reconnectListener);
+	        this.reconnectListener = null;
+	    }
 		shutdown(true);
 	}
 	

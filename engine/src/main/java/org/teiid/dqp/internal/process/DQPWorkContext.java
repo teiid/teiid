@@ -56,7 +56,9 @@ import org.teiid.security.SecurityHelper;
 
 public class DQPWorkContext implements Serializable {
 	
-	private static final String TEIID_VDB = "teiid-vdb"; //$NON-NLS-1$
+	public static final String ADMIN_ROLE_NAME = "admin"; //$NON-NLS-1$
+
+    private static final String TEIID_VDB = "teiid-vdb"; //$NON-NLS-1$
 
 	private static final String TEIID_SESSION = "teiid-session"; //$NON-NLS-1$
 
@@ -151,6 +153,7 @@ public class DQPWorkContext implements Serializable {
 	private transient LocalProfile connectionProfile = new LocalProfile();
 
     private boolean local = true;
+    private boolean hasAdminRole;
     
     public DQPWorkContext() {
 	}
@@ -170,6 +173,7 @@ public class DQPWorkContext implements Serializable {
     public void setSession(SessionMetadata session) {
 		this.session = session;
 		this.policies = null;
+		this.hasAdminRole = false;
 	}
     
     public void setSecurityHelper(SecurityHelper securityHelper) {
@@ -307,8 +311,18 @@ public class DQPWorkContext implements Serializable {
 	        		this.policies.put(policy.getName(), policy);
 	        	}
 	        }
+	    	if (getSubject() != null) {
+	    	    this.hasAdminRole = userRoles.contains(ADMIN_ROLE_NAME);
+	    	} else {
+	    	    this.hasAdminRole = false;
+	    	}
 		}
         return this.policies;
+    }
+	
+	public boolean hasAdminRole() {
+	    getAllowedDataPolicies(); //init the value
+        return hasAdminRole;
     }
 	
 	public void setPolicies(HashMap<String, DataPolicy> policies) {
@@ -323,12 +337,15 @@ public class DQPWorkContext implements Serializable {
 	}    
 
 	private Set<String> getUserRoles() {
-		if (getSubject() == null) {
-			return Collections.emptySet();
-		}
-		
-		Set<String> roles = new HashSet<String>();
-		Set<Principal> principals = getSubject().getPrincipals();
+		return getUserRoles(getSubject());
+	}
+
+    public static Set<String> getUserRoles(Subject subject) {
+        if (subject == null) {
+            return Collections.emptySet();
+        }
+        Set<String> roles = new HashSet<String>();
+		Set<Principal> principals = subject.getPrincipals();
 		for(Principal p: principals) {
 			// this JBoss specific, but no code level dependencies
 			if ((p instanceof Group) && p.getName().equals("Roles")){ //$NON-NLS-1$
@@ -340,7 +357,7 @@ public class DQPWorkContext implements Serializable {
 			}
 		}
 		return roles;
-	}
+    }
 	
 	public Version getClientVersion() {
 		return clientVersion;

@@ -105,6 +105,8 @@ public abstract class Command implements LanguageObject {
     
     public static final int TYPE_SOURCE_EVENT = -1;
 
+    public static final int TYPE_IMMEDIATE_DDL = 17;
+
     private static List<Expression> updateCommandSymbol;
     
     /**

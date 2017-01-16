@@ -36,14 +36,8 @@ import org.teiid.events.EventDistributor;
 import org.teiid.events.EventListener;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.ColumnStats;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Table;
+import org.teiid.metadata.*;
 import org.teiid.metadata.Table.TriggerEvent;
-import org.teiid.metadata.TableStats;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.SourceTriggerActionPlanner.SourceEventCommand;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
@@ -165,14 +159,14 @@ public abstract class EventDistributorImpl implements EventDistributor {
 	public void setColumnStats(String vdbName, String vdbVersion,
 			String schemaName, String tableName, String columnName,
 			ColumnStats stats) {
-		Table t = getTable(vdbName, vdbVersion, schemaName, tableName);
+	    VDBMetaData vdb = getVdbRepository().getLiveVDB(vdbName, vdbVersion);
+        Table t = getTable(vdbName, vdbVersion, schemaName, tableName);
 		if (t == null) {
 			return;
 		}
 		Column c = t.getColumnByName(columnName);
 		if (c != null) {
-			c.setColumnStats(stats);
-			t.setLastModified(System.currentTimeMillis());
+			DdlPlan.setColumnStats(vdb, c, stats);
 		}
 	}
 	
@@ -185,12 +179,12 @@ public abstract class EventDistributorImpl implements EventDistributor {
 	@Override
 	public void setTableStats(String vdbName, String vdbVersion,
 			String schemaName, String tableName, TableStats stats) {
+	    VDBMetaData vdb = getVdbRepository().getLiveVDB(vdbName, vdbVersion);
 		Table t = getTable(vdbName, vdbVersion, schemaName, tableName);
 		if (t == null) {
 			return;
 		}
-		t.setTableStats(stats);
-		t.setLastModified(System.currentTimeMillis());
+		DdlPlan.setTableStats(vdb, t, stats);
 	}
 
 	private Table getTable(String vdbName, String vdbVersion, String schemaName,
@@ -229,7 +223,7 @@ public abstract class EventDistributorImpl implements EventDistributor {
 		if (t == null) {
 			return;
 		}
-		DdlPlan.alterInsteadOfTrigger(getVdbRepository().getLiveVDB(vdbName, vdbVersion), t, triggerDefinition, enabled, triggerEvent);
+		DdlPlan.alterInsteadOfTrigger(getVdbRepository().getLiveVDB(vdbName, vdbVersion), t, triggerDefinition, enabled, triggerEvent, true);
 	}
 	
 	@Override
@@ -248,7 +242,7 @@ public abstract class EventDistributorImpl implements EventDistributor {
 		if (p == null) {
 			return;
 		}
-		DdlPlan.alterProcedureDefinition(getVdbRepository().getLiveVDB(vdbName, vdbVersion), p, definition);
+		DdlPlan.alterProcedureDefinition(getVdbRepository().getLiveVDB(vdbName, vdbVersion), p, definition, true);
 	}
 	
 	@Override
@@ -263,7 +257,7 @@ public abstract class EventDistributorImpl implements EventDistributor {
 		if (t == null) {
 			return;
 		}
-		DdlPlan.alterView(getVdbRepository().getLiveVDB(vdbName, vdbVersion), t, definition);
+		DdlPlan.alterView(getVdbRepository().getLiveVDB(vdbName, vdbVersion), t, definition, true);
 	}
 	
 	@Override
@@ -285,13 +279,7 @@ public abstract class EventDistributorImpl implements EventDistributor {
 		}
 		AbstractMetadataRecord record = DataTierManagerImpl.getByUuid(tm.getMetadataStore(), uuid);
 		if (record != null) {
-			record.setProperty(name, value);
-			tm.addToMetadataCache(record, "transformation/matview", null); //$NON-NLS-1$
-			if (record instanceof Table) {
-				((Table)record).setLastModified(System.currentTimeMillis());
-			} else if (record instanceof Procedure) {
-				((Procedure)record).setLastModified(System.currentTimeMillis());
-			}
+		    DdlPlan.setProperty(vdb, record, name, value);
 		}
 	}
 	

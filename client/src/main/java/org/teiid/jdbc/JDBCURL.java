@@ -325,5 +325,4 @@ public class JDBCURL {
         normalizeProperties(props, props);
         return props;
     }
-
 }

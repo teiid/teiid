@@ -36,18 +36,8 @@ import java.net.UnknownHostException;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.transaction.TransactionManager;
@@ -56,11 +46,7 @@ import javax.xml.stream.XMLStreamException;
 import org.jboss.vfs.VirtualFile;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.VDB.Status;
-import org.teiid.adminapi.impl.ModelMetaData;
-import org.teiid.adminapi.impl.SessionMetadata;
-import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.adminapi.impl.VDBMetadataParser;
-import org.teiid.adminapi.impl.VDBTranslatorMetaData;
+import org.teiid.adminapi.impl.*;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
 import org.teiid.client.security.InvalidSessionException;
@@ -71,42 +57,24 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.NamedThreadFactory;
 import org.teiid.core.util.ObjectConverterUtil;
-import org.teiid.deployers.CompositeGlobalTableStore;
-import org.teiid.deployers.CompositeVDB;
-import org.teiid.deployers.ContainerLifeCycleListener;
-import org.teiid.deployers.TranslatorUtil;
-import org.teiid.deployers.UDFMetaData;
-import org.teiid.deployers.VDBLifeCycleListener;
-import org.teiid.deployers.VDBRepository;
-import org.teiid.deployers.VirtualDatabaseException;
+import org.teiid.deployers.*;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ExecutionFactoryProvider;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
-import org.teiid.dqp.internal.process.CachedResults;
-import org.teiid.dqp.internal.process.DQPCore;
-import org.teiid.dqp.internal.process.PreparedPlan;
-import org.teiid.dqp.internal.process.SessionAwareCache;
-import org.teiid.dqp.internal.process.TransactionServerImpl;
+import org.teiid.dqp.internal.process.*;
 import org.teiid.dqp.service.BufferService;
 import org.teiid.events.EventDistributor;
 import org.teiid.events.EventDistributorFactory;
-import org.teiid.jdbc.CallableStatementImpl;
-import org.teiid.jdbc.ConnectionImpl;
-import org.teiid.jdbc.LocalProfile;
-import org.teiid.jdbc.PreparedStatementImpl;
-import org.teiid.jdbc.TeiidDriver;
-import org.teiid.jdbc.TeiidPreparedStatement;
-import org.teiid.jdbc.TeiidSQLException;
+import org.teiid.jdbc.*;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.MetadataRepository;
-import org.teiid.metadata.MetadataStore;
-import org.teiid.metadata.Schema;
+import org.teiid.metadata.*;
 import org.teiid.metadata.index.IndexMetadataRepository;
+import org.teiid.metadatastore.DeploymentBasedDatabaseStore;
+import org.teiid.metadatastore.DeploymentBasedDatabaseStore.PendingDataSourceJobs;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.ServerConnection;
 import org.teiid.net.socket.ObjectChannel;
@@ -357,6 +325,10 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		}
 		this.shutdownListener.setBootInProgress(true);
 		this.config = config;
+		this.cmr.setProvider(this);
+		this.eventDistributorFactoryService = new EmbeddedEventDistributorFactoryService();
+		this.eventDistributorFactoryService.start();
+		this.dqp.setEventDistributor(this.eventDistributorFactoryService.getReplicatedEventDistributor());
 		this.scheduler = Executors.newScheduledThreadPool(config.getMaxAsyncThreads(), new NamedThreadFactory("Asynch Worker")); //$NON-NLS-1$
 		this.replicator = config.getObjectReplicator();
 		if (this.replicator == null && config.getJgroupsConfigFile() != null) {
@@ -438,9 +410,10 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			}
 		}
 		this.shutdownListener.setBootInProgress(false);
+		this.shutdownListener.started();
 		running = true;
 	}
-
+	
 	private void setBufferManagerProperties(EmbeddedConfiguration config) {
 		
 		this.bufferService.setUseDisk(config.isUseDisk());
@@ -687,25 +660,43 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	 * @throws IOException 
 	 */
 	public void deployVDB(InputStream is) throws VirtualDatabaseException, ConnectorManagerException, TranslatorException, IOException {
+		deployVDB(is, false);
+	}
+	
+	/**
+	 * Deploy a vdb.xml file.  The name and version will be derived from the xml.
+	 * @param is, which will be closed by this deployment
+	 * @param ddl, true if the file contents are DDL
+	 * @throws TranslatorException 
+	 * @throws ConnectorManagerException 
+	 * @throws VirtualDatabaseException 
+	 * @throws IOException 
+	 */	
+	public void deployVDB(InputStream is, boolean ddl) throws VirtualDatabaseException, ConnectorManagerException, TranslatorException, IOException {
 		if (is == null) {
 			return;
 		}
 		byte[] bytes = ObjectConverterUtil.convertToByteArray(is);
-		try {
-			//TODO: find a way to do this off of the stream
-			VDBMetadataParser.validate(new ByteArrayInputStream(bytes));
-		} catch (SAXException e) {
-			throw new VirtualDatabaseException(e);
-		}
-		VDBMetaData metadata;
-		try {
-			metadata = VDBMetadataParser.unmarshell(new ByteArrayInputStream(bytes));
-		} catch (XMLStreamException e) {
-			throw new VirtualDatabaseException(e);
+		VDBMetaData metadata = null;
+		if (ddl) {
+			DeploymentBasedDatabaseStore store = new DeploymentBasedDatabaseStore(getVDBRepository());
+			metadata = store.getVDBMetadata(new String(bytes));
+		} else {
+			try {
+				//TODO: find a way to do this off of the stream
+				VDBMetadataParser.validate(new ByteArrayInputStream(bytes));
+			} catch (SAXException e) {
+				throw new VirtualDatabaseException(e);
+			}			
+			try {
+				metadata = VDBMetadataParser.unmarshell(new ByteArrayInputStream(bytes));
+			} catch (XMLStreamException e) {
+				throw new VirtualDatabaseException(e);
+			}
 		}
 		metadata.setXmlDeployment(true);
 		deployVDB(metadata, null);
-	}
+	}	
 	
 	/**
 	 * Deploy a vdb zip file.  The name and version will be derived from the xml.
@@ -741,6 +732,20 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		if (!vdb.getOverrideTranslators().isEmpty()) {
 			throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40106, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40106, vdb.getName()));
 		}
+		
+	    // if inline datasource needs to be created, then create it first.  
+	    PendingDataSourceJobs jobs = vdb.getAttachment(PendingDataSourceJobs.class);
+	    if (jobs != null && !jobs.isEmpty()) {
+	    	ExecutorService executor = Executors.newSingleThreadExecutor(new NamedThreadFactory("teiid-datasource-creator"));
+	    	for (Callable<Boolean> job :  jobs.values()) {
+	    		try {
+	    			executor.submit(job).get();
+	    		} catch (TeiidRuntimeException | ExecutionException | InterruptedException e){
+	    			// ignore
+	    		}
+	    	}
+	    }		
+		
 		cmr.createConnectorManagers(vdb, this);
 		MetadataStore metadataStore = new MetadataStore();
 		UDFMetaData udfMetaData = new UDFMetaData();
@@ -837,6 +842,10 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		this.repo.removeVDB(vdbName, "1"); //$NON-NLS-1$
 	}
 
+	EmbeddedConfiguration getConfiguration() {
+	    return this.config;
+	}
+	
 	/**
 	 * Stops the server.  Once stopped it cannot be restarted.
 	 */
@@ -851,6 +860,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			this.channelFactory.stop();
 		}
         this.shutdownListener.setShutdownInProgress(true);
+
         this.repo.removeListener(this.materializationMgr);
         this.scheduler.shutdownNow();
 		for (SocketListener socket:this.transports) {
@@ -899,6 +909,17 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		return (ExecutionFactory<Object, Object>) ef;
 	}
 	
+    @Override
+    public void addOverrideTranslator(VDBTranslatorMetaData translator) throws ConnectorManagerException {
+        ExecutionFactory<Object, Object> ef = TranslatorUtil.buildDelegateAwareExecutionFactory(translator, this);
+        translators.put(translator.getName(), ef);
+    }
+
+    @Override
+    public void removeOverrideTranslator(String translatorName) throws ConnectorManagerException{
+        translators.remove(translatorName);
+    }
+    
 	@Override
 	protected VDBRepository getVDBRepository() {
 		return this.repo;
@@ -954,12 +975,14 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	static class ShutDownListener implements ContainerLifeCycleListener {
 	    private boolean shutdownInProgress = false;
 	    private boolean bootInProgress = false;
-
+	    private boolean running = false;
+	    
         @Override
         public boolean isShutdownInProgress() {
             return shutdownInProgress;
         }
 
+        @Override
         public boolean isBootInProgress() {
             return bootInProgress;
         }
@@ -974,5 +997,14 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
         public void setShutdownInProgress(boolean value) {
             this.shutdownInProgress = value;
         }
+
+		public void started() {
+			running = true;
+		}
+		
+		@Override
+		public boolean isStarted() {
+			return running;
+		}
 	}
 }

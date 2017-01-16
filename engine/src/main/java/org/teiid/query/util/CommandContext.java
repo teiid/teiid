@@ -75,6 +75,7 @@ import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.net.ServerConnection;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.metadata.DDLProcessor;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.parser.ParseInfo;
@@ -699,6 +700,14 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	}
 	
 	@Override
+	public boolean hasAdminRole() {
+	    if (this.vdbState.dqpWorkContext == null) {
+            return false;
+        }
+        return this.vdbState.dqpWorkContext.hasAdminRole();
+	}
+	
+	@Override
 	public VDBMetaData getVdb() {
 		if (this.vdbState.dqpWorkContext == null) {
 			return null;
@@ -1176,5 +1185,4 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	public void setBatchUpdateException(Throwable t) {
 		this.globalState.batchUpdateException = t;
 	}
-	
 }

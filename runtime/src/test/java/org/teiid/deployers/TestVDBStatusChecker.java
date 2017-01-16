@@ -67,12 +67,17 @@ public class TestVDBStatusChecker {
 		
 		ConnectorManagerRepository cmr = new ConnectorManagerRepository();
 		cmr.setProvider(new ExecutionFactoryProvider() {
-			
 			@Override
 			public ExecutionFactory<Object, Object> getExecutionFactory(String name)
 					throws ConnectorManagerException {
 				return new ExecutionFactory<Object, Object>();
 			}
+            @Override
+            public void addOverrideTranslator(VDBTranslatorMetaData translator) {
+            }
+            @Override
+            public void removeOverrideTranslator(String translatorName) throws ConnectorManagerException {
+            }
 		});
 		ExecutionFactory ef1 = new ExecutionFactory();
 		ConnectorManager mgr = new ConnectorManager("oracle", "dsName", ef1);

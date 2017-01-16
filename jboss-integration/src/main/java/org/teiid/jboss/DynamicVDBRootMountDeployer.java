@@ -34,6 +34,7 @@ import org.jboss.vfs.VirtualFile;
 
 class DynamicVDBRootMountDeployer  implements DeploymentUnitProcessor {
 	private static final String DYNAMIC_VDB_STRUCTURE = "-vdb.xml"; //$NON-NLS-1$
+	private static final String DDL_VDB_STRUCTURE = "-vdb.ddl"; //$NON-NLS-1$
 	
 	public void deploy(DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
         final DeploymentUnit deploymentUnit = phaseContext.getDeploymentUnit();
@@ -49,7 +50,7 @@ class DynamicVDBRootMountDeployer  implements DeploymentUnitProcessor {
         if (deploymentContents == null)
             return;
         
-        if (deploymentName.endsWith(DYNAMIC_VDB_STRUCTURE)) {
+        if (deploymentName.endsWith(DYNAMIC_VDB_STRUCTURE) || deploymentName.endsWith(DDL_VDB_STRUCTURE)) {
             // use the contents directly
             // nothing was mounted
             final ResourceRoot resourceRoot = new ResourceRoot(deploymentContents, null);

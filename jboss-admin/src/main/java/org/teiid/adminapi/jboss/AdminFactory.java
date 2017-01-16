@@ -209,7 +209,7 @@ public class AdminFactory {
         }
     };
 	
-    public class AdminImpl implements Admin{
+    public class AdminImpl implements Admin {
         private static final long CACHE_TIME = 5*1000;
     	private static final String CLASS_NAME = "class-name";
 		private static final String JAVA_CONTEXT = "java:/";
@@ -1157,6 +1157,7 @@ public class AdminFactory {
 			return templates;
 		}
 
+		@Override
 		public List<String> getDeployments(){
 			return Util.getDeployments(this.connection);
 		}
@@ -2048,9 +2049,16 @@ public class AdminFactory {
 		}
 
 		@Override
+        public String getSchema(String vdbName, String vdbVersion,
+                String modelName, EnumSet<SchemaObjectType> allowedTypes,
+                String typeNamePattern) throws AdminException {
+            return getSchema(vdbName, vdbVersion, modelName, allowedTypes, typeNamePattern, ExportFormat.XML);
+        }		
+        
+		@Override
 		public String getSchema(String vdbName, String vdbVersion,
 				String modelName, EnumSet<SchemaObjectType> allowedTypes,
-				String typeNamePattern) throws AdminException {
+				String typeNamePattern, ExportFormat format) throws AdminException {
 			ModelNode request = null;
 
 			ArrayList<String> params = new ArrayList<String>();
@@ -2058,9 +2066,14 @@ public class AdminFactory {
 			params.add(vdbName);
 			params.add("vdb-version");
 			params.add(vdbVersion);
-			params.add("model-name");
-			params.add(modelName);
+			if (modelName != null) {
+    			params.add("model-name");
+    			params.add(modelName);
+			}
+            params.add("format");
+            params.add(format.name());
 
+			
 			if (allowedTypes != null) {
 				params.add("entity-type");
 				StringBuilder sb = new StringBuilder();
