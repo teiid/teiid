@@ -72,6 +72,9 @@ import org.teiid.transport.pg.PGbytea;
  */
 @SuppressWarnings("nls")
 public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements ODBCClientRemote {
+    
+    public static final String APPLICATION_NAME = "application_name"; //$NON-NLS-1$
+    public static final String DEFAULT_APPLICATION_NAME = "ODBC"; //$NON-NLS-1$
 
 	public static final String SSL_HANDLER_KEY = "sslHandler";
 
@@ -271,7 +274,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 		sendParameterStatus("server_version", "8.1.4");
 		sendParameterStatus("session_authorization", this.props.getProperty("user"));
 		sendParameterStatus("standard_conforming_strings", "on");
-		sendParameterStatus("application_name", this.props.getProperty("application_name", "ODBCClient"));
+		sendParameterStatus(APPLICATION_NAME, this.props.getProperty(APPLICATION_NAME, DEFAULT_APPLICATION_NAME));
 		
 		// TODO PostgreSQL TimeZone
 		sendParameterStatus("TimeZone", "CET");
@@ -832,7 +835,8 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 		sendMessage();
 	}
 
-	private void sendParameterStatus(String param, String value) {
+	@Override
+	public void sendParameterStatus(String param, String value) {
 		startMessage('S');
 		writeString(param);
 		writeString(value);
