@@ -50,6 +50,7 @@ import org.teiid.client.security.LogonException;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.ApplicationInfo;
+import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
 import org.teiid.deployers.PgCatalogMetadataStore;
@@ -81,7 +82,7 @@ import org.teiid.transport.PgFrontendProtocol.NullTerminatedStringDataInputStrea
  */
 public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	
-	private static final boolean HONOR_DECLARE_FETCH_TXN = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.honorDeclareFetchTxn", false); //$NON-NLS-1$
+    private static final boolean HONOR_DECLARE_FETCH_TXN = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.honorDeclareFetchTxn", false); //$NON-NLS-1$
 
 	public static final String CONNECTION_PROPERTY_PREFIX = "connection."; //$NON-NLS-1$
 	private static final String UNNAMED = ""; //$NON-NLS-1$
@@ -272,11 +273,17 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			}
 			
 			// this is local connection
-			String url = "jdbc:teiid:"+databaseName+";ApplicationName=ODBC"; //$NON-NLS-1$ //$NON-NLS-2$
+			String url = "jdbc:teiid:"+databaseName; //$NON-NLS-1$
 
 			if (password != null) {
 				info.put(TeiidURL.CONNECTION.PASSWORD, password); 
 			}
+			String applicationName = this.props.getProperty(PgBackendProtocol.APPLICATION_NAME);
+			if (applicationName == null) {
+			    applicationName = PgBackendProtocol.DEFAULT_APPLICATION_NAME;
+			    this.props.put(PgBackendProtocol.APPLICATION_NAME, applicationName);
+			}
+			info.put(TeiidURL.CONNECTION.APP_NAME, applicationName);
 			
 			if (remoteAddress instanceof InetSocketAddress) {
 				SocketServerConnection.updateConnectionProperties(info, ((InetSocketAddress)remoteAddress).getAddress(), false);
@@ -479,7 +486,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
                         client.sendResults(sql, stmt.getResultSet(), cols, completion, CursorDirection.FORWARD, -1, tag.equals("SELECT") || tag.equals("SHOW"), null); //$NON-NLS-1$ //$NON-NLS-2$
 	                } else {
 	                	client.sendUpdateCount(sql, stmt.getUpdateCount());
-	                	setEncoding();
+	                	updateSessionProperties();
 	                	completion.getResultsReceiver().receiveResults(1);
 	                }
     			} catch (Throwable e) {
@@ -684,7 +691,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		                	sendCursorResults(query, maxRows);
 		                } else {
 		                	client.sendUpdateCount(query.prepared.sql, stmt.getUpdateCount());
-		                	setEncoding();
+		                	updateSessionProperties();
 		                	doneExecuting();
 		                }
                     } catch (ExecutionException e) {
@@ -1038,11 +1045,25 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		this.client.sendSslResponse();
 	}
 	
-	private void setEncoding() {
+	private void updateSessionProperties() {
 		String encoding = getEncoding();
 		if (encoding != null) {
 			//this may be unnecessary
 			this.client.setEncoding(encoding, false);
+		}
+		String appName = this.connection.getExecutionProperty(PgBackendProtocol.APPLICATION_NAME);
+		if (appName != null) {
+    		String existing = props.getProperty(PgBackendProtocol.APPLICATION_NAME);
+    		if (!EquivalenceUtil.areEqual(appName, existing)) {
+                try {
+                    SessionMetadata sm = ((LocalServerConnection)connection.getServerConnection()).getWorkContext().getSession();
+                    sm.setApplicationName(appName);
+                } catch (SQLException e) {
+                    //connection invalid
+                }
+                this.client.sendParameterStatus(PgBackendProtocol.APPLICATION_NAME, appName);
+                this.props.put(PgBackendProtocol.APPLICATION_NAME, appName);
+    		}
 		}
 	}
 	

@@ -120,4 +120,6 @@ public interface ODBCClientRemote {
 	//	NotificationResponse (B)
 	
 	void sendPortalSuspended();
+
+    void sendParameterStatus(String param, String value);
 }

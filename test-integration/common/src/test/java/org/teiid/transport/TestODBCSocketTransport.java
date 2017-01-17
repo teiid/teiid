@@ -48,6 +48,7 @@ import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.Request.ProcessingState;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.RequestMetadata;
+import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.util.ObjectConverterUtil;
@@ -735,6 +736,32 @@ public class TestODBCSocketTransport {
         rs.next();
         int oid1 = rs.getInt(1);
         assertEquals(oid, oid1);
+    }
+	
+    @Test public void testApplicationName() throws Exception {
+        Statement s = conn.createStatement();
+        checkApplicationName(s, "ODBC");
+        s.execute("set application_name to other");
+        checkApplicationName(s, "other");
+    }
+
+    private void checkApplicationName(Statement s, String value) throws SQLException {
+        ResultSet rs = s.executeQuery("show application_name");
+        rs.next();
+        assertEquals(value, rs.getString(1));
+        rs.close();
+        rs = s.executeQuery("select session_id()");
+        rs.next();
+        String sessionId = rs.getString(1);
+        rs.close();
+        SessionMetadata current = null;
+        for (SessionMetadata session : odbcServer.server.getSessionService().getActiveSessions()) {
+            if (session.getSessionId().equals(sessionId)) {
+                current = session;
+                break;
+            }
+        }
+        assertEquals(value, current.getApplicationName());
     }
 	
 }
