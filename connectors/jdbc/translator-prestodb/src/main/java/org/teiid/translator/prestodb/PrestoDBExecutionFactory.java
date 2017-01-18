@@ -381,5 +381,10 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsArrayType() {
         return true;
+    }
+
+    @Override
+    public boolean supportsCorrelatedSubqueries() {
+        return false;
     }    
 }
