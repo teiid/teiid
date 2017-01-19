@@ -22,6 +22,9 @@
 
 package org.teiid.query.sql.lang;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
 
 
@@ -29,11 +32,15 @@ public abstract class ProcedureContainer extends Command implements TargetedComm
 
     private int updateCount = -1;
     private UpdateInfo updateInfo;
+    private Set<String> tags;
     
     protected void copyMetadataState(ProcedureContainer copy) {
         super.copyMetadataState(copy);
         copy.setUpdateInfo(this.getUpdateInfo());
         copy.updateCount = updateCount;
+        if (tags != null) {
+            copy.tags = new HashSet<String>(tags);
+        }
     }
     
     /** 
@@ -64,5 +71,16 @@ public abstract class ProcedureContainer extends Command implements TargetedComm
     public void setUpdateInfo(UpdateInfo updateInfo) {
 		this.updateInfo = updateInfo;
 	}
+    
+    public boolean hasTag(String name) {
+        return tags != null && tags.contains(name);
+    }
+    
+    public void addTag(String name) {
+        if (tags == null) {
+            tags = new HashSet<String>();
+        }
+        tags.add(name);
+    }
     
 }

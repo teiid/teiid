@@ -53,10 +53,12 @@ import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionMethods;
+import org.teiid.query.metadata.MaterializationMetadataRepository;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
+import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil;
 import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria;
 import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria.PlannedResult;
 import org.teiid.query.optimizer.relational.rules.RulePlaceAccess;
@@ -101,6 +103,8 @@ import org.teiid.translator.SourceSystemFunctions;
  */
 public class QueryRewriter {
 
+    private static final String WRITE_THROUGH = "write-through"; //$NON-NLS-1$
+    
     private static final Constant ZERO_CONSTANT = new Constant(0, DataTypeManager.DefaultDataClasses.INTEGER);
 	public static final CompareCriteria TRUE_CRITERIA = new CompareCriteria(new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER), CompareCriteria.EQ, new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER));
     public static final CompareCriteria FALSE_CRITERIA = new CompareCriteria(new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER), CompareCriteria.EQ, ZERO_CONSTANT) {
@@ -2801,6 +2805,10 @@ public class QueryRewriter {
     }
 
 	private Command rewriteInsert(Insert insert) throws TeiidComponentException, TeiidProcessingException{
+	    Command c = rewriteInsertForWriteThrough(insert);
+	    if (c != null) {
+	        return c;
+	    }
 		UpdateInfo info = insert.getUpdateInfo();
 		if (info != null && info.isInherentInsert()) {
 			//TODO: update error messages
@@ -2843,6 +2851,212 @@ public class QueryRewriter {
         insert.setValues(evalExpressions);        
 		return insert;
 	}
+
+    private Command rewriteInsertForWriteThrough(Insert insert)
+            throws TeiidComponentException, QueryMetadataException,
+            QueryResolverException, TeiidProcessingException {
+        if (processing 
+                || insert.hasTag(WRITE_THROUGH) 
+	            || !metadata.hasMaterialization(insert.getGroup().getMetadataID()) 
+	            || !Boolean.valueOf(metadata.getExtensionProperty(insert.getGroup().getMetadataID(), MaterializationMetadataRepository.MATVIEW_WRITE_THROUGH, false))) {
+            return null;
+        }
+        //create a block to save the insert values, then insert them into both the view and the materialization
+        //it would be better to combine this with project into, but there are several paths we have to account for:
+        //- upserts
+        //- insert rewritten via inherent logic
+        //- insert with a single set of values (non-deterministic requires creating a single value set)
+        //- insert with a query expression
+        //so instead we'll just do this in a single place for now
+        Block block = new Block();
+        block.setAtomic(true);
+        Insert cloneInsert = (Insert)insert.clone();
+        Insert values = new Insert();
+        
+        GroupSymbol temp = new GroupSymbol("#temp"); //$NON-NLS-1$
+        if (context.getGroups().contains(temp.getName())) {
+            temp = RulePlaceAccess.recontextSymbol(temp, context.getGroups());
+            temp.setDefinition(null);
+        }
+        values.setGroup(temp);
+        if (insert.getQueryExpression() != null) {
+            values.setQueryExpression(insert.getQueryExpression());
+        } else {
+            values.setValues(insert.getValues());
+        }
+        for (ElementSymbol es : insert.getVariables()) {
+            values.addVariable(new ElementSymbol(es.getShortName()));
+        }
+        block.addStatement(new CommandStatement(values));
+        Query q = new Query();
+        q.setSelect(new Select(Arrays.asList(new MultipleElementSymbol())));
+        q.setFrom(new From(Arrays.asList(new UnaryFromClause(temp))));
+        
+        insert.setQueryExpression((QueryCommand) q.clone());
+        insert.addTag(WRITE_THROUGH); 
+        block.addStatement(new CommandStatement(insert));
+        ElementSymbol rowCount = new ElementSymbol(ProcedureReservedWords.ROWCOUNT);
+        ElementSymbol val = new ElementSymbol("val"); //$NON-NLS-1$
+        DeclareStatement ds = new DeclareStatement(val, DataTypeManager.DefaultDataTypes.INTEGER, rowCount);
+        block.addStatement(ds);
+        Object target = metadata.getMaterialization(insert.getGroup().getMetadataID());
+        if (target != null) {
+            GroupSymbol newGroup = new GroupSymbol(metadata.getFullName(target));
+            newGroup.setMetadataID(target);
+            List<ElementSymbol> newVars = new ArrayList<ElementSymbol>();
+            for (ElementSymbol es : insert.getVariables()) {
+                ElementSymbol newVariable = new ElementSymbol(es.getShortName(), newGroup.clone());
+                newVars.add(newVariable);
+            }
+            cloneInsert.setVariables(newVars);
+            cloneInsert.setGroup(newGroup);
+            cloneInsert.setUpdateInfo(null);
+            cloneInsert.getValues().clear();
+            cloneInsert.setQueryExpression(q);
+            block.addStatement(new CommandStatement(cloneInsert));
+        } else {
+            Object key = NewCalculateCostUtil.getKeyUsed(insert.getVariables(), Collections.singleton(insert.getGroup()), metadata, true);
+            if (key == null || key != metadata.getPrimaryKey(insert.getGroup().getMetadataID())) {
+                //we need a key for this logic to work
+                return null;
+            }
+            Block b = new Block();
+            LoopStatement loop = new LoopStatement(b, (Query)q.clone(), "x"); //$NON-NLS-1$
+            StoredProcedure sp = new StoredProcedure();
+            sp.setProcedureName("SYSAdmin.refreshMatViewRow"); //$NON-NLS-1$
+            sp.setParameter(new SPParameter(1, new Constant(metadata.getFullName(insert.getGroup().getMetadataID()))));
+
+            List<Object> ids = metadata.getElementIDsInKey(key);
+            int index = 2;
+            for (Object id : ids) {
+                sp.setParameter(new SPParameter(index++, new ElementSymbol(metadata.getName(id))));
+            }
+            b.addStatement(new CommandStatement(sp));
+            block.addStatement(loop);
+        }
+        Query result = new Query();
+        result.setSelect(new Select(Arrays.asList(val)));
+        block.addStatement(new CommandStatement(result));
+        CreateProcedureCommand command = new CreateProcedureCommand(block);
+        QueryResolver.resolveCommand(command, metadata);
+        return rewriteCommand(command, false);
+    }
+    
+    private Command rewriteForWriteThrough(ProcedureContainer update)
+            throws TeiidComponentException, QueryMetadataException,
+            QueryResolverException, TeiidProcessingException {
+        if (processing 
+                || update.hasTag(WRITE_THROUGH) 
+                || !metadata.hasMaterialization(update.getGroup().getMetadataID()) 
+                || !Boolean.valueOf(metadata.getExtensionProperty(update.getGroup().getMetadataID(), MaterializationMetadataRepository.MATVIEW_WRITE_THROUGH, false))) {
+            return null;
+        }
+        
+        //internal
+        //update view ... where predicate - mark as write through
+        //loop on (select pk from view where predicate) - mark as write through, it's ok that this will use cache 
+        //  refreshMatView ...
+        //end
+        
+        //external
+        //update view ... where predicate - mark as write through
+        //update target ... where predicate - mark as write through
+        
+        Block block = new Block();
+        block.setAtomic(true);
+        ProcedureContainer clone = (ProcedureContainer)update.clone();
+        
+        GroupSymbol temp = new GroupSymbol("#temp"); //$NON-NLS-1$
+        if (context.getGroups().contains(temp.getName())) {
+            temp = RulePlaceAccess.recontextSymbol(temp, context.getGroups());
+            temp.setDefinition(null);
+        }
+        Query q = new Query();
+        q.setSelect(new Select(Arrays.asList(new MultipleElementSymbol())));
+        q.setFrom(new From(Arrays.asList(new UnaryFromClause(temp))));
+        
+        update.addTag(WRITE_THROUGH); 
+        block.addStatement(new CommandStatement(update));
+        ElementSymbol rowCount = new ElementSymbol(ProcedureReservedWords.ROWCOUNT);
+        ElementSymbol val = new ElementSymbol("val"); //$NON-NLS-1$
+        DeclareStatement ds = new DeclareStatement(val, DataTypeManager.DefaultDataTypes.INTEGER, rowCount);
+        block.addStatement(ds);
+        final Object gid = update.getGroup().getMetadataID();
+        Object target = metadata.getMaterialization(gid);
+        if (target != null) {
+            final GroupSymbol newGroup = new GroupSymbol(metadata.getFullName(target));
+            newGroup.setMetadataID(target);
+            ExpressionMappingVisitor emv = new ExpressionMappingVisitor(null) {
+                public Expression replaceExpression(Expression element) {
+                    if (element instanceof ElementSymbol) {
+                        ElementSymbol es = (ElementSymbol)element;
+                        if (es.getGroupSymbol().getMetadataID() == gid) {
+                            es.setGroupSymbol(newGroup);
+                        }
+                    }
+                    return element;
+                }
+            };
+            if (clone instanceof Update) {
+                Update u = (Update)clone;
+                for (SetClause sc : u.getChangeList().getClauses()) {
+                    sc.setSymbol(new ElementSymbol(sc.getSymbol().getShortName(), newGroup.clone()));
+                    PreOrPostOrderNavigator.doVisit(sc, emv, PreOrPostOrderNavigator.POST_ORDER);
+                }  
+                u.setGroup(newGroup);
+            } else {
+                ((Delete)clone).setGroup(newGroup);
+            }
+            PreOrPostOrderNavigator.doVisit(((FilteredCommand)clone).getCriteria(), emv, PreOrPostOrderNavigator.POST_ORDER);
+            clone.setUpdateInfo(null);
+            clone.addTag(WRITE_THROUGH); 
+            block.addStatement(new CommandStatement(clone));
+        } else {
+            Object key = metadata.getPrimaryKey(update.getGroup().getMetadataID());
+            if (key == null) {
+                //we need a key for this logic to work
+                return null;
+            }
+            Block b = new Block();
+            List<Object> ids = metadata.getElementIDsInKey(key);
+            Select select = new Select();
+            for (Object id : ids) {
+                select.addSymbol(new ElementSymbol(metadata.getName(id)));
+            }
+            if (clone instanceof Update) {
+                Update u = (Update)clone;
+                for (SetClause sc : u.getChangeList().getClauses()) {
+                    if (ids.contains(sc.getSymbol().getMetadataID())) {
+                        //corner case of an update manipulating the primary key
+                        return null;
+                    }
+                }  
+            }
+            Query keys = new Query();
+            keys.setSelect(select);
+            keys.setFrom(new From(Arrays.asList(new UnaryFromClause(update.getGroup()))));
+            if (((FilteredCommand)clone).getCriteria() != null) {
+                keys.setCriteria((Criteria) ((FilteredCommand)clone).getCriteria().clone());
+            }
+            LoopStatement loop = new LoopStatement(b, keys, "x"); //$NON-NLS-1$
+            StoredProcedure sp = new StoredProcedure();
+            sp.setProcedureName("SYSAdmin.refreshMatViewRow"); //$NON-NLS-1$
+            sp.setParameter(new SPParameter(1, new Constant(metadata.getFullName(update.getGroup().getMetadataID()))));
+
+            int index = 2;
+            for (Object id : ids) {
+                sp.setParameter(new SPParameter(index++, new ElementSymbol(metadata.getName(id))));
+            }
+            b.addStatement(new CommandStatement(sp));
+            block.addStatement(loop);
+        }
+        Query result = new Query();
+        result.setSelect(new Select(Arrays.asList(val)));
+        block.addStatement(new CommandStatement(result));
+        CreateProcedureCommand command = new CreateProcedureCommand(block);
+        QueryResolver.resolveCommand(command, metadata);
+        return rewriteCommand(command, false);
+    }
 
     public static Command rewriteAsUpsertProcedure(Insert insert, QueryMetadataInterface metadata, CommandContext context)
             throws TeiidComponentException, QueryMetadataException,
@@ -2997,6 +3211,10 @@ public class QueryRewriter {
     }
 
 	private Command rewriteUpdate(Update update) throws TeiidComponentException, TeiidProcessingException{
+	    Command c = rewriteForWriteThrough(update);
+        if (c != null) {
+            return c;
+        }
 		UpdateInfo info = update.getUpdateInfo();
 		if (info != null && info.isInherentUpdate()) {
 			if (!info.getUnionBranches().isEmpty()) {
@@ -3169,6 +3387,10 @@ public class QueryRewriter {
 	}
 	
 	private Command rewriteDelete(Delete delete) throws TeiidComponentException, TeiidProcessingException{
+	    Command c = rewriteForWriteThrough(delete);
+	    if (c != null) {
+	        return c;
+	    }
 		UpdateInfo info = delete.getUpdateInfo();
 		if (info != null && info.isInherentDelete()) {
 			if (!info.getUnionBranches().isEmpty()) {

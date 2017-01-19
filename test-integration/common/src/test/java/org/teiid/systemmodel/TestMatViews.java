@@ -30,10 +30,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
@@ -493,7 +495,7 @@ public class TestMatViews {
 	}
 	
 	@Test
-	public void testupdateMatViewInternal() throws Exception {
+	public void testUpdateMatViewInternal() throws Exception {
 	    
 	    ModelMetaData mmd2 = new ModelMetaData();
         mmd2.setName("view1");
@@ -634,5 +636,61 @@ public class TestMatViews {
 		Timestamp v2ts1 = rs.getTimestamp("updated");
 		assertEquals(v2ts, v2ts1);
 	}
+	
+    @Test
+    public void testInternalWriteThroughMativew() throws Exception {
+        ModelMetaData mmd2 = new ModelMetaData();
+        mmd2.setName("m");
+        mmd2.setModelType(Type.PHYSICAL);
+        mmd2.addSourceMapping("x", "x", null);
+        mmd2.addSourceMetadata("DDL", "CREATE foreign TABLE t (col string, colx string) options (updatable true); "
+                + "CREATE VIEW v1 (col1 string, col2 string, primary key (col1)) "
+                + "OPTIONS (updatable true, MATERIALIZED true, \"teiid_rel:MATVIEW_WRITE_THROUGH\" true) AS /*+ cache(updatable) */ select col, colx from t;");
+        
+        HardCodedExecutionFactory hcef = new HardCodedExecutionFactory() {
+            @Override
+            public boolean supportsCompareCriteriaEquals() {
+                return true;
+            }  
+        };
+        hcef.addData("SELECT t.col, t.colx FROM t", Arrays.asList(Arrays.asList("a", "ax")));
+        hcef.addData("SELECT t.col, t.colx FROM t WHERE t.col = 'b'", Arrays.asList(Arrays.asList("b", "d")));
+        hcef.addUpdate("INSERT INTO t (col, colx) VALUES ('b', 'd')", new int[] {1});
+        server.addTranslator("x", hcef);
+        
+        server.deployVDB("comp", mmd2);
+        
+        Connection c = server.getDriver().connect("jdbc:teiid:comp", null);
+        
+        Statement s = c.createStatement();
+        ResultSet rs = s.executeQuery("select * from v1");
+        rs.next();
+        assertEquals("a", rs.getString(1));
+        
+        s.execute("insert into v1 (col1, col2) values ('b', 'd')");
+        assertEquals(1, s.getUpdateCount());
+        
+        rs = s.executeQuery("select count(*) from v1");
+        rs.next();
+        assertEquals(2, rs.getInt(1));
+        
+        hcef.addUpdate("DELETE FROM t WHERE t.col = 'b'", new int[] {1});
+        hcef.addData("SELECT t.col, t.colx FROM t WHERE t.col = 'b'", new ArrayList<List<?>>());
+        s.execute("delete from v1 where v1.col1 = 'b'");
+        assertEquals(1, s.getUpdateCount());
+        
+        rs = s.executeQuery("select count(*) from v1");
+        rs.next();
+        assertEquals(1, rs.getInt(1));
+        
+        hcef.addUpdate("UPDATE t SET colx = 'bx' WHERE t.colx = 'ax'", new int[] {1});
+        hcef.addData("SELECT t.col, t.colx FROM t WHERE t.col = 'a'", Arrays.asList(Arrays.asList("a", "ax")));
+        s.execute("update v1 set col2 = 'bx' where col2 = 'ax'");
+        assertEquals(1, s.getUpdateCount());
+        
+        rs = s.executeQuery("select col2, col1 from v1");
+        rs.next();
+        assertEquals("ax", rs.getString(1));
+    }
 	
 }

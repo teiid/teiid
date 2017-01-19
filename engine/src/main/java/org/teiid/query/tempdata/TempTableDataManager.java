@@ -458,7 +458,6 @@ public class TempTableDataManager implements ProcessorDataManager {
 		StringBuilder criteria = new StringBuilder();
 		for (int i = 0; i < ids.size(); i++) {
 			Object id = iter.next();
-			String targetTypeName = metadata.getElementType(id);
 			if (i != 0) {
 				criteria.append(" AND "); //$NON-NLS-1$
 			}

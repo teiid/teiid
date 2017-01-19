@@ -22,15 +22,12 @@
 
 package org.teiid.systemmodel;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.PrintWriter;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
@@ -49,12 +46,16 @@ import org.junit.Test;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.jdbc.FakeServer;
+import org.teiid.jdbc.util.ResultSetUtil;
 import org.teiid.logging.LogManager;
 import org.teiid.runtime.HardCodedExecutionFactory;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.h2.H2ExecutionFactory;
 
+@SuppressWarnings("nls")
 public class TestExternalMatViews {
+    private static boolean DEBUG = false;
+    
 	private Connection conn;
 	private FakeServer server;
 	private static DataSource h2DataSource;
@@ -101,6 +102,7 @@ public class TestExternalMatViews {
 	public void setUp() throws Exception {
     	server = new FakeServer(true);
     	
+    	if (DEBUG)
 		LogManager.setLogListener(new org.teiid.logging.Logger() {
 			@Override
 			public void shutdown() {
@@ -325,15 +327,24 @@ public class TestExternalMatViews {
 		rs1.close();
 		s1.close();
 	}
-		
+
 	private HardCodedExecutionFactory setupData() throws TranslatorException {
-		H2ExecutionFactory executionFactory = new H2ExecutionFactory() ;
+	    return setupData(false);
+	}
+
+	private HardCodedExecutionFactory setupData(final boolean supportsEQ) throws TranslatorException {
+		H2ExecutionFactory executionFactory = new H2ExecutionFactory();
 		executionFactory.setSupportsDirectQueryProcedure(true);
 		executionFactory.start();
 		server.addTranslator("translator-h2", executionFactory);
 		server.addConnectionFactory("java:/matview-ds", h2DataSource);		
 
-		HardCodedExecutionFactory hcef = new HardCodedExecutionFactory();
+		HardCodedExecutionFactory hcef = new HardCodedExecutionFactory() {
+		    @Override
+    		public boolean supportsCompareCriteriaEquals() {
+		        return supportsEQ;
+    		}  
+		};
 		hcef.addData("SELECT physicalTbl.col, physicalTbl.col1 FROM physicalTbl",
 				Arrays.asList(
 						Arrays.asList(1, "town"), 
@@ -364,7 +375,7 @@ public class TestExternalMatViews {
 		ModelMetaData sourceModel = new ModelMetaData();
 		sourceModel.setName("source");
 		sourceModel.setModelType(Type.PHYSICAL);
-		sourceModel.addSourceMetadata("DDL", "create foreign table physicalTbl (col integer, col1 string);");
+		sourceModel.addSourceMetadata("DDL", "create foreign table physicalTbl (col integer, col1 string) options (updatable true);");
 		sourceModel.addSourceMapping("s1", "fixed", null);
 		return sourceModel;
 	}	
@@ -437,6 +448,59 @@ public class TestExternalMatViews {
 		admin.close();
 	}	
 	
+    @Test
+    public void testInternalWriteThroughMativew() throws Exception {
+        HardCodedExecutionFactory hcef = setupData(true);
+        ModelMetaData sourceModel = setupSourceModel();
+        ModelMetaData matViewModel = setupMatViewModel();
+        
+        ModelMetaData viewModel = new ModelMetaData();
+        viewModel.setName("view1");
+        viewModel.setModelType(Type.VIRTUAL);
+        viewModel.addSourceMetadata("DDL", "CREATE VIEW v1 (col integer primary key, col1 string) "
+                + "OPTIONS (MATERIALIZED true,"
+                + "UPDATABLE true, "
+                + "MATERIALIZED_TABLE 'matview.MAT_V2', "
+                + "\"teiid_rel:MATVIEW_TTL\" 3000, "
+                + "\"teiid_rel:MATVIEW_WRITE_THROUGH\" true, "
+                + "\"teiid_rel:ALLOW_MATVIEW_MANAGEMENT\" true, " 
+                + "\"teiid_rel:MATVIEW_STATUS_TABLE\" 'matview.STATUS', "
+                + "\"teiid_rel:MATVIEW_LOADNUMBER_COLUMN\" 'loadnum') "
+                + "AS select col, col1 from source.physicalTbl");
+        server.deployVDB("comp", sourceModel, viewModel, matViewModel);     
+        
+        Connection c = server.createConnection("jdbc:teiid:comp");
+        
+        Statement s = c.createStatement();
+        ResultSet rs = s.executeQuery("select count(*) from v1");
+        rs.next();
+        assertEquals(3, rs.getInt(1));
+        
+        hcef.addUpdate("INSERT INTO physicalTbl (col, col1) VALUES (4, 'continent')", new int[] {1});
+        s.execute("insert into v1 (col, col1) values (4, 'continent')");
+        assertEquals(1, s.getUpdateCount());
+        
+        rs = s.executeQuery("select count(*) from v1");
+        rs.next();
+        assertEquals(4, rs.getInt(1));
+        
+        hcef.addUpdate("DELETE FROM physicalTbl WHERE physicalTbl.col1 = 'continent'", new int[] {1});
+        s.execute("delete from v1 where v1.col1 = 'continent'");
+        assertEquals(1, s.getUpdateCount());
+        
+        rs = s.executeQuery("select count(*) from v1");
+        rs.next();
+        assertEquals(3, rs.getInt(1));
+        
+        hcef.addUpdate("UPDATE physicalTbl SET col1 = 'town' WHERE physicalTbl.col1 = 'city'", new int[] {1});
+        s.execute("update v1 set col1 = 'town' where col1 = 'city'");
+        assertEquals(1, s.getUpdateCount());
+        
+        rs = s.executeQuery("select col, col1 from v1 where col = 1");
+        rs.next();
+        assertEquals("town", rs.getString(2));
+    }
+	
     public static boolean execute(Connection connection, String sql) throws Exception {
         boolean hasRs = true;
         try {
@@ -444,29 +508,19 @@ public class TestExternalMatViews {
             hasRs = statement.execute(sql);
             if (!hasRs) {
                 int cnt = statement.getUpdateCount();
-                System.out.println("----------------\r");
-                System.out.println("Updated #rows: " + cnt);
-                System.out.println("----------------\r");
+                if (DEBUG) {
+                    System.out.println("----------------\r");
+                    System.out.println("Updated #rows: " + cnt);
+                    System.out.println("----------------\r");
+                }
             } else {
                 ResultSet results = statement.getResultSet();
-                ResultSetMetaData metadata = results.getMetaData();
-                int columns = metadata.getColumnCount();
-                System.out.println("Results");
-                for (int row = 1; results.next(); row++) {
-                    System.out.print(row + ": ");
-                    for (int i = 0; i < columns; i++) {
-                        if (i > 0) {
-                            System.out.print(",");
-                        }
-                        System.out.print(results.getObject(i+1));
-                    }
-                    System.out.println();
+                if (DEBUG) {
+                    ResultSetUtil.printResultSet(results);
                 }
                 results.close();
             }
             statement.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
         } finally {
             if (connection != null) {
                 connection.close();
