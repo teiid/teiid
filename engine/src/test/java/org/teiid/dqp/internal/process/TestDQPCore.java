@@ -140,6 +140,8 @@ public class TestDQPCore {
     	DQPWorkContext.setWorkContext(new DQPWorkContext());
     	core.stop();
     }
+    
+    int id = 0;
 
     public RequestMessage exampleRequestMessage(String sql) {
         RequestMessage msg = new RequestMessage(sql);
@@ -147,6 +149,7 @@ public class TestDQPCore {
         msg.setFetchSize(10);
         msg.setPartialResults(false);
         msg.setExecutionId(100);
+        msg.setExecutionId(id++);
         return msg;
     }
     
@@ -329,6 +332,7 @@ public class TestDQPCore {
         
         //insensitive should not block
         reqMsg.setCursorType(ResultSet.TYPE_SCROLL_INSENSITIVE);
+        reqMsg.setExecutionId(id++);
         
         message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
         rm = message.get(500000, TimeUnit.MILLISECONDS);
