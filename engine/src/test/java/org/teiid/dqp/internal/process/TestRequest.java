@@ -71,7 +71,8 @@ public class TestRequest {
         RequestMessage message = new RequestMessage();
         DQPWorkContext workContext = RealMetadataFactory.buildWorkContext(metadata, RealMetadataFactory.example1VDB());
         
-        request.initialize(message, BufferManagerFactory.getStandaloneBufferManager(), null,new FakeTransactionService(), TEMP_TABLE_STORE, workContext, null); 
+		request.initialize(message, BufferManagerFactory.getStandaloneBufferManager(), null,
+				new FakeTransactionService(), TEMP_TABLE_STORE, workContext, null); 
         request.initMetadata();
         DefaultAuthorizationValidator drav = new DefaultAuthorizationValidator();
         DataRolePolicyDecider drpd = new DataRolePolicyDecider();

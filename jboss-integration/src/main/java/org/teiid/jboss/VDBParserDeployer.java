@@ -24,30 +24,33 @@ package org.teiid.jboss;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.concurrent.Executor;
 
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.as.server.deployment.Attachments;
-import org.jboss.as.server.deployment.DeploymentPhaseContext;
-import org.jboss.as.server.deployment.DeploymentUnit;
-import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
-import org.jboss.as.server.deployment.DeploymentUnitProcessor;
+import org.jboss.as.controller.ModelController;
+import org.jboss.as.server.Services;
+import org.jboss.as.server.deployment.*;
 import org.jboss.metadata.property.PropertyReplacer;
 import org.jboss.metadata.property.PropertyReplacers;
 import org.jboss.metadata.property.PropertyResolver;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.vfs.VirtualFile;
 import org.jboss.vfs.VirtualFileFilter;
+import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataParser;
+import org.teiid.adminapi.jboss.AdminFactory;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.StringUtil;
 import org.teiid.deployers.UDFMetaData;
+import org.teiid.deployers.VDBRepository;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadatastore.DeploymentBasedDatabaseStore;
 import org.teiid.query.metadata.VDBResources;
 import org.xml.sax.SAXException;
 
@@ -56,8 +59,10 @@ import org.xml.sax.SAXException;
  * This file loads the "vdb.xml" file inside a ".vdb" file, along with all the metadata in the .INDEX files
  */
 class VDBParserDeployer implements DeploymentUnitProcessor {
+	private VDBRepository vdbRepo;
 	
-	public VDBParserDeployer() {
+	public VDBParserDeployer(VDBRepository vdbRepo) {
+		this.vdbRepo = vdbRepo;
 	}
 	
 	public void deploy(final DeploymentPhaseContext phaseContext)  throws DeploymentUnitProcessingException {
@@ -70,6 +75,9 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 		
 		if (TeiidAttachments.isVDBXMLDeployment(deploymentUnit)) {
 			parseVDBXML(file, deploymentUnit, phaseContext, true);			
+		}
+		else if (TeiidAttachments.isVDBDDLDeployment(deploymentUnit)) {
+			parseVDBDDL(file, deploymentUnit, phaseContext);
 		}
 		else {
 			// scan for different files 
@@ -108,7 +116,8 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 		}
 	}
 
-	private VDBMetaData parseVDBXML(VirtualFile file, DeploymentUnit deploymentUnit, DeploymentPhaseContext phaseContext, boolean xmlDeployment) throws DeploymentUnitProcessingException {
+	private VDBMetaData parseVDBXML(VirtualFile file, DeploymentUnit deploymentUnit,
+			DeploymentPhaseContext phaseContext, boolean xmlDeployment) throws DeploymentUnitProcessingException {
 		try {
 			VDBMetadataParser.validate(file.openStream());
             PropertyResolver propertyResolver = deploymentUnit.getAttachment(org.jboss.as.ee.metadata.property.Attachments.FINAL_PROPERTY_RESOLVER);
@@ -140,6 +149,35 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 		} catch (IOException e) {
 			throw new DeploymentUnitProcessingException(IntegrationPlugin.Event.TEIID50017.name(), e);
 		} catch (SAXException e) {
+			throw new DeploymentUnitProcessingException(IntegrationPlugin.Event.TEIID50017.name(), e);
+		}
+	}
+
+	private VDBMetaData parseVDBDDL(VirtualFile file, DeploymentUnit deploymentUnit,
+			DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
+		try {
+            PropertyReplacer replacer = deploymentUnit.getAttachment(org.jboss.as.ee.metadata.property.Attachments.FINAL_PROPERTY_REPLACER);
+            String vdbContents = replacer.replaceProperties(ObjectConverterUtil.convertToString(file.openStream()));
+			
+			ObjectSerializer serializer = ObjectSerializer.class
+					.cast(phaseContext.getServiceRegistry().getService(TeiidServiceNames.OBJECT_SERIALIZER).getValue());
+
+			DeploymentBasedDatabaseStore store = new DeploymentBasedDatabaseStore(vdbRepo);
+			VDBMetaData vdb = store.getVDBMetadata(vdbContents);
+			
+			// if there is persisted one, let that be XML version for now.
+			if (serializer.buildVdbXml(vdb).exists()) {
+				vdb = VDBMetadataParser.unmarshell(new FileInputStream(serializer.buildVdbXml(vdb)));
+			}
+			
+			vdb.setStatus(Status.LOADING);
+			vdb.setXmlDeployment(true);
+			deploymentUnit.putAttachment(TeiidAttachments.VDB_METADATA, vdb);
+			LogManager.logDetail(LogConstants.CTX_RUNTIME,"VDB "+file.getName()+" has been parsed.");  //$NON-NLS-1$ //$NON-NLS-2$
+			return vdb;
+		} catch (XMLStreamException e) {
+			throw new DeploymentUnitProcessingException(IntegrationPlugin.Event.TEIID50017.name(), e);
+		} catch (IOException e) {
 			throw new DeploymentUnitProcessingException(IntegrationPlugin.Event.TEIID50017.name(), e);
 		}
 	}

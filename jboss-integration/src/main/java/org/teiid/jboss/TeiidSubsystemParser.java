@@ -113,7 +113,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 			AUTHENTICATION_ALLOW_SECURITY_DOMAIN_QUALIFIER.marshallAsAttribute(node, false, writer);
 			writer.writeEndElement();
     	}
-    	   	
+    	 
     	if (has(node, Element.TRANSPORT_ELEMENT.getLocalName())) {
 	    	ArrayList<String> transports = new ArrayList<String>(node.get(Element.TRANSPORT_ELEMENT.getLocalName()).keys());
 	    	if (!transports.isEmpty()) {
@@ -135,6 +135,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 	    		}
 	    	}        
     	}
+    	   	
         writer.writeEndElement(); // End of subsystem element
     }
     
@@ -273,7 +274,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     				case POLICY_DECIDER_MODULE_ELEMENT:
     				case AUTHORIZATION_VALIDATOR_MODULE_ELEMENT:
     				case PREPARSER_MODULE_ELEMENT:
-    				case WORKMANAGER:    					
+    				case WORKMANAGER:
     					bootServices.get(reader.getLocalName()).set(reader.getElementText());
     					break;
     				case TIME_SLICE_IN_MILL_ELEMENT:
@@ -348,6 +349,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
                         	throw new XMLStreamException();
                     	}
                         break;
+                        
                     case AUTHENTICATION_ELEMENT:
     					parseAuthentication(reader, bootServices);
     					break;

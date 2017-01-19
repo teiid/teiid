@@ -50,6 +50,7 @@ public class TestStatement {
 
 	@Test public void testBatchExecution() throws Exception {
 		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
+		Mockito.stub(conn.getConnectionProps()).toReturn(new Properties());
 		DQP dqp = Mockito.mock(DQP.class);
 		ResultsFuture<ResultsMessage> results = new ResultsFuture<ResultsMessage>(); 
 		Mockito.stub(dqp.executeRequest(Mockito.anyLong(), (RequestMessage)Mockito.anyObject())).toReturn(results);
@@ -67,6 +68,7 @@ public class TestStatement {
 	
 	@Test public void testWarnings() throws Exception {
 		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
+		Mockito.stub(conn.getConnectionProps()).toReturn(new Properties());
 		DQP dqp = Mockito.mock(DQP.class);
 		ResultsFuture<ResultsMessage> results = new ResultsFuture<ResultsMessage>(); 
 		Mockito.stub(dqp.executeRequest(Mockito.anyLong(), (RequestMessage)Mockito.anyObject())).toReturn(results);
@@ -92,6 +94,7 @@ public class TestStatement {
 	
 	@Test public void testGetMoreResults() throws Exception {
 		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
+		Mockito.stub(conn.getConnectionProps()).toReturn(new Properties());
 		DQP dqp = Mockito.mock(DQP.class);
 		ResultsFuture<ResultsMessage> results = new ResultsFuture<ResultsMessage>(); 
 		Mockito.stub(dqp.executeRequest(Mockito.anyLong(), (RequestMessage)Mockito.anyObject())).toReturn(results);
@@ -217,6 +220,7 @@ public class TestStatement {
 	
 	@Test public void testAsynchTimeout() throws Exception {
 		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
+		Mockito.stub(conn.getConnectionProps()).toReturn(new Properties());
 		final StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 		statement.setQueryTimeoutMS(1);
 		DQP dqp = Mockito.mock(DQP.class);

@@ -402,7 +402,7 @@ public class Request {
      * @throws TeiidComponentException
      * @throws TeiidProcessingException 
      */
-    protected void generatePlan(boolean addLimit) throws TeiidComponentException, TeiidProcessingException {
+    protected void generatePlan(boolean prepared) throws TeiidComponentException, TeiidProcessingException {
     	createCommandContext();
         Command command = parseCommand();
         
@@ -434,7 +434,7 @@ public class Request {
          * Adds a row limit to a query if Statement.setMaxRows has been called and the command
          * doesn't already have a limit clause.
          */
-        if (addLimit && requestMsg.getRowLimit() > 0 && command instanceof QueryCommand) {
+        if (!prepared && requestMsg.getRowLimit() > 0 && command instanceof QueryCommand) {
             QueryCommand query = (QueryCommand)command;
             if (query.getLimit() == null) {
                 query.setLimit(new Limit(null, new Constant(new Integer(requestMsg.getRowLimit()), DataTypeManager.DefaultDataClasses.INTEGER)));
@@ -478,7 +478,7 @@ public class Request {
     	
         initMetadata();
         
-        generatePlan(true);
+        generatePlan(false);
         
         postProcessXML();
         

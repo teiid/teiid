@@ -74,7 +74,10 @@ public class CompositeVDB {
 	private Collection<Future<?>> tasks = Collections.synchronizedSet(new HashSet<Future<?>>());
 	private VDBKey vdbKey;
 	
-	public CompositeVDB(VDBMetaData vdb, MetadataStore metadataStore, LinkedHashMap<String, VDBResources.Resource> visibilityMap, UDFMetaData udf, FunctionTree systemFunctions, ConnectorManagerRepository cmr, VDBRepository vdbRepository, MetadataStore... additionalStores) throws VirtualDatabaseException {
+    public CompositeVDB(VDBMetaData vdb, MetadataStore metadataStore,
+            LinkedHashMap<String, VDBResources.Resource> visibilityMap, UDFMetaData udf, FunctionTree systemFunctions,
+            ConnectorManagerRepository cmr, VDBRepository vdbRepository, MetadataStore... additionalStores)
+            throws VirtualDatabaseException {
 		this.vdb = vdb;
 		this.store = metadataStore;
 		this.visibilityMap = visibilityMap;
@@ -88,8 +91,11 @@ public class CompositeVDB {
 		buildCompositeState(vdbRepository);
 	}
 	
-	private static TransformationMetadata buildTransformationMetaData(VDBMetaData vdb, LinkedHashMap<String, VDBResources.Resource> visibilityMap, MetadataStore store, UDFMetaData udf, FunctionTree systemFunctions, MetadataStore[] additionalStores) {
-		Collection <FunctionTree> udfs = new ArrayList<FunctionTree>();
+    private static TransformationMetadata buildTransformationMetaData(VDBMetaData vdb,
+            LinkedHashMap<String, VDBResources.Resource> visibilityMap, MetadataStore store, UDFMetaData udf,
+            FunctionTree systemFunctions, MetadataStore[] additionalStores) {
+
+        Collection <FunctionTree> udfs = new ArrayList<FunctionTree>();
 		if (udf != null) {			
 			for (Map.Entry<String, UDFSource> entry : udf.getFunctions().entrySet()) {
 				udfs.add(new FunctionTree(entry.getKey(), entry.getValue(), true));

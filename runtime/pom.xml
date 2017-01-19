@@ -121,5 +121,10 @@
         <artifactId>postgresql</artifactId>
         <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.picketbox</groupId>
+      <artifactId>picketbox</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 </project>

@@ -11,7 +11,6 @@ import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.deployers.VDBRepository;
-import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.net.TeiidURL;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.runtime.DoNothingSecurityHelper;
@@ -110,11 +109,7 @@ public class TestSessionServiceImpl {
 		
 		ssi.setVDBRepository(repo);
 		
-		try {
-			ssi.getActiveVDB("name.x", null);
-			fail("must have failed with non integer version");
-		} catch (SessionServiceException e) {
-		}
+		assertNull(ssi.getActiveVDB("name.x", null));
 	}
 	
 	@Test
@@ -130,17 +125,9 @@ public class TestSessionServiceImpl {
 		
 		ssi.setVDBRepository(repo);
 		
-		try {
-			ssi.getActiveVDB("name.1", "1");
-			fail("must have failed with ambigious version info");
-		} catch (SessionServiceException e) {
-		}
+		assertNull(ssi.getActiveVDB("name.1", "1"));
 		
-		try {
-			ssi.getActiveVDB("name..1", null);
-			fail("must have failed with ambigious version info");
-		} catch (SessionServiceException e) {
-		}
+		assertNull(ssi.getActiveVDB("name..1", null));
 	}	
 	
 	@Test public void testSecurityDomain() throws Exception {
@@ -249,4 +236,5 @@ public class TestSessionServiceImpl {
         
         assertEquals("@", SessionServiceImpl.getBaseUsername("@")); //$NON-NLS-1$ //$NON-NLS-2$
     }	
+    
 }

@@ -22,7 +22,9 @@
 
 package org.teiid.query.parser;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
@@ -72,6 +74,16 @@ public class TestParser {
 		assertEquals("Cloned command objects do not match: ", expectedCommand, actualCommand.clone());				 //$NON-NLS-1$
 	}
 
+	static void helpTest(String sql, String expectedString, Command expectedCommand, ParseInfo info,
+			String vdbName, String vdbVersion, String schemaName) throws QueryParserException {
+		Command actualCommand = QueryParser.getQueryParser().parseCommand(sql, info, false, vdbName, vdbVersion,
+                schemaName, null);
+		String actualString = actualCommand.toString();
+
+		assertEquals("Parse string does not match: ", expectedString, actualString); //$NON-NLS-1$
+		assertEquals("Command objects do not match: ", expectedCommand, actualCommand);				 //$NON-NLS-1$
+		assertEquals("Cloned command objects do not match: ", expectedCommand, actualCommand.clone());				 //$NON-NLS-1$
+	}	
 	public static void helpTestExpression(String sql, String expectedString, Expression expected) throws QueryParserException {
 		Expression	actual = QueryParser.getQueryParser().parseExpression(sql);
 		String actualString = actual.toString();
@@ -5272,5 +5284,4 @@ public class TestParser {
     	query.setSelect(new Select(Arrays.asList(new Function(SQLConstants.Tokens.DOUBLE_AMP, new Expression[] {new Constant(1), new Constant(2)}))));
         helpTest(sql, "SELECT (1 && 2)", query);
     }
-
 }

@@ -90,7 +90,7 @@ public class TestODataMetadataProcessor {
 		String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
 		//System.out.println(ddl);	
 		
-		MetadataFactory mf2 = new MetadataFactory(null, 1, "northwind", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null); 
+		MetadataFactory mf2 = new MetadataFactory("vdb", 1, "northwind", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null); 
 		QueryParser.getQueryParser().parseDDL(mf2, ddl);	
 		
 		Procedure p = mf.getSchema().getProcedure("executeVoid");

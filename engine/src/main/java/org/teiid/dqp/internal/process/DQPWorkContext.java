@@ -323,12 +323,15 @@ public class DQPWorkContext implements Serializable {
 	}    
 
 	private Set<String> getUserRoles() {
-		if (getSubject() == null) {
-			return Collections.emptySet();
-		}
-		
-		Set<String> roles = new HashSet<String>();
-		Set<Principal> principals = getSubject().getPrincipals();
+		return getUserRoles(getSubject());
+	}
+
+    public static Set<String> getUserRoles(Subject subject) {
+        if (subject == null) {
+            return Collections.emptySet();
+        }
+        Set<String> roles = new HashSet<String>();
+		Set<Principal> principals = subject.getPrincipals();
 		for(Principal p: principals) {
 			// this JBoss specific, but no code level dependencies
 			if ((p instanceof Group) && p.getName().equals("Roles")){ //$NON-NLS-1$

@@ -22,6 +22,8 @@ package org.teiid.query.parser;
  */
 import static org.junit.Assert.*;
 
+import java.io.StringReader;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -33,6 +35,10 @@ import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.*;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.Table.TriggerEvent;
+import org.teiid.metadata.Grant.Permission;
+import org.teiid.metadata.Grant.Permission.Privilege;
+import org.teiid.query.function.SystemFunctionManager;
+import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.validator.ValidatorReport;
@@ -41,8 +47,6 @@ import org.teiid.query.validator.ValidatorReport;
 
 @SuppressWarnings("nls")
 public class TestDDLParser {
-	private QueryParser parser = new QueryParser();
-	
 	@Test
 	public void testForeignTable() throws Exception {
 		
@@ -148,17 +152,19 @@ public class TestDDLParser {
 	
 	@Test(expected=MetadataException.class)
 	public void testDuplicatePrimarykey() throws Exception {
+		QueryParser parser = new QueryParser();
 		String ddl = "CREATE FOREIGN TABLE G1( e1 integer primary key, e2 varchar primary key)";
 		MetadataStore mds = new MetadataStore();
-		MetadataFactory mf = new MetadataFactory(null, 1, "model", getDataTypes(), new Properties(), null); 
+		MetadataFactory mf = new MetadataFactory("x", 1, "model", getDataTypes(), new Properties(), null); 
 		parser.parseDDL(mf, ddl);
 		mf.mergeInto(mds);
 	}
 	
 	@Test public void testAutoIncrementPrimarykey() throws Exception {
+		QueryParser parser = new QueryParser();
 		String ddl = "CREATE FOREIGN TABLE G1( e1 integer auto_increment primary key, e2 varchar)";
 		MetadataStore mds = new MetadataStore();
-		MetadataFactory mf = new MetadataFactory(null, 1, "model", getDataTypes(), new Properties(), null); 
+		MetadataFactory mf = new MetadataFactory("x", 1, "model", getDataTypes(), new Properties(), null); 
 		parser.parseDDL(mf, ddl);
 		mf.mergeInto(mds);
 	}
@@ -254,10 +260,11 @@ public class TestDDLParser {
 	
 	@Test(expected=MetadataException.class)
 	public void testWrongPrimarykey() throws Exception {
+		QueryParser parser = new QueryParser();
 		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, PRIMARY KEY (e3))";
 
 		MetadataStore mds = new MetadataStore();
-		MetadataFactory mf = new MetadataFactory(null, 1, "model", getDataTypes(), new Properties(), null); 
+		MetadataFactory mf = new MetadataFactory("x", 1, "model", getDataTypes(), new Properties(), null); 
 		parser.parseDDL(mf, ddl);
 		mf.mergeInto(mds);
 	}	
@@ -380,17 +387,19 @@ public class TestDDLParser {
 	
 	@Test(expected=MetadataException.class)
 	public void testTableWithPlan() throws Exception {
+		QueryParser parser = new QueryParser();
 		String ddl = "CREATE foreign table G1 as select 1";
 		MetadataStore mds = new MetadataStore();
-		MetadataFactory mf = new MetadataFactory(null, 1, "model", getDataTypes(), new Properties(), null); 
+		MetadataFactory mf = new MetadataFactory("x", 1, "model", getDataTypes(), new Properties(), null); 
 		parser.parseDDL(mf,ddl);
 		mf.mergeInto(mds);
 	}	
 	
 	@Test
 	public void testViewWithoutColumns() throws Exception {
+		QueryParser parser = new QueryParser();
 		MetadataStore mds = new MetadataStore();			
-		MetadataFactory mf = new MetadataFactory(null, 1, "VM1", getDataTypes(), new Properties(), null); 
+		MetadataFactory mf = new MetadataFactory("x", 1, "VM1", getDataTypes(), new Properties(), null); 
 		parser.parseDDL(mf,"CREATE VIEW V1 AS SELECT * FROM PM1.G1");			
 		mf.mergeInto(mds);
 	}	
@@ -705,10 +714,11 @@ public class TestDDLParser {
 	
 	@Test
 	public void testNamespace() throws Exception {
+		QueryParser parser = new QueryParser();
 		String ddl = 	"set namespace 'http://teiid.org' AS teiid";
 
 		MetadataStore mds = new MetadataStore();
-		MetadataFactory mf = new MetadataFactory(null, 1, "model", getDataTypes(), new Properties(), null); 
+		MetadataFactory mf = new MetadataFactory("x", 1, "model", getDataTypes(), new Properties(), null); 
 		parser.parseDDL(mf, ddl);
 		mf.mergeInto(mds);
 		
@@ -718,9 +728,10 @@ public class TestDDLParser {
 	
     @Test
     public void testReservedNamespace1() throws Exception {
+    	QueryParser parser = new QueryParser();
         String ddl = "set namespace 'http://www.teiid.org/translator/salesforce/2012' AS teiid_sf";
         MetadataStore mds = new MetadataStore();
-        MetadataFactory mf = new MetadataFactory(null, 1, "model", getDataTypes(), new Properties(), null); 
+        MetadataFactory mf = new MetadataFactory("x", 1, "model", getDataTypes(), new Properties(), null); 
         parser.parseDDL(mf, ddl);
         mf.mergeInto(mds);
         
@@ -730,9 +741,10 @@ public class TestDDLParser {
     
     @Test(expected=MetadataException.class)
     public void testReservedNamespaceURIWrong() throws Exception {
+    	QueryParser parser = new QueryParser();
         String ddl = "set namespace 'http://www.teiid.org/translator/salesforce/2013' AS teiid_sf";
         MetadataStore mds = new MetadataStore();
-        MetadataFactory mf = new MetadataFactory(null, 1, "model", getDataTypes(), new Properties(), null); 
+        MetadataFactory mf = new MetadataFactory("x", 1, "model", getDataTypes(), new Properties(), null); 
         parser.parseDDL(mf, ddl);
         mf.mergeInto(mds);
         
@@ -742,9 +754,10 @@ public class TestDDLParser {
     
     @Test(expected=MetadataException.class)
     public void testReservedNamespacePrefixMismatch() throws Exception {
+    	QueryParser parser = new QueryParser();
         String ddl = "set namespace 'http://www.teiid.org/translator/salesforce/2012' AS teiid_foo";
         MetadataStore mds = new MetadataStore();
-        MetadataFactory mf = new MetadataFactory(null, 1, "model", getDataTypes(), new Properties(), null); 
+        MetadataFactory mf = new MetadataFactory("x", 1, "model", getDataTypes(), new Properties(), null); 
         parser.parseDDL(mf, ddl);
         mf.mergeInto(mds);
         
@@ -754,9 +767,10 @@ public class TestDDLParser {
 	
     @Test
     public void testReservedURIDifferentNS() throws Exception {
+    	QueryParser parser = new QueryParser();
         String ddl = "set namespace 'http://www.teiid.org/translator/salesforce/2012' AS ns";
         MetadataStore mds = new MetadataStore();
-        MetadataFactory mf = new MetadataFactory(null, 1, "model", getDataTypes(), new Properties(), null); 
+        MetadataFactory mf = new MetadataFactory("x", 1, "model", getDataTypes(), new Properties(), null); 
         parser.parseDDL(mf, ddl);
         mf.mergeInto(mds);
         
@@ -765,17 +779,41 @@ public class TestDDLParser {
     }    
 
 	public static MetadataFactory helpParse(String ddl, String model) {
-		MetadataFactory mf = new MetadataFactory(null, 1, model, getDataTypes(), new Properties(), null); 
+		MetadataFactory mf = new MetadataFactory("x", 1, model, getDataTypes(), new Properties(), null); 
 		QueryParser.getQueryParser().parseDDL(mf, ddl);
 		return mf;
 	}
+	
+    public static Database helpParse(String ddl) {
+        DatabaseStore store = new DatabaseStore() {
+            @Override
+            public Map<String, Datatype> getRuntimeTypes() {
+                return getDataTypes();
+            }
+            @Override
+            public Map<String, Datatype> getBuiltinDataTypes() {
+                return getDataTypes();
+            }
+			@Override
+			public SystemFunctionManager getSystemFunctionManager() {
+				return new SystemFunctionManager();
+			}
+        }; 
+        store.startEditing(true);
+        QueryParser.getQueryParser().parseDDL(store, new StringReader(ddl));
+        store.stopEditing();
+        if (store.getDatabases().isEmpty()) {
+            return null;
+        }
+        return store.getDatabases().get(0);
+    }	
 	
 	public static Map<String, Datatype> getDataTypes() {
 		return SystemMetadata.getInstance().getRuntimeTypeMap();
 	}
 	
 	@Test public void testKeyResolve() {
-		MetadataFactory mf = new MetadataFactory(null, 1, "foo", getDataTypes(), new Properties(), null);
+		MetadataFactory mf = new MetadataFactory("x", 1, "foo", getDataTypes(), new Properties(), null);
 		mf.addNamespace("x", "http://x");
 		assertEquals("{http://x}z", MetadataFactory.resolvePropertyKey(mf, "x:z"));
 		assertEquals("y:z", MetadataFactory.resolvePropertyKey(mf, "y:z"));
@@ -959,5 +997,476 @@ public class TestDDLParser {
         assertEquals("tr", tr.getName());
         assertEquals(TriggerEvent.UPDATE, tr.getEvent());
         assertNotNull(tr.getPlan());
+	}
+	
+    @Test 
+    public void testCreateDatabase() throws Exception {
+        String ddl = "CREATE DATABASE FOO VERSION '2' OPTIONS (k1 'v1', k2 'v2')";
+        
+        Database db = helpParse(ddl);
+        
+        assertEquals("FOO", db.getName());
+        assertEquals("2", db.getVersion());
+        assertEquals("v1", db.getProperty("k1", false));
+        assertEquals("v2", db.getProperty("k2", false));
+    }	
+    
+    @Test 
+    public void testAlterDatabase() throws Exception {
+        String ddl = "CREATE DATABASE FOO VERSION '2' OPTIONS (k1 'v1', k2 'v2');"
+                 + "ALTER DATABASE FOO OPTIONS (ADD k3 'v3', SET k1 'v4', DROP k2);";
+        
+        Database db = helpParse(ddl);
+        
+        assertEquals("FOO", db.getName());
+        assertEquals("2", db.getVersion());
+        assertEquals("v4", db.getProperty("k1", false));
+        assertNull(db.getProperty("k2", false));
+        assertEquals("v3", db.getProperty("k3", false));
+    }
+    
+    @Test 
+    public void testAlterServer() throws Exception {
+        String ddl = "CREATE DATABASE FOO VERSION '2';"
+                + "CREATE FOREIGN DATA WRAPPER orcl;"
+                + "CREATE SERVER x TYPE 'oracle' VERSION '2.0' FOREIGN DATA WRAPPER orcl OPTIONS (k1 'v1');"
+                + "ALTER SERVER x OPTIONS(SET k1 'v2')";
+        		
+        Database db = helpParse(ddl);
+        
+        assertEquals("FOO", db.getName());
+        assertEquals("2", db.getVersion());
+        Server s = db.getServer("x");
+        assertNotNull(s);
+        assertEquals("v2", s.getProperty("k1", false));
+    }    
+    
+    @Test 
+    public void testCreateDatabaseNoVersion() throws Exception {
+        String ddl = "CREATE DATABASE FOO OPTIONS (k1 'v1', k2 'v2')";
+        
+        Database db = helpParse(ddl);
+        
+        assertEquals("FOO", db.getName());
+        assertEquals("1", db.getVersion());
+        assertEquals("v1", db.getProperty("k1", false));
+        assertEquals("v2", db.getProperty("k2", false));
+    }
+    
+    @Test 
+    public void testCreateDropDatabase() throws Exception {
+        String ddl = "CREATE DATABASE FOO;"
+                + "DROP DATABASE FOO;";
+        
+        Database db = helpParse(ddl);
+        assertNull(db);
+    }    
+    
+    @Test 
+    public void testCreateSchema() throws Exception {
+        String ddl = "CREATE DATABASE FOO;"
+                + "CREATE FOREIGN DATA WRAPPER orcl;"
+                + "CREATE SERVER x TYPE 'oracle' VERSION '2.0' FOREIGN DATA WRAPPER orcl OPTIONS (k1 'v1');"
+                + "CREATE SCHEMA S1 SERVER x OPTIONS (x 'y');";
+        
+        Database db = helpParse(ddl);
+        
+        // schema test
+        Schema schema = db.getSchema("S1");
+        assertNotNull(schema);
+        assertEquals("y", schema.getProperty("x", false));
+        
+        //server test
+        assertNotNull(db.getServer("x"));
+        assertNotNull(schema.getServer("x"));
+        assertEquals("v1", db.getServer("x").getProperty("k1", false));
+        
+        // data wrapper test
+        assertNotNull(db.getDataWrapper("orcl"));
+        assertEquals("orcl", db.getServer("x").getDataWrapper());
+    }
+    
+    @Test 
+    public void testRole() throws Exception {
+        String ddl = "CREATE DATABASE FOO;"
+                + "CREATE ROLE superuser WITH JAAS ROLE x,y;";
+        
+        Database db = helpParse(ddl);
+        Role role = db.getRole("superuser");
+        assertNotNull(role);
+        
+        assertEquals("[x, y]", role.getJassRoles().toString());
+    } 
+    
+    @Test 
+    public void testRoleAnyAuth() throws Exception {
+        String ddl = "CREATE DATABASE FOO;"
+                + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;";
+        
+        Database db = helpParse(ddl);
+        Role role = db.getRole("superuser");
+        assertNotNull(role);
+        
+        assertEquals("[x, y]", role.getJassRoles().toString());
+        assertTrue(role.isAnyAuthenticated());
+    }  
+
+    @Test 
+    public void testDropRole() throws Exception {
+        String ddl = "CREATE DATABASE FOO;"
+                + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;"
+                + "DROP ROLE superuser";
+        
+        Database db = helpParse(ddl);
+        Role role = db.getRole("superuser");
+        assertNull(role);
+        
+    }      
+    
+    @Test 
+    public void testGrant() throws Exception {
+        String ddl = "CREATE DATABASE FOO;"
+                + "CREATE FOREIGN DATA WRAPPER postgresql;"
+                + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
+                + "CREATE  SCHEMA test SERVER pgsql;"
+                + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
+                + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;"
+                + "GRANT SELECT,INSERT,DELETE ON TABLE G1 TO superuser;"
+                + "GRANT UPDATE ON TABLE test.G1 TO superuser;";
+        
+        Database db = helpParse(ddl);
+        Role role = db.getRole("superuser");
+        assertNotNull(role);
+
+        Collection<Grant> grants = db.getGrants();
+        assertEquals(1, grants.size());
+        Grant g = grants.iterator().next();
+        assertEquals(1, g.getPermissions().size());
+        Permission p = g.getPermissions().iterator().next();
+        assertTrue(p.hasPrivilege(Privilege.SELECT));
+        assertTrue(p.hasPrivilege(Privilege.INSERT));
+        assertTrue(p.hasPrivilege(Privilege.DELETE));
+        assertTrue(p.hasPrivilege(Privilege.UPDATE));
+        assertFalse(p.hasPrivilege(Privilege.DROP));
+    }
+    
+    @Test 
+    public void testGrantAll() throws Exception {
+        String ddl = "CREATE DATABASE FOO;"
+                + "CREATE FOREIGN DATA WRAPPER postgresql;"
+                + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
+                + "CREATE  SCHEMA test SERVER pgsql;"
+                + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
+                + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;"
+                + "GRANT ALL PRIVILEGES ON TABLE test.G1 TO superuser;";
+        
+        Database db = helpParse(ddl);
+        Role role = db.getRole("superuser");
+        assertNotNull(role);
+
+        Collection<Grant> grants = db.getGrants();
+        assertEquals(1, grants.size());
+        Grant g = grants.iterator().next();
+        assertEquals(1, g.getPermissions().size());
+        Permission p = g.getPermissions().iterator().next();
+        assertTrue(p.hasPrivilege(Privilege.ALL_PRIVILEGES));
+    }  
+    
+    @Test 
+    public void testGrantWithCondition() throws Exception {
+        String ddl = "CREATE DATABASE FOO;"
+                + "CREATE FOREIGN DATA WRAPPER postgresql;"
+                + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
+                + "CREATE  SCHEMA test SERVER pgsql;"
+                + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
+                + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;"
+                + "GRANT ALL PRIVILEGES ON TABLE test.G1 CONDITION CONSTRAINT 'foo=bar' TO superuser;";
+        
+        Database db = helpParse(ddl);
+        Role role = db.getRole("superuser");
+        assertNotNull(role);
+
+        Collection<Grant> grants = db.getGrants();
+        assertEquals(1, grants.size());
+        Grant g = grants.iterator().next();
+        assertEquals(1, g.getPermissions().size());
+        Permission p = g.getPermissions().iterator().next();
+        assertTrue(p.hasPrivilege(Privilege.ALL_PRIVILEGES));
+        assertEquals("foo=bar", p.getCondition());
+        assertTrue(p.isConditionAConstraint());
+    }     
+    
+    @Test 
+    public void testRevokeGrant() throws Exception {
+        String ddl = "CREATE DATABASE FOO;"
+                + "CREATE FOREIGN DATA WRAPPER postgresql;"
+                + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
+                + "CREATE  SCHEMA test SERVER pgsql;"
+                + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
+                + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;"
+                + "GRANT SELECT,INSERT,DELETE ON TABLE G1 TO superuser;"
+                + "GRANT UPDATE ON TABLE test.G1 TO superuser;"
+                + "REVOKE GRANT SELECT ON TABLE test.G1 FROM superuser;";
+        
+        Database db = helpParse(ddl);
+        Role role = db.getRole("superuser");
+        assertNotNull(role);
+
+        Collection<Grant> grants = db.getGrants();
+        assertEquals(1, grants.size());
+        Grant g = grants.iterator().next();
+        assertEquals(1, g.getPermissions().size());
+        Permission p = g.getPermissions().iterator().next();
+        assertFalse(p.hasPrivilege(Privilege.SELECT));
+        assertTrue(p.hasPrivilege(Privilege.INSERT));
+        assertTrue(p.hasPrivilege(Privilege.DELETE));
+        assertTrue(p.hasPrivilege(Privilege.UPDATE));
+        assertFalse(p.hasPrivilege(Privilege.DROP));
+    }  
+    
+    @Test 
+    public void testRevokeALl() throws Exception {
+        String ddl = "CREATE DATABASE FOO;"
+                + "CREATE FOREIGN DATA WRAPPER postgresql;"
+                + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
+                + "CREATE  SCHEMA test SERVER pgsql;"
+                + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
+                + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;"
+                + "GRANT SELECT,INSERT,DELETE ON TABLE G1 TO superuser;"
+                + "GRANT UPDATE ON TABLE test.G1 TO superuser;"
+                + "REVOKE GRANT ALL PRIVILEGES ON TABLE test.G1 FROM superuser;";
+        
+        Database db = helpParse(ddl);
+        Role role = db.getRole("superuser");
+        assertNotNull(role);
+
+        Collection<Grant> grants = db.getGrants();
+        assertEquals(0, grants.size());
+    }    
+
+    @Test 
+    public void testPhysicalTable() throws Exception {
+        String ddl = "CREATE DATABASE FOO;"
+                + "CREATE FOREIGN DATA WRAPPER postgresql;"
+                + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
+                + "CREATE  SCHEMA test SERVER pgsql;"
+                + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);";
+        
+        Database db = helpParse(ddl);
+        Schema s = db.getSchema("test");
+        Table t = s.getTable("G1");
+        assertNotNull(t);  
+        assertTrue(t.getColumns().size() == 3);
+        assertNotNull(t.getColumnByName("e1"));
+        assertNotNull(t.getColumnByName("e2"));
+        assertNotNull(t.getColumnByName("e3"));
+    }    
+    
+    @Test 
+    public void testAlterView() throws Exception {
+        String ddl = "CREATE DATABASE FOO;"
+                + "CREATE VIRTUAL SCHEMA test;"
+                + "CREATE VIRTUAL VIEW G1( e1 integer, e2 varchar, e3 date) AS SELECT 1, '2', curdate();"
+                + "ALTER VIEW G1 AS /*+ foo */ SELECT 1, 'foo', curdate()";
+        
+        Database db = helpParse(ddl);
+        Schema s = db.getSchema("test");
+        Table t = s.getTable("G1");
+        assertEquals("SELECT 1, 'foo', curdate()", t.getSelectTransformation());
+    } 
+    
+    @Test 
+    public void testPhysicalTableAlterAddColumn() throws Exception {
+        String ddl = "CREATE DATABASE FOO;"
+                + "CREATE FOREIGN DATA WRAPPER postgresql;"
+                + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
+                + "CREATE  SCHEMA test SERVER pgsql;"
+                + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
+                + "ALTER TABLE G1 ADD COLUMN e4 integer PRIMARY KEY OPTIONS(x 10)";
+        
+        Database db = helpParse(ddl);
+        Schema s = db.getSchema("test");
+        Table t = s.getTable("G1");
+        assertNotNull(t);  
+        assertTrue(t.getColumns().size() == 4);
+        assertNotNull(t.getColumnByName("e1"));
+        assertNotNull(t.getColumnByName("e2"));
+        assertNotNull(t.getColumnByName("e3"));
+        assertNotNull(t.getColumnByName("e4"));
+        
+        Column c = t.getColumnByName("e4");
+        assertEquals("integer", c.getRuntimeType());
+        assertNotNull(t.getPrimaryKey().getColumnByName("e4"));
+        assertEquals("10", c.getProperty("x", false));
+    }
+    
+    @Test 
+    public void testPhysicalTableAlterDropColumn() throws Exception {
+        String ddl = "CREATE DATABASE FOO;"
+                + "CREATE FOREIGN DATA WRAPPER postgresql;"
+                + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
+                + "CREATE  SCHEMA test SERVER pgsql;"
+                + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
+                + "ALTER TABLE G1 DROP COLUMN e1";
+        
+        Database db = helpParse(ddl);
+        Schema s = db.getSchema("test");
+        Table t = s.getTable("G1");
+        assertNotNull(t);  
+        assertTrue(t.getColumns().size() == 2);
+        assertNull(t.getColumnByName("e1"));
+        assertNotNull(t.getColumnByName("e2"));
+        assertNotNull(t.getColumnByName("e3"));
+    }     
+    
+    @Test 
+    public void testDropPhysicalTable() throws Exception {
+        String ddl = "CREATE DATABASE FOO;"
+                + "CREATE FOREIGN DATA WRAPPER postgresql;"
+                + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
+                + "CREATE  SCHEMA test SERVER pgsql;"
+                + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
+                + "DROP FOREIGN TABLE G1";
+        
+        Database db = helpParse(ddl);
+        Schema s = db.getSchema("test");
+        Table t = s.getTable("G1");
+        assertNull(t);  
+    }       
+    
+    @Test 
+    public void testAlterViewAddColumn2() throws Exception {
+        String ddl = "CREATE DATABASE FOO;"
+                + "CREATE VIRTUAL SCHEMA test;"
+                + "CREATE VIRTUAL VIEW G1 AS SELECT 1 as e1, '2' as e2, curdate() as e3;"
+                + "ALTER VIEW G1 AS SELECT 1 as e1, '2' as e2, curdate() as e3, 'foo' as e4;";
+        
+        Database db = helpParse(ddl);
+        Schema s = db.getSchema("test");
+        Table t = s.getTable("G1");
+        assertEquals("SELECT 1 AS e1, '2' AS e2, curdate() AS e3, 'foo' AS e4", t.getSelectTransformation());
+    }    
+    
+    @Test 
+    public void testDropView() throws Exception {
+        String ddl = "CREATE DATABASE FOO;"
+                + "CREATE VIRTUAL SCHEMA test;"
+                + "CREATE VIRTUAL VIEW G1 AS SELECT 1 as e1, '2' as e2, curdate() as e3;"
+                + "DROP VIEW G1";
+        
+        Database db = helpParse(ddl);
+        Schema s = db.getSchema("test");
+        Table t = s.getTable("G1");
+        assertNull(t);
+    }     
+    
+	@Test 
+	public void testFunction() throws Exception {
+        String ddl = "CREATE DATABASE FOO;"
+                + "CREATE FOREIGN DATA WRAPPER postgresql;"
+                + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
+                + "CREATE  SCHEMA test SERVER pgsql;"
+                + "CREATE FOREIGN FUNCTION SourceFunc(flag Boolean) RETURNS varchar";
+
+        FunctionMethod method = null;
+		Database db = helpParse(ddl);
+		Schema s = db.getSchema("test");
+		for (FunctionMethod fm : s.getFunctions().values()) {
+			if (fm.getName().equalsIgnoreCase("SourceFunc")) {
+				method = fm;
+				break;
+			}
+		}
+		assertNotNull(method);
+		assertEquals("boolean", method.getInputParameters().get(0).getType());
+	}
+	
+	@Test 
+	public void testDropFunction() throws Exception {
+        String ddl = "CREATE DATABASE FOO;"
+                + "CREATE FOREIGN DATA WRAPPER postgresql;"
+                + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
+                + "CREATE  SCHEMA test SERVER pgsql;"
+                + "CREATE FUNCTION SourceFunc(flag Boolean) RETURNS varchaR options (UUID 'z');"
+                + "DROP FUNCTION SourceFunc;";
+
+		FunctionMethod method = null;
+		Database db = helpParse(ddl);
+		Schema s = db.getSchema("test");
+		for (FunctionMethod fm : s.getFunctions().values()) {
+			if (fm.getName().equalsIgnoreCase("SourceFunc")) {
+				method = fm;
+				break;
+			}
+		}
+		assertNull(method);	
+	}	
+	
+    @Test 
+    public void testDropSchema() throws Exception {
+        String ddl = "CREATE DATABASE FOO;"
+                + "CREATE VIRTUAL SCHEMA test;"
+                + "CREATE VIRTUAL VIEW G1 AS SELECT 1 as e1, '2' as e2, curdate() as e3;"
+                + "DROP VIRTUAL SCHEMA test";
+        
+        Database db = helpParse(ddl);
+        Schema s = db.getSchema("test");
+        assertNull(s);
+    } 	
+    
+    @Test(expected=MetadataException.class) 
+    public void testDropDataWrapper() throws Exception {
+        String ddl = "CREATE DATABASE FOO VERSION '2';"
+                + "CREATE FOREIGN DATA WRAPPER orcl;"
+                + "CREATE SERVER x TYPE 'oracle' VERSION '2.0' FOREIGN DATA WRAPPER orcl OPTIONS (k1 'v1');"
+                + "DROP FOREIGN DATA WRAPPER orcl;";
+        		
+        Database db = helpParse(ddl);
+        assertNull(db.getDataWrapper("orcl"));
+    } 
+    
+    @Test 
+    public void testDropDataWrappers() throws Exception {
+        String ddl = "CREATE DATABASE FOO VERSION '2';"
+                + "CREATE FOREIGN DATA WRAPPER orcl;"
+                + "CREATE SERVER x TYPE 'oracle' VERSION '2.0' FOREIGN DATA WRAPPER orcl OPTIONS (k1 'v1');"
+                + "DROP SERVER x;"
+                + "DROP FOREIGN DATA WRAPPER orcl;";
+        		
+        Database db = helpParse(ddl);
+        assertNull(db.getDataWrapper("orcl"));
+    }    
+    
+    @Test 
+    public void testCreateProcedure() throws Exception {
+        String ddl = "CREATE DATABASE FOO;"
+                + "CREATE FOREIGN DATA WRAPPER postgresql;"
+                + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
+                + "CREATE  SCHEMA test SERVER pgsql;"
+                + "CREATE FOREIGN PROCEDURE procG1(P1 integer) RETURNS (e1 integer, e2 varchar)";
+        
+        Database db = helpParse(ddl);
+        Schema s = db.getSchema("test");
+        Procedure p = s.getProcedure("procG1");
+        assertNotNull(p);  
+        assertEquals(1, p.getParameters().size());
+        assertNotNull(p.getParameterByName("P1"));
+        assertEquals(2, p.getResultSet().getColumns().size());
+        assertEquals("e1", p.getResultSet().getColumns().get(0).getName());
+    }         
+
+    @Test 
+    public void testDropProcedure() throws Exception {
+        String ddl = "CREATE DATABASE FOO;"
+                + "CREATE FOREIGN DATA WRAPPER postgresql;"
+                + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
+                + "CREATE  SCHEMA test SERVER pgsql;"
+                + "CREATE FOREIGN PROCEDURE procG1(P1 integer) RETURNS (e1 integer, e2 varchar);"
+                + "DROP FOREIGN PROCEDURE procG1";
+        
+        Database db = helpParse(ddl);
+        Schema s = db.getSchema("test");
+        Procedure p = s.getProcedure("procG1");
+        assertNull(p);  
     }
 }

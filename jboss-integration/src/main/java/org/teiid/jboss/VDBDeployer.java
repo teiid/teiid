@@ -32,24 +32,11 @@ import java.util.concurrent.TimeUnit;
 import javax.script.ScriptEngineManager;
 
 import org.jboss.as.naming.deployment.ContextNames;
-import org.jboss.as.server.deployment.Attachments;
-import org.jboss.as.server.deployment.DeploymentPhaseContext;
-import org.jboss.as.server.deployment.DeploymentUnit;
-import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
-import org.jboss.as.server.deployment.DeploymentUnitProcessor;
+import org.jboss.as.server.deployment.*;
 import org.jboss.modules.ModuleClassLoader;
-import org.jboss.msc.service.AbstractServiceListener;
-import org.jboss.msc.service.Service;
-import org.jboss.msc.service.ServiceBuilder;
-import org.jboss.msc.service.ServiceBuilder.DependencyType;
-import org.jboss.msc.service.ServiceController;
+import org.jboss.msc.service.*;
 import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.service.ServiceController.State;
-import org.jboss.msc.service.ServiceName;
-import org.jboss.msc.service.ServiceTarget;
-import org.jboss.msc.service.StartContext;
-import org.jboss.msc.service.StartException;
-import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 import org.jboss.vfs.VirtualFile;
 import org.teiid.adminapi.Model;
@@ -59,18 +46,12 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
-import org.teiid.common.buffer.BufferManager;
-import org.teiid.deployers.RuntimeVDB;
-import org.teiid.deployers.TranslatorUtil;
-import org.teiid.deployers.UDFMetaData;
-import org.teiid.deployers.VDBRepository;
-import org.teiid.deployers.VDBStatusChecker;
+import org.teiid.deployers.*;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.jboss.TeiidServiceNames.InvalidServiceNameException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.index.IndexMetadataRepository;
-import org.teiid.query.ObjectReplicator;
 import org.teiid.query.metadata.VDBResources;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.vdb.runtime.VDBKey;
@@ -193,10 +174,8 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		vdbService.addDependency(TeiidServiceNames.TRANSLATOR_REPO, TranslatorRepository.class,  vdb.translatorRepositoryInjector);
 		vdbService.addDependency(TeiidServiceNames.THREAD_POOL_SERVICE, Executor.class,  vdb.executorInjector);
 		vdbService.addDependency(TeiidServiceNames.OBJECT_SERIALIZER, ObjectSerializer.class, vdb.serializerInjector);
-		vdbService.addDependency(TeiidServiceNames.BUFFER_MGR, BufferManager.class, vdb.bufferManagerInjector);
 		vdbService.addDependency(TeiidServiceNames.VDB_STATUS_CHECKER, VDBStatusChecker.class, vdb.vdbStatusCheckInjector);
 		vdbService.addDependency(vdbSwitchServiceName, CountDownLatch.class, new InjectedValue<CountDownLatch>());
-		vdbService.addDependency(DependencyType.OPTIONAL, TeiidServiceNames.OBJECT_REPLICATOR, ObjectReplicator.class, vdb.objectReplicatorInjector);
 				
 		// VDB restart switch, control the vdbservice by adding removing the switch service. If you
 		// remove the service by setting status remove, there is no way start it back up if vdbservice used alone

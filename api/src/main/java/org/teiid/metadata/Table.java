@@ -412,6 +412,5 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
     
     public Map<String, Trigger> getTriggers() {
         return triggers;
-    }
-    
+    }    
 }

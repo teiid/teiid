@@ -19,13 +19,14 @@ import org.teiid.core.types.*;
 import org.teiid.core.util.StringUtil;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageObject;
-import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.proc.*;
 import org.teiid.query.sql.symbol.*;
+import org.teiid.query.metadata.*;
 import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.language.Like.MatchMode;
 import org.teiid.translator.*;
+import org.teiid.query.sql.lang.*;
 
 /** 
  * <p>The SQLParser is a JavaCC-generated parser that reads a SQL string and produces a 
@@ -263,7 +264,6 @@ TOKEN : /* Reserved words */
 |   <NEW: "new">
 |	<NOCACHE: "nocache">
 |   <NO: "no">
-|   <NONE: "none">
 |   <NOT: "not">
 |   <NULL: "null">
 |   <OF: "of">
@@ -499,6 +499,23 @@ TOKEN : /* NonReserved words */
 |   <UPSERT: "upsert">
 |   <AFTER: "after">
 
+|   <AUTHENTICATED: "authenticated">
+|   <TYPE: "type">
+|   <TRANSLATOR: "translator">
+|   <JAAS: "jaas">
+|   <CONDITION: "condition">
+|   <MASK: "mask">
+|   <ACCESS: "access">
+|   <CONTROL: "control">
+|   <NONE: "none">
+|   <DATA: "data">
+|   <DATABASE: "database">
+|   <PRIVILEGES: "privileges">
+|   <SCHEMA: "schema">
+|   <ROLE: "role">
+|   <USE: "use">
+|   <SERVER: "server">
+|   <WRAPPER: "wrapper">
 }
 /*
 name=all in group identifier
@@ -606,7 +623,8 @@ Token nonReserved() :
      |<TO_BYTES>|<TIMESTAMPADD>|<TIMESTAMPDIFF>|<QUERYSTRING>|<NAMESPACE>|<RESULT>|<INDEX>|<ACCESSPATTERN>|<AUTO_INCREMENT>|<WELLFORMED>|<SQL_TSI_FRAC_SECOND>
      |<SQL_TSI_SECOND>|<SQL_TSI_MINUTE>|<SQL_TSI_HOUR>|<SQL_TSI_DAY>|<SQL_TSI_WEEK>|<SQL_TSI_MONTH>|<SQL_TSI_QUARTER>|<SQL_TSI_YEAR>|<TEXTTABLE>|<ARRAYTABLE>
      |<SELECTOR>|<SKIP_KEYWORD>|<WIDTH>|<PASSING>|<NAME>|<ENCODING>|<COLUMNS>|<DELIMITER>|<QUOTE>|<HEADER>|<NULLS>|<OBJECTTABLE>
-     |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>|<VARIADIC>|<RAISE>|<EXCEPTION>|<CHAIN>|<JSONARRAY_AGG>|<JSONOBJECT>|<PRESERVE>|<UPSERT>|<AFTER>)
+     |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>|<VARIADIC>|<RAISE>|<EXCEPTION>|<CHAIN>|<JSONARRAY_AGG>|<JSONOBJECT>|<PRESERVE>|<UPSERT>|<AFTER>
+     |<TYPE>|<TRANSLATOR>|<JAAS>|<CONDITION>|<MASK>|<ACCESS>|<CONTROL>|<NONE>|<DATA>|<DATABASE>|<PRIVILEGES>|<ROLE>|<SCHEMA>|<USE>)
     {
     	return getToken(0);
     }	
@@ -4927,12 +4945,12 @@ Constant unsignedNumericLiteral(String strVal) :
 /*
 unused=true
 */
- void parseMetadata(MetadataFactory factory) :
+void parseMetadata(DatabaseStore dbStore) :
 {
 }
 {
-    (ddlStmt(factory))?
-    (<SEMICOLON> [ddlStmt(factory)])*
+    (ddlStmt(dbStore))?
+    (<SEMICOLON> [ddlStmt(dbStore)])*
     <EOF>     
 }
 
@@ -4942,19 +4960,38 @@ description=A data definition statement.
 example=[source,sql]\n----\nCREATE FOREIGN TABLE X (Y STRING)\n----\n
 index=true
 */
-void ddlStmt(MetadataFactory factory) :
+void ddlStmt(DatabaseStore dbStore) :
 {
 	Command command = null; 
 }
 {
-	(LOOKAHEAD(3) 	createTable(factory) [LOOKAHEAD(3) createTable(factory) | createDDLProcedure(factory, ParseInfo.DEFAULT_INSTANCE)]| 
-	 LOOKAHEAD(4)	createDDLProcedure(factory, ParseInfo.DEFAULT_INSTANCE) [ ddlStmt(factory) ] |
-	 LOOKAHEAD(2)	createNameSpace(factory) |
-	 LOOKAHEAD(4)	alterStatement(factory) |
+	(
+	 LOOKAHEAD(3) 	createTable(dbStore) [LOOKAHEAD(3) createTable(dbStore) | createDDLProcedure(dbStore, ParseInfo.DEFAULT_INSTANCE)] | 
+	 LOOKAHEAD(2)	createNameSpace(dbStore) |
+	 LOOKAHEAD(4)	alterStatement(dbStore) |
 	 LOOKAHEAD(4) 	command=createTrigger(ParseInfo.DEFAULT_INSTANCE)
 	 {
-	 	createDDLTrigger(factory, (AlterTrigger)command);
-	 }
+	 	createDDLTrigger(dbStore, (AlterTrigger)command);
+	 } |
+	 LOOKAHEAD(3)  createServer(dbStore) |
+	 LOOKAHEAD(3)  createRole(dbStore) |
+	 LOOKAHEAD(3)  dropRole(dbStore) |
+	 LOOKAHEAD(2)  grantOption(dbStore) |
+	 LOOKAHEAD(2)  revokeGrantOption(dbStore) | 
+	 LOOKAHEAD(3)  dropServer(dbStore) |
+	 LOOKAHEAD(3)  dropTableView(dbStore) |
+	 LOOKAHEAD(3)  importSchema(dbStore) |
+	 LOOKAHEAD(3)  importDatabase(dbStore) |
+	 LOOKAHEAD(2)  createDatabase(dbStore) |
+	 LOOKAHEAD(2)  dropDatabase(dbStore) |
+	 LOOKAHEAD(2)  useDatabase(dbStore) |
+     LOOKAHEAD(2)  dropSchema(dbStore) |
+     LOOKAHEAD(2)  useSchema(dbStore) |
+     LOOKAHEAD(3)  createSchema(dbStore) |
+     LOOKAHEAD(3)  createDDLProcedure(dbStore, ParseInfo.DEFAULT_INSTANCE) [ ddlStmt(dbStore) ] |
+     LOOKAHEAD(5)  createDataWrapper(dbStore)|
+     LOOKAHEAD(5)  dropDataWrapper(dbStore) |
+     LOOKAHEAD(3)  dropProcedure(dbStore)     
 	)
 }
 
@@ -4963,7 +5000,7 @@ name=option namespace
 description=A namespace used to shorten the full name of an option key.
 example=[source,sql]\n----\nSET NAMESPACE 'http://foo' AS foo\n----\n
 */
-void createNameSpace(MetadataFactory factory) :
+void createNameSpace(DatabaseStore dbStore) :
 {
 	String uri = null;
 	String prefix = null;
@@ -4971,8 +5008,444 @@ void createNameSpace(MetadataFactory factory) :
 { 
 	<SET> <NAMESPACE> uri = stringVal() <AS> prefix = id(Boolean.FALSE)
 	{
-		factory.addNamespace(prefix, uri);
+		dbStore.createNameSpace(prefix, uri);
 	}
+}
+
+/*
+name=create database
+description=create a new database
+example=[source,sql]\n----\nCREATE DATABASE foo [VERSION 'version'] OPTIONS(...)\n----\n
+*/
+void createDatabase(DatabaseStore dbStore) :
+{
+    String name = null;
+    Database database = null;
+    String version = null;
+}
+{ 
+    <CREATE> <DATABASE> name = id(null) 
+    {
+        database = new Database(name);
+    }
+    [<VERSION>
+      ( version = stringVal()
+        {
+            database.setVersion(version);
+        }
+      )   
+    ] 
+    [ optionsClause(database, null)
+      {
+         OptionsUtil.setOptions(database);
+      }
+    ]
+    {
+        dbStore.databaseCreated(database);
+    }
+}
+
+/*
+name=use database
+description=database into working context
+example=[source,sql]\n----\nUSE DATABASE foo [VERSION 'version']\n----\n
+*/
+void useDatabase(DatabaseStore dbStore) :
+{
+    String name = null;
+    String version = "1";
+}
+{ 
+    <USE> <DATABASE> name = id(null) 
+    [<VERSION>(version = stringVal())]
+    {
+        dbStore.databaseSwitched(name, version);
+    }
+}
+
+/*
+name=drop database
+description=drop database 
+example=[source,sql]\n----\nDROP DATABASE foo [VERSION 'version']\n----\n
+*/
+void dropDatabase(DatabaseStore dbStore) :
+{
+    String name = null;
+    Database database = null;
+    String version = "1";
+}
+{ 
+    <DROP> <DATABASE> name = id(null)
+    [<VERSION>(version = stringVal())]     
+    {
+        dbStore.databaseDropped(name, version);
+    }
+}
+
+/*
+name=create schema
+description=create a schema in database
+example=[source,sql]\n----\nCREATE [VIRTUAL] SCHEMA foo SERVER (s1,s2,s3) OPTIONS(...)\n----\n
+*/
+void createSchema(DatabaseStore dbStore) :
+{
+    Schema schema = null;
+    String server = null;
+    boolean physical = true;
+    String name = null;
+    ArrayList<String> servers = new ArrayList<String>();
+}
+{
+    <CREATE> [<VIRTUAL> {physical=false;}] <SCHEMA> 
+    name = id(null) 
+    {
+        schema = new Schema();
+        schema.setName(name);
+        schema.setPhysical(physical);
+    }
+    [<SERVER> readCSVString(servers)]     
+    [ optionsClause(schema, null)
+      {
+         OptionsUtil.setOptions(schema);
+      }
+    ]
+    {        
+        dbStore.schemaCreated(schema, servers);
+    }
+}
+
+/*
+name=drop schema
+description=drop a schema in database
+example=[source,sql]\n----\DROP SCHEMA foo \n----\n
+*/
+void dropSchema(DatabaseStore dbStore) :
+{
+    String name = null;
+    boolean physical = true;
+}
+{ 
+    <DROP> [<VIRTUAL> {physical=false;}] <SCHEMA> name = id(null) 
+    {
+        dbStore.schemaDropped(name);
+    }
+}
+
+/*
+name=use schema
+description=use schema for following database resources 
+example=[source,sql]\n----\nUSE SCHEMA foo \n----\n
+*/
+void useSchema(DatabaseStore dbStore) :
+{
+    String name = null;
+}
+{ 
+    <SET> <SCHEMA> (name = id(null) 
+    {
+        dbStore.schemaSwitched(name);
+    })
+}
+
+/*
+name=create data wrapper aka translator
+description=Defines a translator; use the options to override the translator properties.
+example=[source,sql]\n----\nCREATE FOREIGN (DATA WRAPPER|TRANSLATOR)  wrapper OPTIONS(properties)\n----\n
+*/
+void createDataWrapper(DatabaseStore dbStore) :
+{
+    String wrapperName = null; 
+    DataWrapper wrapper = null;
+    String type = null;
+}
+{
+    <CREATE> <FOREIGN> (<DATA> <WRAPPER>|<TRANSLATOR>) 
+    ( wrapperName = id(null)
+      {
+        wrapper = new DataWrapper(wrapperName);
+      } 
+    )
+    [ <TYPE> (type = id(null) { wrapper.setType(type);}) ]      
+    [ optionsClause(wrapper, null)
+      {
+         OptionsUtil.setOptions(wrapper);
+      }
+    ]    
+    {
+        dbStore.dataWrapperCreated(wrapper);
+    }
+}
+
+/*
+name=Drop data wrapper aka translator
+description=Deletes a translator
+example=[source,sql]\n----\nDROP FOREIGN (DATA WRAPPER|TRANSLATOR) wrapper\n----\n
+*/
+void dropDataWrapper(DatabaseStore dbStore) :
+{
+    String wrapperName = null;
+}
+{
+    <DROP> <FOREIGN> (<DATA> <WRAPPER>|<TRANSLATOR>)  
+    ( wrapperName = id(null)
+      {
+        dbStore.dataWrapperDropped(wrapperName);
+      } 
+    )   
+}
+
+
+/*
+name=create role 
+description=Defines data role for the database
+example=[source,sql]\n----\nCREATE DATA ROLE <data-role>  [WITH JAAS ROLE <string>(,<string>)*]\n----\n
+*/
+void createRole(DatabaseStore dbStore) :
+{
+    String roleName = null;     
+    Role role = null;    
+}
+{
+    <CREATE> <ROLE> 
+    ( roleName = id(null)
+      {
+        role = new Role(roleName);
+      }
+    )   
+    [<WITH> readWith(role) ]
+    {
+        dbStore.roleCreated(role);
+    }
+}
+
+/*
+name=not used
+*/
+void readWith(Role role) :
+{
+    List<String> jaasNames = new ArrayList<String>();
+    boolean anyAuthenticated = false;
+}
+{        
+    (<JAAS> <ROLE> readCSVString(jaasNames) | <ANY> <AUTHENTICATED> {anyAuthenticated=true;}) 
+    (<WITH>
+        (<JAAS> <ROLE> readCSVString(jaasNames) | <ANY> <AUTHENTICATED> {anyAuthenticated=true;})
+    )*
+    {
+        role.setJaasRoles(jaasNames);
+        role.setAnyAuthenticated(anyAuthenticated);    
+    } 
+}
+
+/*
+name=drop role 
+description=Removes data role for the database
+example=[source,sql]\n----\nDROP ROLE <data-role>\n----\n
+*/
+void dropRole(DatabaseStore dbStore) :
+{
+    String roleName = null; 
+}
+{
+    <DROP> <ROLE> 
+    ( roleName = id(null)
+      {
+        dbStore.roleDropped(roleName);
+      }
+    )   
+}
+
+/*
+name=Create GRANT
+description=Defines GRANT for a role
+example=[source,sql]\n----\nGRANT ( SELECT | INSERT |  UPDATE | DELETE | EXECUTE | LANGUAGE | ALTER | DROP | ALL PRIVILEGES | TEMPORARY TABLES ) 
+ON
+   (
+   DATABASE
+   TABLE <schema-name>.<table-name> 
+    PROCEDURE <schema-name>.<proc-name>
+    SCHEMA <schema-name>
+    COLUMN <schema-name>.<table-name>.<col-name> [MASK [ORDER \d] <string-val> ] [CONDITION [CONSTRAINT] <string-val>]
+    )
+TO <data-role-name>\n----\n
+*/
+void grantOption(DatabaseStore dbStore) :
+{
+    Database.ResourceType on= null;
+    Grant grant = new Grant();
+    String resource = null;
+    String mask = null;
+    int maskOrder = -1;
+    String condition = null;
+    boolean isConstraint = false;
+    String to = null;
+    ArrayList<Grant.Permission.Privilege> privileges = new ArrayList<Grant.Permission.Privilege>();
+    Grant.Permission permission = new Grant.Permission();
+}
+{
+    <GRANT> readGrantTypes(privileges) (<COMMA> readGrantTypes(privileges))*
+    <ON> ( 
+        <DATABASE> [resource = id(null)] {on = Database.ResourceType.DATABASE;} |
+        <TABLE> resource = id(null) {on = Database.ResourceType.TABLE;} 
+        	[<CONDITION> [<CONSTRAINT> {isConstraint=true;}] condition = stringVal()] |
+        <PROCEDURE> resource = id(null) {on = Database.ResourceType.PROCEDURE;} 
+        	[<CONDITION> [<CONSTRAINT> {isConstraint=true;}] condition = stringVal()] |
+        <SCHEMA> resource = id(null) {on = Database.ResourceType.SCHEMA;} |
+        <COLUMN> resource = id(null) {on = Database.ResourceType.COLUMN;} 
+            [<MASK> [<ORDER> maskOrder = intVal()] mask = stringVal()] 
+            [<CONDITION> [<CONSTRAINT> {isConstraint=true;}] condition = stringVal()]
+    ) 
+    <TO>( to = id(null)
+        {
+            if (resource != null) {
+                permission.setResourceName(resource);
+            }
+            permission.setPrivileges(privileges);
+            permission.setResourceType(on);            
+            if (mask != null) {
+                permission.setMask(mask);
+                if (maskOrder != -1) {
+                    permission.setMaskOrder(maskOrder);
+                }
+            }
+            if(condition != null) {
+                permission.setCondition(condition, isConstraint);               
+            }
+            grant.setRole(to);
+            grant.addPermission(permission);
+            dbStore.grantCreated(grant);
+        } 
+    )
+}
+
+/*
+name=Revoke GRANT
+description=Revokes GRANT for a role
+example=[source,sql]\n----\nREVOKE GRANT ( SELECT | INSERT |  UPDATE | DELETE | EXECUTE | LANGUAGE | ALTER | DROP | ALL PRIVILEGES | TEMPORARY TABLES ) 
+ON
+   (
+    DATABASE
+    TABLE <schema-name>.<table-name>
+    PROCEDURE <schema-name>.<proc-name>
+    SCHEMA <schema-name>
+    COLUMN <schema-name>.<table-name>.<col-name>
+    )
+FROM <data-role-name>\n----\n
+*/
+void revokeGrantOption(DatabaseStore dbStore) :
+{
+    Database.ResourceType on= null;
+    Grant grant = new Grant();
+    String resource = null;
+    String mask = null;
+    int maskOrder = -1;
+    String condition = null;
+    boolean isConstraint = false;
+    String to = null;
+    ArrayList<Grant.Permission.Privilege> privileges = new ArrayList<Grant.Permission.Privilege>();
+    Grant.Permission permission = new Grant.Permission();
+}
+{
+    <REVOKE> <GRANT> readGrantTypes(privileges) (<COMMA> readGrantTypes(privileges))*
+    <ON> ( 
+        <DATABASE> [resource = id(null)] {on = Database.ResourceType.DATABASE;} |
+        <TABLE> resource = id(null) {on = Database.ResourceType.TABLE;} 
+        	[<CONDITION> [<CONSTRAINT> {isConstraint=true;}] condition = stringVal()] |
+        <PROCEDURE> resource = id(null) {on = Database.ResourceType.PROCEDURE;} 
+        	[<CONDITION> [<CONSTRAINT> {isConstraint=true;}] condition = stringVal()] |
+        <SCHEMA> resource = id(null) {on = Database.ResourceType.SCHEMA;} |
+        <COLUMN> resource = id(null) {on = Database.ResourceType.COLUMN;} 
+            [<MASK> [<ORDER> maskOrder = intVal()] mask = stringVal()] 
+            [<CONDITION> [<CONSTRAINT> {isConstraint=true;}] condition = stringVal()]
+    ) 
+    <FROM>( to = id(null)
+        {
+            if (resource != null) {
+                permission.setResourceName(resource);
+            }
+            permission.setPrivileges(privileges);
+            permission.setResourceType(on);            
+            if (mask != null) {
+                permission.setMask(mask);
+                if (maskOrder != -1) {
+                    permission.setMaskOrder(maskOrder);
+                }
+            }
+            if(condition != null) {
+                permission.setCondition(condition, isConstraint);               
+            }
+            grant.setRole(to);
+            grant.addPermission(permission);
+            dbStore.grantRevoked(grant);
+        } 
+    )
+}
+
+/*
+name=create server, aka data source
+description=Defines connection to foreign source
+example=[source,sql]\n----\nCREATE SERVER server_name [ TYPE 'server_type' ] [ VERSION 'server_version' ] FOREIGN (<DATA> <WRAPPER>|<TRANSLATOR>)  fdw_name [ OPTIONS ( option 'value' [, ... ] ) ]\n----\n
+*/
+void createServer(DatabaseStore dbStore) :
+{
+    String serverName = null; 
+    String type = null;
+    String version = null;
+    Server server = null;
+    String wrapperName = null;
+}
+{
+    <CREATE> <SERVER> 
+    ( serverName = id(null)
+      {
+        server = new Server(serverName);
+      }
+    )
+    <TYPE>
+    ( type = stringVal()
+        {
+            server.setType(type);
+        } 
+    )         
+    [<VERSION>
+      ( version = stringVal()
+        {
+            server.setVersion(version);
+        }
+      )   
+    ]    
+    <FOREIGN> (<DATA> <WRAPPER>|<TRANSLATOR>) 
+    ( wrapperName = id(null)
+      {
+        server.setDataWrapper(wrapperName);
+      } 
+    )      
+    [ optionsClause(server, null)
+      {
+         OptionsUtil.setOptions(server);
+      }
+    ]
+    {
+        dbStore.serverCreated(server);
+    }
+}
+
+/*
+name=drop server, aka data source
+description=Defines dropping connection to foreign source
+example=[source,sql]\n----\DROP SERVER server_name\n----\n
+*/
+void dropServer(DatabaseStore dbStore) :
+{
+    String serverName = null;
+}
+{
+    <DROP> <SERVER> 
+    ( serverName = id(null)
+      {
+          dbStore.serverDropped(serverName);
+      }
+    )
 }
 
 /*
@@ -4980,23 +5453,27 @@ name=create procedure
 description=Defines a procedure or function invocation.
 example=[source,sql]\n----\nCREATE FOREIGN PROCEDURE proc (param STRING) RETURNS STRING\n----\n
 */
-CreateProcedureCommand createDDLProcedure(MetadataFactory factory, ParseInfo info) :
+CreateProcedureCommand createDDLProcedure(DatabaseStore dbStore, ParseInfo info) :
 {
-	boolean virtual = true;
-	boolean function = false;
 	Procedure proc = null;
-	String procName = null;
     CreateProcedureCommand procCmd = new CreateProcedureCommand();
     Statement stmt = null; 	
     ParsedDataType returnDataType = null;
     Token comment = null;    
     Column c = new Column();
+    MetadataFactory factory = null;
+    String serverName = null;
+    FunctionMethod fm = null;
+    boolean virtual = true;
+    boolean function = false;  
+    String procName = null;  
 }
 {
-	<CREATE> [<VIRTUAL> | <FOREIGN> {virtual = false;}] (<PROCEDURE> | <FUNCTION> {function = true;})
-	//the below is optional beacuse to allow the designer based metadata
-	(	procName = id(null)
-		{
+    <CREATE> [<VIRTUAL> | <FOREIGN> {virtual = false;}](<PROCEDURE> | <FUNCTION> {function = true;})
+    procName = id(null)
+	//the below is optional because to allow the designer based metadata
+	(   {
+		    factory = DatabaseStore.createMF(dbStore);
 			proc = factory.addProcedure(procName);
 		}
 	
@@ -5014,7 +5491,7 @@ CreateProcedureCommand createDDLProcedure(MetadataFactory factory, ParseInfo inf
 	    ]
 	    [ optionsClause(proc, factory)
 		   {
-		      setProcedureOptions(proc);
+		      OptionsUtil.setOptions(proc);
 		   }
 		]
 		[<AS> { comment = getToken(1).specialToken; } 
@@ -5035,13 +5512,40 @@ CreateProcedureCommand createDDLProcedure(MetadataFactory factory, ParseInfo inf
 	        } else if (proc.getResultSet() != null) {
 	            proc.getResultSet().setProperties(c.getProperties());
 	        }
-	        if (function) {
-	        	replaceProcedureWithFunction(factory, proc);
+	        if (function && proc.getQueryPlan() == null) {
+	        	fm = replaceProcedureWithFunction(factory, proc);
+	        	if (fm != null) {
+	        	  dbStore.functionCreated(fm);
+	        	}
+	        } else {
+	            dbStore.procedureCreated(proc);
 	        }
 	        return procCmd; 		
 		}
 }
 
+/*
+name=drop procedure
+description=Drops a table or view.
+example=[source,sql]\n----\nDROP [FOREIGN (TABLE|VIEW) table-name\n----\n
+*/
+void dropProcedure(DatabaseStore dbStore) :
+{
+	String procedureName = null;
+	boolean virtual = false;
+	boolean function = false;
+}
+{
+	<DROP> [<VIRTUAL> | <FOREIGN> {virtual = false;}](<PROCEDURE> | <FUNCTION> {function = true;})
+	procedureName = id(null)
+	{
+	   	if (function){
+	   		dbStore.functionDropped(procedureName);
+	   	} else {
+	   		dbStore.procedureDropped(procedureName);
+	    }
+	}
+}
 /*
 name=procedure parameter
 description=A procedure or function parameter
@@ -5086,7 +5590,7 @@ void procedureParameter(MetadataFactory factory, Procedure proc) :
 	[<DEFAULT_KEYWORD> defaultValue = expression(ParseInfo.DEFAULT_INSTANCE) {setDefault(param, defaultValue);}]
 	[optionsClause(param, factory)
 	   {
-	      setColumnOptions(param);
+	      OptionsUtil.setOptions(param);
 	   }
 	]	
 }
@@ -5112,7 +5616,7 @@ void procedureRsColumn(MetadataFactory factory, Procedure proc) :
 	  [<NOT> <NULL> {column.setNullType(Column.NullType.No_Nulls);}]	  
 	  [optionsClause(column, factory)
 	   {
-	      setColumnOptions(column);
+	      OptionsUtil.setOptions(column);
 	   }
 	  ]
 }
@@ -5122,7 +5626,7 @@ name=create table
 description=Defines a table or view.
 example=[source,sql]\n----\nCREATE VIEW vw AS SELECT 1\n----\n
 */
-void createTable(MetadataFactory factory) :
+void createTable(DatabaseStore dbStore) :
 {
 	boolean view = false;
 	boolean globalTemp = false;
@@ -5130,6 +5634,7 @@ void createTable(MetadataFactory factory) :
 	Table table = null;
 	Token comment = null;
 	Command query = null;
+	MetadataFactory factory = null;
 }
 {
 	<CREATE> (
@@ -5138,7 +5643,8 @@ void createTable(MetadataFactory factory) :
 		(<GLOBAL> <TEMPORARY> <TABLE> {globalTemp = true; view = true;})
 	) 
 	tableName = id(null)
-	{
+	{	    
+	    factory = DatabaseStore.createMF(dbStore);
 	    table = factory.addTable(tableName);
 	    table.setVirtual(view);
 	    if (globalTemp) {
@@ -5147,7 +5653,7 @@ void createTable(MetadataFactory factory) :
 	}
 	(createTableBody(table, factory) | [optionsClause(table, factory)
 	   {
-	      setTableOptions(table);
+	      OptionsUtil.setOptions(table);
 	   }
 	])
 	[<AS> { comment = getToken(1).specialToken; } query = queryExpression(ParseInfo.DEFAULT_INSTANCE)
@@ -5158,6 +5664,32 @@ void createTable(MetadataFactory factory) :
 		   table.setSelectTransformation((comment != null?comment.image+" ":"") + query.toString());	
 	  }
 	]
+	{
+	   dbStore.tableCreated(table);
+	}
+}
+
+/*
+name=drop table
+description=Drops a table or view.
+example=[source,sql]\n----\nDROP (FOREIGN TABLE | [VIRTUAL] VIEW) table-name\n----\n
+*/
+void dropTableView(DatabaseStore dbStore) :
+{
+	boolean view = false;
+	boolean globalTemp = false;
+	String tableName = null;
+}
+{
+	<DROP> (
+		(<FOREIGN> <TABLE>) | 
+		([<VIRTUAL>] <VIEW> {view = true;}) |
+		(<GLOBAL> <TEMPORARY> <TABLE> {globalTemp = true; view = true;})
+	) 
+	tableName = id(null)
+	{
+	   dbStore.tableDropped(tableName);
+	}
 }
 
 /*
@@ -5201,6 +5733,8 @@ void createTableBody(Table table, MetadataFactory factory) :
 {
 	String name = null;
 	AbstractMetadataRecord constraint = null;
+	Server server = null;
+	String serverName = null;
 }
 {
 	<LPAREN>
@@ -5211,14 +5745,14 @@ void createTableBody(Table table, MetadataFactory factory) :
     (<COMMA>{name=null;} [<CONSTRAINT> name = id(null)] (constraint = primaryKey(factory, table, name) | constraint = constraint(factory, table, name, ParseInfo.DEFAULT_INSTANCE) | constraint = foreignKey(factory, table, name))
        [optionsClause(constraint, factory)
 	   {
-	      setCommonProperties(constraint, constraint.getProperties());
+	      OptionsUtil.setCommonProperties(constraint, constraint.getProperties());
 	   }
 	]
     )*
-    <RPAREN>    
+    <RPAREN>
     [optionsClause(table, factory)
 	   {
-	      setTableOptions(table);
+	      OptionsUtil.setOptions(table);
 	   }
 	]
 	{
@@ -5392,7 +5926,7 @@ void createColumn(MetadataFactory factory, Table table) :
 	 [<DEFAULT_KEYWORD> defaultValue = expression(ParseInfo.DEFAULT_INSTANCE) {setDefault(column, defaultValue);}]
 	 [optionsClause(column, factory)
 	   {
-	      setColumnOptions(column);
+	      OptionsUtil.setOptions(column);
 	   }
 	 ]
 	 {
@@ -5444,7 +5978,9 @@ void optionPair(AbstractMetadataRecord record, MetadataFactory factory) :
 	 (value = nonNumericLiteral()
 	 | [strVal = plusMinus()] value = unsignedNumericLiteral(strVal))
 	 { 
-	 	key = MetadataFactory.resolvePropertyKey(factory, key);
+	 	if (factory != null){
+            key = MetadataFactory.resolvePropertyKey(factory, key);
+	 	}
 	 	String val = null;
 	 	if (!value.isNull()) {
 	 		val = value.getValue().toString();
@@ -5454,38 +5990,253 @@ void optionPair(AbstractMetadataRecord record, MetadataFactory factory) :
 }
 
 /*
-name=alter options
-description=alters options of tables/procedure
-example=[source,sql]\n----\nALTER FOREIGN TABLE foo OPTIONS (ADD cardinality 100)\n----\n
+name=alter option pair
+description=Alter An option key/value pair.
+example=[source,sql]\n----\n'key' 'value'\n----\n
 */
-void alterStatement(MetadataFactory factory) :
+void alterOptionPair(String objectName, Database.ResourceType type, DatabaseStore dbStore) :
 {
-	boolean table = false;
-	boolean proc = false;
-	boolean func = false;
-	String objectName = null;
-	AbstractMetadataRecord record = null;
+    Constant value = null;
+    String key = null;
+    Token t = null;
+    String strVal = null;
+}
+{
+     key = id(null)
+     (value = nonNumericLiteral()
+     | [strVal = plusMinus()] value = unsignedNumericLiteral(strVal))
+     { 
+        String val = null;
+        if (!value.isNull()) {
+            val = value.getValue().toString();
+        }
+        dbStore.addOrSetOption(objectName, type, key, val, true);
+     } 
+}
+
+
+void alterStatement(DatabaseStore dbStore) :
+{
+    boolean virtual = false;
+}
+{
+    <ALTER> [<VIRTUAL> {virtual = true;} | <FOREIGN>]
+    (
+        LOOKAHEAD(3)
+        alterTable(dbStore, virtual, ParseInfo.DEFAULT_INSTANCE) |
+        alterProcedure(dbStore, virtual, ParseInfo.DEFAULT_INSTANCE) |
+        alterTrigger(dbStore, ParseInfo.DEFAULT_INSTANCE) |
+        alterServer(dbStore) |
+        alterTranslator(dbStore) |
+        alterDatabase(dbStore)
+    )
+}
+
+/*
+name=ALTER TABLE 
+description=alters options of database
+example=[source,sql]\n----\nALTER TABLE foo (ADD|DROP|ALTER) COLUMN <name> <type> OPTIONS ( (ADD|SET|DROP) x y)\n----\n
+*/
+void alterTable(DatabaseStore dbStore, boolean virtual, ParseInfo info) :
+{
+    String objectName = null;
+    QueryCommand command = null;
+    Token comment = null;
+    Table table = null;
+}
+{
+    ((<VIEW> objectName = id(null)
+        {
+      		table = (Table)dbStore.getSchemaRecord(objectName, Database.ResourceType.TABLE);
+        }
+	    <AS> { comment = getToken(1).specialToken; } command = queryExpression(info)
+	    {
+	        if (comment != null) {
+	            command.setCacheHint(getQueryCacheOption(comment.image));
+	        }
+	        dbStore.setViewDefinition(table.getName(), command.toString(), true);        
+	    }
+	    [alterOptionsList(objectName, Database.ResourceType.TABLE, dbStore) |
+	    	alterColumn(objectName, Database.ResourceType.TABLE, dbStore)
+	    ]
+	 ) | (
+	 	<TABLE> objectName = id(null)
+	 	{
+	 		if (virtual) {
+	            throw new org.teiid.metadata.MetadataException(QueryPlugin.Event.TEIID31238,
+	                    QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31238));                                    	 		
+	 		}
+	 	}
+	    [alterOptionsList(objectName, Database.ResourceType.TABLE, dbStore) | 
+	    	alterAddColumn(objectName, Database.ResourceType.TABLE, dbStore) |
+	    	alterDropColumn(objectName, Database.ResourceType.TABLE, dbStore) |
+	    	alterColumn(objectName, Database.ResourceType.TABLE, dbStore)
+	    ]	 	
+	 ))    
+}
+
+/*
+name=ADD column
+description=alters table and adds a column
+example=[source,sql]\n----\nADD COLUMN bar type OPTIONS (ADD updatable true)\n----\n
+*/
+void alterAddColumn(String objectName, Database.ResourceType type, DatabaseStore dbStore) :
+{
+	Database.ResourceType childType = Database.ResourceType.COLUMN;
+	MetadataFactory factory = null;
+	Table table = null;
 }
 { 
-	<ALTER> [<VIRTUAL> | <FOREIGN>] (<TABLE> {table = true;} | <VIEW> {table = true;} | <PROCEDURE> {proc=true;})
-	objectName = id(null)
+	<ADD> <COLUMN>
 	{
-		if (table){
-			record = factory.getSchema().getTable(objectName);
-			if (record == null){
-				throw new MetadataException(QueryPlugin.Util.getString("SQLParser.alter_table_doesnot_exist", objectName));
-			}
-		}
-		if (proc){
-			record = factory.getSchema().getProcedure(objectName);
-			if (record == null){
-				throw new MetadataException(QueryPlugin.Util.getString("SQLParser.alter_procedure_doesnot_exist", objectName));
-			}
-		}		
+		factory = DatabaseStore.createMF(dbStore);
+		table = (Table)dbStore.getSchemaRecord(objectName, type); 
 	}
-	
-	(alterOptionsList(record, factory) | 
-	 alterColumn(record, factory))
+	createColumn(factory, table)
+	{
+		dbStore.tableModified(table);
+	}
+}
+
+/*
+name=DROP column
+description=alters table and adds a column
+example=[source,sql]\n----\DROP COLUMN bar\n----\n
+*/
+void alterDropColumn(String objectName, Database.ResourceType type, DatabaseStore dbStore) :
+{
+	MetadataFactory factory = null;
+	Table table = null;
+	String childName = null;
+	Column column = null;
+}
+{ 
+	<DROP> <COLUMN>
+	childName = id(null)
+	{
+		factory = DatabaseStore.createMF(dbStore);
+		table = (Table)dbStore.getSchemaRecord(objectName, type);
+		column = table.getColumnByName(childName);
+		if (column == null) {
+			throw new org.teiid.metadata.MetadataException(QueryPlugin.Event.TEIID31223,
+            	QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31223, childName));		
+		}
+		table.removeColumn(column);
+		dbStore.tableModified(table); 
+	}
+}
+
+/*
+name=alter column options
+description=alters a set of column options
+example=[source,sql]\n----\nALTER COLUMN bar OPTIONS (ADD updatable true)\n----\n
+*/
+void alterColumn(String objectName, Database.ResourceType type, DatabaseStore dbStore) :
+{
+	String childName = null;
+	Database.ResourceType childType = Database.ResourceType.COLUMN;
+}
+{ 
+	<ALTER> (<COLUMN>|<PARAMETER>{childType = Database.ResourceType.PARAMETER;})
+	childName = id(null)
+	alterChildOptionsList(objectName, type, childName, childType, dbStore)
+}
+
+/*
+name=ALTER PROCEDURE 
+description=alters options of database
+example=[source,sql]\n----\nALTER PROCEDURE foo [AS <stmt>] OPTIONS (ADD x y)\n----\n
+*/
+void alterProcedure(DatabaseStore dbStore, boolean virtual, ParseInfo info) :
+{
+    String objectName = null;
+    Statement stmt = null;
+    Token comment = null;
+    Procedure procedure = null;
+}
+{
+    <PROCEDURE> objectName = id(null)
+    {
+    	procedure = (Procedure)dbStore.getSchemaRecord(objectName, Database.ResourceType.PROCEDURE);
+    }    
+    [
+        <AS> { comment = getToken(1).specialToken; } stmt = statement(info)
+        {
+            CreateProcedureCommand cup = new CreateProcedureCommand(asBlock(stmt));
+            if (comment != null) {
+                cup.setCacheHint(getQueryCacheOption(comment.image));
+            }
+            dbStore.setProcedureDefinition(procedure.getName(), cup.toString(), true);
+        }
+    ]     
+    [alterOptionsList(objectName, Database.ResourceType.PROCEDURE, dbStore) |   
+    	alterColumn(objectName, Database.ResourceType.PROCEDURE, dbStore)]    
+}
+
+/*
+name=ALTER TRIGGER 
+description=alters options of table triggers
+example=[source,sql]\n----\nALTER TRIGGER ON <id> INSTEAD OF (INSERT|UPDATE|DELETE) AS [ENABLED|DISABLED]\n----\n
+*/
+void alterTrigger(DatabaseStore dbStore, ParseInfo info) :
+{
+    String objectName = null;
+    Boolean enabled = null;
+    Token event = null;
+    TriggerAction triggerAction = null;
+}
+{
+    <TRIGGER> <ON> objectName = id(null) <INSTEAD> <OF> (event = <INSERT> | event = <UPDATE> | event = <DELETE>) 
+    (<AS> triggerAction = forEachRowTriggerAction(info) | <ENABLED> {enabled=true;} | <DISABLED> {enabled=false;})
+    {
+        if (enabled != null){
+            dbStore.enableTableTriggerPlan(objectName, Table.TriggerEvent.valueOf(event.image.toUpperCase()), enabled, true);
+        } else {
+            dbStore.setTableTriggerPlan(null, objectName, Table.TriggerEvent.valueOf(event.image.toUpperCase()), triggerAction.toString(), false);
+        }                
+    }
+}
+
+/*
+name=ALTER SERVER 
+description=alters options of database
+example=[source,sql]\n----\nALTER SERVER foo OPTIONS (ADD x y)\n----\n
+*/
+void alterServer(DatabaseStore dbStore) :
+{
+    String objectName = null;
+}
+{
+    <SERVER> objectName = id(null)
+    (alterOptionsList(objectName, Database.ResourceType.SERVER, dbStore))    
+}
+
+/*
+name=ALTER DATA WRAPPER 
+description=alters options of data wrapper
+example=[source,sql]\n----\nALTER [DATA WRAPPER|TRANSLATOR] foo OPTIONS (ADD x y)\n----\n
+*/
+void alterTranslator(DatabaseStore dbStore) :
+{
+    String objectName = null;
+}
+{
+    (<DATA> <WRAPPER>|<TRANSLATOR>) objectName = id(null)
+    (alterOptionsList(objectName, Database.ResourceType.DATAWRAPPER, dbStore))    
+}
+
+/*
+name=ALTER DATABASE 
+description=alters options of database
+example=[source,sql]\n----\nALTER DATABASE foo OPTIONS (ADD x y)\n----\n
+*/
+void alterDatabase(DatabaseStore dbStore) :
+{
+    String objectName = null;
+}
+{
+    <DATABASE> objectName = id(null)
+    (alterOptionsList(objectName, Database.ResourceType.DATABASE, dbStore))    
 }
 
 /*
@@ -5493,20 +6244,17 @@ name=alter options list
 description=a list of alterations to options
 example=[source,sql]\n----\nOPTIONS (ADD updatable true)\n----\n
 */
-void alterOptionsList(AbstractMetadataRecord record, MetadataFactory factory) :
+void alterOptionsList(String objectName, Database.ResourceType type, DatabaseStore dbStore) :
 {
 
 }
 {
   <OPTIONS> <LPAREN>
-  (addSetOption(record, factory) |
-   dropOption(record))
-  (<COMMA> (addSetOption(record, factory) |
-   dropOption(record)))*
+  (addSetOption(objectName, type, dbStore) |
+   dropOption(objectName, type, dbStore))
+  (<COMMA> (addSetOption(objectName, type, dbStore) |
+   dropOption(objectName, type, dbStore)))*
   <RPAREN>
-  {
- 		setOptions(record);
-  }
 }
 
 /*
@@ -5514,14 +6262,14 @@ name=drop option
 description=drop option
 example=[source,sql]\n----\nDROP updatable\n----\n
 */
-void dropOption(AbstractMetadataRecord record) :
+void dropOption(String objectName, Database.ResourceType type, DatabaseStore dbStore) :
 {
 	String key = null;
 }
 {
    <DROP> key = id(null) 
    {
- 		removeOption(key, record);
+ 		dbStore.removeOption(objectName, type, key);
    }
 }
 
@@ -5530,30 +6278,172 @@ name=add set option
 description=add or set an option pair
 example=[source,sql]\n----\nADD updatable true\n----\n
 */
-void addSetOption(AbstractMetadataRecord record, MetadataFactory factory) :
+void addSetOption(String objectName, Database.ResourceType type, DatabaseStore dbStore) :
 {
 }
 {
-   (<ADD>|<SET>) optionPair(record, factory) 
+   (<ADD>|<SET>) alterOptionPair(objectName, type, dbStore) 
 }
 
 /*
-name=alter column options
-description=alters a set of column options
-example=[source,sql]\n----\nALTER COLUMN bar OPTIONS (ADD updatable true)\n----\n
+name=alter child options list
+description=a list of alterations to options
+example=[source,sql]\n----\nOPTIONS (ADD updatable true)\n----\n
 */
-void alterColumn(AbstractMetadataRecord parent, MetadataFactory factory) :
+void alterChildOptionsList(String objectName, Database.ResourceType type, String childName, Database.ResourceType childType, DatabaseStore dbStore) :
 {
-	boolean param = false;
-	String objectName = null;
-	AbstractMetadataRecord record = null;
-	String key = null;
+
+}
+{
+  <OPTIONS> <LPAREN>
+  (addSetChildOption(objectName, type, childName, childType, dbStore) |
+   dropChildOption(objectName, type, childName, childType, dbStore))
+  (<COMMA> (addSetChildOption(objectName, type, childName, childType, dbStore) |
+   dropChildOption(objectName, type, childName, childType, dbStore)))*
+  <RPAREN>
+}
+
+/*
+name=drop option
+description=drop option
+example=[source,sql]\n----\nDROP updatable\n----\n
+*/
+void dropChildOption(String objectName, Database.ResourceType type, String childName, Database.ResourceType childType, DatabaseStore dbStore) :
+{
+    String key = null;
+}
+{
+   <DROP> key = id(null) 
+   {
+        dbStore.removeOption(objectName, type, childName, childType, key);
+   }
+}
+
+/*
+name=add set child option
+description=add or set an option pair
+example=[source,sql]\n----\nADD updatable true\n----\n
+*/
+void addSetChildOption(String objectName, Database.ResourceType type, String childName, Database.ResourceType childType, DatabaseStore dbStore) :
+{
+}
+{
+   (<ADD>|<SET>) alterChildOptionPair(objectName, type, childName, childType, dbStore) 
+}
+
+/*
+name=alter child option pair
+description=Alter An option key/value pair.
+example=[source,sql]\n----\n'key' 'value'\n----\n
+*/
+void alterChildOptionPair(String objectName, Database.ResourceType type, String childName, Database.ResourceType childType, DatabaseStore dbStore) :
+{
+    Constant value = null;
+    String key = null;
+    Token t = null;
+    String strVal = null;
+}
+{
+     key = id(null)
+     (value = nonNumericLiteral()
+     | [strVal = plusMinus()] value = unsignedNumericLiteral(strVal))
+     { 
+        String val = null;
+        if (!value.isNull()) {
+            val = value.getValue().toString();
+        }
+        dbStore.addOrSetOption(objectName, type, childName, childType, key, val, true);
+     } 
+}
+
+/*
+name=Import foreign schema
+description=imports schema metadata from server
+example=[source,sql]\n----\nIMPORT FOREIGN SCHEMA foo [LIMIT TO (x,y,z)|EXCEPT (x,y,z)] FROM SERVER bar\n----\n
+*/
+void importSchema(DatabaseStore dbStore) :
+{
+    String foreignSchemaName = null;
+    String schemaName = null;
+    String serverName = null;
+    String importIntoSchemaName = null;
+    ArrayList<String> includeTables = new ArrayList<String>();
+    ArrayList<String> excludeTables = new ArrayList<String>();
+    Server server = new Server("__temp__"); 
 }
 { 
-	<ALTER> [<COLUMN>|<PARAMETER>{param=true;}]
-	objectName = id(null)
-	{
-		record = getChild(objectName, parent, param);
-	}
-	alterOptionsList(record, factory)
+    <IMPORT> <FOREIGN> <SCHEMA> 
+    foreignSchemaName = id(null)
+    [<LIMIT> <TO> <LPAREN> readCSVString(includeTables) <RPAREN> | <LPAREN> <EXCEPT> readCSVString(excludeTables) <RPAREN>]
+    <FROM> <SERVER> serverName = id(null)    
+    <INTO> schemaName = id(null)
+    [optionsClause(server, null)
+	   {
+	      OptionsUtil.setOptions(server);
+	   }
+	]
+    {
+        dbStore.importSchema(schemaName, serverName, foreignSchemaName, includeTables, excludeTables, server.getProperties());
+    }	
+}
+
+/*
+name=Import another Database
+description=imports another database into current database
+example=[source,sql]\n----\nIMPORT DATABASE <id> VERSION <string-val> [WITH ACCESS CONTROL]\n----\n
+*/
+void importDatabase(DatabaseStore dbStore) :
+{
+    String dbName = null;
+    String version = null;
+    boolean importAccessControls = false;
+}
+{ 
+    <IMPORT> <DATABASE> 
+    dbName = id(null)
+    <VERSION>
+    version = stringVal()
+    [<WITH> <ACCESS> <CONTROL> {importAccessControls=true;}]    
+    {
+        dbStore.importDatabase(dbName, version, importAccessControls);
+    }
+}
+
+/*
+name=not used
+*/
+void readCSVString(List<String> strings) :
+{
+    String name = null;
+}
+{        
+    name = id(null)
+    {
+        strings.add(name);
+    } 
+    (<COMMA>
+        name = id(null)
+        {
+            strings.add(name);
+        }
+    )* 
+}
+
+/*
+name=notused
+*/
+void readGrantTypes(ArrayList<Grant.Permission.Privilege> privileges) :
+{
+}
+{        
+    <SELECT> {privileges.add(Grant.Permission.Privilege.SELECT);} |
+    <INSERT> {privileges.add(Grant.Permission.Privilege.INSERT);} |
+    <UPDATE> {privileges.add(Grant.Permission.Privilege.UPDATE);} |
+    <DELETE> {privileges.add(Grant.Permission.Privilege.DELETE);} |
+    <EXECUTE> {privileges.add(Grant.Permission.Privilege.EXECUTE);} |
+    <LANGUAGE> {privileges.add(Grant.Permission.Privilege.LANGUAGE);} |
+    <ALTER> {privileges.add(Grant.Permission.Privilege.ALTER);} |
+    <DROP> {privileges.add(Grant.Permission.Privilege.DROP);} |
+    <ALL> <PRIVILEGES> {privileges.add(Grant.Permission.Privilege.ALL_PRIVILEGES);} |
+    <TEMPORARY> <TABLE> {privileges.add(Grant.Permission.Privilege.TEMPORARY_TABLE);}
 }

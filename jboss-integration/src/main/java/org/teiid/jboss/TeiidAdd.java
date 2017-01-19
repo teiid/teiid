@@ -35,6 +35,7 @@ import java.lang.reflect.Proxy;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.ServiceLoader;
 import java.util.concurrent.Executor;
@@ -77,12 +78,16 @@ import org.jboss.msc.value.InjectedValue;
 import org.teiid.CommandContext;
 import org.teiid.PolicyDecider;
 import org.teiid.PreParser;
+import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.cache.CacheFactory;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBufferCache;
 import org.teiid.deployers.RestWarGenerator;
+import org.teiid.deployers.TranslatorUtil;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VDBStatusChecker;
+import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
+import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.dqp.internal.process.AuthorizationValidator;
 import org.teiid.dqp.internal.process.CachedResults;
@@ -102,6 +107,7 @@ import org.teiid.replication.jgroups.JGroupsObjectReplicator;
 import org.teiid.runtime.MaterializationManager;
 import org.teiid.services.InternalEventDistributorFactory;
 import org.teiid.services.SessionServiceImpl;
+import org.teiid.translator.ExecutionFactory;
 import org.wildfly.clustering.jgroups.ChannelFactory;
 import org.wildfly.clustering.jgroups.spi.service.ProtocolStackServiceName;
 
@@ -223,6 +229,9 @@ class TeiidAdd extends AbstractAddStepHandler {
 		
 		final String nodeName = getNodeName();
 		
+        Environment environment = context.getCallEnvironment();        
+		final JBossLifeCycleListener shutdownListener = new JBossLifeCycleListener(environment);
+		
 		// async thread-pool
 		int maxThreads = 10;
         if (isDefined(ASYNC_THREAD_POOL_ELEMENT, operation, context)) {
@@ -241,9 +250,12 @@ class TeiidAdd extends AbstractAddStepHandler {
 				return translatorRepo;
 			}
     	});
+        
         ServiceController<TranslatorRepository> service = target.addService(
                 TeiidServiceNames.TRANSLATOR_REPO, translatorService).install();
-    	
+        
+        final ConnectorManagerRepository connectorManagerRepo = buildConnectorManagerRepository(translatorRepo);
+        
     	// system function tree
 		SystemFunctionManager systemFunctionManager = new SystemFunctionManager();
 		if (isDefined(ALLOW_ENV_FUNCTION_ELEMENT, operation, context)) {
@@ -262,7 +274,10 @@ class TeiidAdd extends AbstractAddStepHandler {
     	}
 
     	VDBRepositoryService vdbRepositoryService = new VDBRepositoryService(vdbRepository);
-    	target.addService(TeiidServiceNames.VDB_REPO, vdbRepositoryService).install();
+    	ServiceBuilder<VDBRepository> vdbRepoService = target.addService(TeiidServiceNames.VDB_REPO, vdbRepositoryService);
+    	vdbRepoService.addDependency(TeiidServiceNames.BUFFER_MGR, BufferManager.class, vdbRepositoryService.bufferManagerInjector);
+        vdbRepoService.addDependency(DependencyType.OPTIONAL, TeiidServiceNames.OBJECT_REPLICATOR, ObjectReplicator.class, vdbRepositoryService.objectReplicatorInjector);
+    	vdbRepoService.install();
 		
     	// VDB Status manager
     	final VDBStatusCheckerExecutorService statusChecker = new VDBStatusCheckerExecutorService();
@@ -422,7 +437,7 @@ class TeiidAdd extends AbstractAddStepHandler {
 	    	preparedPlanCacheBuilder.addDependency(TeiidServiceNames.PREPAREDPLAN_CACHE_FACTORY, CacheFactory.class, preparedPlanService.cacheFactoryInjector);
 	    	preparedPlanCacheBuilder.addDependency(ServiceName.JBOSS.append("infinispan", ispnName, cacheName)); //$NON-NLS-1$
 	    	preparedPlanCacheBuilder.install();
-    	}    	
+    	}
     	
     	// Query Engine
     	final DQPCoreService engine = buildQueryEngine(context, operation);
@@ -454,9 +469,6 @@ class TeiidAdd extends AbstractAddStepHandler {
         
         engineBuilder.setInitialMode(ServiceController.Mode.ACTIVE);
         engineBuilder.install(); 
-        Environment environment = context.getCallEnvironment();
-        
-		final JBossLifeCycleListener shutdownListener = new JBossLifeCycleListener(environment);
             	
         // add JNDI for event distributor
 		final ReferenceFactoryService<EventDistributorFactory> referenceFactoryService = new ReferenceFactoryService<EventDistributorFactory>();
@@ -491,9 +503,10 @@ class TeiidAdd extends AbstractAddStepHandler {
 			@Override
 			public void execute(DeploymentProcessorTarget processorTarget) {
 				// vdb deployers
+			    processorTarget.addDeploymentProcessor(TeiidExtension.TEIID_SUBSYSTEM, Phase.STRUCTURE, 0, new FileRootMountProcessor(".ddl"));
 				processorTarget.addDeploymentProcessor(TeiidExtension.TEIID_SUBSYSTEM, Phase.STRUCTURE, Phase.STRUCTURE_WAR_DEPLOYMENT_INIT|0xFF75,new DynamicVDBRootMountDeployer());
 				processorTarget.addDeploymentProcessor(TeiidExtension.TEIID_SUBSYSTEM, Phase.STRUCTURE, Phase.STRUCTURE_WAR_DEPLOYMENT_INIT|0xFF76,new VDBStructureDeployer());
-				processorTarget.addDeploymentProcessor(TeiidExtension.TEIID_SUBSYSTEM, Phase.PARSE, Phase.PARSE_WEB_DEPLOYMENT|0x0001, new VDBParserDeployer());
+				processorTarget.addDeploymentProcessor(TeiidExtension.TEIID_SUBSYSTEM, Phase.PARSE, Phase.PARSE_WEB_DEPLOYMENT|0x0001, new VDBParserDeployer(vdbRepository));
 				processorTarget.addDeploymentProcessor(TeiidExtension.TEIID_SUBSYSTEM, Phase.DEPENDENCIES, Phase.DEPENDENCIES_WAR_MODULE|0x0001, new VDBDependencyDeployer());
 				processorTarget.addDeploymentProcessor(TeiidExtension.TEIID_SUBSYSTEM, Phase.INSTALL, Phase.INSTALL_WAR_DEPLOYMENT|0x1000, new VDBDeployer(translatorRepo, vdbRepository, shutdownListener));
 				
@@ -544,24 +557,8 @@ class TeiidAdd extends AbstractAddStepHandler {
    		sessionServiceImpl.setSecurityHelper(new JBossSecurityHelper());
    		sessionServiceImpl.start();
    		
-   		ServiceBuilder<SessionService> sessionServiceBuilder = target.addService(TeiidServiceNames.SESSION, new Service<SessionService>() {
-   			@Override
-   			public SessionService getValue() throws IllegalStateException,
-   					IllegalArgumentException {
-   				return sessionServiceImpl;
-   			}
-   			
-   			@Override
-   			public void stop(StopContext context) {
-   				sessionServiceImpl.stop();
-   			}
-
-			@Override
-			public void start(StartContext context) throws StartException {
-						
-			}
-   		});
-   		
+   		ContainerSessionService containerSessionService = new ContainerSessionService(sessionServiceImpl);
+        ServiceBuilder<SessionService> sessionServiceBuilder = target.addService(TeiidServiceNames.SESSION, containerSessionService);
    		sessionServiceBuilder.install();
    		
   		// rest war service
@@ -573,11 +570,58 @@ class TeiidAdd extends AbstractAddStepHandler {
 		warGeneratorSvc.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class, restEnabler.vdbRepoInjector);
 		warGeneratorSvc.install();
 	}
+
+    private ConnectorManagerRepository buildConnectorManagerRepository(final TranslatorRepository translatorRepo) {
+        ConnectorManagerRepository cmr = new ConnectorManagerRepository();
+        ConnectorManagerRepository.ExecutionFactoryProvider provider = new ConnectorManagerRepository.ExecutionFactoryProvider() {
+            HashMap<String, ExecutionFactory<Object, Object>> map = new HashMap<String, ExecutionFactory<Object, Object>>();
+            @Override
+            public ExecutionFactory<Object, Object> getExecutionFactory(String name) throws ConnectorManagerException {
+                VDBTranslatorMetaData translator = translatorRepo.getTranslatorMetaData(name);
+                if (translator == null) {
+                    throw new ConnectorManagerException(
+                            IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50110, name));                    
+                }
+                ExecutionFactory<Object, Object> ef = map.get(name);
+                if ( ef == null) {
+                    ef = TranslatorUtil.buildDelegateAwareExecutionFactory(translator, this);
+                    map.put(name, ef);
+                }
+                return ef;
+            }
+        };
+        cmr.setProvider(provider);
+        return cmr;
+    }
 	
     private void buildThreadService(int maxThreads, ServiceTarget target) {
         ThreadExecutorService service = new ThreadExecutorService(maxThreads);
         final ServiceBuilder<?> serviceBuilder = target.addService(TeiidServiceNames.THREAD_POOL_SERVICE, service);
         serviceBuilder.install();
+    }
+
+    private static final class ContainerSessionService implements
+            Service<SessionService> {
+        private final SessionServiceImpl sessionServiceImpl;
+
+        private ContainerSessionService(SessionServiceImpl sessionServiceImpl) {
+            this.sessionServiceImpl = sessionServiceImpl;
+        }
+
+        @Override
+        public SessionService getValue() throws IllegalStateException,
+        		IllegalArgumentException {
+        	return sessionServiceImpl;
+        }
+
+        @Override
+        public void stop(StopContext context) {
+        	sessionServiceImpl.stop();
+        }
+
+        @Override
+        public void start(StartContext context) throws StartException {
+        }
     }
 
     static class TeiidThreadFactoryResolver extends ThreadFactoryResolver.SimpleResolver{

@@ -135,7 +135,7 @@ public class EvaluatorIterator extends WrappingIterator {
     
     public static TransformationMetadata createTransformationMetadata(String ddl) {
         MetadataStore mds = new MetadataStore();
-        MetadataFactory mf = new MetadataFactory(null, 1, IMPLICIT_MODEL_NAME,
+        MetadataFactory mf = new MetadataFactory("vdb", 1, IMPLICIT_MODEL_NAME,
                 SystemMetadata.getInstance().getRuntimeTypeMap(),
                 new Properties(), null);        
         QueryParser.getQueryParser().parseDDL(mf, ddl);

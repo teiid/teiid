@@ -34,6 +34,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.teiid.adminapi.*;
+import org.teiid.adminapi.Admin.ExportFormat;
 import org.teiid.adminapi.Admin.TranlatorPropertyType;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.jboss.AdminFactory;
@@ -400,12 +401,21 @@ public class AdminShell {
 		return getAdmin().getQueryPlan(sessionId, executionId);
 	}
 
-	@Doc(text = "Get schema for the model")
+	@Doc(text = "Get schema for the VDB/model")
 	public static String getSchema(@Doc(text = "vdb name") String vdbName,
 			@Doc(text = "vdb version") Object vdbVersion,
 			@Doc(text = "models") String modelName) throws AdminException {
 		return getAdmin().getSchema(vdbName, vdbVersion!=null?vdbVersion.toString():null, modelName, null, null);
 	}
+	
+    @Doc(text = "Get schema for the VDB")
+    public static String getSchema(@Doc(text = "vdb name") String vdbName,
+            @Doc(text = "vdb version") Object vdbVersion,
+            @Doc(text = "models") String modelName,
+            @Doc(text = "format(XML,DDL)") String format) throws AdminException {
+        return getAdmin().getSchema(vdbName, vdbVersion != null ? vdbVersion.toString() : null, modelName, null, null,
+                ExportFormat.valueOf(format));
+    }	
 
 	@Doc(text = "Restart the server")
     public static void restart(){

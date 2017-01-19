@@ -43,7 +43,10 @@ import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.Database.ResourceType;
 import org.teiid.metadata.FunctionMethod.Determinism;
+import org.teiid.metadata.Grant.Permission;
+import org.teiid.metadata.Grant.Permission.Privilege;
 import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -88,7 +91,13 @@ public class DDLStringVisitor {
         visitor.visit(schema);
         return visitor.toString();
     }
-	
+
+    public static String getDDLString(Database database) {
+        DDLStringVisitor visitor = new DDLStringVisitor(null, null);
+        visitor.visit(database);
+        return visitor.toString();
+    }
+    
     public DDLStringVisitor(EnumSet<SchemaObjectType> types, String regexPattern) {
     	if (types != null) {
     		this.includeTables = types.contains(SchemaObjectType.TABLES);
@@ -100,7 +109,187 @@ public class DDLStringVisitor {
     	}
     }
     
-	private void visit(Schema schema) {
+    private void visit(Database database) {
+        append(NEWLINE);
+        append("/*").append(NEWLINE);
+        append("###########################################").append(NEWLINE);
+        append("# START DATABASE ").append(database.getName()).append(NEWLINE);
+        append("###########################################").append(NEWLINE);
+        append("*/").append(NEWLINE);
+        
+        append(CREATE).append(SPACE).append(DATABASE).append(SPACE)
+                .append(SQLStringVisitor.escapeSinglePart(database.getName())).append(SPACE).append(VERSION)
+                .append(SPACE).append(TICK).append(database.getVersion()).append(TICK);
+        appendOptions(database);
+        append(SEMICOLON);
+        append(NEWLINE);
+        append(NEWLINE);
+
+        if (!database.getDataWrappers().isEmpty()){
+        	append(NEWLINE);
+        	append("--############ Translators ############");
+        	append(NEWLINE);        	
+        }
+        
+        for (DataWrapper dw : database.getDataWrappers()) {
+            visit(dw);
+            append(NEWLINE);
+            append(NEWLINE);
+        }
+
+        if (!database.getServers().isEmpty()){
+        	append(NEWLINE);
+        	append("--############ Servers ############");
+        	append(NEWLINE);        	
+        }
+        
+        for (Server server : database.getServers()) {
+            visit(server);
+            append(NEWLINE);
+            append(NEWLINE);
+        }
+
+        for (Schema schema : database.getSchemas()) {
+        	append(NEWLINE);
+        	append("--############ Schema:").append(schema.getName()).append(" ############");
+        	append(NEWLINE);
+            append(CREATE).append(SPACE);
+            if (!schema.isPhysical()) {
+                append(VIRTUAL);
+            }
+            append(SPACE).append(SCHEMA).append(SPACE).append(SQLStringVisitor.escapeSinglePart(schema.getName()));
+            if (!schema.getServers().isEmpty()) {
+                append(SPACE).append(SERVER);
+                boolean first = true;
+                for (Server s:schema.getServers()) {
+                    if (first) {
+                        first = true;
+                    } else {
+                        append(COMMA);
+                    }
+                    append(SPACE).append(SQLStringVisitor.escapeSinglePart(s.getName()));
+                }
+            }
+            
+            appendOptions(schema);
+            append(SEMICOLON);
+            append(NEWLINE);
+            append(NEWLINE);
+            
+            visit(schema);  
+        }
+        
+        if (!database.getRoles().isEmpty()){
+        	append(NEWLINE);
+        	append("--############ Roles & Grants ############");
+        	append(NEWLINE);        	
+        }
+        
+        for (Role role:database.getRoles()) {
+            visit(role);
+            append(NEWLINE);
+        }
+        
+        for (Grant grant:database.getGrants()) {
+            visit(grant);
+            append(NEWLINE);
+        }
+        
+        append(NEWLINE);
+        append("/*").append(NEWLINE);
+        append("###########################################").append(NEWLINE);
+        append("# END DATABASE ").append(database.getName()).append(NEWLINE);
+        append("###########################################").append(NEWLINE);
+        append("*/").append(NEWLINE);
+        append(NEWLINE);
+    }
+    
+    private void visit(Grant grant) {
+        
+        for (Permission permission : grant.getPermissions()) {
+            append(GRANT);
+            boolean first = true;
+            for (Privilege allowance:permission.getPrivileges()) {
+                if (first) {
+                    first = false;
+                    append(SPACE);
+                } else {
+                    append(COMMA);
+                }
+                append(allowance.name());
+            }
+            append(SPACE).append(ON).append(SPACE).append(permission.getResourceType().name());
+            if (permission.getResourceName() != null) {
+                append(SPACE).append(SQLStringVisitor.escapeSinglePart(permission.getResourceName()));
+            }
+            
+            if (permission.getResourceType() == ResourceType.COLUMN) {
+                
+                if (permission.getMask() != null) {
+                    append(SPACE).append(MASK);
+                    if (permission.getMaskOrder() != null && permission.getMaskOrder() != -1) {
+                        append(SPACE).append(ORDER).append(SPACE).append(permission.getMaskOrder());
+                    }
+                    append(SPACE).append(TICK).append(SQLStringVisitor.escapeSinglePart(permission.getMask())).append(TICK);
+                }
+                
+                if (permission.getCondition() != null) {
+                    append(SPACE).append(CONDITION);
+                    if (permission.isConditionAConstraint() != null && permission.isConditionAConstraint()) {
+                        append(SPACE).append(CONSTRAINT);
+                    }
+                    append(SPACE).append(TICK).append(SQLStringVisitor.escapeSinglePart(permission.getCondition())).append(TICK);
+                }
+            }
+            append(SPACE).append(TO).append(SPACE).append(grant.getRole());
+            append(SEMICOLON).append(NEWLINE);
+        }
+    }
+
+    private void visit(Role role) {
+        append(CREATE).append(SPACE).append(ROLE.toUpperCase()).append(SPACE)
+                .append(SQLStringVisitor.escapeSinglePart(role.getName()));
+        if (role.getJassRoles() != null && !role.getJassRoles().isEmpty()) {
+            append(SPACE).append(WITH).append(SPACE).append(JAAS).append(SPACE).append(ROLE);
+            for (String str:role.getJassRoles()) {
+                append(SPACE).append(SQLStringVisitor.escapeSinglePart(str));
+            }
+        }
+        
+        if (role.isAnyAuthenticated()) {
+            append(SPACE).append(WITH).append(SPACE).append(ANY).append(SPACE).append(AUTHENTICATED);
+        }
+        append(SEMICOLON);
+    }
+    
+    private void visit(DataWrapper dw) {
+        append(CREATE).append(SPACE).append(FOREIGN).append(SPACE).append(DATA).append(SPACE).append(WRAPPER)
+                .append(SPACE);
+        append(SQLStringVisitor.escapeSinglePart(dw.getName()));
+        if (dw.getType() != null) {
+            append(SPACE).append(TYPE).append(SPACE).append(SQLStringVisitor.escapeSinglePart(dw.getType()));
+        }
+        appendOptions(dw);
+        append(SEMICOLON);
+    }
+
+    private void visit(Server server) {
+        if (server.getName().equalsIgnoreCase("none")) {
+            return;
+        }
+        append(CREATE).append(SPACE).append(SERVER).append(SPACE)
+                .append(SQLStringVisitor.escapeSinglePart(server.getName())).append(SPACE).append(TYPE).append(SPACE)
+                .append(TICK).append(server.getType()).append(TICK);
+        if (server.getVersion() != null) {
+            append(SPACE).append(VERSION).append(SPACE).append(TICK).append(server.getVersion()).append(TICK);
+        }
+        append(SPACE).append(FOREIGN).append(SPACE).append(DATA).append(SPACE).append(WRAPPER).append(SPACE);
+        append(SQLStringVisitor.escapeSinglePart(server.getDataWrapper()));
+        appendOptions(server);
+        append(SEMICOLON);
+    }
+
+    private void visit(Schema schema) {
 		boolean first = true; 
 		
 		if (this.includeTables) {

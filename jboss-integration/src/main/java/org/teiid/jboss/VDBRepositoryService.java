@@ -25,10 +25,15 @@ import org.jboss.msc.service.Service;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
+import org.jboss.msc.value.InjectedValue;
+import org.teiid.common.buffer.BufferManager;
 import org.teiid.deployers.VDBRepository;
+import org.teiid.query.ObjectReplicator;
 
 class VDBRepositoryService implements Service<VDBRepository> {
 	private VDBRepository repo;
+    protected final InjectedValue<BufferManager> bufferManagerInjector = new InjectedValue<BufferManager>();
+    protected final InjectedValue<ObjectReplicator> objectReplicatorInjector = new InjectedValue<ObjectReplicator>();
 	
 	public VDBRepositoryService(VDBRepository repo) {
 		this.repo = repo;
@@ -36,6 +41,8 @@ class VDBRepositoryService implements Service<VDBRepository> {
 	
 	@Override
 	public void start(StartContext context) throws StartException {
+	    repo.setBufferManager(this.bufferManagerInjector.getValue());
+	    repo.setObjectReplicator(this.objectReplicatorInjector.getValue());
 		repo.start();
 	}
 

@@ -143,9 +143,27 @@ public class SQLConstants {
 		public static final String PRESERVE = "PRESERVE"; //$NON-NLS-1$
 		
 		public static final String GEOMETRY = "GEOMETRY"; //$NON-NLS-1$
-		
 		public static final String UPSERT = "UPSERT"; //$NON-NLS-1$
         public static final String AFTER = "AFTER"; //$NON-NLS-1$
+
+        //ddl
+        public static final String AUTHENTICATED = "AUTHENTICATED"; //$NON-NLS-1$
+        public static final String TYPE = "TYPE"; //$NON-NLS-1$$
+        public static final String TRANSLATOR = "TRANSLATOR"; //$NON-NLS-1$
+        public static final String JAAS = "JAAS"; //$NON-NLS-1$
+        public static final String CONDITION= "CONDITION"; //$NON-NLS-1$
+        public static final String MASK = "MASK"; //$NON-NLS-1$
+        public static final String ACCESS = "ACCESS"; //$NON-NLS-1$
+        public static final String CONTROL = "CONTROL"; //$NON-NLS-1$
+        public static final String DATABASE = "DATABASE"; //$NON-NLS-1$
+        public static final String DATA = "DATA"; //$NON-NLS-1$
+        public static final String PRIVILEGES = "PRIVILEGES"; //$NON-NLS-1$
+        public static final String ROLE = "ROLE"; //$NON-NLS-1$
+        public static final String SCHEMA = "SCHEMA"; //$NON-NLS-1$
+        public static final String USE = "USE"; //$NON-NLS-1$
+        public static final String SERVER = "SERVER"; //$NON-NLS-1$
+        public static final String WRAPPER = "WRAPPER"; //$NON-NLS-1$
+        public static final String NONE = "NONE"; //$NON-NLS-1$
 	}
 	
 	public interface Reserved {
@@ -305,7 +323,6 @@ public class SQLConstants {
 		public static final String NCLOB = "NCLOB"; //$NON-NLS-1$
 		public static final String NEW = "NEW"; //$NON-NLS-1$
 		public static final String NO = "NO"; //$NON-NLS-1$
-	    public static final String NONE = "NONE"; //$NON-NLS-1$
 	    public static final String NOT = "NOT"; //$NON-NLS-1$
 	    public static final String NULL = "NULL"; //$NON-NLS-1$
 	    public static final String NUMERIC = "NUMERIC"; //$NON-NLS-1$
@@ -430,7 +447,6 @@ public class SQLConstants {
 	    public static final String XMLVALIDATE = "XMLVALIDATE"; //$NON-NLS-1$
 	    
 	    //SQL/MED
-	    
 	    public static final String DATALINK = "DATALINK"; //$NON-NLS-1$
 	    public static final String DLNEWCOPY = "DLNEWCOPY"; //$NON-NLS-1$
 	    public static final String DLPREVIOUSCOPY = "DLPREVIOUSCOPY"; //$NON-NLS-1$

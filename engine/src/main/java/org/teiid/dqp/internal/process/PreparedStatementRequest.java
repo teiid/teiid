@@ -116,7 +116,7 @@ public class PreparedStatementRequest extends Request {
             //if prepared plan does not exist, create one
             prepPlan = new PreparedPlan();
             LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Query does not exist in cache: ", sqlQuery}); //$NON-NLS-1$
-            super.generatePlan(false);
+            super.generatePlan(true);
         	prepPlan.setCommand(this.userCommand);
         	
         	//there's no need to cache the plan if it's a stored procedure, since we already do that in the optimizer

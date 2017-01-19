@@ -31,6 +31,8 @@ public class Trigger extends AbstractMetadataRecord {
     
     private TriggerEvent event; 
     private String plan;
+    private boolean after;
+    private String name;
     
     public TriggerEvent getEvent() {
         return event;
@@ -47,5 +49,20 @@ public class Trigger extends AbstractMetadataRecord {
     public void setPlan(String plan) {
         this.plan = plan;
     }
-    
+
+    public boolean isAfter() {
+        return after;
+    }
+
+    public void setAfter(boolean after) {
+        this.after = after;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 }

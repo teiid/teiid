@@ -26,10 +26,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.TreeMap;
 
-import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.StringUtil;
@@ -240,18 +238,5 @@ public class CompositeMetadataStore extends MetadataStore {
 	public int getMaxOid() {
 		getOids();
 		return oidId;
-	}
-	
-	public void processGrants(Map<String, DataPolicyMetadata> policies) {
-		if (this.grants == null || policies == null) {
-			return;
-		}
-		for (Grant grant : this.grants) {
-			DataPolicyMetadata dpm = policies.get(grant.getRole());
-			if (dpm != null) {
-				dpm.addPermission(grant.getPermission());
-			}
-		}
-	}
-	
+	}	
 }

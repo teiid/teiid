@@ -557,7 +557,7 @@ public class TeiidConstants {
             .setAllowExpression(false)
             .setAllowNull(true)
             .build();   
-    	
+
     public static boolean isDefined(final SimpleAttributeDefinition attr, final ModelNode  model, final OperationContext context) throws OperationFailedException {
         ModelNode resolvedNode = attr.resolveModelAttribute(context, model);
         return resolvedNode.isDefined();    	

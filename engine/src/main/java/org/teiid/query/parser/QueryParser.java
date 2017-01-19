@@ -22,29 +22,24 @@
 
 package org.teiid.query.parser;
 
-import static org.teiid.query.parser.SQLParserConstants.*;
-import static org.teiid.query.parser.TeiidSQLParserTokenManager.*;
+import static org.teiid.query.parser.SQLParserConstants.tokenImage;
+import static org.teiid.query.parser.TeiidSQLParserTokenManager.INVALID_TOKEN;
 
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 import org.teiid.api.exception.query.QueryParserException;
-import org.teiid.connector.DataPlugin;
 import org.teiid.language.SQLConstants;
-import org.teiid.metadata.DuplicateRecordException;
-import org.teiid.metadata.FunctionMethod;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.Parser;
+import org.teiid.metadata.*;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.function.SystemFunctionManager;
+import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.util.CommandContext;
 
 /**
  * <p>Converts a SQL-string to an object version of a query.  This
@@ -66,7 +61,8 @@ public class QueryParser implements Parser {
 
     private static final String XQUERY_DECLARE = "declare"; //$NON-NLS-1$
     private static final String XML_OPEN_BRACKET = "<"; //$NON-NLS-1$
-
+    private static final String NONE = "none"; //$NON-NLS-1$
+    
 	private SQLParser parser;
 	private TeiidSQLParserTokenManager tm;
     
@@ -136,7 +132,7 @@ public class QueryParser implements Parser {
 	 * @throws QueryParserException if parsing fails
 	 * @throws IllegalArgumentException if sql is null
 	 */
-    public Command parseCommand(String sql, ParseInfo parseInfo) throws QueryParserException {
+	public Command parseCommand(String sql, ParseInfo parseInfo) throws QueryParserException {
         return parseCommand(sql, parseInfo, false);
     }
     
@@ -145,6 +141,11 @@ public class QueryParser implements Parser {
     }
 
 	public Command parseCommand(String sql, ParseInfo parseInfo, boolean designerCommands) throws QueryParserException {
+		return parseCommand(sql, parseInfo, designerCommands, null, null, null, null);
+	}    
+	
+	public Command parseCommand(final String sql, ParseInfo parseInfo, boolean designerCommands, String vdbName,
+			String vdbVersion, String schemaName, CommandContext commandContext) throws QueryParserException {
         if(sql == null || sql.length() == 0) {
              throw new QueryParserException(QueryPlugin.Event.TEIID30377, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30377));
         }
@@ -161,7 +162,7 @@ public class QueryParser implements Parser {
         	if(sql.startsWith(XML_OPEN_BRACKET) || sql.startsWith(XQUERY_DECLARE)) {
             	 throw new QueryParserException(QueryPlugin.Event.TEIID30378, convertParserException(pe), QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30378, sql));
             }
-            throw convertParserException(pe);
+    		throw convertParserException(pe);
         } finally {
         	tm.reinit();
         }
@@ -465,20 +466,62 @@ public class QueryParser implements Parser {
     	parseDDL(factory, new StringReader(ddl));
     }
     
-    public void parseDDL(MetadataFactory factory, Reader ddl) {
-    	try {
-			getSqlParser(ddl).parseMetadata(factory);
-		} catch (ParseException e) {
-			throw new org.teiid.metadata.ParseException(QueryPlugin.Event.TEIID30386, convertParserException(e));
-		} finally {
-        	tm.reinit();
+    public void parseDDL(final MetadataFactory factory, Reader ddl) {
+        DatabaseStore store = new DatabaseStore() {
+            @Override
+            public Map<String, Datatype> getRuntimeTypes() {
+                return factory.getDataTypes();
+            }
+            @Override
+            public Map<String, Datatype> getBuiltinDataTypes() {
+                return factory.getBuiltinDataTypes();
+            } 
+			@Override
+			public SystemFunctionManager getSystemFunctionManager() {
+				return new SystemFunctionManager();
+			}            
+        };
+
+        store.startEditing(true);        
+        Database db = new Database(factory.getVdbName(), factory.getVdbVersion());
+        store.databaseCreated(db);
+        
+        store.dataWrapperCreated(new DataWrapper(NONE));
+        Server server = new Server(NONE);
+        server.setDataWrapper(NONE);
+        
+        store.serverCreated(server);
+        if (factory.getSchema().isPhysical()) {
+            Server s = new Server(factory.getSchema().getName());
+            s.setDataWrapper(NONE);
+            store.serverCreated(s);
         }
-    	HashSet<FunctionMethod> functions = new HashSet<FunctionMethod>();
-    	for (FunctionMethod functionMethod : factory.getSchema().getFunctions().values()) {
-			if (!functions.add(functionMethod)) {
-				throw new DuplicateRecordException(DataPlugin.Event.TEIID60015, DataPlugin.Util.gs(DataPlugin.Event.TEIID60015, functionMethod.getName()));
-			}
-		}
+        List<String> servers = Collections.emptyList();
+        if (factory.getSchema().isPhysical()){
+        	servers = Arrays.asList(NONE);
+        }
+        store.schemaCreated(factory.getSchema(), servers);
+        
+        try {
+            parseDDL(store, ddl);
+            Map<String, String> colNs = store.getNameSpaces();
+            for (String key:colNs.keySet()) {
+                factory.addNamespace(key, colNs.get(key));    
+            }
+        } finally {
+            store.stopEditing();
+        }
     }
 
+    public void parseDDL(DatabaseStore repository, Reader ddl)
+            throws MetadataException {
+        try {
+            getSqlParser(ddl).parseMetadata(repository);
+        } catch (ParseException e) {
+            throw new org.teiid.metadata.ParseException(QueryPlugin.Event.TEIID30386, convertParserException(e));
+        } finally {
+            tm.reinit();
+        }
+    }
+    
 }

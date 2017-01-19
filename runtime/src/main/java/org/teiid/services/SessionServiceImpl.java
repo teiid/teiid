@@ -172,6 +172,9 @@ public class SessionServiceImpl implements SessionService {
 	        VDBMetaData vdb = null;
 	        if (vdbName != null) {
 	        	vdb = getActiveVDB(vdbName, vdbVersion);
+	        	if (vdb == null) {
+        	        throw new SessionServiceException(RuntimePlugin.Event.TEIID40046, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40046, vdbName, vdbVersion));
+	        	}
 	        }
 	
 	        if (sessionMaxLimit > 0 && getActiveSessionsCount() >= sessionMaxLimit) {
@@ -252,22 +255,28 @@ public class SessionServiceImpl implements SessionService {
         }
 	}
 	
+	/**
+	 * 
+	 * @param vdbName
+	 * @param vdbVersion
+	 * @return the vdb or null if it doesn't exist
+	 * @throws SessionServiceException if the version is not valid or the vdb doesn't accept connections
+	 */
 	protected VDBMetaData getActiveVDB(String vdbName, String vdbVersion) throws SessionServiceException {
 		VDBMetaData vdb = null;
 		
 		try {
 			if (vdbVersion == null) {
-				vdbVersion = "latest"; //$NON-NLS-1$
 				vdb = this.vdbRepository.getLiveVDB(vdbName);
 			}
 			else {
 				vdb = this.vdbRepository.getLiveVDB(vdbName, vdbVersion);
-			}         
+			}
 		} catch (NumberFormatException e) {
 			 throw new SessionServiceException(RuntimePlugin.Event.TEIID40045, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40045, vdbVersion));
 		}
 		if (vdb == null) {
-			 throw new SessionServiceException(RuntimePlugin.Event.TEIID40046, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40046, vdbName, vdbVersion));
+		    return null;
 		}
 		if (vdb.getConnectionType() == ConnectionType.NONE) {
 			 throw new SessionServiceException(RuntimePlugin.Event.TEIID40048, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40048, vdbName, vdbVersion));
@@ -443,30 +452,31 @@ public class SessionServiceImpl implements SessionService {
 			userName = CoreConstants.DEFAULT_ANON_USERNAME;
 		}
 		if (vdbName != null) {
-			VDB vdb;
+			VDB vdb = null;
 			try {
 				vdb = getActiveVDB(vdbName, version);
 			} catch (SessionServiceException e) {
 				throw new LogonException(e);
 			}
-			
-			String gssPattern = vdb.getPropertyValue(GSS_PATTERN_PROPERTY);
-			
-			//TODO: cache the patterns
-			
-			if (gssPattern != null && Pattern.matches(gssPattern, userName)) {
-				return AuthenticationType.GSS;
-			}
-			
-			String passwordPattern = vdb.getPropertyValue(PASSWORD_PATTERN_PROPERTY);
-			
-			if (passwordPattern != null && Pattern.matches(passwordPattern, userName)) {
-				return AuthenticationType.USERPASSWORD;
-			}
-			
-			String typeProperty = vdb.getPropertyValue(AUTHENTICATION_TYPE_PROPERTY);
-			if (typeProperty != null) {
-				return AuthenticationType.valueOf(typeProperty);
+			if (vdb != null) {
+				String gssPattern = vdb.getPropertyValue(GSS_PATTERN_PROPERTY);
+				
+				//TODO: cache the patterns
+				
+				if (gssPattern != null && Pattern.matches(gssPattern, userName)) {
+					return AuthenticationType.GSS;
+				}
+				
+				String passwordPattern = vdb.getPropertyValue(PASSWORD_PATTERN_PROPERTY);
+				
+				if (passwordPattern != null && Pattern.matches(passwordPattern, userName)) {
+					return AuthenticationType.USERPASSWORD;
+				}
+				
+				String typeProperty = vdb.getPropertyValue(AUTHENTICATION_TYPE_PROPERTY);
+				if (typeProperty != null) {
+					return AuthenticationType.valueOf(typeProperty);
+				}
 			}
 		}
 		return this.defaultAuthenticationType;
@@ -482,14 +492,16 @@ public class SessionServiceImpl implements SessionService {
 	    		if (vdb == null) {
 	    			vdb = getActiveVDB(vdbName, version);
 	    		}
-				String typeProperty = vdb.getPropertyValue(SECURITY_DOMAIN_PROPERTY);				
-				if (typeProperty != null) {
-					if (securityDomain != null && !typeProperty.equals(securityDomain)) {
-						//conflicting
-		    			throw new LoginException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40116));
+	    		if (vdb != null) {
+					String typeProperty = vdb.getPropertyValue(SECURITY_DOMAIN_PROPERTY);				
+					if (typeProperty != null) {
+						if (securityDomain != null && !typeProperty.equals(securityDomain)) {
+							//conflicting
+			    			throw new LoginException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40116));
+						}
+						return typeProperty;
 					}
-					return typeProperty;
-				}
+	    		}
 			} catch (SessionServiceException e) {
 				// ignore and return default, this only occur if the name and version are wrong 
 			}			
@@ -544,5 +556,4 @@ public class SessionServiceImpl implements SessionService {
     public boolean isAllowSecurityDomainQualifier() {
         return allowSecurityDomainQualifier;
     }
-        
 }

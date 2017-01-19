@@ -522,9 +522,14 @@ public class VDBMetadataParser {
 		writeAttribute(writer, Element.NAME.getLocalName(), dp.getName());
 		writeAttribute(writer, Element.DATA_ROLE_ANY_ATHENTICATED_ATTR.getLocalName(), String.valueOf(dp.isAnyAuthenticated()));
 		writeAttribute(writer, Element.DATA_ROLE_GRANT_ALL_ATTR.getLocalName(), String.valueOf(dp.isGrantAll()));
-		writeAttribute(writer, Element.DATA_ROLE_ALLOW_TEMP_TABLES_ATTR.getLocalName(), String.valueOf(dp.isAllowCreateTemporaryTables()));
+		
+		if(dp.isAllowCreateTemporaryTables() !=null) {
+		    writeAttribute(writer, Element.DATA_ROLE_ALLOW_TEMP_TABLES_ATTR.getLocalName(), String.valueOf(dp.isAllowCreateTemporaryTables()));
+		}
 
-		writeElement(writer, Element.DESCRIPTION, dp.getDescription());
+		if (dp.getDescription() != null) {
+		    writeElement(writer, Element.DESCRIPTION, dp.getDescription());
+		}
 		
 		// permission
 		for (DataPolicy.DataPermission permission: dp.getPermissions()) {
@@ -613,7 +618,9 @@ public class VDBMetadataParser {
 		for (int i = 0; i < model.getSourceMetadataType().size(); i++) {
 			writer.writeStartElement(Element.METADATA.getLocalName());
 			writeAttribute(writer, Element.TYPE.getLocalName(), model.getSourceMetadataType().get(i));
-			writer.writeCData(model.getSourceMetadataText().get(i));
+			if (model.getSourceMetadataText().get(i) != null) {
+				writer.writeCData(model.getSourceMetadataText().get(i));
+			}
 			writer.writeEndElement();
 		}
 		

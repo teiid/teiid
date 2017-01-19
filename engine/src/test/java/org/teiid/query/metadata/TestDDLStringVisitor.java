@@ -30,9 +30,15 @@ import java.util.Properties;
 
 import org.junit.Test;
 import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.Database.ResourceType;
 import org.teiid.metadata.Column;
+import org.teiid.metadata.DataWrapper;
+import org.teiid.metadata.Database;
+import org.teiid.metadata.Grant;
 import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Role;
 import org.teiid.metadata.Schema;
+import org.teiid.metadata.Server;
 import org.teiid.metadata.Table;
 import org.teiid.query.parser.SQLParserUtil;
 import org.teiid.query.parser.TestDDLParser;
@@ -365,4 +371,134 @@ public class TestDDLStringVisitor {
 	            + "\nCREATE TRIGGER table1 ON T INSTEAD OF UPDATE AS\nFOR EACH ROW\nBEGIN ATOMIC\nIF(\"new\" IS NOT DISTINCT FROM \"old\")\nBEGIN\nRAISE SQLEXCEPTION 'error';\nEND\nEND;";
 	    helpTest(ddl, expected);
 	}
+    @Test 
+    public void testDatabase() throws Exception {
+        Database db = new Database("foo", "2");
+        String metadataDDL = DDLStringVisitor.getDDLString(db);
+        String expected = "\n"
+        		+ "/*\n" + 
+                "###########################################\n" + 
+                "# START DATABASE foo\n" + 
+                "###########################################\n"
+                + "*/\n" + 
+                "CREATE DATABASE foo VERSION '2';\n" + 
+                "\n" +
+                "\n" +
+                "/*\n" +
+                "###########################################\n" + 
+                "# END DATABASE foo\n" + 
+                "###########################################\n"
+                + "*/\n" + 
+                "\n";
+        assertEquals(expected, metadataDDL);
+    }
+    
+    @Test 
+    public void testSchema() throws Exception {
+        Database db = new Database("foo", "2");
+        
+        DataWrapper dw = new DataWrapper("orcle");
+        db.addDataWrapper(dw);
+        
+        Server s = new Server("testing");
+        s.setDataWrapper(dw.getName());
+        s.setJndiName("java://test-server");
+        s.setType("orcl");
+        db.addServer(s);
+        
+        String table = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar)";
+        Table t = TestDDLParser.helpParse(table, "SchemaA").getSchema().getTable("G1");
+        Schema schema = new Schema();
+        schema.setName("SchemaA");
+        schema.addTable(t);
+        schema.addServer(s);
+        db.addSchema(schema);
+        
+        String metadataDDL = DDLStringVisitor.getDDLString(db);
+        String expected = "\n" + 
+        		"/*\n" +
+                "###########################################\n" + 
+                "# START DATABASE foo\n" + 
+                "###########################################\n" + 
+                "*/\n" +
+                "CREATE DATABASE foo VERSION '2';\n" + 
+                "\n" + 
+                "\n--############ Translators ############\n" +
+                "CREATE FOREIGN DATA WRAPPER orcle;\n" + 
+                "\n" +
+                "\n--############ Servers ############\n" +
+                "CREATE SERVER testing TYPE 'orcl' FOREIGN DATA WRAPPER orcle OPTIONS (\"jndi-name\" 'java://test-server');\n" + 
+                "\n" + 
+                "\n--############ Schema:SchemaA ############\n" +
+                "CREATE  SCHEMA SchemaA SERVER testing;\n" + 
+                "\n" + 
+                "CREATE FOREIGN TABLE G1 (\n" + 
+                "\te1 integer,\n" + 
+                "\te2 string\n" + 
+                ");\n" + 
+                "/*\n" +
+                "###########################################\n" + 
+                "# END DATABASE foo\n" + 
+                "###########################################\n" + 
+                "*/\n" +
+                "\n"; 
+        assertEquals(expected, metadataDDL);
+    }
+    
+    @Test 
+    public void testGrants() throws Exception {
+        Database db = new Database("foo", "2");
+        
+        Role role = new Role("admin");
+        role.setAnyAuthenticated(true);        
+        
+        Grant.Permission permission = new Grant.Permission();
+        permission.setAllowAlter(true);
+        permission.setAllowSelect(true);
+        permission.setResourceName("schema.tableName");
+        permission.setResourceType(ResourceType.TABLE);
+        
+        Grant.Permission permission2 = new Grant.Permission();
+        permission2.setAllowDelete(true);
+        permission2.setResourceName("schema.tableName");
+        permission2.setResourceType(ResourceType.TABLE);        
+        
+        Grant g = new Grant();
+        g.setRole(role.getName());
+        g.addPermission(permission);
+
+        Grant g2 = new Grant();
+        g2.setRole(role.getName());
+        g2.addPermission(permission2);
+        
+        g2.addPermission(permission2);
+        
+        db.addRole(role);
+        db.addGrant(g);
+        db.addGrant(g2);
+        
+        
+        String expected = "\n" + 
+        		"/*\n" +
+                "###########################################\n" + 
+                "# START DATABASE foo\n" + 
+                "###########################################\n" + 
+                "*/\n" +
+                "CREATE DATABASE foo VERSION '2';\n" + 
+                "\n\n" + 
+                "--############ Roles & Grants ############\n"+
+                "CREATE ROLE admin WITH ANY AUTHENTICATED;\n" + 
+                "GRANT SELECT,DELETE,ALTER ON TABLE \"schema.tableName\" TO admin;\n" + 
+                "\n" + 
+                "\n" + 
+                "/*\n" +
+                "###########################################\n" + 
+                "# END DATABASE foo\n" + 
+                "###########################################\n" + 
+                "*/\n" +
+                "\n";
+        
+        String metadataDDL = DDLStringVisitor.getDDLString(db);
+        assertEquals(expected, metadataDDL);        
+    }    
 }

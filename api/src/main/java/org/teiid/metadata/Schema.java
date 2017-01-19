@@ -24,6 +24,7 @@ package org.teiid.metadata;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.NavigableMap;
 import java.util.TreeMap;
@@ -35,12 +36,13 @@ public class Schema extends AbstractMetadataRecord {
 	private static final long serialVersionUID = -5113742472848113008L;
 
 	private boolean physical = true;
+	protected boolean visible = true;
     private String primaryMetamodelUri = "http://www.metamatrix.com/metamodels/Relational"; //$NON-NLS-1$
     
     private NavigableMap<String, Table> tables = new TreeMap<String, Table>(String.CASE_INSENSITIVE_ORDER);
 	private NavigableMap<String, Procedure> procedures = new TreeMap<String, Procedure>(String.CASE_INSENSITIVE_ORDER);
 	private NavigableMap<String, FunctionMethod> functions = new TreeMap<String, FunctionMethod>(String.CASE_INSENSITIVE_ORDER);
-	
+	private NavigableMap<String, Server> servers = new TreeMap<String, Server>(String.CASE_INSENSITIVE_ORDER);	
 	private List<AbstractMetadataRecord> resolvingOrder = new ArrayList<AbstractMetadataRecord>();
 	
 	public void addTable(Table table) {
@@ -51,6 +53,14 @@ public class Schema extends AbstractMetadataRecord {
 		resolvingOrder.add(table);
 	}
 	
+	public Table removeTable(String tableName) {
+		Table previous = this.tables.remove(tableName);
+		if (previous != null){
+			resolvingOrder.remove(previous);
+		}
+		return previous;
+	}
+	
 	public void addProcedure(Procedure procedure) {
 		procedure.setParent(this);
 		if (this.procedures.put(procedure.getName(), procedure) != null) {
@@ -59,14 +69,46 @@ public class Schema extends AbstractMetadataRecord {
 		resolvingOrder.add(procedure);
 	}
 	
+	public Procedure removeProcedure(String procedureName) {
+		Procedure previous = this.procedures.remove(procedureName);
+		if (previous != null){
+			resolvingOrder.remove(previous);
+		}
+		return previous;
+	}
+	
 	public void addFunction(FunctionMethod function) {
-		function.setParent(this);
+	    function.setParent(this);
+	    // hash based check, which allows overloaded functions
+        HashSet<FunctionMethod> funcs = new HashSet<FunctionMethod>();
+        for (FunctionMethod fm : getFunctions().values()) {
+            funcs.add(fm);
+        }
+        if (funcs.contains(function)) {
+            throw new DuplicateRecordException(DataPlugin.Event.TEIID60015,
+                    DataPlugin.Util.gs(DataPlugin.Event.TEIID60015, function.getName()));
+        }
+        
 		//TODO: ensure that all uuids are unique
 		if (this.functions.put(function.getUUID(), function) != null) {
 			throw new DuplicateRecordException(DataPlugin.Event.TEIID60015, DataPlugin.Util.gs(DataPlugin.Event.TEIID60015, function.getUUID()));
 		}
 		resolvingOrder.add(function);
 	}	
+	
+	public List<FunctionMethod> removeFunctions(String functionName) {
+		ArrayList<FunctionMethod> funcs = new ArrayList<FunctionMethod>();
+		for (FunctionMethod fm : this.functions.values()){
+        	if (fm.getName().equalsIgnoreCase(functionName)){
+        		funcs.add(fm);        			
+        	}
+        }
+		
+		for (FunctionMethod func:funcs) {
+			this.functions.remove(func.getUUID());
+		}
+		return funcs;
+	}
 
 	/**
 	 * Get the tables defined in this schema
@@ -149,4 +191,23 @@ public class Schema extends AbstractMetadataRecord {
 		return resolvingOrder;
 	}
     
+    public void addServer(Server server) {
+        this.servers.put(server.getName(), server);
+    }
+    
+    public Server getServer(String serverName) {
+        return this.servers.get(serverName);
+    }
+    
+    public List<Server> getServers(){
+        return new ArrayList<Server>(this.servers.values());
+    }
+
+	public boolean isVisible() {
+		return visible;
+	}
+
+	public void setVisible(boolean visible) {
+		this.visible = visible;
+	}
 }
