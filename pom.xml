@@ -85,7 +85,6 @@
 	<version.com.fasterxml.aalto-xml>0.9.10</version.com.fasterxml.aalto-xml>
         <version.org.reflections>0.9.9</version.org.reflections>
         <version.com.google.code.findbugs>2.0.1</version.com.google.code.findbugs>
-        <version.com.facebook.presto>0.89</version.com.facebook.presto>
         <version.net.oauth.core>20100527</version.net.oauth.core>
         <version.jts>1.13</version.jts>
         <version.jts2geojson>0.7.0</version.jts2geojson>
@@ -1654,11 +1653,6 @@
 				<artifactId>spring-tx</artifactId>
 				<version>${version.org.springframework}</version>
 			</dependency>                
-            <dependency>
-                <groupId>com.facebook.presto</groupId>
-                <artifactId>presto-jdbc</artifactId>
-                <version>${version.com.facebook.presto}</version>
-            </dependency>
             <dependency>
                 <groupId>com.vividsolutions</groupId>
                 <artifactId>jts</artifactId>
