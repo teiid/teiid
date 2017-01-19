@@ -93,6 +93,8 @@ public class TestDataTierManager {
         request.setSerial(serial);
         return new DataTierTupleSource(request, workItem, connectorManager.registerRequest(request), dtm, limit);
     }
+    
+    private int id;
 
 	private AtomicRequestMessage helpSetupRequest(String sql, int nodeId, QueryMetadataInterface metadata) throws Exception {
 		DQPWorkContext workContext = RealMetadataFactory.buildWorkContext(metadata, vdb);
@@ -100,7 +102,7 @@ public class TestDataTierManager {
         Command command = helpGetCommand(sql, metadata);
         
         RequestMessage original = new RequestMessage();
-        original.setExecutionId(1);
+        original.setExecutionId(id++);
         original.setPartialResults(true);
         RequestID requestID = workContext.getRequestID(original.getExecutionId());
         
