@@ -44,13 +44,14 @@ import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TranslatorProperty.PropertyType;
-import org.teiid.translator.TypeFacility;
 import org.teiid.translator.infinispan.hotrod.InfinispanHotRodConnection;
 import org.teiid.translator.infinispan.hotrod.InfinispanPlugin;
 import org.teiid.translator.object.ClassRegistry;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.metadata.JavaBeanMetadataProcessor;
 import org.teiid.translator.object.util.ObjectUtil;
+
+import com.google.protobuf.Descriptors.FieldDescriptor.JavaType;
 
 import protostream.com.google.protobuf.Descriptors;
 
@@ -125,7 +126,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 		
 		if (classObjectColumn && !materialized) {
 	    // add column for cache Object, set to non-selectable by default so that select * queries don't fail by default
-			addRootColumn(mf, Object.class, entity, null, null, SearchType.Unsearchable, rootTable.getName(), rootTable, false, false, NullType.Nullable); //$NON-NLS-1$	
+			addRootColumn(mf, Object.class, entity, null, null, SearchType.Unsearchable, rootTable.getName(), rootTable, false, false, NullType.Nullable, conn); //$NON-NLS-1$	
 		}
 		
 		pkMethod = null;
@@ -135,21 +136,21 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 				throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25008, new Object[] {pkField, cacheName, entity.getName()}));		    	
 		    }	
 		}
-		
-		boolean addKey = false;
+		//		boolean addKey = false;
 		boolean registeredClass = false;
 		// the descriptor is needed to determine which fields are defined as searchable.
 		for (FieldDescriptor fd:descriptor.getFields()) {	
-			if (fd.isRepeated() ) {
+			Class<?> returnType = getJavaType( fd,entity, conn);
+			
+			if (fd.isRepeated() && (! returnType.equals(byte[].class))) {
 				descriptorMap.put(fd.getName(), fd);				
 				continue;
 
 			} 
 				NullType nt = NullType.Nullable;
 				SearchType st = isSearchable(fd);
-				Class<?> returnType = getJavaType( fd,entity, conn);
+				
 				if (updatable && fd.getName().equalsIgnoreCase(pkField)) {
-					addKey = true;
 					st = SearchType.Searchable;
 					nt = NullType.No_Nulls;
 				} else {
@@ -164,9 +165,9 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 					}
 				}
 				// dont make primary key updatable, the object must be deleted and readded in order to change the key
-				addRootColumn(mf, returnType, getProtobufNativeType(fd), fd.getFullName(), fd.getName(), st, rootTable.getName(), rootTable, true, updatable, nt);	
+				addRootColumn(mf, returnType, getProtobufNativeType(fd), fd.getFullName(), fd.getName(), st, rootTable.getName(), rootTable, true, updatable, nt, conn);	
 				if (materialized) {
-					addRootColumn(mf, returnType, getProtobufNativeType(fd), fd.getFullName(), fd.getName(), st, stagingTable.getName(), stagingTable, true, true, nt);	
+					addRootColumn(mf, returnType, getProtobufNativeType(fd), fd.getFullName(), fd.getName(), st, stagingTable.getName(), stagingTable, true, true, nt, conn);	
 					
 				}
 		}
@@ -213,18 +214,6 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 		
 	}
 	
-	private  boolean doesStagingTableExist(MetadataFactory mf, Class<?> entity) {
-		String tName = entity.getSimpleName();
-		tName = "ST_" + tName; //$NON-NLS-1$
-		Table t = mf.getSchema().getTable(tName);
-		if (t != null) {
-			//already loaded
-			return true;
-		}
-		return false;
-
-	}
-	
     private static Method findMethod(String className, String methodName, InfinispanHotRodConnection conn) throws TranslatorException {
         Map<String, Method> mapMethods = conn.getClassRegistry().getReadClassMethods(className);
 
@@ -261,7 +250,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 			final SearchType st = isSearchable(f);
 
 			// need to use the repeated descriptor, fd, as the prefix to the NIS in order to perform query
-			addSubColumn(mf, getJavaType(f, c, conn),  getProtobufNativeType(f), f, st, (fd_Name == null ? f.getContainingMessage().getName() : fd_Name), t, true, rootTable.supportsUpdate(), (f.isRequired() ? NullType.No_Nulls  : NullType.Nullable) );	
+			addSubColumn(mf, getJavaType(f, c, conn),  getProtobufNativeType(f), f, st, (fd_Name == null ? f.getContainingMessage().getName() : fd_Name), t, true, rootTable.supportsUpdate(), (f.isRequired() ? NullType.No_Nulls  : NullType.Nullable), conn );	
 		}
 		
 		if (pkMethod != null) {
@@ -281,7 +270,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 			referencedKeyColumns.add(methodName);
 			String fkName = "FK_" + rootTable.getName().toUpperCase();
 			
-    		addRootColumn(mf, pkMethod.getReturnType(), pkMethod.getReturnType(), methodName, methodName, SearchType.Searchable, t.getName(), t, false, true, NullType.No_Nulls);
+    		addRootColumn(mf, pkMethod.getReturnType(), pkMethod.getReturnType(), methodName, methodName, SearchType.Searchable, t.getName(), t, false, true, NullType.No_Nulls, conn);
 			ForeignKey fk = mf.addForiegnKey(fkName, keyColumns, referencedKeyColumns, rootTable.getName(), t);
 			
 			fk.setNameInSource(mName);
@@ -353,7 +342,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 	}	
 
 	private Column addRootColumn(MetadataFactory mf, Class<?> type, Class<?> nativeType, String columnFullName, String columnName,
-			 SearchType searchType, String entityName, Table rootTable, boolean selectable, boolean updateable, NullType nt) {
+			 SearchType searchType, String entityName, Table rootTable, boolean selectable, boolean updateable, NullType nt, InfinispanHotRodConnection conn) {
 		String attributeName;
 		String nis;
 		
@@ -384,52 +373,33 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 			nis = "this";
 		}
 	
-		return addColumn(mf, type, nativeType, attributeName, nis, searchType, rootTable, selectable, updateable, nt);
+		return addColumn(mf, type, nativeType, attributeName, nis, searchType, rootTable, selectable, updateable, nt, conn);
 
 	}
 	
 	private Column addSubColumn(MetadataFactory mf, Class<?> type, Class<?> nativeType, FieldDescriptor fd,
-			 SearchType searchType, String nisPrefix, Table rootTable, boolean selectable, boolean updateable, NullType nt) {
+			 SearchType searchType, String nisPrefix, Table rootTable, boolean selectable, boolean updateable, NullType nt, InfinispanHotRodConnection conn) {
 		String attributeName = fd.getName();
 		
 		// create the combined name to use for a 1-to-many relationship when searching
 		String nis = nisPrefix + "." + fd.getName();
 
-		return addColumn(mf, type, nativeType, attributeName, nis, searchType, rootTable, selectable, updateable, nt);
+		return addColumn(mf, type, nativeType, attributeName, nis, searchType, rootTable, selectable, updateable, nt, conn);
 
 	}	
 	
-	private Column addColumn(MetadataFactory mf, Class<?> type, Class<?> nativeType,  String attributeName, String nis, SearchType searchType, Table rootTable, boolean selectable, boolean updateable, NullType nt) {
+	private Column addColumn(MetadataFactory mf, Class<?> type, Class<?> nativeType,  String attributeName, String nis, SearchType searchType, Table rootTable, boolean selectable, boolean updateable, NullType nt, InfinispanHotRodConnection conn) {
 		if (rootTable.getColumnByName(attributeName) != null) return rootTable.getColumnByName(attributeName);
-	
-		boolean isEnum = false;
-		Class<?> datatype = type;
-		if (type.isEnum()) {
-			datatype = String.class;
-			isEnum=true;
-			
-		} else {
-			datatype = TypeFacility.getRuntimeType(type);
-		}
+				
+		Column c = mf.addColumn(attributeName, conn.getClassRegistry().getObjectDataTypeManager().getDataTypeName(type), rootTable);
+		c.setNativeType( conn.getClassRegistry().getObjectDataTypeManager().getNativeTypeName(nativeType));
 		
-		Column c = mf.addColumn(attributeName, TypeFacility.getDataTypeName(datatype), rootTable);
-
 		if (nis != null) {
 			c.setNameInSource(nis);
 		}
 		
 		c.setUpdatable(updateable);
-		c.setSearchType(searchType);
-		
-		if (isEnum) {
-			c.setNativeType(Enum.class.getName());
-		} else if (nativeType.isArray()) {
-			c.setNativeType(type.getSimpleName());
-		} else {
-			c.setNativeType(nativeType.getName());
-		}
-		
-		
+		c.setSearchType(searchType);	
 		c.setSelectable(selectable);
 
 		// this is needed due to an infinispan issue with updates/inserts that requires a workaround for boolean attributes:
@@ -438,18 +408,11 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 		//  - pass a value on the sql statement
 		if (nativeType.isAssignableFrom(boolean.class)) {
 			c.setNullType(NullType.No_Nulls);
+			c.setDefaultValue("false");
 		} else {
 			c.setNullType(nt);
 		}
 		
-//		else if (type.isArray()) {
-//			c.setNativeType(type.getSimpleName());
-//		} else if (type.isEnum()) {
-//			c.setNativeType(type.getName());
-//		} else {
-//			c.setNativeType(type.getName());
-//		}
-
 		return c; 
 	}	
 	
@@ -477,38 +440,38 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 	 */
 	private static Class<?> getProtobufNativeType(FieldDescriptor fd) {
 
-		String n = fd.getJavaType().name();
+		final org.infinispan.protostream.descriptors.JavaType n = fd.getJavaType();
 		
-		if (Descriptors.FieldDescriptor.JavaType.STRING.name().equals(n)) {
+		if (org.infinispan.protostream.descriptors.JavaType.STRING.equals(n)) {
 			return String.class;
 		}
-		
-		if (Descriptors.FieldDescriptor.JavaType.BOOLEAN.name().equals(n)) {
+				
+		if (org.infinispan.protostream.descriptors.JavaType.BOOLEAN.equals(n)) {
 			return boolean.class;
 		}
 		
-		if (Descriptors.FieldDescriptor.JavaType.LONG.name().equals(n)) {
+		if (org.infinispan.protostream.descriptors.JavaType.LONG.equals(n)) {
 			return long.class;
 		}
 		
-		if (Descriptors.FieldDescriptor.JavaType.INT.name().equals(n)) {
+		if (org.infinispan.protostream.descriptors.JavaType.INT.equals(n)) {
 			return int.class;
 		}
-		if (Descriptors.FieldDescriptor.JavaType.DOUBLE.name().equals(n)) {
+		if (org.infinispan.protostream.descriptors.JavaType.DOUBLE.equals(n)) {
 			return double.class;
 		}
 		
-		if (Descriptors.FieldDescriptor.JavaType.FLOAT.name().equals(n)) {
+		if (org.infinispan.protostream.descriptors.JavaType.FLOAT.equals(n)) {
 			return float.class;
 		}
 		
-		if (Descriptors.FieldDescriptor.JavaType.BYTE_STRING.name().equals(n)) {
+		if (org.infinispan.protostream.descriptors.JavaType.BYTE_STRING.equals(n)) {
 			return byte[].class;
 		}
 
-//		if (Descriptors.FieldDescriptor.JavaType.ENUM.equals(fd.getJavaType())) {
-//			return Enum.class;
-//		}	
+		if (org.infinispan.protostream.descriptors.JavaType.ENUM.equals(n)) {
+			return Enum.class;
+		}	
 //		if (Descriptors.FieldDescriptor.JavaType.MESSAGE.equals(fd.getJavaType())) {
 //			return Byte.class;
 //		}	

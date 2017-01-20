@@ -48,6 +48,7 @@ import org.infinispan.protostream.descriptors.FileDescriptor;
 import org.infinispan.protostream.impl.parser.SquareProtoParser;
 import org.infinispan.query.dsl.Query;
 import org.teiid.translator.infinispan.hotrod.InfinispanHotRodConnection;
+import org.teiid.translator.infinispan.hotrod.ProtobufDataTypeManager;
 import org.teiid.translator.object.ClassRegistry;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.util.Version;
@@ -77,7 +78,7 @@ public class PersonCacheSource<K, V>  implements RemoteCache<K, V>{
 	public static final int NUMPERSONS = 10;
 	public static final int NUMPHONES = 2;
 	
-	public static ClassRegistry CLASS_REGISTRY = new ClassRegistry();
+	public static ClassRegistry CLASS_REGISTRY = new ClassRegistry(new ProtobufDataTypeManager());
 	
 	private Map<Object, Object> cache =  Collections.synchronizedMap(new HashMap<Object, Object>());
 	

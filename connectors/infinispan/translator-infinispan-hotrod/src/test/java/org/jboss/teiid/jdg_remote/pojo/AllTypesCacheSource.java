@@ -37,9 +37,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import org.infinispan.client.hotrod.CacheTopologyInfo;
 import org.infinispan.client.hotrod.Flag;
@@ -57,6 +54,7 @@ import org.infinispan.protostream.descriptors.FileDescriptor;
 import org.infinispan.protostream.impl.parser.SquareProtoParser;
 import org.infinispan.query.dsl.Query;
 import org.teiid.translator.infinispan.hotrod.InfinispanHotRodConnection;
+import org.teiid.translator.infinispan.hotrod.ProtobufDataTypeManager;
 import org.teiid.translator.object.ClassRegistry;
 
 /**
@@ -77,13 +75,13 @@ public class AllTypesCacheSource<K, V>  implements RemoteCache<K, V>{
 	public static Descriptor DESCRIPTOR;
 	
 	public static Random RANDOM = new Random();
-	
-	
-	public static ClassRegistry CLASS_REGISTRY = new ClassRegistry();
+		
+	public static ClassRegistry CLASS_REGISTRY = new ClassRegistry(new ProtobufDataTypeManager());
 	
 	private Map cache = Collections.synchronizedMap(new HashMap<Object, Object>());
 	
 	static {
+
 		try {
 			DESCRIPTOR = createDescriptor();
 
@@ -119,14 +117,14 @@ public class AllTypesCacheSource<K, V>  implements RemoteCache<K, V>{
 			p.setLongNum(RANDOM.nextLong());
 			
 			p.setBooleanValue(RANDOM.nextBoolean());
-			
-			
+						
 			p.setDoubleNum(RANDOM.nextDouble());
 			
 			p.setFloatNum(RANDOM.nextFloat());
 			
-			byte[] bytes = new byte[RANDOM.nextInt(100)];		
-			p.setObjectValue(bytes);
+			byte[] bytes = new byte[RANDOM.nextInt(100)]; 
+			
+			p.setByteArrayValue(bytes);
 			
 			p.setCharValue((char)(RANDOM.nextInt(26) + 'a'));
 			p.setShortValue((short) RANDOM.nextInt(Short.MAX_VALUE + 1));

@@ -47,13 +47,30 @@ public class ClassRegistry {
 	
 	public static final String OBJECT_NAME = "o"; //$NON-NLS-1$
 
-	private ObjectScriptEngine readEngine = new ObjectScriptEngine(true);
-	private ObjectScriptEngine writeEngine = new ObjectScriptEngine(false);
+	private ObjectScriptEngine readEngine=null;
+	private ObjectScriptEngine writeEngine=null;
 	
 	private Map<String, Class<?>> registeredClasses = new HashMap<String, Class<?>>(); // fullClassName, Class
 	private Map<String, Class<?>> tableNameClassMap = new HashMap<String, Class<?>>(); // simpleClassName(i.e., tableName), Class 
 
-
+	private ObjectDataTypeManager dataTypeManager = null;
+	
+	public ClassRegistry() {
+		dataTypeManager = new ObjectDataTypeManager();
+		init();
+	}
+	
+	public ClassRegistry(ObjectDataTypeManager odtm) {
+		this.dataTypeManager = odtm;
+		init();
+	}
+	
+	private void init()
+	{
+		readEngine = new ObjectScriptEngine(true);
+		writeEngine = new ObjectScriptEngine(false);
+	}
+	
 	public synchronized void registerClass(Class<?> clz) {
 		 
 			registeredClasses.put(clz.getName(), clz);	
@@ -66,6 +83,9 @@ public class ClassRegistry {
 			tableNameClassMap.remove(clz.getSimpleName());	
 	}
 
+	public ObjectDataTypeManager getObjectDataTypeManager() {
+		return this.dataTypeManager;
+	}
 	
 	public ObjectScriptEngine getReadScriptEngine() {
 		return readEngine;

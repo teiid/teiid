@@ -7,39 +7,35 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 
-import org.hibernate.search.annotations.Field;
-import org.hibernate.search.annotations.Index;
-import org.hibernate.search.annotations.Indexed;
+import org.infinispan.protostream.annotations.ProtoDoc;
+import org.infinispan.protostream.annotations.ProtoField;
 
-@Indexed(index="AllTypes")
+@ProtoDoc("@Indexed")
 public class AllTypes implements Serializable{
 	
 	private static final long serialVersionUID = -3821001741608384452L;
 	
-	@Field(index=Index.YES)
 	private String stringNum;
-	private char charValue;
+	private int charValue;
 	private Double doubleNum;
 	private BigInteger bigIntegerValue;
 	private Short shortValue;
 	private Float floatNum;
-	private byte[]  objectValue;
+	private byte[]  byteArrayValue;
 	
-	@Field(index=Index.YES)
 	private Integer intNum;
 	private BigDecimal bigDecimalValue;
 	
-	@Field(index=Index.YES)
 	private Long longNum;
 	private Boolean booleanValue;
 	private Timestamp timeStampValue;
 	
-	@Field(index=Index.YES)
 	private Integer intKey;
 	private String stringKey;
 	private Time timeValue;
 	private Date dateValue;
 
+	@ProtoField(number = 2)
 	public String getStringNum() {
 		return stringNum;
 	}
@@ -48,11 +44,11 @@ public class AllTypes implements Serializable{
 		this.stringNum = stringNum;
 	}
 
-	public char getCharValue() {
+	public int getCharValue() {
 		return charValue;
 	}
 
-	public void setCharValue(char charValue) {
+	public void setCharValue(int charValue) {
 		this.charValue = charValue;
 	}
 
@@ -63,7 +59,6 @@ public class AllTypes implements Serializable{
 	public void setDoubleNum(Double doubleNum) {
 		this.doubleNum = doubleNum;
 	}
-
 	public java.math.BigInteger getBigIntegerValue() {
 		return bigIntegerValue;
 	}
@@ -88,14 +83,17 @@ public class AllTypes implements Serializable{
 		this.floatNum = floatNum;
 	}
 
-	public byte[] getObjectValue() {
-		return objectValue;
+	@ProtoField(number = 7)
+	public byte[] getByteArrayValue() {
+		return byteArrayValue;
 	}
 
-	public void setObjectValue(byte[] objectValue) {
-		this.objectValue = objectValue;
+	public void setByteArrayValue(byte[] objectValue) {
+		this.byteArrayValue = objectValue;
 	}
+	
 
+	@ProtoField(number = 8)
 	public Integer getIntNum() {
 		return intNum;
 	}
@@ -112,6 +110,7 @@ public class AllTypes implements Serializable{
 		this.bigDecimalValue = bigDecimalValue;
 	}
 
+	@ProtoField(number = 9)
 	public Long getLongNum() {
 		return longNum;
 	}
@@ -136,6 +135,7 @@ public class AllTypes implements Serializable{
 		this.timeStampValue = timeStampValue;
 	}
 
+	@ProtoField(number = 1, required = true)
 	public Integer getIntKey() {
 		return intKey;
 	}
@@ -144,6 +144,7 @@ public class AllTypes implements Serializable{
 		this.intKey = intKey;
 	}
 
+	@ProtoField(number = 13, required = true)
 	public String getStringKey() {
 		return stringKey;
 	}
@@ -171,6 +172,8 @@ public class AllTypes implements Serializable{
 
 	@Override
 	public String toString() {
-		return "SmallA [stringNum=" + stringNum + ", charValue=" + charValue + ", doubleNum=" + doubleNum + ", bigIntegerNum=" + bigIntegerValue + ", shortValue=" + shortValue + ", floatNum=" + floatNum + ", ObjectValue=" + objectValue + ", intNum=" + intNum + ", bigDecimalValue=" + bigDecimalValue + ", longNum=" + longNum + ", booelanValue=" + booleanValue + ", timeStampValue=" + timeStampValue +  ", intKey=" + intKey + ", stringKey=" + stringKey + ", timeValue=" + timeValue + ", dateValue=" + dateValue + "]";
+		return "SmallA [stringNum=" + stringNum + ", charValue=" + charValue + ", doubleNum=" + doubleNum + ", bigIntegerNum=" + bigIntegerValue + ", shortValue=" + shortValue + ", floatNum=" + floatNum + ", "
+				// "//ObjectValue=" + byteArrayValue + ""
+						+ ", intNum=" + intNum + ", bigDecimalValue=" + bigDecimalValue + ", longNum=" + longNum + ", booelanValue=" + booleanValue + ", timeStampValue=" + timeStampValue +  ", intKey=" + intKey + ", stringKey=" + stringKey + ", timeValue=" + timeValue + ", dateValue=" + dateValue + "]";
 	}
 }

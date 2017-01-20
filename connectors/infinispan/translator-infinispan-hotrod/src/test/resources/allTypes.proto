@@ -11,15 +11,15 @@ message AllTypes {
    optional int64 bigIntegerValue = 5 [default = 0];
    optional int32 shortValue = 6;      
    optional double doubleNum = 7 [default = 0];
-   optional bytes objectValue = 8;
+   optional bytes byteArrayValue = 9; 
    /* @IndexedField(index=true, store=false) */
-   optional int32 intNum = 9 [default = 0];   
-   optional double bigDecimalValue = 10 [default = 0];   
-   optional int64 longNum = 11 [default = 0];   
-   optional bool booleanValue = 12 [default = false];  
-   optional int64 timeStampValue = 13;     
-   optional int64 timeValue = 14;
-   optional int64 dateValue = 15; 
-   optional int32 charValue = 16;
+   optional int32 intNum = 10 [default = 0];   
+   optional string bigDecimalValue = 11 [default = 0];   
+   optional int64 longNum = 12 [default = 0];   
+   optional bool booleanValue = 13 [default = false];  
+   optional int64 timeStampValue = 14;     
+   optional int64 timeValue = 15;
+   optional int64 dateValue = 16; 
+   optional int32 charValue = 17 [default = 0]; 
 
 }

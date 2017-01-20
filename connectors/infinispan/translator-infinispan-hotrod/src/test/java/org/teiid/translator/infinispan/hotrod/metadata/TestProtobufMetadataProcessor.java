@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Properties;
 
-import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PersonCacheConnection;
 import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PersonCacheSource;
 import org.jboss.teiid.jdg_remote.pojo.AllTypesCacheSource;
 import org.junit.Before;
@@ -18,7 +17,6 @@ import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.translator.infinispan.hotrod.InfinispanHotRodConnection;
 import org.teiid.translator.infinispan.hotrod.InfinispanHotRodExecutionFactory;
 import org.teiid.translator.object.ObjectConnection;
-import org.teiid.translator.object.testdata.trades.TradesCacheSource;
 
 @SuppressWarnings("nls")
 public class TestProtobufMetadataProcessor {
@@ -44,7 +42,9 @@ public class TestProtobufMetadataProcessor {
 
 		InfinispanHotRodConnection conn = PersonCacheSource.createConnection(true);
 
-		TRANSLATOR.getMetadataProcessor().process(mf, conn);
+		ProtobufMetadataProcessor mp = (ProtobufMetadataProcessor) TRANSLATOR.getMetadataProcessor();
+		mp.setClassObjectColumn(false);		
+		mp.process(mf, conn);
 
 		String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(),
 				null, null);

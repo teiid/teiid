@@ -29,8 +29,6 @@ import java.beans.MethodDescriptor;
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.io.Reader;
-import java.lang.ref.Reference;
-import java.lang.ref.SoftReference;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
 import java.util.Collections;
@@ -64,8 +62,9 @@ import org.teiid.translator.object.util.ObjectUtil;
  *
  */
 public final class ObjectScriptEngine extends AbstractScriptEngine implements Compilable {
-	private Reference<Map<Class<?>, Map<String, Method>>> properties;
+	
 	private static Pattern splitter = Pattern.compile("\\."); //$NON-NLS-1$
+	private Map<Class<?>, Map<String, Method>> clazzMaps = Collections.synchronizedMap(new LRUCache<Class<?>, Map<String,Method>>(100));	
 
 	private static final String SET_ARG_ATTRIBUTE = "set";
 
@@ -74,7 +73,6 @@ public final class ObjectScriptEngine extends AbstractScriptEngine implements Co
 	public ObjectScriptEngine(boolean forReads) {
 		this.forReads = forReads;
 	}
-
 		
 		@Override
 		public Bindings createBindings() {
@@ -114,12 +112,14 @@ public final class ObjectScriptEngine extends AbstractScriptEngine implements Co
 					if (parts.length > 0) {
 						obj = sc.getAttribute(parts[0]);
 					}
+					if (obj == null) {
+						return null;
+					}
+					
+					Map<String, Method> methodMap = getMethodMap(obj.getClass());
 					for (int i = 1; i < parts.length; i++) {
-						if (obj == null) {
-							return null;
-						}
+
 						String part = parts[i];
-						Map<String, Method> methodMap = getMethodMap(obj.getClass());
 						Method m = findMethod(methodMap,part);
 						if (m == null) {
 							int index = indexes[i];
@@ -152,7 +152,13 @@ public final class ObjectScriptEngine extends AbstractScriptEngine implements Co
 			};
 		}
 		
-		public Map<String, Method> getMethodMap(Class<?> clazz) throws ScriptException {
+		public synchronized Map<String, Method> getMethodMap(Class<?> clazz) throws ScriptException {
+
+			Map<String, Method> methodMap = clazzMaps.get(clazz);
+			if (methodMap != null) {
+				return methodMap;
+			}
+
 			if (this.forReads) {
 				return getReadMethodMap(clazz);
 			}
@@ -161,17 +167,9 @@ public final class ObjectScriptEngine extends AbstractScriptEngine implements Co
 		}
 			
 		private Map<String, Method> getReadMethodMap(Class<?> clazz) throws ScriptException {
-			Map<Class<?>, Map<String, Method>> clazzMaps = null;
+
 			Map<String, Method> methodMap = null; 
-			if (properties != null) {
-				clazzMaps = properties.get();
-				if (clazzMaps != null) {
-					methodMap = clazzMaps.get(clazz);
-					if (methodMap != null) {
-						return methodMap;
-					}
-				}
-			}
+
 			try {
 				BeanInfo info = Introspector.getBeanInfo(clazz);
 				PropertyDescriptor[] pds = info.getPropertyDescriptors();
@@ -201,10 +199,7 @@ public final class ObjectScriptEngine extends AbstractScriptEngine implements Co
 						methodMap.put(name.toLowerCase(), m);
 					}
 				}
-				if (clazzMaps == null) {
-					clazzMaps = Collections.synchronizedMap(new LRUCache<Class<?>, Map<String,Method>>(100));
-					properties = new SoftReference<Map<Class<?>,Map<String,Method>>>(clazzMaps);
-				}
+
 				clazzMaps.put(clazz, methodMap);
 			} catch (IntrospectionException e) {
 				throw new ScriptException(e);
@@ -213,17 +208,7 @@ public final class ObjectScriptEngine extends AbstractScriptEngine implements Co
 		}
 		
 		public Map<String, Method> getWriteMethodMap(Class<?> clazz) throws ScriptException {
-			Map<Class<?>, Map<String, Method>> clazzMaps = null;
 			Map<String, Method> methodMap = null; 
-			if (properties != null) {
-				clazzMaps = properties.get();
-				if (clazzMaps != null) {
-					methodMap = clazzMaps.get(clazz);
-					if (methodMap != null) {
-						return methodMap;
-					}
-				}
-			}
 		    	
 			try {
 				BeanInfo info = Introspector.getBeanInfo(clazz);
@@ -260,7 +245,8 @@ public final class ObjectScriptEngine extends AbstractScriptEngine implements Co
 
 					}
 				}
-
+				
+				clazzMaps.put(clazz, methodMap);
 			} catch (IntrospectionException e) {
 				throw new ScriptException(e);
 			}
@@ -299,11 +285,11 @@ public final class ObjectScriptEngine extends AbstractScriptEngine implements Co
 		}
 		
 		protected Object callMethod(Method m, Object obj, ScriptContext sc, String[] parts ) throws ScriptException {
-			////
+
 			if (forReads) {
 				
-				try {
-					return ClassRegistry.executeGetMethod(m, obj);
+				try {												
+					return ClassRegistry.executeGetMethod(m, obj);										
 				} catch (Exception e1) {
 					throw new ScriptException(e1);
 				}				
@@ -312,7 +298,7 @@ public final class ObjectScriptEngine extends AbstractScriptEngine implements Co
 			
 			Object arg = sc.getAttribute(SET_ARG_ATTRIBUTE);
 
-			try {
+			try {							
 				return ClassRegistry.executeSetMethod(m, obj, arg);
 			} catch (Exception e1) {
 				throw new ScriptException(e1);

@@ -51,6 +51,7 @@ import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.infinispan.hotrod.InfinispanPlugin;
+import org.teiid.translator.infinispan.hotrod.ProtobufDataTypeManager;
 import org.teiid.translator.object.CacheNameProxy;
 import org.teiid.translator.object.ClassRegistry;
 import org.teiid.util.Version;
@@ -72,7 +73,7 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 	private String cacheJndiName = null;
 	private Class<?> cacheTypeClass = null; // cacheName ==> ClassType
 	private String cacheTypes = null;
-	private ClassRegistry methodUtil = new ClassRegistry();
+	private ClassRegistry methodUtil = new ClassRegistry(new ProtobufDataTypeManager());
 	
 	private String protobufDefFile = null;
 	private String messageMarshallers = null;
