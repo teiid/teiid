@@ -119,6 +119,8 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	private boolean useBindingsForDependentJoin = true;
 	private String commentFormat = "/*teiid sessionid:{0}, requestid:{1}.{2}*/ "; //$NON-NLS-1$
 	
+	private boolean useParensForJoins = false;
+	
 	private AtomicBoolean initialConnection = new AtomicBoolean(true);
 	
 	public JDBCExecutionFactory() {
@@ -1301,9 +1303,14 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * should have parenthesis.
      * @return true if every branch of a join should use parenthesis
      */
+    @TranslatorProperty(display="Use Parens For Joins", description="Set True to have every branch in join to have parenthesis",advanced=true)
     public boolean useParensForJoins() {
-    	return false;
+    	return this.useParensForJoins;
     }
+	
+	public void setUseParensForJoins(boolean parensForJoins) {
+		this.useParensForJoins = parensForJoins;
+	}
     
     @Override
     public NullOrder getDefaultNullOrder() {
