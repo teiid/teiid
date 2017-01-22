@@ -279,9 +279,10 @@ public class SwaggerProcedureExecution extends BaseQueryExecution implements Pro
     }
 
     public static SwaggerSerializer getSerializer(String contentType) {
-        if (contentType.equalsIgnoreCase("application/json")) {
+        ContentType type = ContentType.parse(contentType);
+        if (type.isJSON()) {
             return new JsonSerializer();
-        } else if (contentType.equalsIgnoreCase("application/xml")) {
+        } else if (type.isXML()) {
             return new XMLSerializer();
         }
         return null;
@@ -340,5 +341,44 @@ public class SwaggerProcedureExecution extends BaseQueryExecution implements Pro
 
     @Override
     public void cancel() throws TranslatorException {
+    }
+    
+    private static class ContentType {
+        
+        private static String APPLICATION = "application"; //$NON-NLS-1$
+        private static String TYPE_JSON = "json"; //$NON-NLS-1$
+        private static String TYPE_XML = "xml"; //$NON-NLS-1$
+        
+        private String major;
+        private String subtype;
+        
+        ContentType(String major, String subtype) {
+            this.major = major;
+            this.subtype = subtype;
+        }
+        
+        public boolean isJSON() {
+            return major != null && subtype != null && major.equals(APPLICATION) && subtype.equals(TYPE_JSON);
+        }
+        
+        public boolean isXML() {
+            return major != null && subtype != null && major.equals(APPLICATION) && subtype.equals(TYPE_XML);
+        }
+        
+        public static ContentType parse(String type) {
+            int typeIndex = type.indexOf('/'); //$NON-NLS-1$
+            int paramIndex = type.indexOf(';'); //$NON-NLS-1$
+            String major = null;
+            String subtype = null;
+            if(typeIndex > 0) {
+                major = type.substring(0, typeIndex);
+                if (paramIndex > -1) {
+                    subtype = type.substring(typeIndex + 1, paramIndex);
+                } else {
+                    subtype = type.substring(typeIndex + 1);
+                }
+            }
+            return new ContentType(major, subtype);
+        }
     }
 }
