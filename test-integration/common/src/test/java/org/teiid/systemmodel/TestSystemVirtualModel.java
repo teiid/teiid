@@ -274,7 +274,9 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
         mmd3.setName("x");
         mmd3.setModelType(Type.PHYSICAL);
         mmd3.addSourceMapping("x", "x", null);
-        mmd3.addSourceMetadata("DDL", "create foreign table t (intkey integer); create trigger tr on t after insert as for each row begin select intkey from t where intkey = new.intkey; end");
+        mmd3.addSourceMetadata("DDL", "create foreign table t (intkey integer); "
+                + " create trigger tr on t after insert as for each row begin select intkey from t where intkey = new.intkey; end; "
+                + " create trigger tr1 on t after update as for each row begin select intkey from t where intkey = new.intkey + old.intkey; end;");
         HardCodedExecutionFactory ef = new HardCodedExecutionFactory() {
             @Override
             public boolean supportsCompareCriteriaEquals() {
@@ -294,6 +296,22 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
         Thread.sleep(2000);
         
         assertEquals("SELECT t.intkey FROM t WHERE t.intkey = 1", ef.getCommands().get(0).toString());
+        
+        ef.addData("SELECT t.intkey FROM t WHERE t.intkey = 3", new ArrayList<List<?>>());
+        //update event
+        server.getEventDistributor().dataModification("test3", "1", "x", "t", new Object[] {2}, new Object[] {1}, null);
+        
+        Thread.sleep(2000);
+        
+        assertEquals("SELECT t.intkey FROM t WHERE t.intkey = 3", ef.getCommands().get(1).toString());
+        
+        //delete event
+        server.getEventDistributor().dataModification("test3", "1", "x", "t", new Object[] {2}, null, null);
+        
+        Thread.sleep(2000);
+        
+        //no trigger
+        assertEquals(2, ef.getCommands().size());
     }
 	
 	@Test public void testSpatial() throws Exception {

@@ -73,6 +73,9 @@ import org.teiid.query.util.CommandContext;
  */
 public final class SourceTriggerActionPlanner implements CommandPlanner {
     
+    /**
+     * TODO: elevate the transaction handling?
+     */
     public static class CompositeProcessorPlan extends ProcessorPlan {
         
         private List<ProcessorPlan> plans;
@@ -257,6 +260,26 @@ public final class SourceTriggerActionPlanner implements CommandPlanner {
                 }
             }
         }
+        if (sec.oldValues != null) {
+            GroupSymbol oldGroup = new GroupSymbol(SQLConstants.Reserved.OLD);
+            oldGroup.setMetadataID(sec.table);
+            for (int i = 0; i < sec.getTable().getColumns().size(); i++) {
+                Column c = sec.getTable().getColumns().get(i);
+                Integer index = null;
+                if (map != null) {
+                    index = map.get(c.getName());
+                } else {
+                    index = i;
+                }
+                ElementSymbol oldElement = new ElementSymbol(c.getName(), oldGroup);
+                oldElement.setMetadataID(c);
+                lookup.put(oldElement, tuple.size());
+                params.put(oldElement, oldElement);
+                if (index != null) {
+                    tuple.add(new Constant(DataTypeManager.convertToRuntimeType(sec.oldValues[index], true)));
+                }
+            }
+        }
         
         List<ProcessorPlan> plans = new ArrayList<ProcessorPlan>();
         List<String> names = new ArrayList<String>();
@@ -277,6 +300,9 @@ public final class SourceTriggerActionPlanner implements CommandPlanner {
                 }
                 break;
             case UPDATE:
+                if (sec.oldValues == null || sec.newValues == null) {
+                    continue;
+                }
                 break;
             }
             //create plan
