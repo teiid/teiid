@@ -21,9 +21,7 @@
  */
 package org.teiid.translator.swagger;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -366,5 +364,13 @@ public class TestSwaggerQueryExecution {
         headers.put("X-Rate-Limit", "1");
         headers.put("X-Expires-After", "2016-04-08T10:14:23Z");
         return headers;
+    }
+    
+    @Test
+    public void testGetSerializer(){  
+        assertTrue(SwaggerProcedureExecution.getSerializer("application/json") instanceof JsonSerializer);
+        assertTrue(SwaggerProcedureExecution.getSerializer("application/json;charset=utf-8") instanceof JsonSerializer);
+        assertTrue(SwaggerProcedureExecution.getSerializer("application/xml") instanceof XMLSerializer);
+        assertTrue(SwaggerProcedureExecution.getSerializer("application/xml;charset=utf-8") instanceof XMLSerializer);
     }
 }
