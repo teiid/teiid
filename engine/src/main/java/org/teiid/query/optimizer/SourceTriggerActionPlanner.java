@@ -128,7 +128,9 @@ public final class SourceTriggerActionPlanner implements CommandPlanner {
                 open = false;
                 planIndex++;
             }
-            return new TupleBatch(1, new List<?>[0]);
+            TupleBatch batch = new TupleBatch(1, new List<?>[0]);
+            batch.setTerminationFlag(true);
+            return batch;
         }
 
         @Override
@@ -178,7 +180,7 @@ public final class SourceTriggerActionPlanner implements CommandPlanner {
 
         @Override
         public List<Expression> getProjectedSymbols() {
-            return null;
+            return Command.getUpdateCommandSymbol();
         }
 
         @Override

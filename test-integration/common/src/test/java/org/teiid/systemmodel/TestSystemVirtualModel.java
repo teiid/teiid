@@ -289,6 +289,7 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 	    
         this.internalConnection = server.createConnection("jdbc:teiid:test3");
         checkResult("testTriggers", "select * from sysadmin.triggers"); //$NON-NLS-1$ //$NON-NLS-2$
+        closeStatement();
         
         //insert event
         server.getEventDistributor().dataModification("test3", "1", "x", "t", null, new Object[] {1}, null);
@@ -312,6 +313,9 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
         
         //no trigger
         assertEquals(2, ef.getCommands().size());
+        
+        //make sure all triggers have completed
+        assertEquals(0, server.getAdmin().getRequests().size());
     }
 	
 	@Test public void testSpatial() throws Exception {
