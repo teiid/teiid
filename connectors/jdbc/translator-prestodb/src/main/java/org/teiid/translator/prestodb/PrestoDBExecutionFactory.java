@@ -61,6 +61,7 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
         setSupportsOuterJoins(true);
         setSupportsFullOuterJoins(true);
         setUseBindVariables(false);
+        setTransactionSupport(TransactionSupport.NONE);
     }
     
     @Override
