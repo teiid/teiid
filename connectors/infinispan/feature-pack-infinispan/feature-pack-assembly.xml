@@ -8,6 +8,7 @@
     <fileSets>
         <fileSet>
             <directory>${project.build.directory}/${project.artifactId}-${project.version}</directory>
+            <filtered>true</filtered>
             <outputDirectory/>
         </fileSet>
     </fileSets>
