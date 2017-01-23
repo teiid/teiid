@@ -35,8 +35,8 @@ import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.infinispan.hotrod.InfinispanHotRodConnection;
 import org.teiid.translator.infinispan.hotrod.InfinispanExecutionFactory;
+import org.teiid.translator.infinispan.hotrod.InfinispanHotRodConnection;
 
 /**
  * This VDBUtility is building the metadata based on the JDG quickstart:  remote-query

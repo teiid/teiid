@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -14,7 +15,6 @@ import org.infinispan.client.hotrod.RemoteCache;
 import org.jboss.teiid.jdg_remote.pojo.AllTypes;
 import org.jboss.teiid.jdg_remote.pojo.AllTypesCacheSource;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -26,14 +26,14 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.infinispan.hotrod.util.AllTypesSchemaVDBUtility;
 import org.teiid.translator.object.ObjectUpdateExecution;
 
-@Ignore
+
 public class TestInfinispanUpdateUsingAllTypes {
 	
 	private static InfinispanHotRodConnection CONNECTION;
 	private static TranslationUtility translationUtility = AllTypesSchemaVDBUtility.TRANSLATION_UTILITY;
 
 	private static RemoteCache DATA = AllTypesCacheSource.loadCache();
-	private static InfinispanExecutionFactory TRANSLATOR;
+	private static InfinispanHotRodExecutionFactory TRANSLATOR;
 	
 	@Mock
 	private ExecutionContext context;
@@ -48,7 +48,6 @@ public class TestInfinispanUpdateUsingAllTypes {
 	public void testInsertRootClass() throws Exception {
 		CONNECTION = AllTypesCacheSource.createConnection();
 		insertRootClass();
-//		insertBytes();
 	}
 	
 	@Test
@@ -100,11 +99,10 @@ public class TestInfinispanUpdateUsingAllTypes {
 		Object o = getCache().get(199);
 		assertNull(o);
 		
-		byte[] b = new byte[] {'1', '2', '3', '4', '5', '1'};
-
 		Command command = translationUtility
-				.parseCommand("Insert into AllTypes (intKey, intNum, stringKey, stringNum, booleanValue, longNum, objectValue) " + 
-							"VALUES (199, 199, 'string key value', '999', true, 1200, '" +  Arrays.toString(b)  + "'    ) ");  
+				.parseCommand("Insert into AllTypes (intKey, intNum, stringKey, stringNum, booleanValue, longNum) " + 
+				"VALUES (199, 199, 'string key value', '999', true, 1200  ) ");  
+
 						//new String(b, "UTF-8")  + "'  )");
 		
 		// no search required by the UpdateExecution logic
@@ -125,8 +123,9 @@ public class TestInfinispanUpdateUsingAllTypes {
 		assertTrue(p.getStringKey().equals( String.valueOf("string key value")));
 		assertTrue(p.getLongNum().equals(Long.valueOf(1200)) );
 		assertTrue(p.getBooleanValue().equals(Boolean.TRUE) );
-		assertTrue(p.getObjectValue().equals(b));
-//		assertTrue(p.getDoubleNum().equals(Double.valueOf(23.45d)) );
+//		assertTrue(p.getByteArrayValue().equals(b));
+
+		//		assertTrue(p.getDoubleNum().equals(Double.valueOf(23.45d)) );
 //		assertTrue(p.getFloatNum().equals(Float.valueOf(12.456f)) );
 			
 	}	
@@ -279,7 +278,7 @@ public class TestInfinispanUpdateUsingAllTypes {
 		assertNotNull(getCache().get(1));
 
 		Command command = translationUtility
-				.parseCommand("Delete From AllTypes Where intKey=99");
+				.parseCommand("Delete From AllTypes Where intKey=1");
 
 		@SuppressWarnings("rawtypes")
 		List rows = new ArrayList();
@@ -296,19 +295,7 @@ public class TestInfinispanUpdateUsingAllTypes {
 	protected ObjectUpdateExecution createExecution(Command command, final List<Object> results)
 			throws TranslatorException {
 		
-		TRANSLATOR = new InfinispanExecutionFactory() {
-
-//			@Override
-//			public List<Object> search(ObjectVisitor visitor, ObjectConnection connection, ExecutionContext executionContext)
-//					throws TranslatorException {
-//    			return results;
-//			}
-
-       
-//			@Override
-//			public Object performKeySearch(String columnName, Object value, ObjectConnection connection, ExecutionContext executionContext) throws TranslatorException {
-//				return DATA.get(value);
-//			}
+		TRANSLATOR = new InfinispanHotRodExecutionFactory() {
 
 		};
 		TRANSLATOR.start();
@@ -319,6 +306,7 @@ public class TestInfinispanUpdateUsingAllTypes {
 				AllTypesSchemaVDBUtility.RUNTIME_METADATA, CONNECTION);
 	}
 	
+	@SuppressWarnings("unchecked")
 	private static Map<Object,Object> getCache() throws TranslatorException {
 		return (Map<Object,Object>) CONNECTION.getCache();
 	}

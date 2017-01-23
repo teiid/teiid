@@ -35,9 +35,7 @@ import javax.script.ScriptContext;
 import javax.script.ScriptException;
 import javax.script.SimpleScriptContext;
 
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
-import org.teiid.core.util.PropertiesUtils;
 import org.teiid.language.BatchedUpdates;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Command;
@@ -67,8 +65,6 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 	// Passed to constructor
 	private Command command;
 	private Class<?> clz =  null;
-	
-//	private String tablename = null;
 
 	private int[] result;
 
@@ -196,7 +192,7 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 					
 				writeColumnData(entity, column, value, writeMethods);
 				
-				keyValue = evaluate(entity, ObjectUtil.getRecordName(keyCol), connection.getClassRegistry().getReadScriptEngine(), clz);
+				keyValue = getObjectValue(entity, ObjectUtil.getRecordName(keyCol), connection.getClassRegistry().getReadScriptEngine(), clz);
 				
 			} else {
 				
@@ -284,7 +280,7 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21015, new Object[] {fkeyValue, connection.getCacheClassType().getSimpleName()}));
 		}
 		// read the child object from the root object based on the relationship 
-		Object childrenObjects = this.evaluate(rootObject, fkeyColNIS, getClassRegistry().getReadScriptEngine(), connection.getCacheClassType());
+		Object childrenObjects = this.getObjectValue(rootObject, fkeyColNIS, getClassRegistry().getReadScriptEngine(), connection.getCacheClassType());
 			
 		// first see if its a 1-to-many relationship
 		// if it not of type (collection, map, or array), then
@@ -476,7 +472,7 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 		if (keyCol != null) {
 			for (Object entity:toUpdate) {
 				
-				Object keyValue = evaluate(entity, ObjectUtil.getRecordName(keyCol), classRegistry.getReadScriptEngine(), clz);
+				Object keyValue = getObjectValue(entity, ObjectUtil.getRecordName(keyCol), classRegistry.getReadScriptEngine(), clz);
 				
 				for (SetClause sc:updateList) {
 					Column column = sc.getSymbol().getMetadataObject();
@@ -514,20 +510,21 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 		result = null;
 	}
 
-	private Object evaluate(Object value, String columnName, ObjectScriptEngine scriptEngine, Class entityClass)
+	private Object getObjectValue(Object value, String columnName, ObjectScriptEngine scriptEngine, Class<?> entityClass)
 			throws TranslatorException {
-		Method m = null;
-		try {
-			m = ClassRegistry.findMethod(scriptEngine.getMethodMap(entityClass), columnName, entityClass.getSimpleName());
-		} catch (ScriptException e1) {
-			throw new TranslatorException(e1);
-		}
+//		Method m = null;
+//
+//		try {
+//			m = ClassRegistry.findMethod(scriptEngine.getMethodMap(entityClass), columnName, entityClass.getSimpleName());
+//		} catch (ScriptException e1) {
+//			throw new TranslatorException(e1);
+//		}
 		
 		sc.setAttribute(ClassRegistry.OBJECT_NAME, value,
 				ScriptContext.ENGINE_SCOPE);
 		try {
-			CompiledScript cs = scriptEngine.compile(ClassRegistry.OBJECT_NAME
-					+ "." + m.getName());
+			CompiledScript cs = scriptEngine.compile(ClassRegistry.OBJECT_NAME + "." + columnName);
+//					+ "." + m.getName());
 			final Object v = cs.eval(sc);
 			return v;
 		} catch (ScriptException e) {
@@ -539,7 +536,7 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 	private  Object convertKeyValue(Object value, Column keyColumn )  throws TranslatorException {
 		if (connection.getCacheKeyClassType() != null) {
 			try {
-				return DataTypeManager.transformValue(value,  connection.getCacheKeyClassType());
+				return this.getClassRegistry().getObjectDataTypeManager().convertToObjectType(value, connection.getCacheKeyClassType());
 			} catch (TransformationException e) {
 				throw new TranslatorException(e);
 			}
@@ -551,8 +548,7 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 	
 	private void writeColumnData(Object entity, Column column, Object value, Map<String, Method> writeMethods) throws TranslatorException {
 		
-			String nis = ObjectUtil.getRecordName(column);
-	
+			String nis = ObjectUtil.getRecordName(column);	
 			writeColumnData(entity, nis, value, writeMethods);
 	}
 	
@@ -570,40 +566,21 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 					ClassRegistry.executeSetMethod(m, entity, value);
 					return;
 				}
-				final Class<?> sourceClassType = value.getClass();
+				
 				final Class<?> targetClassType = m.getParameterTypes()[0];
 				if (targetClassType == null) {
 					throw new TranslatorException("Program Error: invalid method " + m.getName() + ", no valid parameter defined on the expected set method");
-				}
-				if (targetClassType.isEnum()) {
-					Object[] con = targetClassType.getEnumConstants();
-					for (Object c:con) {
-						if (c.toString().equalsIgnoreCase(value.toString())) {
-							ClassRegistry.executeSetMethod(m, entity, c);
-							return;
-						}
-					}
-					throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21010, new Object[] {nameInSource}));
-				} else if (sourceClassType.isAssignableFrom(targetClassType)) {
-					ClassRegistry.executeSetMethod(m, entity, value);
-				} else if (DataTypeManager.isTransformable(value.getClass(), targetClassType)) {
-	
-					final Object transformedValue = DataTypeManager.transformValue(value,  targetClassType ); //column.getJavaType()
-					ClassRegistry.executeSetMethod(m, entity, transformedValue);
-					
-//				} else if (value.getClass().isArray()) {
-//						final ByteString bs = ByteString.copyFrom( (byte[]) value);
-//						ClassRegistry.executeSetMethod(m, entity, bs);
-//					} else {
-//						final Object transformedValue = DataTypeManager.transformValue(value,  column.getJavaType());
-//						ClassRegistry.executeSetMethod(m, entity, transformedValue);
-//					}
-								
-				} else {
-					PropertiesUtils.setBeanProperty(entity, nameInSource, value);
-				}
+				}				
 
+				Object transformedValue = getClassRegistry().getObjectDataTypeManager().convertToObjectType(value, targetClassType);
+				if (transformedValue == null) {
+					throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21010, new Object[] {nameInSource}));
+				}
+				ClassRegistry.executeSetMethod(m, entity, transformedValue);
 				
+
+			} catch (TranslatorException e) {
+				throw e;
 			} catch (Exception e) {
 				throw new TranslatorException(e);
 			}

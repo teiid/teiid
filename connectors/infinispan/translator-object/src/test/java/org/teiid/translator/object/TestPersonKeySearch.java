@@ -113,18 +113,18 @@ public class TestPersonKeySearch {
 	}	
 	
 	@Test public void test1toManyA() throws Exception {
-		Select command = (Select)translationUtility.parseCommand("select a.name, a.id, a.email, b.number From Person as A, PhoneNumber as b where a.id = b.id"); //$NON-NLS-1$
+		Select command = (Select)translationUtility.parseCommand("select b.id,  b.number From Person as A, PhoneNumber as b where a.id = b.id"); //$NON-NLS-1$
 
 		
-		performTest(20, 4, command);
+		performTest(20, 2, command);
 
 	}
 	
 	@Test public void test1toManyB() throws Exception {
-		Select command = (Select)translationUtility.parseCommand("select a.name, a.id, a.email, b.number, b.type From Person as A, PhoneNumber as b where a.id = b.id and a.id = 4"); //$NON-NLS-1$
+		Select command = (Select)translationUtility.parseCommand("select b.id, b.number, b.type From Person as A, PhoneNumber as b where a.id = b.id and a.id = 4"); //$NON-NLS-1$
 
 		
-		performTest(2, 5, command);
+		performTest(2, 3, command);
 
 	}	
 	

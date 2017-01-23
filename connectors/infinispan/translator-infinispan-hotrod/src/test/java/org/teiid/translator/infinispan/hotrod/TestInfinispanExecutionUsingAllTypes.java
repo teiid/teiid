@@ -30,8 +30,8 @@ import java.util.Map;
 
 import org.jboss.teiid.jdg_remote.pojo.AllTypesCacheSource;
 import org.junit.BeforeClass;
-import org.junit.Test;
 import org.junit.Ignore;
+import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.language.Select;
@@ -70,7 +70,7 @@ public class TestInfinispanExecutionUsingAllTypes {
 
 
 	@Test public void testExecution() throws Exception {
-		Select command = (Select)translationUtility.parseCommand("select intKey, intNum, stringNum, stringKey, floatNum, bigIntegerValue, shortValue, doubleNum, objectValue, bigDecimalValue, longNum, booleanValue, timeStampValue, timeValue, dateValue, charValue  From AllTypes as T"); //$NON-NLS-1$
+		Select command = (Select)translationUtility.parseCommand("select intKey, intNum, stringNum, stringKey, floatNum, bigIntegerValue, shortValue, doubleNum, byteArrayValue, bigDecimalValue, longNum, booleanValue, timeStampValue, timeValue, dateValue, charValue  From AllTypes as T"); //$NON-NLS-1$
 		
 		performTest(10, 16, command);
 
@@ -83,30 +83,40 @@ public class TestInfinispanExecutionUsingAllTypes {
 	@Ignore
 	@Test public void testReturningObject() throws Exception {
 		Select command = (Select)translationUtility.parseCommand("select AllTypesObject From AllTypes as T"); //$NON-NLS-1$
-
 		
 		performTest(10, 1, command);
 
 	}
+	
+	@Test public void testByteArray() throws Exception {
+		Select command = (Select)translationUtility.parseCommand("select intKey, byteArrayValue  From AllTypes as T"); //$NON-NLS-1$
+		
 
+		List<Class<?>> expectedResultTypes = new ArrayList<Class<?>>();
+		expectedResultTypes.add(Integer.class);
+		expectedResultTypes.add(byte[].class);
 
-	protected List<Object> performTest(int rowcnt, int colCount, Select command)
+		List<List<Object>> rows = performTest(10, 2, command, expectedResultTypes);
+
+	}
+
+	protected List<List<Object>> performTest(int rowcnt, int colCount, Select command) 
 			throws TranslatorException {
 		
 		ObjectExecution exec = createExecution(command, rowcnt, colCount);
 
 		exec.execute();
 		
-		List<Object> rows = new ArrayList<Object>();
+		List<List<Object>> rows = new ArrayList<List<Object>>();
 		
 		int cnt = 0;
-		List<?> row = exec.next();
+		List<Object> row = (List<Object>) exec.next();
 	
 		while (row != null) {
 			rows.add(row);
 			assertEquals("column count did not match", colCount, row.size());
 			++cnt;
-			row = exec.next();
+			row = (List<Object>) exec.next();
 		}
 		
 		assertEquals("Did not get expected number of rows", rowcnt, cnt); //$NON-NLS-1$
@@ -115,30 +125,31 @@ public class TestInfinispanExecutionUsingAllTypes {
 		return rows;
 	}
 	
-	protected List<Object> performTest(int rowcnt, int colCount, Select command, List<Object> expectedResults)
+	protected List<List<Object>> performTest(int rowcnt, int colCount, Select command, List<Class<?>> expectedResultTypes)
 			throws TranslatorException {
 		
 		ObjectExecution exec = createExecution(command, rowcnt, colCount);
 
 		exec.execute();
 		
-		List<Object> rows = new ArrayList<Object>();
+		List<List<Object>> rows = new ArrayList<List<Object>>();
 		
 		int cnt = 0;
-		List<?> row = exec.next();
+		List<Object> row = (List<Object>) exec.next();
 	
 		while (row != null) {
 			rows.add(row);
 			assertEquals("column count did not match", colCount, row.size());
 			
-			for (int i=0; i<expectedResults.size(); i++) {
+			for (int i=0; i<expectedResultTypes.size(); i++) {
 				
-				assertEquals("values don't match for row " + cnt + " column " + i, row.get(i), expectedResults.get(i));
+				assertEquals("values don't match for row " + cnt + " column " + i, row.get(i).getClass() ,expectedResultTypes.get(i));
 				
 			}
 			
 			++cnt;
-			row = exec.next();
+			row = (List<Object>) exec.next();
+
 		}
 		
 		assertEquals("Did not get expected number of rows", rowcnt, cnt); //$NON-NLS-1$

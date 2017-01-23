@@ -35,6 +35,7 @@ import javax.script.ScriptContext;
 import javax.script.ScriptException;
 import javax.script.SimpleScriptContext;
 
+import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Command;
@@ -43,6 +44,7 @@ import org.teiid.language.Select;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.metadata.Datatype;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
@@ -61,34 +63,93 @@ public class ObjectExecution extends ObjectBaseExecution implements ResultSetExe
 		VALUE
 	}
 
+	class Node {
+
+		protected Object value = null;
+		protected int columnLoc = 0;
+		protected OBJECT_TYPE ot;
+		protected String name = null;
+		protected String dataType = null;
+		protected CompiledScript compiledScript;
+		
+		Node() {
+		}
+		Node(String nodeName, int columnLocation) {
+			name = nodeName;
+			columnLoc = columnLocation;
+		}
+		
+		String getName() {
+			return name;
+		}
+		int getColumnLocation() {
+			return columnLoc;
+		}
+		
+		Object getValue() {
+			return value;
+		}		
+		
+		void setValue(Object v) {
+			value = v;
+			if (Collection.class.isAssignableFrom(v.getClass())) {
+				ot = OBJECT_TYPE.COLLECTION;	
+			} else if (Map.class.isAssignableFrom(v.getClass())) {
+				ot = OBJECT_TYPE.MAP;
+			} else if (v.getClass().isArray()) {
+				ot = OBJECT_TYPE.ARRAY;
+			} else {
+				ot = OBJECT_TYPE.VALUE;
+			}
+		}
+		
+		boolean isCollection() {
+			return (ot == OBJECT_TYPE.COLLECTION);
+		}
+		
+		boolean isMap() {
+			return (ot == OBJECT_TYPE.MAP);
+		}
+
+		boolean isArray() {
+			return (ot == OBJECT_TYPE.ARRAY);
+		}
+		
+		boolean isObjectValue() { 
+			return (ot == OBJECT_TYPE.VALUE);
+		}
+		/**
+		 * Called to reset pointer to what it was before 
+		 * being processed.  This is so the this node can be reused
+		 * for each object in the object result set for this column.
+		 */
+		void reset() {
+			value = null;
+			ot=null;
+		}
 	
-	class DepthNode {
+	}
+	class DepthNode extends Node {
+		// values that change during processing
+		protected int nodePosition=0;
 		
 		protected List<String> nodes = null;
 		protected String depthNodes = null;
 		protected int nodeSize = 0;
-		protected int columnLoc = 0;
 		
-		// values that change during processing
-		protected int nodePosition=0;
-		protected Object value = null;  
-		protected OBJECT_TYPE ot;
-		
-		private DepthNode() {
-			
+		DepthNode() {			
 		}
+		
 		DepthNode(String name, int colLocation) {
 			this();
 			nodes = StringUtil.split(name, ".");
+			this.name = nodes.get(0);
 			nodeSize = nodes.size();
 			depthNodes = name.substring(0, name.lastIndexOf("."));
 			columnLoc = colLocation;
 	
 		}
 		
-		int getColumnLocation() {
-			return columnLoc;
-		}
 		
 		String getNodeName(int position) {
 			return nodes.get(position);
@@ -122,49 +183,17 @@ public class ObjectExecution extends ObjectBaseExecution implements ResultSetExe
 			++nodePosition;
 		}
 		
-		Object getValue() {
-			return value;
-		}
-		
-		boolean isCollection() {
-			return (ot == OBJECT_TYPE.COLLECTION);
-		}
-		
-		boolean isMap() {
-			return (ot == OBJECT_TYPE.MAP);
-		}
-
-		boolean isArray() {
-			return (ot == OBJECT_TYPE.ARRAY);
-		}
-		
-		boolean isObjectValue() { 
-			return (ot == OBJECT_TYPE.VALUE);
-		}
-		
 		/**
 		 * Called to reset pointer to what it was before 
 		 * being processed.  This is so the this node can be reused
 		 * for each object in the object result set for this column.
 		 */
+		@Override
 		void reset() {
+			super.reset();
 			nodePosition=0;
-			value = null;
-			ot=null;
 		}
-		
-		void setValue(Object v) {
-			value = v;
-			if (Collection.class.isAssignableFrom(v.getClass())) {
-				ot = OBJECT_TYPE.COLLECTION;	
-			} else if (Map.class.isAssignableFrom(v.getClass())) {
-				ot = OBJECT_TYPE.MAP;
-			} else if (v.getClass().isArray()) {
-				ot = OBJECT_TYPE.ARRAY;
-			} else {
-				ot = OBJECT_TYPE.VALUE;
-			}
-		}
+
 
 		@Override
 		protected Object clone() {
@@ -215,6 +244,7 @@ public class ObjectExecution extends ObjectBaseExecution implements ResultSetExe
 		for (DerivedColumn dc : cols) {
 			ColumnReference cr = (ColumnReference) dc.getExpression();
 			
+			String runtimeTypeName = cr.getMetadataObject().getDatatype().getRuntimeTypeName();
 			String nis = ObjectUtil.getRecordName(cr.getMetadataObject());
 
 			if (nis.equalsIgnoreCase("this")) { //$NON-NLS-1$
@@ -228,15 +258,26 @@ public class ObjectExecution extends ObjectBaseExecution implements ResultSetExe
 					}
 					DepthNode dn = new DepthNode(nis, col);
 					colObjects[col] = dn;
+					dn.dataType = runtimeTypeName;
 					 						
 					int n =dn.getNumberOfNodes();
 
 					if (n > depth) depth = n;
 					
+					try {
+						dn.compiledScript = getCompiledNode(dn.getDepthMethodName());
+					} catch (ScriptException e) {
+					}
+					
 			} else {
 				
+				Node n = new Node(nis, col);
+				n.dataType = runtimeTypeName;
+				
 				try {
-					colObjects[col] = getCompiledNode(nis);
+					n.compiledScript = getCompiledNode(nis);
+					
+					colObjects[col] = n;
 				} catch (ScriptException e) {
 					throw new TranslatorException(e);
 				}
@@ -259,7 +300,6 @@ public class ObjectExecution extends ObjectBaseExecution implements ResultSetExe
 		    
 			// column NIS for a column will be used to query the cache
 		    List<Object> objResults = connection.getSearchType().performSearch(visitor, executionContext); 
-		    		//env.search(visitor, connection, executionContext);
 		    
 			if (objResults == null) {
 				objResults = Collections.emptyList();
@@ -283,12 +323,7 @@ public class ObjectExecution extends ObjectBaseExecution implements ResultSetExe
 			return (List<Object>) cacheResultsIt.next();
 		} 
 		
-		String fkeyColNIS = null;
 		cacheResultsIt = null;
-		if (depth > 0 ) {
-
-			fkeyColNIS = visitor.getForeignKey().getNameInSource();
-		}
 		
 		// process the next object in the search result set
 		while (objResultsItr.hasNext()) {
@@ -296,7 +331,8 @@ public class ObjectExecution extends ObjectBaseExecution implements ResultSetExe
 			final Object o = objResultsItr.next();
 			
 			if (depth > 0) {
-				
+				String fkeyColNIS = visitor.getForeignKey().getNameInSource();
+
 				Method rootClassReadMethod = ClassRegistry.findMethod(this.getClassRegistry().getReadClassMethods(this.connection.getCacheClassType().getName()), fkeyColNIS, this.connection.getCacheClassType().getName());
 
 				Object parentValue = null;
@@ -339,20 +375,24 @@ public class ObjectExecution extends ObjectBaseExecution implements ResultSetExe
 			}
 			try {
 				
-				if (colObjects[i] instanceof CompiledScript) {
-					sc.setAttribute(ClassRegistry.OBJECT_NAME, parent, ScriptContext.ENGINE_SCOPE);	
-					CompiledScript cs = (CompiledScript) colObjects[i];
-					r.add(cs.eval(sc));
-				} else {
+				if (colObjects[i] instanceof DepthNode) {
 					sc.setAttribute(ClassRegistry.OBJECT_NAME, child, ScriptContext.ENGINE_SCOPE);	
-					DepthNode dn = (DepthNode) colObjects[i];	
-					dn.reset();
-					CompiledScript cs = getCompiledNode(dn.getDepthMethodName());
 					
-					r.add(cs.eval(sc));
+				} else {
+					sc.setAttribute(ClassRegistry.OBJECT_NAME, parent, ScriptContext.ENGINE_SCOPE);	
+				} 	
+				
+				Node n = (Node) colObjects[i];
+				n.reset();
+				Object v = n.compiledScript.eval(sc);
 
-				}				
+				Object rtn = this.getClassRegistry().getObjectDataTypeManager().convertFromObjectType(v, n.dataType);					
 
+				r.add(rtn);
+
+
+			} catch (TransformationException t) {
+				throw new TranslatorException(t);
 			} catch (ScriptException e) {
 				throw new TranslatorException(e);
 			}
@@ -430,9 +470,6 @@ public class ObjectExecution extends ObjectBaseExecution implements ResultSetExe
 
 			//	Collections.emptyList();
 		if (value == null) return results;
-		
-//		Object obj = depthNode.getValue();
-//		if (obj == null) return rows;
 		
 		try {
 			

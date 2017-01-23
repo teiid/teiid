@@ -30,8 +30,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.teiid.logging.LogConstants;
-import org.teiid.logging.LogManager;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
@@ -43,8 +41,8 @@ import org.teiid.metadata.Table;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
-import org.teiid.translator.TypeFacility;
 import org.teiid.translator.TranslatorProperty.PropertyType;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.object.ClassRegistry;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectPlugin;
@@ -141,16 +139,16 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 
 		if (classObjectColumn && !materializedSource) {
 			String columnName = rootTable.getName() + OBJECT_COL_SUFFIX;
-			addColumn(mf, entity, columnName, "this", SearchType.Unsearchable, rootTable, false, NullType.Nullable, false); //$NON-NLS-1$	
+			addColumn(mf, entity, columnName, "this", SearchType.Unsearchable, rootTable, false, NullType.Nullable, false, conn); //$NON-NLS-1$	
 		}
 		
 
  		if (updatable) {
  			// add the primary key field information; column and primary key 
- 			addColumn(mf, pkMethod.getReturnType(), pkField, pkField, SearchType.Searchable, this.rootTable, true, NullType.No_Nulls, updatable);
+ 			addColumn(mf, pkMethod.getReturnType(), pkField, pkField, SearchType.Searchable, this.rootTable, true, NullType.No_Nulls, updatable, conn);
  	        
  			if (materializedSource) {
- 	           addColumn(mf, pkMethod.getReturnType(), pkField, pkField, SearchType.Searchable, stagingTable, true, NullType.No_Nulls, true);
+ 	           addColumn(mf, pkMethod.getReturnType(), pkField, pkField, SearchType.Searchable, stagingTable, true, NullType.No_Nulls, true, conn);
  			}
  						
 			String colname = getNameFromMethodName(pkMethod.getName());
@@ -271,7 +269,7 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 				}					
 				
 			}
-			addColumn(mf, m.getReturnType(), entry.getValue(), entry.getValue(), st, table, true, nt, columnUpdatable);			
+			addColumn(mf, m.getReturnType(), entry.getValue(), entry.getValue(), st, table, true, nt, columnUpdatable, conn);			
 		}
 	}
 	
@@ -389,26 +387,18 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 		return entity.getSimpleName();
 	}
 	
-	protected Column addColumn(MetadataFactory mf,  Class<?> type, String attributeName, String nis, SearchType searchType, Table entityTable, boolean selectable, NullType nt, boolean updatable) {
+	protected Column addColumn(MetadataFactory mf,  Class<?> type, String attributeName, String nis, SearchType searchType, Table entityTable, boolean selectable, NullType nt, boolean updatable,  ObjectConnection conn) {
 		Column c = entityTable.getColumnByName(attributeName);
 		if (c != null) {
 			//TODO: there should be a log here
 			return c;
 		}
-		c = mf.addColumn(attributeName, TypeFacility.getDataTypeName(TypeFacility.getRuntimeType(type)), entityTable);
+		c = mf.addColumn(attributeName, conn.getClassRegistry().getObjectDataTypeManager().getDataTypeName(type), entityTable);
 		if (nis != null) {
 			c.setNameInSource(nis);
 		}
 		
-		
-		if (type.isArray()) {
-			c.setNativeType(type.getSimpleName());
-		} else if (type.isEnum()) {
-			c.setNativeType(Enum.class.getName());
-		} else {
-			c.setNativeType(type.getName());
-		}
-		
+		c.setNativeType(conn.getClassRegistry().getObjectDataTypeManager().getNativeTypeName(type));
 
 		c.setUpdatable(updatable);
 		c.setSearchType(searchType);
@@ -429,7 +419,7 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 			List<String> referencedKeyColumns = new ArrayList<String>();
 			referencedKeyColumns.add(methodName);			
 			
-    		addColumn(mf, pkMethod.getReturnType(), methodName, methodName, SearchType.Searchable, childTable,  false, NullType.No_Nulls, true);
+    		addColumn(mf, pkMethod.getReturnType(), methodName, methodName, SearchType.Searchable, childTable,  false, NullType.No_Nulls, true, conn);
     		addPrimaryKey(mf, pkMethod.getName(), childTable);
     		
     		ForeignKey fk = mf.addForiegnKey(fkName, keyColumns, referencedKeyColumns, rootTable.getName(), childTable);
