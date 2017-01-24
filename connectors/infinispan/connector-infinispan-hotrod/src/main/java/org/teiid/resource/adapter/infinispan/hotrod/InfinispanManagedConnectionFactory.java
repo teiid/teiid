@@ -93,6 +93,12 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 	private ClassLoader cl;
 	private CacheNameProxy cacheNameProxy;
 	private InfinispanSchemaDefinition cacheSchemaConfigurator;
+	
+	private String trustStoreFileName = null;
+	private String trustStorePassword = null;
+	private String keyStoreFileName = null;
+	private String keyStorePassword = null;
+	private String sNIHostName = null;
 
 	@Override
 	public BasicConnectionFactory<InfinispanConnectionImpl> createConnectionFactory()
@@ -106,33 +112,42 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 		} else {
 			// if any of the following properties are specified, all 3 must be specified
 			if (protobufDefFile == null) {
-				throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25030));
+				throw new InvalidPropertyException(InfinispanManagedConnectionFactory.UTIL.getString("TEIID25030") );
 			}
 	
 			if (messageMarshallers == null) {
-				throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25029));
+				throw new InvalidPropertyException(InfinispanManagedConnectionFactory.UTIL.getString("TEIID25029") );
 			}
 			
 			if (messageDescriptor == null) {
-				throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25020));
+				throw new InvalidPropertyException(InfinispanManagedConnectionFactory.UTIL.getString("TEIID25020") );
 			}
 			cacheSchemaConfigurator = new ProtobufSchema();
 		}
 		
 		if (this.cacheTypes == null) {
-			throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25021));
+			throw new InvalidPropertyException(InfinispanManagedConnectionFactory.UTIL.getString("TEIID25021") );
 		}
 
 		if (remoteServerList == null
 				&& hotrodClientPropertiesFile == null && cacheJndiName == null) {
-			throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25023));
+			throw new InvalidPropertyException(InfinispanManagedConnectionFactory.UTIL.getString("TEIID25023") );
 		}
 
 		determineCacheType();
 		if (cacheType == null) {
-			throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25022));
+			throw new InvalidPropertyException(InfinispanManagedConnectionFactory.UTIL.getString("TEIID25022") );
 		}
 		
+		if ( (this.trustStoreFileName != null && this.trustStorePassword == null) ||
+				(this.trustStoreFileName == null && this.trustStorePassword != null) ) {
+			throw new InvalidPropertyException(InfinispanManagedConnectionFactory.UTIL.getString("TEIID25033") );
+		}
+		
+		if ( (this.keyStoreFileName != null && this.keyStorePassword == null) ||
+				(this.keyStoreFileName == null && this.keyStorePassword != null) ) {
+			throw new InvalidPropertyException(InfinispanManagedConnectionFactory.UTIL.getString("TEIID25034") );
+		}
 		/*
 		 * the creation of the cacheContainer has to be done within the
 		 * call to get the connection so that the classloader is driven
@@ -445,6 +460,114 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 		this.cacheJndiName = jndiName;
 	}
 	
+	
+	/**
+	 * Returns the file name of the truststore
+	 *            
+	 * @see #setTrustStoreFileName()
+	 */	
+	public String getTrustStoreFileName() {
+		return trustStoreFileName;
+	}
+
+	/**
+	 * Set the name of the truststore file name to use when configuring SSL.
+	 * 
+	 * @param trustStoreFileName
+	 *            the name of the truststore file
+	 *            
+	 * @see #getTrustStoreFileName()
+	 */
+	public void setTrustStoreFileName(String trustStoreFileName) {
+		this.trustStoreFileName = trustStoreFileName;
+	}
+
+	/**
+	 * Returns the password for the truststore
+	 *            
+	 * @see #setTrustStorePassword()
+	 */	
+	public String getTrustStorePassword() {
+		return trustStorePassword;
+	}
+
+	/**
+	 * Set the password for the truststore when configuring SSL.
+	 * 
+	 * @param trustStorePassword
+	 *            the password of the truststore
+	 *            
+	 * @see #getTrustStorePassword()
+	 */
+	public void setTrustStorePassword(String trustStorePassword) {
+		this.trustStorePassword = trustStorePassword;
+	}
+	
+	/**
+	 * Returns the file name of the keystore
+	 *            
+	 * @see #setKeyStoreFileName()
+	 */	
+	public String getKeyStoreFileName() {
+		return keyStoreFileName;
+	}
+
+	/**
+	 * Set the name of the keystore file name to use when configuring SSL.
+	 * 
+	 * @param keyStoreFileName
+	 *            the name of the keystore file
+	 *            
+	 * @see #getKeyStoreFileName()
+	 */
+	public void setKeyStoreFileName(String keyStoreFileName) {
+		this.keyStoreFileName = keyStoreFileName;
+	}
+
+	/**
+	 * Returns the password for the keystore
+	 *            
+	 * @see #setKeyStorePassword()
+	 */	
+	public String getKeyStorePassword() {
+		return keyStorePassword;
+	}
+
+	/**
+	 * Set the password for the keytore when configuring SSL.
+	 * 
+	 * @param keyStorePassword
+	 *            the password of the keystore
+	 *            
+	 * @see #getKeyStorePassword()
+	 */
+	public void setKeyStorePassword(String keyStorePassword) {
+		this.keyStorePassword = keyStorePassword;
+	}
+
+	
+	/**
+	 * Returns the SNI Host Name
+	 *            
+	 * @see #setTrustStorePassword()
+	 */	
+	public String getSNIHostName() {
+		return sNIHostName;
+	}
+	
+	/**
+	 * Set the SNI Host Name.
+	 * 
+	 * @param getSNIHostName
+	 *            the SNI Host Name
+	 *            
+	 * @see #getSNIHostName()
+	 */
+
+	public void setSNIHostName(String sNIHostName) {
+		this.sNIHostName = sNIHostName;
+	}
+
 	/** 
 	 * Call to set the name of the cache to access when calling getCache
 	 * @param cacheName
@@ -455,7 +578,7 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 			cacheNameProxy = new CacheNameProxy(cacheName, getStagingCacheName(),getAliasCacheName() );
 			
 		} else if (getStagingCacheName() != null || getAliasCacheName() != null)  {
-				throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25011));
+			throw new InvalidPropertyException(InfinispanManagedConnectionFactory.UTIL.getString("TEIID25011") );
 
 		} else {
 			cacheNameProxy = new CacheNameProxy(cacheName);
@@ -545,7 +668,7 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 			List<String> cacheClassparm = StringUtil.getTokens(leftside, ":");
 						
 			if (cacheClassparm.size() != 2) {
-				throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25022));
+				throw new InvalidPropertyException(InfinispanManagedConnectionFactory.UTIL.getString("TEIID25022") );
 			}
 			
 			cacheName = cacheClassparm.get(0);
@@ -563,7 +686,7 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 		} else {
 			List<String> parms = StringUtil.getTokens(getCacheTypeMap(), ":"); //$NON-NLS-1$
 			if (parms.size() < 2) {
-				throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25022));
+				throw new InvalidPropertyException(InfinispanManagedConnectionFactory.UTIL.getString("TEIID25022") );
 			}
 			
 			cacheName = parms.get(0);
@@ -630,6 +753,7 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 				if (aliasCache == null) {
 					throw new ResourceException(	
 							InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25010, new Object[] {cacheNameProxy.getAliasCacheName()}));
+					
 				}
 				cacheNameProxy.initializeAliasCache(aliasCache);
 			}
@@ -672,7 +796,7 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 							LogConstants.CTX_CONNECTOR,
 							"=== Using RemoteCacheManager (created from properties file " + f.getAbsolutePath() + ") ==="); //$NON-NLS-1$
 
-			return createRemoteCache(props, classLoader);
+			return createRemoteCache(props, this.getRemoteServerList(), classLoader);
 
 		} catch (Exception err) {
 			throw new ResourceException(err);
@@ -682,25 +806,38 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 	
 	protected  RemoteCacheManager createRemoteCacheFromServerList(
 			ClassLoader classLoader) throws ResourceException {
-		Properties props = new Properties();
-		props.put(
-				"infinispan.client.hotrod.server_list", this.getRemoteServerList()); //$NON-NLS-1$
 
 		LogManager.logInfo(LogConstants.CTX_CONNECTOR,
 				"=== Using RemoteCacheManager (loaded by serverlist) ==="); //$NON-NLS-1$
 
-		return createRemoteCache(props, classLoader);
+		return createRemoteCache(null, this.getRemoteServerList(), classLoader);
 	}
 	
-	private RemoteCacheManager createRemoteCache(Properties props,
+	private RemoteCacheManager createRemoteCache(Properties props, String serverList,
 			ClassLoader classLoader) throws ResourceException {
 		RemoteCacheManager remoteCacheManager;
 		try {
 			ConfigurationBuilder cb = new ConfigurationBuilder();
 			cb.marshaller(new ProtoStreamMarshaller());
-			cb.withProperties(props);
+			if (serverList != null) {
+				cb.addServers(serverList);
+			}
+			if (props != null && !props.isEmpty()) {
+				cb.withProperties(props);
+			}
 			if (classLoader != null)
 				cb.classLoader(classLoader);
+			
+			if (this.getTrustStoreFileName()!= null) {
+				
+				cb.security().ssl()
+					.enabled(true)
+					.trustStoreFileName(this.getTrustStoreFileName())
+					.trustStorePassword(this.getTrustStorePassword().toCharArray())
+					.keyStorePassword(this.getKeyStorePassword().toCharArray())
+					.keyStoreFileName(this.getKeyStoreFileName())
+					;
+			}
 			remoteCacheManager = new RemoteCacheManager(cb.build(), true);
 
 		} catch (Exception err) {

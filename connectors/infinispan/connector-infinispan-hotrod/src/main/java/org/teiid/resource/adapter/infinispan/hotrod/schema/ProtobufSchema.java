@@ -39,6 +39,7 @@ import org.infinispan.protostream.BaseMarshaller;
 import org.infinispan.protostream.FileDescriptorSource;
 import org.infinispan.protostream.descriptors.Descriptor;
 import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
+import org.teiid.core.BundleUtil;
 import org.teiid.core.util.StringUtil;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -55,6 +56,8 @@ import org.teiid.translator.object.ClassRegistry;
  * @author vhalbert
  */
 public class ProtobufSchema  implements InfinispanSchemaDefinition {
+	public static final BundleUtil UTIL = BundleUtil.getBundleUtil(ProtobufSchema.class);
+	
 	@SuppressWarnings("rawtypes")
 	protected Map<String, BaseMarshaller> messageMarshallerMap = null;
 	
@@ -68,7 +71,8 @@ public class ProtobufSchema  implements InfinispanSchemaDefinition {
 			
 			List<String> marshallMap = StringUtil.getTokens(mm, ":"); //$NON-NLS-1$
 			if (marshallMap.size() != 2) {
-				throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25031, new Object[] {mm}));
+				
+				throw new InvalidPropertyException(ProtobufSchema.UTIL.getString("TEIID25031", new Object[] {mm} ) );
 			}
 			final String clzName = marshallMap.get(0);
 			final String m = marshallMap.get(1);
