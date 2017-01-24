@@ -200,11 +200,16 @@ public class HiveExecutionFactory extends BaseHiveExecutionFactory {
     
     @Override
     public boolean useParensForJoins() {
-    	return true;
+    	return false;
     }
         
     @Override
     public String translateLiteralDate(java.sql.Date dateValue) {
         return "DATE '" + formatDateValue(dateValue) + '\'';
     }     
+    
+    @Override
+    public boolean requiresLeftLinearJoin() {
+        return true;
+    }
 }
