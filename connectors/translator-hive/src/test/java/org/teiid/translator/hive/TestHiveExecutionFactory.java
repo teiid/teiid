@@ -121,6 +121,20 @@ public class TestHiveExecutionFactory {
     }
     
     @Test
+    public void testFourWayJoin() throws Exception {
+        String input = "SELECT A.intkey FROM BQT1.SMALLA A JOIN BQT1.SmallB B on A.intkey=B.intkey JOIN BQT1.SMALLA C on A.intkey=C.intkey JOIN BQT1.SMALLB D on A.intkey=D.intkey"; 
+        String output = "SELECT A.IntKey FROM SmallA A  JOIN SmallB B ON A.IntKey = B.IntKey  JOIN SmallA C ON A.IntKey = C.IntKey  JOIN SmallB D ON A.IntKey = D.IntKey"; 
+        helpTestVisitor(bqt, input, output);
+    }
+    
+    @Test
+    public void testThreeWayJoin() throws Exception {
+        String input = "SELECT A.intkey FROM BQT1.SMALLA A JOIN BQT1.SmallB B on A.intkey=B.intkey JOIN BQT1.SMALLA C on A.intkey=C.intkey"; 
+        String output = "SELECT A.IntKey FROM SmallA A  JOIN SmallB B ON A.IntKey = B.IntKey  JOIN SmallA C ON A.IntKey = C.IntKey"; 
+        helpTestVisitor(bqt, input, output);
+    }
+    
+    @Test
     public void testCrossJoinCriteria() throws Exception {
         String input = "SELECT A.intkey FROM BQT1.SMALLA A Cross join BQT1.SmallB B"; 
         String output = "SELECT A.IntKey FROM SmallA A CROSS JOIN SmallB B"; 

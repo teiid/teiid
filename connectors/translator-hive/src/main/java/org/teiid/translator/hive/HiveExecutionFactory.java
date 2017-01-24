@@ -200,7 +200,11 @@ public class HiveExecutionFactory extends BaseHiveExecutionFactory {
     
     @Override
     public boolean useParensForJoins() {
-    	return true;
-    }
+    	return false;
+    }   
     
+    @Override
+    public boolean requiresLeftLinearJoin() {
+        return true;
+    }
 }
