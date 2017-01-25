@@ -501,7 +501,7 @@ public class QueryParser implements Parser {
         	servers = Arrays.asList(NONE);
         }
         store.schemaCreated(factory.getSchema(), servers);
-        
+        store.schemaSwitched(factory.getSchema().getName());
         try {
             parseDDL(store, ddl);
             Map<String, String> colNs = store.getNameSpaces();

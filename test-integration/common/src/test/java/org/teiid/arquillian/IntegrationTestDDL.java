@@ -65,6 +65,7 @@ public class IntegrationTestDDL extends AbstractMMQueryTestCase {
 				+ "create foreign data wrapper loopback;"
 				+ "create server NONE type 'NONE' foreign data wrapper loopback;"
 				+ "create schema test server NONE;"
+				+ "set schema test;"
 				+ "CREATE FOREIGN TABLE G1 (e1 integer PRIMARY KEY, e2 varchar(25), e3 double)";
 
 		this.admin.deploy("foo-vdb.ddl", new ByteArrayInputStream(ddl.getBytes()), false);
@@ -101,6 +102,7 @@ public class IntegrationTestDDL extends AbstractMMQueryTestCase {
         + "create foreign data wrapper loopy type loopback OPTIONS(IncrementRows true, RowCount 500);"
         + "create server serverOne type 'NONE' foreign data wrapper loopy;"
         + "create schema test server serverOne;"
+        + "set schema test;"
         + "CREATE FOREIGN TABLE G1 (e1 integer PRIMARY KEY, e2 varchar(25), e3 double);";
     
 		this.admin.deploy("foo-vdb.ddl", new ByteArrayInputStream(ddl.getBytes()), false);
@@ -120,6 +122,7 @@ public class IntegrationTestDDL extends AbstractMMQueryTestCase {
 		        + "create foreign data wrapper loopy type loopback OPTIONS(IncrementRows true, RowCount 500);"
 		        + "create server serverOne type 'NONE' foreign data wrapper loopy;"
 		        + "create schema test server serverOne;"
+		        + "set schema test;"
 		        + "CREATE FOREIGN TABLE G1 (e1 integer PRIMARY KEY, e2 varchar(25), e3 double);";
 		String bar =  "create database BAR;"
 		        + "IMPORT database foo VERSION '1';";
