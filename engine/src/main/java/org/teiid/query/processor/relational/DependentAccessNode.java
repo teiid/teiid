@@ -24,6 +24,7 @@ package org.teiid.query.processor.relational;
 
 import java.util.Collections;
 
+import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.Assertion;
@@ -82,7 +83,16 @@ public class DependentAccessNode extends AccessNode {
     protected Command nextCommand() throws TeiidProcessingException, TeiidComponentException {
     	if (rewrittenCommand == null) {
     		Command atomicCommand = super.nextCommand();
-	        rewriteAndEvaluate(atomicCommand, getEvaluator(Collections.emptyMap()), this.getContext(), this.getContext().getMetadata());
+    		try {
+    		    rewriteAndEvaluate(atomicCommand, getEvaluator(Collections.emptyMap()), this.getContext(), this.getContext().getMetadata());
+    		} catch (BlockedException e) {
+    		    //we must decline already as the parent will assume open, and it will
+    		    //be too late
+    		    if (sort && ((Query)atomicCommand).getOrderBy() != null) {
+    		        declineSort();
+    		    }
+    		    throw e;
+    		}
 	        rewrittenCommand = atomicCommand;
 	        nextCommand = null;
     	}
@@ -146,24 +156,7 @@ public class DependentAccessNode extends AccessNode {
         
         //walk up the tree and notify the parent join it is responsible for the sort
         if (sort && query.getOrderBy() != null && criteriaProcessor.hasNextCommand()) {
-            RelationalNode parent = this.getParent();
-            RelationalNode child = this;
-            while (parent != null && !(parent instanceof JoinNode)) {
-            	child = parent;
-                parent = parent.getParent();
-            }
-            if (parent != null) {
-                JoinNode joinNode = (JoinNode)parent;
-                if (joinNode.getJoinStrategy() instanceof MergeJoinStrategy) {
-                    MergeJoinStrategy mjs = (MergeJoinStrategy)joinNode.getJoinStrategy();
-                    if (joinNode.getChildren()[0] == child) {
-                    	mjs.setProcessingSortLeft(true);
-                    } else {
-                    	mjs.setProcessingSortRight(true);
-                    }
-                }
-            }
-            sort = false;
+            declineSort();
         }
         if (!sort) {
             query.setOrderBy(null);
@@ -176,6 +169,27 @@ public class DependentAccessNode extends AccessNode {
         criteriaProcessor.consumedCriteria();
         
         return result;
+    }
+
+    private void declineSort() {
+        RelationalNode parent = this.getParent();
+        RelationalNode child = this;
+        while (parent != null && !(parent instanceof JoinNode)) {
+        	child = parent;
+            parent = parent.getParent();
+        }
+        if (parent != null) {
+            JoinNode joinNode = (JoinNode)parent;
+            if (joinNode.getJoinStrategy() instanceof MergeJoinStrategy) {
+                MergeJoinStrategy mjs = (MergeJoinStrategy)joinNode.getJoinStrategy();
+                if (joinNode.getChildren()[0] == child) {
+                	mjs.setProcessingSortLeft(true);
+                } else {
+                	mjs.setProcessingSortRight(true);
+                }
+            }
+        }
+        sort = false;
     }
 
     /**
