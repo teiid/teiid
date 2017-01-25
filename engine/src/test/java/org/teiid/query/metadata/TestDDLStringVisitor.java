@@ -430,7 +430,8 @@ public class TestDDLStringVisitor {
                 "CREATE SERVER testing TYPE 'orcl' FOREIGN DATA WRAPPER orcle OPTIONS (\"jndi-name\" 'java://test-server');\n" + 
                 "\n" + 
                 "\n--############ Schema:SchemaA ############\n" +
-                "CREATE  SCHEMA SchemaA SERVER testing;\n" + 
+                "CREATE  SCHEMA SchemaA SERVER testing;\n" +
+                "SET SCHEMA SchemaA;\n" +
                 "\n" + 
                 "CREATE FOREIGN TABLE G1 (\n" + 
                 "\te1 integer,\n" + 

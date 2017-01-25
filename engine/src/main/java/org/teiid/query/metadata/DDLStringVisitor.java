@@ -174,6 +174,9 @@ public class DDLStringVisitor {
             appendOptions(schema);
             append(SEMICOLON);
             append(NEWLINE);
+            append(SET).append(SPACE).append(SCHEMA).append(SPACE);
+            append(SQLStringVisitor.escapeSinglePart(schema.getName())).append(SEMICOLON);
+            append(NEWLINE);
             append(NEWLINE);
             
             visit(schema);  

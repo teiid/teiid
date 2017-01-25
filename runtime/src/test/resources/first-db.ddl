@@ -6,6 +6,8 @@ create server z type 'custom' version 'one' foreign data wrapper y options(key '
 
 create schema PM1 server z;
 
+set schema PM1;
+
 --import foreign schema anyschema FROM SERVER z into PM1;  
 
 create foreign table mytable ("my-column" string) OPTIONS(UPDATABLE true);

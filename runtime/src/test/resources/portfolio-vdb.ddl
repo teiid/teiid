@@ -21,6 +21,7 @@ CREATE SERVER "text-connector" TYPE 'NONE' FOREIGN DATA WRAPPER file OPTIONS ("j
 
 --############ Schema:MarketData ############
 CREATE  SCHEMA MarketData SERVER "text-connector";
+SET SCHEMA MarketData;
 
 CREATE FOREIGN PROCEDURE deleteFile(IN filePath string)
 OPTIONS (ANNOTATION 'Delete the given file path. ');
@@ -35,6 +36,7 @@ CREATE FOREIGN PROCEDURE saveFile(IN filePath string, IN file object OPTIONS (AN
 OPTIONS (ANNOTATION 'Saves the given value to the given path.  Any existing file will be overriden.');
 --############ Schema:Accounts ############
 CREATE  SCHEMA Accounts SERVER "h2-connector" none OPTIONS ("importer.useFullSchemaName" 'false');
+SET SCHEMA Accounts;
 
 CREATE FOREIGN TABLE ACCOUNT (
 	ACCOUNT_ID integer,
@@ -67,6 +69,7 @@ CREATE FOREIGN TABLE PRODUCT (
 );
 --############ Schema:Stocks ############
 CREATE VIRTUAL SCHEMA Stocks;
+SET SCHEMA Stocks;
 
 CREATE VIEW Stock (
 	product_id integer,

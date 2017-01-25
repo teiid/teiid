@@ -168,8 +168,6 @@ public abstract class DatabaseStore implements DDLProcessor {
         verifyDatabaseExists();
         setUUID(this.currentDatabase.getName(), this.currentDatabase.getVersion(), schema);
         this.currentDatabase.addSchema(schema);
-        this.currentSchema = schema;
-        
         if (schema.isPhysical()) {
             for (String serverName:serverNames) {
                 Server server = verifyServerExists(serverName);

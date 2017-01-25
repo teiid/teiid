@@ -1129,6 +1129,7 @@ public class TestDDLParser {
                 + "CREATE FOREIGN DATA WRAPPER postgresql;"
                 + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
                 + "CREATE  SCHEMA test SERVER pgsql;"
+                + "SET SCHEMA test;"
                 + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
                 + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;"
                 + "GRANT SELECT,INSERT,DELETE ON TABLE G1 TO superuser;"
@@ -1156,6 +1157,7 @@ public class TestDDLParser {
                 + "CREATE FOREIGN DATA WRAPPER postgresql;"
                 + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
                 + "CREATE  SCHEMA test SERVER pgsql;"
+                + "SET SCHEMA test;"
                 + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
                 + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;"
                 + "GRANT ALL PRIVILEGES ON TABLE test.G1 TO superuser;";
@@ -1178,6 +1180,7 @@ public class TestDDLParser {
                 + "CREATE FOREIGN DATA WRAPPER postgresql;"
                 + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
                 + "CREATE  SCHEMA test SERVER pgsql;"
+                + "SET SCHEMA test;"
                 + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
                 + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;"
                 + "GRANT ALL PRIVILEGES ON TABLE test.G1 CONDITION CONSTRAINT 'foo=bar' TO superuser;";
@@ -1202,6 +1205,7 @@ public class TestDDLParser {
                 + "CREATE FOREIGN DATA WRAPPER postgresql;"
                 + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
                 + "CREATE  SCHEMA test SERVER pgsql;"
+                + "SET SCHEMA test;"
                 + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
                 + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;"
                 + "GRANT SELECT,INSERT,DELETE ON TABLE G1 TO superuser;"
@@ -1230,6 +1234,7 @@ public class TestDDLParser {
                 + "CREATE FOREIGN DATA WRAPPER postgresql;"
                 + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
                 + "CREATE  SCHEMA test SERVER pgsql;"
+                + "SET SCHEMA test;"
                 + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
                 + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;"
                 + "GRANT SELECT,INSERT,DELETE ON TABLE G1 TO superuser;"
@@ -1250,6 +1255,7 @@ public class TestDDLParser {
                 + "CREATE FOREIGN DATA WRAPPER postgresql;"
                 + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
                 + "CREATE  SCHEMA test SERVER pgsql;"
+                + "SET SCHEMA test;"
                 + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);";
         
         Database db = helpParse(ddl);
@@ -1266,6 +1272,7 @@ public class TestDDLParser {
     public void testAlterView() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
                 + "CREATE VIRTUAL SCHEMA test;"
+                + "SET SCHEMA test;"
                 + "CREATE VIRTUAL VIEW G1( e1 integer, e2 varchar, e3 date) AS SELECT 1, '2', curdate();"
                 + "ALTER VIEW G1 AS /*+ foo */ SELECT 1, 'foo', curdate()";
         
@@ -1281,6 +1288,7 @@ public class TestDDLParser {
                 + "CREATE FOREIGN DATA WRAPPER postgresql;"
                 + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
                 + "CREATE  SCHEMA test SERVER pgsql;"
+                + "SET SCHEMA test;"
                 + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
                 + "ALTER TABLE G1 ADD COLUMN e4 integer PRIMARY KEY OPTIONS(x 10)";
         
@@ -1306,6 +1314,7 @@ public class TestDDLParser {
                 + "CREATE FOREIGN DATA WRAPPER postgresql;"
                 + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
                 + "CREATE  SCHEMA test SERVER pgsql;"
+                + "SET SCHEMA test;"
                 + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
                 + "ALTER TABLE G1 DROP COLUMN e1";
         
@@ -1325,6 +1334,7 @@ public class TestDDLParser {
                 + "CREATE FOREIGN DATA WRAPPER postgresql;"
                 + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
                 + "CREATE  SCHEMA test SERVER pgsql;"
+                + "SET SCHEMA test;"
                 + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
                 + "DROP FOREIGN TABLE G1";
         
@@ -1338,6 +1348,7 @@ public class TestDDLParser {
     public void testAlterViewAddColumn2() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
                 + "CREATE VIRTUAL SCHEMA test;"
+                + "SET SCHEMA test;"
                 + "CREATE VIRTUAL VIEW G1 AS SELECT 1 as e1, '2' as e2, curdate() as e3;"
                 + "ALTER VIEW G1 AS SELECT 1 as e1, '2' as e2, curdate() as e3, 'foo' as e4;";
         
@@ -1351,6 +1362,7 @@ public class TestDDLParser {
     public void testDropView() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
                 + "CREATE VIRTUAL SCHEMA test;"
+                + "SET SCHEMA test;"
                 + "CREATE VIRTUAL VIEW G1 AS SELECT 1 as e1, '2' as e2, curdate() as e3;"
                 + "DROP VIEW G1";
         
@@ -1366,6 +1378,7 @@ public class TestDDLParser {
                 + "CREATE FOREIGN DATA WRAPPER postgresql;"
                 + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
                 + "CREATE  SCHEMA test SERVER pgsql;"
+                + "SET SCHEMA test;"
                 + "CREATE FOREIGN FUNCTION SourceFunc(flag Boolean) RETURNS varchar";
 
         FunctionMethod method = null;
@@ -1387,6 +1400,7 @@ public class TestDDLParser {
                 + "CREATE FOREIGN DATA WRAPPER postgresql;"
                 + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
                 + "CREATE  SCHEMA test SERVER pgsql;"
+                + "SET SCHEMA test;"
                 + "CREATE FUNCTION SourceFunc(flag Boolean) RETURNS varchaR options (UUID 'z');"
                 + "DROP FUNCTION SourceFunc;";
 
@@ -1406,6 +1420,7 @@ public class TestDDLParser {
     public void testDropSchema() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
                 + "CREATE VIRTUAL SCHEMA test;"
+                + "SET SCHEMA test;"
                 + "CREATE VIRTUAL VIEW G1 AS SELECT 1 as e1, '2' as e2, curdate() as e3;"
                 + "DROP VIRTUAL SCHEMA test";
         
@@ -1443,6 +1458,7 @@ public class TestDDLParser {
                 + "CREATE FOREIGN DATA WRAPPER postgresql;"
                 + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
                 + "CREATE  SCHEMA test SERVER pgsql;"
+                + "SET SCHEMA test;"
                 + "CREATE FOREIGN PROCEDURE procG1(P1 integer) RETURNS (e1 integer, e2 varchar)";
         
         Database db = helpParse(ddl);
@@ -1461,6 +1477,7 @@ public class TestDDLParser {
                 + "CREATE FOREIGN DATA WRAPPER postgresql;"
                 + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
                 + "CREATE  SCHEMA test SERVER pgsql;"
+                + "SET SCHEMA test;"
                 + "CREATE FOREIGN PROCEDURE procG1(P1 integer) RETURNS (e1 integer, e2 varchar);"
                 + "DROP FOREIGN PROCEDURE procG1";
         
