@@ -837,6 +837,7 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 					.keyStorePassword(this.getKeyStorePassword().toCharArray())
 					.keyStoreFileName(this.getKeyStoreFileName())
 					;
+				
 			}
 			remoteCacheManager = new RemoteCacheManager(cb.build(), true);
 

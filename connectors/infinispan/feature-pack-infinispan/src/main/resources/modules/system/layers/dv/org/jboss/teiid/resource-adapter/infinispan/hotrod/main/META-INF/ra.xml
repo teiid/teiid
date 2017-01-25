@@ -107,7 +107,7 @@
             </config-property>   
             
             <config-property>
-                <description>{$display:"TrustStore Password",$description:"TrustStore Password",$required="false"}</description>
+                <description>{$display:"TrustStore Password",$description:"TrustStore Password",$required="false",$masked:"true"}</description>
                <config-property-name>TrustStorePassword</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
             </config-property>  
@@ -119,7 +119,7 @@
             </config-property>  
             
             <config-property>
-                <description>{$display:"KeyStore Password",$description:"KeyStore Password",$required="false"}</description>
+                <description>{$display:"KeyStore Password",$description:"KeyStore Password",$required="false",$masked:"true"}</description>
                <config-property-name>KeyStorePassword</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
             </config-property>              
