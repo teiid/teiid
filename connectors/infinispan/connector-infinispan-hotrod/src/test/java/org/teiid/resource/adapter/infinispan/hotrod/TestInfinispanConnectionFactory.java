@@ -100,6 +100,9 @@ public class TestInfinispanConnectionFactory  {
 		afactory.setMessageDescriptor("org.jboss.teiid.jdg_remote.pojo.AllTypes");
 		afactory.setCacheTypeMap("AllTypesCache:org.jboss.teiid.jdg_remote.pojo.AllTypes;intKey:" + Integer.class.getName());
 		afactory.setHotRodClientPropertiesFile("");
+		afactory.setTrustStoreFileName("/the/trustore/filename");
+		afactory.setTrustStorePassword( "abc");
+		afactory.setSNIHostName("sniHostName");
 		
 		
 		afactory.createConnectionFactory().getConnection();
@@ -108,6 +111,9 @@ public class TestInfinispanConnectionFactory  {
 		assertEquals("Cache name not the same", "AllTypesCache", afactory.getCacheName());
 		
 		assertEquals("CacheKeyTypeClass not the same", afactory.getCacheKeyClassType(), Integer.class);
+		assertEquals("/the/trustore/filename", afactory.getTrustStoreFileName());
+		assertEquals("abc", afactory.getTrustStorePassword());
+		assertEquals("sniHostName", afactory.getSNIHostName());
 	}
 	
 	 /**
@@ -207,8 +213,7 @@ public class TestInfinispanConnectionFactory  {
 		afactory.setMessageDescriptor("org.jboss.teiid.jdg_remote.pojo.AllTypes");
 		afactory.setCacheTypeMap("AllTypesCache:org.jboss.teiid.jdg_remote.pojo.AllTypes:intKey");
 		afactory.setHotRodClientPropertiesFile("");
-		
-		
+				
 		afactory.createConnectionFactory().getConnection();
 		
 		assertEquals("CacheClass Type not the same", AllTypes.class, afactory.getCacheClassType());
@@ -235,6 +240,27 @@ public class TestInfinispanConnectionFactory  {
 		afactory.createConnectionFactory().getConnection();
 		
 	}	
+	
+	 /**
+     * Test invalid property - TEIID25033=Truststore filename and password must be specified
+     * - 
+     * @throws Exception
+     */
+	@Test( expected = InvalidPropertyException.class )
+	public void testInvalidTruststoreSetting() throws Exception {
+		afactory.setProtobufDefinitionFile("allTypes.proto");
+		afactory.setMessageMarshallers("org.jboss.teiid.jdg_remote.pojo.AllTypes:org.jboss.teiid.jdg_remote.pojo.marshaller.AllTypesMarshaller");
+		afactory.setMessageDescriptor("org.jboss.teiid.jdg_remote.pojo.AllTypes");
+		afactory.setCacheTypeMap("AllTypesCache:org.jboss.teiid.jdg_remote.pojo.AllTypes:intKey");
+		afactory.setHotRodClientPropertiesFile("");
+		
+		afactory.setTrustStoreFileName("filename");
+		
+		
+		afactory.createConnectionFactory().getConnection();
+		
+	}
+
 
 
 }

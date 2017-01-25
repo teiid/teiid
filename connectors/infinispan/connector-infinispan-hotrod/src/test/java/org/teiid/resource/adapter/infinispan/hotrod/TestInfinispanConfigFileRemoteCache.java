@@ -43,11 +43,12 @@ import org.teiid.util.Version;
 public class TestInfinispanConfigFileRemoteCache {
     
     private static InfinispanManagedConnectionFactory factory = null;
+	private static RemoteInfinispanTestHelper RemoteServer = new RemoteInfinispanTestHelper();
 		
 
 	@BeforeClass
     public static void beforeEachClass() throws Exception {  
-		RemoteInfinispanTestHelper.startServer();
+		RemoteServer.startServer();
 		
   		// read in the properties template file and set the server host:port and then save for use
   		File f = new File("./src/test/resources/jdg.properties");
@@ -67,7 +68,7 @@ public class TestInfinispanConfigFileRemoteCache {
 	
 	@AfterClass
     public static void closeConnection() throws Exception {
-          RemoteInfinispanTestHelper.releaseServer();
+		RemoteServer.releaseServer();
     }
 
 	
@@ -97,7 +98,7 @@ public class TestInfinispanConfigFileRemoteCache {
     		 
     	} finally {
 	    	factory.cleanUp();
-	    	RemoteInfinispanTestHelper.releaseServer();
+	    	RemoteServer.releaseServer();
     	}
     }
 }

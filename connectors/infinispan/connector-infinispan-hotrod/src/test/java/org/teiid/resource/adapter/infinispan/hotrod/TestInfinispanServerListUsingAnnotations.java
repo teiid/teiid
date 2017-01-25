@@ -36,24 +36,24 @@ import org.teiid.translator.object.ObjectConnection;
 @SuppressWarnings("nls")
 public class TestInfinispanServerListUsingAnnotations {
 	    private static InfinispanManagedConnectionFactory factory = null;
+		
+		private static RemoteInfinispanTestHelper RemoteServer = new RemoteInfinispanTestHelper();
 			
 		@BeforeClass
 	    public static void beforeEachClass() throws Exception { 
-			RemoteInfinispanTestHelper.startServer();
+			RemoteServer.startServer();
 			
 			factory = new InfinispanManagedConnectionFactory();
 
 			factory.setRemoteServerList(RemoteInfinispanTestHelper.hostAddress() + ":" + RemoteInfinispanTestHelper.hostPort());
 			factory.setCacheTypeMap(RemoteInfinispanTestHelper.PERSON_CACHE_NAME + ":" + RemoteInfinispanTestHelper.PERSON_CLASS.getName()+ ";" + RemoteInfinispanTestHelper.PKEY_COLUMN);
-			
-			Thread.sleep(10000);
 	
 		}
 		
 		
 		@AfterClass
 	    public static void closeConnection() throws Exception {
-	          RemoteInfinispanTestHelper.releaseServer();
+			RemoteServer.releaseServer();
 	    }
 
 	    @Test
