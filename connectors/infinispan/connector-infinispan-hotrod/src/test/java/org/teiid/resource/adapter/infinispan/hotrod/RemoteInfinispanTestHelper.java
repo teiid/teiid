@@ -75,23 +75,16 @@ public class RemoteInfinispanTestHelper {
 		if (HOTRODSERVER == null) {
 			try {
 				
-				System.out.println("==== Creating JDG Hot Rod Server.... ====");
+//				System.out.println("==== Creating JDG Hot Rod Server.... ====");
 				
 				File configfile = new File(UnitTestUtil.getTestDataPath(), CONFIG_FILE);
 				
 				CACHEMANAGER = new DefaultCacheManager(configfile.getAbsolutePath());
-//						
-//						new ConfigurationBuilder()
-//		            .eviction()
-//		            .jmxStatistics().disable()
-//		            .build());
 	
 				CACHEMANAGER.start();
 				
 				CACHEMANAGER.startCache(PERSON_CACHE_NAME);
 				CACHEMANAGER.startCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME);
-								
-//				PersonCacheSource.loadCache(CACHEMANAGER.getCache(PERSON_CACHE_NAME));
 				
 			} catch (Exception e) {
 				throw new RuntimeException(e);
@@ -118,11 +111,7 @@ public class RemoteInfinispanTestHelper {
 
 			HOTRODSERVER.startInternal(config, CACHEMANAGER);
 			
-//			server.startTransport();
-			
-			System.out.println("==== Created JDG Hot Rod Server ====");
-			
-			System.out.println("====  pausing 10 secs ====");
+//			System.out.println("==== Created JDG Hot Rod Server ====");
 			
 			try {
 				Thread.sleep(10000);
@@ -133,11 +122,7 @@ public class RemoteInfinispanTestHelper {
 			
 		}
 		return HOTRODSERVER;
-	}//		Collection<Object> a = conn.getAll();
-//	for (Object x : a) {
-//	Person po = (Person) x;
-//	System.out.println(po);
-//}
+	}
 
 	
 	public void startServer() throws IOException {
