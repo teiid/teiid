@@ -62,6 +62,7 @@ public class IntegrationTestDDL extends AbstractMMQueryTestCase {
 	@Test
 	public void testDDL() throws Exception {
 		String ddl = "create database foo version '1';"
+		        + "use database foo version '1';"
 				+ "create foreign data wrapper loopback;"
 				+ "create server NONE type 'NONE' foreign data wrapper loopback;"
 				+ "create schema test server NONE;"
@@ -99,6 +100,7 @@ public class IntegrationTestDDL extends AbstractMMQueryTestCase {
 	@Test
 	public void testOverrideTranslator() throws Exception {    
 		String ddl = "create database foo;"
+		+ "use database foo version '1';"
         + "create foreign data wrapper loopy type loopback OPTIONS(IncrementRows true, RowCount 500);"
         + "create server serverOne type 'NONE' foreign data wrapper loopy;"
         + "create schema test server serverOne;"
@@ -119,6 +121,7 @@ public class IntegrationTestDDL extends AbstractMMQueryTestCase {
 	@Test
     public void testVDBImport() throws Exception {        
 		String ddl = "create database foo;"
+		        + "use database foo version '1';"
 		        + "create foreign data wrapper loopy type loopback OPTIONS(IncrementRows true, RowCount 500);"
 		        + "create server serverOne type 'NONE' foreign data wrapper loopy;"
 		        + "create schema test server serverOne;"
@@ -147,7 +150,9 @@ public class IntegrationTestDDL extends AbstractMMQueryTestCase {
         admin.deploy("func.jar", jar.as(ZipExporter.class).exportAsInputStream());
         
         String ddl = "create database \"dynamic-func\" OPTIONS(lib 'deployment.func.jar');"
+                + "USE DATABASE \"dynamic-func\" version '1';"
         		+ "CREATE VIRTUAL schema test;"
+                + "SET SCHEMA test;"
         		+ "CREATE function func (val string) returns integer "
                 + "options (JAVA_CLASS 'org.teiid.arquillian.SampleFunctions',  JAVA_METHOD 'doSomething');";
                 

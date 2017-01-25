@@ -485,6 +485,7 @@ public class QueryParser implements Parser {
         store.startEditing(true);        
         Database db = new Database(factory.getVdbName(), factory.getVdbVersion());
         store.databaseCreated(db);
+        store.databaseSwitched(factory.getVdbName(), factory.getVdbVersion());
         
         store.dataWrapperCreated(new DataWrapper(NONE));
         Server server = new Server(NONE);

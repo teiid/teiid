@@ -1014,6 +1014,7 @@ public class TestDDLParser {
     @Test 
     public void testAlterDatabase() throws Exception {
         String ddl = "CREATE DATABASE FOO VERSION '2' OPTIONS (k1 'v1', k2 'v2');"
+                + "USE DATABASE FOO version '2';"
                  + "ALTER DATABASE FOO OPTIONS (ADD k3 'v3', SET k1 'v4', DROP k2);";
         
         Database db = helpParse(ddl);
@@ -1028,6 +1029,7 @@ public class TestDDLParser {
     @Test 
     public void testAlterServer() throws Exception {
         String ddl = "CREATE DATABASE FOO VERSION '2';"
+                + "USE DATABASE FOO version '2';"
                 + "CREATE FOREIGN DATA WRAPPER orcl;"
                 + "CREATE SERVER x TYPE 'oracle' VERSION '2.0' FOREIGN DATA WRAPPER orcl OPTIONS (k1 'v1');"
                 + "ALTER SERVER x OPTIONS(SET k1 'v2')";
@@ -1065,6 +1067,7 @@ public class TestDDLParser {
     @Test 
     public void testCreateSchema() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
+                + "USE DATABASE FOO ;"
                 + "CREATE FOREIGN DATA WRAPPER orcl;"
                 + "CREATE SERVER x TYPE 'oracle' VERSION '2.0' FOREIGN DATA WRAPPER orcl OPTIONS (k1 'v1');"
                 + "CREATE SCHEMA S1 SERVER x OPTIONS (x 'y');";
@@ -1089,6 +1092,7 @@ public class TestDDLParser {
     @Test 
     public void testRole() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
+                + "USE DATABASE FOO ;"
                 + "CREATE ROLE superuser WITH JAAS ROLE x,y;";
         
         Database db = helpParse(ddl);
@@ -1101,6 +1105,7 @@ public class TestDDLParser {
     @Test 
     public void testRoleAnyAuth() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
+                + "USE DATABASE FOO ;"
                 + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;";
         
         Database db = helpParse(ddl);
@@ -1114,6 +1119,7 @@ public class TestDDLParser {
     @Test 
     public void testDropRole() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
+                + "USE DATABASE FOO ;"
                 + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;"
                 + "DROP ROLE superuser";
         
@@ -1126,6 +1132,7 @@ public class TestDDLParser {
     @Test 
     public void testGrant() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
+                + "USE DATABASE FOO ;"
                 + "CREATE FOREIGN DATA WRAPPER postgresql;"
                 + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
                 + "CREATE  SCHEMA test SERVER pgsql;"
@@ -1154,6 +1161,7 @@ public class TestDDLParser {
     @Test 
     public void testGrantAll() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
+                + "USE DATABASE FOO ;"
                 + "CREATE FOREIGN DATA WRAPPER postgresql;"
                 + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
                 + "CREATE  SCHEMA test SERVER pgsql;"
@@ -1177,6 +1185,7 @@ public class TestDDLParser {
     @Test 
     public void testGrantWithCondition() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
+                + "USE DATABASE FOO ;"
                 + "CREATE FOREIGN DATA WRAPPER postgresql;"
                 + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
                 + "CREATE  SCHEMA test SERVER pgsql;"
@@ -1202,6 +1211,7 @@ public class TestDDLParser {
     @Test 
     public void testRevokeGrant() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
+                + "USE DATABASE FOO ;"
                 + "CREATE FOREIGN DATA WRAPPER postgresql;"
                 + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
                 + "CREATE  SCHEMA test SERVER pgsql;"
@@ -1231,6 +1241,7 @@ public class TestDDLParser {
     @Test 
     public void testRevokeALl() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
+                + "USE DATABASE FOO ;"
                 + "CREATE FOREIGN DATA WRAPPER postgresql;"
                 + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
                 + "CREATE  SCHEMA test SERVER pgsql;"
@@ -1252,6 +1263,7 @@ public class TestDDLParser {
     @Test 
     public void testPhysicalTable() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
+                + "USE DATABASE FOO ;"
                 + "CREATE FOREIGN DATA WRAPPER postgresql;"
                 + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
                 + "CREATE  SCHEMA test SERVER pgsql;"
@@ -1271,6 +1283,7 @@ public class TestDDLParser {
     @Test 
     public void testAlterView() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
+                + "USE DATABASE FOO ;"
                 + "CREATE VIRTUAL SCHEMA test;"
                 + "SET SCHEMA test;"
                 + "CREATE VIRTUAL VIEW G1( e1 integer, e2 varchar, e3 date) AS SELECT 1, '2', curdate();"
@@ -1285,6 +1298,7 @@ public class TestDDLParser {
     @Test 
     public void testPhysicalTableAlterAddColumn() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
+                + "USE DATABASE FOO ;"
                 + "CREATE FOREIGN DATA WRAPPER postgresql;"
                 + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
                 + "CREATE  SCHEMA test SERVER pgsql;"
@@ -1311,6 +1325,7 @@ public class TestDDLParser {
     @Test 
     public void testPhysicalTableAlterDropColumn() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
+                + "USE DATABASE FOO ;"
                 + "CREATE FOREIGN DATA WRAPPER postgresql;"
                 + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
                 + "CREATE  SCHEMA test SERVER pgsql;"
@@ -1331,6 +1346,7 @@ public class TestDDLParser {
     @Test 
     public void testDropPhysicalTable() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
+                + "USE DATABASE FOO ;"
                 + "CREATE FOREIGN DATA WRAPPER postgresql;"
                 + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
                 + "CREATE  SCHEMA test SERVER pgsql;"
@@ -1347,6 +1363,7 @@ public class TestDDLParser {
     @Test 
     public void testAlterViewAddColumn2() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
+                + "USE DATABASE FOO ;"
                 + "CREATE VIRTUAL SCHEMA test;"
                 + "SET SCHEMA test;"
                 + "CREATE VIRTUAL VIEW G1 AS SELECT 1 as e1, '2' as e2, curdate() as e3;"
@@ -1361,6 +1378,7 @@ public class TestDDLParser {
     @Test 
     public void testDropView() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
+                + "USE DATABASE FOO ;"
                 + "CREATE VIRTUAL SCHEMA test;"
                 + "SET SCHEMA test;"
                 + "CREATE VIRTUAL VIEW G1 AS SELECT 1 as e1, '2' as e2, curdate() as e3;"
@@ -1375,6 +1393,7 @@ public class TestDDLParser {
 	@Test 
 	public void testFunction() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
+                + "USE DATABASE FOO ;"
                 + "CREATE FOREIGN DATA WRAPPER postgresql;"
                 + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
                 + "CREATE  SCHEMA test SERVER pgsql;"
@@ -1397,6 +1416,7 @@ public class TestDDLParser {
 	@Test 
 	public void testDropFunction() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
+                + "USE DATABASE FOO ;"
                 + "CREATE FOREIGN DATA WRAPPER postgresql;"
                 + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
                 + "CREATE  SCHEMA test SERVER pgsql;"
@@ -1419,6 +1439,7 @@ public class TestDDLParser {
     @Test 
     public void testDropSchema() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
+                + "USE DATABASE FOO ;"
                 + "CREATE VIRTUAL SCHEMA test;"
                 + "SET SCHEMA test;"
                 + "CREATE VIRTUAL VIEW G1 AS SELECT 1 as e1, '2' as e2, curdate() as e3;"
@@ -1443,6 +1464,7 @@ public class TestDDLParser {
     @Test 
     public void testDropDataWrappers() throws Exception {
         String ddl = "CREATE DATABASE FOO VERSION '2';"
+                + "USE DATABASE FOO version '2';"
                 + "CREATE FOREIGN DATA WRAPPER orcl;"
                 + "CREATE SERVER x TYPE 'oracle' VERSION '2.0' FOREIGN DATA WRAPPER orcl OPTIONS (k1 'v1');"
                 + "DROP SERVER x;"
@@ -1455,6 +1477,7 @@ public class TestDDLParser {
     @Test 
     public void testCreateProcedure() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
+                + "USE DATABASE FOO;"
                 + "CREATE FOREIGN DATA WRAPPER postgresql;"
                 + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
                 + "CREATE  SCHEMA test SERVER pgsql;"
@@ -1474,6 +1497,7 @@ public class TestDDLParser {
     @Test 
     public void testDropProcedure() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
+                + "USE DATABASE FOO ;"
                 + "CREATE FOREIGN DATA WRAPPER postgresql;"
                 + "CREATE SERVER pgsql TYPE 'custom' FOREIGN DATA WRAPPER postgresql OPTIONS (\"jndi-name\" 'jndiname');"  
                 + "CREATE  SCHEMA test SERVER pgsql;"
