@@ -874,6 +874,53 @@ public class TestDDLParser {
 		assertNull(table.getProperty("FOO", false));
 	}	
 	
+    @Test
+    public void testAlterTableAlterColumnType() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);" +
+                "ALTER FOREIGN TABLE G1 ALTER COLUMN e1 TYPE varchar(12);" +
+                "ALTER FOREIGN TABLE G1 ALTER COLUMN e2 TYPE serial;" +
+                "ALTER FOREIGN TABLE G1 ALTER COLUMN e3 TYPE integer not null auto_increment;";
+
+        Schema s = helpParse(ddl, "model").getSchema();
+        Map<String, Table> tableMap = s.getTables();    
+        
+        assertTrue("Table not found", tableMap.containsKey("G1"));
+        Table table = tableMap.get("G1");
+        
+        Column e1 = table.getColumnByName("e1");
+        assertNotNull(e1);
+        assertEquals("string", e1.getRuntimeType());
+        assertEquals(NullType.Nullable, e1.getNullType());
+
+        Column e2 = table.getColumnByName("e2");
+        assertNotNull(e2);
+        assertEquals("integer", e2.getRuntimeType());
+        assertTrue(e2.isAutoIncremented());
+        assertEquals(NullType.No_Nulls, e2.getNullType());
+
+        Column e3 = table.getColumnByName("e3");
+        assertNotNull(e3);
+        assertEquals("integer", e3.getRuntimeType());
+        assertTrue(e3.isAutoIncremented());
+        assertEquals(NullType.No_Nulls, e3.getNullType());
+    }
+    
+    @Test
+    public void testAlterTableRenameColumn() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);" +
+                "ALTER FOREIGN TABLE G1 RENAME COLUMN e3 TO e3renamed;";
+
+        Schema s = helpParse(ddl, "model").getSchema();
+        Map<String, Table> tableMap = s.getTables();    
+        
+        assertTrue("Table not found", tableMap.containsKey("G1"));
+        Table table = tableMap.get("G1");
+        
+        Column e3 = table.getColumnByName("e3renamed");
+        assertNotNull(e3);
+        assertEquals("date", e3.getRuntimeType());
+    }
+    
 	@Test
 	public void testAlterTableAddColumnOptions() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);" +
@@ -933,6 +980,35 @@ public class TestDDLParser {
 		assertEquals(1, proc.getUpdateCount());
 	}	
 	
+    @Test
+    public void testAlterProcedureColumnType() throws Exception {
+        String ddl = "CREATE FOREIGN PROCEDURE myProc(OUT p1 boolean, p2 varchar, INOUT p3 decimal) " +
+                "RETURNS (r1 varchar, r2 decimal)" +
+                "OPTIONS(RANDOM 'any', UUID 'uuid', NAMEINSOURCE 'nis', ANNOTATION 'desc', UPDATECOUNT '2');" +
+                "ALTER FOREIGN PROCEDURE myProc ALTER PARAMETER p2 TYPE integer;";
+        
+        Schema s = helpParse(ddl, "model").getSchema();
+        Procedure proc = s.getProcedure("myProc");
+        assertNotNull(proc);
+    
+        assertEquals("p2", proc.getParameters().get(1).getName());
+        assertEquals("integer", proc.getParameters().get(1).getRuntimeType());
+    }  
+    
+    @Test
+    public void testAlterProcedureColumnRename() throws Exception {
+        String ddl = "CREATE FOREIGN PROCEDURE myProc(OUT p1 boolean, p2 varchar, INOUT p3 decimal) " +
+                "RETURNS (r1 varchar, r2 decimal)" +
+                "OPTIONS(RANDOM 'any', UUID 'uuid', NAMEINSOURCE 'nis', ANNOTATION 'desc', UPDATECOUNT '2');" +
+                "ALTER FOREIGN PROCEDURE myProc RENAME PARAMETER p2 TO p2renamed;";
+        
+        Schema s = helpParse(ddl, "model").getSchema();
+        Procedure proc = s.getProcedure("myProc");
+        assertNotNull(proc);
+    
+        assertEquals("p2renamed", proc.getParameters().get(1).getName());
+    }     
+    
 	@Test
 	public void testTypeLength() throws Exception {
 		String ddl = "CREATE FOREIGN PROCEDURE myProc(OUT p1 boolean, p2 varchar, INOUT p3 decimal) " +
