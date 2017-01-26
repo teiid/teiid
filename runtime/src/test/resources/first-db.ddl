@@ -1,5 +1,7 @@
 create database empty version '2';
 
+use database empty version '2';
+
 create foreign translator y;use database empty version '2';
 
 create server z type 'custom' version 'one' foreign data wrapper y options(key 'value');

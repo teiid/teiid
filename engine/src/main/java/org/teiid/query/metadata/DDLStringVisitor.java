@@ -123,6 +123,10 @@ public class DDLStringVisitor {
         appendOptions(database);
         append(SEMICOLON);
         append(NEWLINE);
+        append(USE).append(SPACE).append(DATABASE).append(SPACE);
+        append(SQLStringVisitor.escapeSinglePart(database.getName())).append(SPACE);
+        append(VERSION).append(SPACE).append(TICK).append(database.getVersion()).append(TICK);
+        append(SEMICOLON);
         append(NEWLINE);
 
         if (!database.getDataWrappers().isEmpty()){

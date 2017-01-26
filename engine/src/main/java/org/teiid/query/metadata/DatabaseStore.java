@@ -108,8 +108,6 @@ public abstract class DatabaseStore implements DDLProcessor {
         }
         
         this.databases.put(vdbKey(db), db);
-
-        this.currentDatabase = db;
     }
 
     private VDBKey vdbKey(Database db) {

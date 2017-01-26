@@ -5,7 +5,7 @@
 ###########################################
 */
 CREATE DATABASE Portfolio VERSION '1' OPTIONS (ANNOTATION 'A Dynamic VDB', "connection-type" 'BY_VERSION', UseConnectorMetadata 'true');
-
+USE DATABASE Portfolio VERSION '1';
 
 --############ Translators ############
 CREATE FOREIGN DATA WRAPPER file;

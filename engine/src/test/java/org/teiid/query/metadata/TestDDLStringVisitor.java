@@ -381,8 +381,8 @@ public class TestDDLStringVisitor {
                 "# START DATABASE foo\n" + 
                 "###########################################\n"
                 + "*/\n" + 
-                "CREATE DATABASE foo VERSION '2';\n" + 
-                "\n" +
+                "CREATE DATABASE foo VERSION '2';\n" +
+                "USE DATABASE foo VERSION '2';\n" +
                 "\n" +
                 "/*\n" +
                 "###########################################\n" + 
@@ -422,6 +422,7 @@ public class TestDDLStringVisitor {
                 "###########################################\n" + 
                 "*/\n" +
                 "CREATE DATABASE foo VERSION '2';\n" + 
+                "USE DATABASE foo VERSION '2';" +
                 "\n" + 
                 "\n--############ Translators ############\n" +
                 "CREATE FOREIGN DATA WRAPPER orcle;\n" + 
@@ -486,7 +487,8 @@ public class TestDDLStringVisitor {
                 "###########################################\n" + 
                 "*/\n" +
                 "CREATE DATABASE foo VERSION '2';\n" + 
-                "\n\n" + 
+                "USE DATABASE foo VERSION '2';\n" +
+                "\n" + 
                 "--############ Roles & Grants ############\n"+
                 "CREATE ROLE admin WITH ANY AUTHENTICATED;\n" + 
                 "GRANT SELECT,DELETE,ALTER ON TABLE \"schema.tableName\" TO admin;\n" + 
