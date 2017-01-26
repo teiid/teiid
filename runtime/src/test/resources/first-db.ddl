@@ -10,7 +10,9 @@ create schema PM1 server z;
 
 set schema PM1;
 
---import foreign schema anyschema FROM SERVER z into PM1;  
+import foreign schema anyschema FROM SERVER z into PM1;
+
+import foreign schema anyschema FROM REPOSITORY myrepo into PM1 OPTIONS(myrepokey 'value');
 
 create foreign table mytable ("my-column" string) OPTIONS(UPDATABLE true);
 

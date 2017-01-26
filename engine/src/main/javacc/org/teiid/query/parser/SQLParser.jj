@@ -516,6 +516,7 @@ TOKEN : /* NonReserved words */
 |   <USE: "use">
 |   <SERVER: "server">
 |   <WRAPPER: "wrapper">
+|   <REPOSITORY: "repository">
 }
 /*
 name=all in group identifier
@@ -624,7 +625,7 @@ Token nonReserved() :
      |<SQL_TSI_SECOND>|<SQL_TSI_MINUTE>|<SQL_TSI_HOUR>|<SQL_TSI_DAY>|<SQL_TSI_WEEK>|<SQL_TSI_MONTH>|<SQL_TSI_QUARTER>|<SQL_TSI_YEAR>|<TEXTTABLE>|<ARRAYTABLE>
      |<SELECTOR>|<SKIP_KEYWORD>|<WIDTH>|<PASSING>|<NAME>|<ENCODING>|<COLUMNS>|<DELIMITER>|<QUOTE>|<HEADER>|<NULLS>|<OBJECTTABLE>
      |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>|<VARIADIC>|<RAISE>|<EXCEPTION>|<CHAIN>|<JSONARRAY_AGG>|<JSONOBJECT>|<PRESERVE>|<UPSERT>|<AFTER>
-     |<TYPE>|<TRANSLATOR>|<JAAS>|<CONDITION>|<MASK>|<ACCESS>|<CONTROL>|<NONE>|<DATA>|<DATABASE>|<PRIVILEGES>|<ROLE>|<SCHEMA>|<USE>)
+     |<TYPE>|<TRANSLATOR>|<JAAS>|<CONDITION>|<MASK>|<ACCESS>|<CONTROL>|<NONE>|<DATA>|<DATABASE>|<PRIVILEGES>|<ROLE>|<SCHEMA>|<USE>|<REPOSITORY>)
     {
     	return getToken(0);
     }	
@@ -6364,6 +6365,7 @@ example=[source,sql]\n----\nIMPORT FOREIGN SCHEMA foo [LIMIT TO (x,y,z)|EXCEPT (
 void importSchema(DatabaseStore dbStore) :
 {
     String foreignSchemaName = null;
+    String serverType = null;
     String schemaName = null;
     String serverName = null;
     String importIntoSchemaName = null;
@@ -6375,7 +6377,7 @@ void importSchema(DatabaseStore dbStore) :
     <IMPORT> <FOREIGN> <SCHEMA> 
     foreignSchemaName = id(null)
     [<LIMIT> <TO> <LPAREN> readCSVString(includeTables) <RPAREN> | <LPAREN> <EXCEPT> readCSVString(excludeTables) <RPAREN>]
-    <FROM> <SERVER> serverName = id(null)    
+    <FROM> (<SERVER>{serverType = "native";}|<REPOSITORY>) serverName = id(null)    
     <INTO> schemaName = id(null)
     [optionsClause(server, null)
 	   {
@@ -6383,7 +6385,11 @@ void importSchema(DatabaseStore dbStore) :
 	   }
 	]
     {
-        dbStore.importSchema(schemaName, serverName, foreignSchemaName, includeTables, excludeTables, server.getProperties());
+        if (serverType == null){
+            serverType = serverName;
+            serverName = null;
+        }
+        dbStore.importSchema(schemaName, serverType, serverName, foreignSchemaName, includeTables, excludeTables, server.getProperties());
     }	
 }
 
