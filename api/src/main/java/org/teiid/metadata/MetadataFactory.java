@@ -258,6 +258,22 @@ public class MetadataFactory implements Serializable {
 		setUUID(column);
 		return column;
 	}
+	
+    public Column renameColumn(String oldName, String name, ColumnSet<?> table) {
+        if (this.autoCorrectColumnNames) {
+            name.replace(AbstractMetadataRecord.NAME_DELIM_CHAR, '_');
+        } else if (name.indexOf(AbstractMetadataRecord.NAME_DELIM_CHAR) != -1) {
+            throw new MetadataException(DataPlugin.Event.TEIID60008, DataPlugin.Util.gs(DataPlugin.Event.TEIID60008, table.getFullName(), name));
+        }
+        if (table.getColumnByName(name) != null) {
+            throw new DuplicateRecordException(DataPlugin.Event.TEIID60016, DataPlugin.Util.gs(DataPlugin.Event.TEIID60016, table.getFullName() + AbstractMetadataRecord.NAME_DELIM_CHAR + name));
+        }
+        Column column = table.getColumnByName(oldName);
+        table.removeColumn(column);        
+        column.setName(name);
+        table.addColumn(column);
+        return column;
+    }	
 
 	public static Datatype setDataType(String type, BaseColumn column, Map<String, Datatype> dataTypes, boolean allowNull) {
 		int arrayDimensions = 0;

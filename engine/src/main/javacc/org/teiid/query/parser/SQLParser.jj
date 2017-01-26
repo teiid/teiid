@@ -517,6 +517,7 @@ TOKEN : /* NonReserved words */
 |   <SERVER: "server">
 |   <WRAPPER: "wrapper">
 |   <REPOSITORY: "repository">
+|   <RENAME: "rename">
 }
 /*
 name=all in group identifier
@@ -625,7 +626,7 @@ Token nonReserved() :
      |<SQL_TSI_SECOND>|<SQL_TSI_MINUTE>|<SQL_TSI_HOUR>|<SQL_TSI_DAY>|<SQL_TSI_WEEK>|<SQL_TSI_MONTH>|<SQL_TSI_QUARTER>|<SQL_TSI_YEAR>|<TEXTTABLE>|<ARRAYTABLE>
      |<SELECTOR>|<SKIP_KEYWORD>|<WIDTH>|<PASSING>|<NAME>|<ENCODING>|<COLUMNS>|<DELIMITER>|<QUOTE>|<HEADER>|<NULLS>|<OBJECTTABLE>
      |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>|<VARIADIC>|<RAISE>|<EXCEPTION>|<CHAIN>|<JSONARRAY_AGG>|<JSONOBJECT>|<PRESERVE>|<UPSERT>|<AFTER>
-     |<TYPE>|<TRANSLATOR>|<JAAS>|<CONDITION>|<MASK>|<ACCESS>|<CONTROL>|<NONE>|<DATA>|<DATABASE>|<PRIVILEGES>|<ROLE>|<SCHEMA>|<USE>|<REPOSITORY>)
+     |<TYPE>|<TRANSLATOR>|<JAAS>|<CONDITION>|<MASK>|<ACCESS>|<CONTROL>|<NONE>|<DATA>|<DATABASE>|<PRIVILEGES>|<ROLE>|<SCHEMA>|<USE>|<REPOSITORY>|<RENAME>)
     {
     	return getToken(0);
     }	
@@ -6071,7 +6072,8 @@ void alterTable(DatabaseStore dbStore, boolean virtual, ParseInfo info) :
 	    [alterOptionsList(objectName, Database.ResourceType.TABLE, dbStore) | 
 	    	alterAddColumn(objectName, Database.ResourceType.TABLE, dbStore) |
 	    	alterDropColumn(objectName, Database.ResourceType.TABLE, dbStore) |
-	    	alterColumn(objectName, Database.ResourceType.TABLE, dbStore)
+	    	alterColumn(objectName, Database.ResourceType.TABLE, dbStore) |
+	    	alterRenameColumn(objectName, Database.ResourceType.TABLE, dbStore)
 	    ]	 	
 	 ))    
 }
@@ -6136,11 +6138,99 @@ void alterColumn(String objectName, Database.ResourceType type, DatabaseStore db
 {
 	String childName = null;
 	Database.ResourceType childType = Database.ResourceType.COLUMN;
+    ParsedDataType datatype = null;
+    boolean autoIncrement = false;
+    boolean notNull = false;
+    BaseColumn column = null;
+    Table table = null;
+    Procedure proc = null;
+    MetadataFactory factory = null;
 }
 { 
 	<ALTER> (<COLUMN>|<PARAMETER>{childType = Database.ResourceType.PARAMETER;})
 	childName = id(null)
-	alterChildOptionsList(objectName, type, childName, childType, dbStore)
+	(<TYPE>
+     (
+      <SERIAL>
+      {
+        datatype = new ParsedDataType("INTEGER");
+        autoIncrement = true;
+        notNull = true;
+      }
+      |
+      (
+        datatype = parseDataType()
+        [<NOT> <NULL> { notNull = true; }]
+        [<AUTO_INCREMENT> {  autoIncrement = true; }]
+      )
+     )
+     {
+        factory = DatabaseStore.createMF(dbStore);
+        if (childType == Database.ResourceType.COLUMN){
+            table = (Table)dbStore.getSchemaRecord(objectName, type); 
+            column = table.getColumnByName(childName);
+            if (column == null){
+                throw new ParseException(QueryPlugin.Util.getString("SQLParser.no_table_column_found", childName, table.getName())); //$NON-NLS-1$
+            }
+            ((Column)column).setAutoIncremented(autoIncrement);
+        } else {
+            proc = (Procedure)dbStore.getSchemaRecord(objectName, type);
+            column = proc.getParameterByName(childName);
+            if (column == null){
+                throw new ParseException(QueryPlugin.Util.getString("SQLParser.no_proc_column_found", childName, proc.getName())); //$NON-NLS-1$
+            }            
+        }
+        factory.setDataType(datatype.type, column, factory.getDataTypes(), notNull);
+        setTypeInfo(datatype, column);
+        if (notNull) {
+           column.setNullType(Column.NullType.No_Nulls);
+        }
+        if (childType == Database.ResourceType.COLUMN) {
+            ((Column)column).setAutoIncremented(autoIncrement);
+        }        
+     }	
+	|
+	alterChildOptionsList(objectName, type, childName, childType, dbStore))
+}
+
+/*
+name=rename column options
+description=renames either a table column or procedure's parameter name
+example=[source,sql]\n----\nRENAME COLUMN bar TO foo\n----\n
+*/
+void alterRenameColumn(String objectName, Database.ResourceType type, DatabaseStore dbStore) :
+{
+    String oldName = null;
+    String newName = null;
+    Database.ResourceType childType = Database.ResourceType.COLUMN;
+    Table table = null;
+    BaseColumn column = null;
+    Procedure proc = null;
+    MetadataFactory factory = null;
+}
+{ 
+    <RENAME> (<COLUMN>|<PARAMETER>{childType = Database.ResourceType.PARAMETER;})
+    oldName = id(null)
+    <TO>
+    newName = id(null)
+    {
+        factory = DatabaseStore.createMF(dbStore);
+        if (childType == Database.ResourceType.COLUMN){
+            table = (Table)dbStore.getSchemaRecord(objectName, type); 
+            column = table.getColumnByName(oldName);
+            if (column == null){
+                throw new ParseException(QueryPlugin.Util.getString("SQLParser.no_table_column_found", oldName, table.getName())); //$NON-NLS-1$
+            }
+            factory.renameColumn(oldName, newName, table);
+        } else {
+            proc = (Procedure)dbStore.getSchemaRecord(objectName, type);
+            column = proc.getParameterByName(oldName);
+            if (column == null){
+                throw new ParseException(QueryPlugin.Util.getString("SQLParser.no_proc_column_found", oldName, proc.getName())); //$NON-NLS-1$
+            }
+            column.setName(newName);            
+        } 
+    }
 }
 
 /*
@@ -6171,7 +6261,8 @@ void alterProcedure(DatabaseStore dbStore, boolean virtual, ParseInfo info) :
         }
     ]     
     [alterOptionsList(objectName, Database.ResourceType.PROCEDURE, dbStore) |   
-    	alterColumn(objectName, Database.ResourceType.PROCEDURE, dbStore)]    
+    	alterColumn(objectName, Database.ResourceType.PROCEDURE, dbStore)   |
+    	alterRenameColumn(objectName, Database.ResourceType.PROCEDURE, dbStore)]     
 }
 
 /*
