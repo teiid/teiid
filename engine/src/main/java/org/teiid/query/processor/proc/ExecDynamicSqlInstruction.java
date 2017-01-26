@@ -162,6 +162,17 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 			
 			
 			Command command = QueryParser.getQueryParser().parseCommand(query);
+			
+			//special handling for dynamic anon blocks
+			if (command instanceof CreateProcedureCommand) {
+			    if (dynamicCommand.getIntoGroup() != null || returnable) {
+    			    //won't work unless we use a different approach than the insert into ... 
+			        //and the creation of an inline view
+			        throw new QueryProcessingException(QueryPlugin.Event.TEIID31250, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31250));
+			    }
+			    ((CreateProcedureCommand)command).setResultSetColumns(Collections.EMPTY_LIST);
+			}
+			
 			command.setExternalGroupContexts(dynamicCommand.getExternalGroupContexts());
 			command.setTemporaryMetadata(dynamicCommand.getTemporaryMetadata().clone());
 			updateContextWithUsingValues(procEnv, localContext);
@@ -180,10 +191,6 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
                 command.addExternalGroupToContext(using);
             }
             
-            if (!returnable && command instanceof CreateProcedureCommand) {
-            	((CreateProcedureCommand)command).setResultSetColumns(Collections.EMPTY_LIST);
-            }
-
 			QueryResolver.resolveCommand(command, metadata.getDesignTimeMetadata());
 
 			validateDynamicCommand(procEnv, command, value.toString());
@@ -212,8 +219,9 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 				}
 			}
             
+            //if this is an update procedure, it could reassign variables
 			command = QueryRewriter.rewrite(command, metadata, procEnv.getContext(),
-					nameValueMap);
+					command instanceof CreateProcedureCommand?Collections.EMPTY_MAP:nameValueMap); 
 
             ProcessorPlan commandPlan = QueryOptimizer.optimizePlan(command, metadata,
 					idGenerator, capFinder, AnalysisRecord

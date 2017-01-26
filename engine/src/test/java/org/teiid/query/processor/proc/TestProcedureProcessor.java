@@ -2336,7 +2336,26 @@ public class TestProcedureProcessor {
         	
         }
     }
+    
+    @Test(expected=QueryProcessingException.class) public void testDyanmicAnonBlockInto() throws Exception {
+        String sql = "begin execute immediate 'begin select 2; end' as x integer into #temp; end"; //$NON-NLS-1$
+        TransformationMetadata tm = RealMetadataFactory.example1Cached();
+        ProcessorPlan plan = getProcedurePlan(sql, tm);
 
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        List[] expected = new List[] {}; //$NON-NLS-1$
+        helpTestProcess(plan, expected, dataManager, tm);
+    }
+
+    @Test public void testDyanmicAnonBlockRewrite() throws Exception {
+        String sql = "begin insert into #temp values (1); declare integer x = 1; execute immediate 'begin x = 2; insert into #temp select x; end' without return; select * from #temp; end"; //$NON-NLS-1$
+        TransformationMetadata tm = RealMetadataFactory.example1Cached();
+        ProcessorPlan plan = getProcedurePlan(sql, tm);
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        List[] expected = new List[] {Arrays.asList(1), Arrays.asList(2)}; //$NON-NLS-1$
+        helpTestProcess(plan, expected, dataManager, tm);
+    }
     
     /**
      * Should fail as the results conflict from multiple statements
