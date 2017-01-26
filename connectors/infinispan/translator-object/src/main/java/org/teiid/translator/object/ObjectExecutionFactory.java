@@ -147,4 +147,9 @@ public abstract class ObjectExecutionFactory extends
 		this.setSupportsSearchabilityUsingAnnotations(connection.configuredUsingAnnotations());
 
 	}
+	
+	@Override
+	public boolean supportsUpsert() {
+	    return true;
+	}
 }

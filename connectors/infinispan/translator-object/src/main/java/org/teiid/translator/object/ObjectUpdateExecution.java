@@ -36,16 +36,7 @@ import javax.script.ScriptException;
 import javax.script.SimpleScriptContext;
 
 import org.teiid.core.types.TransformationException;
-import org.teiid.language.BatchedUpdates;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Command;
-import org.teiid.language.Delete;
-import org.teiid.language.Expression;
-import org.teiid.language.ExpressionValueSource;
-import org.teiid.language.Insert;
-import org.teiid.language.Literal;
-import org.teiid.language.SetClause;
-import org.teiid.language.Update;
+import org.teiid.language.*;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
@@ -174,26 +165,53 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21006, new Object[] {"insert", visitor.getTableName()}));
 		}
 
-		List<ColumnReference> columns = visitor.getInsert().getColumns();
-		List<Expression> values = ((ExpressionValueSource) visitor.getInsert()
-				.getValueSource()).getValues();
-		Object keyValue = null;
+		Object keyValue = updateEntity(clz, writeMethods, entity, keyCol.getSourceName(), keyCol, visitor, true);
+		
+		//TODO: for 1.8 use putIfAbsent
+		
+		//TEIID-4603 dont use DSLSearch, but use the direct key to the cache to lookup the object
+		Object rootObject = connection.get(keyValue);
+
+		if (rootObject != null) {
+		    if (!insert.isUpsert()) {
+		        throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21007, new Object[] {insert.getTable().getName(), keyValue}));
+		    }
+		    keyValue = updateEntity(clz, writeMethods, rootObject, keyCol.getSourceName(), keyCol, visitor, true);
+		    entity = rootObject;
+		}
+		
+		connection.add(keyValue, entity);
+
+		return 1;
+
+	}
+
+    private Object updateEntity(Class<?> clz, Map<String, Method> writeMethods,
+            Object entity, String keyColName, Column pkCol, ObjectVisitor visitor, boolean writeKey) throws TranslatorException {
+        List<ColumnReference> columns = visitor.getInsert().getColumns();
+        List<Expression> values = ((ExpressionValueSource) visitor.getInsert()
+                .getValueSource()).getValues();
+        
+        Object keyValue = null;
 		
 		for (int i = 0; i < columns.size(); i++) {
 			Column column = columns.get(i).getMetadataObject();
 			Object value = values.get(i);
 
-			if (keyCol.getName().equals(column.getName()) ) {
+			if (keyColName.equals(column.getSourceName()) ) {
 
 				if (value instanceof Literal) {
 					Literal literalValue = (Literal) value;
 					value = literalValue.getValue();
 				}
 					
-				writeColumnData(entity, column, value, writeMethods);
-				
-				keyValue = getObjectValue(entity, ObjectUtil.getRecordName(keyCol), connection.getClassRegistry().getReadScriptEngine(), clz);
-				
+				if (writeKey) {
+				    writeColumnData(entity, column, value, writeMethods);
+	                keyValue = getObjectValue(entity, keyColName, connection.getClassRegistry().getReadScriptEngine(), clz);
+				} else {
+				    keyValue = value;
+				}
+				keyValue = convertKeyValue(keyValue, pkCol);				
 			} else {
 				
 				if (value instanceof Literal) {
@@ -205,23 +223,8 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 
 			}
 		}
-		
-		keyValue = convertKeyValue(keyValue, keyCol);
-		
-		//TODO: for 1.8 use putIfAbsent
-		
-		//TEIID-4603 dont use DSLSearch, but use the direct key to the cache to lookup the object
-		Object rootObject = connection.get(keyValue);
-
-		if (rootObject != null) {
-			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21007, new Object[] {insert.getTable().getName(), keyValue}));
-		}
-		
-		connection.add(keyValue, entity);
-
-		return 1;
-
-	}
+        return keyValue;
+    }
 
 	@SuppressWarnings("rawtypes")
 	private int handleInsertChildObject(ObjectVisitor visitor, Object newEntity, Map<String, Method> writeMethods, Class<?> clzz) throws TranslatorException {
@@ -234,43 +237,8 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 		// get the root method based on the foreign key, will be used to add the child
 		Method rootClassWriteMethod = ClassRegistry.findMethod(this.getClassRegistry().getWriteClassMethods(this.connection.getCacheClassType().getName()), fkeyColNIS, this.connection.getCacheClassType().getName());
 			
-		List<ColumnReference> columns = visitor.getInsert().getColumns();
-		List<Expression> values = ((ExpressionValueSource) visitor.getInsert()
-				.getValueSource()).getValues();
+		Object fkeyValue = updateEntity(clz, writeMethods, newEntity, fkeyRefColumnName, visitor.getPrimaryKeyCol(), visitor, false);
 		
-		Object fkeyValue = null;
-		
-		// iterate over the columns and set data on newentity
-		for (int i = 0; i < columns.size(); i++) {
-
-			Column column = columns.get(i).getMetadataObject();
-			Object value = values.get(i);
-
-			// on a child object do not add the value for column that's the used in the foreign key,
-			// which is already stored as the key value on the root object
-			if (fkeyRefColumnName.equals(ObjectUtil.getRecordName(column)) ) {
-				if (value instanceof Literal) {
-					Literal literalValue = (Literal) value;
-					fkeyValue = literalValue.getValue();
-				} else {
-					fkeyValue = value;
-				}
-	
-			} else {
-				
-				if (value instanceof Literal) {
-					Literal literalValue = (Literal) value;
-					value = literalValue.getValue();
-				}
-				writeColumnData(newEntity, column, value, writeMethods);
-			}
-		}
-		
-
-		// need to find the parent object in order to add the child
-		
-		fkeyValue = convertKeyValue(fkeyValue, visitor.getPrimaryKeyCol());
-
 		// dont get the object based on key to the cache, do the DSL search so that its ensured the object
 		// exist for this root object type.  Using the get(key) could return an invalid object type if 
 		// keys overlap, so the exception thrown here will alert to a possible issue
@@ -347,14 +315,14 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 
 		Column keyCol = visitor.getPrimaryKeyCol();
 		if (keyCol == null) {
-			throw new TranslatorException("Deleting container class is not currently supported, not primary key defined");
+			throw new TranslatorException("Deleting container class is not currently supported, no primary key defined");
 		}
 
 		// Find all the objects that meet the criteria for deletion
 		List<Object> toDelete = connection.getSearchType().performSearch(visitor, executionContext) ;
 				//env.search(visitor, connection, executionContext);
 		if (toDelete == null || toDelete.isEmpty()) {
-			LogManager.logWarning(LogConstants.CTX_CONNECTOR, ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21013, new Object[] {visitor.getTableName(), visitor.getWhereCriteria()}));
+			LogManager.logInfo(LogConstants.CTX_CONNECTOR, ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21013, new Object[] {visitor.getTableName(), visitor.getWhereCriteria()}));
 			return 0;
 		}
 		int cnt = 0;

@@ -1,9 +1,6 @@
 package org.teiid.translator.infinispan.hotrod;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,14 +8,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-
 //import org.teiid.translator.object.testdata.person.*;
 import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.Person;
 import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PersonCacheSource;
 import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PhoneNumber;
 import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PhoneType;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -29,7 +24,6 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.ObjectUpdateExecution;
 import org.teiid.translator.object.testdata.person.PersonSchemaVDBUtility;
 
-@Ignore
 public class TestInfinispanUpdateExecution {
 	private static InfinispanHotRodConnection CONNECTION;
 	private static TranslationUtility translationUtility = PersonSchemaVDBUtility.TRANSLATION_UTILITY;
@@ -82,6 +76,30 @@ public class TestInfinispanUpdateExecution {
 		assertTrue(p.getName().equals("TestName"));
 		assertTrue(p.getEmail().equals("testName@mail.com"));
 		
+		command = translationUtility
+                .parseCommand("upsert into Person (id, email) VALUES (98, 'new@mail.com')");
+
+		ie = createExecution(command, Collections.EMPTY_LIST);
+
+        ie.execute();
+
+		p = (Person) getCache().get((new Integer(98).intValue()));
+
+        assertNotNull(p);
+        assertTrue(p.getEmail().equals("new@mail.com"));
+        
+        command = translationUtility
+                .parseCommand("upsert into Person (id, email) VALUES (99, 'new1@mail.com')");
+        
+        ie = createExecution(command, Collections.EMPTY_LIST);
+
+        ie.execute();
+        
+        p = (Person) getCache().get((new Integer(99).intValue()));
+
+        assertNotNull(p);
+        assertTrue(p.getName().equals("TestName"));
+        assertTrue(p.getEmail().equals("new1@mail.com"));
 	}
 	
 	@Test
@@ -204,7 +222,7 @@ public class TestInfinispanUpdateExecution {
 		assertNotNull(getCache().get(new Integer(2).intValue()));
 
 		Command command = translationUtility
-				.parseCommand("Delete From Person Where Name = 'Person 2'");
+				.parseCommand("Delete From Person Where id = 2");
 
 
 		List rows = new ArrayList();
