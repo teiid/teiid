@@ -87,17 +87,14 @@ public  class SearchByKey implements SearchType  {
 			
 			return results;
 		}
-		int x = 0;
 		for (Object value:values) {
-			x++;
 			Object cv = conn.get(value);
 			if (cv != null) {
 				results.add(cv);
 			}		
-			if (hasLimit && x >= visitor.getLimit()) {
+			if (hasLimit && results.size() >= visitor.getLimit()) {
 				break;
 			}
-		
 		}
 
 		return results;

@@ -75,6 +75,13 @@ public class TestInfinispanExecution {
 
 	}
 	
+	@Test public void testExecutionLimitAndIn() throws Exception {
+        Select command = (Select)translationUtility.parseCommand("select name, id From Person as T where id in (-1, 1, 5, 9) limit 2"); //$NON-NLS-1$
+        
+        performTest(2, 2, command);
+
+    }
+	
 	/**
 	 * Test that only the 'object' instance is returned in the result set
 	 * @throws Exception
