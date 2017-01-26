@@ -44,6 +44,7 @@ import org.jboss.security.SimplePrincipal;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.Admin.ExportFormat;
 import org.teiid.adminapi.AdminException;
@@ -55,6 +56,7 @@ import org.teiid.core.util.FileUtils;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.TeiidDriver;
+import org.teiid.metadata.MetadataRepository;
 import org.teiid.runtime.EmbeddedAdminImpl;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.EmbeddedServer;
@@ -204,6 +206,11 @@ public class TestDDLMetadataStore {
         es.addTranslator("y", new TestEmbeddedServer.FakeTranslator(false));
         es.start(ec);
         
+        final AtomicInteger counter = new AtomicInteger();
+        ConnectionFactoryProvider<AtomicInteger> cfp = new EmbeddedServer.SimpleConnectionFactoryProvider<AtomicInteger>(counter);
+        es.addConnectionFactoryProvider("z", cfp);
+        es.addMetadataRepository("myrepo", Mockito.mock(MetadataRepository.class));
+        
         es.deployVDB(new FileInputStream(UnitTestUtil.getTestDataPath()+"/first-db.ddl"), true);
         
         Admin admin = es.getAdmin();
@@ -214,8 +221,7 @@ public class TestDDLMetadataStore {
         String expected = ObjectConverterUtil
                 .convertFileToString(new File(UnitTestUtil.getTestDataPath() + "/" + "first-vdb.xml"));
         assertEquals(expected, new String(out.toByteArray()));
-        
-    }    
+    }
     
     @Test
     public void testRoles() throws Exception {
@@ -231,7 +237,7 @@ public class TestDDLMetadataStore {
         es.addConnectionFactoryProvider("z", cfp);
         
         es.start(ec);
-
+        es.addMetadataRepository("myrepo", Mockito.mock(MetadataRepository.class));
         es.deployVDB(new FileInputStream(UnitTestUtil.getTestDataPath()+"/first-db.ddl"), true);
         
         TeiidDriver td = es.getDriver();

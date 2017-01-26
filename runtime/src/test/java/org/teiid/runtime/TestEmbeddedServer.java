@@ -201,6 +201,11 @@ public class TestEmbeddedServer {
 			};
 			return ue;
 		}
+
+        @Override
+        public boolean isSourceRequiredForMetadata() {
+            return false;
+        }
 	}
 
 	public static final class MockTransactionManager implements TransactionManager {

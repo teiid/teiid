@@ -49,13 +49,14 @@ public class DeploymentBasedDatabaseStore extends DatabaseStore {
 	public static class PendingDataSourceJobs extends HashMap<String, Callable<Boolean>> {}
     
     private ArrayList<VDBImportMetadata> importedVDBs = new ArrayList<VDBImportMetadata>();
-    private Map<String, ImportedSchema> importedSchemas = new HashMap<String, ImportedSchema>();
+    private Map<String, List<ImportedSchema>> importedSchemas = new HashMap<String, List<ImportedSchema>>();
     
     private class ImportedSchema {
     	String foreignSchemaName; 
     	List<String> includeTables;
 		List<String> excludeTables;
 		Map<String, String> properties;
+		String serverType;
     }
     
     public DeploymentBasedDatabaseStore(VDBRepository vdbRepo) {
@@ -95,27 +96,26 @@ public class DeploymentBasedDatabaseStore extends DatabaseStore {
         
         for (ModelMetaData model : vdb.getModelMetaDatas().values()) {
             Schema schema = database.getSchema(model.getName());
-            ImportedSchema is = this.importedSchemas.get(model.getName());
-            if (is != null) {
-                model.addProperty("importer.schemaPattern", is.foreignSchemaName);
-                
-                if (is.excludeTables != null && !is.excludeTables.isEmpty()) {
-                	model.addProperty("importer.excludeTables", getCSV(is.excludeTables));
-                }
-
-                // TODO: need to add this to jdbc translator
-                if (is.includeTables != null && !is.includeTables.isEmpty()) {
-                	model.addProperty("importer.includeTables", getCSV(is.includeTables));    
-                }
-                
-                if (is.properties != null) {
-                	for (String key : is.properties.keySet()) {
-                		model.addProperty(key, is.properties.get(key));
-                	}
-                }
-                model.addSourceMetadata("NATIVE", null);
+            for (ImportedSchema is:this.importedSchemas.get(model.getName())) {
+                    model.addProperty("importer.schemaPattern", is.foreignSchemaName);
+                    
+                    if (is.excludeTables != null && !is.excludeTables.isEmpty()) {
+                    	model.addProperty("importer.excludeTables", getCSV(is.excludeTables));
+                    }
+    
+                    // TODO: need to add this to jdbc translator
+                    if (is.includeTables != null && !is.includeTables.isEmpty()) {
+                    	model.addProperty("importer.includeTables", getCSV(is.includeTables));    
+                    }
+                    
+                    if (is.properties != null) {
+                    	for (String key : is.properties.keySet()) {
+                    		model.addProperty(key, is.properties.get(key));
+                    	}
+                    }
+                    model.addSourceMetadata(is.serverType, null);
             }
-            
+                
             if (!schema.getTables().isEmpty() || !schema.getProcedures().isEmpty()
                     || !schema.getFunctions().isEmpty()) {
                 String ddl = DDLStringVisitor.getDDLString(database.getSchema(model.getName()), null, null);
@@ -143,14 +143,21 @@ public class DeploymentBasedDatabaseStore extends DatabaseStore {
     }
     
 	@Override
-	public void importSchema(String schemaName, String serverName, String foreignSchemaName, List<String> includeTables,
-			List<String> excludeTables, Map<String, String> properties) {
+    public void importSchema(String schemaName, String serverType, String serverName, String foreignSchemaName,
+            List<String> includeTables, List<String> excludeTables, Map<String, String> properties) {
 		ImportedSchema schema = new ImportedSchema();
 		schema.foreignSchemaName = foreignSchemaName; 
 		schema.includeTables = includeTables;
 		schema.excludeTables = excludeTables; 
-		schema.properties = properties;	
-		this.importedSchemas.put(schemaName, schema);
+		schema.properties = properties;
+		schema.serverType = serverType;
+		
+		List<ImportedSchema> imports = importedSchemas.get(schemaName);
+		if (imports == null) {
+		    imports = new ArrayList<>();
+		}
+		imports.add(schema);
+		this.importedSchemas.put(schemaName, imports);
 	}
 	
 	@Override

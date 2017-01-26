@@ -84,8 +84,8 @@ public class SchemaLoadAwareDatabaseStore extends DatabaseStore {
     }
 
     @Override
-    public void importSchema(String schemaName, String serverName, String foreignSchemaName, List<String> includeTables,
-            List<String> excludeTables, Map<String,String> properties) {
+    public void importSchema(String schemaName, String serverType, String serverName, String foreignSchemaName,
+            List<String> includeTables, List<String> excludeTables, Map<String, String> properties) {
         
         verifySchemaExists(schemaName);
         verifyServerExists(serverName);

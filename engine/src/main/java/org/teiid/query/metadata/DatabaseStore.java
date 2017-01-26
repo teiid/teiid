@@ -671,7 +671,7 @@ public abstract class DatabaseStore implements DDLProcessor {
     }
     
     
-    public void importSchema(String schemaName, String serverName, String foreignSchemaName, List<String> includeTables,
+    public void importSchema(String schemaName, String serverType, String serverName, String foreignSchemaName, List<String> includeTables,
             List<String> excludeTables, Map<String,String> properties) {
         throw new MetadataException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31221));
     }
