@@ -126,7 +126,7 @@ public class ConnectorManagerRepository implements Serializable{
             if (!cm.getTranslatorName().equals(translatorName)
                     || !EquivalenceUtil.areEqual(cm.getConnectionName(), jndiName)) {
                 if (!replace) {
-                    throw new ConnectorManagerException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31217, sourceName));
+                    throw new ConnectorManagerException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31103, sourceName));
                 }
                 if (cm.getTranslatorName().equals(translatorName)) {
                     ef = cm.getExecutionFactory();
@@ -138,7 +138,7 @@ public class ConnectorManagerRepository implements Serializable{
         if (ef == null) {
             ef = provider.getExecutionFactory(translatorName);
             if (ef == null) {
-                throw new ConnectorManagerException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31218, translatorName));
+                throw new ConnectorManagerException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31146, translatorName));
             }
         }
         cm = createConnectorManager(translatorName, jndiName, ef);
