@@ -96,7 +96,7 @@ public class TestMultiSourcePlanToProcessConverter {
         }
     }
 
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = true;
 
     public ProcessorPlan helpTestMultiSourcePlan(QueryMetadataInterface metadata, String userSql, String multiModel, int sourceCount, ProcessorDataManager dataMgr, List<?>[] expectedResults, VDBMetaData vdb) throws Exception {
     	return helpTestMultiSourcePlan(metadata, userSql, multiModel, sourceCount, dataMgr, expectedResults, vdb, null, null);
@@ -245,6 +245,34 @@ public class TestMultiSourcePlanToProcessConverter {
                             Arrays.asList("e", "z", "be"), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                             Arrays.asList("f", "z", "bf")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
+    }
+    
+    @Test public void testNested() throws Exception {
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
+
+        final String userSql = "select max(source_name), a from (SELECT a, source_name FROM MultiModel.Phys union all select b, source_name from MultiModel.phys1) as x group by a"; //$NON-NLS-1$
+        final String multiModel = "MultiModel"; //$NON-NLS-1$
+        final int sources = 2;
+        final List<?>[] expected = new List<?>[] {
+                Arrays.asList("b", 1),
+            };
+        final HardcodedDataManager dataMgr = new HardcodedDataManager();
+        dataMgr.addData("SELECT v_0.c_0, MAX(v_0.c_1) FROM (SELECT g_1.a AS c_0, 'a' AS c_1 FROM MultiModel.Phys AS g_1 UNION ALL SELECT g_0.b AS c_0, 'a' AS c_1 FROM MultiModel.Phys1 AS g_0) AS v_0 GROUP BY v_0.c_0", //$NON-NLS-1$
+                        new List<?>[] {
+                            Arrays.asList(1, "a")}); 
+        dataMgr.addData("SELECT v_0.c_0, MAX(v_0.c_1) FROM (SELECT g_1.a AS c_0, 'b' AS c_1 FROM MultiModel.Phys AS g_1 UNION ALL SELECT g_0.b AS c_0, 'b' AS c_1 FROM MultiModel.Phys1 AS g_0) AS v_0 GROUP BY v_0.c_0", //$NON-NLS-1$
+                new List<?>[] {
+                    Arrays.asList(1, "b")});
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
+        bsc.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        bsc.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+        bsc.setCapabilitySupport(Capability.QUERY_UNION, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        bsc.setFunctionSupport(SourceSystemFunctions.CONCAT, true);
+        
+        helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB(), null, null, bsc);
     }
     
     @Test public void testMultiJoinImplicit() throws Exception {
