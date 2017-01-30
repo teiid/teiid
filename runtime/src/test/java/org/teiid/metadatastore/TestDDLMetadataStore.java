@@ -21,19 +21,18 @@
  */
 package org.teiid.metadatastore;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.security.auth.Subject;
@@ -57,12 +56,9 @@ import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.metadata.MetadataRepository;
-import org.teiid.runtime.EmbeddedAdminImpl;
-import org.teiid.runtime.EmbeddedConfiguration;
-import org.teiid.runtime.EmbeddedServer;
+import org.teiid.runtime.*;
 import org.teiid.runtime.EmbeddedServer.ConnectionFactoryProvider;
-import org.teiid.runtime.RuntimePlugin;
-import org.teiid.runtime.TestEmbeddedServer;
+import org.teiid.runtime.util.ConvertVDB;
 import org.teiid.security.Credentials;
 import org.teiid.security.GSSResult;
 import org.teiid.security.SecurityHelper;
@@ -282,5 +278,19 @@ public class TestDDLMetadataStore {
         String expected = ObjectConverterUtil
                 .convertFileToString(new File(UnitTestUtil.getTestDataPath() + "/" + "portfolio-vdb.ddl"));
         assertEquals(expected, content);
-    } 
+    }
+    
+    @Test
+    public void testMigrateVDBXML() throws Exception {
+        File vdb = new File(UnitTestUtil.getTestDataPath() + "/" + "portfolio-vdb.xml");
+        String content = ConvertVDB.convert(vdb);
+        /*
+        FileWriter fw = new FileWriter(new File(UnitTestUtil.getTestDataPath() + "/" + "portfolio-converted-vdb.ddl"));
+        fw.write(content);
+        fw.close();
+        */
+        String expected = ObjectConverterUtil
+                .convertFileToString(new File(UnitTestUtil.getTestDataPath() + "/" + "portfolio-converted-vdb.ddl"));
+        assertEquals(expected, content);
+    }     
 }
