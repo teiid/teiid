@@ -1280,4 +1280,35 @@ public class TestAggregateProcessing {
                 hdm, new List<?>[] {Arrays.asList(4)});
     }
     
+    @Test public void testCardinalityDependentNotPushed() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL(
+                " CREATE FOREIGN TABLE tbl_1 (a integer, b bigdecimal);"
+                + " CREATE virtual view v1 as select * from tbl_1; "
+                + " CREATE virtual view v2 as select 1 as a, 1 as b;"
+                + " create procedure pr() returns (a integer, b integer) as select 1, 1;", "x", "y");
+        
+        String sql = "select count(v2.b) from v1 right join v2 on true group by v1.b;";
+        
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT g_0.b FROM y.tbl_1 AS g_0", Arrays.asList(1), Arrays.asList(2), Arrays.asList(2), Arrays.asList(3));
+        
+        BasicSourceCapabilities bsc = TestAggregatePushdown.getAggregateCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, false);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, false);
+        bsc.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
+        bsc.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+        
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder(bsc));
+        
+        TestProcessor.helpProcess(plan, TestProcessor.createCommandContext(),
+                hdm, new List<?>[] {Arrays.asList(1), Arrays.asList(2), Arrays.asList(1)});
+        
+        sql = "select count(v2.b) from v1 join (call pr()) v2 on true group by v1.b";
+        
+        plan = TestProcessor.helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder(bsc));
+        
+        TestProcessor.helpProcess(plan, TestProcessor.createCommandContext(),
+                hdm, new List<?>[] {Arrays.asList(1), Arrays.asList(2), Arrays.asList(1)});
+    }
+    
 }
