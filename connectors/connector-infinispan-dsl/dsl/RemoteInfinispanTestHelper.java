@@ -39,6 +39,8 @@ import org.teiid.core.util.UnitTestUtil;
  */
 @SuppressWarnings("nls")
 public class RemoteInfinispanTestHelper {
+	protected static final String CONFIG_FILE = "infinispan_personcache_config.xml";
+
 	protected static final String TEST_CACHE_NAME = "test";
 	protected static final String PERSON_CACHE_NAME = PersonCacheSource.PERSON_CACHE_NAME;
 	protected static final Class<?> PERSON_CLASS = Person.class;
@@ -46,12 +48,15 @@ public class RemoteInfinispanTestHelper {
 	
 	protected static final int PORT = 11312;
 	protected static final int TIMEOUT = 0;
-
-	private HotRodServer server = null;
-	private DefaultCacheManager CACHEMANAGER = null;
-
+	
+	
 	public static final String KEYSTORE_PASSWORD = "secret";
 	public static final String TRUSTORE_PASSWORD = "secret";
+
+
+	private HotRodServer HOTRODSERVER = null;
+	private DefaultCacheManager CACHEMANAGER = null;
+	
 	
 	public String KeyStoreFile = null;
 	public String TrustStoreFile = null;
@@ -66,21 +71,30 @@ public class RemoteInfinispanTestHelper {
 		
 		return createServer();
 	}
-
 	private synchronized HotRodServer createServer()  {
-		if (server == null) {
+		if (HOTRODSERVER == null) {
 			try {
-								
+				
+//				System.out.println("==== Creating JDG Hot Rod Server.... ====");
 				CACHEMANAGER = new DefaultCacheManager(new ConfigurationBuilder()
-		            .eviction()
-		            .build());
-	
+			            .eviction()
+			            .build());
+				
+//				File configfile = new File(UnitTestUtil.getTestDataPath(), CONFIG_FILE);
+				
+//				CACHEMANAGER = new DefaultCacheManager(configfile.getAbsolutePath());
 				CACHEMANAGER.start();
 				
 				CACHEMANAGER.startCache(PERSON_CACHE_NAME);
 				CACHEMANAGER.startCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME);
-								
-				PersonCacheSource.loadCache(CACHEMANAGER.getCache(PERSON_CACHE_NAME));
+
+				
+				
+				
+				CACHEMANAGER.start();
+				
+				CACHEMANAGER.startCache(PERSON_CACHE_NAME);
+				CACHEMANAGER.startCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME);
 				
 			} catch (Exception e) {
 				throw new RuntimeException(e);
@@ -89,6 +103,7 @@ public class RemoteInfinispanTestHelper {
 			String hostAddress = hostAddress();
 
 			HotRodServerConfigurationBuilder bldr = new HotRodServerConfigurationBuilder();
+
 			bldr.host(hostAddress);
 			bldr.port(PORT);
 			
@@ -100,18 +115,26 @@ public class RemoteInfinispanTestHelper {
 			     .trustStorePassword(TRUSTORE_PASSWORD.toCharArray());
 			     
 			}
-
 			
 			HotRodServerConfiguration config = bldr.create();
 
-			server = new HotRodServer();
+			HOTRODSERVER = new HotRodServer();
 
-			server.startInternal(config, CACHEMANAGER);
-			server.cacheManager().startCaches(PERSON_CACHE_NAME);
-
+			HOTRODSERVER.startInternal(config, CACHEMANAGER);
+			
+//			System.out.println("==== Created JDG Hot Rod Server ====");
+			
+			try {
+				Thread.sleep(10000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 		}
-		return server;
+		return HOTRODSERVER;
 	}
+
 	
 	public void startServer() throws IOException {
 		createServer();
@@ -138,25 +161,25 @@ public class RemoteInfinispanTestHelper {
 			return "localhost";
 	}
 
-	public  synchronized void releaseServer() {
-			try {
-				if (CACHEMANAGER != null) {
-					CACHEMANAGER.stop();
-				}
-			} finally {
-				CACHEMANAGER = null;
+	public synchronized void releaseServer() {
+		try {
+			if (CACHEMANAGER != null) {
+				CACHEMANAGER.stop();
 			}
-			
+		} finally {
+			CACHEMANAGER = null;
+		}
+		
 
-			try {
-				// System.out.println("Stopping HotRot Server at " +
-				// hostAddress() + ":" + hostPort());
-				if (server != null) {
-					server.stop();
-				}
-			} finally {
-				server = null;
+		try {
+			// System.out.println("Stopping HotRot Server at " +
+			// hostAddress() + ":" + hostPort());
+			if (HOTRODSERVER != null) {
+				HOTRODSERVER.stop();
 			}
+		} finally {
+			HOTRODSERVER = null;
+		}
 
 	}
 }

@@ -26,9 +26,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-import java.util.Map;
-
-import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PersonCacheSource;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -39,11 +36,11 @@ import org.teiid.translator.object.ObjectConnection;
 @SuppressWarnings("nls")
 public class TestInfinispanServerListUsingAnnotations {
 	    private static InfinispanManagedConnectionFactory factory = null;
-	    private static RemoteInfinispanTestHelper Server = new RemoteInfinispanTestHelper();
+		private static RemoteInfinispanTestHelper RemoteServer = new RemoteInfinispanTestHelper();
 
 		@BeforeClass
-	    public static void beforeEachClass() throws Exception {  
-			Server.startServer();
+		public static void beforeEachClass() throws Exception {
+			RemoteServer.startServerWithSSL();
 			
 			factory = new InfinispanManagedConnectionFactory();
 
@@ -57,21 +54,12 @@ public class TestInfinispanServerListUsingAnnotations {
 		
 		@AfterClass
 	    public static void closeConnection() throws Exception {
-	          Server.releaseServer();
+			RemoteServer.releaseServer();
 	    }
 
 	    @Test
 	    public void testRemoteConnection() throws Exception {
 	    		ObjectConnection conn = factory.createConnectionFactory().getConnection();
-	    		
-	    		Map<Object, Object> m = PersonCacheSource.loadCache();
-	    		Object key = null;
-	    		for (Object k : m.keySet()){
-	    			Object v = m.get(k);
-	    			conn.add(k, v);
-	    			key = k;
-	    		}
-	    		
 	    		Class<?> clz = conn.getCacheClassType();
 	    
 	    		assertEquals(RemoteInfinispanTestHelper.PERSON_CLASS, clz);

@@ -98,7 +98,31 @@
                 <description>{$display:"Alias Cache Name",$description:"Cache name for the alias cache used in aliasing caches used in materialization",$required="false"}</description>
                <config-property-name>AliasCacheName</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
-            </config-property>                               
+            </config-property>    
+            
+                       <config-property>
+                <description>{$display:"TrustStore File Name",$description:"File name of the truststore",$required="false"}</description>
+               <config-property-name>TrustStoreFileName</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>   
+            
+            <config-property>
+                <description>{$display:"TrustStore Password",$description:"TrustStore Password",$required="false",$masked="true"}</description>
+               <config-property-name>TrustStorePassword</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>  
+            
+  			<config-property>
+                <description>{$display:"KeyStore File Name",$description:"File name of the keystore",$required="false"}</description>
+               <config-property-name>KeyStoreFileName</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>  
+            
+            <config-property>
+                <description>{$display:"KeyStore Password",$description:"KeyStore Password",$required="false",$masked="true"}</description>
+               <config-property-name>KeyStorePassword</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>                                                          
                        
             <connectionfactory-interface>javax.resource.cci.ConnectionFactory</connectionfactory-interface>
             <connectionfactory-impl-class>org.teiid.resource.spi.WrappedConnectionFactory</connectionfactory-impl-class>

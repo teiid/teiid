@@ -26,11 +26,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import java.io.File;
-import java.util.Map;
 import java.util.Properties;
 
 import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.Address;
-import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PersonCacheSource;
 import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PhoneNumber;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -45,11 +43,11 @@ import org.teiid.translator.object.Version;
 public class TestInfinispanConfigFileRemoteCache {
     
     private static InfinispanManagedConnectionFactory factory = null;
-    private static RemoteInfinispanTestHelper Server = new RemoteInfinispanTestHelper();
+	private static RemoteInfinispanTestHelper RemoteServer = new RemoteInfinispanTestHelper();
 
 	@BeforeClass
-    public static void beforeEachClass() throws Exception {  
-		Server.startServer();
+	public static void beforeEachClass() throws Exception {
+		RemoteServer.startServerWithSSL();
 		
   		// read in the properties template file and set the server host:port and then save for use
   		File f = new File("./src/test/resources/jdg.properties");
@@ -69,7 +67,7 @@ public class TestInfinispanConfigFileRemoteCache {
 	
 	@AfterClass
     public static void closeConnection() throws Exception {
-          Server.releaseServer();
+		RemoteServer.releaseServer();
     }
 
 	
@@ -77,15 +75,6 @@ public class TestInfinispanConfigFileRemoteCache {
     public void testConnection() throws Exception {
     	try {
     		InfinispanDSLConnection conn = factory.createConnectionFactory().getConnection();
-    		
-    		Map<Object, Object> m = PersonCacheSource.loadCache();
-    		Object key = null;
-    		for (Object k : m.keySet()){
-    			Object v = m.get(k);
-    			conn.add(k, v);
-    			key = k;
-    		}
-
     		Class<?> clz = conn.getCacheClassType();
     
     		assertEquals(RemoteInfinispanTestHelper.PERSON_CLASS, clz);
@@ -99,7 +88,7 @@ public class TestInfinispanConfigFileRemoteCache {
     		 assertNotNull(conn.getCache());
     		 
     		 assertEquals("Support For Compare is false", conn.getVersion().compareTo(Version.getVersion("6.6")) >= 0, false );
- //   		 assertEquals("Version doesn't start with 7.RemoteInfinispanTestHelper2", conn.getVersion().startsWith("7.2"));
+ //   		 assertEquals("Version doesn't start with 7.2", conn.getVersion().startsWith("7.2"));
 
     		 assertNotNull(conn.getDescriptor(Address.class));
     		 assertNotNull(conn.getDescriptor(PhoneNumber.class));
@@ -108,7 +97,7 @@ public class TestInfinispanConfigFileRemoteCache {
     		 
     	} finally {
 	    	factory.cleanUp();
-	    	Server.releaseServer();
+	    	RemoteServer.releaseServer();
     	}
     }
 }

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<infinispan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="urn:infinispan:config:6.0 http://www.infinispan.org/schemas/infinispan-config-6.0.xsd"
+            xmlns="urn:infinispan:config:6.0">
+<global>
+        <globalJmxStatistics enabled="false" allowDuplicateDomains="true"/>
+    </global>
+   <default>
+      <indexing enabled="true" indexLocalOnly="true">
+      	<properties>
+     			<property name="default.directory_provider" value="ram" />
+                <property name="lucene_version" value="LUCENE_36" />
+         </properties>  
+      </indexing>
+  </default>
+    
+    <namedCache name="PersonsCache">
+        <eviction
+                strategy="LIRS"
+                maxEntries="1000"/>
+       <persistence passivation="false">
+            <singleFile
+                    shared="false"
+                    fetchPersistentState="false"
+                    ignoreModifications="false"
+                    purgeOnStartup="true"
+                    preload="false"
+                    location="./target/localcache/indexing/person">
+            </singleFile>
+        </persistence>
+
+    </namedCache> 
+</infinispan>

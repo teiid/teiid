@@ -32,7 +32,12 @@
                 <groupId>org.infinispan</groupId>
                 <artifactId>infinispan-core</artifactId>
                 <version>${version.org.infinispan.6}</version>
-            </dependency>            
+            </dependency>     
+            <dependency>
+              <groupId>org.infinispan</groupId>
+              <artifactId>infinispan-query</artifactId>
+              <version>${version.org.infinispan.6}</version>
+            </dependency>         
              <dependency>
                 <groupId>org.infinispan</groupId>
                 <artifactId>infinispan-remote-query-client</artifactId>
@@ -119,6 +124,10 @@
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-query-dsl</artifactId>
         </dependency>  
+        <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-query</artifactId>
+        </dependency>          
         <dependency>
             <groupId>org.infinispan.protostream</groupId>
             <artifactId>protostream</artifactId>
