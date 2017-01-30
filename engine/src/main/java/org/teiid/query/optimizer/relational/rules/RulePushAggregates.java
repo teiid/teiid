@@ -1021,17 +1021,13 @@ public class RulePushAggregates implements
                 originatingNode = parentAccess;
             }
 
-            if (originatingNode.getParent() == groupNode) {
+            if (originatingNode.getParent() == groupNode || originatingNode.getType() != NodeConstants.Types.ACCESS) {
             	//anything logically applied after the join and is
             	//dependent upon the cardinality prevents us from optimizing.
             	if (aggs && ((AggregateSymbol)aggregateSymbol).isCardinalityDependent()) {
             		return null;
             	}
-                continue;
-            }
-            
-            if (originatingNode.getType() != NodeConstants.Types.ACCESS) {
-            	continue; //don't perform intermediate grouping
+                continue; //don't perform intermediate grouping either
             }
             
             if (aggs && ((AggregateSymbol)aggregateSymbol).isDistinct()) {
