@@ -96,24 +96,26 @@ public class DeploymentBasedDatabaseStore extends DatabaseStore {
         
         for (ModelMetaData model : vdb.getModelMetaDatas().values()) {
             Schema schema = database.getSchema(model.getName());
-            for (ImportedSchema is:this.importedSchemas.get(model.getName())) {
-                    model.addProperty("importer.schemaPattern", is.foreignSchemaName);
-                    
-                    if (is.excludeTables != null && !is.excludeTables.isEmpty()) {
-                    	model.addProperty("importer.excludeTables", getCSV(is.excludeTables));
-                    }
-    
-                    // TODO: need to add this to jdbc translator
-                    if (is.includeTables != null && !is.includeTables.isEmpty()) {
-                    	model.addProperty("importer.includeTables", getCSV(is.includeTables));    
-                    }
-                    
-                    if (is.properties != null) {
-                    	for (String key : is.properties.keySet()) {
-                    		model.addProperty(key, is.properties.get(key));
-                    	}
-                    }
-                    model.addSourceMetadata(is.serverType, null);
+            if (this.importedSchemas.get(model.getName()) != null){
+                for (ImportedSchema is:this.importedSchemas.get(model.getName())) {
+                        model.addProperty("importer.schemaPattern", is.foreignSchemaName);
+                        
+                        if (is.excludeTables != null && !is.excludeTables.isEmpty()) {
+                        	model.addProperty("importer.excludeTables", getCSV(is.excludeTables));
+                        }
+        
+                        // TODO: need to add this to jdbc translator
+                        if (is.includeTables != null && !is.includeTables.isEmpty()) {
+                        	model.addProperty("importer.includeTables", getCSV(is.includeTables));    
+                        }
+                        
+                        if (is.properties != null) {
+                        	for (String key : is.properties.keySet()) {
+                        		model.addProperty(key, is.properties.get(key));
+                        	}
+                        }
+                        model.addSourceMetadata(is.serverType, null);
+                }
             }
                 
             if (!schema.getTables().isEmpty() || !schema.getProcedures().isEmpty()
