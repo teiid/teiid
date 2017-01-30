@@ -298,7 +298,12 @@ public class Program implements Cloneable, Labeled {
         if (!transactionalReads && this.isAtomic()) {
             return false;
         }
+        return instructionsRequireTransaction(transactionalReads);
+    }
+
+    public Boolean instructionsRequireTransaction(boolean transactionalReads) {
         boolean possiblyRequired = false;
+        boolean last = false;
         for (ProgramInstruction instruction : this.programInstructions) {
             Boolean instructionRequires = instruction.requiresTransaction(transactionalReads);
             if (instructionRequires == null) {
@@ -306,13 +311,19 @@ public class Program implements Cloneable, Labeled {
                     return true;
                 }
                 possiblyRequired = true;
+                last = true;
                 continue;
             }
+            last = false;
             if (instructionRequires) {
                 return true;
             }
         }
         if (possiblyRequired) {
+            if (!last) {
+                //we'd have to test more in depth about whether the later statements could fail
+                return true; 
+            }
             return null;
         }
         return false;

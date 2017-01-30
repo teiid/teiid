@@ -570,9 +570,10 @@ public class TestEmbeddedServer {
 		mmd1.setSchemaSourceType("ddl");
 		mmd1.setSchemaText("create view v as select 1; " +
 				"create virtual procedure proc () options (updatecount 2) as begin select * from v; end; " +
-				"create virtual procedure proc1 () as begin atomic select * from v; end; " +
-				"create virtual procedure proc2 (x integer) as begin atomic select 1; begin select 1/x; end exception e end; " +
-				"create virtual procedure proc3 (x integer) as begin begin atomic select 1; end create local temporary table x (y string); begin atomic select 1; end end;");
+				"create virtual procedure proc0 () as begin atomic select * from v; end; " +
+				"create virtual procedure proc1 () as begin atomic insert into #temp values (1); insert into #temp values (1); end; " +
+				"create virtual procedure proc2 (x integer) as begin atomic insert into #temp values (1); insert into #temp values (1); select 1; begin select 1/x; end exception e end; " +
+				"create virtual procedure proc3 (x integer) as begin begin atomic call proc (); select 1; end create local temporary table x (y string); begin atomic call proc (); select 1; end end;");
 
 		es.deployVDB("test", mmd1);
 		
@@ -593,6 +594,11 @@ public class TestEmbeddedServer {
 		assertEquals(1, tm.txnHistory.size());
 		txn = tm.txnHistory.remove(0);
 		Mockito.verify(txn).commit();
+		
+		//no txn needed
+        s.execute("call proc0()");
+	        
+        assertEquals(0, tm.txnHistory.size());
 		
 		//block txn
 		s.execute("call proc1()");
