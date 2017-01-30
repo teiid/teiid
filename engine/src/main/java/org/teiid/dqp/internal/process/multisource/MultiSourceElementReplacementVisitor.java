@@ -26,6 +26,8 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -33,7 +35,7 @@ import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 
 
 public class MultiSourceElementReplacementVisitor extends ExpressionMappingVisitor {
-
+    
     private String bindingName;
     private QueryMetadataInterface metadata;
     
@@ -58,6 +60,13 @@ public class MultiSourceElementReplacementVisitor extends ExpressionMappingVisit
         }
         
         return expr;
+    }
+    
+    public static void visit(String bindingName, QueryMetadataInterface metadata, Command processingCommand) {
+        MultiSourceElementReplacementVisitor visitor = new MultiSourceElementReplacementVisitor(bindingName, metadata);
+        PreOrPostOrderNavigator nav = new PreOrPostOrderNavigator(visitor, PreOrPostOrderNavigator.PRE_ORDER, true);
+        nav.setSkipEvaluatable(true);
+        processingCommand.acceptVisitor(nav);
     }
     
 }

@@ -55,7 +55,6 @@ import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.SubqueryContainer.Evaluatable;
-import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
@@ -251,7 +250,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
             } 
             if (!(command instanceof StoredProcedure || command instanceof Insert)) {
             	processingCommand = (Command) command.clone();
-        		PreOrPostOrderNavigator.doVisit(processingCommand, new MultiSourceElementReplacementVisitor(replacement, getContext().getMetadata()), PreOrPostOrderNavigator.PRE_ORDER, false);
+            	MultiSourceElementReplacementVisitor.visit(replacement, getContext().getMetadata(), processingCommand);
         	}
         }
         
@@ -685,7 +684,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
                 // Modify the command to pull the instance column and evaluate the criteria
             	if (!(command instanceof Insert || command instanceof StoredProcedure)) {
                 	command = (Command)command.clone();
-                	PreOrPostOrderNavigator.doVisit(command, new MultiSourceElementReplacementVisitor(sourceName, metadata), PreOrPostOrderNavigator.PRE_ORDER, false);
+                	MultiSourceElementReplacementVisitor.visit(sourceName, metadata, command);
             		if (!RelationalNodeUtil.shouldExecute(command, false, true)) {
             			continue;
                     }
