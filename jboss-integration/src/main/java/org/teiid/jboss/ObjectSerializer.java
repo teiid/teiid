@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.util.ConcurrentModificationException;
 
 import org.jboss.logging.Logger;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -77,10 +76,6 @@ public class ObjectSerializer {
 				oos = new ObjectOutputStream(new FileOutputStream(attachmentsStore));
 				oos.writeObject(attachment);
 				return true;
-			} catch (ConcurrentModificationException e) {
-                if (log.isDebugEnabled()) {
-                    log.debug("saveAttachment failed, attachmentsStore=" + attachmentsStore + ", attachment=" + attachment, e); //$NON-NLS-1$ //$NON-NLS-2$
-                }
 			} finally {
 				if (oos != null) {
 					oos.close();
