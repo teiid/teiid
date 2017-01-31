@@ -421,7 +421,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 			final File cachedFile = getSerializer().buildModelFile(vdb, model.getName());
 			try {
 				getSerializer().saveAttachment(cachedFile, schema, false);
-			} catch (IOException e) {
+			} catch (Exception e) {
 				LogManager.logWarning(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50044, vdb.getName(), vdb.getVersion(), model.getName()));
 			}
 		}
