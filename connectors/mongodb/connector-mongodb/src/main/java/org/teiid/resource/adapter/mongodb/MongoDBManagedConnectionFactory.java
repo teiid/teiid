@@ -49,7 +49,7 @@ public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFacto
 	private String username;
 	private String password;
 	private String database;
-	private String securityType = SecurityType.None.name();
+	private String securityType = SecurityType.SCRAM_SHA_1.name();
 	private String authDatabase;
 	private Boolean ssl;
 

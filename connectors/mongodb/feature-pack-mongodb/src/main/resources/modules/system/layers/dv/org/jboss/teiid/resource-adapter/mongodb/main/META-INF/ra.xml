@@ -64,6 +64,7 @@
                 <description>{$display:"Authentication Mechanism",$allowed:["None","SCRAM_SHA_1","MONGODB_CR", "Kerberos","X509"], $description:"Type of Authentication to used", $required:"false"}</description>
                 <config-property-name>SecurityType</config-property-name>
                 <config-property-type>java.lang.String</config-property-type>
+                <config-property-value>SCRAM_SHA_1</config-property-value>
             </config-property> 
             
             <config-property>
