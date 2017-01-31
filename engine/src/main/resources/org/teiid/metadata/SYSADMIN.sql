@@ -97,7 +97,7 @@ BEGIN
 	
 	IF (uid IS NULL)
 	BEGIN
-		RAISE SQLEXCEPTION 'The view not found';
+		RAISE SQLEXCEPTION 'The view was not found';
 	END
 	
 	DECLARE boolean isMaterialized = (SELECT IsMaterialized FROM SYS.Tables WHERE UID = VARIABLES.uid);
@@ -256,18 +256,7 @@ BEGIN
         
         IF (VARIABLES.loadScript IS null)
         BEGIN
-            DECLARE string columns;
-            LOOP ON (SELECT Name FROM SYS.Columns WHERE SchemaName = loadMatView.schemaName  AND TableName = loadMatView.viewName) AS columnCursor
-            BEGIN
-                IF (columns IS null)
-                BEGIN
-                    columns = columnCursor.Name;
-                END
-                ELSE
-                BEGIN
-                    columns = columns || ', ' || columnCursor.Name;
-                END
-            END
+            DECLARE string columns = (SELECT cast(string_agg('"' || replace(Name, '"', '""') || '"', ',') as string) FROM SYS.Columns WHERE SchemaName = loadMatView.schemaName  AND TableName = loadMatView.viewName);
             
             IF (VARIABLES.loadNumColumn IS null)
             BEGIN
@@ -422,18 +411,7 @@ BEGIN
 	DECLARE string updateStmtWithCardinality = 'UPDATE ' || VARIABLES.statusTable || ' SET LoadState = DVARS.LoadState, valid = DVARS.valid, Updated = DVARS.updated, Cardinality = DVARS.cardinality, LoadNumber = DVARS.loadNumber ' ||  crit;
 
     BEGIN ATOMIC
-        DECLARE string columns;
-        LOOP ON (SELECT Name FROM SYS.Columns WHERE SchemaName = updateMatView.schemaName  AND TableName = updateMatView.viewName) AS columnCursor
-        BEGIN
-            IF (columns IS null)
-            BEGIN
-                columns = columnCursor.Name;
-            END
-            ELSE
-            BEGIN
-                columns = columns || ', ' || columnCursor.Name;
-            END
-        END
+        DECLARE string columns = (SELECT cast(string_agg('"' || replace(Name, '"', '""') || '"', ',') as string) FROM SYS.Columns WHERE SchemaName = updateMatView.schemaName  AND TableName = updateMatView.viewName);
         IF(loadNumColumn IS null)
         BEGIN
             EXECUTE IMMEDIATE 'DELETE FROM ' || targetSchemaName || '.' || matViewTable || ' WHERE ' ||  replace(refreshCriteria, viewName, matViewTable);
