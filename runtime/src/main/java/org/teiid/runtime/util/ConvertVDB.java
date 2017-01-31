@@ -111,7 +111,8 @@ public class ConvertVDB {
                 es.deployVDBZip(f.toURI().toURL());
                 Admin admin = es.getAdmin();
                 VDB vdb = admin.getVDBs().iterator().next();
-                return admin.getSchema(vdb.getName(), vdb.getVersion(), null, null, null, ExportFormat.DDL);
+                String format = System.getProperty("format", "DDL");
+                return admin.getSchema(vdb.getName(), vdb.getVersion(), null, null, null, ExportFormat.valueOf(format));
             } else if (f.getName().toLowerCase().endsWith(".xml")) {
                 return es.convertVDB(new FileInputStream(f));
             } 
