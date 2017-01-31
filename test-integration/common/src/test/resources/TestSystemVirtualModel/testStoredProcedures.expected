@@ -1,8 +1,8 @@
 string                                                             clob                                                             
 Name                                                               Body                                                             
-loadMatView                                                        Clob[8571]                                                       
-matViewStatus                                                      Clob[1568]                                                       
-updateMatView                                                      Clob[3039]                                                       
+loadMatView                                                        Clob[8829]                                                       
+matViewStatus                                                      Clob[1572]                                                       
+updateMatView                                                      Clob[3302]                                                       
 Row Count : 3
 getColumnName  getColumnType  getCatalogName  getColumnClassName  getColumnLabel  getColumnTypeName  getSchemaName  getTableName      getColumnDisplaySize  getPrecision  getScale  isAutoIncrement  isCaseSensitive  isCurrency  isDefinitelyWritable  isNullable  isReadOnly  isSearchable  isSigned  isWritable  
 Name           12             PartsSupplier   java.lang.String    Name            string             SYSADMIN       StoredProcedures  255                   255           0         false            true             false       false                 0           true        true          false     false       
