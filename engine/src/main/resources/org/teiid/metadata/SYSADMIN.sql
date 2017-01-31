@@ -97,7 +97,7 @@ BEGIN
 	
 	IF (uid IS NULL)
 	BEGIN
-		RAISE SQLEXCEPTION 'The view not found';
+		RAISE SQLEXCEPTION 'The view was not found';
 	END
 	
 	DECLARE boolean isMaterialized = (SELECT IsMaterialized FROM SYS.Tables WHERE UID = VARIABLES.uid);
@@ -139,7 +139,7 @@ BEGIN
 	
 	IF (uid IS NULL)
 	BEGIN
-		RAISE SQLEXCEPTION 'The view not found';
+		RAISE SQLEXCEPTION 'The view was not found';
 	END
 	
 	DECLARE boolean isMaterialized = (SELECT IsMaterialized FROM SYS.Tables WHERE UID = VARIABLES.uid);
@@ -236,7 +236,8 @@ BEGIN
     BEGIN ATOMIC
     	IF (VARIABLES.loadScript IS null)
     	BEGIN
-    		VARIABLES.loadScript = 'INSERT INTO ' || matViewStageTable || ' SELECT * FROM ' || schemaName || '.' || viewName || ' OPTION NOCACHE ' || schemaName || '.' || viewName;
+    	    DECLARE string columns = (SELECT cast(string_agg('"' || replace(Name, '"', '""') || '"', ',') as string) FROM SYS.Columns WHERE SchemaName = loadMatView.schemaName  AND TableName = loadMatView.viewName);
+    		VARIABLES.loadScript = 'INSERT INTO ' || matViewStageTable || '(' || columns ||') SELECT '|| columns ||' FROM ' || schemaName || '.' || viewName || ' OPTION NOCACHE ' || schemaName || '.' || viewName;
     		VARIABLES.implicitLoadScript = true;
     	END
     	
@@ -288,7 +289,7 @@ BEGIN
 	
 	IF (uid IS NULL)
 	BEGIN
-		RAISE SQLEXCEPTION 'The view not found';
+		RAISE SQLEXCEPTION 'The view was not found';
 	END
 	
 	DECLARE boolean isMaterialized = (SELECT IsMaterialized FROM SYS.Tables WHERE UID = VARIABLES.uid);
@@ -364,8 +365,9 @@ BEGIN
 	DECLARE string updateStmtWithCardinality = 'UPDATE ' || VARIABLES.statusTable || ' SET LoadState = DVARS.LoadState, valid = DVARS.valid, Updated = DVARS.updated, Cardinality = DVARS.cardinality' ||  crit;
 
     BEGIN ATOMIC
+        DECLARE string columns = (SELECT cast(string_agg('"' || replace(Name, '"', '""') || '"', ',') as string) FROM SYS.Columns WHERE SchemaName = updateMatView.schemaName  AND TableName = updateMatView.viewName);
         EXECUTE IMMEDIATE 'DELETE FROM '|| targetSchemaName || '.' || matViewTable || ' WHERE ' ||  refreshCriteria AS rowCount integer;
-        EXECUTE IMMEDIATE 'INSERT INTO ' || targetSchemaName || '.' || matViewTable || ' SELECT * FROM '|| schemaName || '.' || viewName || ' WHERE ' || refreshCriteria || ' OPTION NOCACHE ' || schemaName || '.' || viewName;
+        EXECUTE IMMEDIATE 'INSERT INTO ' || targetSchemaName || '.' || matViewTable || ' (' || columns || ') SELECT '|| columns ||' FROM '|| schemaName || '.' || viewName || ' WHERE ' || refreshCriteria || ' OPTION NOCACHE ' || schemaName || '.' || viewName;
     	
         EXECUTE IMMEDIATE 'SELECT count(*) as rowCount FROM ' || targetSchemaName || '.' || matViewTable AS rowCount integer INTO #load_count;        
         rowsUpdated = (SELECT rowCount FROM #load_count);        
