@@ -78,17 +78,18 @@ public abstract class AbstractEventDistributorFactoryService implements Internal
 			@Override
 			public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 			    Replicated annotation = method.getAnnotation(Replicated.class);
-			    try {
-                    if (replicatableEventDistributor == null || (annotation != null && annotation.remoteOnly())) {
-                        method.invoke(ed, args);
+			    Object result = null;
+                try {
+			        if (replicatableEventDistributor == null || (annotation != null && annotation.remoteOnly())) {
+                        result = method.invoke(ed, args);
                     } 
                     if (replicatableEventDistributor != null) {
-    					method.invoke(replicatableEventDistributor, args);
+    					result = method.invoke(replicatableEventDistributor, args);
     				}
 			    } catch (InvocationTargetException e) {
 			        throw e.getTargetException();
 			    }
-				return null;
+				return result;
 			}
 		});		
 	}

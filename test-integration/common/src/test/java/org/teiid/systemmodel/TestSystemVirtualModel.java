@@ -35,6 +35,7 @@ import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -42,6 +43,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
 import org.teiid.jdbc.FakeServer;
@@ -292,24 +294,21 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
         closeStatement();
         
         //insert event
-        server.getEventDistributor().dataModification("test3", "1", "x", "t", null, new Object[] {1}, null);
-        
-        Thread.sleep(2000);
+        ResultsFuture<?> future = server.getEventDistributor().dataModification("test3", "1", "x", "t", null, new Object[] {1}, null);
+        future.get(2, TimeUnit.SECONDS);
         
         assertEquals("SELECT t.intkey FROM t WHERE t.intkey = 1", ef.getCommands().get(0).toString());
         
         ef.addData("SELECT t.intkey FROM t WHERE t.intkey = 3", new ArrayList<List<?>>());
         //update event
-        server.getEventDistributor().dataModification("test3", "1", "x", "t", new Object[] {2}, new Object[] {1}, null);
-        
-        Thread.sleep(2000);
+        future = server.getEventDistributor().dataModification("test3", "1", "x", "t", new Object[] {2}, new Object[] {1}, null);
+        future.get(2, TimeUnit.SECONDS);
         
         assertEquals("SELECT t.intkey FROM t WHERE t.intkey = 3", ef.getCommands().get(1).toString());
         
         //delete event
-        server.getEventDistributor().dataModification("test3", "1", "x", "t", new Object[] {2}, null, null);
-        
-        Thread.sleep(2000);
+        future = server.getEventDistributor().dataModification("test3", "1", "x", "t", new Object[] {2}, null, null);
+        future.get(2, TimeUnit.SECONDS);
         
         //no trigger
         assertEquals(2, ef.getCommands().size());

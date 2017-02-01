@@ -28,6 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.dqp.internal.process.DQPCore;
@@ -36,8 +37,14 @@ import org.teiid.events.EventDistributor;
 import org.teiid.events.EventListener;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.*;
+import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.ColumnStats;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
 import org.teiid.metadata.Table.TriggerEvent;
+import org.teiid.metadata.TableStats;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.SourceTriggerActionPlanner.SourceEventCommand;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
@@ -284,44 +291,44 @@ public abstract class EventDistributorImpl implements EventDistributor {
 	}
 	
 	@Override
-	public void dataModification(String vdbName, String vdbVersion,
+	public ResultsFuture<?> dataModification(String vdbName, String vdbVersion,
 	        String schema, String tableName, Object[] oldValues, Object[] newValues,
 	        String[] columnNames) {
 	    VDBMetaData vdb = getVdbRepository().getLiveVDB(vdbName, vdbVersion);
         if (vdb == null) {
-            return;
+            return null;
         }
         TransformationMetadata tm = vdb.getAttachment(TransformationMetadata.class);
         if (tm == null) {
-            return;
+            return null;
         }
 	    //lookup, call triggers
 	    Table t = getTable(vdbName, vdbVersion, schema, tableName);
 	    if (t == null) {
-	        return;
+	        return null;
 	    }
 	    //notify of just the table modification
 	    dataModification(vdbName, vdbVersion, schema, tableName);
 	    if (oldValues == null && newValues == null) {
-	        return;
+	        return null;
 	    }
 	    if (!t.getTriggers().isEmpty()) {
 	        if (columnNames != null) {
 	            if ((oldValues != null && oldValues.length != columnNames.length) 
                         || (newValues != null && newValues.length != columnNames.length)) {
-                    throw new AssertionError();
+                    throw new IllegalArgumentException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40162));
                 }
 	        } else {
                if ((oldValues != null && oldValues.length != t.getColumns().size()) 
                         || (newValues != null && newValues.length != t.getColumns().size())) {
-                    throw new AssertionError();
+                   throw new IllegalArgumentException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40163));
                 }
 	        }
 	        
     	    //create command
 	        SourceEventCommand sec = new SourceEventCommand(t, oldValues, newValues, columnNames);
 	        try {
-                DQPCore.executeQuery(sec, vdb, "admin", "event-distributor", -1, getDQPCore(), new DQPCore.ResultsListener() { //$NON-NLS-1$ //$NON-NLS-2$
+                return DQPCore.executeQuery(sec, vdb, "admin", "event-distributor", -1, getDQPCore(), new DQPCore.ResultsListener() { //$NON-NLS-1$ //$NON-NLS-2$
                     @Override
                     public void onResults(List<String> columns, List<? extends List<?>> results) throws Exception {
                         //no result
@@ -331,6 +338,7 @@ public abstract class EventDistributorImpl implements EventDistributor {
 	            throw new TeiidRuntimeException(throwable);
 	        }
 	    }
+	    return null;
 	}
 	
 	@Override

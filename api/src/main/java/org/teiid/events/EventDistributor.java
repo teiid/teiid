@@ -25,6 +25,7 @@ package org.teiid.events;
 import java.util.List;
 
 import org.teiid.Replicated;
+import org.teiid.client.util.ResultsFuture;
 import org.teiid.metadata.ColumnStats;
 import org.teiid.metadata.Table;
 import org.teiid.metadata.TableStats;
@@ -251,10 +252,11 @@ public interface EventDistributor {
      * <br>For an insert only the newValues are provided.
      * <br>For a delete only the oldValues are provided.
      * <br>For an update both are provided.
+     * @return a {@link ResultsFuture} if execution has started, or null if no execution has started
      * @param vdbName
      * @param vdbVersion
      * @param schema
      * @param tableNames
      */
-    void dataModification(String vdbName, String vdbVersion, String schema, String tableName, Object[] oldValues, Object[] newValues, String[] columnNames);
+    ResultsFuture<?> dataModification(String vdbName, String vdbVersion, String schema, String tableName, Object[] oldValues, Object[] newValues, String[] columnNames);
 }
