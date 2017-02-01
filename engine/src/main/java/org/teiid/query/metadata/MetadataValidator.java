@@ -98,6 +98,7 @@ public class MetadataValidator {
 			new ResolveQueryPlans().execute(vdb, store, report, this);
 			new MinimalMetadata().execute(vdb, store, report, this);
 			new MatViewPropertiesValidator().execute(vdb, store, report, this);
+			new MatViewScopeValidator().execute(vdb, store, report, this);
 		}
 		return report;
 	}
@@ -799,5 +800,29 @@ public class MetadataValidator {
 		}
 	}
 	
-
+    static class MatViewScopeValidator implements MetadataRule {
+        @Override
+        public void execute(VDBMetaData vdb, MetadataStore store, ValidatorReport report, MetadataValidator metadataValidator) {
+            for (Schema schema:store.getSchemaList()) {
+                // only walk on schemas that are imported
+                if (!vdb.getImportedModels().contains(schema.getName())) {
+                    continue;
+                }
+                ModelMetaData model = vdb.getModel(schema.getName());
+                for (Table t:schema.getTables().values()) {
+                    String manage = t.getProperty(ALLOW_MATVIEW_MANAGEMENT, false);
+                    if (manage != null && Boolean.valueOf(manage)) {
+                        if (t.isVirtual() && t.isMaterialized() && t.getMaterializedTable() != null) {
+                            String scope = t.getProperty(MATVIEW_SCOPE, false);
+                            if (scope == null || !scope.equalsIgnoreCase("SCHEMA")) {
+                                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31251,
+                                        t.getFullName(), MATVIEW_SCOPE));
+                                continue;                            
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

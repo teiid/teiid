@@ -24,6 +24,8 @@ package org.teiid.systemmodel;
 
 import static org.junit.Assert.*;
 
+import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
 import java.io.PrintWriter;
 import java.sql.CallableStatement;
 import java.sql.Connection;
@@ -45,12 +47,15 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.core.util.UnitTestUtil;
+import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.util.ResultSetUtil;
 import org.teiid.logging.LogManager;
 import org.teiid.runtime.HardCodedExecutionFactory;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.h2.H2ExecutionFactory;
+import org.teiid.translator.loopback.LoopbackExecutionFactory;
 
 @SuppressWarnings("nls")
 public class TestExternalMatViews {
@@ -229,6 +234,21 @@ public class TestExternalMatViews {
 		assertTest(useUpdateScript, hcef);
 	}
 
+	@Test
+	public void testVDBImportScopeWarning() {
+	    try {
+    	    server.addTranslator("loopback", new LoopbackExecutionFactory());
+    	    server.deployVDB(new FileInputStream(UnitTestUtil.getTestDataFile("child-vdb.xml")));
+    	    server.deployVDB(new FileInputStream(UnitTestUtil.getTestDataFile("parent-vdb.xml")));
+    	    fail("must have failed the validation beacuse matview is not shared");
+	    } catch (Exception e) {
+	        assertEquals("TEIID40095 TEIID31251 Materialized view VM1.G1 "
+	                + "is not configured correctly. The materialization property "
+	                + "{http://www.teiid.org/ext/relational/2012}MATVIEW_SCOPE on View VM1.G1 "
+	                + "MUST be defined with \"SCHEMA\" scope.  ", e.getMessage());
+	    }
+	}
+	
 	@Test
 	public void testInternalFullRefresh() throws Exception {
 		internalWithSameExternalProcedures(false);
