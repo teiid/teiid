@@ -1,0 +1,41 @@
+<vdb name="parent" version="1">
+    
+    <import-vdb name="child" version="1" import-data-policies="true"/>
+    
+    <model visible="true" name="VM2" type="VIRTUAL">
+        <metadata type = "DDL"><![CDATA[        
+        CREATE VIEW G1 (e1 integer PRIMARY KEY, e2 varchar(25)) OPTIONS(
+            MATERIALIZED 'TRUE', 
+            UPDATABLE 'TRUE',
+            MATERIALIZED_TABLE 'materialized2.G1',
+            "teiid_rel:MATVIEW_TTL" 20000,
+            "teiid_rel:ALLOW_MATVIEW_MANAGEMENT" 'true',
+            "teiid_rel:MATVIEW_STATUS_TABLE" 'materialized.status',
+            "teiid_rel:MATVIEW_LOADNUMBER_COLUMN" 'LoadNumber'
+        )
+         AS SELECT e1, e2 FROM VM1.G1;
+        ]]>
+       </metadata>        
+    </model>
+    <model name="materialized2">
+        <source name="s2" translator-name="loopback"/> 
+        <metadata type = "DDL"><![CDATA[        
+        CREATE FOREIGN TABLE G1 (e1 integer PRIMARY KEY, e2 varchar(25), LoadNumber long);
+        CREATE FOREIGN TABLE status (
+            VDBName varchar(50) not null,
+            VDBVersion varchar(50) not null,
+            SchemaName varchar(50) not null,
+            Name varchar(256) not null,
+            TargetSchemaName varchar(50),
+            TargetName varchar(256) not null,
+            Valid boolean not null,
+            LoadState varchar(25) not null,
+            Cardinality long,
+            Updated timestamp not null,
+            LoadNumber long not null,
+            PRIMARY KEY (VDBName, VDBVersion, SchemaName, Name)
+        );
+        ]]>
+       </metadata>        
+    </model>        
+</vdb>
