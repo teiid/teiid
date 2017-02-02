@@ -172,20 +172,16 @@ public final class RuleMergeVirtual implements
             	return root; //only consider no sources when the frame is simple and there is a parent join
             }
             if (sources.isEmpty() && parentJoin != null) {
-            	PlanNode parent = frame.getParent();
-            	boolean hasCriteria = false;
-            	while (parent != parentJoin) {
-	            	if (parent.getType() != NodeConstants.Types.SELECT) {
-	        			return root; //sanity check, can only be filters
-	        		}
-	            	if (!parent.hasBooleanProperty(Info.IS_PHANTOM)) {
-	            		hasCriteria = true;
-	            	}
-	            	parent = parent.getParent(); 
-            	}
+                PlanNode left = FrameUtil.findJoinSourceNode(parentJoin.getFirstChild());
+                boolean isLeft = left == frame;
             	JoinType jt = (JoinType) parentJoin.getProperty(Info.JOIN_TYPE);
-            	if (jt.isOuter() && (hasCriteria || jt != JoinType.JOIN_LEFT_OUTER || FrameUtil.findJoinSourceNode(parentJoin.getFirstChild()) == frame)) {
-        			return root; //cannot remove if the no source side is an outer side
+            	if (jt.isOuter()) {
+        			return root; //cannot remove if the no source side is an outer side, or if it can change the meaning of the plan
+            	}
+
+            	PlanNode other = isLeft? FrameUtil.findJoinSourceNode(parentJoin.getLastChild()):left;
+            	if (other != null && (SymbolMap)other.getProperty(NodeConstants.Info.CORRELATED_REFERENCES) != null) {
+            		return root; //TODO: we don't have the logic yet to then replace the correlated references
             	}
             }
         }
