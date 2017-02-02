@@ -261,6 +261,8 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
         
         if (getVersion().compareTo(NINE_2) >= 0) {
             supportedFunctions.add(SourceSystemFunctions.ST_MAKEENVELOPE);
+            supportedFunctions.add(SourceSystemFunctions.ST_SNAPTOGRID);
+            supportedFunctions.add(SourceSystemFunctions.ST_SIMPLIFYPRESERVETOPOLOGY);
         }
         
         return supportedFunctions;

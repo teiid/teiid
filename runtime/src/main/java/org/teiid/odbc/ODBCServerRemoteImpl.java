@@ -26,7 +26,7 @@ import static org.teiid.odbc.PGUtil.*;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.sql.ParameterMetaData;
+import java.nio.charset.Charset;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -53,6 +53,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.ApplicationInfo;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.deployers.PgCatalogMetadataStore;
 import org.teiid.dqp.service.SessionService;
 import org.teiid.jdbc.ConnectionImpl;
@@ -75,6 +76,7 @@ import org.teiid.transport.LogonImpl;
 import org.teiid.transport.ODBCClientInstance;
 import org.teiid.transport.PgBackendProtocol;
 import org.teiid.transport.PgFrontendProtocol.NullTerminatedStringDataInputStream;
+import org.teiid.transport.pg.TimestampUtils;
 
 /**
  * While executing the multiple prepared statements I see this bug currently
@@ -509,15 +511,6 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 				//just pull the initial information - leave statement formation until binding 
 				String modfiedSQL = fixSQL(sql);
 				stmt = this.connection.prepareStatement(modfiedSQL);
-				if (paramType.length > 0) {
-					ParameterMetaData pmd = stmt.getParameterMetaData();
-					for (int i = 0; i < paramType.length; i++) {
-						if (paramType[i] == 0) {
-							//TODO: this is incorrect - should be oid
-							//paramType[i] = convertType(pmd.getParameterType(i + 1));
-						}
-					}
-				}
 				Prepared prepared = new Prepared(prepareName, sql, modfiedSQL, paramType, getPgColInfo(stmt.getMetaData()));
 				this.preparedMap.put(prepareName, prepared);
 				this.client.prepareCompleted(prepareName);
@@ -546,7 +539,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	}
 	
 	@Override
-	public void bindParameters(String bindName, String prepareName, Object[] params, int resultCodeCount, short[] resultColumnFormat) {
+	public void bindParameters(String bindName, String prepareName, Object[] params, int resultCodeCount, short[] resultColumnFormat, Charset encoding) {
 		// An unnamed portal is destroyed at the end of the transaction, or as soon as 
 		// the next Bind statement specifying the unnamed portal as destination is issued. 
 		if (bindName == null || bindName.length() == 0) {
@@ -577,12 +570,6 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 				if (param instanceof byte[] && prepared.paramType.length > i) {
 					int oid = prepared.paramType[i];
 					switch (oid) {
-					//binary array
-					//pgobject
-					//hstore
-					//date
-					//time
-					//timestamp
 					case PGUtil.PG_TYPE_UNSPECIFIED:
 						//TODO: should infer type from the parameter metadata from the parse message
 						break;
@@ -603,6 +590,13 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 					case PGUtil.PG_TYPE_FLOAT8:
 						param = Double.longBitsToDouble(readLong((byte[])param, 8));
 						break;
+					case PGUtil.PG_TYPE_DATE:
+					    param = TimestampUtils.toDate(TimestampWithTimezone.getCalendar().getTimeZone(), (int)readLong((byte[])param, 4));
+						break;
+					default:
+					    //start with the string conversion
+					    param = new String((byte[])param, encoding);
+					    break;
 					}
 				}
 				stmt.setObject(i+1, param);
