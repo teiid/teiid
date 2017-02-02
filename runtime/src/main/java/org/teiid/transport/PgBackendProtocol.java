@@ -43,6 +43,7 @@ import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.sql.Array;
 import java.sql.Blob;
+import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -56,6 +57,7 @@ import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.ReflectionHelper;
 import org.teiid.core.util.SqlUtil;
 import org.teiid.core.util.StringUtil;
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.jdbc.ResultSetImpl;
 import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.logging.LogConstants;
@@ -66,6 +68,7 @@ import org.teiid.odbc.ODBCClientRemote;
 import org.teiid.odbc.PGUtil.PgColInfo;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.transport.pg.PGbytea;
+import org.teiid.transport.pg.TimestampUtils;
 /**
  * Represents the messages going from Server --> PG ODBC Client  
  * Some parts of this code is taken from H2's implementation of ODBC
@@ -472,7 +475,8 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 		for (int i = 0; i < cols.size(); i++) {
 			int dataBytesIndex = this.dataOut.writerIndex();
 			writeInt(-1);
-			if (resultColumnFormat==null || (resultColumnFormat.length==1?resultColumnFormat[0]==0:resultColumnFormat[i]==0)) {
+			if (!isBinary(cols.get(i).type)
+			        || (resultColumnFormat==null || (resultColumnFormat.length==1?resultColumnFormat[0]==0:resultColumnFormat[i]==0))) {
 	            getContent(rs, cols.get(i), i+1);
 			} else {
                 getBinaryContent(rs, cols.get(i), i+1);
@@ -529,12 +533,17 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
                 }
             }
             break;
+	    case PG_TYPE_DATE:
+	        Date d = rs.getDate(column);
+	        if (d != null) {
+	            long millis = d.getTime();
+	            millis += TimestampWithTimezone.getCalendar().getTimeZone().getOffset(millis);
+	            long secs = TimestampUtils.toPgSecs(millis / 1000);
+	            dataOut.writeInt((int) (secs / 86400));
+	        }
+	        break;
 	    default:
-	        Object obj = rs.getObject(column);
-            if (obj != null) {
-                throw new IOException("unsupported binary type " + col.type + " failed to convert");
-            }
-            break;
+	        throw new AssertionError();
 	    }
 	}
 	
@@ -708,6 +717,20 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 		sendMessage();
 	}
 	
+	boolean isBinary(int oid) {
+	    switch (oid) {
+	    case PG_TYPE_INT2:
+	    case PG_TYPE_INT4:
+	    case PG_TYPE_INT8:
+	    case PG_TYPE_FLOAT4:
+	    case PG_TYPE_FLOAT8:
+	    case PG_TYPE_BYTEA:
+	    case PG_TYPE_DATE:
+	        return true;
+	    }
+	    return false;
+	}
+	
 	private void sendRowDescription(List<PgColInfo> cols, short[] resultColumnFormat) {
 		if (cols == null) {
 			//send NoData
@@ -730,15 +753,11 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 			writeShort(getTypeSize(info.type, info.precision));
 			// pg_attribute.atttypmod
 			writeInt(info.mod);
-			// text
-			if (resultColumnFormat != null) {
-			    if (resultColumnFormat.length == 1) {
-	                writeShort(resultColumnFormat[0]);
-			    } else {
-			        writeShort(resultColumnFormat[i]);
-			    }
-			} else {
+			if (!isBinary(info.type) || resultColumnFormat == null) {
+			    //text
 			    writeShort(0);
+			} else {
+                writeShort(resultColumnFormat[resultColumnFormat.length == 1?0:i]);
 			}
 		}
 		sendMessage();

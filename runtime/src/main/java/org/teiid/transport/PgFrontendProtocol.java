@@ -224,6 +224,7 @@ public class PgFrontendProtocol extends ByteToMessageDecoder {
         String clientEncoding = props.getProperty("client_encoding", PgBackendProtocol.DEFAULT_ENCODING);
         props.setProperty("client_encoding", clientEncoding);
         props.setProperty("default_transaction_isolation", "read committed");
+        props.setProperty("integer_datetimes", "on");
         props.setProperty("DateStyle", "ISO");
         props.setProperty("TimeZone", Calendar.getInstance().getTimeZone().getDisplayName());
         this.odbcProxy.initialize(props);
@@ -286,7 +287,7 @@ public class PgFrontendProtocol extends ByteToMessageDecoder {
                 resultColumnFormat[i] = data.readShort();
             }
         }
-        this.odbcProxy.bindParameters(bindName, prepName, params, resultCodeCount, resultColumnFormat);
+        this.odbcProxy.bindParameters(bindName, prepName, params, resultCodeCount, resultColumnFormat, this.pgBackendProtocol.getEncoding());
         return message;
 	}	
 

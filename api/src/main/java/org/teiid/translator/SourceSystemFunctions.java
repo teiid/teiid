@@ -200,6 +200,7 @@ public class SourceSystemFunctions {
 	public static final String ST_EQUALS = "st_equals"; //$NON-NLS-1$
 	public static final String ST_TRANSFORM = "st_transform"; //$NON-NLS-1$
 	public static final String ST_SIMPLIFY = "st_simplify"; //$NON-NLS-1$
+	public static final String ST_SIMPLIFYPRESERVETOPOLOGY = "st_simplifypreservetopology"; //$NON-NLS-1$
 	public static final String ST_FORCE_2D = "st_force_2d"; //$NON-NLS-1$
 	public static final String ST_ENVELOPE = "st_envelope"; //$NON-NLS-1$
 	public static final String ST_WITHIN = "st_within"; //$NON-NLS-1$
@@ -247,5 +248,6 @@ public class SourceSystemFunctions {
     public static final String ST_Y = "st_y"; //$NON-NLS-1$
     public static final String ST_Z = "st_z"; //$NON-NLS-1$
     public static final String ST_MAKEENVELOPE = "st_makeenvelope"; //$NON-NLS-1$
+    public static final String ST_SNAPTOGRID = "st_snaptogrid"; //$NON-NLS-1$
 	
 }

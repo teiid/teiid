@@ -595,6 +595,7 @@ public class TestODBCSocketTransport {
 		Statement s = conn.createStatement();
 		ResultSet rs = s.executeQuery("select '2011-01-01'::date");
 		rs.next();
+		assertEquals("2011-01-01", rs.getString(1));
 	}
 	
 	/**

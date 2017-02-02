@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.io.PushbackInputStream;
 import java.io.PushbackReader;
 import java.io.Reader;
+import java.io.StringReader;
 import java.sql.Blob;
 import java.sql.SQLException;
 
@@ -60,9 +61,12 @@ import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKBReader;
 import com.vividsolutions.jts.io.WKBWriter;
 import com.vividsolutions.jts.io.WKTReader;
+import com.vividsolutions.jts.io.WKTWriter;
 import com.vividsolutions.jts.io.gml2.GMLHandler;
 import com.vividsolutions.jts.io.gml2.GMLWriter;
+import com.vividsolutions.jts.precision.GeometryPrecisionReducer;
 import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
+import com.vividsolutions.jts.simplify.TopologyPreservingSimplifier;
 
 /**
  * Utility methods for geometry
@@ -425,8 +429,17 @@ public class GeometryUtils {
 
 	public static GeometryType simplify(
 			GeometryType geom, double tolerance) throws FunctionExecutionException {
-		return getGeometryType(DouglasPeuckerSimplifier.simplify(getGeometry(geom), tolerance));
+	    DouglasPeuckerSimplifier douglasPeuckerSimplifier = new DouglasPeuckerSimplifier(getGeometry(geom));
+	    douglasPeuckerSimplifier.setEnsureValid(false);
+	    douglasPeuckerSimplifier.setDistanceTolerance(tolerance);
+	    Geometry resultGeometry = douglasPeuckerSimplifier.getResultGeometry();
+        return getGeometryType(resultGeometry);
 	}
+	
+	public static GeometryType simplifyPreserveTopology(
+            GeometryType geom, double tolerance) throws FunctionExecutionException {
+        return getGeometryType(TopologyPreservingSimplifier.simplify(getGeometry(geom), tolerance));
+    }
 	
 	public static boolean boundingBoxIntersects(
 			GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
@@ -790,6 +803,29 @@ public class GeometryUtils {
             geom.setSRID(srid);
         }
         return getGeometryType(geom);
+    }
+
+    public static GeometryType snapToGrid(GeometryType geom, double size) throws FunctionExecutionException {
+        if (size == 0) {
+            return geom;
+        }
+        Geometry g1 = getGeometry(geom);
+        PrecisionModel precisionModel = new PrecisionModel(1/size);
+        GeometryPrecisionReducer reducer = new GeometryPrecisionReducer(precisionModel);
+        reducer.setPointwise(true);
+        reducer.setChangePrecisionModel(true);
+        Geometry result = reducer.reduce(g1);
+        //since the wkb writer doesn't consider precision, we have to first write/read through wkt
+        WKTWriter writer = new WKTWriter();
+        String val = writer.write(result);
+        WKTReader reader = new WKTReader(GEOMETRY_FACTORY);
+        try {
+            result = reader.read(new StringReader(val));
+        } catch (ParseException e) {
+            throw new FunctionExecutionException(e);
+        }
+        result.setSRID(geom.getSrid());
+        return getGeometryType(result);
     }
 
 }

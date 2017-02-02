@@ -689,6 +689,8 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
             supportedFunctions.add(SourceSystemFunctions.ST_UNION);
             supportedFunctions.add(SourceSystemFunctions.ST_X);
             supportedFunctions.add(SourceSystemFunctions.ST_Y);
+            supportedFunctions.add(SourceSystemFunctions.ST_SNAPTOGRID);
+            supportedFunctions.add(SourceSystemFunctions.ST_SIMPLIFYPRESERVETOPOLOGY);
         }
         if (this.postGisVersion.compareTo(ONE_4) >= 0) {
         	supportedFunctions.add(SourceSystemFunctions.ST_ASGEOJSON);

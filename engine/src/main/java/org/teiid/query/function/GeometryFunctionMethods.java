@@ -310,6 +310,16 @@ public class GeometryFunctionMethods {
     	return GeometryUtils.simplify(geom, tolerance);
 	}
     
+    @TeiidFunction(name=SourceSystemFunctions.ST_SIMPLIFYPRESERVETOPOLOGY,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static GeometryType simplifyPreserveTopology(GeometryType geom, 
+                                      double tolerance)
+                                              throws FunctionExecutionException {        
+        return GeometryUtils.simplifyPreserveTopology(geom, tolerance);
+    }
+    
     @TeiidFunction(name=SourceSystemFunctions.ST_FORCE_2D,
             category=FunctionCategoryConstants.GEOMETRY,
             nullOnNull=true,
@@ -702,6 +712,14 @@ public class GeometryFunctionMethods {
             pushdown=PushDown.CAN_PUSHDOWN)
     public static GeometryType makeEnvelope(double xmin, double ymin, double xmax, double ymax, int srid) {
         return GeometryUtils.makeEnvelope(xmin, ymin, xmax, ymax, srid);
+    }
+
+    @TeiidFunction(name=SourceSystemFunctions.ST_SNAPTOGRID,
+            category=FunctionCategoryConstants.GEOMETRY,
+            nullOnNull=true,
+            pushdown=PushDown.CAN_PUSHDOWN)
+    public static GeometryType snapToGrid(GeometryType geom, float size) throws FunctionExecutionException {
+        return GeometryUtils.snapToGrid(geom, size);
     }
     
 }
