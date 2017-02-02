@@ -312,9 +312,6 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
         
         //no trigger
         assertEquals(2, ef.getCommands().size());
-        
-        //make sure all triggers have completed
-        assertEquals(0, server.getAdmin().getRequests().size());
     }
 	
 	@Test public void testSpatial() throws Exception {
