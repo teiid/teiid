@@ -459,11 +459,12 @@ public class TestRuleMergeVirtual {
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
     
+    //should not allow the merge since it's an outer join
     @Test public void testNoSourcesMerge3() throws Exception {
         TestOptimizer.helpPlan("select z.* from pm1.g1 left outer join (select 1 as a, 2, 3) as z on pm1.g1.e2 = z.a", //$NON-NLS-1$
                                       RealMetadataFactory.example1Cached(),
                                       new String[] {
-                                          "SELECT 3 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+                                          "SELECT g_0.e2 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         
     }
     
@@ -490,10 +491,10 @@ public class TestRuleMergeVirtual {
     	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
     	caps.setFunctionSupport("convert", true); //$NON-NLS-1$
     	caps.setFunctionSupport("array_get", true); //$NON-NLS-1$
-    	ProcessorPlan plan = TestOptimizer.helpPlan("select z.* from pm1.g1 left outer join arraytable(cast(pm1.g1.e1 as object) COLUMNS one integer, two integer, three integer) as z on (pm1.g1.e2 = z.one)", //$NON-NLS-1$
+    	ProcessorPlan plan = TestOptimizer.helpPlan("select z.* from pm1.g1 inner join arraytable(cast(pm1.g1.e1 as object) COLUMNS one integer, two integer, three integer) as z on (pm1.g1.e2 = z.one)", //$NON-NLS-1$
                 RealMetadataFactory.example1Cached(),
                 new String[] {
-                    "SELECT convert(array_get(convert(g_0.e1, object), 1), integer), convert(array_get(convert(g_0.e1, object), 2), integer), convert(array_get(convert(g_0.e1, object), 3), integer) FROM pm1.g1 AS g_0"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+                    "SELECT convert(array_get(convert(g_0.e1, object), 1), integer), convert(array_get(convert(g_0.e1, object), 2), integer), convert(array_get(convert(g_0.e1, object), 3), integer) FROM pm1.g1 AS g_0 WHERE (convert(g_0.e1, object) IS NOT NULL) AND (g_0.e2 = convert(array_get(convert(g_0.e1, object), 1), integer))"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
