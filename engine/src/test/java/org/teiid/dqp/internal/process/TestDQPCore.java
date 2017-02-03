@@ -484,6 +484,21 @@ public class TestDQPCore {
     	helpTestSourceConcurrencyWithLimitedUnion();
     }
     
+    @Test public void testSerialThreadBoundClose() throws Exception {
+        agds.setSleep(100);
+        agds.threadBound = true;
+        core.setUserRequestSourceConcurrency(1);
+        String sql = "SELECT IntKey FROM BQT1.SmallA"; //$NON-NLS-1$
+        String userName = "logon"; //$NON-NLS-1$
+        ((BufferManagerImpl)core.getBufferManager()).setProcessorBatchSize(1);
+        
+        RequestMessage reqMsg = exampleRequestMessage(sql);
+        //execute by don't finish the work
+        execute(userName, 1, reqMsg);
+        //make sure the source request is still closed
+        assertEquals(1, agds.getCloseCount().get());
+    }
+    
     @Test(expected=TeiidProcessingException.class) public void testThreadBoundException() throws Exception {
     	agds.threadBound = true;
     	agds.throwExceptionOnExecute = true;
