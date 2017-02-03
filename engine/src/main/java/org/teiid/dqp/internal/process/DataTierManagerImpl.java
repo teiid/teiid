@@ -173,7 +173,9 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 
 		@Override
 		public void onCompletion(FutureWork<Void> future) {
-			signalMore();
+		    if (future != null) {
+		        signalMore();
+		    }
 			toRead.closeSource();
 			dtts.fullyCloseSource();
 		}
@@ -1096,6 +1098,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 						TeiidProcessingException {
 					if (!processed) {
 						callable.call();
+						callable.onCompletion(null);
 						processed = true;
 					}
 					return ts.nextTuple();
@@ -1103,6 +1106,10 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				
 				@Override
 				public void closeSource() {
+				    if (!processed) {
+				        callable.onCompletion(null);
+				        processed = true;
+				    }
 					ts.closeSource();
 				}
 			};
