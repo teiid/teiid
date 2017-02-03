@@ -43,18 +43,17 @@ import org.teiid.translator.object.Version;
 public class TestInfinispanConfigFileRemoteCache {
     
     private static InfinispanManagedConnectionFactory factory = null;
-	
-    private static RemoteInfinispanTestHelper REMOTEHELPER = new RemoteInfinispanTestHelper();
+		
 
 	@BeforeClass
     public static void beforeEachClass() throws Exception {  
-		REMOTEHELPER.startServer();
+		RemoteInfinispanTestHelper.startServer();
 		
   		// read in the properties template file and set the server host:port and then save for use
   		File f = new File("./src/test/resources/jdg.properties");
   		
   		Properties props = PropertiesUtils.load(f.getAbsolutePath());
-  		props.setProperty("infinispan.client.hotrod.server_list", REMOTEHELPER.hostAddress() + ":" + REMOTEHELPER.hostPort());
+  		props.setProperty("infinispan.client.hotrod.server_list", RemoteInfinispanTestHelper.hostAddress() + ":" + RemoteInfinispanTestHelper.hostPort());
 		
   		PropertiesUtils.print("./target/hotrod-client.properties", props);
 
@@ -68,7 +67,7 @@ public class TestInfinispanConfigFileRemoteCache {
 	
 	@AfterClass
     public static void closeConnection() throws Exception {
-		REMOTEHELPER.releaseServer();
+          RemoteInfinispanTestHelper.releaseServer();
     }
 
 	
@@ -98,7 +97,7 @@ public class TestInfinispanConfigFileRemoteCache {
     		 
     	} finally {
 	    	factory.cleanUp();
-	    	REMOTEHELPER.releaseServer();
+	    	RemoteInfinispanTestHelper.releaseServer();
     	}
     }
 }

@@ -21,9 +21,9 @@
  */
 package org.teiid.resource.adapter.infinispan.dsl;
 
-import java.io.File;
 import java.io.IOException;
 
+import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
 import org.infinispan.server.hotrod.HotRodServer;
@@ -31,15 +31,12 @@ import org.infinispan.server.hotrod.configuration.HotRodServerConfiguration;
 import org.infinispan.server.hotrod.configuration.HotRodServerConfigurationBuilder;
 import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.Person;
 import org.jboss.as.quickstarts.datagrid.hotrod.query.domain.PersonCacheSource;
-import org.teiid.core.util.UnitTestUtil;
 
 
 /**
  */
 @SuppressWarnings("nls")
 public class RemoteInfinispanTestHelper {
-	protected static final String CONFIG_FILE = "infinispan_personcache_config.xml";
-
 	protected static final String TEST_CACHE_NAME = "test";
 	protected static final String PERSON_CACHE_NAME = PersonCacheSource.PERSON_CACHE_NAME;
 	protected static final Class<?> PERSON_CLASS = Person.class;
@@ -48,17 +45,24 @@ public class RemoteInfinispanTestHelper {
 	protected static final int PORT = 11312;
 	protected static final int TIMEOUT = 0;
 
+	private static HotRodServer server = null;
 	private static int count = 0;
-	private HotRodServer HOTRODSERVER = null;
-	private DefaultCacheManager CACHEMANAGER = null;
+	private static DefaultCacheManager CACHEMANAGER = null;
 
-	private  synchronized void createServer()  {
+	private static synchronized HotRodServer createServer()  {
+		if (server == null) {
 			try {
-				
-				File configfile = new File(UnitTestUtil.getTestDataPath(), CONFIG_FILE);
-				
-				CACHEMANAGER = new DefaultCacheManager(configfile.getAbsolutePath());
+								
+				CACHEMANAGER = new DefaultCacheManager(new ConfigurationBuilder()
+		            .eviction()
+		            .build());
+	
 				CACHEMANAGER.start();
+				
+				CACHEMANAGER.startCache(PERSON_CACHE_NAME);
+				CACHEMANAGER.startCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME);
+								
+				PersonCacheSource.loadCache(CACHEMANAGER.getCache(PERSON_CACHE_NAME));
 				
 			} catch (Exception e) {
 				throw new RuntimeException(e);
@@ -72,32 +76,25 @@ public class RemoteInfinispanTestHelper {
 			
 			HotRodServerConfiguration config = bldr.create();
 
-			HOTRODSERVER = new HotRodServer();
+			server = new HotRodServer();
 
-			HOTRODSERVER.startInternal(config, CACHEMANAGER);
-			HOTRODSERVER.cacheManager().startCaches(PERSON_CACHE_NAME);
-			
-			CACHEMANAGER.startCache(PERSON_CACHE_NAME);
-			CACHEMANAGER.startCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME);
+			server.startInternal(config, CACHEMANAGER);
+			server.cacheManager().startCaches(PERSON_CACHE_NAME);
 
-			try {
-				Thread.sleep(10000);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
+		}
+		count++;
+		return server;
 	}
 	
-	public void startServer() throws IOException {
+	public static void startServer() throws IOException {
 		createServer();
 	}
 
-	public DefaultCacheManager getCacheManager() {
+	public static DefaultCacheManager getCacheManager() {
 		return CACHEMANAGER;
 	}
 
-	public int hostPort() {
+	public static int hostPort() {
 		return PORT;
 	}
 
@@ -106,35 +103,31 @@ public class RemoteInfinispanTestHelper {
 	 * 
 	 * @return the IP address as a string
 	 */
-	public String hostAddress() {
+	public static String hostAddress() {
 			return "localhost";
 	}
 
-	public synchronized void releaseServer() {
-		try {
-			if (CACHEMANAGER != null) {
-				CACHEMANAGER.stop();
+	public static synchronized void releaseServer() {
+		count--;
+		if (count == 0) {
+			try {
+				if (CACHEMANAGER != null) {
+					CACHEMANAGER.stop();
+				}
+			} finally {
+				CACHEMANAGER = null;
 			}
-		} finally {
-			CACHEMANAGER = null;
-		}
-		
+			
 
-		try {
-			// System.out.println("Stopping HotRot Server at " +
-			// hostAddress() + ":" + hostPort());
-			if (HOTRODSERVER != null) {
-				HOTRODSERVER.stop();
+			try {
+				// System.out.println("Stopping HotRot Server at " +
+				// hostAddress() + ":" + hostPort());
+				if (server != null) {
+					server.stop();
+				}
+			} finally {
+				server = null;
 			}
-		} finally {
-			HOTRODSERVER = null;
-		}
-		
-		try {
-			Thread.sleep(10000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 
 	}
