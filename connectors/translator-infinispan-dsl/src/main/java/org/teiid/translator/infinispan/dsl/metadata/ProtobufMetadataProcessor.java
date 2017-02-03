@@ -34,7 +34,6 @@ import java.util.Map;
 
 import org.infinispan.protostream.descriptors.Descriptor;
 import org.infinispan.protostream.descriptors.FieldDescriptor;
-import org.infinispan.protostream.descriptors.JavaType;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
@@ -52,6 +51,8 @@ import org.teiid.translator.object.ClassRegistry;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.metadata.JavaBeanMetadataProcessor;
 import org.teiid.translator.object.util.ObjectUtil;
+
+import protostream.com.google.protobuf.Descriptors;
 
 
 /**
@@ -478,33 +479,31 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 	private static Class<?> getProtobufNativeType(FieldDescriptor fd) {
 
 		String n = fd.getJavaType().name();
-
 		
-		
-		if (JavaType.STRING.name().equals(n)) {
+		if (Descriptors.FieldDescriptor.JavaType.STRING.name().equals(n)) {
 			return String.class;
 		}
 		
-		if (JavaType.BOOLEAN.name().equals(n)) {
+		if (Descriptors.FieldDescriptor.JavaType.BOOLEAN.name().equals(n)) {
 			return boolean.class;
 		}
 		
-		if (JavaType.LONG.name().equals(n)) {
+		if (Descriptors.FieldDescriptor.JavaType.LONG.name().equals(n)) {
 			return long.class;
 		}
 		
-		if (JavaType.INT.name().equals(n)) {
+		if (Descriptors.FieldDescriptor.JavaType.INT.name().equals(n)) {
 			return int.class;
 		}
-		if (JavaType.DOUBLE.name().equals(n)) {
+		if (Descriptors.FieldDescriptor.JavaType.DOUBLE.name().equals(n)) {
 			return double.class;
 		}
 		
-		if (JavaType.FLOAT.name().equals(n)) {
+		if (Descriptors.FieldDescriptor.JavaType.FLOAT.name().equals(n)) {
 			return float.class;
 		}
 		
-		if (JavaType.BYTE_STRING.name().equals(n)) {
+		if (Descriptors.FieldDescriptor.JavaType.BYTE_STRING.name().equals(n)) {
 			return byte[].class;
 		}
 

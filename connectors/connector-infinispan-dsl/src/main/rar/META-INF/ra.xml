@@ -100,48 +100,6 @@
                <config-property-type>java.lang.String</config-property-type>
             </config-property>                               
                        
-            <config-property>
-                <description>{$display:"Authentication Server Name",$description:"Authentication Server Name",$required="false"}</description>
-               <config-property-name>AuthServerName</config-property-name>
-               <config-property-type>java.lang.String</config-property-type>
-            </config-property>   
-   
-            <config-property>
-                <description>{$display:"Authentication Application Realm",$description:"Authentication Application Realm",$required="false"}</description>
-               <config-property-name>AuthApplicationRealm</config-property-name>
-               <config-property-type>java.lang.String</config-property-type>
-            </config-property>   
-                     
-            <config-property>
-                <description>{$display:"Authentication SASL Mechanism",$description:"Authentication SASL Mechanism",$required="false"}</description>
-               <config-property-name>AuthSASLMechanism</config-property-name>
-               <config-property-type>java.lang.String</config-property-type>
-            </config-property>  
-             
-            <config-property>
-                <description>{$display:"Authentication User Name",$description:"Authentication User Name",$required="false"}</description>
-               <config-property-name>AuthUserName</config-property-name>
-               <config-property-type>java.lang.String</config-property-type>
-            </config-property>   
-            
-            <config-property>
-                <description>{$display:"Authentication User Password",$description:"Authentication User Password",$required="false"}</description>
-               <config-property-name>AuthPassword</config-property-name>
-               <config-property-type>java.lang.String</config-property-type>
-            </config-property>     
- 
-            <config-property>
-                <description>{$display:"Administrative User Name",$description:"Administrative User Name",$required="false"}</description>
-               <config-property-name>AdminUserName</config-property-name>
-               <config-property-type>java.lang.String</config-property-type>
-            </config-property>   
-            
-            <config-property>
-                <description>{$display:"Authentication User Password",$description:"Administrative User Password",$required="false"}</description>
-               <config-property-name>AdminPassword</config-property-name>
-               <config-property-type>java.lang.String</config-property-type>
-            </config-property> 
-                           
             <connectionfactory-interface>javax.resource.cci.ConnectionFactory</connectionfactory-interface>
             <connectionfactory-impl-class>org.teiid.resource.spi.WrappedConnectionFactory</connectionfactory-impl-class>
             <connection-interface>javax.resource.cci.Connection</connection-interface>

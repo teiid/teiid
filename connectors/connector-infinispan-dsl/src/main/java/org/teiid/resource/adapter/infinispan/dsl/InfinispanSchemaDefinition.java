@@ -49,7 +49,7 @@ public interface InfinispanSchemaDefinition {
 	 * @param config
 	 * @throws ResourceException
 	 */
-	public void registerSchema(InfinispanManagedConnectionFactory config, InfinispanConnectionImpl conn)  throws ResourceException;
+	public void registerSchema(InfinispanManagedConnectionFactory config)  throws ResourceException;
 
 	/**
 	 * Called to obtain a <code>Descriptor</code> for the specified class.
@@ -58,5 +58,5 @@ public interface InfinispanSchemaDefinition {
 	 * @return Descriptor
 	 * @throws TranslatorException if no descriptor is found.
 	 */
-	public Descriptor getDecriptor(InfinispanManagedConnectionFactory config, InfinispanConnectionImpl conn, Class<?> clz) throws TranslatorException;
+	public Descriptor getDecriptor(InfinispanManagedConnectionFactory config, Class<?> clz) throws TranslatorException;
 }

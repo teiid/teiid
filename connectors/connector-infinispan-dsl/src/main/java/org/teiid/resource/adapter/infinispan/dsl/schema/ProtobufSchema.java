@@ -42,7 +42,6 @@ import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
 import org.teiid.core.util.StringUtil;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.resource.adapter.infinispan.dsl.InfinispanConnectionImpl;
 import org.teiid.resource.adapter.infinispan.dsl.InfinispanManagedConnectionFactory;
 import org.teiid.resource.adapter.infinispan.dsl.InfinispanSchemaDefinition;
 import org.teiid.translator.TranslatorException;
@@ -94,7 +93,7 @@ public class ProtobufSchema  implements InfinispanSchemaDefinition {
 	}
 
 	@Override
-	public void registerSchema(InfinispanManagedConnectionFactory config, InfinispanConnectionImpl conn)  throws ResourceException {
+	public void registerSchema(InfinispanManagedConnectionFactory config)  throws ResourceException {
 		
 		String protoBufResource = config.getProtobufDefinitionFile();
 		try {
@@ -102,13 +101,11 @@ public class ProtobufSchema  implements InfinispanSchemaDefinition {
 			fds.addProtoFile("protofile",
 					config.getClassLoader().getResourceAsStream(protoBufResource));
 
-			conn.getContext().registerProtoFiles(fds);
+			config.getContext().registerProtoFiles(fds);
 
 			@SuppressWarnings("unchecked")
-			RemoteCache<String, String> metadataCache = conn.
-						getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME);
-
-
+			RemoteCache<String, String> metadataCache = config.
+					getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME);
 			metadataCache.put(protoBufResource,
 					readResource(protoBufResource, config.getClassLoader()));
 
@@ -121,13 +118,12 @@ public class ProtobufSchema  implements InfinispanSchemaDefinition {
 
 			for (String clzName : messageMarshallerMap.keySet()) {
 				BaseMarshaller m = messageMarshallerMap.get(clzName);
-				conn.getContext().registerMarshaller(m);
+				config.getContext().registerMarshaller(m);
 			}
 			
 			LogManager.logTrace(LogConstants.CTX_CONNECTOR,
 					"=== Registered marshalling with RemoteCacheManager ==="); //$NON-NLS-1$
-		} catch (TranslatorException e) {
-			throw new ResourceException(e);
+
 		} catch (IOException e) {
 			throw new ResourceException(
 					InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25032),
@@ -154,9 +150,9 @@ public class ProtobufSchema  implements InfinispanSchemaDefinition {
 	
 
 	@Override
-	public Descriptor getDecriptor(InfinispanManagedConnectionFactory config, InfinispanConnectionImpl conn, Class<?> clz) throws TranslatorException {
-		BaseMarshaller m = conn.getContext().getMarshaller(clz);
-		Descriptor d = conn.getContext().getMessageDescriptor(m.getTypeName());
+	public Descriptor getDecriptor(InfinispanManagedConnectionFactory config, Class<?> clz) throws TranslatorException {
+		BaseMarshaller m = config.getContext().getMarshaller(clz);
+		Descriptor d = config.getContext().getMessageDescriptor(m.getTypeName());
 		if (d == null) {
 			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25028,  m.getTypeName(), config.getCacheName()));			
 		}
