@@ -35,6 +35,7 @@ import org.infinispan.protostream.annotations.ProtoSchemaBuilderException;
 import org.infinispan.protostream.descriptors.Descriptor;
 import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
 import org.teiid.core.util.StringUtil;
+import org.teiid.resource.adapter.infinispan.dsl.InfinispanConnectionImpl;
 import org.teiid.resource.adapter.infinispan.dsl.InfinispanManagedConnectionFactory;
 import org.teiid.resource.adapter.infinispan.dsl.InfinispanSchemaDefinition;
 import org.teiid.translator.TranslatorException;
@@ -67,7 +68,7 @@ public class AnnotationSchema implements InfinispanSchemaDefinition {
 
 
 	@Override
-	public void registerSchema(InfinispanManagedConnectionFactory config) throws ResourceException {
+	public void registerSchema(InfinispanManagedConnectionFactory config, InfinispanConnectionImpl conn) throws ResourceException {
 		final Class<?> clzzType = config.getCacheClassType();
 		String p = clzzType.getPackage().getName();
 		
@@ -85,9 +86,9 @@ public class AnnotationSchema implements InfinispanSchemaDefinition {
 			for(Class<?> c:classes) {
 				protoSchemaBuilder.addClass(c);
 			}
-			String protoSchema = protoSchemaBuilder.build(config.getContext());
+			String protoSchema = protoSchemaBuilder.build(conn.getContext());
 			
-		     RemoteCache<String, String> metadataCache = config.getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME);
+		     RemoteCache<String, String> metadataCache = conn.getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME);
 		     metadataCache.put(protoName, protoSchema);
 		
 		} catch (ProtoSchemaBuilderException e) {
@@ -98,14 +99,17 @@ public class AnnotationSchema implements InfinispanSchemaDefinition {
 			throw new ResourceException(e);
 		} catch (IllegalAccessException e) {
 			throw new ResourceException(e);
+		} catch (TranslatorException e) {
+			// TODO Auto-generated catch block
+			throw new ResourceException(e);
 		}
 	}
 	
 
 	@Override
-	public Descriptor getDecriptor(InfinispanManagedConnectionFactory config, Class<?> clz) throws TranslatorException {
-		BaseMarshaller m = config.getContext().getMarshaller(clz);
-		Descriptor d = config.getContext().getMessageDescriptor(m.getTypeName());
+	public Descriptor getDecriptor(InfinispanManagedConnectionFactory config, InfinispanConnectionImpl conn, Class<?> clz) throws TranslatorException {
+		BaseMarshaller m = conn.getContext().getMarshaller(clz);
+		Descriptor d = conn.getContext().getMessageDescriptor(m.getTypeName());
 		if (d == null) {
 			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25028,  m.getTypeName(), config.getCacheName()));			
 		}
