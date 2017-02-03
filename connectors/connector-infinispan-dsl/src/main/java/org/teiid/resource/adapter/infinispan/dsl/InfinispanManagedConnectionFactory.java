@@ -21,39 +21,24 @@
  */
 package org.teiid.resource.adapter.infinispan.dsl;
 
-import java.io.File;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
 import javax.resource.ResourceException;
 import javax.resource.spi.InvalidPropertyException;
 
 import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoadException;
-import org.infinispan.client.hotrod.RemoteCache;
-import org.infinispan.client.hotrod.RemoteCacheManager;
-import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
-import org.infinispan.client.hotrod.marshall.ProtoStreamMarshaller;
-import org.infinispan.protostream.SerializationContext;
 import org.teiid.core.BundleUtil;
-import org.teiid.core.util.Assertion;
-import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
-import org.teiid.logging.LogConstants;
-import org.teiid.logging.LogManager;
 import org.teiid.resource.adapter.infinispan.dsl.schema.AnnotationSchema;
 import org.teiid.resource.adapter.infinispan.dsl.schema.ProtobufSchema;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.infinispan.dsl.InfinispanPlugin;
 import org.teiid.translator.object.CacheNameProxy;
 import org.teiid.translator.object.ClassRegistry;
-import org.teiid.translator.object.Version;
 
 
 
@@ -64,7 +49,7 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 	 */
 	private static final long serialVersionUID = -4791974803005018658L;
 
-	private enum CACHE_TYPE {
+	enum CACHE_TYPE {
 		USE_JNDI, REMOTE_SERVER_LISTS, REMOTE_HOT_ROD_PROPERTIES
 	}
 	
@@ -83,7 +68,6 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 	
 	private boolean usingAnnotations = false;
 	
-	private RemoteCacheManager cacheContainer = null;
 	private String stagingCacheName;
 	private String aliasCacheName;
 	private String pkKey;
@@ -93,10 +77,48 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 	private ClassLoader cl;
 	private CacheNameProxy cacheNameProxy;
 	private InfinispanSchemaDefinition cacheSchemaConfigurator;
-
+	private boolean initialized = false;
+	
+	/* properties for JDG authentication, used for materialization use cases or when only a single user account it used */
+	private String authUserName = null;
+	private String authPassword = null;
+	private String authServerName = null;
+	private String authSASLMechanism = null;
+	private String authApplicationRealm = null;
+	private String adminUserName = null;
+	private String adminPassword = null;
+	
 	@Override
 	public BasicConnectionFactory<InfinispanConnectionImpl> createConnectionFactory()
 			throws ResourceException {
+		
+		validation();
+		
+		return new InfinispanConnectionFactory(this);
+
+	}
+	
+	class InfinispanConnectionFactory extends BasicConnectionFactory<InfinispanConnectionImpl>{
+
+		InfinispanManagedConnectionFactory factory;
+		
+		public InfinispanConnectionFactory(InfinispanManagedConnectionFactory IMfactory) {
+			factory = IMfactory;
+		}
+		private static final long serialVersionUID = 3802635158148246427L;
+		@Override
+		public InfinispanConnectionImpl getConnection()
+				throws ResourceException {
+			
+			InfinispanManagedConnectionFactory.this.loadClasses();
+
+			return new InfinispanConnectionImpl(factory);
+		}
+
+	}
+	
+	 synchronized void validation() throws ResourceException {
+		if (initialized) return;
 		
 		// if all the properties are null,then its assumed the pojo has the protobuf annotations for indexing columns
 		if (protobufDefFile == null && messageMarshallers == null && messageDescriptor == null) {
@@ -133,25 +155,22 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 			throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25022));
 		}
 		
-		/*
-		 * the creation of the cacheContainer has to be done within the
-		 * call to get the connection so that the classloader is driven
-		 * from the caller.
-		 */
-		return new BasicConnectionFactory<InfinispanConnectionImpl>() {
+		if ((adminUserName != null && adminPassword == null) || (adminUserName == null && adminPassword != null)) {
+			throw new InvalidPropertyException("AdminUserName and AdminPassword must be specfied");
+		} else if (adminUserName != null && adminPassword != null && authApplicationRealm == null) {
+			throw new InvalidPropertyException("AuthApplicationRealm must be specfied");
+		}
 
-			private static final long serialVersionUID = 1L;
+		if ((authUserName != null && authPassword == null) || (authUserName == null && authPassword != null)) {
+			throw new InvalidPropertyException("AuthUserName and AuthPassword must be specfied");
+		} else if (authUserName != null && authPassword != null && authApplicationRealm == null) {
+			throw new InvalidPropertyException("AuthApplicationRealm must be specfied");
+		}
 
-			@Override
-			public InfinispanConnectionImpl getConnection()
-					throws ResourceException {
-				
-				InfinispanManagedConnectionFactory.this.createCacheContainer();
-
-				return new InfinispanConnectionImpl(InfinispanManagedConnectionFactory.this);
-			}
-		};
-
+		if ((authServerName != null && authSASLMechanism == null)
+				|| (authServerName == null && authSASLMechanism != null)) {
+			throw new InvalidPropertyException("AuthServerName and AuthSASMechanism must be specfied");
+		}
 	}
 	
 	public InfinispanSchemaDefinition getCacheSchemaConfigurator() {
@@ -165,16 +184,6 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 	
 	public String getCacheStagingName() {
 		return cacheNameProxy.getStageCacheAliasName();
-	}	
-	
-	@SuppressWarnings("rawtypes")
-	public RemoteCache getCache(String cacheName) {
-      if (cacheName == null) {
-      	Assertion.isNotNull(cacheName, "Program Error: Cache Name is null");
-      }
-
-       return cacheContainer.getCache(cacheName);
-      
 	}	
 
 	/**
@@ -245,7 +254,7 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 
 	/**
 	 * Set the Google Protobuf Definition File name that describes the objects to be serialized.
-	 * 
+	 * select name, email, id from Person
 	 * @param protobufDefFile
 	 *            the file name of the protobuf definition file to use
 	 * @see #getProtobufDefinitionFile()
@@ -443,6 +452,62 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 		this.cacheJndiName = jndiName;
 	}
 	
+	public String getAuthUserName() {
+		return authUserName;
+	}
+
+	public void setAuthUserName(String username) {
+		this.authUserName = username;
+	}
+
+	public String getAuthPassword() {
+		return authPassword;
+	}
+
+	public void setAuthPassword(String password) {
+		this.authPassword = password;
+	}
+	
+	public String getAuthServerName() {
+		return authServerName;
+	}
+
+	public void setAuthServerName(String authServerName) {
+		this.authServerName = authServerName;
+	}
+
+	public String getAuthSASLMechanism() {
+		return authSASLMechanism;
+	}
+
+	public void setAuthSASLMechanism(String authSASLMechanism) {
+		this.authSASLMechanism = authSASLMechanism;
+	}
+
+	public String getAuthApplicationRealm() {
+		return authApplicationRealm;
+	}
+
+	public void setAuthApplicationRealm(String authApplicationRealm) {
+		this.authApplicationRealm = authApplicationRealm;
+	}
+
+	public String getAdminUserName() {
+		return adminUserName;
+	}
+
+	public void setAdminUserName(String adminUserName) {
+		this.adminUserName = adminUserName;
+	}
+
+	public String getAdminPassword() {
+		return adminPassword;
+	}
+
+	public void setAdminPassword(String adminPassword) {
+		this.adminPassword = adminPassword;
+	}
+
 	/** 
 	 * Call to set the name of the cache to access when calling getCache
 	 * @param cacheName
@@ -468,23 +533,9 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
     	return this.usingAnnotations;
     }
 
-	public boolean isAlive() {
-		return this.cacheContainer != null;
-	}
-	
-	public RemoteCacheManager getCacheContainer() {
-		return this.cacheContainer;
-	}
-	
-	protected void setCacheContainer(RemoteCacheManager rcm) {
-		this.cacheContainer = rcm;
-	}
-	
-
-	public SerializationContext getContext() {
-		return ProtoStreamMarshaller.getSerializationContext(this
-				.getCacheContainer());
-	}
+    public CACHE_TYPE getCacheType() {
+    	return cacheType;
+    }
 	
 	public ClassLoader getClassLoader() {
 		return this.cl;
@@ -500,7 +551,10 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 	
 	@SuppressWarnings("rawtypes")
 	protected synchronized ClassLoader loadClasses() throws ResourceException {
-
+		if (initialized) {
+			return this.getClassLoader();
+		}
+	
 		cl = null;
 
 		if (getModule() != null) {
@@ -561,61 +615,12 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 		}
 		
 		cacheSchemaConfigurator.initialize(this, methodUtil);
+		
+		initialized = true;
 
 		return cl;
 
 	}
-
-	protected synchronized void createCacheContainer() throws ResourceException {
-		if (getCacheContainer() != null)
-			return;
-		
-		RemoteCacheManager cc = null;
-
-
-		ClassLoader lcl = Thread.currentThread().getContextClassLoader();
-		try {
-			Thread.currentThread().setContextClassLoader(
-					this.getClass().getClassLoader());
-		
-			ClassLoader classLoader = loadClasses();
-
-			switch (cacheType) {
-			case USE_JNDI:
-				cc = getRemoteCacheFromJNDI(this.getCacheJndiName(), classLoader);
-				break;
-	
-			case REMOTE_HOT_ROD_PROPERTIES:
-				cc = createRemoteCacheFromProperties(classLoader);
-				break;
-	
-			case REMOTE_SERVER_LISTS:
-				cc = createRemoteCacheFromServerList(classLoader);
-				break;
-	
-			}
-
-			setCacheContainer(cc);
-
-			registerWithCacheManager();
-			
-			// if configured for materialization, initialize the cacheNameProxy
-			if (cacheNameProxy.getAliasCacheName() != null) {
-				RemoteCache aliasCache = cc.getCache(cacheNameProxy.getAliasCacheName());
-				if (aliasCache == null) {
-					throw new ResourceException(	
-							InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25010, new Object[] {cacheNameProxy.getAliasCacheName()}));
-				}
-				cacheNameProxy.initializeAliasCache(aliasCache);
-			}
-
-		
-		} finally {
-			Thread.currentThread().setContextClassLoader(lcl);
-		}
-		
-		
-	}	
 
 	private void determineCacheType() {
 		String jndiName = getCacheJndiName();
@@ -629,110 +634,13 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 		}
 	}
 
-	protected RemoteCacheManager createRemoteCacheFromProperties(
-			ClassLoader classLoader) throws ResourceException {
-		File f = new File(this.getHotRodClientPropertiesFile());
-		if (!f.exists()) {
-			throw new InvalidPropertyException(
-					InfinispanManagedConnectionFactory.UTIL.getString(
-							"clientPropertiesFileDoesNotExist",
-							f.getAbsoluteFile()));
-
-		}
-		try {
-			Properties props = PropertiesUtils.load(f.getAbsolutePath());
-
-			LogManager
-					.logInfo(
-							LogConstants.CTX_CONNECTOR,
-							"=== Using RemoteCacheManager (created from properties file " + f.getAbsolutePath() + ") ==="); //$NON-NLS-1$
-
-			return createRemoteCache(props, classLoader);
-
-		} catch (Exception err) {
-			throw new ResourceException(err);
-		}
-
-	}
-	
-	protected  RemoteCacheManager createRemoteCacheFromServerList(
-			ClassLoader classLoader) throws ResourceException {
-		Properties props = new Properties();
-		props.put(
-				"infinispan.client.hotrod.server_list", this.getRemoteServerList()); //$NON-NLS-1$
-
-		LogManager.logInfo(LogConstants.CTX_CONNECTOR,
-				"=== Using RemoteCacheManager (loaded by serverlist) ==="); //$NON-NLS-1$
-
-		return createRemoteCache(props, classLoader);
-	}
-	
-	private RemoteCacheManager createRemoteCache(Properties props,
-			ClassLoader classLoader) throws ResourceException {
-		RemoteCacheManager remoteCacheManager;
-		try {
-			ConfigurationBuilder cb = new ConfigurationBuilder();
-			cb.marshaller(new ProtoStreamMarshaller());
-			cb.withProperties(props);
-			if (classLoader != null)
-				cb.classLoader(classLoader);
-			remoteCacheManager = new RemoteCacheManager(cb.build(), true);
-
-		} catch (Exception err) {
-			throw new ResourceException(err);
-		}
-
-		return remoteCacheManager;
-
-	}	
-
-	
-	private RemoteCacheManager getRemoteCacheFromJNDI(
-			String jndiName, ClassLoader classLoader) throws ResourceException {
-
-		Object cache = null;
-		try {
-			Context context = new InitialContext();
-			cache = context.lookup(jndiName);
-		} catch (Exception err) {
-			if (err instanceof RuntimeException)
-				throw (RuntimeException) err;
-			throw new ResourceException(err);
-		}
-
-		if (cache == null) {
-			throw new ResourceException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25025, jndiName));
-		}
-		
-		
-		if (cache instanceof RemoteCacheManager) {
-			LogManager.logInfo(LogConstants.CTX_CONNECTOR,
-				"=== Using RemoteCacheManager (loaded from JNDI " + jndiName + ") ==="); //$NON-NLS-1$
-
-			return cacheContainer;
-		}
-
-		throw new ResourceException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25026, cacheContainer.getClass().getName()));
-
-	}
-	
-	protected void registerWithCacheManager() throws ResourceException {
-		this.cacheSchemaConfigurator.registerSchema(this);
-	}
-	
-	public Version getVersion() throws TranslatorException {
-		RemoteCache rc = this.getCache(this.getCacheNameProxy().getPrimaryCacheKey());
-		return Version.getVersion(rc.getProtocolVersion());
-
-	}
-
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
 		result = prime
 				* result
-				+  (protobufDefFile.hashCode());
+				+  ((protobufDefFile == null) ? 0 : protobufDefFile.hashCode());
 		result = prime
 				* result
 				+ ((remoteServerList == null) ? 0 : remoteServerList.hashCode());
@@ -754,15 +662,33 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 		if (getClass() != obj.getClass())
 			return false;
 		InfinispanManagedConnectionFactory other = (InfinispanManagedConnectionFactory) obj;
-
-		if (!checkEquals(this.remoteServerList, other.remoteServerList)) {
-			return false;
+		if (this.remoteServerList == null) {
+			if (other.remoteServerList != null) {
+				return false;
+			}
+		} else if (!checkEquals(this.remoteServerList, other.remoteServerList)) {
+				return false;
 		}
-		if (!checkEquals(this.hotrodClientPropertiesFile,
+		if (this.hotrodClientPropertiesFile == null) {
+			if (other.hotrodClientPropertiesFile != null) {
+				return false;
+			}
+		} else if (!checkEquals(this.hotrodClientPropertiesFile,
 				other.hotrodClientPropertiesFile)) {
 			return false;
 		}
-		if (!checkEquals(this.cacheJndiName, other.cacheJndiName)) {
+		if (this.cacheJndiName == null) {
+			if (other.cacheJndiName != null) {
+				return false;
+			}
+		} else if (!checkEquals(this.cacheJndiName, other.cacheJndiName)) {
+			return false;
+		}
+		if (this.protobufDefFile == null) {
+			if (other.protobufDefFile != null) {
+				return false;
+			}
+		} else if (!checkEquals(this.protobufDefFile, other.protobufDefFile)) {
 			return false;
 		}
 		return false;
@@ -772,7 +698,6 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 	public void cleanUp() {
 
 		cacheType = null;
-		cacheContainer = null;
 		cl = null;
 		methodUtil.cleanUp();
 

@@ -34,6 +34,7 @@ import org.jboss.teiid.jdg_remote.pojo.AllTypes;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.teiid.resource.spi.BasicConnectionFactory;
 
 
 @SuppressWarnings("nls")
@@ -46,36 +47,44 @@ public class TestInfinispanConnectionFactory  {
 	@Before
     public void beforeEach() throws Exception {  
   
-        afactory = new InfinispanManagedConnectionFactory() {
-			/**
-			 */
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public SerializationContext getContext() {
-				// TODO Auto-generated method stub
-				return null;
-			}
-
-			@Override
-			public RemoteCacheManager createRemoteCacheFromProperties(
-					ClassLoader classLoader) throws ResourceException {
-				// TODO Auto-generated method stub
-				return null;
-			}
-
-			@Override
-			public RemoteCacheManager createRemoteCacheFromServerList(
-					ClassLoader classLoader) throws ResourceException {
-				// TODO Auto-generated method stub
-				return null;
-			}
-			
-			@Override
-			protected void registerWithCacheManager() throws ResourceException {
-				// don't call JDG
-			}			
-
+        afactory = new InfinispanManagedConnectionFactory()
+            {
+        	@Override
+        	public BasicConnectionFactory<InfinispanConnectionImpl> createConnectionFactory()
+        			throws ResourceException {
+        		super.validation();
+        		super.loadClasses();
+        		return null;
+        	}
+//			/**
+//			 */
+//			private static final long serialVersionUID = 1L;
+//
+//			@Override
+//			public SerializationContext getContext() {
+//				// TODO Auto-generated method stub
+//				return null;
+//			}
+//
+//			@Override
+//			public RemoteCacheManager createRemoteCacheFromProperties(
+//					ClassLoader classLoader) throws ResourceException {
+//				// TODO Auto-generated method stub
+//				return null;
+//			}
+//
+//			@Override
+//			public RemoteCacheManager createRemoteCacheFromServerList(
+//					ClassLoader classLoader) throws ResourceException {
+//				// TODO Auto-generated method stub
+//				return null;
+//			}
+//			
+//			@Override
+//			protected void registerWithCacheManager() throws ResourceException {
+//				// don't call JDG
+//			}			
+//
 		};
 		
 	}	
@@ -99,10 +108,10 @@ public class TestInfinispanConnectionFactory  {
 		afactory.setMessageMarshallers("org.jboss.teiid.jdg_remote.pojo.AllTypes:org.jboss.teiid.jdg_remote.pojo.marshaller.AllTypesMarshaller");
 		afactory.setMessageDescriptor("org.jboss.teiid.jdg_remote.pojo.AllTypes");
 		afactory.setCacheTypeMap("AllTypesCache:org.jboss.teiid.jdg_remote.pojo.AllTypes;intKey:" + Integer.class.getName());
-		afactory.setHotRodClientPropertiesFile("");
+		afactory.setHotRodClientPropertiesFile("./src/test/resources/jdg.properties");
 		
 		
-		afactory.createConnectionFactory().getConnection();
+		afactory.createConnectionFactory();
 		
 		assertEquals("CacheClass Type not the same", AllTypes.class, afactory.getCacheClassType());
 		assertEquals("Cache name not the same", "AllTypesCache", afactory.getCacheName());
@@ -121,10 +130,10 @@ public class TestInfinispanConnectionFactory  {
 		afactory.setMessageMarshallers("org.jboss.teiid.jdg_remote.pojo.AllTypes:org.jboss.teiid.jdg_remote.pojo.marshaller.AllTypesMarshaller");
 		afactory.setMessageDescriptor("org.jboss.teiid.jdg_remote.pojo.AllTypes");
 		afactory.setCacheTypeMap("AllTypesCache:org.jboss.teiid.jdg_remote.pojo.AllTypes;intKey:" + String.class.getName());
-		afactory.setHotRodClientPropertiesFile("");
+		afactory.setHotRodClientPropertiesFile("./src/test/resources/jdg.properties");
 		
 		
-		afactory.createConnectionFactory().getConnection();
+		afactory.createConnectionFactory();
 		
 		assertEquals("CacheClass Type not the same", AllTypes.class, afactory.getCacheClassType());
 		assertEquals("Cache name not the same", "AllTypesCache", afactory.getCacheName());
@@ -145,10 +154,10 @@ public class TestInfinispanConnectionFactory  {
 		afactory.setMessageMarshallers("org.jboss.teiid.jdg_remote.pojo.AllTypes:org.jboss.teiid.jdg_remote.pojo.marshaller.AllTypesMarshaller");
 		afactory.setMessageDescriptor("org.jboss.teiid.jdg_remote.pojo.AllTypes");
 		afactory.setCacheTypeMap("AllTypesCache:org.jboss.teiid.jdg_remote.pojo.AllTypes");
-		afactory.setHotRodClientPropertiesFile("");
+		afactory.setHotRodClientPropertiesFile("./src/test/resources/jdg.properties");
 		
 		
-		afactory.createConnectionFactory().getConnection();
+		afactory.createConnectionFactory();
 		
 		assertEquals("CacheClass Type not the same", AllTypes.class, afactory.getCacheClassType());
 		assertEquals("Cache name not the same", "AllTypesCache", afactory.getCacheName());
@@ -166,10 +175,10 @@ public class TestInfinispanConnectionFactory  {
 		afactory.setMessageMarshallers("org.jboss.teiid.jdg_remote.pojo.AllTypes:org.jboss.teiid.jdg_remote.pojo.marshaller.AllTypesMarshaller");
 		afactory.setMessageDescriptor("org.jboss.teiid.jdg_remote.pojo.AllTypes");
 		afactory.setCacheTypeMap("AllTypesCache:org.jboss.teiid.jdg_remote.pojo.AllTypes;intKey");
-		afactory.setHotRodClientPropertiesFile("");
+		afactory.setHotRodClientPropertiesFile("./src/test/resources/jdg.properties");
 		
 		
-		afactory.createConnectionFactory().getConnection();
+		afactory.createConnectionFactory();
 		
 		assertEquals("CacheClass Type not the same", AllTypes.class, afactory.getCacheClassType());
 		assertEquals("Cache name not the same", "AllTypesCache", afactory.getCacheName());
@@ -189,10 +198,10 @@ public class TestInfinispanConnectionFactory  {
 		afactory.setMessageMarshallers("");
 		afactory.setMessageDescriptor("org.jboss.teiid.jdg_remote.pojo.AllTypes");
 		afactory.setCacheTypeMap("AllTypesCache");
-		afactory.setHotRodClientPropertiesFile("");
+		afactory.setHotRodClientPropertiesFile("./src/test/resources/jdg.properties");
 		
 		
-		afactory.createConnectionFactory().getConnection();
+		afactory.createConnectionFactory();
 		
 	}	
 
