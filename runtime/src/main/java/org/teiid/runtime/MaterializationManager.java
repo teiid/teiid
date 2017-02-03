@@ -36,6 +36,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.client.util.ResultsFuture.CompletionListener;
@@ -249,6 +250,12 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 		public void run() {
 			vdb.removeTask(future);
 			String query = "execute SYSADMIN.matViewStatus('"+StringUtil.replaceAll(table.getParent().getName(), "'", "''")+"', '"+StringUtil.replaceAll(table.getName(), "'", "''")+"')"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ 
+			
+			// in rare situations when VDB is force re-deployed, and is results in invalid
+			// deployment, due to nature of VDB deployment even previous VDB is removed. 
+			if (vdb.getVDB().getStatus() != Status.ACTIVE) {
+			    return;
+			}
 			
 			List<Map<String, String>> result = null;
 			try {
