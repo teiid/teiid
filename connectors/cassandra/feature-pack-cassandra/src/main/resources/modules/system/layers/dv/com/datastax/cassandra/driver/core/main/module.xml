@@ -6,8 +6,7 @@
     
     <resources>
         <artifact name="${com.datastax.cassandra:cassandra-driver-core}"/>
-        <artifact name="${com.codahale.metrics:metrics-core}"/>
-        <artifact name="${com.google.guava:guava}"/>
+        <artifact name="${io.dropwizard.metrics:metrics-core}"/>
     </resources>
 
     <dependencies>
@@ -15,10 +14,7 @@
         <module name="sun.jdk" />
         <module name="org.slf4j" />
         <module name="io.netty"/>
-        <module name="org.codehaus.jackson.jackson-core-asl"/>
-        <module name="org.codehaus.jackson.jackson-mapper-asl"/>
-        <module name="org.apache.thrift"/>
-        <module name="org.apache.httpcomponents"/>
+        <module name="com.google.guava"/>
     </dependencies>
 
 </module>

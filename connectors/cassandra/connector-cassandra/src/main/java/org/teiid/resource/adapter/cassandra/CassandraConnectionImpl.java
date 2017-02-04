@@ -67,7 +67,7 @@ public class CassandraConnectionImpl extends BasicConnection implements Cassandr
 		
 		this.session = cluster.connect(config.getKeyspace());
 		
-		this.version = this.session.getCluster().getConfiguration().getProtocolOptions().getProtocolVersionEnum();
+		this.version = this.session.getCluster().getConfiguration().getProtocolOptions().getProtocolVersion();
 	}
 
 	@Override
