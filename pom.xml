@@ -69,7 +69,7 @@
         <version.solr>4.6.0</version.solr>
         <version.noggit>0.5</version.noggit>
         <version.aws-java-sdk>1.11.0</version.aws-java-sdk>
-        <version.cassandra-driver-core>2.1.3</version.cassandra-driver-core>
+        <version.cassandra-driver-core>3.1.3</version.cassandra-driver-core>
         <version.org.jboss.resteasy.tjws>3.0.11.Final</version.org.jboss.resteasy.tjws>        
         <version.postgresql>9.2-1004-jdbc4</version.postgresql>
         <derby.version>10.2.1.6</derby.version>

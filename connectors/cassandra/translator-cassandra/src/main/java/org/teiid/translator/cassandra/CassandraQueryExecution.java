@@ -150,14 +150,13 @@ public class CassandraQueryExecution implements ResultSetExecution {
 				values.add(Integer.valueOf(row.getInt(i)));
 				break;
 			case LIST:
-				values.add(row.getList(i, columnDefinitions.getType(i).getTypeArguments().get(0).asJavaClass()));
+				values.add(row.getList(i, Object.class));
 				break;
 			case MAP:
-				values.add(row.getMap(i, columnDefinitions.getType(i).getTypeArguments().get(0).asJavaClass(),
-										 columnDefinitions.getType(i).getTypeArguments().get(1).asJavaClass()));
+				values.add(row.getMap(i, Object.class, Object.class));
 				break;
 			case SET:
-				values.add(row.getSet(i, columnDefinitions.getType(i).getTypeArguments().get(0).asJavaClass()));
+				values.add(row.getSet(i, Object.class));
 				break;
 			case TEXT:
 				values.add(row.getString(i));
