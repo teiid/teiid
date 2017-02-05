@@ -8,16 +8,17 @@
             "teiid_rel:MATVIEW_TTL" 20000,
             "teiid_rel:ALLOW_MATVIEW_MANAGEMENT" 'true',
             "teiid_rel:MATVIEW_STATUS_TABLE" 'materialized.status',
-            "teiid_rel:MATVIEW_LOADNUMBER_COLUMN" 'LoadNumber'
+            "teiid_rel:MATVIEW_LOADNUMBER_COLUMN" 'LoadNumber',
+            "teiid_rel:MATVIEW_SHARE_SCOPE" 'VDB'
         )
          AS SELECT 1, '2';
         ]]>
        </metadata>        
     </model>
     <model name="materialized">
-        <source name="s1" translator-name="loopback"/> 
+        <source name="s1" translator-name="h2" connection-jndi-name="java:/matview-ds"/> 
         <metadata type = "DDL"><![CDATA[        
-        CREATE FOREIGN TABLE G1 (e1 integer PRIMARY KEY, e2 varchar(25), LoadNumber long);
+        CREATE FOREIGN TABLE G1 (e1 integer PRIMARY KEY, e2 varchar(25), LoadNumber long) OPTIONS(UPDATABLE true);
         CREATE FOREIGN TABLE status (
             VDBName varchar(50) not null,
             VDBVersion varchar(50) not null,
@@ -31,7 +32,7 @@
             Updated timestamp not null,
             LoadNumber long not null,
             PRIMARY KEY (VDBName, VDBVersion, SchemaName, Name)
-        );
+        )OPTIONS (UPDATABLE true);
         ]]>
        </metadata>        
     </model>        

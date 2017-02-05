@@ -98,7 +98,6 @@ public class MetadataValidator {
 			new ResolveQueryPlans().execute(vdb, store, report, this);
 			new MinimalMetadata().execute(vdb, store, report, this);
 			new MatViewPropertiesValidator().execute(vdb, store, report, this);
-			new MatViewScopeValidator().execute(vdb, store, report, this);
 		}
 		return report;
 	}
@@ -315,6 +314,11 @@ public class MetadataValidator {
                     	Table matTable = t.getMaterializedTable();
                         Table stageTable = t.getMaterializedStageTable();
                         
+                        // set the original names of the VDB with view, incase VDB is imported
+                        // into another VDB
+                        t.setProperty(MATVIEW_OWNER_VDB_NAME, vdb.getName());
+                        t.setProperty(MATVIEW_OWNER_VDB_VERSION, vdb.getVersion());
+                        
                         String beforeScript = t.getProperty(MATVIEW_BEFORE_LOAD_SCRIPT, false);
                         String afterScript = t.getProperty(MATVIEW_AFTER_LOAD_SCRIPT, false);
     					if (beforeScript == null || afterScript == null) {
@@ -347,6 +351,12 @@ public class MetadataValidator {
                         if (matViewLoadNumberColumn == null && stageTable == null && loadScript == null) {
                         	metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31216, t.getFullName()));
                         	continue; 
+                        }
+                        
+                        String scope = t.getProperty(MATVIEW_SHARE_SCOPE, false);
+                        if (scope != null && !scope.equalsIgnoreCase(Scope.IMPORTED.name()) && !scope.equalsIgnoreCase(Scope.FULL.name())) {
+                            metadataValidator.log(report, model, Severity.WARNING, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31253, t.getFullName(), scope));
+                            t.setProperty(MATVIEW_SHARE_SCOPE, Scope.IMPORTED.name());
                         }
                         
 						Table statusTable = findTableByName(store, status);
@@ -556,8 +566,9 @@ public class MetadataValidator {
 					t.setProperty(MaterializationMetadataRepository.MATVIEW_PREFER_MEMORY, String.valueOf(cacheHint.getPrefersMemory()));
 				}
 				if (cacheHint != null && cacheHint.getScope() != null && addCacheHint
-						&& t.getProperty(MaterializationMetadataRepository.MATVIEW_SCOPE, false) == null) {
-					t.setProperty(MaterializationMetadataRepository.MATVIEW_SCOPE, cacheHint.getScope().name());
+						&& t.getProperty(MaterializationMetadataRepository.MATVIEW_SHARE_SCOPE, false) == null) {
+				    log(report, model, Severity.WARNING, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31252, t.getName(), cacheHint.getScope().name()));				    
+					t.setProperty(MaterializationMetadataRepository.MATVIEW_SHARE_SCOPE, MaterializationMetadataRepository.Scope.IMPORTED.name());
 				}				
     		}
 			processReport(model, record, report, resolverReport);
@@ -799,30 +810,4 @@ public class MetadataValidator {
 			
 		}
 	}
-	
-    static class MatViewScopeValidator implements MetadataRule {
-        @Override
-        public void execute(VDBMetaData vdb, MetadataStore store, ValidatorReport report, MetadataValidator metadataValidator) {
-            for (Schema schema:store.getSchemaList()) {
-                // only walk on schemas that are imported
-                if (!vdb.getImportedModels().contains(schema.getName())) {
-                    continue;
-                }
-                ModelMetaData model = vdb.getModel(schema.getName());
-                for (Table t:schema.getTables().values()) {
-                    String manage = t.getProperty(ALLOW_MATVIEW_MANAGEMENT, false);
-                    if (manage != null && Boolean.valueOf(manage)) {
-                        if (t.isVirtual() && t.isMaterialized() && t.getMaterializedTable() != null) {
-                            String scope = t.getProperty(MATVIEW_SCOPE, false);
-                            if (scope == null || !scope.equalsIgnoreCase("SCHEMA")) {
-                                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31251,
-                                        t.getFullName(), MATVIEW_SCOPE));
-                                continue;                            
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
 }
