@@ -44,18 +44,21 @@ import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
 
-import com.datastax.driver.core.ProtocolVersion;
+import com.datastax.driver.core.VersionNumber;
 
 
 @Translator(name = "cassandra", description = "A translator for Cassandra NoSql database")
 public class CassandraExecutionFactory extends ExecutionFactory<ConnectionFactory, CassandraConnection> {
-	public static final BundleUtil UTIL = BundleUtil.getBundleUtil(CassandraExecutionFactory.class);
+	private static final VersionNumber DEFAULT_VERSION = VersionNumber.parse("1.2.0"); //$NON-NLS-1$
+    private static final VersionNumber V2 = VersionNumber.parse("2.0.0"); //$NON-NLS-1$
+	private static final VersionNumber V2_2 = VersionNumber.parse("2.2.0"); //$NON-NLS-1$
+    public static final BundleUtil UTIL = BundleUtil.getBundleUtil(CassandraExecutionFactory.class);
 
 	public static enum Event implements BundleUtil.Event {
 		TEIID22000
 	}
 
-	private boolean isV2;
+	private VersionNumber version;
 	
 	@Override
 	public void start() throws TranslatorException {
@@ -136,34 +139,34 @@ public class CassandraExecutionFactory extends ExecutionFactory<ConnectionFactor
 	
 	@Override
 	public boolean supportsBulkUpdate() {
-		return isV2;
+		return version.compareTo(V2) >= 0;
 	}
 	
 	@Override
 	public boolean supportsBatchedUpdates() {
-		return isV2;
+	    return version.compareTo(V2) >= 0;
 	}
-      /*
-       @Override
-       public boolean supportsAggregatesSum() {
-         return true;
-       }
+      
+    @Override
+    public boolean supportsAggregatesSum() {
+        return version.compareTo(V2_2) >= 0;
+    }
 
-       @Override
-       public boolean supportsAggregatesAvg() {
-           return true;
-       }
-    
-	@Override
-        public boolean supportsAggregatesMin() {
-    	    return true;
-        }
-	
-        @Override
-        public boolean supportsAggregatesMax() {
-    	    return true;
-        }
-	*/
+    @Override
+    public boolean supportsAggregatesAvg() {
+        return version.compareTo(V2_2) >= 0;
+    }
+
+    @Override
+    public boolean supportsAggregatesMin() {
+        return version.compareTo(V2_2) >= 0;
+    }
+
+    @Override
+    public boolean supportsAggregatesMax() {
+        return version.compareTo(V2_2) >= 0;
+    }
+
 	@Override
 	public boolean returnsSingleUpdateCount() {
 		return true;
@@ -175,8 +178,9 @@ public class CassandraExecutionFactory extends ExecutionFactory<ConnectionFactor
 		if (connection == null) {
 			return;
 		}
-		if (connection.getVersion().compareTo(ProtocolVersion.V2) >= 0) {
-			this.isV2 = true;
+		this.version = connection.getVersion();
+		if (this.version == null) {
+		     this.version = DEFAULT_VERSION;  
 		}
 	}
 	

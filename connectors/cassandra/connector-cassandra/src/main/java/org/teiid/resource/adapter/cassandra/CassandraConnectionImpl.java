@@ -23,6 +23,7 @@
 package org.teiid.resource.adapter.cassandra;
 
 import java.util.List;
+import java.util.Set;
 
 import javax.resource.ResourceException;
 
@@ -41,7 +42,7 @@ public class CassandraConnectionImpl extends BasicConnection implements Cassandr
 	private Cluster cluster = null;
 	private Session session = null;
 	private Metadata metadata = null;
-	private ProtocolVersion version;
+	private VersionNumber version;
 	
 	public CassandraConnectionImpl(CassandraManagedConnectionFactory config, Metadata metadata) {
 		this.config = config;
@@ -67,7 +68,11 @@ public class CassandraConnectionImpl extends BasicConnection implements Cassandr
 		
 		this.session = cluster.connect(config.getKeyspace());
 		
-		this.version = this.session.getCluster().getConfiguration().getProtocolOptions().getProtocolVersion();
+		Set<Host> allHosts = cluster.getMetadata().getAllHosts();
+		if (!allHosts.isEmpty()) {
+            Host host = allHosts.iterator().next();
+            this.version = host.getCassandraVersion();
+		}
 	}
 
 	@Override
@@ -125,7 +130,7 @@ public class CassandraConnectionImpl extends BasicConnection implements Cassandr
 	}
 	
 	@Override
-	public ProtocolVersion getVersion() {
+	public VersionNumber getVersion() {
 		return version;
 	}
 	

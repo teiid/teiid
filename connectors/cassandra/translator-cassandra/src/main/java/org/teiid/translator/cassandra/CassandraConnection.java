@@ -28,8 +28,8 @@ import javax.resource.ResourceException;
 import javax.resource.cci.Connection;
 
 import com.datastax.driver.core.KeyspaceMetadata;
-import com.datastax.driver.core.ProtocolVersion;
 import com.datastax.driver.core.ResultSetFuture;
+import com.datastax.driver.core.VersionNumber;
 
 /**
  * Connection to Cassandra NoSql database.
@@ -64,9 +64,9 @@ public interface CassandraConnection extends Connection{
 	ResultSetFuture executeBatch(String update, List<Object[]> values);
 
 	/**
-	 * Get the protocol version in use for this connection
+	 * Get the version in use for this connection
 	 * @return
 	 */
-	ProtocolVersion getVersion();
+	VersionNumber getVersion();
 	
 }
