@@ -24,6 +24,7 @@ package org.teiid.translator.cassandra;
 
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.resource.ResourceException;
@@ -39,6 +40,7 @@ import org.teiid.translator.cassandra.CassandraExecutionFactory.Event;
 
 import com.datastax.driver.core.ColumnMetadata;
 import com.datastax.driver.core.DataType.Name;
+import com.datastax.driver.core.IndexMetadata;
 import com.datastax.driver.core.TableMetadata;
 
 public class CassandraMetadataProcessor implements MetadataProcessor<CassandraConnection>{
@@ -63,7 +65,14 @@ public class CassandraMetadataProcessor implements MetadataProcessor<CassandraCo
 	private void addTable(MetadataFactory factory, TableMetadata columnFamily) {
 		Table table = factory.addTable(columnFamily.getName());
 		addColumnsToTable(factory, table, columnFamily);
-		addPrimaryKey(factory, table, columnFamily);
+        addPrimaryKey(factory, table, columnFamily);
+		for (IndexMetadata index : columnFamily.getIndexes()) {
+		    Column c = table.getColumnByName(index.getTarget());
+		    if (c != null) {
+		        c.setSearchType(SearchType.Searchable);
+	            factory.addIndex(index.getName(), false, Arrays.asList(index.getTarget()), table); 
+		    }
+		}
 		table.setSupportsUpdate(true);
 	}
 
@@ -73,15 +82,14 @@ public class CassandraMetadataProcessor implements MetadataProcessor<CassandraCo
 	 * @param columnFamily
 	 */
 	private void addPrimaryKey(MetadataFactory factory, Table table, TableMetadata columnFamily) {
-		List<ColumnMetadata> primaryKeys = new ArrayList<ColumnMetadata>();
-		primaryKeys = columnFamily.getPrimaryKey();
-		List<String> PKNames = new ArrayList<String>();
+		List<ColumnMetadata> primaryKeys = columnFamily.getPrimaryKey();
+		List<String> names = new ArrayList<String>();
 		
 		for (ColumnMetadata columnName : primaryKeys){
-			PKNames.add(columnName.getName());
+		    names.add(columnName.getName());
 			table.getColumnByName(columnName.getName()).setSearchType(SearchType.Searchable);
 		}
-		factory.addPrimaryKey("PK_" + columnFamily.getName(), PKNames, table); //$NON-NLS-1$
+		factory.addPrimaryKey("PK_" + columnFamily.getName(), names, table); //$NON-NLS-1$
 	}
 
 	/**
