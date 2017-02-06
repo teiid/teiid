@@ -452,7 +452,9 @@ public class RealMetadataFactory {
         virtGroupManaged.setMaterializedStageTable(physGroupStage);
         virtGroupManaged.setProperty(MaterializationMetadataRepository.ALLOW_MATVIEW_MANAGEMENT, "true");
         virtGroupManaged.setProperty(MaterializationMetadataRepository.MATVIEW_STATUS_TABLE, "MatSrc.Status");
-        virtGroupManaged.setProperty(MaterializationMetadataRepository.MATVIEW_SHARE_SCOPE, "SCHEMA");
+        virtGroupManaged.setProperty(MaterializationMetadataRepository.MATVIEW_SHARE_SCOPE, "FULL");
+        virtGroupManaged.setProperty(MaterializationMetadataRepository.MATVIEW_OWNER_VDB_NAME, "X");
+        virtGroupManaged.setProperty(MaterializationMetadataRepository.MATVIEW_OWNER_VDB_VERSION, "1");
         
         
         //add one virtual group that uses the materialized group in transformation with NOCACHE option

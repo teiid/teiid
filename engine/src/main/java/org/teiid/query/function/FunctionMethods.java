@@ -91,6 +91,7 @@ import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.query.metadata.MaterializationMetadataRepository;
+import org.teiid.query.metadata.MaterializationMetadataRepository.Scope;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 import org.teiid.query.util.CommandContext;
@@ -1717,13 +1718,28 @@ public final class FunctionMethods {
 			
 			//add quoting if needed, although this needs to be resolved to be fully correct
 			statusTable = SQLStringVisitor.getSQLString(new GroupSymbol(statusTable)).toString();
+
+			String ownerVDB = context.getMetadata().getExtensionProperty(id, MaterializationMetadataRepository.MATVIEW_OWNER_VDB_NAME, false);
+			if (ownerVDB == null) {
+			    ownerVDB = context.getVdbName();
+			}
+			
+            String ownerVersion = context.getMetadata().getExtensionProperty(id, MaterializationMetadataRepository.MATVIEW_OWNER_VDB_VERSION, false);
+            if (ownerVersion == null) {
+                ownerVersion = context.getVdbVersion();
+            }
+            
+            String scope = context.getMetadata().getExtensionProperty(id, MaterializationMetadataRepository.MATVIEW_SHARE_SCOPE, false);
+            if (scope != null && Scope.valueOf(scope) == Scope.FULL) {
+                ownerVersion = "0";
+            }
 			
 			PreparedStatement ps = null;
 			try {
 				Connection c = context.getConnection();
 				ps = c.prepareStatement("SELECT Valid, LoadState FROM "+statusTable+" WHERE VDBName = ? AND VDBVersion = ? AND SchemaName = ? AND Name = ?"); //$NON-NLS-1$ //$NON-NLS-2$
-				ps.setString(1, context.getVdbName());
-				ps.setString(2, context.getVdbVersion());
+				ps.setString(1, ownerVDB);
+				ps.setString(2, ownerVersion);
 				ps.setString(3, schemaName);
 				ps.setString(4, viewName);
 				ResultSet rs = ps.executeQuery();

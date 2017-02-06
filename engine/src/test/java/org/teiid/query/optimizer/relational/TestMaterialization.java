@@ -207,7 +207,14 @@ public class TestMaterialization {
         
         Command command = helpGetCommand(userSql, metadata, null);
         
-        RelationalPlan plan = (RelationalPlan)TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT g_0.e1 FROM MatTable.MatTable AS g_0 WHERE (SELECT mvstatus('MatView', 'ManagedMatView', Valid, LoadState, null) FROM (SELECT 1) AS x LEFT OUTER JOIN MatSrc.Status ON SchemaName = 'MatView' AND Name = 'ManagedMatView' LIMIT 2) = 1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        RelationalPlan plan = (RelationalPlan) TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(),
+                analysis,
+                new String[] {
+                        "SELECT g_0.e1 FROM MatTable.MatTable AS g_0 WHERE (SELECT mvstatus('MatView', 'ManagedMatView', "
+                        + "Valid, LoadState, null) FROM (SELECT 1) AS x LEFT OUTER JOIN MatSrc.Status "
+                        + "ON VDBName = 'X' AND VDBVersion = '0' AND SchemaName = 'MatView' "
+                        + "AND Name = 'ManagedMatView' LIMIT 2) = 1" }, //$NON-NLS-1$
+                ComparisonMode.EXACT_COMMAND_STRING);
 
         Collection<Annotation> annotations = analysis.getAnnotations();
         assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$

@@ -52,10 +52,13 @@ public class MaterializationMetadataRepository extends MetadataRepository {
 	public static final String MATVIEW_SCOPE = "{http://www.teiid.org/ext/relational/2012}MATVIEW_SCOPE"; //$NON-NLS-1$
 	public static final String MATVIEW_LOADNUMBER_COLUMN = "{http://www.teiid.org/ext/relational/2012}MATVIEW_LOADNUMBER_COLUMN"; //$NON-NLS-1$
 	
+	public static final String MATVIEW_OWNER_VDB_NAME = "{http://www.teiid.org/ext/relational/2012}MATVIEW_OWNER_VDB_NAME"; //$NON-NLS-1$
+	public static final String MATVIEW_OWNER_VDB_VERSION = "{http://www.teiid.org/ext/relational/2012}MATVIEW_OWNER_VDB_VERSION"; //$NON-NLS-1$
+	
 	public static final String MATVIEW_WRITE_THROUGH = "{http://www.teiid.org/ext/relational/2012}MATVIEW_WRITE_THROUGH"; //$NON-NLS-1$
 	
 	public enum LoadStates {NEEDS_LOADING, LOADING, LOADED, FAILED_LOAD};
-	public enum Scope {NONE, VDB, SCHEMA};
+	public enum Scope {IMPORTED, FULL};
 	public enum ErrorAction {THROW_EXCEPTION, IGNORE, WAIT}
 	// Status table column names
 	//VDBName, VDBVersion, SchemaName, Name, TargetSchemaName, TargetName, Valid, LoadState, Updated, Cardinality, LoadNumber

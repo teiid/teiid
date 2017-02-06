@@ -95,6 +95,7 @@ public class TestExternalMatViews {
 		c.createStatement().execute(matView);
 		c.createStatement().execute(matViewStage);
 		c.createStatement().execute(matView2);
+		c.createStatement().execute("CREATE table G1 (e1 int primary key, e2 varchar(50), LoadNumber long)");
 		c.close();
 	}
 	
@@ -191,7 +192,6 @@ public class TestExternalMatViews {
                 				+ "execute matview.native(''ALTER TABLE MAT_V1_STAGE RENAME TO MAT_V1'');"
                 				+ "execute matview.native(''ALTER TABLE MAT_V1_TEMP RENAME TO MAT_V1_STAGE''); "
                 			+ "end', "
-                + "\"teiid_rel:MATVIEW_SHARE_SCOPE\" 'NONE', "
                 + "\"teiid_rel:MATVIEW_ONERROR_ACTION\" 'THROW_EXCEPTION') "
 				+ "AS select col, col1 from source.physicalTbl");
 		server.deployVDB("comp", sourceModel, viewModel, matViewModel);
@@ -235,18 +235,54 @@ public class TestExternalMatViews {
 	}
 
 	@Test
-	public void testVDBImportScopeWarning() {
-	    try {
-    	    server.addTranslator("loopback", new LoopbackExecutionFactory());
-    	    server.deployVDB(new FileInputStream(UnitTestUtil.getTestDataFile("child-vdb.xml")));
-    	    server.deployVDB(new FileInputStream(UnitTestUtil.getTestDataFile("parent-vdb.xml")));
-    	    fail("must have failed the validation beacuse matview is not shared");
-	    } catch (Exception e) {
-	        assertEquals("TEIID40095 TEIID31251 Materialized view VM1.G1 "
-	                + "is not configured correctly. The materialization property "
-	                + "{http://www.teiid.org/ext/relational/2012}MATVIEW_SCOPE on View VM1.G1 "
-	                + "MUST be defined with \"SCHEMA\" scope.  ", e.getMessage());
-	    }
+	public void testVDBImportScopeWarning() throws Exception {
+        H2ExecutionFactory executionFactory = new H2ExecutionFactory();
+        executionFactory.setSupportsDirectQueryProcedure(true);
+        executionFactory.start();
+        server.addTranslator("h2", executionFactory);
+        server.addConnectionFactory("java:/matview-ds", h2DataSource);      
+	    server.deployVDB(new FileInputStream(UnitTestUtil.getTestDataFile("child-vdb.xml")));
+	    server.deployVDB(new FileInputStream(UnitTestUtil.getTestDataFile("parent-vdb.xml")));
+	    
+	    Thread.sleep(1000);
+	    
+	    String uidQuery = "SELECT UID FROM Sys.Tables WHERE VDBName = 'parent' AND SchemaName = 'VM1' AND Name = 'G1'";
+
+	    conn = server.createConnection("jdbc:teiid:parent");
+        Statement s = conn.createStatement();
+        ResultSet rs = s.executeQuery(uidQuery);
+        rs.next();
+        String uid = rs.getString(1);
+        
+        String scopeQuery = "SELECT \"value\" from SYS.Properties WHERE UID = '"+uid
+                +"' AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_SHARE_SCOPE'";
+        s = conn.createStatement();
+        rs = s.executeQuery(scopeQuery);
+        rs.next();
+        assertEquals("IMPORTED", rs.getString(1)); // check if the default switching working
+        
+        s = conn.createStatement();
+        rs = s.executeQuery("select * from VM1.G1");
+        rs.next();
+        assertEquals(1, rs.getInt(1));
+        assertEquals("2", rs.getString(2));
+        
+        Connection c = h2DataSource.getConnection();
+        rs = c.createStatement().executeQuery("SELECT VDBVersion FROm Status WHERE VDBName = 'child'");
+        rs.next();
+        assertEquals(1, rs.getInt(1)); // 1 means IMPORTED
+        
+        rs = s.executeQuery("select * from VM2.G1");
+        rs.next();
+        assertEquals(1, rs.getInt(1));
+        assertEquals("2", rs.getString(2));
+
+        rs = c.createStatement().executeQuery("SELECT VDBVersion FROm Status WHERE VDBName = 'parent'");
+        rs.next();
+        assertEquals(0, rs.getInt(1)); // 0 means FULL
+        
+        conn.close();
+        c.close();
 	}
 	
 	@Test
