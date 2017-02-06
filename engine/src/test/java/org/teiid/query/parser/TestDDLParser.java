@@ -34,9 +34,9 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.*;
 import org.teiid.metadata.Column.SearchType;
-import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.metadata.Grant.Permission;
 import org.teiid.metadata.Grant.Permission.Privilege;
+import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.metadata.MetadataValidator;
@@ -1117,7 +1117,23 @@ public class TestDDLParser {
         Server s = db.getServer("x");
         assertNotNull(s);
         assertEquals("v2", s.getProperty("k1", false));
-    }    
+    } 
+    
+    @Test 
+    public void testCreateServerNoType() throws Exception {
+        String ddl = "CREATE DATABASE FOO VERSION '2';"
+                + "USE DATABASE FOO version '2';"
+                + "CREATE FOREIGN DATA WRAPPER orcl;"
+                + "CREATE SERVER x FOREIGN DATA WRAPPER orcl;";
+                
+        Database db = helpParse(ddl);
+        
+        assertEquals("FOO", db.getName());
+        assertEquals("2", db.getVersion());
+        Server s = db.getServer("x");
+        assertNotNull(s);
+        assertTrue(s.isVirtual());
+    } 
     
     @Test 
     public void testCreateDatabaseNoVersion() throws Exception {

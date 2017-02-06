@@ -30,21 +30,15 @@ import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
+import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
-import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
-import org.teiid.metadata.DataWrapper;
-import org.teiid.metadata.Database;
+import org.teiid.metadata.*;
 import org.teiid.metadata.Database.ResourceType;
-import org.teiid.metadata.Grant;
 import org.teiid.metadata.Grant.Permission;
 import org.teiid.metadata.Grant.Permission.Privilege;
-import org.teiid.metadata.MetadataStore;
-import org.teiid.metadata.Role;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Server;
 
 public class DatabaseUtil {
 
@@ -247,11 +241,7 @@ public class DatabaseUtil {
                     if (connectionName == null) {
                         connectionName = server.getName();
                     }
-                    if (server.getType().equalsIgnoreCase("NONE")) {
-                        mmd.addSourceMapping(server.getName(), server.getDataWrapper(), null);
-                    } else {
-                        mmd.addSourceMapping(server.getName(), server.getDataWrapper(), connectionName);
-                    }
+                    mmd.addSourceMapping(server.getName(), server.getDataWrapper(), connectionName);
                 }
             } else {
                 mmd.setModelType(Model.Type.VIRTUAL);

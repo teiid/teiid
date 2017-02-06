@@ -5403,12 +5403,13 @@ void createServer(DatabaseStore dbStore) :
         server = new Server(serverName);
       }
     )
-    <TYPE>
-    ( type = stringVal()
+    [<TYPE>
+      ( type = stringVal()
         {
             server.setType(type);
         } 
-    )         
+      )
+    ]         
     [<VERSION>
       ( version = stringVal()
         {

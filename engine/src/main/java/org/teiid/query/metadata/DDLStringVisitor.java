@@ -281,14 +281,13 @@ public class DDLStringVisitor {
     }
 
     private void visit(Server server) {
-        if (server.getName().equalsIgnoreCase("none")) {
-            return;
-        }
         append(CREATE).append(SPACE).append(SERVER).append(SPACE)
-                .append(SQLStringVisitor.escapeSinglePart(server.getName())).append(SPACE).append(TYPE).append(SPACE)
-                .append(TICK).append(server.getType()).append(TICK);
+                .append(SQLStringVisitor.escapeSinglePart(server.getName()));
+        if (!server.isVirtual()) { 
+            append(SPACE).append(TYPE).append(SPACE).append(new Constant(server.getType()));
+        }
         if (server.getVersion() != null) {
-            append(SPACE).append(VERSION).append(SPACE).append(TICK).append(server.getVersion()).append(TICK);
+            append(SPACE).append(VERSION).append(SPACE).append(new Constant(server.getVersion()));
         }
         append(SPACE).append(FOREIGN).append(SPACE).append(DATA).append(SPACE).append(WRAPPER).append(SPACE);
         append(SQLStringVisitor.escapeSinglePart(server.getDataWrapper()));

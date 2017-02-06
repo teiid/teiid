@@ -27,7 +27,7 @@ package org.teiid.metadata;
  */
 public class Server extends AbstractMetadataRecord {
     private static final long serialVersionUID = -3969389574210542638L;
-    private String type = "NONE"; //$NON-NLS-1$
+    private String type;
     private String version;
     private String dataWrapperName;
     
@@ -68,6 +68,6 @@ public class Server extends AbstractMetadataRecord {
     }
 
 	public boolean isVirtual() {
-		return type.equalsIgnoreCase("NONE"); //$NON-NLS-1$
+		return type == null;
 	}
 }
