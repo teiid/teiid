@@ -22,11 +22,7 @@
 
 package org.teiid.transport;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -363,6 +359,13 @@ public class TestJDBCSocketTransport {
 		s.setCharacterStream(1, new StringReader(new String(new char[200000])));
 		s.execute();
 	}
+	
+    @Test public void testLobCase() throws Exception {
+        Statement s = conn.createStatement();
+        s.execute("select ucase(cast('abc' as clob))");
+        s.getResultSet().next();
+        assertEquals("ABC", s.getResultSet().getString(1));
+    }
 	
 	@Test public void testGeometryStreaming() throws Exception {
 		StringBuilder geomString = new StringBuilder();

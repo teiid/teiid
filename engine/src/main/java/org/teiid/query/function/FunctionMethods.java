@@ -109,6 +109,31 @@ public final class FunctionMethods {
             super(in);
             this.upper = upper;
         }
+        
+        @Override
+        public int read(char[] cbuf, int off, int len) throws IOException {
+            if (len <= 0) {
+                if (len < 0) {
+                    throw new IndexOutOfBoundsException();
+                } else if ((off < 0) || (off > cbuf.length)) {
+                    throw new IndexOutOfBoundsException();
+                }
+                return 0;
+            }
+            int chars = 0;
+            while (chars <= len) {
+                int c = read();
+                if (c == -1) {
+                    if (chars == 0) {
+                        return -1;
+                    }
+                    break;
+                }
+                cbuf[off++] = (char)c;
+                chars++;
+            }
+            return chars;
+        }
 
         @Override
         public int read() throws IOException {
