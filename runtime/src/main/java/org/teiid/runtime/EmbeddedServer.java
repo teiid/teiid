@@ -360,6 +360,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		if (running != null) {
 			throw new IllegalStateException();
 		}
+		this.dqp.setLocalProfile(this.embeddedProfile);
 		this.shutdownListener.setBootInProgress(true);
 		this.config = config;
 		this.cmr.setProvider(this);

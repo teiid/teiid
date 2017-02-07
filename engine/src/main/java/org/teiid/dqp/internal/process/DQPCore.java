@@ -73,6 +73,7 @@ import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.dqp.service.TransactionService;
 import org.teiid.events.EventDistributor;
 import org.teiid.jdbc.EnhancedTimer;
+import org.teiid.jdbc.LocalProfile;
 import org.teiid.logging.CommandLogMessage;
 import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.logging.LogConstants;
@@ -124,6 +125,8 @@ public class DQPCore implements DQP {
 	private Options options;
 
 	private ExecutorService timeoutExecutor;
+	
+	private LocalProfile localProfile;
     
     /**
      * perform a full shutdown and wait for 10 seconds for all threads to finish
@@ -909,6 +912,9 @@ public class DQPCore implements DQP {
         final long requestID =  0L;
 
         DQPWorkContext workContext = new DQPWorkContext();
+        if (engine.localProfile != null) {
+            workContext.setConnectionProfile(engine.localProfile);
+        }
         workContext.setUseCallingThread(true);
         workContext.setSession(session);
         workContext.setAdmin(true);
@@ -999,4 +1005,12 @@ public class DQPCore implements DQP {
         });
         return resultFuture;
 	}
+    
+    /**
+     * The localprofile to use if this is an embedded DQP
+     * @param localProfile
+     */
+    public void setLocalProfile(LocalProfile localProfile) {
+        this.localProfile = localProfile;
+    }
 }
