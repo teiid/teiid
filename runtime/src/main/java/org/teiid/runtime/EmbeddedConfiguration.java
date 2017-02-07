@@ -74,6 +74,7 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	private int maxStorageObjectSize ;
 	private boolean memoryBufferOffHeap = false;
 	private int memoryBufferSpace ;
+	private String nodeName;
 	
     private DefaultCacheManager cacheManager;
 	private AuthenticationType authenticationType;
@@ -346,4 +347,12 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	public void setAuthenticationType(AuthenticationType authenticationType) {
 		this.authenticationType = authenticationType;
 	}
+
+    public String getNodeName() {
+        return nodeName;
+    }
+
+    public void setNodeName(String nodeName) {
+        this.nodeName = nodeName;
+    }
 }

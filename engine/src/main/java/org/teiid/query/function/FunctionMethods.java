@@ -1567,7 +1567,7 @@ public final class FunctionMethods {
     }
     
     @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
-    public static Object node_id() {
+    public static String node_id() {
         return System.getProperty("jboss.node.name"); //$NON-NLS-1$
     }
     

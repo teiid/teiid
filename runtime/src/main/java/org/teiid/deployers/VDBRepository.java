@@ -186,7 +186,7 @@ public class VDBRepository implements Serializable{
 		}
 	}
 
-	CompositeVDB getCompositeVDB(VDBKey key) {
+	public CompositeVDB getCompositeVDB(VDBKey key) {
 		return this.vdbRepo.get(key);
 	}
 	

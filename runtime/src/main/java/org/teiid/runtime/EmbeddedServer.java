@@ -331,6 +331,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	private MaterializationManager materializationMgr = null;
 	private ShutDownListener shutdownListener = new ShutDownListener();
 	private SimpleChannelFactory channelFactory;
+	private NodeTracker nodeTracker = null;
 
 	public EmbeddedServer() {
 
@@ -363,6 +364,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		this.dqp.setLocalProfile(this.embeddedProfile);
 		this.shutdownListener.setBootInProgress(true);
 		this.config = config;
+		System.setProperty("jboss.node.name", config.getNodeName()==null?"localhost":config.getNodeName());
 		this.cmr.setProvider(this);
 		this.eventDistributorFactoryService = new EmbeddedEventDistributorFactoryService();
 		this.eventDistributorFactoryService.start();
@@ -371,7 +373,17 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		this.replicator = config.getObjectReplicator();
 		if (this.replicator == null && config.getJgroupsConfigFile() != null) {
 			channelFactory = new SimpleChannelFactory(config);
-			this.replicator = new JGroupsObjectReplicator(channelFactory, this.scheduler);			
+			this.replicator = new JGroupsObjectReplicator(channelFactory, this.scheduler);
+			try {
+                this.nodeTracker = new NodeTracker(channelFactory.createChannel("teiid-node-tracker"), config.getNodeName()) {
+                    @Override
+                    public ScheduledExecutorService getScheduledExecutorService() {
+                        return scheduler;
+                    }
+                };
+            } catch (Exception e) {
+                LogManager.logError(LogConstants.CTX_RUNTIME, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40089));
+            }
 		}
 		this.eventDistributorFactoryService = new EmbeddedEventDistributorFactoryService();
 		//must be called after the replicator is set
@@ -427,8 +439,11 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		    this.sessionService.setAuthenticationType(this.config.getAuthenticationType());
 		}
 		this.services.setVDBRepository(this.repo);
-		this.materializationMgr = getMaterializationManager();
+		this.materializationMgr = getMaterializationManager();		
 		this.repo.addListener(this.materializationMgr);
+		if (this.nodeTracker != null) {
+		    this.nodeTracker.addNodeListener(this.materializationMgr);
+		}
 		this.logon = new LogonImpl(sessionService, null);
 		services.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
 		services.registerClientService(DQP.class, dqp, LogConstants.CTX_DQP);
@@ -598,7 +613,11 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
             public DQPCore getDQP() {
             	return dqp;
             }
-            
+
+            @Override
+            public VDBRepository getVDBRepository() {
+                return repo;
+            }
         };
 	}
 
