@@ -2,7 +2,7 @@
   <parent>
       <groupId>org.jboss.teiid.connectors</groupId>
       <artifactId>cassandra</artifactId>
-      <version>9.2.0.CR2-SNAPSHOT</version>
+      <version>9.3.0.Alpha1-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jboss.teiid.connectors</groupId>
