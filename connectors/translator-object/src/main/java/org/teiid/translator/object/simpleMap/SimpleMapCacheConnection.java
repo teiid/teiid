@@ -69,7 +69,7 @@ public class SimpleMapCacheConnection implements ObjectConnection {
 		if (cacheName.equals(proxy.getAliasCacheName())) {
 			cn = cacheName;
 		} else {
-			cn = proxy.getCacheName(cacheName);
+			cn = proxy.getCacheName(cacheName, this);
 		}
 		
 		Map<Object, Object> cache = mapCaches.get(cn);

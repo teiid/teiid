@@ -57,7 +57,7 @@ public class TestInfinispanServerListUsingAnnotations {
 
 	    @Test
 	    public void testRemoteConnection() throws Exception {
-	    		ObjectConnection conn = factory.createConnectionFactory().getConnection();
+	    		InfinispanConnectionImpl conn = factory.createConnectionFactory().getConnection();
 	    		Class<?> clz = conn.getCacheClassType();
 	    
 	    		assertEquals(RemoteInfinispanTestHelper.PERSON_CLASS, clz);

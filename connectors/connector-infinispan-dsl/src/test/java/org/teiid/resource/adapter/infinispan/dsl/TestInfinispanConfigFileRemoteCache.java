@@ -76,6 +76,7 @@ public class TestInfinispanConfigFileRemoteCache {
     public void testConnection() throws Exception {
     	try {
     		InfinispanDSLConnection conn = factory.createConnectionFactory().getConnection();
+    		
     		Class<?> clz = conn.getCacheClassType();
     
     		assertEquals(RemoteInfinispanTestHelper.PERSON_CLASS, clz);

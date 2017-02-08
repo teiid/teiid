@@ -25,7 +25,7 @@ package org.teiid.resource.adapter.infinispan.dsl;
 
 import java.io.File;
 import java.io.IOException;
-import java.security.Principal;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
 
@@ -52,6 +52,7 @@ import org.infinispan.protostream.descriptors.Descriptor;
 import org.infinispan.query.dsl.QueryFactory;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.PropertiesUtils;
+import org.teiid.core.util.ReflectionHelper;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnection;
@@ -84,8 +85,8 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 		this.config = config;
 		
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Infinispan Connection has been newly created "); //$NON-NLS-1$
-	}
-	
+	}	
+
 	@Override
 	public Version getVersion() throws TranslatorException {
 		RemoteCache rc = this.getCache(config.getCacheNameProxy().getPrimaryCacheKey());
@@ -228,10 +229,14 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	}
 
 	private String getTargetCacheName() {
-		if (getDDLHandler().isStagingTarget()) {
-			return config.getCacheNameProxy().getStageCacheAliasName();
+		try {
+			if (getDDLHandler().isStagingTarget()) {
+				return config.getCacheNameProxy().getStageCacheAliasName(this);
+			}
+			return config.getCacheNameProxy().getPrimaryCacheAliasName(this);
+		} catch (TranslatorException te) {
+			throw new RuntimeException(te);
 		}
-		return config.getCacheNameProxy().getPrimaryCacheAliasName();
 	}
 
 	/**
@@ -343,7 +348,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 		return (config.getStagingCacheName() != null);
 	}
 	
-	private RemoteCacheManager getCacheContainer() throws TranslatorException {
+	private synchronized RemoteCacheManager getCacheContainer() throws TranslatorException {
 		if (this.cacheContainer != null) return this.cacheContainer;
 		
 		try {
@@ -359,37 +364,47 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 
 		RemoteCacheManager cc = null;
 
-		switch (config.getCacheType()) {
-		case USE_JNDI:
-			cc = getRemoteCacheFromJNDI(config.getCacheJndiName());
-			break;
 
-		case REMOTE_HOT_ROD_PROPERTIES:
-			cc = createRemoteCacheFromProperties();
-			break;
+		ClassLoader lcl = Thread.currentThread().getContextClassLoader();
+		try {
+			Thread.currentThread().setContextClassLoader(
+					config.getRAClassLoader());
+			
+			switch (config.getCacheType()) {
+			case USE_JNDI:
+				cc = getRemoteCacheFromJNDI(config.getCacheJndiName());
+				break;
 
-		case REMOTE_SERVER_LISTS:
-			cc = createRemoteCacheFromServerList();
-			break;
+			case REMOTE_HOT_ROD_PROPERTIES:
+				cc = createRemoteCacheFromProperties();
+				break;
 
-		}
+			case REMOTE_SERVER_LISTS:
+				cc = createRemoteCacheFromServerList();
+				break;
 
-		this.cacheContainer = cc;
-
-		// if configured for materialization, initialize the cacheNameProxy
-		if (config.getCacheNameProxy().getAliasCacheName() != null) {
-			RemoteCache aliasCache = cc.getCache(config.getCacheNameProxy().getAliasCacheName());
-			if (aliasCache == null) {
-				throw new ResourceException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25010,
-						new Object[] { config.getCacheNameProxy().getAliasCacheName() }));
 			}
-			config.getCacheNameProxy().initializeAliasCache(aliasCache);
+
+			this.cacheContainer = cc;
+
+			this.context = ProtoStreamMarshaller.getSerializationContext(this.cacheContainer);
+
+			// if configured for materialization, initialize the cacheNameProxy
+			if (config.getCacheNameProxy().getAliasCacheName() != null) {
+				RemoteCache aliasCache = cc.getCache(config.getCacheNameProxy().getAliasCacheName());
+				if (aliasCache == null) {
+					throw new ResourceException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25010,
+							new Object[] { config.getCacheNameProxy().getAliasCacheName() }));
+				}
+			}
+
+			config.getCacheSchemaConfigurator().registerSchema(config, this);
+
+			
+		} finally {
+			Thread.currentThread().setContextClassLoader(lcl);
 		}
-
-		this.context = ProtoStreamMarshaller.getSerializationContext(this.cacheContainer);
-
-		config.getCacheSchemaConfigurator().registerSchema(config, this);
-
+		
 	}
 	
 	private RemoteCacheManager getRemoteCacheFromJNDI(
@@ -439,6 +454,8 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 
 			return createRemoteCache(props, config.getRemoteServerList());
 
+		} catch (ResourceException re) {
+			throw re;
 		} catch (Exception err) {
 			throw new ResourceException(err);
 		}
@@ -457,8 +474,10 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	private RemoteCacheManager createRemoteCache(Properties props, String serverList) throws ResourceException {
 		RemoteCacheManager remoteCacheManager;
 		try {
-			ConfigurationBuilder cb = new ConfigurationBuilder();
-			cb.marshaller(new ProtoStreamMarshaller());
+			
+			ProtoStreamMarshaller pm = (ProtoStreamMarshaller) ReflectionHelper.create("org.infinispan.client.hotrod.marshall.ProtoStreamMarshaller", null, config.getRAClassLoader());
+			ConfigurationBuilder cb = (ConfigurationBuilder) ReflectionHelper.create("org.infinispan.client.hotrod.configuration.ConfigurationBuilder", null, config.getRAClassLoader());
+			cb.marshaller(pm);
 			
 			if (props != null) {
 				cb.withProperties(props);
@@ -486,9 +505,6 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 					Subject subject = ConnectionContext.getSubject();
 
 					if (subject != null) {
-						
-//						String userName = ConnectionContext.getUserName(subject, config, null);
-//						String password = ConnectionContext.getPassword(subject, config, userName, null);
 
 						cb.security().authentication().enable()
 							.serverName(config.getAuthServerName())
@@ -501,8 +517,12 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 
 				}
 			}
+			
+			Collection<Object> ctors = new ArrayList<Object>(2);
+			ctors.add(cb.build());
+			ctors.add(true);
 
-			remoteCacheManager = new RemoteCacheManager(cb.build(), true);
+			remoteCacheManager = (RemoteCacheManager) ReflectionHelper.create("org.infinispan.client.hotrod.RemoteCacheManager", ctors, config.getRAClassLoader());
 
 		} catch (Exception err) {
 			throw new ResourceException(err);

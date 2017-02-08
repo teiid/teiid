@@ -21,8 +21,9 @@
  */
 package org.teiid.translator.object;
 
-import java.util.HashMap;
 import java.util.Map;
+
+import org.teiid.translator.TranslatorException;
 
 
 /**
@@ -36,8 +37,6 @@ import java.util.Map;
  */
 public class CacheNameProxy {
 	
-	private Map<Object, Object> aliasMap = null;
-	
 	private String primaryCacheNameKey = null;
 	
 	private String stageCacheNameKey = null;
@@ -48,23 +47,6 @@ public class CacheNameProxy {
 	
 	public CacheNameProxy(String primaryCacheNameKey, String stageCacheNameKey, String aliasCacheName) {
 		this(primaryCacheNameKey);
-
-		if (stageCacheNameKey == null) {
-			throw new IllegalArgumentException("Program error: stageCacheNameKey must not be null");
-		}
-		if (aliasCacheName == null) {
-			throw new IllegalArgumentException("Program error: aliasCacheName must not be null");
-		}
-		
-		this.stageCacheNameKey = stageCacheNameKey;
-		this.aliasCacheName = aliasCacheName;
-		
-		initializeKey(this.stageCacheNameKey, this.stageCacheNameKey);
-		
-	}
-	
-	public CacheNameProxy(String primaryCacheNameKey, String stageCacheNameKey, String aliasCacheName, Map<Object, Object> aliasMap) {
-		this(primaryCacheNameKey, aliasMap);
 		
 		if (stageCacheNameKey == null) {
 			throw new IllegalArgumentException("Program error: stageCacheNameKey must not be null");
@@ -75,9 +57,7 @@ public class CacheNameProxy {
 		
 		this.stageCacheNameKey = stageCacheNameKey;
 		this.aliasCacheName = aliasCacheName;
-		
-		initializeKey(this.stageCacheNameKey, this.stageCacheNameKey);
-		
+				
 	}
 	
 	/** instantiated when materialization isnt being performed 
@@ -90,51 +70,14 @@ public class CacheNameProxy {
 
 		this.primaryCacheNameKey = primaryCacheName;
 		
-		setAliasCache( new HashMap<Object,Object>(2) );
-		
-		initializeKey(primaryCacheNameKey, primaryCacheNameKey);
-		
 		ddlHandler = new DDLHandler(this);
-	}
+	}	
 	
-	/** instantiated when materialization isnt being performed 
-	 * @param primaryCacheName 
-	 * @param aliasMap 
-   **/
-	public CacheNameProxy(String primaryCacheName, Map<Object, Object> aliasMap) {
-		if (primaryCacheName == null) {
-			throw new IllegalArgumentException("Program error: primaryCacheNameKey must not be null");
+	public boolean isMaterialized() {
+		if (this.stageCacheNameKey != null && this.aliasCacheName != null) {
+			return true;
 		}
-		
-		if (aliasMap == null) {
-			throw new IllegalArgumentException("Program error: aliasMap must not be null");
-		}
-
-		this.primaryCacheNameKey = primaryCacheName;
-		
-		setAliasCache( aliasMap );
-		
-		initializeKey(primaryCacheNameKey, primaryCacheNameKey);
-		
-		ddlHandler = new DDLHandler(this);
-	}
-	
-	/**
-	 * Called to initialize.  This can be used to reset the state of the proxy.
-	 * @param cache
-	 */
-	public synchronized void initializeAliasCache(Map<Object, Object> cache) {
-		this.aliasMap = cache;
-		initializeKey(primaryCacheNameKey, primaryCacheNameKey);
-		initializeKey(stageCacheNameKey, stageCacheNameKey);
-	}
-	
-	public boolean isAliasCacheValid() {
-		if (this.aliasMap == null) return false;
-		if (this.aliasMap.isEmpty()) return false;
-		if (this.aliasMap.get(this.primaryCacheNameKey) == null) return false;
-		
-		return true;
+		return false;
 	}
 	
 	public DDLHandler getDDLHandler() {
@@ -149,60 +92,68 @@ public class CacheNameProxy {
 		return this.stageCacheNameKey;
 	}
 	
-	public synchronized String getStageCacheAliasName() {
-		return (String) aliasMap.get(getStageCacheKey());
+	public synchronized String getStageCacheAliasName(ObjectConnection conn) throws TranslatorException{
+		Map<Object, Object> m = getAliasCache(conn);
+		return (String) m.get(getStageCacheKey());
 	}
 	
-	public synchronized String getPrimaryCacheAliasName() {
-			return (String) aliasMap.get(getPrimaryCacheKey());	
+	public synchronized String getPrimaryCacheAliasName(ObjectConnection conn) throws TranslatorException{
+		if (this.isMaterialized()) {
+			Map<Object, Object> m = getAliasCache(conn);
+			return (String) m.get(getPrimaryCacheKey());	
+		}
+		return this.primaryCacheNameKey;
 	}
 
-	public synchronized String getCacheName(String cacheNameKey) {
-		return (String) aliasMap.get(cacheNameKey);
+	public synchronized String getCacheName(String cacheNameKey, ObjectConnection conn) throws TranslatorException{
+		if (this.isMaterialized()) {
+			Map<Object, Object> m = getAliasCache(conn);
+			return (String) m.get(cacheNameKey);
+		}
+		return primaryCacheNameKey;
 	}
 	
 	public String getAliasCacheName() {
 		return this.aliasCacheName;
 	}
 	
-	public synchronized void swapCacheNames(){
+	public synchronized void swapCacheNames(ObjectConnection conn) throws TranslatorException{
+		Map<Object, Object> m = getAliasCache(conn);
 		
-			Object scn = aliasMap.get(stageCacheNameKey);
-			Object pcn = aliasMap.get(primaryCacheNameKey);
+		Object scn = m.get(stageCacheNameKey);
+		Object pcn = m.get(primaryCacheNameKey);
 		
-			aliasMap.put(this.primaryCacheNameKey, scn);
-			aliasMap.put(this.stageCacheNameKey, pcn);
+		m.put(this.primaryCacheNameKey, scn);
+		m.put(this.stageCacheNameKey, pcn);
 
 	}
 	
-	public synchronized void ensureCacheNames(){
+	public synchronized void ensureCacheNames(ObjectConnection conn) throws TranslatorException{
 		
-		Object scn = aliasMap.get(stageCacheNameKey);
-		Object pcn = aliasMap.get(primaryCacheNameKey);
+		Map<Object, Object> m = getAliasCache(conn);
+		
+
+		Object pcn = m.get(primaryCacheNameKey);
+		if (pcn == null) {
+			m.put(primaryCacheNameKey, primaryCacheNameKey);
+			m.put(stageCacheNameKey, stageCacheNameKey);
+			return;
+		}
+		Object scn = m.get(stageCacheNameKey);
+		
 		
 		if (pcn.equals(scn)) {
 			if (scn.equals(stageCacheNameKey)) {
-				aliasMap.put(stageCacheNameKey, primaryCacheNameKey);
+				m.put(stageCacheNameKey, primaryCacheNameKey);
 			} else {
-				aliasMap.put(stageCacheNameKey, stageCacheNameKey);
+				m.put(stageCacheNameKey, stageCacheNameKey);
 			}
 		}
 
 	}
 	
-	// only set the key if its not already set, so that there is an initial state
-	private void initializeKey(String key, String alias) {
-		if (aliasMap.get(key) != null) return;
-		
-		aliasMap.put(key, alias);
-	}
-	
-	private void setAliasCache(Map<Object, Object> aliasCache) {
-		this.aliasMap = aliasCache;
-	}
-	
-	public Map<Object, Object> getAliasCache() {
-		return this.aliasMap;
+	private Map<Object, Object> getAliasCache(ObjectConnection conn) throws TranslatorException {
+		return (Map<Object, Object>) conn.getCache(this.getAliasCacheName());
 	}
 
 }

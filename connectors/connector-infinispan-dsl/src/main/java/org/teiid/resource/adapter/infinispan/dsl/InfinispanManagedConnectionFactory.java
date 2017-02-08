@@ -31,9 +31,9 @@ import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoadException;
 import org.teiid.core.BundleUtil;
+import org.teiid.core.TeiidException;
+import org.teiid.core.util.ReflectionHelper;
 import org.teiid.core.util.StringUtil;
-import org.teiid.resource.adapter.infinispan.dsl.schema.AnnotationSchema;
-import org.teiid.resource.adapter.infinispan.dsl.schema.ProtobufSchema;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 import org.teiid.translator.infinispan.dsl.InfinispanPlugin;
@@ -64,6 +64,9 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 	private String messageMarshallers = null;
 	private String messageDescriptor = null;
 	
+	private String className = null;
+	private String pktype = null;
+	
 	private String childClasses= null;
 	
 	private boolean usingAnnotations = false;
@@ -71,7 +74,9 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 	private String stagingCacheName;
 	private String aliasCacheName;
 	private String pkKey;
+	
 	private Class<?> pkCacheKeyJavaType = null;
+	
 	private CACHE_TYPE cacheType;
 	private String module;
 	private ClassLoader cl;
@@ -91,11 +96,8 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 	@Override
 	public BasicConnectionFactory<InfinispanConnectionImpl> createConnectionFactory()
 			throws ResourceException {
-		
-		validation();
-		
+				
 		return new InfinispanConnectionFactory(this);
-
 	}
 	
 	class InfinispanConnectionFactory extends BasicConnectionFactory<InfinispanConnectionImpl>{
@@ -110,21 +112,69 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 		public InfinispanConnectionImpl getConnection()
 				throws ResourceException {
 			
-			InfinispanManagedConnectionFactory.this.loadClasses();
+			initialize();
 
 			return new InfinispanConnectionImpl(factory);
 		}
 
 	}
 	
-	 synchronized void validation() throws ResourceException {
-		if (initialized) return;
+	synchronized void initialize() throws ResourceException {
+		if (initialized) {
+			return;
+		}
+	
+		cl = null;
+		
+		ClassLoader lcl = Thread.currentThread().getContextClassLoader();
+		try {
+			Thread.currentThread().setContextClassLoader(
+					this.getClass().getClassLoader());
+
+
+			if (getModule() != null) {
+	
+				try {
+					List<String> mods = StringUtil.getTokens(getModule(), ","); //$NON-NLS-1$
+					for (String mod : mods) {
+	
+						Module x = Module.getContextModuleLoader().loadModule(
+								ModuleIdentifier.create(mod));
+						// the first entry must be the module associated with the
+						// cache
+						if (cl == null) {
+							cl = x.getClassLoader();
+						}
+					}
+				} catch (ModuleLoadException e) {
+					throw new ResourceException(e);
+				}
+	
+			} 
+			
+			if (cl == null) {
+				cl = Thread.currentThread().getContextClassLoader();
+			}
+			
+			validation();
+			
+			loadClasses(cl);	
+			
+		} finally {
+			Thread.currentThread().setContextClassLoader(lcl);
+		}
+		
+		initialized=true;
+		
+	}	
+
+	
+	private void validation() throws ResourceException {
 		
 		// if all the properties are null,then its assumed the pojo has the protobuf annotations for indexing columns
 		if (protobufDefFile == null && messageMarshallers == null && messageDescriptor == null) {
 			usingAnnotations = true;
 			
-			cacheSchemaConfigurator = new AnnotationSchema();
 		} else {
 			// if any of the following properties are specified, all 3 must be specified
 			if (protobufDefFile == null) {
@@ -138,7 +188,6 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 			if (messageDescriptor == null) {
 				throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25020));
 			}
-			cacheSchemaConfigurator = new ProtobufSchema();
 		}
 		
 		if (this.cacheTypes == null) {
@@ -171,20 +220,35 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 				|| (authServerName == null && authSASLMechanism != null)) {
 			throw new InvalidPropertyException("AuthServerName and AuthSASMechanism must be specfied");
 		}
+		
+		
+		List<String> parms = StringUtil.getTokens(getCacheTypeMap(), ";"); //$NON-NLS-1$
+		String leftside = parms.get(0);
+		List<String> cacheClassparm = StringUtil.getTokens(leftside, ":");
+		
+		if (cacheClassparm.size() != 2) {
+			throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25022));
+		}
+		
+		String cn = cacheClassparm.get(0);
+		setCacheName(cn);
+		
+		this.className = cacheClassparm.get(1);
+			
+		if (parms.size() == 2) {
+			String rightside = parms.get(1);
+			List<String> pkKeyparm = StringUtil.getTokens(rightside, ":");
+			pkKey = pkKeyparm.get(0);
+			if (pkKeyparm.size() == 2) {
+				pktype = pkKeyparm.get(1);
+			}
+		}
+
 	}
 	
 	public InfinispanSchemaDefinition getCacheSchemaConfigurator() {
 		return cacheSchemaConfigurator;
 	}
-
-	public String getCacheName() {
-		// return the cacheName that is mapped as the alias
-		return cacheNameProxy.getPrimaryCacheAliasName();
-	}
-	
-	public String getCacheStagingName() {
-		return cacheNameProxy.getStageCacheAliasName();
-	}	
 
 	/**
 	 * Get the <code>cacheName:className[;pkFieldName[:cacheJavaType]]</code> cache
@@ -537,88 +601,52 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
     	return cacheType;
     }
 	
-	public ClassLoader getClassLoader() {
+	public ClassLoader getRAClassLoader() {
+		if (this.cl == null) {
+			throw new RuntimeException("Program Error: Classloader isn't set");
+		}
 		return this.cl;
 	}
 	
 	public Class<?> loadClass(String className) throws ResourceException {
 		try {
-			return Class.forName(className, false, getClassLoader());
+			return Class.forName(className, false, this.getRAClassLoader());
 		} catch (ClassNotFoundException e) {
 			throw new ResourceException(e);
 		}
 	}
 	
-	@SuppressWarnings("rawtypes")
-	protected synchronized ClassLoader loadClasses() throws ResourceException {
-		if (initialized) {
-			return this.getClassLoader();
+	private Class<?> loadClass(String className, ClassLoader loader) throws ResourceException {
+		try {
+			return Class.forName(className, false, loader);
+		} catch (ClassNotFoundException e) {
+			throw new ResourceException(e);
 		}
-	
-		cl = null;
-
-		if (getModule() != null) {
-
-			try {
-				List<String> mods = StringUtil.getTokens(getModule(), ","); //$NON-NLS-1$
-				for (String mod : mods) {
-
-					Module x = Module.getContextModuleLoader().loadModule(
-							ModuleIdentifier.create(mod));
-					// the first entry must be the module associated with the
-					// cache
-					if (cl == null) {
-						cl = x.getClassLoader();
-					}
-				}
-			} catch (ModuleLoadException e) {
-				throw new ResourceException(e);
-			}
-
-		} 
+	}
 		
-		if (cl == null) {
-			cl = Thread.currentThread().getContextClassLoader();
-		}
-		
+	private  void loadClasses(ClassLoader loader) throws ResourceException {
 			
-		/*
-		 * Parsing based on format:  cacheName:className[;pkFieldName[:cacheKeyJavaType]]
-		 * 
-		 */
+		cacheTypeClass = loadClass(className, loader);
 		
-		List<String> parms = StringUtil.getTokens(getCacheTypeMap(), ";"); //$NON-NLS-1$
-		String leftside = parms.get(0);
-		List<String> cacheClassparm = StringUtil.getTokens(leftside, ":");
-		
-		if (cacheClassparm.size() != 2) {
-			throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25022));
-		}
-		
-		String cn = cacheClassparm.get(0);
-		setCacheName(cn);
-		String className = cacheClassparm.get(1);
-		cacheTypeClass = loadClass(className);
-	
 		methodUtil.registerClass(cacheTypeClass);
-			
-		if (parms.size() == 2) {
-			String rightside = parms.get(1);
-			List<String> pkKeyparm = StringUtil.getTokens(rightside, ":");
-			pkKey = pkKeyparm.get(0);
-			if (pkKeyparm.size() == 2) {
-				String pktype = pkKeyparm.get(1);
-				if (pktype != null) {
-					pkCacheKeyJavaType = loadClass(pktype);
-				}
-			}
+		
+		if (pktype != null) {
+			pkCacheKeyJavaType = loadClass(pktype, loader);
 		}
+				
+		try {
+			if (usingAnnotations) {
+				cacheSchemaConfigurator = (InfinispanSchemaDefinition) ReflectionHelper.create("org.teiid.resource.adapter.infinispan.dsl.schema.AnnotationSchema", null, loader);
+			} else {
+				cacheSchemaConfigurator = (InfinispanSchemaDefinition) ReflectionHelper.create("org.teiid.resource.adapter.infinispan.dsl.schema.ProtobufSchema", null, loader);
+			}
+		} catch (TeiidException e) {
+			// TODO Auto-generated catch block
+			throw new ResourceException(e);
+		}			
+
 		
 		cacheSchemaConfigurator.initialize(this, methodUtil);
-		
-		initialized = true;
-
-		return cl;
 
 	}
 
@@ -698,8 +726,9 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 	public void cleanUp() {
 
 		cacheType = null;
-		cl = null;
 		methodUtil.cleanUp();
+		cacheNameProxy = null;
+		cacheSchemaConfigurator = null;
 
 	}
 	
