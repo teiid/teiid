@@ -4,7 +4,7 @@
     <parent>
       <groupId>org.jboss.teiid.connectors</groupId>
       <artifactId>swagger</artifactId>
-      <version>9.2.0.Beta3-SNAPSHOT</version>
+      <version>9.2.0.CR1</version>
     </parent>
     <artifactId>feature-pack-swagger</artifactId>
     <name>Teiid Connector Swagger Feature Pack</name>
