@@ -84,6 +84,7 @@ import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.ReaderInputStream;
 import org.teiid.core.util.StringUtil;
 import org.teiid.core.util.TimestampWithTimezone;
+import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.metadata.AbstractMetadataRecord;
@@ -1704,9 +1705,11 @@ public final class FunctionMethods {
 	
 	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM, determinism = Determinism.COMMAND_DETERMINISTIC)
 	public static int mvstatus(CommandContext context, String schemaName, String viewName, Boolean validity, String status, String action) throws FunctionExecutionException, SQLException, QueryMetadataException, TeiidComponentException {
-		if ((validity == null || !validity) && !MaterializationMetadataRepository.ErrorAction.IGNORE.name().equalsIgnoreCase(action)) {
-			if (MaterializationMetadataRepository.ErrorAction.THROW_EXCEPTION.name().equalsIgnoreCase(action)) {
-				throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31147, schemaName, viewName));
+	    boolean loading = status != null && DQPWorkContext.getWorkContext().isAdmin() && status.equals("LOADING"); //$NON-NLS-1$
+        String key = "mat_management_waits_" + schemaName + "." + viewName; //$NON-NLS-1$ //$NON-NLS-2$
+        if ((validity == null || !validity) && (!MaterializationMetadataRepository.ErrorAction.IGNORE.name().equalsIgnoreCase(action) || loading)) {
+			if (!loading && MaterializationMetadataRepository.ErrorAction.THROW_EXCEPTION.name().equalsIgnoreCase(action)) {
+			    throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31147, schemaName, viewName));
 			}
 			
 			Object id = context.getMetadata().getGroupID(schemaName + AbstractMetadataRecord.NAME_DELIM_CHAR + viewName);
@@ -1753,9 +1756,18 @@ public final class FunctionMethods {
 					ps.close();
 				}
 			}
-			context.getWorkItem().scheduleWork(10000);
+			
+			int spins = 0;
+			
+            Object value = context.getSessionVariable(key);
+			if (value instanceof Integer) {
+			    spins = (Integer)value;
+			}
+			context.getWorkItem().scheduleWork(100*(1<<Math.min(spins, 7)));
+			context.setSessionVariable(key, ++spins);
 			throw BlockedException.INSTANCE;
 		}
+        context.setSessionVariable(key, null);
 		return 1;
 	}	
 	

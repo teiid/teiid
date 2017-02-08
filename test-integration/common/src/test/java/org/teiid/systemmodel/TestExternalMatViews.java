@@ -24,7 +24,6 @@ package org.teiid.systemmodel;
 
 import static org.junit.Assert.*;
 
-import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.PrintWriter;
 import java.sql.CallableStatement;
@@ -48,17 +47,48 @@ import org.junit.Test;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.core.util.UnitTestUtil;
-import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.util.ResultSetUtil;
+import org.teiid.language.Command;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.runtime.HardCodedExecutionFactory;
+import org.teiid.translator.Execution;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.h2.H2ExecutionFactory;
-import org.teiid.translator.loopback.LoopbackExecutionFactory;
 
 @SuppressWarnings("nls")
 public class TestExternalMatViews {
+    private static final class DelayableHardCodedExectionFactory extends
+            HardCodedExecutionFactory {
+        private final boolean supportsEQ;
+        private int delay;
+
+        private DelayableHardCodedExectionFactory(boolean supportsEQ) {
+            this.supportsEQ = supportsEQ;
+        }
+
+        @Override
+        public boolean supportsCompareCriteriaEquals() {
+            return supportsEQ;
+        }
+
+        @Override
+        public Execution createExecution(Command command,
+                ExecutionContext executionContext,
+                RuntimeMetadata metadata, Object connection)
+                throws TranslatorException {
+            if (delay > 0) {
+                try {
+                    Thread.sleep(delay);
+                } catch (InterruptedException e) {
+                }
+            }
+            return super.createExecution(command, executionContext, metadata, connection);
+        }
+    }
+
     private static boolean DEBUG = false;
     
 	private Connection conn;
@@ -91,11 +121,13 @@ public class TestExternalMatViews {
 		
 		String matView = "CREATE table mat_v1 (col int primary key, col1 varchar(50))";
 		String matView2 = "CREATE table mat_v2 (col int primary key, col1 varchar(50), loadnum long)";
+		String matView1a = "CREATE table mat_v1a (col int primary key, col1 varchar(50), loadnum long)";
 		String matViewStage = "CREATE table mat_v1_stage (col int primary key, col1 varchar(50))";
 		c.createStatement().execute(matView);
 		c.createStatement().execute(matViewStage);
 		c.createStatement().execute(matView2);
 		c.createStatement().execute("CREATE table G1 (e1 int primary key, e2 varchar(50), LoadNumber long)");
+		c.createStatement().execute(matView1a);
 		c.close();
 	}
 	
@@ -200,6 +232,52 @@ public class TestExternalMatViews {
 		
 		assertTest(useUpdateScript, hcef);
 	}
+	
+    @Test
+    public void testViewChaining() throws Exception {
+        DelayableHardCodedExectionFactory hcef = setupData();
+        ModelMetaData sourceModel = setupSourceModel();
+        ModelMetaData matViewModel = setupMatViewModel();
+        
+        ModelMetaData viewModel = new ModelMetaData();
+        viewModel.setName("view1");
+        viewModel.setModelType(Type.VIRTUAL);
+        viewModel.addSourceMetadata("DDL", "CREATE VIEW v1 (col integer primary key, col1 string) "
+                + "OPTIONS (MATERIALIZED true, "
+                + "MATERIALIZED_TABLE 'matview.MAT_V1a', "
+                + "\"teiid_rel:MATVIEW_TTL\" 5000, "
+                + "\"teiid_rel:ALLOW_MATVIEW_MANAGEMENT\" true, " 
+                + "\"teiid_rel:MATVIEW_STATUS_TABLE\" 'matview.STATUS', "
+                + "\"teiid_rel:MATVIEW_LOADNUMBER_COLUMN\" 'loadnum', "
+                + "\"teiid_rel:MATVIEW_ONERROR_ACTION\" 'THROW_EXCEPTION') "
+                + "AS select col, col1 from source.physicalTbl;"
+                
+                + "CREATE VIEW v2 (col integer primary key, col1 string) "
+                + "OPTIONS (MATERIALIZED true, "
+                + "MATERIALIZED_TABLE 'matview.MAT_V2', "
+                + "\"teiid_rel:MATVIEW_TTL\" 5000, "
+                + "\"teiid_rel:ALLOW_MATVIEW_MANAGEMENT\" true, " 
+                + "\"teiid_rel:MATVIEW_STATUS_TABLE\" 'matview.STATUS', "
+                + "\"teiid_rel:MATVIEW_LOADNUMBER_COLUMN\" 'loadnum',"
+                + "\"teiid_rel:MATVIEW_ONERROR_ACTION\" 'THROW_EXCEPTION') "
+                + "AS select col, col1 from v1");
+        
+        server.deployVDB("chain", sourceModel, viewModel, matViewModel);
+        hcef.delay = 200;
+        Connection c = server.getDriver().connect("jdbc:teiid:chain", null);
+        Statement s = c.createStatement();
+
+        try {
+            s.execute("select * from v2");
+        } catch (SQLException e) {
+            //should fail - as we're throw exception and still loading
+        }
+
+        Thread.sleep(1000);
+        
+        //should succeed
+        s.execute("select * from v2");
+    }
 	
 	@Test
 	public void testMergeDeleteWithFullRefresh() throws Exception {
@@ -384,23 +462,18 @@ public class TestExternalMatViews {
 		s1.close();
 	}
 
-	private HardCodedExecutionFactory setupData() throws TranslatorException {
+	private DelayableHardCodedExectionFactory setupData() throws TranslatorException {
 	    return setupData(false);
 	}
 
-	private HardCodedExecutionFactory setupData(final boolean supportsEQ) throws TranslatorException {
+	private DelayableHardCodedExectionFactory setupData(final boolean supportsEQ) throws TranslatorException {
 		H2ExecutionFactory executionFactory = new H2ExecutionFactory();
 		executionFactory.setSupportsDirectQueryProcedure(true);
 		executionFactory.start();
 		server.addTranslator("translator-h2", executionFactory);
 		server.addConnectionFactory("java:/matview-ds", h2DataSource);		
 
-		HardCodedExecutionFactory hcef = new HardCodedExecutionFactory() {
-		    @Override
-    		public boolean supportsCompareCriteriaEquals() {
-		        return supportsEQ;
-    		}  
-		};
+		DelayableHardCodedExectionFactory hcef = new DelayableHardCodedExectionFactory(supportsEQ);
 		hcef.addData("SELECT physicalTbl.col, physicalTbl.col1 FROM physicalTbl",
 				Arrays.asList(
 						Arrays.asList(1, "town"), 
