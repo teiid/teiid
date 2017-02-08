@@ -14,7 +14,7 @@
 	<artifactId>teiid-parent</artifactId>
 	<packaging>pom</packaging>
 	<name>Teiid</name>
-    <version>8.7.11.6_2</version>
+    <version>8.7.12.6_2</version>
 	<description>Federated SQL and XML query engine.</description>
 	<properties>
 	    <site.url>http://www.jboss.org/teiid</site.url>
