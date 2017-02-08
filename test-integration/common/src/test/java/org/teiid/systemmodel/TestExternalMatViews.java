@@ -263,20 +263,22 @@ public class TestExternalMatViews {
                 + "AS select col, col1 from v1");
         
         server.deployVDB("chain", sourceModel, viewModel, matViewModel);
-        hcef.delay = 200;
+        hcef.delay = 100;
         Connection c = server.getDriver().connect("jdbc:teiid:chain", null);
         Statement s = c.createStatement();
 
-        try {
-            s.execute("select * from v2");
-        } catch (SQLException e) {
-            //should fail - as we're throw exception and still loading
+        //should succeed before the ttl
+        for (int i = 0; i < 5; i++) {
+            try {
+                s.execute("select * from v2");
+                if (i == 0) {
+                    System.out.println("expected first iteration to fail");
+                }
+                return;
+            } catch (SQLException e) {
+            }
+            Thread.sleep(400);
         }
-
-        Thread.sleep(1000);
-        
-        //should succeed
-        s.execute("select * from v2");
     }
 	
 	@Test
