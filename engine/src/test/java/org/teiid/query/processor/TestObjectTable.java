@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Properties;
 
 import org.junit.Test;
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.sql.lang.Command;
@@ -72,10 +73,14 @@ public class TestObjectTable {
 
         process(sql, expected);
     }
-	
-	public static void process(String sql, List<?>[] expectedResults) throws Exception {    
+		
+    public static void process(String sql, List<?>[] expectedResults) throws Exception {
+	    process(sql, expectedResults, new List[] {Collections.singletonList(Arrays.asList("hello", "world")), Collections.singletonList(Arrays.asList("x", null, "y")), Collections.singletonList(null)});
+	}
+
+	public static void process(String sql, List<?>[] expectedResults, List<?>[] rows) throws Exception {    
     	HardcodedDataManager dataManager = new HardcodedDataManager();
-    	dataManager.addData("SELECT BQT1.SmallA.ObjectValue FROM BQT1.SmallA", new List[] {Collections.singletonList(Arrays.asList("hello", "world")), Collections.singletonList(Arrays.asList("x", null, "y")), Collections.singletonList(null)} );
+    	dataManager.addData("SELECT BQT1.SmallA.ObjectValue FROM BQT1.SmallA", rows);
     	Properties p = new Properties();
 		p.put(TransformationMetadata.ALLOWED_LANGUAGES, ObjectTable.DEFAULT_LANGUAGE);
 		TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(RealMetadataFactory.exampleBQTCached().getMetadataStore(), "bqt", p);
@@ -99,6 +104,19 @@ public class TestObjectTable {
     	Command c = QueryParser.getQueryParser().parseCommand(sql);
     	assertEquals("SELECT * FROM OBJECTTABLE(LANGUAGE 'x' 'teiid_context' COLUMNS y string 'teiid_row.userName') AS X", c.toString());
     	assertEquals("SELECT * FROM OBJECTTABLE(LANGUAGE 'x' 'teiid_context' COLUMNS y string 'teiid_row.userName') AS X", c.clone().toString());
+    }
+	
+    @Test public void testArray() throws Exception {
+        String sql = "select x.* from bqt1.smalla, objecttable('ov' passing objectvalue as ov COLUMNS x string 'teiid_row', y integer 'teiid_row_number') x"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List[] {
+                Arrays.asList("hello", 1),
+                Arrays.asList("world", 2),
+                Arrays.asList("x", 1),
+                Arrays.asList("y", 2),
+        };    
+
+        process(sql, expected, new List<?>[] {Collections.singletonList(new String[] {"hello", "world"}), Arrays.asList(new ArrayImpl("x", "y"))});
     }
 	
 }
