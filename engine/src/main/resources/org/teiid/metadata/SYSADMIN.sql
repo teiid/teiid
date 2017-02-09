@@ -306,6 +306,9 @@ BEGIN
             	
     	IF (VARIABLES.afterLoadScript IS NOT null)
     	BEGIN
+	    	IF (VARIABLES.loadScript IS null AND VARIABLES.valid AND VARIABLES.loadNumColumn IS null)
+		    	--assume that the after state will be invalid, will be updated again below
+		    	EXECUTE IMMEDIATE 'UPDATE ' || VARIABLES.statusTable || ' SET valid = false ' || VARIABLES.updateCriteria USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = loadMatView.viewName;
 	    	EXECUTE IMMEDIATE VARIABLES.afterLoadScript;
         END
         
