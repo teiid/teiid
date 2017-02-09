@@ -23,12 +23,15 @@
 package org.teiid.query.processor.relational;
 
 import java.io.IOException;
+import java.sql.Array;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import javax.script.CompiledScript;
 import javax.script.ScriptContext;
@@ -56,6 +59,31 @@ import org.teiid.query.util.CommandContext;
  * Handles object table processing.
  */
 public class ObjectTableNode extends SubqueryAwareRelationalNode {
+    
+    private static class ReflectiveArrayIterator implements Iterator<Object> {
+        private int index;
+        private Object array;
+        private int length;
+        
+        ReflectiveArrayIterator(Object array) {
+            this.array = array;
+            length = java.lang.reflect.Array.getLength(this.array);
+        }
+        
+        @Override
+        public boolean hasNext() {
+            return index < length;
+        }
+        
+        @Override
+        public Object next() {
+            if (index >= length) {
+                throw new NoSuchElementException();
+            }
+            return java.lang.reflect.Array.get(array, index++);
+        }
+        
+    }
 
 	private static final String TEIID_ROW_NUMBER = "teiid_row_number"; //$NON-NLS-1$
 	private static final String TEIID_ROW = "teiid_row"; //$NON-NLS-1$
@@ -171,6 +199,14 @@ public class ObjectTableNode extends SubqueryAwareRelationalNode {
 			result = ((Iterable<?>)value).iterator();
 		} else if (value instanceof Iterator<?>) {
 			result = (Iterator<?>)value;
+		} else if (value != null && value.getClass().isArray()){
+		    result = new ReflectiveArrayIterator(value);
+		} else if (value instanceof Array) {
+		    try {
+                result = new ReflectiveArrayIterator(((Array)value).getArray());
+            } catch (SQLException e) {
+                throw new TeiidProcessingException(e);
+            }
 		} else {
 			result = Arrays.asList(value).iterator();
 		}
