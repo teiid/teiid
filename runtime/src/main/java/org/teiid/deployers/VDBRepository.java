@@ -56,6 +56,7 @@ import org.teiid.query.function.metadata.FunctionMetadataValidator;
 import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.VDBResources;
+import org.teiid.query.validator.ValidatorFailure;
 import org.teiid.query.validator.ValidatorReport;
 import org.teiid.runtime.MaterializationManager;
 import org.teiid.runtime.RuntimePlugin;
@@ -297,10 +298,25 @@ public class VDBRepository implements Serializable{
 		v.metadataLoadFinished();
 		synchronized (metadataAwareVDB) {
 			try {
+				try {
+					v.metadataLoadFinished();
+				} catch (MetadataException e) {
+					LogManager.logWarning(LogConstants.CTX_RUNTIME, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40073, name, version, e.getMessage())); //$NON-NLS-1$
+					if (!metadataAwareVDB.isPreview()) {
+						ValidatorReport report = new ValidatorReport();
+						report.addItem(new ValidatorFailure(e.getMessage()));
+						if (!processMetadataValidatorReport(key, report)) {
+							metadataAwareVDB.setStatus(Status.FAILED);
+							notifyFinished(name, version, v);
+							return;
+						}
+					}
+				}
+				
 				ValidatorReport report = new MetadataValidator().validate(metadataAwareVDB, metadataAwareVDB.removeAttachment(MetadataStore.class));
 	
 				if (report.hasItems()) {
-					LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40073, name, version));
+					LogManager.logWarning(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40073, name, version, report.getItems().iterator().next()));
 					if (!metadataAwareVDB.isPreview() && !processMetadataValidatorReport(key, report)) {
 						metadataAwareVDB.setStatus(Status.FAILED);
 						notifyFinished(name, version, v);
