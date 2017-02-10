@@ -331,7 +331,7 @@ public class VDBRepository implements Serializable{
 				try {
 					v.metadataLoadFinished();
 				} catch (MetadataException e) {
-					LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40073, name, version));
+					LogManager.logWarning(LogConstants.CTX_RUNTIME, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40073, name, version, e.getMessage())); //$NON-NLS-1$
 					if (!metadataAwareVDB.isPreview()) {
 						ValidatorReport report = new ValidatorReport();
 						report.addItem(new ValidatorFailure(e.getMessage()));
@@ -345,7 +345,7 @@ public class VDBRepository implements Serializable{
 				ValidatorReport report = new MetadataValidator().validate(metadataAwareVDB, metadataAwareVDB.removeAttachment(MetadataStore.class));
 	
 				if (report.hasItems()) {
-					LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40073, name, version));
+					LogManager.logWarning(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40073, name, version, report.getItems().iterator().next()));
 					if (!metadataAwareVDB.isPreview() && !processMetadataValidatorReport(key, report)) {
 						metadataAwareVDB.setStatus(Status.FAILED);
 						notifyFinished(name, version, v);

@@ -117,6 +117,9 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 
 		// execute start triggers
 		final VDBMetaData vdb = cvdb.getVDB();
+		if (vdb.getStatus() != Status.ACTIVE) {
+		    return;
+		}
 			doMaterializationActions(vdb, new MaterializationAction() {
 				@Override
 				public void process(final Table table) {
