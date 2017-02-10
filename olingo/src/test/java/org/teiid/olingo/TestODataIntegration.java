@@ -26,7 +26,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.StringReader;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -2499,4 +2498,46 @@ public class TestODataIntegration {
             teiid.undeployVDB("northwind");            
         }
     }
+
+    @Test 
+    public void testReverseBidirectionalNavigation() throws Exception {
+        HardCodedExecutionFactory hc = new HardCodedExecutionFactory();
+        hc.addData("SELECT EmployeeMasterEntity.EmployeeID, EmployeeMasterEntity.Department FROM EmployeeMasterEntity", 
+                Arrays.asList(Arrays.asList(3, 10000001)));
+        
+        hc.addData("SELECT OrganizationalUnitEntity.OrganizationaUnitID, OrganizationalUnitEntity.UnitManager FROM OrganizationalUnitEntity", 
+                Arrays.asList(Arrays.asList(10000001, 1)));
+        
+        teiid.addTranslator("x12", hc);
+        
+        try {
+            ModelMetaData mmd = new ModelMetaData();
+            mmd.setName("m");
+            mmd.addSourceMetadata("ddl", 
+                    "CREATE FOREIGN TABLE EmployeeMasterEntity (\n" + 
+                    "  EmployeeID integer primary key,\n" + 
+                    "  Department integer,"
+                    + "CONSTRAINT Departments FOREIGN KEY (Department) REFERENCES OrganizationalUnitEntity(OrganizationaUnitID));\n" + 
+                    "CREATE FOREIGN TABLE OrganizationalUnitEntity (\n" + 
+                    "  OrganizationaUnitID integer PRIMARY KEY,\n" + 
+                    "  UnitManager integer,\n" + 
+                    "  CONSTRAINT Managers FOREIGN KEY (UnitManager) REFERENCES EmployeeMasterEntity(EmployeeID));");
+            mmd.addSourceMapping("x12", "x12", null);
+            teiid.deployVDB("northwind", mmd);
+
+            localClient = getClient(teiid.getDriver(), "northwind", 1, new Properties());
+
+            ContentResponse response = null;
+            response = http.newRequest(baseURL + "/northwind/m/EmployeeMasterEntity(3)/Departments?$format=json")
+                    .method("GET")
+                    .send();
+            assertEquals(200, response.getStatus());
+            assertEquals("{\"@odata.context\":\"$metadata#OrganizationalUnitEntity/$entity\",\"OrganizationaUnitID\":10000001,\"UnitManager\":1}", 
+                    response.getContentAsString());
+        } finally {
+            localClient = null;
+            teiid.undeployVDB("northwind");            
+        }
+    }
+    
 }
