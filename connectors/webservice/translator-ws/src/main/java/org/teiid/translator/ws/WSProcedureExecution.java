@@ -22,6 +22,10 @@
 
 package org.teiid.translator.ws;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.sql.SQLException;
@@ -30,15 +34,20 @@ import java.util.Arrays;
 import java.util.List;
 
 import javax.xml.stream.XMLStreamException;
+import javax.xml.transform.Result;
+import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stax.StAXSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.ws.Dispatch;
+import javax.xml.ws.Service.Mode;
 import javax.xml.ws.WebServiceException;
 import javax.xml.ws.handler.MessageContext;
 
+import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.types.XMLType.Type;
@@ -63,7 +72,7 @@ public class WSProcedureExecution implements ProcedureExecution {
 	RuntimeMetadata metadata;
     ExecutionContext context;
     private Call procedure;
-    private StAXSource returnValue;
+    private Source returnValue;
     private WSConnection conn;
     private WSExecutionFactory executionFactory;
     
@@ -78,29 +87,34 @@ public class WSProcedureExecution implements ProcedureExecution {
         this.executionFactory = executionFactory;
     }
     
+    @SuppressWarnings("unchecked")
     public void execute() throws TranslatorException {
         List<Argument> arguments = this.procedure.getArguments();
         
         String style = (String)arguments.get(0).getArgumentValue().getValue();
         String action = (String)arguments.get(1).getArgumentValue().getValue();
         XMLType docObject = (XMLType)arguments.get(2).getArgumentValue().getValue();
-        StAXSource source = null;
+        Source source = null;
     	try {
-	        source = convertToSource(docObject);
+            Class type = StAXSource.class;
+            if (executionFactory.getDefaultServiceMode() == Mode.MESSAGE) {
+                type = DOMSource.class;
+            }
+    	    
+	        source = convertToSource(type, docObject);
 	        String endpoint = (String)arguments.get(3).getArgumentValue().getValue();
 	        
 	        if (style == null) {
 	        	style = executionFactory.getDefaultBinding().getBindingId();
 	        } else {
 	        	try {
-		        	Binding type = Binding.valueOf(style.toUpperCase());
-		        	style = type.getBindingId();
+		        	style = Binding.valueOf(style.toUpperCase()).getBindingId();
 	        	} catch (IllegalArgumentException e) {
 	        		throw new TranslatorException(WSExecutionFactory.UTIL.getString("invalid_invocation", Arrays.toString(Binding.values()))); //$NON-NLS-1$
 	        	}
 	        }
 	        
-	        Dispatch<StAXSource> dispatch = conn.createDispatch(style, endpoint, StAXSource.class, executionFactory.getDefaultServiceMode()); 
+	        Dispatch dispatch = conn.createDispatch(style, endpoint, type, executionFactory.getDefaultServiceMode()); 
 	
 			if (Binding.HTTP.getBindingId().equals(style)) {
 				if (action == null) {
@@ -133,7 +147,7 @@ public class WSProcedureExecution implements ProcedureExecution {
 				// JBoss Native DispatchImpl throws exception when the source is null
 				source = new StAXSource(XMLType.getXmlInputFactory().createXMLEventReader(new StringReader("<none/>"))); //$NON-NLS-1$
 			}
-			this.returnValue = dispatch.invoke(source);
+			this.returnValue = (Source) dispatch.invoke(source);
 		} catch (SQLException e) {
 			throw new TranslatorException(e);
 		} catch (WebServiceException e) {
@@ -145,12 +159,12 @@ public class WSProcedureExecution implements ProcedureExecution {
 		}
     }
 
-	private StAXSource convertToSource(SQLXML xml) throws SQLException {
-		if (xml == null) {
-			return null;
-		}
-		return xml.getSource(StAXSource.class);
-	}
+    private Source convertToSource(Class<? extends Source> T, SQLXML xml) throws SQLException {
+        if (xml == null) {
+            return null;
+        }
+        return xml.getSource(T);
+    }
     
     @Override
     public List<?> next() throws TranslatorException, DataNotAvailableException {
@@ -160,14 +174,33 @@ public class WSProcedureExecution implements ProcedureExecution {
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
     	Object result = returnValue;
-		if (returnValue != null && procedure.getArguments().size() > 4
+		if (returnValue != null && (returnValue instanceof StAXSource) && procedure.getArguments().size() > 4
 				&& procedure.getArguments().get(4).getDirection() == Direction.IN
 				&& Boolean.TRUE.equals(procedure.getArguments().get(4).getArgumentValue().getValue())) {
-			SQLXMLImpl sqlXml = new StAXSQLXML(returnValue);
+			SQLXMLImpl sqlXml = new StAXSQLXML((StAXSource)returnValue);
 			XMLType xml = new XMLType(sqlXml);
 			xml.setType(Type.DOCUMENT);
 			result = xml;
-		}
+		} else if (returnValue != null && returnValue instanceof DOMSource){
+            final DOMSource xmlSource = (DOMSource) returnValue;
+            SQLXMLImpl sqlXml = new SQLXMLImpl(new InputStreamFactory() {
+                @Override
+                public InputStream getInputStream() throws IOException {
+                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                    Result outputTarget = new StreamResult(outputStream);
+                    try {
+                        TransformerFactory.newInstance().newTransformer()
+                                .transform(xmlSource, outputTarget);
+                    } catch (Exception e) {
+                        throw new IOException(e);
+                    }
+                    return new ByteArrayInputStream(outputStream.toByteArray());
+                }
+            });
+            XMLType xml = new XMLType(sqlXml);
+            xml.setType(Type.DOCUMENT);
+            result = xml;
+        }
         return Arrays.asList(result);
     }    
     
