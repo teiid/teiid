@@ -22,7 +22,10 @@
 
 package org.teiid.systemmodel;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.FileInputStream;
 import java.io.PrintWriter;
@@ -39,6 +42,7 @@ import java.util.logging.Logger;
 
 import javax.sql.DataSource;
 
+import org.infinispan.transaction.tm.DummyTransactionManager;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -52,6 +56,7 @@ import org.teiid.jdbc.util.ResultSetUtil;
 import org.teiid.language.Command;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.HardCodedExecutionFactory;
 import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
@@ -91,6 +96,13 @@ public class TestExternalMatViews {
 
     private static boolean DEBUG = false;
     
+    @BeforeClass public static void oneTimeSetup() {
+        if (DEBUG) {
+            UnitTestUtil.enableTraceLogging("org.teiid");
+        }
+        System.setProperty("jgroups.bind_addr", "127.0.0.1");
+    }
+    
 	private Connection conn;
 	private FakeServer server;
 	private static DataSource h2DataSource;
@@ -107,7 +119,8 @@ public class TestExternalMatViews {
 			"  LoadState varchar(25) not null,\n" + 
 			"  Cardinality long,\n" + 
 			"  Updated timestamp not null,\n" + 
-			"  LoadNumber long not null,\n" + 
+			"  LoadNumber long not null,\n" +
+			"  NodeName varchar(25) not null,\n" +
 			"  PRIMARY KEY (VDBName, VDBVersion, SchemaName, Name)\n" + 
 			")";
 
@@ -203,7 +216,7 @@ public class TestExternalMatViews {
 	}
 	
 	private void withSwapScripts(boolean useUpdateScript) throws Exception {
-		HardCodedExecutionFactory hcef = setupData();
+		HardCodedExecutionFactory hcef = setupData(server);
 		ModelMetaData sourceModel = setupSourceModel();
 		ModelMetaData matViewModel = setupMatViewModel();
 
@@ -235,7 +248,7 @@ public class TestExternalMatViews {
 	
     @Test
     public void testViewChaining() throws Exception {
-        DelayableHardCodedExectionFactory hcef = setupData();
+        DelayableHardCodedExectionFactory hcef = setupData(server);
         ModelMetaData sourceModel = setupSourceModel();
         ModelMetaData matViewModel = setupMatViewModel();
         
@@ -292,7 +305,7 @@ public class TestExternalMatViews {
 	}
 	
 	private void withMergeDelete(boolean useUpdateScript) throws Exception {
-		HardCodedExecutionFactory hcef = setupData();
+		HardCodedExecutionFactory hcef = setupData(server);
 		ModelMetaData sourceModel = setupSourceModel();
 		ModelMetaData matViewModel = setupMatViewModel();
 		
@@ -348,7 +361,7 @@ public class TestExternalMatViews {
         assertEquals("2", rs.getString(2));
         
         Connection c = h2DataSource.getConnection();
-        rs = c.createStatement().executeQuery("SELECT VDBVersion FROm Status WHERE VDBName = 'child'");
+        rs = c.createStatement().executeQuery("SELECT VDBVersion FROM Status WHERE VDBName = 'child'");
         rs.next();
         assertEquals(1, rs.getInt(1)); // 1 means IMPORTED
         
@@ -376,7 +389,7 @@ public class TestExternalMatViews {
 	}
 	
 	private void internalWithSameExternalProcedures(boolean useUpdateScript) throws Exception {
-		HardCodedExecutionFactory hcef = setupData();
+		HardCodedExecutionFactory hcef = setupData(server);
 		ModelMetaData sourceModel = setupSourceModel();
 		ModelMetaData matViewModel = setupMatViewModel();
 
@@ -396,6 +409,66 @@ public class TestExternalMatViews {
 		
 		assertTest(useUpdateScript, hcef);
 	}
+	
+    @Test
+    public void testRestartServerInMiddleOfLoading() throws Exception {
+        HardCodedExecutionFactory hcef = setupData(server);
+        ModelMetaData sourceModel = setupSourceModel();
+        ModelMetaData matViewModel = setupMatViewModel();
+
+        ModelMetaData viewModel = new ModelMetaData();
+        viewModel.setName("view1");
+        viewModel.setModelType(Type.VIRTUAL);
+        viewModel.addSourceMetadata("DDL", "CREATE VIEW v1 (col integer primary key, col1 string) "
+                + "OPTIONS (MATERIALIZED true, "
+                + "MATERIALIZED_TABLE 'matview.MAT_V2', "
+                + "\"teiid_rel:MATVIEW_TTL\" 3000, "
+                + "\"teiid_rel:ALLOW_MATVIEW_MANAGEMENT\" true, " 
+                + "\"teiid_rel:MATVIEW_STATUS_TABLE\" 'matview.STATUS', "
+                + "\"teiid_rel:MATVIEW_LOADNUMBER_COLUMN\" 'loadnum') "
+                + "AS select col, col1 from source.physicalTbl");
+        server.deployVDB("comp", sourceModel, viewModel, matViewModel);
+        
+        Thread.sleep(1000);
+        
+        // test that the matview loaded
+        conn = server.createConnection("jdbc:teiid:comp");
+        Statement s = conn.createStatement();
+        ResultSet rs = s.executeQuery("select * from view1.v1 order by col");
+        rs.next();
+        assertEquals(1, rs.getInt(1));
+        assertEquals("town", rs.getString(2));
+
+        // now change the status table underneath
+        h2DataSource = getDatasource();
+        Connection c = h2DataSource.getConnection();
+        assertNotNull(c);
+        
+        Statement stmt = c.createStatement();
+        boolean update = stmt.execute("UPDATE status SET LOADSTATE = 'LOADING' WHERE NAME = 'v1'");
+        assertFalse(update); // this is update
+        assertEquals(1, stmt.getUpdateCount());
+        
+        rs = c.createStatement().executeQuery("SELECT LOADSTATE, NODENAME FROM status");
+        assertTrue(rs.next());
+        assertEquals("LOADING", rs.getString(1));
+        assertEquals("localhost", rs.getString(2));
+        server.stop();
+        
+        server = new FakeServer(true);
+        setupData(server);
+        setupSourceModel();
+        setupMatViewModel();
+        
+        server.deployVDB("comp", sourceModel, viewModel, matViewModel);
+        
+        Thread.sleep(1000);
+        
+        rs = c.createStatement().executeQuery("SELECT LOADSTATE, NODENAME FROM STATUS WHERE NAME = 'v1'");
+        assertTrue(rs.next());
+        assertEquals("LOADED", rs.getString(1));
+        assertEquals("localhost", rs.getString(2));
+    }	
 	
 	private void assertTest(boolean useUpdateScript, HardCodedExecutionFactory hcef)
 			throws Exception, SQLException, InterruptedException {
@@ -464,11 +537,11 @@ public class TestExternalMatViews {
 		s1.close();
 	}
 
-	private DelayableHardCodedExectionFactory setupData() throws TranslatorException {
-	    return setupData(false);
+	private DelayableHardCodedExectionFactory setupData(FakeServer server) throws TranslatorException {
+	    return setupData(false, server);
 	}
 
-	private DelayableHardCodedExectionFactory setupData(final boolean supportsEQ) throws TranslatorException {
+	private DelayableHardCodedExectionFactory setupData(final boolean supportsEQ, FakeServer server) throws TranslatorException {
 		H2ExecutionFactory executionFactory = new H2ExecutionFactory();
 		executionFactory.setSupportsDirectQueryProcedure(true);
 		executionFactory.start();
@@ -557,7 +630,7 @@ public class TestExternalMatViews {
 	
 	@Test
 	public void test() throws Exception {
-		HardCodedExecutionFactory hcef = setupData();
+		HardCodedExecutionFactory hcef = setupData(server);
 		ModelMetaData sourceModel = setupSourceModel();
 		ModelMetaData matViewModel = setupMatViewModel();
 		
@@ -581,7 +654,7 @@ public class TestExternalMatViews {
 	
     @Test
     public void testInternalWriteThroughMativew() throws Exception {
-        HardCodedExecutionFactory hcef = setupData(true);
+        HardCodedExecutionFactory hcef = setupData(true, server);
         ModelMetaData sourceModel = setupSourceModel();
         ModelMetaData matViewModel = setupMatViewModel();
         
@@ -658,5 +731,65 @@ public class TestExternalMatViews {
             }
         }
         return hasRs;
-    }	
+    }
+    
+    private FakeServer createServer(String nodeName, String ispn, String jgroups) throws Exception {
+        FakeServer server = new FakeServer(false);
+
+        EmbeddedConfiguration config = new EmbeddedConfiguration();
+        config.setInfinispanConfigFile(ispn);
+        config.setJgroupsConfigFile(jgroups);
+        config.setNodeName(nodeName);
+        config.setTransactionManager(new DummyTransactionManager());
+        server.start(config, true);
+        return server;
+    }
+    
+    @Test
+    public void testNodeFailure() throws Exception {
+        FakeServer server1 = createServer("server1", "infinispan-replicated-config.xml", "tcp-shared.xml");
+        
+        HardCodedExecutionFactory hcef = setupData(server1);
+        ModelMetaData sourceModel = setupSourceModel();
+        ModelMetaData matViewModel = setupMatViewModel();
+        
+        ModelMetaData viewModel = new ModelMetaData();
+        viewModel.setName("view1");
+        viewModel.setModelType(Type.VIRTUAL);
+        viewModel.addSourceMetadata("DDL", "CREATE VIEW v1 (col integer primary key, col1 string) "
+                + "OPTIONS (MATERIALIZED true, "
+                + "MATERIALIZED_TABLE 'matview.MAT_V2', "
+                + "\"teiid_rel:MATVIEW_TTL\" 30000, "
+                + "\"teiid_rel:ALLOW_MATVIEW_MANAGEMENT\" true, "
+                + "\"teiid_rel:MATVIEW_SHARE_SCOPE\" 'FULL', "
+                + "\"teiid_rel:MATVIEW_STATUS_TABLE\" 'matview.STATUS', "
+                + "\"teiid_rel:MATVIEW_LOADNUMBER_COLUMN\" 'loadnum') "
+                + "AS select col, col1 from source.physicalTbl");
+        server1.deployVDB("comp", sourceModel, viewModel, matViewModel);
+        
+        Thread.sleep(1000);
+        
+        FakeServer server2 = createServer("server2", "infinispan-replicated-config-1.xml", "tcp-shared.xml");
+        setupData(server2);
+        server2.deployVDB("comp", sourceModel, viewModel, matViewModel);
+        Thread.sleep(5000);
+                
+        Connection c = h2DataSource.getConnection();
+        ResultSet rs = c.createStatement().executeQuery("SELECT LoadState, Nodename FROM Status WHERE VDBName = 'comp'");
+        rs.next();
+        assertEquals("LOADED", rs.getString(1));
+        assertEquals("server1", rs.getString(2));
+        
+        int update = c.createStatement().executeUpdate("UPDATE Status SET LoadState = 'LOADING' WHERE VDBName = 'comp' AND Nodename = 'server1'");
+        assertEquals(1, update);
+
+        server1.stop();
+        
+        Thread.sleep(1000);
+        
+        rs = c.createStatement().executeQuery("SELECT LoadState, Nodename FROM Status WHERE VDBName = 'comp'");
+        rs.next();
+        assertEquals("LOADED", rs.getString(1));
+        assertEquals("server2", rs.getString(2));        
+    }
 }

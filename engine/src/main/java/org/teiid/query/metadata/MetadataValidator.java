@@ -377,6 +377,7 @@ public class MetadataValidator {
             			statusTypeMap.put("CARDINALITY", DataTypeManager.DefaultDataClasses.LONG); //$NON-NLS-1$
             			statusTypeMap.put("UPDATED", DataTypeManager.DefaultDataClasses.TIMESTAMP); //$NON-NLS-1$
             			statusTypeMap.put("LOADNUMBER", DataTypeManager.DefaultDataClasses.LONG); //$NON-NLS-1$
+            			statusTypeMap.put("NODENAME", DataTypeManager.DefaultDataClasses.STRING); //$NON-NLS-1$
                                                 
                         List<Column> statusColumns = statusTable.getColumns();
                         for(int i = 0 ; i < statusColumns.size() ; i ++) {
