@@ -5221,7 +5221,7 @@ void createRole(DatabaseStore dbStore) :
 }
 
 /*
-name=not used
+name=with role
 */
 void readWith(Role role) :
 {
@@ -6508,7 +6508,7 @@ void importDatabase(DatabaseStore dbStore) :
 }
 
 /*
-name=not used
+name=identifier list
 */
 void readCSVString(List<String> strings) :
 {
@@ -6528,7 +6528,7 @@ void readCSVString(List<String> strings) :
 }
 
 /*
-name=notused
+name=grant type
 */
 void readGrantTypes(ArrayList<Grant.Permission.Privilege> privileges) :
 {
