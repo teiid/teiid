@@ -91,12 +91,12 @@ CREATE ROLE ReadOnly WITH ANY AUTHENTICATED;
 CREATE ROLE Prices WITH JAAS ROLE prices;
 CREATE ROLE ReadWrite WITH JAAS ROLE superuser;
 GRANT SELECT ON SCHEMA Accounts TO ReadOnly;
-GRANT ON COLUMN "Accounts.Account.SSN" MASK '"null"' TO ReadOnly;
+GRANT ON COLUMN "Accounts.Account.SSN" MASK 'null' TO ReadOnly;
 GRANT ON TABLE "Accounts.Customer" TO ReadOnly;
-GRANT ON COLUMN "Accounts.Customer.SSN" MASK '"null"' TO ReadOnly;
+GRANT ON COLUMN "Accounts.Customer.SSN" MASK 'null' TO ReadOnly;
 GRANT SELECT ON SCHEMA MarketData TO ReadOnly;
 GRANT SELECT ON SCHEMA Stocks TO ReadOnly;
-GRANT ON COLUMN "Stocks.StockPrices.Price" MASK ORDER 1 '"CASE WHEN hasRole('Prices') = true THEN Price END"' TO ReadOnly;
+GRANT ON COLUMN "Stocks.StockPrices.Price" MASK ORDER 1 'CASE WHEN hasRole(''Prices'') = true THEN Price END' TO ReadOnly;
 
 GRANT SELECT,INSERT,UPDATE,DELETE ON SCHEMA Accounts TO ReadWrite;
 GRANT ON COLUMN "Accounts.Account.SSN" MASK ORDER 1 'SSN' TO ReadWrite;
