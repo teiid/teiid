@@ -109,7 +109,7 @@ public class DDLStringVisitor {
     	}
     }
     
-    private void visit(Database database) {
+    public void visit(Database database) {
         append(NEWLINE);
         append("/*").append(NEWLINE);
         append("###########################################").append(NEWLINE);
@@ -295,7 +295,7 @@ public class DDLStringVisitor {
         append(SEMICOLON);
     }
 
-    private void visit(Schema schema) {
+    protected void visit(Schema schema) {
 		boolean first = true; 
 		
 		if (this.includeTables) {
