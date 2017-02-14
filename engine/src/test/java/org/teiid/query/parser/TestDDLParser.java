@@ -785,14 +785,15 @@ public class TestDDLParser {
 	}
 	
     public static Database helpParse(String ddl) {
+        final Map<String, Datatype> dataTypes = getDataTypes();
         DatabaseStore store = new DatabaseStore() {
             @Override
             public Map<String, Datatype> getRuntimeTypes() {
-                return getDataTypes();
+                return dataTypes;
             }
             @Override
             public Map<String, Datatype> getBuiltinDataTypes() {
-                return getDataTypes();
+                return dataTypes;
             }
 			@Override
 			public SystemFunctionManager getSystemFunctionManager() {
