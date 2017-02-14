@@ -89,11 +89,7 @@ public class DatabaseUtil {
 
                 	// add servers
                     Server server = new Server(s.getName());
-	                if (s.getConnectionJndiName() != null) {
-	                    server.setJndiName(s.getConnectionJndiName());
-	                } else {
-	                    server.setType("NONE");
-	                }
+                    server.setJndiName(s.getConnectionJndiName());
 	                server.setDataWrapper(s.getTranslatorName());
 	                // no need to add duplicate definitions.
 	                if (db.getServer(s.getName()) == null) {
