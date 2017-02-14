@@ -29,6 +29,9 @@ import java.sql.Array;
 import java.sql.SQLException;
 import java.util.Properties;
 
+import org.hamcrest.CoreMatchers;
+import org.hamcrest.Matcher;
+import org.hamcrest.MatcherAssert;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -188,4 +191,16 @@ public class TestConnection {
         }
     }
 
+    @Test public void testMaxOpenStatements() throws SQLException {
+        ConnectionImpl conn = getMMConnection();
+        for(int i = 0; i < 1000; i++){
+            conn.createStatement();
+        }
+        try{
+            conn.createStatement();
+            fail("MaxOpenStatements not limited to required number.");
+        } catch (TeiidSQLException ex){
+            assertThat(ex.getMessage(), CoreMatchers.containsString(JDBCPlugin.Event.TEIID20036.name()));
+        }
+    }
 }
