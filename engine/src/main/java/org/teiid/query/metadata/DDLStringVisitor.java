@@ -119,13 +119,13 @@ public class DDLStringVisitor {
         
         append(CREATE).append(SPACE).append(DATABASE).append(SPACE)
                 .append(SQLStringVisitor.escapeSinglePart(database.getName())).append(SPACE).append(VERSION)
-                .append(SPACE).append(TICK).append(database.getVersion()).append(TICK);
+                .append(SPACE).append(new Constant(database.getVersion()));
         appendOptions(database);
         append(SEMICOLON);
         append(NEWLINE);
         append(USE).append(SPACE).append(DATABASE).append(SPACE);
         append(SQLStringVisitor.escapeSinglePart(database.getName())).append(SPACE);
-        append(VERSION).append(SPACE).append(TICK).append(database.getVersion()).append(TICK);
+        append(VERSION).append(SPACE).append(new Constant(database.getVersion()));
         append(SEMICOLON);
         append(NEWLINE);
 
@@ -237,7 +237,7 @@ public class DDLStringVisitor {
                     if (permission.getMaskOrder() != null && permission.getMaskOrder() != -1) {
                         append(SPACE).append(ORDER).append(SPACE).append(permission.getMaskOrder());
                     }
-                    append(SPACE).append(TICK).append(SQLStringVisitor.escapeSinglePart(permission.getMask())).append(TICK);
+                    append(SPACE).append(new Constant(permission.getMask()));
                 }
                 
                 if (permission.getCondition() != null) {
@@ -245,7 +245,7 @@ public class DDLStringVisitor {
                     if (permission.isConditionAConstraint() != null && permission.isConditionAConstraint()) {
                         append(SPACE).append(CONSTRAINT);
                     }
-                    append(SPACE).append(TICK).append(SQLStringVisitor.escapeSinglePart(permission.getCondition())).append(TICK);
+                    append(SPACE).append(new Constant(permission.getCondition()));
                 }
             }
             append(SPACE).append(TO).append(SPACE).append(grant.getRole());
@@ -588,7 +588,7 @@ public class DDLStringVisitor {
 			if (BaseColumn.EXPRESSION_DEFAULT.equalsIgnoreCase(column.getProperty(BaseColumn.DEFAULT_HANDLING, false))) {
 				append(column.getDefaultValue());
 			} else {
-				append(TICK).append(StringUtil.replaceAll(column.getDefaultValue(), TICK, TICK + TICK)).append(TICK);
+				append(new Constant(column.getDefaultValue()));
 			}
 		}
 	}
