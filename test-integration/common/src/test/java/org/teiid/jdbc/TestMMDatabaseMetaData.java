@@ -41,17 +41,20 @@ import java.sql.Types;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.util.ApplicationInfo;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.util.ResultSetUtil;
+import org.teiid.net.ServerConnection;
 
 
 /**
@@ -928,6 +931,18 @@ public class TestMMDatabaseMetaData {
         expected.put("getConnection", conn); //$NON-NLS-1$
 
         return expected;
+    }
+    
+    @Test
+    public void testDatabaseVersions() throws Exception {
+        ConnectionImpl impl = Mockito.mock(ConnectionImpl.class);
+        Mockito.stub(impl.getConnectionProps()).toReturn(new Properties());
+        ServerConnection sconn = Mockito.mock(ServerConnection.class);
+        Mockito.stub(sconn.getServerVersion()).toReturn("01.02.03-something");
+        Mockito.stub(impl.getServerConnection()).toReturn(sconn);
+        DatabaseMetaDataImpl metadata = new DatabaseMetaDataImpl(impl);
+        assertEquals(1, metadata.getDatabaseMajorVersion());
+        assertEquals(2, metadata.getDatabaseMinorVersion());
     }
     
 }

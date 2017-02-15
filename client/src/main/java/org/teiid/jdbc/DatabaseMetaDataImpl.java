@@ -696,7 +696,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
      * @throws SQLException if a database access error occurs.
      */
     public int getDatabaseMinorVersion() throws SQLException {
-        return TeiidDriver.getInstance().getMinorVersion();
+        return Integer.valueOf(driverConnection.getServerConnection().getServerVersion().split("[.]")[1]); //$NON-NLS-1$
     }
 
     /**
@@ -705,7 +705,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
      * @throws SQLException if a database access error occurs.
      */
     public int getDatabaseMajorVersion() throws SQLException {
-        return TeiidDriver.getInstance().getMajorVersion();
+        return Integer.valueOf(driverConnection.getServerConnection().getServerVersion().split("[.]")[0]); //$NON-NLS-1$
     }
 
     /**
