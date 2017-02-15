@@ -113,6 +113,10 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 
 	@Test public void testDataTypes() throws Exception {
 		checkResult("testDataTypes", "select * from SYS.DataTypes order by name"); //$NON-NLS-1$ //$NON-NLS-2$
+		execute("select * from SYS.DataTypes where name = 'string'"); //$NON-NLS-1$ //$NON-NLS-2$
+		assertRowCount(1);
+		execute("select * from SYS.DataTypes where isstandard"); //$NON-NLS-1$ //$NON-NLS-2$
+        assertTrue(getRowCount() >= 22);
 	}
 
 	@Test public void testProcedureParams() throws Exception {

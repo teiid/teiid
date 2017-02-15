@@ -406,7 +406,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		});
         name = SystemTables.DATATYPES.name();
         columns = getColumns(tm, name);
-        systemTables.put(SystemTables.DATATYPES, new RecordExtractionTable<Datatype>(new RecordTable<Datatype>(new int[] {0}, columns) {
+        systemTables.put(SystemTables.DATATYPES, new RecordExtractionTable<Datatype>(new RecordTable<Datatype>(new int[] {0}, columns.subList(0, 1)) {
         	
         	@Override
         	public SimpleIterator<Datatype> processQuery(VDBMetaData vdb,
