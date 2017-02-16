@@ -355,8 +355,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addColumn("indisprimary", DataTypeManager.DefaultDataTypes.BOOLEAN, t); //$NON-NLS-1$ 
 		
 		// This is an array of indnatts values that indicate which table columns this index indexes.
-		Column c = addColumn("indkey", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
-		c.setRuntimeType(DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.SHORT)));
+		Column c = addColumn("indkey", DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.SHORT)), t); //$NON-NLS-1$ 
 		c.setProperty("pg_type:oid", String.valueOf(PG_TYPE_INT2VECTOR)); //$NON-NLS-1$
 		
 		// Expression trees (in nodeToString() representation) for index attributes that are not simple 
@@ -415,22 +414,17 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		// Number of input arguments
 		addColumn("pronargs", DataTypeManager.DefaultDataTypes.SHORT, t); //$NON-NLS-1$ 
 		
-		Column c = addColumn("proargtypes", DataTypeManager.DefaultDataTypes.OBJECT, t); //$NON-NLS-1$
+		Column c = addColumn("proargtypes", DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.INTEGER)), t); //$NON-NLS-1$
 		c.setProperty("pg_type:oid", String.valueOf(PG_TYPE_OIDVECTOR)); //$NON-NLS-1$
-		c.setRuntimeType(DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.INTEGER)));
 		
-		c = addColumn("proargnames", DataTypeManager.DefaultDataTypes.OBJECT, t); //$NON-NLS-1$
+		c = addColumn("proargnames", DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.STRING)), t); //$NON-NLS-1$
 		c.setProperty("pg_type:oid", String.valueOf(PG_TYPE_TEXTARRAY)); //$NON-NLS-1$
-		c.setRuntimeType(DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.STRING)));
 		
-		c = addColumn("proargmodes", DataTypeManager.DefaultDataTypes.OBJECT, t); //$NON-NLS-1$
+		c = addColumn("proargmodes", DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.CHAR)), t); //$NON-NLS-1$
 		c.setProperty("pg_type:oid", String.valueOf(PG_TYPE_CHARARRAY)); //$NON-NLS-1$
-		//TODO: we don't yet understand that we can cast from string[] to char[]
-		c.setRuntimeType(DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.CHAR)));
 		
-		c = addColumn("proallargtypes", DataTypeManager.DefaultDataTypes.OBJECT, t); //$NON-NLS-1$
+		c = addColumn("proallargtypes", DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.INTEGER)), t); //$NON-NLS-1$
 		c.setProperty("pg_type:oid", String.valueOf(PG_TYPE_OIDARRAY)); //$NON-NLS-1$
-		c.setRuntimeType(DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.INTEGER)));
 		
 		// The OID of the namespace that contains this function 
 		addColumn("pronamespace", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
