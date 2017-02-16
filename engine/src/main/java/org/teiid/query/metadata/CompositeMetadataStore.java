@@ -224,7 +224,7 @@ public class CompositeMetadataStore extends MetadataStore {
 			synchronized (this) {
 				if (oids == null) {
 					TreeMap<String, RecordHolder> map = new TreeMap<String, RecordHolder>(String.CASE_INSENSITIVE_ORDER);
-					addOids(this.getDatatypes().values(), map);
+					addOids(this.getDatatypesExcludingAliases().values(), map);
 					for (Schema s : getSchemaList()) {
 						assignOids(s, map);
 					}

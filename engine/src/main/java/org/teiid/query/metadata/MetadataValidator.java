@@ -45,6 +45,7 @@ import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionMetadataValidator;
 import org.teiid.query.mapping.relational.QueryNode;
+import org.teiid.query.metadata.MaterializationMetadataRepository.Scope;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.report.ActivityReport;
 import org.teiid.query.report.ReportItem;
@@ -245,7 +246,6 @@ public class MetadataValidator {
 						super.setUUID(record);
 					}
 				};
-				mf.setBuiltinDataTypes(store.getDatatypes());
 				for (AbstractMetadataRecord record : schema.getResolvingOrder()) {
 					if (record instanceof Table) {
 						Table t = (Table)record;
@@ -488,7 +488,7 @@ public class MetadataValidator {
     			ResolverUtil.resolveGroup(symbol, metadata);    			
     			String selectTransformation = t.getSelectTransformation();
 				if (t.isVirtual()) {
-    				QueryCommand command = (QueryCommand)QueryParser.getQueryParser().parseCommand(selectTransformation);
+    				QueryCommand command = (QueryCommand)parser.parseCommand(selectTransformation);
     				QueryResolver.resolveCommand(command, metadata);
     				resolverReport =  Validator.validate(command, metadata);
     				if (!resolverReport.hasItems() && (t.getColumns() == null || t.getColumns().isEmpty())) {
@@ -528,7 +528,7 @@ public class MetadataValidator {
 	    						}
 	    						String exprString = c.getNameInSource();
 	    						try {
-		    						Expression ex = QueryParser.getQueryParser().parseExpression(exprString);
+		    						Expression ex = parser.parseExpression(exprString);
 									ResolverVisitor.resolveLanguageObject(ex, groups, metadata);
 									if (!ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(ex).isEmpty()) {
 										log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31114, exprString, fbi.getFullName()));
@@ -631,7 +631,7 @@ public class MetadataValidator {
 			QueryMetadataInterface metadata, 
 			Table t, String plan, int type) throws QueryParserException, QueryResolverException,
 			TeiidComponentException {
-		Command command = QueryParser.getQueryParser().parseProcedure(plan, true);
+		Command command = parser.parseProcedure(plan, true);
 		
 		QueryResolver.resolveCommand(command, new GroupSymbol(t.getFullName()), type, metadata, false);
 		

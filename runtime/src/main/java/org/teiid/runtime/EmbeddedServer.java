@@ -850,7 +850,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			ConnectorManagerRepository cmr,
 			MetadataRepository metadataRepository, MetadataStore store,
 			AtomicInteger loadCount, VDBResources vdbResources) throws TranslatorException {
-		MetadataFactory factory = createMetadataFactory(vdb, model, vdbResources==null?Collections.EMPTY_MAP:vdbResources.getEntriesPlusVisibilities());
+		MetadataFactory factory = createMetadataFactory(vdb, store, model, vdbResources==null?Collections.EMPTY_MAP:vdbResources.getEntriesPlusVisibilities());
 		
 		ExecutionFactory ef = null;
 		Object cf = null;
@@ -879,7 +879,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 				break;
 			} catch (Exception e) {
 				te = e;
-				factory = createMetadataFactory(vdb, model, vdbResources==null?Collections.EMPTY_MAP:vdbResources.getEntriesPlusVisibilities());
+				factory = createMetadataFactory(vdb, store, model, vdbResources==null?Collections.EMPTY_MAP:vdbResources.getEntriesPlusVisibilities());
 			}
 		}
 		if (te != null) {

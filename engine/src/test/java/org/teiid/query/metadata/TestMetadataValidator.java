@@ -66,7 +66,6 @@ public class TestMetadataValidator {
 		DDLMetadataRepository repo = new DDLMetadataRepository();
 		MetadataFactory mf = new MetadataFactory("myVDB",1, modelName, TestDDLParser.getDataTypes(), new Properties(), ddl);
 		mf.setParser(QueryParser.getQueryParser());
-		mf.setBuiltinDataTypes(SystemMetadata.getInstance().getSystemStore().getDatatypes());
 		mf.getSchema().setPhysical(physical);
 		repo.loadMetadata(mf, null, null, ddl);
 		mf.mergeInto(store);

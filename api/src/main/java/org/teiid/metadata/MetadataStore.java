@@ -25,6 +25,7 @@ package org.teiid.metadata;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +45,7 @@ public class MetadataStore implements Serializable {
 	protected NavigableMap<String, Schema> schemas = new TreeMap<String, Schema>(String.CASE_INSENSITIVE_ORDER);
 	protected List<Schema> schemaList = new ArrayList<Schema>(); //used for a stable ordering
 	protected NavigableMap<String, Datatype> datatypes = new TreeMap<String, Datatype>(String.CASE_INSENSITIVE_ORDER);
+	protected NavigableMap<String, Datatype> unmondifiableDatatypes = Collections.unmodifiableNavigableMap(datatypes);
 	private Map<String, Grant> grants = new TreeMap<String, Grant>(String.CASE_INSENSITIVE_ORDER);
 	protected LinkedHashMap<String, Role> roles = new LinkedHashMap<String, Role>();
 	
@@ -74,30 +76,44 @@ public class MetadataStore implements Serializable {
         return s;
 	}
 	
-	public void addDataTypes(Collection<Datatype> types) {
-		if (types != null){
-			for (Datatype type:types) {
-				addDatatype(type);
+	public void addDataTypes(Map<String, Datatype> typeMap) {
+		if (typeMap != null){
+			for (Map.Entry<String, Datatype> entry:typeMap.entrySet()) {
+				addDatatype(entry.getKey(), entry.getValue());
 			}
 		}
 	}
 	
-	public void addDatatype(Datatype datatype) {
-		if (!this.datatypes.containsKey(datatype.getName())) {
-			this.datatypes.put(datatype.getName(), datatype);
+	public void addDatatype(String name, Datatype datatype) {
+		if (!this.datatypes.containsKey(name)) {
+			this.datatypes.put(name, datatype);
 		}
 	}
 		
 	public NavigableMap<String, Datatype> getDatatypes() {
-		return datatypes;
+		return unmondifiableDatatypes;
 	}
+	
+	/**
+	 * Get the type information excluding aliases and case sensitive by name
+	 * @return
+	 */
+	public NavigableMap<String, Datatype> getDatatypesExcludingAliases() {
+        TreeMap<String, Datatype> result = new TreeMap<String, Datatype>();
+        for (Map.Entry<String, Datatype> entry : this.datatypes.entrySet()) {
+            if (entry.getKey().equals(entry.getValue().getName())) {
+                result.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return result;
+    }
 	
 	public void merge(MetadataStore store) {
 		if (store != null) {
 			for (Schema s:store.getSchemaList()) {
 				addSchema(s);
 			}
-			addDataTypes(store.getDatatypes().values());
+			addDataTypes(store.getDatatypes());
 			addGrants(store.grants.values());
 		}
 	}

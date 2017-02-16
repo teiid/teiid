@@ -129,6 +129,29 @@ public class DDLStringVisitor {
         append(SEMICOLON);
         append(NEWLINE);
 
+        boolean outputDt = false;
+        for (Datatype dt : database.getMetadataStore().getDatatypes().values()) {
+            if (dt.getType() == Datatype.Type.Domain) {
+                outputDt = true;
+                break;
+            }
+        }
+        
+        if (outputDt) {
+            append(NEWLINE);
+            append("--############ Domains ############");
+            append(NEWLINE);
+            
+            for (Datatype dt : database.getMetadataStore().getDatatypes().values()) {
+                if (dt.isBuiltin()) {
+                    continue;
+                }
+                visit(dt);
+                append(NEWLINE);
+                append(NEWLINE);
+            }
+        }
+        
         if (!database.getDataWrappers().isEmpty()){
         	append(NEWLINE);
         	append("--############ Translators ############");
@@ -157,9 +180,9 @@ public class DDLStringVisitor {
         	append(NEWLINE);
         	append("--############ Schema:").append(schema.getName()).append(" ############");
         	append(NEWLINE);
-            append(CREATE).append(SPACE);
+            append(CREATE);
             if (!schema.isPhysical()) {
-                append(VIRTUAL);
+                append(SPACE).append(VIRTUAL);
             }
             append(SPACE).append(SCHEMA).append(SPACE).append(SQLStringVisitor.escapeSinglePart(schema.getName()));
             if (!schema.getServers().isEmpty()) {
@@ -211,6 +234,30 @@ public class DDLStringVisitor {
         append(NEWLINE);
     }
     
+    private void visit(Datatype dt) {
+        append(CREATE).append(SPACE).append(DOMAIN).append(SPACE);
+        append(SQLStringVisitor.escapeSinglePart(dt.getName())).append(SPACE).append(AS).append(SPACE);
+        String runtimeTypeName = dt.getBasetypeName();
+        append(runtimeTypeName);
+        Datatype base = SystemMetadata.getInstance().getRuntimeTypeMap().get(runtimeTypeName);
+        if (LENGTH_DATATYPES.contains(runtimeTypeName)) {
+            if (dt.getLength() != base.getLength()) {
+                append(LPAREN).append(dt.getLength()).append(RPAREN);
+            }
+        } else if (PRECISION_DATATYPES.contains(runtimeTypeName)
+                && (dt.getPrecision() != base.getPrecision() || dt.getScale() != base.getScale())) {
+            append(LPAREN).append(dt.getPrecision());
+            if (dt.getScale() != 0) {
+                append(COMMA).append(dt.getScale());
+            }
+            append(RPAREN);
+        }
+        if (dt.getNullType() == NullType.No_Nulls) {
+            append(SPACE).append(NOT_NULL);
+        }
+        append(SEMICOLON);
+    }
+
     private void visit(Grant grant) {
         
         for (Permission permission : grant.getPermissions()) {
@@ -600,31 +647,37 @@ public class DDLStringVisitor {
 		if (includeType) {
 			Datatype datatype = column.getDatatype();
 			String runtimeTypeName = column.getRuntimeType();
+			boolean domain = false;
 			if (datatype != null) {
-				runtimeTypeName = datatype.getRuntimeTypeName();
+			    runtimeTypeName = datatype.getRuntimeTypeName();
+			    domain = datatype.getType() == Datatype.Type.Domain;
 			}
 			if (includeName) {
 				append(SPACE);
 			}
-			append(runtimeTypeName);
-			if (LENGTH_DATATYPES.contains(runtimeTypeName)) {
-				if (column.getLength() != 0 && (datatype == null || column.getLength() != datatype.getLength())) {
-					append(LPAREN).append(column.getLength()).append(RPAREN);
-				}
-			} else if (PRECISION_DATATYPES.contains(runtimeTypeName) 
-					&& !column.isDefaultPrecisionScale()) {
-				append(LPAREN).append(column.getPrecision());
-				if (column.getScale() != 0) {
-					append(COMMA).append(column.getScale());
-				}
-				append(RPAREN);
+			if (domain) {
+	            append(datatype.getName());
+			} else {
+    			append(runtimeTypeName);
+    			if (LENGTH_DATATYPES.contains(runtimeTypeName)) {
+    				if (column.getLength() != 0 && (datatype == null || column.getLength() != datatype.getLength())) {
+    					append(LPAREN).append(column.getLength()).append(RPAREN);
+    				}
+    			} else if (PRECISION_DATATYPES.contains(runtimeTypeName) 
+    					&& !column.isDefaultPrecisionScale()) {
+    				append(LPAREN).append(column.getPrecision());
+    				if (column.getScale() != 0) {
+    					append(COMMA).append(column.getScale());
+    				}
+    				append(RPAREN);
+    			}
 			}
 			if (datatype != null) {
 				for (int dims = column.getArrayDimensions(); dims > 0; dims--) {
 					append(Tokens.LSBRACE).append(Tokens.RSBRACE);
 				}
 			}
-			if (column.getNullType() == NullType.No_Nulls) {
+			if (column.getNullType() == NullType.No_Nulls && (!domain || datatype.getNullType() != NullType.No_Nulls)) {
 				append(SPACE).append(NOT_NULL);
 			}
 		}
@@ -634,7 +687,8 @@ public class DDLStringVisitor {
 		StringBuilder options = new StringBuilder();
 		addCommonOptions(options, column);
 		
-		if (!column.getDatatype().isBuiltin()) {
+		if (!column.getDatatype().isBuiltin() && column.getDatatype().getType() != Datatype.Type.Domain) {
+		    //an enterprise type
 			addOption(options, UDT, column.getDatatype().getName() + "("+column.getLength()+ ", " +column.getPrecision()+", " + column.getScale()+ ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		}
 		
@@ -960,5 +1014,17 @@ public class DDLStringVisitor {
     		return sb.append("\n").toString() + buffer.toString(); //$NON-NLS-1$
     	}
         return buffer.toString();
+    }
+
+    public static String getDomainDDLString(Database database) {
+        DDLStringVisitor visitor = new DDLStringVisitor(null, null);
+        for (Datatype dt : database.getMetadataStore().getDatatypes().values()) {
+            if (dt.getType() != Datatype.Type.Domain) {
+                continue;
+            }
+            visitor.visit(dt);
+            visitor.append(SPACE);
+        }
+        return visitor.toString();
     }
 }

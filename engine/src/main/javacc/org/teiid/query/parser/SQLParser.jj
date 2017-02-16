@@ -518,6 +518,7 @@ TOKEN : /* NonReserved words */
 |   <WRAPPER: "wrapper">
 |   <REPOSITORY: "repository">
 |   <RENAME: "rename">
+|   <DOMAIN: "domain">
 }
 /*
 name=all in group identifier
@@ -626,7 +627,7 @@ Token nonReserved() :
      |<SQL_TSI_SECOND>|<SQL_TSI_MINUTE>|<SQL_TSI_HOUR>|<SQL_TSI_DAY>|<SQL_TSI_WEEK>|<SQL_TSI_MONTH>|<SQL_TSI_QUARTER>|<SQL_TSI_YEAR>|<TEXTTABLE>|<ARRAYTABLE>
      |<SELECTOR>|<SKIP_KEYWORD>|<WIDTH>|<PASSING>|<NAME>|<ENCODING>|<COLUMNS>|<DELIMITER>|<QUOTE>|<HEADER>|<NULLS>|<OBJECTTABLE>
      |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>|<VARIADIC>|<RAISE>|<EXCEPTION>|<CHAIN>|<JSONARRAY_AGG>|<JSONOBJECT>|<PRESERVE>|<UPSERT>|<AFTER>
-     |<TYPE>|<TRANSLATOR>|<JAAS>|<CONDITION>|<MASK>|<ACCESS>|<CONTROL>|<NONE>|<DATA>|<DATABASE>|<PRIVILEGES>|<ROLE>|<SCHEMA>|<USE>|<REPOSITORY>|<RENAME>)
+     |<TYPE>|<TRANSLATOR>|<JAAS>|<CONDITION>|<MASK>|<ACCESS>|<CONTROL>|<NONE>|<DATA>|<DATABASE>|<PRIVILEGES>|<ROLE>|<SCHEMA>|<USE>|<REPOSITORY>|<RENAME>|<DOMAIN>)
     {
     	return getToken(0);
     }	
@@ -4794,6 +4795,8 @@ ParsedDataType parseDataType() :
 {
     int arraySuffixes = 0;
     ParsedDataType type = null;
+    String typeName = null;
+    Token idToken = null;
 }
 {
     type = parseDataTypePrimary()
@@ -4803,6 +4806,13 @@ ParsedDataType parseDataType() :
            type.type += StringUtil.join(Collections.nCopies(arraySuffixes, "[]"), "");
         }
         return type;
+    }
+    |
+    idToken = <ID> 
+    {
+        String id = normalizeId(idToken.image);
+        id = validateName(id, true);
+        return new ParsedDataType(id);
     }
 }
 
@@ -4975,6 +4985,7 @@ void ddlStmt(DatabaseStore dbStore) :
 	 {
 	 	createDDLTrigger(dbStore, (AlterTrigger)command);
 	 } |
+	 LOOKAHEAD(2)  createDomain(dbStore) |
 	 LOOKAHEAD(3)  createServer(dbStore) |
 	 LOOKAHEAD(3)  createRole(dbStore) |
 	 LOOKAHEAD(3)  dropRole(dbStore) |
@@ -5147,6 +5158,27 @@ void useSchema(DatabaseStore dbStore) :
     {
         dbStore.schemaSwitched(name);
     })
+}
+
+/*
+name=create a domain or type alias
+description=creates a named type with optional constraints
+example=[source,sql]\n----\nCREATE DOMAIN my_type AS INTEGER NOT NULL\n----\n
+*/
+void createDomain(DatabaseStore dbStore) :
+{
+    String domainName = null; 
+    ParsedDataType type = null;
+    boolean notNull = false;
+}
+{
+    <CREATE> <DOMAIN> domainName = id(null) [<AS>] 
+    type = parseDataType()
+    //-default, and other options
+    [<NOT> <NULL> {notNull = true;}]    
+    {
+        dbStore.createDomain(domainName, type.type, type.length==null?type.precision:type.length, type.scale, notNull);
+    }
 }
 
 /*

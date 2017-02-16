@@ -65,10 +65,6 @@ public class DeploymentBasedDatabaseStore extends DatabaseStore {
     
     @Override
     public Map<String, Datatype> getRuntimeTypes() {
-        return vdbRepo.getRuntimeTypeMap();
-    }
-    @Override
-    public Map<String, Datatype> getBuiltinDataTypes() {
         return vdbRepo.getSystemStore().getDatatypes();
     } 
 
@@ -128,6 +124,9 @@ public class DeploymentBasedDatabaseStore extends DatabaseStore {
         for (VDBImportMetadata vid : this.importedVDBs) {
         	vdb.getVDBImports().add(vid);
         }
+        
+        //add the domains to the metadata
+        
         return vdb;
     }
     

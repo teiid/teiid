@@ -30,6 +30,9 @@ CREATE FOREIGN TABLE Columns (
 	UID string(50) NOT NULL,
 	Description string(255),
 	TableUID string (50) NOT NULL,
+	TypeName string(100),
+	TypeCode integer,
+	ColumnSize integer,
 	PRIMARY KEY (VDBName, SchemaName, TableName, Name),
 	FOREIGN KEY (VDBName, SchemaName, TableName) REFERENCES Tables (VDBName, SchemaName, Name),
 	FOREIGN KEY (TableUID) REFERENCES Tables (UID),
@@ -39,7 +42,7 @@ CREATE FOREIGN TABLE Columns (
 CREATE FOREIGN TABLE DataTypes (
 	Name string(100) NOT NULL,
 	IsStandard boolean,
-	IsPhysical boolean,
+	Type string(64),
 	TypeName string(100) NOT NULL,
 	JavaClass string(500) NOT NULL,
 	Scale integer,
@@ -55,6 +58,9 @@ CREATE FOREIGN TABLE DataTypes (
 	RuntimeType string(64),
 	BaseType string(64),
 	Description string(255),
+	TypeCode integer,
+	Literal_Prefix string(64),
+	Literal_Suffix string(64),
 	PRIMARY KEY (Name),
 	UNIQUE (UID)	
 );

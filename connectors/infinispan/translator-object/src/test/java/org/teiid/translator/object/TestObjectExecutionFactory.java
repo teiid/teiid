@@ -90,7 +90,7 @@ public class TestObjectExecutionFactory {
 	@Test public void testGetMetadata() throws Exception {
 		factory.start();
 		
-		Map<String, Datatype> dts = SystemMetadata.getInstance().getSystemStore().getDatatypes();
+		Map<String, Datatype> dts = SystemMetadata.getInstance().getRuntimeTypeMap();
 
 		MetadataFactory mfactory = new MetadataFactory("TestVDB", 1, "Trade",  dts, new Properties(), null);
 		

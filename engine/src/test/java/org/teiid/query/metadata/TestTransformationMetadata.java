@@ -163,13 +163,11 @@ public class TestTransformationMetadata {
 	
 	@Test public void testTypeCorrection() throws Exception {
 		MetadataFactory mf = new MetadataFactory(null, 1, "x", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null); //$NON-NLS-1$
-		mf.setBuiltinDataTypes(SystemMetadata.getInstance().getSystemStore().getDatatypes());
 		
 		Table t = mf.addTable("y"); //$NON-NLS-1$
 		mf.addColumn("test", "string", t);
 		Datatype unknown = new Datatype();
 		unknown.setName("unknown");
-		mf.addEnterpriseDatatype(unknown);
 		Column col = mf.addColumn("arg", "string", t);
 		col.setDatatype(unknown);
 		MetadataFactory mf1 = UnitTestUtil.helpSerialize(mf);
@@ -177,12 +175,11 @@ public class TestTransformationMetadata {
 		Column column = mf1.getSchema().getTable("y").getColumns().get(0);
 		Datatype dt = column.getDatatype();
 		
-		assertNotSame(mf.getBuiltinDataTypes().get(dt.getName()), column.getDatatype());
+		assertNotSame(mf.getDataTypes().get(dt.getName()), column.getDatatype());
 		
-		mf1.correctDatatypes(mf.getDataTypes(), mf.getBuiltinDataTypes());
+		mf1.correctDatatypes(mf.getDataTypes());
 		
-		assertSame(mf.getBuiltinDataTypes().get(dt.getName()), column.getDatatype());
-		assertNotNull(mf1.getEnterpriseDatatype("unknown"));
+		assertSame(mf.getDataTypes().get(dt.getName()), column.getDatatype());
 	}
 	
 }

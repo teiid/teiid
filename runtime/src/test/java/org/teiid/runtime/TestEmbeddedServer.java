@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -2017,6 +2018,25 @@ public class TestEmbeddedServer {
         s.execute("select count(distinct name) from sys.columns where tablename like 'test%'");
         s.getResultSet().next();
         assertEquals(2, s.getResultSet().getInt(1));
+    }
+    
+    @Test public void testCreateDomain() throws Exception {
+        es.start(new EmbeddedConfiguration());
+        
+        es.deployVDB(new FileInputStream(UnitTestUtil.getTestDataFile("domains-vdb.ddl")), true);
+        
+        Connection c = es.getDriver().connect("jdbc:teiid:domains", null);
+        
+        Statement s = c.createStatement();
+        
+        s.execute("select * from g1");
+        
+        ResultSetMetaData rsmd = s.getResultSet().getMetaData();
+        //for now we'll report the runtime type
+        assertEquals("string", rsmd.getColumnTypeName(1));
+        ResultSet rs = c.getMetaData().getColumns(null, null, "g1", null);
+        rs.next();
+        assertEquals("x", rs.getString("TYPE_NAME"));
     }
 
 }

@@ -59,10 +59,6 @@ public class SchemaLoadAwareDatabaseStore extends DatabaseStore {
     
     @Override
     public Map<String, Datatype> getRuntimeTypes() {
-        return vdbRepo.getRuntimeTypeMap();
-    }
-    @Override
-    public Map<String, Datatype> getBuiltinDataTypes() {
         return vdbRepo.getSystemStore().getDatatypes();
     } 
 	

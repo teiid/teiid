@@ -214,7 +214,7 @@ public class IndexMetadataRepository extends MetadataRepository {
 	public synchronized void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory)
 			throws TranslatorException {
 		try {
-			loadAll(factory.getBuiltinDataTypes().values(), factory.getVDBResources());
+			loadAll(factory.getDataTypes().values(), factory.getVDBResources());
 		} catch (IOException e) {
 			throw new TranslatorException(e);
 		}
@@ -228,10 +228,6 @@ public class IndexMetadataRepository extends MetadataRepository {
     		}
 			getTables(s);
 			getProcedures(s);
-			Map<String, AbstractMetadataRecord> uuidToRecord = getByType(MetadataConstants.RECORD_TYPE.DATATYPE);
-			for (AbstractMetadataRecord datatypeRecordImpl : uuidToRecord.values()) {
-				factory.addDatatype((Datatype) datatypeRecordImpl);
-			}
 			factory.setSchema(s);
 			return;
     	}
@@ -241,10 +237,6 @@ public class IndexMetadataRepository extends MetadataRepository {
 	public MetadataStore load(Collection<Datatype> systemDatatypes, VDBResources vdbResources) throws IOException {
 		MetadataStore store = new MetadataStore();
 		loadAll(systemDatatypes, vdbResources.getEntriesPlusVisibilities());
-		Map<String, AbstractMetadataRecord> uuidToRecord = getByType(MetadataConstants.RECORD_TYPE.DATATYPE);
-		for (AbstractMetadataRecord datatypeRecordImpl : uuidToRecord.values()) {
-			store.addDatatype((Datatype) datatypeRecordImpl);
-		}
 		
     	// the index map below is keyed by uuid not modelname, so map lookup is not possible
     	Collection<AbstractMetadataRecord> modelRecords = getByType(MetadataConstants.RECORD_TYPE.MODEL).values();

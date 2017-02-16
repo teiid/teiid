@@ -22,6 +22,7 @@
 
 package org.teiid.runtime;
 
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -47,17 +48,21 @@ import org.teiid.dqp.internal.process.multisource.MultiSourceElement;
 import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.Database;
 import org.teiid.metadata.Datatype;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.VDBResource;
+import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.metadata.ChainingMetadataRepository;
 import org.teiid.query.metadata.DDLFileMetadataRepository;
 import org.teiid.query.metadata.DDLMetadataRepository;
+import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.metadata.DirectQueryMetadataRepository;
 import org.teiid.query.metadata.MaterializationMetadataRepository;
 import org.teiid.query.metadata.NativeMetadataRepository;
+import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.VDBResources;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.translator.ExecutionFactory;
@@ -182,7 +187,31 @@ public abstract class AbstractVDBDeployer {
     
 	protected void loadMetadata(VDBMetaData vdb, ConnectorManagerRepository cmr,
 			MetadataStore store, VDBResources vdbResources) throws TranslatorException {
-		// load metadata from the models
+	    //add the system types
+	    store.addDataTypes(SystemMetadata.getInstance().getRuntimeTypeMap());
+	    //add domains if defined
+	    String value = vdb.getPropertyValue(VDBMetaData.TEIID_DOMAINS);
+	    if (value != null) {
+	        //use a temporary store/db to retrieve the domains
+	        DatabaseStore dbStore = new DatabaseStore() {
+	            @Override
+	            public Map<String, Datatype> getRuntimeTypes() {
+	                return getVDBRepository().getRuntimeTypeMap();
+	            }
+	            @Override
+	            public SystemFunctionManager getSystemFunctionManager() {
+	                return getVDBRepository().getSystemFunctionManager();
+	            }
+	        }; 
+	        dbStore.startEditing(true);
+	        dbStore.databaseCreated(new Database("x", "1")); //$NON-NLS-1$ //$NON-NLS-2$
+	        dbStore.databaseSwitched("x", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+	        QueryParser.getQueryParser().parseDDL(dbStore, new StringReader(value));
+	        dbStore.stopEditing();
+	        store.addDataTypes(dbStore.getDatabase("x", "1").getMetadataStore().getDatatypes()); //$NON-NLS-1$ //$NON-NLS-2$
+	    }
+	    
+        // load metadata from the models
 		AtomicInteger loadCount = new AtomicInteger();
 		for (ModelMetaData model: vdb.getModelMetaDatas().values()) {
 			if (model.getModelType() == Model.Type.PHYSICAL || model.getModelType() == Model.Type.VIRTUAL) {
@@ -245,11 +274,10 @@ public abstract class AbstractVDBDeployer {
 		}
 	}
 	
-	protected MetadataFactory createMetadataFactory(VDBMetaData vdb,
+	protected MetadataFactory createMetadataFactory(VDBMetaData vdb, MetadataStore store,
 			ModelMetaData model, Map<String, ? extends VDBResource> vdbResources) {
-		Map<String, Datatype> datatypes = this.getVDBRepository().getRuntimeTypeMap();
+		Map<String, Datatype> datatypes = store.getDatatypes();
 		MetadataFactory factory = new MetadataFactory(vdb.getName(), vdb.getVersion(), datatypes, model);
-		factory.setBuiltinDataTypes(this.getVDBRepository().getSystemStore().getDatatypes());
 		factory.getSchema().setPhysical(model.isSource());
 		factory.setParser(new QueryParser()); //for thread safety each factory gets it's own instance.
 		factory.setVdbResources(vdbResources);

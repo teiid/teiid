@@ -87,7 +87,7 @@ public class TestDDLParser {
 		Column e6 = columns.get(5);
 		
 		assertEquals("e1", e1.getName());
-		assertEquals("int", e1.getDatatype().getName());
+		assertEquals("integer", e1.getDatatype().getName());
 		assertEquals("primary key not same", e1, table.getPrimaryKey().getColumns().get(0));
 		
 		assertEquals("e2", e2.getName());
@@ -111,7 +111,7 @@ public class TestDDLParser {
 		assertEquals("12.2", e4.getDefaultValue());
 		
 		assertEquals("e5", e5.getName());
-		assertEquals("int", e5.getDatatype().getName());
+		assertEquals("integer", e5.getDatatype().getName());
 		assertEquals(true, e5.isAutoIncremented());
 		assertEquals("uuid", e5.getUUID());
 		assertEquals("nis", e5.getNameInSource());
@@ -789,10 +789,6 @@ public class TestDDLParser {
         DatabaseStore store = new DatabaseStore() {
             @Override
             public Map<String, Datatype> getRuntimeTypes() {
-                return dataTypes;
-            }
-            @Override
-            public Map<String, Datatype> getBuiltinDataTypes() {
                 return dataTypes;
             }
 			@Override
@@ -1602,5 +1598,33 @@ public class TestDDLParser {
         Schema s = db.getSchema("test");
         Procedure p = s.getProcedure("procG1");
         assertNull(p);  
+    }
+    
+    @Test(expected=MetadataException.class)
+    public void testCreateDomainAlreadyExists() throws Exception {
+        String ddl = "CREATE DATABASE FOO VERSION '2.0.0'; USE DATABASE FOO VERSION '2.0.0';"
+                 + "CREATE DOMAIN \"INTEGER\" AS string(4000)";
+        
+        helpParse(ddl);
+    }
+    
+    @Test
+    public void testCreateDomain() throws Exception {
+        String ddl = "CREATE DATABASE FOO VERSION '2.0.0'; USE DATABASE FOO VERSION '2.0.0';"
+                 + "CREATE DOMAIN nnint AS integer not null;";
+        
+        Database db = helpParse(ddl);
+        assertEquals(NullType.No_Nulls, db.getMetadataStore().getDatatypes().get("NNINT").getNullType());
+    }
+    
+    @Test
+    public void testCreateDomainUsedInSchema() throws Exception {
+        String ddl = "CREATE DATABASE FOO VERSION '2.0.0'; USE DATABASE FOO VERSION '2.0.0';"
+                 + "CREATE DOMAIN my_string AS string(1000) not null;"
+                 + "CREATE SCHEMA S1; SET SCHEMA S1;"
+                 + "CREATE VIEW X (y my_string) as select 'a';";
+        
+        Database db = helpParse(ddl);
+        assertEquals(1000, db.getMetadataStore().getDatatypes().get("my_string").getLength());
     }
 }

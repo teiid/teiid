@@ -30,16 +30,8 @@ import java.util.Properties;
 
 import org.junit.Test;
 import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.*;
 import org.teiid.metadata.Database.ResourceType;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.DataWrapper;
-import org.teiid.metadata.Database;
-import org.teiid.metadata.Grant;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.Role;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Server;
-import org.teiid.metadata.Table;
 import org.teiid.query.parser.SQLParserUtil;
 import org.teiid.query.parser.TestDDLParser;
 import org.teiid.query.sql.symbol.Expression;
@@ -394,6 +386,43 @@ public class TestDDLStringVisitor {
     }
     
     @Test 
+    public void testDatabaseWithDomains() throws Exception {
+        String expected = "\n"
+                + "/*\n" + 
+                "###########################################\n" + 
+                "# START DATABASE foo\n" + 
+                "###########################################\n"
+                + "*/\n" + 
+                "CREATE DATABASE foo VERSION '2';\n" +
+                "USE DATABASE foo VERSION '2';\n" +
+                "\n" +
+                "--############ Domains ############\n" +
+                "CREATE DOMAIN x AS string(1000) NOT NULL;\n\n" + 
+                "CREATE DOMAIN y AS integer NOT NULL;\n\n" +
+                "CREATE DOMAIN z AS bigdecimal(10,2) NOT NULL;\n\n" +
+                "\n--############ Schema:SchemaA ############\n" +
+                "CREATE VIRTUAL SCHEMA SchemaA;\n" +
+                "SET SCHEMA SchemaA;\n" +
+                "\n" + 
+                "CREATE VIEW G1 (\n" + 
+                "\te1 x,\n" + 
+                "\te2 y\n" + 
+                ")\nAS\nSELECT 'a', 1;\n" +
+                "/*\n"+
+                "###########################################\n" + 
+                "# END DATABASE foo\n" + 
+                "###########################################\n"
+                + "*/\n" + 
+                "\n";
+        
+        Database db = TestDDLParser.helpParse(expected);
+        
+        String metadataDDL = DDLStringVisitor.getDDLString(db);
+        
+        assertEquals(expected, metadataDDL);
+    }
+    
+    @Test 
     public void testSchema() throws Exception {
         Database db = new Database("foo", "2");
         
@@ -431,7 +460,7 @@ public class TestDDLStringVisitor {
                 "CREATE SERVER testing TYPE 'orcl' FOREIGN DATA WRAPPER orcle OPTIONS (\"jndi-name\" 'java://test-server');\n" + 
                 "\n" + 
                 "\n--############ Schema:SchemaA ############\n" +
-                "CREATE  SCHEMA SchemaA SERVER testing;\n" +
+                "CREATE SCHEMA SchemaA SERVER testing;\n" +
                 "SET SCHEMA SchemaA;\n" +
                 "\n" + 
                 "CREATE FOREIGN TABLE G1 (\n" + 

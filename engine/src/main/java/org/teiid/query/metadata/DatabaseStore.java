@@ -60,7 +60,6 @@ public abstract class DatabaseStore implements DDLProcessor {
     private CommandContext commandContext;
    
     public abstract Map<String, Datatype> getRuntimeTypes();
-    public abstract Map<String, Datatype> getBuiltinDataTypes();
     public abstract SystemFunctionManager getSystemFunctionManager();
     
     public void startEditing(boolean persist) {
@@ -106,7 +105,7 @@ public abstract class DatabaseStore implements DDLProcessor {
             throw new MetadataException(QueryPlugin.Event.TEIID31242,
                     QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31242));
         }
-        
+        db.getMetadataStore().addDataTypes(getRuntimeTypes());
         this.databases.put(vdbKey(db), db);
     }
 
@@ -531,6 +530,12 @@ public abstract class DatabaseStore implements DDLProcessor {
         getCurrentDatabase().addNamespace(prefix, uri);
     }
     
+    public void createDomain(String name, String baseType, Integer length, Integer scale, boolean notNull) {
+        assertInEditMode();
+        Datatype dt = getCurrentDatabase().addDomain(name, baseType, length, scale, notNull);
+        setUUID(getCurrentDatabase().getUUID(), dt);
+    }
+    
     public Map<String, String> getNameSpaces() {
         return getCurrentDatabase().getNamespaces();
     }
@@ -736,7 +741,7 @@ public abstract class DatabaseStore implements DDLProcessor {
     
     public static MetadataFactory createMF(DatabaseStore events) {
         MetadataFactory mf = new MetadataFactory(events.getCurrentDatabase().getName(), events.getCurrentDatabase().getVersion(),
-                events.getCurrentSchema().getName(), events.getRuntimeTypes(), new Properties(), null);
+                events.getCurrentSchema().getName(), events.getCurrentDatabase().getMetadataStore().getDatatypes(), new Properties(), null);
         Map<String, String> nss = events.getNameSpaces();
         for (String key:nss.keySet()) {
             mf.addNamespace(key, nss.get(key));    

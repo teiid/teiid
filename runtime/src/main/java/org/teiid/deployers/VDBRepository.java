@@ -60,6 +60,7 @@ import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.VDBResources;
+import org.teiid.query.parser.QueryParser;
 import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.query.validator.ValidatorFailure;
 import org.teiid.query.validator.ValidatorReport;
@@ -342,7 +343,8 @@ public class VDBRepository implements Serializable{
 						}
 					}
 				}
-				ValidatorReport report = new MetadataValidator().validate(metadataAwareVDB, metadataAwareVDB.removeAttachment(MetadataStore.class));
+				MetadataStore store = metadataAwareVDB.removeAttachment(MetadataStore.class);
+                ValidatorReport report = new MetadataValidator(store.getDatatypes(), QueryParser.getQueryParser()).validate(metadataAwareVDB, store);
 	
 				if (report.hasItems()) {
 					LogManager.logWarning(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40073, name, version, report.getItems().iterator().next()));

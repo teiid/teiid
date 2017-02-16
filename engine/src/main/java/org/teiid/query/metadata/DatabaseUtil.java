@@ -50,6 +50,8 @@ public class DatabaseUtil {
         }
         db.setProperty("connection-type", vdb.getConnectionType().name());
         
+        db.getMetadataStore().addDataTypes(metadataStore.getDatatypes());
+        
         // override translators
         List<Translator> translators = vdb.getOverrideTranslators();
         for (Translator t: translators) {
@@ -206,6 +208,11 @@ public class DatabaseUtil {
             vdb.setConnectionType(VDB.ConnectionType.valueOf(database.getProperty("connection-type", false)));
         }
         vdb.getPropertiesMap().putAll(database.getProperties());
+        
+        String domainDDLString = DDLStringVisitor.getDomainDDLString(database);
+        if (!domainDDLString.isEmpty()) {
+            vdb.addProperty(VDBMetaData.TEIID_DOMAINS, domainDDLString);
+        }
         
         // translators
         for (DataWrapper dw : database.getDataWrappers()) {

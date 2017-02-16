@@ -20,7 +20,7 @@ CREATE SERVER "text-connector" FOREIGN DATA WRAPPER file OPTIONS ("jndi-name" 'j
 
 
 --############ Schema:MarketData ############
-CREATE  SCHEMA MarketData SERVER "text-connector";
+CREATE SCHEMA MarketData SERVER "text-connector";
 SET SCHEMA MarketData;
 
 CREATE FOREIGN PROCEDURE deleteFile(IN filePath string)
@@ -35,7 +35,7 @@ OPTIONS (ANNOTATION 'Returns text files that match the given path and pattern as
 CREATE FOREIGN PROCEDURE saveFile(IN filePath string, IN file object OPTIONS (ANNOTATION 'The contents to save.  Can be one of CLOB, BLOB, or XML'))
 OPTIONS (ANNOTATION 'Saves the given value to the given path.  Any existing file will be overriden.');
 --############ Schema:Accounts ############
-CREATE  SCHEMA Accounts SERVER "h2-connector" none OPTIONS ("importer.useFullSchemaName" 'false');
+CREATE SCHEMA Accounts SERVER "h2-connector" none OPTIONS ("importer.useFullSchemaName" 'false');
 SET SCHEMA Accounts;
 
 CREATE FOREIGN TABLE ACCOUNT (

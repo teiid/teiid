@@ -166,6 +166,7 @@ public class SQLConstants {
         public static final String NONE = "NONE"; //$NON-NLS-1$
         public static final String REPOSITORY= "REPOSITORY"; //$NON-NLS-1$
         public static final String RENAME = "RENAME"; //$NON-NLS-1$
+        public static final String DOMAIN = "DOMAIN"; //$NON-NLS-1$
 	}
 	
 	public interface Reserved {

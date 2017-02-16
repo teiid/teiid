@@ -23,7 +23,6 @@
 package org.teiid.metadata;
 
 import java.io.Reader;
-import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -43,7 +42,6 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.connector.DataPlugin;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.util.StringUtil;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Database.ResourceType;
 import org.teiid.metadata.FunctionMethod.PushDown;
@@ -57,31 +55,14 @@ import org.teiid.translator.TypeFacility;
  * TODO: add support for datatype import
  * TODO: add support for unique constraints
  */
-public class MetadataFactory implements Serializable {
+public class MetadataFactory extends NamespaceContainer {
 
-	static final String TEIID_RESERVED = "teiid_"; //$NON-NLS-1$
-	private static final String TEIID_SF = "teiid_sf"; //$NON-NLS-1$
-	private static final String TEIID_RELATIONAL = "teiid_rel"; //$NON-NLS-1$
-	private static final String TEIID_WS = "teiid_ws"; //$NON-NLS-1$
-	private static final String TEIID_MONGO = "teiid_mongo"; //$NON-NLS-1$
-	private static final String TEIID_ODATA = "teiid_odata"; //$NON-NLS-1$
-	private static final String TEIID_ACCUMULO = "teiid_accumulo"; //$NON-NLS-1$
-	private static final String TEIID_EXCEL = "teiid_excel"; //$NON-NLS-1$
-	private static final String TEIID_JPA = "teiid_jpa"; //$NON-NLS-1$
-	private static final String TEIID_HBASE = "teiid_hbase"; //$NON-NLS-1$
-	private static final String TEIID_SPATIAL = "teiid_spatial"; //$NON-NLS-1$
-	private static final String TEIID_LDAP = "teiid_ldap"; //$NON-NLS-1$
-	private static final String TEIID_REST = "teiid_rest"; //$NON-NLS-1$
-	private static final String TEIID_PI = "teiid_pi"; //$NON-NLS-1$
 	private static final long serialVersionUID = 8590341087771685630L;
 
 	private String vdbName;
 	private String vdbVersion;
-	private Map<String, Datatype> enterpriseTypes;
 	private Map<String, Datatype> dataTypes;
-	private Map<String, Datatype> builtinDataTypes;
 	private boolean autoCorrectColumnNames = true;
-	private Map<String, String> namespaces;
 	private String rawMetadata;
 	private Properties modelProperties;
 	private Schema schema = new Schema();
@@ -92,38 +73,6 @@ public class MetadataFactory implements Serializable {
 	private transient Map<String, ? extends VDBResource> vdbResources;
 	private Map<String, Grant> grants;
 
-	public static final String SF_URI = "{http://www.teiid.org/translator/salesforce/2012}"; //$NON-NLS-1$
-	public static final String WS_URI = "{http://www.teiid.org/translator/ws/2012}"; //$NON-NLS-1$
-	public static final String MONGO_URI = "{http://www.teiid.org/translator/mongodb/2013}"; //$NON-NLS-1$
-	public static final String ODATA_URI = "{http://www.jboss.org/teiiddesigner/ext/odata/2012}"; //$NON-NLS-1$
-	public static final String ACCUMULO_URI = "{http://www.teiid.org/translator/accumulo/2013}"; //$NON-NLS-1$
-	public static final String EXCEL_URI = "{http://www.teiid.org/translator/excel/2014}"; //$NON-NLS-1$
-	public static final String JPA_URI = "{http://www.teiid.org/translator/jpa/2014}"; //$NON-NLS-1$
-	public static final String HBASE_URI = "{http://www.teiid.org/translator/hbase/2014}"; //$NON-NLS-1$
-	public static final String SPATIAL_URI = "{http://www.teiid.org/translator/spatial/2015}"; //$NON-NLS-1$
-	public static final String LDAP_URI = "{http://www.teiid.org/translator/ldap/2015}"; //$NON-NLS-1$
-	public static final String REST_URI = "{http://teiid.org/rest}"; //$NON-NLS-1$
-	public static final String PI_URI = "{http://www.teiid.org/translator/pi/2016}"; //$NON-NLS-1$
-
-	public static final Map<String, String> BUILTIN_NAMESPACES;
-	static {
-		Map<String, String> map = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
-		map.put(TEIID_RELATIONAL, AbstractMetadataRecord.RELATIONAL_URI.substring(1, AbstractMetadataRecord.RELATIONAL_URI.length()-1));
-		map.put(TEIID_SF, SF_URI.substring(1, SF_URI.length()-1));
-		map.put(TEIID_WS, WS_URI.substring(1, WS_URI.length()-1));
-		map.put(TEIID_MONGO, MONGO_URI.substring(1, MONGO_URI.length()-1));
-		map.put(TEIID_ODATA, ODATA_URI.substring(1, ODATA_URI.length()-1));
-		map.put(TEIID_ACCUMULO, ACCUMULO_URI.substring(1, ACCUMULO_URI.length()-1));
-		map.put(TEIID_EXCEL, EXCEL_URI.substring(1, EXCEL_URI.length()-1));
-		map.put(TEIID_JPA, JPA_URI.substring(1, JPA_URI.length()-1));
-		map.put(TEIID_HBASE, HBASE_URI.substring(1, HBASE_URI.length()-1));
-		map.put(TEIID_SPATIAL, SPATIAL_URI.substring(1, SPATIAL_URI.length()-1));
-		map.put(TEIID_LDAP, LDAP_URI.substring(1, LDAP_URI.length()-1));
-		map.put(TEIID_REST, REST_URI.substring(1, REST_URI.length()-1));
-		map.put(TEIID_PI, PI_URI.substring(1, PI_URI.length()-1));
-		BUILTIN_NAMESPACES = Collections.unmodifiableMap(map);
-	}
-
 	public MetadataFactory(String vdbName, Object vdbVersion, Map<String, Datatype> runtimeTypes, ModelMetaData model) {
 		this(vdbName, vdbVersion, model.getName(), runtimeTypes, model.getProperties(), model.getSchemaText());
 		this.model = model;
@@ -132,8 +81,7 @@ public class MetadataFactory implements Serializable {
 	public MetadataFactory(String vdbName, Object vdbVersion, String schemaName, Map<String, Datatype> runtimeTypes, Properties modelProperties, String rawMetadata) {
 		this.vdbName = vdbName;
 		this.vdbVersion = vdbVersion.toString();
-		this.dataTypes = runtimeTypes;
-		this.builtinDataTypes = runtimeTypes;
+		this.dataTypes = Collections.unmodifiableMap(runtimeTypes);
 		this.schema.setName(schemaName);
 		long msb = longHash(vdbName, 0);
 		try {
@@ -544,10 +492,10 @@ public class MetadataFactory implements Serializable {
 	private void setFunctionMethodTypes(FunctionMethod function) {
 		FunctionParameter outputParameter = function.getOutputParameter();
 		if (outputParameter != null) {
-			setDataType(outputParameter.getRuntimeType(), outputParameter, builtinDataTypes, outputParameter.getNullType() == NullType.Nullable);
+			setDataType(outputParameter.getRuntimeType(), outputParameter, dataTypes, outputParameter.getNullType() == NullType.Nullable);
 		}
 		for (FunctionParameter param : function.getInputParameters()) {
-			setDataType(param.getRuntimeType(), param, builtinDataTypes, param.getNullType() == NullType.Nullable);
+			setDataType(param.getRuntimeType(), param, dataTypes, param.getNullType() == NullType.Nullable);
 		}
 	}
 	
@@ -625,30 +573,9 @@ public class MetadataFactory implements Serializable {
 		this.autoCorrectColumnNames = autoCorrectColumnNames;
 	}
 
-	public void addNamespace(String prefix, String uri) {
-		if (uri == null || uri.indexOf('}') != -1) {
-			throw new MetadataException(DataPlugin.Event.TEIID60018, DataPlugin.Util.gs(DataPlugin.Event.TEIID60018, uri));
-		}
-        
-		if (StringUtil.startsWithIgnoreCase(prefix, TEIID_RESERVED)) {
-		    String validURI = BUILTIN_NAMESPACES.get(prefix);
-		    if (validURI == null || !uri.equals(validURI)) {
-		        throw new MetadataException(DataPlugin.Event.TEIID60017, DataPlugin.Util.gs(DataPlugin.Event.TEIID60017, prefix));
-		    }
-        }
-		
-		if (this.namespaces == null) {
-			 this.namespaces = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
-		}
-		this.namespaces.put(prefix, uri);
-	}
-
 	public void mergeInto (MetadataStore store) {
 		store.addSchema(this.schema);
-		store.addDataTypes(this.builtinDataTypes.values()); //TODO: this is redundant
-		if (this.enterpriseTypes != null) {
-			store.addDataTypes(this.enterpriseTypes.values());
-		}
+		store.addDataTypes(this.dataTypes);
 		if (this.grants != null) {
 		    store.addGrants(this.grants.values());
 		}
@@ -685,9 +612,8 @@ public class MetadataFactory implements Serializable {
 	 * @param dt
 	 * @param builtin
 	 */
-	public void correctDatatypes(Map<String, Datatype> dt, Map<String, Datatype> builtin) {
+	public void correctDatatypes(Map<String, Datatype> dt) {
 		this.dataTypes = dt;
-		this.builtinDataTypes = builtin;
 		for (Table t : this.schema.getTables().values()) {
 			correctDataTypes(t.getColumns());
 		}
@@ -714,63 +640,11 @@ public class MetadataFactory implements Serializable {
 			} else {
 				name = datatype.getName();
 			}
-			Datatype dt = this.builtinDataTypes.get(name);
-			if (dt == null && this.enterpriseTypes != null) {
-				dt = this.enterpriseTypes.get(name);
-			}
+			Datatype dt = this.dataTypes.get(name);
 			if (dt != null) {
 				c.setDatatype(dt);
-			} else if (datatype != null) {
-				//must be an enterprise type
-				//if it's used in a single schema, we're ok, but when used in multiple there's an issue
-				//since the same record will exist as multiple instances
-				//
-				//old serialized forms do not have tracking for enterprise types, ensure that the
-				//type is added so that it will show up in the vdb metadata
-				addEnterpriseDatatype(datatype);
 			}
 		}
-	}
-
-	/**
-	 * Add an enterprise type (typically a Designer defined type extension) - typically not called
-	 * @deprecated see addEnterpriseType
-	 * @param datatype
-	 */
-	@Deprecated
-	public void addDatatype(Datatype datatype) {
-		addEnterpriseDatatype(datatype);
-	}
-
-	/**
-	 * Add an enterprise type (typically a Designer defined type extension)- typically not called
-	 * @param datatype
-	 */
-	public void addEnterpriseDatatype(Datatype datatype) {
-		//we have to hold these separately, as the built-in/runtime types should be considered
-		//unmodifiable.
-		//
-		//however we still have an issue in that designer treats these as vdb scoped, while
-		//we're treating them as schema scoped.  any refinement of the type system
-		//should correct this.
-		//
-		//TODO: should throw an exception if there is a conflict with a built-in type
-		if (this.enterpriseTypes == null) {
-			this.enterpriseTypes = new TreeMap<String, Datatype>(String.CASE_INSENSITIVE_ORDER);
-		}
-		this.enterpriseTypes.put(datatype.getName(), datatype);
-	}
-
-	/**
-	 * Get an enterprise type (typically a Designer defined type extension) by name.
-	 * @param name
-	 * @return
-	 */
-	public Datatype getEnterpriseDatatype(String name) {
-		if (this.enterpriseTypes == null) {
-			return null;
-		}
-		return this.enterpriseTypes.get(name);
 	}
 
 	public String getVdbName() {
@@ -791,20 +665,6 @@ public class MetadataFactory implements Serializable {
 			return Collections.emptyMap();
 		}
 		return this.namespaces;
-	}
-
-	public void setBuiltinDataTypes(Map<String, Datatype> builtinDataTypes) {
-		this.builtinDataTypes = builtinDataTypes;
-	}
-
-	/**
-	 * get all built-in types, known to Designer and defined in the system metadata.
-	 * The entries are keyed by type name, which is typically the xsd type name.
-	 * @see #getDataTypes() for run-time types
-	 * @return
-	 */
-	public Map<String, Datatype> getBuiltinDataTypes() {
-		return this.builtinDataTypes;
 	}
 
 	/**
@@ -953,22 +813,6 @@ public class MetadataFactory implements Serializable {
 		}
 		setUUID(functionMethod.getOutputParameter());
 		this.schema.addFunction(functionMethod);
-	}
-
-	public static String resolvePropertyKey(MetadataFactory factory, String key) {
-	 	int index = key.indexOf(':');
-	 	if (index > 0 && index < key.length() - 1) {
-	 		String prefix = key.substring(0, index);
-	 		String uri = BUILTIN_NAMESPACES.get(prefix);
-	 		if (uri == null && factory != null) {
-	 			uri = factory.getNamespaces().get(prefix);
-	 		}
-	 		if (uri != null) {
-	 			key = '{' +uri + '}' + key.substring(index + 1, key.length());
-	 		}
-	 		//TODO warnings or errors if not resolvable 
-	 	}
-	 	return key;
 	}
 
 }

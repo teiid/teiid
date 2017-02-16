@@ -23,24 +23,22 @@ package org.teiid.metadata;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
 import org.teiid.connector.DataPlugin;
-import org.teiid.core.util.StringUtil;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Grant.Permission.Privilege;
 
-public class Database extends AbstractMetadataRecord {
+public class Database extends NamespaceContainer {
     private static final long serialVersionUID = 7595765832848232840L;
     public enum ResourceType {DATABASE, SCHEMA, TABLE, PROCEDURE, FUNCTION, COLUMN, SERVER, DATAWRAPPER, PARAMETER, ROLE, GRANT};
     protected MetadataStore store = new MetadataStore();
     protected NavigableMap<String, DataWrapper> wrappers = new TreeMap<String, DataWrapper>(String.CASE_INSENSITIVE_ORDER);
     protected NavigableMap<String, Server> servers = new TreeMap<String, Server>(String.CASE_INSENSITIVE_ORDER);    
-    protected Map<String, String> namespaces;
     private String version;
     
     public Database(String dbName) {
@@ -146,45 +144,8 @@ public class Database extends AbstractMetadataRecord {
         return new ArrayList<Server>(this.servers.values());
     }
     
-    public void addNamespace(String prefix, String uri) {
-        if (uri == null || uri.indexOf('}') != -1) {
-            throw new MetadataException(DataPlugin.Event.TEIID60018, DataPlugin.Util.gs(DataPlugin.Event.TEIID60018, uri));
-        }
-        
-        if (StringUtil.startsWithIgnoreCase(prefix, MetadataFactory.TEIID_RESERVED)) {
-            String validURI = MetadataFactory.BUILTIN_NAMESPACES.get(prefix);
-            if (validURI == null || !uri.equals(validURI)) {
-                throw new MetadataException(DataPlugin.Event.TEIID60017, DataPlugin.Util.gs(DataPlugin.Event.TEIID60017, prefix));
-            }
-        }
-        
-        if (this.namespaces == null) {
-             this.namespaces = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
-        }
-        this.namespaces.put(prefix, uri);
-    }
-    
     public String resolveNamespaceInPropertyKey(String key) {
-        int index = key.indexOf(':');
-        if (index > 0 && index < key.length() - 1) {
-            String prefix = key.substring(0, index);
-            String uri = MetadataFactory.BUILTIN_NAMESPACES.get(prefix);
-            if (uri == null) {
-                uri = getNamespaces().get(prefix);
-            }
-            if (uri != null) {
-                key = '{' +uri + '}' + key.substring(index + 1, key.length());
-            }
-            //TODO warnings or errors if not resolvable 
-        }
-        return key;
-    }
-    
-    public Map<String, String> getNamespaces() {
-        if (this.namespaces == null) {
-            return Collections.emptyMap();
-        }
-        return this.namespaces;
+        return NamespaceContainer.resolvePropertyKey(this, key);
     }
 
     @Override
@@ -288,5 +249,45 @@ public class Database extends AbstractMetadataRecord {
     
     public Collection<Grant> getGrants(){
         return this.store.getGrants();
+    }
+    
+    public Datatype addDomain(String name, String baseType, Integer precision, Integer scale, boolean notNull) {
+        //TODO: allow named array types
+        // requires either storing the dimension on the datatype, or using a holder
+        /*int dimensions = 0;
+        while (DataTypeManager.isArrayType(baseType)) {
+            baseType = DataTypeManager.getComponentType(baseType);
+            dimensions++;
+        }*/
+        Datatype base = store.getDatatypes().get(baseType);
+        if (base == null || !base.isBuiltin()) {
+            throw new MetadataException(DataPlugin.Event.TEIID60032, DataPlugin.Util.gs(DataPlugin.Event.TEIID60032, baseType));
+        }
+        Datatype existing = store.getDatatypes().get(name);
+        if (existing != null) {
+            throw new DuplicateRecordException(DataPlugin.Event.TEIID60034, DataPlugin.Util.gs(DataPlugin.Event.TEIID60032, existing));
+        }
+        Datatype dataType = base.clone();
+        dataType.setName(name);
+        dataType.setBasetypeName(baseType);
+        dataType.setType(Datatype.Type.Domain);
+        //dataType.setUUID(uuid);
+        
+        if (precision != null) {
+            if (!Number.class.isAssignableFrom(DataTypeManager.getDataTypeClass(base.getRuntimeTypeName()))) {
+                dataType.setLength(precision);
+            } else {
+                dataType.setPrecision(precision);
+            }
+        }
+        if (scale != null) {
+            dataType.setScale(scale);
+        }
+        if (notNull) {
+            dataType.setNullType(NullType.No_Nulls);
+        }
+        
+        store.addDatatype(name, dataType);
+        return dataType;
     }
 }

@@ -20,14 +20,14 @@ CREATE SERVER "text-connector" FOREIGN DATA WRAPPER file OPTIONS ("jndi-name" 'j
 
 
 --############ Schema:MarketData ############
-CREATE  SCHEMA MarketData SERVER "text-connector";
+CREATE SCHEMA MarketData SERVER "text-connector";
 SET SCHEMA MarketData;
 
 IMPORT FOREIGN SCHEMA "%" FROM SERVER "text-connector" INTO MarketData OPTIONS (
 );
 
 --############ Schema:Accounts ############
-CREATE  SCHEMA Accounts SERVER "h2-connector";
+CREATE SCHEMA Accounts SERVER "h2-connector";
 SET SCHEMA Accounts;
 
 
@@ -63,7 +63,7 @@ SET SCHEMA Accounts;
 			);
           
 --############ Schema:Stocks ############
-CREATE  SCHEMA Stocks;
+CREATE SCHEMA Stocks;
 SET SCHEMA Stocks;
 
 
