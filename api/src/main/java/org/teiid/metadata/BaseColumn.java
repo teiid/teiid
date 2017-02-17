@@ -154,10 +154,21 @@ public abstract class BaseColumn extends AbstractMetadataRecord {
 		return datatype;
 	}
     
+    /**
+     * Set the datatype without copying any of the datatype attributes and assumes a non-array type
+     * @see #setDatatype(Datatype, boolean, int) for more control over the type info
+     * @param datatype
+     */
     public void setDatatype(Datatype datatype) {
     	setDatatype(datatype, false, 0);
     }
     
+    /**
+     * Set the datatype and assumes a non-array type
+     * @see #setDatatype(Datatype, boolean, int) for more control over the type info
+     * @param datatype
+     * @param copyAttributes
+     */
     public void setDatatype(Datatype datatype, boolean copyAttributes) {
     	setDatatype(datatype, copyAttributes, 0);
     }
