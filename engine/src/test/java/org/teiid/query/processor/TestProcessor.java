@@ -7842,5 +7842,25 @@ public class TestProcessor {
 		TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList("a", "a")});
 	}
 	
+	@Test public void testOuterJoinWithNoInnerSources() throws Exception {
+	    TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table test_emails(email string); CREATE view test_view_emails as SELECT 'test1@mail.com' as email", "x", "pm1");
+	    
+	    String sql = "SELECT a.email, b.email, lower(a.email), lower(b.email) FROM test_emails as a left join test_view_emails as b on lower(a.email)=lower(b.email)";
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata);
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT pm1.test_emails.email FROM pm1.test_emails", Arrays.asList("Test1@mail.com"), Arrays.asList("test2@mail.com"));
+        TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList("Test1@mail.com", "test1@mail.com", "test1@mail.com", "test1@mail.com"), Arrays.asList("test2@mail.com", null, "test2@mail.com", null)});
+	}
+	
+	@Test public void testOuterJoinWithNoOuterSources() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table test_emails(email string); CREATE view test_view_emails as SELECT 'test1@mail.com' as email", "x", "pm1");
+        
+        String sql = "SELECT a.email, b.email, lower(a.email), lower(b.email) FROM test_emails as a right outer join test_view_emails as b on lower(a.email)=lower(b.email)";
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata);
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT pm1.test_emails.email FROM pm1.test_emails", Arrays.asList("Test1@mail.com"), Arrays.asList("test2@mail.com"));
+        TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList("Test1@mail.com", "test1@mail.com", "test1@mail.com", "test1@mail.com")});
+    }
+	
     private static final boolean DEBUG = false;
 }
