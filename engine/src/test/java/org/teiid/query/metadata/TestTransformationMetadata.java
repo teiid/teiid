@@ -166,10 +166,11 @@ public class TestTransformationMetadata {
 		
 		Table t = mf.addTable("y"); //$NON-NLS-1$
 		mf.addColumn("test", "string", t);
+		mf.addColumn("array", "string[]", t);
 		Datatype unknown = new Datatype();
 		unknown.setName("unknown");
 		Column col = mf.addColumn("arg", "string", t);
-		col.setDatatype(unknown);
+		col.setDatatype(unknown, false, 0);
 		MetadataFactory mf1 = UnitTestUtil.helpSerialize(mf);
 		
 		Column column = mf1.getSchema().getTable("y").getColumns().get(0);
@@ -177,9 +178,13 @@ public class TestTransformationMetadata {
 		
 		assertNotSame(mf.getDataTypes().get(dt.getName()), column.getDatatype());
 		
+		assertEquals(1, mf1.getSchema().getTable("y").getColumns().get(1).getArrayDimensions());
+		
 		mf1.correctDatatypes(mf.getDataTypes());
 		
 		assertSame(mf.getDataTypes().get(dt.getName()), column.getDatatype());
+		
+		assertEquals(1, mf1.getSchema().getTable("y").getColumns().get(1).getArrayDimensions());
 	}
 	
 }

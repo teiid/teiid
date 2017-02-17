@@ -146,7 +146,7 @@ public class OptionsUtil {
         } else if (key.equals(DDLConstants.DISTINCT_VALUES)) {
             c.setDistinctValues(-1);
         } else if (key.equals(DDLConstants.UDT)) {
-            c.setDatatype(null);
+            c.setDatatype(null, false, c.getArrayDimensions());
             c.setLength(0);
             c.setPrecision(0);
             c.setScale(0);
@@ -338,7 +338,7 @@ public class OptionsUtil {
                 }
             }
             if (match != null) {
-                c.setDatatype(match);
+                c.setDatatype(match, false, c.getArrayDimensions());
                 c.setLength(Integer.parseInt(matcher.group(2)));
                 ParsedDataType pdt = new ParsedDataType(matcher.group(1), Integer.parseInt(matcher.group(3)), Integer.parseInt(matcher.group(4)), true);
                 c.setScale(Integer.parseInt(matcher.group(4)));		 

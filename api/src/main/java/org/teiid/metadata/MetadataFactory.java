@@ -642,7 +642,7 @@ public class MetadataFactory extends NamespaceContainer {
 			}
 			Datatype dt = this.dataTypes.get(name);
 			if (dt != null) {
-				c.setDatatype(dt);
+				c.setDatatype(dt, false, c.getArrayDimensions());
 			}
 		}
 	}
