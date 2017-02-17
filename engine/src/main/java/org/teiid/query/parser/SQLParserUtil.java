@@ -465,7 +465,7 @@ public class SQLParserUtil {
     	} else if (key.equals(DDLConstants.DISTINCT_VALUES)) {
     		c.setDistinctValues(-1);
     	} else if (key.equals(DDLConstants.UDT)) {
-			c.setDatatype(null);
+    	    c.setDatatype(null, false, c.getArrayDimensions());
 			c.setLength(0);
 			c.setPrecision(0);
 			c.setScale(0);

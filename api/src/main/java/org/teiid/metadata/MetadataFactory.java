@@ -701,7 +701,7 @@ public class MetadataFactory implements Serializable {
 				dt = this.enterpriseTypes.get(name);
 			}
 			if (dt != null) {
-				c.setDatatype(dt);
+			    c.setDatatype(dt, false, c.getArrayDimensions());
 			} else if (datatype != null) {
 				//must be an enterprise type
 				//if it's used in a single schema, we're ok, but when used in multiple there's an issue
