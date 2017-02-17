@@ -67,8 +67,6 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 	// Passed to constructor
 	private Command command;
 	private Class<?> clz =  null;
-	
-//	private String tablename = null;
 
 	private int[] result;
 
@@ -619,7 +617,8 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 					PropertiesUtils.setBeanProperty(entity, nameInSource, value);
 				}
 
-				
+			} catch (TranslatorException e) {
+				throw e;
 			} catch (Exception e) {
 				throw new TranslatorException(e);
 			}

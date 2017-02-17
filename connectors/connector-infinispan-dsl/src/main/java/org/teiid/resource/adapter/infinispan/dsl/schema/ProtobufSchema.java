@@ -34,7 +34,6 @@ import javax.resource.ResourceException;
 import javax.resource.spi.InvalidPropertyException;
 
 import org.infinispan.client.hotrod.RemoteCache;
-import org.infinispan.client.hotrod.marshall.ProtoStreamMarshaller;
 import org.infinispan.protostream.BaseMarshaller;
 import org.infinispan.protostream.FileDescriptorSource;
 import org.infinispan.protostream.descriptors.Descriptor;

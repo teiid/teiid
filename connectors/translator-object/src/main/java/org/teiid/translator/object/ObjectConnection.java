@@ -83,7 +83,7 @@ public interface ObjectConnection {
 	 * Returns the name of the cache
 	 * @return String cacheName
 	 */
-	public String getCacheName();
+	public String getCacheName() throws TranslatorException;
 	
 		
 	/**

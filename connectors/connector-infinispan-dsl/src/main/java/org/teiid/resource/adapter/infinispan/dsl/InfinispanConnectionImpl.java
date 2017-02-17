@@ -79,6 +79,8 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	private SerializationContext context = null;
 	
 	private boolean adminUsage = false;
+	
+	private boolean connectionDead = false;
 
 
 	public InfinispanConnectionImpl(InfinispanManagedConnectionFactory config)  throws ResourceException {
@@ -109,10 +111,16 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	
 	@Override
 	public void cleanUp() {
-		if (cacheContainer != null) {
-			cacheContainer.stop();
+		// if the connection is not alive or
+		// if the remotecache connection is based on user auth, 
+		// then the container will need to be recreated on next use
+//		if ((config.getAuthSASLMechanism() != null) || !isAlive() ) {
+		if ( !isAlive() ) {
+			if (cacheContainer != null) {
+				cacheContainer.stop();
+			}
+			cacheContainer = null;
 		}
-		cacheContainer = null;
 	}
 
 	/** 
@@ -121,27 +129,27 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	 */
 	@Override
 	public boolean isAlive() {
-		if (config == null || cacheContainer == null) return false;
+		if (connectionDead || config == null || cacheContainer == null) return false;
 		boolean alive = false;
 		try {
 			 this.getCache();
 			 alive = true;
 		} catch (Throwable t) {
-			
+				alive = false;
 		}
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Infinispan Remote Cache Connection is alive:", alive); //$NON-NLS-1$
-		return alive;
+ 		return alive;
 	}	
 
 	@Override
 	public Class<?> getCacheClassType() throws TranslatorException {		
-		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "=== GetType for cache :", getCacheName(),  "==="); //$NON-NLS-1$ //$NON-NLS-2$
+		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "=== GetCacheClassType ==="); //$NON-NLS-1$ //$NON-NLS-2$
 
 		Class<?> type = config.getCacheClassType();
 		if (type != null) {
 			return type;
 		}
-		throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25040, getCacheName()));
+		throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25040, "getCacheClassType"));
 
 	}
 	
@@ -228,15 +236,11 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	    return getCacheContainer().getCache(cacheName);
 	}
 
-	private String getTargetCacheName() {
-		try {
-			if (getDDLHandler().isStagingTarget()) {
-				return config.getCacheNameProxy().getStageCacheAliasName(this);
-			}
-			return config.getCacheNameProxy().getPrimaryCacheAliasName(this);
-		} catch (TranslatorException te) {
-			throw new RuntimeException(te);
+	private String getTargetCacheName() throws TranslatorException {
+		if (getDDLHandler().isStagingTarget()) {
+			return config.getCacheNameProxy().getStageCacheAliasName(this);
 		}
+		return config.getCacheNameProxy().getPrimaryCacheAliasName(this);
 	}
 
 	/**
@@ -297,7 +301,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	 * @see org.teiid.translator.object.ObjectConnection#getCacheName()
 	 */
 	@Override
-	public String getCacheName() {
+	public String getCacheName() throws TranslatorException {
 		return getTargetCacheName();
 	}
 
@@ -354,7 +358,6 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 		try {
 			createCacheContainer();
 		} catch (ResourceException e) {
-			// TODO Auto-generated catch block
 			throw new TranslatorException(e);
 		}
 		return this.cacheContainer;				
@@ -386,20 +389,25 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 			}
 
 			this.cacheContainer = cc;
-
+			
 			this.context = ProtoStreamMarshaller.getSerializationContext(this.cacheContainer);
 
 			// if configured for materialization, initialize the cacheNameProxy
-			if (config.getCacheNameProxy().getAliasCacheName() != null) {
-				RemoteCache aliasCache = cc.getCache(config.getCacheNameProxy().getAliasCacheName());
+			String aliasName = config.getCacheNameProxy().getAliasCacheName();
+			if (aliasName != null) {
+				RemoteCache aliasCache = cc.getCache(aliasName);
 				if (aliasCache == null) {
 					throw new ResourceException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25010,
-							new Object[] { config.getCacheNameProxy().getAliasCacheName() }));
+							new Object[] { aliasName }));
 				}
 			}
 
 			config.getCacheSchemaConfigurator().registerSchema(config, this);
 
+			this.cacheContainer.start();
+			
+			connectionDead = false;
+			
 			
 		} finally {
 			Thread.currentThread().setContextClassLoader(lcl);
