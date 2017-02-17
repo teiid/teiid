@@ -124,13 +124,13 @@ public class TestCreateDrop {
         c.setName("x");
         c.setUUID("tid:0");
         Datatype string = SystemMetadata.getInstance().getRuntimeTypeMap().get("string");
-        c.setDatatype(string, true);
+        c.setDatatype(string, true, 0);
         t.addColumn(c);
         c = new Column();
         c.setName("y");
         c.setUUID("tid:0");
         Datatype decimal = SystemMetadata.getInstance().getRuntimeTypeMap().get("decimal");
-        c.setDatatype(decimal, true);
+        c.setDatatype(decimal, true, 0);
         t.addColumn(c);
         t.setCardinality(10000);
         create.setTableMetadata(t);
