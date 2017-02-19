@@ -162,7 +162,13 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	@SuppressWarnings({ "rawtypes"})
 	@Override
 	public RemoteCache getCache() throws TranslatorException {
-		return getTargetCache();
+		try {
+			return getTargetCache();
+		} catch (TranslatorException te) {
+			throw te;
+		} catch (RuntimeException re) {
+			throw new TranslatorException(re.getCause());
+		}
 	}
 
 	/**
@@ -359,6 +365,8 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 			createCacheContainer();
 		} catch (ResourceException e) {
 			throw new TranslatorException(e);
+		} catch (RuntimeException re) {
+			throw new TranslatorException(re);
 		}
 		return this.cacheContainer;				
 	}
