@@ -2206,7 +2206,7 @@ public class QueryRewriter {
                 		return value;
                 	}
                 	try {
-						return new Constant(FunctionMethods.convert(((Constant)value).getValue(), DataTypeManager.getDataTypeName(type)), es.getType());
+						return new Constant(FunctionMethods.convert(context, ((Constant)value).getValue(), DataTypeManager.getDataTypeName(type)), es.getType());
 					} catch (FunctionExecutionException e) {
 						 throw new QueryValidatorException(e);
 					}

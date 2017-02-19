@@ -34,6 +34,7 @@ import javax.script.ScriptEngine;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.eval.TeiidScriptEngine;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.mapping.relational.QueryNode;
@@ -122,9 +123,9 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
     }
 
     /**
-     * @see QueryMetadataInterface#getElementType(ElementSymbol)
+     * @see QueryMetadataInterface#getElementRuntimeTypeName(ElementSymbol)
      */
-    public String getElementType(Object elementID)
+    public String getElementRuntimeTypeName(Object elementID)
         throws TeiidComponentException, QueryMetadataException {
         return null;
     }
@@ -585,6 +586,12 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
 	@Override
 	public boolean widenComparisonToString() {
 		return true;
+	}
+	
+	@Override
+	public Class<?> getDataTypeClass(String typeName)
+	        throws QueryMetadataException {
+	    return DataTypeManager.getDataTypeClass(typeName);
 	}
 	
 }

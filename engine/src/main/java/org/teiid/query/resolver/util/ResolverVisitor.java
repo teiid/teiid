@@ -483,6 +483,16 @@ public class ResolverVisitor extends LanguageVisitor {
     }
     
     @Override
+    public void visit(XMLCast xmlCast) {
+        String typeName = xmlCast.getTypeName();
+        try {
+            xmlCast.setType(this.metadata.getDataTypeClass(typeName));
+        } catch (QueryMetadataException e) {
+            handleException(e);
+        }
+    }
+    
+    @Override
     public void visit(QueryString obj) {
     	try {
 			obj.setPath(ResolverUtil.convertExpression(obj.getPath(), DataTypeManager.DefaultDataTypes.STRING, metadata));
@@ -682,7 +692,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	    //special case handling for convert of an untyped reference
 	    if (FunctionLibrary.isConvert(function) && hasArgWithoutType) {
 	        Constant constant = (Constant)function.getArg(1);
-	        Class<?> type = DataTypeManager.getDataTypeClass((String)constant.getValue());
+	        Class<?> type = metadata.getDataTypeClass((String)constant.getValue());
 	
 	        setDesiredType(function.getArg(0), type, function);
 	        types[0] = type;
@@ -727,7 +737,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	    
 	    if(fd.isSystemFunction(FunctionLibrary.CONVERT) || fd.isSystemFunction(FunctionLibrary.CAST)) {
 	        String dataType = (String) ((Constant)args[1]).getValue();
-	        Class<?> dataTypeClass = DataTypeManager.getDataTypeClass(dataType);
+	        Class<?> dataTypeClass = metadata.getDataTypeClass(dataType);
 	        fd = library.findTypedConversionFunction(args[0].getType(), dataTypeClass);
 	
 	        // Verify that the type conversion from src to type is even valid
@@ -867,7 +877,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	    types[1] = upperTypeName;
 	    Class<?> type = null;
 	    
-	    String commonType = ResolverUtil.getCommonType(types);
+	    String commonType = ResolverUtil.getCommonRuntimeType(types);
     	if (commonType != null) {
     		type = DataTypeManager.getDataTypeClass(commonType);
     	}
@@ -1022,7 +1032,7 @@ public class ResolverVisitor extends LanguageVisitor {
 			return;
 	    }
 	
-		String commonType = ResolverUtil.getCommonType(new String[] {leftTypeName, rightTypeName});
+		String commonType = ResolverUtil.getCommonRuntimeType(new String[] {leftTypeName, rightTypeName});
 		
 		if (commonType == null) {
 	        // Neither are aggs, but types can't be reconciled
@@ -1101,7 +1111,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	    }
 	    
 	    if (!same) {
-		    String commonType = ResolverUtil.getCommonType(types);
+		    String commonType = ResolverUtil.getCommonRuntimeType(types);
 	    	if (commonType != null) {
 	    		type = DataTypeManager.getDataTypeClass(commonType);
 	    	} else {
@@ -1247,14 +1257,14 @@ public class ResolverVisitor extends LanguageVisitor {
 	    // Invariants: all the expressions' types are non-null
 	
 	    // 3. Perform implicit type conversions
-	    String whenTypeName = ResolverUtil.getCommonType(whenTypeNames.toArray(new String[whenTypeNames.size()]));
+	    String whenTypeName = ResolverUtil.getCommonRuntimeType(whenTypeNames.toArray(new String[whenTypeNames.size()]));
 	    if (whenTypeName == null) {
 	         throw new QueryResolverException(QueryPlugin.Event.TEIID30079, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30079, "WHEN", obj));//$NON-NLS-1$
 	    }
 	    if (!metadata.widenComparisonToString() && whenNotChar && isCharacter(DataTypeManager.getDataTypeClass(whenTypeName), true)) {
 	    	throw new QueryResolverException(QueryPlugin.Event.TEIID31172, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31172, obj));
 	    }
-	    String thenTypeName = ResolverUtil.getCommonType(thenTypeNames.toArray(new String[thenTypeNames.size()]));
+	    String thenTypeName = ResolverUtil.getCommonRuntimeType(thenTypeNames.toArray(new String[thenTypeNames.size()]));
 	    if (thenTypeName == null) {
 	         throw new QueryResolverException(QueryPlugin.Event.TEIID30079, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30079, "THEN/ELSE", obj));//$NON-NLS-1$
 	    }
@@ -1336,7 +1346,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	    // Invariants: all the expressions' types are non-null
 	
 	    // 3. Perform implicit type conversions
-	    String thenTypeName = ResolverUtil.getCommonType(thenTypeNames.toArray(new String[thenTypeNames.size()]));
+	    String thenTypeName = ResolverUtil.getCommonRuntimeType(thenTypeNames.toArray(new String[thenTypeNames.size()]));
 	    if (thenTypeName == null) {
 	         throw new QueryResolverException(QueryPlugin.Event.TEIID30079, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30079, "THEN/ELSE", obj)); //$NON-NLS-1$
 	    }

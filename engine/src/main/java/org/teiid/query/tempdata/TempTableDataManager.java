@@ -446,7 +446,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			final Object[] vals = new Object[param.length];
 			for (int i = 0; i < ids.size(); i++) {
 				Object value = param[i];
-				String targetTypeName = metadata.getElementType(ids.get(i));
+				String targetTypeName = metadata.getElementRuntimeTypeName(ids.get(i));
 				value = DataTypeManager.transformValue(value, DataTypeManager.getDataTypeClass(targetTypeName));
 				vals[i] = value;
 			}
@@ -802,8 +802,8 @@ public class TempTableDataManager implements ProcessorDataManager {
 	    	
 	    	ElementSymbol keyElement = new ElementSymbol(keyElementName, new GroupSymbol(matTableName));
 	    	ElementSymbol returnElement = new ElementSymbol(returnElementName, new GroupSymbol(matTableName));
-	    	keyElement.setType(DataTypeManager.getDataTypeClass(metadata.getElementType(metadata.getElementID(codeTableName + ElementSymbol.SEPARATOR + keyElementName))));
-	    	returnElement.setType(DataTypeManager.getDataTypeClass(metadata.getElementType(metadata.getElementID(codeTableName + ElementSymbol.SEPARATOR + returnElementName))));
+	    	keyElement.setType(DataTypeManager.getDataTypeClass(metadata.getElementRuntimeTypeName(metadata.getElementID(codeTableName + ElementSymbol.SEPARATOR + keyElementName))));
+	    	returnElement.setType(DataTypeManager.getDataTypeClass(metadata.getElementRuntimeTypeName(metadata.getElementID(codeTableName + ElementSymbol.SEPARATOR + returnElementName))));
 	    	
 	    	Query query = RelationalPlanner.createMatViewQuery(id, matTableName, Arrays.asList(returnElement), true);
 	    	query.setCriteria(new CompareCriteria(keyElement, CompareCriteria.EQ, new Constant(keyValue)));

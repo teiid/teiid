@@ -119,9 +119,9 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 		return actualMetadata.getElementLength(elementID);
 	}
 
-	public String getElementType(Object elementID)
+	public String getElementRuntimeTypeName(Object elementID)
 			throws TeiidComponentException, QueryMetadataException {
-		return actualMetadata.getElementType(elementID);
+		return actualMetadata.getElementRuntimeTypeName(elementID);
 	}
 
 	public Properties getExtensionProperties(Object metadataID)
@@ -445,5 +445,11 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 	public boolean widenComparisonToString() {
 		return actualMetadata.widenComparisonToString();
 	}
+	
+    @Override
+    public Class<?> getDataTypeClass(String typeName)
+            throws QueryMetadataException {
+        return actualMetadata.getDataTypeClass(typeName);
+    }
 	
 }

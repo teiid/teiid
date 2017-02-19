@@ -116,7 +116,7 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
         for(int i = 0; i<elements.size() && mse == null; i++) {
             Object elemID = elements.get(i);
             if(actualMetadata.getName(elemID).equalsIgnoreCase(multiSourceElementName)) {
-            	if (!actualMetadata.getElementType(elemID).equalsIgnoreCase(DataTypeManager.DefaultDataTypes.STRING)) {
+            	if (!actualMetadata.getElementRuntimeTypeName(elemID).equalsIgnoreCase(DataTypeManager.DefaultDataTypes.STRING)) {
             		throw new QueryMetadataException(QueryPlugin.Event.TEIID31128, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31128, multiSourceElementName, groupID));
             	}
             	mse = elemID;

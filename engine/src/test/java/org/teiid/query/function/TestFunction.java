@@ -97,13 +97,13 @@ public class TestFunction {
     }
 
     public static void helpConvert(Object src, String tgtType, Object expected) throws FunctionExecutionException {
-        Object actual = FunctionMethods.convert(src, tgtType);
+        Object actual = FunctionMethods.convert(null, src, tgtType);
         assertEquals("convert(" + src + "," + tgtType + ") failed.", expected, actual); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     public static void helpConvertFail(Object src, String tgtType) {
         try {
-            FunctionMethods.convert(src, tgtType);
+            FunctionMethods.convert(null, src, tgtType);
             fail("Expected convert(" + src + "," + tgtType + ") to throw FunctionExecutionException, but it did not."); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         } catch (FunctionExecutionException e) {
         } 

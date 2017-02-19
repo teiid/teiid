@@ -754,8 +754,8 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         ElementSymbol symbol = new ElementSymbol(column.getName(), this.context.getGroupSymbol());
         
         update.addChange(symbol, new Reference(0));
-        Class<?> lobType = DataTypeManager.getDataTypeClass(column.getDatatype().getRuntimeTypeName());
-        int sqlType = JDBCSQLTypeInfo.getSQLType(column.getDatatype().getRuntimeTypeName());
+        Class<?> lobType = DataTypeManager.getDataTypeClass(column.getRuntimeType());
+        int sqlType = JDBCSQLTypeInfo.getSQLType(column.getRuntimeType());
         if (content == null) {
             this.params.add(new SQLParameter(null, sqlType));
         } else {

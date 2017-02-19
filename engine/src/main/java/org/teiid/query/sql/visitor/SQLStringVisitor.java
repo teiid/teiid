@@ -2301,13 +2301,13 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
     
     @Override
-    public void visit(XMLCast exists) {
+    public void visit(XMLCast xmlcast) {
     	append("XMLCAST("); //$NON-NLS-1$
-    	append(exists.getExpression());
+    	append(xmlcast.getExpression());
     	append(Tokens.SPACE);
     	append(AS);
     	append(Tokens.SPACE);
-    	append(DataTypeManager.getDataTypeName(exists.getType()));
+    	append(xmlcast.getTypeName());
         append(")");//$NON-NLS-1$
     }
 

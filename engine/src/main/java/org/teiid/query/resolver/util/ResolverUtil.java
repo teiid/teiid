@@ -112,7 +112,7 @@ public class ResolverUtil {
      * @return a type name to which all the given types can be converted
      */
     @SuppressWarnings("null")
-	public static String getCommonType(String[] typeNames) {
+	public static String getCommonRuntimeType(String[] typeNames) {
         if (typeNames == null || typeNames.length == 0) {
             return null;
         }
@@ -280,6 +280,15 @@ public class ResolverUtil {
         return null;
     }
 
+    /**
+     * IMPORTANT: source and target must be basic runtime types
+     * @param sourceExpression
+     * @param sourceTypeName
+     * @param targetTypeName
+     * @param implicit
+     * @param library
+     * @return
+     */
     public static Function getConversion(Expression sourceExpression,
                                             String sourceTypeName,
                                             String targetTypeName,
@@ -583,7 +592,7 @@ public class ResolverUtil {
                 // Form an element symbol from the ID
                 ElementSymbol element = new ElementSymbol(elementName, group);
                 element.setMetadataID(elementID);
-                element.setType( DataTypeManager.getDataTypeClass(metadata.getElementType(element.getMetadataID())) );
+                element.setType( DataTypeManager.getDataTypeClass(metadata.getElementRuntimeTypeName(element.getMetadataID())) );
 
                 symbols.put(elementID, element);
             }

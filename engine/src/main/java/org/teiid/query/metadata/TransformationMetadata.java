@@ -42,6 +42,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.util.ArgCheck;
@@ -173,6 +174,9 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     		processGrants(store, policies);
     	} else {
     		this.importedModels = Collections.emptySet();
+    	}
+    	if (store.getDatatypes().isEmpty()) {
+    	    store.addDataTypes(SystemMetadata.getInstance().getRuntimeTypeMap());
     	}
         this.store = store;
         if (vdbEntries == null) {
@@ -452,7 +456,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         }
     }
 
-    public String getElementType(final Object elementID) throws TeiidComponentException, QueryMetadataException {
+    public String getElementRuntimeTypeName(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
             return ((Column) elementID).getRuntimeType();            
         } else if(elementID instanceof ProcedureParameter){
@@ -1186,6 +1190,24 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 	
 	public void setWidenComparisonToString(boolean widenComparisonToString) {
 		this.widenComparisonToString = widenComparisonToString;
+	}
+	
+	@Override
+	public Class<?> getDataTypeClass(String typeOrDomainName)
+	        throws QueryMetadataException {
+	    if (typeOrDomainName == null) {
+            return DefaultDataClasses.NULL;
+        }
+
+        Datatype type = store.getDatatypes().get(typeOrDomainName);
+
+        if (type != null) {
+            return DataTypeManager.getDataTypeClass(type.getRuntimeTypeName());
+        }
+        if (DataTypeManager.isArrayType(typeOrDomainName)) {
+            return DataTypeManager.getArrayType(getDataTypeClass(typeOrDomainName.substring(0, typeOrDomainName.length() - 2)));
+        }
+        throw new QueryMetadataException(QueryPlugin.Event.TEIID31254, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31254, typeOrDomainName));
 	}
 	
 }

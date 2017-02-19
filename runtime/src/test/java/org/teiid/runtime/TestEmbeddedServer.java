@@ -2037,6 +2037,21 @@ public class TestEmbeddedServer {
         ResultSet rs = c.getMetaData().getColumns(null, null, "g1", null);
         rs.next();
         assertEquals("x", rs.getString("TYPE_NAME"));
+        
+        try {
+            s.execute("select cast(1 as a)"); //should fail
+            fail();
+        } catch (SQLException e) {
+            
+        }
+        
+        s.execute("select cast(1 as z)");
+        rs = s.getResultSet();
+        
+        //for now we'll report the runtime type
+        assertEquals("bigdecimal", rs.getMetaData().getColumnTypeName(1));
+        
+        s.execute("select xmlcast(xmlparse(document '<a>1</a>') as z)");
     }
 
 }

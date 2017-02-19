@@ -1255,13 +1255,18 @@ public final class FunctionMethods {
 
 	// ================== Function = convert =====================
 
-	public static Object convert(Object src, String type)
+	public static Object convert(CommandContext context, Object src, String type)
 		throws FunctionExecutionException {
 		try {
-			return DataTypeManager.transformValue(src, DataTypeManager.getDataTypeClass(type));
+		    if (context == null || context.getMetadata() == null) {
+		        return DataTypeManager.transformValue(src, DataTypeManager.getDataTypeClass(type));
+		    }
+			return DataTypeManager.transformValue(src, context.getMetadata().getDataTypeClass(type));
 		} catch(TransformationException e) {
-			 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30405, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30405, new Object[]{src, DataTypeManager.getDataTypeName(src.getClass()), type}));
-		}
+			throw new FunctionExecutionException(QueryPlugin.Event.TEIID30405, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30405, new Object[]{src, DataTypeManager.getDataTypeName(src.getClass()), type}));
+		} catch (QueryMetadataException e) {
+		    throw new FunctionExecutionException(QueryPlugin.Event.TEIID30405, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30405, new Object[]{src, DataTypeManager.getDataTypeName(src.getClass()), type}));
+        }
 	}
 
     // ================== Function = context and rowlimit =====================

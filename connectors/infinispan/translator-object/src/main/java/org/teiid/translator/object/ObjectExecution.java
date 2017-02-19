@@ -44,7 +44,6 @@ import org.teiid.language.Select;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.metadata.Datatype;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
@@ -244,7 +243,7 @@ public class ObjectExecution extends ObjectBaseExecution implements ResultSetExe
 		for (DerivedColumn dc : cols) {
 			ColumnReference cr = (ColumnReference) dc.getExpression();
 			
-			String runtimeTypeName = cr.getMetadataObject().getDatatype().getRuntimeTypeName();
+			String runtimeTypeName = cr.getMetadataObject().getRuntimeType();
 			String nis = ObjectUtil.getRecordName(cr.getMetadataObject());
 
 			if (nis.equalsIgnoreCase("this")) { //$NON-NLS-1$

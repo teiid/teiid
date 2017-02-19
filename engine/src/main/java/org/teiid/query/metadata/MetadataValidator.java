@@ -132,7 +132,7 @@ public class MetadataValidator {
 				
 				if (!schema.getFunctions().isEmpty()) {
 			    	ActivityReport<ReportItem> funcReport = new ActivityReport<ReportItem>("Translator metadata load " + model.getName()); //$NON-NLS-1$
-					FunctionMetadataValidator.validateFunctionMethods(schema.getFunctions().values(),report);
+					FunctionMetadataValidator.validateFunctionMethods(schema.getFunctions().values(),report, store.getDatatypes());
 					if(report.hasItems()) {
 						metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31073, funcReport));
 					}						

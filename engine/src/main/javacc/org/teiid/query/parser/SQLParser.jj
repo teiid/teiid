@@ -926,7 +926,7 @@ Column tableElement(ParseInfo info) :
 {
 	 element = id(Boolean.TRUE)
 	 (
-	  type = parseDataType()
+	  type = parseBasicDataType()
 	  |
 	  <SERIAL>
 	  {
@@ -1529,14 +1529,14 @@ List<TableFunctionReference.ProjectedColumn> createElementsWithTypes(ParseInfo i
 }
 {
 	 element = id(Boolean.TRUE)
-	 type = parseDataType()
+	 type = parseBasicDataType()
 	 {
 	    TableFunctionReference.ProjectedColumn symbol = new TableFunctionReference.ProjectedColumn(element, type.type);
-		elements.add(symbol);
+        elements.add(symbol);
 	 }
 	 (LOOKAHEAD(2) <COMMA>
 		element = id(Boolean.TRUE)
-		type = parseDataType()
+		type = parseBasicDataType()
 		{
 	      symbol = new TableFunctionReference.ProjectedColumn(element, type.type);
 		  elements.add(symbol);
@@ -2691,7 +2691,7 @@ TextTable.TextColumn textColumn(ParseInfo info):
             <HEADER>
             header = stringVal()
         ]
-    	datatype = parseDataType()
+    	datatype = parseBasicDataType()
     	[ 
     	  	<WIDTH>
     	  	width = intVal() 
@@ -2893,7 +2893,7 @@ ObjectTable.ObjectColumn objectColumn(ParseInfo info):
 }
 {
 	name = id(null)
-    datatype = parseDataType()
+    datatype = parseBasicDataType()
 	path = stringVal()    
     [
    	  <DEFAULT_KEYWORD> defaultExpr = expression(info)
@@ -2985,7 +2985,7 @@ XMLTable.XMLColumn xmlColumn(ParseInfo info):
 	    return new XMLTable.XMLColumn(name); 
 	  }	
 	) | (
-      datatype = parseDataType()
+      datatype = parseBasicDataType()
       [
 	    <DEFAULT_KEYWORD> defaultExpr = expression(info)
 	  ]
@@ -4027,7 +4027,7 @@ Expression unescapedFunction(ParseInfo info) :
 		<AS>
 		type = parseDataType()
 		<RPAREN>				
-    ) { return new XMLCast(expression, DataTypeManager.getDataTypeClass(type.type)); }
+    ) { return new XMLCast(expression, type.type); }
 }
 
 /*
@@ -4787,16 +4787,14 @@ ParsedDataType parseDataTypePrimary() :
 }
 
 /*
-name=data type
+name=basic data type
 description=A data type.
 example=[source,sql]\n----\nSTRING[]\n----\n
 */
-ParsedDataType parseDataType() :
+ParsedDataType parseBasicDataType() :
 {
     int arraySuffixes = 0;
     ParsedDataType type = null;
-    String typeName = null;
-    Token idToken = null;
 }
 {
     type = parseDataTypePrimary()
@@ -4805,6 +4803,23 @@ ParsedDataType parseDataType() :
         if (arraySuffixes > 0) {
            type.type += StringUtil.join(Collections.nCopies(arraySuffixes, "[]"), "");
         }
+        return type;
+    }
+}
+
+/*
+name=data type
+description=A data type.
+example=[source,sql]\n----\nSTRING[]\n----\n
+*/
+ParsedDataType parseDataType() :
+{
+    ParsedDataType type = null;
+    Token idToken = null;
+}
+{
+    type = parseBasicDataType()
+    {
         return type;
     }
     |

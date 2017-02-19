@@ -199,7 +199,7 @@ public class FunctionTree {
         if(inputParams != null) {
         	types = new Class<?>[inputParams.size()];
             for(int i=0; i<inputParams.size(); i++) {
-                String typeName = inputParams.get(i).getType();
+                String typeName = inputParams.get(i).getRuntimeType();
                 Class<?> clazz = DataTypeManager.getDataTypeClass(typeName);
                 types[i] = clazz;
                 setUuid(inputParams.get(i));
@@ -288,7 +288,7 @@ public class FunctionTree {
         FunctionParameter outputParam = method.getOutputParameter();
         Class<?> outputType = null;
         if(outputParam != null) {
-            outputType = DataTypeManager.getDataTypeClass(outputParam.getType());
+            outputType = DataTypeManager.getDataTypeClass(outputParam.getRuntimeType());
         }
         List<Class<?>> inputTypes = new ArrayList<Class<?>>(Arrays.asList(types));
         boolean hasWrappedArg = false;

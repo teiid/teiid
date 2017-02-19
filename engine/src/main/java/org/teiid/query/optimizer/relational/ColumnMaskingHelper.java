@@ -83,7 +83,7 @@ public class ColumnMaskingHelper {
 		Object metadataID = col.getMetadataID();
 		String fullName = metadata.getFullName(metadataID);
 		final GroupSymbol group = col.getGroupSymbol();
-		String elementType = metadata.getElementType(col.getMetadataID());
+		String elementType = metadata.getElementRuntimeTypeName(col.getMetadataID());
 		Class<?> expectedType = DataTypeManager.getDataTypeClass(elementType);
 		List<WhenThen> cases = null;
 		Collection<GroupSymbol> groups = Arrays.asList(unaliased);

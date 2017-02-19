@@ -364,9 +364,10 @@ public class UpdateProcedureResolver implements CommandResolver {
         if (exists) {
         	handleUnresolvableDeclaration(variable, QueryPlugin.Util.getString("ERR.015.010.0032", variable.getOutputName())); //$NON-NLS-1$
         }
-        variable.setType(DataTypeManager.getDataTypeClass(typeName));
+        boolean exception = typeName.equalsIgnoreCase(SQLConstants.NonReserved.EXCEPTION);
+        variable.setType(exception?DataTypeManager.DefaultDataClasses.OBJECT:DataTypeManager.getDataTypeClass(typeName));
         variable.setGroupSymbol(variables);
-        TempMetadataID id = new TempMetadataID(variable.getName(), typeName.equalsIgnoreCase(SQLConstants.NonReserved.EXCEPTION)?Exception.class:variable.getType());
+        TempMetadataID id = new TempMetadataID(variable.getName(), exception?Exception.class:variable.getType());
         id.setUpdatable(true);
         variable.setMetadataID(id);
         //TODO: this will cause the variables group to loose it's cache of resolved symbols

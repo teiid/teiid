@@ -171,7 +171,7 @@ public class SetQueryResolver implements CommandResolver {
             String sourceType = DataTypeManager.getDataTypeName(firstProjType);
             String targetType = DataTypeManager.getDataTypeName(projType);
             
-            String commonType = ResolverUtil.getCommonType(new String[] {sourceType, targetType});
+            String commonType = ResolverUtil.getCommonRuntimeType(new String[] {sourceType, targetType});
             
             if (commonType == null) {
             	commonType = DataTypeManager.DefaultDataTypes.OBJECT;
