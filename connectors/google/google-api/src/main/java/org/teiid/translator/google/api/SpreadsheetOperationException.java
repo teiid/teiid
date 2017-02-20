@@ -20,35 +20,31 @@
  * 02110-1301 USA.
  */
 
+package org.teiid.translator.google.api;
 
-package org.teiid.translator.goole.api;
+/**
+ * Any error during quering or inserting data to Google Spreadsheet
+ * @author fnguyen
+ *
+ */
+public class SpreadsheetOperationException  extends RuntimeException{
 
-public class UpdateSet {
+	private static final long serialVersionUID = 4939489286115962870L;
 
-	String columnID;
-	String value;
-	
-	public UpdateSet(String columnID, String value){
-		this.columnID = columnID;
-		this.value = value;
+	public SpreadsheetOperationException() {
+		super();
 	}
 
-	public String getColumnID() {
-		return columnID;
+	public SpreadsheetOperationException(String message, Throwable cause) {
+		super(message, cause);
 	}
 
-	public void setColumnID(String columnID) {
-		this.columnID = columnID;
+	public SpreadsheetOperationException(String message) {
+		super(message);
 	}
 
-	public String getValue() {
-		return value;
+	public SpreadsheetOperationException(Throwable cause) {
+		super(cause);
 	}
 
-	public void setValue(String value) {
-		this.value = value;
-	}
-	
-	
-	
 }

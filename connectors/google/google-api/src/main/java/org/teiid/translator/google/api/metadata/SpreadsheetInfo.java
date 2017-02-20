@@ -1,4 +1,4 @@
-package org.teiid.translator.goole.api.metadata;
+package org.teiid.translator.google.api.metadata;
 
 
 import java.util.Collection;

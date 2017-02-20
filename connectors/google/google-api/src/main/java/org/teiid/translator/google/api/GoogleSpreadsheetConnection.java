@@ -20,13 +20,30 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.translator.goole.api.metadata;
+package org.teiid.translator.google.api;
 
-public enum SpreadsheetColumnType {
-	 STRING,
-	 DATE, 
-	 TIMEOFDAY,
-	 DATETIME,
-	 BOOLEAN,
-	 NUMBER
+import java.util.List;
+import java.util.Map;
+
+import javax.resource.cci.Connection;
+
+import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
+import org.teiid.translator.google.api.result.RowsResult;
+import org.teiid.translator.google.api.result.UpdateResult;
+
+
+/**
+ * Connection to GoogleSpreadsheet API. 
+ * 
+ */
+public interface GoogleSpreadsheetConnection extends Connection {
+	public RowsResult executeQuery(String worksheetName, String query, Integer offset, Integer limit, int batchSize);
+	public UpdateResult executeListFeedUpdate(String worksheetID, String criteria, List<UpdateSet> set);
+	public UpdateResult deleteRows(String worksheetID, String criteria);
+	public UpdateResult executeRowInsert(String worksheetID, Map<String,String> pair);
+	/**
+	 * Returns information about existing Spreadsheets and worksheets.
+	 * @return
+	 */
+	public SpreadsheetInfo getSpreadsheetInfo();
 }

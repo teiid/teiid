@@ -31,9 +31,9 @@ import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.google.api.GoogleSpreadsheetConnection;
+import org.teiid.translator.google.api.result.SheetRow;
 import org.teiid.translator.google.visitor.SpreadsheetSQLVisitor;
-import org.teiid.translator.goole.api.GoogleSpreadsheetConnection;
-import org.teiid.translator.goole.api.result.SheetRow;
 
 /**
  * Execution of SELECT Command

@@ -20,31 +20,35 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.translator.goole.api;
 
-/**
- * Used for errors during authentication or authorization for GoogleSpreadsheet
- * @author fnguyen
- *
- */
-public class SpreadsheetAuthException extends RuntimeException {
+package org.teiid.translator.google.api;
 
-	private static final long serialVersionUID = 5098286312672469818L;
+public class UpdateSet {
 
-	public SpreadsheetAuthException() {
-		super();
+	String columnID;
+	String value;
+	
+	public UpdateSet(String columnID, String value){
+		this.columnID = columnID;
+		this.value = value;
 	}
 
-	public SpreadsheetAuthException(String message, Throwable cause) {
-		super(message, cause);
+	public String getColumnID() {
+		return columnID;
 	}
 
-	public SpreadsheetAuthException(String message) {
-		super(message);
+	public void setColumnID(String columnID) {
+		this.columnID = columnID;
 	}
 
-	public SpreadsheetAuthException(Throwable cause) {
-		super(cause);
+	public String getValue() {
+		return value;
 	}
+
+	public void setValue(String value) {
+		this.value = value;
+	}
+	
+	
 	
 }

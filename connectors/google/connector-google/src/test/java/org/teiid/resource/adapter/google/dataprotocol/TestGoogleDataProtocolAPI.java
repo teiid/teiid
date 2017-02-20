@@ -30,7 +30,7 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 
 import org.junit.Test;
-import org.teiid.translator.goole.api.metadata.SpreadsheetColumnType;
+import org.teiid.translator.google.api.metadata.SpreadsheetColumnType;
 
 @SuppressWarnings("nls")
 public class TestGoogleDataProtocolAPI {

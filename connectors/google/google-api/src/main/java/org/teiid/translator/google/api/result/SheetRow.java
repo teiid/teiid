@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.translator.goole.api.result;
+package org.teiid.translator.google.api.result;
 
 import java.util.ArrayList;
 import java.util.Arrays;

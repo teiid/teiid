@@ -23,7 +23,7 @@
 package org.teiid.translator.google.visitor;
 
 import org.teiid.language.Delete;
-import org.teiid.translator.goole.api.metadata.SpreadsheetInfo;
+import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
 /**
  * Translates SQL DELETE commands
  * 

@@ -20,45 +20,27 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.translator.goole.api.result;
+package org.teiid.translator.google.api.result;
+
+import java.util.List;
 
 
 /**
- * This class represents number of updated rows
+ * Executable query that will retrieve just specified portion of results (rows). 
  * 
- * @author felias
+ * For example to get rows starting at row 10 and retrieves 5 rows (included) use this interface:
+ *   
+ *   partialResultExecutor.getResultBatch(10,5) 
  * 
+ * @author fnguyen
  */
-public class UpdateResult {
-
-	private int expectedNumberOfRows = -1;
-	private int actualNumberOfRows = -1;
-
+public interface PartialResultExecutor {
+	
 	/**
-	 * 
-	 * @param expectedNumberOfRows
-	 *            number of rows that should have been updated
-	 * @param actualNumberOfRows
-	 *            actual number of updated rows
+	 *  Returns part of the result.
+	 *  
+	 * @return null or empty list if no more results are in the batch. Maximum amount of sheet rows in the result
+	 * is amount
 	 */
-	public UpdateResult(int expectedNumberOfRows, int actualNumberOfRows) {
-		this.expectedNumberOfRows = expectedNumberOfRows;
-		this.actualNumberOfRows = actualNumberOfRows;
-	}
-
-	/*
-	 * Returns number of rows that should have been updated
-	 */
-	public int getExpectedNumberOfRows() {
-		return expectedNumberOfRows;
-	}
-
-	/**
-	 * Returns actual number of updated rows
-	 * 
-	 */
-	public int getActualNumberOfRows() {
-		return actualNumberOfRows;
-	}
-
+	List<SheetRow> getResultsBatch(int startIndex, int amount);
 }

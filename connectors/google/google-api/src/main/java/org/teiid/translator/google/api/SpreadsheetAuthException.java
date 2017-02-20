@@ -20,31 +20,31 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.translator.goole.api;
+package org.teiid.translator.google.api;
 
 /**
- * Any error during quering or inserting data to Google Spreadsheet
+ * Used for errors during authentication or authorization for GoogleSpreadsheet
  * @author fnguyen
  *
  */
-public class SpreadsheetOperationException  extends RuntimeException{
+public class SpreadsheetAuthException extends RuntimeException {
 
-	private static final long serialVersionUID = 4939489286115962870L;
+	private static final long serialVersionUID = 5098286312672469818L;
 
-	public SpreadsheetOperationException() {
+	public SpreadsheetAuthException() {
 		super();
 	}
 
-	public SpreadsheetOperationException(String message, Throwable cause) {
+	public SpreadsheetAuthException(String message, Throwable cause) {
 		super(message, cause);
 	}
 
-	public SpreadsheetOperationException(String message) {
+	public SpreadsheetAuthException(String message) {
 		super(message);
 	}
 
-	public SpreadsheetOperationException(Throwable cause) {
+	public SpreadsheetAuthException(Throwable cause) {
 		super(cause);
 	}
-
+	
 }

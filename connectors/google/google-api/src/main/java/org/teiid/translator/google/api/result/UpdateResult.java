@@ -20,30 +20,45 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.translator.goole.api;
-
-import java.util.List;
-import java.util.Map;
-
-import javax.resource.cci.Connection;
-
-import org.teiid.translator.goole.api.metadata.SpreadsheetInfo;
-import org.teiid.translator.goole.api.result.RowsResult;
-import org.teiid.translator.goole.api.result.UpdateResult;
+package org.teiid.translator.google.api.result;
 
 
 /**
- * Connection to GoogleSpreadsheet API. 
+ * This class represents number of updated rows
+ * 
+ * @author felias
  * 
  */
-public interface GoogleSpreadsheetConnection extends Connection {
-	public RowsResult executeQuery(String worksheetName, String query, Integer offset, Integer limit, int batchSize);
-	public UpdateResult executeListFeedUpdate(String worksheetID, String criteria, List<UpdateSet> set);
-	public UpdateResult deleteRows(String worksheetID, String criteria);
-	public UpdateResult executeRowInsert(String worksheetID, Map<String,String> pair);
+public class UpdateResult {
+
+	private int expectedNumberOfRows = -1;
+	private int actualNumberOfRows = -1;
+
 	/**
-	 * Returns information about existing Spreadsheets and worksheets.
-	 * @return
+	 * 
+	 * @param expectedNumberOfRows
+	 *            number of rows that should have been updated
+	 * @param actualNumberOfRows
+	 *            actual number of updated rows
 	 */
-	public SpreadsheetInfo getSpreadsheetInfo();
+	public UpdateResult(int expectedNumberOfRows, int actualNumberOfRows) {
+		this.expectedNumberOfRows = expectedNumberOfRows;
+		this.actualNumberOfRows = actualNumberOfRows;
+	}
+
+	/*
+	 * Returns number of rows that should have been updated
+	 */
+	public int getExpectedNumberOfRows() {
+		return expectedNumberOfRows;
+	}
+
+	/**
+	 * Returns actual number of updated rows
+	 * 
+	 */
+	public int getActualNumberOfRows() {
+		return actualNumberOfRows;
+	}
+
 }

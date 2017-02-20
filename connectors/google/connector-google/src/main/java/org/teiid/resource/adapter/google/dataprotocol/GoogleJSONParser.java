@@ -11,7 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.teiid.core.util.StringUtil;
-import org.teiid.translator.goole.api.SpreadsheetOperationException;
+import org.teiid.translator.google.api.SpreadsheetOperationException;
 
 /**
  * Parsing google json is a little non-standard.  They assume a js binding, so array syntax, strings, and date are used.

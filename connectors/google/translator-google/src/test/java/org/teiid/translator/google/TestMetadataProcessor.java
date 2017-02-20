@@ -31,11 +31,11 @@ import org.mockito.Mockito;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.query.metadata.SystemMetadata;
-import org.teiid.translator.goole.api.GoogleSpreadsheetConnection;
-import org.teiid.translator.goole.api.metadata.Column;
-import org.teiid.translator.goole.api.metadata.SpreadsheetInfo;
-import org.teiid.translator.goole.api.metadata.Util;
-import org.teiid.translator.goole.api.metadata.Worksheet;
+import org.teiid.translator.google.api.GoogleSpreadsheetConnection;
+import org.teiid.translator.google.api.metadata.Column;
+import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
+import org.teiid.translator.google.api.metadata.Util;
+import org.teiid.translator.google.api.metadata.Worksheet;
 
 @SuppressWarnings("nls")
 public class TestMetadataProcessor {

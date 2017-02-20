@@ -34,11 +34,11 @@ import org.teiid.resource.adapter.google.dataprotocol.GoogleDataProtocolAPI;
 import org.teiid.resource.adapter.google.gdata.GDataClientLoginAPI;
 import org.teiid.resource.adapter.google.gdata.SpreadsheetMetadataExtractor;
 import org.teiid.resource.spi.BasicConnection;
-import org.teiid.translator.goole.api.GoogleSpreadsheetConnection;
-import org.teiid.translator.goole.api.UpdateSet;
-import org.teiid.translator.goole.api.metadata.SpreadsheetInfo;
-import org.teiid.translator.goole.api.result.RowsResult;
-import org.teiid.translator.goole.api.result.UpdateResult;
+import org.teiid.translator.google.api.GoogleSpreadsheetConnection;
+import org.teiid.translator.google.api.UpdateSet;
+import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
+import org.teiid.translator.google.api.result.RowsResult;
+import org.teiid.translator.google.api.result.UpdateResult;
 
 
 

@@ -9,7 +9,7 @@ import org.teiid.resource.adapter.google.auth.OAuth2HeaderFactory;
 import org.teiid.resource.adapter.google.dataprotocol.GoogleDataProtocolAPI;
 import org.teiid.resource.adapter.google.gdata.GDataClientLoginAPI;
 import org.teiid.resource.adapter.google.gdata.SpreadsheetMetadataExtractor;
-import org.teiid.translator.goole.api.metadata.SpreadsheetInfo;
+import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
 
 /**
  * Testing of metadata loading. For metadata loading we use GData API.

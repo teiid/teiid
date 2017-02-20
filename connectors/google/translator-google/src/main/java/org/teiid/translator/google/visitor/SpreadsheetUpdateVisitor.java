@@ -31,9 +31,9 @@ import org.teiid.language.Expression;
 import org.teiid.language.Literal;
 import org.teiid.language.SetClause;
 import org.teiid.language.Update;
-import org.teiid.translator.goole.api.SpreadsheetOperationException;
-import org.teiid.translator.goole.api.UpdateSet;
-import org.teiid.translator.goole.api.metadata.SpreadsheetInfo;
+import org.teiid.translator.google.api.SpreadsheetOperationException;
+import org.teiid.translator.google.api.UpdateSet;
+import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
 
 /**
  * Translates SQL UPDATE commands

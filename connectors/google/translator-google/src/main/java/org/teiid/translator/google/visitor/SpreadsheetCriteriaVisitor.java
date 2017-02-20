@@ -34,8 +34,8 @@ import org.teiid.language.Like;
 import org.teiid.language.Literal;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.translator.TypeFacility;
-import org.teiid.translator.goole.api.SpreadsheetOperationException;
-import org.teiid.translator.goole.api.metadata.SpreadsheetInfo;
+import org.teiid.translator.google.api.SpreadsheetOperationException;
+import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
 
 /**
  * Base visitor for criteria

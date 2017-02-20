@@ -29,9 +29,9 @@ import java.util.List;
 import junit.framework.Assert;
 
 import org.junit.Test;
-import org.teiid.translator.goole.api.result.PartialResultExecutor;
-import org.teiid.translator.goole.api.result.RowsResult;
-import org.teiid.translator.goole.api.result.SheetRow;
+import org.teiid.translator.google.api.result.PartialResultExecutor;
+import org.teiid.translator.google.api.result.RowsResult;
+import org.teiid.translator.google.api.result.SheetRow;
 
 
 /**

@@ -30,10 +30,10 @@ import org.teiid.metadata.Table;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
-import org.teiid.translator.goole.api.GoogleSpreadsheetConnection;
-import org.teiid.translator.goole.api.metadata.Column;
-import org.teiid.translator.goole.api.metadata.SpreadsheetInfo;
-import org.teiid.translator.goole.api.metadata.Worksheet;
+import org.teiid.translator.google.api.GoogleSpreadsheetConnection;
+import org.teiid.translator.google.api.metadata.Column;
+import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
+import org.teiid.translator.google.api.metadata.Worksheet;
 
 public class GoogleMetadataProcessor implements MetadataProcessor<GoogleSpreadsheetConnection>{
 	

@@ -31,9 +31,9 @@ import java.util.Map.Entry;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.adapter.google.GDataAPI;
 import org.teiid.resource.adapter.google.auth.AuthHeaderFactory;
-import org.teiid.translator.goole.api.SpreadsheetOperationException;
-import org.teiid.translator.goole.api.UpdateSet;
-import org.teiid.translator.goole.api.result.UpdateResult;
+import org.teiid.translator.google.api.SpreadsheetOperationException;
+import org.teiid.translator.google.api.UpdateSet;
+import org.teiid.translator.google.api.result.UpdateResult;
 
 import com.google.gdata.client.spreadsheet.FeedURLFactory;
 import com.google.gdata.client.spreadsheet.SpreadsheetQuery;

@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.translator.goole.api.metadata;
+package org.teiid.translator.google.api.metadata;
 
 /**
  * 

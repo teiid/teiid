@@ -20,27 +20,35 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.translator.goole.api.result;
-
-import java.util.List;
+package org.teiid.translator.google.api.metadata;
 
 
-/**
- * Executable query that will retrieve just specified portion of results (rows). 
- * 
- * For example to get rows starting at row 10 and retrieves 5 rows (included) use this interface:
- *   
- *   partialResultExecutor.getResultBatch(10,5) 
- * 
- * @author fnguyen
- */
-public interface PartialResultExecutor {
+public class Column {
+	private String alphaName;
+	private String label;
+	private SpreadsheetColumnType dataType = SpreadsheetColumnType.STRING;
+
+	public String getAlphaName() {
+		return alphaName;
+	}
+
+	public void setAlphaName(String alphaName) {
+		this.alphaName = alphaName;
+	}
 	
-	/**
-	 *  Returns part of the result.
-	 *  
-	 * @return null or empty list if no more results are in the batch. Maximum amount of sheet rows in the result
-	 * is amount
-	 */
-	List<SheetRow> getResultsBatch(int startIndex, int amount);
+	public String getLabel() {
+		return label;
+	}
+	
+	public void setLabel(String label) {
+		this.label = label;
+	}
+
+	public SpreadsheetColumnType getDataType() {
+		return dataType;
+	}
+
+	public void setDataType(SpreadsheetColumnType dataType) {
+		this.dataType = dataType;
+	}
 }

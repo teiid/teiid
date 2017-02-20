@@ -27,8 +27,8 @@ import org.junit.Test;
 import org.teiid.resource.adapter.google.auth.OAuth2HeaderFactory;
 import org.teiid.resource.adapter.google.dataprotocol.GoogleDataProtocolAPI;
 import org.teiid.resource.adapter.google.gdata.GDataClientLoginAPI;
-import org.teiid.translator.goole.api.result.RowsResult;
-import org.teiid.translator.goole.api.result.SheetRow;
+import org.teiid.translator.google.api.result.RowsResult;
+import org.teiid.translator.google.api.result.SheetRow;
 
 /**
  * Testing ClientLogin and OAuth2. We need to authenticate with both GData protocol and Google Visualization Protocol.

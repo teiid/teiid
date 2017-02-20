@@ -44,13 +44,13 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.adapter.google.GDataAPI;
 import org.teiid.resource.adapter.google.auth.AuthHeaderFactory;
-import org.teiid.translator.goole.api.SpreadsheetAuthException;
-import org.teiid.translator.goole.api.SpreadsheetOperationException;
-import org.teiid.translator.goole.api.metadata.Column;
-import org.teiid.translator.goole.api.metadata.SpreadsheetColumnType;
-import org.teiid.translator.goole.api.result.PartialResultExecutor;
-import org.teiid.translator.goole.api.result.RowsResult;
-import org.teiid.translator.goole.api.result.SheetRow;
+import org.teiid.translator.google.api.SpreadsheetAuthException;
+import org.teiid.translator.google.api.SpreadsheetOperationException;
+import org.teiid.translator.google.api.metadata.Column;
+import org.teiid.translator.google.api.metadata.SpreadsheetColumnType;
+import org.teiid.translator.google.api.result.PartialResultExecutor;
+import org.teiid.translator.google.api.result.RowsResult;
+import org.teiid.translator.google.api.result.SheetRow;
 
 /**
  * 

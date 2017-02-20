@@ -34,9 +34,9 @@ import org.teiid.language.Select;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.google.SpreadsheetExecutionFactory;
-import org.teiid.translator.goole.api.SpreadsheetOperationException;
-import org.teiid.translator.goole.api.metadata.SpreadsheetInfo;
-import org.teiid.translator.goole.api.metadata.Worksheet;
+import org.teiid.translator.google.api.SpreadsheetOperationException;
+import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
+import org.teiid.translator.google.api.metadata.Worksheet;
 /**
  * Translates SQL SELECT queries
  * 
