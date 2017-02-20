@@ -392,11 +392,12 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
 	                inst.process(this);
 	                this.evaluator.close();
 	            }
-	        } catch (RuntimeException e) {
-	        	throw e;
 	        } catch (TeiidComponentException e) {
 	        	throw e;
 	        } catch (Exception e) {
+                if (e instanceof RuntimeException) {
+                    LogManager.logWarning(org.teiid.logging.LogConstants.CTX_DQP, e, "Unexpected Error"); //$NON-NLS-1$
+                }
 	        	//processing or teiidsqlexception
 	        	boolean atomic = program.isAtomic();
 	        	while (program.getExceptionGroup() == null) {
