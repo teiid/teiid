@@ -35,6 +35,9 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
+import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.sql.lang.Command;
@@ -210,10 +213,7 @@ public class TestMaterialization {
         RelationalPlan plan = (RelationalPlan) TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(),
                 analysis,
                 new String[] {
-                        "SELECT g_0.e1 FROM MatTable.MatTable AS g_0 WHERE (SELECT mvstatus('MatView', 'ManagedMatView', "
-                        + "Valid, LoadState, null) FROM (SELECT 1) AS x LEFT OUTER JOIN MatSrc.Status "
-                        + "ON VDBName = 'X' AND VDBVersion = '0' AND SchemaName = 'MatView' "
-                        + "AND Name = 'ManagedMatView' LIMIT 2) = 1" }, //$NON-NLS-1$
+                        "SELECT g_0.e1 FROM MatTable.MatTable AS g_0 WHERE mvstatus('MatView', 'ManagedMatView') = 1" }, //$NON-NLS-1$
                 ComparisonMode.EXACT_COMMAND_STRING);
 
         Collection<Annotation> annotations = analysis.getAnnotations();
@@ -221,5 +221,56 @@ public class TestMaterialization {
         assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), Annotation.MATERIALIZED_VIEW); //$NON-NLS-1$
     }
     
+    @Test public void testManagedMaterializedTransformationJoin() throws Exception {
+        //make sure view removal is not inhibited
+        String userSql = "SELECT * FROM ManagedMatView left outer join MatTable1 on ManagedMatView.e1 = MatTable1.e1"; //$NON-NLS-1$
+        
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
+        AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
+        
+        Command command = helpGetCommand(userSql, metadata, null);
+        
+        TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(),
+                analysis,
+                new String[] {
+                        "SELECT g_1.e1, g_0.e1 FROM MatTable.MatTable AS g_0 LEFT OUTER JOIN MatTable.MatTable1 AS g_1 ON g_0.e1 = g_1.e1 WHERE mvstatus('MatView', 'ManagedMatView') = 1" }, //$NON-NLS-1$
+                ComparisonMode.EXACT_COMMAND_STRING);
+    }
+    
+    @Test public void testManagedMaterializedTransformationUnion() throws Exception {
+        //make sure view removal is not inhibited
+        String userSql = "SELECT * FROM ManagedMatView union all SELECT * FROM ManagedMatView"; //$NON-NLS-1$
+        
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
+        AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
+        
+        Command command = helpGetCommand(userSql, metadata, null);
+        BasicSourceCapabilities capabilities = getTypicalCapabilities();
+        capabilities.setCapabilitySupport(Capability.QUERY_UNION, true);
+        TestOptimizer.helpPlanCommand(command, metadata, new DefaultCapabilitiesFinder(capabilities),
+                analysis,
+                new String[] {
+                        "SELECT g_1.e1 AS c_0 FROM MatTable.MatTable AS g_1 WHERE mvstatus('MatView', 'ManagedMatView') = 1 UNION ALL SELECT g_0.e1 AS c_0 FROM MatTable.MatTable AS g_0" }, //$NON-NLS-1$
+                ComparisonMode.EXACT_COMMAND_STRING);
+    }
+    
+    @Test public void testManagedMaterializedTransformationSubquery() throws Exception {
+        String userSql = "SELECT e1, (select min(e1) from ManagedMatView x where x.e1 > MatTable1.e1) FROM MatTable1"; //$NON-NLS-1$
+        
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
+        AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
+        
+        Command command = helpGetCommand(userSql, metadata, null);
+        BasicSourceCapabilities capabilities = getTypicalCapabilities();
+        capabilities.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+        capabilities.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+        capabilities.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, true);
+        capabilities.setCapabilitySupport(Capability.QUERY_AGGREGATES_MIN, true);
+        TestOptimizer.helpPlanCommand(command, metadata, new DefaultCapabilitiesFinder(capabilities),
+                analysis,
+                new String[] {
+                        "SELECT g_0.e1, (SELECT MIN(g_1.e1) FROM MatTable.MatTable AS g_1 WHERE (mvstatus('MatView', 'ManagedMatView') = 1) AND (g_1.e1 > g_0.e1)) FROM MatTable.MatTable1 AS g_0" }, //$NON-NLS-1$
+                ComparisonMode.EXACT_COMMAND_STRING);
+    }
     
 }

@@ -313,7 +313,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
             	parentNode.setProperty(NodeConstants.Info.INLINE_VIEW, Boolean.TRUE);
             	accessNode.getGroups().clear();
             	accessNode.addGroups(parentNode.getGroups());
-                RulePlaceAccess.copyDependentHints(parentNode, accessNode);
+                RulePlaceAccess.copyProperties(parentNode, accessNode);
             	return performRaise(rootNode, accessNode, parentNode);
             }
             case NodeConstants.Types.TUPLE_LIMIT:
@@ -1042,8 +1042,8 @@ public final class RuleRaiseAccess implements OptimizerRule {
         accessNode.addGroups(other.getGroups());
         
         // Combine hints if necessary
-        RulePlaceAccess.copyDependentHints(other, accessNode);
-        RulePlaceAccess.copyDependentHints(joinNode, accessNode);
+        RulePlaceAccess.copyProperties(other, accessNode);
+        RulePlaceAccess.copyProperties(joinNode, accessNode);
         combineSourceHints(accessNode, other);
         
         if (other.hasBooleanProperty(Info.IS_MULTI_SOURCE)) {

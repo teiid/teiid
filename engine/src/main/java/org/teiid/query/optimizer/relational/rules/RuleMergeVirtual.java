@@ -277,7 +277,7 @@ public final class RuleMergeVirtual implements
                     newAp.addAll(ap);
                 }
             }
-            RulePlaceAccess.copyDependentHints(frame, newRoot);
+            RulePlaceAccess.copyProperties(frame, newRoot);
         }
     }
 

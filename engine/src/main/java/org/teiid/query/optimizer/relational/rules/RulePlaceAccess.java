@@ -134,7 +134,7 @@ public final class RulePlaceAccess implements
             PlanNode accessNode = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
             accessNode.addGroups(sourceNode.getGroups());
 
-            copyDependentHints(sourceNode, accessNode);
+            copyProperties(sourceNode, accessNode);
             SourceHint sourceHint = (SourceHint)sourceNode.removeProperty(Info.SOURCE_HINT);
             //TODO: trim the hint to only the sources possible under this model (typically 1, but could be more in
             //multi-source
@@ -190,12 +190,16 @@ public final class RulePlaceAccess implements
 
             apNode = accessNode;
             
-            // set hint as to if the model mandates a where clause
+            // set additional information
     		for (GroupSymbol group : accessNode.getGroups()) {
+    		    if (group.getCheckMatViewStatus() != null) {
+    		        LinkedHashSet<Object> viewsToCheck = new LinkedHashSet<Object>();
+    		        viewsToCheck.add(group.getCheckMatViewStatus());
+    		        accessNode.setProperty(Info.CHECK_MAT_VIEW, viewsToCheck);
+    		    }
                 Object modelID = metadata.getModelID(group.getMetadataID());
                 if (CapabilitiesUtil.requiresCriteria(modelID, metadata, finder)) {
                 	additionalRules[1] = true;
-                	break;
                 }
             }
         }
@@ -327,7 +331,7 @@ public final class RulePlaceAccess implements
         return newSymbol;
     }
 
-    static void copyDependentHints(PlanNode node,
+    static void copyProperties(PlanNode node,
                                    PlanNode copyTo) {
         // Copy the make dependent hint if necessary
         Object hint = node.getProperty(NodeConstants.Info.MAKE_DEP);
@@ -341,6 +345,15 @@ public final class RulePlaceAccess implements
         hint = node.getProperty(NodeConstants.Info.MAKE_IND);
         if (hint != null) {
             copyTo.setProperty(NodeConstants.Info.MAKE_IND, hint);
+        }
+        Set<Object> toCheck = (Set<Object>) node.getProperty(NodeConstants.Info.CHECK_MAT_VIEW);
+        if (toCheck != null) {
+            Set<Object> existing = (Set<Object>) copyTo.getProperty(NodeConstants.Info.CHECK_MAT_VIEW);
+            if (existing != null) {
+                existing.addAll(toCheck);
+            } else {
+                copyTo.setProperty(NodeConstants.Info.CHECK_MAT_VIEW, new LinkedHashSet<Object>(toCheck));
+            }
         }
     }
 
