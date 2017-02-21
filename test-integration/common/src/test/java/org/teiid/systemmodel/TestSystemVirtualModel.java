@@ -44,6 +44,7 @@ import org.junit.Test;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.client.util.ResultsFuture;
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
 import org.teiid.jdbc.FakeServer;
@@ -271,6 +272,7 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 	
 	@Test public void testFunctionParameters() throws Exception {
 		checkResult("testFunctionParams", "select * from FunctionParams"); //$NON-NLS-1$ //$NON-NLS-2$
+		assertFalse(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("TestSystemVirtualModel/testFunctionParams.expected")).contains("Missing message"));
 	}
 	
 	@Test public void testTriggers() throws Exception {
