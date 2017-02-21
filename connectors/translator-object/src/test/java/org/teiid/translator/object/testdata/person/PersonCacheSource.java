@@ -62,9 +62,10 @@ public class PersonCacheSource extends HashMap <Object, Object> {
 		Map <Object, Object> stageCache = new PersonCacheSource();
 		Map <Object, Object> aliasCache = new HashMap<Object,Object>(3);
 		
-		proxy.initializeAliasCache(aliasCache);		
+//		proxy.initializeAliasCache(aliasCache);		
 
 		ObjectConnection toc = PersonObjectConnection.createConnection(primaryCache, stageCache, aliasCache, proxy );
+		
 		return toc;
 
 	}

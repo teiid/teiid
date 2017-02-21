@@ -24,7 +24,6 @@ package org.teiid.resource.adapter.infinispan.dsl;
 import static org.teiid.language.visitor.SQLStringVisitor.getRecordName;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -102,15 +101,22 @@ public final class DSLSearch implements SearchType  {
 	}
 	
 	public List<Object> getAll() throws TranslatorException  {	
-		QueryBuilder qb = getQueryBuilder(conn);
 		
-		Query query = qb.build();
-		List<Object> results = query.list();
-		if (results == null) {
-               return Collections.emptyList();
+		try {
+			QueryBuilder qb = getQueryBuilder(conn);
+			
+			Query query = qb.build();
+			List<Object> results = query.list();
+			if (results == null) {
+	               return Collections.emptyList();
+			}
+
+			return results;
+
+		} finally {
+			conn = null;
 		}
 
-		return results;
 	}
 	
 	
@@ -278,7 +284,7 @@ public final class DSLSearch implements SearchType  {
 	}
 
 	@SuppressWarnings("rawtypes")
-	public static FilterConditionContext visit(Comparison obj, QueryBuilder queryBuilder, FilterConditionBeginContext fcbc) throws TranslatorException {
+	private static FilterConditionContext visit(Comparison obj, QueryBuilder queryBuilder, FilterConditionBeginContext fcbc) throws TranslatorException {
 
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
 				"Parsing Comparison criteria."); //$NON-NLS-1$
@@ -362,7 +368,7 @@ public final class DSLSearch implements SearchType  {
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static FilterConditionContext visit(In obj, QueryBuilder queryBuilder, FilterConditionBeginContext fcbc) throws TranslatorException {
+	private static FilterConditionContext visit(In obj, QueryBuilder queryBuilder, FilterConditionBeginContext fcbc) throws TranslatorException {
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Parsing IN criteria."); //$NON-NLS-1$
 
 		Expression lhs = obj.getLeftExpression();
@@ -405,7 +411,7 @@ public final class DSLSearch implements SearchType  {
 	}
 
 	@SuppressWarnings("rawtypes")
-	public static FilterConditionContext visit(Like obj, QueryBuilder queryBuilder, FilterConditionBeginContext fcbc) throws TranslatorException {
+	private static FilterConditionContext visit(Like obj, QueryBuilder queryBuilder, FilterConditionBeginContext fcbc) throws TranslatorException {
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
 				"Parsing LIKE criteria."); //$NON-NLS-1$
 
@@ -445,7 +451,7 @@ public final class DSLSearch implements SearchType  {
 	}
 	
 	@SuppressWarnings("rawtypes")
-	public static FilterConditionContext visit(IsNull obj, QueryBuilder queryBuilder, FilterConditionBeginContext fcbc)  {
+	private static FilterConditionContext visit(IsNull obj, QueryBuilder queryBuilder, FilterConditionBeginContext fcbc)  {
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
 				"Parsing IsNull criteria."); //$NON-NLS-1$
 

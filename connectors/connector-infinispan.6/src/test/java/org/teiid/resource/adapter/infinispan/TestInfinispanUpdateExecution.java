@@ -40,7 +40,6 @@ public class TestInfinispanUpdateExecution {
 
 		factory.setConfigurationFileNameForLocalCache("./src/test/resources/infinispan_persistent_config.xml");
 		factory.setCacheTypeMap(InfinispanTestHelper.TRADE_CACHE_NAME + ":" + "org.teiid.translator.object.testdata.annotated.Trade;longValue:long");
-
 		
 		TRANS_FACTORY = new InfinispanCacheExecutionFactory();
 		TRANS_FACTORY.start();

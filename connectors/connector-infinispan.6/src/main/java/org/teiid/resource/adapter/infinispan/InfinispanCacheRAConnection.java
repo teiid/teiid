@@ -80,7 +80,11 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	 */
 	@Override
 	public String getCacheName()  {
-		return cacheWrapper.getCacheName();
+		try {			
+			return cacheWrapper.getConfig().getCacheNameProxy().getPrimaryCacheAliasName(this);
+		} catch (TranslatorException te) {
+			throw new RuntimeException(te);
+		}
 	}
 
 	/**
