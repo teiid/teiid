@@ -122,7 +122,7 @@ public class ConvertVDB {
                 VDB vdb = admin.getVDBs().iterator().next();
                 String format = System.getProperty("format", "DDL");
                 return admin.getSchema(vdb.getName(), vdb.getVersion(), null, null, null, ExportFormat.valueOf(format));
-            } else if (f.getName().toLowerCase().endsWith(".xml")) {
+            } else if (f.getName().toLowerCase().endsWith("-vdb.xml")) {
                 return es.convertVDB(new FileInputStream(f));
             } 
         } finally {
@@ -216,6 +216,11 @@ public class ConvertVDB {
                }
                replace += ");\n";
             return replace;
+        }
+
+        @Override
+        protected boolean allowOverrideTranslators() {
+            return true;
         }
     };
     
