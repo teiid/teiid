@@ -56,7 +56,14 @@ public class ObjectDirectExecution extends ObjectBaseExecution implements Proced
 		String sourceSQL = (String) this.arguments.get(0).getArgumentValue().getValue();
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Source-specific command: ", sourceSQL); //$NON-NLS-1$
 
-    	omlc.handleDDL(sourceSQL, this.connection);
+        try {
+        	omlc.handleDDL(sourceSQL, this.connection);
+		} catch (RuntimeException re) {
+			// Cache containers, like JDG, can throw runtime exception when there are problems accessing the data in the cache, even though the 
+			// container and cache are available.  So the translator needs to re-throw the exception so that Teiid can respond accordingly.
+			this.connection.forceCleanUp();
+			throw new TranslatorException(re);
+		}
     	updateCount = 1;
     }
 

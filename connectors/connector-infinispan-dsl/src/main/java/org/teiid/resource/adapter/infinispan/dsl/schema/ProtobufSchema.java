@@ -36,6 +36,7 @@ import javax.resource.spi.InvalidPropertyException;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.protostream.BaseMarshaller;
 import org.infinispan.protostream.FileDescriptorSource;
+import org.infinispan.protostream.SerializationContext;
 import org.infinispan.protostream.descriptors.Descriptor;
 import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
 import org.teiid.core.TeiidException;
@@ -87,7 +88,9 @@ public class ProtobufSchema  implements InfinispanSchemaDefinition {
 			fds.addProtoFile("protofile",
 					config.getRAClassLoader().getResourceAsStream(protoBufResource));
 
-			conn.getContext().registerProtoFiles(fds);
+			SerializationContext sc = conn.getContext();
+
+			sc.registerProtoFiles(fds);
 
 			@SuppressWarnings("unchecked")
 			RemoteCache<String, String> metadataCache = conn.
@@ -115,7 +118,7 @@ public class ProtobufSchema  implements InfinispanSchemaDefinition {
 
 					config.getClassRegistry().registerClass(ci);
 					
-					conn.getContext().registerMarshaller(m);
+					sc.registerMarshaller(m);
 		
 				} catch (TeiidException e) {
 					// TODO Auto-generated catch block

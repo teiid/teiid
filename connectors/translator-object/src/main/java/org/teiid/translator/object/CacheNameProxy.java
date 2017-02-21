@@ -101,16 +101,20 @@ public class CacheNameProxy {
 	}
 
 	public synchronized String getCacheName(String cacheNameKey, ObjectConnection conn) throws TranslatorException{
-		if (this.isMaterialized()) {
-			Map<Object, Object> m = getAliasCache(conn);			
-			String k = (String) m.get(cacheNameKey);
+		if (this.isMaterialized()) {		
+			String k = getCacheNameForKey(cacheNameKey, conn);
 			// add a null check in case JDG went down and the alias cache was reset
 			// this was an issue with openshift and scaling up and down
 			if (k != null) return k;
 			ensureCacheNames(conn);
-			return (String) m.get(cacheNameKey);
+			return getCacheNameForKey(cacheNameKey, conn);
 		}
 		return primaryCacheNameKey;
+	}
+	
+	private String getCacheNameForKey(String cacheNameKey, ObjectConnection conn) throws TranslatorException {
+		Map<Object, Object> m = getAliasCache(conn);			
+		return (String) m.get(cacheNameKey);
 	}
 	
 	public String getAliasCacheName() {
@@ -136,6 +140,19 @@ public class CacheNameProxy {
 		Object pcn = m.get(primaryCacheNameKey);
 		Object scn = m.get(stageCacheNameKey);
 		
+		if (pcn != null && scn != null) {
+			if (pcn.equals(scn)) {
+				
+				if (scn.equals(stageCacheNameKey)) {
+					m.put(stageCacheNameKey, primaryCacheNameKey);
+				} else {
+					m.put(stageCacheNameKey, stageCacheNameKey);
+				}
+			}
+			
+			return;
+		}
+		
 		if (pcn == null) {
 			m.put(primaryCacheNameKey, primaryCacheNameKey);
 			m.put(stageCacheNameKey, stageCacheNameKey);
@@ -149,14 +166,7 @@ public class CacheNameProxy {
 				m.put(stageCacheNameKey, primaryCacheNameKey);
 			}
 		
-		} else if (pcn.equals(scn)) {
-		
-			if (scn.equals(stageCacheNameKey)) {
-				m.put(stageCacheNameKey, primaryCacheNameKey);
-			} else {
-				m.put(stageCacheNameKey, stageCacheNameKey);
-			}
-		}
+		} 
 
 	}
 	

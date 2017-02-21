@@ -50,7 +50,6 @@ import org.infinispan.client.hotrod.marshall.ProtoStreamMarshaller;
 import org.infinispan.protostream.SerializationContext;
 import org.infinispan.protostream.descriptors.Descriptor;
 import org.infinispan.query.dsl.QueryFactory;
-import org.teiid.core.util.Assertion;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.ReflectionHelper;
 import org.teiid.logging.LogConstants;
@@ -76,8 +75,6 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	
 	private RemoteCacheManager cacheContainer = null;
 	
-	private SerializationContext context = null;
-	
 	private boolean adminUsage = false;
 	
 	private boolean connectionDead = false;
@@ -91,7 +88,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 
 	@Override
 	public Version getVersion() throws TranslatorException {
-		RemoteCache rc = this.getCache(config.getCacheNameProxy().getPrimaryCacheKey());
+		RemoteCache rc = this.getCache();
 		return Version.getVersion(rc.getProtocolVersion());
 	}
 	
@@ -102,7 +99,6 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	@Override
     public void close() {
 		config = null;
-		context = null;
 		if (cacheContainer != null)
 			cacheContainer.stop();
 		
@@ -114,13 +110,21 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 		// if the connection is not alive or
 		// if the remotecache connection is based on user auth, 
 		// then the container will need to be recreated on next use
-//		if ((config.getAuthSASLMechanism() != null) || !isAlive() ) {
 		if ( !isAlive() ) {
 			if (cacheContainer != null) {
 				cacheContainer.stop();
 			}
 			cacheContainer = null;
 		}
+	}
+	
+	@Override
+	public void forceCleanUp() {
+		if (cacheContainer != null) {
+			cacheContainer.stop();
+		}
+		cacheContainer = null;
+		
 	}
 
 	/** 
@@ -162,13 +166,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	@SuppressWarnings({ "rawtypes"})
 	@Override
 	public RemoteCache getCache() throws TranslatorException {
-		try {
-			return getTargetCache();
-		} catch (TranslatorException te) {
-			throw te;
-		} catch (RuntimeException re) {
-			throw new TranslatorException(re.getCause());
-		}
+		return getTargetCache();
 	}
 
 	/**
@@ -233,18 +231,16 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 		getCache().replace(key, value);
 	}
 	private RemoteCache getTargetCache() throws TranslatorException {
-		final String cacheName = getTargetCacheName();
-		
-	    if (cacheName == null) {
-	       Assertion.isNotNull(cacheName, "Program Error: Cache Name is null");
-	    }
-
-	    return getCacheContainer().getCache(cacheName);
+	    return getCacheContainer().getCache(getTargetCacheName());
 	}
 
 	private String getTargetCacheName() throws TranslatorException {
 		if (getDDLHandler().isStagingTarget()) {
-			return config.getCacheNameProxy().getStageCacheAliasName(this);
+			String cn = config.getCacheNameProxy().getStageCacheAliasName(this);
+			if (cn == null) {
+				throw new TranslatorException("Program error, aliasCache not initialized with cache names");
+			}
+			return cn;
 		}
 		return config.getCacheNameProxy().getPrimaryCacheAliasName(this);
 	}
@@ -371,7 +367,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 		return this.cacheContainer;				
 	}
 	
-	protected synchronized void createCacheContainer() throws ResourceException {
+	private void createCacheContainer() throws ResourceException {
 
 		RemoteCacheManager cc = null;
 
@@ -397,25 +393,20 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 			}
 
 			this.cacheContainer = cc;
-			
-			this.context = ProtoStreamMarshaller.getSerializationContext(this.cacheContainer);
+
+			config.getCacheSchemaConfigurator().registerSchema(config, this);
 
 			// if configured for materialization, initialize the cacheNameProxy
 			String aliasName = config.getCacheNameProxy().getAliasCacheName();
 			if (aliasName != null) {
-				RemoteCache aliasCache = cc.getCache(aliasName);
+				RemoteCache aliasCache = this.cacheContainer.getCache(aliasName);
 				if (aliasCache == null) {
 					throw new ResourceException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25010,
 							new Object[] { aliasName }));
 				}
 			}
-
-			config.getCacheSchemaConfigurator().registerSchema(config, this);
-
-			this.cacheContainer.start();
 			
-			connectionDead = false;
-			
+			connectionDead = false;			
 			
 		} finally {
 			Thread.currentThread().setContextClassLoader(lcl);
@@ -540,6 +531,8 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 
 			remoteCacheManager = (RemoteCacheManager) ReflectionHelper.create("org.infinispan.client.hotrod.RemoteCacheManager", ctors, config.getRAClassLoader());
 
+			remoteCacheManager.start();
+
 		} catch (Exception err) {
 			throw new ResourceException(err);
 		}
@@ -548,8 +541,8 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 
 	}
 	
-	public SerializationContext getContext() {
-		return context;
+	public SerializationContext getContext() throws TranslatorException {
+		return ProtoStreamMarshaller.getSerializationContext(getCacheContainer());
 	}
 	
 }

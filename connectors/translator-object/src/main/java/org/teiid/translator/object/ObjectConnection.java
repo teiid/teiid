@@ -126,6 +126,11 @@ public interface ObjectConnection {
 	 */
 	public void cleanUp();
 	
+	/**
+	 * Called to force the cleanup of the connection when its know its bad.
+	 */
+	public void forceCleanUp();
+	
 	
 	/**
 	 * Return the ClassRegistry that contains which classes and their methods.

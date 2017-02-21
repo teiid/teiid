@@ -86,6 +86,11 @@ public class SimpleMapCacheConnection implements ObjectConnection {
 		mapCaches.clear();
 	}
 
+	@Override
+	public void forceCleanUp() {
+		mapCaches.clear();
+	}
+
 	/**
 	 * @return registry
 	 */
