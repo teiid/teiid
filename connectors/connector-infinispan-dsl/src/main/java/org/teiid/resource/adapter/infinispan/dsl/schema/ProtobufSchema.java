@@ -26,7 +26,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringWriter;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,11 +36,15 @@ import javax.resource.spi.InvalidPropertyException;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.protostream.BaseMarshaller;
 import org.infinispan.protostream.FileDescriptorSource;
+import org.infinispan.protostream.SerializationContext;
 import org.infinispan.protostream.descriptors.Descriptor;
 import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
+import org.teiid.core.TeiidException;
+import org.teiid.core.util.ReflectionHelper;
 import org.teiid.core.util.StringUtil;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.resource.adapter.infinispan.dsl.InfinispanConnectionImpl;
 import org.teiid.resource.adapter.infinispan.dsl.InfinispanManagedConnectionFactory;
 import org.teiid.resource.adapter.infinispan.dsl.InfinispanSchemaDefinition;
 import org.teiid.translator.TranslatorException;
@@ -55,14 +58,14 @@ import org.teiid.translator.object.ClassRegistry;
  * @author vhalbert
  */
 public class ProtobufSchema  implements InfinispanSchemaDefinition {
-	@SuppressWarnings("rawtypes")
-	protected Map<String, BaseMarshaller> messageMarshallerMap = null;
+
+	protected Map<String, String> cmap = null;
 	
 	@Override
 	public void initialize(InfinispanManagedConnectionFactory config, ClassRegistry methodUtil) throws ResourceException {
 		List<String> marshallers = StringUtil.getTokens(config.getMessageMarshallers(), ","); //$NON-NLS-1$
 		
-		Map<String, BaseMarshaller> mmp = new HashMap<String, BaseMarshaller>(marshallers.size());
+		cmap = new HashMap<String, String>(marshallers.size());
 		
 		for (String mm : marshallers) {
 			
@@ -70,44 +73,32 @@ public class ProtobufSchema  implements InfinispanSchemaDefinition {
 			if (marshallMap.size() != 2) {
 				throw new InvalidPropertyException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25031, new Object[] {mm}));
 			}
-			final String clzName = marshallMap.get(0);
-			final String m = marshallMap.get(1);
-
-			try {
-				Object bmi = (config.loadClass(m)).newInstance();
-				Class ci = config.loadClass(clzName);
-
-				mmp.put(clzName, (BaseMarshaller) bmi); 	
-
-				methodUtil.registerClass(ci);
-		
-			} catch (InstantiationException e) {
-				throw new ResourceException(e);
-			} catch (IllegalAccessException e) {	
-				throw new ResourceException(e);
-			} 
+			
+			cmap.put(marshallMap.get(0), marshallMap.get(1));
 		
 		}
-		
-		messageMarshallerMap=Collections.unmodifiableMap(mmp);
 	}
 
 	@Override
-	public void registerSchema(InfinispanManagedConnectionFactory config)  throws ResourceException {
+	public void registerSchema(InfinispanManagedConnectionFactory config, InfinispanConnectionImpl conn)  throws ResourceException {
 		
 		String protoBufResource = config.getProtobufDefinitionFile();
 		try {
 			FileDescriptorSource fds = new FileDescriptorSource();
 			fds.addProtoFile("protofile",
-					config.getClassLoader().getResourceAsStream(protoBufResource));
+					config.getRAClassLoader().getResourceAsStream(protoBufResource));
 
-			config.getContext().registerProtoFiles(fds);
+			SerializationContext sc = conn.getContext();
+
+			sc.registerProtoFiles(fds);
 
 			@SuppressWarnings("unchecked")
-			RemoteCache<String, String> metadataCache = config.
-					getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME);
+			RemoteCache<String, String> metadataCache = conn.
+						getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME);
+
+
 			metadataCache.put(protoBufResource,
-					readResource(protoBufResource, config.getClassLoader()));
+					readResource(protoBufResource, config.getRAClassLoader()));
 
 			String errors = metadataCache
 					.get(ProtobufMetadataManagerConstants.ERRORS_KEY_SUFFIX);
@@ -116,18 +107,32 @@ public class ProtobufSchema  implements InfinispanSchemaDefinition {
 						"Error registering Protobuf schema files:\n" + errors);
 			}
 
-			for (String clzName : messageMarshallerMap.keySet()) {
-				BaseMarshaller m = messageMarshallerMap.get(clzName);
-				config.getContext().registerMarshaller(m);
+			for (String clzName : cmap.keySet()) {
+				String marshallClass = cmap.get(clzName);
+							
+				try {
+					
+					BaseMarshaller m = (BaseMarshaller) ReflectionHelper.create(marshallClass, null, config.getRAClassLoader());
+
+					Class ci = config.loadClass(clzName);
+
+					config.getClassRegistry().registerClass(ci);
+					
+					sc.registerMarshaller(m);
+		
+				} catch (TeiidException e) {
+					// TODO Auto-generated catch block
+					throw new ResourceException(e);
+				} 				
+					
 			}
 			
 			LogManager.logTrace(LogConstants.CTX_CONNECTOR,
 					"=== Registered marshalling with RemoteCacheManager ==="); //$NON-NLS-1$
-
+		} catch (TranslatorException e) {
+			throw new ResourceException(e);
 		} catch (IOException e) {
-			throw new ResourceException(
-					InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25032),
-					e);
+			throw new ResourceException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25032), e);
 		}
 	}
 	
@@ -150,11 +155,11 @@ public class ProtobufSchema  implements InfinispanSchemaDefinition {
 	
 
 	@Override
-	public Descriptor getDecriptor(InfinispanManagedConnectionFactory config, Class<?> clz) throws TranslatorException {
-		BaseMarshaller m = config.getContext().getMarshaller(clz);
-		Descriptor d = config.getContext().getMessageDescriptor(m.getTypeName());
+	public Descriptor getDecriptor(InfinispanManagedConnectionFactory config, InfinispanConnectionImpl conn, Class<?> clz) throws TranslatorException {
+		BaseMarshaller m = conn.getContext().getMarshaller(clz);
+		Descriptor d = conn.getContext().getMessageDescriptor(m.getTypeName());
 		if (d == null) {
-			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25028,  m.getTypeName(), config.getCacheName()));			
+			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25028,  m.getTypeName(), config.getCacheNameProxy().getPrimaryCacheKey()));			
 		}
 		return d;
 	}

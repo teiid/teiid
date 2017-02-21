@@ -35,7 +35,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.client.util.ResultsFuture.CompletionListener;
@@ -210,12 +212,22 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 	private void runJob(final CompositeVDB vdb, final Table table, final long ttl) {
 		String command = "execute SYSADMIN.loadMatView('"+StringUtil.replaceAll(table.getParent().getName(), "'", "''")+"','"+StringUtil.replaceAll(table.getName(), "'", "''")+"')"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
 		try {
-			executeAsynchQuery(vdb.getVDB(), command).addCompletionListener(new CompletionListener() {
+		    final AtomicInteger procReturn = new AtomicInteger();
+			executeAsynchQuery(vdb.getVDB(), command, new DQPCore.ResultsListener() {
+                @Override
+                public void onResults(List<String> columns, List<? extends List<?>> results) throws Exception {
+                    procReturn.set((Integer)results.get(0).get(0));
+                }}).addCompletionListener(new CompletionListener() {
 				@Override
 				public void onCompletion(ResultsFuture future) {
 					try {
 						future.get();
-						scheduleJob(vdb, table, ttl, ttl);
+					    if (procReturn.get() >= 0) {
+					        scheduleJob(vdb, table, ttl, ttl);
+					    } else {
+					        // when in error re-schedule in 1 min or less
+					        scheduleJob(vdb, table, ttl, Math.min(ttl/4, 60000));
+					    }
 					} catch (InterruptedException e) {
 					} catch (ExecutionException e) {
 						LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
@@ -254,6 +266,19 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 			vdb.removeTask(future);
 			String query = "execute SYSADMIN.matViewStatus('"+StringUtil.replaceAll(table.getParent().getName(), "'", "''")+"', '"+StringUtil.replaceAll(table.getName(), "'", "''")+"')"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ 
 			
+			// in rare situations when VDB is force re-deployed, and is results in invalid
+			// deployment, due to nature of VDB deployment even previous VDB is removed. 
+			if (vdb.getVDB().getStatus() != Status.ACTIVE) {
+			    return;
+			}
+			
+			// when source or target data source(s) are down, there is no reason
+			// to run the materialization jobs. schedule for later time
+            if (!vdb.getVDB().isValid()) {
+                scheduleJob(vdb, table, ttl, Math.min(ttl/4, 60000)); // re-schedule the same job in one minute
+                return;
+            }			
+			
 			List<Map<String, String>> result = null;
 			try {
 				result = executeQuery(vdb.getVDB(), query);
@@ -286,6 +311,13 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 			else if (loadstate.equalsIgnoreCase("loading")) { //$NON-NLS-1$
 				// if the process is already loading do nothing
 				next = ttl - elapsed;
+                if (elapsed >= ttl) {
+                    next = Math.min(ttl / 4, 60000);
+                }
+                
+                if (elapsed > ttl*1.5) {
+                   resetPendingJob(vdb.getVDB(), table);
+               }                
 			}
 			else if (loadstate.equalsIgnoreCase("loaded")) { //$NON-NLS-1$
 				if (elapsed >= ttl) {
@@ -295,7 +327,7 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 				next = ttl - elapsed;	
 			}
 			else if (loadstate.equalsIgnoreCase("failed_load")) { //$NON-NLS-1$
-				if (elapsed > ttl/4 || elapsed > 60000) { // exceeds 1/4 of cached time or 5 mins
+				if (elapsed > ttl/4 || elapsed > 60000) { // exceeds 1/4 of cached time or 1 mins
 					runJob(vdb, table, ttl);
 					return;
 				}
@@ -305,13 +337,26 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 		}
 	}	
 	
+    public int resetPendingJob(final VDBMetaData vdb, final Table table) {
+        try {
+            String statusTable = table.getProperty(MaterializationMetadataRepository.MATVIEW_STATUS_TABLE, false);
+            String updateStatusTable = "UPDATE " + statusTable + " SET LOADSTATE='needs_loading' "
+                    + "WHERE LOADSTATE = 'LOADING' AND NAME = '" + table.getName() + "'";
+            List<Map<String, String>> results = executeQuery(vdb, updateStatusTable);
+            String count = results.get(0).get("update-count");
+            return Integer.parseInt(count);
+        } catch (SQLException e) {
+            LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
+        }
+        return 0;
+    }
+	
 	public ResultsFuture<?> executeAsynchQuery(VDBMetaData vdb, String command) throws SQLException {
 		try {
 			return DQPCore.executeQuery(command, vdb, "embedded-async", "internal", -1, getDQP(), new DQPCore.ResultsListener() { //$NON-NLS-1$ //$NON-NLS-2$
 				@Override
 				public void onResults(List<String> columns,
 						List<? extends List<?>> results) throws Exception {
-					
 				}
 			});
 		} catch (Throwable e) {
@@ -319,6 +364,13 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 		}
 	}
 	
+    public ResultsFuture<?> executeAsynchQuery(VDBMetaData vdb, String command, DQPCore.ResultsListener listener) throws SQLException {
+        try {
+            return DQPCore.executeQuery(command, vdb, "embedded-async", "internal", -1, getDQP(), listener); //$NON-NLS-1$ //$NON-NLS-2$
+        } catch (Throwable e) {
+            throw new SQLException(e);
+        }
+    }	
     public List<Map<String, String>> executeQuery(VDBMetaData vdb, String command) throws SQLException {
         final List<Map<String, String>> rows = new ArrayList<Map<String,String>>();
         try {

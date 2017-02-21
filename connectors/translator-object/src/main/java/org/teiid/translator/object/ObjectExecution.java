@@ -268,6 +268,11 @@ public class ObjectExecution extends ObjectBaseExecution implements ResultSetExe
 					"ObjectExecution: number of returned objects is :", objResults.size() ); //$NON-NLS-1$
 			
 			this.objResultsItr = objResults.iterator();
+		} catch (RuntimeException re) {
+			// Cache containers, like JDG, can throw runtime exception when there are problems accessing the data in the cache, even though the 
+			// container and cache are available.  So translator needs to re-throw the exception so that Teiid can respond accordingly.
+			this.connection.forceCleanUp();
+			throw new TranslatorException(re);
 		} finally {
 			connection.getDDLHandler().setStagingTarget(false);
 		}
