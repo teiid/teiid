@@ -783,10 +783,15 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		deployVDB(metadata, resources);
 	}
 	
+	protected boolean allowOverrideTranslators() {
+	    return false;
+	}
+	
 	protected void deployVDB(VDBMetaData vdb, VDBResources resources) 
 			throws ConnectorManagerException, VirtualDatabaseException, TranslatorException {
 		checkStarted();
-		if (!vdb.getOverrideTranslators().isEmpty()) {
+		
+		if (!vdb.getOverrideTranslators().isEmpty() && !allowOverrideTranslators()) {
 			throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40106, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40106, vdb.getName()));
 		}
 		
