@@ -67,8 +67,6 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 	// Passed to constructor
 	private Command command;
 	private Class<?> clz =  null;
-	
-//	private String tablename = null;
 
 	private int[] result;
 
@@ -145,6 +143,11 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 			} else {
 				throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21004, new Object[] {command.getClass().getName()}));
 			}
+		} catch (RuntimeException re) {
+			// Cache containers, like JDG, can throw runtime exception when there are problems accessing the data in the cache, even though the 
+			// container and cache are available.  So translator needs to re-throw the exception so that Teiid can respond accordingly.
+			this.connection.forceCleanUp();
+			throw new TranslatorException(re);
 		} finally {
 			this.connection.getDDLHandler().setStagingTarget(false);
 		}
@@ -377,14 +380,7 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 				Object v = cs.eval(sc);
 
 				v = convertKeyValue(v, keyCol);
-				Object removed = connection.remove(v);
-				if (removed == null) {
-					if (connection.get(v) == null) {
-						LogManager.logWarning(LogConstants.CTX_CONNECTOR, ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21013, new Object[] {visitor.getTableName(), v}));
-					} 
-					throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21012, new Object[] {visitor.getTableName(), v}));
-						
-				}
+				connection.remove(v);
 				++cnt;
 
 			}
@@ -619,7 +615,8 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 					PropertiesUtils.setBeanProperty(entity, nameInSource, value);
 				}
 
-				
+			} catch (TranslatorException e) {
+				throw e;
 			} catch (Exception e) {
 				throw new TranslatorException(e);
 			}

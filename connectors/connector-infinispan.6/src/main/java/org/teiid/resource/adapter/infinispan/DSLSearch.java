@@ -22,7 +22,6 @@
 package org.teiid.resource.adapter.infinispan;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -77,10 +76,10 @@ import org.teiid.translator.object.SearchType;
  */
 public final class DSLSearch implements SearchType   {
 
-	private ObjectConnection conn;
+	private InfinispanCacheConnection conn;
 	
 	
-	public DSLSearch(ObjectConnection connection) {
+	public DSLSearch(InfinispanCacheConnection connection) {
 		this.conn = connection;
 	}
 	

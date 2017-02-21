@@ -80,7 +80,11 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	 */
 	@Override
 	public String getCacheName()  {
-		return cacheWrapper.getCacheName();
+		try {			
+			return cacheWrapper.getConfig().getCacheNameProxy().getPrimaryCacheAliasName(this);
+		} catch (TranslatorException te) {
+			throw new RuntimeException(te);
+		}
 	}
 
 	/**
@@ -222,6 +226,16 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	public boolean configuredForMaterialization() {
 		return false;
 	}
+
+	@Override
+	public void forceCleanUp() {
+		this.cacheWrapper.forceCleanUp();
+	}
 	
+	@Override
+	public void cleanUp() {
+		this.cacheWrapper.cleanUp();
+		
+	}
 
 }

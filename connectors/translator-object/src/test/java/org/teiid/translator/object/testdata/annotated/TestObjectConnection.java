@@ -29,4 +29,13 @@ public class TestObjectConnection extends SimpleMapCacheConnection {
 
 	}	
 	
+	public TestObjectConnection(Map<Object,Object> primary, Map<Object,Object> staging, Map<Object,Object> alias, ClassRegistry registry, CacheNameProxy proxy) {
+		super(primary, staging, alias, registry, proxy);
+		
+		setPkField("tradeId");
+		setCacheKeyClassType(java.lang.Integer.class);
+		this.setCacheClassType(Trade.class);
+
+	}	
+	
 }

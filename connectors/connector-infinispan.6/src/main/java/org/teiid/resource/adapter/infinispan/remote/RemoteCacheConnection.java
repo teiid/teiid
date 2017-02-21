@@ -188,6 +188,10 @@ public class RemoteCacheConnection<K,V>  extends InfinispanCacheWrapper<K,V> {
 		config = null;
 	}
 
+	@Override
+	public void forceCleanUp() {
+		cleanUp();
+	}
 	/**
 	 * {@inheritDoc}
 	 *

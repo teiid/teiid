@@ -23,6 +23,9 @@ package org.teiid.resource.adapter.infinispan;
 
 import javax.resource.ResourceException;
 
+import org.infinispan.client.hotrod.RemoteCache;
+import org.teiid.core.util.Assertion;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.infinispan.cache.InfinispanCacheConnection;
 import org.teiid.translator.object.ClassRegistry;
 import org.teiid.translator.object.DDLHandler;
@@ -52,10 +55,6 @@ public abstract class InfinispanCacheWrapper<K,V> implements InfinispanCacheConn
 	 * @param cacheManager object
 	 */
 	public abstract void init(InfinispanManagedConnectionFactory config, Object cacheManager);
-
-	protected String getTargetCacheName() {
-		return getConfig().getCacheName();
- 	}
 	
 	/**
 	 * {@inheritDoc}
@@ -84,7 +83,29 @@ public abstract class InfinispanCacheWrapper<K,V> implements InfinispanCacheConn
 	 */
 	@Override
 	public String getCacheName() {
-		return getConfig().getCacheName();
+		return getTargetCacheName();
+	}
+	
+//	private RemoteCache getTargetCache() throws TranslatorException {
+//		final String cacheName = getTargetCacheName();
+//		
+//	    if (cacheName == null) {
+//	       Assertion.isNotNull(cacheName, "Program Error: Cache Name is null");
+//	    }
+//
+//	    return getCacheContainer().getCache(cacheName);
+//	}
+	
+
+	protected String getTargetCacheName() {
+		try {
+			if (getDDLHandler().isStagingTarget()) {
+				return getConfig().getCacheNameProxy().getStageCacheAliasName(this);
+			}
+			return getConfig().getCacheNameProxy().getPrimaryCacheAliasName(this);
+		} catch (TranslatorException te) {
+			throw new RuntimeException(te);
+		}
 	}
 
 	/**

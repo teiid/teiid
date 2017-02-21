@@ -31,7 +31,6 @@ import org.infinispan.query.dsl.QueryFactory;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.CacheNameProxy;
 import org.teiid.translator.object.ClassRegistry;
-import org.teiid.translator.object.DDLHandler;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.simpleMap.SimpleMapCacheConnection;
 import org.teiid.translator.object.testdata.annotated.TestObjectConnection;
@@ -58,7 +57,6 @@ public class TestInfinispanDSLConnection extends SimpleMapCacheConnection implem
 		this.setCacheClassType(Trade.class);
 
 	}	
-
 
 	@Override
 	public QueryFactory getQueryFactory() throws TranslatorException {

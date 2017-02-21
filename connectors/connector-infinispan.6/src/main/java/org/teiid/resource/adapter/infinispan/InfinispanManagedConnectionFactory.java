@@ -109,15 +109,6 @@ public class InfinispanManagedConnectionFactory extends
 
 	}
 	
-	public String getCacheName() {
-		// return the cacheName that is mapped as the alias
-		return cacheNameProxy.getPrimaryCacheAliasName();
-	}
-
-	public String getCacheStagingName() {
-		return cacheNameProxy.getStageCacheAliasName();
-	}
-	
 	/** 
 	 * Call to set the name of the cache to access when calling getCache
 	 * @param cacheName
@@ -462,7 +453,7 @@ public class InfinispanManagedConnectionFactory extends
 							.getString(
 									"InfinispanManagedConnectionFactory.aliasCacheNotDefined", cacheNameProxy.getAliasCacheName())); //$NON-NLS-1$
 					}
-					cacheNameProxy.initializeAliasCache(aliasCache);
+//					cacheNameProxy.initializeAliasCache(aliasCache);
 				}
 
 			} catch (Exception e) {

@@ -30,12 +30,14 @@ import javax.naming.InitialContext;
 import javax.resource.ResourceException;
 
 import org.infinispan.Cache;
+import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.configuration.cache.Configuration;
 //import org.infinispan.;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.query.Search;
 import org.infinispan.query.dsl.QueryFactory;
+import org.teiid.core.util.Assertion;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.adapter.infinispan.DSLSearch;
@@ -86,20 +88,22 @@ public class LocalCacheConnection<K,V>  extends InfinispanCacheWrapper<K,V> {
 
 				ecm = cc;
 				
-				Configuration conf = cc.getCacheConfiguration(config.getCacheNameProxy().getPrimaryCacheAliasName());
+				Configuration conf = cc.getCacheConfiguration(config.getCacheNameProxy().getPrimaryCacheAliasName(this));
 				if (conf == null) {
-					throw new ResourceException("Program Error: cache " +  config.getCacheNameProxy().getPrimaryCacheAliasName() + " was not configured");
+					throw new ResourceException("Program Error: cache " +  config.getCacheNameProxy().getPrimaryCacheAliasName(this) + " was not configured");
 				}
 				conf.module(config.getCacheClassType());
 				
-				if (config.getCacheNameProxy().getStageCacheAliasName() != null) {
-					conf = cc.getCacheConfiguration(config.getCacheNameProxy().getStageCacheAliasName());
+				if (config.getCacheNameProxy().isMaterialized()) {
+					conf = cc.getCacheConfiguration(config.getCacheNameProxy().getStageCacheAliasName(this));
 					if (conf == null) {
-						throw new ResourceException("Program Error: cache " +  config.getCacheNameProxy().getStageCacheAliasName() + " was not configured");
+						throw new ResourceException("Program Error: cache " +  config.getCacheNameProxy().getStageCacheAliasName(this) + " was not configured");
 					}
 					
 					conf.module(config.getCacheClassType());
 				}
+			} catch (TranslatorException te) {
+				throw new RuntimeException(te);
 			} catch (IOException e) {
 				throw new ResourceException(e);
 			}
@@ -129,12 +133,13 @@ public class LocalCacheConnection<K,V>  extends InfinispanCacheWrapper<K,V> {
 	 * @see org.teiid.resource.adapter.infinispan.InfinispanCacheWrapper#getCache()
 	 */
 	@Override
-	public Cache getCache() {
-		if (getTargetCacheName() == null) {
+	public Cache getCache() {	
+		String name = getTargetCacheName();
+		if (name == null) {
 			return ecm.getCache();
 		}
 		
-		return getCache(getTargetCacheName());
+		return getCache(name);
 	}
 	
 	/**
@@ -191,6 +196,11 @@ public class LocalCacheConnection<K,V>  extends InfinispanCacheWrapper<K,V> {
 
 	}
 
+	@Override
+	public void forceCleanUp() {
+		cleanUp();
+		
+	}
 	/**
 	 * {@inheritDoc}
 	 *

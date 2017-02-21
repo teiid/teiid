@@ -23,20 +23,39 @@
 package org.teiid.resource.adapter.infinispan.dsl;
 
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.Properties;
 
+import javax.naming.Context;
+import javax.naming.InitialContext;
 import javax.resource.ResourceException;
+import javax.resource.spi.InvalidPropertyException;
+import javax.security.auth.Subject;
+import javax.security.auth.callback.Callback;
+import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.callback.NameCallback;
+import javax.security.auth.callback.PasswordCallback;
+import javax.security.auth.callback.UnsupportedCallbackException;
+import javax.security.sasl.AuthorizeCallback;
+import javax.security.sasl.RealmCallback;
 
 import org.infinispan.client.hotrod.RemoteCache;
+import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.Search;
+import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
+import org.infinispan.client.hotrod.marshall.ProtoStreamMarshaller;
+import org.infinispan.protostream.SerializationContext;
 import org.infinispan.protostream.descriptors.Descriptor;
 import org.infinispan.query.dsl.QueryFactory;
+import org.teiid.core.util.PropertiesUtils;
+import org.teiid.core.util.ReflectionHelper;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnection;
+import org.teiid.resource.spi.ConnectionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.infinispan.dsl.InfinispanDSLConnection;
 import org.teiid.translator.infinispan.dsl.InfinispanPlugin;
@@ -50,21 +69,27 @@ import org.teiid.translator.object.Version;
  * cache to be accessed in the container.
  * 
  */
-public class InfinispanConnectionImpl extends BasicConnection implements InfinispanDSLConnection { 
+public class InfinispanConnectionImpl extends BasicConnection implements InfinispanDSLConnection{ 
 	
 	InfinispanManagedConnectionFactory config = null;
+	
+	private RemoteCacheManager cacheContainer = null;
+	
+	private boolean adminUsage = false;
+	
+	private boolean connectionDead = false;
+
 
 	public InfinispanConnectionImpl(InfinispanManagedConnectionFactory config)  throws ResourceException {
 		this.config = config;
-
-		this.config.createCacheContainer();
 		
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Infinispan Connection has been newly created "); //$NON-NLS-1$
-	}
-	
+	}	
+
 	@Override
 	public Version getVersion() throws TranslatorException {
-		return this.config.getVersion();
+		RemoteCache rc = this.getCache();
+		return Version.getVersion(rc.getProtocolVersion());
 	}
 	
 	/** 
@@ -73,7 +98,33 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	 */
 	@Override
     public void close() {
-		config = null;	
+		config = null;
+		if (cacheContainer != null)
+			cacheContainer.stop();
+		
+		cacheContainer=null;
+	}
+	
+	@Override
+	public void cleanUp() {
+		// if the connection is not alive or
+		// if the remotecache connection is based on user auth, 
+		// then the container will need to be recreated on next use
+		if ( !isAlive() ) {
+			if (cacheContainer != null) {
+				cacheContainer.stop();
+			}
+			cacheContainer = null;
+		}
+	}
+	
+	@Override
+	public void forceCleanUp() {
+		if (cacheContainer != null) {
+			cacheContainer.stop();
+		}
+		cacheContainer = null;
+		
 	}
 
 	/** 
@@ -82,20 +133,27 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	 */
 	@Override
 	public boolean isAlive() {
-		boolean alive = (config == null ? false : config.isAlive());
-		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Infinispan Cache Connection is alive:", alive); //$NON-NLS-1$
-		return (alive);
+		if (connectionDead || config == null || cacheContainer == null) return false;
+		boolean alive = false;
+		try {
+			 this.getCache();
+			 alive = true;
+		} catch (Throwable t) {
+				alive = false;
+		}
+		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Infinispan Remote Cache Connection is alive:", alive); //$NON-NLS-1$
+ 		return alive;
 	}	
 
 	@Override
 	public Class<?> getCacheClassType() throws TranslatorException {		
-		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "=== GetType for cache :", getCacheName(),  "==="); //$NON-NLS-1$ //$NON-NLS-2$
+		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "=== GetCacheClassType ==="); //$NON-NLS-1$ //$NON-NLS-2$
 
 		Class<?> type = config.getCacheClassType();
 		if (type != null) {
 			return type;
 		}
-		throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25040, getCacheName()));
+		throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25040, "getCacheClassType"));
 
 	}
 	
@@ -108,9 +166,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	@SuppressWarnings({ "rawtypes"})
 	@Override
 	public RemoteCache getCache() throws TranslatorException {
-
-		return config.getCache(getTargetCache());
-
+		return getTargetCache();
 	}
 
 	/**
@@ -128,8 +184,11 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	@Override
 	public Descriptor getDescriptor(Class<?> clz)
 			throws TranslatorException {
+		this.adminUsage = true;
+		// check that its been created.
+		this.getCacheContainer();
 		
-		return config.getCacheSchemaConfigurator().getDecriptor(config, clz);
+		return config.getCacheSchemaConfigurator().getDecriptor(config, this, clz);
 
 	}
 	
@@ -137,7 +196,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	@Override
 	public QueryFactory getQueryFactory() throws TranslatorException {
 		
-		return Search.getQueryFactory(getCache(getTargetCache()));
+		return Search.getQueryFactory(getCache());
 	}
 
 	/**
@@ -148,7 +207,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	@SuppressWarnings("unchecked")
 	@Override
 	public void add(Object key, Object value) throws TranslatorException {
-		getCache(getTargetCache()).put(key, value);
+		getCache().put(key, value);
 	}
 
 	/**
@@ -158,7 +217,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	 */
 	@Override
 	public Object remove(Object key) throws TranslatorException {
-		return getCache(getTargetCache()).remove(key);
+		return getCache().remove(key);
 	}
 
 	/**
@@ -169,14 +228,21 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	@SuppressWarnings("unchecked")
 	@Override
 	public void update(Object key, Object value) throws TranslatorException {
-		getCache(getTargetCache()).replace(key, value);
+		getCache().replace(key, value);
+	}
+	private RemoteCache getTargetCache() throws TranslatorException {
+	    return getCacheContainer().getCache(getTargetCacheName());
 	}
 
-	private String getTargetCache() {
+	private String getTargetCacheName() throws TranslatorException {
 		if (getDDLHandler().isStagingTarget()) {
-			return config.getCacheNameProxy().getStageCacheAliasName();
+			String cn = config.getCacheNameProxy().getStageCacheAliasName(this);
+			if (cn == null) {
+				throw new TranslatorException("Program error, aliasCache not initialized with cache names");
+			}
+			return cn;
 		}
-		return config.getCacheNameProxy().getPrimaryCacheAliasName();
+		return config.getCacheNameProxy().getPrimaryCacheAliasName(this);
 	}
 
 	/**
@@ -196,7 +262,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	 */
 	@Override
 	public Object get(Object key) throws TranslatorException {
-		return getCache(getTargetCache()).get(key);
+		return getCache().get(key);
 	}
 
 	/**
@@ -237,18 +303,20 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	 * @see org.teiid.translator.object.ObjectConnection#getCacheName()
 	 */
 	@Override
-	public String getCacheName() {
-		return getTargetCache();
+	public String getCacheName() throws TranslatorException {
+		return getTargetCacheName();
 	}
 
 	/**
 	 * {@inheritDoc}
+	 * @throws ResourceException 
 	 *
 	 * @see org.teiid.translator.object.ObjectConnection#getCache(java.lang.String)
 	 */
 	@Override
-	public RemoteCache getCache(String cacheName) {
-		return config.getCache(cacheName);
+	public RemoteCache getCache(String cacheName) throws TranslatorException {
+		return getCacheContainer().getCache(cacheName);
+
 	}
 
 	/**
@@ -258,7 +326,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	 */
 	@Override
 	public void clearCache(String cacheName) throws TranslatorException {
-		config.getCache(cacheName).clear();
+		getCache(cacheName).clear();
 	}
 
 	/**
@@ -285,4 +353,236 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 	public boolean configuredForMaterialization() {
 		return (config.getStagingCacheName() != null);
 	}
+	
+	private synchronized RemoteCacheManager getCacheContainer() throws TranslatorException {
+		if (this.cacheContainer != null) return this.cacheContainer;
+		
+		try {
+			createCacheContainer();
+		} catch (ResourceException e) {
+			throw new TranslatorException(e);
+		} catch (RuntimeException re) {
+			throw new TranslatorException(re);
+		}
+		return this.cacheContainer;				
+	}
+	
+	private void createCacheContainer() throws ResourceException {
+
+		RemoteCacheManager cc = null;
+
+
+		ClassLoader lcl = Thread.currentThread().getContextClassLoader();
+		try {
+			Thread.currentThread().setContextClassLoader(
+					config.getRAClassLoader());
+			
+			switch (config.getCacheType()) {
+			case USE_JNDI:
+				cc = getRemoteCacheFromJNDI(config.getCacheJndiName());
+				break;
+
+			case REMOTE_HOT_ROD_PROPERTIES:
+				cc = createRemoteCacheFromProperties();
+				break;
+
+			case REMOTE_SERVER_LISTS:
+				cc = createRemoteCacheFromServerList();
+				break;
+
+			}
+
+			this.cacheContainer = cc;
+
+			config.getCacheSchemaConfigurator().registerSchema(config, this);
+
+			// if configured for materialization, initialize the cacheNameProxy
+			String aliasName = config.getCacheNameProxy().getAliasCacheName();
+			if (aliasName != null) {
+				RemoteCache aliasCache = this.cacheContainer.getCache(aliasName);
+				if (aliasCache == null) {
+					throw new ResourceException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25010,
+							new Object[] { aliasName }));
+				}
+			}
+			
+			connectionDead = false;			
+			
+		} finally {
+			Thread.currentThread().setContextClassLoader(lcl);
+		}
+		
+	}
+	
+	private RemoteCacheManager getRemoteCacheFromJNDI(
+			String jndiName) throws ResourceException {
+
+		Object cache = null;
+		try {
+			Context context = new InitialContext();
+			cache = context.lookup(jndiName);
+		} catch (Exception err) {
+			if (err instanceof RuntimeException)
+				throw (RuntimeException) err;
+			throw new ResourceException(err);
+		}
+
+		if (cache == null) {
+			throw new ResourceException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25025, jndiName));
+		}
+		
+		
+		if (cache instanceof RemoteCacheManager) {
+			LogManager.logInfo(LogConstants.CTX_CONNECTOR,
+				"=== Using RemoteCacheManager (loaded from JNDI " + jndiName + ") ==="); //$NON-NLS-1$
+			return (RemoteCacheManager) cache;
+		}
+
+		throw new ResourceException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25026, cache.getClass().getName()));
+
+	}
+	
+	protected RemoteCacheManager createRemoteCacheFromProperties() throws ResourceException {
+		File f = new File(config.getHotRodClientPropertiesFile());
+		if (!f.exists()) {
+			throw new InvalidPropertyException(
+					InfinispanManagedConnectionFactory.UTIL.getString(
+							"clientPropertiesFileDoesNotExist",
+							f.getAbsoluteFile()));
+
+		}
+		try {
+			Properties props = PropertiesUtils.load(f.getAbsolutePath());
+
+			LogManager
+					.logInfo(
+							LogConstants.CTX_CONNECTOR,
+							"=== Using RemoteCacheManager (created from properties file " + f.getAbsolutePath() + ") ==="); //$NON-NLS-1$
+
+			return createRemoteCache(props, config.getRemoteServerList());
+
+		} catch (ResourceException re) {
+			throw re;
+		} catch (Exception err) {
+			throw new ResourceException(err);
+		}
+
+	}
+	
+	protected  RemoteCacheManager createRemoteCacheFromServerList() throws ResourceException {
+
+		LogManager.logInfo(LogConstants.CTX_CONNECTOR,
+				"=== Using RemoteCacheManager (loaded by serverlist) ==="); //$NON-NLS-1$
+
+		return createRemoteCache(null, config.getRemoteServerList());
+	}
+
+	
+	private RemoteCacheManager createRemoteCache(Properties props, String serverList) throws ResourceException {
+		RemoteCacheManager remoteCacheManager;
+		try {
+			
+			ProtoStreamMarshaller pm = (ProtoStreamMarshaller) ReflectionHelper.create("org.infinispan.client.hotrod.marshall.ProtoStreamMarshaller", null, config.getRAClassLoader());
+			ConfigurationBuilder cb = (ConfigurationBuilder) ReflectionHelper.create("org.infinispan.client.hotrod.configuration.ConfigurationBuilder", null, config.getRAClassLoader());
+			cb.marshaller(pm);
+			
+			if (props != null) {
+				cb.withProperties(props);
+			}
+			
+			if (serverList != null) {
+				cb.addServers(serverList);
+			}
+			
+			if (config.getAuthSASLMechanism() != null) {
+				
+				if (this.adminUsage) {
+					cb.security().authentication().enable()
+					.serverName(config.getAuthServerName())
+					.saslMechanism(config.getAuthSASLMechanism())
+					.callbackHandler(new TeiidCallBackHandler(config.getAdminUserName(), config.getAuthApplicationRealm(), config.getAdminPassword().toCharArray()));
+
+				} else if (config.getAuthUserName()!= null) {
+					cb.security().authentication().enable()
+						.serverName(config.getAuthServerName())
+						.saslMechanism(config.getAuthSASLMechanism())
+						.callbackHandler(new TeiidCallBackHandler(config.getAuthUserName(), config.getAuthApplicationRealm(), config.getAuthPassword().toCharArray()));
+					
+				} else {
+					Subject subject = ConnectionContext.getSubject();
+
+					if (subject != null) {
+
+						cb.security().authentication().enable()
+							.serverName(config.getAuthServerName())
+							.saslMechanism(config.getAuthSASLMechanism())
+							.clientSubject(subject)
+							.callbackHandler(new TeiidCallBackHandler());
+
+					}
+
+
+				}
+			}
+			
+			Collection<Object> ctors = new ArrayList<Object>(2);
+			ctors.add(cb.build());
+			ctors.add(true);
+
+			remoteCacheManager = (RemoteCacheManager) ReflectionHelper.create("org.infinispan.client.hotrod.RemoteCacheManager", ctors, config.getRAClassLoader());
+
+			remoteCacheManager.start();
+
+		} catch (Exception err) {
+			throw new ResourceException(err);
+		}
+
+		return remoteCacheManager;
+
+	}
+	
+	public SerializationContext getContext() throws TranslatorException {
+		return ProtoStreamMarshaller.getSerializationContext(getCacheContainer());
+	}
+	
 }
+
+class TeiidCallBackHandler implements CallbackHandler {
+	   final private String username;
+	   final private char[] password;
+	   final private String realm;
+
+	   public TeiidCallBackHandler (String username, String realm, char[] password) {
+	      this.username = username;
+	      this.password = password;
+	      this.realm = realm;
+	   }
+	   public TeiidCallBackHandler () {	   
+	      this.username = System.getProperty("sasl.username");
+	      this.password = System.getProperty("sasl.password").toCharArray();
+	      this.realm = System.getProperty("sasl.realm");
+	   }
+
+	   @Override
+	   public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
+	      for (Callback callback : callbacks) {
+	         if (callback instanceof NameCallback) {
+	            NameCallback nameCallback = (NameCallback) callback;
+	            nameCallback.setName(username);
+	         } else if (callback instanceof PasswordCallback) {
+	            PasswordCallback passwordCallback = (PasswordCallback) callback;
+	            passwordCallback.setPassword(password);
+	         } else if (callback instanceof AuthorizeCallback) {
+	            AuthorizeCallback authorizeCallback = (AuthorizeCallback) callback;
+	            authorizeCallback.setAuthorized(authorizeCallback.getAuthenticationID().equals(
+	                  authorizeCallback.getAuthorizationID()));
+	         } else if (callback instanceof RealmCallback) {
+	            RealmCallback realmCallback = (RealmCallback) callback;
+	            realmCallback.setText(realm);
+	         } else {
+	            throw new UnsupportedCallbackException(callback);
+	         }
+	      }
+	   }
+	}
+
