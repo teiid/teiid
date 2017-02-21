@@ -42,11 +42,13 @@
 
 <h4>from 9.2</h4>
 <ul>
-  <li><a href="https://issues.jboss.org/browse/TEIID-4574">TEIID-4574</a> Phoenix/Hbase Translator has been renamed phoenix and the usage of the HBaseExecutionFactory and the hbase translator name has been deprecated.</li>
+  <li><a href="https://issues.jboss.org/browse/TEIID-3624">TEIID-3624</a> The introduction of domain types modified several of the system tables.  The isPhysical column was removed from the SYS.Datatypes table.
+  SYS.Datatypes added Type, TypeCode, Literal_Prefix, and Literal_Suffix columns.  The SYS.Columns table added TypeName, TypeCode, and ColumnSize columns.</li>
 </ul>
 
 <h4>from 9.1</h4>
 <ul>
+    <li><a href="https://issues.jboss.org/browse/TEIID-4574">TEIID-4574</a> Phoenix/Hbase Translator has been renamed phoenix and the usage of the HBaseExecutionFactory and the hbase translator name has been deprecated.</li>
     <li><a href="https://issues.jboss.org/browse/TEIID-4501">TEIID-4501</a> The salesforce-34 resource adapter defaults to the version 34 api rather than version 22 api.</li>
 </ul>
 

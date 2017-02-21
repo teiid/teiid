@@ -292,5 +292,19 @@ public class TestDDLMetadataStore {
         String expected = ObjectConverterUtil
                 .convertFileToString(new File(UnitTestUtil.getTestDataPath() + "/" + "portfolio-converted-vdb.ddl"));
         assertEquals(expected, content);
+    }
+    
+    @Test
+    public void testOverideTranslator() throws Exception {
+        File vdb = new File(UnitTestUtil.getTestDataPath() + "/" + "override-vdb.xml");
+        String content = ConvertVDB.convert(vdb);
+        /*
+        FileWriter fw = new FileWriter(new File(UnitTestUtil.getTestDataPath() + "/" + "override-vdb.ddl"));
+        fw.write(content);
+        fw.close();
+        */
+        String expected = ObjectConverterUtil
+                .convertFileToString(new File(UnitTestUtil.getTestDataPath() + "/" + "override-vdb.ddl"));
+        assertEquals(expected, content);
     }     
 }

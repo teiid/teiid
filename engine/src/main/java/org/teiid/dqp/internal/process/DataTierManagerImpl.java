@@ -250,7 +250,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
     static {
         PREFIX_MAP.put(DataTypeManager.DefaultDataTypes.STRING, Arrays.asList("'", "'")); //$NON-NLS-1$ //$NON-NLS-2$
         PREFIX_MAP.put(DataTypeManager.DefaultDataTypes.CHAR, Arrays.asList("'", "'")); //$NON-NLS-1$ //$NON-NLS-2$
-        PREFIX_MAP.put(DataTypeManager.DefaultDataTypes.VARBINARY, Arrays.asList("{'X", "'}")); //$NON-NLS-1$ //$NON-NLS-2$
+        PREFIX_MAP.put(DataTypeManager.DefaultDataTypes.VARBINARY, Arrays.asList("'X", "'")); //$NON-NLS-1$ //$NON-NLS-2$
         PREFIX_MAP.put(DataTypeManager.DefaultDataTypes.DATE, Arrays.asList("{'d", "'}")); //$NON-NLS-1$ //$NON-NLS-2$
         PREFIX_MAP.put(DataTypeManager.DefaultDataTypes.TIME, Arrays.asList("{'t", "'}")); //$NON-NLS-1$ //$NON-NLS-2$
         PREFIX_MAP.put(DataTypeManager.DefaultDataTypes.TIMESTAMP, Arrays.asList("{'ts", "'}")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -741,7 +741,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         		row.add(column.getSearchType().toString());
         		row.add(column.getFormat());
         		row.add(column.getDefaultValue());
-        		row.add(dt!=null?dt.getJavaClassName():null);
+        		row.add(column.getJavaType().getName());
         		row.add(column.getPrecision());
         		row.add(column.getCharOctetLength());
         		row.add(column.getRadix());
@@ -756,6 +756,10 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         		        //some of the designer UDT types conflict with our type names,
         		        //so use the runtime type instead
         		        typeName = dt.getRuntimeTypeName();
+        		    }
+        		    int arrayDimensions = column.getArrayDimensions();
+        		    while (arrayDimensions-- > 0) {
+        		        typeName += "[]"; //$NON-NLS-1$
         		    }
         		}
         		row.add(typeName);

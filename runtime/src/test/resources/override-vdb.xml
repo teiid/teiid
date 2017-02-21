@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<vdb name="override" version="1">
+
+    <model name="test">
+        <source name="s1" translator-name="mysql-override" connection-jndi-name="java:/mysqlDS"/>
+    </model>
+    
+    <translator name="mysql-override" type="mysql">
+         <property name="RequiresCriteria" value="true"/>
+    </translator>
+</vdb>
