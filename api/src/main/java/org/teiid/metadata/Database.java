@@ -251,6 +251,15 @@ public class Database extends NamespaceContainer {
         return this.store.getGrants();
     }
     
+    /**
+     * Add a domain with the given attributes.  The UID must still be set.
+     * @param name
+     * @param baseType
+     * @param precision
+     * @param scale
+     * @param notNull
+     * @return
+     */
     public Datatype addDomain(String name, String baseType, Integer precision, Integer scale, boolean notNull) {
         //TODO: allow named array types
         // requires either storing the dimension on the datatype, or using a holder
@@ -271,7 +280,7 @@ public class Database extends NamespaceContainer {
         dataType.setName(name);
         dataType.setBasetypeName(baseType);
         dataType.setType(Datatype.Type.Domain);
-        //dataType.setUUID(uuid);
+        dataType.setUUID(null);
         
         if (precision != null) {
             if (!Number.class.isAssignableFrom(DataTypeManager.getDataTypeClass(base.getRuntimeTypeName()))) {

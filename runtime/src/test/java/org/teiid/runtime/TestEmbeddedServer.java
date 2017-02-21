@@ -31,6 +31,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.math.BigDecimal;
 import java.net.InetSocketAddress;
 import java.sql.*;
 import java.util.ArrayList;
@@ -2037,6 +2038,10 @@ public class TestEmbeddedServer {
         ResultSet rs = c.getMetaData().getColumns(null, null, "g1", null);
         rs.next();
         assertEquals("x", rs.getString("TYPE_NAME"));
+        rs.next();
+        assertEquals("z", rs.getString("TYPE_NAME"));
+        rs.next();
+        assertEquals("x[]", rs.getString("TYPE_NAME"));
         
         try {
             s.execute("select cast(1 as a)"); //should fail
@@ -2052,6 +2057,17 @@ public class TestEmbeddedServer {
         assertEquals("bigdecimal", rs.getMetaData().getColumnTypeName(1));
         
         s.execute("select xmlcast(xmlparse(document '<a>1</a>') as z)");
+        
+        s.execute("select attname, atttypid from pg_attribute where attname = 'e1'");
+        rs = s.getResultSet();
+        rs.next();
+        assertEquals(1043, rs.getInt(2)); //varchar
+        
+        s.execute("select cast((1.0,) as z[])");
+        rs = s.getResultSet();
+        rs.next();
+        assertArrayEquals(new BigDecimal[] {BigDecimal.valueOf(1.0)}, (BigDecimal[])rs.getArray(1).getArray());
+        assertEquals("bigdecimal[]", rs.getMetaData().getColumnTypeName(1));
     }
 
 }

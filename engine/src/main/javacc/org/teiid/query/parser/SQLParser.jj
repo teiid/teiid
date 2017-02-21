@@ -4814,6 +4814,7 @@ example=[source,sql]\n----\nSTRING[]\n----\n
 */
 ParsedDataType parseDataType() :
 {
+    int arraySuffixes = 0;
     ParsedDataType type = null;
     Token idToken = null;
 }
@@ -4823,12 +4824,19 @@ ParsedDataType parseDataType() :
         return type;
     }
     |
-    idToken = <ID> 
+    (idToken = <ID> 
     {
         String id = normalizeId(idToken.image);
         id = validateName(id, true);
-        return new ParsedDataType(id);
+        type = new ParsedDataType(id);
     }
+    (<LSBRACE><RSBRACE> {arraySuffixes++;})*
+    {
+        if (arraySuffixes > 0) {
+           type.type += StringUtil.join(Collections.nCopies(arraySuffixes, "[]"), "");
+        }
+        return type;
+    })
 }
 
 /*
