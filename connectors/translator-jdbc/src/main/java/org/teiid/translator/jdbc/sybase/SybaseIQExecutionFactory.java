@@ -1,6 +1,8 @@
 package org.teiid.translator.jdbc.sybase;
 
+import java.sql.Connection;
 import java.sql.Date;
+import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -20,6 +22,7 @@ import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.EscapeSyntaxModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.Version;
+import org.teiid.translator.jdbc.TemplateFunctionModifier;
 import org.teiid.translator.jdbc.hsql.AddDiffModifier;
 import org.teiid.translator.jdbc.oracle.ConcatFunctionModifier;
 
@@ -32,6 +35,8 @@ public class SybaseIQExecutionFactory extends BaseSybaseExecutionFactory {
 	public static final Version FIFTEEN_4 = Version.getVersion("15.4"); //$NON-NLS-1$
 	
 	protected Map<String, Integer> formatMap = new HashMap<String, Integer>();
+
+    private Boolean jConnectDriver;
 	
 	public SybaseIQExecutionFactory() {
 		setSupportsFullOuterJoins(false);
@@ -51,7 +56,7 @@ public class SybaseIQExecutionFactory extends BaseSybaseExecutionFactory {
     	});
     	registerFunctionModifier(SourceSystemFunctions.CONCAT2, new AliasModifier("STRING")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new EscapeSyntaxModifier());
-        registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new TemplateFunctionModifier("DATEPART(dy,",0, ")")); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new EscapeSyntaxModifier());
         registerFunctionModifier(SourceSystemFunctions.WEEK, new EscapeSyntaxModifier());
         registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new AddDiffModifier(true, this.getLanguageFactory()).supportsQuarter(true));
@@ -271,6 +276,26 @@ public class SybaseIQExecutionFactory extends BaseSybaseExecutionFactory {
     @Override
     public boolean useAsInGroupAlias() {
     	return true;
+    }
+    
+    @Override
+    public void initCapabilities(Connection connection)
+            throws TranslatorException {
+        try {
+            this.jConnectDriver = connection.getMetaData().getDriverName().contains("jConnect"); //$NON-NLS-1$
+            if (this.jConnectDriver) {
+                //jConnect does not use the correct bind logic 
+                setUseBindVariables(false);
+                setUseBindingsForDependentJoin(false);
+            }
+        } catch (SQLException e) {
+            throw new TranslatorException(e);
+        }
+        super.initCapabilities(connection);
+    }
+    
+    public boolean isSourceRequiredForCapabilities() {
+        return super.isSourceRequiredForCapabilities() || jConnectDriver == null;
     }
 	
 }
