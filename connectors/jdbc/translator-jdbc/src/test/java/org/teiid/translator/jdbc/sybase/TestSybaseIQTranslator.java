@@ -85,4 +85,13 @@ public class TestSybaseIQTranslator {
             output);
     }
     
+    @Test public void testDayOfYear() {
+        String input = "SELECT dayofyear(datevalue) from bqt1.smalla"; //$NON-NLS-1$
+        String output = "SELECT DATEPART(dy,SmallA.DateValue) FROM SmallA";  //$NON-NLS-1$
+        
+        helpTestVisitor(TranslationHelper.BQT_VDB,
+            input, 
+            output);
+    }
+    
 }
