@@ -87,6 +87,7 @@
     <module>ldap</module>
     <module>jdbc</module>
     <module>mongodb</module>
+    <module>couchbase</module>
     <module>simpledb</module>
     <module>webservice</module>
     <module>salesforce</module>
