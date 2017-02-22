@@ -254,6 +254,25 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         .append(" ORDER BY PROCEDURE_SCHEM, PROCEDURE_NAME").toString(); //$NON-NLS-1$
 
     private final static String QUERY_PROCEDURE_COLUMNS =
+        new StringBuffer("SELECT VDBName PROCEDURE_CAT, SchemaName AS PROCEDURE_SCHEM") //$NON-NLS-1$
+          .append(", ProcedureName AS PROCEDURE_NAME, p.Name AS COLUMN_NAME") //$NON-NLS-1$
+          .append(", convert(decodeString(TYPE, '").append(PARAM_DIRECTION_MAPPING).append("', ','), short) AS COLUMN_TYPE") //$NON-NLS-1$ //$NON-NLS-2$
+          .append(", TypeCode AS DATA_TYPE") //$NON-NLS-1$
+          .append(", TypeName AS TYPE_NAME, ColumnSize AS \"PRECISION\", TypeLength  AS LENGTH, convert(case when scale > 32767 then 32767 else Scale end, short) AS SCALE") //$NON-NLS-1$
+          .append(", Radix AS RADIX, convert(decodeString(NullType, '") //$NON-NLS-1$
+          .append(PROC_COLUMN_NULLABILITY_MAPPING).append("', ','), integer) AS NULLABLE") //$NON-NLS-1$
+          .append(", p.Description AS REMARKS, NULL AS COLUMN_DEF") //$NON-NLS-1$
+          .append(", NULL AS SQL_DATA_TYPE, NULL AS SQL_DATETIME_SUB, NULL AS CHAR_OCTET_LENGTH, p.Position AS ORDINAL_POSITION") //$NON-NLS-1$
+          .append(", "+IS_NULLABLE+", p.ProcedureName as SPECIFIC_NAME FROM ") //$NON-NLS-1$ //$NON-NLS-2$
+          .append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME)
+          .append(".ProcedureParams as p") //$NON-NLS-1$
+          .append(" WHERE UCASE(VDBName)").append(LIKE_ESCAPE)//$NON-NLS-1$
+          .append(" AND UCASE(SchemaName)").append(LIKE_ESCAPE)//$NON-NLS-1$
+          .append(" AND UCASE(ProcedureName)").append(LIKE_ESCAPE) //$NON-NLS-1$
+          .append(" AND UCASE(p.Name)").append(LIKE_ESCAPE) //$NON-NLS-1$
+          .append(" ORDER BY PROCEDURE_SCHEM, PROCEDURE_NAME, COLUMN_TYPE, POSITION").toString(); //$NON-NLS-1$
+
+    private final static String QUERY_PROCEDURE_COLUMNS_OLD =
       new StringBuffer("SELECT VDBName PROCEDURE_CAT, SchemaName AS PROCEDURE_SCHEM") //$NON-NLS-1$
         .append(", ProcedureName AS PROCEDURE_NAME, p.Name AS COLUMN_NAME") //$NON-NLS-1$
         .append(", convert(decodeString(TYPE, '").append(PARAM_DIRECTION_MAPPING).append("', ','), short) AS COLUMN_TYPE") //$NON-NLS-1$ //$NON-NLS-2$
@@ -287,7 +306,22 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     	.append(" AND UCASE(Name)").append(LIKE_ESCAPE)//$NON-NLS-1$
     	.append(" ORDER BY FUNCTION_CAT, FUNCTION_SCHEM, FUNCTION_NAME, SPECIFIC_NAME").toString(); //$NON-NLS-1$
 	
-	private static final String QUERY_FUNCTION_COLUMNS = new StringBuffer("SELECT VDBName AS Function_CAT, SchemaName AS FUNCTION_SCHEM, ") //$NON-NLS-1$
+   private static final String QUERY_FUNCTION_COLUMNS = new StringBuffer("SELECT VDBName AS Function_CAT, SchemaName AS FUNCTION_SCHEM, ") //$NON-NLS-1$
+       .append("FunctionName AS FUNCTION_NAME, Name as COLUMN_NAME, CASE WHEN Type = 'ReturnValue' Then 4 WHEN Type = 'In' Then 1 ELSE 0 END AS COLUMN_TYPE") //$NON-NLS-1$
+       .append(", TypeCode AS DATA_TYPE") //$NON-NLS-1$
+       .append(", TypeName AS TYPE_NAME, ColumnSize AS \"PRECISION\", TypeLength  AS LENGTH, convert(case when scale > 32767 then 32767 else Scale end, short) AS SCALE") //$NON-NLS-1$
+       .append(", Radix AS RADIX, convert(decodeString(NullType, '") //$NON-NLS-1$
+       .append(PROC_COLUMN_NULLABILITY_MAPPING).append("', ','), integer) AS NULLABLE") //$NON-NLS-1$
+       .append(", Description AS REMARKS, NULL AS CHAR_OCTET_LENGTH, Position AS ORDINAL_POSITION,") //$NON-NLS-1$
+       .append(IS_NULLABLE).append(", FunctionUID as SPECIFIC_NAME") //$NON-NLS-1$
+       .append(" FROM ").append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".FunctionParams") //$NON-NLS-1$ //$NON-NLS-2$
+       .append(" WHERE UCASE(VDBName)").append(LIKE_ESCAPE)//$NON-NLS-1$
+       .append(" AND UCASE(SchemaName)").append(LIKE_ESCAPE)//$NON-NLS-1$
+       .append(" AND UCASE(FunctionName)").append(LIKE_ESCAPE)//$NON-NLS-1$
+       .append(" AND UCASE(Name)").append(LIKE_ESCAPE)//$NON-NLS-1$
+       .append(" ORDER BY FUNCTION_CAT, FUNCTION_SCHEM, FUNCTION_NAME, SPECIFIC_NAME, ORDINAL_POSITION").toString(); //$NON-NLS-1$
+
+	private static final String QUERY_FUNCTION_COLUMNS_OLD = new StringBuffer("SELECT VDBName AS Function_CAT, SchemaName AS FUNCTION_SCHEM, ") //$NON-NLS-1$
 		.append("FunctionName AS FUNCTION_NAME, Name as COLUMN_NAME, CASE WHEN Type = 'ReturnValue' Then 4 WHEN Type = 'In' Then 1 ELSE 0 END AS COLUMN_TYPE") //$NON-NLS-1$
 		.append(", 1 AS DATA_TYPE") //$NON-NLS-1$
 	    .append(", DataType AS TYPE_NAME, \"Precision\" AS \"PRECISION\", TypeLength  AS LENGTH, convert(case when scale > 32767 then 32767 else Scale end, short) AS SCALE") //$NON-NLS-1$
@@ -1236,8 +1270,11 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         ResultSetMetaData rmetadata = null;
         ResultSetImpl results = null;
         PreparedStatement prepareQuery = null;
+        
+        boolean newMetadata = driverConnection.getServerConnection().getServerVersion().compareTo("09.03") >= 0; //$NON-NLS-1$
+
         try {
-            prepareQuery = driverConnection.prepareStatement(QUERY_PROCEDURE_COLUMNS);
+            prepareQuery = driverConnection.prepareStatement(newMetadata?QUERY_PROCEDURE_COLUMNS:QUERY_PROCEDURE_COLUMNS_OLD);
             prepareQuery.setObject(1, catalog.toUpperCase());
             prepareQuery.setObject(2, schemaPattern.toUpperCase());
             prepareQuery.setObject(3, procedureNamePattern.toUpperCase());
@@ -1255,19 +1292,21 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
                     // get the value at the current index add it to currentRow
                     currentRow.add(results.getObject(i+1));
                 }
-                String typeName = (String)currentRow.get(JDBCColumnPositions.PROCEDURE_COLUMNS.TYPE_NAME-1);
-                Integer length = (Integer)currentRow.get(JDBCColumnPositions.PROCEDURE_COLUMNS.LENGTH-1);
-                Integer precision = (Integer)currentRow.get(JDBCColumnPositions.PROCEDURE_COLUMNS.PRECISION-1);
-                if (precision != null && precision <= 0) {
-        			currentRow.set(JDBCColumnPositions.PROCEDURE_COLUMNS.PRECISION-1, JDBCSQLTypeInfo.getDefaultPrecision(typeName));
-            	}
-                if (length != null && length <= 0) {
-        			currentRow.set(JDBCColumnPositions.PROCEDURE_COLUMNS.LENGTH-1, JDBCSQLTypeInfo.getDefaultPrecision(typeName));
-        		}
-                if (typeName != null) {
-                	currentRow.set(JDBCColumnPositions.PROCEDURE_COLUMNS.DATA_TYPE-1, JDBCSQLTypeInfo.getSQLType(typeName));
-                } else {
-                	currentRow.set(JDBCColumnPositions.PROCEDURE_COLUMNS.DATA_TYPE-1, null);                	
+                if (!newMetadata) {
+                    String typeName = (String)currentRow.get(JDBCColumnPositions.PROCEDURE_COLUMNS.TYPE_NAME-1);
+                    Integer length = (Integer)currentRow.get(JDBCColumnPositions.PROCEDURE_COLUMNS.LENGTH-1);
+                    Integer precision = (Integer)currentRow.get(JDBCColumnPositions.PROCEDURE_COLUMNS.PRECISION-1);
+                    if (precision != null && precision <= 0) {
+            			currentRow.set(JDBCColumnPositions.PROCEDURE_COLUMNS.PRECISION-1, JDBCSQLTypeInfo.getDefaultPrecision(typeName));
+                	}
+                    if (length != null && length <= 0) {
+            			currentRow.set(JDBCColumnPositions.PROCEDURE_COLUMNS.LENGTH-1, JDBCSQLTypeInfo.getDefaultPrecision(typeName));
+            		}
+                    if (typeName != null) {
+                    	currentRow.set(JDBCColumnPositions.PROCEDURE_COLUMNS.DATA_TYPE-1, JDBCSQLTypeInfo.getSQLType(typeName));
+                    } else {
+                    	currentRow.set(JDBCColumnPositions.PROCEDURE_COLUMNS.DATA_TYPE-1, null);                	
+                    }
                 }
                 // add the current row to the list of records.
                 records.add(currentRow);
@@ -2387,8 +2426,11 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         ResultSetMetaData rmetadata = null;
         ResultSetImpl results = null;
         PreparedStatementImpl prepareQuery = null;
+        
+        boolean newMetadata = driverConnection.getServerConnection().getServerVersion().compareTo("09.03") >= 0; //$NON-NLS-1$
+        
         try {
-            prepareQuery = driverConnection.prepareStatement(QUERY_FUNCTION_COLUMNS);
+            prepareQuery = driverConnection.prepareStatement(newMetadata?QUERY_FUNCTION_COLUMNS:QUERY_FUNCTION_COLUMNS_OLD);
             prepareQuery.setString(1, catalog.toUpperCase());
             prepareQuery.setString(2, schemaPattern.toUpperCase());
             prepareQuery.setString(3, functionNamePattern.toUpperCase());
@@ -2402,19 +2444,21 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
                 for(int i=0; i < cols; i++) {
                     currentRow.add(results.getObject(i+1));
                 }
-                String typeName = (String)currentRow.get(6);
-                Integer length = (Integer)currentRow.get(8);
-                Integer precision = (Integer)currentRow.get(7);
-                if (precision != null && precision <= 0) {
-        			currentRow.set(7, JDBCSQLTypeInfo.getDefaultPrecision(typeName));
-            	}
-                if (length != null && length <= 0) {
-        			currentRow.set(8, JDBCSQLTypeInfo.getDefaultPrecision(typeName));
-        		}
-                if (typeName != null) {
-                	currentRow.set(5, JDBCSQLTypeInfo.getSQLType(typeName));
-                } else {
-                	currentRow.set(5, null);                	
+                if (!newMetadata) { 
+                    String typeName = (String)currentRow.get(6);
+                    Integer length = (Integer)currentRow.get(8);
+                    Integer precision = (Integer)currentRow.get(7);
+                    if (precision != null && precision <= 0) {
+            			currentRow.set(7, JDBCSQLTypeInfo.getDefaultPrecision(typeName));
+                	}
+                    if (length != null && length <= 0) {
+            			currentRow.set(8, JDBCSQLTypeInfo.getDefaultPrecision(typeName));
+            		}
+                    if (typeName != null) {
+                    	currentRow.set(5, JDBCSQLTypeInfo.getSQLType(typeName));
+                    } else {
+                    	currentRow.set(5, null);                	
+                    }
                 }
                 // add the current row to the list of records.
                 records.add(currentRow);

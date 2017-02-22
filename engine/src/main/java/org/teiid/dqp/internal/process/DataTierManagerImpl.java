@@ -513,12 +513,13 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				row.add(type);
 				row.add(isOptional);
 				row.add(param.getPrecision());
-				row.add(param.getLength());
+                row.add(param.getLength());
 				row.add(param.getScale());
 				row.add(param.getRadix());
 				row.add(param.getNullType().toString());
 				row.add(param.getUUID());
 				row.add(param.getAnnotation());
+				addTypeInfo(row, param, dt);
         	}
         	
         	@Override
@@ -563,6 +564,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				row.add(param.getNullType().toString());
 				row.add(param.getUUID());
 				row.add(param.getAnnotation());
+				addTypeInfo(row, param, param.getDatatype());
         	}
         	
         	@Override
@@ -748,38 +750,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         		row.add(column.getUUID());
         		row.add(column.getAnnotation());
         		row.add(column.getParent().getUUID());
-        		String typeName = column.getRuntimeType();
-        		if (dt != null) {
-        		    if (dt.isBuiltin() || dt.getType() == Datatype.Type.Domain) {
-        		        typeName = dt.getName();
-        		    } else {
-        		        //some of the designer UDT types conflict with our type names,
-        		        //so use the runtime type instead
-        		        typeName = dt.getRuntimeTypeName();
-        		    }
-        		    int arrayDimensions = column.getArrayDimensions();
-        		    while (arrayDimensions-- > 0) {
-        		        typeName += "[]"; //$NON-NLS-1$
-        		    }
-        		}
-        		row.add(typeName);
-        		row.add(JDBCSQLTypeInfo.getSQLType(column.getRuntimeType()));
-        		int columnSize = column.getPrecision();
-        		if (columnSize == 0) {
-        		    columnSize = column.getLength();
-        		}
-                if (column.getRuntimeType() != null) {
-                    if (!Number.class.isAssignableFrom(DataTypeManager.getDataTypeClass(column.getRuntimeType()))) {
-                        if (column.getLength() <= 0) {
-                            columnSize = JDBCSQLTypeInfo.getDefaultPrecision(column.getRuntimeType());
-                        } else {
-                            columnSize = column.getLength();
-                        }
-                    } else if (column.getPrecision() <= 0) {
-                        columnSize = JDBCSQLTypeInfo.getDefaultPrecision(column.getRuntimeType());
-                    }
-                }
-                row.add(columnSize);
+        		addTypeInfo(row, column, dt);
         	}
         	
         	@Override
@@ -992,6 +963,46 @@ public class DataTierManagerImpl implements ProcessorDataManager {
     		}
 		}
     	return true;
+    }
+    
+    private void addTypeInfo(List<Object> row, BaseColumn column,
+            Datatype dt) {
+        String typeName = column.getRuntimeType();
+        if (dt != null) {
+            if (dt.isBuiltin() || dt.getType() == Datatype.Type.Domain) {
+                typeName = dt.getName();
+            } else {
+                //some of the designer UDT types conflict with our type names,
+                //so use the runtime type instead
+                typeName = dt.getRuntimeTypeName();
+            }
+            int arrayDimensions = column.getArrayDimensions();
+            while (arrayDimensions-- > 0) {
+                typeName += "[]"; //$NON-NLS-1$
+            }
+        }
+        row.add(typeName);
+        row.add(JDBCSQLTypeInfo.getSQLType(column.getRuntimeType()));
+        Integer columnSize = null;
+        if (column.getArrayDimensions() == 0) {
+            columnSize = column.getPrecision();
+            if (columnSize == 0) {
+                columnSize = column.getLength();
+            }
+            if (typeName != null) {
+                Class<?> dataTypeClass = DataTypeManager.getDataTypeClass(typeName);
+                if (!Number.class.isAssignableFrom(dataTypeClass)) {
+                    if (java.util.Date.class.isAssignableFrom(dataTypeClass) || column.getLength() <= 0) {
+                        columnSize = JDBCSQLTypeInfo.getDefaultPrecision(column.getRuntimeType());
+                    } else {
+                        columnSize = column.getLength();
+                    }
+                } else if (column.getPrecision() <= 0) {
+                    columnSize = JDBCSQLTypeInfo.getDefaultPrecision(column.getRuntimeType());
+                }
+            }
+        }
+        row.add(columnSize);
     }
 
 	private List<ElementSymbol> getColumns(TransformationMetadata tm,

@@ -114,6 +114,9 @@ CREATE FOREIGN TABLE ProcedureParams (
 	NullType string(10) NOT NULL,
 	UID string(50),
 	Description string(255),
+	TypeName string(100),
+    TypeCode integer,
+    ColumnSize integer,
 	PRIMARY KEY (VDBName, SchemaName, ProcedureName, Name),
 	FOREIGN KEY (VDBName, SchemaName, ProcedureName) REFERENCES Procedures (VDBName, SchemaName, Name),
 	UNIQUE (UID)	
@@ -150,6 +153,9 @@ CREATE FOREIGN TABLE FunctionParams (
     NullType string(10) NOT NULL,
     UID string(50),
     Description string(4000),
+    TypeName string(100),
+    TypeCode integer,
+    ColumnSize integer,
     UNIQUE (UID),
     PRIMARY KEY (VDBName, SchemaName, FunctionName, Name),
     FOREIGN KEY (VDBName, SchemaName, FunctionName) REFERENCES Functions (VDBName, SchemaName, Name)
