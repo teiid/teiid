@@ -39,7 +39,7 @@
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>translator-jdbc</artifactId>
-        </dependency>               
+        </dependency>                 
     </dependencies>
 
     <build>

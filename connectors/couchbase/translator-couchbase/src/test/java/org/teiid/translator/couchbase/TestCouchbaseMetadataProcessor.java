@@ -21,13 +21,24 @@
  */
 package org.teiid.translator.couchbase;
 
+import java.util.Map;
+import java.util.Properties;
+
+import javax.resource.ResourceException;
+
 import org.junit.Test;
+import org.teiid.metadata.Datatype;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.translator.TranslatorException;
 
 public class TestCouchbaseMetadataProcessor {
 
     @Test
-    public void testMetadata() throws TranslatorException {
+    public void testMetadata() throws TranslatorException, ResourceException {
         
+        Map<String, Datatype> datatypes = SystemMetadata.getInstance().getRuntimeTypeMap();
+        MetadataFactory mf = new MetadataFactory("vdb", 1, "couchbase", datatypes, new Properties(), null);
+
     }
 }

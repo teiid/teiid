@@ -28,6 +28,7 @@ import org.teiid.language.QueryExpression;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
@@ -51,5 +52,10 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
 	public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, CouchbaseConnection connection) throws TranslatorException {
 		return new CouchbaseQueryExecution(this, command, executionContext, metadata, connection);
 	}
+
+    @Override
+    public MetadataProcessor<CouchbaseConnection> getMetadataProcessor() {
+        return new CouchbaseMetadataProcessor();
+    }
 
 }
