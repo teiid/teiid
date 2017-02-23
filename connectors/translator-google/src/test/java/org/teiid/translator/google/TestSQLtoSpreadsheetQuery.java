@@ -222,6 +222,7 @@ public class TestSQLtoSpreadsheetQuery {
 	
 	@Test
 	public void testUpdateVisitor() throws Exception {
+		//String sql="UPDATE PeopleList set A = 'String,String', C = 1.5";
 		String sql="UPDATE PeopleList set A = 'String,String', C = 1.5 where A='Str,Str'";
         SpreadsheetUpdateVisitor visitor=new SpreadsheetUpdateVisitor(people);
         visitor.visit((Update)getCommand(sql));

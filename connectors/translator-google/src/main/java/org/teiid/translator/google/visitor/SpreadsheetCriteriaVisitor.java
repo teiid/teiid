@@ -95,6 +95,16 @@ public class SpreadsheetCriteriaVisitor extends SQLStringVisitor {
 		this.criteriaQuery = criteriaQuery;
 	}
 
+	public void translateWhere(Condition condition) {
+	    if (condition != null) {
+	        StringBuilder temp = this.buffer;
+	        this.buffer = new StringBuilder();
+	        append(condition);
+	        criteriaQuery = buffer.toString();
+	        this.buffer = temp;
+	    }
+	}
+	
 	public boolean isHeaderEnabled() {
 		return headerEnabled;
 	}
