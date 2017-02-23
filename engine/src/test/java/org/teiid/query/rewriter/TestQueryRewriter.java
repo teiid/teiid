@@ -496,7 +496,7 @@ public class TestQueryRewriter {
     
     @Test public void testRewriteParseDateCastString() {
         helpTestRewriteCriteria("PARSEDATE(bqt1.smalla.stringkey, 'yyyy-MM-dd') = {d'2011-01-10'}", //$NON-NLS-1$
-                                "convert(parsetimestamp(bqt1.smalla.stringkey, 'yyyy-MM-dd'), date) = {d'2011-01-10'}", RealMetadataFactory.exampleBQTCached() );         //$NON-NLS-1$
+                                "convert(bqt1.smalla.stringkey, DATE) = {d'2011-01-10'}", RealMetadataFactory.exampleBQTCached() );         //$NON-NLS-1$
     }
     
     @Test public void testRewriteParseTimeCast() {
