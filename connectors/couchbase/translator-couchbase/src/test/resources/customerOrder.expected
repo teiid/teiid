@@ -1,0 +1,30 @@
+CREATE FOREIGN TABLE testKeyspace (
+	id string OPTIONS (UPDATABLE FALSE),
+	Type string,
+	Name string,
+	CustomerID string,
+	CONSTRAINT PK0 PRIMARY KEY(id)
+) OPTIONS (NAMEINSOURCE '`testKeyspace`', UPDATABLE TRUE);
+
+CREATE FOREIGN TABLE testKeyspace_CreditCard (
+	id string OPTIONS (UPDATABLE FALSE),
+	CardNumber string,
+	Type string,
+	CVN integer,
+	Expiry string
+) OPTIONS (NAMEINSOURCE '`testKeyspace`.`CreditCard`', UPDATABLE TRUE);
+
+CREATE FOREIGN TABLE testKeyspace_Items (
+	id string OPTIONS (UPDATABLE FALSE)
+) OPTIONS (NAMEINSOURCE '`testKeyspace`.`Items`', UPDATABLE TRUE);
+
+CREATE FOREIGN TABLE testKeyspace_Items_Items (
+	id string OPTIONS (UPDATABLE FALSE),
+	Quantity integer,
+	ItemID integer
+) OPTIONS (NAMEINSOURCE '`testKeyspace`.`Items`.`Items`', UPDATABLE TRUE);
+
+CREATE FOREIGN TABLE testKeyspace_SavedAddresses (
+	id string OPTIONS (UPDATABLE FALSE),
+	SavedAddresses string
+) OPTIONS (NAMEINSOURCE '`testKeyspace`.`SavedAddresses`', UPDATABLE TRUE);

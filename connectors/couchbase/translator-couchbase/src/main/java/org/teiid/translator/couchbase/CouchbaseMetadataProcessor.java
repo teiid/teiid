@@ -49,9 +49,12 @@ import com.couchbase.client.java.query.N1qlQueryRow;
 public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseConnection> {
     
     private static final String ID = "id"; //$NON-NLS-1$
-    private static final String WAVE = "`"; //$NON-NLS-1$
-    private static final String DOT = "."; //$NON-NLS-1$
     private static final String JSON = "json"; //$NON-NLS-1$
+    
+    public static final String WAVE = "`"; //$NON-NLS-1$
+    public static final String DOT = "."; //$NON-NLS-1$
+    
+    public static final String LINE = "_"; //$NON-NLS-1$
 
     @Override
     public void process(MetadataFactory metadataFactory, CouchbaseConnection connection) throws TranslatorException {
@@ -65,38 +68,43 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
         }
     }
     
-    protected void addTable(MetadataFactory metadataFactory, String tableName, JsonObject doc, Table parent) {
+    protected void addTable(MetadataFactory metadataFactory, String key, JsonObject doc, Table parent) {
 
         Table table = null;
+        String tableName = key;
+        if(parent != null) {
+            tableName = parent.getName() + LINE + key;
+        }
         if (metadataFactory.getSchema().getTable(tableName) != null) {
             table = metadataFactory.getSchema().getTable(tableName);
         } else {
             table = metadataFactory.addTable(tableName);
-            table.setSupportsUpdate(true);
             metadataFactory.addColumn(ID, STRING, table);
+            table.setSupportsUpdate(true);
             if(parent == null) {
                 // Base on N1QL, the top Table map to keyspace in Couchbase, each rows represent a document in keyspace. 
                 // The top Table have a unique primary key.
-                table.setNameInSource(buildNameInSource(tableName, null));
+                table.setNameInSource(buildNameInSource(key, null));
                 metadataFactory.addPrimaryKey("PK0", Arrays.asList(ID), table); //$NON-NLS-1$
             } else {
-                table.setNameInSource(buildNameInSource(tableName, parent.getNameInSource()));
+                table.setNameInSource(buildNameInSource(key, parent.getNameInSource()));
             }
         }
 
         // add more columns
-        for(String key : doc.getNames()) {
-            addColumn(metadataFactory, table, key, doc.get(key));
+        for(String keyCol : doc.getNames()) {
+            addColumn(metadataFactory, table, keyCol, doc.get(keyCol));
         }
     }
-    
+
     private void addTable(MetadataFactory metadataFactory, String key, JsonArray value, Table parent) {
         
         Table table = null;
-        if (metadataFactory.getSchema().getTable(key) != null) {
-            table = metadataFactory.getSchema().getTable(key);
+        String tableName = parent.getName() + LINE  + key;
+        if (metadataFactory.getSchema().getTable(tableName) != null) {
+            table = metadataFactory.getSchema().getTable(tableName);
         } else {
-            table = metadataFactory.addTable(key);
+            table = metadataFactory.addTable(tableName);
             table.setSupportsUpdate(true);
             metadataFactory.addColumn(ID, STRING, table);
             table.setNameInSource(buildNameInSource(key, parent.getNameInSource()));
@@ -128,7 +136,8 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
             addTable(metadataFactory, key, (JsonArray)value, table);
         } else {
             if (table.getColumnByName(key) == null) {
-                metadataFactory.addColumn(key, getDataType(value), table);
+                Column column = metadataFactory.addColumn(key, getDataType(value), table);
+                column.setUpdatable(true);
             } else {
                 Column column = table.getColumnByName(key);
                 // For array contain different type

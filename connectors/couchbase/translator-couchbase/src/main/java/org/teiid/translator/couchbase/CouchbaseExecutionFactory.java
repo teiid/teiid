@@ -21,6 +21,9 @@
  */
 package org.teiid.translator.couchbase;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.resource.cci.ConnectionFactory;
 
 import org.teiid.couchbase.CouchbaseConnection;
@@ -49,6 +52,15 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
 	}
 
 	@Override
+    public List<String> getSupportedFunctions() {
+	    
+	    List<String> supportedFunctions = new ArrayList<String>();
+	    
+	    
+        return supportedFunctions;
+    }
+
+    @Override
 	public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, CouchbaseConnection connection) throws TranslatorException {
 		return new CouchbaseQueryExecution(this, command, executionContext, metadata, connection);
 	}
