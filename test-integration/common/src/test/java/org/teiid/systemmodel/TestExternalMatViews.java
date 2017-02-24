@@ -50,7 +50,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.events.EventDistributor;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.util.ResultSetUtil;
 import org.teiid.language.Command;
@@ -121,6 +123,7 @@ public class TestExternalMatViews {
 			"  Updated timestamp not null,\n" + 
 			"  LoadNumber long not null,\n" +
 			"  NodeName varchar(25) not null,\n" +
+			"  StaleCount long default 0,\n" +
 			"  PRIMARY KEY (VDBName, VDBVersion, SchemaName, Name)\n" + 
 			")";
 
@@ -792,4 +795,70 @@ public class TestExternalMatViews {
         assertEquals("LOADED", rs.getString(1));
         assertEquals("server2", rs.getString(2));        
     }
+    
+    @Test
+    public void testLazyUpdate() throws Exception {
+        HardCodedExecutionFactory hcef = setupData(server);
+        ModelMetaData sourceModel = setupSourceModel();
+        ModelMetaData matViewModel = setupMatViewModel();
+        
+        ModelMetaData viewModel = new ModelMetaData();
+        viewModel.setName("view1");
+        viewModel.setModelType(Type.VIRTUAL);
+        viewModel.addSourceMetadata("DDL", "CREATE VIEW v1 (col integer primary key, col1 string) "
+                + "OPTIONS (MATERIALIZED true, "
+                + "MATERIALIZED_TABLE 'matview.MAT_V2', "
+                + "\"teiid_rel:MATVIEW_TTL\" 3000, "
+                + "\"teiid_rel:ALLOW_MATVIEW_MANAGEMENT\" true, " 
+                + "\"teiid_rel:MATVIEW_STATUS_TABLE\" 'matview.STATUS', "
+                + "\"teiid_rel:MATVIEW_REFRESH_TYPE\" 'LAZY_SNAPSHOT', "
+                + "\"teiid_rel:MATVIEW_LOADNUMBER_COLUMN\" 'loadnum') "
+                + "AS select col, col1 from source.physicalTbl");
+        server.deployVDB("comp", sourceModel, viewModel, matViewModel);
+        
+        Thread.sleep(1000);
+
+        // check if materilization is loaded
+        Connection c = h2DataSource.getConnection();
+        ResultSet rs = c.createStatement().executeQuery("SELECT LoadState, StaleCount FROM Status WHERE VDBName = 'comp'");
+        rs.next();
+        assertEquals("LOADED", rs.getString(1));
+        assertEquals(0, rs.getInt(2));
+
+        // verify with querying the database.
+        conn = server.createConnection("jdbc:teiid:comp");
+        Statement s = conn.createStatement();
+        rs = s.executeQuery("select * from view1.v1 order by col");
+        rs.next();
+        assertEquals(1, rs.getInt(1));
+        assertEquals("town", rs.getString(2));
+        
+        // send a row update
+        EventDistributor ed = server.getEventDistributor();
+        ResultsFuture<?> f = ed.dataModification("comp", "1", "source", "physicalTbl", new Object[] { 1, "town" },
+                new Object[] { 1, "town-modified" }, new String[] { "col1", "col2" });
+        f.get();
+        
+        f = ed.dataModification("comp", "1", "source", "physicalTbl", new Object[] { 1, "town" },
+                new Object[] { 1, "town-modified" }, new String[] { "col1", "col2" });
+        f.get();
+        
+        // check the stale count incremented
+        rs = c.createStatement().executeQuery("SELECT LoadState, StaleCount FROM Status WHERE VDBName = 'comp'");
+        rs.next();
+        assertEquals("NEEDS_LOADING", rs.getString(1));
+        assertEquals(2, rs.getInt(2));      
+        
+        // now reload the view, this should reset the stalecount. If you can wait one minute this occurs automatically
+        conn.createStatement().execute("exec SYSADMIN.loadMatView(schemaName=>'view1', viewName=>'v1', invalidate=>false)");
+        
+        // check the stale count to zero
+        rs = c.createStatement().executeQuery("SELECT LoadState, StaleCount FROM Status WHERE VDBName = 'comp'");
+        rs.next();
+        assertEquals("LOADED", rs.getString(1));
+        assertEquals(0, rs.getInt(2));
+        
+        String ddl = server.getAdmin().getSchema("comp", "1", null, null, null);
+        assertFalse(ddl.contains("AFTER INSERT"));
+    }    
 }

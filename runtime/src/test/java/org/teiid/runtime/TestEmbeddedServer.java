@@ -1226,6 +1226,8 @@ public class TestEmbeddedServer {
                 c = metadataFactory.addColumn("LoadNumber", TypeFacility.RUNTIME_NAMES.LONG, t);
                 c.setUpdatable(true);
                 c = metadataFactory.addColumn("NodeName", TypeFacility.RUNTIME_NAMES.STRING, t);
+                c.setUpdatable(true);
+                c = metadataFactory.addColumn("StaleCount", TypeFacility.RUNTIME_NAMES.LONG, t);
                 c.setUpdatable(true);                
                 metadataFactory.addPrimaryKey("PK", Arrays.asList("VDBName", "VDBVersion", "SchemaName", "Name"), t);
             }
