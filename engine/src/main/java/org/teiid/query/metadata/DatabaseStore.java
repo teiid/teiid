@@ -125,7 +125,7 @@ public abstract class DatabaseStore implements DDLProcessor {
         Database db = this.databases.get(new VDBKey(dbName,version));
         if (db == null) {
             throw new MetadataException(QueryPlugin.Event.TEIID31231,
-                    QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31231, dbName));                        
+                    QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31231, dbName, version));                        
         }
 
         assertGrant(Grant.Permission.Privilege.DROP, Database.ResourceType.DATABASE, db);
@@ -549,7 +549,14 @@ public abstract class DatabaseStore implements DDLProcessor {
     }
 
     public AbstractMetadataRecord getSchemaRecord(String name, Database.ResourceType type) {
-        TransformationMetadata qmi = new TransformationMetadata(getCurrentDatabase(), getSystemFunctionManager());
+        Database database = getCurrentDatabase();
+        
+        CompositeMetadataStore store = new CompositeMetadataStore(database.getMetadataStore());
+        //grants are already stored on the VDBMetaData
+        store.getGrants().clear();
+        TransformationMetadata qmi = new TransformationMetadata(DatabaseUtil.convert(database), store, null,
+                getSystemFunctionManager().getSystemFunctions(), null);
+
         try {
             switch (type) {
             case TABLE:
@@ -579,14 +586,9 @@ public abstract class DatabaseStore implements DDLProcessor {
                     throw new org.teiid.metadata.MetadataException(QueryPlugin.Event.TEIID31223,
                             QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31223, name));                                    
                 }
-                break;
+                return c;
             case DATABASE:
-                Database db = getCurrentDatabase();
-                if (db == null || !db.getName().equals(name)) {
-                    throw new org.teiid.metadata.MetadataException(QueryPlugin.Event.TEIID31231,
-                            QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31231, name));                                
-                }
-                return db;
+                return getCurrentDatabase();
             case SCHEMA:
                 Schema schema = qmi.getModelID(name);
                 if (schema == null) {
@@ -718,6 +720,9 @@ public abstract class DatabaseStore implements DDLProcessor {
         assertGrant(Grant.Permission.Privilege.CREATE, Database.ResourceType.GRANT, grant);
         
         for (Grant.Permission p:grant.getPermissions()) {
+            if (p.getResourceType() == ResourceType.LANGUAGE) {
+                continue;
+            }
             AbstractMetadataRecord record = getSchemaRecord(p.getResourceName(), p.getResourceType());
             p.setResourceName(record.getFullName());
         }
@@ -732,6 +737,9 @@ public abstract class DatabaseStore implements DDLProcessor {
         assertGrant(Grant.Permission.Privilege.DROP, Database.ResourceType.GRANT, grant);
         
         for (Grant.Permission p:grant.getPermissions()) {
+            if (p.getResourceType() == ResourceType.LANGUAGE) {
+                continue;
+            }
             AbstractMetadataRecord record = getSchemaRecord(p.getResourceName(), p.getResourceType());
             p.setResourceName(record.getFullName());
         }

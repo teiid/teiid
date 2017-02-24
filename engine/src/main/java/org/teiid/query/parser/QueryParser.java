@@ -27,7 +27,6 @@ import static org.teiid.query.parser.TeiidSQLParserTokenManager.*;
 
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -506,9 +505,6 @@ public class QueryParser implements Parser {
             store.serverCreated(s);
         }
         List<String> servers = Collections.emptyList();
-        if (factory.getSchema().isPhysical()){
-        	servers = Arrays.asList(NONE);
-        }
         store.schemaCreated(factory.getSchema(), servers);
         store.schemaSwitched(factory.getSchema().getName());
         try {

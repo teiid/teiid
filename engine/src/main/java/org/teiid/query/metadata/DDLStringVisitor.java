@@ -190,7 +190,7 @@ public class DDLStringVisitor {
                 boolean first = true;
                 for (Server s:schema.getServers()) {
                     if (first) {
-                        first = true;
+                        first = false;
                     } else {
                         append(COMMA);
                     }
@@ -261,43 +261,59 @@ public class DDLStringVisitor {
     private void visit(Grant grant) {
         
         for (Permission permission : grant.getPermissions()) {
-            append(GRANT);
-            boolean first = true;
-            for (Privilege allowance:permission.getPrivileges()) {
-                if (first) {
-                    first = false;
-                    append(SPACE);
-                } else {
-                    append(COMMA);
-                }
-                append(allowance.name());
+            if (!permission.getPrivileges().isEmpty() || permission.getMask() != null || permission.getCondition() != null) {
+                appendGrant(grant, permission, false);
             }
-            append(SPACE).append(ON).append(SPACE).append(permission.getResourceType().name());
-            if (permission.getResourceName() != null) {
-                append(SPACE).append(SQLStringVisitor.escapeSinglePart(permission.getResourceName()));
+            if (!permission.getRevokePrivileges().isEmpty()) {
+                appendGrant(grant, permission, true);
             }
-            
-            if (permission.getResourceType() == ResourceType.COLUMN) {
-                
-                if (permission.getMask() != null) {
-                    append(SPACE).append(MASK);
-                    if (permission.getMaskOrder() != null && permission.getMaskOrder() != -1) {
-                        append(SPACE).append(ORDER).append(SPACE).append(permission.getMaskOrder());
-                    }
-                    append(SPACE).append(new Constant(permission.getMask()));
-                }
-                
-                if (permission.getCondition() != null) {
-                    append(SPACE).append(CONDITION);
-                    if (permission.isConditionAConstraint() != null && permission.isConditionAConstraint()) {
-                        append(SPACE).append(CONSTRAINT);
-                    }
-                    append(SPACE).append(new Constant(permission.getCondition()));
-                }
-            }
-            append(SPACE).append(TO).append(SPACE).append(grant.getRole());
-            append(SEMICOLON).append(NEWLINE);
         }
+    }
+
+    private void appendGrant(Grant grant, Permission permission, boolean revoke) {
+        EnumSet<Privilege> privileges = revoke?permission.getRevokePrivileges():permission.getPrivileges();
+        if (revoke) {
+            append(REVOKE).append(SPACE);
+        }
+        append(GRANT);
+        boolean first = true;
+        for (Privilege allowance:privileges) {
+            if (first) {
+                first = false;
+                append(SPACE);
+            } else {
+                append(COMMA);
+            }
+            append(allowance);
+        }
+        if (permission.getResourceType() != ResourceType.DATABASE) { 
+            append(SPACE).append(ON).append(SPACE).append(permission.getResourceType());
+        }
+        
+        if (permission.getResourceName() != null) {
+            append(SPACE).append(SQLStringVisitor.escapeSinglePart(permission.getResourceName()));
+        }
+        
+        if (!revoke && permission.getMask() != null) {
+            append(SPACE).append(MASK);
+            if (permission.getMaskOrder() != null && permission.getMaskOrder() != -1) {
+                append(SPACE).append(ORDER).append(SPACE).append(permission.getMaskOrder());
+            }
+            append(SPACE).append(new Constant(permission.getMask()));
+        }
+        
+        if (!revoke && permission.getCondition() != null) {
+            append(SPACE).append(CONDITION);
+            if (!revoke) {
+                if (permission.isConditionAConstraint() != null && permission.isConditionAConstraint()) {
+                    append(SPACE).append(CONSTRAINT);
+                }
+                append(SPACE).append(new Constant(permission.getCondition()));
+            }
+        }
+
+        append(SPACE).append(revoke?FROM:TO).append(SPACE).append(grant.getRole());
+        append(SEMICOLON).append(NEWLINE);
     }
 
     private void visit(Role role) {

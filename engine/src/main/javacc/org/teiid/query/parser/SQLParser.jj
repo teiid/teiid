@@ -519,6 +519,7 @@ TOKEN : /* NonReserved words */
 |   <REPOSITORY: "repository">
 |   <RENAME: "rename">
 |   <DOMAIN: "domain">
+|   <USAGE: "usage">
 }
 /*
 name=all in group identifier
@@ -627,7 +628,8 @@ Token nonReserved() :
      |<SQL_TSI_SECOND>|<SQL_TSI_MINUTE>|<SQL_TSI_HOUR>|<SQL_TSI_DAY>|<SQL_TSI_WEEK>|<SQL_TSI_MONTH>|<SQL_TSI_QUARTER>|<SQL_TSI_YEAR>|<TEXTTABLE>|<ARRAYTABLE>
      |<SELECTOR>|<SKIP_KEYWORD>|<WIDTH>|<PASSING>|<NAME>|<ENCODING>|<COLUMNS>|<DELIMITER>|<QUOTE>|<HEADER>|<NULLS>|<OBJECTTABLE>
      |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>|<VARIADIC>|<RAISE>|<EXCEPTION>|<CHAIN>|<JSONARRAY_AGG>|<JSONOBJECT>|<PRESERVE>|<UPSERT>|<AFTER>
-     |<TYPE>|<TRANSLATOR>|<JAAS>|<CONDITION>|<MASK>|<ACCESS>|<CONTROL>|<NONE>|<DATA>|<DATABASE>|<PRIVILEGES>|<ROLE>|<SCHEMA>|<USE>|<REPOSITORY>|<RENAME>|<DOMAIN>)
+     |<TYPE>|<TRANSLATOR>|<JAAS>|<CONDITION>|<MASK>|<ACCESS>|<CONTROL>|<NONE>|<DATA>|<DATABASE>|<PRIVILEGES>|<ROLE>|<SCHEMA>|<USE>|<REPOSITORY>|<RENAME>
+     |<DOMAIN>|<USAGE>)
     {
     	return getToken(0);
     }	
@@ -5315,16 +5317,7 @@ void dropRole(DatabaseStore dbStore) :
 /*
 name=Create GRANT
 description=Defines GRANT for a role
-example=[source,sql]\n----\nGRANT ( SELECT | INSERT |  UPDATE | DELETE | EXECUTE | LANGUAGE | ALTER | DROP | ALL PRIVILEGES | TEMPORARY TABLES ) 
-ON
-   (
-   DATABASE
-   TABLE <schema-name>.<table-name> 
-    PROCEDURE <schema-name>.<proc-name>
-    SCHEMA <schema-name>
-    COLUMN <schema-name>.<table-name>.<col-name> [MASK [ORDER \d] <string-val> ] [CONDITION [CONSTRAINT] <string-val>]
-    )
-TO <data-role-name>\n----\n
+example=[source,sql]\n----\nGRANT SELECT ON TABLE x.y TO role\n----\n
 */
 void grantOption(DatabaseStore dbStore) :
 {
@@ -5340,23 +5333,33 @@ void grantOption(DatabaseStore dbStore) :
     Grant.Permission permission = new Grant.Permission();
 }
 {
-    <GRANT> readGrantTypes(privileges) (<COMMA> readGrantTypes(privileges))*
-    <ON> ( 
-        <DATABASE> [resource = id(null)] {on = Database.ResourceType.DATABASE;} |
+    <GRANT> 
+    ((
+       [readGrantTypes(privileges) (<COMMA> readGrantTypes(privileges))*]
+       <ON> ( 
         <TABLE> resource = id(null) {on = Database.ResourceType.TABLE;} 
         	[<CONDITION> [<CONSTRAINT> {isConstraint=true;}] condition = stringVal()] |
+        <FUNCTION> resource = id(null) {on = Database.ResourceType.FUNCTION;} |
         <PROCEDURE> resource = id(null) {on = Database.ResourceType.PROCEDURE;} 
         	[<CONDITION> [<CONSTRAINT> {isConstraint=true;}] condition = stringVal()] |
         <SCHEMA> resource = id(null) {on = Database.ResourceType.SCHEMA;} |
         <COLUMN> resource = id(null) {on = Database.ResourceType.COLUMN;} 
             [<MASK> [<ORDER> maskOrder = intVal()] mask = stringVal()] 
-            [<CONDITION> [<CONSTRAINT> {isConstraint=true;}] condition = stringVal()]
-    ) 
+       )
+      ) 
+      |
+      (<ALL> <PRIVILEGES> {privileges.add(Grant.Permission.Privilege.ALL_PRIVILEGES);})
+      |
+      (<TEMPORARY> <TABLE> {privileges.add(Grant.Permission.Privilege.TEMPORARY_TABLE);}) 
+      |
+      (<USAGE> {privileges.add(Grant.Permission.Privilege.USAGE); on = Database.ResourceType.LANGUAGE;} <ON> <LANGUAGE> resource=id(null))
+    )
     <TO>( to = id(null)
         {
-            if (resource != null) {
-                permission.setResourceName(resource);
+            if (privileges.isEmpty() && condition == null && mask == null) {
+            	throw new MetadataException(QueryPlugin.Util.getString("SQLParser.empty_grant_revoke"));
             }
+            permission.setResourceName(resource);
             permission.setPrivileges(privileges);
             permission.setResourceType(on);            
             if (mask != null) {
@@ -5378,16 +5381,7 @@ void grantOption(DatabaseStore dbStore) :
 /*
 name=Revoke GRANT
 description=Revokes GRANT for a role
-example=[source,sql]\n----\nREVOKE GRANT ( SELECT | INSERT |  UPDATE | DELETE | EXECUTE | LANGUAGE | ALTER | DROP | ALL PRIVILEGES | TEMPORARY TABLES ) 
-ON
-   (
-    DATABASE
-    TABLE <schema-name>.<table-name>
-    PROCEDURE <schema-name>.<proc-name>
-    SCHEMA <schema-name>
-    COLUMN <schema-name>.<table-name>.<col-name>
-    )
-FROM <data-role-name>\n----\n
+example=[source,sql]\n----\nREVOKE GRANT SELECT ON TABLE x.y TO role\n----\n
 */
 void revokeGrantOption(DatabaseStore dbStore) :
 {
@@ -5395,41 +5389,46 @@ void revokeGrantOption(DatabaseStore dbStore) :
     Grant grant = new Grant();
     String resource = null;
     String mask = null;
-    int maskOrder = -1;
     String condition = null;
-    boolean isConstraint = false;
     String to = null;
     ArrayList<Grant.Permission.Privilege> privileges = new ArrayList<Grant.Permission.Privilege>();
     Grant.Permission permission = new Grant.Permission();
 }
 {
-    <REVOKE> <GRANT> readGrantTypes(privileges) (<COMMA> readGrantTypes(privileges))*
-    <ON> ( 
-        <DATABASE> [resource = id(null)] {on = Database.ResourceType.DATABASE;} |
+    <REVOKE> <GRANT> 
+    ((
+       [readGrantTypes(privileges) (<COMMA> readGrantTypes(privileges))*]
+       <ON> ( 
         <TABLE> resource = id(null) {on = Database.ResourceType.TABLE;} 
-        	[<CONDITION> [<CONSTRAINT> {isConstraint=true;}] condition = stringVal()] |
+        	[<CONDITION> {condition = "";}] |
+        <FUNCTION> resource = id(null) {on = Database.ResourceType.FUNCTION;} |
         <PROCEDURE> resource = id(null) {on = Database.ResourceType.PROCEDURE;} 
-        	[<CONDITION> [<CONSTRAINT> {isConstraint=true;}] condition = stringVal()] |
+        	[<CONDITION> {condition = "";} ] |
         <SCHEMA> resource = id(null) {on = Database.ResourceType.SCHEMA;} |
         <COLUMN> resource = id(null) {on = Database.ResourceType.COLUMN;} 
-            [<MASK> [<ORDER> maskOrder = intVal()] mask = stringVal()] 
-            [<CONDITION> [<CONSTRAINT> {isConstraint=true;}] condition = stringVal()]
-    ) 
+            [<MASK> {mask = "";} ] 
+       )
+      ) 
+      |
+      (<ALL> <PRIVILEGES> {privileges.add(Grant.Permission.Privilege.ALL_PRIVILEGES);})
+      |
+      (<TEMPORARY> <TABLE> {privileges.add(Grant.Permission.Privilege.TEMPORARY_TABLE);}) 
+      |
+      (<USAGE> {privileges.add(Grant.Permission.Privilege.USAGE); on = Database.ResourceType.LANGUAGE;} <ON> <LANGUAGE> resource=id(null))
+    )
     <FROM>( to = id(null)
         {
-            if (resource != null) {
-                permission.setResourceName(resource);
+            if (privileges.isEmpty() && condition == null && mask == null) {
+            	throw new MetadataException(QueryPlugin.Util.getString("SQLParser.empty_grant_revoke"));
             }
-            permission.setPrivileges(privileges);
+            permission.setResourceName(resource);
+            permission.setRevokePrivileges(privileges);
             permission.setResourceType(on);            
             if (mask != null) {
                 permission.setMask(mask);
-                if (maskOrder != -1) {
-                    permission.setMaskOrder(maskOrder);
-                }
             }
             if(condition != null) {
-                permission.setCondition(condition, isConstraint);               
+                permission.setCondition(condition, null);               
             }
             grant.setRole(to);
             grant.addPermission(permission);
@@ -6594,9 +6593,6 @@ void readGrantTypes(ArrayList<Grant.Permission.Privilege> privileges) :
     <UPDATE> {privileges.add(Grant.Permission.Privilege.UPDATE);} |
     <DELETE> {privileges.add(Grant.Permission.Privilege.DELETE);} |
     <EXECUTE> {privileges.add(Grant.Permission.Privilege.EXECUTE);} |
-    <LANGUAGE> {privileges.add(Grant.Permission.Privilege.LANGUAGE);} |
     <ALTER> {privileges.add(Grant.Permission.Privilege.ALTER);} |
-    <DROP> {privileges.add(Grant.Permission.Privilege.DROP);} |
-    <ALL> <PRIVILEGES> {privileges.add(Grant.Permission.Privilege.ALL_PRIVILEGES);} |
-    <TEMPORARY> <TABLE> {privileges.add(Grant.Permission.Privilege.TEMPORARY_TABLE);}
+    <DROP> {privileges.add(Grant.Permission.Privilege.DROP);}
 }
