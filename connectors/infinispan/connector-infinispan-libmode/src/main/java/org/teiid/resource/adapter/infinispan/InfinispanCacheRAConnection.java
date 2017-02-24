@@ -89,7 +89,7 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	 * @see org.teiid.translator.object.ObjectConnection#getCacheName()
 	 */
 	@Override
-	public String getCacheName() {
+	public String getCacheName() throws TranslatorException {
 		return getTargetCacheName();
 	}
 
@@ -126,22 +126,15 @@ public class InfinispanCacheRAConnection extends BasicConnection
 
 	}	
 	
-	private String getTargetCacheName() {
+	private String getTargetCacheName() throws TranslatorException {
 		if (getDDLHandler().isStagingTarget()) {
-			return config.getCacheNameProxy().getStageCacheAliasName();
+			return config.getCacheNameProxy().getStageCacheAliasName(this);
 		}
-		return config.getCacheNameProxy().getPrimaryCacheAliasName();//	public String getCacheName() {
-//		// return the cacheName that is mapped as the alias
-//		return cacheNameProxy.getPrimaryCacheAliasName();
-//	}
-//
-//	public String getCacheStagingName() {
-//		return cacheNameProxy.getStageCacheAliasName();
-//	}
+		return config.getCacheNameProxy().getPrimaryCacheAliasName(this);//	public String getCacheName() {
 
 	}
 
-	public Cache<Object, Object> getCache() {
+	public Cache<Object, Object> getCache() throws TranslatorException {
 		return getCache(getTargetCacheName());
 	}
 	
@@ -151,7 +144,7 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	 * @see org.teiid.translator.object.ObjectConnection#getCache(java.lang.String)
 	 */
 	@Override
-	public Cache<Object, Object> getCache(String cacheName) {
+	public Cache<Object, Object> getCache(String cacheName) throws TranslatorException {
 		return config.getCache(cacheName);
 	}	
 
@@ -189,29 +182,29 @@ public class InfinispanCacheRAConnection extends BasicConnection
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public QueryFactory getQueryFactory() {
+	public QueryFactory getQueryFactory() throws TranslatorException {
 
 		return Search.getQueryFactory(getCache(getTargetCacheName()));
 
 	}
 
 	@Override
-	public Object get(Object key)  {
+	public Object get(Object key) throws TranslatorException {
 		return getCache(getTargetCacheName()).get(key);
 	}
 
 	@Override
-	public void add(Object key, Object value)  {
+	public void add(Object key, Object value) throws TranslatorException {
 		getCache(getTargetCacheName()).put(key, value);
 	}
 
 	@Override
-	public Object remove(Object key)  {
+	public Object remove(Object key) throws TranslatorException {
 		return getCache(getTargetCacheName()).removeAsync(key);
 	}
 
 	@Override
-	public void update(Object key, Object value) {
+	public void update(Object key, Object value) throws TranslatorException {
 		getCache(getTargetCacheName()).replace(key, value);
 	}
 
@@ -220,7 +213,7 @@ public class InfinispanCacheRAConnection extends BasicConnection
 		getCache(cacheName).clear();
 	}
 	
-	protected void shutDownCacheManager() {
+	protected void shutDownCacheManager() throws TranslatorException {
 		getCache().stop();
 	}
 	

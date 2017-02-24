@@ -15,7 +15,7 @@
                 
         <module name="org.jboss.teiid.translator.object" export="true" />        
 
-   	<module name="org.infinispan.protostream" slot="${jdg.slot}" optional="true" export="true" />
+   		<module name="org.infinispan.protostream" slot="${jdg.slot}" optional="true" export="true" />
         <module name="org.infinispan.query.dsl" slot="${jdg.slot}" optional="true" export="true" />    
  
     	<module name="org.infinispan.protostream" slot="jdg-6.6" optional="true" export="true" />

@@ -51,10 +51,6 @@ import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.metadata.JavaBeanMetadataProcessor;
 import org.teiid.translator.object.util.ObjectUtil;
 
-import com.google.protobuf.Descriptors.FieldDescriptor.JavaType;
-
-import protostream.com.google.protobuf.Descriptors;
-
 
 /**
  * The ProtobufMetadataProcess is the logic for providing metadata to the translator based on
@@ -116,8 +112,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 	private void createRootTable(MetadataFactory mf, Class<?> entity, Descriptor descriptor, String cacheName, InfinispanHotRodConnection conn) throws TranslatorException {
 			
 		String pkField = conn.getPkField();
-		// the table can only be updateable if it has the pkField defined, even if its materialized)
-		boolean updatable = (pkField != null ? true : false);
+		boolean updatable = (materialized ? true : (pkField != null ? true : false));
 		
 		rootTable = addTable(mf, entity, updatable, false);
 		if (materialized) {
@@ -129,19 +124,34 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 			addRootColumn(mf, Object.class, entity, null, null, SearchType.Unsearchable, rootTable.getName(), rootTable, false, false, NullType.Nullable, conn); //$NON-NLS-1$	
 		}
 		
+		Map<String, Method> mapMethods = conn.getClassRegistry().getReadClassMethods(entity.getName());
+		
 		pkMethod = null;
-		if (updatable) {
-		    pkMethod = findMethod(entity.getName(), pkField, conn);
+		if (updatable) {			
+		    pkMethod = findMethod(entity.getName(), pkField, mapMethods, conn);
 		    if (pkMethod == null) {
 				throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25008, new Object[] {pkField, cacheName, entity.getName()}));		    	
 		    }	
 		}
-		//		boolean addKey = false;
+		
 		boolean registeredClass = false;
-		// the descriptor is needed to determine which fields are defined as searchable.
+		// the descriptor is needed to determine which fields are defined as searchable and how the relationships are defined (1-to-many, 1-to-1)
 		for (FieldDescriptor fd:descriptor.getFields()) {	
-			Class<?> returnType = getJavaType( fd,entity, conn);
 			
+			Class<?> returnType = null;
+			Method m = findMethod(entity.getName(), fd.getName(), mapMethods, conn);
+			
+			if (m == null) {
+				// if method cannot be matched based on descriptor name, then try to match the message type (class) to the return type
+				m = getMethodBasedOnReturnType(fd.getMessageType().getName(), mapMethods);
+				if (m ==null)  {
+					throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25008, new Object[] {fd.getName(), entity.getName()}));		    	
+				}
+				
+			} 
+			returnType = m.getReturnType();
+			
+			// identify those that have child relationship tables to be created
 			if (fd.isRepeated() && (! returnType.equals(byte[].class))) {
 				descriptorMap.put(fd.getName(), fd);				
 				continue;
@@ -185,7 +195,9 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 		}
 
 		
-		// if materialized, child objects (relationships) are not supported, so no need to create them
+		// 2 reasons to create child objects
+		//   1)  if not materialized, child objects (relationships) are not supported
+		//   2)  if not updatable,  if no primary key, then no way to form the parent-child relationships
 		if (!materialized && updatable) {
 			for (String key : descriptorMap.keySet()) {
 				FieldDescriptor fd = descriptorMap.get(key);
@@ -214,12 +226,9 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 		
 	}
 	
-    private static Method findMethod(String className, String methodName, InfinispanHotRodConnection conn) throws TranslatorException {
-        Map<String, Method> mapMethods = conn.getClassRegistry().getReadClassMethods(className);
-
+    private static Method findMethod(String className, String methodName, Map<String, Method> mapMethods, InfinispanHotRodConnection conn) throws TranslatorException {
         
         Method m = ClassRegistry.findMethod(mapMethods, methodName, className);
-        		//mapMethods.get(methodName);
         if (m != null) return m;
          
         // because the class 'methods' contains 2 different references
@@ -231,7 +240,8 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
         		return m;
         	} 
         }
-		throw new TranslatorException("Program Error: unable to find method " + methodName + " on class " + className);
+        
+        return null;
 
     }
     private void createInnerTable(MetadataFactory mf, Descriptor desc, String parentColumnRef, Table rootTable, Method pkMethod, InfinispanHotRodConnection conn) throws TranslatorException  {
@@ -243,20 +253,29 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 		String fd_Name = parentColumnRef;
 
 		Table t = addTable(mf, c, rootTable.supportsUpdate(), false);
+		
+		Map<String, Method> mapMethods = conn.getClassRegistry().getReadClassMethods(c.getName());
 
 		List<FieldDescriptor> fields = desc.getFields();
 		for (FieldDescriptor f:fields) {
 			
 			final SearchType st = isSearchable(f);
+			
+			Method m = findMethod(c.getName(), f.getName(), mapMethods, conn);
+			Class<?> type = m.getReturnType();
 
 			// need to use the repeated descriptor, fd, as the prefix to the NIS in order to perform query
-			addSubColumn(mf, getJavaType(f, c, conn),  getProtobufNativeType(f), f, st, (fd_Name == null ? f.getContainingMessage().getName() : fd_Name), t, true, rootTable.supportsUpdate(), (f.isRequired() ? NullType.No_Nulls  : NullType.Nullable), conn );	
+			addSubColumn(mf, type,  getProtobufNativeType(f), f, st, (fd_Name == null ? f.getContainingMessage().getName() : fd_Name), t, true, rootTable.supportsUpdate(), (f.isRequired() ? NullType.No_Nulls  : NullType.Nullable), conn );	
 		}
 		
 		if (pkMethod != null) {
+			
+	        Map<String, Method> parentMethods = conn.getClassRegistry().
+	        		getReadClassMethods(pc.getName());
+
 					
 			// if not repeatable, then use the attribute name
-			String mName =  findMethodNameForReturnType(pc.getName(), c, fd_Name, conn);
+			String mName =  findMethodNameForReturnType(pc.getName(), c, fd_Name, parentMethods, conn);
 			
 			if (mName == null) {		
 				mName = desc.getName();
@@ -282,14 +301,10 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
     /*
      * This is used to find the method name to call on the parent object to obtain the child reference object(s)
      */
-    private  String findMethodNameForReturnType(String parentClassName, Class<?> childClzz, String methodName, InfinispanHotRodConnection conn) throws TranslatorException {
+    private  String findMethodNameForReturnType(String parentClassName, Class<?> childClzz, String methodName, Map<String, Method> mapMethods, InfinispanHotRodConnection conn) throws TranslatorException {
         if (methodName == null || methodName.length() == 0) {
             return null;
-        }
-        
-        Map<String, Method> mapMethods = conn.getClassRegistry().
-        		getReadClassMethods(parentClassName);
-        
+        }        
         Method m = ClassRegistry.findMethod(mapMethods, methodName, parentClassName);
         
         if (m != null) return ObjectUtil.getNameFromMethodName(m.getName().toLowerCase()); 
@@ -321,9 +336,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 		                if (typeArgument.equals(childClzz)) {
 		                	return ObjectUtil.getNameFromMethodName(m.getName()).toLowerCase();
 
-		                }
-		                
-		                
+		                }    
 		            }
 		        }
 			}			
@@ -333,6 +346,46 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 		return null;
 
     }	
+    
+    /**
+     * Find a matching method, comparing the descriptor java type to the method return type
+     * @param descriptorReturnType
+     * @param mapMethods
+     * @return Method
+     */
+    private Method getMethodBasedOnReturnType(String descriptorReturnType,   Map<String, Method> mapMethods) {
+    	
+    	Method m = null;
+ 
+        // try to match the return generic type (if defined) to the child class
+		for (Iterator it = mapMethods.keySet().iterator(); it.hasNext();) {
+			String k = (String) it.next();
+			m = mapMethods.get(k);
+			
+			// is this a 1-to-1 relationship, then return the method
+			if (m.getReturnType().getSimpleName().equals(descriptorReturnType)) {
+				return m;
+			}
+			if (Collection.class.isAssignableFrom(m.getReturnType()) || m.getReturnType().isArray()) {
+		        Type returnType = m.getGenericReturnType();
+
+		        if(returnType instanceof ParameterizedType){
+		            ParameterizedType type = (ParameterizedType) returnType;
+		            Type[] typeArguments = type.getActualTypeArguments();
+		            for(Type typeArgument : typeArguments){
+		                Class typeArgClass = (Class) typeArgument;
+		                if (typeArgClass.getSimpleName().equals(descriptorReturnType)) {
+		                	return m;
+
+		                }
+   
+		            }
+		        }
+			}
+					
+		}
+		return null;
+    }
 	
 	private Class<?> getRegisteredClass(String name, ObjectConnection conn) throws TranslatorException {
 		Class<?> c = conn.getClassRegistry().getRegisteredClassUsingTableName(name);
@@ -429,12 +482,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 		return SearchType.Unsearchable;
 
 	}
-	
-	private static Class<?> getJavaType(FieldDescriptor fd, Class<?> c, InfinispanHotRodConnection conn) throws TranslatorException {
 
-			Method m = findMethod(c.getName(), fd.getName(), conn);
-			return m.getReturnType();
-	}
 	/*
 	 * See https://developers.google.com/protocol-buffers/docs/proto#scalar
 	 */
@@ -478,4 +526,5 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<ObjectConnec
 		
 		return String.class;
 	}
+
 }

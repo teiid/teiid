@@ -309,13 +309,18 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 
 	// Private method to actually do a delete operation. 
 	private int handleDelete(Delete delete, ObjectVisitor visitor,  Class<?> clz) throws TranslatorException {
-				
+		
+		// child table deletes not implemented yet
+		if (visitor.getForeignKey() != null) {
+			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21017, new Object[] {visitor.getTableName()}));
+		}
+	
 		// if this is the root class (no foreign key), then for each object, obtain
 		// the primary key value and use it to be removed from the cache
 
 		Column keyCol = visitor.getPrimaryKeyCol();
 		if (keyCol == null) {
-			throw new TranslatorException("Deleting container class is not currently supported, no primary key defined");
+			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21018, new Object[] {visitor.getTableName()}));
 		}
 
 		// Find all the objects that meet the criteria for deletion
@@ -416,6 +421,11 @@ public class ObjectUpdateExecution extends ObjectBaseExecution implements Update
 
 	// Private method to actually do an update operation. 
 	private int handleUpdate(Update update, ObjectVisitor visitor, ClassRegistry classRegistry,  Class<?> clz, Map<String, Method> writeMethods) throws TranslatorException {
+		// child table lupdates/deletes not implemented yet
+		if (visitor.getForeignKey() != null) {
+			throw new TranslatorException(ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21017, new Object[] {visitor.getTableName()}));
+		}
+		
 		// Find all the objects that meet the criteria for updating
 		List<Object> toUpdate = connection.getSearchType().performSearch(visitor, executionContext) ;
 				//env.search(visitor, connection, executionContext);

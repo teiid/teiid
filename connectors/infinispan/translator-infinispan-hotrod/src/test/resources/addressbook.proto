@@ -13,7 +13,7 @@ message Person {
 
 
    /* @IndexedField(index=true, store=false) */
-   repeated PhoneNumber phone = 4;
+   repeated PhoneNumber phoneNumber = 4;
    
    optional Address address = 5;
    

@@ -15,24 +15,23 @@
         <module name="javax.resource.api" />
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.api" />    
-	<module name="org.jboss.teiid.translator.infinispan.hotrod" export="true" />
+		<module name="org.jboss.teiid.translator.infinispan.hotrod" export="true" />
 		
 	<!--  additional JDG dependencies can be found in the translator-infinispan-hotrod module -->
 		
-  	<module name="org.infinispan.commons" slot="${jdg.slot}" optional="true" services="import"/>
-   	<module name="org.infinispan.client.hotrod" slot="${jdg.slot}" optional="true" services="import"/>
-        <module name="org.infinispan.protostream" slot="${jdg.slot}"  optional="true" services="import" />
+  		<module name="org.infinispan.commons" slot="${jdg.slot}" optional="true" services="import"/>
+   		<module name="org.infinispan.client.hotrod" slot="${jdg.slot}" optional="true" services="import"/>
+    	<module name="org.infinispan.protostream" slot="${jdg.slot}"  optional="true" services="import" />
    	  	
-    	<module name="org.infinispan.commons" slot="jdg-6.6" optional="true" services="import"/>
-	<module name="org.infinispan.client.hotrod" slot="jdg-6.6" optional="true" services="import"/>
+   		<module name="org.infinispan.commons" slot="jdg-6.6" optional="true" services="import"/>
+		<module name="org.infinispan.client.hotrod" slot="jdg-6.6" optional="true" services="import"/>
     	<module name="org.infinispan.protostream" slot="jdg-6.6"  optional="true" services="import" />
 
     	<module name="org.infinispan.commons" slot="jdg-6.5" optional="true" services="import"/>
-	<module name="org.infinispan.client.hotrod" slot="jdg-6.5" optional="true" services="import"/>
+		<module name="org.infinispan.client.hotrod" slot="jdg-6.5" optional="true" services="import"/>
     	<module name="org.infinispan.protostream" slot="jdg-6.5"  optional="true" services="import" />
 
-
-        <module name="org.jboss.remoting3"  />   
+    	<module name="org.jboss.remoting3"  />   
 
       <!--
         The following dependency is needed when the pojo protobuf annotations are being used
@@ -42,7 +41,7 @@
         the java class(s) that's being stored in the JDG cache         
         -->
     
-        <module name="your.pojo.module"  optional="true"  export="true" />
+    	<module name="your.pojo.module"  optional="true"  export="true" />
       
     </dependencies>
 </module>

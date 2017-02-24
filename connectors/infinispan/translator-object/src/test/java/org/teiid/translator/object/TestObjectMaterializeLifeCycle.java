@@ -100,8 +100,8 @@ public class TestObjectMaterializeLifeCycle {
 		
 		performTest(1, args);
 		
-		assertEquals(PROXY.getCacheName(PersonCacheSource.PERSON_CACHE_NAME),STAGE_CACHE_NAME);
-		assertEquals(PROXY.getCacheName(STAGE_CACHE_NAME), PersonCacheSource.PERSON_CACHE_NAME);
+		assertEquals(PROXY.getCacheName(PersonCacheSource.PERSON_CACHE_NAME, CONNECTION),STAGE_CACHE_NAME);
+		assertEquals(PROXY.getCacheName(STAGE_CACHE_NAME, CONNECTION), PersonCacheSource.PERSON_CACHE_NAME);
 
 	}	
 	

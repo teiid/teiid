@@ -74,9 +74,9 @@ public class DDLHandler {
 	 * @throws TranslatorException if the staging cache cannot be determined or is not avaiCommandContext lable
 	 */
 	private void truncate(ObjectConnection connection) throws TranslatorException {
-		proxy.ensureCacheNames();
+		proxy.ensureCacheNames(connection);
 		
-		String scn = this.getCacheNameProxy().getStageCacheAliasName();
+		String scn = this.getCacheNameProxy().getStageCacheAliasName(connection);
 		
 		connection.clearCache(scn);
 	}
@@ -89,7 +89,7 @@ public class DDLHandler {
 	 * @throws TranslatorException
 	 */
 	private void swap(ObjectConnection connection) throws TranslatorException {
-		proxy.swapCacheNames();
+		proxy.swapCacheNames(connection);
 	}
 
 	public boolean isStagingTarget() {
