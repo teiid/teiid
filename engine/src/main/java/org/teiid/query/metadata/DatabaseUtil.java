@@ -164,10 +164,8 @@ public class DatabaseUtil {
         
         p.setAllowAlter(dp.getAllowAlter());
         p.setAllowDelete(dp.getAllowDelete());
-        p.setAllowDrop(false);
         p.setAllowExecute(dp.getAllowExecute());
         p.setAllowInsert(dp.getAllowCreate());
-        p.setAllowLanguage(dp.getAllowLanguage());
         p.setAllowSelect(dp.getAllowRead());
         p.setAllowUpdate(dp.getAllowUpdate());
         p.setResourceName(dp.getResourceName());
@@ -176,7 +174,8 @@ public class DatabaseUtil {
         
         // this is more of a guessing game here..
         if (dp.getAllowLanguage() != null && dp.getAllowLanguage()) {
-            p.setResourceType(ResourceType.DATABASE);
+            p.setAllowUsage(true);
+            p.setResourceType(ResourceType.LANGUAGE);
         } else if (dotCount == 0) {
             p.setResourceType(ResourceType.SCHEMA);
         } else if (dp.getAllowExecute() != null && dp.getAllowExecute()){
@@ -258,28 +257,13 @@ public class DatabaseUtil {
         PermissionMetaData pmd = new PermissionMetaData();
         pmd.setResourceName(from.getResourceName());
         
-        // NOTE: PMD even though you set false, it can interpret it wrong, use null or true only
-        if (from.hasPrivilege(Privilege.ALTER)) {
-            pmd.setAllowAlter(true);
-        }
-        if (from.hasPrivilege(Privilege.INSERT)) {
-            pmd.setAllowCreate(true);
-        }
-        if (from.hasPrivilege(Privilege.DELETE)) {
-            pmd.setAllowDelete(true);
-        }
-        if(from.hasPrivilege(Privilege.EXECUTE)) {
-            pmd.setAllowExecute(true);
-        }
-        if (from.hasPrivilege(Privilege.SELECT)) {
-            pmd.setAllowRead(true);
-        }
-        if(from.hasPrivilege(Privilege.UPDATE)) {
-            pmd.setAllowUpdate(true);
-        }
-        if (from.hasPrivilege(Privilege.LANGUAGE)) {
-            pmd.setAllowLanguage(true);
-        }
+        pmd.setAllowAlter(from.hasPrivilege(Privilege.ALTER));
+        pmd.setAllowCreate(from.hasPrivilege(Privilege.INSERT));
+        pmd.setAllowDelete(from.hasPrivilege(Privilege.DELETE));
+        pmd.setAllowExecute(from.hasPrivilege(Privilege.EXECUTE));
+        pmd.setAllowRead(from.hasPrivilege(Privilege.SELECT));
+        pmd.setAllowUpdate(from.hasPrivilege(Privilege.UPDATE));
+        pmd.setAllowLanguage(from.hasPrivilege(Privilege.USAGE));
         
         pmd.setCondition(from.getCondition());
         pmd.setConstraint(from.isConditionAConstraint());
@@ -294,10 +278,10 @@ public class DatabaseUtil {
         dpm.setName(from.getRole());
         
         for (Permission p : from.getPermissions()) {
-            if (p.hasPrivilege(Privilege.ALL_PRIVILEGES)) {
+            if (Boolean.TRUE.equals(p.hasPrivilege(Privilege.ALL_PRIVILEGES))) {
                 dpm.setGrantAll(true);
                 continue;
-            } else if (p.hasPrivilege(Privilege.TEMPORARY_TABLE)) {
+            } else if (Boolean.TRUE.equals(p.hasPrivilege(Privilege.TEMPORARY_TABLE))) {
                 dpm.setAllowCreateTemporaryTables(true);
                 continue;
             }
@@ -306,11 +290,9 @@ public class DatabaseUtil {
             dpm.addPermission(pmd);
         }
         
-        if (role != null) {
-            dpm.setDescription(role.getAnnotation());
-        }
+        dpm.setDescription(role.getAnnotation());
         
-        if (role != null && role.getJassRoles() != null && !role.getJassRoles().isEmpty()) {
+        if (role.getJassRoles() != null && !role.getJassRoles().isEmpty()) {
             dpm.setMappedRoleNames(role.getJassRoles());
         }
         

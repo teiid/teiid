@@ -24,7 +24,6 @@ package org.teiid.metadata;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -32,11 +31,10 @@ import java.util.TreeMap;
 
 import org.teiid.connector.DataPlugin;
 import org.teiid.core.util.StringUtil;
-import org.teiid.metadata.Grant.Permission.Privilege;
 
 public class Database extends AbstractMetadataRecord {
     private static final long serialVersionUID = 7595765832848232840L;
-    public enum ResourceType {DATABASE, SCHEMA, TABLE, PROCEDURE, FUNCTION, COLUMN, SERVER, DATAWRAPPER, PARAMETER, ROLE, GRANT};
+    public enum ResourceType {DATABASE, SCHEMA, TABLE, PROCEDURE, FUNCTION, COLUMN, SERVER, DATAWRAPPER, PARAMETER, ROLE, GRANT, LANGUAGE};
     protected MetadataStore store = new MetadataStore();
     protected NavigableMap<String, DataWrapper> wrappers = new TreeMap<String, DataWrapper>(String.CASE_INSENSITIVE_ORDER);
     protected NavigableMap<String, Server> servers = new TreeMap<String, Server>(String.CASE_INSENSITIVE_ORDER);    
@@ -260,30 +258,7 @@ public class Database extends AbstractMetadataRecord {
     }
 
     public void revokeGrant(Grant grant) {
-    	boolean found = false;
-    	for (Grant g : getGrants()) {
-            if (g.getRole().equalsIgnoreCase(grant.getRole())) {
-            	Database.ResourceType resourceType = grant.getPermissions().iterator().next().getResourceType();
-            	String resourceName = grant.getPermissions().iterator().next().getResourceName();
-            	EnumSet<Privilege> allowence = grant.getPermissions().iterator().next().getPrivileges();
-            	boolean all = allowence.contains(Privilege.ALL_PRIVILEGES);
-            	for (Grant.Permission p : g.getPermissions()) {
-					if (p.getResourceType() == resourceType && 
-							p.getResourceName().equals(resourceName) &&
-							(all || p.getPrivileges().containsAll(allowence))) {
-            			found = true;            			
-            		}
-            	}
-            }    		
-    	}
-    	if (found) {
-    		this.store.removeGrant(grant);
-    	} else {
-            throw new MetadataException(DataPlugin.Event.TEIID60031,
-                    DataPlugin.Util.gs(DataPlugin.Event.TEIID60031, grant.getRole(),
-                            grant.getPermissions().iterator().next().getResourceName(),
-                            grant.getPermissions().iterator().next().getResourceType().name()));    		
-    	}
+    	this.store.removeGrant(grant);
     }
     
     public Collection<Grant> getGrants(){

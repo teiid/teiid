@@ -33,7 +33,6 @@ import java.util.TreeMap;
 
 import org.teiid.connector.DataPlugin;
 import org.teiid.metadata.Grant.Permission;
-import org.teiid.metadata.Grant.Permission.Privilege;
 
 /**
  * Simple holder for metadata.
@@ -99,6 +98,7 @@ public class MetadataStore implements Serializable {
 			}
 			addDataTypes(store.getDatatypes().values());
 			addGrants(store.grants.values());
+			roles.putAll(store.roles);
 		}
 	}
 
@@ -111,7 +111,7 @@ public class MetadataStore implements Serializable {
 		}
 	}
 
-	public void addGrant(Grant grant) {
+	void addGrant(Grant grant) {
 	    if (grant == null) {
 	        return;
 	    }
@@ -119,19 +119,43 @@ public class MetadataStore implements Serializable {
 	    if (previous == null) {
 	        this.grants.put(grant.getRole(), grant);
 	    } else {
-	        for (Permission newP : grant.getPermissions()) {
+	        for (Permission addPermission : grant.getPermissions()) {
 	            boolean found = false;
-	            for (Permission oldP : previous.getPermissions()) {
-                    if (oldP.getResourceName().equalsIgnoreCase(newP.getResourceName())
-                            && oldP.getResourceType() == newP.getResourceType()) {
-	                    oldP.appendPrivileges(newP.getPrivileges());
-	                    found = true;
-	                }
-	            }
+	            for (Permission currentPermission : new ArrayList<Permission>(previous.getPermissions())) {
+                    if (currentPermission.resourceMatches(addPermission)) {
+                        found = true;
+                        if (addPermission.getMask() != null) {
+                            if (currentPermission.getMask() != null) {
+                                throw new MetadataException(DataPlugin.Event.TEIID60035, DataPlugin.Util.gs(DataPlugin.Event.TEIID60035, addPermission.getMask(), currentPermission.getMask()));
+                            }
+                            currentPermission.setMask(addPermission.getMask());
+                            currentPermission.setMaskOrder(addPermission.getMaskOrder());
+                        }
+                        if (addPermission.getCondition() != null) {
+                            if (currentPermission.getCondition() != null) {
+                                throw new MetadataException(DataPlugin.Event.TEIID60036, DataPlugin.Util.gs(DataPlugin.Event.TEIID60036, addPermission.getMask(), currentPermission.getMask()));
+                            }
+                            currentPermission.setCondition(addPermission.getCondition(), addPermission.isConditionAConstraint());
+                        }
+                        currentPermission.appendPrivileges(addPermission.getPrivileges());
+                    }
+                    if (currentPermission.getPrivileges().isEmpty() 
+                            && currentPermission.getRevokePrivileges().isEmpty()
+                            && currentPermission.getCondition() == null
+                            && currentPermission.getMask() == null) {
+                        previous.removePermission(currentPermission);
+                    }
+                    if (found) {
+                        break;
+                    }
+                }
 	            if (!found) {
-	                previous.addPermission(newP);
+	                previous.addPermission(addPermission);
 	            }
-	        }
+            }
+            if (previous.getPermissions().isEmpty()) {
+                this.grants.remove(grant.getRole());
+            }
 	    }
 	}
 	
@@ -140,30 +164,48 @@ public class MetadataStore implements Serializable {
 	        return;
 	    }
 	    Grant previous = this.grants.get(toRemoveGrant.getRole());
-	    if (previous != null) {
-	        for (Permission removePermission : toRemoveGrant.getPermissions()) {
-	        	ArrayList<Permission> emptyPermissions = new ArrayList<Permission>();
-	            for (Permission currentPermission : previous.getPermissions()) {
-                    if (currentPermission.getResourceName().equalsIgnoreCase(removePermission.getResourceName())
-                            && currentPermission.getResourceType() == removePermission.getResourceType()) {
-                    	boolean all = removePermission.getPrivileges().contains(Privilege.ALL_PRIVILEGES);
-                    	if (all) {
-                    		currentPermission.removePrivileges(currentPermission.getPrivileges());
-                    	} else {
-                    		currentPermission.removePrivileges(removePermission.getPrivileges());
-                    	}
-	                }
-                    if (currentPermission.getPrivileges().isEmpty()) {
-                    	emptyPermissions.add(currentPermission);
+	    if (previous == null) {
+	        this.grants.put(toRemoveGrant.getRole(), toRemoveGrant);
+	    } else {
+	        for (Permission revokePermission : toRemoveGrant.getPermissions()) {
+                boolean found = false;
+                for (Permission currentPermission : new ArrayList<Permission>(previous.getPermissions())) {
+                    if (currentPermission.resourceMatches(revokePermission)) {
+                        found = true;
+                        if (revokePermission.getMask() != null) {
+                            if (currentPermission.getMask() != null) {
+                                currentPermission.setMask(null);
+                                currentPermission.setMaskOrder(null);
+                            } else {
+                                //TODO: could be exception
+                            }
+                        }
+                        if (revokePermission.getCondition() != null) {
+                            if (currentPermission.getCondition() != null) {
+                                currentPermission.setCondition(null, null);
+                            } else {
+                                //TODO: could be exception
+                            }
+                        }
+                        currentPermission.removePrivileges(revokePermission.getRevokePrivileges());
                     }
-	            }
-	            for (Permission p:emptyPermissions) {
-	            	previous.removePermission(p);	
-	            }
-	        }
-	        if (previous.getPermissions().isEmpty()) {
-	        	this.grants.remove(toRemoveGrant.getRole());
-	        }
+                    if (currentPermission.getPrivileges().isEmpty() 
+                            && currentPermission.getRevokePrivileges().isEmpty()
+                            && currentPermission.getCondition() == null
+                            && currentPermission.getMask() == null) {
+                        previous.removePermission(currentPermission);
+                    }
+                    if (found) {
+                        break;
+                    }
+                }
+                if (!found) {
+                    previous.addPermission(revokePermission);
+                }
+            }
+            if (previous.getPermissions().isEmpty()) {
+                this.grants.remove(toRemoveGrant.getRole());
+            }	        
 	    }
 	}	
 	
@@ -171,19 +213,19 @@ public class MetadataStore implements Serializable {
 	    return this.grants.values();
 	}
     
-    public void addRole(Role role) {
+    void addRole(Role role) {
         this.roles.put(role.getName(), role);
     }
     
-    public Role getRole(String roleName) {
+    Role getRole(String roleName) {
         return this.roles.get(roleName);
     }
 
-    public Collection<Role> getRoles() {
+    Collection<Role> getRoles() {
         return this.roles.values();
     }
     
-    public Role removeRole(String roleName) {
+    Role removeRole(String roleName) {
         return this.roles.remove(roleName);
     }    
 }

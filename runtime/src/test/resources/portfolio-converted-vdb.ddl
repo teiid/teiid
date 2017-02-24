@@ -92,9 +92,11 @@ SET SCHEMA Stocks;
 CREATE ROLE ReadOnly WITH ANY AUTHENTICATED;
 CREATE ROLE Prices WITH JAAS ROLE prices;
 CREATE ROLE ReadWrite WITH JAAS ROLE superuser;
+REVOKE GRANT SELECT ON SCHEMA Accounts FROM Prices;
+
 GRANT SELECT ON SCHEMA Accounts TO ReadOnly;
 GRANT ON COLUMN "Accounts.Account.SSN" MASK 'null' TO ReadOnly;
-GRANT ON TABLE "Accounts.Customer" TO ReadOnly;
+GRANT ON TABLE "Accounts.Customer" CONDITION 'state <> ''New York''' TO ReadOnly;
 GRANT ON COLUMN "Accounts.Customer.SSN" MASK 'null' TO ReadOnly;
 GRANT SELECT ON SCHEMA MarketData TO ReadOnly;
 GRANT SELECT ON SCHEMA Stocks TO ReadOnly;
@@ -102,7 +104,7 @@ GRANT ON COLUMN "Stocks.StockPrices.Price" MASK ORDER 1 'CASE WHEN hasRole(''Pri
 
 GRANT SELECT,INSERT,UPDATE,DELETE ON SCHEMA Accounts TO ReadWrite;
 GRANT ON COLUMN "Accounts.Account.SSN" MASK ORDER 1 'SSN' TO ReadWrite;
-GRANT ON TABLE "Accounts.Customer" TO ReadWrite;
+GRANT ON TABLE "Accounts.Customer" CONDITION 'true' TO ReadWrite;
 GRANT ON COLUMN "Accounts.Customer.SSN" MASK ORDER 1 'SSN' TO ReadWrite;
 GRANT SELECT,INSERT,UPDATE,DELETE ON SCHEMA MarketData TO ReadWrite;
 

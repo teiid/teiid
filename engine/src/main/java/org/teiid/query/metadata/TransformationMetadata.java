@@ -48,6 +48,8 @@ import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.LRUCache;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.StringUtil;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column.SearchType;
@@ -56,7 +58,6 @@ import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionTree;
-import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingDocument;
 import org.teiid.query.mapping.xml.MappingLoader;
@@ -187,11 +188,6 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         }
     }
     
-    public TransformationMetadata(Database database, SystemFunctionManager systemFunctionMgr) {
-        this(DatabaseUtil.convert(database), new CompositeMetadataStore(database.getMetadataStore()), null,
-        		systemFunctionMgr.getSystemFunctions(), null);
-    }
-    
     private void processGrants(MetadataStore store, Map<String, DataPolicyMetadata> policies) {
         if (store.getGrants() == null || store.getGrants().isEmpty() || policies == null) {
             return;
@@ -206,9 +202,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
                     }
                 }
             } else {
-                // Convert from Grant to DataPolicyMetadata
-                dpm = DatabaseUtil.convert(grant, store.getRole(grant.getRole()));
-                policies.put(grant.getRole(), dpm);
+                LogManager.logDetail(LogConstants.CTX_RUNTIME, "Permission added to non-existant role", grant.getRole()); //$NON-NLS-1$
             }
         }
     }

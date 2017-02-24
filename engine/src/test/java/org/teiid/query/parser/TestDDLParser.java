@@ -38,6 +38,7 @@ import org.teiid.metadata.Grant.Permission;
 import org.teiid.metadata.Grant.Permission.Privilege;
 import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.query.function.SystemFunctionManager;
+import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.SystemMetadata;
@@ -1248,7 +1249,7 @@ public class TestDDLParser {
         assertTrue(p.hasPrivilege(Privilege.INSERT));
         assertTrue(p.hasPrivilege(Privilege.DELETE));
         assertTrue(p.hasPrivilege(Privilege.UPDATE));
-        assertFalse(p.hasPrivilege(Privilege.DROP));
+        assertNull(p.hasPrivilege(Privilege.DROP));
     }
     
     @Test 
@@ -1261,7 +1262,7 @@ public class TestDDLParser {
                 + "SET SCHEMA test;"
                 + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
                 + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;"
-                + "GRANT ALL PRIVILEGES ON TABLE test.G1 TO superuser;";
+                + "GRANT ALL PRIVILEGES TO superuser;";
         
         Database db = helpParse(ddl);
         Role role = db.getRole("superuser");
@@ -1285,7 +1286,7 @@ public class TestDDLParser {
                 + "SET SCHEMA test;"
                 + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
                 + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;"
-                + "GRANT ALL PRIVILEGES ON TABLE test.G1 CONDITION CONSTRAINT 'foo=bar' TO superuser;";
+                + "GRANT SELECT ON TABLE test.G1 CONDITION CONSTRAINT 'foo=bar' TO superuser;";
         
         Database db = helpParse(ddl);
         Role role = db.getRole("superuser");
@@ -1296,7 +1297,7 @@ public class TestDDLParser {
         Grant g = grants.iterator().next();
         assertEquals(1, g.getPermissions().size());
         Permission p = g.getPermissions().iterator().next();
-        assertTrue(p.hasPrivilege(Privilege.ALL_PRIVILEGES));
+        assertTrue(p.hasPrivilege(Privilege.SELECT));
         assertEquals("foo=bar", p.getCondition());
         assertTrue(p.isConditionAConstraint());
     }     
@@ -1324,15 +1325,15 @@ public class TestDDLParser {
         Grant g = grants.iterator().next();
         assertEquals(1, g.getPermissions().size());
         Permission p = g.getPermissions().iterator().next();
-        assertFalse(p.hasPrivilege(Privilege.SELECT));
+        assertNull(p.hasPrivilege(Privilege.SELECT));
         assertTrue(p.hasPrivilege(Privilege.INSERT));
         assertTrue(p.hasPrivilege(Privilege.DELETE));
         assertTrue(p.hasPrivilege(Privilege.UPDATE));
-        assertFalse(p.hasPrivilege(Privilege.DROP));
+        assertNull(p.hasPrivilege(Privilege.DROP));
     }  
     
     @Test 
-    public void testRevokeALl() throws Exception {
+    public void testRevokeAll() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
                 + "USE DATABASE FOO ;"
                 + "CREATE FOREIGN DATA WRAPPER postgresql;"
@@ -1343,14 +1344,15 @@ public class TestDDLParser {
                 + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;"
                 + "GRANT SELECT,INSERT,DELETE ON TABLE G1 TO superuser;"
                 + "GRANT UPDATE ON TABLE test.G1 TO superuser;"
-                + "REVOKE GRANT ALL PRIVILEGES ON TABLE test.G1 FROM superuser;";
+                + "REVOKE GRANT ALL PRIVILEGES FROM superuser;";
         
         Database db = helpParse(ddl);
         Role role = db.getRole("superuser");
         assertNotNull(role);
 
         Collection<Grant> grants = db.getGrants();
-        assertEquals(0, grants.size());
+        //revoke all privileges will only have an already granted all privileges
+        assertEquals(1, grants.size());
     }    
 
     @Test 

@@ -22,16 +22,27 @@
 
 package org.teiid.query.parser;
 
-import static org.teiid.query.parser.SQLParserConstants.tokenImage;
-import static org.teiid.query.parser.TeiidSQLParserTokenManager.INVALID_TOKEN;
+import static org.teiid.query.parser.SQLParserConstants.*;
+import static org.teiid.query.parser.TeiidSQLParserTokenManager.*;
 
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.language.SQLConstants;
-import org.teiid.metadata.*;
+import org.teiid.metadata.DataWrapper;
+import org.teiid.metadata.Database;
+import org.teiid.metadata.Datatype;
+import org.teiid.metadata.MetadataException;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Parser;
+import org.teiid.metadata.Server;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.metadata.DatabaseStore;
@@ -498,9 +509,6 @@ public class QueryParser implements Parser {
             store.serverCreated(s);
         }
         List<String> servers = Collections.emptyList();
-        if (factory.getSchema().isPhysical()){
-        	servers = Arrays.asList(NONE);
-        }
         store.schemaCreated(factory.getSchema(), servers);
         store.schemaSwitched(factory.getSchema().getName());
         try {

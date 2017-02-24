@@ -454,6 +454,8 @@ public class TestDDLStringVisitor {
         Role role = new Role("admin");
         role.setAnyAuthenticated(true);        
         
+        Role role1 = new Role("uber");
+        
         Grant.Permission permission = new Grant.Permission();
         permission.setAllowAlter(true);
         permission.setAllowSelect(true);
@@ -465,19 +467,30 @@ public class TestDDLStringVisitor {
         permission2.setResourceName("schema.tableName");
         permission2.setResourceType(ResourceType.TABLE);        
         
+        Grant.Permission permission3 = new Grant.Permission();
+        permission3.setAllowAllPrivileges(true);
+        
+        Grant.Permission permission4 = new Grant.Permission();
+        permission4.setAllowTemporyTables(true);
+        
         Grant g = new Grant();
         g.setRole(role.getName());
         g.addPermission(permission);
+        g.addPermission(permission4);
 
         Grant g2 = new Grant();
         g2.setRole(role.getName());
         g2.addPermission(permission2);
         
-        g2.addPermission(permission2);
+        Grant g3 = new Grant();
+        g3.setRole("uber");
+        g3.addPermission(permission3);
         
         db.addRole(role);
+        db.addRole(role1);
         db.addGrant(g);
         db.addGrant(g2);
+        db.addGrant(g3);
         
         
         String expected = "\n" + 
@@ -491,7 +504,10 @@ public class TestDDLStringVisitor {
                 "\n" + 
                 "--############ Roles & Grants ############\n"+
                 "CREATE ROLE admin WITH ANY AUTHENTICATED;\n" + 
+                "CREATE ROLE uber;\n" +
                 "GRANT SELECT,DELETE,ALTER ON TABLE \"schema.tableName\" TO admin;\n" + 
+                "GRANT TEMPORARY TABLE TO admin;\n\n" +
+                "GRANT ALL PRIVILEGES TO uber;\n" +
                 "\n" + 
                 "\n" + 
                 "/*\n" +

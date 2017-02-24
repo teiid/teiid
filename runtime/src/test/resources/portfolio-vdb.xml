@@ -113,6 +113,11 @@
     <data-role name="Prices"  >
         <description>Allow ReadOnly Operations to see pricing</description>
         
+        <permission>
+            <resource-name>Accounts</resource-name>
+            <allow-read>false</allow-read>
+        </permission>
+        
         <mapped-role-name>prices</mapped-role-name>
     </data-role>
     
