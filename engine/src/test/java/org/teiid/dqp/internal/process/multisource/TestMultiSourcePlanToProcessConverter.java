@@ -96,7 +96,7 @@ public class TestMultiSourcePlanToProcessConverter {
         }
     }
 
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
 
     public ProcessorPlan helpTestMultiSourcePlan(QueryMetadataInterface metadata, String userSql, String multiModel, int sourceCount, ProcessorDataManager dataMgr, List<?>[] expectedResults, VDBMetaData vdb) throws Exception {
     	return helpTestMultiSourcePlan(metadata, userSql, multiModel, sourceCount, dataMgr, expectedResults, vdb, null, null);
