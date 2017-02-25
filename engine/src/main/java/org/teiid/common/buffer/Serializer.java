@@ -35,4 +35,5 @@ public interface Serializer<T> {
 	T deserialize(ObjectInput ois) throws IOException, ClassNotFoundException;
 	boolean useSoftCache();
 	Long getId();
+	String describe(T obj);
 }
