@@ -418,6 +418,11 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			}
 			return (int)(totalSize/rowsSampled);
 		}
+		
+		@Override
+		public String describe(List<? extends List<?>> obj) {
+		    return "Batch of " + obj.size() + " rows of " + types; //$NON-NLS-1$ //$NON-NLS-2$ 
+		}
 	}
 	
 	private static class BatchSoftReference extends SoftReference<CacheEntry> {

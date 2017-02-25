@@ -28,6 +28,7 @@ import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -682,7 +683,20 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 				//entries are mutable after adding, the original should be removed shortly so just ignore
 				LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Object ", entry.getId(), " changed size since first persistence, keeping the original."); //$NON-NLS-1$ //$NON-NLS-2$
 			} else if (e == BlockOutputStream.exceededMax){
-				LogManager.logError(LogConstants.CTX_BUFFER_MGR, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30001,s.getId(), entry.getId())); 
+			    final long[] size = new long[1];
+			    try {
+                    ObjectOutput dos = new ObjectOutputStream(new OutputStream() {
+                        @Override
+                        public void write(int b) throws IOException {
+                            size[0]++;
+                        }
+                    });
+                    s.serialize(entry.getObject(), dos);
+                } catch (IOException e1) {
+                    
+                }
+				LogManager.logError(LogConstants.CTX_BUFFER_MGR, 
+				        QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30001,s.getId(), entry.getId(), entry.getSizeEstimate(), size[0], s.describe(entry.getObject()))); 
 			} else {
 				LogManager.logError(LogConstants.CTX_BUFFER_MGR, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30002,s.getId(), entry.getId()));
 			}

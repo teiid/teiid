@@ -71,6 +71,11 @@ public class TestBufferFrontedFileStoreCache {
 		public boolean useSoftCache() {
 			return false;
 		}
+		
+		@Override
+		public String describe(Integer obj) {
+		    return null;
+		}
 	}
 	
 	@After public void teardown() {
