@@ -55,7 +55,7 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 public class DDLStringVisitor {
 	private static final String TAB = "\t"; //$NON-NLS-1$
 	private static final String NEWLINE = "\n";//$NON-NLS-1$
-	
+    public static final String GENERATED = "TEIID_GENERATED";
 	private static final HashSet<String> LENGTH_DATATYPES = new HashSet<String>(
 			Arrays.asList(
 					DataTypeManager.DefaultDataTypes.CHAR,
@@ -370,7 +370,10 @@ public class DDLStringVisitor {
 					append(NEWLINE);
 					append(NEWLINE);
 				}			
-				visit(t);
+                String generated = t.getProperty(GENERATED, false);
+                if (generated == null || !Boolean.valueOf(generated)) {
+                    visit(t);
+                }
 			}
 		}
 		
@@ -383,7 +386,11 @@ public class DDLStringVisitor {
 					append(NEWLINE);
 					append(NEWLINE);
 				}				
-				visit(p);
+				
+                String generated = p.getProperty(GENERATED, false);
+                if (generated == null || !Boolean.valueOf(generated)) {
+                    visit(p);
+                }
 			}
 		}
 		
@@ -396,7 +403,10 @@ public class DDLStringVisitor {
 					append(NEWLINE);
 					append(NEWLINE);
 				}				
-				visit(f);
+                String generated = f.getProperty(GENERATED, false);
+                if (generated == null || !Boolean.valueOf(generated)) {
+                    visit(f);
+                }
 			}
 		}
 	}
@@ -427,19 +437,22 @@ public class DDLStringVisitor {
 			append(SQLConstants.Tokens.SEMICOLON);
 			
 			if (table.isInsertPlanEnabled()) {
-				buildTrigger(name, null, INSERT, table.getInsertPlan());
+				buildTrigger(name, null, INSERT, table.getInsertPlan(), false);
 			}
 			
 			if (table.isUpdatePlanEnabled()) {
-				buildTrigger(name, null, UPDATE, table.getUpdatePlan());
+				buildTrigger(name, null, UPDATE, table.getUpdatePlan(), false);
 			}	
 			
 			if (table.isDeletePlanEnabled()) {
-				buildTrigger(name, null, DELETE, table.getDeletePlan());
+				buildTrigger(name, null, DELETE, table.getDeletePlan(), false);
 			}	
 			
 			for (Trigger tr : table.getTriggers().values()) {
-			    buildTrigger(name, tr.getName(), tr.getEvent().name(), tr.getPlan());   
+			    String generated = tr.getProperty(GENERATED, false);
+			    if (generated == null || !Boolean.valueOf(generated)) {
+			        buildTrigger(name, tr.getName(), tr.getEvent().name(), tr.getPlan(), tr.isAfter());
+			    }
 			}
 		} else {
 		    append(SQLConstants.Tokens.SEMICOLON);
@@ -481,14 +494,20 @@ public class DDLStringVisitor {
 		return this;
 	}
 
-	private void buildTrigger(String name, String trigger_name, String type, String plan) {
+	private void buildTrigger(String name, String trigger_name, String type, String plan, boolean isAfter) {
 		append(NEWLINE);
 		append(NEWLINE);
 		append(SQLConstants.Reserved.CREATE).append(SPACE).append(TRIGGER).append(SPACE);
 		if (trigger_name != null) {
 		    append(SQLStringVisitor.escapeSinglePart(trigger_name)).append(SPACE);
 		}
-		append(SQLConstants.Reserved.ON).append(SPACE).append(name).append(SPACE).append(INSTEAD_OF).append(SPACE).append(type).append(SPACE).append(SQLConstants.Reserved.AS).append(NEWLINE);
+		append(SQLConstants.Reserved.ON).append(SPACE).append(name).append(SPACE);
+		if (isAfter) {
+		    append(AFTER);
+		} else {
+		    append(INSTEAD_OF);   
+		}
+		append(SPACE).append(type).append(SPACE).append(SQLConstants.Reserved.AS).append(NEWLINE);
 		append(plan);
 		append(SQLConstants.Tokens.SEMICOLON);
 	}

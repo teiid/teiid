@@ -224,23 +224,24 @@ BEGIN
     END
     
     DECLARE string updateCriteria = ' WHERE VDBName = DVARS.vdbName AND VDBVersion = DVARS.vdbVersion AND schemaName = DVARS.schemaName AND Name = DVARS.viewName';
-	DECLARE string updateStmt = 'UPDATE ' || VARIABLES.statusTable || ' SET LoadNumber = DVARS.LoadNumber, LoadState = DVARS.LoadState, valid = DVARS.valid, Updated = DVARS.updated, Cardinality = DVARS.cardinality, NodeName=DVARS.NodeName' ||  VARIABLES.updateCriteria;
+	DECLARE string updateStmt = 'UPDATE ' || VARIABLES.statusTable || ' SET LoadNumber = DVARS.LoadNumber, LoadState = DVARS.LoadState, valid = DVARS.valid, Updated = DVARS.updated, Cardinality = DVARS.cardinality, NodeName=DVARS.NodeName, StaleCount=DVARS.StaleCount ' ||  VARIABLES.updateCriteria;
 
-	EXECUTE IMMEDIATE 'SELECT Name, TargetSchemaName, TargetName, Valid, LoadState, Updated, Cardinality, LoadNumber FROM ' || VARIABLES.statusTable || VARIABLES.updateCriteria AS Name string, TargetSchemaName string, TargetName string, Valid boolean, LoadState string, Updated timestamp, Cardinality long, LoadNumber long INTO #load USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = loadMatView.schemaName, viewName = loadMatView.viewName;
+	EXECUTE IMMEDIATE 'SELECT Name, TargetSchemaName, TargetName, Valid, LoadState, Updated, Cardinality, LoadNumber, StaleCount FROM ' || VARIABLES.statusTable || VARIABLES.updateCriteria AS Name string, TargetSchemaName string, TargetName string, Valid boolean, LoadState string, Updated timestamp, Cardinality long, LoadNumber long, StaleCount long INTO #load USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = loadMatView.schemaName, viewName = loadMatView.viewName;
 	
 	DECLARE string previousRow = (SELECT Name FROM #load);
 	IF (previousRow is null)
     BEGIN 
-        EXECUTE IMMEDIATE 'INSERT INTO '|| VARIABLES.statusTable ||' (VDBName, VDBVersion, SchemaName, Name, TargetSchemaName, TargetName, Valid, LoadState, Updated, Cardinality, LoadNumber, NodeName) values (DVARS.vdbName, DVARS.vdbVersion, DVARS.schemaName, DVARS.viewName, DVARS.TargetSchemaName, DVARS.matViewTable, DVARS.valid, DVARS.loadStatus, DVARS.updated, -1, 1, DVARS.NodeName)' USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, targetSchemaName = VARIABLES.targetSchemaName, viewName = loadMatView.viewName, valid=false, loadStatus='LOADING', matViewTable=matViewTable, updated = now(), NodeName = NODE_ID();
+        EXECUTE IMMEDIATE 'INSERT INTO '|| VARIABLES.statusTable ||' (VDBName, VDBVersion, SchemaName, Name, TargetSchemaName, TargetName, Valid, LoadState, Updated, Cardinality, LoadNumber, NodeName, StaleCount) values (DVARS.vdbName, DVARS.vdbVersion, DVARS.schemaName, DVARS.viewName, DVARS.TargetSchemaName, DVARS.matViewTable, DVARS.valid, DVARS.loadStatus, DVARS.updated, -1, 1, DVARS.NodeName, 0)' USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, targetSchemaName = VARIABLES.targetSchemaName, viewName = loadMatView.viewName, valid=false, loadStatus='LOADING', matViewTable=matViewTable, updated = now(), NodeName = NODE_ID();
         VARIABLES.status = 'LOAD';
     EXCEPTION e
         DELETE FROM #load;
         EXECUTE logMsg(context=>'org.teiid.MATVIEWS', level=>'WARN', msg=>e.exception);
-        EXECUTE IMMEDIATE 'SELECT Name, TargetSchemaName, TargetName, Valid, LoadState, Updated, Cardinality, LoadNumber FROM ' || VARIABLES.statusTable || VARIABLES.updateCriteria AS Name string, TargetSchemaName string, TargetName string, Valid boolean, LoadState string, Updated timestamp, Cardinality long, LoadNumber long INTO #load USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = loadMatView.viewName;		       
+        EXECUTE IMMEDIATE 'SELECT Name, TargetSchemaName, TargetName, Valid, LoadState, Updated, Cardinality, LoadNumber, StaleCount FROM ' || VARIABLES.statusTable || VARIABLES.updateCriteria AS Name string, TargetSchemaName string, TargetName string, Valid boolean, LoadState string, Updated timestamp, Cardinality long, LoadNumber long, StaleCount long INTO #load USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = loadMatView.viewName;		       
     END
     
     DECLARE long VARIABLES.loadNumber = 1;
     DECLARE boolean VARIABLES.valid = false;
+	DECLARE long staleCount = (SELECT StaleCount FROM #load);
 	
 	IF (VARIABLES.status = 'CHECK')
 	BEGIN 
@@ -248,7 +249,7 @@ BEGIN
 	    BEGIN
 		    IF (loadstate <> 'LOADING' OR TIMESTAMPDIFF(SQL_TSI_SECOND, matcursor.updated, now()) > (ttl/1000))
 		        BEGIN 
-		            EXECUTE IMMEDIATE updateStmt || ' AND loadNumber = ' || matcursor.loadNumber USING loadNumber = matcursor.loadNumber + 1, vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = loadMatView.viewName, updated = now(), LoadState = 'LOADING', valid = matcursor.valid AND NOT invalidate, cardinality = matcursor.cardinality, NodeName = NODE_ID();
+		            EXECUTE IMMEDIATE updateStmt || ' AND loadNumber = ' || matcursor.loadNumber USING loadNumber = matcursor.loadNumber + 1, vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = loadMatView.viewName, updated = now(), LoadState = 'LOADING', valid = matcursor.valid AND NOT invalidate, cardinality = matcursor.cardinality, NodeName = NODE_ID(), StaleCount = VARIABLES.staleCount;
 					DECLARE integer updated = VARIABLES.ROWCOUNT;
 					IF (updated = 0)
 						BEGIN
@@ -315,11 +316,11 @@ BEGIN
 	    	EXECUTE IMMEDIATE VARIABLES.afterLoadScript;
         END
         
-        EXECUTE IMMEDIATE updateStmt || ' AND loadNumber = DVARS.loadNumber' USING  loadNumber = VARIABLES.loadNumber, vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = loadMatView.viewName, updated = now(), LoadState = 'LOADED', valid = true, cardinality = VARIABLES.rowsUpdated, NodeName = NODE_ID();	
+        EXECUTE IMMEDIATE updateStmt || ' AND loadNumber = DVARS.loadNumber' USING  loadNumber = VARIABLES.loadNumber, vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = loadMatView.viewName, updated = now(), LoadState = 'LOADED', valid = true, cardinality = VARIABLES.rowsUpdated, NodeName = NODE_ID(), StaleCount = 0;	
         VARIABLES.status = 'DONE';
         EXECUTE logMsg(context=>'org.teiid.MATVIEWS', level=>'INFO', msg=>'Materialization of view ' || VARIABLES.fullViewName || ' completed. Rows updated = ' || VARIABLES.rowsUpdated || ' Load Number = ' || VARIABLES.loadNumber);
     EXCEPTION e 
-        EXECUTE IMMEDIATE updateStmt || ' AND loadNumber = DVARS.loadNumber' USING  loadNumber = VARIABLES.loadNumber, vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = loadMatView.viewName, updated = now(), LoadState = 'FAILED_LOAD', valid = VARIABLES.valid AND NOT invalidate, cardinality = -1, NodeName = NODE_ID();
+        EXECUTE IMMEDIATE updateStmt || ' AND loadNumber = DVARS.loadNumber' USING  loadNumber = VARIABLES.loadNumber, vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = loadMatView.viewName, updated = now(), LoadState = 'FAILED_LOAD', valid = VARIABLES.valid AND NOT invalidate, cardinality = -1, NodeName = NODE_ID(), StaleCount = VARIABLES.staleCount;
         VARIABLES.status = 'FAILED';
         VARIABLES.rowsUpdated = -3;
         EXECUTE logMsg(context=>'org.teiid.MATVIEWS', level=>'WARN', msg=>e.exception);
@@ -473,4 +474,70 @@ BEGIN
         EXECUTE logMsg(context=>'org.teiid.MATVIEWS', level=>'WARN', msg=>e.exception);
     END    
 	RETURN  rowsUpdated;
+END
+
+CREATE VIRTUAL PROCEDURE updateStaleCount(IN schemaName string NOT NULL, IN viewName string NOT NULL) RETURNS integer
+AS
+BEGIN
+    DECLARE string vdbName = (SELECT Name FROM VirtualDatabases);
+    DECLARE string vdbVersion = (SELECT Version FROM VirtualDatabases);
+    DECLARE string uid = (SELECT UID FROM Sys.Tables WHERE VDBName = VARIABLES.vdbName AND SchemaName = updateStaleCount.schemaName AND Name = updateStaleCount.viewName);
+    DECLARE integer rowsUpdated = 0;
+    DECLARE string fullViewName = updateStaleCount.schemaName || '.' || updateStaleCount.viewName;
+        
+    IF (uid IS NULL)
+    BEGIN
+        RAISE SQLEXCEPTION 'The view '|| VARIABLES.fullViewName || 'was not found';
+    END
+    
+    DECLARE boolean isMaterialized = (SELECT IsMaterialized FROM SYS.Tables WHERE UID = VARIABLES.uid);
+    IF (NOT isMaterialized)
+    BEGIN
+        RAISE SQLEXCEPTION 'The view ' || VARIABLES.fullViewName || 'is not declared as Materialized View in Metadata';
+    END       
+
+    DECLARE string ownerVdbName = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_OWNER_VDB_NAME');
+    IF (ownerVDBName IS NOT NULL)
+    BEGIN
+        vdbName = ownerVdbName;
+    END
+         
+    DECLARE string ownerVdbVersion = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_OWNER_VDB_VERSION');
+    IF (ownerVdbVersion IS NOT NULL)
+    BEGIN
+        vdbVersion = ownerVdbVersion;
+    END     
+
+    DECLARE string scope = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_SHARE_SCOPE');
+    IF ((scope IS NOT null) AND (scope = 'FULL'))
+    BEGIN
+        vdbVersion = '0';
+    END
+    
+    DECLARE string pct = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_LAZY_MAX_ALLOWED_STALENESS_PCT');
+    IF (pct IS null)
+    BEGIN
+        pct = '1';
+    END
+
+    DECLARE string statusTable = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_STATUS_TABLE');
+    DECLARE string selectCriteria = ' WHERE VDBName = DVARS.vdbName AND VDBVersion = DVARS.vdbVersion AND schemaName = DVARS.schemaName AND Name = DVARS.viewName';
+    DECLARE string updateStmt = 'UPDATE ' || VARIABLES.statusTable || ' SET StaleCount=DVARS.StaleCount, LoadState = DVARS.LoadState ' || VARIABLES.selectCriteria;
+
+    EXECUTE logMsg(context=>'org.teiid.MATVIEWS', level=>'DEBUG', msg=>'Materialization of view ' || VARIABLES.fullViewName || ', updating the stale count.');        
+
+    EXECUTE IMMEDIATE 'SELECT Name, LoadState, StaleCount, Cardinality FROM ' || VARIABLES.statusTable || VARIABLES.selectCriteria AS Name string, LoadState string, StaleCount long, Cardinality long  INTO #load USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = updateStaleCount.schemaName, viewName = updateStaleCount.viewName;
+    
+    DECLARE string previousRow = (SELECT Name FROM #load);
+    DECLARE string loadState = (SELECT LoadState FROM #load);
+    IF (previousRow IS NOT null AND loadState = 'LOADED')
+    BEGIN
+        DECLARE long prevStaleCount = (SELECT StaleCount FROM #load);
+        DECLARE long cardinality = (SELECT Cardinality FROM #load);
+        IF (prevStaleCount > 0 AND (prevStaleCount/cardinality) >= (convert(pct, integer)/100))
+            VARIABLES.loadState = 'NEEDS_LOADING';
+        EXECUTE IMMEDIATE updateStmt USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = updateStaleCount.schemaName, viewName = updateStaleCount.viewName, StaleCount = VARIABLES.prevStaleCount+1, LoadState = VARIABLES.loadState;
+    EXCEPTION e
+        EXECUTE logMsg(context=>'org.teiid.MATVIEWS', level=>'WARN', msg=>e.exception);
+    END
 END
