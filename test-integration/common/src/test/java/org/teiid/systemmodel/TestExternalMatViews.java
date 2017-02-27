@@ -22,10 +22,7 @@
 
 package org.teiid.systemmodel;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.FileInputStream;
 import java.io.PrintWriter;
@@ -808,10 +805,9 @@ public class TestExternalMatViews {
         viewModel.addSourceMetadata("DDL", "CREATE VIEW v1 (col integer primary key, col1 string) "
                 + "OPTIONS (MATERIALIZED true, "
                 + "MATERIALIZED_TABLE 'matview.MAT_V2', "
-                + "\"teiid_rel:MATVIEW_TTL\" 3000, "
                 + "\"teiid_rel:ALLOW_MATVIEW_MANAGEMENT\" true, " 
                 + "\"teiid_rel:MATVIEW_STATUS_TABLE\" 'matview.STATUS', "
-                + "\"teiid_rel:MATVIEW_REFRESH_TYPE\" 'LAZY_SNAPSHOT', "
+                + "\"teiid_rel:MATVIEW_MAX_STALENESS_PCT\" '10', "
                 + "\"teiid_rel:MATVIEW_LOADNUMBER_COLUMN\" 'loadnum') "
                 + "AS select col, col1 from source.physicalTbl");
         server.deployVDB("comp", sourceModel, viewModel, matViewModel);
@@ -847,7 +843,7 @@ public class TestExternalMatViews {
         rs = c.createStatement().executeQuery("SELECT LoadState, StaleCount FROM Status WHERE VDBName = 'comp'");
         rs.next();
         assertEquals("NEEDS_LOADING", rs.getString(1));
-        assertEquals(2, rs.getInt(2));      
+        assertEquals(1, rs.getInt(2));      
         
         // now reload the view, this should reset the stalecount. If you can wait one minute this occurs automatically
         conn.createStatement().execute("exec SYSADMIN.loadMatView(schemaName=>'view1', viewName=>'v1', invalidate=>false)");

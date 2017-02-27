@@ -359,25 +359,20 @@ public class MetadataValidator {
                             t.setProperty(MATVIEW_SHARE_SCOPE, Scope.IMPORTED.name());
                         }
                         
-                        String refreshType = t.getProperty(MATVIEW_REFRESH_TYPE, false);
-                        if (refreshType == null) {
-                            t.setProperty(MATVIEW_REFRESH_TYPE, RefreshType.TTL_SNAPSHOT.name());
-                        } else if (!refreshType.equalsIgnoreCase(RefreshType.LAZY_SNAPSHOT.name())
-                                && !refreshType.equalsIgnoreCase(RefreshType.EAGER.name())
-                                && !refreshType.equalsIgnoreCase(RefreshType.TTL_SNAPSHOT.name())) {
-                            metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31255, t.getFullName(), refreshType));
-                            continue;
-                        }
-                        
-                        if (refreshType != null && RefreshType.valueOf(refreshType) == RefreshType.LAZY_SNAPSHOT) {
+                        String stalenessString = t.getProperty(MaterializationMetadataRepository.MATVIEW_MAX_STALENESS_PCT, false);
+                        if (stalenessString != null) {
+                            final HashSet<Table> ids = new HashSet<Table>();
                             listPhysicalTables(t.getIncomingObjects(), new TableFilter() {
                                 @Override
                                 public void accept(Table physicalTable) {
-                                    addLazyMatViewTrigger(vdb, t, physicalTable, Table.TriggerEvent.INSERT);
-                                    addLazyMatViewTrigger(vdb, t, physicalTable, Table.TriggerEvent.UPDATE);
-                                    addLazyMatViewTrigger(vdb, t, physicalTable, Table.TriggerEvent.DELETE);
+                                    ids.add(physicalTable);
                                 }
                             });
+                            for (Table physicalTable : ids) {
+                                addLazyMatViewTrigger(vdb, t, physicalTable, Table.TriggerEvent.INSERT);
+                                addLazyMatViewTrigger(vdb, t, physicalTable, Table.TriggerEvent.UPDATE);
+                                addLazyMatViewTrigger(vdb, t, physicalTable, Table.TriggerEvent.DELETE);
+                            }
                         }
                         
 						Table statusTable = findTableByName(store, status);

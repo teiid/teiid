@@ -515,14 +515,10 @@ BEGIN
     END
     
     DECLARE string pct = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_LAZY_MAX_ALLOWED_STALENESS_PCT');
-    IF (pct IS null)
-    BEGIN
-        pct = '1';
-    END
 
     DECLARE string statusTable = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_STATUS_TABLE');
     DECLARE string selectCriteria = ' WHERE VDBName = DVARS.vdbName AND VDBVersion = DVARS.vdbVersion AND schemaName = DVARS.schemaName AND Name = DVARS.viewName';
-    DECLARE string updateStmt = 'UPDATE ' || VARIABLES.statusTable || ' SET StaleCount=DVARS.StaleCount, LoadState = DVARS.LoadState ' || VARIABLES.selectCriteria;
+    DECLARE string updateStmt = 'UPDATE ' || VARIABLES.statusTable || ' SET StaleCount=StaleCount+1, LoadState = DVARS.LoadState ' || VARIABLES.selectCriteria;
 
     EXECUTE logMsg(context=>'org.teiid.MATVIEWS', level=>'DEBUG', msg=>'Materialization of view ' || VARIABLES.fullViewName || ', updating the stale count.');        
 
@@ -532,11 +528,11 @@ BEGIN
     DECLARE string loadState = (SELECT LoadState FROM #load);
     IF (previousRow IS NOT null AND loadState = 'LOADED')
     BEGIN
-        DECLARE long prevStaleCount = (SELECT StaleCount FROM #load);
+        DECLARE long staleCount = (SELECT StaleCount FROM #load) + 1;
         DECLARE long cardinality = (SELECT Cardinality FROM #load);
-        IF (prevStaleCount > 0 AND (prevStaleCount/cardinality) >= (convert(pct, integer)/100))
+        IF (cardinality = 0 OR ((100*staleCount/sqrt(cardinality)) >= convert(pct, integer)))
             VARIABLES.loadState = 'NEEDS_LOADING';
-        EXECUTE IMMEDIATE updateStmt USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = updateStaleCount.schemaName, viewName = updateStaleCount.viewName, StaleCount = VARIABLES.prevStaleCount+1, LoadState = VARIABLES.loadState;
+        EXECUTE IMMEDIATE updateStmt USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = updateStaleCount.schemaName, viewName = updateStaleCount.viewName, LoadState = VARIABLES.loadState;
     EXCEPTION e
         EXECUTE logMsg(context=>'org.teiid.MATVIEWS', level=>'WARN', msg=>e.exception);
     END

@@ -55,7 +55,6 @@ import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.query.metadata.MaterializationMetadataRepository;
-import org.teiid.query.metadata.MaterializationMetadataRepository.RefreshType;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.tempdata.TempTableDataManager;
 import org.teiid.runtime.NodeTracker.NodeListener;
@@ -180,21 +179,25 @@ public abstract class MaterializationManager implements VDBLifeCycleListener, No
 						}
 					}
 					
-					String refreshType = table.getProperty(MaterializationMetadataRepository.MATVIEW_REFRESH_TYPE, false);
-					if (refreshType == null || RefreshType.valueOf(refreshType) == RefreshType.TTL_SNAPSHOT) {
-    					String ttlStr = table.getProperty(MaterializationMetadataRepository.MATVIEW_TTL, false);
-    					if (ttlStr == null) {
-    					    ttlStr = String.valueOf(Long.MAX_VALUE);
-    					}
-    					if (ttlStr != null) {
-    						long ttl = Long.parseLong(ttlStr);
-    						if (ttl > 0) {
-    							scheduleSnapshotJob(cvdb, table, ttl, 0L, false);
-    						}
-    					}
-					} else if (refreshType != null && RefreshType.valueOf(refreshType) == RefreshType.LAZY_SNAPSHOT) {
+					long ttl = 0;
+					String ttlStr = table.getProperty(MaterializationMetadataRepository.MATVIEW_TTL, false);
+					if (ttlStr == null) {
+					    ttlStr = String.valueOf(Long.MAX_VALUE);
+					}
+					if (ttlStr != null) {
+						ttl = Long.parseLong(ttlStr);
+						if (ttl > 0) {
+							scheduleSnapshotJob(cvdb, table, ttl, 0L, false);
+						}
+					}
+					
+					String stalenessString = table.getProperty(MaterializationMetadataRepository.MATVIEW_MAX_STALENESS_PCT, false);
+					
+					if (stalenessString != null) {
 					    // run first time like, SNAPSHOT
-					    scheduleSnapshotJob(cvdb, table, 0L, 0L, true);
+					    if (ttl <= 0) {
+					        scheduleSnapshotJob(cvdb, table, 0L, 0L, true);
+					    }
 
 					    // schedule a check every minute 
 					    scheduleSnapshotJob(cvdb, table, WAITTIME, WAITTIME, true);
