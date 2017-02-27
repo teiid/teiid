@@ -56,7 +56,7 @@ public class ObjectDirectExecution extends ObjectBaseExecution implements Proced
 		String sourceSQL = (String) this.arguments.get(0).getArgumentValue().getValue();
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Source-specific command: ", sourceSQL); //$NON-NLS-1$
 
-    	omlc.handleDDL(sourceSQL, this.connection);
+        omlc.handleDDL(sourceSQL, this.connection);
     	updateCount = 1;
     }
 

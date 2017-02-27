@@ -22,9 +22,7 @@
 package org.teiid.resource.adapter.infinispan.hotrod.schema;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.resource.ResourceException;
 
@@ -34,7 +32,10 @@ import org.infinispan.protostream.annotations.ProtoSchemaBuilder;
 import org.infinispan.protostream.annotations.ProtoSchemaBuilderException;
 import org.infinispan.protostream.descriptors.Descriptor;
 import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
+import org.teiid.core.TeiidException;
+import org.teiid.core.util.ReflectionHelper;
 import org.teiid.core.util.StringUtil;
+import org.teiid.resource.adapter.infinispan.hotrod.InfinispanConnectionImpl;
 import org.teiid.resource.adapter.infinispan.hotrod.InfinispanManagedConnectionFactory;
 import org.teiid.resource.adapter.infinispan.hotrod.InfinispanSchemaDefinition;
 import org.teiid.translator.TranslatorException;
@@ -48,25 +49,20 @@ import org.teiid.translator.object.ClassRegistry;
  *
  */
 public class AnnotationSchema implements InfinispanSchemaDefinition {
-	private Set<Class> classes = new HashSet<Class>();
+	
+	private List<String> clzNames = null;
 	
 	@Override
 	public void initialize(InfinispanManagedConnectionFactory config, ClassRegistry methodUtil) throws ResourceException {
 		
 		if (config.getChildClasses() != null) {
-			List<String> clzzes = StringUtil.getTokens(config.getChildClasses(), ","); //$NON-NLS-1$
-			for (String clzName : clzzes) {
-				Class<?> ci = config.loadClass(clzName);
-
-				methodUtil.registerClass(ci);	
-				classes.add(ci);
-			}
+			clzNames = StringUtil.getTokens(config.getChildClasses(), ","); //$NON-NLS-1$
 		}
 
 	}
 
 	@Override
-	public void registerSchema(InfinispanManagedConnectionFactory config) throws ResourceException {
+	public void registerSchema(InfinispanManagedConnectionFactory config, InfinispanConnectionImpl conn) throws ResourceException {
 		final Class<?> clzzType = config.getCacheClassType();
 		String p = clzzType.getPackage().getName();
 		
@@ -75,37 +71,44 @@ public class AnnotationSchema implements InfinispanSchemaDefinition {
 		ProtoSchemaBuilder protoSchemaBuilder = null;
 				
 		try {
-			Class<?> clzz = config.loadClass("org.infinispan.protostream.annotations.ProtoSchemaBuilder");
-			protoSchemaBuilder = (ProtoSchemaBuilder) clzz.newInstance();
+			
+			protoSchemaBuilder = (ProtoSchemaBuilder) ReflectionHelper.create("org.infinispan.protostream.annotations.ProtoSchemaBuilder", null, config.getRAClassLoader());
+
 			protoSchemaBuilder.fileName(protoName);
 			protoSchemaBuilder.packageName(p);
 			protoSchemaBuilder.addClass(clzzType);
 			
-			for(Class<?> c:classes) {
-				protoSchemaBuilder.addClass(c);
+			if (clzNames != null) {
+				for (String clzName : clzNames) {
+					Class<?> ci = config.loadClass(clzName);
+		
+					config.getClassRegistry().registerClass(ci);
+					
+					protoSchemaBuilder.addClass(ci);
+				}
 			}
-			String protoSchema = protoSchemaBuilder.build(config.getContext());
+			String protoSchema = protoSchemaBuilder.build(conn.getContext());
 			
-		     RemoteCache<String, String> metadataCache = config.getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME);
-		     metadataCache.put(protoName, protoSchema);
+		    RemoteCache<String, String> metadataCache = conn.getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME);
+		    metadataCache.put(protoName, protoSchema);
 		
 		} catch (ProtoSchemaBuilderException e) {
 			throw new ResourceException(e);
 		} catch (IOException e) {
 			throw new ResourceException(e);
-		} catch (InstantiationException e) {
+		} catch (TranslatorException e) {
 			throw new ResourceException(e);
-		} catch (IllegalAccessException e) {
+		} catch (TeiidException e) {
 			throw new ResourceException(e);
 		}
 	}	
 
 	@Override
-	public Descriptor getDecriptor(InfinispanManagedConnectionFactory config, Class<?> clz) throws TranslatorException {
-		BaseMarshaller m = config.getContext().getMarshaller(clz);
-		Descriptor d = config.getContext().getMessageDescriptor(m.getTypeName());
+	public Descriptor getDecriptor(InfinispanManagedConnectionFactory config, InfinispanConnectionImpl conn, Class<?> clz) throws TranslatorException {
+		BaseMarshaller m = conn.getContext().getMarshaller(clz);
+		Descriptor d = conn.getContext().getMessageDescriptor(m.getTypeName());
 		if (d == null) {
-			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25028,  m.getTypeName(), config.getCacheName()));			
+			throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25028,  m.getTypeName(), config.getCacheNameProxy().getPrimaryCacheKey()));			
 		}
 		return d;
 	}

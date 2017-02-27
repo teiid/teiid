@@ -39,7 +39,6 @@ import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoadException;
 import org.teiid.core.BundleUtil;
-import org.teiid.core.util.Assertion;
 import org.teiid.core.util.StringUtil;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -281,10 +280,10 @@ public class InfinispanManagedConnectionFactory extends
 	}
 	
 	@SuppressWarnings("rawtypes")
-	public Cache<Object, Object> getCache(String cacheName) {
-      if (cacheName == null) {
-      	Assertion.isNotNull(cacheName, "Program Error: Cache Name is null");
-      }
+	public Cache<Object, Object> getCache(String cacheName) throws TranslatorException {
+          if (cacheName == null) {
+      	      	throw new TranslatorException("Program Error: Cache Name is null");
+          } 
 
 		return cacheManager.getCache(cacheName);
 	}	
@@ -401,29 +400,24 @@ public class InfinispanManagedConnectionFactory extends
 				
 				createCache();
 
-						
-				// if configured for materialization, initialize the 
-				if (cacheNameProxy.getAliasCacheName() != null) {
-					Map<Object,Object> aliasCache = this.cacheManager.getCache(cacheNameProxy.getAliasCacheName());
-					if (aliasCache == null) {
-						throw new ResourceException(	
-							InfinispanManagedConnectionFactory.UTIL
-							.getString(
-									"InfinispanManagedConnectionFactory.aliasCacheNotDefined", cacheNameProxy.getAliasCacheName())); //$NON-NLS-1$
-					}
-					cacheNameProxy.initializeAliasCache(aliasCache);
-				}
-				
-				Cache<Object, Object> cache = this.getCache(this.getCacheNameProxy().getPrimaryCacheKey());
-				version = Version.getVersion(cache.getVersion());
-
 			} catch (Exception e) {
 				throw new ResourceException(e);
 			} finally {
 				Thread.currentThread().setContextClassLoader(cl);
 			}
 		}
-		return new InfinispanCacheRAConnection(this);
+		InfinispanCacheRAConnection conn =  new InfinispanCacheRAConnection(this);
+
+		try {
+			Cache<Object, Object> cache = this.getCache(this.getCacheNameProxy().getPrimaryCacheKey());
+			version = Version.getVersion(cache.getVersion());
+
+		} catch (TranslatorException te) {
+			throw new ResourceException(te);
+		}
+
+		return conn;
+
 	}
 
 	private boolean determineConnectionType() {
@@ -438,7 +432,7 @@ public class InfinispanManagedConnectionFactory extends
 		return false;
 	}
 	
-	private void createCache() throws TranslatorException {
+	private void createCache() throws ResourceException {
 		if (cacheManager != null) return;
 
 		if (getConfigurationFileNameForLocalCache() != null) {
@@ -451,34 +445,51 @@ public class InfinispanManagedConnectionFactory extends
 
 				cacheManager = cc;
 				
-				Configuration conf = cc.getCacheConfiguration(getCacheNameProxy().getPrimaryCacheAliasName());
+				Configuration conf = cc.getCacheConfiguration(getCacheNameProxy().getPrimaryCacheKey());
 				if (conf == null) {
-					throw new TranslatorException("Program Error: cache " +  getCacheNameProxy().getPrimaryCacheAliasName() + " was not configured");
+					throw new TranslatorException("Program Error: cache " +  getCacheNameProxy().getPrimaryCacheKey() + " was not configured");
 				}
 				conf.module(getCacheClassType());
 				
-				if (getCacheNameProxy().getStageCacheAliasName() != null) {
-					conf = cc.getCacheConfiguration(getCacheNameProxy().getStageCacheAliasName());
+				if (getCacheNameProxy().getStageCacheKey() != null) {
+					conf = cc.getCacheConfiguration(getCacheNameProxy().getStageCacheKey());
 					if (conf == null) {
-						throw new TranslatorException("Program Error: cache " +  getCacheNameProxy().getStageCacheAliasName() + " was not configured");
+						throw new TranslatorException("Program Error: cache " +  getCacheNameProxy().getStageCacheKey() + " was not configured");
 					}
 					
 					conf.module(getCacheClassType());
 				}
+
+
+				// if configured for materialization, initialize the 
+				if (cacheNameProxy.getAliasCacheName() != null) {
+					Map<Object,Object> aliasCache = cacheManager.getCache(cacheNameProxy.getAliasCacheName());
+					if (aliasCache == null) {
+						throw new ResourceException(	
+							InfinispanManagedConnectionFactory.UTIL
+							.getString(
+									"InfinispanManagedConnectionFactory.aliasCacheNotDefined", cacheNameProxy.getAliasCacheName())); //$NON-NLS-1$
+					}
+				}
+
+
+			} catch (TranslatorException e) {
+				throw new ResourceException(e);
+
 			} catch (IOException e) {
-				throw new TranslatorException(e);
+				throw new ResourceException(e);
 			}
 		} else {
 			if (getCacheJndiName() != null) {
 				try {
 					cacheManager =  (EmbeddedCacheManager) performJNDICacheLookup(getCacheJndiName());
 				} catch (TranslatorException e) {
-					throw e;
+					throw new ResourceException(e);
 				} catch (Exception e) {
-					throw new TranslatorException(e);
+					throw new ResourceException(e);
 				}
 			} else if (cacheManager == null) {
-				throw new TranslatorException("Program Error: DefaultCacheManager was not configured");
+				throw new ResourceException("Program Error: DefaultCacheManager was not configured");
 			}
 		}
 		

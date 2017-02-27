@@ -73,14 +73,14 @@ public class ClassRegistry {
 	
 	public synchronized void registerClass(Class<?> clz) {
 		 
-			registeredClasses.put(clz.getName(), clz);	
-			tableNameClassMap.put(clz.getSimpleName(), clz);
+		registeredClasses.put(clz.getName(), clz);	
+		tableNameClassMap.put(clz.getSimpleName(), clz);
 		 	
 	}
 	
 	public synchronized void unregisterClass(Class<?> clz)  {
-			registeredClasses.remove(clz.getName());	
-			tableNameClassMap.remove(clz.getSimpleName());	
+		registeredClasses.remove(clz.getName());	
+		tableNameClassMap.remove(clz.getSimpleName());	
 	}
 
 	public ObjectDataTypeManager getObjectDataTypeManager() {

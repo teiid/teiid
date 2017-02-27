@@ -30,6 +30,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
@@ -120,8 +122,7 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 		}		
 		
 		String pkField = conn.getPkField();
-		// the table can only be updateable if it has the pkField defined, even if its materialized)
-		boolean updatable = (pkField != null ? true : false);
+		boolean updatable = determineUpdatable(conn, pkField, entity.getSimpleName(), methods);
 
 		pkMethod = null;
 		if (updatable) {
@@ -176,6 +177,19 @@ public class JavaBeanMetadataProcessor implements MetadataProcessor<ObjectConnec
 		x.add(pkn);
 		mf.addPrimaryKey(pkName, x , t);
 
+	}
+	
+	private boolean determineUpdatable(ObjectConnection conn, String pkField, String entityName, Map<String, Method> methods) {
+		
+	    this.pkMethod = null;
+	    if (pkField != null) {
+	    	pkMethod = methods.get(pkField);
+        } else {
+			// warn if no pk is defined
+			LogManager.logWarning(LogConstants.CTX_CONNECTOR, ObjectPlugin.Util.gs(ObjectPlugin.Event.TEIID21000, entityName));				
+        }
+	    
+	    return (materializedSource ? true : (pkField != null ? true : false));
 	}
 	
 	private Table createTable(MetadataFactory mf, Class<?> entity, boolean updatable, boolean staging) {

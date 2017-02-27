@@ -15,7 +15,7 @@
         <module name="org.jboss.teiid.common-core"  export="true" />
         <module name="org.jboss.teiid.api"  export="true" />
         <!--  need teiid-engine for the scriptengine -->
-        <module name="org.jboss.teiid" export="true" />
+        <!-- module name="org.jboss.teiid" export="true" /-->
         <module name="org.jboss.modules"  export="true" />
  
         <module name="org.hibernate.search.engine" />

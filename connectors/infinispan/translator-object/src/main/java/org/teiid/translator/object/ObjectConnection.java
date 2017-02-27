@@ -84,7 +84,7 @@ public interface ObjectConnection {
 	 * Returns the name of the cache
 	 * @return String cacheName
 	 */
-	public String getCacheName();
+	public String getCacheName() throws TranslatorException;
 	
 		
 	/**
@@ -125,8 +125,7 @@ public interface ObjectConnection {
 	/** 
 	 * Called to enable the connection to cleanup after use
 	 */
-	public void cleanUp();
-	
+	public void cleanUp();	
 	
 	/**
 	 * Return the ClassRegistry that contains which classes and their methods.

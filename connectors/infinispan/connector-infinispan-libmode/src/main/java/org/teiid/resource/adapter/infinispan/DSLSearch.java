@@ -144,7 +144,6 @@ public final class DSLSearch implements SearchType   {
 
 		return results;
 	}
-
 	
 	private static List<Object> performSearch(ObjectVisitor visitor, ObjectConnection conn) throws TranslatorException {
 		
@@ -504,8 +503,7 @@ public final class DSLSearch implements SearchType   {
 	// convert the value based on the native type
 	private static Object convertValue(Object value, Column mdIDElement) throws TranslatorException {
 		try {
-			value  = DataTypeManager.transformValue(value,  mdIDElement.getJavaType());
-			return value;
+			return DataTypeManager.transformValue(value,  mdIDElement.getJavaType());
 		} catch (TransformationException e) {
 			throw new TranslatorException(e);
 		}
