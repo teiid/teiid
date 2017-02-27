@@ -40,7 +40,7 @@ import org.teiid.query.metadata.SystemMetadata;
 import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 
-@SuppressWarnings("nls")
+@SuppressWarnings({"nls", "static-access"})
 public class TestCouchbaseMetadataProcessor {
  
     @Test
@@ -74,20 +74,15 @@ public class TestCouchbaseMetadataProcessor {
         
         CouchbaseMetadataProcessor metadataProcessor = new CouchbaseMetadataProcessor();  
         MetadataFactory mf = new MetadataFactory("vdb", 1, "couchbase", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
-        String keyspace = "A";
-        JsonObject json = JsonObject.create().put("A", JsonObject.create().put("A", JsonObject.create().put("A", "value")));
-        metadataProcessor.addTable(mf, keyspace, json, null);
+        metadataProcessor.addTable(mf, "A", complexObject(), null);
         helpTest("complexJson.expected", mf);
     }
     
-    @SuppressWarnings("static-access")
     @Test
     public void testMetadataComplexArray() throws ResourceException {
         CouchbaseMetadataProcessor metadataProcessor = new CouchbaseMetadataProcessor();  
         MetadataFactory mf = new MetadataFactory("vdb", 1, "couchbase", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
-        String keyspace = "A";
-        JsonObject json = JsonObject.create().put("A", JsonArray.create().from("A",  JsonArray.create().from("A", JsonArray.create().add("A"))));
-        metadataProcessor.addTable(mf, keyspace, json, null);
+        metadataProcessor.addTable(mf,  "A", complexArray(), null);
         helpTest("complexJsonArray.expected", mf);
     }
     
@@ -126,14 +121,22 @@ public class TestCouchbaseMetadataProcessor {
         helpTest("TODO.expected", mf);
     }
     
-    private JsonObject formCustomer() {
+    static JsonObject complexObject() {
+        return JsonObject.create().put("A", JsonObject.create().put("A", JsonObject.create().put("A", "value")));
+    }
+    
+    static JsonObject complexArray() {
+        return JsonObject.create().put("A", JsonArray.create().from("A",  JsonArray.create().from("A", JsonArray.create().add("A"))));
+    }
+    
+    static JsonObject formCustomer() {
         return JsonObject.create()
                 .put("Type", "Customer")
                 .put("Name", "John Doe")
                 .put("SavedAddresses", JsonArray.from("123 Main St.", "456 1st Ave"));
     }
     
-    private JsonObject formOder() {
+    static JsonObject formOder() {
         return JsonObject.create()
                 .put("Type", "Oder")
                 .put("CustomerID", "Customer_12345")
@@ -141,7 +144,7 @@ public class TestCouchbaseMetadataProcessor {
                 .put("Items", JsonArray.from(JsonObject.create().put("ItemID", 89123).put("Quantity", 1), JsonObject.create().put("ItemID", 92312).put("Quantity", 5)));
     }
     
-    private JsonArray formSimpleJsonArray() {
+    static JsonArray formSimpleJsonArray() {
         return JsonArray.create()
                 .add(true)
                 .add(0.0d)
@@ -157,13 +160,13 @@ public class TestCouchbaseMetadataProcessor {
                 .addNull();
     }
     
-    private JsonObject formJson() {
+    static JsonObject formJson() {
         return formSimpleJson()
                 .put("attr_jsonObject", formSimpleJson())
                 .put("attr_jsonArray", formSimpleJsonArray());
     }
 
-    private JsonObject formSimpleJson() {
+    static JsonObject formSimpleJson() {
         return JsonObject.create()
                 .put("attr_boolean", true)
                 .put("attr_double", 0.0d)

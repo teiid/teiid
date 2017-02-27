@@ -79,13 +79,13 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
             table = metadataFactory.getSchema().getTable(tableName);
         } else {
             table = metadataFactory.addTable(tableName);
-            metadataFactory.addColumn(ID, STRING, table);
+//            metadataFactory.addColumn(ID, STRING, table);
             table.setSupportsUpdate(true);
             if(parent == null) {
                 // Base on N1QL, the top Table map to keyspace in Couchbase, each rows represent a document in keyspace. 
                 // The top Table have a unique primary key.
                 table.setNameInSource(buildNameInSource(key, null));
-                metadataFactory.addPrimaryKey("PK0", Arrays.asList(ID), table); //$NON-NLS-1$
+//                metadataFactory.addPrimaryKey("PK0", Arrays.asList(ID), table); //$NON-NLS-1$
             } else {
                 table.setNameInSource(buildNameInSource(key, parent.getNameInSource()));
             }
@@ -106,7 +106,7 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
         } else {
             table = metadataFactory.addTable(tableName);
             table.setSupportsUpdate(true);
-            metadataFactory.addColumn(ID, STRING, table);
+//            metadataFactory.addColumn(ID, STRING, table);
             table.setNameInSource(buildNameInSource(key, parent.getNameInSource()));
         }
         
