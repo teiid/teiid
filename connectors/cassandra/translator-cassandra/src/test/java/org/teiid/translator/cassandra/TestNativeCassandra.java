@@ -22,7 +22,7 @@
 
 package org.teiid.translator.cassandra;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
