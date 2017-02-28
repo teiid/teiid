@@ -21,22 +21,40 @@
  */
 package org.teiid.translator.solr;
 
-import static org.teiid.language.SQLConstants.Reserved.*;
-import static org.teiid.language.visitor.SQLStringVisitor.*;
+import static org.teiid.language.SQLConstants.Reserved.FALSE;
+import static org.teiid.language.SQLConstants.Reserved.NULL;
+import static org.teiid.language.SQLConstants.Reserved.TRUE;
+import static org.teiid.language.visitor.SQLStringVisitor.getRecordName;
 
+import java.net.URLDecoder;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
 import java.util.TimeZone;
 
 import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrQuery.ORDER;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.StringUtil;
-import org.teiid.language.*;
+import org.teiid.language.AggregateFunction;
+import org.teiid.language.AndOr;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Comparison;
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.Function;
+import org.teiid.language.GroupBy;
+import org.teiid.language.In;
+import org.teiid.language.Like;
+import org.teiid.language.Limit;
+import org.teiid.language.Literal;
+import org.teiid.language.OrderBy;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.language.SQLConstants.Tokens;
+import org.teiid.language.SortSpecification;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.RuntimeMetadata;
@@ -59,6 +77,7 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	private SolrExecutionFactory ef;
 	private HashMap<String, String> columnAliasMap = new HashMap<String, String>();
 	private boolean countStarInUse;
+	private LinkedList<String> dateRange = new LinkedList<String>();
 
 	public SolrSQLHierarchyVistor(RuntimeMetadata metadata, SolrExecutionFactory ef) {
 		this.metadata = metadata;
@@ -242,6 +261,7 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
                     || type.equals(DataTypeManager.DefaultDataClasses.DATE)) {
             	synchronized (sdf) {
                 	this.onGoingExpression.push(escapeString(sdf.format(val)));
+                	this.dateRange.add(sdf.format(val));
 				}
             } 
             else {
@@ -302,9 +322,9 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 				sb.insert(0,Tokens.COMMA);
 			}
 		}
-		sb.insert(0,Tokens.LPAREN);
-		sb.insert(0,obj.getName());
-		sb.append(Tokens.RPAREN);
+		//sb.insert(0,Tokens.LPAREN);
+		//sb.insert(0,obj.getName());
+		//sb.append(Tokens.RPAREN);
 		this.onGoingExpression.push(sb.toString());
 	}
 	
@@ -328,6 +348,72 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 		}
     }	
 	
+	@Override
+	public void visit(GroupBy obj) {
+		
+		String dateRangeGap = null;
+		StringBuilder facetFields = new StringBuilder();
+		
+		Stack<String> reversedOnGoingExpression = new Stack<String>();
+		
+		try {
+			Function function = (Function)(obj.getElements().get(0));
+			Literal literalDateFormat = (Literal)function.getParameters().get(1);
+			String dateFormat = literalDateFormat.toString();
+			new SimpleDateFormat(dateFormat);
+			dateRangeGap = getDateRangeGap(dateFormat);
+						
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		visitNodes(obj.getElements());
+		
+		while(!this.onGoingExpression.isEmpty()) {
+			reversedOnGoingExpression.push(this.onGoingExpression.pop());
+		}
+		
+		String facetField = reversedOnGoingExpression.pop();
+		this.query.setFacet(true);
+		
+		if(dateRangeGap == null) {
+			facetFields.append(facetField);
+		} else if(!dateRange.isEmpty() && dateRange.size() == 2) {
+			this.query.add("facet.range", "{!tag=r1}"+facetField);
+			this.query.add("facet.range.start", dateRange.poll());
+			this.query.add("facet.range.end", dateRange.poll());
+			this.query.add("facet.range.gap", "+1"+dateRangeGap);
+		}
+			
+		while(!reversedOnGoingExpression.isEmpty()) {
+			facetFields.append(Tokens.COMMA);
+			facetFields.append(reversedOnGoingExpression.pop());
+		}
+		
+		if(dateRangeGap == null) {
+			this.query.addFacetPivotField(facetFields.toString());
+		} else if(facetFields.length() > 1){
+			facetFields.deleteCharAt(0); // remove the first comma
+			facetFields.insert(0, "{!range=r1}");
+			this.query.addFacetPivotField(facetFields.toString());
+		}
+	}
+	
+	private String getDateRangeGap(String dateFormat) {
+		// yyyy-MM-dd'T'HH:mm:ss:SSS'Z'
+		
+		if(dateFormat.contains("mm"))
+			return "MINUTE";
+		else if(dateFormat.contains("HH"))
+			return "HOUR";
+		else if(dateFormat.contains("dd"))
+			return "DAY";
+		else if(dateFormat.contains("MM"))
+			return "MONTH";
+		else 
+			return "YEAR";
+	}
+	
 	private String formatSolrQuery(String solrQuery) {
 		solrQuery = solrQuery.replace("%", "*"); //$NON-NLS-1$ //$NON-NLS-2$
 		solrQuery = solrQuery.replace("'",""); //$NON-NLS-1$ //$NON-NLS-2$
@@ -339,6 +425,7 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 		if (buffer == null || buffer.length() == 0) {
 			buffer = new StringBuilder("*:*"); //$NON-NLS-1$
 		}
+		
 		return query.setQuery(buffer.toString());
 	}
 	

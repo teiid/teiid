@@ -27,7 +27,7 @@ import javax.resource.ResourceException;
 
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.HttpSolrServer;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.request.LukeRequest;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.client.solrj.response.LukeResponse;
@@ -39,7 +39,7 @@ import org.teiid.translator.solr.SolrConnection;
 
 public class SolrConnectionImpl extends BasicConnection implements SolrConnection {
 
-	private HttpSolrServer server;
+	private HttpSolrClient server;
 	private String coreName;
 
 	public SolrConnectionImpl(SolrManagedConnectionFactory config) {
@@ -48,7 +48,7 @@ public class SolrConnectionImpl extends BasicConnection implements SolrConnectio
 			url = config.getUrl()+"/"; //$NON-NLS-1$
 		}
 		url = url + config.getCoreName();
-		this.server = new HttpSolrServer(url);
+		this.server = new HttpSolrClient(url);
 
 		if (config.getSoTimeout() != null) {
 			this.server.setSoTimeout(config.getSoTimeout());
@@ -61,18 +61,19 @@ public class SolrConnectionImpl extends BasicConnection implements SolrConnectio
 		}
 		if (config.getAllowCompression() != null) {
 			this.server.setAllowCompression(config.getAllowCompression());
-		}
-		if (config.getMaxRetries() != null) {
-			this.server.setMaxRetries(config.getMaxRetries());
-		}
-		
+		}		
 		this.coreName = config.getCoreName();
 	}
 
 	@Override
 	public void close() throws ResourceException {
-		if (this.server != null)
-			this.server.shutdown();
+		if (this.server != null) {
+			try {
+				this.server.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	@Override
@@ -92,6 +93,8 @@ public class SolrConnectionImpl extends BasicConnection implements SolrConnectio
 		try {
 			return server.query(params);
 		} catch (SolrServerException e) {
+			throw new TranslatorException(e);
+		} catch (IOException e) {
 			throw new TranslatorException(e);
 		}
 	}

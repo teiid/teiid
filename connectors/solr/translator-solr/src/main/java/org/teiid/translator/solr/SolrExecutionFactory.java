@@ -22,28 +22,24 @@
 package org.teiid.translator.solr;
 
 import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 import javax.resource.cci.ConnectionFactory;
 
+import org.hibernate.sql.ordering.antlr.ColumnReference;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
 import org.teiid.language.Command;
+import org.teiid.language.Expression;
+import org.teiid.language.Function;
+import org.teiid.language.Literal;
 import org.teiid.language.QueryExpression;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.MetadataProcessor;
-import org.teiid.translator.ResultSetExecution;
-import org.teiid.translator.SourceSystemFunctions;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
-import org.teiid.translator.UpdateExecution;
+import org.teiid.translator.*;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 
@@ -54,13 +50,47 @@ public class SolrExecutionFactory extends ExecutionFactory<ConnectionFactory, So
 	public SolrExecutionFactory() {
 		super();
 		setSourceRequiredForMetadata(true);
-		setTransactionSupport(TransactionSupport.NONE);
+		
         registerFunctionModifier("%", new AliasModifier("mod"));//$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier("+", new AliasModifier("sum"));//$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier("-", new AliasModifier("sub"));//$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier("*", new AliasModifier("product"));//$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier("/", new AliasModifier("div"));//$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier(SourceSystemFunctions.POWER, new AliasModifier("pow"));//$NON-NLS-1$
+        /*
+        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new FunctionModifier() {
+         
+			@Override
+			public List<?> translate(Function function) {
+				function.setName("");
+				Expression date = function.getParameters().get(0);
+				if(date.getType().equals(TypeFacility.RUNTIME_TYPES.TIMESTAMP)) {
+					function.setType(TypeFacility.RUNTIME_TYPES.TIMESTAMP);
+				}
+				return null;
+			}
+		});
+		*/
+        registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, new FunctionModifier() {
+			@Override
+			public List<?> translate(Function function) {
+				
+				function.setName("");
+				function.getParameters().remove(1);
+				
+				return null;
+			}
+		});
+        registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new FunctionModifier() {
+			@Override
+			public List<?> translate(Function function) {
+				
+				function.setName("");
+				function.getParameters().remove(1);
+				
+				return null;
+			}
+		});
 		
 	}
 	
@@ -94,6 +124,9 @@ public class SolrExecutionFactory extends ExecutionFactory<ConnectionFactory, So
         supportedFunctions.add(SourceSystemFunctions.LOG);
         supportedFunctions.add(SourceSystemFunctions.SQRT);
         
+        supportedFunctions.add(SourceSystemFunctions.DAYOFMONTH);
+        supportedFunctions.add(SourceSystemFunctions.PARSETIMESTAMP);
+        supportedFunctions.add(SourceSystemFunctions.FORMATTIMESTAMP);
         return supportedFunctions;
     }
     
@@ -221,6 +254,21 @@ public class SolrExecutionFactory extends ExecutionFactory<ConnectionFactory, So
     public boolean supportsAggregatesCountStar() {
     	return true;
     }	
+	
+	@Override
+	public boolean supportsFunctionsInGroupBy() {
+		return true;
+	}
+	  
+	@Override
+	public boolean supportsGroupBy() {
+		return true;
+	}
+	
+	@Override
+	public boolean supportsHaving() {
+		return true;
+	}
 	
 	@Override
 	public boolean returnsSingleUpdateCount() {
