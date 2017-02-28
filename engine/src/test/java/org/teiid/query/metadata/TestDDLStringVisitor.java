@@ -469,6 +469,7 @@ public class TestDDLStringVisitor {
         
         Grant.Permission permission3 = new Grant.Permission();
         permission3.setAllowAllPrivileges(true);
+        permission3.setAllowTemporyTables(true);
         
         Grant.Permission permission4 = new Grant.Permission();
         permission4.setAllowTemporyTables(true);
@@ -508,6 +509,7 @@ public class TestDDLStringVisitor {
                 "GRANT SELECT,DELETE,ALTER ON TABLE \"schema.tableName\" TO admin;\n" + 
                 "GRANT TEMPORARY TABLE TO admin;\n\n" +
                 "GRANT ALL PRIVILEGES TO uber;\n" +
+                "GRANT TEMPORARY TABLE TO uber;\n" +
                 "\n" + 
                 "\n" + 
                 "/*\n" +

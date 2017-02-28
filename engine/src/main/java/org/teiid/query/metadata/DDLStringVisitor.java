@@ -214,21 +214,26 @@ public class DDLStringVisitor {
     private void visit(Grant grant) {
         
         for (Permission permission : grant.getPermissions()) {
+            if (permission.getResourceType() == ResourceType.DATABASE) {
+                for (Privilege p : permission.getPrivileges()) {
+                    appendGrant(grant, permission, EnumSet.of(p), false);
+                }
+                for (Privilege p : permission.getRevokePrivileges()) {
+                    appendGrant(grant, permission, EnumSet.of(p), true);
+                }
+                continue;
+            }
             if (!permission.getPrivileges().isEmpty() || permission.getMask() != null || permission.getCondition() != null) {
-                appendGrant(grant, permission, false);
+                appendGrant(grant, permission, permission.getPrivileges(), false);
             }
             if (!permission.getRevokePrivileges().isEmpty()) {
-                appendGrant(grant, permission, true);
+                appendGrant(grant, permission, permission.getRevokePrivileges(), true);
             }
         }
     }
 
-    private void appendGrant(Grant grant, Permission permission, boolean revoke) {
-        EnumSet<Privilege> privileges = revoke?permission.getRevokePrivileges():permission.getPrivileges();
-        if (revoke) {
-            append(REVOKE).append(SPACE);
-        }
-        append(GRANT);
+    private void appendGrant(Grant grant, Permission permission, EnumSet<Privilege> privileges, boolean revoke) {
+        append(revoke?REVOKE:GRANT);
         boolean first = true;
         for (Privilege allowance:privileges) {
             if (first) {
