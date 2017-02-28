@@ -361,7 +361,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
     	if (id == null) {
     		synchronized (this) {
     	    	id = this.tableStore.getMetadataStore().addTempGroup(matTableName, Arrays.asList(keyElement, returnElement), false, true);
-    	    	String queryString = Reserved.SELECT + ' ' + keyElementName + " ," + returnElementName + ' ' + Reserved.FROM + ' ' + codeTableName; //$NON-NLS-1$ 
+    	    	String queryString = Reserved.SELECT + ' ' + new ElementSymbol(keyElementName) + " ," + new ElementSymbol(returnElementName) + ' ' + Reserved.FROM + ' ' + new GroupSymbol(codeTableName); //$NON-NLS-1$ 
     	    	id.setQueryNode(new QueryNode(queryString));
     	    	id.setPrimaryKey(id.getElements().subList(0, 1));
     	    	CacheHint hint = new CacheHint(true, null);
