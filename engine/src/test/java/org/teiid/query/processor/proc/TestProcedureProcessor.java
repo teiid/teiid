@@ -2187,6 +2187,24 @@ public class TestProcedureProcessor {
         helpTestProcess(plan, expected, hdm, metadata);
     }
     
+    // TEIID-3267 OPTION NOCACHE causes ConcurrentModificationException
+    @Test public void testOptionNocacheDynamic() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.example1();
+        String proc = "CREATE VIRTUAL PROCEDURE\n" //$NON-NLS-1$
+            + "BEGIN\n" //$NON-NLS-1$
+            + "DECLARE string VARIABLES.strSql = 'select g1.e1 from vm1.g1 as g1, vm1.g2 as g2 where g1.e1=g2.e1 option nocache g1';\n" //$NON-NLS-1$
+            + "EXECUTE IMMEDIATE VARIABLES.strSql AS id string;\n" //$NON-NLS-1$
+            + "END"; //$NON-NLS-1$
+        addProc(metadata, proc);
+        String userUpdateStr = "EXEC pm1.sq2()"; //$NON-NLS-1$
+        HardcodedDataManager hdm = new HardcodedDataManager(false);
+        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
+        
+        // expecting 0 row without an exception
+        List[] expected = new List[] {}; //$NON-NLS-1$
+        helpTestProcess(plan, expected, hdm, metadata);
+    }
+    
     private static final boolean DEBUG = false;
     
 }
