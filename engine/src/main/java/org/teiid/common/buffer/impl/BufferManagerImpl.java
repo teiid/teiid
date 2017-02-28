@@ -541,7 +541,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			compareIndexes[i] = i;
 		}
     	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
-    		LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Creating STree:", newID); //$NON-NLS-1$
+    		LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Creating STree:", newID, keyLength, elements); //$NON-NLS-1$
     	}
     	return new STree(keyManager, bm, new ListNestedSortComparator(compareIndexes).defaultNullOrder(getOptions().getDefaultNullOrder()), getProcessorBatchSize(elements.subList(0, keyLength)), getProcessorBatchSize(elements), keyLength, lobManager);
     }
