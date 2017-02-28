@@ -42,6 +42,8 @@ import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.translator.TypeFacility;
 
 public class CassandraSQLVisitor extends SQLStringVisitor {
+    
+    	private static final String ALLOW_FILTERING = "ALLOW FILTERING";
 
 	public String getTranslatedSQL() {
 		return buffer.toString();
@@ -58,10 +60,16 @@ public class CassandraSQLVisitor extends SQLStringVisitor {
 
 	@Override
 	public void visit(Select obj) {
+	    
+	    	boolean allowFiltering = false;
+	    
 		buffer.append(SELECT).append(Tokens.SPACE);
 		if (obj.getFrom() != null && !obj.getFrom().isEmpty()){
 			NamedTable table = (NamedTable)obj.getFrom().get(0);
 		
+			allowFiltering = Boolean.parseBoolean(
+			          table.getMetadataObject().getProperties().get(CassandraMetadataProcessor.ALLOWFILTERING));
+			
 			if(table.getMetadataObject().getColumns() !=  null){
 				append(obj.getDerivedColumns());
 			}
@@ -83,6 +91,11 @@ public class CassandraSQLVisitor extends SQLStringVisitor {
 		if(obj.getLimit() != null){
 			buffer.append(Tokens.SPACE);
 			append(obj.getLimit());
+		}
+		
+		if (allowFiltering) {
+		      buffer.append(Tokens.SPACE);
+		      buffer.append(ALLOW_FILTERING);
 		}
 	}
 	

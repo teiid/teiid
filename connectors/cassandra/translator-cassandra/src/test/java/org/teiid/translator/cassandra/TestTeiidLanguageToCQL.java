@@ -74,7 +74,7 @@ public class TestTeiidLanguageToCQL {
 
 		//assertEquals("SELECT id FROM Person where custom = X'abcd'", getTranslation("SELECT id FROM Person WHERE custom = 0xABCD", props));
 
-		// assertEquals("INSERT into Person (id, custom1) values (1, X'abcd')",getTranslation("INSERT INTO Person (id, custom1) VALUES (1, 0xABCD)", props));
+		//assertEquals("INSERT into Person (id, custom1) values (1, X'abcd')",getTranslation("INSERT INTO Person (id, custom1) VALUES (1, 0xABCD)", props));
 	}
 
 	@Test

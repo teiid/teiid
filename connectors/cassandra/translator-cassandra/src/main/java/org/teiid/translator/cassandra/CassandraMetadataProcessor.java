@@ -28,8 +28,8 @@ import java.util.List;
 import javax.resource.ResourceException;
 
 import org.teiid.metadata.Column;
-import org.teiid.metadata.ExtensionMetadataProperty;
 import org.teiid.metadata.Column.SearchType;
+import org.teiid.metadata.ExtensionMetadataProperty;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.translator.MetadataProcessor;
@@ -42,8 +42,8 @@ import com.datastax.driver.core.TableMetadata;
 
 public class CassandraMetadataProcessor implements MetadataProcessor<CassandraConnection>{
 	
-    @ExtensionMetadataProperty(applicable=Table.class, datatype=Boolean.class, display="Allow Filtering", description="This is to avoid the warning from Cassandra when it might not be able to execute the query in an efficient way", required=false)
-	public static final String ALLOWFILTERING = "ALLOWFILTERING"; //$NON-NLS-1$
+    	@ExtensionMetadataProperty(applicable=Table.class, datatype=Boolean.class, display="Allow Filtering", description="This is to avoid the warning from Cassandra when it might not be able to execute the query in an efficient way", required=false)
+    	public static final String ALLOWFILTERING = "ALLOWFILTERING"; 
     
 	/**
 	 * Creates metadata from all column families in current keyspace.
