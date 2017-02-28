@@ -37,9 +37,10 @@ public class TestTeiidLanguageToCQL {
 		factory.addColumn("employed", TypeFacility.RUNTIME_NAMES.BOOLEAN, person);
 		factory.addColumn("custom", TypeFacility.RUNTIME_NAMES.VARBINARY, person);
 		factory.addColumn("custom1", TypeFacility.RUNTIME_NAMES.BLOB, person);
-		factory.getModelProperties().forEach((k, v) -> {
-			person.setProperty(k.toString(), v.toString());
-		});
+		Properties pros = factory.getModelProperties();
+		for(Object key: pros.keySet()) {
+			person.setProperty(key.toString(), pros.getProperty(key.toString()));
+		}
 	}
 
 	private String getTranslation(String sql, Properties modelProperties) {
@@ -74,7 +75,7 @@ public class TestTeiidLanguageToCQL {
 
 		//assertEquals("SELECT id FROM Person where custom = X'abcd'", getTranslation("SELECT id FROM Person WHERE custom = 0xABCD", props));
 
-		//assertEquals("INSERT into Person (id, custom1) values (1, X'abcd')",getTranslation("INSERT INTO Person (id, custom1) VALUES (1, 0xABCD)", props));
+		// assertEquals("INSERT into Person (id, custom1) values (1, X'abcd')",getTranslation("INSERT INTO Person (id, custom1) VALUES (1, 0xABCD)", props));
 	}
 
 	@Test
