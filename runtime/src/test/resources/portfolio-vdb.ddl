@@ -90,7 +90,7 @@ SELECT SP.symbol, SP.price FROM (EXEC MarketData.getTextFiles('*.txt')) AS f, TE
 CREATE ROLE ReadOnly WITH ANY AUTHENTICATED;
 CREATE ROLE Prices WITH JAAS ROLE prices;
 CREATE ROLE ReadWrite WITH JAAS ROLE superuser;
-REVOKE GRANT SELECT ON SCHEMA Accounts FROM Prices;
+REVOKE SELECT ON SCHEMA Accounts FROM Prices;
 
 GRANT SELECT ON SCHEMA Accounts TO ReadOnly;
 GRANT ON COLUMN "Accounts.Account.SSN" MASK 'null' TO ReadOnly;

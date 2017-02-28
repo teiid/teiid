@@ -38,7 +38,6 @@ import org.teiid.metadata.Grant.Permission;
 import org.teiid.metadata.Grant.Permission.Privilege;
 import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.query.function.SystemFunctionManager;
-import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.SystemMetadata;
@@ -1310,7 +1309,7 @@ public class TestDDLParser {
                 + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;"
                 + "GRANT SELECT,INSERT,DELETE ON TABLE G1 TO superuser;"
                 + "GRANT UPDATE ON TABLE test.G1 TO superuser;"
-                + "REVOKE GRANT SELECT ON TABLE test.G1 FROM superuser;";
+                + "REVOKE SELECT ON TABLE test.G1 FROM superuser;";
         
         Database db = helpParse(ddl);
         Role role = db.getRole("superuser");
@@ -1340,7 +1339,7 @@ public class TestDDLParser {
                 + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;"
                 + "GRANT SELECT,INSERT,DELETE ON TABLE G1 TO superuser;"
                 + "GRANT UPDATE ON TABLE test.G1 TO superuser;"
-                + "REVOKE GRANT ALL PRIVILEGES FROM superuser;";
+                + "REVOKE ALL PRIVILEGES FROM superuser;";
         
         Database db = helpParse(ddl);
         Role role = db.getRole("superuser");

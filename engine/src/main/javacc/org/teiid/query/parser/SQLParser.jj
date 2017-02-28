@@ -5381,7 +5381,7 @@ void grantOption(DatabaseStore dbStore) :
 /*
 name=Revoke GRANT
 description=Revokes GRANT for a role
-example=[source,sql]\n----\nREVOKE GRANT SELECT ON TABLE x.y TO role\n----\n
+example=[source,sql]\n----\nREVOKE SELECT ON TABLE x.y TO role\n----\n
 */
 void revokeGrantOption(DatabaseStore dbStore) :
 {
@@ -5395,7 +5395,7 @@ void revokeGrantOption(DatabaseStore dbStore) :
     Grant.Permission permission = new Grant.Permission();
 }
 {
-    <REVOKE> <GRANT> 
+    <REVOKE> 
     ((
        [readGrantTypes(privileges) (<COMMA> readGrantTypes(privileges))*]
        <ON> ( 
