@@ -40,7 +40,6 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.validator.ValidatorReport;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.jdbc.SQLConversionVisitor;
 
 @SuppressWarnings("nls")
 public class TestCouchbaseExecutionFactory {
@@ -52,13 +51,13 @@ public class TestCouchbaseExecutionFactory {
 
             CouchbaseMetadataProcessor mp = new CouchbaseMetadataProcessor();  
             MetadataFactory mf = new MetadataFactory("couchbase", 1, SystemMetadata.getInstance().getRuntimeTypeMap(), mmd);
-            String keyspace = "testKeyspace";
-            mp.addTable(mf, keyspace, formCustomer(), null);
-            mp.addTable(mf, keyspace, formOder(), null);
-            mp.addTable(mf, keyspace, formSimpleJson(), null);
-            mp.addTable(mf, keyspace, formJson(), null);
-            mp.addTable(mf, keyspace, complexObject(), null);
-            mp.addTable(mf, keyspace, complexArray(), null);
+            mp.addTable(mf, KEYSPACE, formCustomer(), null);
+            mp.addTable(mf, KEYSPACE, formOder(), null);
+            mp.addTable(mf, KEYSPACE, formSimpleJson(), null);
+            mp.addTable(mf, KEYSPACE, formJson(), null);
+            mp.addTable(mf, KEYSPACE, formArray(), null);
+            mp.addTable(mf, KEYSPACE, layerJson(), null);
+            mp.addTable(mf, KEYSPACE, layerArray(), null);
 
             TransformationMetadata tm = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "x");
             ValidatorReport report = new MetadataValidator().validate(tm.getVdbMetaData(), tm.getMetadataStore());
@@ -97,8 +96,32 @@ public class TestCouchbaseExecutionFactory {
 
     @Test
     public void testBasicSelect() throws TranslatorException {
-        String sql = "SELECT * FROM testKeyspace_SavedAddresses";
-        helpTest(sql, "");
+        
+        String sql = "SELECT * FROM test_CreditCard AS T";
+        helpTest(sql, "SELECT T.CardNumber, T.Type, T.CVN, T.Expiry FROM `test`.`CreditCard` AS T");
+        
+        sql = "SELECT * FROM test_CreditCard";
+        helpTest(sql, "SELECT CardNumber, Type, CVN, Expiry FROM `test`.`CreditCard`");
+        
+        sql = "SELECT * FROM test_SavedAddresses";
+        helpTest(sql, "SELECT SavedAddresses FROM `test`.`SavedAddresses`");
+        
+        sql = "SELECT * FROM test_SavedAddresses AS T";
+        helpTest(sql, "SELECT T FROM `test`.`SavedAddresses` AS T");
+    }
+    
+    @Test
+    public void testNumbericFunctions() throws TranslatorException {
+        
+        String sql = "SELECT CEILING(attr_number_float) FROM test";
+        helpTest(sql, "SELECT CEIL(TONUMBER(`test`.attr_number_float)) FROM `test`"); 
+    }
+    
+    @Test
+    public void testConversionFunctions() throws TranslatorException {
+        
+        String sql = "SELECT convert(attr_number_float, double) FROM test";
+        helpTest(sql, "SELECT TONUMBER(`test`.attr_number_float) FROM `test`"); 
     }
 
 

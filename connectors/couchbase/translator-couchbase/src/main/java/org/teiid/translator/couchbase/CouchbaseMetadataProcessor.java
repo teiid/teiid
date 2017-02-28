@@ -31,7 +31,6 @@ import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.BYTE;
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.LONG;
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.FLOAT;
 
-import java.util.Arrays;
 import java.util.Iterator;
 
 import org.teiid.couchbase.CouchbaseConnection;
@@ -55,6 +54,10 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
     public static final String DOT = "."; //$NON-NLS-1$
     
     public static final String LINE = "_"; //$NON-NLS-1$
+    public static final String IS_TOP_TABLE = "isTopTable"; //$NON-NLS-1$
+    public static final String IS_ARRAY_TABLE = "isArrayTable"; //$NON-NLS-1$
+    public static final String TRUE = "true"; //$NON-NLS-1$
+    public static final String FALSE = "false"; //$NON-NLS-1$
 
     @Override
     public void process(MetadataFactory metadataFactory, CouchbaseConnection connection) throws TranslatorException {
@@ -85,10 +88,13 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
                 // Base on N1QL, the top Table map to keyspace in Couchbase, each rows represent a document in keyspace. 
                 // The top Table have a unique primary key.
                 table.setNameInSource(buildNameInSource(key, null));
+                table.setProperty(IS_TOP_TABLE, TRUE);
 //                metadataFactory.addPrimaryKey("PK0", Arrays.asList(ID), table); //$NON-NLS-1$
             } else {
                 table.setNameInSource(buildNameInSource(key, parent.getNameInSource()));
+                table.setProperty(IS_TOP_TABLE, FALSE);
             }
+            table.setProperty(IS_ARRAY_TABLE, FALSE);
         }
 
         // add more columns
@@ -97,6 +103,15 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
         }
     }
 
+    /**
+     * JsonArray be map to a one Column Table.
+     * If all array items are same type, the mapped Table column type use this type, 
+     * else, the Table column type use Object.
+     * @param metadataFactory
+     * @param key
+     * @param value
+     * @param parent
+     */
     private void addTable(MetadataFactory metadataFactory, String key, JsonArray value, Table parent) {
         
         Table table = null;
@@ -108,17 +123,23 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
             table.setSupportsUpdate(true);
 //            metadataFactory.addColumn(ID, STRING, table);
             table.setNameInSource(buildNameInSource(key, parent.getNameInSource()));
+            table.setProperty(IS_ARRAY_TABLE, TRUE);
+            table.setProperty(IS_TOP_TABLE, FALSE);
         }
         
         Iterator<Object> items = value.iterator();
         while(items.hasNext()) {
             Object item = items.next();
-            if(item instanceof JsonObject) {
-                addTable(metadataFactory, key, (JsonObject)item, table);
-            } else if(item instanceof JsonArray) {
-                addTable(metadataFactory, key, (JsonArray)item, table);
+            String arrayType = getDataType(item);
+            if (table.getColumnByName(key) != null) {
+                Column column = table.getColumnByName(key);
+                if(!column.getDatatype().getName().equals(arrayType) && !column.getDatatype().getName().equals(OBJECT)) {
+                    Datatype datatype = metadataFactory.getDataTypes().get(OBJECT);
+                    column.setDatatype(datatype, true, 0);
+                }
             } else {
-                addColumn(metadataFactory, table, key, item);
+                Column column = metadataFactory.addColumn(key, arrayType, table);
+                column.setUpdatable(true);
             }
         }
     }
@@ -135,17 +156,8 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
         } else if(value instanceof JsonArray) {
             addTable(metadataFactory, key, (JsonArray)value, table);
         } else {
-            if (table.getColumnByName(key) == null) {
-                Column column = metadataFactory.addColumn(key, getDataType(value), table);
-                column.setUpdatable(true);
-            } else {
-                Column column = table.getColumnByName(key);
-                // For array contain different type
-                if(!column.getDatatype().getName().equals(getDataType(value))) {
-                    Datatype datatype = metadataFactory.getDataTypes().get(OBJECT);
-                    column.setDatatype(datatype, true, 0);
-                }
-            } 
+            Column column = metadataFactory.addColumn(key, getDataType(value), table);
+            column.setUpdatable(true);
         }
     }
 

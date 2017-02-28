@@ -29,7 +29,9 @@ import java.util.TreeMap;
 
 import javax.resource.cci.ConnectionFactory;
 
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.couchbase.CouchbaseConnection;
+import org.teiid.language.Function;
 import org.teiid.language.QueryExpression;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
@@ -41,11 +43,14 @@ import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
+import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 
 
 @Translator(name="couchbase", description="Couchbase Translator, reads and writes the data to Couchbase")
 public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactory, CouchbaseConnection> {
+    
+//    private class CouchbaseConvertModifier FunctionModifier
     
     private static final String COUCHBASE = "couchbase"; //$NON-NLS-1$
     
@@ -60,6 +65,7 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
 	public void start() throws TranslatorException {
 		super.start();
 		
+		registerFunctionModifier(SourceSystemFunctions.CONVERT, new CouchbaseConvertModifier());
 		registerFunctionModifier(SourceSystemFunctions.CEILING, new AliasModifier("CEIL"));//$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.LOG, new AliasModifier("LN"));//$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.LOG10, new AliasModifier("LOG"));//$NON-NLS-1$
@@ -153,7 +159,7 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
 
     @Override
     public boolean supportsAggregatesMin() {
-        return true;
+        return false;
     }
 
     @Override

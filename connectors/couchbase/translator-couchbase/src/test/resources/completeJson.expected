@@ -1,37 +1,35 @@
-CREATE FOREIGN TABLE testKeyspace (
-	id string OPTIONS (UPDATABLE FALSE),
+CREATE FOREIGN TABLE test (
 	attr_double double,
 	attr_number_short short,
 	attr_string string,
 	attr_boolean boolean,
 	attr_number_long long,
 	attr_int integer,
+	Name string,
 	attr_number_integer integer,
 	attr_long long,
 	attr_number_float float,
 	attr_null object,
 	attr_number_byte byte,
-	attr_number_double double,
-	CONSTRAINT PK0 PRIMARY KEY(id)
-) OPTIONS (NAMEINSOURCE '`testKeyspace`', UPDATABLE TRUE);
+	attr_number_double double
+) OPTIONS (NAMEINSOURCE '`test`', UPDATABLE TRUE);
 
-CREATE FOREIGN TABLE testKeyspace_attr_jsonArray (
-	id string OPTIONS (UPDATABLE FALSE),
-	attr_jsonArray boolean
-) OPTIONS (NAMEINSOURCE '`testKeyspace`.`attr_jsonArray`', UPDATABLE TRUE);
+CREATE FOREIGN TABLE test_attr_jsonArray (
+	attr_jsonArray object
+) OPTIONS (NAMEINSOURCE '`test`.`attr_jsonArray`', UPDATABLE TRUE);
 
-CREATE FOREIGN TABLE testKeyspace_attr_jsonObject (
-	id string OPTIONS (UPDATABLE FALSE),
+CREATE FOREIGN TABLE test_attr_jsonObject (
 	attr_double double,
 	attr_number_short short,
 	attr_string string,
+	attr_boolean boolean,
+	attr_number_long long,
+	attr_int integer,
+	Name string,
+	attr_number_integer integer,
 	attr_long long,
 	attr_number_float float,
 	attr_null object,
-	attr_boolean boolean,
 	attr_number_byte byte,
-	attr_number_long long,
-	attr_int integer,
-	attr_number_double double,
-	attr_number_integer integer
-) OPTIONS (NAMEINSOURCE '`testKeyspace`.`attr_jsonObject`', UPDATABLE TRUE);
+	attr_number_double double
+) OPTIONS (NAMEINSOURCE '`test`.`attr_jsonObject`', UPDATABLE TRUE);
