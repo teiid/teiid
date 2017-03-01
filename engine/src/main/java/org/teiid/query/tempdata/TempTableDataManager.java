@@ -98,6 +98,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 	
 	public interface RequestExecutor {
 		void execute(String command, List<?> parameters);
+		boolean isShutdown();
 	}
 	
 	public abstract class ProxyTupleSource implements TupleSource {
@@ -755,7 +756,10 @@ public class TempTableDataManager implements ProcessorDataManager {
 					throw e;
 				} catch (Exception e) {
 					errored = true;
-					LogManager.logError(LogConstants.CTX_MATVIEWS, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30015, tableName));
+					if (executor == null || !executor.isShutdown()) {
+					    //if we're shutting down, no need to log
+					    LogManager.logError(LogConstants.CTX_MATVIEWS, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30015, tableName));
+					}
 					closeSource();
 					rethrow(e);
 					throw new AssertionError();

@@ -912,9 +912,6 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	 * Stops the server.  Once stopped it cannot be restarted.
 	 */
 	public synchronized void stop() {
-		if (config != null) {
-			config.stop();
-		}
 		if (running == null || !running) {
 			return;
 		}
@@ -930,6 +927,9 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		this.sessionService.stop();
 		this.transports.clear();
 		dqp.stop();
+		if (config != null) {
+            config.stop();
+        }
 		eventDistributorFactoryService.stop();
 		config.getCacheFactory().destroy();
 		config.setCacheFactory(null);

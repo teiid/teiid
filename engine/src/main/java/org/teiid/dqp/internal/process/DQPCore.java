@@ -34,6 +34,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import javax.transaction.xa.Xid;
@@ -127,11 +128,20 @@ public class DQPCore implements DQP {
 	private ExecutorService timeoutExecutor;
 	
 	private LocalProfile localProfile;
+	
+	private volatile boolean shutdown;
     
     /**
      * perform a full shutdown and wait for 10 seconds for all threads to finish
      */
     public void stop() {
+        shutdown = true;
+        for (RequestID request : requests.keySet()) {
+            try {
+                cancelRequest(request);
+            } catch (TeiidComponentException e) {
+            }
+        }
     	processWorkerPool.shutdownNow();
     	try {
 			processWorkerPool.awaitTermination(10, TimeUnit.SECONDS);
@@ -401,7 +411,14 @@ public class DQPCore implements DQP {
     }
     
     void addWork(Runnable work) {
-		this.processWorkerPool.execute(work);
+        try {
+            this.processWorkerPool.execute(work);
+        } catch (RejectedExecutionException e) {
+            if (!shutdown) {
+                throw e;
+            }
+            LogManager.logDetail(LogConstants.CTX_DQP, e, "In the process of shutting down, work will not be started"); //$NON-NLS-1$
+        }
     }
     
     Future<Void> scheduleWork(final Runnable r, long delay) {
@@ -664,6 +681,11 @@ public class DQPCore implements DQP {
 					}
 					
 				});
+			}
+			
+			@Override
+			public boolean isShutdown() {
+			    return shutdown;
 			}
 		});
         dataTierMgr.setEventDistributor(eventDistributor);
