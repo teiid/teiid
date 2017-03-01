@@ -3,9 +3,13 @@ package org.teiid.translator.cassandra;
 import static org.junit.Assert.*;
 
 import java.util.Properties;
+import java.util.TimeZone;
 
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.cdk.CommandBuilder;
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.Command;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
@@ -66,7 +70,7 @@ public class TestTeiidLanguageToCQL {
 
 		assertEquals("SELECT id, name, age FROM Person WHERE id IN (1, 2, 3)", getTranslation("SELECT id, name, age from Person where id in(1,2,3)", props));
 
-		assertEquals("SELECT id FROM Person WHERE bday = -2208966800000 AND employed = TRUE", getTranslation("select id from Person where bday = {ts '1900-01-01 12:00:00'} and employed = true", props));
+		assertEquals("SELECT id FROM Person WHERE bday = -2208949200000 AND employed = TRUE", getTranslation("select id from Person where bday = {ts '1900-01-01 12:00:00'} and employed = true", props));
 
 		//assertEquals("SELECT id FROM Person where custom = X'abcd'", getTranslation("SELECT id FROM Person WHERE custom = 0xABCD", props));
 
@@ -80,5 +84,15 @@ public class TestTeiidLanguageToCQL {
 		assertEquals("SELECT id, name, age, bday, employed, custom, custom FROM Person WHERE age = 8 ALLOW FILTERING",
 				getTranslation("select id, name, age, bday, employed, custom, custom from Person WHERE age = 8",
 						props));
+	}
+	
+	@BeforeClass
+	public static void oneTimeSetup() {
+	    TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT+1"));
+	}
+	
+	@AfterClass
+	public static void oneTimeTeardown() {
+	    TimestampWithTimezone.resetCalendar(null);
 	}
 }
