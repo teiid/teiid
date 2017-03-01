@@ -22,7 +22,6 @@
 package org.teiid.translator.accumulo;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -81,7 +80,6 @@ import org.teiid.translator.accumulo.AccumuloMetadataProcessor.ValueIn;
 public class EvaluatorIterator extends WrappingIterator {
     private static final SystemFunctionManager SFM = new SystemFunctionManager();
 	public static final String QUERYSTRING = "QUERYSTRING"; //$NON-NLS-1$
-	public static final String ENCODING = "ENCODING";//$NON-NLS-1$
 	public static final String TABLE = "TABLE";//$NON-NLS-1$
 	public static final String DDL = "DDL";//$NON-NLS-1$
 	
@@ -119,7 +117,7 @@ public class EvaluatorIterator extends WrappingIterator {
 	            ResolverUtil.resolveGroup(gs, tm);
 	        }
 	        ResolverVisitor.resolveLanguageObject(this.criteria, tm);
-	        this.evaluatorUtil = new EvaluatorUtil(Charset.forName(options.get(ENCODING)), gs);
+	        this.evaluatorUtil = new EvaluatorUtil(gs);
 		} catch (QueryParserException e) {
 			throw new IOException(e);
 		} catch (ClassNotFoundException e) {
@@ -342,10 +340,8 @@ public class EvaluatorIterator extends WrappingIterator {
 	private static class EvaluatorUtil {
 		private Map<ColumnSet, ColumnInfo> columnMap =  new HashMap<ColumnSet, ColumnInfo>();		
 		private Map<ElementSymbol, Integer> elementMap = new HashMap<ElementSymbol, Integer>();
-		private Charset encoding;
 		
-		public EvaluatorUtil(Charset encoding, GroupSymbol group) throws ClassNotFoundException {
-			this.encoding = encoding;
+		public EvaluatorUtil(GroupSymbol group) throws ClassNotFoundException {
 			
 			List<Column> columns = ((Table)(group.getMetadataID())).getColumns();
 			for (int i = 0; i < columns.size(); i++) {
@@ -388,19 +384,19 @@ public class EvaluatorIterator extends WrappingIterator {
 				if (info != null) {
 					Value v = kv.value;					
 					if (ValueIn.CQ.equals(info.in)) {
-						tuple[info.pos] = convert(kv.key.getColumnQualifier().getBytes(), info.es, this.encoding);
+						tuple[info.pos] = convert(kv.key.getColumnQualifier().getBytes(), info.es);
 					}
 					else {
-						tuple[info.pos] = convert(v.get(), info.es, this.encoding);
+						tuple[info.pos] = convert(v.get(), info.es);
 					}					
 				}
 				info = this.columnMap.get(new ColumnSet(new Text(AccumuloMetadataProcessor.ROWID)));
-				tuple[info.pos] = convert(kv.key.getRow().getBytes(), info.es, this.encoding);
+				tuple[info.pos] = convert(kv.key.getRow().getBytes(), info.es);
 			}
 			return Arrays.asList(tuple);
 		}
 		
-		private Object convert(byte[] content, ElementSymbol es, Charset enc) {
+		private Object convert(byte[] content, ElementSymbol es) {
 			return AccumuloDataTypeManager.deserialize(content, es.getType());			
 		}
 		

@@ -91,7 +91,7 @@ public class AccumuloQueryVisitor extends HierarchyVisitor {
         visitNode(obj.getLimit());
         
         if (this.doScanEvaluation) {
-        	HashMap<String, String> options = buildEvaluatorOptions(this.scanTable, this.ef.getEncoding());
+        	HashMap<String, String> options = buildEvaluatorOptions(this.scanTable);
         	SQLStringVisitor visitor = new SQLStringVisitor() {
         	    @Override
         	    public String getName(AbstractMetadataRecord object) {
@@ -260,7 +260,6 @@ public class AccumuloQueryVisitor extends HierarchyVisitor {
 		if (obj.getName().equals(AggregateFunction.COUNT)) {
 			HashMap<String, String> options = new HashMap<String, String>();
 			options.put(CountStarIterator.ALIAS, this.currentAlias);
-			options.put(CountStarIterator.ENCODING, this.ef.getEncoding());
 			IteratorSetting it = new IteratorSetting(this.iteratorPriority++, CountStarIterator.class, options);
 			
 			// expression expects a column
@@ -302,9 +301,8 @@ public class AccumuloQueryVisitor extends HierarchyVisitor {
 		this.scanTable = obj.getMetadataObject();
 	}
 	
-	private static HashMap<String, String> buildEvaluatorOptions(Table table, String encoding) {
+	private static HashMap<String, String> buildEvaluatorOptions(Table table) {
         HashMap<String, String> options = new HashMap<String, String>();
-        options.put(EvaluatorIterator.ENCODING, encoding);
         options.put(EvaluatorIterator.TABLE, table.getName());
         
         String ddl = DDLStringVisitor.getDDLString(table.getParent(), null, table.getName());

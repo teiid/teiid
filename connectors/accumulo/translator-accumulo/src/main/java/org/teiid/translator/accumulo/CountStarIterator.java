@@ -37,7 +37,6 @@ import org.apache.accumulo.core.iterators.WrappingIterator;
  */
 public class CountStarIterator extends WrappingIterator {
 	public static final String ALIAS = "alias"; //$NON-NLS-1$
-	public static final String ENCODING = "ENCODING"; //$NON-NLS-1$
 	private Key topKey;
 	private Value topValue;
 	private String alias;
