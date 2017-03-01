@@ -31,8 +31,10 @@ import javax.resource.cci.ConnectionFactory;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.couchbase.CouchbaseConnection;
+import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.QueryExpression;
+import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
@@ -43,15 +45,14 @@ import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
-import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
+
+import com.couchbase.client.java.document.json.JsonObject;
 
 
 @Translator(name="couchbase", description="Couchbase Translator, reads and writes the data to Couchbase")
 public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactory, CouchbaseConnection> {
-    
-//    private class CouchbaseConvertModifier FunctionModifier
-    
+        
     private static final String COUCHBASE = "couchbase"; //$NON-NLS-1$
     
     protected Map<String, FunctionModifier> functionModifiers = new TreeMap<String, FunctionModifier>(String.CASE_INSENSITIVE_ORDER);
@@ -65,7 +66,6 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
 	public void start() throws TranslatorException {
 		super.start();
 		
-		registerFunctionModifier(SourceSystemFunctions.CONVERT, new CouchbaseConvertModifier());
 		registerFunctionModifier(SourceSystemFunctions.CEILING, new AliasModifier("CEIL"));//$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.LOG, new AliasModifier("LN"));//$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.LOG10, new AliasModifier("LOG"));//$NON-NLS-1$
@@ -73,6 +73,21 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
 		registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("LOWER"));//$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("UPPER"));//$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.TRANSLATE, new AliasModifier("REPLACE"));//$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.CONVERT, new FunctionModifier(){
+            @Override
+            public List<?> translate(Function function) {
+                Expression param = function.getParameters().get(0);
+                int targetCode = getCode(function.getType());
+                if(targetCode == BYTE || targetCode == SHORT || targetCode == INTEGER || targetCode == LONG || targetCode == FLOAT || targetCode == DOUBLE ) {
+                    return Arrays.asList("TONUMBER" + Tokens.LPAREN, param, Tokens.RPAREN);//$NON-NLS-1$ 
+                } else if(targetCode == STRING || targetCode == CHAR) {
+                    return Arrays.asList("TOSTRING" + Tokens.LPAREN, param, Tokens.RPAREN);//$NON-NLS-1$ 
+                } else if(targetCode == BOOLEAN) {
+                    return Arrays.asList("TOBOOLEAN" + Tokens.LPAREN, param, Tokens.RPAREN);//$NON-NLS-1$ 
+                } else {
+                    return Arrays.asList("TOOBJECT" + Tokens.LPAREN, param, Tokens.RPAREN);//$NON-NLS-1$ 
+                }
+            }});
 		
 		addPushDownFunction(COUCHBASE, "CONTAINS", TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
 		addPushDownFunction(COUCHBASE, "TITLE", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
@@ -80,7 +95,6 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
 		addPushDownFunction(COUCHBASE, "TRIM", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
 		addPushDownFunction(COUCHBASE, "RTRIM", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
 		addPushDownFunction(COUCHBASE, "POSITION", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(COUCHBASE, "REVERSE", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
 	}
 
 	@Override
@@ -121,6 +135,9 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
 	    supportedFunctions.add(SourceSystemFunctions.TRANSLATE);
 	    supportedFunctions.add(SourceSystemFunctions.SUBSTRING);
 	    supportedFunctions.add(SourceSystemFunctions.UCASE);
+	    
+	    //conversion
+	    supportedFunctions.add(SourceSystemFunctions.CONVERT);
 	    
         return supportedFunctions;
     }
@@ -189,6 +206,19 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
     
     public N1QLVisitor getN1QLVisitor(RuntimeMetadata metadata) {
         return new N1QLVisitor(this, metadata);
+    }
+
+    public Object retrieveValue(String columnName, Class<?> columnType, Object value) {
+        
+        if (value == null) {
+            return null;
+        }
+
+        if (value.getClass().equals(columnType)) {
+            return value;
+        }
+        
+        return value;
     }
 
 }

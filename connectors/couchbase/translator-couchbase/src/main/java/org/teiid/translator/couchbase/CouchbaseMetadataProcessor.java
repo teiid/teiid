@@ -47,8 +47,8 @@ import com.couchbase.client.java.query.N1qlQueryRow;
 
 public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseConnection> {
     
-    private static final String ID = "id"; //$NON-NLS-1$
-    private static final String JSON = "json"; //$NON-NLS-1$
+    public static final String ID = "id"; //$NON-NLS-1$
+    public static final String JSON = "json"; //$NON-NLS-1$
     
     public static final String WAVE = "`"; //$NON-NLS-1$
     public static final String DOT = "."; //$NON-NLS-1$

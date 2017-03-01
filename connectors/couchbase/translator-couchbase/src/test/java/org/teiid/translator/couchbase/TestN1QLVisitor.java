@@ -42,7 +42,7 @@ import org.teiid.query.validator.ValidatorReport;
 import org.teiid.translator.TranslatorException;
 
 @SuppressWarnings("nls")
-public class TestCouchbaseExecutionFactory {
+public class TestN1QLVisitor {
     
     private static TransformationMetadata queryMetadataInterface() {
         try {
@@ -86,24 +86,31 @@ public class TestCouchbaseExecutionFactory {
 
         Command command = translationUtility.parseCommand(sql);
 
-        N1QLVisitor vistor = TRANSLATOR.getN1QLVisitor(runtimeMetadata);
-        vistor.append(command);
+        N1QLVisitor visitor = TRANSLATOR.getN1QLVisitor(runtimeMetadata);
+        visitor.append(command);
 
-        System.out.println(vistor.toString());
-        assertEquals(expected, vistor.toString());
+        System.out.println(visitor.toString());
+        assertEquals(expected, visitor.toString());
     }
     
 
     @Test
     public void testBasicSelect() throws TranslatorException {
         
-        String sql = "SELECT * FROM test_CreditCard AS T";
+        String sql = "SELECT * FROM test";
+        helpTest(sql, "SELECT `test`.Type, `test`.Name, `test`.CustomerID, `test`.attr_double, `test`.attr_number_short, `test`.attr_string, `test`.attr_boolean, `test`.attr_number_long, `test`.attr_int, `test`.attr_number_integer, `test`.attr_long, `test`.attr_number_float, `test`.attr_null, `test`.attr_number_byte, `test`.attr_number_double FROM `test`");
+        
+        sql = "SELECT * FROM test_CreditCard AS T";
         helpTest(sql, "SELECT T.CardNumber, T.Type, T.CVN, T.Expiry FROM `test`.`CreditCard` AS T");
         
         sql = "SELECT * FROM test_CreditCard";
         helpTest(sql, "SELECT CardNumber, Type, CVN, Expiry FROM `test`.`CreditCard`");
+    }
+    
+    @Test
+    public void testBasicSelectArray() throws TranslatorException {
         
-        sql = "SELECT * FROM test_SavedAddresses";
+        String sql = "SELECT * FROM test_SavedAddresses";
         helpTest(sql, "SELECT SavedAddresses FROM `test`.`SavedAddresses`");
         
         sql = "SELECT * FROM test_SavedAddresses AS T";
@@ -111,10 +118,50 @@ public class TestCouchbaseExecutionFactory {
     }
     
     @Test
+    public void testStringFunctions() throws TranslatorException {
+        
+        String sql = "SELECT LCASE(attr_string) FROM test_attr_jsonObject";
+        helpTest(sql, "SELECT LOWER(attr_string) FROM `test`.`attr_jsonObject`");
+        
+        sql = "SELECT UCASE(attr_string) FROM test_attr_jsonObject";
+        helpTest(sql, "SELECT UPPER(attr_string) FROM `test`.`attr_jsonObject`");
+        
+        sql = "SELECT TRANSLATE(attr_string, 'is', 'are') FROM test_attr_jsonObject";
+        helpTest(sql, "SELECT REPLACE(attr_string, 'is', 'are') FROM `test`.`attr_jsonObject`");
+        
+        sql = "SELECT couchbase.CONTAINS(attr_string, 'is') FROM test_attr_jsonObject";
+        helpTest(sql, "SELECT CONTAINS(attr_string, 'is') FROM `test`.`attr_jsonObject`");
+        
+        sql = "SELECT couchbase.TITLE(attr_string) FROM test_attr_jsonObject";
+        helpTest(sql, "SELECT TITLE(attr_string) FROM `test`.`attr_jsonObject`");
+        
+        sql = "SELECT couchbase.LTRIM(attr_string, 'This') FROM test_attr_jsonObject";
+        helpTest(sql, "SELECT LTRIM(attr_string, 'This') FROM `test`.`attr_jsonObject`");
+        
+        sql = "SELECT couchbase.TRIM(attr_string, 'is') FROM test_attr_jsonObject";
+        helpTest(sql, "SELECT TRIM(attr_string, 'is') FROM `test`.`attr_jsonObject`");
+        
+        sql = "SELECT couchbase.RTRIM(attr_string, 'value') FROM test_attr_jsonObject";
+        helpTest(sql, "SELECT RTRIM(attr_string, 'value') FROM `test`.`attr_jsonObject`");
+        
+        sql = "SELECT couchbase.POSITION(attr_string, 'is') FROM test_attr_jsonObject";
+        helpTest(sql, "SELECT POSITION(attr_string, 'is') FROM `test`.`attr_jsonObject`");
+    }
+    
+    @Test
     public void testNumbericFunctions() throws TranslatorException {
         
-        String sql = "SELECT CEILING(attr_number_float) FROM test";
-        helpTest(sql, "SELECT CEIL(TONUMBER(`test`.attr_number_float)) FROM `test`"); 
+        String sql = "SELECT CEILING(attr_number_float) FROM test_attr_jsonObject";
+        helpTest(sql, "SELECT CEIL(TONUMBER(attr_number_float)) FROM `test`.`attr_jsonObject`"); 
+        
+        sql = "SELECT LOG(attr_number_double) FROM test_attr_jsonObject";
+        helpTest(sql, "SELECT LN(attr_number_double) FROM `test`.`attr_jsonObject`"); 
+        
+        sql = "SELECT LOG10(attr_number_double) FROM test_attr_jsonObject";
+        helpTest(sql, "SELECT LOG(attr_number_double) FROM `test`.`attr_jsonObject`"); 
+        
+        sql = "SELECT RAND(attr_number_integer) FROM test_attr_jsonObject";
+        helpTest(sql, "SELECT RANDOM(attr_number_integer) FROM `test`.`attr_jsonObject`"); 
     }
     
     @Test
@@ -122,6 +169,12 @@ public class TestCouchbaseExecutionFactory {
         
         String sql = "SELECT convert(attr_number_float, double) FROM test";
         helpTest(sql, "SELECT TONUMBER(`test`.attr_number_float) FROM `test`"); 
+        
+        sql = "SELECT convert(attr_number_byte, boolean) FROM test";
+        helpTest(sql, "SELECT TOBOOLEAN(`test`.attr_number_byte) FROM `test`");
+        
+        sql = "SELECT convert(attr_number_long, string) FROM test";
+        helpTest(sql, "SELECT TOSTRING(`test`.attr_number_long) FROM `test`");
     }
 
 

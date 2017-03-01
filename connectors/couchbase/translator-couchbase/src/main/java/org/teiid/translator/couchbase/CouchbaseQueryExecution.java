@@ -21,23 +21,35 @@
  */
 package org.teiid.translator.couchbase;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.couchbase.CouchbaseConnection;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 
+import com.couchbase.client.java.document.json.JsonArray;
+import com.couchbase.client.java.document.json.JsonObject;
+import com.couchbase.client.java.query.N1qlQueryResult;
+import com.couchbase.client.java.query.N1qlQueryRow;
+
 public class CouchbaseQueryExecution extends CouchbaseExecution implements ResultSetExecution {
     
 	private Select command;
 	private CouchbaseExecutionFactory executionFactory;
-
 	private Class<?>[] expectedTypes;
+	
+	private N1QLVisitor visitor;
+	private Iterator<N1qlQueryRow> results;
+	private Iterator <Object> array;
 
 	public CouchbaseQueryExecution(
 			CouchbaseExecutionFactory executionFactory,
@@ -51,18 +63,52 @@ public class CouchbaseQueryExecution extends CouchbaseExecution implements Resul
 
 	@Override
 	public void execute() throws TranslatorException {
-		
+		this.visitor = this.executionFactory.getN1QLVisitor(metadata);
+		this.visitor.append(this.command);
+		LogManager.logInfo(LogConstants.CTX_CONNECTOR, this.command);
+		String sql = this.visitor.toString();
+		N1qlQueryResult queryResult = connection.executeQuery(sql);
+		this.results = queryResult.iterator();
 	}
 
 	@Override
 	public List<?> next() throws TranslatorException, DataNotAvailableException {
-
+	    if (this.results != null && this.results.hasNext() && this.array == null) {
+	        N1qlQueryRow queryRow = this.results.next();
+	        if(queryRow != null) {
+	            List<Object> row = new ArrayList<>(expectedTypes.length);
+	            JsonObject json = queryRow.value();
+	            for(int i = 0 ; i < expectedTypes.length ; i ++){
+	                Object value = json.get(this.visitor.getSelectColumns().get(i));
+	                if(value instanceof JsonArray) {
+	                    array = ((JsonArray)value).iterator();
+	                    return nextArray();
+	                }
+	                row.add(this.executionFactory.retrieveValue(this.visitor.getSelectColumns().get(i), expectedTypes[i], value));
+	            }
+	            return row;
+	        }
+	    } else if(this.array != null && this.array.hasNext()) {
+	        return nextArray();
+	    }
 		return null;
 	}
 
-	@Override
-	public void close() {
+	private List<?> nextArray() {
+	    if(this.array != null && this.array.hasNext()){
+	        List<Object> row = new ArrayList<>(1);
+            row.add(this.array.next());
+            if(!this.array.hasNext()) {
+                this.array = null;
+            }
+            return row;
+	    }
+        return null;
+    }
 
+    @Override
+	public void close() {
+	    this.results = null;
 	}
 
 	@Override

@@ -7,10 +7,13 @@ import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.IS_TOP_T
 import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.TRUE;
 import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.FALSE;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Function;
+import org.teiid.language.SQLConstants.NonReserved;
+import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.RuntimeMetadata;
 
@@ -18,6 +21,8 @@ public class N1QLVisitor extends SQLStringVisitor{
     
     private RuntimeMetadata metadata;
     private CouchbaseExecutionFactory ef;
+    
+    private List<String> selectColumns = new ArrayList<>();
 
     public N1QLVisitor(CouchbaseExecutionFactory ef, RuntimeMetadata metadata) {
         this.ef = ef;
@@ -39,6 +44,9 @@ public class N1QLVisitor extends SQLStringVisitor{
         }else {
             super.visit(obj);
         }
+        
+        //add selectColumns
+        selectColumns.add(obj.getName());
     }
 
     @Override
@@ -50,6 +58,11 @@ public class N1QLVisitor extends SQLStringVisitor{
             super.append(obj.getParameters().get(0));
             buffer.append(parts.get(2));
             return;
+        } else if (functionName.equalsIgnoreCase(NonReserved.TRIM)){
+            buffer.append(obj.getName()).append(Tokens.LPAREN);
+            append(obj.getParameters());
+            buffer.append(Tokens.RPAREN);
+            return;
         } else if (this.ef.getFunctionModifiers().containsKey(functionName)) {
             List<?> parts =  this.ef.getFunctionModifiers().get(functionName).translate(obj);
             if (parts != null) {
@@ -57,5 +70,9 @@ public class N1QLVisitor extends SQLStringVisitor{
             }
         } 
         super.visit(obj);
+    }
+
+    public List<String> getSelectColumns() {
+        return selectColumns;
     }
 }
