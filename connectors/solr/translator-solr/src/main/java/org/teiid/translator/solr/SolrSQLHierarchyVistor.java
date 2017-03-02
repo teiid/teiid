@@ -26,7 +26,7 @@ import static org.teiid.language.SQLConstants.Reserved.NULL;
 import static org.teiid.language.SQLConstants.Reserved.TRUE;
 import static org.teiid.language.visitor.SQLStringVisitor.getRecordName;
 
-import java.security.Timestamp;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -79,7 +79,15 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	private boolean countStarInUse;
 	private LinkedList<String> dateRange = new LinkedList<String>();
 	private boolean dateRangMissingException = false;
-	private static final String DATE_RANGE_MISSING_MSG = "please provide the query with date range: where 'date_field' between date_1 and date_2";
+	//NOTE: If the entered teiid query doesn't contain a date range that specify the date from-to range, the following error message will appear.
+	private static final String DATE_RANGE_MISSING_MSG = "Please provide the query with date range in where clause; For instance 'date_field' between date_1 and date_2";
+	private static final String FACET_TAG = "{!tag=r1}";
+	private static final String FACET_RANGE_TAG = "{!range=r1}";
+	private static final String FACET_RANGE = "facet.range";
+	private static final String FACET_RANGE_START = "facet.range.start";
+	private static final String FACET_RANGE_END = "facet.range.end";
+	private static final String FACET_RANGE_GAP = "facet.range.gap";
+	private static final String PLUS_ONE = "+1";
 	
 	public SolrSQLHierarchyVistor(RuntimeMetadata metadata, SolrExecutionFactory ef) {
 		this.metadata = metadata;
@@ -88,8 +96,8 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 
 	@Override
 	public void visit(DerivedColumn obj) {
-		
 		visitNode(obj.getExpression());
+		
 		String expr = this.onGoingExpression.pop();
 		if (obj.getAlias() != null) {
 			this.columnAliasMap.put(obj.getAlias(), expr);
@@ -109,7 +117,12 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
         }
 		return elemShortName;
 	}	
-	
+	/*
+	 * Check if this column belongs to the timestamp class, then add this column at the first position of the "onGoingExpression" object.
+	 * To be able to construct the right solr pivot query that takes the {!range} function at its first position to be applied on the following parameters
+	 * For example: facet.range={!tag=r1}date&facet.pivot={!range=r1}field 
+	 * The range r1 will be applied on the "field" field
+	 */
 	@Override
 	public void visit(ColumnReference obj) {
 		String columnName;
@@ -269,6 +282,7 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
                     || type.equals(DataTypeManager.DefaultDataClasses.DATE)) {
             	synchronized (sdf) {
                 	this.onGoingExpression.push(escapeString(sdf.format(val)));
+                	// Push date start and end to "dateRange" object 
                 	this.dateRange.add(sdf.format(val));
 				}
             } 
@@ -330,6 +344,7 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 				sb.insert(0,Tokens.COMMA);
 			}
 		}
+		// Remove method name and its brackets
 		//sb.insert(0,Tokens.LPAREN);
 		//sb.insert(0,obj.getName());
 		//sb.append(Tokens.RPAREN);
@@ -358,97 +373,109 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	
 	@Override
 	public void visit(GroupBy obj) {
-		
 		String dateRangeGap = extractDateRangeGap(obj);
 		StringBuilder facetFields = new StringBuilder();
 
 		visitNodes(obj.getElements());
-		
 		Stack<String> reversedOnGoingExpression = reverseOnGoingExpression(this.onGoingExpression);
-		
+
 		String facetField = reversedOnGoingExpression.pop();
 		this.query.setFacet(true);
-		
-		if(dateRangeGap == null) {
+
+		if (dateRangeGap == null) {
 			facetFields.append(facetField);
 		} else {
-			this.query.add("facet.range", "{!tag=r1}"+facetField);
-			this.query.add("facet.range.gap", "+1"+dateRangeGap);
-			
-			setFacetDateRange();
+			setFacetDateRange(dateRangeGap, facetField);
 		}
-		
-		while(!reversedOnGoingExpression.isEmpty()) {
+
+		while (!reversedOnGoingExpression.isEmpty()) {
 			facetFields.append(Tokens.COMMA);
 			facetFields.append(reversedOnGoingExpression.pop());
 		}
-		
-		if(dateRangeGap == null) {
+
+		if (dateRangeGap == null) {
 			this.query.addFacetPivotField(facetFields.toString());
-		} else if(facetFields.length() > 1){
+		} else if (facetFields.length() > 1) {
 			facetFields.deleteCharAt(0); // remove the first comma
-			facetFields.insert(0, "{!range=r1}");
+			facetFields.insert(0, FACET_RANGE_TAG);
 			this.query.addFacetPivotField(facetFields.toString());
 		}
 	}
-	
+	/**
+     * Extract the date range gap from the parameters of the FORMATTIMESTAMP function in teiid query
+     * @param GroupBy object
+     * @return String gap
+     */
 	private String extractDateRangeGap(GroupBy obj) {
-		
 		try {
-			Function function = (Function)(getTimestampElement(obj));
-			Literal literalDateFormat = (Literal)function.getParameters().get(1);
+			Function function = (Function) (getTimestampElement(obj));
+			Literal literalDateFormat = (Literal) function.getParameters().get(1);
 			String dateFormat = literalDateFormat.toString();
 			new SimpleDateFormat(dateFormat);
 			return getDateRangeGap(dateFormat);
-						
 		} catch (Exception e) {
 			return null;
 		}
 	}
-	
+	/**
+     * Search through the list of the grouby elements to find the timestamp element.
+     * @param GroupBy object
+     * @return element
+     */
 	private Expression getTimestampElement(GroupBy obj) {
 		List<Expression> elements = obj.getElements();
-		for(int i=0; i<elements.size(); i++) {
-			if(elements.get(i).getType().equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
+		for (int i = 0; i < elements.size(); i++) {
+			if (elements.get(i).getType().equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
 				return elements.get(i);
 			}
 		}
 		return null;
 	}
-	
+	/**
+     * Reverse the "onGoingExpression" stack object
+     * @param Stack<String> expression
+     * @return Stack<String> reversed expression
+     */
 	private Stack<String> reverseOnGoingExpression(Stack<String> expression) {
-		
 		Stack<String> result = new Stack<String>();
-		
-		while(!expression.isEmpty()) {
+		while (!expression.isEmpty()) {
 			result.push(expression.pop());
 		}
-		
 		return result;
 	}
-	
-	private void setFacetDateRange() {
-		if(!dateRange.isEmpty() && dateRange.size() == 2) {
-			this.query.add("facet.range.start", dateRange.poll());
-			this.query.add("facet.range.end", dateRange.poll());
+	/**
+     * Add facet range to the solr query (range field, start date, end date and the gap between dates)
+     * @param String gap, String facetField
+     * @return Stack<String>
+     */
+	private void setFacetDateRange(String dateRangeGap, String facetField) {
+		if (!dateRange.isEmpty() && dateRange.size() == 2) {
+			this.query.add(FACET_RANGE, FACET_TAG + facetField);
+			this.query.add(FACET_RANGE_START, dateRange.poll());
+			this.query.add(FACET_RANGE_END, dateRange.poll());
+			this.query.add(FACET_RANGE_GAP, PLUS_ONE + dateRangeGap);
 		} else {
 			this.dateRangMissingException = true;
 		}
 	}
-	
+	/**
+     * Get the date range gap
+     * @param String dateFormat
+     * @return String gap
+     */
 	private String getDateRangeGap(String dateFormat) {
 		// yyyy-MM-dd'T'HH:mm:ss:SSS'Z'
-		
-		if(dateFormat.contains("mm"))
+		if (dateFormat.contains("mm")) {
 			return "MINUTE";
-		else if(dateFormat.contains("HH"))
+		} else if (dateFormat.contains("HH")) {
 			return "HOUR";
-		else if(dateFormat.contains("dd"))
+		} else if (dateFormat.contains("dd")) {
 			return "DAY";
-		else if(dateFormat.contains("MM"))
+		} else if (dateFormat.contains("MM")) {
 			return "MONTH";
-		else 
+		} else {
 			return "YEAR";
+		}
 	}
 	
 	private String formatSolrQuery(String solrQuery) {
@@ -467,7 +494,6 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 		if (buffer == null || buffer.length() == 0) {
 			buffer = new StringBuilder("*:*"); //$NON-NLS-1$
 		}
-		
 		return query.setQuery(buffer.toString());
 	}
 	

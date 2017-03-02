@@ -30,7 +30,6 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
 import org.teiid.language.Command;
-import org.teiid.language.Function;
 import org.teiid.language.QueryExpression;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.*;
@@ -40,38 +39,18 @@ import org.teiid.translator.jdbc.FunctionModifier;
 @Translator(name = "solr", description = "A translator for Solr search platform")
 public class SolrExecutionFactory extends ExecutionFactory<ConnectionFactory, SolrConnection> {
 	protected Map<String, FunctionModifier> functionModifiers = new TreeMap<String, FunctionModifier>(String.CASE_INSENSITIVE_ORDER);
-	
+
 	public SolrExecutionFactory() {
 		super();
 		setSourceRequiredForMetadata(true);
-		
         registerFunctionModifier("%", new AliasModifier("mod"));//$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier("+", new AliasModifier("sum"));//$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier("-", new AliasModifier("sub"));//$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier("*", new AliasModifier("product"));//$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier("/", new AliasModifier("div"));//$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier(SourceSystemFunctions.POWER, new AliasModifier("pow"));//$NON-NLS-1$
-   
-        registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, new FunctionModifier() {
-			@Override
-			public List<?> translate(Function function) {
-				
-				function.setName("");
-				function.getParameters().remove(1);
-				
-				return null;
-			}
-		});
-        registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new FunctionModifier() {
-			@Override
-			public List<?> translate(Function function) {
-				
-				function.setName("");
-				function.getParameters().remove(1);
-				
-				return null;
-			}
-		});
+        registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, new DateFunctionModifier());
+        registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new DateFunctionModifier());
 		
 	}
 	
@@ -104,7 +83,6 @@ public class SolrExecutionFactory extends ExecutionFactory<ConnectionFactory, So
         supportedFunctions.add(SourceSystemFunctions.ABS);
         supportedFunctions.add(SourceSystemFunctions.LOG);
         supportedFunctions.add(SourceSystemFunctions.SQRT);
-        
         supportedFunctions.add(SourceSystemFunctions.PARSETIMESTAMP);
         supportedFunctions.add(SourceSystemFunctions.FORMATTIMESTAMP);
         return supportedFunctions;
@@ -244,12 +222,7 @@ public class SolrExecutionFactory extends ExecutionFactory<ConnectionFactory, So
 	public boolean supportsGroupBy() {
 		return true;
 	}
-	
-	@Override
-	public boolean supportsHaving() {
-		return true;
-	}
-	
+
 	@Override
 	public boolean returnsSingleUpdateCount() {
 		return true;
