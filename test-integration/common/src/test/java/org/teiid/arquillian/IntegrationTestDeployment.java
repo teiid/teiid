@@ -214,7 +214,7 @@ public class IntegrationTestDeployment {
     @Test
     public void testTraslatorProperties() throws Exception {
         Collection<? extends PropertyDefinition> props = admin.getTranslatorPropertyDefinitions("accumulo", TranlatorPropertyType.OVERRIDE);
-        assertEquals(21, props.size());
+        assertEquals(20, props.size());
         
         props = admin.getTranslatorPropertyDefinitions("accumulo", TranlatorPropertyType.EXTENSION_METADATA);
         assertEquals(3, props.size());
