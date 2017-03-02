@@ -22,21 +22,15 @@
 package org.teiid.translator.solr;
 
 import java.lang.reflect.Array;
-import java.sql.Timestamp;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 import javax.resource.cci.ConnectionFactory;
 
-import org.hibernate.sql.ordering.antlr.ColumnReference;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
 import org.teiid.language.Command;
-import org.teiid.language.Expression;
 import org.teiid.language.Function;
-import org.teiid.language.Literal;
 import org.teiid.language.QueryExpression;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.*;
@@ -57,20 +51,7 @@ public class SolrExecutionFactory extends ExecutionFactory<ConnectionFactory, So
         registerFunctionModifier("*", new AliasModifier("product"));//$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier("/", new AliasModifier("div"));//$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier(SourceSystemFunctions.POWER, new AliasModifier("pow"));//$NON-NLS-1$
-        /*
-        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new FunctionModifier() {
-         
-			@Override
-			public List<?> translate(Function function) {
-				function.setName("");
-				Expression date = function.getParameters().get(0);
-				if(date.getType().equals(TypeFacility.RUNTIME_TYPES.TIMESTAMP)) {
-					function.setType(TypeFacility.RUNTIME_TYPES.TIMESTAMP);
-				}
-				return null;
-			}
-		});
-		*/
+   
         registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, new FunctionModifier() {
 			@Override
 			public List<?> translate(Function function) {
@@ -124,7 +105,6 @@ public class SolrExecutionFactory extends ExecutionFactory<ConnectionFactory, So
         supportedFunctions.add(SourceSystemFunctions.LOG);
         supportedFunctions.add(SourceSystemFunctions.SQRT);
         
-        supportedFunctions.add(SourceSystemFunctions.DAYOFMONTH);
         supportedFunctions.add(SourceSystemFunctions.PARSETIMESTAMP);
         supportedFunctions.add(SourceSystemFunctions.FORMATTIMESTAMP);
         return supportedFunctions;

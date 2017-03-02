@@ -26,8 +26,7 @@ import static org.teiid.language.SQLConstants.Reserved.NULL;
 import static org.teiid.language.SQLConstants.Reserved.TRUE;
 import static org.teiid.language.visitor.SQLStringVisitor.getRecordName;
 
-import java.net.URLDecoder;
-import java.text.ParseException;
+import java.security.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,7 +36,6 @@ import java.util.Stack;
 import java.util.TimeZone;
 
 import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrQuery.ORDER;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.AggregateFunction;
@@ -45,6 +43,7 @@ import org.teiid.language.AndOr;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Comparison;
 import org.teiid.language.DerivedColumn;
+import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.GroupBy;
 import org.teiid.language.In;
@@ -58,6 +57,7 @@ import org.teiid.language.SortSpecification;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.FunctionModifier;
 
 public class SolrSQLHierarchyVistor extends HierarchyVisitor {
@@ -78,7 +78,9 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	private HashMap<String, String> columnAliasMap = new HashMap<String, String>();
 	private boolean countStarInUse;
 	private LinkedList<String> dateRange = new LinkedList<String>();
-
+	private boolean dateRangMissingException = false;
+	private static final String DATE_RANGE_MISSING_MSG = "please provide the query with date range: where 'date_field' between date_1 and date_2";
+	
 	public SolrSQLHierarchyVistor(RuntimeMetadata metadata, SolrExecutionFactory ef) {
 		this.metadata = metadata;
 		this.ef = ef;
@@ -86,8 +88,8 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 
 	@Override
 	public void visit(DerivedColumn obj) {
-		visitNode(obj.getExpression());
 		
+		visitNode(obj.getExpression());
 		String expr = this.onGoingExpression.pop();
 		if (obj.getAlias() != null) {
 			this.columnAliasMap.put(obj.getAlias(), expr);
@@ -110,11 +112,17 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	
 	@Override
 	public void visit(ColumnReference obj) {
+		String columnName;
 		if (obj.getMetadataObject() != null) {
-			this.onGoingExpression.push(getColumnName(obj));
+			columnName = getColumnName(obj);
+		} else {
+			columnName = this.columnAliasMap.get(getColumnName(obj));
 		}
-		else {
-			this.onGoingExpression.push(this.columnAliasMap.get(getColumnName(obj)));	
+		
+		if(obj.getType().equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
+			this.onGoingExpression.add(0, columnName);
+		} else {
+			this.onGoingExpression.push(columnName);
 		}
 	}
 
@@ -351,40 +359,25 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	@Override
 	public void visit(GroupBy obj) {
 		
-		String dateRangeGap = null;
+		String dateRangeGap = extractDateRangeGap(obj);
 		StringBuilder facetFields = new StringBuilder();
-		
-		Stack<String> reversedOnGoingExpression = new Stack<String>();
-		
-		try {
-			Function function = (Function)(obj.getElements().get(0));
-			Literal literalDateFormat = (Literal)function.getParameters().get(1);
-			String dateFormat = literalDateFormat.toString();
-			new SimpleDateFormat(dateFormat);
-			dateRangeGap = getDateRangeGap(dateFormat);
-						
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
+
 		visitNodes(obj.getElements());
 		
-		while(!this.onGoingExpression.isEmpty()) {
-			reversedOnGoingExpression.push(this.onGoingExpression.pop());
-		}
+		Stack<String> reversedOnGoingExpression = reverseOnGoingExpression(this.onGoingExpression);
 		
 		String facetField = reversedOnGoingExpression.pop();
 		this.query.setFacet(true);
 		
 		if(dateRangeGap == null) {
 			facetFields.append(facetField);
-		} else if(!dateRange.isEmpty() && dateRange.size() == 2) {
+		} else {
 			this.query.add("facet.range", "{!tag=r1}"+facetField);
-			this.query.add("facet.range.start", dateRange.poll());
-			this.query.add("facet.range.end", dateRange.poll());
 			this.query.add("facet.range.gap", "+1"+dateRangeGap);
-		}
 			
+			setFacetDateRange();
+		}
+		
 		while(!reversedOnGoingExpression.isEmpty()) {
 			facetFields.append(Tokens.COMMA);
 			facetFields.append(reversedOnGoingExpression.pop());
@@ -396,6 +389,50 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 			facetFields.deleteCharAt(0); // remove the first comma
 			facetFields.insert(0, "{!range=r1}");
 			this.query.addFacetPivotField(facetFields.toString());
+		}
+	}
+	
+	private String extractDateRangeGap(GroupBy obj) {
+		
+		try {
+			Function function = (Function)(getTimestampElement(obj));
+			Literal literalDateFormat = (Literal)function.getParameters().get(1);
+			String dateFormat = literalDateFormat.toString();
+			new SimpleDateFormat(dateFormat);
+			return getDateRangeGap(dateFormat);
+						
+		} catch (Exception e) {
+			return null;
+		}
+	}
+	
+	private Expression getTimestampElement(GroupBy obj) {
+		List<Expression> elements = obj.getElements();
+		for(int i=0; i<elements.size(); i++) {
+			if(elements.get(i).getType().equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
+				return elements.get(i);
+			}
+		}
+		return null;
+	}
+	
+	private Stack<String> reverseOnGoingExpression(Stack<String> expression) {
+		
+		Stack<String> result = new Stack<String>();
+		
+		while(!expression.isEmpty()) {
+			result.push(expression.pop());
+		}
+		
+		return result;
+	}
+	
+	private void setFacetDateRange() {
+		if(!dateRange.isEmpty() && dateRange.size() == 2) {
+			this.query.add("facet.range.start", dateRange.poll());
+			this.query.add("facet.range.end", dateRange.poll());
+		} else {
+			this.dateRangMissingException = true;
 		}
 	}
 	
@@ -421,7 +458,12 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 		return solrQuery;
 	}
 
-	public SolrQuery getSolrQuery() {
+	public SolrQuery getSolrQuery() throws TranslatorException {
+		
+		if(this.dateRangMissingException) {
+			throw new TranslatorException(DATE_RANGE_MISSING_MSG);
+		}
+		
 		if (buffer == null || buffer.length() == 0) {
 			buffer = new StringBuilder("*:*"); //$NON-NLS-1$
 		}
