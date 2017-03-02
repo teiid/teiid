@@ -36,6 +36,7 @@ import java.util.Iterator;
 import org.teiid.couchbase.CouchbaseConnection;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Datatype;
+import org.teiid.metadata.ExtensionMetadataProperty;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.translator.MetadataProcessor;
@@ -47,30 +48,36 @@ import com.couchbase.client.java.query.N1qlQueryRow;
 
 public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseConnection> {
     
-    public static final String ID = "id"; //$NON-NLS-1$
-    public static final String JSON = "json"; //$NON-NLS-1$
+    @ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="Is Top Table", description="Declare the table is top table, which map to attribute under keyspace")
+    public static final String IS_TOP_TABLE = MetadataFactory.COUCHBASE_URI + "ISTOPTABLE"; //$NON-NLS-1$
+   
+    @ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="Is Array Table", description="Declare the table is array table, which map to a JsonArray in document")
+    public static final String IS_ARRAY_TABLE = MetadataFactory.COUCHBASE_URI + "ISARRAYTABLE"; //$NON-NLS-1$
     
-    public static final String WAVE = "`"; //$NON-NLS-1$
-    public static final String DOT = "."; //$NON-NLS-1$
-    
-    public static final String LINE = "_"; //$NON-NLS-1$
-    public static final String IS_TOP_TABLE = "isTopTable"; //$NON-NLS-1$
-    public static final String IS_ARRAY_TABLE = "isArrayTable"; //$NON-NLS-1$
     public static final String TRUE = "true"; //$NON-NLS-1$
     public static final String FALSE = "false"; //$NON-NLS-1$
-
+    
+    private static final String JSON = "json"; //$NON-NLS-1$ 
+    private static final String WAVE = "`"; //$NON-NLS-1$
+    private static final String DOT = "."; //$NON-NLS-1$
+    private static final String PLACEHOLDER = "$"; //$NON-NLS-1$
+    private static final String LINE = "_"; //$NON-NLS-1$
+    
     @Override
     public void process(MetadataFactory metadataFactory, CouchbaseConnection connection) throws TranslatorException {
        
         String keyspace = connection.getKeyspaceName();
-        Iterator<N1qlQueryRow> result = connection.executeQuery(buildMetaN1ql(keyspace)).rows();
+        
+        // Map data documents to tables
+        Iterator<N1qlQueryRow> result = connection.executeQuery(buildN1ql(keyspace)).iterator();
         while(result.hasNext()) {
             N1qlQueryRow row = result.next();
             JsonObject doc = row.value().getObject(JSON);
             addTable(metadataFactory, keyspace, doc, null);       
         }
+        
     }
-    
+   
     protected void addTable(MetadataFactory metadataFactory, String key, JsonObject doc, Table parent) {
 
         Table table = null;
@@ -82,14 +89,12 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
             table = metadataFactory.getSchema().getTable(tableName);
         } else {
             table = metadataFactory.addTable(tableName);
-//            metadataFactory.addColumn(ID, STRING, table);
             table.setSupportsUpdate(true);
             if(parent == null) {
                 // Base on N1QL, the top Table map to keyspace in Couchbase, each rows represent a document in keyspace. 
                 // The top Table have a unique primary key.
                 table.setNameInSource(buildNameInSource(key, null));
                 table.setProperty(IS_TOP_TABLE, TRUE);
-//                metadataFactory.addPrimaryKey("PK0", Arrays.asList(ID), table); //$NON-NLS-1$
             } else {
                 table.setNameInSource(buildNameInSource(key, parent.getNameInSource()));
                 table.setProperty(IS_TOP_TABLE, FALSE);
@@ -121,7 +126,6 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
         } else {
             table = metadataFactory.addTable(tableName);
             table.setSupportsUpdate(true);
-//            metadataFactory.addColumn(ID, STRING, table);
             table.setNameInSource(buildNameInSource(key, parent.getNameInSource()));
             table.setProperty(IS_ARRAY_TABLE, TRUE);
             table.setProperty(IS_TOP_TABLE, FALSE);
@@ -182,9 +186,9 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
         }
         return OBJECT;
     }
-
-    private String buildMetaN1ql(String keyspace) {
-        return "SELECT META(json).id as id, json FROM " + buildNameInSource(keyspace, null) + " as json"; //$NON-NLS-1$ //$NON-NLS-2$
+    
+    private String buildN1ql(String keyspace) {
+        return "SELECT json FROM " + buildNameInSource(keyspace, null) + " as json"; //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     private String buildNameInSource(String path, String parentPath) {
@@ -198,6 +202,10 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
         sb.append(WAVE);
         String nameInSource = sb.toString();
         return nameInSource;
+    }
+    
+    public static String buildPlaceholder(int i) {
+        return PLACEHOLDER + i; 
     }
    
 }

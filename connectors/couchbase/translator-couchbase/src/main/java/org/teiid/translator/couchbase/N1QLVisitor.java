@@ -2,6 +2,8 @@ package org.teiid.translator.couchbase;
 
 import static org.teiid.language.SQLConstants.Reserved.CAST;
 import static org.teiid.language.SQLConstants.Reserved.CONVERT;
+import static org.teiid.language.SQLConstants.Reserved.LIMIT;
+import static org.teiid.language.SQLConstants.Reserved.OFFSET;
 import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.IS_ARRAY_TABLE;
 import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.IS_TOP_TABLE;
 import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.TRUE;
@@ -11,7 +13,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.language.ColumnReference;
+import org.teiid.language.DerivedColumn;
 import org.teiid.language.Function;
+import org.teiid.language.Limit;
+import org.teiid.language.NamedTable;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.visitor.SQLStringVisitor;
@@ -23,6 +28,7 @@ public class N1QLVisitor extends SQLStringVisitor{
     private CouchbaseExecutionFactory ef;
     
     private List<String> selectColumns = new ArrayList<>();
+    private List<String> selectColumnReferences = new ArrayList<>();
 
     public N1QLVisitor(CouchbaseExecutionFactory ef, RuntimeMetadata metadata) {
         this.ef = ef;
@@ -30,23 +36,35 @@ public class N1QLVisitor extends SQLStringVisitor{
     }
 
     @Override
+    public void visit(DerivedColumn obj) {
+        selectColumnReferences.add(obj.getAlias());
+        super.visit(obj);
+    }
+
+    @Override
     public void visit(ColumnReference obj) {
         
-        String group = obj.getTable().getCorrelationName();
-        String isArrayTable = obj.getTable().getMetadataObject().getProperty(IS_ARRAY_TABLE, false);
-        String isTopTable = obj.getTable().getMetadataObject().getProperty(IS_TOP_TABLE, false);
-        if(isTopTable.equals(FALSE) && group == null) {
-            shortNameOnly = true;
-            super.visit(obj);
-            shortNameOnly = false;
-        } else if(isArrayTable.equals(TRUE) && group != null) {
-            buffer.append(group);
-        }else {
+        NamedTable groupTable = obj.getTable();
+        if(groupTable != null) {
+            String group = obj.getTable().getCorrelationName();
+            String isArrayTable = obj.getTable().getMetadataObject().getProperty(IS_ARRAY_TABLE, false);
+            String isTopTable = obj.getTable().getMetadataObject().getProperty(IS_TOP_TABLE, false);
+            if(isTopTable.equals(FALSE) && group == null) {
+                shortNameOnly = true;
+                super.visit(obj);
+                shortNameOnly = false;
+            } else if(isArrayTable.equals(TRUE) && group != null) {
+                buffer.append(group);
+            }else {
+                super.visit(obj);
+            }
+            
+            //add selectColumns
+            selectColumns.add(obj.getName());
+        } else {
             super.visit(obj);
         }
-        
-        //add selectColumns
-        selectColumns.add(obj.getName());
+
     }
 
     @Override
@@ -72,7 +90,23 @@ public class N1QLVisitor extends SQLStringVisitor{
         super.visit(obj);
     }
 
+    @Override
+    public void visit(Limit limit) {
+        if(limit.getRowOffset() > 0) {
+            buffer.append(LIMIT).append(Tokens.SPACE);
+            buffer.append(limit.getRowLimit()).append(Tokens.SPACE);
+            buffer.append(OFFSET).append(Tokens.SPACE);
+            buffer.append(limit.getRowOffset());
+        } else {
+            super.visit(limit);
+        }
+    }
+
     public List<String> getSelectColumns() {
         return selectColumns;
+    }
+
+    public List<String> getSelectColumnReferences() {
+        return selectColumnReferences;
     }
 }

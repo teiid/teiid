@@ -48,6 +48,7 @@ public class NamespaceContainer extends AbstractMetadataRecord {
     private static final String TEIID_LDAP = "teiid_ldap"; //$NON-NLS-1$
     private static final String TEIID_REST = "teiid_rest"; //$NON-NLS-1$
     private static final String TEIID_PI = "teiid_pi"; //$NON-NLS-1$
+    private static final String TEIID_COUCHBASE = "teiid_couchbase"; //$NON-NLS-1$
 
     public static final String SF_URI = "{http://www.teiid.org/translator/salesforce/2012}"; //$NON-NLS-1$
     public static final String WS_URI = "{http://www.teiid.org/translator/ws/2012}"; //$NON-NLS-1$
@@ -61,6 +62,7 @@ public class NamespaceContainer extends AbstractMetadataRecord {
     public static final String LDAP_URI = "{http://www.teiid.org/translator/ldap/2015}"; //$NON-NLS-1$
     public static final String REST_URI = "{http://teiid.org/rest}"; //$NON-NLS-1$
     public static final String PI_URI = "{http://www.teiid.org/translator/pi/2016}"; //$NON-NLS-1$
+    public static final String COUCHBASE_URI = "{http://www.teiid.org/translator/couchbase/2017}"; //$NON-NLS-1$
 
     public static final Map<String, String> BUILTIN_NAMESPACES;
     static {
@@ -78,6 +80,7 @@ public class NamespaceContainer extends AbstractMetadataRecord {
         map.put(TEIID_LDAP, LDAP_URI.substring(1, LDAP_URI.length()-1));
         map.put(TEIID_REST, REST_URI.substring(1, REST_URI.length()-1));
         map.put(TEIID_PI, PI_URI.substring(1, PI_URI.length()-1));
+        map.put(TEIID_COUCHBASE, COUCHBASE_URI.substring(1, COUCHBASE_URI.length()-1));
         BUILTIN_NAMESPACES = Collections.unmodifiableMap(map);
     }
     

@@ -118,6 +118,32 @@ public class TestN1QLVisitor {
     }
     
     @Test
+    public void testLimitOffsetClause() throws TranslatorException {
+        
+        String sql = "SELECT Name FROM test LIMIT 2";
+        helpTest(sql, "SELECT `test`.Name FROM `test` LIMIT 2");
+        
+        sql = "SELECT Name FROM test LIMIT 2, 2";
+        helpTest(sql, "SELECT `test`.Name FROM `test` LIMIT 2 OFFSET 2");
+        
+        sql = "SELECT Name FROM test OFFSET 2 ROWS";
+        helpTest(sql, "SELECT `test`.Name FROM `test` LIMIT 2147483647 OFFSET 2");
+    }
+    
+    @Test
+    public void testOrderByClause() throws TranslatorException {
+        
+        String sql = "SELECT Name, Type FROM test ORDER BY Name";
+        helpTest(sql, "SELECT `test`.Name, `test`.Type FROM `test` ORDER BY `test`.Name");
+        
+        sql = "SELECT Type FROM test ORDER BY Name"; //Unrelated
+        helpTest(sql, "SELECT `test`.Type FROM `test` ORDER BY `test`.Name");
+        
+        sql = "SELECT Name, Type FROM test ORDER BY Type"; //NullOrdering
+        helpTest(sql, "SELECT `test`.Name, `test`.Type FROM `test` ORDER BY `test`.Type");
+    }
+    
+    @Test
     public void testStringFunctions() throws TranslatorException {
         
         String sql = "SELECT LCASE(attr_string) FROM test_attr_jsonObject";

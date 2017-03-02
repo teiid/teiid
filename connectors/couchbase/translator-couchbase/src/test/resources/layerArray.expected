@@ -1,7 +1,9 @@
+SET NAMESPACE 'http://www.teiid.org/translator/couchbase/2017' AS teiid_couchbase;
+
 CREATE FOREIGN TABLE test (
 	Name string
-) OPTIONS (NAMEINSOURCE '`test`', UPDATABLE TRUE);
+) OPTIONS (NAMEINSOURCE '`test`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false', "teiid_couchbase:ISTOPTABLE" 'true');
 
 CREATE FOREIGN TABLE test_A (
 	A object
-) OPTIONS (NAMEINSOURCE '`test`.`A`', UPDATABLE TRUE);
+) OPTIONS (NAMEINSOURCE '`test`.`A`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'true', "teiid_couchbase:ISTOPTABLE" 'false');

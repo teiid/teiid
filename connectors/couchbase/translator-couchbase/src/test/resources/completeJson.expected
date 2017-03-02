@@ -1,3 +1,5 @@
+SET NAMESPACE 'http://www.teiid.org/translator/couchbase/2017' AS teiid_couchbase;
+
 CREATE FOREIGN TABLE test (
 	attr_double double,
 	attr_number_short short,
@@ -12,11 +14,11 @@ CREATE FOREIGN TABLE test (
 	attr_null object,
 	attr_number_byte byte,
 	attr_number_double double
-) OPTIONS (NAMEINSOURCE '`test`', UPDATABLE TRUE);
+) OPTIONS (NAMEINSOURCE '`test`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false', "teiid_couchbase:ISTOPTABLE" 'true');
 
 CREATE FOREIGN TABLE test_attr_jsonArray (
 	attr_jsonArray object
-) OPTIONS (NAMEINSOURCE '`test`.`attr_jsonArray`', UPDATABLE TRUE);
+) OPTIONS (NAMEINSOURCE '`test`.`attr_jsonArray`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'true', "teiid_couchbase:ISTOPTABLE" 'false');
 
 CREATE FOREIGN TABLE test_attr_jsonObject (
 	attr_double double,
@@ -32,4 +34,4 @@ CREATE FOREIGN TABLE test_attr_jsonObject (
 	attr_null object,
 	attr_number_byte byte,
 	attr_number_double double
-) OPTIONS (NAMEINSOURCE '`test`.`attr_jsonObject`', UPDATABLE TRUE);
+) OPTIONS (NAMEINSOURCE '`test`.`attr_jsonObject`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false', "teiid_couchbase:ISTOPTABLE" 'false');

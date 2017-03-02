@@ -21,6 +21,8 @@
  */
 package org.teiid.translator.couchbase;
 
+import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.buildPlaceholder;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -65,26 +67,36 @@ public class CouchbaseQueryExecution extends CouchbaseExecution implements Resul
 	public void execute() throws TranslatorException {
 		this.visitor = this.executionFactory.getN1QLVisitor(metadata);
 		this.visitor.append(this.command);
-		LogManager.logInfo(LogConstants.CTX_CONNECTOR, this.command);
 		String sql = this.visitor.toString();
+		LogManager.logDetail(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29001, sql));
 		N1qlQueryResult queryResult = connection.executeQuery(sql);
 		this.results = queryResult.iterator();
 	}
 
 	@Override
 	public List<?> next() throws TranslatorException, DataNotAvailableException {
+	    
 	    if (this.results != null && this.results.hasNext() && this.array == null) {
 	        N1qlQueryRow queryRow = this.results.next();
 	        if(queryRow != null) {
 	            List<Object> row = new ArrayList<>(expectedTypes.length);
 	            JsonObject json = queryRow.value();
 	            for(int i = 0 ; i < expectedTypes.length ; i ++){
-	                Object value = json.get(this.visitor.getSelectColumns().get(i));
+	                String columnName = this.visitor.getSelectColumns().get(i);
+	                Object value = json.get(columnName);
+	                if(value == null && this.visitor.getSelectColumnReferences().get(i) != null) {
+	                    columnName = this.visitor.getSelectColumnReferences().get(i);
+	                    value = json.get(columnName);
+	                }
+	                if(value == null && json.getNames().contains(buildPlaceholder(i + 1))) {
+	                    columnName = buildPlaceholder(i + 1);
+	                    value = json.get(columnName);
+	                }
 	                if(value instanceof JsonArray) {
 	                    array = ((JsonArray)value).iterator();
 	                    return nextArray();
 	                }
-	                row.add(this.executionFactory.retrieveValue(this.visitor.getSelectColumns().get(i), expectedTypes[i], value));
+	                row.add(this.executionFactory.retrieveValue(columnName, expectedTypes[i], value));
 	            }
 	            return row;
 	        }

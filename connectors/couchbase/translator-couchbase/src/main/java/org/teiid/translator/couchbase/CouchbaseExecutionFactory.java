@@ -29,7 +29,6 @@ import java.util.TreeMap;
 
 import javax.resource.cci.ConnectionFactory;
 
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.couchbase.CouchbaseConnection;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
@@ -46,9 +45,6 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
-
-import com.couchbase.client.java.document.json.JsonObject;
-
 
 @Translator(name="couchbase", description="Couchbase Translator, reads and writes the data to Couchbase")
 public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactory, CouchbaseConnection> {
@@ -204,6 +200,36 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
         return true;
     }
     
+    @Override
+    public boolean supportsSelectExpression() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsRowLimit() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsRowOffset() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsOrderBy() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsOrderByUnrelated() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsOrderByNullOrdering() {
+        return true;
+    }
+
     public N1QLVisitor getN1QLVisitor(RuntimeMetadata metadata) {
         return new N1QLVisitor(this, metadata);
     }
