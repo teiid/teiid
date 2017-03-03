@@ -29,7 +29,6 @@ import java.util.List;
 
 import org.teiid.couchbase.CouchbaseConnection;
 import org.teiid.language.QueryExpression;
-import org.teiid.language.Select;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.RuntimeMetadata;
@@ -45,7 +44,7 @@ import com.couchbase.client.java.query.N1qlQueryRow;
 
 public class CouchbaseQueryExecution extends CouchbaseExecution implements ResultSetExecution {
     
-	private Select command;
+	private QueryExpression command;
 	private CouchbaseExecutionFactory executionFactory;
 	private Class<?>[] expectedTypes;
 	
@@ -58,7 +57,7 @@ public class CouchbaseQueryExecution extends CouchbaseExecution implements Resul
 			QueryExpression command, ExecutionContext executionContext,
 			RuntimeMetadata metadata, CouchbaseConnection connection) {
 		super(executionContext, metadata, connection);
-		this.command = (Select)command;
+		this.command = command;
 		this.executionFactory = executionFactory;
 		this.expectedTypes = command.getColumnTypes();
 	}
@@ -82,16 +81,28 @@ public class CouchbaseQueryExecution extends CouchbaseExecution implements Resul
 	            List<Object> row = new ArrayList<>(expectedTypes.length);
 	            JsonObject json = queryRow.value();
 	            for(int i = 0 ; i < expectedTypes.length ; i ++){
-	                String columnName = this.visitor.getSelectColumns().get(i);
-	                Object value = json.get(columnName);
-	                if(value == null && this.visitor.getSelectColumnReferences().get(i) != null) {
+	                String columnName = null;
+	                Object value = null;
+	                int cursor = i + 1;
+	                
+	                // column without reference, like 'select col, count(*) from table'
+	                if(cursor <= this.visitor.getSelectColumns().size()){
+	                    columnName = this.visitor.getSelectColumns().get(i);
+	                    value = json.get(columnName); 
+	                }
+	                
+	                // column with alias, like 'select col AS c_1 from table' 
+	                if(value == null && (cursor <= this.visitor.getSelectColumnReferences().size()) && this.visitor.getSelectColumnReferences().get(i) != null) {
 	                    columnName = this.visitor.getSelectColumnReferences().get(i);
 	                    value = json.get(columnName);
 	                }
-	                if(value == null && json.getNames().contains(buildPlaceholder(i + 1))) {
-	                    columnName = buildPlaceholder(i + 1);
+	                
+	                // column without reference and alias
+	                if(value == null && json.getNames().contains(buildPlaceholder(1))) {
+	                    columnName = buildPlaceholder(1);
 	                    value = json.get(columnName);
 	                }
+	                
 	                if(value instanceof JsonArray) {
 	                    array = ((JsonArray)value).iterator();
 	                    return nextArray();

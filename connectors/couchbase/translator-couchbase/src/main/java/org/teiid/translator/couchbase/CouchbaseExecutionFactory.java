@@ -54,8 +54,10 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
     protected Map<String, FunctionModifier> functionModifiers = new TreeMap<String, FunctionModifier>(String.CASE_INSENSITIVE_ORDER);
 
 	public CouchbaseExecutionFactory() {
+	    setSupportsSelectDistinct(true);
 		setSourceRequiredForMetadata(false);
 		setTransactionSupport(TransactionSupport.NONE);
+		// Couchbase subquery returns an array every time, Join relate with use-keys-clause
 	}
 
 	@Override
@@ -91,6 +93,8 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
 		addPushDownFunction(COUCHBASE, "TRIM", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
 		addPushDownFunction(COUCHBASE, "RTRIM", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
 		addPushDownFunction(COUCHBASE, "POSITION", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+		
+//		addPushDownFunction(COUCHBASE, "METAID", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
 	}
 
 	@Override
@@ -227,6 +231,31 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
 
     @Override
     public boolean supportsOrderByNullOrdering() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsGroupBy() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsHaving() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsUnions() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsIntersect() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsExcept() {
         return true;
     }
 

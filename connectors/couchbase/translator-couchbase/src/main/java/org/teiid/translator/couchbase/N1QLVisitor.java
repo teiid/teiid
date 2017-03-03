@@ -13,10 +13,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.language.ColumnReference;
+import org.teiid.language.Comparison;
 import org.teiid.language.DerivedColumn;
 import org.teiid.language.Function;
+import org.teiid.language.GroupBy;
 import org.teiid.language.Limit;
+import org.teiid.language.Literal;
 import org.teiid.language.NamedTable;
+import org.teiid.language.OrderBy;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.visitor.SQLStringVisitor;
@@ -27,6 +31,7 @@ public class N1QLVisitor extends SQLStringVisitor{
     private RuntimeMetadata metadata;
     private CouchbaseExecutionFactory ef;
     
+    private boolean recordColumnName = true;
     private List<String> selectColumns = new ArrayList<>();
     private List<String> selectColumnReferences = new ArrayList<>();
 
@@ -36,8 +41,24 @@ public class N1QLVisitor extends SQLStringVisitor{
     }
 
     @Override
+    public void visit(GroupBy obj) {
+        recordColumnName = false;
+        super.visit(obj);
+        recordColumnName = true;
+    }
+
+    @Override
+    public void visit(OrderBy obj) {
+        recordColumnName = false;
+        super.visit(obj);
+        recordColumnName = true;
+    }
+
+    @Override
     public void visit(DerivedColumn obj) {
-        selectColumnReferences.add(obj.getAlias());
+        if(recordColumnName) {
+            selectColumnReferences.add(obj.getAlias());
+        }
         super.visit(obj);
     }
 
@@ -60,15 +81,24 @@ public class N1QLVisitor extends SQLStringVisitor{
             }
             
             //add selectColumns
-            selectColumns.add(obj.getName());
+            if(recordColumnName){
+                selectColumns.add(obj.getName());
+            }
         } else {
             super.visit(obj);
         }
+    }
 
+    @Override
+    public void visit(Comparison obj) {
+        recordColumnName = false;
+        super.visit(obj);
+        recordColumnName = true;
     }
 
     @Override
     public void visit(Function obj) {
+        
         String functionName = obj.getName();
         if(functionName.equalsIgnoreCase(CONVERT) || functionName.equalsIgnoreCase(CAST)) {
             List<?> parts =  this.ef.getFunctionModifiers().get(functionName).translate(obj);
@@ -81,7 +111,14 @@ public class N1QLVisitor extends SQLStringVisitor{
             append(obj.getParameters());
             buffer.append(Tokens.RPAREN);
             return;
-        } else if (this.ef.getFunctionModifiers().containsKey(functionName)) {
+        } else if(functionName.equalsIgnoreCase("METAID")) { //$NON-NLS-1$
+            buffer.append("META").append(Tokens.LPAREN); //$NON-NLS-1$
+            Literal literal = (Literal) obj.getParameters().get(0);
+            String tableName = (String) literal.getValue();
+            buffer.append(tableName);
+            buffer.append(Tokens.RPAREN).append(".id"); //$NON-NLS-1$
+            return;
+        }else if (this.ef.getFunctionModifiers().containsKey(functionName)) {
             List<?> parts =  this.ef.getFunctionModifiers().get(functionName).translate(obj);
             if (parts != null) {
                 obj = (Function)parts.get(0);

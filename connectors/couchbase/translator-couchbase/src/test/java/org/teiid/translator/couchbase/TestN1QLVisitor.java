@@ -144,6 +144,46 @@ public class TestN1QLVisitor {
     }
     
     @Test
+    public void testGroupByClause() throws TranslatorException {
+        
+        String sql = "SELECT Name, COUNT(*) FROM test GROUP BY Name";
+        helpTest(sql, "SELECT `test`.Name, COUNT(*) FROM `test` GROUP BY `test`.Name");
+    }
+    
+    @Test
+    public void testWhereClause() throws TranslatorException {
+        
+        String sql = "SELECT Name, Type  FROM test WHERE Name = 'John Doe'";
+        helpTest(sql, "SELECT `test`.Name, `test`.Type FROM `test` WHERE `test`.Name = 'John Doe'");
+    }
+    
+    @Test
+    public void testSelectClause() throws TranslatorException {
+        
+        String sql = "SELECT DISTINCT attr_int FROM test";
+        helpTest(sql, "SELECT DISTINCT `test`.attr_int FROM `test`");
+        
+        sql = "SELECT ALL attr_int FROM test";
+        helpTest(sql, "SELECT `test`.attr_int FROM `test`");
+    }
+    
+    @Test
+    public void testSetOperations() throws TranslatorException {
+        
+        String sql = "SELECT attr_int, attr_long FROM test UNION ALL SELECT attr_int, attr_long FROM test_attr_jsonObject";
+        helpTest(sql, "SELECT `test`.attr_int, `test`.attr_long FROM `test` UNION ALL SELECT attr_int, attr_long FROM `test`.`attr_jsonObject`");
+        
+        sql = "SELECT attr_int, attr_long FROM test UNION SELECT attr_int, attr_long FROM test_attr_jsonObject";
+        helpTest(sql, "SELECT `test`.attr_int, `test`.attr_long FROM `test` UNION SELECT attr_int, attr_long FROM `test`.`attr_jsonObject`");
+        
+        sql = "SELECT attr_int, attr_long FROM test INTERSECT SELECT attr_int, attr_long FROM test_attr_jsonObject";
+        helpTest(sql, "SELECT `test`.attr_int, `test`.attr_long FROM `test` INTERSECT SELECT attr_int, attr_long FROM `test`.`attr_jsonObject`");
+        
+        sql = "SELECT attr_int, attr_long FROM test EXCEPT SELECT attr_int, attr_long FROM test_attr_jsonObject";
+        helpTest(sql, "SELECT `test`.attr_int, `test`.attr_long FROM `test` EXCEPT SELECT attr_int, attr_long FROM `test`.`attr_jsonObject`");
+    }
+    
+    @Test
     public void testStringFunctions() throws TranslatorException {
         
         String sql = "SELECT LCASE(attr_string) FROM test_attr_jsonObject";
@@ -202,6 +242,6 @@ public class TestN1QLVisitor {
         sql = "SELECT convert(attr_number_long, string) FROM test";
         helpTest(sql, "SELECT TOSTRING(`test`.attr_number_long) FROM `test`");
     }
-
+   
 
 }
