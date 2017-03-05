@@ -302,6 +302,109 @@ public class TestTeiidLanguageToSolr {
 				getSolrTranslation("select name,(popularity+1)/2 as x from example order by popularity ASC"));		
 	}
 	
+	@Test
+	public void testGroupBySingleField() throws Exception {
+		assertEquals("fl=name,1&rows=0&facet=true&facet.pivot=name&q=*:*",
+				getSolrTranslation("select name, count(*)  from example group by name"));		
+	}
+	
+	@Test
+	public void testGroupByMultipleFieldsInOrder() throws Exception {
+		assertEquals("fl=name,popularity,1&rows=0&facet=true&facet.pivot=name,popularity&q=*:*",
+				getSolrTranslation("select name, popularity, count(*) from example group by name, popularity"));		
+	}
+	
+	@Test
+	public void testGroupByMultipleFieldsOutOfOrder() throws Exception {
+		assertEquals("fl=popularity,name,1&rows=0&facet=true&facet.pivot=name,popularity&q=*:*",
+				getSolrTranslation("select popularity, name, count(*) from example group by name, popularity"));		
+	}
+	
+	@Test
+	public void testGroupByDateRangeFunction() throws Exception {
+		assertEquals(
+				"fl=purchasets,1&rows=0&facet=true&"
+				+ "facet.range={!tag%3Dr1}purchasets&"
+				+ "facet.range.start=2015-08-01T02:00:00:000Z&"
+				+ "facet.range.end=2015-10-31T13:13:32:536Z&"
+				+ "facet.range.gap=%2B1MONTH&"
+				+ "q=((purchasets:[2015\\-08\\-01T02\\:00\\:00\\:000Z+TO+*])+AND+(purchasets:[*+TO+2015\\-10\\-31T13\\:13\\:32\\:536Z]))",
+				getSolrTranslation(
+							"Select PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM'), count(*) from example " + 
+							"where purchasets between '2015-08-01 04:00:00' and '2015-10-31 15:13:32.536' " + 
+							"group by PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM');"
+							));
+	
+	}
+	
+	@Test
+	public void testGroupByDateRangeOnSingleFieldInOrder() throws Exception {
+		assertEquals(
+				"fl=name,purchasets,1&rows=0&facet=true&"
+				+ "facet.range={!tag%3Dr1}purchasets&"
+				+ "facet.range.start=2015-08-01T02:00:00:000Z&"
+				+ "facet.range.end=2015-10-31T13:13:32:536Z&"
+				+ "facet.range.gap=%2B1MONTH&"
+				+ "facet.pivot={!range%3Dr1}name&"
+				+ "q=((purchasets:[2015\\-08\\\\-01T02\\\\:00\\\\:00\\\\:000Z+TO+*])+AND+(purchasets:[*+TO+2015\\-10\\-31T13\\:13\\:32\\:536Z]))",
+				getSolrTranslation(
+						"Select PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM'), name, count(*) from example " + 
+					 	"where purchasets between '2015-08-01 04:00:00' and '2015-10-31 15:13:32.536' " + 
+					 	"group by PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM'), name;"
+					 	));
+	}
+	
+	@Test
+	public void testGroupByDateRangeOnSingleFieldOutOfOrder() throws Exception {
+		assertEquals(
+				"fl=purchasets,name,1&rows=0&facet=true&"
+				+ "facet.range={!tag%3Dr1}purchasets&"
+				+ "facet.range.start=2015-08-01T02:00:00:000Z&"
+				+ "facet.range.end=2015-10-31T13:13:32:536Z&"
+				+ "facet.range.gap=%2B1MONTH&"
+				+ "facet.pivot={!range%3Dr1}name&"
+				+ "q=((purchasets:[2015\\-08\\-01T02\\:00\\:00\\:000Z+TO+*])+AND+(purchasets:[*+TO+2015\\-10\\-31T13\\:13\\:32\\:536Z]))",
+				getSolrTranslation(
+						"Select PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM'), name, count(*) from example " + 
+					 	"where purchasets between '2015-08-01 04:00:00' and '2015-10-31 15:13:32.536' " + 
+					 	"group by name, PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM');"
+					 	));
+	}
+	
+	@Test
+	public void testGroupByDateRangeOnMultipleFieldsInOrder() throws Exception {
+		assertEquals(
+				"fl=purchasets,name,popularity,1&rows=0&facet=true&"
+				+ "facet.range={!tag%3Dr1}purchasets&"
+				+ "facet.range.start=2015-08-01T02:00:00:000Z&"
+				+ "facet.range.end=2015-10-31T13:13:32:536Z&"
+				+ "facet.range.gap=%2B1MONTH&"
+				+ "facet.pivot={!range%3Dr1}name,popularity&"
+				+ "q=((purchasets:[2015\\-08\\-01T02\\:00\\:00\\:000Z+TO+*])+AND+(purchasets:[*+TO+2015\\-10\\-31T13\\:13\\:32\\:536Z]))",
+				getSolrTranslation(
+						"Select PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM'), name, popularity, count(*) from example " + 
+					 	"where purchasets between '2015-08-01 04:00:00' and '2015-10-31 15:13:32.536' " + 
+					 	"group by PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM'), name, popularity;"
+					 	));
+	}
+	
+	@Test
+	public void testGroupByDateRangeOnMultipleFieldsOutOfOrder() throws Exception {
+		assertEquals(
+				"fl=name,popularity,purchasets,1&rows=0&facet=true&"
+				+ "facet.range={!tag%3Dr1}purchasets&"
+				+ "facet.range.start=2015-08-01T02:00:00:000Z&"
+				+ "facet.range.end=2015-10-31T13:13:32:536Z&"
+				+ "facet.range.gap=%2B1MONTH&"
+				+ "facet.pivot={!range%3Dr1}name,popularity&"
+				+ "q=((purchasets:[2015\\-08\\-01T02\\:00\\:00\\:000Z+TO+*])+AND+(purchasets:[*+TO+2015\\-10\\-31T13\\:13\\:32\\:536Z]))",
+				getSolrTranslation(
+						"Select name, popularity, PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM'), count(*) from example " + 
+					 	"where purchasets between '2015-08-01 04:00:00' and '2015-10-31 15:13:32.536' " + 
+					 	"group by PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM'), name, popularity;"
+					 	));
+	}
+	
 	@Before public void setUp() { 
 		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("PST")); //$NON-NLS-1$ 
 	}

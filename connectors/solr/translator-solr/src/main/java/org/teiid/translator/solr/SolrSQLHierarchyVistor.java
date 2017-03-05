@@ -88,6 +88,16 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	private static final String FACET_RANGE_END = "facet.range.end";
 	private static final String FACET_RANGE_GAP = "facet.range.gap";
 	private static final String PLUS_ONE = "+1";
+	private static final String MINUTE_FORMAT = "mm";
+	private static final String MINUTE = "MINUTE";
+	private static final String HOUR_FORMAT = "HH";
+	private static final String HOUR = "HOUR";
+	private static final String DAY_FORMAT = "dd";
+	private static final String DAY = "DAY";
+	private static final String MONTH_FORMAT = "MM";
+	private static final String MONTH = "MONTH";
+	private static final String YEAR = "YEAR";
+	
 	
 	public SolrSQLHierarchyVistor(RuntimeMetadata metadata, SolrExecutionFactory ef) {
 		this.metadata = metadata;
@@ -345,6 +355,7 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 			}
 		}
 		// Remove method name and its brackets
+		
 		//sb.insert(0,Tokens.LPAREN);
 		//sb.insert(0,obj.getName());
 		//sb.append(Tokens.RPAREN);
@@ -465,16 +476,16 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
      */
 	private String getDateRangeGap(String dateFormat) {
 		// yyyy-MM-dd'T'HH:mm:ss:SSS'Z'
-		if (dateFormat.contains("mm")) {
-			return "MINUTE";
-		} else if (dateFormat.contains("HH")) {
-			return "HOUR";
-		} else if (dateFormat.contains("dd")) {
-			return "DAY";
-		} else if (dateFormat.contains("MM")) {
-			return "MONTH";
+		if (dateFormat.contains(MINUTE_FORMAT)) {
+			return MINUTE;
+		} else if (dateFormat.contains(HOUR_FORMAT)) {
+			return HOUR;
+		} else if (dateFormat.contains(DAY_FORMAT)) {
+			return DAY;
+		} else if (dateFormat.contains(MONTH_FORMAT)) {
+			return MONTH;
 		} else {
-			return "YEAR";
+			return YEAR;
 		}
 	}
 	
