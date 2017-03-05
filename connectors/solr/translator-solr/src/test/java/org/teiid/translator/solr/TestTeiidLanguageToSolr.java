@@ -323,86 +323,96 @@ public class TestTeiidLanguageToSolr {
 	@Test
 	public void testGroupByDateRangeFunction() throws Exception {
 		assertEquals(
-				"fl=purchasets,1&rows=0&facet=true&"
-				+ "facet.range={!tag%3Dr1}purchasets&"
-				+ "facet.range.start=2015-08-01T02:00:00:000Z&"
-				+ "facet.range.end=2015-10-31T13:13:32:536Z&"
-				+ "facet.range.gap=%2B1MONTH&"
-				+ "q=((purchasets:[2015\\-08\\-01T02\\:00\\:00\\:000Z+TO+*])+AND+(purchasets:[*+TO+2015\\-10\\-31T13\\:13\\:32\\:536Z]))",
-				getSolrTranslation(
-							"Select PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM'), count(*) from example " + 
-							"where purchasets between '2015-08-01 04:00:00' and '2015-10-31 15:13:32.536' " + 
-							"group by PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM');"
-							));
+				URLDecoder.decode(
+					"fl=purchasets,1&rows=0&facet=true&"
+					+ "facet.range={!tag%3Dr1}purchasets&"
+					+ "facet.range.start=2015-08-01T02:00:00:000Z&"
+					+ "facet.range.end=2015-10-31T13:13:32:536Z&"
+					+ "facet.range.gap=%2B1MONTH&"
+					+ "q=((purchasets:[2015\\-08\\-01T02\\:00\\:00\\:000Z+TO+*])+AND+(purchasets:[*+TO+2015\\-10\\-31T13\\:13\\:32\\:536Z]))" 
+					, "UTF-8"),
+		getSolrTranslation(
+					"Select PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM'), count(*) from example " + 
+					"where purchasets between '2015-08-01 04:00:00' and '2015-10-31 15:13:32.536' " + 
+					"group by PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM');"
+					));
 	
 	}
 	
 	@Test
 	public void testGroupByDateRangeOnSingleFieldInOrder() throws Exception {
 		assertEquals(
-				"fl=name,purchasets,1&rows=0&facet=true&"
-				+ "facet.range={!tag%3Dr1}purchasets&"
-				+ "facet.range.start=2015-08-01T02:00:00:000Z&"
-				+ "facet.range.end=2015-10-31T13:13:32:536Z&"
-				+ "facet.range.gap=%2B1MONTH&"
-				+ "facet.pivot={!range%3Dr1}name&"
-				+ "q=((purchasets:[2015\\-08\\\\-01T02\\\\:00\\\\:00\\\\:000Z+TO+*])+AND+(purchasets:[*+TO+2015\\-10\\-31T13\\:13\\:32\\:536Z]))",
-				getSolrTranslation(
-						"Select PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM'), name, count(*) from example " + 
-					 	"where purchasets between '2015-08-01 04:00:00' and '2015-10-31 15:13:32.536' " + 
-					 	"group by PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM'), name;"
-					 	));
+				URLDecoder.decode(
+					"fl=name,purchasets,1&rows=0&facet=true&"
+					+ "facet.range={!tag%3Dr1}purchasets&"
+					+ "facet.range.start=2015-08-01T02:00:00:000Z&"
+					+ "facet.range.end=2015-10-31T13:13:32:536Z&"
+					+ "facet.range.gap=%2B1MONTH&"
+					+ "facet.pivot={!range%3Dr1}name&"
+					+ "q=((purchasets:[2015\\-08\\\\-01T02\\\\:00\\\\:00\\\\:000Z+TO+*])+AND+(purchasets:[*+TO+2015\\-10\\-31T13\\:13\\:32\\:536Z]))"
+					, "UTF-8"),
+		getSolrTranslation(
+				"Select PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM'), name, count(*) from example " + 
+			 	"where purchasets between '2015-08-01 04:00:00' and '2015-10-31 15:13:32.536' " + 
+			 	"group by PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM'), name;"
+			 	));
 	}
 	
 	@Test
 	public void testGroupByDateRangeOnSingleFieldOutOfOrder() throws Exception {
 		assertEquals(
-				"fl=purchasets,name,1&rows=0&facet=true&"
-				+ "facet.range={!tag%3Dr1}purchasets&"
-				+ "facet.range.start=2015-08-01T02:00:00:000Z&"
-				+ "facet.range.end=2015-10-31T13:13:32:536Z&"
-				+ "facet.range.gap=%2B1MONTH&"
-				+ "facet.pivot={!range%3Dr1}name&"
-				+ "q=((purchasets:[2015\\-08\\-01T02\\:00\\:00\\:000Z+TO+*])+AND+(purchasets:[*+TO+2015\\-10\\-31T13\\:13\\:32\\:536Z]))",
-				getSolrTranslation(
-						"Select PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM'), name, count(*) from example " + 
-					 	"where purchasets between '2015-08-01 04:00:00' and '2015-10-31 15:13:32.536' " + 
-					 	"group by name, PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM');"
-					 	));
+				URLDecoder.decode(
+					"fl=purchasets,name,1&rows=0&facet=true&"
+					+ "facet.range={!tag%3Dr1}purchasets&"
+					+ "facet.range.start=2015-08-01T02:00:00:000Z&"
+					+ "facet.range.end=2015-10-31T13:13:32:536Z&"
+					+ "facet.range.gap=%2B1MONTH&"
+					+ "facet.pivot={!range%3Dr1}name&"
+					+ "q=((purchasets:[2015\\-08\\-01T02\\:00\\:00\\:000Z+TO+*])+AND+(purchasets:[*+TO+2015\\-10\\-31T13\\:13\\:32\\:536Z]))"
+					, "UTF-8"),
+		getSolrTranslation(
+				"Select PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM'), name, count(*) from example " 
+			 	+ "where purchasets between '2015-08-01 04:00:00' and '2015-10-31 15:13:32.536' "
+			 	+ "group by name, PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM');"
+			 	));
 	}
 	
 	@Test
 	public void testGroupByDateRangeOnMultipleFieldsInOrder() throws Exception {
 		assertEquals(
-				"fl=purchasets,name,popularity,1&rows=0&facet=true&"
-				+ "facet.range={!tag%3Dr1}purchasets&"
-				+ "facet.range.start=2015-08-01T02:00:00:000Z&"
-				+ "facet.range.end=2015-10-31T13:13:32:536Z&"
-				+ "facet.range.gap=%2B1MONTH&"
-				+ "facet.pivot={!range%3Dr1}name,popularity&"
-				+ "q=((purchasets:[2015\\-08\\-01T02\\:00\\:00\\:000Z+TO+*])+AND+(purchasets:[*+TO+2015\\-10\\-31T13\\:13\\:32\\:536Z]))",
-				getSolrTranslation(
-						"Select PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM'), name, popularity, count(*) from example " + 
-					 	"where purchasets between '2015-08-01 04:00:00' and '2015-10-31 15:13:32.536' " + 
-					 	"group by PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM'), name, popularity;"
-					 	));
+				URLDecoder.decode(
+					"fl=purchasets,name,popularity,1&rows=0&facet=true&"
+					+ "facet.range={!tag%3Dr1}purchasets&"
+					+ "facet.range.start=2015-08-01T02:00:00:000Z&"
+					+ "facet.range.end=2015-10-31T13:13:32:536Z&"
+					+ "facet.range.gap=%2B1MONTH&"
+					+ "facet.pivot={!range%3Dr1}name,popularity&"
+					+ "q=((purchasets:[2015\\-08\\-01T02\\:00\\:00\\:000Z+TO+*])+AND+(purchasets:[*+TO+2015\\-10\\-31T13\\:13\\:32\\:536Z]))"
+					, "UTF-8"),
+		getSolrTranslation(
+				"Select PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM'), name, popularity, count(*) from example "
+			 	+ "where purchasets between '2015-08-01 04:00:00' and '2015-10-31 15:13:32.536' " 
+			 	+ "group by PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM'), name, popularity;"
+			 	));
 	}
 	
 	@Test
 	public void testGroupByDateRangeOnMultipleFieldsOutOfOrder() throws Exception {
 		assertEquals(
-				"fl=name,popularity,purchasets,1&rows=0&facet=true&"
-				+ "facet.range={!tag%3Dr1}purchasets&"
-				+ "facet.range.start=2015-08-01T02:00:00:000Z&"
-				+ "facet.range.end=2015-10-31T13:13:32:536Z&"
-				+ "facet.range.gap=%2B1MONTH&"
-				+ "facet.pivot={!range%3Dr1}name,popularity&"
-				+ "q=((purchasets:[2015\\-08\\-01T02\\:00\\:00\\:000Z+TO+*])+AND+(purchasets:[*+TO+2015\\-10\\-31T13\\:13\\:32\\:536Z]))",
-				getSolrTranslation(
-						"Select name, popularity, PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM'), count(*) from example " + 
-					 	"where purchasets between '2015-08-01 04:00:00' and '2015-10-31 15:13:32.536' " + 
-					 	"group by PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM'), name, popularity;"
-					 	));
+				URLDecoder.decode(
+					"fl=name,popularity,purchasets,1&rows=0&facet=true&"
+					+ "facet.range={!tag%3Dr1}purchasets&"
+					+ "facet.range.start=2015-08-01T02:00:00:000Z&"
+					+ "facet.range.end=2015-10-31T13:13:32:536Z&"
+					+ "facet.range.gap=%2B1MONTH&"
+					+ "facet.pivot={!range%3Dr1}name,popularity&"
+					+ "q=((purchasets:[2015\\-08\\-01T02\\:00\\:00\\:000Z+TO+*])+AND+(purchasets:[*+TO+2015\\-10\\-31T13\\:13\\:32\\:536Z]))"
+					, "UTF-8"),
+		getSolrTranslation(
+				"Select name, popularity, PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM'), count(*) from example " 
+			 	+ "where purchasets between '2015-08-01 04:00:00' and '2015-10-31 15:13:32.536' "
+			 	+ "group by PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM'), name, popularity;"
+			 	));
 	}
 	
 	@Before public void setUp() { 
