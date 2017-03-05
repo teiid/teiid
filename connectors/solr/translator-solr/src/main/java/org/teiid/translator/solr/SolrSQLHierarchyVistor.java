@@ -354,11 +354,15 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 				sb.insert(0,Tokens.COMMA);
 			}
 		}
-		// Remove method name and its brackets
+		// Remove method name and its brackets if function's type is timestamp or string
 		
-		//sb.insert(0,Tokens.LPAREN);
-		//sb.insert(0,obj.getName());
-		//sb.append(Tokens.RPAREN);
+		if(!obj.getType().equals(DataTypeManager.DefaultDataClasses.TIMESTAMP) && 
+				!obj.getType().equals(DataTypeManager.DefaultDataClasses.STRING)) {
+			sb.insert(0,Tokens.LPAREN);
+			sb.insert(0,obj.getName());
+			sb.append(Tokens.RPAREN);
+		}
+		
 		this.onGoingExpression.push(sb.toString());
 	}
 	
