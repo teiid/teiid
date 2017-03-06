@@ -44,6 +44,7 @@ import org.teiid.language.Select;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.translator.TranslatorException;
 
 @SuppressWarnings("nls")
 public class TestTeiidLanguageGroupingToSolr {
@@ -238,6 +239,13 @@ public class TestTeiidLanguageGroupingToSolr {
 			 	+ "where purchasets between '2015-08-01 04:00:00' and '2015-10-31 15:13:32.536' "
 			 	+ "group by PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM'), name, popularity;"
 			 	));
+	}
+	
+	@Test(expected=TranslatorException.class)
+	public void testGroupByDateRangeWithoutDateBoundaries() throws Exception {
+		getSolrTranslation(
+				"Select name, popularity, PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM'), count(*) from example " 
+			 	+ "group by PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM'), name, popularity;");
 	}
 	
 	@Before public void setUp() { 
