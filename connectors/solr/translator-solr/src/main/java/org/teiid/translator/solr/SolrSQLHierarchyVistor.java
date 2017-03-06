@@ -21,12 +21,16 @@
  */
 package org.teiid.translator.solr;
 
-import static org.teiid.language.SQLConstants.Reserved.*;
-import static org.teiid.language.visitor.SQLStringVisitor.*;
+import static org.teiid.language.SQLConstants.Reserved.FALSE;
+import static org.teiid.language.SQLConstants.Reserved.NULL;
+import static org.teiid.language.SQLConstants.Reserved.TRUE;
+import static org.teiid.language.visitor.SQLStringVisitor.getRecordName;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
 import java.util.TimeZone;
@@ -34,12 +38,26 @@ import java.util.TimeZone;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.StringUtil;
-import org.teiid.language.*;
+import org.teiid.language.AggregateFunction;
+import org.teiid.language.AndOr;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Comparison;
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.Expression;
+import org.teiid.language.Function;
+import org.teiid.language.GroupBy;
+import org.teiid.language.In;
+import org.teiid.language.Like;
+import org.teiid.language.Limit;
+import org.teiid.language.Literal;
+import org.teiid.language.OrderBy;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.language.SQLConstants.Tokens;
+import org.teiid.language.SortSpecification;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.FunctionModifier;
 
 public class SolrSQLHierarchyVistor extends HierarchyVisitor {
@@ -59,7 +77,28 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	private SolrExecutionFactory ef;
 	private HashMap<String, String> columnAliasMap = new HashMap<String, String>();
 	private boolean countStarInUse;
-
+	private LinkedList<String> dateRange = new LinkedList<String>();
+	private boolean dateRangMissingException = false;
+	//NOTE: If the entered teiid query doesn't contain a date range that specify the date from-to range, the following error message will appear.
+	private static final String DATE_RANGE_MISSING_MSG = "Please provide the query with date range in where clause; For instance 'date_field' between date_1 and date_2";
+	private static final String FACET_TAG = "{!tag=r1}";
+	private static final String FACET_RANGE_TAG = "{!range=r1}";
+	private static final String FACET_RANGE = "facet.range";
+	private static final String FACET_RANGE_START = "facet.range.start";
+	private static final String FACET_RANGE_END = "facet.range.end";
+	private static final String FACET_RANGE_GAP = "facet.range.gap";
+	private static final String PLUS_ONE = "+1";
+	private static final String MINUTE_FORMAT = "mm";
+	private static final String MINUTE = "MINUTE";
+	private static final String HOUR_FORMAT = "HH";
+	private static final String HOUR = "HOUR";
+	private static final String DAY_FORMAT = "dd";
+	private static final String DAY = "DAY";
+	private static final String MONTH_FORMAT = "MM";
+	private static final String MONTH = "MONTH";
+	private static final String YEAR = "YEAR";
+	
+	
 	public SolrSQLHierarchyVistor(RuntimeMetadata metadata, SolrExecutionFactory ef) {
 		this.metadata = metadata;
 		this.ef = ef;
@@ -88,14 +127,25 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
         }
 		return elemShortName;
 	}	
-	
+	/*
+	 * Check if this column belongs to the timestamp class, then add this column at the first position of the "onGoingExpression" object.
+	 * To be able to construct the right solr pivot query that takes the {!range} function at its first position to be applied on the following parameters
+	 * For example: facet.range={!tag=r1}date&facet.pivot={!range=r1}field 
+	 * The range r1 will be applied on the "field" field
+	 */
 	@Override
 	public void visit(ColumnReference obj) {
+		String columnName;
 		if (obj.getMetadataObject() != null) {
-			this.onGoingExpression.push(getColumnName(obj));
+			columnName = getColumnName(obj);
+		} else {
+			columnName = this.columnAliasMap.get(getColumnName(obj));
 		}
-		else {
-			this.onGoingExpression.push(this.columnAliasMap.get(getColumnName(obj)));	
+		
+		if(obj.getType().equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
+			this.onGoingExpression.add(0, columnName);
+		} else {
+			this.onGoingExpression.push(columnName);
 		}
 	}
 
@@ -242,6 +292,8 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
                     || type.equals(DataTypeManager.DefaultDataClasses.DATE)) {
             	synchronized (sdf) {
                 	this.onGoingExpression.push(escapeString(sdf.format(val)));
+                	// Push date start and end to "dateRange" object 
+                	this.dateRange.add(sdf.format(val));
 				}
             } 
             else {
@@ -302,9 +354,15 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 				sb.insert(0,Tokens.COMMA);
 			}
 		}
-		sb.insert(0,Tokens.LPAREN);
-		sb.insert(0,obj.getName());
-		sb.append(Tokens.RPAREN);
+		// Remove method name and its brackets if function's type is timestamp or string
+		
+		if(!obj.getType().equals(DataTypeManager.DefaultDataClasses.TIMESTAMP) && 
+				!obj.getType().equals(DataTypeManager.DefaultDataClasses.STRING)) {
+			sb.insert(0,Tokens.LPAREN);
+			sb.insert(0,obj.getName());
+			sb.append(Tokens.RPAREN);
+		}
+		
 		this.onGoingExpression.push(sb.toString());
 	}
 	
@@ -328,6 +386,113 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 		}
     }	
 	
+	@Override
+	public void visit(GroupBy obj) {
+		String dateRangeGap = extractDateRangeGap(obj);
+		StringBuilder facetFields = new StringBuilder();
+
+		visitNodes(obj.getElements());
+		Stack<String> reversedOnGoingExpression = reverseOnGoingExpression(this.onGoingExpression);
+
+		String facetField = reversedOnGoingExpression.pop();
+		this.query.setFacet(true);
+
+		if (dateRangeGap == null) {
+			facetFields.append(facetField);
+		} else {
+			setFacetDateRange(dateRangeGap, facetField);
+		}
+
+		while (!reversedOnGoingExpression.isEmpty()) {
+			facetFields.append(Tokens.COMMA);
+			facetFields.append(reversedOnGoingExpression.pop());
+		}
+
+		if (dateRangeGap == null) {
+			this.query.addFacetPivotField(facetFields.toString());
+		} else if (facetFields.length() > 1) {
+			facetFields.deleteCharAt(0); // remove the first comma
+			facetFields.insert(0, FACET_RANGE_TAG);
+			this.query.addFacetPivotField(facetFields.toString());
+		}
+	}
+	/**
+     * Extract the date range gap from the parameters of the FORMATTIMESTAMP function in teiid query
+     * @param GroupBy object
+     * @return String gap
+     */
+	private String extractDateRangeGap(GroupBy obj) {
+		try {
+			Function function = (Function) (getTimestampElement(obj));
+			Literal literalDateFormat = (Literal) function.getParameters().get(1);
+			String dateFormat = literalDateFormat.toString();
+			new SimpleDateFormat(dateFormat);
+			return getDateRangeGap(dateFormat);
+		} catch (Exception e) {
+			return null;
+		}
+	}
+	/**
+     * Search through the list of the grouby elements to find the timestamp element.
+     * @param GroupBy object
+     * @return element
+     */
+	private Expression getTimestampElement(GroupBy obj) {
+		List<Expression> elements = obj.getElements();
+		for (int i = 0; i < elements.size(); i++) {
+			if (elements.get(i).getType().equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
+				return elements.get(i);
+			}
+		}
+		return null;
+	}
+	/**
+     * Reverse the "onGoingExpression" stack object
+     * @param Stack<String> expression
+     * @return Stack<String> reversed expression
+     */
+	private Stack<String> reverseOnGoingExpression(Stack<String> expression) {
+		Stack<String> result = new Stack<String>();
+		while (!expression.isEmpty()) {
+			result.push(expression.pop());
+		}
+		return result;
+	}
+	/**
+     * Add facet range to the solr query (range field, start date, end date and the gap between dates)
+     * @param String gap, String facetField
+     * @return Stack<String>
+     */
+	private void setFacetDateRange(String dateRangeGap, String facetField) {
+		if (!dateRange.isEmpty() && dateRange.size() == 2) {
+			this.query.add(FACET_RANGE, FACET_TAG + facetField);
+			this.query.add(FACET_RANGE_START, dateRange.poll());
+			this.query.add(FACET_RANGE_END, dateRange.poll());
+			this.query.add(FACET_RANGE_GAP, PLUS_ONE + dateRangeGap);
+		} else {
+			this.dateRangMissingException = true;
+		}
+	}
+	/**
+     * Get the date range gap
+     * @param String dateFormat
+     * @return String gap
+     */
+	private String getDateRangeGap(String dateFormat) {
+		// yyyy-MM-dd'T'HH:mm:ss:SSS'Z'
+		if (dateFormat.contains(MINUTE_FORMAT)) {
+			return MINUTE;
+		} else if (dateFormat.contains(HOUR_FORMAT)) {
+			return HOUR;
+		} else if (dateFormat.contains(DAY_FORMAT)) {
+			return DAY;
+		} else if (dateFormat.contains(MONTH_FORMAT)) {
+			return MONTH;
+		} else {
+			return YEAR;
+		}
+	}
+	
 	private String formatSolrQuery(String solrQuery) {
 		solrQuery = solrQuery.replace("%", "*"); //$NON-NLS-1$ //$NON-NLS-2$
 		solrQuery = solrQuery.replace("'",""); //$NON-NLS-1$ //$NON-NLS-2$
@@ -335,7 +500,12 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 		return solrQuery;
 	}
 
-	public SolrQuery getSolrQuery() {
+	public SolrQuery getSolrQuery() throws TranslatorException {
+		
+		if(this.dateRangMissingException) {
+			throw new TranslatorException(DATE_RANGE_MISSING_MSG);
+		}
+		
 		if (buffer == null || buffer.length() == 0) {
 			buffer = new StringBuilder("*:*"); //$NON-NLS-1$
 		}

@@ -302,6 +302,24 @@ public class TestTeiidLanguageToSolr {
 				getSolrTranslation("select name,(popularity+1)/2 as x from example order by popularity ASC"));		
 	}
 	
+	@Test
+	public void testGroupBySingleField() throws Exception {
+		assertEquals("fl=name,1&rows=0&facet=true&facet.pivot=name&q=*:*",
+				getSolrTranslation("select name, count(*)  from example group by name"));		
+	}
+	
+	@Test
+	public void testGroupByMultipleFieldsInOrder() throws Exception {
+		assertEquals("fl=name,popularity,1&rows=0&facet=true&facet.pivot=name,popularity&q=*:*",
+				getSolrTranslation("select name, popularity, count(*) from example group by name, popularity"));		
+	}
+	
+	@Test
+	public void testGroupByMultipleFieldsOutOfOrder() throws Exception {
+		assertEquals("fl=popularity,name,1&rows=0&facet=true&facet.pivot=name,popularity&q=*:*",
+				getSolrTranslation("select popularity, name, count(*) from example group by name, popularity"));		
+	}
+	
 	@Before public void setUp() { 
 		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("PST")); //$NON-NLS-1$ 
 	}

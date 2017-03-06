@@ -21,14 +21,24 @@
  */
 package org.teiid.translator.solr;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.Stack;
+import java.util.TimeZone;
 
 import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.response.PivotField;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.client.solrj.response.RangeFacet;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
+import org.apache.solr.common.util.NamedList;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.logging.LogManager;
@@ -43,10 +53,16 @@ public class SolrQueryExecution implements ResultSetExecution {
 	private SolrConnection connection;
 	private SolrSQLHierarchyVistor visitor;
 	private Iterator<SolrDocument> resultsItr;
+	private Iterator<RangeFacet.Count> facetRangeItr;
+	private ListIterator<PivotField> facetPivotItr;
+	private Stack<ListIterator> pivotItrs = new Stack<ListIterator>();
+	private Stack<String> pivotValues = new Stack<String>();
 	private Class<?>[] expectedTypes;
 	private SolrExecutionFactory executionFactory;
 	private int offset = 0;
 	private Long resultSize;
+	private static String[] acceptedSolrDateFormats = {"yyyy-MM-dd'T'HH:mm:ss:SSS'Z'", "yyyy-MM-dd'T'HH:mm:ss'Z'", "EEE MMM dd HH:mm:ss z yyyy"};
+	private static String[] acceptedDateFormats = {"yyyy-MM-dd HH:mm:ss:SSS", "yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm:ss"};
 
 	public SolrQueryExecution(SolrExecutionFactory ef, Command command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
@@ -54,14 +70,16 @@ public class SolrQueryExecution implements ResultSetExecution {
 		this.executionFactory = ef;
 		this.executionContext = executionContext;
 		this.connection = connection;
+		
+		this.visitor = new SolrSQLHierarchyVistor(metadata, this.executionFactory);
+		this.visitor.visitNode(command);
+		
 		if (command instanceof QueryExpression) {
 			this.expectedTypes = ((QueryExpression)command).getColumnTypes();
 		}
 		
-		this.visitor = new SolrSQLHierarchyVistor(metadata, this.executionFactory);
-		this.visitor.visitNode(command);
 	}
-
+	
 	@Override
 	public void execute() throws TranslatorException {
 		LogManager.logDetail("Solr Source Query:", this.visitor.getSolrQuery()); //$NON-NLS-1$
@@ -74,13 +92,144 @@ public class SolrQueryExecution implements ResultSetExecution {
 			query.setStart(this.offset);
 			query.setRows(this.executionContext.getBatchSize());
 		}
-		
 		QueryResponse queryResponse = connection.query(this.visitor.getSolrQuery());
-		SolrDocumentList docList = queryResponse.getResults();
-		this.resultSize = docList.getNumFound();
-		this.resultsItr = docList.iterator();
+		
+		NamedList<List<PivotField>> facetPivots = queryResponse.getFacetPivot();
+		List<RangeFacet> 			facetRanges = queryResponse.getFacetRanges();
+		
+		if (facetPivots != null && !facetPivots.getVal(0).isEmpty()) {
+			
+			this.facetPivotItr = facetPivots.getVal(0).listIterator();
+			
+		} else if (facetRanges != null && !facetRanges.isEmpty()) {
+			
+			RangeFacet facetRange = facetRanges.get(0);
+			this.facetRangeItr = facetRange.getCounts().iterator();
+			
+		} else {
+			SolrDocumentList docList = queryResponse.getResults();
+			this.resultSize = docList.getNumFound();
+			this.resultsItr = docList.iterator();
+		}
+		
+	}
+	
+	private void fillPivotItrs(ListIterator<PivotField> pivotItr) throws TranslatorException {
+
+		if (pivotItr != null && pivotItr.hasNext()) {
+
+			this.pivotItrs.push(pivotItr);
+			PivotField pivotField = pivotItr.next();
+
+			if ((pivotField.getPivot() == null || pivotField.getPivot().isEmpty())
+					&& (pivotField.getFacetRanges() == null || pivotField.getFacetRanges().isEmpty())) {
+
+				pivotItr.previous();
+				return;
+
+			} else if (pivotField.getPivot() != null && !pivotField.getPivot().isEmpty()) {
+				fillPivotValues(pivotField.getValue());
+				fillPivotItrs(pivotField.getPivot().listIterator());
+
+			} else {
+				fillPivotValues(pivotField.getValue());
+				this.pivotItrs.push(pivotField.getFacetRanges().get(0).getCounts().listIterator());
+			}
+
+		} else if (this.pivotItrs != null && !this.pivotItrs.isEmpty()) {
+			pivotValues.pop();
+			fillPivotItrs(pivotItrs.pop());
+		} else {
+			return;
+		}
+	}
+	
+	private void fillPivotValues(Object obj) throws TranslatorException {
+		if (obj.getClass().equals(DataTypeManager.DefaultDataClasses.TIMESTAMP) || obj.getClass().equals(Date.class)) {
+			this.pivotValues.add(adjustDateFormat(obj.toString()));
+		} else {
+			this.pivotValues.add(obj.toString());
+		}
 	}
 
+	private List<Object> fillRow(List<Object> row) throws TranslatorException {
+
+		if (!pivotItrs.isEmpty() && !pivotItrs.peek().hasNext()) {
+
+			pivotValues.pop();
+			pivotItrs.pop();
+			fillPivotItrs(pivotItrs.pop());
+
+			return fillRow(row);
+
+		} else if (!pivotItrs.isEmpty()) {
+			// pivotField or RangeFacet.Count
+			Object value = pivotItrs.peek().next();
+			try {
+				PivotField pivotField = (PivotField) value;
+				row.addAll(pivotValues);
+				row.add(pivotField.getValue());
+				row.add(pivotField.getCount());
+			} catch (Exception e) {
+				RangeFacet.Count facetRange = (RangeFacet.Count) value;
+				row.add(adjustDateFormat(facetRange.getValue()));
+				row.addAll(pivotValues);
+				row.add(facetRange.getCount());
+			}
+			reorderRowValues(row);
+			return row;
+		} else {
+			return null;
+		}
+	}
+
+	/*
+	 * Change the date format from solr's date format, including 'T' and 'Z', to a normal date format
+	 */
+	private String adjustDateFormat(String value) throws TranslatorException {
+
+		String parsedDate = null;
+		SimpleDateFormat solrDateFormat;
+		SimpleDateFormat normalDateFormat;
+		ParseException parseException = null;
+
+		for (int i = 0; i < acceptedSolrDateFormats.length; i++) {
+			try {
+				solrDateFormat = new SimpleDateFormat(acceptedSolrDateFormats[i]);
+				normalDateFormat = new SimpleDateFormat(acceptedDateFormats[i]);
+				parsedDate = normalDateFormat.format(solrDateFormat.parse(value));
+				break;
+			} catch (ParseException pe) {
+				parseException = pe;
+			}
+		}
+
+		if (parsedDate == null) {
+			throw new TranslatorException(parseException);
+		} else {
+			return parsedDate;
+		}
+
+	}
+
+	private void reorderRowValues(List<Object> row) {
+		int index = findTimestampIndex(this.expectedTypes);
+		if (index != -1) {
+			String timestamp = (String) row.get(0);
+			row.remove(0);
+			row.add(index, timestamp);
+		}
+	}
+
+	private int findTimestampIndex(Class<?>[] types) {
+		for (int i = 0; i < types.length; i++) {
+			if (types[i].equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
+				return i;
+			}
+		}
+		return -1;
+	}
+	
 	/*
 	 * This iterates through the documents from Solr and maps their fields to
 	 * rows in the Teiid table
@@ -92,9 +241,22 @@ public class SolrQueryExecution implements ResultSetExecution {
 
 		final List<Object> row = new ArrayList<Object>();
 
-		if (this.visitor.isCountStarInUse() && this.resultsItr != null) {
-			row.add(this.resultSize);
+		if (this.visitor.isCountStarInUse() && this.facetPivotItr != null && this.facetPivotItr.hasNext()) {
+			if (this.pivotItrs == null || this.pivotItrs.isEmpty()) {
+				this.fillPivotItrs(this.facetPivotItr);
+			}
+			return fillRow(row);
+
+		}
+		if (this.visitor.isCountStarInUse() && this.facetRangeItr != null && this.facetRangeItr.hasNext()) {
 			this.resultsItr = null;
+			RangeFacet.Count facetResult = this.facetRangeItr.next();
+			if (this.expectedTypes[0].equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
+				row.add(adjustDateFormat(facetResult.getValue()));
+			} else {
+				row.add(facetResult.getValue());
+			}
+			row.add(facetResult.getCount());
 			return row;
 		}
 		
