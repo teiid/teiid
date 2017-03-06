@@ -31,12 +31,12 @@ import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.BYTE;
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.LONG;
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.FLOAT;
 
+import java.util.Arrays;
 import java.util.Iterator;
 
 import org.teiid.couchbase.CouchbaseConnection;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Datatype;
-import org.teiid.metadata.ExtensionMetadataProperty;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.translator.MetadataProcessor;
@@ -48,14 +48,14 @@ import com.couchbase.client.java.query.N1qlQueryRow;
 
 public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseConnection> {
     
-    @ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="Is Top Table", description="Declare the table is top table, which map to attribute under keyspace")
     public static final String IS_TOP_TABLE = MetadataFactory.COUCHBASE_URI + "ISTOPTABLE"; //$NON-NLS-1$
-   
-    @ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="Is Array Table", description="Declare the table is array table, which map to a JsonArray in document")
     public static final String IS_ARRAY_TABLE = MetadataFactory.COUCHBASE_URI + "ISARRAYTABLE"; //$NON-NLS-1$
+    public static final String ARRAY_TABLE_GROUP = MetadataFactory.COUCHBASE_URI + "ARRAYTABLEGROUP"; //$NON-NLS-1$
     
     public static final String TRUE = "true"; //$NON-NLS-1$
     public static final String FALSE = "false"; //$NON-NLS-1$
+    
+    public static final String PK = "PK"; //$NON-NLS-1$
     
     private static final String JSON = "json"; //$NON-NLS-1$ 
     private static final String WAVE = "`"; //$NON-NLS-1$
@@ -89,12 +89,13 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
             table = metadataFactory.getSchema().getTable(tableName);
         } else {
             table = metadataFactory.addTable(tableName);
+            metadataFactory.addColumn(PK, STRING, table);
             table.setSupportsUpdate(true);
             if(parent == null) {
-                // Base on N1QL, the top Table map to keyspace in Couchbase, each rows represent a document in keyspace. 
                 // The top Table have a unique primary key.
                 table.setNameInSource(buildNameInSource(key, null));
                 table.setProperty(IS_TOP_TABLE, TRUE);
+                metadataFactory.addPrimaryKey("PK0", Arrays.asList(PK), table); //$NON-NLS-1$
             } else {
                 table.setNameInSource(buildNameInSource(key, parent.getNameInSource()));
                 table.setProperty(IS_TOP_TABLE, FALSE);
@@ -107,47 +108,7 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
             addColumn(metadataFactory, table, keyCol, doc.get(keyCol));
         }
     }
-
-    /**
-     * JsonArray be map to a one Column Table.
-     * If all array items are same type, the mapped Table column type use this type, 
-     * else, the Table column type use Object.
-     * @param metadataFactory
-     * @param key
-     * @param value
-     * @param parent
-     */
-    private void addTable(MetadataFactory metadataFactory, String key, JsonArray value, Table parent) {
-        
-        Table table = null;
-        String tableName = parent.getName() + LINE  + key;
-        if (metadataFactory.getSchema().getTable(tableName) != null) {
-            table = metadataFactory.getSchema().getTable(tableName);
-        } else {
-            table = metadataFactory.addTable(tableName);
-            table.setSupportsUpdate(true);
-            table.setNameInSource(buildNameInSource(key, parent.getNameInSource()));
-            table.setProperty(IS_ARRAY_TABLE, TRUE);
-            table.setProperty(IS_TOP_TABLE, FALSE);
-        }
-        
-        Iterator<Object> items = value.iterator();
-        while(items.hasNext()) {
-            Object item = items.next();
-            String arrayType = getDataType(item);
-            if (table.getColumnByName(key) != null) {
-                Column column = table.getColumnByName(key);
-                if(!column.getDatatype().getName().equals(arrayType) && !column.getDatatype().getName().equals(OBJECT)) {
-                    Datatype datatype = metadataFactory.getDataTypes().get(OBJECT);
-                    column.setDatatype(datatype, true, 0);
-                }
-            } else {
-                Column column = metadataFactory.addColumn(key, arrayType, table);
-                column.setUpdatable(true);
-            }
-        }
-    }
-
+    
     private void addColumn(MetadataFactory metadataFactory, Table table, String key, Object value) {
         
         //TODO-- couchbase is case sensitive
@@ -162,6 +123,69 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
         } else {
             Column column = metadataFactory.addColumn(key, getDataType(value), table);
             column.setUpdatable(true);
+        }
+    }
+
+    /**
+     * Map document-format nested JsonArray to JDBC-compatible Table:
+     *  If nested array contains differently-typed elements and no elements are Json document, all elements be 
+     *  map to same column with Object type.
+     *  If nested array contains Json document, all keys be map to Column name, and reference value data type be
+     *  map to Column data type
+     *  If nested array contains other nested array, or nested array's Json document item contains nested arrays/documents
+     *  these nested arrays/documents be treated as Object
+     * @param metadataFactory
+     * @param key
+     * @param value
+     * @param parent
+     */
+    private void addTable(MetadataFactory metadataFactory, String key, JsonArray value, Table parent) {
+        
+        Table table = null;
+        String tableName = parent.getName() + LINE  + key;
+        if (metadataFactory.getSchema().getTable(tableName) != null) {
+            table = metadataFactory.getSchema().getTable(tableName);
+        } else {
+            table = metadataFactory.addTable(tableName);
+            metadataFactory.addColumn(PK, STRING, table);
+            table.setSupportsUpdate(true);
+            table.setNameInSource(buildNameInSource(key, parent.getNameInSource()));
+            table.setProperty(IS_ARRAY_TABLE, TRUE);
+            table.setProperty(IS_TOP_TABLE, FALSE);
+            table.setProperty(ARRAY_TABLE_GROUP, key);
+        }
+        
+        Iterator<Object> items = value.iterator();
+        while(items.hasNext()) {
+            Object item = items.next();
+            if(item instanceof JsonObject) {
+                JsonObject nestedJson = (JsonObject) item;
+                for(String keyCol : nestedJson.getNames()) {
+                    String arrayType = getDataType(nestedJson.get(keyCol));
+                    if(table.getColumnByName(keyCol) != null) {
+                        Column column = table.getColumnByName(keyCol);
+                        if(!column.getDatatype().getName().equals(arrayType) && !column.getDatatype().getName().equals(OBJECT)) {
+                            Datatype datatype = metadataFactory.getDataTypes().get(OBJECT);
+                            column.setDatatype(datatype, true, 0);
+                        }
+                    } else {
+                        Column column = metadataFactory.addColumn(keyCol, arrayType, table);
+                        column.setUpdatable(true);
+                    }
+                }
+            } else {
+                String arrayType = getDataType(item);
+                if (table.getColumnByName(key) != null) {
+                    Column column = table.getColumnByName(key);
+                    if(!column.getDatatype().getName().equals(arrayType) && !column.getDatatype().getName().equals(OBJECT)) {
+                        Datatype datatype = metadataFactory.getDataTypes().get(OBJECT);
+                        column.setDatatype(datatype, true, 0);
+                    }
+                } else {
+                    Column column = metadataFactory.addColumn(key, arrayType, table);
+                    column.setUpdatable(true);
+                }
+            }
         }
     }
 

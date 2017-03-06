@@ -51,6 +51,8 @@ public class CouchbaseQueryExecution extends CouchbaseExecution implements Resul
 	private N1QLVisitor visitor;
 	private Iterator<N1qlQueryRow> results;
 	private Iterator <Object> array;
+	private List<Object> arrayRow;
+	private List<String> arrayColumnNames;
 
 	public CouchbaseQueryExecution(
 			CouchbaseExecutionFactory executionFactory,
@@ -105,6 +107,8 @@ public class CouchbaseQueryExecution extends CouchbaseExecution implements Resul
 	                
 	                if(value instanceof JsonArray) {
 	                    array = ((JsonArray)value).iterator();
+	                    this.arrayRow = row;
+	                    this.arrayColumnNames = this.visitor.getSelectColumns().subList(i +1, this.visitor.getSelectColumns().size());
 	                    return nextArray();
 	                }
 	                row.add(this.executionFactory.retrieveValue(columnName, expectedTypes[i], value));
@@ -120,9 +124,20 @@ public class CouchbaseQueryExecution extends CouchbaseExecution implements Resul
 	private List<?> nextArray() {
 	    if(this.array != null && this.array.hasNext()){
 	        List<Object> row = new ArrayList<>(1);
-            row.add(this.array.next());
+	        row.addAll(this.arrayRow);
+	        Object obj = this.array.next();
+	        if(this.arrayColumnNames != null && obj instanceof JsonObject) {
+	            JsonObject json = (JsonObject) obj;
+	            for(String key : arrayColumnNames) {
+	                row.add(json.get(key));
+	            }
+	        } else {
+	            row.add(obj);
+	        }
             if(!this.array.hasNext()) {
                 this.array = null;
+                this.arrayRow = null;
+                this.arrayColumnNames = null;
             }
             return row;
 	    }

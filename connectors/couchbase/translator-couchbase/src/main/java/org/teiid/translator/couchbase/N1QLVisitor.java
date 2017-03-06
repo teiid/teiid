@@ -6,8 +6,10 @@ import static org.teiid.language.SQLConstants.Reserved.LIMIT;
 import static org.teiid.language.SQLConstants.Reserved.OFFSET;
 import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.IS_ARRAY_TABLE;
 import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.IS_TOP_TABLE;
+import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.ARRAY_TABLE_GROUP;
 import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.TRUE;
 import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.FALSE;
+import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.PK;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +19,7 @@ import org.teiid.language.Comparison;
 import org.teiid.language.DerivedColumn;
 import org.teiid.language.Function;
 import org.teiid.language.GroupBy;
+import org.teiid.language.LanguageObject;
 import org.teiid.language.Limit;
 import org.teiid.language.Literal;
 import org.teiid.language.NamedTable;
@@ -32,12 +35,28 @@ public class N1QLVisitor extends SQLStringVisitor{
     private CouchbaseExecutionFactory ef;
     
     private boolean recordColumnName = true;
+    private boolean isNestedArrayColumns = false;
     private List<String> selectColumns = new ArrayList<>();
     private List<String> selectColumnReferences = new ArrayList<>();
 
     public N1QLVisitor(CouchbaseExecutionFactory ef, RuntimeMetadata metadata) {
         this.ef = ef;
         this.metadata = metadata;
+    }
+
+    @Override
+    protected void append(List<? extends LanguageObject> items) {
+        
+        if (items != null && items.size() != 0) {
+            append(items.get(0));
+            for (int i = 1; i < items.size(); i++) {
+                if(!isNestedArrayColumns) {
+                    buffer.append(Tokens.COMMA).append(Tokens.SPACE);
+                }
+                append(items.get(i));
+            }
+        }
+        isNestedArrayColumns = false;
     }
 
     @Override
@@ -70,15 +89,38 @@ public class N1QLVisitor extends SQLStringVisitor{
             String group = obj.getTable().getCorrelationName();
             String isArrayTable = obj.getTable().getMetadataObject().getProperty(IS_ARRAY_TABLE, false);
             String isTopTable = obj.getTable().getMetadataObject().getProperty(IS_TOP_TABLE, false);
-            if(isTopTable.equals(FALSE) && group == null) {
+            
+            // need address complex join conditions
+            if(obj.getName().equals(PK)) {
+                buffer.append("META().id AS PK"); //$NON-NLS-1$ 
+                selectColumns.add("PK"); //$NON-NLS-1$ 
+                return;
+            }
+            
+            if(isArrayTable.equals(TRUE) && !isNestedArrayColumns){
+                if(group == null) {
+                    group = obj.getTable().getMetadataObject().getProperty(ARRAY_TABLE_GROUP, false);
+                }
+                buffer.append(group);
+                selectColumns.add(group);
+                isNestedArrayColumns = true;
+            } else if(isArrayTable.equals(FALSE) && isTopTable.equals(FALSE) && group == null) {
                 shortNameOnly = true;
                 super.visit(obj);
                 shortNameOnly = false;
-            } else if(isArrayTable.equals(TRUE) && group != null) {
-                buffer.append(group);
-            }else {
+            } else if(isArrayTable.equals(FALSE)){
                 super.visit(obj);
             }
+            
+//            if(isTopTable.equals(FALSE) && group == null) {
+//                shortNameOnly = true;
+//                super.visit(obj);
+//                shortNameOnly = false;
+//            } else if(isArrayTable.equals(TRUE) && group != null) {
+//                buffer.append(group);
+//            }else {
+//                super.visit(obj);
+//            }
             
             //add selectColumns
             if(recordColumnName){

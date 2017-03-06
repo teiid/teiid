@@ -89,7 +89,7 @@ public class TestN1QLVisitor {
         N1QLVisitor visitor = TRANSLATOR.getN1QLVisitor(runtimeMetadata);
         visitor.append(command);
 
-        System.out.println(visitor.toString());
+//        System.out.println(visitor.toString());
         assertEquals(expected, visitor.toString());
     }
     
@@ -98,23 +98,39 @@ public class TestN1QLVisitor {
     public void testBasicSelect() throws TranslatorException {
         
         String sql = "SELECT * FROM test";
-        helpTest(sql, "SELECT `test`.Type, `test`.Name, `test`.CustomerID, `test`.attr_double, `test`.attr_number_short, `test`.attr_string, `test`.attr_boolean, `test`.attr_number_long, `test`.attr_int, `test`.attr_number_integer, `test`.attr_long, `test`.attr_number_float, `test`.attr_null, `test`.attr_number_byte, `test`.attr_number_double FROM `test`");
+        helpTest(sql, "SELECT META().id AS PK, `test`.Type, `test`.ID, `test`.Name, `test`.CustomerID, `test`.attr_double, `test`.attr_number_short, `test`.attr_string, `test`.attr_boolean, `test`.attr_number_long, `test`.attr_int, `test`.attr_number_integer, `test`.attr_long, `test`.attr_number_float, `test`.attr_null, `test`.attr_number_byte, `test`.attr_number_double FROM `test`");
         
         sql = "SELECT * FROM test_CreditCard AS T";
-        helpTest(sql, "SELECT T.CardNumber, T.Type, T.CVN, T.Expiry FROM `test`.`CreditCard` AS T");
+        helpTest(sql, "SELECT META().id AS PK, T.CardNumber, T.Type, T.CVN, T.Expiry FROM `test`.`CreditCard` AS T");
         
         sql = "SELECT * FROM test_CreditCard";
-        helpTest(sql, "SELECT CardNumber, Type, CVN, Expiry FROM `test`.`CreditCard`");
+        helpTest(sql, "SELECT META().id AS PK, CardNumber, Type, CVN, Expiry FROM `test`.`CreditCard`");
     }
     
     @Test
-    public void testBasicSelectArray() throws TranslatorException {
+    public void testNestedArray() throws TranslatorException {
         
         String sql = "SELECT * FROM test_SavedAddresses";
-        helpTest(sql, "SELECT SavedAddresses FROM `test`.`SavedAddresses`");
+        helpTest(sql, "SELECT META().id AS PK, SavedAddresses FROM `test`.`SavedAddresses`");
         
         sql = "SELECT * FROM test_SavedAddresses AS T";
-        helpTest(sql, "SELECT T FROM `test`.`SavedAddresses` AS T");
+        helpTest(sql, "SELECT META().id AS PK, T FROM `test`.`SavedAddresses` AS T");
+        
+        sql = "SELECT * FROM test_Items";
+        helpTest(sql, "SELECT META().id AS PK, Items FROM `test`.`Items`");
+        
+        sql = "SELECT * FROM test_Items AS T";
+        helpTest(sql, "SELECT META().id AS PK, T FROM `test`.`Items` AS T");
+    }
+    
+    @Test
+    public void testPKColumn() throws TranslatorException {
+        
+        String sql = "SELECT PK FROM test";
+        helpTest(sql, "SELECT META().id AS PK FROM `test`");
+        
+        sql = "SELECT PK FROM test_CreditCard";
+        helpTest(sql, "SELECT META().id AS PK FROM `test`.`CreditCard`");
     }
     
     @Test

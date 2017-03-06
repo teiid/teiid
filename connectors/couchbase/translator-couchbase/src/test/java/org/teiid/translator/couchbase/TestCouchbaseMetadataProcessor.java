@@ -129,14 +129,14 @@ public class TestCouchbaseMetadataProcessor {
     }
     
     static JsonObject formCustomer() {
-        return JsonObject.create().put("Name", "John Doe").put("Type", "Customer").put("SavedAddresses", JsonArray.from("123 Main St.", "456 1st Ave"));
+        return JsonObject.create().put("Name", "John Doe").put("ID", "Customer_101").put("Type", "Customer").put("SavedAddresses", JsonArray.from("123 Main St.", "456 1st Ave"));
     }
     
     static JsonObject formOder() {
         return JsonObject.create()
                 .put("Name", "Air Ticket")
                 .put("Type", "Oder")
-                .put("CustomerID", "Customer_12345")
+                .put("CustomerID", "Customer_101")
                 .put("CreditCard", JsonObject.create().put("Type", "Visa").put("CardNumber", "4111 1111 1111 111").put("Expiry", "12/12").put("CVN", 123))
                 .put("Items", JsonArray.from(JsonObject.create().put("ItemID", 89123).put("Quantity", 1), JsonObject.create().put("ItemID", 92312).put("Quantity", 5)));
     }
@@ -167,11 +167,11 @@ public class TestCouchbaseMetadataProcessor {
     }
     
     static JsonObject layerJson() {
-        return JsonObject.create().put("Name", "Layer Json").put("A", JsonObject.create().put("A", JsonObject.create().put("A", "value")));
+        return JsonObject.create().put("Name", "Layer Json").put("nestedJson", JsonObject.create().put("nestedJson", JsonObject.create().put("nestedJson", "value")));
     }
     
     static JsonObject layerArray() {
-        return JsonObject.create().put("Name", "Layer Array").put("A", JsonArray.create().from("A",  JsonArray.create().from("A", JsonArray.create().add("A"))));
+        return JsonObject.create().put("Name", "Layer Array").put("nestedArray", JsonArray.create().from(JsonArray.create().from(JsonArray.create().add("nestedArray"))));
     }
     
     static JsonArray formSimpleJsonArray() {
@@ -190,7 +190,7 @@ public class TestCouchbaseMetadataProcessor {
                 .addNull();
     }
     
-    private static final boolean PRINT_TO_CONSOLE = true;
+    private static final boolean PRINT_TO_CONSOLE = false;
     private static final boolean REPLACE_EXPECTED = false;
     
     private void helpTest(String name, MetadataFactory mf) throws ResourceException {

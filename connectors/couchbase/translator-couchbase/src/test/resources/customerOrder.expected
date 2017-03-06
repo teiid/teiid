@@ -1,12 +1,16 @@
 SET NAMESPACE 'http://www.teiid.org/translator/couchbase/2017' AS teiid_couchbase;
 
 CREATE FOREIGN TABLE test (
+	PK string OPTIONS (UPDATABLE FALSE),
 	Type string,
+	ID string,
 	Name string,
-	CustomerID string
+	CustomerID string,
+	CONSTRAINT PK0 PRIMARY KEY(PK)
 ) OPTIONS (NAMEINSOURCE '`test`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false', "teiid_couchbase:ISTOPTABLE" 'true');
 
 CREATE FOREIGN TABLE test_CreditCard (
+	PK string OPTIONS (UPDATABLE FALSE),
 	CardNumber string,
 	Type string,
 	CVN integer,
@@ -14,9 +18,12 @@ CREATE FOREIGN TABLE test_CreditCard (
 ) OPTIONS (NAMEINSOURCE '`test`.`CreditCard`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false', "teiid_couchbase:ISTOPTABLE" 'false');
 
 CREATE FOREIGN TABLE test_Items (
-	Items object
-) OPTIONS (NAMEINSOURCE '`test`.`Items`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'true', "teiid_couchbase:ISTOPTABLE" 'false');
+	PK string OPTIONS (UPDATABLE FALSE),
+	Quantity integer,
+	ItemID integer
+) OPTIONS (NAMEINSOURCE '`test`.`Items`', UPDATABLE TRUE, "teiid_couchbase:ARRAYTABLEGROUP" 'Items', "teiid_couchbase:ISARRAYTABLE" 'true', "teiid_couchbase:ISTOPTABLE" 'false');
 
 CREATE FOREIGN TABLE test_SavedAddresses (
+	PK string OPTIONS (UPDATABLE FALSE),
 	SavedAddresses string
-) OPTIONS (NAMEINSOURCE '`test`.`SavedAddresses`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'true', "teiid_couchbase:ISTOPTABLE" 'false');
+) OPTIONS (NAMEINSOURCE '`test`.`SavedAddresses`', UPDATABLE TRUE, "teiid_couchbase:ARRAYTABLEGROUP" 'SavedAddresses', "teiid_couchbase:ISARRAYTABLE" 'true', "teiid_couchbase:ISTOPTABLE" 'false');

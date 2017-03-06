@@ -1,11 +1,16 @@
 SET NAMESPACE 'http://www.teiid.org/translator/couchbase/2017' AS teiid_couchbase;
 
 CREATE FOREIGN TABLE test (
-	Name string
+	PK string OPTIONS (UPDATABLE FALSE),
+	Name string,
+	CONSTRAINT PK0 PRIMARY KEY(PK)
 ) OPTIONS (NAMEINSOURCE '`test`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false', "teiid_couchbase:ISTOPTABLE" 'true');
 
-CREATE FOREIGN TABLE test_A OPTIONS (NAMEINSOURCE '`test`.`A`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false', "teiid_couchbase:ISTOPTABLE" 'false');
+CREATE FOREIGN TABLE test_nestedJson (
+	PK string OPTIONS (UPDATABLE FALSE)
+) OPTIONS (NAMEINSOURCE '`test`.`nestedJson`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false', "teiid_couchbase:ISTOPTABLE" 'false');
 
-CREATE FOREIGN TABLE test_A_A (
-	A string
-) OPTIONS (NAMEINSOURCE '`test`.`A`.`A`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false', "teiid_couchbase:ISTOPTABLE" 'false');
+CREATE FOREIGN TABLE test_nestedJson_nestedJson (
+	PK string OPTIONS (UPDATABLE FALSE),
+	nestedJson string
+) OPTIONS (NAMEINSOURCE '`test`.`nestedJson`.`nestedJson`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false', "teiid_couchbase:ISTOPTABLE" 'false');
