@@ -1278,6 +1278,9 @@ public class TestOracleTranslator {
     	String val = omp.getFullyQualifiedName("package", "schema", "proc", true);
     	assertEquals("\"schema\".\"package\".\"proc\"", val);
     	
+    	val = omp.getFullyQualifiedName("", "schema", "proc", true);
+        assertEquals("\"schema\".\"proc\"", val);
+    	
     	omp.setUseQualifiedName(false);
     	val = omp.getFullyQualifiedName("package", "schema", "proc", true);
     	assertEquals("\"package\".\"proc\"", val);
