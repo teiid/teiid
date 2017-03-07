@@ -156,7 +156,7 @@ public final class OracleMetadataProcessor extends
 	@Override
 	protected String getFullyQualifiedName(String catalogName,
 			String schemaName, String objectName, boolean quoted) {
-		if (catalogName != null) {
+		if (catalogName != null && catalogName.length() > 0) {
 			//must be a package name
 			if (quoted) {
 				//name in source is required to be package.objectName
