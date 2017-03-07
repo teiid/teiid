@@ -66,7 +66,7 @@ public class CouchbaseQueryExecution extends CouchbaseExecution implements Resul
 
 	@Override
 	public void execute() throws TranslatorException {
-		this.visitor = this.executionFactory.getN1QLVisitor(metadata);
+		this.visitor = this.executionFactory.getN1QLVisitor();
 		this.visitor.append(this.command);
 		String sql = this.visitor.toString();
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29001, sql));
@@ -123,17 +123,29 @@ public class CouchbaseQueryExecution extends CouchbaseExecution implements Resul
 
 	private List<?> nextArray() {
 	    if(this.array != null && this.array.hasNext()){
-	        List<Object> row = new ArrayList<>(1);
+	        
+	        List<Object> row = new ArrayList<>();
 	        row.addAll(this.arrayRow);
 	        Object obj = this.array.next();
-	        if(this.arrayColumnNames != null && obj instanceof JsonObject) {
-	            JsonObject json = (JsonObject) obj;
-	            for(String key : arrayColumnNames) {
-	                row.add(json.get(key));
-	            }
-	        } else {
-	            row.add(obj);
+	        JsonObject json = null;
+	        boolean isAddObject = true;
+	        
+	        if(obj instanceof JsonObject) {
+	            json = (JsonObject) obj;
 	        }
+	        
+	        for(int i = 1; i < expectedTypes.length ; i ++) {
+	            String columnName = arrayColumnNames.get(i - 1);
+	            if(json != null) {
+                    row.add(this.executionFactory.retrieveValue(columnName, expectedTypes[i], json.get(columnName)));
+                } else if(isAddObject){
+                    row.add(this.executionFactory.retrieveValue(columnName, expectedTypes[i], obj));
+                    isAddObject = false;
+                } else {
+                    row.add(this.executionFactory.retrieveValue(columnName, expectedTypes[i], null));
+                }
+	        }
+
             if(!this.array.hasNext()) {
                 this.array = null;
                 this.arrayRow = null;

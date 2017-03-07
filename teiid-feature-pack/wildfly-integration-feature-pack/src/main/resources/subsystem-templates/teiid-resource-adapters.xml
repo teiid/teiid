@@ -26,6 +26,9 @@
 	       <resource-adapter id="mongodb">
 	           <module slot="main" id="org.jboss.teiid.resource-adapter.mongodb"/>
 	       </resource-adapter>
+               <resource-adapter id="couchbase">
+                   <module slot="main" id="org.jboss.teiid.resource-adapter.couchbase"/>
+               </resource-adapter>
 	       <resource-adapter id="cassandra">
 	           <module slot="main" id="org.jboss.teiid.resource-adapter.cassandra"/>
 	       </resource-adapter>

@@ -95,6 +95,18 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
 		addPushDownFunction(COUCHBASE, "POSITION", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
 		
 //		addPushDownFunction(COUCHBASE, "METAID", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+		
+		addPushDownFunction(COUCHBASE, "CLOCK_MILLIS", TypeFacility.RUNTIME_NAMES.DOUBLE); //$NON-NLS-1$
+		addPushDownFunction(COUCHBASE, "CLOCK_STR", TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+		addPushDownFunction(COUCHBASE, "CLOCK_STR", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+		addPushDownFunction(COUCHBASE, "DATE_ADD_MILLIS", TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+		addPushDownFunction(COUCHBASE, "DATE_ADD_STR", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+		addPushDownFunction(COUCHBASE, "DATE_DIFF_MILLIS", TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+		addPushDownFunction(COUCHBASE, "DATE_DIFF_STR", TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+		addPushDownFunction(COUCHBASE, "DATE_PART_MILLIS", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+		addPushDownFunction(COUCHBASE, "DATE_PART_STR", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+		addPushDownFunction(COUCHBASE, "NOW_MILLIS", TypeFacility.RUNTIME_NAMES.DOUBLE); //$NON-NLS-1$
+		addPushDownFunction(COUCHBASE, "NOW_STR", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
 	}
 
 	@Override
@@ -259,8 +271,13 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
         return true;
     }
 
-    public N1QLVisitor getN1QLVisitor(RuntimeMetadata metadata) {
-        return new N1QLVisitor(this, metadata);
+    @Override
+    public boolean supportsSelectWithoutFrom() {
+        return true;
+    }
+
+    public N1QLVisitor getN1QLVisitor() {
+        return new N1QLVisitor(this);
     }
 
     public Object retrieveValue(String columnName, Class<?> columnType, Object value) {

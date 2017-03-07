@@ -53,6 +53,7 @@
         <translator name="sap-gateway" module="org.jboss.teiid.translator.odata"/>
         <translator name="sap-nw-gateway" module="org.jboss.teiid.translator.odata"/>
         <translator name="mongodb" module="org.jboss.teiid.translator.mongodb"/>
+        <translator name="couchbase" module="org.jboss.teiid.translator.couchbase"/>
         <translator name="cassandra" module="org.jboss.teiid.translator.cassandra"/>
         <translator name="simpledb" module="org.jboss.teiid.translator.simpledb"/>
         <translator name="accumulo" module="org.jboss.teiid.translator.accumulo"/>

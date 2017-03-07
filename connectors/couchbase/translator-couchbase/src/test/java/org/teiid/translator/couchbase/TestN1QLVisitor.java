@@ -58,6 +58,7 @@ public class TestN1QLVisitor {
             mp.addTable(mf, KEYSPACE, formArray(), null);
             mp.addTable(mf, KEYSPACE, layerJson(), null);
             mp.addTable(mf, KEYSPACE, layerArray(), null);
+            mp.addTable(mf, KEYSPACE, nestedArray(), null);
 
             TransformationMetadata tm = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "x");
             ValidatorReport report = new MetadataValidator().validate(tm.getVdbMetaData(), tm.getMetadataStore());
@@ -70,8 +71,8 @@ public class TestN1QLVisitor {
         }
     }
     
-    private static TranslationUtility translationUtility = new TranslationUtility(queryMetadataInterface());
-    private static RuntimeMetadata runtimeMetadata = new RuntimeMetadataImpl(queryMetadataInterface());
+    static TranslationUtility translationUtility = new TranslationUtility(queryMetadataInterface());
+    static RuntimeMetadata runtimeMetadata = new RuntimeMetadataImpl(queryMetadataInterface());
     
     private static CouchbaseExecutionFactory TRANSLATOR;
     
@@ -86,7 +87,7 @@ public class TestN1QLVisitor {
 
         Command command = translationUtility.parseCommand(sql);
 
-        N1QLVisitor visitor = TRANSLATOR.getN1QLVisitor(runtimeMetadata);
+        N1QLVisitor visitor = TRANSLATOR.getN1QLVisitor();
         visitor.append(command);
 
 //        System.out.println(visitor.toString());
@@ -121,6 +122,15 @@ public class TestN1QLVisitor {
         
         sql = "SELECT * FROM test_Items AS T";
         helpTest(sql, "SELECT META().id AS PK, T FROM `test`.`Items` AS T");
+    }
+    
+    @Test
+    public void testNestedArrayLoop() throws TranslatorException {
+        String sql = "SELECT * FROM test_nestedArray";
+        helpTest(sql, "SELECT META().id AS PK, nestedArray FROM `test`.`nestedArray`");
+        
+        sql = "SELECT * FROM test_nestedArray AS T";
+        helpTest(sql, "SELECT META().id AS PK, T FROM `test`.`nestedArray` AS T");
     }
     
     @Test
@@ -171,6 +181,9 @@ public class TestN1QLVisitor {
         
         String sql = "SELECT Name, Type  FROM test WHERE Name = 'John Doe'";
         helpTest(sql, "SELECT `test`.Name, `test`.Type FROM `test` WHERE `test`.Name = 'John Doe'");
+        
+        sql = "SELECT Name, Type  FROM test WHERE PK = 'customer'";
+        helpTest(sql, "SELECT `test`.Name, `test`.Type FROM `test` WHERE META().id = 'customer'");
     }
     
     @Test
@@ -257,6 +270,25 @@ public class TestN1QLVisitor {
         
         sql = "SELECT convert(attr_number_long, string) FROM test";
         helpTest(sql, "SELECT TOSTRING(`test`.attr_number_long) FROM `test`");
+    }
+    
+    @Test
+    public void testDateFunctions() throws TranslatorException {
+        
+        String sql = "SELECT couchbase.CLOCK_MILLIS() FROM test";
+        helpTest(sql, "SELECT CLOCK_MILLIS() FROM `test`"); 
+        
+        sql = "SELECT couchbase.CLOCK_STR() FROM test";
+        helpTest(sql, "SELECT CLOCK_STR() FROM `test`"); 
+        
+        sql = "SELECT couchbase.CLOCK_STR('2006-01-02') FROM test";
+        helpTest(sql, "SELECT CLOCK_STR('2006-01-02') FROM `test`");
+                
+        sql = "SELECT couchbase.DATE_ADD_MILLIS(1488873653696, 2, 'century') FROM test";
+        helpTest(sql, "SELECT DATE_ADD_MILLIS(1488873653696, 2, 'century') FROM `test`"); 
+        
+        sql = "SELECT couchbase.DATE_ADD_STR('2017-03-08', 2, 'century') FROM test";
+        helpTest(sql, "SELECT DATE_ADD_STR('2017-03-08', 2, 'century') FROM `test`"); 
     }
    
 

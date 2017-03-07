@@ -1,3 +1,24 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * See the COPYRIGHT.txt file distributed with this work for information
+ * regarding copyright ownership.  Some portions may be licensed
+ * to Red Hat, Inc. under one or more contributor license agreements.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
 package org.teiid.translator.couchbase;
 
 import static org.teiid.language.SQLConstants.Reserved.CAST;
@@ -27,11 +48,9 @@ import org.teiid.language.OrderBy;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.visitor.SQLStringVisitor;
-import org.teiid.metadata.RuntimeMetadata;
 
 public class N1QLVisitor extends SQLStringVisitor{
     
-    private RuntimeMetadata metadata;
     private CouchbaseExecutionFactory ef;
     
     private boolean recordColumnName = true;
@@ -39,9 +58,8 @@ public class N1QLVisitor extends SQLStringVisitor{
     private List<String> selectColumns = new ArrayList<>();
     private List<String> selectColumnReferences = new ArrayList<>();
 
-    public N1QLVisitor(CouchbaseExecutionFactory ef, RuntimeMetadata metadata) {
+    public N1QLVisitor(CouchbaseExecutionFactory ef) {
         this.ef = ef;
-        this.metadata = metadata;
     }
 
     @Override
@@ -90,10 +108,13 @@ public class N1QLVisitor extends SQLStringVisitor{
             String isArrayTable = obj.getTable().getMetadataObject().getProperty(IS_ARRAY_TABLE, false);
             String isTopTable = obj.getTable().getMetadataObject().getProperty(IS_TOP_TABLE, false);
             
-            // need address complex join conditions
             if(obj.getName().equals(PK)) {
-                buffer.append("META().id AS PK"); //$NON-NLS-1$ 
-                selectColumns.add("PK"); //$NON-NLS-1$ 
+                if(recordColumnName) {
+                    buffer.append("META().id AS PK"); //$NON-NLS-1$ 
+                    selectColumns.add("PK"); //$NON-NLS-1$ 
+                } else {
+                    buffer.append("META().id"); //$NON-NLS-1$ 
+                }
                 return;
             }
             
@@ -111,16 +132,6 @@ public class N1QLVisitor extends SQLStringVisitor{
             } else if(isArrayTable.equals(FALSE)){
                 super.visit(obj);
             }
-            
-//            if(isTopTable.equals(FALSE) && group == null) {
-//                shortNameOnly = true;
-//                super.visit(obj);
-//                shortNameOnly = false;
-//            } else if(isArrayTable.equals(TRUE) && group != null) {
-//                buffer.append(group);
-//            }else {
-//                super.visit(obj);
-//            }
             
             //add selectColumns
             if(recordColumnName){

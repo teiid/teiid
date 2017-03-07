@@ -114,6 +114,15 @@ public class TestCouchbaseMetadataProcessor {
         helpTest("completeJson.expected", mf);
     }
     
+    @Test
+    public void testNestedArray() throws ResourceException {
+        
+        CouchbaseMetadataProcessor metadataProcessor = new CouchbaseMetadataProcessor();  
+        MetadataFactory mf = new MetadataFactory("vdb", 1, "couchbase", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
+        metadataProcessor.addTable(mf, KEYSPACE, nestedArray(), null);
+        helpTest("nestedArray.expected", mf);
+    }
+
     @Ignore("not resolved so far")
     @Test
     public void testMetadataCaseSensitive() throws ResourceException {
@@ -188,6 +197,16 @@ public class TestCouchbaseMetadataProcessor {
                 .add(new Double(60.123))
                 .add("This is String value")
                 .addNull();
+    }
+    
+    static JsonObject nestedArray() {
+        return JsonObject.create().put("Name", "Nested Array").put("LoopNestedArray", JsonArray.create()
+                .add("item")
+                .add(JsonObject.create().put("key1", "value1"))
+                .add(JsonObject.create().put("key2", "value2"))
+                .add(JsonObject.create().put("key3", "value3").put("key4", "value4"))
+                .add(JsonObject.create().put("key5", JsonObject.create().put("key6", "value6")).put("key7", JsonArray.create().add(100).add(200)))
+                .add(JsonArray.create().add(true).add(false)));
     }
     
     private static final boolean PRINT_TO_CONSOLE = false;
