@@ -69,7 +69,8 @@ import org.teiid.util.Version;
 @Translator(name="oracle", description="A translator for Oracle 9i Database or later")
 public class OracleExecutionFactory extends JDBCExecutionFactory {
 	
-	public static final Version NINE_0 = Version.getVersion("9.0"); //$NON-NLS-1$
+	private static final String TRUNC = "TRUNC"; //$NON-NLS-1$
+    public static final Version NINE_0 = Version.getVersion("9.0"); //$NON-NLS-1$
 	public static final Version NINE_2 = Version.getVersion("9.2"); //$NON-NLS-1$
 	public static final Version ELEVEN_2_0_4 = Version.getVersion("11.2.0.4"); //$NON-NLS-1$
 	public static final Version TWELVE = Version.getVersion("12"); //$NON-NLS-1$
@@ -93,6 +94,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	public static final String WITHIN_DISTANCE = "sdo_within_distance"; //$NON-NLS-1$
 	public static final String NEAREST_NEIGHBOR_DISTANCE = "sdo_nn_distance"; //$NON-NLS-1$
 	public static final String ORACLE_SDO = "Oracle-SDO"; //$NON-NLS-1$
+	public static final String ORACLE = "Oracle"; //$NON-NLS-1$
 	
 	private static final Set<String> STRING_BOOLEAN_FUNCTIONS = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
 	static {
@@ -238,6 +240,11 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	convertModifier.addNumericBooleanConversions();
     	convertModifier.setWideningNumericImplicit(true);
     	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
+    	
+    	addPushDownFunction(ORACLE, TRUNC, TIMESTAMP, TIMESTAMP, STRING); 
+    	addPushDownFunction(ORACLE, TRUNC, TIMESTAMP, TIMESTAMP); 
+    	addPushDownFunction(ORACLE, TRUNC, BIG_DECIMAL, BIG_DECIMAL, BIG_DECIMAL); 
+    	addPushDownFunction(ORACLE, TRUNC, BIG_DECIMAL, BIG_DECIMAL); 
     	
     	addPushDownFunction(ORACLE_SDO, RELATE, STRING, STRING, STRING, STRING);
     	addPushDownFunction(ORACLE_SDO, RELATE, STRING, OBJECT, OBJECT, STRING);

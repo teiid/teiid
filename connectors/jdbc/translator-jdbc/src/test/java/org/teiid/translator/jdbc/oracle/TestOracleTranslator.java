@@ -1288,4 +1288,10 @@ public class TestOracleTranslator {
         String output = "SELECT g_0.IntKey, CASE WHEN g_0.IntNum = 0 THEN 0 WHEN g_0.IntNum IS NOT NULL THEN 1 END FROM SmallA g_0 GROUP BY g_0.IntKey, CASE WHEN g_0.IntNum = 0 THEN 0 WHEN g_0.IntNum IS NOT NULL THEN 1 END HAVING CASE WHEN CASE WHEN g_0.IntNum = 0 THEN 0 WHEN g_0.IntNum IS NOT NULL THEN 1 END = 0 THEN 'false' WHEN CASE WHEN g_0.IntNum = 0 THEN 0 WHEN g_0.IntNum IS NOT NULL THEN 1 END IS NOT NULL THEN 'true' END > 'false'"; //$NON-NLS-1$
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
+    
+    @Test public void testTrunc() throws Exception {
+        String input = "SELECT trunc(IntNum, 10), trunc(IntNum), trunc(TIMESTAMPVALUE, 'day') FROM BQT1.SmallA";
+        String output = "SELECT TRUNC(SmallA.IntNum, 10), TRUNC(SmallA.IntNum), TRUNC(SmallA.TimestampValue, 'day') FROM SmallA"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
 }
