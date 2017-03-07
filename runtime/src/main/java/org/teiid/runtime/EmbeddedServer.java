@@ -57,6 +57,7 @@ import javax.transaction.TransactionManager;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.vfs.VirtualFile;
+import org.teiid.PreParser;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -74,6 +75,7 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.NamedThreadFactory;
 import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.ReflectionHelper;
 import org.teiid.deployers.CompositeGlobalTableStore;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.ContainerLifeCycleListener;
@@ -808,6 +810,13 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	    	}
 	    }		
 		
+		vdb.addAttchment(ClassLoader.class, Thread.currentThread().getContextClassLoader());
+		try {
+            createPreParser(vdb);
+        } catch (TeiidException e1) {
+            throw new VirtualDatabaseException(e1);
+        }
+		
 		cmr.createConnectorManagers(vdb, this);
 		MetadataStore metadataStore = new MetadataStore();
 		UDFMetaData udfMetaData = new UDFMetaData();
@@ -1056,5 +1065,14 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		public boolean isStarted() {
 			return running;
 		}
+	}
+	
+	public static void createPreParser(VDBMetaData deployment) throws TeiidException {
+	    String preparserClass = deployment.getPropertyValue(VDBMetaData.PREPARSER_CLASS);
+        if (preparserClass != null) {
+            ClassLoader vdbClassLoader = deployment.getAttachment(ClassLoader.class);
+            PreParser preParser = (PreParser) ReflectionHelper.create(preparserClass, Collections.emptyList(), vdbClassLoader);
+            deployment.addAttchment(PreParser.class, preParser);
+        }
 	}
 }

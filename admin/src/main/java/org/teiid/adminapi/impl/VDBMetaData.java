@@ -47,6 +47,8 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 	public static final String TEIID_DOMAINS = "domain-ddl"; //$NON-NLS-1$
 	
 	private static final long serialVersionUID = -4723595252013356436L;
+
+    public static final String PREPARSER_CLASS = "preparser-class"; //$NON-NLS-1$
 	
 	private LinkedHashMap<String, ModelMetaData> models = new LinkedHashMap<String, ModelMetaData>();
 	private LinkedHashMap<String, VDBTranslatorMetaData> translators = new LinkedHashMap<String, VDBTranslatorMetaData>(); 

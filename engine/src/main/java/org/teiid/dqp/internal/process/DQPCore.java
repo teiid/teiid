@@ -39,6 +39,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.transaction.xa.Xid;
 
+import org.teiid.PreParser;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.Request.ProcessingState;
 import org.teiid.adminapi.Request.ThreadState;
@@ -280,7 +281,24 @@ public class DQPCore implements DQP {
 	    request.setExecutor(this.processWorkerPool);
 		request.setResultSetCacheEnabled(this.rsCache != null);
 		request.setAuthorizationValidator(this.authorizationValidator);
-		request.setPreParser(this.config.getPreParser());
+		final PreParser preparser = workContext.getVDB().getAttachment(PreParser.class);
+		if (preparser != null) {
+		    if (this.config.getPreParser() != null) {
+		        //chain the preparsing effect
+		        request.setPreParser(new PreParser() {
+                    
+                    @Override
+                    public String preParse(String command, org.teiid.CommandContext context) {
+                        String preParse = config.getPreParser().preParse(command, context);
+                        return preparser.preParse(preParse, context);
+                    }
+                });
+		    } else {
+		        request.setPreParser(preparser);
+		    }
+		} else {
+		    request.setPreParser(this.config.getPreParser());
+		}
 		request.setUserRequestConcurrency(this.getUserRequestSourceConcurrency());
         ResultsFuture<ResultsMessage> resultsFuture = new ResultsFuture<ResultsMessage>();
         final RequestWorkItem workItem = new RequestWorkItem(this, requestMsg, request, resultsFuture.getResultsReceiver(), requestID, workContext);

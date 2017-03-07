@@ -1475,6 +1475,18 @@ public class TestEmbeddedServer {
         assertEquals(0, ps.getUpdateCount());
         assertNull(ps.getMetaData());        
     }
+    
+    public static class MyPreParser implements PreParser {
+        
+        @Override
+        public String preParse(String command, CommandContext context) {
+            if (command.equals("select 'goodbye'")) {
+                return "select 'vdb'";
+            }
+            return command;
+        }
+        
+    }
 	
 	@Test public void testPreParser() throws Exception {
 		EmbeddedConfiguration ec = new EmbeddedConfiguration();
@@ -1500,6 +1512,15 @@ public class TestEmbeddedServer {
 		ResultSet rs = s.executeQuery("select 'hello world'");
 		rs.next();
 		assertEquals("goodbye", rs.getString(1));
+		
+		String perVdb = "<vdb name=\"x1\" version=\"1\"><property name=\"preparser-class\" value=\""+MyPreParser.class.getName()+"\"/><model name=\"x\" type=\"VIRTUAL\"><metadata type=\"ddl\">create view v as select 1</metadata></model></vdb>";
+		
+		es.deployVDB(new ByteArrayInputStream(perVdb.getBytes("UTF-8")));
+		c = es.getDriver().connect("jdbc:teiid:x1", null);
+		s = c.createStatement();
+        rs = s.executeQuery("select 'hello world'");
+        rs.next();
+        assertEquals("vdb", rs.getString(1));
 	}
 	
 	@Test public void testTurnOffLobCleaning() throws Exception {
