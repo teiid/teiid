@@ -45,7 +45,6 @@ import com.couchbase.client.java.query.N1qlQueryRow;
 public class CouchbaseQueryExecution extends CouchbaseExecution implements ResultSetExecution {
     
 	private QueryExpression command;
-	private CouchbaseExecutionFactory executionFactory;
 	private Class<?>[] expectedTypes;
 	
 	private N1QLVisitor visitor;
@@ -58,9 +57,8 @@ public class CouchbaseQueryExecution extends CouchbaseExecution implements Resul
 			CouchbaseExecutionFactory executionFactory,
 			QueryExpression command, ExecutionContext executionContext,
 			RuntimeMetadata metadata, CouchbaseConnection connection) {
-		super(executionContext, metadata, connection);
+		super(executionFactory, executionContext, metadata, connection);
 		this.command = command;
-		this.executionFactory = executionFactory;
 		this.expectedTypes = command.getColumnTypes();
 	}
 
@@ -159,6 +157,9 @@ public class CouchbaseQueryExecution extends CouchbaseExecution implements Resul
     @Override
 	public void close() {
 	    this.results = null;
+	    this.array = null;
+        this.arrayRow = null;
+        this.arrayColumnNames = null;
 	}
 
 	@Override

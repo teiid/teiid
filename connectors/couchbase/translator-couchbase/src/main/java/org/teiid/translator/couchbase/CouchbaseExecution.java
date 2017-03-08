@@ -30,8 +30,10 @@ public class CouchbaseExecution {
 	protected ExecutionContext executionContext;
 	protected RuntimeMetadata metadata;
 	protected CouchbaseConnection connection;
+	protected CouchbaseExecutionFactory executionFactory;
 
-	protected CouchbaseExecution(ExecutionContext executionContext, RuntimeMetadata metadata, CouchbaseConnection connection) {
+	protected CouchbaseExecution(CouchbaseExecutionFactory executionFactory, ExecutionContext executionContext, RuntimeMetadata metadata, CouchbaseConnection connection) {
+	    this.executionFactory = executionFactory;
 		this.executionContext = executionContext;
 		this.metadata = metadata;
 		this.connection = connection;

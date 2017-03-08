@@ -137,6 +137,15 @@ public class TestCouchbaseMetadataProcessor {
         helpTest("TODO.expected", mf);
     }
     
+    @Test
+    public void testProcedures() throws ResourceException {
+        
+        CouchbaseMetadataProcessor metadataProcessor = new CouchbaseMetadataProcessor();  
+        MetadataFactory mf = new MetadataFactory("vdb", 1, "couchbase", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
+        metadataProcessor.addProcedures(mf, null);
+        helpTest("procedures.expected", mf);
+    }
+    
     static JsonObject formCustomer() {
         return JsonObject.create().put("Name", "John Doe").put("ID", "Customer_101").put("Type", "Customer").put("SavedAddresses", JsonArray.from("123 Main St.", "456 1st Ave"));
     }

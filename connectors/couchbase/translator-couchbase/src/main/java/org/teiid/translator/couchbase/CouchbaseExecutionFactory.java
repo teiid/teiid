@@ -29,7 +29,10 @@ import java.util.TreeMap;
 
 import javax.resource.cci.ConnectionFactory;
 
+import org.teiid.core.types.ClobImpl;
+import org.teiid.core.types.ClobType;
 import org.teiid.couchbase.CouchbaseConnection;
+import org.teiid.language.Call;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.QueryExpression;
@@ -38,6 +41,7 @@ import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.MetadataProcessor;
+import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
@@ -172,6 +176,11 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
 	}
 
     @Override
+    public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, CouchbaseConnection connection) throws TranslatorException {
+        return new CouchbaseProcedureExecution(this, command, executionContext, metadata, connection);
+    }
+
+    @Override
     public MetadataProcessor<CouchbaseConnection> getMetadataProcessor() {
         return new CouchbaseMetadataProcessor();
     }
@@ -288,6 +297,11 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
 
         if (value.getClass().equals(columnType)) {
             return value;
+        }
+        
+        if(columnType.equals(ClobType.class)) {
+            ClobImpl clob = new ClobImpl(value.toString());
+            return new ClobType(clob);
         }
         
         return value;

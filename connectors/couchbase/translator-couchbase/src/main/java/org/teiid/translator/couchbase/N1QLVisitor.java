@@ -25,16 +25,30 @@ import static org.teiid.language.SQLConstants.Reserved.CAST;
 import static org.teiid.language.SQLConstants.Reserved.CONVERT;
 import static org.teiid.language.SQLConstants.Reserved.LIMIT;
 import static org.teiid.language.SQLConstants.Reserved.OFFSET;
+import static org.teiid.language.SQLConstants.Reserved.SELECT;
+import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.GETTEXTDOCUMENTS;
+import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.GETDOCUMENTS;
+import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.GETTEXTDOCUMENT;
+import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.GETDOCUMENT;
+import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.SAVEDOCUMENT;
+import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.DELETEDOCUMENT;
+import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.GETTEXTMETADATADOCUMENT;
+import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.GETMETADATADOCUMENT;
+import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.ID;
+import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.RESULT;
 import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.IS_ARRAY_TABLE;
 import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.IS_TOP_TABLE;
 import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.ARRAY_TABLE_GROUP;
 import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.TRUE;
 import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.FALSE;
 import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.PK;
+import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.buildNameInSource;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.language.Argument;
+import org.teiid.language.Call;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Comparison;
 import org.teiid.language.DerivedColumn;
@@ -45,7 +59,9 @@ import org.teiid.language.Limit;
 import org.teiid.language.Literal;
 import org.teiid.language.NamedTable;
 import org.teiid.language.OrderBy;
+import org.teiid.language.Argument.Direction;
 import org.teiid.language.SQLConstants.NonReserved;
+import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.visitor.SQLStringVisitor;
 
@@ -198,5 +214,110 @@ public class N1QLVisitor extends SQLStringVisitor{
 
     public List<String> getSelectColumnReferences() {
         return selectColumnReferences;
+    }
+    
+    private String keySpace;
+
+    public String getKeySpace() {
+        return keySpace;
+    }
+
+    public void setKeySpace(String keySpace) {
+        this.keySpace = keySpace;
+    }
+
+    @Override
+    public void visit(Call call) {
+                
+        if(call.getProcedureName().equalsIgnoreCase(GETTEXTDOCUMENTS)) {
+            appendClobN1QL();
+            appendN1QLWhere(call);
+            return;
+        } else if(call.getProcedureName().equalsIgnoreCase(GETTEXTDOCUMENT)) {
+            appendClobN1QL();
+            appendN1QLPK(call);
+            return;
+        } else if(call.getProcedureName().equalsIgnoreCase(GETDOCUMENTS)) {
+            appendBlobN1QL();
+            appendN1QLWhere(call);
+            return;
+        } else if(call.getProcedureName().equalsIgnoreCase(GETDOCUMENT)) {
+            appendBlobN1QL();
+            appendN1QLPK(call);
+            return;
+        } else if(call.getProcedureName().equalsIgnoreCase(SAVEDOCUMENT)) {
+            buffer.append("UPSERT INTO").append(Tokens.SPACE); //$NON-NLS-1$
+            buffer.append(buildNameInSource(keySpace, null)).append(Tokens.SPACE);
+            buffer.append(Reserved.AS).append(Tokens.SPACE);
+            buffer.append(RESULT).append(Tokens.SPACE); 
+            buffer.append("(KEY, VALUE) VALUES").append(Tokens.SPACE); //$NON-NLS-1$
+            buffer.append(Tokens.LPAREN);
+            final List<Argument> params = call.getArguments();
+            for (int i = 0; i < params.size(); i++) {
+                Argument param = params.get(i);
+                if (param.getDirection() == Direction.IN ) {
+                    if (i != 0) {
+                        buffer.append(Tokens.COMMA).append(Tokens.SPACE);
+                    }
+                    append(param);
+                }
+            }
+            buffer.append(Tokens.RPAREN).append(Tokens.SPACE);
+            buffer.append("RETURNING").append(Tokens.SPACE); //$NON-NLS-1$
+            buffer.append(RESULT);
+            return;
+        } else if(call.getProcedureName().equalsIgnoreCase(DELETEDOCUMENT)) {
+            buffer.append(Reserved.DELETE).append(Tokens.SPACE);
+            buffer.append(Reserved.FROM).append(Tokens.SPACE);
+            buffer.append(buildNameInSource(keySpace, null)).append(Tokens.SPACE);
+            buffer.append(Reserved.AS).append(Tokens.SPACE);
+            buffer.append(RESULT).append(Tokens.SPACE); 
+            appendN1QLPK(call);
+            buffer.append(Tokens.SPACE);
+            buffer.append("RETURNING").append(Tokens.SPACE); //$NON-NLS-1$
+            buffer.append(RESULT);
+            return;
+        } else if(call.getProcedureName().equalsIgnoreCase(GETTEXTMETADATADOCUMENT) || call.getProcedureName().equalsIgnoreCase(GETMETADATADOCUMENT)) {
+            buffer.append(SELECT).append(Tokens.SPACE);
+            buffer.append("META").append(Tokens.LPAREN).append(Tokens.RPAREN).append(Tokens.SPACE); //$NON-NLS-1$
+            buffer.append(Reserved.AS).append(Tokens.SPACE);
+            buffer.append(RESULT).append(Tokens.SPACE);
+            buffer.append(Reserved.FROM).append(Tokens.SPACE);
+            buffer.append(buildNameInSource(keySpace, null));
+            return;
+        } 
+    }
+
+    private void appendClobN1QL() {
+        buffer.append(SELECT).append(Tokens.SPACE);
+        buffer.append("META").append(Tokens.LPAREN).append(Tokens.RPAREN); //$NON-NLS-1$
+        buffer.append(".id").append(Tokens.SPACE);
+        buffer.append(Reserved.AS).append(Tokens.SPACE).append(ID); //$NON-NLS-1$
+        buffer.append(Tokens.COMMA).append(Tokens.SPACE); 
+        buffer.append(RESULT).append(Tokens.SPACE); 
+        buffer.append(Reserved.FROM).append(Tokens.SPACE);
+        buffer.append(buildNameInSource(keySpace, null)).append(Tokens.SPACE);
+        buffer.append(Reserved.AS).append(Tokens.SPACE).append(RESULT).append(Tokens.SPACE);
+    }
+    
+    private void appendBlobN1QL() {
+        buffer.append(SELECT).append(Tokens.SPACE);
+        buffer.append(RESULT).append(Tokens.SPACE); 
+        buffer.append(Reserved.FROM).append(Tokens.SPACE);
+        buffer.append(buildNameInSource(keySpace, null)).append(Tokens.SPACE);
+        buffer.append(Reserved.AS).append(Tokens.SPACE).append(RESULT).append(Tokens.SPACE);
+    }
+    
+    private void appendN1QLWhere(Call call) {
+        buffer.append(Reserved.WHERE).append(Tokens.SPACE);
+        buffer.append("META").append(Tokens.LPAREN).append(Tokens.RPAREN); //$NON-NLS-1$
+        buffer.append(".id").append(Tokens.SPACE);
+        buffer.append(Reserved.LIKE).append(Tokens.SPACE);
+        append(call.getArguments().get(0));
+    }
+    
+    private void appendN1QLPK(Call call) {
+        buffer.append("USE PRIMARY KEYS").append(Tokens.SPACE);
+        append(call.getArguments().get(0));
     }
 }

@@ -59,6 +59,7 @@ public class TestN1QLVisitor {
             mp.addTable(mf, KEYSPACE, layerJson(), null);
             mp.addTable(mf, KEYSPACE, layerArray(), null);
             mp.addTable(mf, KEYSPACE, nestedArray(), null);
+            mp.addProcedures(mf, null);
 
             TransformationMetadata tm = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "x");
             ValidatorReport report = new MetadataValidator().validate(tm.getVdbMetaData(), tm.getMetadataStore());
@@ -88,6 +89,7 @@ public class TestN1QLVisitor {
         Command command = translationUtility.parseCommand(sql);
 
         N1QLVisitor visitor = TRANSLATOR.getN1QLVisitor();
+        visitor.setKeySpace(KEYSPACE);
         visitor.append(command);
 
 //        System.out.println(visitor.toString());
@@ -289,6 +291,37 @@ public class TestN1QLVisitor {
         
         sql = "SELECT couchbase.DATE_ADD_STR('2017-03-08', 2, 'century') FROM test";
         helpTest(sql, "SELECT DATE_ADD_STR('2017-03-08', 2, 'century') FROM `test`"); 
+    }
+    
+    @Test
+    public void testProcedures() throws TranslatorException {
+        
+        String sql = "call getTextDocuments('customer')";
+        helpTest(sql, "SELECT META().id AS id, result FROM `test` AS result WHERE META().id LIKE 'customer'");
+        
+        sql = "call getTextDocuments('%e%')";
+        helpTest(sql, "SELECT META().id AS id, result FROM `test` AS result WHERE META().id LIKE '%e%'");
+        
+        sql = "call getDocuments('customer')";
+        helpTest(sql, "SELECT result FROM `test` AS result WHERE META().id LIKE 'customer'");
+        
+        sql = "call getTextDocument('customer')";
+        helpTest(sql, "SELECT META().id AS id, result FROM `test` AS result USE PRIMARY KEYS 'customer'");
+        
+        sql = "call getDocument('customer')";
+        helpTest(sql, "SELECT result FROM `test` AS result USE PRIMARY KEYS 'customer'");
+        
+        sql = "call saveDocument('k001', '{\"key\": \"value\"}')";
+        helpTest(sql, "UPSERT INTO `test` AS result (KEY, VALUE) VALUES ('k001', '{\"key\": \"value\"}') RETURNING result");
+        
+        sql = "call deleteDocument('k001')";
+        helpTest(sql, "DELETE FROM `test` AS result USE PRIMARY KEYS 'k001' RETURNING result");
+        
+        sql = "call getTextMetadataDocument()";
+        helpTest(sql, "SELECT META() AS result FROM `test`");
+        
+        sql = "call getMetadataDocument()";
+        helpTest(sql, "SELECT META() AS result FROM `test`");
     }
    
 
