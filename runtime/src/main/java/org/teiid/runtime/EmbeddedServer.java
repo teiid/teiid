@@ -768,19 +768,27 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	 */
 	public void deployVDBZip(URL url) throws VirtualDatabaseException, ConnectorManagerException, TranslatorException, IOException, URISyntaxException {
 		VirtualFile root = PureZipFileSystem.mount(url);
-		VirtualFile vdbMetadata = root.getChild("/META-INF/vdb.xml"); //$NON-NLS-1$
-		try {
-			VDBMetadataParser.validate(vdbMetadata.openStream());
-		} catch (SAXException e) {
-			throw new VirtualDatabaseException(e);
-		}
-		InputStream is = vdbMetadata.openStream();
 		VDBMetaData metadata;
-		try {
-			metadata = VDBMetadataParser.unmarshell(is);
-		} catch (XMLStreamException e) {
-			throw new VirtualDatabaseException(e);
+		
+		VirtualFile vdbMetadata = root.getChild("/META-INF/vdb.xml"); //$NON-NLS-1$
+		if (vdbMetadata.exists()) {
+    		try {
+    			VDBMetadataParser.validate(vdbMetadata.openStream());
+    		} catch (SAXException e) {
+    			throw new VirtualDatabaseException(e);
+    		}
+    		InputStream is = vdbMetadata.openStream();
+    		try {
+    			metadata = VDBMetadataParser.unmarshell(is);
+    		} catch (XMLStreamException e) {
+    			throw new VirtualDatabaseException(e);
+    		}
+		} else {
+		    vdbMetadata = root.getChild("/META-INF/vdb.ddl"); //$NON-NLS-1$
+	        DeploymentBasedDatabaseStore store = new DeploymentBasedDatabaseStore(getVDBRepository());
+	        metadata = store.getVDBMetadata(ObjectConverterUtil.convertToString(vdbMetadata.openStream()));
 		}
+		
 		VDBResources resources = new VDBResources(root, metadata);
 		deployVDB(metadata, resources);
 	}

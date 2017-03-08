@@ -404,6 +404,28 @@ public class TestEmbeddedServer {
 		assertEquals("HELLO WORLD", rs.getString(1));
 	}
 	
+	
+    @Test public void testDeployZipDDL() throws Exception {
+        es.start(new EmbeddedConfiguration());
+        
+        File f = UnitTestUtil.getTestScratchFile("some.vdb");
+        ZipOutputStream out = new ZipOutputStream(new FileOutputStream(f));
+        out.putNextEntry(new ZipEntry("v1.ddl")); 
+        out.write("CREATE VIEW helloworld as SELECT 'HELLO WORLD';".getBytes("UTF-8"));
+        out.putNextEntry(new ZipEntry("META-INF/vdb.ddl"));
+        String externalDDL = "CREATE DATABASE test VERSION '1';"
+                + "USE DATABASE test VERSION '1';"
+                + "CREATE VIRTUAL SCHEMA test2;"
+                + "IMPORT FOREIGN SCHEMA public FROM REPOSITORY \"DDL-FILE\" INTO test2 OPTIONS(\"ddl-file\" '/v1.ddl');";
+        out.write(externalDDL.getBytes("UTF-8"));
+        out.close();
+        
+        es.deployVDBZip(f.toURI().toURL());
+        ResultSet rs = es.getDriver().connect("jdbc:teiid:test", null).createStatement().executeQuery("select * from helloworld");
+        rs.next();
+        assertEquals("HELLO WORLD", rs.getString(1));
+    }	
+	
 	@Test public void testDeployDesignerZip() throws Exception {
 		es.start(new EmbeddedConfiguration());
 		es.deployVDBZip(UnitTestUtil.getTestDataFile("matviews.vdb").toURI().toURL());
