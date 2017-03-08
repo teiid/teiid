@@ -45,6 +45,7 @@ import javax.xml.validation.Validator;
 
 import org.teiid.adminapi.AdminPlugin;
 import org.teiid.adminapi.DataPolicy;
+import org.teiid.adminapi.DataPolicy.ResourceType;
 import org.teiid.adminapi.VDBImport;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.adminapi.impl.ModelMetaData.Message;
@@ -225,7 +226,10 @@ public class VDBMetadataParser {
             switch (element) {
 			case RESOURCE_NAME:
 				permission.setResourceName(reader.getElementText());
-				break;            
+				break; 
+			case RESOURCE_TYPE:
+			    permission.setResourceType(ResourceType.valueOf(reader.getElementText()));
+			    break;
 			case ALLOW_ALTER:
 				permission.setAllowAlter(Boolean.parseBoolean(reader.getElementText()));
 				break;
@@ -403,6 +407,7 @@ public class VDBMetadataParser {
 	    DATA_ROLE_ALLOW_TEMP_TABLES_ATTR("allow-create-temporary-tables"),
 	    PERMISSION("permission"),
 	    RESOURCE_NAME("resource-name"),
+	    RESOURCE_TYPE("resource-type"),
 	    ALLOW_CREATE("allow-create"),
 	    ALLOW_READ("allow-read"),
 	    ALLOW_UPADTE("allow-update"),
@@ -535,6 +540,9 @@ public class VDBMetadataParser {
 		for (DataPolicy.DataPermission permission: dp.getPermissions()) {
 			writer.writeStartElement(Element.PERMISSION.getLocalName());
 			writeElement(writer, Element.RESOURCE_NAME, permission.getResourceName());
+			if (permission.getResourceType() != null) {
+			    writeElement(writer, Element.RESOURCE_TYPE, permission.getResourceType().name());
+			}
 			if (permission.getAllowCreate() != null) {
 				writeElement(writer, Element.ALLOW_CREATE, permission.getAllowCreate().toString());
 			}

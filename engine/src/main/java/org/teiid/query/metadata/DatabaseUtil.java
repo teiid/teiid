@@ -162,7 +162,6 @@ public class DatabaseUtil {
     
     private static Permission convert(DataPermission dp) {
         Permission p = new Permission();
-        p.setResourceType(ResourceType.TABLE);
         
         p.setAllowAlter(dp.getAllowAlter());
         p.setAllowDelete(dp.getAllowDelete());
@@ -172,18 +171,25 @@ public class DatabaseUtil {
         p.setAllowUpdate(dp.getAllowUpdate());
         p.setResourceName(dp.getResourceName());
         
-        int dotCount = dp.getResourceName().length() - dp.getResourceName().replaceAll("\\.", "").length();
-        
-        // this is more of a guessing game here..
         if (dp.getAllowLanguage() != null && dp.getAllowLanguage()) {
             p.setAllowUsage(true);
             p.setResourceType(ResourceType.LANGUAGE);
-        } else if (dotCount == 0) {
-            p.setResourceType(ResourceType.SCHEMA);
-        } else if (dp.getAllowExecute() != null && dp.getAllowExecute()){
-            p.setResourceType(ResourceType.PROCEDURE);
-        } else if (dotCount >= 2 ) {
-            p.setResourceType(ResourceType.COLUMN);
+        } else if (dp.getResourceType() != null) {
+            p.setResourceType(ResourceType.valueOf(dp.getResourceType().name()));
+        } else {
+            int dotCount = dp.getResourceName().length() - dp.getResourceName().replaceAll("\\.", "").length(); //$NON-NLS-1$ //$NON-NLS-2$
+            
+            if (dotCount == 0) {
+                p.setResourceType(ResourceType.SCHEMA);
+            } else if (dp.getAllowExecute() != null && dp.getAllowExecute()){
+                // this may not be correct as it could be a function as well
+                p.setResourceType(ResourceType.PROCEDURE);
+            } else if (dotCount >= 2) {
+                // this may not be correct as it could be a table
+                p.setResourceType(ResourceType.COLUMN);
+            } else {
+                p.setResourceType(ResourceType.TABLE);
+            }
         }
         
         if (dp.getMask() != null) {
@@ -263,7 +269,7 @@ public class DatabaseUtil {
     static PermissionMetaData convert(Permission from) {
         PermissionMetaData pmd = new PermissionMetaData();
         pmd.setResourceName(from.getResourceName());
-        
+        pmd.setResourceType(DataPolicy.ResourceType.valueOf(from.getResourceType().name()));
         pmd.setAllowAlter(from.hasPrivilege(Privilege.ALTER));
         pmd.setAllowCreate(from.hasPrivilege(Privilege.INSERT));
         pmd.setAllowDelete(from.hasPrivilege(Privilege.DELETE));
