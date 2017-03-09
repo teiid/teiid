@@ -102,6 +102,10 @@ public abstract class AdminObjectImpl implements AdminObject, Serializable {
 		this.properties.put(key, value);
 	}
 	
+	public String removeProperty(String key) {
+	    return this.properties.remove(key);
+	}
+	
    /**
     * Add attachment
     *

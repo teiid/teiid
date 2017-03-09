@@ -523,7 +523,7 @@ public interface Admin {
      *
      * @param vdbName  - required
      * @param vdbVersion - required
-     * @param modelName - optionally can be null, to export whole VDB
+     * @param modelName - required
      * @param EnumSet<SchemaObjectType> Type of schema objects to retrieve, null means ALL the schema object types
      * @param typeNamePattern RegEx pattern to filter to names of tables, procedures that are being read. Null means no filter.
      * @param format - when exporting whole VDB, it can be either XML or DDL format
