@@ -47,6 +47,7 @@ public class OAuth20LoginModule extends AbstractPasswordCredentialLoginModule {
     private String clientSecret;
     private String refreshToken;
     private String accessTokenURI;
+    private String accessToken;
     protected OAuthCredential credential;
     protected Subject callerSubject;
     protected Principal callerPrincipal;
@@ -60,6 +61,7 @@ public class OAuth20LoginModule extends AbstractPasswordCredentialLoginModule {
        
        this.refreshToken = (String) options.get("refresh-token"); //$NON-NLS-1$
        this.accessTokenURI = (String) options.get("access-token-uri"); //$NON-NLS-1$
+        this.accessToken = (String) options.get("access-token"); //$NON-NLS-1$
     }
     
     @Override
@@ -69,7 +71,8 @@ public class OAuth20LoginModule extends AbstractPasswordCredentialLoginModule {
         
         if (getCredential() == null) {
             if (getClientId() == null || getClientSecret() == null || 
-                    getAccessTokenURI() == null || getRefreshToken() == null) {
+                    (getAccessTokenURI() == null && getAccessToken() == null)
+                    || (getRefreshToken() == null && getAccessToken() == null)) {
                 super.loginOk = false;
                 return false;
             }
@@ -80,6 +83,7 @@ public class OAuth20LoginModule extends AbstractPasswordCredentialLoginModule {
             cred.setClientSecret(getClientSecret());
             cred.setRefreshToken(getRefreshToken());
             cred.setAccessTokenURI(getAccessTokenURI());
+            cred.setAccessTokenString(getAccessToken());
             setCredential(cred);
         }
         
@@ -186,5 +190,13 @@ public class OAuth20LoginModule extends AbstractPasswordCredentialLoginModule {
 
     public void setAccessTokenURI(String accessTokenURI) {
         this.accessTokenURI = accessTokenURI;
+    }
+
+    public String getAccessToken() {
+        return accessToken;
+    }
+
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
     }
 }
