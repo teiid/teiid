@@ -400,8 +400,9 @@ public class TestDDLStringVisitor {
                 "CREATE DOMAIN x AS string(1000) NOT NULL;\n\n" + 
                 "CREATE DOMAIN y AS integer NOT NULL;\n\n" +
                 "CREATE DOMAIN z AS bigdecimal(10,2) NOT NULL;\n\n" +
+                "\n--############ Schemas ############\n" +
+                "CREATE VIRTUAL SCHEMA SchemaA;\n\n" +
                 "\n--############ Schema:SchemaA ############\n" +
-                "CREATE VIRTUAL SCHEMA SchemaA;\n" +
                 "SET SCHEMA SchemaA;\n" +
                 "\n" + 
                 "CREATE VIEW G1 (\n" + 
@@ -459,8 +460,9 @@ public class TestDDLStringVisitor {
                 "\n--############ Servers ############\n" +
                 "CREATE SERVER testing TYPE 'orcl' FOREIGN DATA WRAPPER orcle OPTIONS (\"jndi-name\" 'java://test-server');\n" + 
                 "\n" + 
+                "\n--############ Schemas ############\n" +
+                "CREATE SCHEMA SchemaA SERVER testing;\n\n" +
                 "\n--############ Schema:SchemaA ############\n" +
-                "CREATE SCHEMA SchemaA SERVER testing;\n" +
                 "SET SCHEMA SchemaA;\n" +
                 "\n" + 
                 "CREATE FOREIGN TABLE G1 (\n" + 
@@ -532,9 +534,10 @@ public class TestDDLStringVisitor {
                 "CREATE DATABASE foo VERSION '2';\n" + 
                 "USE DATABASE foo VERSION '2';\n" +
                 "\n" + 
-                "--############ Roles & Grants ############\n"+
-                "CREATE ROLE admin WITH ANY AUTHENTICATED;\n" + 
-                "CREATE ROLE uber;\n" +
+                "--############ Roles ############\n"+
+                "CREATE ROLE admin WITH ANY AUTHENTICATED;\n\n" + 
+                "CREATE ROLE uber;\n\n\n" +
+                "--############ Grants ############\n"+
                 "GRANT SELECT,DELETE,ALTER ON TABLE \"schema.tableName\" TO admin;\n" + 
                 "GRANT TEMPORARY TABLE TO admin;\n\n" +
                 "GRANT ALL PRIVILEGES TO uber;\n" +

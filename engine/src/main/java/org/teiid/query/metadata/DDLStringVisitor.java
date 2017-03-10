@@ -55,7 +55,7 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 public class DDLStringVisitor {
 	private static final String TAB = "\t"; //$NON-NLS-1$
 	private static final String NEWLINE = "\n";//$NON-NLS-1$
-    public static final String GENERATED = "TEIID_GENERATED";
+    public static final String GENERATED = "TEIID_GENERATED"; //$NON-NLS-1$
 	private static final HashSet<String> LENGTH_DATATYPES = new HashSet<String>(
 			Arrays.asList(
 					DataTypeManager.DefaultDataTypes.CHAR,
@@ -156,73 +156,86 @@ public class DDLStringVisitor {
         	append(NEWLINE);
         	append("--############ Translators ############");
         	append(NEWLINE);        	
-        }
-        
-        for (DataWrapper dw : database.getDataWrappers()) {
-            visit(dw);
-            append(NEWLINE);
-            append(NEWLINE);
+            for (DataWrapper dw : database.getDataWrappers()) {
+                visit(dw);
+                append(NEWLINE);
+                append(NEWLINE);
+            }
         }
 
         if (!database.getServers().isEmpty()){
         	append(NEWLINE);
         	append("--############ Servers ############");
         	append(NEWLINE);        	
+            for (Server server : database.getServers()) {
+                visit(server);
+                append(NEWLINE);
+                append(NEWLINE);
+            }
         }
         
-        for (Server server : database.getServers()) {
-            visit(server);
+        if (!database.getSchemas().isEmpty()) {
             append(NEWLINE);
-            append(NEWLINE);
-        }
-
-        for (Schema schema : database.getSchemas()) {
-        	append(NEWLINE);
-        	append("--############ Schema:").append(schema.getName()).append(" ############");
-        	append(NEWLINE);
-            append(CREATE);
-            if (!schema.isPhysical()) {
-                append(SPACE).append(VIRTUAL);
-            }
-            append(SPACE).append(SCHEMA).append(SPACE).append(SQLStringVisitor.escapeSinglePart(schema.getName()));
-            if (!schema.getServers().isEmpty()) {
-                append(SPACE).append(SERVER);
-                boolean first = true;
-                for (Server s:schema.getServers()) {
-                    if (first) {
-                        first = false;
-                    } else {
-                        append(COMMA);
-                    }
-                    append(SPACE).append(SQLStringVisitor.escapeSinglePart(s.getName()));
+            append("--############ Schemas ############");
+            append(NEWLINE); 
+    
+            for (Schema schema : database.getSchemas()) {
+                append(CREATE);
+                if (!schema.isPhysical()) {
+                    append(SPACE).append(VIRTUAL);
                 }
+                append(SPACE).append(SCHEMA).append(SPACE).append(SQLStringVisitor.escapeSinglePart(schema.getName()));
+                if (!schema.getServers().isEmpty()) {
+                    append(SPACE).append(SERVER);
+                    boolean first = true;
+                    for (Server s:schema.getServers()) {
+                        if (first) {
+                            first = false;
+                        } else {
+                            append(COMMA);
+                        }
+                        append(SPACE).append(SQLStringVisitor.escapeSinglePart(s.getName()));
+                    }
+                }
+                
+                appendOptions(schema);
+                append(SEMICOLON);
+                append(NEWLINE);
+                append(NEWLINE);
+                createdSchmea(schema);
             }
-            
-            appendOptions(schema);
-            append(SEMICOLON);
+        }
+        
+        if (!database.getRoles().isEmpty()){
+            append(NEWLINE);
+            append("--############ Roles ############");
+            append(NEWLINE);            
+            for (Role role:database.getRoles()) {
+                visit(role);
+                append(NEWLINE);
+                append(NEWLINE);
+            }
+        }
+        
+        for (Schema schema : database.getSchemas()) {
+            append(NEWLINE);
+            append("--############ Schema:").append(schema.getName()).append(" ############");
             append(NEWLINE);
             append(SET).append(SPACE).append(SCHEMA).append(SPACE);
             append(SQLStringVisitor.escapeSinglePart(schema.getName())).append(SEMICOLON);
             append(NEWLINE);
             append(NEWLINE);
-            
             visit(schema);  
         }
         
         if (!database.getRoles().isEmpty()){
         	append(NEWLINE);
-        	append("--############ Roles & Grants ############");
+        	append("--############ Grants ############");
         	append(NEWLINE);        	
-        }
-        
-        for (Role role:database.getRoles()) {
-            visit(role);
-            append(NEWLINE);
-        }
-        
-        for (Grant grant:database.getGrants()) {
-            visit(grant);
-            append(NEWLINE);
+            for (Grant grant:database.getGrants()) {
+                visit(grant);
+                append(NEWLINE);
+            }
         }
         
         append(NEWLINE);
@@ -234,6 +247,10 @@ public class DDLStringVisitor {
         append(NEWLINE);
     }
     
+    protected void createdSchmea(Schema schema) {
+        
+    }
+
     private void visit(Datatype dt) {
         append(CREATE).append(SPACE).append(DOMAIN).append(SPACE);
         append(SQLStringVisitor.escapeSinglePart(dt.getName())).append(SPACE).append(AS).append(SPACE);
@@ -366,53 +383,39 @@ public class DDLStringVisitor {
     protected void visit(Schema schema) {
 		boolean first = true; 
 		
-		if (this.includeTables) {
-			for (Table t: schema.getTables().values()) {
-				if (first) {
-					first = false;
-				}
-				else {
-					append(NEWLINE);
-					append(NEWLINE);
-				}			
-                String generated = t.getProperty(GENERATED, false);
-                if (generated == null || !Boolean.valueOf(generated)) {
-                    visit(t);
+		for (AbstractMetadataRecord record : schema.getResolvingOrder()) {
+            String generated = record.getProperty(GENERATED, false);
+            if (generated != null && Boolean.valueOf(generated)) {
+                continue;
+            }
+
+            if (record instanceof Table) {
+                if (!this.includeTables) {
+                    continue;
                 }
-			}
-		}
-		
-		if (this.includeProcedures) {
-			for (Procedure p:schema.getProcedures().values()) {
-				if (first) {
-					first = false;
-				}
-				else {
-					append(NEWLINE);
-					append(NEWLINE);
-				}				
-				
-                String generated = p.getProperty(GENERATED, false);
-                if (generated == null || !Boolean.valueOf(generated)) {
-                    visit(p);
+            } else if (record instanceof Procedure) {
+                if (!this.includeProcedures) {
+                    continue;
                 }
-			}
-		}
-		
-		if (this.includeFunctions) {
-			for (FunctionMethod f:schema.getFunctions().values()) {
-				if (first) {
-					first = false;
-				}
-				else {
-					append(NEWLINE);
-					append(NEWLINE);
-				}				
-                String generated = f.getProperty(GENERATED, false);
-                if (generated == null || !Boolean.valueOf(generated)) {
-                    visit(f);
+            } else if (record instanceof FunctionMethod) {
+                if (!this.includeFunctions) {
+                    continue;
                 }
-			}
+            }
+            if (first) {
+                first = false;
+            }
+            else {
+                append(NEWLINE);
+                append(NEWLINE);
+            }
+            if (record instanceof Table) {
+                visit((Table)record);
+            } else if (record instanceof Procedure) {
+                visit((Procedure)record);
+            } else if (record instanceof FunctionMethod) {
+                visit((FunctionMethod)record);
+            }
 		}
 	}
 

@@ -98,7 +98,10 @@ public class NamespaceContainer extends AbstractMetadataRecord {
         if (this.namespaces == null) {
              this.namespaces = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
         }
-        this.namespaces.put(prefix, uri);
+        String old = this.namespaces.put(prefix, uri);
+        if (old != null && !old.equals(uri)) {
+            throw new MetadataException(DataPlugin.Event.TEIID60037, DataPlugin.Util.gs(DataPlugin.Event.TEIID60037, prefix, old, uri));
+        }
     }
     
     public Map<String, String> getNamespaces() {

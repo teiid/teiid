@@ -58,7 +58,6 @@ class OperationsConstants {
 	public static final SimpleAttributeDefinition FORMAT = new SimpleAttributeDefinitionBuilder("format", ModelType.STRING) //$NON-NLS-1$
 	        .setAllowNull(true)
 	        .setAllowExpression(false)
-	        .setAllowedValues(Admin.ExportFormat.DDL.name(), Admin.ExportFormat.XML.name())
 	        .build();   
 	public static final SimpleAttributeDefinition INCLUDE_SOURCE = new SimpleAttributeDefinition("include-source", ModelType.STRING, true); //$NON-NLS-1$
 	

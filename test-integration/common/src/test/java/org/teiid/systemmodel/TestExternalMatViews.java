@@ -854,7 +854,7 @@ public class TestExternalMatViews {
         assertEquals("LOADED", rs.getString(1));
         assertEquals(0, rs.getInt(2));
         
-        String ddl = server.getAdmin().getSchema("comp", "1", null, null, null);
+        String ddl = server.getAdmin().getSchema("comp", "1", "source", null, null);
         assertFalse(ddl.contains("AFTER INSERT"));
     }    
 }

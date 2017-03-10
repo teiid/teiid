@@ -45,10 +45,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -113,7 +110,6 @@ import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.index.IndexMetadataRepository;
 import org.teiid.metadatastore.DeploymentBasedDatabaseStore;
-import org.teiid.metadatastore.DeploymentBasedDatabaseStore.PendingDataSourceJobs;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.ServerConnection;
 import org.teiid.net.socket.ObjectChannel;
@@ -804,19 +800,6 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		if (!vdb.getOverrideTranslators().isEmpty() && !allowOverrideTranslators()) {
 			throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40106, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40106, vdb.getName()));
 		}
-		
-	    // if inline datasource needs to be created, then create it first.  
-	    PendingDataSourceJobs jobs = vdb.getAttachment(PendingDataSourceJobs.class);
-	    if (jobs != null && !jobs.isEmpty()) {
-	    	ExecutorService executor = Executors.newSingleThreadExecutor(new NamedThreadFactory("teiid-datasource-creator"));
-	    	for (Callable<Boolean> job :  jobs.values()) {
-	    		try {
-	    			executor.submit(job).get();
-	    		} catch (TeiidRuntimeException | ExecutionException | InterruptedException e){
-	    			// ignore
-	    		}
-	    	}
-	    }		
 		
 		vdb.addAttchment(ClassLoader.class, Thread.currentThread().getContextClassLoader());
 		try {

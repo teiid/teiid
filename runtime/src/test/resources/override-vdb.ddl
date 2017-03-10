@@ -17,12 +17,15 @@ CREATE FOREIGN DATA WRAPPER "mysql-override" OPTIONS (RequiresCriteria 'true');
 CREATE SERVER s1 FOREIGN DATA WRAPPER "mysql-override" OPTIONS ("jndi-name" 'java:/mysqlDS');
 
 
---############ Schema:test ############
+--############ Schemas ############
 CREATE SCHEMA test SERVER s1;
+
+IMPORT FOREIGN SCHEMA "%" FROM SERVER s1 INTO test;
+
+
+--############ Schema:test ############
 SET SCHEMA test;
 
-IMPORT FOREIGN SCHEMA "%" FROM SERVER s1 INTO test OPTIONS (
-);
 
 /*
 ###########################################

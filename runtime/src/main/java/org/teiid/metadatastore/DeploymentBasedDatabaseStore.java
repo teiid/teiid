@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBImportMetadata;
@@ -35,18 +34,13 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.metadata.Database;
 import org.teiid.metadata.Datatype;
-import org.teiid.metadata.Schema;
 import org.teiid.query.function.SystemFunctionManager;
-import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.metadata.DatabaseUtil;
 import org.teiid.query.parser.QueryParser;
 
 public class DeploymentBasedDatabaseStore extends DatabaseStore {
     private VDBRepository vdbRepo;
-    
-    @SuppressWarnings("serial")
-	public static class PendingDataSourceJobs extends HashMap<String, Callable<Boolean>> {}
     
     private ArrayList<VDBImportMetadata> importedVDBs = new ArrayList<VDBImportMetadata>();
     private Map<String, List<ImportedSchema>> importedSchemas = new HashMap<String, List<ImportedSchema>>();
@@ -81,6 +75,7 @@ public class DeploymentBasedDatabaseStore extends DatabaseStore {
     	StringReader reader = new StringReader(contents);
     	try {
             startEditing(false);
+            this.setMode(Mode.DATABASE_STRUCTURE);
             QueryParser.getQueryParser().parseDDL(this, new BufferedReader(reader));
         } finally {
         	reader.close();
@@ -91,33 +86,28 @@ public class DeploymentBasedDatabaseStore extends DatabaseStore {
         VDBMetaData vdb = DatabaseUtil.convert(database);
         
         for (ModelMetaData model : vdb.getModelMetaDatas().values()) {
-            Schema schema = database.getSchema(model.getName());
             if (this.importedSchemas.get(model.getName()) != null){
                 for (ImportedSchema is:this.importedSchemas.get(model.getName())) {
-                        model.addProperty("importer.schemaPattern", is.foreignSchemaName);
-                        
-                        if (is.excludeTables != null && !is.excludeTables.isEmpty()) {
-                        	model.addProperty("importer.excludeTables", getCSV(is.excludeTables));
+                    model.addProperty("importer.schemaPattern", is.foreignSchemaName);
+                    
+                    if (is.excludeTables != null && !is.excludeTables.isEmpty()) {
+                        model.addProperty("importer.excludeTables", getCSV(is.excludeTables));
+                    }
+    
+                    // TODO: need to add this to jdbc translator
+                    if (is.includeTables != null && !is.includeTables.isEmpty()) {
+                        model.addProperty("importer.includeTables", getCSV(is.includeTables));    
+                    }
+                    
+                    if (is.properties != null) {
+                        for (String key : is.properties.keySet()) {
+                            model.addProperty(key, is.properties.get(key));
                         }
-        
-                        // TODO: need to add this to jdbc translator
-                        if (is.includeTables != null && !is.includeTables.isEmpty()) {
-                        	model.addProperty("importer.includeTables", getCSV(is.includeTables));    
-                        }
-                        
-                        if (is.properties != null) {
-                        	for (String key : is.properties.keySet()) {
-                        		model.addProperty(key, is.properties.get(key));
-                        	}
-                        }
-                        model.addSourceMetadata(is.serverType, null);
+                    }
+                    model.addSourceMetadata(is.serverType, null);
                 }
-            }
-                
-            if (!schema.getTables().isEmpty() || !schema.getProcedures().isEmpty()
-                    || !schema.getFunctions().isEmpty()) {
-                String ddl = DDLStringVisitor.getDDLString(database.getSchema(model.getName()), null, null);
-                model.addSourceMetadata("DDL", ddl);
+            } else {
+                model.addSourceMetadata("DDL", null); //$NON-NLS-1$
             }
         }  
         
@@ -125,8 +115,8 @@ public class DeploymentBasedDatabaseStore extends DatabaseStore {
         	vdb.getVDBImports().add(vid);
         }
         
-        //add the domains to the metadata
-        
+        vdb.addProperty(VDBMetaData.TEIID_DDL, contents);
+                
         return vdb;
     }
     
@@ -146,6 +136,9 @@ public class DeploymentBasedDatabaseStore extends DatabaseStore {
 	@Override
     public void importSchema(String schemaName, String serverType, String serverName, String foreignSchemaName,
             List<String> includeTables, List<String> excludeTables, Map<String, String> properties) {
+	    if (!assertInEditMode(Mode.DATABASE_STRUCTURE)) {
+            return;
+        }
 		ImportedSchema schema = new ImportedSchema();
 		schema.foreignSchemaName = foreignSchemaName; 
 		schema.includeTables = includeTables;
@@ -163,6 +156,9 @@ public class DeploymentBasedDatabaseStore extends DatabaseStore {
 	
 	@Override
 	public void importDatabase(String dbName, String version, boolean importPolicies) {
+	    if (!assertInEditMode(Mode.DATABASE_STRUCTURE)) {
+	        return;
+	    }
 		VDBImportMetadata db = new VDBImportMetadata();
 		db.setName(dbName);
 		db.setVersion(version);

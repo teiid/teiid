@@ -80,6 +80,7 @@ import org.teiid.language.Literal;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.visitor.CollectorVisitor;
 import org.teiid.metadata.Column;
+import org.teiid.metadata.MetadataException;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
@@ -425,6 +426,42 @@ public class TestEmbeddedServer {
         rs.next();
         assertEquals("HELLO WORLD", rs.getString(1));
     }	
+    
+    @Test public void testDDLVDBImport() throws Exception {
+        es.start(new EmbeddedConfiguration());
+        
+        String ddl1 = "CREATE DATABASE x VERSION '1';"
+                + "USE DATABASE x VERSION '1';"
+                + "CREATE VIRTUAL SCHEMA test2;"
+                + "SET SCHEMA test2;"
+                + "CREATE VIEW x as select 1;";
+        
+        String ddl2 = "CREATE DATABASE test VERSION '1';"
+                + "USE DATABASE test VERSION '1';"
+                + "IMPORT DATABASE x VERSION '1';";
+        
+        es.deployVDB(new ByteArrayInputStream(ddl1.getBytes("UTF-8")), true);
+        es.deployVDB(new ByteArrayInputStream(ddl2.getBytes("UTF-8")), true);
+    }
+    
+    @Test(expected=MetadataException.class) public void testAlterImported() throws Exception {
+        es.start(new EmbeddedConfiguration());
+        
+        String ddl1 = "CREATE DATABASE x VERSION '1';"
+                + "USE DATABASE x VERSION '1';"
+                + "CREATE VIRTUAL SCHEMA test2;"
+                + "SET SCHEMA test2;"
+                + "CREATE VIEW x as select 1;";
+        
+        String ddl2 = "CREATE DATABASE test VERSION '1';"
+                + "USE DATABASE test VERSION '1';"
+                + "IMPORT DATABASE x VERSION '1';"
+                + "set schema test2;"
+                + "DROP VIEW x;";
+        
+        es.deployVDB(new ByteArrayInputStream(ddl1.getBytes("UTF-8")), true);
+        es.deployVDB(new ByteArrayInputStream(ddl2.getBytes("UTF-8")), true);
+    }
 	
 	@Test public void testDeployDesignerZip() throws Exception {
 		es.start(new EmbeddedConfiguration());
