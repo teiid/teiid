@@ -30,16 +30,8 @@ import java.util.Properties;
 
 import org.junit.Test;
 import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.*;
 import org.teiid.metadata.Database.ResourceType;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.DataWrapper;
-import org.teiid.metadata.Database;
-import org.teiid.metadata.Grant;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.Role;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Server;
-import org.teiid.metadata.Table;
 import org.teiid.query.parser.SQLParserUtil;
 import org.teiid.query.parser.TestDDLParser;
 import org.teiid.query.sql.symbol.Expression;
@@ -430,8 +422,9 @@ public class TestDDLStringVisitor {
                 "\n--############ Servers ############\n" +
                 "CREATE SERVER testing TYPE 'orcl' FOREIGN DATA WRAPPER orcle OPTIONS (\"jndi-name\" 'java://test-server');\n" + 
                 "\n" + 
+                "\n--############ Schemas ############\n" +
+                "CREATE SCHEMA SchemaA SERVER testing;\n\n" +
                 "\n--############ Schema:SchemaA ############\n" +
-                "CREATE  SCHEMA SchemaA SERVER testing;\n" +
                 "SET SCHEMA SchemaA;\n" +
                 "\n" + 
                 "CREATE FOREIGN TABLE G1 (\n" + 
@@ -503,9 +496,10 @@ public class TestDDLStringVisitor {
                 "CREATE DATABASE foo VERSION '2';\n" + 
                 "USE DATABASE foo VERSION '2';\n" +
                 "\n" + 
-                "--############ Roles & Grants ############\n"+
-                "CREATE ROLE admin WITH ANY AUTHENTICATED;\n" + 
-                "CREATE ROLE uber;\n" +
+                "--############ Roles ############\n"+
+                "CREATE ROLE admin WITH ANY AUTHENTICATED;\n\n" + 
+                "CREATE ROLE uber;\n\n\n" +
+                "--############ Grants ############\n"+
                 "GRANT SELECT,DELETE,ALTER ON TABLE \"schema.tableName\" TO admin;\n" + 
                 "GRANT TEMPORARY TABLE TO admin;\n\n" +
                 "GRANT ALL PRIVILEGES TO uber;\n" +

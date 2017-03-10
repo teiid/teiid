@@ -47,7 +47,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.adminapi.Admin;
-import org.teiid.adminapi.Admin.ExportFormat;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.PropertyDefinition;
@@ -271,8 +270,8 @@ public class TestDDLMetadataStore {
         FileInputStream vdb = new FileInputStream(UnitTestUtil.getTestDataPath() + "/" + "portfolio-vdb.xml");
         es.deployVDB(vdb);
         
-        Admin admin = es.getAdmin();
-        String content = admin.getSchema("Portfolio", "1", null, null, null, ExportFormat.DDL);
+        String content = ConvertVDB.convert(new File(UnitTestUtil.getTestDataPath() + "/" + "portfolio-vdb.xml"));
+        
         es.undeployVDB("Portfolio");
         
         /*

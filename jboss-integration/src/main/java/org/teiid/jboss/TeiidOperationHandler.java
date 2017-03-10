@@ -900,11 +900,6 @@ class GetSchema extends BaseOperationHandler<VDBRepository>{
 		    modelName = operation.get(OperationsConstants.MODEL_NAME.getName()).asString();	
 		}
 		
-		Admin.ExportFormat format = Admin.ExportFormat.XML;
-        if (operation.hasDefined(OperationsConstants.FORMAT.getName())) {
-            format = Admin.ExportFormat.valueOf(operation.get(OperationsConstants.FORMAT.getName()).asString()); 
-        }
-		
 		ModelNode result = context.getResult();
 		String vdbName = operation.get(OperationsConstants.VDB_NAME.getName()).asString();
 		String vdbVersion = operation.get(OperationsConstants.VDB_VERSION.getName()).asString();
@@ -951,7 +946,6 @@ class GetSchema extends BaseOperationHandler<VDBRepository>{
 		builder.addParameter(OperationsConstants.MODEL_NAME);
 		builder.addParameter(OperationsConstants.ENTITY_TYPE);
 		builder.addParameter(OperationsConstants.ENTITY_PATTERN);
-		builder.addParameter(OperationsConstants.FORMAT);
 		builder.setReplyType(ModelType.STRING);
 	}
 }

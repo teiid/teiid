@@ -45,7 +45,11 @@ import org.teiid.metadata.Parser;
 import org.teiid.metadata.Server;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.SystemFunctionManager;
+import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.DatabaseStore;
+import org.teiid.query.metadata.DatabaseStore.Mode;
+import org.teiid.query.metadata.DatabaseUtil;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
@@ -60,6 +64,38 @@ import org.teiid.query.util.CommandContext;
  */
 public class QueryParser implements Parser {
     
+    private static final class SingleSchemaDatabaseStore extends DatabaseStore {
+        private final MetadataFactory factory;
+        private SystemFunctionManager systemFunctionManager;
+        private TransformationMetadata transformationMetadata;
+
+        private SingleSchemaDatabaseStore(MetadataFactory factory, SystemFunctionManager systemFunctionManager) {
+            this.factory = factory;
+            this.systemFunctionManager = systemFunctionManager;
+        }
+
+        @Override
+        public Map<String, Datatype> getRuntimeTypes() {
+            return factory.getDataTypes();
+        }
+
+        @Override
+        public SystemFunctionManager getSystemFunctionManager() {
+        	return systemFunctionManager;
+        }
+
+        @Override
+        protected TransformationMetadata getTransformationMetadata() {
+            return transformationMetadata;
+        }
+        
+        public void setTransformationMetadata(
+                TransformationMetadata transformationMetadata) {
+            this.transformationMetadata = transformationMetadata;
+        }
+        
+    }
+
     private static ThreadLocal<QueryParser> QUERY_PARSER = new ThreadLocal<QueryParser>() {
         /** 
          * @see java.lang.ThreadLocal#initialValue()
@@ -478,20 +514,7 @@ public class QueryParser implements Parser {
     }
     
     public void parseDDL(final MetadataFactory factory, Reader ddl) {
-        DatabaseStore store = new DatabaseStore() {
-            @Override
-            public Map<String, Datatype> getRuntimeTypes() {
-                return factory.getDataTypes();
-            }
-            @Override
-            public Map<String, Datatype> getBuiltinDataTypes() {
-                return factory.getBuiltinDataTypes();
-            } 
-			@Override
-			public SystemFunctionManager getSystemFunctionManager() {
-				return new SystemFunctionManager();
-			}            
-        };
+        SingleSchemaDatabaseStore store = new SingleSchemaDatabaseStore(factory, new SystemFunctionManager(factory.getDataTypes()));
 
         store.startEditing(true);        
         Database db = new Database(factory.getVdbName(), factory.getVdbVersion());
@@ -510,7 +533,17 @@ public class QueryParser implements Parser {
         }
         List<String> servers = Collections.emptyList();
         store.schemaCreated(factory.getSchema(), servers);
+        
+        //with the schema created, create the TransformationMetadata
+        CompositeMetadataStore cms = new CompositeMetadataStore(db.getMetadataStore());
+        TransformationMetadata qmi = new TransformationMetadata(DatabaseUtil.convert(db), cms, null,
+                store.getSystemFunctionManager().getSystemFunctions(), null);
+
+        store.setTransformationMetadata(qmi);
+        
         store.schemaSwitched(factory.getSchema().getName());
+        store.setMode(Mode.SCHEMA);
+        store.setStrict(true);
         try {
             parseDDL(store, ddl);
             Map<String, String> colNs = store.getNameSpaces();
@@ -524,8 +557,15 @@ public class QueryParser implements Parser {
 
     public void parseDDL(DatabaseStore repository, Reader ddl)
             throws MetadataException {
+        SQLParser sqlParser = getSqlParser(ddl);
         try {
-            getSqlParser(ddl).parseMetadata(repository);
+            sqlParser.parseMetadata(repository);
+        } catch (org.teiid.metadata.ParseException e) {
+            throw e;
+        } catch (MetadataException e) {
+            Token t = sqlParser.token;
+            throw new org.teiid.metadata.ParseException(QueryPlugin.Event.TEIID31259, e, 
+                    QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31259, t.image, t.beginLine, t.beginColumn, e.getMessage()));
         } catch (ParseException e) {
             throw new org.teiid.metadata.ParseException(QueryPlugin.Event.TEIID30386, convertParserException(e));
         } finally {

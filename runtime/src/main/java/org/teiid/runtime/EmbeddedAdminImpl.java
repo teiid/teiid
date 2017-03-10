@@ -1,13 +1,10 @@
 package org.teiid.runtime;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.*;
 
-import javax.xml.stream.XMLStreamException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
@@ -25,7 +22,6 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.PropertyDefinitionMetadata;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.adminapi.impl.VDBMetadataParser;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.core.TeiidComponentException;
@@ -36,12 +32,9 @@ import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.service.SessionServiceException;
-import org.teiid.metadata.Database;
-import org.teiid.metadata.MetadataException;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.query.metadata.DDLStringVisitor;
-import org.teiid.query.metadata.DatabaseUtil;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.metadata.VDBResources;
 import org.teiid.translator.TranslatorProperty.PropertyType;
@@ -536,39 +529,10 @@ public class EmbeddedAdminImpl implements Admin {
     @Override
     public String getSchema(String vdbName, String vdbVersion, String modelName, EnumSet<SchemaObjectType> allowedTypes,
             String typeNamePattern) throws AdminException {
-        return getSchema(vdbName, vdbVersion, modelName, allowedTypes, typeNamePattern, ExportFormat.XML);
-    }
-    
-    @Override
-    public String getSchema(String vdbName, String vdbVersion, String modelName, EnumSet<SchemaObjectType> allowedTypes,
-            String typeNamePattern, ExportFormat type) throws AdminException {
-		String ddl = null;
 		VDBMetaData vdb = checkVDB(vdbName, vdbVersion);
 		MetadataStore metadataStore = vdb.getAttachment(TransformationMetadata.class).getMetadataStore();
-		if (modelName != null) {
-    		Schema schema = metadataStore.getSchema(modelName);
-    		ddl = DDLStringVisitor.getDDLString(schema, allowedTypes, typeNamePattern);
-		} else {
-		    if (type == ExportFormat.XML) {
-		        for (ModelMetaData m:vdb.getModelMetaDatas().values()) {
-		            Schema schema = metadataStore.getSchema(m.getName());
-		            ddl = DDLStringVisitor.getDDLString(schema, allowedTypes, typeNamePattern);
-		            m.addSourceMetadata("DDL", ddl);
-		        }
-		        ByteArrayOutputStream out = new ByteArrayOutputStream();
-		        try {
-                    VDBMetadataParser.marshell(vdb, out);
-                    return prettyFormat(new String(out.toByteArray()));
-                } catch (XMLStreamException | IOException | TransformerException e ) {
-                    throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40137, e, "VDB Export failed")); //$NON-NLS-1$
-                }
-		        
-		    } else {
-    		    Database db = DatabaseUtil.convert(vdb, metadataStore);
-    		    ddl = DDLStringVisitor.getDDLString(db);
-		    }
-		}
-		return ddl;
+    	Schema schema = metadataStore.getSchema(modelName);
+    	return DDLStringVisitor.getDDLString(schema, allowedTypes, typeNamePattern);
 	}
 
     public static String prettyFormat(String input) throws TransformerException {

@@ -19,51 +19,65 @@ CREATE SERVER "h2-connector" FOREIGN DATA WRAPPER h2 OPTIONS ("jndi-name" 'java:
 CREATE SERVER "text-connector" FOREIGN DATA WRAPPER file OPTIONS ("jndi-name" 'java:/marketdata-file');
 
 
+--############ Schemas ############
+CREATE SCHEMA MarketData SERVER "text-connector";
+
+IMPORT FOREIGN SCHEMA "%" FROM SERVER "text-connector" INTO MarketData;
+
+CREATE SCHEMA Accounts SERVER "h2-connector" OPTIONS ("importer.useFullSchemaName" 'false');
+
+CREATE VIRTUAL SCHEMA Stocks;
+
+
+--############ Roles ############
+CREATE ROLE ReadOnly WITH ANY AUTHENTICATED;
+
+CREATE ROLE Prices WITH JAAS ROLE prices;
+
+CREATE ROLE ReadWrite WITH JAAS ROLE superuser;
+
+
 --############ Schema:MarketData ############
-CREATE  SCHEMA MarketData SERVER "text-connector";
 SET SCHEMA MarketData;
 
-IMPORT FOREIGN SCHEMA "%" FROM SERVER "text-connector" INTO MarketData OPTIONS (
-);
 
 --############ Schema:Accounts ############
-CREATE  SCHEMA Accounts SERVER "h2-connector";
 SET SCHEMA Accounts;
 
 
         CREATE FOREIGN TABLE CUSTOMER
-			(
-			   SSN char(10),
-			   FIRSTNAME varchar(64),
-			   LASTNAME varchar(64),
-			   ST_ADDRESS varchar(256),
-			   APT_NUMBER varchar(32),
-			   CITY varchar(64),
-			   STATE varchar(32),
-			   ZIPCODE varchar(10),
-			   PHONE varchar(15),
-			   CONSTRAINT CUSTOMER_PK PRIMARY KEY(SSN)
-			);     
-			CREATE FOREIGN TABLE ACCOUNT
-			(
-			   ACCOUNT_ID integer,
-			   SSN char(10),
-			   STATUS char(10),
-			   "TYPE" char(10),
-			   DATEOPENED timestamp,
-			   DATECLOSED timestamp,
-			   CONSTRAINT ACCOUNT_PK PRIMARY KEY(ACCOUNT_ID)
-			);
-			CREATE FOREIGN TABLE  PRODUCT 
-			(
-			   ID integer,
-			   SYMBOL varchar(16),
-			   COMPANY_NAME varchar(256),
-			   CONSTRAINT PRODUCT_PK PRIMARY KEY(ID)
-			);
+            (
+               SSN char(10),
+               FIRSTNAME varchar(64),
+               LASTNAME varchar(64),
+               ST_ADDRESS varchar(256),
+               APT_NUMBER varchar(32),
+               CITY varchar(64),
+               STATE varchar(32),
+               ZIPCODE varchar(10),
+               PHONE varchar(15),
+               CONSTRAINT CUSTOMER_PK PRIMARY KEY(SSN)
+            );     
+            CREATE FOREIGN TABLE ACCOUNT
+            (
+               ACCOUNT_ID integer,
+               SSN char(10),
+               STATUS char(10),
+               "TYPE" char(10),
+               DATEOPENED timestamp,
+               DATECLOSED timestamp,
+               CONSTRAINT ACCOUNT_PK PRIMARY KEY(ACCOUNT_ID)
+            );
+            CREATE FOREIGN TABLE  PRODUCT 
+            (
+               ID integer,
+               SYMBOL varchar(16),
+               COMPANY_NAME varchar(256),
+               CONSTRAINT PRODUCT_PK PRIMARY KEY(ID)
+            );
           
+
 --############ Schema:Stocks ############
-CREATE  SCHEMA Stocks;
 SET SCHEMA Stocks;
 
 
@@ -88,10 +102,8 @@ SET SCHEMA Stocks;
                     FROM StockPrices AS S, Accounts.PRODUCT AS A
                     WHERE S.symbol = A.SYMBOL;                 
          
---############ Roles & Grants ############
-CREATE ROLE ReadOnly WITH ANY AUTHENTICATED;
-CREATE ROLE Prices WITH JAAS ROLE prices;
-CREATE ROLE ReadWrite WITH JAAS ROLE superuser;
+
+--############ Grants ############
 REVOKE SELECT ON SCHEMA Accounts FROM Prices;
 
 GRANT SELECT ON SCHEMA Accounts TO ReadOnly;

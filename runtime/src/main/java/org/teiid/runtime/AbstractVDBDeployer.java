@@ -22,6 +22,7 @@
 
 package org.teiid.runtime;
 
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -47,18 +48,15 @@ import org.teiid.dqp.internal.process.multisource.MultiSourceElement;
 import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.Database;
 import org.teiid.metadata.Datatype;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.VDBResource;
-import org.teiid.query.metadata.ChainingMetadataRepository;
-import org.teiid.query.metadata.DDLFileMetadataRepository;
-import org.teiid.query.metadata.DDLMetadataRepository;
-import org.teiid.query.metadata.DirectQueryMetadataRepository;
-import org.teiid.query.metadata.MaterializationMetadataRepository;
-import org.teiid.query.metadata.NativeMetadataRepository;
-import org.teiid.query.metadata.VDBResources;
+import org.teiid.metadatastore.DeploymentBasedDatabaseStore;
+import org.teiid.query.metadata.*;
+import org.teiid.query.metadata.DatabaseStore.Mode;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
@@ -190,6 +188,7 @@ public abstract class AbstractVDBDeployer {
 			}
 		}
 		if (loadCount.get() == 0) {
+		    processVDBDDL(vdb, store);
 			getVDBRepository().finishDeployment(vdb.getName(), vdb.getVersion());
 			return;
 		}
@@ -241,9 +240,43 @@ public abstract class AbstractVDBDeployer {
 		}
 		
 		if (loadCount.decrementAndGet() == 0 || vdb.getStatus() == Status.FAILED) {
+		    processVDBDDL(vdb, vdbMetadataStore);
 			getVDBRepository().finishDeployment(vdb.getName(), vdb.getVersion());
 		}
 	}
+
+    private void processVDBDDL(final VDBMetaData vdb,
+            final MetadataStore vdbMetadataStore) {
+        if (vdb.getStatus() == Status.FAILED) {
+            return;
+        }
+        String ddl = vdb.getPropertyValue(VDBMetaData.TEIID_DDL);
+        if (ddl != null) {
+            final Database database = DatabaseUtil.convert(vdb, vdbMetadataStore);
+            CompositeMetadataStore compositeStore = new CompositeMetadataStore(vdbMetadataStore);
+            final TransformationMetadata metadata = new TransformationMetadata(vdb, compositeStore, null,
+                    getVDBRepository().getSystemFunctionManager().getSystemFunctions(), null);
+            
+            DeploymentBasedDatabaseStore store = new DeploymentBasedDatabaseStore(getVDBRepository()) {
+                
+                @Override
+                protected TransformationMetadata getTransformationMetadata() {
+                    return metadata;
+                }
+                
+            };
+            store.startEditing(false);
+            store.databaseCreated(database);
+            store.databaseSwitched(database.getName(), database.getVersion());
+            store.setMode(Mode.SCHEMA);
+            try {
+                QueryParser.getQueryParser().parseDDL(store, new StringReader(ddl));
+            } finally {
+                store.stopEditing();
+            }
+            DatabaseUtil.copyDatabaseGrantsAndRoles(database, vdb);
+        }
+    }
 	
 	protected MetadataFactory createMetadataFactory(VDBMetaData vdb,
 			ModelMetaData model, Map<String, ? extends VDBResource> vdbResources) {

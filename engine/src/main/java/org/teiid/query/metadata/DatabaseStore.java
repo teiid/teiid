@@ -21,7 +21,6 @@
  */
 package org.teiid.query.metadata;
 
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -31,36 +30,33 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.logging.LogConstants;
-import org.teiid.logging.LogManager;
 import org.teiid.metadata.*;
 import org.teiid.metadata.Database.ResourceType;
 import org.teiid.metadata.Grant.Permission.Privilege;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.parser.OptionsUtil;
-import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.util.ResolverUtil;
-import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.visitor.SQLStringVisitor;
-import org.teiid.query.util.CommandContext;
 import org.teiid.vdb.runtime.VDBKey;
 
 /**
  * This holds the local state of all Database instances.
  */
-public abstract class DatabaseStore implements DDLProcessor {
+public abstract class DatabaseStore {
+    public static enum Mode {ANY, DOMAIN, SCHEMA, DATABASE_STRUCTURE}
+    
     private ConcurrentHashMap<VDBKey, Database> databases = new ConcurrentHashMap<VDBKey, Database>();
     private Database currentDatabase;
     protected Schema currentSchema;
     private ReentrantLock lock = new ReentrantLock();
     protected int count;
     private boolean persist;
-    private CommandContext commandContext;
+    private Mode mode = Mode.ANY;
+    private boolean seenOther;
+    private boolean strict;
    
     public abstract Map<String, Datatype> getRuntimeTypes();
-    public abstract Map<String, Datatype> getBuiltinDataTypes();
     public abstract SystemFunctionManager getSystemFunctionManager();
     
     public void startEditing(boolean persist) {
@@ -69,6 +65,9 @@ public abstract class DatabaseStore implements DDLProcessor {
         }
         this.lock.lock();
         this.persist = persist;
+        this.mode = Mode.ANY;
+        this.strict = false;
+        this.seenOther = false;
     }
 
     public void stopEditing() throws MetadataException {
@@ -93,7 +92,9 @@ public abstract class DatabaseStore implements DDLProcessor {
     }
     
     public void databaseCreated(Database db) {
-        assertInEditMode();
+        if (!assertInEditMode(Mode.DATABASE_STRUCTURE)) {
+            return;
+        }
         assertGrant(Grant.Permission.Privilege.CREATE, Database.ResourceType.DATABASE, db);
         
         Database database = this.databases.get(vdbKey(db)); 
@@ -106,22 +107,58 @@ public abstract class DatabaseStore implements DDLProcessor {
             throw new MetadataException(QueryPlugin.Event.TEIID31242,
                     QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31242));
         }
-        
         this.databases.put(vdbKey(db), db);
     }
 
     private VDBKey vdbKey(Database db) {
         return new VDBKey(db.getName(), db.getVersion());
     }
+    
+    public void setMode(Mode mode) {
+        this.mode = mode;
+    }
+    
+    public void setStrict(boolean strict) {
+        this.strict = strict;
+    }
 
-    private void assertInEditMode() {
+    protected boolean assertInEditMode(Mode current) {
         if (!this.lock.isHeldByCurrentThread()) {
             throw new MetadataException(QueryPlugin.Event.TEIID31219,
                     QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31219));                                    
         }
+        if (mode == current || mode == Mode.ANY || current == Mode.ANY) {
+            if (seenOther) {
+                throw new MetadataException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31257, current));
+            }
+            return true;
+        }
+        switch (mode) {
+        case DATABASE_STRUCTURE:
+            if (current == Mode.DOMAIN) {
+                if (seenOther) {
+                    throw new MetadataException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31257, current));
+                }
+                return true;
+            }
+            break;
+        case SCHEMA:
+            if (!strict) {
+                return false;
+            }
+            break;
+        default:
+            break;
+        }
+        if (strict) {
+            throw new MetadataException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31258, mode));
+        }
+        seenOther = true;
+        //don't process
+        return false;
     }
     
-    public void databaseDropped(String dbName, String version) {
+    /*public void databaseDropped(String dbName, String version) {
         assertInEditMode();
         Database db = this.databases.get(new VDBKey(dbName,version));
         if (db == null) {
@@ -136,10 +173,12 @@ public abstract class DatabaseStore implements DDLProcessor {
         if (this.currentDatabase != null && this.currentDatabase.getName().equalsIgnoreCase(dbName)) {
             this.currentDatabase = null;
         }
-    }
+    }*/
     
     public void databaseSwitched(String dbName, String version) {
-        assertInEditMode();
+        if (!assertInEditMode(Mode.DATABASE_STRUCTURE)) {
+            return;
+        }
 
         Database db = this.databases.get(new VDBKey(dbName, version));
         if (db == null) {
@@ -160,7 +199,9 @@ public abstract class DatabaseStore implements DDLProcessor {
     }
     
     public void schemaCreated(Schema schema, List<String> serverNames) {
-        assertInEditMode();
+        if (!assertInEditMode(Mode.DATABASE_STRUCTURE)) {
+            return;
+        }
         assertGrant(Grant.Permission.Privilege.CREATE, Database.ResourceType.SCHEMA, schema);
         
         verifyDatabaseExists();
@@ -179,9 +220,10 @@ public abstract class DatabaseStore implements DDLProcessor {
         }
     }
 
-    
     public void schemaDropped(String schemaName) {
-        assertInEditMode();
+        if (!assertInEditMode(Mode.DATABASE_STRUCTURE)) {
+            return;
+        }
         verifySchemaExists(schemaName);
         assertGrant(Grant.Permission.Privilege.DROP, Database.ResourceType.SCHEMA, this.currentDatabase.getSchema(schemaName));
         
@@ -272,22 +314,27 @@ public abstract class DatabaseStore implements DDLProcessor {
     }
     
     public void schemaSwitched(String schemaName) {
-        assertInEditMode();
-        this.currentSchema = verifySchemaExists(schemaName);
+        Schema schema = verifySchemaExists(schemaName); 
+        if (!assertInEditMode(Mode.SCHEMA)) {
+            return;
+        }
+        this.currentSchema = schema;
     }
-
     
     public void dataWrapperCreated(DataWrapper wrapper) {
-        assertInEditMode();
+        if (!assertInEditMode(Mode.DATABASE_STRUCTURE)) {
+            return;
+        }
         assertGrant(Grant.Permission.Privilege.CREATE, Database.ResourceType.DATAWRAPPER, wrapper);
         
         verifyDatabaseExists();
         this.currentDatabase.addDataWrapper(wrapper);
     }
-
     
     public void dataWrapperDropped(String wrapperName) {
-        assertInEditMode();
+        if (!assertInEditMode(Mode.DATABASE_STRUCTURE)) {
+            return;
+        }
         verifyDatabaseExists();
         verifyDataWrapperExists(wrapperName);
         
@@ -304,7 +351,9 @@ public abstract class DatabaseStore implements DDLProcessor {
     }
     
     public void serverCreated(Server server) {
-        assertInEditMode();
+        if (!assertInEditMode(Mode.DATABASE_STRUCTURE)) {
+            return;
+        }
         verifyDatabaseExists();
         verifyDataWrapperExists(server.getDataWrapper());
         
@@ -323,7 +372,9 @@ public abstract class DatabaseStore implements DDLProcessor {
 
     
     public void serverDropped(String serverName) {
-        assertInEditMode();
+        if (!assertInEditMode(Mode.DATABASE_STRUCTURE)) {
+            return;
+        }
         verifyDatabaseExists();
         verifyServerExists(serverName);
         assertGrant(Grant.Permission.Privilege.DROP, Database.ResourceType.SERVER, this.currentDatabase.getServer(serverName));
@@ -365,7 +416,9 @@ public abstract class DatabaseStore implements DDLProcessor {
     }
     
     public void tableCreated(Table table) {
-        assertInEditMode();
+        if (!assertInEditMode(Mode.SCHEMA)) {
+            return;
+        }
         assertGrant(Grant.Permission.Privilege.CREATE, Database.ResourceType.TABLE, table);
         
         Schema s = getCurrentSchema();
@@ -375,20 +428,26 @@ public abstract class DatabaseStore implements DDLProcessor {
     }
     
     public void setViewDefinition(final String tableName, final String definition, boolean updateFunctional) {
-        assertInEditMode();
+        if (!assertInEditMode(Mode.SCHEMA)) {
+            return;
+        }
         assertGrant(Grant.Permission.Privilege.ALTER, Database.ResourceType.TABLE, getCurrentSchema().getTable(tableName));
         verifyTableExists(tableName).setSelectTransformation(definition);
     }
     
     public void tableModified(Table table) {
-        assertInEditMode();
+        if (!assertInEditMode(Mode.SCHEMA)) {
+            return;
+        }
         assertGrant(Grant.Permission.Privilege.ALTER, Database.ResourceType.TABLE, table);
         
         verifyTableExists(table.getName());
     }    
     
     public void tableDropped(String tableName) {
-        assertInEditMode();
+        if (!assertInEditMode(Mode.SCHEMA)) {
+            return;
+        }
         verifyTableExists(tableName);
         assertGrant(Grant.Permission.Privilege.DROP, Database.ResourceType.TABLE, getCurrentSchema().getTable(tableName));
         
@@ -397,7 +456,9 @@ public abstract class DatabaseStore implements DDLProcessor {
     }
 
     public void procedureCreated(Procedure procedure) {
-        assertInEditMode();
+        if (!assertInEditMode(Mode.SCHEMA)) {
+            return;
+        }
         assertGrant(Grant.Permission.Privilege.CREATE, Database.ResourceType.PROCEDURE, procedure);
         
         Schema s = getCurrentSchema();
@@ -413,7 +474,9 @@ public abstract class DatabaseStore implements DDLProcessor {
     }
     
     public void setProcedureDefinition(final String procedureName, final String definition, boolean updateFunctional) {
-        assertInEditMode();
+        if (!assertInEditMode(Mode.SCHEMA)) {
+            return;
+        }
         Procedure procedure = verifyProcedureExists(procedureName);
         
         assertGrant(Grant.Permission.Privilege.CREATE, Database.ResourceType.PROCEDURE, procedure);
@@ -422,13 +485,17 @@ public abstract class DatabaseStore implements DDLProcessor {
     }
     
     public void procedureModified(Procedure procedure) {
-        assertInEditMode();
+        if (!assertInEditMode(Mode.SCHEMA)) {
+            return;
+        }
         verifyProcedureExists(procedure.getName());
         assertGrant(Grant.Permission.Privilege.ALTER, Database.ResourceType.PROCEDURE, procedure);
     }     
 
     public void procedureDropped(String procedureName) {
-        assertInEditMode();
+        if (!assertInEditMode(Mode.SCHEMA)) {
+            return;
+        }
         verifyProcedureExists(procedureName);
 		assertGrant(Grant.Permission.Privilege.DROP, Database.ResourceType.PROCEDURE,
 				getCurrentSchema().getProcedure(procedureName));
@@ -438,7 +505,9 @@ public abstract class DatabaseStore implements DDLProcessor {
     }
     
     public void functionCreated(FunctionMethod function) {
-        assertInEditMode();
+        if (!assertInEditMode(Mode.SCHEMA)) {
+            return;
+        }
 		assertGrant(Grant.Permission.Privilege.CREATE, Database.ResourceType.FUNCTION, function);
         
         Schema s = getCurrentSchema();
@@ -453,7 +522,9 @@ public abstract class DatabaseStore implements DDLProcessor {
     }
 
     public void functionDropped(String functionName) {
-        assertInEditMode();
+        if (!assertInEditMode(Mode.SCHEMA)) {
+            return;
+        }
         FunctionMethod fm = verifyFunctionExists(functionName);
         assertGrant(Grant.Permission.Privilege.DROP, Database.ResourceType.FUNCTION, fm);
 
@@ -463,7 +534,9 @@ public abstract class DatabaseStore implements DDLProcessor {
     
     public void setTableTriggerPlan(final String triggerName, final String tableName, final Table.TriggerEvent event,
             final String triggerDefinition, boolean isAfter) {
-        assertInEditMode();
+        if (!assertInEditMode(Mode.SCHEMA)) {
+            return;
+        }
         Table table = getCurrentSchema().getTable(tableName);
         if (table == null) {
             throw new MetadataException(QueryPlugin.Util.getString("SQLParser.group_doesnot_exist", tableName)); //$NON-NLS-1$
@@ -503,7 +576,9 @@ public abstract class DatabaseStore implements DDLProcessor {
     
 	public void enableTableTriggerPlan(final String tableName, final Table.TriggerEvent event, final boolean enable,
 			boolean updateFunctional) {
-        assertInEditMode();
+        if (!assertInEditMode(Mode.SCHEMA)) {
+            return;
+        }
         Table table = getCurrentSchema().getTable(tableName);
         if (table == null || !table.isVirtual()) {
             throw new org.teiid.metadata.MetadataException(QueryPlugin.Event.TEIID31244,
@@ -527,7 +602,9 @@ public abstract class DatabaseStore implements DDLProcessor {
     }    
 
     public void createNameSpace(String prefix, String uri) {
-        assertInEditMode();
+        if (!assertInEditMode(Mode.ANY)) {
+            return;
+        }
         getCurrentDatabase().addNamespace(prefix, uri);
     }
     
@@ -536,7 +613,9 @@ public abstract class DatabaseStore implements DDLProcessor {
     }
     
     public void addOrSetOption(String recordName, Database.ResourceType type, String key, String value, boolean reload) {
-        assertInEditMode();
+        if (!assertInEditMode(Mode.SCHEMA)) {
+            return;
+        }
         key = getCurrentDatabase().resolveNamespaceInPropertyKey(key);
         AbstractMetadataRecord record = getSchemaRecord(recordName, type);
         record.setProperty(key, value);
@@ -544,14 +623,7 @@ public abstract class DatabaseStore implements DDLProcessor {
     }
 
     public AbstractMetadataRecord getSchemaRecord(String name, Database.ResourceType type) {
-        Database database = getCurrentDatabase();
-        
-        CompositeMetadataStore store = new CompositeMetadataStore(database.getMetadataStore());
-        //grants are already stored on the VDBMetaData
-        store.getGrants().clear();
-        TransformationMetadata qmi = new TransformationMetadata(DatabaseUtil.convert(database), store, null,
-                getSystemFunctionManager().getSystemFunctions(), null);
-
+        TransformationMetadata qmi = getTransformationMetadata();
         try {
             switch (type) {
             case TABLE:
@@ -615,19 +687,25 @@ public abstract class DatabaseStore implements DDLProcessor {
         }
         return null;
     }
-
+    
+    protected TransformationMetadata getTransformationMetadata() {
+        throw new IllegalStateException("TransformationMetadata not yet available"); //$NON-NLS-1$
+    }
     
     public void removeOption(String recordName, Database.ResourceType type, String key) {
-        assertInEditMode();
+        if (!assertInEditMode(Mode.SCHEMA)) {
+            return;
+        }
         key = getCurrentDatabase().resolveNamespaceInPropertyKey(key);
         AbstractMetadataRecord record = getSchemaRecord(recordName, type);
         OptionsUtil.removeOption(record, key);
     }
     
-    
 	public void addOrSetOption(String recordName, Database.ResourceType type, String childName,
 			Database.ResourceType childType, String key, String value, boolean reload) {
-        assertInEditMode();
+        if (!assertInEditMode(Mode.SCHEMA)) {
+            return;
+        }
         key = getCurrentDatabase().resolveNamespaceInPropertyKey(key);
         AbstractMetadataRecord record = getSchemaRecord(recordName, type);
         if (record instanceof Table) {
@@ -646,13 +724,17 @@ public abstract class DatabaseStore implements DDLProcessor {
             }
             p.setProperty(key, value);
             OptionsUtil.setOptions(p);            
+        } else {
+            //exception
         }
     }
     
     
 	public void removeOption(String recordName, Database.ResourceType type, String childName,
 			Database.ResourceType childType, String key) {
-        assertInEditMode();
+        if (!assertInEditMode(Mode.SCHEMA)) {
+            return;
+        }
         key = getCurrentDatabase().resolveNamespaceInPropertyKey(key);
         AbstractMetadataRecord record = getSchemaRecord(recordName, type);
         if (record instanceof Table) {
@@ -669,6 +751,8 @@ public abstract class DatabaseStore implements DDLProcessor {
                         QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31249, childName, recordName));                
             }
             OptionsUtil.removeOption(p, key);            
+        } else {
+            //exception
         }
     }
     
@@ -693,7 +777,9 @@ public abstract class DatabaseStore implements DDLProcessor {
     }
     
     public void roleCreated(Role role) {
-        assertInEditMode();
+        if (!assertInEditMode(Mode.DATABASE_STRUCTURE)) {
+            return;
+        }
         verifyDatabaseExists();
         assertGrant(Grant.Permission.Privilege.CREATE, Database.ResourceType.ROLE, role);
         
@@ -701,7 +787,9 @@ public abstract class DatabaseStore implements DDLProcessor {
     }
     
     public void roleDropped(String roleName) {
-        assertInEditMode();
+        if (!assertInEditMode(Mode.DATABASE_STRUCTURE)) {
+            return;
+        }
         Role role = verifyRoleExists(roleName);
         assertGrant(Grant.Permission.Privilege.DROP, Database.ResourceType.ROLE, role);
         
@@ -709,7 +797,9 @@ public abstract class DatabaseStore implements DDLProcessor {
     }
     
 	public void grantCreated(Grant grant) {
-        assertInEditMode();
+        if (!assertInEditMode(Mode.SCHEMA)) {
+            return;
+        }
         verifyDatabaseExists();
         verifyRoleExists(grant.getRole());
         assertGrant(Grant.Permission.Privilege.CREATE, Database.ResourceType.GRANT, grant);
@@ -718,15 +808,15 @@ public abstract class DatabaseStore implements DDLProcessor {
             if (p.getResourceType() == ResourceType.LANGUAGE) {
                 continue;
             }
-            AbstractMetadataRecord record = getSchemaRecord(p.getResourceName(), p.getResourceType());
-            p.setResourceName(record.getFullName());
         }
         
         this.currentDatabase.addGrant(grant);
     }
     
     public void grantRevoked(Grant grant) {
-        assertInEditMode();
+        if (!assertInEditMode(Mode.SCHEMA)) {
+            return;
+        }
         verifyDatabaseExists();
         verifyRoleExists(grant.getRole());
         assertGrant(Grant.Permission.Privilege.DROP, Database.ResourceType.GRANT, grant);
@@ -735,16 +825,15 @@ public abstract class DatabaseStore implements DDLProcessor {
             if (p.getResourceType() == ResourceType.LANGUAGE) {
                 continue;
             }
-            AbstractMetadataRecord record = getSchemaRecord(p.getResourceName(), p.getResourceType());
-            p.setResourceName(record.getFullName());
         }
         
         this.currentDatabase.revokeGrant(grant);
     }
     
     public static MetadataFactory createMF(DatabaseStore events) {
+        //it's possible that the schema won't be set as we call this from the parsing context - statement will effectively be later ignored
         MetadataFactory mf = new MetadataFactory(events.getCurrentDatabase().getName(), events.getCurrentDatabase().getVersion(),
-                events.getCurrentSchema().getName(), events.getRuntimeTypes(), new Properties(), null);
+                events.currentSchema==null?"undefined":events.getCurrentSchema().getName(), events.getRuntimeTypes(), new Properties(), null); //$NON-NLS-1$
         Map<String, String> nss = events.getNameSpaces();
         for (String key:nss.keySet()) {
             mf.addNamespace(key, nss.get(key));    
@@ -788,47 +877,6 @@ public abstract class DatabaseStore implements DDLProcessor {
         }
         msb = longHash(schema.getName(), msb);
         schema.setUUID("tid:" + MetadataFactory.hex(msb, 12)); //$NON-NLS-1$        
-    }
-    
-    @Override
-    public boolean vdbExists(String dbName, String version) {
-        return getDatabase(dbName, version) != null;
-    }
-    
-    @Override
-	public String processDDL(String dbName, String version, String schema, String ddl, boolean persist,
-			CommandContext commandContext) throws MetadataException {
-        
-        StringBuilder sb = new StringBuilder();
-        startEditing(persist);
-        try {
-        	this.commandContext = commandContext;
-            QueryParser parser = QueryParser.getQueryParser();
-            if (dbName != null) {
-                String str = "USE DATABASE "+SQLStringVisitor.escapeSinglePart(dbName)+" VERSION "+new Constant(version); //$NON-NLS-1$ //$NON-NLS-2$
-                sb.append(str);
-                logNParse(parser, this, str);
-                if (schema != null) {
-                    str = "SET SCHEMA "+SQLStringVisitor.escapeSinglePart(schema);  //$NON-NLS-1$
-                    sb.append(";"); //$NON-NLS-1$
-                    sb.append(str);
-                    logNParse(parser, this, str);
-                }
-            }
-            if (sb.length() > 0) {
-                sb.append(";"); //$NON-NLS-1$
-            }
-            sb.append(ddl);
-            logNParse(parser, this, ddl);
-            return sb.toString();
-        } finally {
-        	this.commandContext = null;
-            stopEditing();
-        }        
-    }
-    private static void logNParse(QueryParser parser, DatabaseStore store, String sql) {
-        LogManager.logDetail(LogConstants.CTX_METASTORE, "DDL: ", sql); //$NON-NLS-1$
-        parser.parseDDL(store, new StringReader(sql));
     }
     
 	private void assertGrant(Privilege allowence, ResourceType type, AbstractMetadataRecord record) {

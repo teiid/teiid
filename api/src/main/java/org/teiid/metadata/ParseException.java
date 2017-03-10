@@ -38,4 +38,9 @@ public class ParseException extends MetadataException {
 	public ParseException(String message) {
 		super(message);
 	}
+
+    public ParseException(Event event,
+            Throwable cause, String message) {
+        super(event, cause, message);
+    }
 }
