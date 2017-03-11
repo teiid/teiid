@@ -2059,11 +2059,8 @@ public class AdminFactory {
 			params.add(vdbName);
 			params.add("vdb-version");
 			params.add(vdbVersion);
-			if (modelName != null) {
-    			params.add("model-name");
-    			params.add(modelName);
-			}
-            params.add("format");
+			params.add("model-name");
+			params.add(modelName);
 			
 			if (allowedTypes != null) {
 				params.add("entity-type");
