@@ -62,7 +62,6 @@ import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.adminapi.jboss.AdminFactory;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.TeiidDriver;
-import org.teiid.runtime.EmbeddedConfiguration;
 
 @RunWith(Arquillian.class)
 @SuppressWarnings("nls")
@@ -813,6 +812,8 @@ public class IntegrationTestDeployment {
         out.close();
         
         admin.deploy("some.vdb", new FileInputStream(f));
+        
+        AdminUtil.waitForVDBLoad(admin, "test2", "1", 3);
         Connection conn = TeiidDriver.getInstance().connect("jdbc:teiid:test2@mm://localhost:31000;user=user;password=user", null);
         ResultSet rs = conn.createStatement().executeQuery("select * from helloworld");
         rs.next();

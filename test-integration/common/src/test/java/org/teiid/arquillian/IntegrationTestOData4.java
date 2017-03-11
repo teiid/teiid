@@ -209,7 +209,7 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
 		
 		admin.deploy("loopy-vdb.xml", new ReaderInputStream(new StringReader(vdb), Charset.forName("UTF-8")));
 		
-		Thread.sleep(2000);
+		assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1, 3));
 		
 		WebClient client = WebClient.create("http://localhost:8080/odata4/loopy.1/MarketData/$metadata");
 		client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
@@ -234,7 +234,7 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
         
         admin.deploy("loopy-vdb.xml", new ReaderInputStream(new StringReader(vdb), Charset.forName("UTF-8")));
         
-        Thread.sleep(2000);
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1, 3));
         
         WebClient client = WebClient.create("http://localhost:8080/odata4/loopy.1/MarketData/$metadata");
         Response response = client.invoke("OPTIONS", null);
@@ -292,6 +292,8 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
                 "</vdb>";
 
         admin.deploy("loopy-vdb.xml", new ByteArrayInputStream(vdb.getBytes()));
+        
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1, 3));
 
         WebClient client = WebClient.create("http://localhost:8080/odata4/loopy/gzip/t");
         client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes()));
@@ -333,6 +335,8 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
 
         admin.deploy("loopy-vdb.xml", new ByteArrayInputStream(vdb.getBytes()));
 
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1, 3));
+        
         String data = "{\"e\":1}";
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         GZIPOutputStream gos = new GZIPOutputStream(bos);
@@ -346,7 +350,7 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
         client.header("Content-Type", "application/json");
 
         Response response = client.put(data);
-        assertEquals("The request should succeed.", 304, response.getStatus());
+        assertEquals("The request should succeed." + response.readEntity(String.class), 304, response.getStatus());
 
         response = client.put(new ByteArrayInputStream(gzipData));
         assertEquals("The request should not succeed. Data is in GZIP format but header not specified.", 400, response.getStatus());
