@@ -83,7 +83,10 @@ class MaterializationManagementService implements Service<MaterializationManager
 	public void stop(StopContext context) {
 		scheduler.shutdownNow();
 		vdbRepositoryInjector.getValue().removeListener(manager);
-		nodeTrackerInjector.getValue().removeNodeListener(manager);
+		NodeTracker value = nodeTrackerInjector.getValue();
+		if (value != null) {
+		    value.removeNodeListener(manager);
+		}
 	}
 
 	@Override
