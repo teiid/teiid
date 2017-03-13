@@ -272,13 +272,13 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
         supportedFunctions.add("LENGTH"); //$NON-NLS-1$
         supportedFunctions.add(SourceSystemFunctions.LOCATE);
         supportedFunctions.add("LOWER"); //$NON-NLS-1$
-        //supportedFunctons.add("LPAD"); //$NON-NLS-1$
+        supportedFunctions.add("LPAD"); //$NON-NLS-1$
         supportedFunctions.add("LTRIM"); //$NON-NLS-1$
         supportedFunctions.add("REPEAT"); //$NON-NLS-1$
         //supportedFunctions.add("RAND"); //$NON-NLS-1$
         supportedFunctions.add("REPLACE"); //$NON-NLS-1$
         supportedFunctions.add("RIGHT"); //$NON-NLS-1$
-        //supportedFunctons.add("RPAD"); //$NON-NLS-1$
+        supportedFunctions.add("RPAD"); //$NON-NLS-1$
         supportedFunctions.add("RTRIM"); //$NON-NLS-1$
         supportedFunctions.add("SPACE"); //$NON-NLS-1$
         supportedFunctions.add("SUBSTRING"); //$NON-NLS-1$
