@@ -53,9 +53,22 @@ public class ByteLobChunkStream implements LobChunkProducer {
                 
         // read contents from the stream
         byte[] cbuf = new byte[this.chunkSize];
-        int read = this.stream.read(cbuf);
-        if (read == -1) {
-            return new LobChunk(new byte[0], true);
+        int start = 0;
+        int read = 0;
+        while (true) {
+            int currentRead = this.stream.read(cbuf, start, cbuf.length - start);
+            if (currentRead == -1) {
+                if (start == 0) {
+                    return new LobChunk(new byte[0], true);
+                }
+                break;
+            }
+            read += currentRead;
+            if (read < this.chunkSize) {
+                start = read;
+            } else {
+                break;
+            }
         }
         boolean isLast = false;
         if (read != this.chunkSize) {
