@@ -53,6 +53,7 @@ import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.EscapeSyntaxModifier;
@@ -158,6 +159,24 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
         		}
         	});
         }
+        registerFunctionModifier(SourceSystemFunctions.LPAD, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                List<Expression> params = function.getParameters();
+                return Arrays.asList("RIGHT(REPLICATE(", //$NON-NLS-1$
+                        params.size()>2?params.get(2):new Literal(" ", TypeFacility.RUNTIME_TYPES.STRING), ", ", //$NON-NLS-1$ //$NON-NLS-2$
+                                params.get(1), ") + ", params.get(0), ", ", params.get(1), ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            }
+        }); 
+        registerFunctionModifier(SourceSystemFunctions.RPAD, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                List<Expression> params = function.getParameters();
+                return Arrays.asList("LEFT(", params.get(0), " + REPLICATE(", //$NON-NLS-1$ //$NON-NLS-2$ 
+                        params.size()>2?params.get(2):new Literal(" ", TypeFacility.RUNTIME_TYPES.STRING), ", ", //$NON-NLS-1$ //$NON-NLS-2$ 
+                                params.get(1), "), ", params.get(1), ")"); //$NON-NLS-1$ //$NON-NLS-2$
+            }
+        });
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("isnull")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$ 
@@ -325,6 +344,7 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
         supportedFunctions.add("LEFT"); //$NON-NLS-1$
         supportedFunctions.add("LENGTH"); //$NON-NLS-1$
         supportedFunctions.add("LOWER"); //$NON-NLS-1$
+        supportedFunctions.add("LPAD"); //$NON-NLS-1$
         supportedFunctions.add("LTRIM"); //$NON-NLS-1$
         supportedFunctions.add("REPEAT"); //$NON-NLS-1$
         //supportedFunctions.add("RAND"); //$NON-NLS-1$
@@ -346,6 +366,7 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
         supportedFunctions.add("MONTHNAME"); //$NON-NLS-1$
         //supportedFunctions.add("NOW"); //$NON-NLS-1$
         supportedFunctions.add("QUARTER"); //$NON-NLS-1$
+        supportedFunctions.add("RPAD"); //$NON-NLS-1$
         supportedFunctions.add("SECOND"); //$NON-NLS-1$
         supportedFunctions.add("TIMESTAMPADD"); //$NON-NLS-1$
         supportedFunctions.add("TIMESTAMPDIFF"); //$NON-NLS-1$
