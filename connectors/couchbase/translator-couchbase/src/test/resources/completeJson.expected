@@ -1,7 +1,7 @@
 SET NAMESPACE 'http://www.teiid.org/translator/couchbase/2017' AS teiid_couchbase;
 
 CREATE FOREIGN TABLE test (
-	PK string OPTIONS (UPDATABLE FALSE),
+	documentId string OPTIONS (UPDATABLE FALSE),
 	attr_double double,
 	attr_number_short short,
 	attr_string string,
@@ -15,16 +15,17 @@ CREATE FOREIGN TABLE test (
 	attr_null object,
 	attr_number_byte byte,
 	attr_number_double double,
-	CONSTRAINT PK0 PRIMARY KEY(PK)
+	CONSTRAINT PK0 PRIMARY KEY(documentId)
 ) OPTIONS (NAMEINSOURCE '`test`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false', "teiid_couchbase:ISTOPTABLE" 'true');
 
 CREATE FOREIGN TABLE test_attr_jsonArray (
-	PK string OPTIONS (UPDATABLE FALSE),
-	attr_jsonArray object
+	documentId string OPTIONS (UPDATABLE FALSE),
+	attr_jsonArray object,
+	FOREIGN KEY(documentId) REFERENCES test 
 ) OPTIONS (NAMEINSOURCE '`test`.`attr_jsonArray`', UPDATABLE TRUE, "teiid_couchbase:ARRAYTABLEGROUP" 'attr_jsonArray', "teiid_couchbase:ISARRAYTABLE" 'true', "teiid_couchbase:ISTOPTABLE" 'false');
 
 CREATE FOREIGN TABLE test_attr_jsonObject (
-	PK string OPTIONS (UPDATABLE FALSE),
+	documentId string OPTIONS (UPDATABLE FALSE),
 	attr_double double,
 	attr_number_short short,
 	attr_string string,
@@ -37,5 +38,6 @@ CREATE FOREIGN TABLE test_attr_jsonObject (
 	attr_number_float float,
 	attr_null object,
 	attr_number_byte byte,
-	attr_number_double double
+	attr_number_double double,
+	FOREIGN KEY(documentId) REFERENCES test 
 ) OPTIONS (NAMEINSOURCE '`test`.`attr_jsonObject`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false', "teiid_couchbase:ISTOPTABLE" 'false');

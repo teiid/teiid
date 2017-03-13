@@ -41,7 +41,7 @@ import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.IS_TOP_T
 import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.ARRAY_TABLE_GROUP;
 import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.TRUE;
 import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.FALSE;
-import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.PK;
+import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.DOCUMENT_ID;
 import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.buildNameInSource;
 
 import java.util.ArrayList;
@@ -124,7 +124,7 @@ public class N1QLVisitor extends SQLStringVisitor{
             String isArrayTable = obj.getTable().getMetadataObject().getProperty(IS_ARRAY_TABLE, false);
             String isTopTable = obj.getTable().getMetadataObject().getProperty(IS_TOP_TABLE, false);
             
-            if(obj.getName().equals(PK)) {
+            if(obj.getName().equals(DOCUMENT_ID)) {
                 if(recordColumnName) {
                     buffer.append("META().id AS PK"); //$NON-NLS-1$ 
                     selectColumns.add("PK"); //$NON-NLS-1$ 

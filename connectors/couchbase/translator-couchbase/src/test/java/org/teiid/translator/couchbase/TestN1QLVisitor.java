@@ -26,9 +26,11 @@ import static org.junit.Assert.*;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.CoreConstants;
+import org.teiid.couchbase.CouchbaseConnection;
 import org.teiid.dqp.internal.datamgr.RuntimeMetadataImpl;
 import org.teiid.language.Command;
 import org.teiid.metadata.MetadataException;
@@ -51,14 +53,16 @@ public class TestN1QLVisitor {
 
             CouchbaseMetadataProcessor mp = new CouchbaseMetadataProcessor();  
             MetadataFactory mf = new MetadataFactory("couchbase", 1, SystemMetadata.getInstance().getRuntimeTypeMap(), mmd);
-            mp.addTable(mf, KEYSPACE, formCustomer(), null);
-            mp.addTable(mf, KEYSPACE, formOder(), null);
-            mp.addTable(mf, KEYSPACE, formSimpleJson(), null);
-            mp.addTable(mf, KEYSPACE, formJson(), null);
-            mp.addTable(mf, KEYSPACE, formArray(), null);
-            mp.addTable(mf, KEYSPACE, layerJson(), null);
-            mp.addTable(mf, KEYSPACE, layerArray(), null);
-            mp.addTable(mf, KEYSPACE, nestedArray(), null);
+            CouchbaseConnection conn = Mockito.mock(CouchbaseConnection.class);
+            Mockito.stub(conn.getKeyspaceName()).toReturn(KEYSPACE);
+            mp.addTable(conn, mf, KEYSPACE, formCustomer(), null);
+            mp.addTable(conn, mf, KEYSPACE, formOder(), null);
+            mp.addTable(conn, mf, KEYSPACE, formSimpleJson(), null);
+            mp.addTable(conn, mf, KEYSPACE, formJson(), null);
+            mp.addTable(conn, mf, KEYSPACE, formArray(), null);
+            mp.addTable(conn, mf, KEYSPACE, layerJson(), null);
+            mp.addTable(conn, mf, KEYSPACE, layerArray(), null);
+            mp.addTable(conn, mf, KEYSPACE, nestedArray(), null);
             mp.addProcedures(mf, null);
 
             TransformationMetadata tm = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "x");
@@ -138,10 +142,10 @@ public class TestN1QLVisitor {
     @Test
     public void testPKColumn() throws TranslatorException {
         
-        String sql = "SELECT PK FROM test";
+        String sql = "SELECT documentId FROM test";
         helpTest(sql, "SELECT META().id AS PK FROM `test`");
         
-        sql = "SELECT PK FROM test_CreditCard";
+        sql = "SELECT documentId FROM test_CreditCard";
         helpTest(sql, "SELECT META().id AS PK FROM `test`.`CreditCard`");
     }
     
@@ -184,7 +188,7 @@ public class TestN1QLVisitor {
         String sql = "SELECT Name, Type  FROM test WHERE Name = 'John Doe'";
         helpTest(sql, "SELECT `test`.Name, `test`.Type FROM `test` WHERE `test`.Name = 'John Doe'");
         
-        sql = "SELECT Name, Type  FROM test WHERE PK = 'customer'";
+        sql = "SELECT Name, Type  FROM test WHERE documentId = 'customer'";
         helpTest(sql, "SELECT `test`.Name, `test`.Type FROM `test` WHERE META().id = 'customer'");
     }
     

@@ -34,7 +34,9 @@ import javax.resource.ResourceException;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.couchbase.CouchbaseConnection;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.metadata.SystemMetadata;
@@ -52,9 +54,11 @@ public class TestCouchbaseMetadataProcessor {
         
         CouchbaseMetadataProcessor metadataProcessor = new CouchbaseMetadataProcessor();  
         MetadataFactory mf = new MetadataFactory("vdb", 1, "couchbase", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
+        CouchbaseConnection conn = Mockito.mock(CouchbaseConnection.class);
+        Mockito.stub(conn.getKeyspaceName()).toReturn(KEYSPACE);
         // Two documents under keyspace
-        metadataProcessor.addTable(mf, KEYSPACE, formCustomer(), null);
-        metadataProcessor.addTable(mf, KEYSPACE, formOder(), null);
+        metadataProcessor.addTable(conn, mf, KEYSPACE, formCustomer(), null);
+        metadataProcessor.addTable(conn, mf, KEYSPACE, formOder(), null);
         helpTest("customerOrder.expected", mf);
     }
     
@@ -63,11 +67,13 @@ public class TestCouchbaseMetadataProcessor {
         
         CouchbaseMetadataProcessor metadataProcessor = new CouchbaseMetadataProcessor();  
         MetadataFactory mf = new MetadataFactory("vdb", 1, "couchbase", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
+        CouchbaseConnection conn = Mockito.mock(CouchbaseConnection.class);
+        Mockito.stub(conn.getKeyspaceName()).toReturn(KEYSPACE);
         // multiple documents with same structure under keyspace
-        metadataProcessor.addTable(mf, KEYSPACE, formCustomer(), null);
-        metadataProcessor.addTable(mf, KEYSPACE, formCustomer(), null);
-        metadataProcessor.addTable(mf, KEYSPACE, formOder(), null);
-        metadataProcessor.addTable(mf, KEYSPACE, formOder(), null);
+        metadataProcessor.addTable(conn, mf, KEYSPACE, formCustomer(), null);
+        metadataProcessor.addTable(conn, mf, KEYSPACE, formCustomer(), null);
+        metadataProcessor.addTable(conn, mf, KEYSPACE, formOder(), null);
+        metadataProcessor.addTable(conn, mf, KEYSPACE, formOder(), null);
         helpTest("customerOrder.expected", mf);
     }
     
@@ -76,7 +82,9 @@ public class TestCouchbaseMetadataProcessor {
         
         CouchbaseMetadataProcessor metadataProcessor = new CouchbaseMetadataProcessor();  
         MetadataFactory mf = new MetadataFactory("vdb", 1, "couchbase", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
-        metadataProcessor.addTable(mf, KEYSPACE, layerJson(), null);
+        CouchbaseConnection conn = Mockito.mock(CouchbaseConnection.class);
+        Mockito.stub(conn.getKeyspaceName()).toReturn(KEYSPACE);
+        metadataProcessor.addTable(conn, mf, KEYSPACE, layerJson(), null);
         helpTest("layerJson.expected", mf);
     }
     
@@ -84,7 +92,9 @@ public class TestCouchbaseMetadataProcessor {
     public void testMetadataLayerArray() throws ResourceException {
         CouchbaseMetadataProcessor metadataProcessor = new CouchbaseMetadataProcessor();  
         MetadataFactory mf = new MetadataFactory("vdb", 1, "couchbase", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
-        metadataProcessor.addTable(mf,  KEYSPACE, layerArray(), null);
+        CouchbaseConnection conn = Mockito.mock(CouchbaseConnection.class);
+        Mockito.stub(conn.getKeyspaceName()).toReturn(KEYSPACE);
+        metadataProcessor.addTable(conn, mf,  KEYSPACE, layerArray(), null);
         helpTest("layerArray.expected", mf);
     }
     
@@ -92,7 +102,9 @@ public class TestCouchbaseMetadataProcessor {
     public void testMetadataComplexArray() throws ResourceException {
         CouchbaseMetadataProcessor metadataProcessor = new CouchbaseMetadataProcessor();  
         MetadataFactory mf = new MetadataFactory("vdb", 1, "couchbase", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
-        metadataProcessor.addTable(mf,  KEYSPACE, formArray(), null);
+        CouchbaseConnection conn = Mockito.mock(CouchbaseConnection.class);
+        Mockito.stub(conn.getKeyspaceName()).toReturn(KEYSPACE);
+        metadataProcessor.addTable(conn, mf,  KEYSPACE, formArray(), null);
         helpTest("complexArray.expected", mf);
     }
     
@@ -101,7 +113,9 @@ public class TestCouchbaseMetadataProcessor {
         
         CouchbaseMetadataProcessor metadataProcessor = new CouchbaseMetadataProcessor();  
         MetadataFactory mf = new MetadataFactory("vdb", 1, "couchbase", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
-        metadataProcessor.addTable(mf, KEYSPACE, formSimpleJson(), null);
+        CouchbaseConnection conn = Mockito.mock(CouchbaseConnection.class);
+        Mockito.stub(conn.getKeyspaceName()).toReturn(KEYSPACE);
+        metadataProcessor.addTable(conn, mf, KEYSPACE, formSimpleJson(), null);
         helpTest("simpleJson.expected", mf);
     }
     
@@ -110,7 +124,9 @@ public class TestCouchbaseMetadataProcessor {
         
         CouchbaseMetadataProcessor metadataProcessor = new CouchbaseMetadataProcessor();  
         MetadataFactory mf = new MetadataFactory("vdb", 1, "couchbase", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
-        metadataProcessor.addTable(mf, KEYSPACE, formJson(), null);
+        CouchbaseConnection conn = Mockito.mock(CouchbaseConnection.class);
+        Mockito.stub(conn.getKeyspaceName()).toReturn(KEYSPACE);
+        metadataProcessor.addTable(conn, mf, KEYSPACE, formJson(), null);
         helpTest("completeJson.expected", mf);
     }
     
@@ -119,7 +135,9 @@ public class TestCouchbaseMetadataProcessor {
         
         CouchbaseMetadataProcessor metadataProcessor = new CouchbaseMetadataProcessor();  
         MetadataFactory mf = new MetadataFactory("vdb", 1, "couchbase", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
-        metadataProcessor.addTable(mf, KEYSPACE, nestedArray(), null);
+        CouchbaseConnection conn = Mockito.mock(CouchbaseConnection.class);
+        Mockito.stub(conn.getKeyspaceName()).toReturn(KEYSPACE);
+        metadataProcessor.addTable(conn, mf, KEYSPACE, nestedArray(), null);
         helpTest("nestedArray.expected", mf);
     }
 
@@ -129,11 +147,13 @@ public class TestCouchbaseMetadataProcessor {
         
         CouchbaseMetadataProcessor metadataProcessor = new CouchbaseMetadataProcessor();  
         MetadataFactory mf = new MetadataFactory("vdb", 1, "couchbase", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
+        CouchbaseConnection conn = Mockito.mock(CouchbaseConnection.class);
+        Mockito.stub(conn.getKeyspaceName()).toReturn(KEYSPACE);
         JsonObject json = JsonObject.create()
                 .put("name", "value")
                 .put("Name", "value")
                 .put("nAmE", "value");
-        metadataProcessor.addTable(mf, KEYSPACE, json, null);
+        metadataProcessor.addTable(conn, mf, KEYSPACE, json, null);
         helpTest("TODO.expected", mf);
     }
     

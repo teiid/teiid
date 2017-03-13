@@ -68,7 +68,8 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
     public static final String TRUE = "true"; //$NON-NLS-1$
     public static final String FALSE = "false"; //$NON-NLS-1$
     
-    public static final String PK = "PK"; //$NON-NLS-1$
+//    public static final String PK = "PK"; //$NON-NLS-1$
+    public static final String DOCUMENT_ID = "documentId"; //$NON-NLS-1$
     
     public static final String ID = "id"; //$NON-NLS-1$ 
     public static final String RESULT = "result"; //$NON-NLS-1$ 
@@ -89,14 +90,14 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
         while(result.hasNext()) {
             N1qlQueryRow row = result.next();
             JsonObject doc = row.value().getObject(JSON);
-            addTable(metadataFactory, keyspace, doc, null);       
+            addTable(connection, metadataFactory, keyspace, doc, null);       
         }
         
         addProcedures(metadataFactory, connection);
         
     }
 
-    protected void addTable(MetadataFactory metadataFactory, String key, JsonObject doc, Table parent) {
+    protected void addTable(CouchbaseConnection connection, MetadataFactory metadataFactory, String key, JsonObject doc, Table parent) {
 
         Table table = null;
         String tableName = key;
@@ -107,27 +108,28 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
             table = metadataFactory.getSchema().getTable(tableName);
         } else {
             table = metadataFactory.addTable(tableName);
-            metadataFactory.addColumn(PK, STRING, table);
+            metadataFactory.addColumn(DOCUMENT_ID, STRING, table);
             table.setSupportsUpdate(true);
             if(parent == null) {
                 // The top Table have a unique primary key.
                 table.setNameInSource(buildNameInSource(key, null));
                 table.setProperty(IS_TOP_TABLE, TRUE);
-                metadataFactory.addPrimaryKey("PK0", Arrays.asList(PK), table); //$NON-NLS-1$
+                metadataFactory.addPrimaryKey("PK0", Arrays.asList(DOCUMENT_ID), table); //$NON-NLS-1$
             } else {
                 table.setNameInSource(buildNameInSource(key, parent.getNameInSource()));
                 table.setProperty(IS_TOP_TABLE, FALSE);
+                metadataFactory.addForiegnKey("FK0", Arrays.asList(DOCUMENT_ID), connection.getKeyspaceName(), table);
             }
             table.setProperty(IS_ARRAY_TABLE, FALSE);
         }
 
         // add more columns
         for(String keyCol : doc.getNames()) {
-            addColumn(metadataFactory, table, keyCol, doc.get(keyCol));
+            addColumn(connection, metadataFactory, table, keyCol, doc.get(keyCol));
         }
     }
     
-    private void addColumn(MetadataFactory metadataFactory, Table table, String key, Object value) {
+    private void addColumn(CouchbaseConnection connection, MetadataFactory metadataFactory, Table table, String key, Object value) {
         
         //TODO-- couchbase is case sensitive
         if (table.getColumnByName(key) != null) {            
@@ -135,9 +137,9 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
         }
         
         if(value instanceof JsonObject) {
-            addTable(metadataFactory, key, (JsonObject)value, table);
+            addTable(connection, metadataFactory, key, (JsonObject)value, table);
         } else if(value instanceof JsonArray) {
-            addTable(metadataFactory, key, (JsonArray)value, table);
+            addTable(connection, metadataFactory, key, (JsonArray)value, table);
         } else {
             Column column = metadataFactory.addColumn(key, getDataType(value), table);
             column.setUpdatable(true);
@@ -157,7 +159,7 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
      * @param value
      * @param parent
      */
-    private void addTable(MetadataFactory metadataFactory, String key, JsonArray value, Table parent) {
+    private void addTable(CouchbaseConnection connection, MetadataFactory metadataFactory, String key, JsonArray value, Table parent) {
         
         Table table = null;
         String tableName = parent.getName() + LINE  + key;
@@ -165,12 +167,13 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
             table = metadataFactory.getSchema().getTable(tableName);
         } else {
             table = metadataFactory.addTable(tableName);
-            metadataFactory.addColumn(PK, STRING, table);
+            metadataFactory.addColumn(DOCUMENT_ID, STRING, table);
             table.setSupportsUpdate(true);
             table.setNameInSource(buildNameInSource(key, parent.getNameInSource()));
             table.setProperty(IS_ARRAY_TABLE, TRUE);
             table.setProperty(IS_TOP_TABLE, FALSE);
             table.setProperty(ARRAY_TABLE_GROUP, key);
+            metadataFactory.addForiegnKey("FK0", Arrays.asList(DOCUMENT_ID), connection.getKeyspaceName(), table);
         }
         
         Iterator<Object> items = value.iterator();
