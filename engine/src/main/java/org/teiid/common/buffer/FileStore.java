@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.teiid.common.buffer.AutoCleanupUtil.Removable;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.query.QueryPlugin;
 
 public abstract class FileStore implements Removable {
 		
@@ -144,6 +145,7 @@ public abstract class FileStore implements Removable {
 	}
 
 	private AtomicBoolean removed = new AtomicBoolean();
+    private long maxLength = Long.MAX_VALUE;
 	
 	public abstract long getLength();
 	
@@ -183,6 +185,9 @@ public abstract class FileStore implements Removable {
 	}
 	
 	public void write(long start, byte[] bytes, int offset, int length) throws IOException {
+	    if (start + length > maxLength) {
+	        throw new IOException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31260, maxLength));
+	    }
         int n = 0;
     	do {
     		checkRemoved();
@@ -253,6 +258,10 @@ public abstract class FileStore implements Removable {
 	
 	public FileStoreOutputStream createOutputStream(int maxMemorySize) {
 		return new FileStoreOutputStream(maxMemorySize);
+	}
+	
+	public void setMaxLength(long maxLength) {
+	    this.maxLength = maxLength;
 	}
 	
 }

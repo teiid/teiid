@@ -257,6 +257,11 @@ public class TestBufferFrontedFileStoreCache {
 						}
 					};
 				}
+				
+				@Override
+				public long getMaxStorageSpace() {
+				    return -1;
+				}
 			};
 			fsc.setStorageManager(sm);
 		}

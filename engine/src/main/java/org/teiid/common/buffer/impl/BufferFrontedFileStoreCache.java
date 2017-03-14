@@ -1231,4 +1231,9 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 		this.compactBufferFiles = compactBufferFiles;
 	}
 	
+	@Override
+	public long getMaxStorageSpace() {
+	    return this.storageManager.getMaxStorageSpace();
+	}
+	
 }
