@@ -29,5 +29,7 @@ public interface StorageManager {
 	void initialize() throws TeiidComponentException;
 
 	FileStore createFileStore(String name);
+	
+	long getMaxStorageSpace();
 
 }

@@ -44,6 +44,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -1705,6 +1706,7 @@ public class TestEmbeddedServer {
 	}
 	
 	@Test public void testSubqueryCache() throws Exception {
+	    UnitTestUtil.enableLogging(Level.WARNING, "org.teiid");
 		EmbeddedConfiguration ec = new EmbeddedConfiguration();
 		es.start(ec);
 		ModelMetaData mmd = new ModelMetaData();

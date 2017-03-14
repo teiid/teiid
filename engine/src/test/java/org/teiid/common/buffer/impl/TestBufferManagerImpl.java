@@ -24,14 +24,20 @@ package org.teiid.common.buffer.impl;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManager.BufferReserveMode;
+import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.common.buffer.BufferManagerFactory;
+import org.teiid.common.buffer.FileStore;
+import org.teiid.common.buffer.TupleBuffer;
+import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.sql.symbol.ElementSymbol;
 
@@ -64,6 +70,38 @@ public class TestBufferManagerImpl {
         bufferManager.setCache(new MemoryStorageManager());
         bufferManager.setMaxReserveKB((1<<22) + 11);
         assertEquals(4194315, bufferManager.getMaxReserveKB());
+    }
+    
+    @Test(expected=IOException.class) public void testFileStoreMax() throws Exception {
+        BufferManagerImpl bufferManager = new BufferManagerImpl();
+        bufferManager.setCache(new MemoryStorageManager() {
+            @Override
+            public long getMaxStorageSpace() {
+                return 640;
+            }
+        });
+        bufferManager.setMaxActivePlans(20);
+        bufferManager.initialize();
+        FileStore fs = bufferManager.createFileStore("x");
+        fs.write(new byte[10], 0, 10);
+    }
+    
+    @Test(expected=TeiidComponentException.class) public void testTupleBufferMax() throws Exception {
+        BufferManagerImpl bufferManager = new BufferManagerImpl();
+        bufferManager.setCache(new MemoryStorageManager() {
+            @Override
+            public long getMaxStorageSpace() {
+                return 640;
+            }
+        });
+        bufferManager.setMaxReserveKB(10);
+        bufferManager.setMaxActivePlans(20);
+        bufferManager.initialize();
+        TupleBuffer tb = bufferManager.createTupleBuffer(Arrays.asList(new ElementSymbol("x", null, String.class)), "x", TupleSourceType.PROCESSOR);
+        //fill one batch, which should then exceed the max
+        for (int i = 0; i < 1024; i++) {
+            tb.addTuple(Arrays.asList("a"));
+        }
     }
     
     @Test

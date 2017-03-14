@@ -185,4 +185,9 @@ public class MemoryStorageManager implements Cache<Long> {
 		
 	}
 	
+	@Override
+	public long getMaxStorageSpace() {
+	    return Runtime.getRuntime().maxMemory();
+	}
+	
 }
