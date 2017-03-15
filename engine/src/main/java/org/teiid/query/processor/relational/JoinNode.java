@@ -212,6 +212,10 @@ public class JoinNode extends SubqueryAwareRelationalNode {
 	        }
     	} catch (BlockedException e) {
     		if (!isDependent()) {
+    		    if (getJoinType() != JoinType.JOIN_FULL_OUTER && this.joinStrategy.leftSource.getSortUtility() == null && this.joinStrategy.leftSource.rowCountLE(0)) {
+                    this.terminateBatches();
+                    return pullBatch();
+                }
     			this.joinStrategy.openRight();
                 this.joinStrategy.loadRight();
                 prefetch(this.joinStrategy.rightSource, this.joinStrategy.leftSource);
@@ -220,6 +224,10 @@ public class JoinNode extends SubqueryAwareRelationalNode {
     	}
         try {
             if (state == State.LOAD_RIGHT) {
+                if (getJoinType() != JoinType.JOIN_FULL_OUTER && this.joinStrategy.leftSource.getSortUtility() == null && this.joinStrategy.leftSource.rowCountLE(0)) {
+                    this.terminateBatches();
+                    return pullBatch();
+                }
 	        	this.joinStrategy.openRight();
 	            this.joinStrategy.loadRight();
                 state = State.EXECUTE;
