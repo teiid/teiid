@@ -47,6 +47,7 @@ import org.teiid.logging.MessageLevel;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.util.CommandContext;
 
 
 /**
@@ -253,6 +254,14 @@ public class SortUtility {
 	 * creates sorted sublists stored in tuplebuffers
 	 */
     protected void initialSort(boolean onePass, boolean lowLatency, int rowLimit) throws TeiidComponentException, TeiidProcessingException {
+        long end = Long.MAX_VALUE;
+        if (!nonBlocking) {
+            //obey the timeslice
+            CommandContext cc = CommandContext.getThreadLocalContext();
+            if (cc != null) {
+                end = System.nanoTime() + (cc.getTimeSliceEnd()-System.currentTimeMillis())*1000000;
+            }
+        }
     	outer: while (!doneReading) {
     		
     		if (this.source != null) {
@@ -273,6 +282,9 @@ public class SortUtility {
 		            	
 		            	if (onePass && lowLatency && this.workingBuffer.getRowCount() > 2*this.targetRowCount) {
 		            		break outer;
+		            	} else if (end != Long.MAX_VALUE && (this.workingBuffer.getRowCount()%32)==1 && System.nanoTime() > end) {
+		            	    CommandContext.getThreadLocalContext().getWorkItem().moreWork();
+		            	    throw BlockedException.block("Blocking on large sort"); //$NON-NLS-1$
 		            	}
 		            } catch(BlockedException e) {
 		            	/*there are three cases here

@@ -291,6 +291,9 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
 	    		}
     		}
     		if (this.processingSortLeft != SortOption.NOT_SORTED && this.processingSortRight != SortOption.NOT_SORTED) {
+    		    if (this.leftSource.rowCountLE(0)) {
+    		        return;
+    		    }
 	    		super.loadRight();
 	    		super.loadLeft();
 	    		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
@@ -348,6 +351,9 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     	int schemaSize = this.joinNode.getBufferManager().getSchemaSize(other.getSource().getOutputElements());
     	int toReserve = this.joinNode.getBufferManager().getMaxProcessingSize();
     	int minSize = toReserve/schemaSize*this.joinNode.getBatchSize();
+    	if (otherSize != -1 && otherSize < this.joinNode.getBatchSize()) {
+    	    //return false;
+    	}
 
     	//determine sizes in an incremental fashion as to avoid a full buffer of the unsorted side
     	while (size < Integer.MAX_VALUE && (indexSize == -1 || otherSize == -1)) {
