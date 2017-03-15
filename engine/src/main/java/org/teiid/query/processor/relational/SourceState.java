@@ -155,7 +155,7 @@ class SourceState {
     		if (getIncrementalRowCount(true) > count) {
     			return false;
     		}
-    		prefetch(Long.MAX_VALUE);
+    		prefetch(count + 1);
     	}
 		return buffer.getRowCount() <= count;
     }
