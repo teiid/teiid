@@ -889,8 +889,8 @@ public class NewCalculateCostUtil {
         	if (dsc.getNdv() == UNKNOWN_VALUE) {
         		return childCost / 3;
         	}
-        	
-        	cost = childCost * dsc.getNdv() / ndv;
+        	       	
+        	cost = childCost * dsc.getNdv() / Math.max(1, ndv);
         }
 
         if (cost == UNKNOWN_VALUE) {

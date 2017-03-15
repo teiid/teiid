@@ -65,7 +65,7 @@ public class TestSourceHints {
 		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
         
         List<?>[] expected = new List[] {};
-        helpProcess(plan, manager("foo x", "leading", "foo", "leading"), expected);
+        helpProcess(plan, manager("foo x", "leading", "foo x", "leading"), expected);
 	}
 	
 	@Test public void testWithHintPushdown() throws TeiidException {

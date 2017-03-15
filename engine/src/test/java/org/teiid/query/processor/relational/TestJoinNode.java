@@ -626,6 +626,31 @@ public class TestJoinNode {
         helpTestJoin();
     }
     
+    @Test public void testFullOuterJoinNoRows() throws Exception {
+        this.joinType = JoinType.JOIN_FULL_OUTER;
+        this.leftTuples = new List[0];
+        this.rightTuples = new List[] {Arrays.asList(1) };
+        expected = new List[] {
+           Arrays.asList(new Object[] { null, 1 }),  
+        };
+        expectedReversed = new List[] {
+            Arrays.asList(new Object[] { 1, null }),  
+        };
+        helpTestJoin();
+    }
+    
+    @Test public void testLeftJoinNoRows() throws Exception {
+        this.joinType = JoinType.JOIN_LEFT_OUTER;
+        this.leftTuples = new List[0];
+        this.rightTuples = new List[] {Arrays.asList(1) };
+        expected = new List[] {
+        };
+        expectedReversed = new List[] {
+                Arrays.asList(1, null)
+        };
+        helpTestJoin();
+    }
+    
     @Test public void testMergeJoinOptimizationRepeatedElements() throws Exception {
     	this.joinType = JoinType.JOIN_INNER;
         this.leftTuples = createMultiColTuples(9, 2);
