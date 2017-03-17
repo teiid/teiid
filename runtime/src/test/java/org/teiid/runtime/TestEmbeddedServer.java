@@ -1948,7 +1948,7 @@ public class TestEmbeddedServer {
 			fail();
 		} catch (BatchUpdateException e) {
 			int[] updateCounts = e.getUpdateCounts();
-			assertArrayEquals(new int[] {1, -3}, updateCounts);
+			assertArrayEquals(new int[] {1}, updateCounts);
 			assertEquals(-1, s.getUpdateCount());
 		}
 		

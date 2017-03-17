@@ -146,8 +146,6 @@ public class BatchedUpdatePlan extends ProcessorPlan {
     				updateCounts[commandIndex++] = Arrays.asList(updateCounts[i]);
     			}
     			cause = e.getCause();
-    		} else {
-    			updateCounts[commandIndex++] = Arrays.asList(Statement.EXECUTE_FAILED);
     		}
     		updateCounts = Arrays.copyOf(updateCounts, commandIndex);
     		getContext().setBatchUpdateException(cause);
@@ -200,8 +198,6 @@ public class BatchedUpdatePlan extends ProcessorPlan {
         			if (e.getCause() != null) {
         				cause = e.getCause();
         			}
-        		} else {
-        			updateCounts[commandIndex++] = Arrays.asList(Statement.EXECUTE_FAILED);
         		}
         		updateCounts = Arrays.copyOf(updateCounts, commandIndex);
         		getContext().setBatchUpdateException(cause);
