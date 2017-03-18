@@ -145,7 +145,6 @@ public class BatchedUpdatePlan extends ProcessorPlan {
     			for (int i = 0; i < tbe.getUpdateCounts().length; i++) {
     				updateCounts[commandIndex++] = Arrays.asList(updateCounts[i]);
     			}
-    			cause = e.getCause();
     		}
     		updateCounts = Arrays.copyOf(updateCounts, commandIndex);
     		getContext().setBatchUpdateException(cause);
@@ -194,9 +193,6 @@ public class BatchedUpdatePlan extends ProcessorPlan {
         			TranslatorBatchException tbe = (TranslatorBatchException)e.getCause();
         			for (int i = 0; i < tbe.getUpdateCounts().length; i++) {
         				updateCounts[commandIndex++] = Arrays.asList(tbe.getUpdateCounts()[i]);
-        			}
-        			if (e.getCause() != null) {
-        				cause = e.getCause();
         			}
         		}
         		updateCounts = Arrays.copyOf(updateCounts, commandIndex);
