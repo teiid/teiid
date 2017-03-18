@@ -1980,7 +1980,7 @@ public class TestEmbeddedServer {
 		s.addBatch("update pm1.g1 set e1 = 'a' where e2 = 1"); //$NON-NLS-1$
 		s.addBatch("update pm1.g1 set e1 = 'b' where e2 = 2"); //$NON-NLS-1$
 		hcef.updateMap.clear();
-		hcef.addUpdate("UPDATE pm1.g1 SET e1 = 'a' WHERE pm1.g1.e2 = 1;UPDATE pm1.g1 SET e1 = 'b' WHERE pm1.g1.e2 = 2;", new TranslatorBatchException(new SQLException(), new int[] {1, -3}));
+		hcef.addUpdate("UPDATE pm1.g1 SET e1 = 'a' WHERE pm1.g1.e2 = 1;\nUPDATE pm1.g1 SET e1 = 'b' WHERE pm1.g1.e2 = 2;", new TranslatorBatchException(new SQLException(), new int[] {1, -3}));
 		try {
 			s.executeBatch();
 			fail();

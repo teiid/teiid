@@ -318,8 +318,8 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
             		bind(pstatement, translatedComm.getPreparedValues(), null);
         			updateCount = pstatement.executeUpdate();
         			result = new int[] {updateCount};
-        			addStatementWarnings();
                 }
+                addStatementWarnings();
                 succeeded = true;
             } 
             if (keyColumnDataTypes != null) {
