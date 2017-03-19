@@ -561,21 +561,31 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     	if (getVersion().compareTo(ELEVEN_0) >= 0 || !(command instanceof QueryExpression)) {
     		if (getVersion().compareTo(ELEVEN_0) >= 0 && command instanceof QueryExpression) {
     			QueryExpression queryCommand = (QueryExpression)command;
-    			if (queryCommand.getLimit() != null && queryCommand.getOrderBy() == null) {
-    				//an order by is required
-    				//we could use top if offset is 0, but that would require contextual knowledge in useSelectLimit
-    			    if (((queryCommand instanceof Select && ((Select)queryCommand).isDistinct()) 
-                            || (queryCommand instanceof SetQuery && !((SetQuery)queryCommand).isAll()))) {
-    			        //can't use the @@version with distinct
-    			        useRowNumber = true;
+    			if (queryCommand.getLimit() != null) {
+    			    if (queryCommand.getOrderBy() == null) {
+        				//an order by is required
+        				//we could use top if offset is 0, but that would require contextual knowledge in useSelectLimit
+        			    if (((queryCommand instanceof Select && ((Select)queryCommand).isDistinct()) 
+                                || (queryCommand instanceof SetQuery && !((SetQuery)queryCommand).isAll()))) {
+        			        //can't use the @@version with distinct
+        			        useRowNumber = true;
+        			    } else {
+            				List<Object> parts = new ArrayList<Object>();
+            				Limit limit = queryCommand.getLimit();
+            				queryCommand.setLimit(null);
+            				parts.add(queryCommand);
+            				parts.add(" ORDER BY @@version "); //$NON-NLS-1$
+            				parts.add(limit);
+            				return parts;
+        			    }
     			    } else {
-        				List<Object> parts = new ArrayList<Object>();
-        				Limit limit = queryCommand.getLimit();
-        				queryCommand.setLimit(null);
-        				parts.add(queryCommand);
-        				parts.add(" ORDER BY @@version "); //$NON-NLS-1$
-        				parts.add(limit);
-        				return parts;
+    			        List<Object> parts = new ArrayList<Object>();
+                        Limit limit = queryCommand.getLimit();
+                        queryCommand.setLimit(null);
+                        parts.add(queryCommand);
+                        parts.add(" "); //$NON-NLS-1$
+                        parts.add(limit);
+                        return parts;
     			    }
     			}
     		}
