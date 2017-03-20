@@ -425,6 +425,19 @@ public class TestJDBCSocketTransport {
         } catch (BatchUpdateException e) {
             assertEquals(1, e.getUpdateCounts()[0]);
         }
+        
+        //make sure no update counts are reported when there's an issue on the first item
+        ps = conn.prepareStatement("insert into x values (?)");
+        ps.setInt(1, 2);
+        ps.addBatch();
+        ps.setInt(1, 2);
+        ps.addBatch();
+        try {
+            ps.executeBatch();
+            fail();
+        } catch (BatchUpdateException e) {
+            assertEquals(0, e.getUpdateCounts().length);
+        }
     }
 	
 }
