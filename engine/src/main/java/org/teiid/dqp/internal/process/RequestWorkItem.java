@@ -974,7 +974,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 			    	response.setResults(keys.getKeys());
 			    	response.setLastRow(keys.getKeys().size());
 			    	finalRowCount = response.getLastRow();
-        		} else if (finalRowCount == 0) {
+        		} else if (finalRowCount == 0 && response.getException() == null) {
         		    //anon block or other construct not setting an explicit update count
         		    response.setResults(Arrays.asList(Arrays.asList(0)));
         		    finalRowCount = 1;
