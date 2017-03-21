@@ -212,7 +212,7 @@ public class JBossSecurityHelper implements SecurityHelper, Serializable {
             }
             if (context.getResponseMessage() instanceof KerberosMessage) {
                 KerberosMessage km = (KerberosMessage)context.getResponseMessage();
-                return new GSSResult(km.getToken(), context.isAuthenticated(), securityContext.getCredDelegState()?securityContext.getDelegCred():null);
+                return new GSSResult(km.getToken(), context.isAuthenticated());
             }
         } catch (GSSException e) {
             // login exception can not take exception

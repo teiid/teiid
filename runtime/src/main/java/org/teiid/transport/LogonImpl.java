@@ -141,10 +141,6 @@ public class LogonImpl implements ILogon {
 		try {
 			SessionMetadata sessionInfo = service.createSession(vdbName, vdbVersion, authType, user,credential, applicationName, connProps);
 			
-			if (connProps.get(GSSCredential.class.getName()) != null) {
-			    addCredentials(sessionInfo.getSubject(), (GSSCredential)connProps.get(GSSCredential.class.getName()));
-			}
-			
 	        updateDQPContext(sessionInfo);
 	        if (DQPWorkContext.getWorkContext().getClientAddress() == null) {
 				sessionInfo.setEmbedded(true);
@@ -184,18 +180,12 @@ public class LogonImpl implements ILogon {
 			LogonResult logonResult = new LogonResult(new SessionToken(0, "temp"), "internal", 0, "internal"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			logonResult.addProperty(ILogon.KRB5TOKEN, result.getServiceToken());
 			logonResult.addProperty(ILogon.KRB5_ESTABLISHED, new Boolean(result.isAuthenticated()));
-			if (result.isAuthenticated()) {
-			    logonResult.addProperty(GSSCredential.class.getName(), result.getDelegationCredential());
-			}
 			return logonResult;
 		}		
 		
 		// GSS API (jdbc) will make the session in one single call
 		connProps.setProperty(TeiidURL.CONNECTION.USER_NAME, result.getUserName());
 		connProps.put(ILogon.KRB5TOKEN, result.getServiceToken());
-		if(result.getDelegationCredential() != null){
-			connProps.put(GSSCredential.class.getName(), result.getDelegationCredential());
-		}
 		LogonResult logonResult =  logon(connProps);
 		return logonResult;
 	}

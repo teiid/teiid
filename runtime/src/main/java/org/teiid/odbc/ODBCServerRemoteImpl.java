@@ -21,7 +21,10 @@
  */
 package org.teiid.odbc;
 
-import static org.teiid.odbc.PGUtil.*;
+import static org.teiid.odbc.PGUtil.PG_TYPE_BPCHAR;
+import static org.teiid.odbc.PGUtil.PG_TYPE_NUMERIC;
+import static org.teiid.odbc.PGUtil.PG_TYPE_VARCHAR;
+import static org.teiid.odbc.PGUtil.convertType;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -42,7 +45,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.ietf.jgss.GSSCredential;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.client.RequestMessage.ResultsMode;
@@ -252,10 +254,6 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
                 	info.put(ILogon.KRB5TOKEN, serviceToken);
                 	if (!result.isNullContinuationToken()) {
                 	    this.client.authenticationGSSContinue(serviceToken);
-                	}
-                	// if delegation is in progress, participate in it.
-                	if (result.getDelegationCredential() != null) {
-                		info.put(GSSCredential.class.getName(), result.getDelegationCredential());
                 	}
             	}
             	else {
