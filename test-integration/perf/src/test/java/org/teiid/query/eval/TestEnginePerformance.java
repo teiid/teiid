@@ -54,6 +54,8 @@ import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.client.BatchSerializer;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.STree;
+import org.teiid.common.buffer.STree.InsertMode;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.impl.BufferFrontedFileStoreCache;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
@@ -561,6 +563,34 @@ public class TestEnginePerformance {
 	
 	@Test public void runWideSort_4_100000() throws Exception {
 		helpTestLargeSort(2, 4, 100000);
+	}
+	
+	@Test public void largeRandomTable() throws Exception {
+	    assertEquals(0, bm.getActiveBatchBytes());
+	    ElementSymbol e1 = new ElementSymbol("x");
+        e1.setType(Long.class);
+        ElementSymbol e2 = new ElementSymbol("y");
+        e2.setType(String.class);
+        List<ElementSymbol> elements = Arrays.asList(e1, e2);
+        STree map = bm.createSTree(elements, "1", 1);
+        
+        r.setSeed(0);
+        
+        int rows = 3000000;
+        for (int i = 0; i < rows; i++) {
+            assertNull(String.valueOf(i), map.insert(Arrays.asList(r.nextLong(), String.valueOf(i)), InsertMode.NEW, -1));
+        }
+        
+        assertEquals(rows, map.getRowCount());
+        r.setSeed(0);
+        
+        for (int i = 0; i < rows; i++) {
+            assertNotNull(map.remove(Arrays.asList(r.nextLong())));
+        }
+        
+        assertEquals(0, map.getRowCount());
+        
+        assertEquals(0, bm.getActiveBatchBytes());
 	}
 
 	private static void showStats() {
