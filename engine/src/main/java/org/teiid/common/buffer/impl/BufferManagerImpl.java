@@ -227,8 +227,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 						rowsSampled -= oldRowCount;
 						updateEstimates = true;
 					}
-					fastGet(previous, prefersMemory.get(), false);
-                    old.nullOut();
+					BufferManagerImpl.this.remove(old, prefersMemory.get());
 				}
 			} else {
 				updateEstimates = true;
@@ -254,7 +253,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
 				LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Add batch to BufferManager", this.id, ce.getId(), "with size estimate", ce.getSizeEstimate()); //$NON-NLS-1$ //$NON-NLS-2$
 			}
-			addMemoryEntry(ce);
+			addMemoryEntry(ce, true);
 			return oid;
 		}
 
@@ -340,7 +339,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 					removeFromCache(this.id, batch);
 					persistBatchReferences(ce.getSizeEstimate());
 				} else {
-					addMemoryEntry(ce);
+					addMemoryEntry(ce, false);
 				}
 			} finally {
 				cache.unlockForLoad(o);
@@ -947,6 +946,8 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		boolean persist = false;
 		synchronized (ce) {
 			if (!ce.isPersistent()) {
+				//the entry should have been removed prior to being set as persistent
+				assert !initialEvictionQueue.remove(ce);
 				persist = true;
 				ce.setPersistent(true);
 			}
@@ -992,6 +993,8 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 					//this call ensures that we won't leak
 					if (memoryEntries.containsKey(batch)) {
 						if (ce.isPersistent()) {
+							//invarient - once marked persistent the entry should not be in the initial eviction queue
+							assert !initialEvictionQueue.remove(ce);
 							evictionQueue.touch(ce);
 						} else {
 							initialEvictionQueue.touch(ce);
@@ -1027,7 +1030,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		if (ce != null && ce.getObject() != null) {
 			referenceHit.getAndIncrement();
 			if (retain) {
-				addMemoryEntry(ce);
+				addMemoryEntry(ce, false);
 			} else {
 				BufferManagerImpl.this.remove(ce, false);
 			}
@@ -1058,20 +1061,21 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		if (inMemory) {
 			activeBatchBytes.addAndGet(-ce.getSizeEstimate());
 		}
-		assert activeBatchBytes.get() >= 0;
 		Serializer<?> s = ce.getSerializer();
 		if (s != null) {
 			removeFromCache(s.getId(), ce.getId());
 		}
 	}
 	
-	void addMemoryEntry(CacheEntry ce) {
+	void addMemoryEntry(CacheEntry ce, boolean initial) {
 		persistBatchReferences(ce.getSizeEstimate());
 		synchronized (ce) {
-			memoryEntries.put(ce.getId(), ce);
-			if (!ce.isPersistent()) {
+			boolean added = memoryEntries.put(ce.getId(), ce) == null;
+			if (initial) {
+				assert added;
 				initialEvictionQueue.add(ce);
 			} else {
+				assert ce.isPersistent();
 				evictionQueue.touch(ce);
 			}
 		}

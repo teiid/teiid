@@ -296,7 +296,6 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>${version.surefire.plugin}</version>
 				<configuration>
-				    <enableAssertions>true</enableAssertions>
 					<includes>
 						<include>**/*TestCase.java</include>
 						<include>**/*Test.java</include>
