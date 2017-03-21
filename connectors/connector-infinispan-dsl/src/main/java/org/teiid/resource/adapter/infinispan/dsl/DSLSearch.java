@@ -75,11 +75,11 @@ import org.teiid.translator.object.SearchType;
  */
 public final class DSLSearch implements SearchType  {
 	
-	private ObjectConnection conn;
+	private InfinispanConnectionImpl conn;
 	
 	
 	public DSLSearch(ObjectConnection connection) {
-		this.conn = connection;
+		this.conn = (InfinispanConnectionImpl) connection;
 	}
 	
 	/** 
@@ -204,12 +204,15 @@ public final class DSLSearch implements SearchType  {
 	}
 	
 	@SuppressWarnings("rawtypes")
-	private static QueryBuilder getQueryBuilder(ObjectConnection conn) throws TranslatorException {
+	private static QueryBuilder getQueryBuilder(InfinispanConnectionImpl conn) throws TranslatorException {
+		if (! conn.isAlive()) {
+			conn.forceCleanUp();
+		}
 		
 		Class<?> type = conn.getCacheClassType();
 		
-		QueryFactory qf = ((InfinispanConnectionImpl) conn).getQueryFactory();
-	    		  
+		QueryFactory qf = conn.getQueryFactory();
+		    		  
 	    return qf.from(type);
 	}
 	
