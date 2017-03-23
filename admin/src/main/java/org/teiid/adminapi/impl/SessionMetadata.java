@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.security.auth.Subject;
 
@@ -62,6 +63,7 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
     private transient boolean embedded;
     private transient Map<String, Object> sessionVariables = Collections.synchronizedMap(new HashMap<String, Object>(2));
 	private volatile boolean closed;
+	private AtomicLong bytesUsed = new AtomicLong();
 
 	@Override
 	public String getApplicationName() {
@@ -230,5 +232,13 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 	public boolean isClosed() {
 		return closed;
 	}
+	
+	public long getBytesUsed() {
+        return bytesUsed.get();
+    }
+	
+	public long addAndGetBytesUsed(long bytes) {
+        return this.bytesUsed.addAndGet(bytes);
+    }
 	
 }

@@ -614,7 +614,13 @@ public class DQPCore implements DQP {
         	LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30006, this.maxActivePlans, config.getMaxThreads()));
         	this.maxActivePlans = config.getMaxThreads();
         }
-
+        
+        //for now options are scoped to the engine - vdb scoping is a todo
+        options = new Options();
+        options.setProperties(config.getProperties());
+        PropertiesUtils.setBeanProperties(options, options.getProperties(), "org.teiid", true); //$NON-NLS-1$
+        
+        this.bufferManager.setOptions(options);
         //hack to set the max active plans
         this.bufferManager.setMaxActivePlans(this.maxActivePlans);
         try {
@@ -657,12 +663,7 @@ public class DQPCore implements DQP {
 			}
 		});
         dataTierMgr.setEventDistributor(eventDistributor);
-        //for now options are scoped to the engine - vdb scoping is a todo
-        options = new Options();
-        options.setProperties(config.getProperties());
-        PropertiesUtils.setBeanProperties(options, options.getProperties(), "org.teiid", true); //$NON-NLS-1$
         LogManager.logDetail(LogConstants.CTX_DQP, "DQPCore started maxThreads", this.config.getMaxThreads(), "maxActivePlans", this.maxActivePlans, "source concurrency", this.userRequestSourceConcurrency); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        this.bufferManager.setOptions(options);
 	}
 	
 	public void setBufferManager(BufferManager mgr) {
