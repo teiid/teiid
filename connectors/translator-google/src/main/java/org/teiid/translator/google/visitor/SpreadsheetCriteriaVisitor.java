@@ -29,6 +29,7 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.language.Comparison;
 import org.teiid.language.Comparison.Operator;
 import org.teiid.language.Condition;
+import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.Like;
 import org.teiid.language.Literal;
@@ -37,7 +38,7 @@ import org.teiid.resource.adapter.google.common.SpreadsheetOperationException;
 import org.teiid.resource.adapter.google.metadata.SpreadsheetInfo;
 
 /**
- * Base visitor for criteria in the UPDATE and DELETE commands
+ * Base visitor for criteria
  * 
  * @author felias
  * 
@@ -55,6 +56,10 @@ public class SpreadsheetCriteriaVisitor extends SQLStringVisitor {
 	}
 
 	public void visit(Literal obj) {
+	    if (!isUpdate()) {
+	        super.visit(obj);
+	        return;
+	    }
 		if (obj.getValue() == null) {
 			buffer.append(NULL);
 			return;
@@ -75,7 +80,18 @@ public class SpreadsheetCriteriaVisitor extends SQLStringVisitor {
 	}
 
 	public void visit(Like obj) {
-		throw new SpreadsheetOperationException("Like is not supported in DELETE and UPDATE queires");
+	    if (isUpdate()) {
+	        throw new SpreadsheetOperationException("Like is not supported in DELETE and UPDATE queires");
+	    }
+	    super.visit(obj);
+	}
+	
+	@Override
+	public void visit(Function obj) {
+	    if (isUpdate()) {
+	        throw new SpreadsheetOperationException("Function is not supported in DELETE and UPDATE queires");
+	    }
+	    super.visit(obj);
 	}
 
 	@Override
@@ -94,16 +110,6 @@ public class SpreadsheetCriteriaVisitor extends SQLStringVisitor {
 	public void setCriteriaQuery(String criteriaQuery) {
 		this.criteriaQuery = criteriaQuery;
 	}
-
-	public void translateWhere(Condition condition) {
-	    if (condition != null) {
-	        StringBuilder temp = this.buffer;
-	        this.buffer = new StringBuilder();
-	        append(condition);
-	        criteriaQuery = buffer.toString();
-	        this.buffer = temp;
-	    }
-	}
 	
 	public boolean isHeaderEnabled() {
 		return headerEnabled;
@@ -116,5 +122,33 @@ public class SpreadsheetCriteriaVisitor extends SQLStringVisitor {
 	public String getWorksheetTitle() {
 		return worksheetTitle;
 	}
-
+	
+	public void translateWhere(Condition condition) {
+	    if (condition != null) {
+	        StringBuilder temp = this.buffer;
+	        this.buffer = new StringBuilder();
+	        append(condition);
+	        criteriaQuery = buffer.toString();
+	        this.buffer = temp;
+	    }
+	}
+	
+	public void visit(Comparison obj) {
+	    boolean addNot = false;
+	    if (obj.getOperator() == Operator.NE 
+	            || (obj.getOperator() == Operator.EQ && !(obj.getRightExpression() instanceof Literal))) {
+	        addNot = true;
+	        buffer.append("("); //$NON-NLS-1$
+	    }
+	    super.visit(obj);
+	    if (addNot) {
+    	    buffer.append(" AND "); //$NON-NLS-1$
+            visitNode(obj.getLeftExpression());
+            buffer.append(" IS NOT NULL)"); //$NON-NLS-1$
+	    }
+	}
+	
+	protected boolean isUpdate() {
+	    return true;
+	}
 }

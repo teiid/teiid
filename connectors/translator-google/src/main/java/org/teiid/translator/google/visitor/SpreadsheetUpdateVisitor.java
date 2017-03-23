@@ -66,13 +66,7 @@ public class SpreadsheetUpdateVisitor extends SpreadsheetCriteriaVisitor {
 			}
 			changes.add(new UpdateSet(columnName, getStringValue(s.getValue())));
 		}
-		if (obj.getWhere() != null) {
-			append(obj.getWhere());
-			criteriaQuery = buffer.toString();
-		} else {
-			criteriaQuery = ""; //$NON-NLS-1$
-		}
-
+		translateWhere(obj.getWhere());
 	}
 	
 	protected String getStringValue(Expression obj) {
