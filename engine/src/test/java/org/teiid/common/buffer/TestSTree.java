@@ -131,6 +131,7 @@ public class TestSTree {
 			assertNotNull(map.remove(Arrays.asList(new String(new byte[1000]))));
 		}
 		
+		assertEquals(0, map.getRowCount());
 		assertEquals(0, bm.getActiveBatchBytes());
 		
 		map.remove();

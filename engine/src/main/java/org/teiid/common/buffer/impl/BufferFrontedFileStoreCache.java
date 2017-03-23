@@ -636,7 +636,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 						if (!map.containsKey(entry.getId())) {
 							return true; //already removed
 						}
-						info = new PhysicalInfo(s.getId(), entry.getId(), EMPTY_ADDRESS, readAttempts.get());
+						info = new PhysicalInfo(s.getId(), entry.getId(), EMPTY_ADDRESS, readAttempts.get(), entry.getSizeEstimate());
 						info.adding = true;
 						map.put(entry.getId(), info);
 					}
@@ -664,7 +664,6 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 			bos.writeLong(s.getId());
 			bos.writeLong(entry.getId());
 			ObjectOutput dos = new ObjectOutputStream(bos);
-			dos.writeInt(entry.getSizeEstimate());
             s.serialize(entry.getObject(), dos);
             dos.close();
         	//synchronized to ensure proper cleanup from a concurrent removal 
@@ -808,8 +807,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 				is.read();
 			}
 			ObjectInput dis = new ObjectInputStream(is);
-			int sizeEstimate = dis.readInt();
-			CacheEntry ce = new CacheEntry(new CacheKey(oid, 1, 1), sizeEstimate, serializer.deserialize(dis), ref, true);
+			CacheEntry ce = new CacheEntry(new CacheKey(oid, 1, 1), info.sizeEstimate, serializer.deserialize(dis), ref, true);
 			return ce;
         } catch(IOException e) {
         	 throw new TeiidComponentException(QueryPlugin.Event.TEIID30048, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30048, info.gid, oid));
@@ -918,19 +916,22 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 	}
 	
 	@Override
-	public boolean remove(Long gid, Long id) {
+	public Integer remove(Long gid, Long id) {
 		Map<Long, PhysicalInfo> map = physicalMapping.get(gid);
 		if (map == null) {
-			return false;
+			return null;
 		}
 		PhysicalInfo info = null;
-		boolean result = false;
+		Integer result = null;
 		synchronized (map) {
-			int size = map.size();
 			info = map.remove(id);
-			result = size != map.size();
+			if (info != null) {
+			    result = info.sizeEstimate;
+			}
 		}
-		free(info, false, false);
+		if (info != null) {
+		    free(info, false, false);
+		}
 		return result;
 	}
 

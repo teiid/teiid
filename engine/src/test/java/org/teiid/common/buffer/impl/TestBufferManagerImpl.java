@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManager.BufferReserveMode;
 import org.teiid.common.buffer.BufferManager.TupleSourceType;
@@ -40,6 +41,8 @@ import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.util.CommandContext;
+import org.teiid.query.util.Options;
 
 @SuppressWarnings("nls")
 public class TestBufferManagerImpl {
@@ -102,6 +105,45 @@ public class TestBufferManagerImpl {
         for (int i = 0; i < 1024; i++) {
             tb.addTuple(Arrays.asList("a"));
         }
+    }
+    
+    @Test public void testTupleBufferSessionMax() throws Exception {
+        BufferManagerImpl bufferManager = new BufferManagerImpl();
+        bufferManager.setCache(new MemoryStorageManager() {
+            @Override
+            public long getMaxStorageSpace() {
+                return 64000;
+            }
+        });
+        bufferManager.setMaxReserveKB(10);
+        bufferManager.setMaxActivePlans(10);
+        bufferManager.setOptions(new Options().maxSessionBufferSizeEstimate(100000));
+        bufferManager.initialize();
+        CommandContext context = new CommandContext();
+        context.setSession(new SessionMetadata());
+        CommandContext.pushThreadLocalContext(context);
+        try {
+            List<TupleBuffer> tupleBuffers = new ArrayList<TupleBuffer>();
+            for (int i = 0; i < 36; i++) {
+                TupleBuffer tb = bufferManager.createTupleBuffer(Arrays.asList(new ElementSymbol("x", null, String.class)), "x", TupleSourceType.PROCESSOR);
+                try {
+                    for (int j = 0; j < 50; j++) {
+                        tb.addTuple(Arrays.asList("a"));
+                    }
+                    tb.saveBatch();
+                    if (i%2==0) {
+                        tb.remove();
+                    }
+                } catch (TeiidComponentException e) {
+                    assertEquals(34, i);
+                    return;
+                }
+                tupleBuffers.add(tb);
+            }
+        } finally {
+            CommandContext.popThreadLocalContext();
+        }
+        fail();
     }
     
     @Test

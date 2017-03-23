@@ -40,6 +40,7 @@ public class Options {
 	public static final String DEFAULT_NULL_ORDER = "org.teiid.defaultNullOrder"; //$NON-NLS-1$
 	public static final String ASSUME_MATCHING_COLLATION = "org.teiid.assumeMatchingCollation"; //$NON-NLS-1$
 	public static final String AGGRESSIVE_JOIN_GROUPING = "org.teiid.aggressiveJoinGrouping"; //$NON-NLS-1$
+	public static final String MAX_SESSION_BUFFER_SIZE_ESTIMATE = "org.teiid.maxSessionBufferSizeEstimate"; //$NON-NLS-1$
 
 	private Properties properties;
 	private boolean subqueryUnnestDefault = false;
@@ -51,6 +52,7 @@ public class Options {
 	private NullOrder defaultNullOrder = NullOrder.LOW;
 	private boolean assumeMatchingCollation = true;
 	private boolean aggressiveJoinGrouping = true;
+	private long maxSessionBufferSizeEstimate = Long.MAX_VALUE;
 	
 	public Properties getProperties() {
 		return properties;
@@ -176,4 +178,19 @@ public class Options {
 		this.aggressiveJoinGrouping = b;
 		return this;
 	}
+	
+	public Options maxSessionBufferSizeEstimate(
+            long l) {
+	    this.maxSessionBufferSizeEstimate = l;
+	    return this;
+	}
+	
+	public void setMaxSessionBufferSizeEstimate(
+            long maxSessionBufferSizeEstimate) {
+        this.maxSessionBufferSizeEstimate = maxSessionBufferSizeEstimate;
+    }
+	
+	public long getMaxSessionBufferSizeEstimate() {
+        return maxSessionBufferSizeEstimate;
+    }
 }
