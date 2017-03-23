@@ -75,6 +75,7 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 	private boolean supportsOdataCount;
 	private boolean supportsOdataSkip;
 	private boolean supportsOdataTop;
+	private boolean supportsOdataBooleanFunctionsWithComparison;
 
 	public ODataExecutionFactory() {
 		setSourceRequiredForMetadata(true);
@@ -85,6 +86,8 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 		setSupportsOdataOrderBy(true);
 		setSupportsOdataSkip(true);
 		setSupportsOdataTop(true);
+		setSupportsOdataBooleanFunctionsWithComparison(true);
+		
 		setTransactionSupport(TransactionSupport.NONE);
 		registerFunctionModifier(SourceSystemFunctions.CONVERT, new AliasModifier("cast")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.LOCATE, new AliasModifier("indexof")); //$NON-NLS-1$
@@ -240,6 +243,16 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 	
 	public void setSupportsOdataTop(boolean supports) {
 		this.supportsOdataTop = supports;
+	}
+	
+	@TranslatorProperty(display="Supports boolean functions with comparison", 
+			description="True, you can use 'substringsof(a, b) eq true' for instance", advanced=true)
+    public boolean supportsOdataBooleanFunctionsWithComparison() {
+    	return supportsOdataBooleanFunctionsWithComparison;
+    }
+	
+	public void setSupportsOdataBooleanFunctionsWithComparison(boolean supports) {
+		this.supportsOdataBooleanFunctionsWithComparison = supports;
 	}	
 	
 	@Override

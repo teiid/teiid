@@ -141,8 +141,17 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 	}
 
 	@Override
-    public void visit(Comparison obj) {
-        append(obj.getLeftExpression());
+    public void visit(Comparison obj) {		
+        Expression left = obj.getLeftExpression();
+        
+        if(!this.executionFactory.supportsOdataBooleanFunctionsWithComparison() 
+        		&& left instanceof Function
+        		&& "boolean".equals(((Function)left).getMetadataObject().getOutputParameter().getRuntimeType())) {
+        	visitComparisonWithBooleanFunction(obj);
+        	// early exit
+        	return;
+        }
+		append(left);
         this.filter.append(Tokens.SPACE);
         switch(obj.getOperator()) {
         case EQ:
@@ -167,6 +176,32 @@ public class ODataSQLVisitor extends HierarchyVisitor {
         this.filter.append(Tokens.SPACE);
         appendRightComparison(obj);
     }
+	
+	public void visitComparisonWithBooleanFunction(Comparison obj) {
+		boolean truthiness = SQLConstants.Reserved.TRUE.equals(obj.getRightExpression().toString());
+		boolean isNot = !truthiness;
+		switch(obj.getOperator()) {
+        case EQ:
+        	break;
+        case NE:
+        	isNot = !isNot;
+        	break;
+        default:
+        	this.exceptions.add(new TranslatorException(
+        			ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17018, ((Function)obj.getLeftExpression()).getName())));
+        }
+		if(isNot) {
+			// can't use a Not object, because it requires a Condition inside,
+			// and we don't have support for generic unary conditions
+			this.filter.append(NOT)
+		        .append(Tokens.SPACE)
+		        .append(Tokens.LPAREN);
+		    append(obj.getLeftExpression());
+		    this.filter.append(Tokens.RPAREN);
+		} else {
+			append(obj.getLeftExpression());
+		}
+	}
 
 	protected void appendRightComparison(Comparison obj) {
 		append(obj.getRightExpression());
