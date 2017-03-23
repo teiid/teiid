@@ -314,8 +314,17 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
 			else {
 				fromKeys = refConstaint.getDependentReferences();
 				toKeys = refConstaint.getPrincipalReferences();
-			}
+			}			
+			
 			if (matchesWithPkOrUnique(fromKeys, fromTable)) {
+				for(String fromKey : fromKeys) {
+					Column column = fromTable.getColumnByName(fromKey);
+					column.setProperty(JOIN_COLUMN, String.valueOf(true));
+				}
+				for(String toKey : toKeys) {
+					Column column = toTable.getColumnByName(toKey);
+					column.setProperty(JOIN_COLUMN, String.valueOf(true));
+				}
 				mf.addForiegnKey(association.getName(), toKeys, fromKeys, fromTable.getName(), toTable);
 			}
 			else {

@@ -131,17 +131,26 @@ public class TestODataSQLVistor {
     
     @Test
     public void testSimpleJoin() throws Exception {
-    	helpExecute("SELECT od.UnitPrice FROM Orders o JOIN Order_Details od ON o.OrderID=od.OrderID and o.OrderID=12", "Orders(12)/Order_Details?$select=UnitPrice");
+    	helpExecute("SELECT od.UnitPrice FROM Orders o JOIN Order_Details od ON o.OrderID=od.OrderID WHERE o.OrderID=12 and od.OrderId=12",
+    			"Orders(12)/Order_Details?$select=UnitPrice");
     }    
+
+    @Test
+    public void testInnerJoinWithOptimizer() throws Exception {
+    	helpExecute("SELECT o.OrderId FROM Shippers s INNER JOIN Orders o ON o.ShipVia=s.ShipperID WHERE s.ShipperID = 12 AND o.ShipVia=12", 
+    			"Shippers(12)/Orders?$select=OrderID");
+    }
     
     @Test
     public void testJoinBasedTwoPK() throws Exception {
-    	helpExecute("SELECT od.UnitPrice FROM Orders o JOIN Order_Details od ON o.OrderID=od.OrderID and o.OrderID=12 WHERE od.ProductID=1", "Orders(12)/Order_Details(OrderID=12,ProductID=1)?$select=UnitPrice");
+    	helpExecute("SELECT od.UnitPrice FROM Orders o JOIN Order_Details od ON o.OrderID=od.OrderID and o.OrderID=12 WHERE od.ProductID=1 AND od.OrderID=12", 
+    			"Orders(12)/Order_Details(ProductID=1,OrderID=12)?$select=UnitPrice");
     }   
     
     @Test
     public void testJoinBasedTwoPKOnKey() throws Exception {
-    	helpExecute("SELECT od.UnitPrice FROM Orders o JOIN Order_Details od ON o.OrderID=od.OrderID and o.OrderID=12 and od.ProductID=1", "Orders(12)/Order_Details(OrderID=12,ProductID=1)?$select=UnitPrice");
+    	helpExecute("SELECT od.UnitPrice FROM Orders o JOIN Order_Details od ON o.OrderID=od.OrderID and o.OrderID=12 and od.ProductID=1",
+    			"Orders(12)/Order_Details(ProductID=1,OrderID=12)?$select=UnitPrice");
     }     
     
     @Test
