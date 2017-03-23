@@ -107,7 +107,7 @@ public class BasicCryptor implements Cryptor {
             } catch (CryptoException err) {
                 //shouldn't happen
             }
-              throw new CryptoException(CorePlugin.Event.TEIID10006,  CorePlugin.Util.gs(CorePlugin.Event.TEIID10006, e.getClass().getName(), e.getMessage()));
+            throw new CryptoException(CorePlugin.Event.TEIID10006, e, CorePlugin.Util.gs(CorePlugin.Event.TEIID10006, e.getClass().getName(), e.getMessage()));
         }
     }
 
