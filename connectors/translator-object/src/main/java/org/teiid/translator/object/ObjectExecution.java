@@ -639,7 +639,9 @@ public class ObjectExecution extends ObjectBaseExecution implements ResultSetExe
 	
 		this.cacheResultsIt = null;
 		
-		this.visitor.cleanUp();
+		if (visitor != null) {
+			this.visitor.cleanUp();
+		}
 		this.visitor = null;
 		
 	}
