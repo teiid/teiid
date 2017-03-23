@@ -26,6 +26,7 @@ import org.apache.cxf.rs.security.oauth2.client.Consumer;
 import org.apache.cxf.rs.security.oauth2.client.OAuthClientUtils;
 import org.apache.cxf.rs.security.oauth2.common.ClientAccessToken;
 import org.apache.cxf.rs.security.oauth2.grants.refresh.RefreshTokenGrant;
+import org.apache.cxf.rs.security.oauth2.utils.OAuthConstants;
 import org.teiid.OAuthCredential;
 
 public class OAuth20CredentialImpl implements OAuthCredential {
@@ -33,6 +34,7 @@ public class OAuth20CredentialImpl implements OAuthCredential {
     private String clientSecret;
     private String refreshToken;
     private String accessTokenURI;
+    private String accessTokenString;
     private ClientAccessToken accessToken;
     
     @Override
@@ -59,6 +61,9 @@ public class OAuth20CredentialImpl implements OAuthCredential {
     }
 
     protected ClientAccessToken getAccessToken() {
+        if (getAccessTokenString() != null) { // if we have access_token directly, use it
+            return new ClientAccessToken(OAuthConstants.ACCESS_TOKEN_TYPE, getAccessTokenString());
+        }
         Consumer consumer = new Consumer(getClientId(), getClientSecret());
         WebClient client = WebClient.create(getAccessTokenURI());
         RefreshTokenGrant grant = new RefreshTokenGrant(getRefreshToken());
@@ -95,5 +100,13 @@ public class OAuth20CredentialImpl implements OAuthCredential {
 
     public void setAccessTokenURI(String accessTokenURI) {
         this.accessTokenURI = accessTokenURI;
+    }
+
+    public String getAccessTokenString() {
+        return accessTokenString;
+    }
+
+    public void setAccessTokenString(String accessTokenString) {
+        this.accessTokenString = accessTokenString;
     }
 }
