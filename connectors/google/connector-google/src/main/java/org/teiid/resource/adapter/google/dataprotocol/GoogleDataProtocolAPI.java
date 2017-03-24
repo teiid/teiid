@@ -42,12 +42,12 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.resource.adapter.google.GDataAPI;
 import org.teiid.resource.adapter.google.auth.AuthHeaderFactory;
 import org.teiid.translator.google.api.SpreadsheetAuthException;
 import org.teiid.translator.google.api.SpreadsheetOperationException;
 import org.teiid.translator.google.api.metadata.Column;
 import org.teiid.translator.google.api.metadata.SpreadsheetColumnType;
+import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
 import org.teiid.translator.google.api.result.PartialResultExecutor;
 import org.teiid.translator.google.api.result.RowsResult;
 import org.teiid.translator.google.api.result.SheetRow;
@@ -61,7 +61,6 @@ import org.teiid.translator.google.api.result.SheetRow;
  *
  */
 public class GoogleDataProtocolAPI {
-	private GDataAPI spreadsheetBrowser = null;
 	private AuthHeaderFactory headerFactory = null;
 	public static String ENCODING = "UTF-8"; //$NON-NLS-1$
 	private GoogleJSONParser parser = new GoogleJSONParser();
@@ -74,10 +73,6 @@ public class GoogleDataProtocolAPI {
 		this.headerFactory = headerFactory;
 	}
 
-	public void setSpreadSheetBrowser( GDataAPI spreadsheetBrowser ){
-		this.spreadsheetBrowser=spreadsheetBrowser;
-	}
-		
 	/**
 	 * Most important method that will issue query [1] to specific worksheet. The columns in the query
 	 * should be identified by their real alphabetic name (A, B, C...). 
@@ -92,10 +87,10 @@ public class GoogleDataProtocolAPI {
 	 * @param batchSize How big portions of data should be returned by one roundtrip to Google.
 	 * @return Iterable RowsResult that will actually perform the roundtrips to Google for data 
 	 */
-	public RowsResult executeQuery(String spreadsheetTitle, String worksheetTitle,
+	public RowsResult executeQuery(SpreadsheetInfo info, String worksheetTitle,
 			String query, int batchSize, Integer offset, Integer limit) {
 	
-		String key = spreadsheetBrowser.getSpreadsheetKeyByTitle(spreadsheetTitle);
+		String key = info.getSpreadsheetKey();
 		
 		RowsResult result = new RowsResult(new DataProtocolQueryStrategy(key,worksheetTitle,query), batchSize);
 		if (offset!= null)
@@ -106,8 +101,7 @@ public class GoogleDataProtocolAPI {
 		return result;
 	}
 	
-	public List<Column> getMetadata(String spreadsheetTitle, String worksheetTitle) {
-		String key = spreadsheetBrowser.getSpreadsheetKeyByTitle(spreadsheetTitle);
+	public List<Column> getMetadata(String key, String worksheetTitle) {
 		DataProtocolQueryStrategy dpqs = new DataProtocolQueryStrategy(key,worksheetTitle,"SELECT *"); //$NON-NLS-1$
 		dpqs.getResultsBatch(0, 1);
 		return dpqs.getMetadata();

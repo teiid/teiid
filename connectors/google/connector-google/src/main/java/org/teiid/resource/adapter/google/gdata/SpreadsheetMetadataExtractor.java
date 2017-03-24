@@ -74,7 +74,7 @@ public class SpreadsheetMetadataExtractor {
 				String title = wentry.getTitle().getPlainText();
 				Worksheet worksheet = metadata.createWorksheet(title);
 				worksheet.setId(wentry.getId().substring(wentry.getId().lastIndexOf('/')+1));
-				List<Column> cols = visualizationAPI.getMetadata(spreadsheetName, title);
+				List<Column> cols = visualizationAPI.getMetadata(sentry.getKey(), title);
 				if(!cols.isEmpty()){
 					if(cols.get(0).getLabel()!=null){
 						worksheet.setHeaderEnabled(true);
