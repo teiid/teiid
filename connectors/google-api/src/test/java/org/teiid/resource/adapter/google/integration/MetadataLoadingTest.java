@@ -31,14 +31,9 @@ public class MetadataLoadingTest extends IntegrationTest {
 		gdata = new GDataClientLoginAPI();
 		gdata.setHeaderFactory(auth);
 		visualizationAPI = new GoogleDataProtocolAPI();
-		visualizationAPI.setSpreadSheetBrowser(gdata);
 		visualizationAPI.setHeaderFactory(auth);
 	}
 	
-	@Test
-	public void findSpreadsheet(){
-		Assert.assertEquals("Spreadsheet not found", "tWNeVMVpBRQYOSY1Pgav15Q",gdata.getSpreadsheetKeyByTitle("spreadsheet1"));
-	}
 	@Test 
 	public void testMetadata(){
 

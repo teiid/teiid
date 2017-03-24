@@ -53,7 +53,7 @@ import com.google.gdata.util.ServiceException;
  * @author fnguyen
  *
  */
-public class GDataClientLoginAPI implements GDataAPI {
+public class GDataClientLoginAPI {
 	private static final int RETRY_DELAY = 3000;
 	private SpreadsheetService service;
 	private FeedURLFactory factory;
@@ -77,14 +77,14 @@ public class GDataClientLoginAPI implements GDataAPI {
 		List<SpreadsheetEntry> entry = feed.getEntries();
 		if (entry.size() == 0)
 			throw new SpreadsheetOperationException("Couldn't find spreadsheet:" + sheetTitle);
+		
+		if (entry.size() > 1) {
+		    throw new SpreadsheetOperationException("Multiple worksheets with the given title:" + sheetTitle + ".  Consider using a sheet key instead.");
+		}
 
 		return entry.get(0);
 	}
 	
-
-	public String getSpreadsheetKeyByTitle(String sheetName) {
-		return getSpreadsheetEntryByTitle(sheetName).getKey();
-	}
 
 	private BaseFeed<?, ?> getSpreadsheetFeedQuery(SpreadsheetQuery squery, Class<? extends BaseFeed<?, ?>> feedClass) {
 		try { 

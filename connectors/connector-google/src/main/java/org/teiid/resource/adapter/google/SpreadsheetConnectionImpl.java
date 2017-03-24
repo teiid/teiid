@@ -61,7 +61,6 @@ public class SpreadsheetConnectionImpl extends BasicConnection implements Google
 		authHeaderFactory.login();
 		dataProtocol.setHeaderFactory(authHeaderFactory);
 		gdata.setHeaderFactory(authHeaderFactory);
-		dataProtocol.setSpreadSheetBrowser(gdata);
 		
 		LogManager.logInfo(LogConstants.CTX_CONNECTOR,SpreadsheetManagedConnectionFactory.UTIL.getString("init") ); //$NON-NLS-1$
 	}
@@ -111,7 +110,7 @@ public class SpreadsheetConnectionImpl extends BasicConnection implements Google
 			String worksheetName, String query, 
 			 Integer offset, Integer limit, int batchSize) {
 		
-		return dataProtocol.executeQuery(config.getSpreadsheetName(), worksheetName, query, Math.min(batchSize, config.getBatchSize()), 
+		return dataProtocol.executeQuery(getSpreadsheetInfo(), worksheetName, query, Math.min(batchSize, config.getBatchSize()), 
 				offset, limit);
 	}	
 	
