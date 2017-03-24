@@ -730,10 +730,13 @@ public final class RuleRaiseAccess implements OptimizerRule {
 
 				lateral = true;
 			}
-			if(childNode.getType() != NodeConstants.Types.ACCESS 
-					|| childNode.hasCollectionProperty(NodeConstants.Info.ACCESS_PATTERNS)) {
+			if(childNode.getType() != NodeConstants.Types.ACCESS) {
                 return null;
             }
+			if (childNode.hasCollectionProperty(NodeConstants.Info.ACCESS_PATTERNS)) {
+			    childNode.recordDebugAnnotation("access pattern not satisfied by join", modelID, "not pushing parent join", record, metadata); //$NON-NLS-1$ //$NON-NLS-2$
+			    return null;
+			}
 			Object accessModelID = getModelIDFromAccess(childNode, metadata);
             if(accessModelID == null) { 
                 return null;
