@@ -110,6 +110,12 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 					if (evicted != 0 && LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
 						LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Asynch eviction run", evicted, impl.reserveBatchBytes.get(), impl.maxReserveBytes, impl.activeBatchBytes.get()); //$NON-NLS-1$
 					}
+					if (evicted < impl.maxProcessingBytes) {
+    					long secondEvicted = impl.doEvictions(impl.maxProcessingBytes/2, true, impl.evictionQueue);
+                        if (secondEvicted != 0 && LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
+                            LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Asynch eviction run", secondEvicted, impl.reserveBatchBytes.get(), impl.maxReserveBytes, impl.activeBatchBytes.get()); //$NON-NLS-1$
+                        }
+					}
 				} catch (Throwable t) {
 					LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, t, "Exception during cleaning run"); //$NON-NLS-1$
 				}
