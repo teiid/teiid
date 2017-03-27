@@ -5272,5 +5272,13 @@ public class TestParser {
     	query.setSelect(new Select(Arrays.asList(new Function(SQLConstants.Tokens.DOUBLE_AMP, new Expression[] {new Constant(1), new Constant(2)}))));
         helpTest(sql, "SELECT (1 && 2)", query);
     }
+    
+    @Test public void testGeometryAlias() {
+        String sql = "SELECT y AS geometry";
+        AliasSymbol as = new AliasSymbol("geometry", new ElementSymbol("y")); //$NON-NLS-1$ //$NON-NLS-2$
+        Query query = new Query();
+        query.setSelect(new Select(Arrays.asList(as)));
+        helpTest(sql, sql, query); //$NON-NLS-1$
+    }
 
 }
