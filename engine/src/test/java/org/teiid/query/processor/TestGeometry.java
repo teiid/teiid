@@ -446,4 +446,15 @@ public class TestGeometry {
         assertEquals("LINESTRING (1.112 2.123, 4.111 3.237)", ClobType.getString((ClobType)Evaluator.evaluate(ex)));
     }
     
+    @Test public void testGeoJson() throws Exception {
+        Expression ex = TestFunctionResolving.getExpression("ST_AsText(ST_GeomFromGeoJson(ST_AsGeoJSON(ST_GeomFromText('MULTIPOINT ((10 40), (40 30), (20 20), (30 10))'))))");
+        assertEquals("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))", ClobType.getString((ClobType)Evaluator.evaluate(ex)));
+        
+        ex = TestFunctionResolving.getExpression("ST_AsText(ST_GeomFromGeoJson(ST_AsGeoJSON(ST_GeomFromText('MULTILINESTRING ((10 10, 20 20, 10 40),(40 40, 30 30, 40 20, 30 10))'))))");
+        assertEquals("MULTILINESTRING ((10 10, 20 20, 10 40), (40 40, 30 30, 40 20, 30 10))", ClobType.getString((ClobType)Evaluator.evaluate(ex)));
+
+        ex = TestFunctionResolving.getExpression("ST_AsText(ST_GeomFromGeoJson(ST_AsGeoJSON(ST_GeomFromText('LINESTRING (30 10, 10 30, 40 40)'))))");
+        assertEquals("LINESTRING (30 10, 10 30, 40 40)", ClobType.getString((ClobType)Evaluator.evaluate(ex)));
+    }
+    
 }
