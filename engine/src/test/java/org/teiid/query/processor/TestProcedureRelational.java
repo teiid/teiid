@@ -805,4 +805,17 @@ public class TestProcedureRelational {
         TestProcessor.helpProcess(plan, dataManager, expected);
     }
     
+    @Test public void testNestedJoin(){
+        String sql = "select y.e1 from pm1.g1 join pm1.vsp26 as x on x.param1=1 and x.param2=pm1.g1.e1 join pm1.vsp26 as y on y.param1 = pm1.g1.e2 and y.param2 = x.e1"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List[] { 
+            Arrays.asList("a"),Arrays.asList("a"),Arrays.asList("a"),Arrays.asList("a"),Arrays.asList("a"),Arrays.asList("a"),Arrays.asList("c"),Arrays.asList("b"),Arrays.asList("a"), //$NON-NLS-1$  //$NON-NLS-2$ //$NON-NLS-3$
+        };       
+        FakeDataManager dataManager = new FakeDataManager();
+        TestProcessor.sampleData1(dataManager);   
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());       
+        TestProcessor.helpProcess(plan, dataManager, expected); 
+    }
+
+    
 }

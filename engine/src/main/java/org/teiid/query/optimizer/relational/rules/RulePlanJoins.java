@@ -466,6 +466,7 @@ public class RulePlanJoins implements OptimizerRule {
                     }
                     
                     joinSources.remove();
+                    currentGroups.addAll(joinSource.getGroups());
                     satisfiedAP = true;
                     joinSource.setProperty(NodeConstants.Info.ACCESS_PATTERN_USED, ap.clone());
                     joinSource.setProperty(NodeConstants.Info.REQUIRED_ACCESS_PATTERN_GROUPS, allRequiredGroups);
