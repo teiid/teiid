@@ -1311,4 +1311,24 @@ public class TestAggregateProcessing {
                 hdm, new List<?>[] {Arrays.asList(1), Arrays.asList(2), Arrays.asList(1)});
     }
     
+    @Test public void testGroupByPredicateInCase() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL(
+                " CREATE FOREIGN TABLE wdv (id integer, numericvalue bigdecimal);" +
+                " CREATE FOREIGN TABLE tv (id integer, varvalue bigdecimal);", "x", "y");
+        
+        String sql = "select case when dv.varvalue is null then 'missing' else 'wrong' end as t"
+                + " from wdv nv left join tv dv on dv.id = nv.id where (dv.varvalue is null or round(nv.numericvalue,0) <> round(dv.varvalue,0))"
+                + " group by dv.varvalue is null";
+        
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT g_1.varvalue, g_0.numericvalue, g_1.varvalue IS NULL FROM y.wdv AS g_0 LEFT OUTER JOIN y.tv AS g_1 ON g_1.id = g_0.id", Arrays.asList(BigDecimal.valueOf(1.0), BigDecimal.valueOf(2.0), false));
+        
+        BasicSourceCapabilities bsc = TestAggregatePushdown.getAggregateCapabilities();
+        
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder(bsc));
+        
+        TestProcessor.helpProcess(plan, TestProcessor.createCommandContext(),
+                hdm, new List<?>[] {Arrays.asList("wrong")});
+    }
+    
 }
