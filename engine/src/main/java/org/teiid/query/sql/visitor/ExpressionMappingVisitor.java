@@ -224,10 +224,17 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
     public void visit(SearchedCaseExpression obj) {
         int whenCount = obj.getWhenCount();
         ArrayList<Expression> thens = new ArrayList<Expression>(whenCount);
+        ArrayList<Criteria> whens = new ArrayList<Criteria>(whenCount);
         for (int i = 0; i < whenCount; i++) {
             thens.add(replaceExpression(obj.getThenExpression(i)));
+            Expression ex = replaceExpression(obj.getWhenCriteria(i));
+            if (!(ex instanceof Criteria)) {
+                whens.add(new ExpressionCriteria(ex));
+            } else {
+                whens.add((Criteria)ex);
+            }
         }
-        obj.setWhen(obj.getWhen(), thens);
+        obj.setWhen(whens, thens);
         if (obj.getElseExpression() != null) {
             obj.setElseExpression(replaceExpression(obj.getElseExpression()));
         }
