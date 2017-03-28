@@ -1,6 +1,0 @@
-/subsystem=teiid/translator=ispn-lib-mode:add(module=org.jboss.teiid.translator.infinispan.libmode)
-
-/subsystem=resource-adapters/resource-adapter=ispn-libmode-ra:add(module=org.jboss.teiid.resource-adapter.infinispan.libmode)
-
-
-
