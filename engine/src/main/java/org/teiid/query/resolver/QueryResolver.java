@@ -52,15 +52,7 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.command.*;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
-import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.From;
-import org.teiid.query.sql.lang.FromClause;
-import org.teiid.query.sql.lang.GroupContext;
-import org.teiid.query.sql.lang.ProcedureContainer;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.SubqueryContainer;
-import org.teiid.query.sql.lang.UnaryFromClause;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -499,6 +491,14 @@ public class QueryResolver {
 		List<ElementSymbol> symbols = ResolverUtil.resolveElementsInGroup(virtualGroup, qmi);
 		List<Expression> projectedSymbols = result.getProjectedSymbols();
 		validateProjectedSymbols(virtualGroup, symbols, projectedSymbols);
+		//setqueries store the projected types separately
+		if (result instanceof SetQuery) {
+		    List<Class<?>> types = new ArrayList<Class<?>>();
+		    for (ElementSymbol es : symbols) {
+		        types.add(es.getType());
+		    }
+		    ((SetQuery)result).setProjectedTypes(types, qmi.getDesignTimeMetadata());
+		}
 	}
 
 	public static void validateProjectedSymbols(GroupSymbol virtualGroup,
