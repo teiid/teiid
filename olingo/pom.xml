@@ -2,7 +2,7 @@
     <parent>
         <artifactId>teiid-parent</artifactId>
         <groupId>org.jboss.teiid</groupId>
-        <version>9.3.0.Alpha2</version>
+        <version>9.3.0.Alpha3-SNAPSHOT</version>
     </parent>
     <groupId>org.jboss.teiid</groupId>
     <modelVersion>4.0.0</modelVersion>
