@@ -83,7 +83,6 @@
     <module>cassandra</module>
     <module>file</module> 
     <module>google</module>
-    <module>infinispan</module>
     <module>ldap</module>
     <module>jdbc</module>
     <module>mongodb</module>
