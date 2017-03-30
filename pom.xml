@@ -763,11 +763,6 @@
                 </exclusions>                                                
             </dependency>   
             <dependency>
-                <groupId>org.jboss.logging</groupId>
-                <artifactId>jboss-logging-generator</artifactId>
-                <version>${version.org.jboss.logging.jboss-logging-tools}</version>            
-            </dependency>
-            <dependency>
                 <groupId>org.jboss.as</groupId>
                 <artifactId>jboss-as-clustering-infinispan</artifactId>
                 <version>${version.org.jboss.as}</version>
