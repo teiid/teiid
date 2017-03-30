@@ -233,7 +233,9 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 		if (this.config != null) {
 			SSLEngine engine = config.getServerSSLEngine();
 		    if (engine != null) {
-		        pipeline.addLast("ssl", new SslHandler(engine)); //$NON-NLS-1$
+		        SslHandler handler = new SslHandler(engine);
+		        handler.setCloseOnSSLException(true);
+                pipeline.addLast("ssl", handler); //$NON-NLS-1$
 		    }
 		}
 	    pipeline.addLast("decoder", new ObjectDecoder(maxMessageSize, maxLobSize, classLoader, storageManager)); //$NON-NLS-1$
