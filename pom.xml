@@ -63,7 +63,7 @@
         <version.org.apache.olingo>4.2.0-teiid-5</version.org.apache.olingo>
         <version.org.eclipse.jetty>9.2.7.v20150116</version.org.eclipse.jetty>
         <version.commons-codec>1.9</version.commons-codec>
-        <version.com.fasterxml.jackson.core>2.4.2</version.com.fasterxml.jackson.core>
+        <version.com.fasterxml.jackson.core>2.5.4</version.com.fasterxml.jackson.core>
 	    <version.com.fasterxml.jackson.swagger>2.4.5</version.com.fasterxml.jackson.swagger>
 	    <version.com.fasterxml.aalto-xml>0.9.10</version.com.fasterxml.aalto-xml>
         <!-- <version.org.reflections>0.9.9</version.org.reflections>  -->
@@ -72,7 +72,7 @@
         <version.com.facebook.presto>0.89</version.com.facebook.presto>
         <version.net.oauth.core>20100527</version.net.oauth.core>
         <version.jts>1.13</version.jts>
-        <version.jts2geojson>0.7.0</version.jts2geojson>
+        <version.jts2geojson>0.8.0</version.jts2geojson>
         <version.proj4j>0.1.0</version.proj4j>
 
 	    <version.swagger-jaxrs>1.5.2</version.swagger-jaxrs>
