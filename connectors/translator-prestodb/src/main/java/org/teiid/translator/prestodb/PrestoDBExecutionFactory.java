@@ -22,22 +22,22 @@
 
 package org.teiid.translator.prestodb;
 
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.BIG_INTEGER;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.BOOLEAN;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.CHAR;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.DOUBLE;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.INTEGER;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.STRING;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.TIMESTAMP;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.VARBINARY;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
+
 
 import java.sql.Connection;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.Argument;
 import org.teiid.language.Call;
 import org.teiid.language.Command;
+import org.teiid.language.Function;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.MetadataProcessor;
@@ -62,6 +62,7 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
         setSupportsOuterJoins(true);
         setSupportsFullOuterJoins(true);
         setUseBindVariables(false);
+//        setTransactionSupport(TransactionSupport.NONE); // not valid in Dv 6.4.
     }
     
     @Override
@@ -113,31 +114,69 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
         convert.addTypeMapping("double", FunctionModifier.DOUBLE); //$NON-NLS-1$
         convert.addTypeMapping("varchar", FunctionModifier.STRING); //$NON-NLS-1$
         convert.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
-        convert.addTypeMapping("time with timezone", FunctionModifier.TIME); //$NON-NLS-1$
-        convert.addTypeMapping("timestamp with timezone", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+        convert.addTypeMapping("time", FunctionModifier.TIME); //$NON-NLS-1$
+        convert.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
         convert.addTypeMapping("varbinary", FunctionModifier.BLOB); //$NON-NLS-1$
         convert.addTypeMapping("json", FunctionModifier.BLOB); //$NON-NLS-1$
+        convert.addConvert(DataTypeManager.DefaultTypeCodes.DATE, DataTypeManager.DefaultTypeCodes.TIMESTAMP, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                return Arrays.asList("cast(", function.getParameters().get(0), " AS timestamp)");    //$NON-NLS-1$ //$NON-NLS-2$
+            }
+            
+        });
+        convert.addConvert(DataTypeManager.DefaultTypeCodes.TIME, DataTypeManager.DefaultTypeCodes.TIMESTAMP, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                return Arrays.asList("cast(", function.getParameters().get(0), " AS timestamp)");    //$NON-NLS-1$ //$NON-NLS-2$
+            }
+            
+        });
+        convert.addConvert(DataTypeManager.DefaultTypeCodes.STRING, DataTypeManager.DefaultTypeCodes.INTEGER, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                return Arrays.asList("cast(", function.getParameters().get(0), " AS integer)");    //$NON-NLS-1$ //$NON-NLS-2$
+            }
+            
+        });
+        convert.addConvert(DataTypeManager.DefaultTypeCodes.BOOLEAN, DataTypeManager.DefaultTypeCodes.INTEGER, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                return Arrays.asList("cast(", function.getParameters().get(0), " AS integer)");    //$NON-NLS-1$ //$NON-NLS-2$
+            }
+            
+        });
         
         registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);        
         
         registerFunctionModifier(SourceSystemFunctions.CURDATE, new AliasModifier("current_date")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.CURTIME, new AliasModifier("current_time")); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("nullif")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day_of_month")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new AliasModifier("day_of_week")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new AliasModifier("day_of_year")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new AliasModifier("format_datetime")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, new AliasModifier("parse_datetime")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.POWER, new AliasModifier("pow")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.LOCATE, new AliasModifier("strpos")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.LOG, new AliasModifier("ln"){ //$NON-NLS-1$
+            @Override
+            protected void modify(Function function) {
+                if(function.getParameters().size() == 1){
+                    super.modify(function);
+                }
+            }}); 
         
         addPushDownFunction(PRESTODB, "cbrt", DOUBLE, DOUBLE); //$NON-NLS-1$
-        addPushDownFunction(PRESTODB, "chr", STRING, CHAR); //$NON-NLS-1$
         addPushDownFunction(PRESTODB, "ceil", INTEGER, DOUBLE); //$NON-NLS-1$
         addPushDownFunction(PRESTODB, "current_timestamp", TIMESTAMP); //$NON-NLS-1$
         addPushDownFunction(PRESTODB, "current_timezone", STRING); //$NON-NLS-1$
         addPushDownFunction(PRESTODB, "e", DOUBLE); //$NON-NLS-1$
         addPushDownFunction(PRESTODB, "ln", DOUBLE, DOUBLE); //$NON-NLS-1$
         addPushDownFunction(PRESTODB, "log2", DOUBLE, DOUBLE); //$NON-NLS-1$
+        addPushDownFunction(PRESTODB, "log", DOUBLE, DOUBLE, INTEGER); //$NON-NLS-1$
         addPushDownFunction(PRESTODB, "random", DOUBLE); //$NON-NLS-1$
         addPushDownFunction(PRESTODB, "cosh", DOUBLE, DOUBLE); //$NON-NLS-1$
         addPushDownFunction(PRESTODB, "tanh", DOUBLE, DOUBLE); //$NON-NLS-1$
@@ -190,6 +229,7 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
         //supportedFunctions.add(SourceSystemFunctions.BITOR);
         //supportedFunctions.add(SourceSystemFunctions.BITXOR);
         supportedFunctions.add(SourceSystemFunctions.CEILING);
+        supportedFunctions.add(SourceSystemFunctions.CHAR);
         supportedFunctions.add(SourceSystemFunctions.COALESCE);
         supportedFunctions.add(SourceSystemFunctions.CONCAT);
         supportedFunctions.add(SourceSystemFunctions.COS);        
@@ -207,7 +247,8 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.HOUR);
         supportedFunctions.add(SourceSystemFunctions.IFNULL);
         supportedFunctions.add(SourceSystemFunctions.LCASE);
-        supportedFunctions.add(SourceSystemFunctions.LOCATE);
+          //TEIID-4680 TEIID-4679 3 arg locate is not supported
+//        supportedFunctions.add(SourceSystemFunctions.LOCATE);
 //        supportedFunctions.add(SourceSystemFunctions.LPAD);
         supportedFunctions.add(SourceSystemFunctions.LENGTH);
         supportedFunctions.add(SourceSystemFunctions.LTRIM);
@@ -240,6 +281,25 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.YEAR);
         return supportedFunctions;
     }     
+
+    /**
+     * Base on https://prestodb.io/docs/current/functions/datetime.html, the support format are
+     * date '2012-08-08', time '01:00', timestamp '2012-08-08 01:00'
+     */
+    @Override
+    public String translateLiteralDate(Date dateValue) {
+        return "date '" + formatDateValue(dateValue) + "'"; //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    @Override
+    public String translateLiteralTime(Time timeValue) {
+        return "time '" + formatDateValue(timeValue) + "'"; //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
+    @Override
+    public String translateLiteralTimestamp(Timestamp timestampValue) {
+        return "timestamp '" + formatDateValue(timestampValue) + "'"; //$NON-NLS-1$ //$NON-NLS-2$
+    }
 
     @Override
     public boolean supportsSelectWithoutFrom() {
@@ -323,5 +383,10 @@ public class PrestoDBExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsArrayType() {
         return true;
+    }
+
+    @Override
+    public boolean supportsCorrelatedSubqueries() {
+        return false;
     }    
 }
