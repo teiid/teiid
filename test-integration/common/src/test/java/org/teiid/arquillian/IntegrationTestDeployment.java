@@ -46,6 +46,7 @@ import org.jboss.shrinkwrap.api.exporter.ZipExporter;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.postgresql.Driver;
@@ -516,6 +517,7 @@ public class IntegrationTestDeployment {
 	}
 	
 	@Test
+	@Ignore
 	public void testCreateConnectionFactory() throws Exception{
 		String deployedName = "wsOne";
 		
