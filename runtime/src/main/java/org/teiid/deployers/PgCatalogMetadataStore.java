@@ -814,10 +814,8 @@ public class PgCatalogMetadataStore extends MetadataFactory {
                     if (isArray) {
                         name += "[]"; //$NON-NLS-1$
                     }
-                    System.out.println(name);
                     return name;
                 }
-                System.out.println("unknown");
                 return "???"; //$NON-NLS-1$
             } finally {
                 if (c != null) {
