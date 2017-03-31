@@ -189,7 +189,6 @@ TOKEN : /* Reserved words */
 |   <CURSOR: "cursor">
 |   <DAY: "day">
 |   <DEALLOCATE: "deallocate">
-|   <DEFAULT_KEYWORD: "default">
 |   <DECLARE: "declare">
 |   <DELETE: "delete">
 |   <DESC: "desc">
@@ -498,7 +497,7 @@ TOKEN : /* NonReserved words */
 |   <GEOMETRY: "geometry">
 |   <UPSERT: "upsert">
 |   <AFTER: "after">
-
+|   <DEFAULT_KEYWORD: "default">
 |   <AUTHENTICATED: "authenticated">
 |   <TYPE: "type">
 |   <TRANSLATOR: "translator">
@@ -629,7 +628,7 @@ Token nonReserved() :
      |<SELECTOR>|<SKIP_KEYWORD>|<WIDTH>|<PASSING>|<NAME>|<ENCODING>|<COLUMNS>|<DELIMITER>|<QUOTE>|<HEADER>|<NULLS>|<OBJECTTABLE>
      |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>|<VARIADIC>|<RAISE>|<EXCEPTION>|<CHAIN>|<JSONARRAY_AGG>|<JSONOBJECT>|<PRESERVE>|<UPSERT>|<AFTER>
      |<TYPE>|<TRANSLATOR>|<JAAS>|<CONDITION>|<MASK>|<ACCESS>|<CONTROL>|<NONE>|<DATA>|<DATABASE>|<PRIVILEGES>|<ROLE>|<SCHEMA>|<USE>|<REPOSITORY>|<RENAME>
-     |<DOMAIN>|<USAGE>|<GEOMETRY>)
+     |<DOMAIN>|<USAGE>|<GEOMETRY>|<DEFAULT_KEYWORD>)
     {
     	return getToken(0);
     }	

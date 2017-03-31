@@ -163,7 +163,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     static Pattern TRANSACTION_STATEMENT = Pattern.compile("\\s*(commit|rollback|(start\\s+transaction))\\s*;?\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     static Pattern SET_STATEMENT = Pattern.compile("\\s*set(?:\\s+(payload))?\\s+((?:session authorization)|(?:[a-zA-Z]\\w*)|(?:\"[^\"]*\")+)\\s+(?:to\\s+)?((?:[^\\s]*)|(?:'[^']*')+)\\s*;?\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     static Pattern SET_CHARACTERISTIC_STATEMENT = Pattern.compile("\\s*set\\s+session\\s+characteristics\\s+as\\s+transaction\\s+isolation\\s+level\\s+((?:read\\s+(?:(?:committed)|(?:uncommitted)))|(?:repeatable\\s+read)|(?:serializable))\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-    static Pattern SHOW_STATEMENT = Pattern.compile("\\s*show\\s+([a-zA-Z]\\w*|(?:\"[^\"]*\")+)\\s*;?\\s*?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+    static Pattern SHOW_STATEMENT = Pattern.compile("\\s*show\\s+((?:transaction isolation level)|(?:[a-zA-Z]\\w*)|(?:\"[^\"]*\")+)\\s*;?\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     
     /**
      * MMStatement Constructor.
@@ -647,6 +647,30 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 					new String[] {DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
 			return booleanFuture(true);
 		}
+		if (show.equalsIgnoreCase("transaction isolation level")) { //$NON-NLS-1$
+            List<ArrayList<Object>> records = new ArrayList<ArrayList<Object>>(1);
+            ArrayList<Object> row = new ArrayList<Object>(1);
+            switch (driverConnection.getTransactionIsolation()) {
+            case Connection.TRANSACTION_READ_COMMITTED:
+                row.add("READ COMMITTED"); //$NON-NLS-1$
+                break;
+            case Connection.TRANSACTION_READ_UNCOMMITTED:
+                row.add("READ UNCOMMITTED"); //$NON-NLS-1$
+                break;
+            case Connection.TRANSACTION_REPEATABLE_READ:
+                row.add("REPEATABLE READ"); //$NON-NLS-1$
+                break;
+            case Connection.TRANSACTION_SERIALIZABLE:
+                row.add("SERIALIZABLE"); //$NON-NLS-1$
+                break;
+            default:
+                row.add("UNKNOWN"); //$NON-NLS-1$
+            }
+            records.add(row);
+            createResultSet(records, new String[] {"TRANSACTION ISOLATION"}, //$NON-NLS-1$
+                    new String[] {DataTypeManager.DefaultDataTypes.STRING});
+            return booleanFuture(true);
+        }
 		List<List<String>> records = Collections.singletonList(Collections.singletonList(driverConnection.getExecutionProperty(show)));
 		createResultSet(records, new String[] {show}, new String[] {DataTypeManager.DefaultDataTypes.STRING});
 		return booleanFuture(true);

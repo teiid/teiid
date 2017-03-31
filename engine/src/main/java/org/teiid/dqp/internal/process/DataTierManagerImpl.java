@@ -776,6 +776,20 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         		row.add(false);
         		row.add((key instanceof ForeignKey)?((ForeignKey)key).getUniqueKeyID():null);
         		row.add(key.getUUID());
+        		row.add(key.getParent().getUUID());
+        		row.add(null);
+        		if (key instanceof ForeignKey) {
+        		    KeyRecord ref = ((ForeignKey)key).getReferenceKey();
+        		    if (ref != null) {
+                        row.set(row.size() - 1, ref.getParent().getUUID());
+        		    }
+        		}
+        		List<Column> columns2 = key.getColumns();
+                Short[] pos = new Short[columns2.size()];
+        		for (int i = 0; i < pos.length; i++) {
+        		    pos[i] = (short)columns2.get(i).getPosition();
+        		}
+        		row.add(new ArrayImpl((Object[])pos));
         	}
         	
         	@Override

@@ -93,6 +93,9 @@ CREATE FOREIGN TABLE Keys (
 	IsIndexed boolean NOT NULL,
 	RefKeyUID string(50),
 	UID string(50) NOT NULL,
+	TableUID string(50) NOT NULL,
+	RefTableUID string(50) NOT NULL,
+	ColPositions short[] NOT NULL,
 	PRIMARY KEY (VDBName, SchemaName, TableName, Name),
 	FOREIGN KEY (VDBName, SchemaName, TableName) REFERENCES Tables (VDBName, SchemaName, Name),
 	UNIQUE (UID)

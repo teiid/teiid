@@ -328,7 +328,7 @@ public class QueryParser implements Parser {
 			String img = tokenImage[t];
 			if (id && img.startsWith("\"") //$NON-NLS-1$ 
 					&& Character.isLetter(img.charAt(1)) 
-					&& !SQLConstants.isReservedWord(img.substring(1, img.length()-1))) {
+					&& (!SQLConstants.isReservedWord(img.substring(1, img.length()-1)) || img.equals("\"default\""))) { //$NON-NLS-1$
 				continue;
 			}
 			if (count > 0) {
