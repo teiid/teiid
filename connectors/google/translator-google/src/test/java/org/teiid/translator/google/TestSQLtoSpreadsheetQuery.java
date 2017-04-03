@@ -71,12 +71,13 @@ public class TestSQLtoSpreadsheetQuery {
 	public static void createSpreadSheetInfo() {
 	    people=  new SpreadsheetInfo("People");
         Worksheet worksheet = people.createWorksheet("PeopleList");
-        for (int i = 1; i <= 3; i++) {
+        for (int i = 1; i <= 4; i++) {
             Column newCol = new Column();
             newCol.setAlphaName(Util.convertColumnIDtoString(i));
             worksheet.addColumn(newCol.getAlphaName(), newCol);
         }
         worksheet.getColumns().get("C").setDataType(SpreadsheetColumnType.NUMBER);
+        worksheet.getColumns().get("D").setDataType(SpreadsheetColumnType.BOOLEAN);
 	}
 	
 	private QueryMetadataInterface dummySpreadsheetMetadata() throws Exception {
@@ -133,7 +134,7 @@ public class TestSQLtoSpreadsheetQuery {
 	public void testSelectFrom1() throws Exception {
 		testConversion("select A,B from PeopleList", "SELECT A, B");
 		testConversion("select C from PeopleList", "SELECT C");
-		testConversion("select * from PeopleList", "SELECT A, B, C");
+		testConversion("select * from PeopleList", "SELECT A, B, C, D");
 		testConversion("select A,B from PeopleList where A like '%car%' AND A NOT like '_car_'", "SELECT A, B WHERE A LIKE '%car%' AND (A NOT LIKE '_car_' AND A IS NOT NULL)");
 		testConversion("select A,B from PeopleList where A='car'", "SELECT A, B WHERE A = 'car'");
 		testConversion("select A,B from PeopleList where A >1  and B='bike'", "SELECT A, B WHERE A > '1' AND B = 'bike'");
@@ -163,6 +164,7 @@ public class TestSQLtoSpreadsheetQuery {
 		testDeleteConversion("delete from PeopleList where C <= 1000 and C !=5","(c <= 1000.0 AND c <> \"\") AND (c <> 5.0 AND c <> \"\")");
 		testDeleteConversion("delete from PeopleList where C >= 50 or C <=60.1","c >= 50.0 OR (c <= 60.1 AND c <> \"\")");
 		testDeleteConversion("delete from PeopleList where A = 'car'","a = \"car\"");
+		testDeleteConversion("delete from PeopleList where D = true","d = true");
 	}
 	
 	@Test public void testLiterals() throws Exception {

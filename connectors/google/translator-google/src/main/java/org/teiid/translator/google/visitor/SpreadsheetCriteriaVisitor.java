@@ -67,7 +67,8 @@ public class SpreadsheetCriteriaVisitor extends SQLStringVisitor {
 		if (Number.class.isAssignableFrom(type)) {
 			buffer.append(obj.toString());
 			return;
-		} else if (obj.getType().equals(DataTypeManager.DefaultDataClasses.DATE)) {
+		} else if (obj.getType().equals(DataTypeManager.DefaultDataClasses.DATE) 
+		        || obj.getType().equals(DataTypeManager.DefaultDataClasses.BOOLEAN)) {
 			buffer.append(obj.getValue().toString()); 
 			return;
 		} else {
