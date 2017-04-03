@@ -36,6 +36,7 @@ import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.resource.adapter.google.common.SpreadsheetOperationException;
 import org.teiid.resource.adapter.google.metadata.SpreadsheetInfo;
 import org.teiid.translator.TypeFacility;
+import org.teiid.translator.google.SpreadsheetExecutionFactory;
 
 /**
  * Base visitor for criteria
@@ -71,7 +72,10 @@ public class SpreadsheetCriteriaVisitor extends SQLStringVisitor {
 		} else if (obj.getType().equals(DataTypeManager.DefaultDataClasses.DATE)) {
 			buffer.append(obj.getValue().toString()); 
 			return;
-		} else {
+		} else if (obj.getType().equals(DataTypeManager.DefaultDataClasses.TIME)
+		        || obj.getType().equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
+            throw new SpreadsheetOperationException(SpreadsheetExecutionFactory.UTIL.gs("time_not_supported")); //$NON-NLS-1$
+        } else {
 			buffer.append("\""); //$NON-NLS-1$
 			buffer.append(StringUtil.replace(obj.getValue().toString(), "\"", "\"\"")); //$NON-NLS-1$ //$NON-NLS-2$
 			buffer.append("\""); //$NON-NLS-1$
