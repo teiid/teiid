@@ -877,7 +877,11 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				row.add(getType(currentParent));
 				row.add(currentParent.getParent().getName());
 				row.add(currentParent.getName());
-				row.add(null); //column usage not yet supported
+				if (currentParent instanceof Column) {
+				    row.add(currentParent.getName());
+				} else {
+	                row.add(null);
+				}
 				row.add(entry.getUUID());
 				row.add(getType(entry));
 				if (entry instanceof Column) {
