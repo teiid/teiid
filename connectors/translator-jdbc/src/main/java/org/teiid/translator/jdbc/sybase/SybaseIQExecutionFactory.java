@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
@@ -50,10 +51,21 @@ public class SybaseIQExecutionFactory extends BaseSybaseExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new EscapeSyntaxModifier());
         registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new EscapeSyntaxModifier());
         registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.WEEK, new EscapeSyntaxModifier());
         registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new AddDiffModifier(true, this.getLanguageFactory()).supportsQuarter(true));
         registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new AddDiffModifier(false, this.getLanguageFactory()).supportsQuarter(true));
         registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier(SourceSystemFunctions.COALESCE));
-        
+        registerFunctionModifier(SourceSystemFunctions.LOCATE, new FunctionModifier() {
+            
+            @Override
+            public List<?> translate(Function function) {
+                List<Expression> params = function.getParameters();
+                Expression param1 = params.get(0);
+                Expression param2 = params.set(1, param1);
+                params.set(0, param2);
+                return null;
+            }
+        });       
         //add in type conversion
         ConvertModifier convertModifier = new ConvertModifier();
         convertModifier.setBooleanNullable(booleanNullable());
