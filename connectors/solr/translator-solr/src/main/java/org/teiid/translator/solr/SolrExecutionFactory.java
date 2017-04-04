@@ -51,6 +51,7 @@ public class SolrExecutionFactory extends ExecutionFactory<ConnectionFactory, So
         registerFunctionModifier(SourceSystemFunctions.POWER, new AliasModifier("pow"));//$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, new DateFunctionModifier());
         registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new DateFunctionModifier());
+        setTransactionSupport(TransactionSupport.NONE);
 		
 	}
 	
@@ -225,6 +226,11 @@ public class SolrExecutionFactory extends ExecutionFactory<ConnectionFactory, So
 
 	@Override
 	public boolean returnsSingleUpdateCount() {
+		return true;
+	}
+	
+	@Override
+	public boolean supportsOnlyFormatLiterals(){
 		return true;
 	}
 }

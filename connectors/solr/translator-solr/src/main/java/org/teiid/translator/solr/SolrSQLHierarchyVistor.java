@@ -80,7 +80,7 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	private LinkedList<String> dateRange = new LinkedList<String>();
 	private boolean dateRangMissingException = false;
 	//NOTE: If the entered teiid query doesn't contain a date range that specify the date from-to range, the following error message will appear.
-	private static final String DATE_RANGE_MISSING_MSG = "Please provide the query with date range in where clause; For instance 'date_field' between date_1 and date_2";
+	private static final String DATE_RANGE_MISSING_MSG = "\n Please provide the query with date range in where clause; For instance => \n 'timestamp' BETWEEN 'yyyy-MM-dd HH:mm:ss' AND 'yyyy-MM-dd HH:mm:ss'";
 	private static final String FACET_TAG = "{!tag=r1}";
 	private static final String FACET_RANGE_TAG = "{!range=r1}";
 	private static final String FACET_RANGE = "facet.range";
@@ -97,7 +97,17 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	private static final String MONTH_FORMAT = "MM";
 	private static final String MONTH = "MONTH";
 	private static final String YEAR = "YEAR";
+	private boolean invalidLiteralPositionException = false;
+	private static final String INVALID_LITERAL_POSITION_MSG = "\n No literals are allowed except in the where clause as in form of => \n BETWEEN 'yyyy-MM-dd HH:mm:ss' AND 'yyyy-MM-dd HH:mm:ss' \n  -or- \n columnName = 'value'";
 	
+	private boolean hasWhereClause = false;
+	private boolean functionIsNotAllowed = false;
+	private static final String FUNCTION_IS_NOT_ALLOWED_MSG = " is not allowed. Only \n PARSETIMESTAMP(FORMATTIMESTAMP(timestamp, 'yyyy-MM-dd HH:mm:ss'), 'yyyy-MM-dd HH:mm:ss') is allowed";
+	private String functionIsNotAllowedMsg = "";
+
+	private LinkedList<String> dateFunctions = new LinkedList<String>();
+	private boolean dateFunctionOrderException = false;
+	private static final String DATE_FUNCTIONS_OUTOF_ORDER = "\n PARSETIMESTAMP(FORMATTIMESTAMP(timestamp, 'yyyy-MM-dd HH:mm:ss'), 'yyyy-MM-dd HH:mm:ss') \n is the only allowed format for using parsetimestamp";
 	
 	public SolrSQLHierarchyVistor(RuntimeMetadata metadata, SolrExecutionFactory ef) {
 		this.metadata = metadata;
@@ -162,6 +172,9 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	 */
 	@Override
 	public void visit(Comparison obj) {
+		
+		this.hasWhereClause = true;
+		
 		visitNode(obj.getLeftExpression());
 		String lhs = this.onGoingExpression.pop();
 		
@@ -203,7 +216,7 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 
 	@Override
 	public void visit(AndOr obj) {
-
+		
 		// prepare statement
 		buffer.append(Tokens.LPAREN);
 		buffer.append(Tokens.LPAREN);
@@ -276,6 +289,11 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 
 	@Override
 	public void visit(Literal obj) {
+		
+		if(!this.hasWhereClause) {
+			this.invalidLiteralPositionException = true;
+		}
+		
     	if (obj.getValue() == null) {
             buffer.append(NULL);
         } else {
@@ -341,11 +359,21 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	
 	@Override
 	public void visit(Function obj) {
+		
+		if( obj.getName() != "") {
+			this.dateFunctions.add(obj.getName());
+		}
+		
 		FunctionModifier funcModifier = this.ef.getFunctionModifiers().get(obj.getName());
 		if (funcModifier != null) {
-			funcModifier.translate(obj);
+			try{
+				funcModifier.translate(obj);
+			} catch(Exception e) {
+				this.functionIsNotAllowed = true;
+				this.functionIsNotAllowedMsg = obj.getName() + FUNCTION_IS_NOT_ALLOWED_MSG;
+			}
 		}
-			
+		
 		StringBuilder sb = new StringBuilder();
 		visitNodes(obj.getParameters());
 		for (int i = 0; i < obj.getParameters().size(); i++) {
@@ -364,6 +392,20 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 		}
 		
 		this.onGoingExpression.push(sb.toString());
+		if(
+			this.dateFunctions.size() == 1 || 
+			(
+				this.dateFunctions.size() >= 2 && 
+				!( 
+					this.dateFunctions.poll() == "parsetimestamp" && 
+					this.dateFunctions.poll() == "formattimestamp" && 
+					this.dateFunctions.isEmpty()
+				 )
+			)
+		   ) 
+		{
+			this.dateFunctionOrderException = true;
+		}
 	}
 	
 	@Override
@@ -388,6 +430,9 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	
 	@Override
 	public void visit(GroupBy obj) {
+		
+		this.hasWhereClause = false;
+		
 		String dateRangeGap = extractDateRangeGap(obj);
 		StringBuilder facetFields = new StringBuilder();
 
@@ -417,6 +462,7 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 		}
 		this.query.setFacetMissing(true);
 	}
+	
 	/**
      * Extract the date range gap from the parameters of the FORMATTIMESTAMP function in teiid query
      * @param GroupBy object
@@ -503,8 +549,27 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 
 	public SolrQuery getSolrQuery() throws TranslatorException {
 		
+		String errorMsg = "";
+		boolean errorFlag = false;
+		if(this.dateFunctionOrderException) {
+			errorMsg += DATE_FUNCTIONS_OUTOF_ORDER;
+			errorFlag = true;
+		}
+		if(this.functionIsNotAllowed) {
+			errorMsg += this.functionIsNotAllowedMsg;
+			errorFlag = true;
+		}
+		if(this.invalidLiteralPositionException) {
+			errorMsg += INVALID_LITERAL_POSITION_MSG;
+			errorFlag = true;
+		}
 		if(this.dateRangMissingException) {
-			throw new TranslatorException(DATE_RANGE_MISSING_MSG);
+			errorMsg += DATE_RANGE_MISSING_MSG;
+			errorFlag = true;
+		}
+		
+		if(errorFlag) {
+			throw new TranslatorException(errorMsg);
 		}
 		
 		if (buffer == null || buffer.length() == 0) {

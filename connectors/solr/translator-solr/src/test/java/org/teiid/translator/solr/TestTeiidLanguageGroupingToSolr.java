@@ -282,5 +282,285 @@ public class TestTeiidLanguageGroupingToSolr {
 	@After public void tearDown() { 
 		TimestampWithTimezone.resetCalendar(null);
 	}
-
+	
+	/* ------------------------------Newly Added Test Cases----------------------------------------------- */
+	
+	//Literals are allowed only after where
+	@Test(expected=TranslatorException.class)
+	public void noSupportForLiteralsBeforeWhere() throws Exception {
+		assertEquals("fl=name,1&rows=0&facet=true&facet.pivot=name&facet.missing=true&q=*:*",
+				getSolrTranslation("select 'name' from example "));		
+	}
+	
+	//Error if where is omitted doesn't exist
+	@Test
+	public void selectWithoutWhere() throws Exception {
+		assertEquals("fl=name&q=*:*",
+		getSolrTranslation("select name from example "));		
+	}
+	
+	//Error if where is omitted from this pattern
+	@Test(expected=TranslatorException.class)
+	public void omitWhere() throws Exception {
+		assertEquals(
+					"fl=purchasets,1&rows=0&facet=true&"
+					+ "facet.range={!tag%3Dr1}purchasets&"
+					+ "facet.range.start=2015-08-01T04:00:00:000Z&"
+					+ "facet.range.end=2015-10-31T15:13:32:536Z&"
+					+ "facet.range.gap=%2B1DAY&"
+					+ "facet.missing=true&"
+					+ "q=((purchasets:[2015\\-08\\-01T04\\:00\\:00\\:000Z+TO+*])+AND+(purchasets:[*+TO+2015\\-10\\-31T15\\:13\\:32\\:536Z]))" 
+					,
+		getSolrTranslation(
+					"Select PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM-dd') ,'yyyy-MM-dd'), count(*) from example " + 
+					"group by PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM-dd') ,'yyyy-MM-dd');"
+					));
+	
+	}
+	
+	//functions must be used as Parsetimestamp(formattimestamp(timestamp, 'yyyy-MM-dd HH:mm'), 'yyyy-MM-dd HH:mm')
+	@Test(expected=TranslatorException.class)
+	public void formatOfDateFunctions() throws Exception {
+		assertEquals(
+					"fl=purchasets,1&rows=0&facet=true&"
+					+ "facet.range={!tag%3Dr1}purchasets&"
+					+ "facet.range.start=2015-08-01T04:00:00:000Z&"
+					+ "facet.range.end=2015-10-31T15:13:32:536Z&"
+					+ "facet.range.gap=%2B1DAY&"
+					+ "facet.missing=true&"
+					+ "q=((purchasets:[2015\\-08\\-01T04\\:00\\:00\\:000Z+TO+*])+AND+(purchasets:[*+TO+2015\\-10\\-31T15\\:13\\:32\\:536Z]))" 
+					,
+		getSolrTranslation(
+					"Select PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM') ,'yyyy-MM-dd'), count(*) from example " + 
+					"where purchasets between '2015-08-01 04:00:00' and '2015-10-31 15:13:32.536' " + 
+					"group by PARSETIMESTAMP(purchasets ,'yyyy-MM-dd');"
+					));
+	
+	}
+	
+	@Test(expected=TranslatorException.class)
+	public void formatOfDateFunctions2() throws Exception {
+		assertEquals(
+					"fl=purchasets,1&rows=0&facet=true&"
+					+ "facet.range={!tag%3Dr1}purchasets&"
+					+ "facet.range.start=2015-08-01T04:00:00:000Z&"
+					+ "facet.range.end=2015-10-31T15:13:32:536Z&"
+					+ "facet.range.gap=%2B1DAY&"
+					+ "facet.missing=true&"
+					+ "q=((purchasets:[2015\\-08\\-01T04\\:00\\:00\\:000Z+TO+*])+AND+(purchasets:[*+TO+2015\\-10\\-31T15\\:13\\:32\\:536Z]))" 
+					,
+		getSolrTranslation(
+					"Select PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM'), 'yyyy-MM'), count(*) from example " + 
+					"where purchasets between '2015-08-01 04:00:00' and '2015-10-31 15:13:32.536' " + 
+					"group by FORMATTIMESTAMP(purchasets,'yyyy-MM');"
+					));
+	
+	}
+	/*
+	@Test(expected=TranslatorException.class)
+	public void formatOfDateFunctions3() throws Exception {
+		assertEquals(
+					"fl=purchasets,1&rows=0&facet=true&"
+					+ "facet.range={!tag%3Dr1}purchasets&"
+					+ "facet.range.start=2015-08-01T04:00:00:000Z&"
+					+ "facet.range.end=2015-10-31T15:13:32:536Z&"
+					+ "facet.range.gap=%2B1DAY&"
+					+ "facet.missing=true&"
+					+ "q=((purchasets:[2015\\-08\\-01T04\\:00\\:00\\:000Z+TO+*])+AND+(purchasets:[*+TO+2015\\-10\\-31T15\\:13\\:32\\:536Z]))" 
+					,
+		getSolrTranslation(
+					"Select PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM'), 'yyyy-MM'), count(*) from example " + 
+					"where purchasets between '2015-08-01 04:00:00' and '2015-10-31 15:13:32.536' " + 
+					"group by FORMATTIMESTAMP('2015-08-01','yyyy-MM');"
+					));
+	
+	}
+	*/
+	
+	//Invalid date format in the where clause
+	@Test(expected=TranslatorException.class)
+	public void invalidDateFormatInWhere() throws Exception {
+		assertEquals(
+					"fl=purchasets,1&rows=0&facet=true&"
+					+ "facet.range={!tag%3Dr1}purchasets&"
+					+ "facet.range.start=2015-08-01T04:00:00:000Z&"
+					+ "facet.range.end=2015-10-31T15:13:32:536Z&"
+					+ "facet.range.gap=%2B1DAY&"
+					+ "facet.missing=true&"
+					+ "q=((purchasets:[2015\\-08\\-01T04\\:00\\:00\\:000Z+TO+*])+AND+(purchasets:[*+TO+2015\\-10\\-31T15\\:13\\:32\\:536Z]))" 
+					,
+		getSolrTranslation(
+					"Select PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM-dd') ,'yyyy-MM-dd'), count(*) from example " + 
+					"where purchasets between '2015-01 04:00:00' and '2015-10-31 15:13:32.536' " + 
+					"group by PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM-dd') ,'yyyy-MM-dd');"
+					));
+	
+	}
+	
+	//Where clause without date between
+	@Test(expected=TranslatorException.class)
+	public void testMissingDateRange() throws Exception {
+		assertEquals(
+					"fl=purchasets,1&rows=0&facet=true&"
+					+ "facet.range={!tag%3Dr1}purchasets&"
+					+ "facet.range.start=2015-08-01T04:00:00:000Z&"
+					+ "facet.range.end=2015-10-31T15:13:32:536Z&"
+					+ "facet.range.gap=%2B1DAY&"
+					+ "facet.missing=true&"
+					+ "q=((purchasets:[2015\\-08\\-01T04\\:00\\:00\\:000Z+TO+*])+AND+(purchasets:[*+TO+2015\\-10\\-31T15\\:13\\:32\\:536Z]))" 
+					,
+		getSolrTranslation(
+					"Select PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM-dd') ,'yyyy-MM-dd'), count(*) from example " + 
+					"where name='a' " + 
+					"group by PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM-dd') ,'yyyy-MM-dd');"
+					));
+	
+	}
+	
+	//Literals are allowed only after where without 
+	@Test(expected=TranslatorException.class)
+	public void noSupportForDateDirectly() throws Exception {
+		assertEquals(
+					"fl=purchasets,1&rows=0&facet=true&"
+					+ "facet.range={!tag%3Dr1}purchasets&"
+					+ "facet.range.start=2015-08-01T04:00:00:000Z&"
+					+ "facet.range.end=2015-10-31T15:13:32:536Z&"
+					+ "facet.range.gap=%2B1DAY&"
+					+ "facet.missing=true&"
+					+ "q=((purchasets:[2015\\-08\\-01T04\\:00\\:00\\:000Z+TO+*])+AND+(purchasets:[*+TO+2015\\-10\\-31T15\\:13\\:32\\:536Z]))" 
+					,
+		getSolrTranslation(
+					"Select '2015-04-01 04:00:00', count(*) from example " + 
+					"where purchasets between '2015-08-01 04:00:00' and '2015-10-31 15:13:32.536' " + 
+					"group by PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM-dd') ,'yyyy-MM-dd');"
+					));
+	
+	}
+	
+	//Invalid method date format
+	@Test(expected=TranslatorException.class)
+	public void invalidDateFormatInMethodParam() throws Exception {
+		assertEquals(
+					"fl=purchasets,1&rows=0&facet=true&"
+					+ "facet.range={!tag%3Dr1}purchasets&"
+					+ "facet.range.start=2015-08-01T04:00:00:000Z&"
+					+ "facet.range.end=2015-10-31T15:13:32:536Z&"
+					+ "facet.range.gap=%2B1DAY&"
+					+ "facet.missing=true&"
+					+ "q=((purchasets:[2015\\-08\\-01T04\\:00\\:00\\:000Z+TO+*])+AND+(purchasets:[*+TO+2015\\-10\\-31T15\\:13\\:32\\:536Z]))" 
+					,
+		getSolrTranslation(
+					"Select PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MMM-dd') ,'yyyy-MM-dd'), count(*) from example " + 
+					"where purchasets between '2015-08-01 04:00:00' and '2015-10-31 15:13:32.536' " + 
+					"group by PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM-dd') ,'yyyy-MM-dd');"
+					));
+	
+	}
+		
+	//Invalid method date format
+	@Test(expected=TranslatorException.class)
+	public void literalsInsideDateFunctions() throws Exception {
+		assertEquals(
+					"fl=purchasets,1&rows=0&facet=true&"
+					+ "facet.range={!tag%3Dr1}purchasets&"
+					+ "facet.range.start=2015-08-01T04:00:00:000Z&"
+					+ "facet.range.end=2015-10-31T15:13:32:536Z&"
+					+ "facet.range.gap=%2B1DAY&"
+					+ "facet.missing=true&"
+					+ "q=((purchasets:[2015\\-08\\-01T04\\:00\\:00\\:000Z+TO+*])+AND+(purchasets:[*+TO+2015\\-10\\-31T15\\:13\\:32\\:536Z]))" 
+					,
+		getSolrTranslation(
+					"Select PARSETIMESTAMP(FORMATTIMESTAMP('2015-08-01','yyyy-MM-dd') ,'yyyy-MM-dd'), count(*) from example " + 
+					"where purchasets between '2015-08-01 04:00:00' and '2015-10-31 15:13:32.536' " + 
+					"group by PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM-dd') ,'yyyy-MM-dd');"
+					));
+	
+	}
+		
+	//Date inside date functions
+	@Test(expected=TranslatorException.class)
+	public void dateInsideDateFunctions() throws Exception {
+		assertEquals(
+					"fl=purchasets,1&rows=0&facet=true&"
+					+ "facet.range={!tag%3Dr1}purchasets&"
+					+ "facet.range.start=2015-08-01T04:00:00:000Z&"
+					+ "facet.range.end=2015-10-31T15:13:32:536Z&"
+					+ "facet.range.gap=%2B1DAY&"
+					+ "facet.missing=true&"
+					+ "q=((purchasets:[2015\\-08\\-01T04\\:00\\:00\\:000Z+TO+*])+AND+(purchasets:[*+TO+2015\\-10\\-31T15\\:13\\:32\\:536Z]))" 
+					,
+		getSolrTranslation(
+					"Select PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM-dd') ,'yyyy-MM-dd'), count(*) from example " + 
+					"where purchasets between '2015-08-01 04:00:00' and '2015-10-31 15:13:32.536' " + 
+					"group by PARSETIMESTAMP(FORMATTIMESTAMP(purchaseDate,'yyyy-MM-dd'),'yyyy-MM-dd');"
+					));
+	
+	}
+	
+	//Time in date functions
+	@Test(expected=TranslatorException.class)
+	public void timeInsideDateFunctions() throws Exception {
+		assertEquals(
+					"fl=purchasets,1&rows=0&facet=true&"
+					+ "facet.range={!tag%3Dr1}purchasets&"
+					+ "facet.range.start=2015-08-01T04:00:00:000Z&"
+					+ "facet.range.end=2015-10-31T15:13:32:536Z&"
+					+ "facet.range.gap=%2B1DAY&"
+					+ "facet.missing=true&"
+					+ "q=((purchasets:[2015\\-08\\-01T04\\:00\\:00\\:000Z+TO+*])+AND+(purchasets:[*+TO+2015\\-10\\-31T15\\:13\\:32\\:536Z]))" 
+					,
+		getSolrTranslation(
+					"Select PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM-dd') ,'yyyy-MM-dd'), count(*) from example " + 
+					"where purchasets between '2015-08-01 04:00:00' and '2015-10-31 15:13:32.536' " + 
+					"group by PARSETIMESTAMP(FORMATTIMESTAMP(purchaseTime,'yyyy-MM-dd'),'yyyy-MM-dd');"
+					));
+	
+	}
+		
+	//parsetimestamp outside the pattern "No problem" but must be Parsetimestamp(formattimestamp, 'yyyy-MM-dd HH:mm'), 'yyyy-MM-dd HH:mm')
+	@Test
+	public void parsetimestampOutsidePattern() throws Exception {
+		assertEquals(
+					"fl=purchasets&q=*:*" 
+					,
+		getSolrTranslation(
+					"Select PARSETIMESTAMP(FORMATTIMESTAMP(purchasets,'yyyy-MM-dd') ,'yyyy-MM-dd') from example; "
+					));
+	
+	}
+	//parsetimestamp outside the pattern "No problem" but must be Parsetimestamp(formattimestamp, 'yyyy-MM-dd HH:mm'), 'yyyy-MM-dd HH:mm')
+	@Test
+	public void parsetimestampOutsidePattern2() throws Exception {
+		assertEquals(
+					"fl=purchasets&q=purchasets:2015\\-03\\-04T00\\:00\\:00\\:000Z" 
+					,
+		getSolrTranslation(
+					"Select purchasets from example where purchasets = PARSETIMESTAMP(FORMATTIMESTAMP('2015-03-04','yyyy-MM-dd') ,'yyyy-MM-dd') "
+					));
+	
+	}
+	
+	//parsetimestamp outside the pattern "No problem" but must be Parsetimestamp(formattimestamp, 'yyyy-MM-dd HH:mm'), 'yyyy-MM-dd HH:mm')
+	@Test
+	public void parsetimestampOutsidePattern3() throws Exception {
+		assertEquals(
+					"fl=purchasets&q=purchasets:2015\\-03\\-01T00\\:00\\:00\\:000Z" 
+					,
+		getSolrTranslation(
+					"Select purchasets from example where purchasets = PARSETIMESTAMP(FORMATTIMESTAMP('2015-03-04','yyyy-MM') ,'yyyy-MM') "
+					));
+	
+	}
+		
+	@Test(expected=TranslatorException.class)
+	public void methodNotAllowed() throws Exception {
+		assertEquals(
+					"fl=purchasets&q=purchasets:2015\\-03\\-04T00\\:00\\:00\\:000Z" 
+					,
+		getSolrTranslation(
+					"Select purchasets from example where purchasets = FORMATTIMESTAMP(purchasets,'yyyy-MM-dd') "
+					));
+	
+	}
+	
 }
