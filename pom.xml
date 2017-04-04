@@ -72,7 +72,7 @@
         <version.com.facebook.presto>0.89</version.com.facebook.presto>
         <version.net.oauth.core>20100527</version.net.oauth.core>
         <version.jts>1.13</version.jts>
-        <version.jts2geojson>0.8.0</version.jts2geojson>
+        <version.jts2geojson>0.6.0</version.jts2geojson>
         <version.proj4j>0.1.0</version.proj4j>
 
 	    <version.swagger-jaxrs>1.5.2</version.swagger-jaxrs>
