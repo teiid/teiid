@@ -17,6 +17,8 @@
 	<properties>
 	    <site.url>http://www.jboss.org/teiid</site.url>
 	    <jdk.min.version>1.8</jdk.min.version>
+	    <maven.compiler.source>1.8</maven.compiler.source>
+	    <maven.compiler.target>1.8</maven.compiler.target>
 	    <illegaltransitivereportonly>true</illegaltransitivereportonly>
 	    <!-- Overrides to allow the release process to commit: https://jira.codehaus.org/browse/MRELEASE-812 -->
 	    <version.release.plugin>2.5</version.release.plugin>
