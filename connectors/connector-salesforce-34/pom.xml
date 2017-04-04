@@ -14,38 +14,43 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.jboss.teiid.connectors</groupId>
+			<artifactId>translator-salesforce-34</artifactId>
+		</dependency>	
+		<dependency>
+			<groupId>org.jboss.teiid.connectors</groupId>
 			<artifactId>connector-salesforce</artifactId>
-			<type>rar</type>
-			<scope>provided</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.jboss.teiid.connectors</groupId>
+					<artifactId>translator-salesforce</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
+
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-frontend-jaxrs</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-core</artifactId>
+        </dependency> 
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-bindings-xml</artifactId>
+        </dependency>                  
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-transports-http</artifactId>
+        </dependency>                			
 	</dependencies>
 
 	<build>
 		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-dependency-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>unpack-dependencies</id>
-						<phase>package</phase>
-						<goals>
-							<goal>unpack-dependencies</goal>
-						</goals>
-						<configuration>
-                            <includeGroupIds>org.jboss.teiid.connectors</includeGroupIds>
-                            <includeArtifactIds>connector-salesforce</includeArtifactIds>
-                            <includeTypes>rar</includeTypes>
-                            <includeScope>provided</includeScope>
-							<outputDirectory>${project.build.directory}/rar-unpack</outputDirectory>
-							<overWriteReleases>false</overWriteReleases>
-							<overWriteSnapshots>true</overWriteSnapshots>
-							<excludeTransitive>true</excludeTransitive>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-
 			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<configuration>

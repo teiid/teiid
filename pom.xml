@@ -22,7 +22,7 @@
 	    <!-- EAP and IP Bom specific and overrides -->
 	    <version.org.jboss.integration-platform>6.0.0.CR30</version.org.jboss.integration-platform>
         <!--version.org.jboss.as>7.5.0.Final-redhat-15</version.org.jboss.as-->
-        <version.org.jboss.as>7.5.5.Final-redhat-3</version.org.jboss.as>
+        <version.org.jboss.as>7.5.14.Final-redhat-2</version.org.jboss.as>
         <version.com.google.guava>14.0.1</version.com.google.guava>     <!--  bom 13.0.1 -->
         <version.jaxen>1.1.4</version.jaxen> <!-- NOTE changing to use bom version of 1.1.3 will cause a build issue in teiid-engine -->
         <!--version.commons-codec>1.9</version.commons-codec-->   <!-- bom version of 1.4 -->
@@ -477,34 +477,44 @@
           		<version>${project.version}</version>
         	</dependency>    
        		<dependency>
-            	<groupId>org.jboss.teiid.connectors</groupId>
-            	<artifactId>translator-salesforce</artifactId>
-            	<version>${project.version}</version>
+            		<groupId>org.jboss.teiid.connectors</groupId>
+            		<artifactId>translator-salesforce</artifactId>
+            		<version>${project.version}</version>
         	</dependency>
-	        <dependency>
+       		<dependency>
+            		<groupId>org.jboss.teiid.connectors</groupId>
+            		<artifactId>translator-salesforce-34</artifactId>
+            		<version>${project.version}</version>
+        	</dependency>        	
+	        <!--dependency>
 	            <groupId>org.jboss.teiid.connectors</groupId>
 	            <artifactId>connector-salesforce</artifactId>
 	            <type>rar</type>
 	            <version>${project.version}</version>
-	        </dependency>        	
+	        </dependency-->    
+	        <dependency>
+	            <groupId>org.jboss.teiid.connectors</groupId>
+	            <artifactId>connector-salesforce</artifactId>
+	            <version>${project.version}</version>
+	        </dependency>  	            	
       		<dependency>
-            	<groupId>org.jboss.teiid.connectors</groupId>
+            		<groupId>org.jboss.teiid.connectors</groupId>
            		<artifactId>translator-jdbc</artifactId>
-				<version>${project.version}</version>
-			</dependency>        	      	   
-            <dependency>
-      	    	<groupId>org.jboss.teiid.connectors</groupId>
-            	<artifactId>google-api</artifactId>
+			<version>${project.version}</version>
+		</dependency>        	      	   
+            	<dependency>
+      	    		<groupId>org.jboss.teiid.connectors</groupId>
+            		<artifactId>google-api</artifactId>
   	        	<version>${project.version}</version>
         	</dependency>
-            <dependency>
-      	    	<groupId>org.jboss.teiid.connectors</groupId>
-            	<artifactId>mongodb-api</artifactId>
+            	<dependency>
+      	    		<groupId>org.jboss.teiid.connectors</groupId>
+            		<artifactId>mongodb-api</artifactId>
   	        	<version>${project.version}</version>
         	</dependency>
-            <dependency>
-      	    	<groupId>org.jboss.teiid.connectors</groupId>
-            	<artifactId>simpledb-api</artifactId>
+            	<dependency>
+      	    		<groupId>org.jboss.teiid.connectors</groupId>
+            		<artifactId>simpledb-api</artifactId>
   	        	<version>${project.version}</version>
         	</dependency>         	       	
 
