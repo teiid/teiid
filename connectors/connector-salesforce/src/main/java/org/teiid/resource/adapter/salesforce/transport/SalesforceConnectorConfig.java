@@ -24,6 +24,7 @@ package org.teiid.resource.adapter.salesforce.transport;
 import java.util.HashMap;
 
 import com.sforce.ws.ConnectorConfig;
+import com.sforce.ws.MessageHandler;
 
 public class SalesforceConnectorConfig extends ConnectorConfig {
     private String cxfConfigFile;
@@ -44,4 +45,9 @@ public class SalesforceConnectorConfig extends ConnectorConfig {
     public void setCredential(String name, Object credential) {
         this.credentialMap.put(name, credential);
     }
+    
+    @Override
+	public void addMessageHandler(MessageHandler handler) {
+	    throw new UnsupportedOperationException();
+	}
 }

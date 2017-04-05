@@ -481,10 +481,15 @@
             	<artifactId>translator-salesforce</artifactId>
             	<version>${project.version}</version>
         	</dependency>
+       		<dependency>
+            	<groupId>org.jboss.teiid.connectors</groupId>
+            	<artifactId>translator-salesforce-34</artifactId>
+            	<version>${project.version}</version>
+        	</dependency>        	
 	        <dependency>
 	            <groupId>org.jboss.teiid.connectors</groupId>
 	            <artifactId>connector-salesforce</artifactId>
-	            <type>rar</type>
+	            <classifier>lib</classifier>
 	            <version>${project.version}</version>
 	        </dependency>        	
       		<dependency>
