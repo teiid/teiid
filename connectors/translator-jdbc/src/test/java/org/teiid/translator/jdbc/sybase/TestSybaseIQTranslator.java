@@ -66,5 +66,21 @@ public class TestSybaseIQTranslator {
             input, 
             output);
     }
+    
+	@Test
+	public void testLocate() {
+		String input = "SELECT locate('a', stringkey, 2) from bqt1.smalla"; //$NON-NLS-1$
+		String output = "SELECT locate(SmallA.StringKey, 'a', 2) FROM SmallA"; //$NON-NLS-1$
+
+		helpTestVisitor(TranslationHelper.BQT_VDB, input, output);
+	}
+
+	@Test
+	public void testWeek() {
+		String input = "SELECT week(datevalue) from bqt1.smalla"; //$NON-NLS-1$
+		String output = "SELECT {fn week(SmallA.DateValue)} FROM SmallA"; //$NON-NLS-1$
+
+		helpTestVisitor(TranslationHelper.BQT_VDB, input, output);
+	}
 
 }
