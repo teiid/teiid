@@ -1,0 +1,32 @@
+SET NAMESPACE 'http://www.teiid.org/translator/couchbase/2017' AS teiid_couchbase;
+
+CREATE FOREIGN TABLE test (
+	documentId string OPTIONS (UPDATABLE FALSE),
+	Type string,
+	ID string,
+	Name string,
+	CustomerID string,
+	CONSTRAINT PK0 PRIMARY KEY(documentId)
+) OPTIONS (NAMEINSOURCE '`test`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false', "teiid_couchbase:ISTOPTABLE" 'true');
+
+CREATE FOREIGN TABLE test_CreditCard (
+	documentId string OPTIONS (UPDATABLE FALSE),
+	CardNumber string,
+	Type string,
+	CVN integer,
+	Expiry string,
+	FOREIGN KEY(documentId) REFERENCES test 
+) OPTIONS (NAMEINSOURCE '`test`.`CreditCard`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false', "teiid_couchbase:ISTOPTABLE" 'false');
+
+CREATE FOREIGN TABLE test_Items (
+	documentId string OPTIONS (UPDATABLE FALSE),
+	Quantity integer,
+	ItemID integer,
+	FOREIGN KEY(documentId) REFERENCES test 
+) OPTIONS (NAMEINSOURCE '`test`.`Items`', UPDATABLE TRUE, "teiid_couchbase:ARRAYTABLEGROUP" 'Items', "teiid_couchbase:ISARRAYTABLE" 'true', "teiid_couchbase:ISTOPTABLE" 'false');
+
+CREATE FOREIGN TABLE test_SavedAddresses (
+	documentId string OPTIONS (UPDATABLE FALSE),
+	SavedAddresses string,
+	FOREIGN KEY(documentId) REFERENCES test 
+) OPTIONS (NAMEINSOURCE '`test`.`SavedAddresses`', UPDATABLE TRUE, "teiid_couchbase:ARRAYTABLEGROUP" 'SavedAddresses', "teiid_couchbase:ISARRAYTABLE" 'true', "teiid_couchbase:ISTOPTABLE" 'false');

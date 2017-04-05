@@ -1,0 +1,19 @@
+SET NAMESPACE 'http://www.teiid.org/translator/couchbase/2017' AS teiid_couchbase;
+
+CREATE FOREIGN TABLE test (
+	documentId string OPTIONS (UPDATABLE FALSE),
+	Name string,
+	CONSTRAINT PK0 PRIMARY KEY(documentId)
+) OPTIONS (NAMEINSOURCE '`test`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false', "teiid_couchbase:ISTOPTABLE" 'true');
+
+CREATE FOREIGN TABLE test_LoopNestedArray (
+	documentId string OPTIONS (UPDATABLE FALSE),
+	LoopNestedArray object,
+	key1 string,
+	key2 string,
+	key3 string,
+	key4 string,
+	key5 object,
+	key7 object,
+	FOREIGN KEY(documentId) REFERENCES test 
+) OPTIONS (NAMEINSOURCE '`test`.`LoopNestedArray`', UPDATABLE TRUE, "teiid_couchbase:ARRAYTABLEGROUP" 'LoopNestedArray', "teiid_couchbase:ISARRAYTABLE" 'true', "teiid_couchbase:ISTOPTABLE" 'false');
