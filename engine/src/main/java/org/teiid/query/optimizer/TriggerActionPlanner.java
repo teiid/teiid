@@ -162,17 +162,18 @@ public final class TriggerActionPlanner {
 			List<Expression> values = mapped.getValues();
 			queryExpression.getSelect().addSymbols(values);
 			values.clear();
+					
+			//update the mapping to the view symbols
+			for (int i = 0; i < projectedSymbols.size(); i++) {
+				ElementSymbol es = insert.getVariables().get(i);
+				mapping.put(new ElementSymbol(es.getShortName(), new GroupSymbol(SQLConstants.Reserved.NEW)), SymbolMap.getExpression(viewSymbols.get(i)));
+			}
+            
 			//map to the query form - changes references back to element form
 			SymbolMap queryMapping = new SymbolMap();
 			queryMapping.asUpdatableMap().putAll(mapping);
 			ExpressionMappingVisitor visitor = new RuleMergeCriteria.ReferenceReplacementVisitor(queryMapping);
 			DeepPostOrderNavigator.doVisit(queryExpression.getSelect(), visitor);
-			//map to the inline view
-			Map<Expression, Expression> viewMapping = new HashMap<Expression, Expression>();
-			for (int i = 0; i < projectedSymbols.size(); i++) {
-				viewMapping.put(SymbolMap.getExpression(projectedSymbols.get(i)), SymbolMap.getExpression(viewSymbols.get(i)));
-			}
-			ExpressionMappingVisitor.mapExpressions(queryExpression.getSelect(), viewMapping);
 			
 			//now we can return a plan based off a single insert statement
 			mapped.setQueryExpression(queryExpression);

@@ -10,6 +10,7 @@ import org.junit.Test;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.service.TransactionContext;
 import org.teiid.metadata.MetadataStore;
@@ -647,6 +648,56 @@ public class TestInsertProcessing {
 
         ProcessorPlan plan = helpGetPlan(sql, tm);
 
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testInsertTriggerWithTypeChanges() throws Exception {
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("CREATE FOREIGN TABLE SmallA (IntKey integer PRIMARY KEY,         StringKey string,         IntNum integer,         StringNum string,         FloatNum float,         LongNum bigint,         DoubleNum double,         ByteNum smallint,         DateValue date,         TimeValue time,         TimestampValue timestamp,         BooleanValue boolean,         CharValue char(1),         ShortValue smallint,         BigIntegerValue decimal,         BigDecimalValue decimal,         ObjectValue blob)     OPTIONS (UPDATABLE 'TRUE'); "
+                + " CREATE VIEW SmallAV (IntKey integer PRIMARY KEY,     StringKey string,     IntNum integer,     StringNum string,     FloatNum float,     LongNum long,     DoubleNum double,     ByteNum byte,     DateValue date,     TimeValue time,     TimestampValue timestamp,     BooleanValue boolean,     CharValue char,     ShortValue short,     BigIntegerValue biginteger,     BigDecimalValue bigdecimal,     ObjectValue object) OPTIONS (UPDATABLE 'TRUE') AS SELECT IntKey, StringKey, IntNum,     StringNum, FloatNum, LongNum, DoubleNum,     convert(ByteNum, byte) AS ByteNum, DateValue, TimeValue, TimestampValue,     BooleanValue, CharValue, ShortValue,     convert(BigIntegerValue, biginteger) AS BigIntegerValue, BigDecimalValue,     convert(ObjectValue, object) AS ObjectValue FROM SmallA; "
+                + " CREATE TRIGGER ON SmallAV INSTEAD OF INSERT AS FOR EACH ROW BEGIN ATOMIC     INSERT INTO smalla (IntKey, StringKey, IntNum, StringNum, FloatNum, LongNum, DoubleNum, ByteNum, DateValue, TimeValue, TimestampValue, BooleanValue, CharValue, ShortValue, BigIntegerValue, BigDecimalValue, ObjectValue) VALUES         (NEW.IntKey, NEW.StringKey, NEW.IntNum, NEW.StringNum, NEW.FloatNum, NEW.LongNum, NEW.DoubleNum, NEW.ByteNum, NEW.DateValue, NEW.TimeValue, NEW.TimestampValue,         NEW.BooleanValue, NEW.CharValue, NEW.ShortValue, NEW.BigIntegerValue, NEW.BigDecimalValue, to_bytes(convert(NEW.ObjectValue, string), 'UTF-8')); END;", "x", "y");
+        
+        String sql = "INSERT INTO smallav (IntKey, IntNum) VALUES (1, null), (2, 2)"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List[] { 
+            Arrays.asList(1)
+        };    
+        
+        final List[] secondResult = new List[] {Arrays.asList(2, null, 2, null, null, null, null, null, null, null, null, null, null, null, null, null, null)};
+
+        HardcodedDataManager dataManager = new HardcodedDataManager() {
+            @Override
+            public TupleSource registerRequest(CommandContext context,
+                    Command command, String modelName,
+                    RegisterRequestParameter parameterObject)
+                    throws TeiidComponentException {
+
+                TupleSource ts = ((Insert)command).getTupleSource();
+                try {
+                    List<?> tuple = ts.nextTuple();
+                    assertEquals(Arrays.asList(1, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null), tuple);
+                    tuple = ts.nextTuple();
+                    assertEquals(secondResult[0], tuple);
+                    assertNull(ts.nextTuple());
+                } catch (TeiidProcessingException e) {
+                    throw new TeiidRuntimeException(e);
+                }
+
+                return super.registerRequest(context, command, modelName,
+                        parameterObject);
+            }
+        };
+        dataManager.addData("INSERT INTO smalla (IntKey, StringKey, IntNum, StringNum, FloatNum, LongNum, DoubleNum, ByteNum, DateValue, TimeValue, TimestampValue, BooleanValue, CharValue, ShortValue, BigIntegerValue, BigDecimalValue, ObjectValue) VALUES (...)", Arrays.asList(2));
+
+        BasicSourceCapabilities bsc = new BasicSourceCapabilities();
+        bsc.setCapabilitySupport(Capability.INSERT_WITH_ITERATOR, true);
+        ProcessorPlan plan = helpGetPlan(sql, tm, new DefaultCapabilitiesFinder(bsc));
+
+        helpProcess(plan, dataManager, expected);
+        
+        sql = "INSERT INTO smallav (IntKey, CharValue) VALUES (1, null), (2, convert('+', char))";
+        plan = helpGetPlan(sql, tm, new DefaultCapabilitiesFinder(bsc));
+
+        secondResult[0] = Arrays.asList(2, null, null, null, null, null, null, null, null, null, null, null, '+', null, null, null, null);
         helpProcess(plan, dataManager, expected);
     }
 
