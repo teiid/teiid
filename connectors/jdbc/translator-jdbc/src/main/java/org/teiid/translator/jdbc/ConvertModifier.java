@@ -172,6 +172,13 @@ public class ConvertModifier extends FunctionModifier {
     	return Arrays.asList(function.getParameters().get(0));
 	}
 
+    /**
+     * IMPORTANT: only for use with default runtime type names
+     * @param langFactory
+     * @param expr
+     * @param typeName
+     * @return
+     */
 	public static Function createConvertFunction(LanguageFactory langFactory, Expression expr, String typeName) {
 		Class<?> type = TypeFacility.getDataTypeClass(typeName);
 		return langFactory.createFunction(SourceSystemFunctions.CONVERT, 

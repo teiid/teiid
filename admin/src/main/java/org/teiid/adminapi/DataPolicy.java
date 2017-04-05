@@ -41,6 +41,7 @@ public interface DataPolicy {
 	
 	public enum PermissionType {CREATE, READ, UPDATE, DELETE, ALTER, EXECUTE, DROP, LANGUAGE};
 	
+	public enum ResourceType {DATABASE, SCHEMA, PROCEDURE, TABLE, FUNCTION, COLUMN, LANGUAGE};
 	
 	/**
 	 * Get the Name of the Data Policy
@@ -86,10 +87,16 @@ public interface DataPolicy {
 	
 	interface DataPermission {
 		/**
-		 * Get the Resource Name that Data Permission representing
+		 * Get the Resource Name that the Data Permission represents
 		 * @return
 		 */
 		String getResourceName();
+		
+		/**
+		 * Get the type of resource the Data Permission is represents
+		 * @return
+		 */
+		ResourceType getResourceType();
 		
 		/**
 		 * Is "CREATE" allowed?

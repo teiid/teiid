@@ -26,10 +26,12 @@ import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.math.BigDecimal;
 import java.net.InetSocketAddress;
 import java.sql.*;
 import java.util.ArrayList;
@@ -42,6 +44,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -78,6 +81,7 @@ import org.teiid.language.Literal;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.visitor.CollectorVisitor;
 import org.teiid.metadata.Column;
+import org.teiid.metadata.MetadataException;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
@@ -401,6 +405,64 @@ public class TestEmbeddedServer {
 		rs.next();
 		assertEquals("HELLO WORLD", rs.getString(1));
 	}
+	
+	
+    @Test public void testDeployZipDDL() throws Exception {
+        es.start(new EmbeddedConfiguration());
+        
+        File f = UnitTestUtil.getTestScratchFile("some.vdb");
+        ZipOutputStream out = new ZipOutputStream(new FileOutputStream(f));
+        out.putNextEntry(new ZipEntry("v1.ddl")); 
+        out.write("CREATE VIEW helloworld as SELECT 'HELLO WORLD';".getBytes("UTF-8"));
+        out.putNextEntry(new ZipEntry("META-INF/vdb.ddl"));
+        String externalDDL = "CREATE DATABASE test VERSION '1';"
+                + "USE DATABASE test VERSION '1';"
+                + "CREATE VIRTUAL SCHEMA test2;"
+                + "IMPORT FOREIGN SCHEMA public FROM REPOSITORY \"DDL-FILE\" INTO test2 OPTIONS(\"ddl-file\" '/v1.ddl');";
+        out.write(externalDDL.getBytes("UTF-8"));
+        out.close();
+        
+        es.deployVDBZip(f.toURI().toURL());
+        ResultSet rs = es.getDriver().connect("jdbc:teiid:test", null).createStatement().executeQuery("select * from helloworld");
+        rs.next();
+        assertEquals("HELLO WORLD", rs.getString(1));
+    }	
+    
+    @Test public void testDDLVDBImport() throws Exception {
+        es.start(new EmbeddedConfiguration());
+        
+        String ddl1 = "CREATE DATABASE x VERSION '1';"
+                + "USE DATABASE x VERSION '1';"
+                + "CREATE VIRTUAL SCHEMA test2;"
+                + "SET SCHEMA test2;"
+                + "CREATE VIEW x as select 1;";
+        
+        String ddl2 = "CREATE DATABASE test VERSION '1';"
+                + "USE DATABASE test VERSION '1';"
+                + "IMPORT DATABASE x VERSION '1';";
+        
+        es.deployVDB(new ByteArrayInputStream(ddl1.getBytes("UTF-8")), true);
+        es.deployVDB(new ByteArrayInputStream(ddl2.getBytes("UTF-8")), true);
+    }
+    
+    @Test(expected=MetadataException.class) public void testAlterImported() throws Exception {
+        es.start(new EmbeddedConfiguration());
+        
+        String ddl1 = "CREATE DATABASE x VERSION '1';"
+                + "USE DATABASE x VERSION '1';"
+                + "CREATE VIRTUAL SCHEMA test2;"
+                + "SET SCHEMA test2;"
+                + "CREATE VIEW x as select 1;";
+        
+        String ddl2 = "CREATE DATABASE test VERSION '1';"
+                + "USE DATABASE test VERSION '1';"
+                + "IMPORT DATABASE x VERSION '1';"
+                + "set schema test2;"
+                + "DROP VIEW x;";
+        
+        es.deployVDB(new ByteArrayInputStream(ddl1.getBytes("UTF-8")), true);
+        es.deployVDB(new ByteArrayInputStream(ddl2.getBytes("UTF-8")), true);
+    }
 	
 	@Test public void testDeployDesignerZip() throws Exception {
 		es.start(new EmbeddedConfiguration());
@@ -1223,6 +1285,10 @@ public class TestEmbeddedServer {
                 c.setUpdatable(true);
                 c = metadataFactory.addColumn("LoadNumber", TypeFacility.RUNTIME_NAMES.LONG, t);
                 c.setUpdatable(true);
+                c = metadataFactory.addColumn("NodeName", TypeFacility.RUNTIME_NAMES.STRING, t);
+                c.setUpdatable(true);
+                c = metadataFactory.addColumn("StaleCount", TypeFacility.RUNTIME_NAMES.LONG, t);
+                c.setUpdatable(true);                
                 metadataFactory.addPrimaryKey("PK", Arrays.asList("VDBName", "VDBVersion", "SchemaName", "Name"), t);
             }
             
@@ -1469,6 +1535,18 @@ public class TestEmbeddedServer {
         assertEquals(0, ps.getUpdateCount());
         assertNull(ps.getMetaData());        
     }
+    
+    public static class MyPreParser implements PreParser {
+        
+        @Override
+        public String preParse(String command, CommandContext context) {
+            if (command.equals("select 'goodbye'")) {
+                return "select 'vdb'";
+            }
+            return command;
+        }
+        
+    }
 	
 	@Test public void testPreParser() throws Exception {
 		EmbeddedConfiguration ec = new EmbeddedConfiguration();
@@ -1494,6 +1572,15 @@ public class TestEmbeddedServer {
 		ResultSet rs = s.executeQuery("select 'hello world'");
 		rs.next();
 		assertEquals("goodbye", rs.getString(1));
+		
+		String perVdb = "<vdb name=\"x1\" version=\"1\"><property name=\"preparser-class\" value=\""+MyPreParser.class.getName()+"\"/><model name=\"x\" type=\"VIRTUAL\"><metadata type=\"ddl\">create view v as select 1</metadata></model></vdb>";
+		
+		es.deployVDB(new ByteArrayInputStream(perVdb.getBytes("UTF-8")));
+		c = es.getDriver().connect("jdbc:teiid:x1", null);
+		s = c.createStatement();
+        rs = s.executeQuery("select 'hello world'");
+        rs.next();
+        assertEquals("vdb", rs.getString(1));
 	}
 	
 	@Test public void testTurnOffLobCleaning() throws Exception {
@@ -1619,6 +1706,7 @@ public class TestEmbeddedServer {
 	}
 	
 	@Test public void testSubqueryCache() throws Exception {
+	    UnitTestUtil.enableLogging(Level.WARNING, "org.teiid");
 		EmbeddedConfiguration ec = new EmbeddedConfiguration();
 		es.start(ec);
 		ModelMetaData mmd = new ModelMetaData();
@@ -1911,7 +1999,7 @@ public class TestEmbeddedServer {
 			fail();
 		} catch (BatchUpdateException e) {
 			int[] updateCounts = e.getUpdateCounts();
-			assertArrayEquals(new int[] {1, -3}, updateCounts);
+			assertArrayEquals(new int[] {1}, updateCounts);
 			assertEquals(-1, s.getUpdateCount());
 		}
 		
@@ -1943,7 +2031,7 @@ public class TestEmbeddedServer {
 		s.addBatch("update pm1.g1 set e1 = 'a' where e2 = 1"); //$NON-NLS-1$
 		s.addBatch("update pm1.g1 set e1 = 'b' where e2 = 2"); //$NON-NLS-1$
 		hcef.updateMap.clear();
-		hcef.addUpdate("UPDATE pm1.g1 SET e1 = 'a' WHERE pm1.g1.e2 = 1;UPDATE pm1.g1 SET e1 = 'b' WHERE pm1.g1.e2 = 2;", new TranslatorBatchException(new SQLException(), new int[] {1, -3}));
+		hcef.addUpdate("UPDATE pm1.g1 SET e1 = 'a' WHERE pm1.g1.e2 = 1;\nUPDATE pm1.g1 SET e1 = 'b' WHERE pm1.g1.e2 = 2;", new TranslatorBatchException(new SQLException(), new int[] {1, -3}));
 		try {
 			s.executeBatch();
 			fail();
@@ -2015,6 +2103,55 @@ public class TestEmbeddedServer {
         s.execute("select count(distinct name) from sys.columns where tablename like 'test%'");
         s.getResultSet().next();
         assertEquals(2, s.getResultSet().getInt(1));
+    }
+    
+    @Test public void testCreateDomain() throws Exception {
+        es.start(new EmbeddedConfiguration());
+        
+        es.deployVDB(new FileInputStream(UnitTestUtil.getTestDataFile("domains-vdb.ddl")), true);
+        
+        Connection c = es.getDriver().connect("jdbc:teiid:domains", null);
+        
+        Statement s = c.createStatement();
+        
+        s.execute("select * from g1");
+        
+        ResultSetMetaData rsmd = s.getResultSet().getMetaData();
+        //for now we'll report the runtime type
+        assertEquals("string", rsmd.getColumnTypeName(1));
+        ResultSet rs = c.getMetaData().getColumns(null, null, "g1", null);
+        rs.next();
+        assertEquals("x", rs.getString("TYPE_NAME"));
+        rs.next();
+        assertEquals("z", rs.getString("TYPE_NAME"));
+        rs.next();
+        assertEquals("x[]", rs.getString("TYPE_NAME"));
+        
+        try {
+            s.execute("select cast(1 as a)"); //should fail
+            fail();
+        } catch (SQLException e) {
+            
+        }
+        
+        s.execute("select cast(1 as z)");
+        rs = s.getResultSet();
+        
+        //for now we'll report the runtime type
+        assertEquals("bigdecimal", rs.getMetaData().getColumnTypeName(1));
+        
+        s.execute("select xmlcast(xmlparse(document '<a>1</a>') as z)");
+        
+        s.execute("select attname, atttypid from pg_attribute where attname = 'e1'");
+        rs = s.getResultSet();
+        rs.next();
+        assertEquals(1043, rs.getInt(2)); //varchar
+        
+        s.execute("select cast((1.0,) as z[])");
+        rs = s.getResultSet();
+        rs.next();
+        assertArrayEquals(new BigDecimal[] {BigDecimal.valueOf(1.0)}, (BigDecimal[])rs.getArray(1).getArray());
+        assertEquals("bigdecimal[]", rs.getMetaData().getColumnTypeName(1));
     }
 
 }

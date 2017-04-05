@@ -313,7 +313,7 @@ public class TestDynamicImportedMetaData {
     	
     	Map<String, FunctionMethod> functions = mf.asMetadataStore().getSchemas().get("TEST").getFunctions();
     	
-    	assertEquals(14, functions.size());
+    	assertEquals(18, functions.size());
     }
     
     @Test public void testIgnorePkIndex() throws Exception {

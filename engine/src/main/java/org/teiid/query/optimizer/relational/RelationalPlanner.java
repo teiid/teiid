@@ -46,12 +46,11 @@ import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.BasicQueryMetadata;
 import org.teiid.query.metadata.MaterializationMetadataRepository;
-import org.teiid.query.metadata.MaterializationMetadataRepository.ErrorAction;
-import org.teiid.query.metadata.MaterializationMetadataRepository.Scope;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
+import org.teiid.query.metadata.MaterializationMetadataRepository.ErrorAction;
 import org.teiid.query.optimizer.QueryOptimizer;
 import org.teiid.query.optimizer.TriggerActionPlanner;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -2113,54 +2112,10 @@ public class RelationalPlanner {
 			allow &= metadata.getMaterialization(viewMatadataId) != null;
 		}
 		if (allow) {
-			String statusTableName = metadata.getExtensionProperty(viewMatadataId, MaterializationMetadataRepository.MATVIEW_STATUS_TABLE, false);
-			String onErrorAction = metadata.getExtensionProperty(viewMatadataId, MaterializationMetadataRepository.MATVIEW_ONERROR_ACTION, false);
-			
-			if (onErrorAction == null || !ErrorAction.IGNORE.name().equalsIgnoreCase(onErrorAction)) {
-				String schemaName = metadata.getName(metadata.getModelID(viewMatadataId));
-				String viewName = metadata.getName(viewMatadataId);
-
-				Expression expr1 = new Constant(schemaName);
-				Expression expr2 = new Constant(viewName); 
-				Expression expr3 = new ElementSymbol("Valid"); //$NON-NLS-1$
-				Expression expr4 = new ElementSymbol("LoadState"); //$NON-NLS-1$
-
-				Query subquery = new Query();
-				Select subSelect = new Select();
-		        subSelect.addSymbol(new Function("mvstatus", new Expression[] {expr1, expr2, expr3, expr4, new Constant(onErrorAction)})); //$NON-NLS-1$ 
-		        subquery.setSelect(subSelect);
-				GroupSymbol statusTable = new GroupSymbol(statusTableName);
-				statusTable.setGlobalTable(false);
-				Query one = new Query();
-				Select s = new Select();
-				s.addSymbol(new Constant(1));
-				one.setSelect(s);
-
-	            String ownerVdbName = metadata.getExtensionProperty(viewMatadataId, MaterializationMetadataRepository.MATVIEW_OWNER_VDB_NAME, false);
-	            if(ownerVdbName == null) {
-	                ownerVdbName = context.getVdbName();	                
-	            }
-	            
-	            String ownerVdbVersion = metadata.getExtensionProperty(viewMatadataId, MaterializationMetadataRepository.MATVIEW_OWNER_VDB_VERSION, false);
-				if (ownerVdbVersion == null) {
-				    ownerVdbVersion = String.valueOf(context.getVdbVersion());
-				}
-				
-				String scope = metadata.getExtensionProperty(viewMatadataId, MaterializationMetadataRepository.MATVIEW_SHARE_SCOPE, false);
-	            if (scope != null && Scope.valueOf(scope) == Scope.FULL) {
-	                ownerVdbVersion = "0";
-	            }
-
-				CompareCriteria c1 = new CompareCriteria(new ElementSymbol("VDBName"), CompareCriteria.EQ, new Constant(ownerVdbName)); //$NON-NLS-1$
-		        CompareCriteria c2 = new CompareCriteria(new ElementSymbol("VDBVersion"), CompareCriteria.EQ, new Constant(ownerVdbVersion)); //$NON-NLS-1$
-		        CompareCriteria c3 = new CompareCriteria(new ElementSymbol("SchemaName"), CompareCriteria.EQ, new Constant(schemaName)); //$NON-NLS-1$
-		        CompareCriteria c4 = new CompareCriteria(new ElementSymbol("Name"), CompareCriteria.EQ, new Constant(viewName)); //$NON-NLS-1$
-
-                CompoundCriteria cc = new CompoundCriteria(CompoundCriteria.AND, Arrays.asList(c1, c2, c3, c4));
-		        
-				subquery.setFrom(new From(Arrays.asList(new JoinPredicate(new SubqueryFromClause("x", one), new UnaryFromClause(statusTable), JoinType.JOIN_LEFT_OUTER, cc)))); //$NON-NLS-1$
-				query.setCriteria(new CompareCriteria(new Constant(1), CompareCriteria.EQ, new ScalarSubquery(subquery)));
-			}
+		    String onErrorAction = metadata.getExtensionProperty(viewMatadataId, MaterializationMetadataRepository.MATVIEW_ONERROR_ACTION, false);
+            if (onErrorAction == null || !ErrorAction.IGNORE.name().equalsIgnoreCase(onErrorAction)) {
+                gs.setCheckMatStatus(viewMatadataId);
+            }
 		}
 		return query;
 	}

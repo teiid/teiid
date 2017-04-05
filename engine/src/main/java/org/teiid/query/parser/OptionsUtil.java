@@ -21,6 +21,7 @@
  */
 package org.teiid.query.parser;
 
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -145,7 +146,7 @@ public class OptionsUtil {
         } else if (key.equals(DDLConstants.DISTINCT_VALUES)) {
             c.setDistinctValues(-1);
         } else if (key.equals(DDLConstants.UDT)) {
-            c.setDatatype(null);
+            c.setDatatype(null, false, c.getArrayDimensions());
             c.setLength(0);
             c.setPrecision(0);
             c.setScale(0);
@@ -326,9 +327,18 @@ public class OptionsUtil {
         v = props.remove(DDLConstants.UDT); 
         if (v != null) {
             Matcher matcher = udtPattern.matcher(v);
-            Map<String, Datatype> datatypes = SystemMetadata.getInstance().getSystemStore().getDatatypes();
-            if (matcher.matches() && datatypes.get(matcher.group(1)) != null) {
-                c.setDatatype(datatypes.get(matcher.group(1)));
+            List<Datatype> datatypes = SystemMetadata.getInstance().getDataTypes();
+            Datatype match = null;
+            if (matcher.matches()) {
+                for (Datatype dt : datatypes) {
+                    if (dt.getName().equalsIgnoreCase(matcher.group(1))) {
+                        match = dt;
+                        break;
+                    }
+                }
+            }
+            if (match != null) {
+                c.setDatatype(match, false, c.getArrayDimensions());
                 c.setLength(Integer.parseInt(matcher.group(2)));
                 ParsedDataType pdt = new ParsedDataType(matcher.group(1), Integer.parseInt(matcher.group(3)), Integer.parseInt(matcher.group(4)), true);
                 c.setScale(Integer.parseInt(matcher.group(4)));		 

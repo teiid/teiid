@@ -1091,7 +1091,7 @@ public class NewCalculateCostUtil {
         	
         	float ndv = getPredicateNDV(dsc.getExpression(), currentNode, childCost, metadata);
         	
-        	cost = childCost * dsc.getNdv() / ndv;
+        	cost = childCost * dsc.getNdv() / Math.max(1, ndv);
         }
 
         if (cost == UNKNOWN_VALUE) {

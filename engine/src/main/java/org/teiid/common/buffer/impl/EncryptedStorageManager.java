@@ -205,5 +205,10 @@ public class EncryptedStorageManager implements StorageManager {
 		}
 	}
 	
+	@Override
+	public long getMaxStorageSpace() {
+	    return manager.getMaxStorageSpace();
+	}
+	
 }
 

@@ -39,8 +39,6 @@ public interface Admin {
 	
 	public enum TranlatorPropertyType{IMPORT, OVERRIDE, EXTENSION_METADATA, ALL};
 
-	public enum ExportFormat {XML, DDL};
-	
     /**
      * Removes a {@link Translator} and Data source from a {@link VDB}'s Model
      *
@@ -518,19 +516,6 @@ public interface Admin {
      */
     String getSchema(String vdbName, String vdbVersion, String modelName, EnumSet<SchemaObjectType> allowedTypes, String typeNamePattern) throws AdminException;
 
-    /**
-     * Retrieve the schema of the given VDB (if model name is null), or DDL for a specific schema (when model is not null).
-     *
-     * @param vdbName  - required
-     * @param vdbVersion - required
-     * @param modelName - optionally can be null, to export whole VDB
-     * @param EnumSet<SchemaObjectType> Type of schema objects to retrieve, null means ALL the schema object types
-     * @param typeNamePattern RegEx pattern to filter to names of tables, procedures that are being read. Null means no filter.
-     * @param format - when exporting whole VDB, it can be either XML or DDL format
-     */
-    String getSchema(String vdbName, String vdbVersion, String modelName, EnumSet<SchemaObjectType> allowedTypes,
-            String typeNamePattern, ExportFormat format) throws AdminException;
-    
     /**
      * Get the Query Plan for the given session with provided execution id.
      * @param sessionId

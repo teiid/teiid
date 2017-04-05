@@ -52,6 +52,7 @@ import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.AggregateAttributes;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.translator.ExecutionContext;
@@ -69,9 +70,12 @@ import org.teiid.util.Version;
 @Translator(name="oracle", description="A translator for Oracle 9i Database or later")
 public class OracleExecutionFactory extends JDBCExecutionFactory {
 	
-	public static final Version NINE_0 = Version.getVersion("9.0"); //$NON-NLS-1$
+	private static final String TRUNC = "TRUNC"; //$NON-NLS-1$
+	private static final String LISTAGG = "LISTAGG"; //$NON-NLS-1$
+    public static final Version NINE_0 = Version.getVersion("9.0"); //$NON-NLS-1$
 	public static final Version NINE_2 = Version.getVersion("9.2"); //$NON-NLS-1$
 	public static final Version ELEVEN_2_0_4 = Version.getVersion("11.2.0.4"); //$NON-NLS-1$
+	public static final Version ELEVEN_2 = Version.getVersion("11.2"); //$NON-NLS-1$
 	public static final Version TWELVE = Version.getVersion("12"); //$NON-NLS-1$
 	
 	private static final String TIME_FORMAT = "HH24:MI:SS"; //$NON-NLS-1$
@@ -93,6 +97,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	public static final String WITHIN_DISTANCE = "sdo_within_distance"; //$NON-NLS-1$
 	public static final String NEAREST_NEIGHBOR_DISTANCE = "sdo_nn_distance"; //$NON-NLS-1$
 	public static final String ORACLE_SDO = "Oracle-SDO"; //$NON-NLS-1$
+	public static final String ORACLE = "Oracle"; //$NON-NLS-1$
 	
 	private static final Set<String> STRING_BOOLEAN_FUNCTIONS = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
 	static {
@@ -239,6 +244,11 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	convertModifier.setWideningNumericImplicit(true);
     	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
     	
+    	addPushDownFunction(ORACLE, TRUNC, TIMESTAMP, TIMESTAMP, STRING); 
+    	addPushDownFunction(ORACLE, TRUNC, TIMESTAMP, TIMESTAMP); 
+    	addPushDownFunction(ORACLE, TRUNC, BIG_DECIMAL, BIG_DECIMAL, BIG_DECIMAL); 
+    	addPushDownFunction(ORACLE, TRUNC, BIG_DECIMAL, BIG_DECIMAL); 
+    	
     	addPushDownFunction(ORACLE_SDO, RELATE, STRING, STRING, STRING, STRING);
     	addPushDownFunction(ORACLE_SDO, RELATE, STRING, OBJECT, OBJECT, STRING);
     	addPushDownFunction(ORACLE_SDO, RELATE, STRING, STRING, OBJECT, STRING);
@@ -292,10 +302,22 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.ST_INTERSECTS, new AliasModifier("SDO_ANYINTERACT")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_OVERLAPS, new AliasModifier("SDO_OVERLAPBDYINTERSECT")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_CROSSES, new AliasModifier("SDO_OVERLAPBDYDISJOINT")); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.ST_TOUCHES, new AliasModifier("SDO_TOUCHES")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_TOUCHES, new AliasModifier("SDO_TOUCH")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_EQUALS, new AliasModifier("SDO_EQUALS")); //$NON-NLS-1$
         //registerFunctionModifier(SourceSystemFunctions.ST_WITHIN, new OracleRelateModifier("inside")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_SRID, new TemplateFunctionModifier("nvl(", 0, ".sdo_srid, 0)")); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Override
+    public void initCapabilities(Connection connection)
+            throws TranslatorException {
+        super.initCapabilities(connection);
+        if (getVersion().compareTo(ELEVEN_2) >= 0) {
+            AggregateAttributes aa = new AggregateAttributes();
+            aa.setAllowsOrderBy(true);
+            addPushDownFunction(ORACLE, LISTAGG, STRING, STRING, STRING).setAggregateAttributes(aa); 
+            addPushDownFunction(ORACLE, LISTAGG, STRING, STRING).setAggregateAttributes(aa);
+        }
     }
     
     public void handleInsertSequences(Insert insert) throws TranslatorException {
@@ -1128,5 +1150,21 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsSelectExpressionArrayType() {
         return false;
+    }
+    
+    @Override
+    public List<?> translate(LanguageObject obj, ExecutionContext context) {
+        if (obj instanceof AggregateFunction) {
+            AggregateFunction af = (AggregateFunction)obj;
+            if (af.getName().equalsIgnoreCase("LISTAGG")) {
+                OrderBy order = af.getOrderBy();
+                af.setOrderBy(null);
+                if (order == null) {
+                    return null;
+                }
+                return Arrays.asList(af, " WITHIN GROUP (", order, ")");
+            }
+        }
+        return super.translate(obj, context);
     }
 }

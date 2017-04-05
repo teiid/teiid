@@ -9,8 +9,8 @@ import org.junit.Test;
 import org.teiid.resource.adapter.google.auth.OAuth2HeaderFactory;
 import org.teiid.resource.adapter.google.dataprotocol.GoogleDataProtocolAPI;
 import org.teiid.resource.adapter.google.gdata.GDataClientLoginAPI;
-import org.teiid.translator.goole.api.result.PartialResultExecutor;
-import org.teiid.translator.goole.api.result.SheetRow;
+import org.teiid.translator.google.api.result.PartialResultExecutor;
+import org.teiid.translator.google.api.result.SheetRow;
 
 
 /**

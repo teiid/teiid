@@ -306,9 +306,6 @@ public class ConnectorWorkItem implements ConnectorWork {
 		if (t instanceof TranslatorException) {
 			return (TranslatorException)t;
 		}
-		if (t instanceof RuntimeException) {
-			throw (RuntimeException)t;
-		}
 		return new TranslatorException(t);
     }
     

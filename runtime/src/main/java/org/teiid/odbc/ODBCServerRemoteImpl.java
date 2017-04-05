@@ -70,6 +70,7 @@ import org.teiid.net.socket.AuthenticationType;
 import org.teiid.net.socket.SocketServerConnection;
 import org.teiid.odbc.ODBCClientRemote.CursorDirection;
 import org.teiid.odbc.PGUtil.PgColInfo;
+import org.teiid.query.sql.symbol.Constant;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.security.GSSResult;
 import org.teiid.transport.LocalServerConnection;
@@ -86,6 +87,7 @@ import org.teiid.transport.pg.TimestampUtils;
 public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	
     private static final boolean HONOR_DECLARE_FETCH_TXN = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.honorDeclareFetchTxn", false); //$NON-NLS-1$
+    private static final String POSTGRESQL_VERSION = System.getProperties().getProperty("org.teiid.pgVersion"); //$NON-NLS-1$
 
 	public static final String CONNECTION_PROPERTY_PREFIX = "connection."; //$NON-NLS-1$
 	private static final String UNNAMED = ""; //$NON-NLS-1$
@@ -733,6 +735,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		if (modified != null && !modified.equals(sql)) {
 			LogManager.logDetail(LogConstants.CTX_ODBC, "Modified Query:", modified); //$NON-NLS-1$
 		}			
+		System.out.println(modified);
 		return modified;
 	}
 	
@@ -777,7 +780,11 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 				return baseQuery + "FKTABLE_NAME = " + m.group(15)+" and FKTABLE_SCHEM = "+m.group(16);//$NON-NLS-1$ //$NON-NLS-2$
 			}
 			else if (modified.equalsIgnoreCase("select version()")) { //$NON-NLS-1$
-				return "SELECT 'Teiid "+ApplicationInfo.getInstance().getReleaseNumber()+"'"; //$NON-NLS-1$ //$NON-NLS-2$
+			    String version = POSTGRESQL_VERSION;
+			    if (version == null) {
+			        version = "Teiid "+ApplicationInfo.getInstance().getReleaseNumber();  //$NON-NLS-1$
+			    }
+				return "SELECT " + new Constant(version); //$NON-NLS-1$
 			}
 			else if (modified.startsWith("SELECT name FROM master..sysdatabases")) { //$NON-NLS-1$
 				return "SELECT 'Teiid'"; //$NON-NLS-1$

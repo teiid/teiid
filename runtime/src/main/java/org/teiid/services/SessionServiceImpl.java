@@ -384,7 +384,13 @@ public class SessionServiceImpl implements SessionService {
 		if (sessionMonitor != null) {
 			this.sessionMonitor.cancel();
 		}
-		this.sessionCache.clear();
+		for (SessionMetadata session : sessionCache.values()) {
+		    try {
+                closeSession(session.getSessionId());
+            } catch (InvalidSessionException e) {
+                
+            }
+		}
 	}
 
 	public void setVDBRepository(VDBRepository repo) {

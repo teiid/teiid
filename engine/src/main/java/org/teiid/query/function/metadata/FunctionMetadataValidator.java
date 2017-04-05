@@ -149,7 +149,6 @@ public class FunctionMetadataValidator {
 
         // Validate attributes
         validateName(param.getName());
-        validateType(param.getType());
         validateDescription(param.getDescription());
     }
 
@@ -167,23 +166,6 @@ public class FunctionMetadataValidator {
     public static final void validateName(String name) throws FunctionMetadataException {
         validateIsNotNull(name, "Name"); //$NON-NLS-1$
         validateLength(name, MAX_LENGTH, "Name"); //$NON-NLS-1$
-    }
-
-    /**
-     * Determine whether a parameter type is valid.  The following items are validated:
-     * <UL>
-     * <LI>Validate that type is not null</LI>
-     * <LI>Validate that type is a known MetaMatrix type</LI>
-     * </UL>
-     * @param type Type to validate
-     * @throws FunctionMetadataException Thrown if parameter type is not valid in some way
-     */
-    public static final void validateType(String type) throws FunctionMetadataException {
-        validateIsNotNull(type, "Type"); //$NON-NLS-1$
-
-        if(DataTypeManager.getDataTypeClass(type) == null) {
-             throw new FunctionMetadataException(QueryPlugin.Event.TEIID30428, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30428, type));
-        }
     }
 
     /**

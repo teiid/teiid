@@ -24,6 +24,9 @@ package org.teiid.arquillian;
 
 import static org.junit.Assert.*;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.nio.charset.Charset;
@@ -31,6 +34,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Properties;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import javax.ws.rs.core.Response;
 
@@ -204,7 +209,7 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
 		
 		admin.deploy("loopy-vdb.xml", new ReaderInputStream(new StringReader(vdb), Charset.forName("UTF-8")));
 		
-		Thread.sleep(2000);
+		assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1, 3));
 		
 		WebClient client = WebClient.create("http://localhost:8080/odata4/loopy.1/MarketData/$metadata");
 		client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
@@ -229,7 +234,7 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
         
         admin.deploy("loopy-vdb.xml", new ReaderInputStream(new StringReader(vdb), Charset.forName("UTF-8")));
         
-        Thread.sleep(2000);
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1, 3));
         
         WebClient client = WebClient.create("http://localhost:8080/odata4/loopy.1/MarketData/$metadata");
         Response response = client.invoke("OPTIONS", null);
@@ -272,5 +277,89 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
         
         statusCode = response.getStatus();
         assertEquals(404, statusCode);        
+    }
+
+    @Test
+    public void testGetDataInGzip() throws AdminException, IOException{
+        String vdb = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
+                "<vdb name=\"loopy\" version=\"1\">\n" +
+                "    <model name=\"gzip\">\n" +
+                "        <source name=\"loopback_src\" translator-name=\"loopback\" />\n" +
+                "         <metadata type=\"DDL\"><![CDATA[\n" +
+                "                CREATE FOREIGN TABLE t (e integer PRIMARY KEY) OPTIONS (UPDATABLE 'true');\n" +
+                "        ]]> </metadata>\n" +
+                "    </model>\n" +
+                "</vdb>";
+
+        admin.deploy("loopy-vdb.xml", new ByteArrayInputStream(vdb.getBytes()));
+        
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1, 3));
+
+        WebClient client = WebClient.create("http://localhost:8080/odata4/loopy/gzip/t");
+        client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes()));
+        client.header("Accept", "application/json");
+        Response response = client.invoke("GET", null);
+
+        assertEquals("The request should succeed.", 200, response.getStatus());
+        assertNull("Content-Encoding response header is not expected.", response.getHeaderString("Content-Encoding"));
+        InputStream is = (InputStream)response.getEntity();
+        byte[] buff = new byte[1000];
+        assertEquals("Expected entity.", "{\"@odata.context\":\"$metadata#t\",\"value\":[{\"e\":0}]}", new String(buff, 0, is.read(buff)));
+
+        client.header("Accept-Encoding", "gzip");
+        response = client.invoke("GET", null);
+        is = (InputStream)response.getEntity();
+        is = new GZIPInputStream(is);
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        int read;
+        while((read = is.read(buff)) != -1){
+            bos.write(buff, 0, read);
+        }
+        assertEquals("The request should succeed.", 200, response.getStatus());
+        assertNotNull("Content-Encoding response header is expected.", response.getHeaderString("Content-Encoding"));
+        assertEquals("Content-Encoding response header.", "gzip", response.getHeaderString("Content-Encoding").toLowerCase());
+        assertEquals("Expected entity.", "{\"@odata.context\":\"$metadata#t\",\"value\":[{\"e\":0}]}", new String(bos.toByteArray()));
+    }
+
+    @Test
+    public void testPutDataInGzip() throws AdminException, IOException{
+        String vdb = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
+                "<vdb name=\"loopy\" version=\"1\">\n" +
+                "    <model name=\"gzip\">\n" +
+                "        <source name=\"loopback_src\" translator-name=\"loopback\" />\n" +
+                "         <metadata type=\"DDL\"><![CDATA[\n" +
+                "                CREATE FOREIGN TABLE t (e integer PRIMARY KEY) OPTIONS (UPDATABLE 'true');\n" +
+                "        ]]> </metadata>\n" +
+                "    </model>\n" +
+                "</vdb>";
+
+        admin.deploy("loopy-vdb.xml", new ByteArrayInputStream(vdb.getBytes()));
+
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1, 3));
+        
+        String data = "{\"e\":1}";
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        GZIPOutputStream gos = new GZIPOutputStream(bos);
+        gos.write(data.getBytes());
+        gos.finish();
+        gos.close();
+        byte[] gzipData = bos.toByteArray();
+
+        WebClient client = WebClient.create("http://localhost:8080/odata4/loopy/gzip/t(1)");
+        client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes()));
+        client.header("Content-Type", "application/json");
+
+        Response response = client.put(data);
+        assertEquals("The request should succeed." + response.readEntity(String.class), 304, response.getStatus());
+
+        response = client.put(new ByteArrayInputStream(gzipData));
+        assertEquals("The request should not succeed. Data is in GZIP format but header not specified.", 400, response.getStatus());
+
+        client.header("Content-Encoding", "gzip");
+        response = client.put(data);
+        assertEquals("The request should not succeed. Data is not in GZIP format.", 400, response.getStatus());
+
+        response = client.put(new ByteArrayInputStream(gzipData));
+        assertEquals("The request should succeed.", 304, response.getStatus());
     }
 }

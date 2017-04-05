@@ -45,6 +45,7 @@ import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionMetadataValidator;
 import org.teiid.query.mapping.relational.QueryNode;
+import org.teiid.query.metadata.MaterializationMetadataRepository.Scope;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.report.ActivityReport;
 import org.teiid.query.report.ReportItem;
@@ -53,7 +54,9 @@ import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.QueryCommand;
+import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -131,7 +134,7 @@ public class MetadataValidator {
 				
 				if (!schema.getFunctions().isEmpty()) {
 			    	ActivityReport<ReportItem> funcReport = new ActivityReport<ReportItem>("Translator metadata load " + model.getName()); //$NON-NLS-1$
-					FunctionMetadataValidator.validateFunctionMethods(schema.getFunctions().values(),report);
+					FunctionMetadataValidator.validateFunctionMethods(schema.getFunctions().values(),report, store.getDatatypes());
 					if(report.hasItems()) {
 						metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31073, funcReport));
 					}						
@@ -245,7 +248,6 @@ public class MetadataValidator {
 						super.setUUID(record);
 					}
 				};
-				mf.setBuiltinDataTypes(store.getDatatypes());
 				for (AbstractMetadataRecord record : schema.getResolvingOrder()) {
 					if (record instanceof Table) {
 						Table t = (Table)record;
@@ -299,9 +301,8 @@ public class MetadataValidator {
 	
 	static class MatViewPropertiesValidator implements MetadataRule {
 
-		
         @Override
-        public void execute(VDBMetaData vdb, MetadataStore store, ValidatorReport report, MetadataValidator metadataValidator) {
+        public void execute(final VDBMetaData vdb, MetadataStore store, ValidatorReport report, MetadataValidator metadataValidator) {
 
             for (Schema schema : store.getSchemaList()) {
                 if (vdb.getImportedModels().contains(schema.getName())) {
@@ -309,7 +310,7 @@ public class MetadataValidator {
                 }
                 ModelMetaData model = vdb.getModel(schema.getName());
                 
-                for (Table t:schema.getTables().values()) {
+                for (final Table t:schema.getTables().values()) {
                     if (t.isVirtual() && t.isMaterialized() && t.getMaterializedTable() != null) {
                     	Table matTable = t.getMaterializedTable();
                         Table stageTable = t.getMaterializedStageTable();
@@ -354,9 +355,26 @@ public class MetadataValidator {
                         }
                         
                         String scope = t.getProperty(MATVIEW_SHARE_SCOPE, false);
-                        if (scope != null && !scope.equalsIgnoreCase(Scope.IMPORTED.name()) && !scope.equalsIgnoreCase(Scope.FULL.name())) {
-                            metadataValidator.log(report, model, Severity.WARNING, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31253, t.getFullName(), scope));
+                        if (scope != null && !scope.equalsIgnoreCase(Scope.IMPORTED.name())
+                                && !scope.equalsIgnoreCase(Scope.FULL.name())) {
+                            metadataValidator.log(report, model, Severity.WARNING,QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31253, t.getFullName(), scope));
                             t.setProperty(MATVIEW_SHARE_SCOPE, Scope.IMPORTED.name());
+                        }
+                        
+                        String stalenessString = t.getProperty(MaterializationMetadataRepository.MATVIEW_MAX_STALENESS_PCT, false);
+                        if (stalenessString != null) {
+                            final HashSet<Table> ids = new HashSet<Table>();
+                            listPhysicalTables(t.getIncomingObjects(), new TableFilter() {
+                                @Override
+                                public void accept(Table physicalTable) {
+                                    ids.add(physicalTable);
+                                }
+                            });
+                            for (Table physicalTable : ids) {
+                                addLazyMatViewTrigger(vdb, t, physicalTable, Table.TriggerEvent.INSERT);
+                                addLazyMatViewTrigger(vdb, t, physicalTable, Table.TriggerEvent.UPDATE);
+                                addLazyMatViewTrigger(vdb, t, physicalTable, Table.TriggerEvent.DELETE);
+                            }
                         }
                         
 						Table statusTable = findTableByName(store, status);
@@ -377,6 +395,8 @@ public class MetadataValidator {
             			statusTypeMap.put("CARDINALITY", DataTypeManager.DefaultDataClasses.LONG); //$NON-NLS-1$
             			statusTypeMap.put("UPDATED", DataTypeManager.DefaultDataClasses.TIMESTAMP); //$NON-NLS-1$
             			statusTypeMap.put("LOADNUMBER", DataTypeManager.DefaultDataClasses.LONG); //$NON-NLS-1$
+            			statusTypeMap.put("NODENAME", DataTypeManager.DefaultDataClasses.STRING); //$NON-NLS-1$
+            			statusTypeMap.put("STALECOUNT", DataTypeManager.DefaultDataClasses.LONG); //$NON-NLS-1$
                                                 
                         List<Column> statusColumns = statusTable.getColumns();
                         for(int i = 0 ; i < statusColumns.size() ; i ++) {
@@ -419,6 +439,44 @@ public class MetadataValidator {
                     }
                 } 
             }
+        }
+        
+        interface TableFilter {
+            void accept(Table table);
+        }
+        
+        private void listPhysicalTables(Collection<AbstractMetadataRecord> records, TableFilter tableFilter) {
+            for (AbstractMetadataRecord record : records) {
+                if (record instanceof Table) {
+                    Table table = (Table)record;
+                    if (table.isPhysical()) {
+                        tableFilter.accept(table);
+                    } else {
+                        listPhysicalTables(table.getIncomingObjects(), tableFilter);
+                    }
+                } else if (record instanceof Procedure) {
+                    Procedure proc = (Procedure)record;
+                    if (proc.isVirtual()) {
+                        listPhysicalTables(proc.getIncomingObjects(), tableFilter);
+                    }
+                }
+            }
+        }
+
+        private void addLazyMatViewTrigger(VDBMetaData vdb, Table t, Table st, Table.TriggerEvent event) {
+            String name = "ON_"+st.getName()+"_"+event.name()+"_FOR_"+t.getName()+"_FOR_LAZY_SNAPSHOT";
+            String plan = "FOR EACH ROW\n"
+                    + "BEGIN ATOMIC\n"
+                    + "EXECUTE SYSADMIN.updateStaleCount(schemaName=>'"+t.getParent().getName()+"', viewName=>'"+t.getName()+"');\n"
+                    + "END\n";
+            Trigger trigger = new Trigger();
+            trigger.setName(name);
+            trigger.setEvent(event);
+            trigger.setPlan(plan);
+            trigger.setAfter(true);
+            trigger.setProperty(DDLStringVisitor.GENERATED, "true");
+            st.getTriggers().put(name, trigger);
+            LogManager.logDetail(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31256, st.getName(), t.getName()));
         }
         
         private void loadScriptsValidation(VDBMetaData vdb, ValidatorReport report, MetadataValidator metadataValidator, ModelMetaData model, Table matView, String script, String option) {
@@ -487,7 +545,7 @@ public class MetadataValidator {
     			ResolverUtil.resolveGroup(symbol, metadata);    			
     			String selectTransformation = t.getSelectTransformation();
 				if (t.isVirtual()) {
-    				QueryCommand command = (QueryCommand)QueryParser.getQueryParser().parseCommand(selectTransformation);
+    				QueryCommand command = (QueryCommand)parser.parseCommand(selectTransformation);
     				QueryResolver.resolveCommand(command, metadata);
     				resolverReport =  Validator.validate(command, metadata);
     				if (!resolverReport.hasItems() && (t.getColumns() == null || t.getColumns().isEmpty())) {
@@ -527,7 +585,7 @@ public class MetadataValidator {
 	    						}
 	    						String exprString = c.getNameInSource();
 	    						try {
-		    						Expression ex = QueryParser.getQueryParser().parseExpression(exprString);
+		    						Expression ex = parser.parseExpression(exprString);
 									ResolverVisitor.resolveLanguageObject(ex, groups, metadata);
 									if (!ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(ex).isEmpty()) {
 										log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31114, exprString, fbi.getFullName()));
@@ -548,28 +606,28 @@ public class MetadataValidator {
     				addCacheHint = true;
     			}
     			
-    			// this seems to parse, resolve and validate.
-    			QueryNode node = QueryResolver.resolveView(symbol, new QueryNode(selectTransformation), SQLConstants.Reserved.SELECT, metadata, true);
-    			CacheHint cacheHint = node.getCommand().getCacheHint();
-				Long ttl = -1L;
-				if (cacheHint != null && cacheHint.getTtl() != null && addCacheHint
-						&& t.getProperty(MaterializationMetadataRepository.MATVIEW_TTL, false) == null) {
-					ttl = cacheHint.getTtl();
-					t.setProperty(MaterializationMetadataRepository.MATVIEW_TTL, String.valueOf(ttl));
-				}
-				if (cacheHint != null && cacheHint.getUpdatable() != null && addCacheHint
-						&& t.getProperty(MaterializationMetadataRepository.MATVIEW_UPDATABLE, false) == null) {
-					t.setProperty(MaterializationMetadataRepository.MATVIEW_UPDATABLE, String.valueOf(cacheHint.getUpdatable()));
-				}
-				if (cacheHint != null && cacheHint.getPrefersMemory() != null && addCacheHint
-						&& t.getProperty(MaterializationMetadataRepository.MATVIEW_PREFER_MEMORY, false) == null) {
-					t.setProperty(MaterializationMetadataRepository.MATVIEW_PREFER_MEMORY, String.valueOf(cacheHint.getPrefersMemory()));
-				}
-				if (cacheHint != null && cacheHint.getScope() != null && addCacheHint
-						&& t.getProperty(MaterializationMetadataRepository.MATVIEW_SHARE_SCOPE, false) == null) {
-				    log(report, model, Severity.WARNING, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31252, t.getName(), cacheHint.getScope().name()));				    
-					t.setProperty(MaterializationMetadataRepository.MATVIEW_SHARE_SCOPE, MaterializationMetadataRepository.Scope.IMPORTED.name());
-				}				
+    			if (addCacheHint && t.isMaterialized()) {
+        			// this seems to parse, resolve and validate.
+        			QueryNode node = QueryResolver.resolveView(symbol, new QueryNode(selectTransformation), SQLConstants.Reserved.SELECT, metadata, true);
+        			CacheHint cacheHint = node.getCommand().getCacheHint();
+    				Long ttl = -1L;
+    				if (cacheHint != null) {
+        				if (cacheHint.getTtl() != null && t.getProperty(MaterializationMetadataRepository.MATVIEW_TTL, false) == null) {
+        					ttl = cacheHint.getTtl();
+        					t.setProperty(MaterializationMetadataRepository.MATVIEW_TTL, String.valueOf(ttl));
+        				}
+        				if (cacheHint.getUpdatable() != null && t.getProperty(MaterializationMetadataRepository.MATVIEW_UPDATABLE, false) == null) {
+        					t.setProperty(MaterializationMetadataRepository.MATVIEW_UPDATABLE, String.valueOf(cacheHint.getUpdatable()));
+        				}
+        				if (cacheHint.getPrefersMemory() != null && t.getProperty(MaterializationMetadataRepository.MATVIEW_PREFER_MEMORY, false) == null) {
+        					t.setProperty(MaterializationMetadataRepository.MATVIEW_PREFER_MEMORY, String.valueOf(cacheHint.getPrefersMemory()));
+        				}
+        				if (cacheHint.getScope() != null && t.getProperty(MaterializationMetadataRepository.MATVIEW_SHARE_SCOPE, false) == null) {
+        				    log(report, model, Severity.WARNING, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31252, t.getName(), cacheHint.getScope().name()));				    
+        					t.setProperty(MaterializationMetadataRepository.MATVIEW_SHARE_SCOPE, MaterializationMetadataRepository.Scope.IMPORTED.name());
+        				}
+    				}
+    			}
     		}
 			processReport(model, record, report, resolverReport);
 		} catch (TeiidException e) {
@@ -578,18 +636,33 @@ public class MetadataValidator {
     }
 
 	public static void determineDependencies(AbstractMetadataRecord p, Command command) {
-		Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroupsIgnoreInlineViews(command, true);
 		LinkedHashSet<AbstractMetadataRecord> values = new LinkedHashSet<AbstractMetadataRecord>();
-		for (GroupSymbol group : groups) {
-			Object mid = group.getMetadataID();
-			if (mid instanceof TempMetadataAdapter) {
-				mid = ((TempMetadataID)mid).getOriginalMetadataID();
-			}
-			if (mid instanceof AbstractMetadataRecord) {
-				values.add((AbstractMetadataRecord)mid);
-			}
+		collectDependencies(command, values);
+		p.setIncomingObjects(new ArrayList<AbstractMetadataRecord>(values));
+		if (p instanceof Table) {
+		    Table t = (Table)p;
+		    for (int i = 0; i < t.getColumns().size(); i++) {
+		        LinkedHashSet<AbstractMetadataRecord> columnValues = new LinkedHashSet<AbstractMetadataRecord>();
+		        Column c = t.getColumns().get(i);
+		        c.setIncomingObjects(columnValues);
+                determineDependencies(command, c, i, columnValues);
+		    }
 		}
-		Collection<ElementSymbol> elems = ElementCollectorVisitor.getElements(command, true, true);
+	}
+
+    private static void collectDependencies(org.teiid.query.sql.LanguageObject lo,
+            LinkedHashSet<AbstractMetadataRecord> values) {
+        Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroupsIgnoreInlineViews(lo, true);
+        for (GroupSymbol group : groups) {
+            Object mid = group.getMetadataID();
+            if (mid instanceof TempMetadataAdapter) {
+                mid = ((TempMetadataID)mid).getOriginalMetadataID();
+            }
+            if (mid instanceof AbstractMetadataRecord) {
+                values.add((AbstractMetadataRecord)mid);
+            }
+        }
+        Collection<ElementSymbol> elems = ElementCollectorVisitor.getElements(lo, true, true);
 		for (ElementSymbol elem : elems) {
 			Object mid = elem.getMetadataID();
 			if (mid instanceof TempMetadataAdapter) {
@@ -599,8 +672,17 @@ public class MetadataValidator {
 				values.add((AbstractMetadataRecord)mid);
 			}
 		}
-		p.setIncomingObjects(new ArrayList<AbstractMetadataRecord>(values));
-	}
+    }
+
+    private static void determineDependencies(Command command, Column c, int index, LinkedHashSet<AbstractMetadataRecord> columnValues) {
+        if (command instanceof Query) {
+            Expression ex = command.getProjectedSymbols().get(index);
+            collectDependencies(ex, columnValues);
+        } else if (command instanceof SetQuery) {
+            determineDependencies(((SetQuery)command).getLeftQuery(), c, index, columnValues);
+            determineDependencies(((SetQuery)command).getRightQuery(), c, index, columnValues);
+        }
+    }
 	
 	private static Table findTableByName(MetadataStore store, String name) {
 	    
@@ -630,7 +712,7 @@ public class MetadataValidator {
 			QueryMetadataInterface metadata, 
 			Table t, String plan, int type) throws QueryParserException, QueryResolverException,
 			TeiidComponentException {
-		Command command = QueryParser.getQueryParser().parseProcedure(plan, true);
+		Command command = parser.parseProcedure(plan, true);
 		
 		QueryResolver.resolveCommand(command, new GroupSymbol(t.getFullName()), type, metadata, false);
 		

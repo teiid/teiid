@@ -35,8 +35,10 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.adminapi.VDB.Status;
+import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.client.util.ResultsFuture.CompletionListener;
@@ -45,6 +47,7 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.ContainerLifeCycleListener;
 import org.teiid.deployers.VDBLifeCycleListener;
+import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -54,12 +57,20 @@ import org.teiid.metadata.Table;
 import org.teiid.query.metadata.MaterializationMetadataRepository;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.tempdata.TempTableDataManager;
+import org.teiid.runtime.NodeTracker.NodeListener;
+import org.teiid.vdb.runtime.VDBKey;
 
-public abstract class MaterializationManager implements VDBLifeCycleListener {
+public abstract class MaterializationManager implements VDBLifeCycleListener, NodeListener {
 	
 	private interface MaterializationAction {
 		void process(Table table);
 	}
+
+	private static final int WAITTIME = 60000;
+	public abstract Executor getExecutor();
+    public abstract ScheduledExecutorService getScheduledExecutorService();
+    public abstract DQPCore getDQP();
+    public abstract VDBRepository getVDBRepository();
 	
 	private ContainerLifeCycleListener shutdownListener;
 	
@@ -117,6 +128,9 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 
 		// execute start triggers
 		final VDBMetaData vdb = cvdb.getVDB();
+		if (vdb.getStatus() != Status.ACTIVE) {
+		    return;
+		}
 			doMaterializationActions(vdb, new MaterializationAction() {
 				@Override
 				public void process(final Table table) {
@@ -151,6 +165,11 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 						} 
 						return;
 					}
+
+					// reset any jobs started by this node that did not complete
+					String nodeName = System.getProperty("jboss.node.name"); //$NON-NLS-1$
+                    resetPendingJob(vdb, table, nodeName);
+					
 					String start = table.getProperty(MaterializationMetadataRepository.ON_VDB_START_SCRIPT, false);
 					if (start != null) {
 						try {
@@ -160,20 +179,48 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 						}
 					}
 					
+					long ttl = 0;
 					String ttlStr = table.getProperty(MaterializationMetadataRepository.MATVIEW_TTL, false);
 					if (ttlStr == null) {
 					    ttlStr = String.valueOf(Long.MAX_VALUE);
 					}
 					if (ttlStr != null) {
-						long ttl = Long.parseLong(ttlStr);
+						ttl = Long.parseLong(ttlStr);
 						if (ttl > 0) {
-							scheduleJob(cvdb, table, ttl, 0L);
+							scheduleSnapshotJob(cvdb, table, ttl, 0L, false);
 						}
-					}				
+					}
+					
+					String stalenessString = table.getProperty(MaterializationMetadataRepository.MATVIEW_MAX_STALENESS_PCT, false);
+					
+					if (stalenessString != null) {
+					    // run first time like, SNAPSHOT
+					    if (ttl <= 0) {
+					        scheduleSnapshotJob(cvdb, table, 0L, 0L, true);
+					    }
+
+					    // schedule a check every minute 
+					    scheduleSnapshotJob(cvdb, table, WAITTIME, WAITTIME, true);
+					}
 				}
 			});
 	}
 	
+    public int resetPendingJob(final VDBMetaData vdb, final Table table, String nodeName){
+        try {
+            String statusTable = table.getProperty(MaterializationMetadataRepository.MATVIEW_STATUS_TABLE, false);
+            String updateStatusTable = "UPDATE "+statusTable+" SET LOADSTATE='needs_loading' "
+                    + "WHERE LOADSTATE = 'LOADING' AND NODENAME = '"+nodeName+"' "
+                    + "AND NAME = '"+table.getName()+"'";
+            List<Map<String, String>> results = executeQuery(vdb, updateStatusTable);
+            String count = results.get(0).get("update-count");
+            return Integer.parseInt(count);
+        } catch (SQLException e) {
+            LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
+        }
+        return 0;
+    }
+    
 	private void doMaterializationActions(VDBMetaData vdb, MaterializationAction action) {
 		TransformationMetadata metadata = vdb.getAttachment(TransformationMetadata.class);
 		if (metadata == null) {
@@ -198,57 +245,85 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 		}
 	}
 	
-	public void scheduleJob(CompositeVDB vdb, Table table, long ttl, long delay) {
-		JobScheduler task = new JobScheduler(vdb, table, ttl, delay);
+	public void scheduleSnapshotJob(CompositeVDB vdb, Table table, long ttl, long delay, boolean oneTimeJob) {
+		SnapshotJobScheduler task = new SnapshotJobScheduler(vdb, table, ttl, delay, oneTimeJob);
 		queueTask(vdb, task, delay);
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private void runJob(final CompositeVDB vdb, final Table table, final long ttl) {
+	private void runJob(final CompositeVDB vdb, final Table table, final long ttl, final boolean onetimeJob) {
 		String command = "execute SYSADMIN.loadMatView('"+StringUtil.replaceAll(table.getParent().getName(), "'", "''")+"','"+StringUtil.replaceAll(table.getName(), "'", "''")+"')"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
 		try {
-			executeAsynchQuery(vdb.getVDB(), command).addCompletionListener(new CompletionListener() {
+		    final AtomicInteger procReturn = new AtomicInteger();
+			executeAsynchQuery(vdb.getVDB(), command, new DQPCore.ResultsListener() {
+                @Override
+                public void onResults(List<String> columns, List<? extends List<?>> results) throws Exception {
+                    procReturn.set((Integer)results.get(0).get(0));
+                }}).addCompletionListener(new CompletionListener() {
 				@Override
 				public void onCompletion(ResultsFuture future) {
 					try {
 						future.get();
-						scheduleJob(vdb, table, ttl, ttl);
+						if (!onetimeJob) {
+						    if (procReturn.get() >= 0) {
+						        scheduleSnapshotJob(vdb, table, ttl, ttl, onetimeJob);
+						    } else {
+						        // when in error re-schedule in 1 min or less
+						        scheduleSnapshotJob(vdb, table, ttl, Math.min(ttl/4, WAITTIME), onetimeJob);
+						    }
+						}
 					} catch (InterruptedException e) {
 					} catch (ExecutionException e) {
 						LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
-						scheduleJob(vdb, table, ttl, Math.min(ttl/4, 60000)); // re-schedule the same job in one minute
+					    scheduleSnapshotJob(vdb, table, ttl, Math.min(ttl/4, WAITTIME), onetimeJob); // re-schedule the same job in one minute
 					}
 				}
 			});
 		} catch (SQLException e) {
 			LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
-			scheduleJob(vdb, table, ttl, Math.min(ttl/4, 60000)); // re-schedule the same job in one minute
+		    scheduleSnapshotJob(vdb, table, ttl, Math.min(ttl/4, WAITTIME), onetimeJob); // re-schedule the same job in one minute
 		}
 	}	
 	
-	private void queueTask(CompositeVDB vdb, JobScheduler task, long delay) {
+	private void queueTask(CompositeVDB vdb, SnapshotJobScheduler task, long delay) {
 		ScheduledFuture<?> sf = getScheduledExecutorService().schedule(task, (delay < 0)?0:delay, TimeUnit.MILLISECONDS);
-		vdb.addTask(sf);
-		task.future = sf;
+		task.attachScheduledFuture(sf);
 	}
 	
-	class JobScheduler implements Runnable {
+	interface MaterializationTask extends Runnable {
+	    void attachScheduledFuture(ScheduledFuture<?> sf);
+	    void removeScheduledFuture();
+	}
+	
+	class SnapshotJobScheduler implements MaterializationTask {
 		protected Table table;
 		protected long ttl;
 		protected long delay;
 		protected CompositeVDB vdb;
 		protected ScheduledFuture<?> future;
+		protected boolean oneTimeJob;
 		
-		public JobScheduler(CompositeVDB vdb, Table table, long ttl, long delay) {
+		public SnapshotJobScheduler(CompositeVDB vdb, Table table, long ttl, long delay, boolean oneTimeJob) {
 			this.vdb = vdb;
 			this.table = table;
 			this.ttl = ttl;
 			this.delay = delay;
+			this.oneTimeJob = oneTimeJob;
 		}
+
+        public void attachScheduledFuture(ScheduledFuture<?> sf) {
+            vdb.addTask(sf);
+            future = sf;
+        }
+        
+        public void removeScheduledFuture() {
+            vdb.removeTask(future);
+            future = null;
+        }
 		
 		@Override
 		public void run() {
-			vdb.removeTask(future);
+		    removeScheduledFuture();
 			String query = "execute SYSADMIN.matViewStatus('"+StringUtil.replaceAll(table.getParent().getName(), "'", "''")+"', '"+StringUtil.replaceAll(table.getName(), "'", "''")+"')"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ 
 			
 			// in rare situations when VDB is force re-deployed, and is results in invalid
@@ -257,12 +332,19 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 			    return;
 			}
 			
+			// when source or target data source(s) are down, there is no reason
+			// to run the materialization jobs. schedule for later time
+            if (!vdb.getVDB().isValid()) {
+                scheduleSnapshotJob(vdb, table, ttl, Math.min(ttl/4, WAITTIME), oneTimeJob); // re-schedule the same job in one minute
+                return;
+            }			
+			
 			List<Map<String, String>> result = null;
 			try {
 				result = executeQuery(vdb.getVDB(), query);
 			} catch (SQLException e) {
 				LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
-				scheduleJob(vdb, table, ttl, Math.min(ttl/4, 60000)); // re-schedule the same job in one minute
+			    scheduleSnapshotJob(vdb, table, ttl, Math.min(ttl/4, WAITTIME), oneTimeJob); // re-schedule the same job in one minute
 				return;
 			}
 			
@@ -283,28 +365,31 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 			long next = ttl;
 			if (loadstate == null || loadstate.equalsIgnoreCase("needs_loading") || !valid) { //$NON-NLS-1$
 				// no entry found run immediately
-				runJob(vdb, table, ttl);
+				runJob(vdb, table, ttl, oneTimeJob);
 				return;
 			}
 			else if (loadstate.equalsIgnoreCase("loading")) { //$NON-NLS-1$
 				// if the process is already loading do nothing
 				next = ttl - elapsed;
+                if (elapsed >= ttl) {
+                    next = Math.min(ttl / 4, 60000);
+                }
 			}
 			else if (loadstate.equalsIgnoreCase("loaded")) { //$NON-NLS-1$
 				if (elapsed >= ttl) {
-					runJob(vdb, table, ttl);
+					runJob(vdb, table, ttl, oneTimeJob);
 					return;
 				} 
 				next = ttl - elapsed;	
 			}
 			else if (loadstate.equalsIgnoreCase("failed_load")) { //$NON-NLS-1$
-				if (elapsed > ttl/4 || elapsed > 60000) { // exceeds 1/4 of cached time or 5 mins
-					runJob(vdb, table, ttl);
+				if (elapsed > ttl/4 || elapsed > 60000) { // exceeds 1/4 of cached time or 1 mins
+					runJob(vdb, table, ttl, oneTimeJob);
 					return;
 				}
 				next = Math.min(((ttl/4)-elapsed), (60000-elapsed));
 			}
-			scheduleJob(vdb, table, ttl, next);
+			scheduleSnapshotJob(vdb, table, ttl, next, oneTimeJob);
 		}
 	}	
 	
@@ -314,7 +399,6 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 				@Override
 				public void onResults(List<String> columns,
 						List<? extends List<?>> results) throws Exception {
-					
 				}
 			});
 		} catch (Throwable e) {
@@ -322,6 +406,13 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 		}
 	}
 	
+    public ResultsFuture<?> executeAsynchQuery(VDBMetaData vdb, String command, DQPCore.ResultsListener listener) throws SQLException {
+        try {
+            return DQPCore.executeQuery(command, vdb, "embedded-async", "internal", -1, getDQP(), listener); //$NON-NLS-1$ //$NON-NLS-2$
+        } catch (Throwable e) {
+            throw new SQLException(e);
+        }
+    }	
     public List<Map<String, String>> executeQuery(VDBMetaData vdb, String command) throws SQLException {
         final List<Map<String, String>> rows = new ArrayList<Map<String,String>>();
         try {
@@ -357,8 +448,52 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
         }   
         return rows;
     }
-		
-	public abstract Executor getExecutor();
-	public abstract ScheduledExecutorService getScheduledExecutorService();
-	public abstract DQPCore getDQP();
+    
+    @Override
+    public void nodeJoined(String nodeName) {
+        // may be nothing to do for now, we can envision replicating cache pro actively.
+    }
+
+    @Override
+    public void nodeDropped(String nodeName) {
+        for (VDBMetaData vdb:getVDBRepository().getVDBs()) {
+            TransformationMetadata metadata = vdb.getAttachment(TransformationMetadata.class);
+            if (metadata == null) {
+                continue;
+            }
+            
+            for (ModelMetaData model : vdb.getModelMetaDatas().values()) {
+                if (vdb.getImportedModels().contains(model.getName())) {
+                    continue;
+                }
+                
+                MetadataStore store = metadata.getMetadataStore();
+                Schema schema = store.getSchema(model.getName()); 
+                for (Table t:schema.getTables().values()) {
+                    if (t.isVirtual() && t.isMaterialized() && t.getMaterializedTable() != null) {
+                        String allow = t.getProperty(MaterializationMetadataRepository.ALLOW_MATVIEW_MANAGEMENT, false);
+                        if (allow == null || !Boolean.valueOf(allow)) {
+                            continue;
+                        }
+                        // reset the pending job if there is one.
+                        int update = resetPendingJob(vdb, t, nodeName);
+                        if (update > 0) {
+                            String ttlStr = t.getProperty(MaterializationMetadataRepository.MATVIEW_TTL, false);
+                            if (ttlStr == null) {
+                                ttlStr = String.valueOf(Long.MAX_VALUE);
+                            }
+                            if (ttlStr != null) {
+                                long ttl = Long.parseLong(ttlStr);
+                                if (ttl > 0) {
+                                    // run the job
+                                    CompositeVDB cvdb = getVDBRepository().getCompositeVDB(new VDBKey(vdb.getName(), vdb.getVersion()));
+                                    scheduleSnapshotJob(cvdb, t, ttl, 0L, true);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }    
 }

@@ -30,7 +30,7 @@ import org.teiid.query.QueryPlugin;
 /**
  * Represents the memory buffer and storage state of an object.
  * It is important to minimize the amount of data held here.
- * Currently should be 56 bytes.
+ * Currently should be 60 bytes.
  */
 final class PhysicalInfo extends BaseCacheEntry {
 	
@@ -48,11 +48,14 @@ final class PhysicalInfo extends BaseCacheEntry {
 	boolean evicting; //indicates that the entry will be moved out of the memory buffer
 	boolean loading; //used by tier 1 cache to prevent double loads
 	boolean adding; //used to prevent double adds
+
+    int sizeEstimate;
 	
-	PhysicalInfo(Long gid, Long id, int inode, long lastAccess) {
+	PhysicalInfo(Long gid, Long id, int inode, long lastAccess, int sizeEstimate) {
 		super(new CacheKey(id, lastAccess, 0));
 		this.inode = inode;
 		this.gid = gid;
+		this.sizeEstimate = sizeEstimate;
 	}
 	
 	void setSize(int size) throws Exception {

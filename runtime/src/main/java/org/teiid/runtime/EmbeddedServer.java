@@ -45,10 +45,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -57,6 +54,7 @@ import javax.transaction.TransactionManager;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.vfs.VirtualFile;
+import org.teiid.PreParser;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -74,6 +72,7 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.NamedThreadFactory;
 import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.ReflectionHelper;
 import org.teiid.deployers.CompositeGlobalTableStore;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.ContainerLifeCycleListener;
@@ -111,7 +110,6 @@ import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.index.IndexMetadataRepository;
 import org.teiid.metadatastore.DeploymentBasedDatabaseStore;
-import org.teiid.metadatastore.DeploymentBasedDatabaseStore.PendingDataSourceJobs;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.ServerConnection;
 import org.teiid.net.socket.ObjectChannel;
@@ -331,6 +329,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	private MaterializationManager materializationMgr = null;
 	private ShutDownListener shutdownListener = new ShutDownListener();
 	private SimpleChannelFactory channelFactory;
+	private NodeTracker nodeTracker = null;
 
 	public EmbeddedServer() {
 
@@ -363,6 +362,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		this.dqp.setLocalProfile(this.embeddedProfile);
 		this.shutdownListener.setBootInProgress(true);
 		this.config = config;
+		System.setProperty("jboss.node.name", config.getNodeName()==null?"localhost":config.getNodeName());
 		this.cmr.setProvider(this);
 		this.eventDistributorFactoryService = new EmbeddedEventDistributorFactoryService();
 		this.eventDistributorFactoryService.start();
@@ -371,7 +371,17 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		this.replicator = config.getObjectReplicator();
 		if (this.replicator == null && config.getJgroupsConfigFile() != null) {
 			channelFactory = new SimpleChannelFactory(config);
-			this.replicator = new JGroupsObjectReplicator(channelFactory, this.scheduler);			
+			this.replicator = new JGroupsObjectReplicator(channelFactory, this.scheduler);
+			try {
+                this.nodeTracker = new NodeTracker(channelFactory.createChannel("teiid-node-tracker"), config.getNodeName()) {
+                    @Override
+                    public ScheduledExecutorService getScheduledExecutorService() {
+                        return scheduler;
+                    }
+                };
+            } catch (Exception e) {
+                LogManager.logError(LogConstants.CTX_RUNTIME, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40089));
+            }
 		}
 		this.eventDistributorFactoryService = new EmbeddedEventDistributorFactoryService();
 		//must be called after the replicator is set
@@ -427,8 +437,11 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		    this.sessionService.setAuthenticationType(this.config.getAuthenticationType());
 		}
 		this.services.setVDBRepository(this.repo);
-		this.materializationMgr = getMaterializationManager();
+		this.materializationMgr = getMaterializationManager();		
 		this.repo.addListener(this.materializationMgr);
+		if (this.nodeTracker != null) {
+		    this.nodeTracker.addNodeListener(this.materializationMgr);
+		}
 		this.logon = new LogonImpl(sessionService, null);
 		services.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
 		services.registerClientService(DQP.class, dqp, LogConstants.CTX_DQP);
@@ -598,7 +611,11 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
             public DQPCore getDQP() {
             	return dqp;
             }
-            
+
+            @Override
+            public VDBRepository getVDBRepository() {
+                return repo;
+            }
         };
 	}
 
@@ -747,42 +764,49 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	 */
 	public void deployVDBZip(URL url) throws VirtualDatabaseException, ConnectorManagerException, TranslatorException, IOException, URISyntaxException {
 		VirtualFile root = PureZipFileSystem.mount(url);
-		VirtualFile vdbMetadata = root.getChild("/META-INF/vdb.xml"); //$NON-NLS-1$
-		try {
-			VDBMetadataParser.validate(vdbMetadata.openStream());
-		} catch (SAXException e) {
-			throw new VirtualDatabaseException(e);
-		}
-		InputStream is = vdbMetadata.openStream();
 		VDBMetaData metadata;
-		try {
-			metadata = VDBMetadataParser.unmarshell(is);
-		} catch (XMLStreamException e) {
-			throw new VirtualDatabaseException(e);
+		
+		VirtualFile vdbMetadata = root.getChild("/META-INF/vdb.xml"); //$NON-NLS-1$
+		if (vdbMetadata.exists()) {
+    		try {
+    			VDBMetadataParser.validate(vdbMetadata.openStream());
+    		} catch (SAXException e) {
+    			throw new VirtualDatabaseException(e);
+    		}
+    		InputStream is = vdbMetadata.openStream();
+    		try {
+    			metadata = VDBMetadataParser.unmarshell(is);
+    		} catch (XMLStreamException e) {
+    			throw new VirtualDatabaseException(e);
+    		}
+		} else {
+		    vdbMetadata = root.getChild("/META-INF/vdb.ddl"); //$NON-NLS-1$
+	        DeploymentBasedDatabaseStore store = new DeploymentBasedDatabaseStore(getVDBRepository());
+	        metadata = store.getVDBMetadata(ObjectConverterUtil.convertToString(vdbMetadata.openStream()));
 		}
+		
 		VDBResources resources = new VDBResources(root, metadata);
 		deployVDB(metadata, resources);
+	}
+	
+	protected boolean allowOverrideTranslators() {
+	    return false;
 	}
 	
 	protected void deployVDB(VDBMetaData vdb, VDBResources resources) 
 			throws ConnectorManagerException, VirtualDatabaseException, TranslatorException {
 		checkStarted();
-		if (!vdb.getOverrideTranslators().isEmpty()) {
+		
+		if (!vdb.getOverrideTranslators().isEmpty() && !allowOverrideTranslators()) {
 			throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40106, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40106, vdb.getName()));
 		}
 		
-	    // if inline datasource needs to be created, then create it first.  
-	    PendingDataSourceJobs jobs = vdb.getAttachment(PendingDataSourceJobs.class);
-	    if (jobs != null && !jobs.isEmpty()) {
-	    	ExecutorService executor = Executors.newSingleThreadExecutor(new NamedThreadFactory("teiid-datasource-creator"));
-	    	for (Callable<Boolean> job :  jobs.values()) {
-	    		try {
-	    			executor.submit(job).get();
-	    		} catch (TeiidRuntimeException | ExecutionException | InterruptedException e){
-	    			// ignore
-	    		}
-	    	}
-	    }		
+		vdb.addAttchment(ClassLoader.class, Thread.currentThread().getContextClassLoader());
+		try {
+            createPreParser(vdb);
+        } catch (TeiidException e1) {
+            throw new VirtualDatabaseException(e1);
+        }
 		
 		cmr.createConnectorManagers(vdb, this);
 		MetadataStore metadataStore = new MetadataStore();
@@ -831,7 +855,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			ConnectorManagerRepository cmr,
 			MetadataRepository metadataRepository, MetadataStore store,
 			AtomicInteger loadCount, VDBResources vdbResources) throws TranslatorException {
-		MetadataFactory factory = createMetadataFactory(vdb, model, vdbResources==null?Collections.EMPTY_MAP:vdbResources.getEntriesPlusVisibilities());
+		MetadataFactory factory = createMetadataFactory(vdb, store, model, vdbResources==null?Collections.EMPTY_MAP:vdbResources.getEntriesPlusVisibilities());
 		
 		ExecutionFactory ef = null;
 		Object cf = null;
@@ -860,7 +884,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 				break;
 			} catch (Exception e) {
 				te = e;
-				factory = createMetadataFactory(vdb, model, vdbResources==null?Collections.EMPTY_MAP:vdbResources.getEntriesPlusVisibilities());
+				factory = createMetadataFactory(vdb, store, model, vdbResources==null?Collections.EMPTY_MAP:vdbResources.getEntriesPlusVisibilities());
 			}
 		}
 		if (te != null) {
@@ -888,9 +912,6 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	 * Stops the server.  Once stopped it cannot be restarted.
 	 */
 	public synchronized void stop() {
-		if (config != null) {
-			config.stop();
-		}
 		if (running == null || !running) {
 			return;
 		}
@@ -906,6 +927,9 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		this.sessionService.stop();
 		this.transports.clear();
 		dqp.stop();
+		if (config != null) {
+            config.stop();
+        }
 		eventDistributorFactoryService.stop();
 		config.getCacheFactory().destroy();
 		config.setCacheFactory(null);
@@ -1032,5 +1056,14 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		public boolean isStarted() {
 			return running;
 		}
+	}
+	
+	public static void createPreParser(VDBMetaData deployment) throws TeiidException {
+	    String preparserClass = deployment.getPropertyValue(VDBMetaData.PREPARSER_CLASS);
+        if (preparserClass != null) {
+            ClassLoader vdbClassLoader = deployment.getAttachment(ClassLoader.class);
+            PreParser preParser = (PreParser) ReflectionHelper.create(preparserClass, Collections.emptyList(), vdbClassLoader);
+            deployment.addAttchment(PreParser.class, preParser);
+        }
 	}
 }

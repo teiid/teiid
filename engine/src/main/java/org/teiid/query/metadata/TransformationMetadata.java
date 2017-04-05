@@ -42,12 +42,15 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.LRUCache;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.StringUtil;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column.SearchType;
@@ -56,7 +59,6 @@ import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionTree;
-import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingDocument;
 import org.teiid.query.mapping.xml.MappingLoader;
@@ -174,6 +176,9 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     	} else {
     		this.importedModels = Collections.emptySet();
     	}
+    	if (store.getDatatypes().isEmpty()) {
+    	    store.addDataTypes(SystemMetadata.getInstance().getRuntimeTypeMap());
+    	}
         this.store = store;
         if (vdbEntries == null) {
         	this.vdbEntries = Collections.emptyMap();
@@ -185,11 +190,6 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         } else {
             this.functionLibrary = new FunctionLibrary(systemFunctions, functionTrees.toArray(new FunctionTree[functionTrees.size()]));
         }
-    }
-    
-    public TransformationMetadata(Database database, SystemFunctionManager systemFunctionMgr) {
-        this(DatabaseUtil.convert(database), new CompositeMetadataStore(database.getMetadataStore()), null,
-        		systemFunctionMgr.getSystemFunctions(), null);
     }
     
     private void processGrants(MetadataStore store, Map<String, DataPolicyMetadata> policies) {
@@ -206,9 +206,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
                     }
                 }
             } else {
-                // Convert from Grant to DataPolicyMetadata
-                dpm = DatabaseUtil.convert(grant, store.getRole(grant.getRole()));
-                policies.put(grant.getRole(), dpm);
+                LogManager.logDetail(LogConstants.CTX_RUNTIME, "Permission added to non-existant role", grant.getRole()); //$NON-NLS-1$
             }
         }
     }
@@ -452,7 +450,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         }
     }
 
-    public String getElementType(final Object elementID) throws TeiidComponentException, QueryMetadataException {
+    public String getElementRuntimeTypeName(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
             return ((Column) elementID).getRuntimeType();            
         } else if(elementID instanceof ProcedureParameter){
@@ -1186,6 +1184,24 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 	
 	public void setWidenComparisonToString(boolean widenComparisonToString) {
 		this.widenComparisonToString = widenComparisonToString;
+	}
+	
+	@Override
+	public Class<?> getDataTypeClass(String typeOrDomainName)
+	        throws QueryMetadataException {
+	    if (typeOrDomainName == null) {
+            return DefaultDataClasses.NULL;
+        }
+
+        Datatype type = store.getDatatypes().get(typeOrDomainName);
+
+        if (type != null) {
+            return DataTypeManager.getDataTypeClass(type.getRuntimeTypeName());
+        }
+        if (DataTypeManager.isArrayType(typeOrDomainName)) {
+            return DataTypeManager.getArrayType(getDataTypeClass(typeOrDomainName.substring(0, typeOrDomainName.length() - 2)));
+        }
+        throw new QueryMetadataException(QueryPlugin.Event.TEIID31254, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31254, typeOrDomainName));
 	}
 	
 }

@@ -247,7 +247,7 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
 	}
 
 	// SPECIAL: Override for temp groups
-	public String getElementType(Object elementID)
+	public String getElementRuntimeTypeName(Object elementID)
 		throws TeiidComponentException, QueryMetadataException {
 		
 		if(elementID instanceof TempMetadataID) { 
@@ -257,7 +257,7 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
             } 
             throw new AssertionError("No type set for element " + elementID); //$NON-NLS-1$
         }
-		return this.actualMetadata.getElementType(elementID);
+		return this.actualMetadata.getElementRuntimeTypeName(elementID);
 	}
 
     public String getDefaultValue(Object elementID)
@@ -644,7 +644,7 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
             TempMetadataID id = (TempMetadataID)elementID;
             Object origElementID = id.getOriginalMetadataID();
             if (origElementID == null) {
-                String type = getElementType(elementID);
+                String type = getElementRuntimeTypeName(elementID);
                 if(type.equals(DataTypeManager.DefaultDataTypes.STRING)) {
                     return 255;
                 }

@@ -52,6 +52,8 @@ import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.util.Assertion;
@@ -244,6 +246,17 @@ public class DataTierManagerImpl implements ProcessorDataManager {
     private Map<SystemTables, BaseExtractionTable<?>> systemTables = new HashMap<SystemTables, BaseExtractionTable<?>>();
     private Map<SystemAdminTables, BaseExtractionTable<?>> systemAdminTables = new HashMap<SystemAdminTables, BaseExtractionTable<?>>();
     
+    private static TreeMap<String, List<String>> PREFIX_MAP = new TreeMap<String, List<String>>(String.CASE_INSENSITIVE_ORDER);
+    static {
+        PREFIX_MAP.put(DataTypeManager.DefaultDataTypes.STRING, Arrays.asList("'", "'")); //$NON-NLS-1$ //$NON-NLS-2$
+        PREFIX_MAP.put(DataTypeManager.DefaultDataTypes.CHAR, Arrays.asList("'", "'")); //$NON-NLS-1$ //$NON-NLS-2$
+        PREFIX_MAP.put(DataTypeManager.DefaultDataTypes.VARBINARY, Arrays.asList("'X", "'")); //$NON-NLS-1$ //$NON-NLS-2$
+        PREFIX_MAP.put(DataTypeManager.DefaultDataTypes.DATE, Arrays.asList("{'d", "'}")); //$NON-NLS-1$ //$NON-NLS-2$
+        PREFIX_MAP.put(DataTypeManager.DefaultDataTypes.TIME, Arrays.asList("{'t", "'}")); //$NON-NLS-1$ //$NON-NLS-2$
+        PREFIX_MAP.put(DataTypeManager.DefaultDataTypes.TIMESTAMP, Arrays.asList("{'ts", "'}")); //$NON-NLS-1$ //$NON-NLS-2$
+        PREFIX_MAP.put(DataTypeManager.DefaultDataTypes.BOOLEAN, Arrays.asList("{'b", "'}")); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
     public DataTierManagerImpl(DQPCore requestMgr, BufferManager bufferMgr, boolean detectChangeEvents) {
 		this.requestMgr = requestMgr;
         this.bufferManager = bufferMgr;
@@ -406,12 +419,12 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		});
         name = SystemTables.DATATYPES.name();
         columns = getColumns(tm, name);
-        systemTables.put(SystemTables.DATATYPES, new RecordExtractionTable<Datatype>(new RecordTable<Datatype>(new int[] {0}, columns) {
+        systemTables.put(SystemTables.DATATYPES, new RecordExtractionTable<Datatype>(new RecordTable<Datatype>(new int[] {0}, columns.subList(0, 1)) {
         	
         	@Override
         	public SimpleIterator<Datatype> processQuery(VDBMetaData vdb,
         			CompositeMetadataStore metadataStore, BaseIndexInfo<?> ii, TransformationMetadata metadata, CommandContext commandContext) {
-        		return processQuery(vdb, metadataStore.getDatatypes(), ii, commandContext);
+        		return processQuery(vdb, metadataStore.getDatatypesExcludingAliases(), ii, commandContext);
         	}
         }, columns) {
 			
@@ -421,7 +434,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         			CommandContext cc, SimpleIterator<Datatype> iter) {
         		row.add(datatype.getName());
 				row.add(datatype.isBuiltin());
-				row.add(datatype.isBuiltin());
+				row.add(datatype.getType().name());
 				row.add(datatype.getName());
 				row.add(datatype.getJavaClassName());
 				row.add(datatype.getScale());
@@ -430,13 +443,28 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				row.add(datatype.isSigned());
 				row.add(datatype.isAutoIncrement());
 				row.add(datatype.isCaseSensitive());
-				row.add(datatype.getPrecision());
+				Integer precision = datatype.getPrecision();
+				if (datatype.isBuiltin() && !Number.class.isAssignableFrom(DataTypeManager.getDataTypeClass(datatype.getRuntimeTypeName()))) {
+				    precision = JDBCSQLTypeInfo.getDefaultPrecision(datatype.getName());
+				} else if (precision != null && precision == 0) {
+                    precision = JDBCSQLTypeInfo.getDefaultPrecision(datatype.getRuntimeTypeName());
+				}
+				row.add(precision);
  				row.add(datatype.getRadix());
  				row.add(datatype.getSearchType().toString()); 
  				row.add(datatype.getUUID());
  				row.add(datatype.getRuntimeTypeName());
  				row.add(datatype.getBasetypeName());
  				row.add(datatype.getAnnotation());
+ 				row.add(JDBCSQLTypeInfo.getSQLType(datatype.getRuntimeTypeName()));
+ 				List<String> prefix = PREFIX_MAP.get(datatype.getRuntimeTypeName());
+ 				if (prefix != null) {
+ 				    row.add(prefix.get(0));
+     				row.add(prefix.get(1));
+ 				} else {
+ 				    row.add(null);
+                    row.add(null);
+ 				}
         	}
 		});
         name = SystemTables.VIRTUALDATABASES.name();
@@ -485,12 +513,13 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				row.add(type);
 				row.add(isOptional);
 				row.add(param.getPrecision());
-				row.add(param.getLength());
+                row.add(param.getLength());
 				row.add(param.getScale());
 				row.add(param.getRadix());
 				row.add(param.getNullType().toString());
 				row.add(param.getUUID());
 				row.add(param.getAnnotation());
+				addTypeInfo(row, param, dt);
         	}
         	
         	@Override
@@ -535,6 +564,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				row.add(param.getNullType().toString());
 				row.add(param.getUUID());
 				row.add(param.getAnnotation());
+				addTypeInfo(row, param, param.getDatatype());
         	}
         	
         	@Override
@@ -713,13 +743,14 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         		row.add(column.getSearchType().toString());
         		row.add(column.getFormat());
         		row.add(column.getDefaultValue());
-        		row.add(dt!=null?dt.getJavaClassName():null);
+        		row.add(column.getJavaType().getName());
         		row.add(column.getPrecision());
         		row.add(column.getCharOctetLength());
         		row.add(column.getRadix());
         		row.add(column.getUUID());
         		row.add(column.getAnnotation());
         		row.add(column.getParent().getUUID());
+        		addTypeInfo(row, column, dt);
         	}
         	
         	@Override
@@ -745,6 +776,20 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         		row.add(false);
         		row.add((key instanceof ForeignKey)?((ForeignKey)key).getUniqueKeyID():null);
         		row.add(key.getUUID());
+        		row.add(key.getParent().getUUID());
+        		row.add(null);
+        		if (key instanceof ForeignKey) {
+        		    KeyRecord ref = ((ForeignKey)key).getReferenceKey();
+        		    if (ref != null) {
+                        row.set(row.size() - 1, ref.getParent().getUUID());
+        		    }
+        		}
+        		List<Column> columns2 = key.getColumns();
+                Short[] pos = new Short[columns2.size()];
+        		for (int i = 0; i < pos.length; i++) {
+        		    pos[i] = (short)columns2.get(i).getPosition();
+        		}
+        		row.add(new ArrayImpl((Object[])pos));
         	}
         	
         	@Override
@@ -879,7 +924,11 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				row.add(getType(currentParent));
 				row.add(currentParent.getParent().getName());
 				row.add(currentParent.getName());
-				row.add(null); //column usage not yet supported
+				if (currentParent instanceof Column) {
+				    row.add(currentParent.getName());
+				} else {
+	                row.add(null);
+				}
 				row.add(entry.getUUID());
 				row.add(getType(entry));
 				if (entry instanceof Column) {
@@ -932,6 +981,46 @@ public class DataTierManagerImpl implements ProcessorDataManager {
     		}
 		}
     	return true;
+    }
+    
+    private void addTypeInfo(List<Object> row, BaseColumn column,
+            Datatype dt) {
+        String typeName = column.getRuntimeType();
+        if (dt != null) {
+            if (dt.isBuiltin() || dt.getType() == Datatype.Type.Domain) {
+                typeName = dt.getName();
+            } else {
+                //some of the designer UDT types conflict with our type names,
+                //so use the runtime type instead
+                typeName = dt.getRuntimeTypeName();
+            }
+            int arrayDimensions = column.getArrayDimensions();
+            while (arrayDimensions-- > 0) {
+                typeName += "[]"; //$NON-NLS-1$
+            }
+        }
+        row.add(typeName);
+        row.add(JDBCSQLTypeInfo.getSQLType(column.getRuntimeType()));
+        Integer columnSize = null;
+        if (column.getArrayDimensions() == 0) {
+            columnSize = column.getPrecision();
+            if (columnSize == 0) {
+                columnSize = column.getLength();
+            }
+            if (typeName != null) {
+                Class<?> dataTypeClass = DataTypeManager.getDataTypeClass(typeName);
+                if (!Number.class.isAssignableFrom(dataTypeClass)) {
+                    if (java.util.Date.class.isAssignableFrom(dataTypeClass) || column.getLength() <= 0) {
+                        columnSize = JDBCSQLTypeInfo.getDefaultPrecision(column.getRuntimeType());
+                    } else {
+                        columnSize = column.getLength();
+                    }
+                } else if (column.getPrecision() <= 0) {
+                    columnSize = JDBCSQLTypeInfo.getDefaultPrecision(column.getRuntimeType());
+                }
+            }
+        }
+        row.add(columnSize);
     }
 
 	private List<ElementSymbol> getColumns(TransformationMetadata tm,

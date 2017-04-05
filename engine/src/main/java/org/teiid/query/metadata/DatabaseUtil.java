@@ -50,6 +50,8 @@ public class DatabaseUtil {
         }
         db.setProperty("connection-type", vdb.getConnectionType().name());
         
+        db.getMetadataStore().addDataTypes(metadataStore.getDatatypes());
+        
         // override translators
         List<Translator> translators = vdb.getOverrideTranslators();
         for (Translator t: translators) {
@@ -89,11 +91,7 @@ public class DatabaseUtil {
 
                 	// add servers
                     Server server = new Server(s.getName());
-	                if (s.getConnectionJndiName() != null) {
-	                    server.setJndiName(s.getConnectionJndiName());
-	                } else {
-	                    server.setType("NONE");
-	                }
+                    server.setJndiName(s.getConnectionJndiName());
 	                server.setDataWrapper(s.getTranslatorName());
 	                // no need to add duplicate definitions.
 	                if (db.getServer(s.getName()) == null) {
@@ -103,13 +101,6 @@ public class DatabaseUtil {
 	            }
             }
             
-            if (m.getDescription() != null) {
-                schema.setAnnotation(m.getDescription());
-            }
-            
-            if(!m.isVisible()) {
-                schema.setVisible(false);
-            }
             db.addSchema(schema);
         }
         
@@ -164,29 +155,34 @@ public class DatabaseUtil {
     
     private static Permission convert(DataPermission dp) {
         Permission p = new Permission();
-        p.setResourceType(ResourceType.TABLE);
         
         p.setAllowAlter(dp.getAllowAlter());
         p.setAllowDelete(dp.getAllowDelete());
-        p.setAllowDrop(false);
         p.setAllowExecute(dp.getAllowExecute());
         p.setAllowInsert(dp.getAllowCreate());
-        p.setAllowLanguage(dp.getAllowLanguage());
         p.setAllowSelect(dp.getAllowRead());
         p.setAllowUpdate(dp.getAllowUpdate());
         p.setResourceName(dp.getResourceName());
         
-        int dotCount = dp.getResourceName().length() - dp.getResourceName().replaceAll("\\.", "").length();
-        
-        // this is more of a guessing game here..
         if (dp.getAllowLanguage() != null && dp.getAllowLanguage()) {
-            p.setResourceType(ResourceType.DATABASE);
-        } else if (dotCount == 0) {
-            p.setResourceType(ResourceType.SCHEMA);
-        } else if (dp.getAllowExecute() != null && dp.getAllowExecute()){
-            p.setResourceType(ResourceType.PROCEDURE);
-        } else if (dotCount >= 2 ) {
-            p.setResourceType(ResourceType.COLUMN);
+            p.setAllowUsage(true);
+            p.setResourceType(ResourceType.LANGUAGE);
+        } else if (dp.getResourceType() != null) {
+            p.setResourceType(ResourceType.valueOf(dp.getResourceType().name()));
+        } else {
+            int dotCount = dp.getResourceName().length() - dp.getResourceName().replaceAll("\\.", "").length(); //$NON-NLS-1$ //$NON-NLS-2$
+            
+            if (dotCount == 0) {
+                p.setResourceType(ResourceType.SCHEMA);
+            } else if (dp.getAllowExecute() != null && dp.getAllowExecute()){
+                // this may not be correct as it could be a function as well
+                p.setResourceType(ResourceType.PROCEDURE);
+            } else if (dotCount >= 2) {
+                // this may not be correct as it could be a table
+                p.setResourceType(ResourceType.COLUMN);
+            } else {
+                p.setResourceType(ResourceType.TABLE);
+            }
         }
         
         if (dp.getMask() != null) {
@@ -210,6 +206,11 @@ public class DatabaseUtil {
             vdb.setConnectionType(VDB.ConnectionType.valueOf(database.getProperty("connection-type", false)));
         }
         vdb.getPropertiesMap().putAll(database.getProperties());
+        
+        String domainDDLString = DDLStringVisitor.getDomainDDLString(database);
+        if (!domainDDLString.isEmpty()) {
+            vdb.addProperty(VDBMetaData.TEIID_DOMAINS, domainDDLString);
+        }
         
         // translators
         for (DataWrapper dw : database.getDataWrappers()) {
@@ -249,41 +250,39 @@ public class DatabaseUtil {
             vdb.addModel(mmd);
         }
         
+        copyDatabaseGrantsAndRoles(database, vdb);
+        
+        return vdb;
+    }
+
+    public static void copyDatabaseGrantsAndRoles(Database database,
+            VDBMetaData vdb) {
         // roles
         for (Grant grant:database.getGrants()) {
             Role role = database.getRole(grant.getRole());
             DataPolicyMetadata dpm = convert(grant, role);
             vdb.addDataPolicy(dpm);
         }
-        return vdb;
+        
+        for (Role role : database.getRoles()) {
+            if (vdb.getDataPolicyMap().get(role.getName()) == null) {
+                DataPolicyMetadata dpm = convert(null, role);
+                vdb.addDataPolicy(dpm);
+            }
+        }
     }
     
     static PermissionMetaData convert(Permission from) {
         PermissionMetaData pmd = new PermissionMetaData();
         pmd.setResourceName(from.getResourceName());
-        
-        // NOTE: PMD even though you set false, it can interpret it wrong, use null or true only
-        if (from.hasPrivilege(Privilege.ALTER)) {
-            pmd.setAllowAlter(true);
-        }
-        if (from.hasPrivilege(Privilege.INSERT)) {
-            pmd.setAllowCreate(true);
-        }
-        if (from.hasPrivilege(Privilege.DELETE)) {
-            pmd.setAllowDelete(true);
-        }
-        if(from.hasPrivilege(Privilege.EXECUTE)) {
-            pmd.setAllowExecute(true);
-        }
-        if (from.hasPrivilege(Privilege.SELECT)) {
-            pmd.setAllowRead(true);
-        }
-        if(from.hasPrivilege(Privilege.UPDATE)) {
-            pmd.setAllowUpdate(true);
-        }
-        if (from.hasPrivilege(Privilege.LANGUAGE)) {
-            pmd.setAllowLanguage(true);
-        }
+        pmd.setResourceType(DataPolicy.ResourceType.valueOf(from.getResourceType().name()));
+        pmd.setAllowAlter(from.hasPrivilege(Privilege.ALTER));
+        pmd.setAllowCreate(from.hasPrivilege(Privilege.INSERT));
+        pmd.setAllowDelete(from.hasPrivilege(Privilege.DELETE));
+        pmd.setAllowExecute(from.hasPrivilege(Privilege.EXECUTE));
+        pmd.setAllowRead(from.hasPrivilege(Privilege.SELECT));
+        pmd.setAllowUpdate(from.hasPrivilege(Privilege.UPDATE));
+        pmd.setAllowLanguage(from.hasPrivilege(Privilege.USAGE));
         
         pmd.setCondition(from.getCondition());
         pmd.setConstraint(from.isConditionAConstraint());
@@ -295,26 +294,26 @@ public class DatabaseUtil {
     
     static DataPolicyMetadata convert(Grant from, Role role) {
         DataPolicyMetadata dpm = new DataPolicyMetadata();
-        dpm.setName(from.getRole());
+        dpm.setName(role.getName());
         
-        for (Permission p : from.getPermissions()) {
-            if (p.hasPrivilege(Privilege.ALL_PRIVILEGES)) {
-                dpm.setGrantAll(true);
-                continue;
-            } else if (p.hasPrivilege(Privilege.TEMPORARY_TABLE)) {
-                dpm.setAllowCreateTemporaryTables(true);
-                continue;
+        if (from != null) {
+            for (Permission p : from.getPermissions()) {
+                if (Boolean.TRUE.equals(p.hasPrivilege(Privilege.ALL_PRIVILEGES))) {
+                    dpm.setGrantAll(true);
+                    continue;
+                } else if (Boolean.TRUE.equals(p.hasPrivilege(Privilege.TEMPORARY_TABLE))) {
+                    dpm.setAllowCreateTemporaryTables(true);
+                    continue;
+                }
+                
+                PermissionMetaData pmd = convert(p);            
+                dpm.addPermission(pmd);
             }
-            
-            PermissionMetaData pmd = convert(p);            
-            dpm.addPermission(pmd);
         }
         
-        if (role != null) {
-            dpm.setDescription(role.getAnnotation());
-        }
+        dpm.setDescription(role.getAnnotation());
         
-        if (role != null && role.getJassRoles() != null && !role.getJassRoles().isEmpty()) {
+        if (role.getJassRoles() != null && !role.getJassRoles().isEmpty()) {
             dpm.setMappedRoleNames(role.getJassRoles());
         }
         

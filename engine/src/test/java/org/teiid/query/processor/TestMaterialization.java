@@ -128,6 +128,11 @@ public class TestMaterialization {
     	assertEquals(1, hdm.getCommandHistory().size());
     }
     
+    @Test public void testCodeTableReservedWord() throws Exception {
+        hdm.addData("SELECT MatTable.info.\"value\", MatTable.info.e1 FROM MatTable.info", Arrays.asList("5", "a"));
+        execute("select lookup('mattable.info', 'e1', 'VALUE', '5')", Arrays.asList("a"));
+    }
+    
 	@Test public void testTtl() throws Exception {
 		execute("SELECT * from vgroup4 where x = 'one'", Arrays.asList("one"));
 		assertEquals(1, hdm.getCommandHistory().size());

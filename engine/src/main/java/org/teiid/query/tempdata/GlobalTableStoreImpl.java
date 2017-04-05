@@ -355,13 +355,13 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 			QueryMetadataException {
 		ElementSymbol keyElement = new ElementSymbol(matTableName + ElementSymbol.SEPARATOR + keyElementName);
     	ElementSymbol returnElement = new ElementSymbol(matTableName + ElementSymbol.SEPARATOR + returnElementName);
-		keyElement.setType(DataTypeManager.getDataTypeClass(metadata.getElementType(metadata.getElementID(codeTableName + ElementSymbol.SEPARATOR + keyElementName))));
-    	returnElement.setType(DataTypeManager.getDataTypeClass(metadata.getElementType(metadata.getElementID(codeTableName + ElementSymbol.SEPARATOR + returnElementName))));
+		keyElement.setType(DataTypeManager.getDataTypeClass(metadata.getElementRuntimeTypeName(metadata.getElementID(codeTableName + ElementSymbol.SEPARATOR + keyElementName))));
+    	returnElement.setType(DataTypeManager.getDataTypeClass(metadata.getElementRuntimeTypeName(metadata.getElementID(codeTableName + ElementSymbol.SEPARATOR + returnElementName))));
     	TempMetadataID id = this.tableStore.getMetadataStore().getTempGroupID(matTableName);
     	if (id == null) {
     		synchronized (this) {
     	    	id = this.tableStore.getMetadataStore().addTempGroup(matTableName, Arrays.asList(keyElement, returnElement), false, true);
-    	    	String queryString = Reserved.SELECT + ' ' + keyElementName + " ," + returnElementName + ' ' + Reserved.FROM + ' ' + codeTableName; //$NON-NLS-1$ 
+    	    	String queryString = Reserved.SELECT + ' ' + new ElementSymbol(keyElementName) + " ," + new ElementSymbol(returnElementName) + ' ' + Reserved.FROM + ' ' + new GroupSymbol(codeTableName); //$NON-NLS-1$ 
     	    	id.setQueryNode(new QueryNode(queryString));
     	    	id.setPrimaryKey(id.getElements().subList(0, 1));
     	    	CacheHint hint = new CacheHint(true, null);

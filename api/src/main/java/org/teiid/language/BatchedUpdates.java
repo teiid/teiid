@@ -31,6 +31,7 @@ import org.teiid.language.visitor.LanguageObjectVisitor;
  */
 public class BatchedUpdates extends BaseLanguageObject implements Command {
 
+    private static final int MAX_COMMANDS_TOSTRING = 5;
     private List<Command> updateCommands;
     private boolean singleResult;
     
@@ -65,10 +66,26 @@ public class BatchedUpdates extends BaseLanguageObject implements Command {
     
     @Override
     public String toString() {
+        return toString(false);
+    }
+        
+    public String toString(boolean allCommands) {
     	StringBuffer result = new StringBuffer();
-    	for (Command command : updateCommands) {
-    		result.append(command.toString());
+    	int toDisplay = updateCommands.size();
+    	boolean overMax = false;
+    	if (!allCommands && toDisplay > MAX_COMMANDS_TOSTRING) {
+    	    toDisplay = MAX_COMMANDS_TOSTRING;
+    	    overMax = true;
+    	}
+    	for (int i = 0; i < toDisplay; i++) {
+    	    if (i > 0) {
+    	        result.append("\n"); //$NON-NLS-1$
+    	    }
+    		result.append(updateCommands.get(i).toString());
     		result.append(";"); //$NON-NLS-1$
+    	}
+    	if (overMax) {
+    	    result.append("\n..."); //$NON-NLS-1$
     	}
     	return result.toString();
     }

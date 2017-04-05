@@ -401,8 +401,10 @@ public class DocumentNode {
     
     DocumentNode joinTable(DocumentNode joinResource, boolean isCollection, JoinType joinType) throws TeiidException {
         ForeignKey fk = null;
+        boolean reverse = false;
         if (isCollection) {
-            fk = joinFK(joinResource.getTable(), getTable());    
+            fk = joinFK(joinResource.getTable(), getTable());
+            reverse = true;
         }
         else {
             fk = joinFK(getTable(), joinResource.getTable());
@@ -415,6 +417,7 @@ public class DocumentNode {
             }
             else {
                 fk = joinFK(joinResource.getTable(), getTable());
+                reverse = true;
             }
         }
         
@@ -428,7 +431,11 @@ public class DocumentNode {
             fromClause = new UnaryFromClause(joinResource.getGroupSymbol());
         }
         else {
-            fromClause = addJoinTable(joinType, joinResource, this);
+            Criteria crit = null;
+            if (!joinType.equals(JoinType.JOIN_CROSS)) {
+                crit = buildCriteria(reverse?joinResource:this, reverse?this:joinResource, fk);
+            }
+            fromClause = new JoinPredicate(this.getFromClause(), new UnaryFromClause(joinResource.getGroupSymbol()), joinType, crit);
         }
         
         joinResource.setFromClause(fromClause);        
@@ -463,32 +470,27 @@ public class DocumentNode {
         return null;
     }
     
-    private static FromClause addJoinTable(final JoinType joinType, DocumentNode from, DocumentNode to) {
-        Criteria crit = null;
-        if (!joinType.equals(JoinType.JOIN_CROSS)) {
-            crit = buildJoinCriteria(from, to);
-            if (crit == null) {
-                crit = buildJoinCriteria(to, from);
-            }
-        }
-        return new JoinPredicate(to.getFromClause(), new UnaryFromClause(from.getGroupSymbol()), joinType, crit);
-    }
-
     static Criteria buildJoinCriteria(DocumentNode from, DocumentNode to) {
-        Criteria criteria = null;
         for (ForeignKey fk:from.getTable().getForeignKeys()) {
             if (fk.getReferenceKey().getParent().equals(to.getTable())) {
-                List<String> fkColumns = DocumentNode.getColumnNames(fk.getColumns());
-                if (fkColumns == null) {
-                    fkColumns = DocumentNode.getColumnNames(getPKColumns(from.getTable()));
-                }                   
-                
-                List<String> pkColumns = DocumentNode.getColumnNames(getPKColumns(to.getTable()));
-                criteria = DocumentNode.buildJoinCriteria(
-                        from.getGroupSymbol(),
-                        to.getGroupSymbol(), pkColumns, fkColumns);
+                return buildCriteria(from, to, fk);
             }
         } 
+        return null;
+    }
+
+    private static Criteria buildCriteria(DocumentNode from, DocumentNode to,
+            ForeignKey fk) {
+        Criteria criteria;
+        List<String> fkColumns = DocumentNode.getColumnNames(fk.getColumns());
+        if (fkColumns == null) {
+            fkColumns = DocumentNode.getColumnNames(getPKColumns(from.getTable()));
+        }                   
+        
+        List<String> pkColumns = DocumentNode.getColumnNames(getPKColumns(to.getTable()));
+        criteria = DocumentNode.buildJoinCriteria(
+                from.getGroupSymbol(),
+                to.getGroupSymbol(), pkColumns, fkColumns);
         return criteria;
     }
     

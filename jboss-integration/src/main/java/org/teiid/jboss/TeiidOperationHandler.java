@@ -23,8 +23,6 @@ package org.teiid.jboss;
 
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Blob;
@@ -38,9 +36,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.concurrent.Future;
-
-import javax.xml.stream.XMLStreamException;
-import javax.xml.transform.TransformerException;
 
 import org.jboss.as.connector.metadata.xmldescriptors.ConnectorXmlDescriptor;
 import org.jboss.as.connector.services.resourceadapters.deployment.InactiveResourceAdapterDeploymentService.InactiveResourceAdapterDeployment;
@@ -65,13 +60,23 @@ import org.jboss.jca.common.api.metadata.spec.ResourceAdapter;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceRegistry;
-import org.teiid.adminapi.*;
-import org.teiid.adminapi.Admin.ExportFormat;
+import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.Admin.SchemaObjectType;
 import org.teiid.adminapi.Admin.TranlatorPropertyType;
+import org.teiid.adminapi.AdminComponentException;
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.VDB.Status;
-import org.teiid.adminapi.impl.*;
+import org.teiid.adminapi.impl.CacheStatisticsMetadata;
+import org.teiid.adminapi.impl.EngineStatisticsMetadata;
+import org.teiid.adminapi.impl.RequestMetadata;
+import org.teiid.adminapi.impl.SessionMetadata;
+import org.teiid.adminapi.impl.TransactionMetadata;
+import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.adminapi.impl.VDBTranslatorMetaData;
+import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.adminapi.jboss.VDBMetadataMapper;
 import org.teiid.adminapi.jboss.VDBMetadataMapper.TransactionMetadataMapper;
 import org.teiid.adminapi.jboss.VDBMetadataMapper.VDBTranslatorMetaDataMapper;
@@ -91,14 +96,11 @@ import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.jboss.TeiidServiceNames.InvalidServiceNameException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.Database;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.query.metadata.DDLStringVisitor;
-import org.teiid.query.metadata.DatabaseUtil;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.runtime.EmbeddedAdminFactory;
-import org.teiid.runtime.EmbeddedAdminImpl;
 import org.teiid.translator.TranslatorProperty.PropertyType;
 import org.teiid.vdb.runtime.VDBKey;
 
@@ -898,11 +900,6 @@ class GetSchema extends BaseOperationHandler<VDBRepository>{
 		    modelName = operation.get(OperationsConstants.MODEL_NAME.getName()).asString();	
 		}
 		
-		Admin.ExportFormat format = Admin.ExportFormat.XML;
-        if (operation.hasDefined(OperationsConstants.FORMAT.getName())) {
-            format = Admin.ExportFormat.valueOf(operation.get(OperationsConstants.FORMAT.getName()).asString()); 
-        }
-		
 		ModelNode result = context.getResult();
 		String vdbName = operation.get(OperationsConstants.VDB_NAME.getName()).asString();
 		String vdbVersion = operation.get(OperationsConstants.VDB_VERSION.getName()).asString();
@@ -937,33 +934,9 @@ class GetSchema extends BaseOperationHandler<VDBRepository>{
 			regEx = operation.get(OperationsConstants.ENTITY_PATTERN.getName()).asString();
 		}
 		MetadataStore metadataStore = vdb.getAttachment(TransformationMetadata.class).getMetadataStore();
-		if (modelName != null) {
-    		Schema schema = metadataStore.getSchema(modelName);
-    		String ddl = DDLStringVisitor.getDDLString(schema, schemaTypes, regEx);
-    		result.set(ddl);
-		} else {
-            if (format == ExportFormat.XML) {
-                for (ModelMetaData m:vdb.getModelMetaDatas().values()) {
-                    Schema schema = metadataStore.getSchema(m.getName());
-                    String ddl = DDLStringVisitor.getDDLString(schema, schemaTypes, regEx);
-                    m.addSourceMetadata("DDL", ddl);
-                }
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                try {
-                    VDBMetadataParser.marshell(vdb, out);
-                    String xml = EmbeddedAdminImpl.prettyFormat(new String(out.toByteArray()));
-                    result.set(xml);
-                } catch (XMLStreamException | IOException | TransformerException e ) {
-                    throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50114, e,
-                            vdbName, vdbVersion));                    
-                }
-                
-            } else {
-                Database db = DatabaseUtil.convert(vdb, metadataStore);
-                String ddl = DDLStringVisitor.getDDLString(db);
-                result.set(ddl);
-            }		    
-		}
+		Schema schema = metadataStore.getSchema(modelName);
+		String ddl = DDLStringVisitor.getDDLString(schema, schemaTypes, regEx);
+		result.set(ddl);
 	}
 
 	@Override
@@ -973,7 +946,6 @@ class GetSchema extends BaseOperationHandler<VDBRepository>{
 		builder.addParameter(OperationsConstants.MODEL_NAME);
 		builder.addParameter(OperationsConstants.ENTITY_TYPE);
 		builder.addParameter(OperationsConstants.ENTITY_PATTERN);
-		builder.addParameter(OperationsConstants.FORMAT);
 		builder.setReplyType(ModelType.STRING);
 	}
 }

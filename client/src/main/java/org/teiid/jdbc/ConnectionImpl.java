@@ -905,7 +905,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
 	}
 
 	private void addStatement(StatementImpl newStatement) throws SQLException {
-		if (statements.size() > MAX_OPEN_STATEMENTS) {
+		if (statements.size() >= MAX_OPEN_STATEMENTS) {
 			this.close();
 			throw new TeiidSQLException(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20036, MAX_OPEN_STATEMENTS));
 		}

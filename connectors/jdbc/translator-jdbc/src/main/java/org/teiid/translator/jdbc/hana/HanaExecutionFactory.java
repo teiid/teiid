@@ -179,7 +179,6 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
     	convertModifier.addTypeMapping("nclob", FunctionModifier.CLOB); //$NON-NLS-1$
     	convertModifier.addTypeMapping("text", FunctionModifier.XML); //$NON-NLS-1$
     	//convertModifier.addTypeMapping("shorttext", FunctionModifier.STRING); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("bintext", FunctionModifier.OBJECT); //$NON-NLS-1$
     	convertModifier.addTypeMapping("st_geometry", FunctionModifier.GEOMETRY); //$NON-NLS-1$
 
     	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.DATE, new ConvertModifier.FormatModifier("to_date", DATE_FORMAT)); //$NON-NLS-1$ 

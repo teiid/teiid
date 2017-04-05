@@ -155,7 +155,7 @@ public interface QueryMetadataInterface {
      * @throws QueryMetadataException Metadata implementation detected a problem during the request
      * @throws TeiidComponentException Unexpected internal system problem during request
      */
-	String getElementType(Object elementID)
+	String getElementRuntimeTypeName(Object elementID)
 		throws TeiidComponentException, QueryMetadataException;
 
     /**
@@ -678,4 +678,12 @@ public interface QueryMetadataInterface {
 	boolean findShortName();
 	
 	boolean widenComparisonToString();
+
+	/**
+	 * Get the runtime type class for the given type name, which may include domains
+	 * @param typeName
+	 * @return
+	 * @throws QueryMetadataException
+	 */
+    Class<?> getDataTypeClass(String typeOrDomainName) throws QueryMetadataException;
 }

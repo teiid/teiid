@@ -174,32 +174,39 @@ public class ODataSchemaBuilder {
     }
 
     private static CsdlProperty buildProperty(Column c, boolean nullable) {
+        String runtimeType = c.getRuntimeType();
         CsdlProperty property = new CsdlProperty()
                 .setName(c.getName())
-                .setType(ODataTypeManager.odataType(c.getRuntimeType()).getFullQualifiedName())
+                .setType(ODataTypeManager.odataType(runtimeType).getFullQualifiedName())
                 .setNullable(nullable);
-
-        if (DataTypeManager.isArrayType(c.getRuntimeType())) {
+        
+        if (DataTypeManager.isArrayType(runtimeType)) {
             property.setCollection(true);
         }
+        
+        runtimeType = ODataTypeManager.teiidType(property.getType(), false);
 
-        if (c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.STRING)) {
-            property.setMaxLength(c.getLength()).setUnicode(true);
-        } else if (c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.BIG_DECIMAL)) {
+        if (runtimeType.equals(DataTypeManager.DefaultDataTypes.STRING)
+                || runtimeType.equals(DataTypeManager.DefaultDataTypes.VARBINARY)) {
+            //this will not be correct for a multi-dimensional or other unsupported type
+            property.setMaxLength(c.getLength());
+            if (runtimeType.equals(DataTypeManager.DefaultDataTypes.STRING)) {
+                property.setUnicode(true);
+            }
+        } else if (runtimeType.equals(DataTypeManager.DefaultDataTypes.BIG_DECIMAL)
+                || runtimeType.equals(DataTypeManager.DefaultDataTypes.BIG_INTEGER)) {
             if (c.getScale() < 0) {
                 property.setPrecision((int)Math.min(Integer.MAX_VALUE, (long)c.getPrecision() - c.getScale()));
             } else {
                 property.setPrecision(c.getPrecision());
             }
             property.setScale(Math.max(0, c.getScale()));
-        } else if (c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.TIMESTAMP)
-                || c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.TIME)) {
+        } else if (runtimeType.equals(DataTypeManager.DefaultDataTypes.TIMESTAMP)
+                || runtimeType.equals(DataTypeManager.DefaultDataTypes.TIME)) {
             property.setPrecision(c.getPrecision() == 0?new Integer(4):c.getPrecision());
         }
-        else {
-            if (c.getDefaultValue() != null) {
-                property.setDefaultValue(c.getDefaultValue());
-            }
+        if (c.getDefaultValue() != null) {
+            property.setDefaultValue(c.getDefaultValue());
         }
         return property;
     }

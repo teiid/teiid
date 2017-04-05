@@ -249,4 +249,69 @@ public class TestJDBCUpdateExecution {
 			assertArrayEquals(new int[] {-3}, counts);
 		}
 	}
+	
+	@Test public void testPreparedBatchedUpdateFailed() throws Exception {
+        Insert command = (Insert)TranslationHelper.helpTranslate(TranslationHelper.BQT_VDB, "insert into BQT1.SmallA (IntKey) values (1)"); //$NON-NLS-1$
+        Parameter param = new Parameter();
+        param.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        param.setValueIndex(0);
+        List<Expression> values = ((ExpressionValueSource)command.getValueSource()).getValues();
+        values.set(0, param);
+        command.setParameterValues(Arrays.asList(Arrays.asList(1), Arrays.asList(1)).iterator());
+        
+        Connection connection = Mockito.mock(Connection.class);
+        PreparedStatement s = Mockito.mock(PreparedStatement.class);
+        Mockito.stub(s.executeBatch()).toThrow(new BatchUpdateException(new int[] {1, Statement.EXECUTE_FAILED}));
+        Mockito.stub(connection.prepareStatement("INSERT INTO SmallA (IntKey) VALUES (?)")).toReturn(s); 
+        
+        JDBCExecutionFactory config = new JDBCExecutionFactory();
+        ResultSet r = Mockito.mock(ResultSet.class);
+        ResultSetMetaData rs = Mockito.mock(ResultSetMetaData.class);
+        Mockito.stub(r.getMetaData()).toReturn(rs);
+        
+        FakeExecutionContextImpl context = new FakeExecutionContextImpl();
+        
+        JDBCUpdateExecution updateExecution = new JDBCUpdateExecution(command, connection, context, config);
+        try {
+            updateExecution.execute();
+            fail();
+        } catch (TranslatorBatchException e) {
+            int[] counts = e.getUpdateCounts();
+            assertArrayEquals(new int[] {1, -3}, counts);
+        }
+        
+        //test multiple batches
+        connection = Mockito.mock(Connection.class);
+        updateExecution = new JDBCUpdateExecution(command, connection, context, config);
+        command.setParameterValues(Arrays.asList(Arrays.asList(1), Arrays.asList(1)).iterator());
+        s = Mockito.mock(PreparedStatement.class);
+        Mockito.stub(connection.prepareStatement("INSERT INTO SmallA (IntKey) VALUES (?)")).toReturn(s);
+        Mockito.stub(s.executeBatch())
+        .toReturn(new int[] {1})
+        .toThrow(new BatchUpdateException(new int[] {Statement.EXECUTE_FAILED}));
+        updateExecution.setMaxPreparedInsertBatchSize(1);
+        try {
+            updateExecution.execute();
+            fail();
+        } catch (TranslatorBatchException e) {
+            int[] counts = e.getUpdateCounts();
+            assertArrayEquals(new int[] {1, -3}, counts);
+        }
+        
+        //test only a single update count
+        connection = Mockito.mock(Connection.class);
+        updateExecution = new JDBCUpdateExecution(command, connection, context, config);
+        command.setParameterValues(Arrays.asList(Arrays.asList(1), Arrays.asList(1)).iterator());
+        s = Mockito.mock(PreparedStatement.class);
+        Mockito.stub(connection.prepareStatement("INSERT INTO SmallA (IntKey) VALUES (?)")).toReturn(s);
+        Mockito.stub(s.executeBatch())
+        .toThrow(new BatchUpdateException(new int[] {1}));
+        try {
+            updateExecution.execute();
+            fail();
+        } catch (TranslatorBatchException e) {
+            int[] counts = e.getUpdateCounts();
+            assertArrayEquals(new int[] {1}, counts);
+        }
+    }
 }

@@ -39,6 +39,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.ServiceLoader;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 import javax.resource.spi.XATerminator;
 import javax.resource.spi.work.WorkManager;
@@ -82,6 +84,7 @@ import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.cache.CacheFactory;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBufferCache;
+import org.teiid.core.util.NamedThreadFactory;
 import org.teiid.deployers.RestWarGenerator;
 import org.teiid.deployers.TranslatorUtil;
 import org.teiid.deployers.VDBRepository;
@@ -105,6 +108,7 @@ import org.teiid.query.ObjectReplicator;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.replication.jgroups.JGroupsObjectReplicator;
 import org.teiid.runtime.MaterializationManager;
+import org.teiid.runtime.NodeTracker;
 import org.teiid.services.InternalEventDistributorFactory;
 import org.teiid.services.SessionServiceImpl;
 import org.teiid.translator.ExecutionFactory;
@@ -231,6 +235,7 @@ class TeiidAdd extends AbstractAddStepHandler {
 		
         Environment environment = context.getCallEnvironment();        
 		final JBossLifeCycleListener shutdownListener = new JBossLifeCycleListener(environment);
+		ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("Teiid Timer")); //$NON-NLS-1$
 		
 		// async thread-pool
 		int maxThreads = 10;
@@ -309,7 +314,12 @@ class TeiidAdd extends AbstractAddStepHandler {
 			serviceBuilder.addDependency(ProtocolStackServiceName.CHANNEL_FACTORY.getServiceName(stack), ChannelFactory.class, replicatorService.channelFactoryInjector); //$NON-NLS-1$ //$NON-NLS-2$
 			serviceBuilder.addDependency(TeiidServiceNames.THREAD_POOL_SERVICE, Executor.class,  replicatorService.executorInjector);
 			serviceBuilder.install();
-			LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50003)); 
+			LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50003));
+			
+			NodeTrackerService trackerService = new NodeTrackerService(nodeName, scheduler);
+			ServiceBuilder<NodeTracker> nodeTrackerBuilder = target.addService(TeiidServiceNames.NODE_TRACKER_SERVICE, trackerService);
+			nodeTrackerBuilder.addDependency(ProtocolStackServiceName.CHANNEL_FACTORY.getServiceName(stack), ChannelFactory.class, trackerService.channelFactoryInjector); //$NON-NLS-1$ //$NON-NLS-2$
+			nodeTrackerBuilder.install();
     	} else {
 			LogManager.logDetail(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("distributed_cache_not_enabled")); //$NON-NLS-1$
     	}
@@ -490,12 +500,13 @@ class TeiidAdd extends AbstractAddStepHandler {
 		
 		LogManager.logDetail(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("event_distributor_bound", jndiName)); //$NON-NLS-1$
 
-		// Materialization management service
-		MaterializationManagementService matviewService = new MaterializationManagementService(shutdownListener);
+		// Materialization management service		
+		MaterializationManagementService matviewService = new MaterializationManagementService(shutdownListener, scheduler);
 		ServiceBuilder<MaterializationManager> matviewBuilder = target.addService(TeiidServiceNames.MATVIEW_SERVICE, matviewService);
 		matviewBuilder.addDependency(TeiidServiceNames.ENGINE, DQPCore.class,  matviewService.dqpInjector);
 		matviewBuilder.addDependency(TeiidServiceNames.THREAD_POOL_SERVICE, Executor.class,  matviewService.executorInjector);
 		matviewBuilder.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class, matviewService.vdbRepositoryInjector);
+		matviewBuilder.addDependency(replicatorAvailable?DependencyType.REQUIRED:DependencyType.OPTIONAL, TeiidServiceNames.NODE_TRACKER_SERVICE, NodeTracker.class, matviewService.nodeTrackerInjector);
 		matviewBuilder.install();
 		
         // Register VDB deployer

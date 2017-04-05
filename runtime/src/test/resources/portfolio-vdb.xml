@@ -14,35 +14,35 @@
         <source name="h2-connector" translator-name="h2" connection-jndi-name="java:/accounts-ds"/>
         <metadata type="DDL"><![CDATA[
         CREATE FOREIGN TABLE CUSTOMER
-			(
-			   SSN char(10),
-			   FIRSTNAME varchar(64),
-			   LASTNAME varchar(64),
-			   ST_ADDRESS varchar(256),
-			   APT_NUMBER varchar(32),
-			   CITY varchar(64),
-			   STATE varchar(32),
-			   ZIPCODE varchar(10),
-			   PHONE varchar(15),
-			   CONSTRAINT CUSTOMER_PK PRIMARY KEY(SSN)
-			);     
-			CREATE FOREIGN TABLE ACCOUNT
-			(
-			   ACCOUNT_ID integer,
-			   SSN char(10),
-			   STATUS char(10),
-			   "TYPE" char(10),
-			   DATEOPENED timestamp,
-			   DATECLOSED timestamp,
-			   CONSTRAINT ACCOUNT_PK PRIMARY KEY(ACCOUNT_ID)
-			);
-			CREATE FOREIGN TABLE  PRODUCT 
-			(
-			   ID integer,
-			   SYMBOL varchar(16),
-			   COMPANY_NAME varchar(256),
-			   CONSTRAINT PRODUCT_PK PRIMARY KEY(ID)
-			);
+            (
+               SSN char(10),
+               FIRSTNAME varchar(64),
+               LASTNAME varchar(64),
+               ST_ADDRESS varchar(256),
+               APT_NUMBER varchar(32),
+               CITY varchar(64),
+               STATE varchar(32),
+               ZIPCODE varchar(10),
+               PHONE varchar(15),
+               CONSTRAINT CUSTOMER_PK PRIMARY KEY(SSN)
+            );     
+            CREATE FOREIGN TABLE ACCOUNT
+            (
+               ACCOUNT_ID integer,
+               SSN char(10),
+               STATUS char(10),
+               "TYPE" char(10),
+               DATEOPENED timestamp,
+               DATECLOSED timestamp,
+               CONSTRAINT ACCOUNT_PK PRIMARY KEY(ACCOUNT_ID)
+            );
+            CREATE FOREIGN TABLE  PRODUCT 
+            (
+               ID integer,
+               SYMBOL varchar(16),
+               COMPANY_NAME varchar(256),
+               CONSTRAINT PRODUCT_PK PRIMARY KEY(ID)
+            );
          ]]> </metadata>
     </model>   
     
@@ -112,6 +112,11 @@
     </data-role>
     <data-role name="Prices"  >
         <description>Allow ReadOnly Operations to see pricing</description>
+        
+        <permission>
+            <resource-name>Accounts</resource-name>
+            <allow-read>false</allow-read>
+        </permission>
         
         <mapped-role-name>prices</mapped-role-name>
     </data-role>

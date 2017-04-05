@@ -26,12 +26,33 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 
+import org.teiid.metadata.Database.ResourceType;
+
 public class Grant extends AbstractMetadataRecord {
     private static final long serialVersionUID = 3728259393244582775L;
 
     public static class Permission {
         public enum Privilege {
-            SELECT, INSERT, UPDATE, DELETE, EXECUTE, LANGUAGE, ALTER, DROP, ALL_PRIVILEGES, TEMPORARY_TABLE, CREATE
+            SELECT, INSERT, UPDATE, DELETE, EXECUTE,
+            ALTER, DROP,
+            USAGE, 
+            ALL_PRIVILEGES("ALL PRIVILEGES"), //$NON-NLS-1$ 
+            TEMPORARY_TABLE("TEMPORARY TABLE"), //$NON-NLS-1$ 
+            CREATE;
+            
+            private final String toString;
+            
+            Privilege(String toString) {
+                this.toString = toString;
+            }
+            
+            Privilege() {
+                this.toString = name();
+            }
+            
+            public String toString() {
+                return toString;
+            }
         }        
         private Database.ResourceType resourceType= null;
         private String resource = null;
@@ -40,8 +61,12 @@ public class Grant extends AbstractMetadataRecord {
         private String condition = null;
         private Boolean isConstraint;
         private EnumSet<Privilege> privileges = EnumSet.noneOf(Privilege.class);
+        private EnumSet<Privilege> revokePrivileges = EnumSet.noneOf(Privilege.class);
         
         public Database.ResourceType getResourceType() {
+            if (resourceType == null) {
+                return ResourceType.DATABASE;
+            }
             return resourceType;
         }
         
@@ -90,8 +115,18 @@ public class Grant extends AbstractMetadataRecord {
             return privileges;
         }
         
-        public boolean hasPrivilege(Privilege allow) {
-            return this.privileges.contains(allow);
+        public EnumSet<Privilege> getRevokePrivileges() {
+            return revokePrivileges;
+        }
+        
+        public Boolean hasPrivilege(Privilege allow) {
+            if (this.privileges.contains(allow)) {
+                return true;
+            }
+            if (this.revokePrivileges.contains(allow)) {
+                return false;
+            }
+            return null;
         }
         
         public void setPrivileges(List<Privilege> types) {
@@ -100,6 +135,13 @@ public class Grant extends AbstractMetadataRecord {
             }
             this.privileges = EnumSet.copyOf(types);
         }
+        
+        public void setRevokePrivileges(List<Privilege> types) {
+            if (types == null ||types.isEmpty()) {
+                return;
+            }
+            this.revokePrivileges = EnumSet.copyOf(types);
+        }
 
         public void appendPrivileges(EnumSet<Privilege> types) {
             if (types == null ||types.isEmpty()) {
@@ -107,6 +149,7 @@ public class Grant extends AbstractMetadataRecord {
             }
             for (Privilege a:types) {
                 this.privileges.add(a);
+                this.revokePrivileges.remove(a);
             }
         }
         
@@ -115,16 +158,21 @@ public class Grant extends AbstractMetadataRecord {
                 return;
             }
             for (Privilege a:types) {
-                this.privileges.remove(a);
+                if (!this.privileges.remove(a)) {
+                    this.revokePrivileges.add(a);
+                }
             }
         }
         
         private void setAllows(Boolean allow, Privilege privilege) {
             if(allow!= null) {
                 if (allow) {
+                    this.revokePrivileges.remove(privilege);
                     this.privileges.add(privilege);
                 } else {
-                    this.privileges.remove(privilege);
+                    if (!this.privileges.remove(privilege)) {
+                        this.revokePrivileges.add(privilege);
+                    }
                 }
             }
         }
@@ -157,14 +205,27 @@ public class Grant extends AbstractMetadataRecord {
             setAllows(allow, Privilege.DROP);
         }        
 
-        public void setAllowLanguage(Boolean allow) {
-            setAllows(allow, Privilege.LANGUAGE);
+        public void setAllowUsage(Boolean allow) {
+            setAllows(allow, Privilege.USAGE);
         }        
         public void setAllowAllPrivileges(Boolean allow) {
             setAllows(allow, Privilege.ALL_PRIVILEGES);
         }
         public void setAllowTemporyTables(Boolean allow) {
             setAllows(allow, Privilege.TEMPORARY_TABLE);
+        }
+
+        public boolean resourceMatches(Permission other) {
+            if (getResourceType() != other.getResourceType()) {
+                return false;
+            }
+            if (resource == null && other.resource == null) {
+                return true;
+            }
+            if (resource != null && other.resource != null && resource.equalsIgnoreCase(other.resource)) {
+                return true;
+            }
+            return false;
         }        
     }
     

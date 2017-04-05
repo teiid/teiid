@@ -272,13 +272,13 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
         supportedFunctions.add("LENGTH"); //$NON-NLS-1$
         supportedFunctions.add(SourceSystemFunctions.LOCATE);
         supportedFunctions.add("LOWER"); //$NON-NLS-1$
-        //supportedFunctons.add("LPAD"); //$NON-NLS-1$
+        supportedFunctions.add("LPAD"); //$NON-NLS-1$
         supportedFunctions.add("LTRIM"); //$NON-NLS-1$
         supportedFunctions.add("REPEAT"); //$NON-NLS-1$
         //supportedFunctions.add("RAND"); //$NON-NLS-1$
         supportedFunctions.add("REPLACE"); //$NON-NLS-1$
         supportedFunctions.add("RIGHT"); //$NON-NLS-1$
-        //supportedFunctons.add("RPAD"); //$NON-NLS-1$
+        supportedFunctions.add("RPAD"); //$NON-NLS-1$
         supportedFunctions.add("RTRIM"); //$NON-NLS-1$
         supportedFunctions.add("SPACE"); //$NON-NLS-1$
         supportedFunctions.add("SUBSTRING"); //$NON-NLS-1$
@@ -561,21 +561,31 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     	if (getVersion().compareTo(ELEVEN_0) >= 0 || !(command instanceof QueryExpression)) {
     		if (getVersion().compareTo(ELEVEN_0) >= 0 && command instanceof QueryExpression) {
     			QueryExpression queryCommand = (QueryExpression)command;
-    			if (queryCommand.getLimit() != null && queryCommand.getOrderBy() == null) {
-    				//an order by is required
-    				//we could use top if offset is 0, but that would require contextual knowledge in useSelectLimit
-    			    if (((queryCommand instanceof Select && ((Select)queryCommand).isDistinct()) 
-                            || (queryCommand instanceof SetQuery && !((SetQuery)queryCommand).isAll()))) {
-    			        //can't use the @@version with distinct
-    			        useRowNumber = true;
+    			if (queryCommand.getLimit() != null) {
+    			    if (queryCommand.getOrderBy() == null) {
+        				//an order by is required
+        				//we could use top if offset is 0, but that would require contextual knowledge in useSelectLimit
+        			    if (((queryCommand instanceof Select && ((Select)queryCommand).isDistinct()) 
+                                || (queryCommand instanceof SetQuery && !((SetQuery)queryCommand).isAll()))) {
+        			        //can't use the @@version with distinct
+        			        useRowNumber = true;
+        			    } else {
+            				List<Object> parts = new ArrayList<Object>();
+            				Limit limit = queryCommand.getLimit();
+            				queryCommand.setLimit(null);
+            				parts.add(queryCommand);
+            				parts.add(" ORDER BY @@version "); //$NON-NLS-1$
+            				parts.add(limit);
+            				return parts;
+        			    }
     			    } else {
-        				List<Object> parts = new ArrayList<Object>();
-        				Limit limit = queryCommand.getLimit();
-        				queryCommand.setLimit(null);
-        				parts.add(queryCommand);
-        				parts.add(" ORDER BY @@version "); //$NON-NLS-1$
-        				parts.add(limit);
-        				return parts;
+    			        List<Object> parts = new ArrayList<Object>();
+                        Limit limit = queryCommand.getLimit();
+                        queryCommand.setLimit(null);
+                        parts.add(queryCommand);
+                        parts.add(" "); //$NON-NLS-1$
+                        parts.add(limit);
+                        return parts;
     			    }
     			}
     		}

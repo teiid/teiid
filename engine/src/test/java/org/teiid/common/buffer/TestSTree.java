@@ -130,7 +130,13 @@ public class TestSTree {
 		for (int i = 0; i < size; i++) {
 			assertNotNull(map.remove(Arrays.asList(new String(new byte[1000]))));
 		}
-				
+		
+		assertEquals(0, map.getRowCount());
+		assertEquals(0, bm.getActiveBatchBytes());
+		
+		map.remove();
+		
+		assertEquals(0, bm.getActiveBatchBytes());
 	}
 	
 	@Test public void testSearch() throws TeiidComponentException, TeiidProcessingException {

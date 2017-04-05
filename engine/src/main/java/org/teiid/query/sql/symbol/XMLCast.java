@@ -28,11 +28,12 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 public class XMLCast implements Expression {
 	
 	private Expression expression;
+	private String typeName;
 	private Class<?> type;
 	
-	public XMLCast(Expression expression, Class<?> type) {
+	public XMLCast(Expression expression, String typeName) {
 		this.expression = expression;
-		this.type = type;
+		this.typeName = typeName;
 	}
 	
 	public Expression getExpression() {
@@ -50,13 +51,21 @@ public class XMLCast implements Expression {
 
 	@Override
 	public Object clone() {
-		return new XMLCast((Expression) expression.clone(), type);
+		return new XMLCast((Expression) expression.clone(), typeName);
+	}
+	
+	public String getTypeName() {
+	    return typeName;
 	}
 	
 	@Override
 	public Class<?> getType() {
 		return type;
 	}
+	
+	public void setType(Class<?> type) {
+        this.type = type;
+    }
 	
 	@Override
 	public int hashCode() {

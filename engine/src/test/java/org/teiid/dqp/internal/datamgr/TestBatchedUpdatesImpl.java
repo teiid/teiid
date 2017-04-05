@@ -22,27 +22,25 @@
 
 package org.teiid.dqp.internal.datamgr;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.Test;
 import org.teiid.language.BatchedUpdates;
 import org.teiid.language.Delete;
 import org.teiid.language.Insert;
 import org.teiid.language.Update;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 
-import junit.framework.TestCase;
-
 
 
 /** 
  * @since 4.2
  */
-public class TestBatchedUpdatesImpl extends TestCase {
-
-    public TestBatchedUpdatesImpl(String name) {
-        super(name);
-    }
+@SuppressWarnings("nls")
+public class TestBatchedUpdatesImpl {
 
     public static BatchedUpdateCommand helpExample() {
         List updates = new ArrayList();
@@ -53,15 +51,23 @@ public class TestBatchedUpdatesImpl extends TestCase {
     }
     
     public static BatchedUpdates example() throws Exception {
-        return (BatchedUpdates)TstLanguageBridgeFactory.factory.translate(helpExample());
+        return TstLanguageBridgeFactory.factory.translate(helpExample());
     }
 
+    @Test
     public void testGetUpdateCommands() throws Exception {
         List updates = example().getUpdateCommands();
         assertEquals(3, updates.size());
         assertTrue(updates.get(0) instanceof Insert);
         assertTrue(updates.get(1) instanceof Update);
         assertTrue(updates.get(2) instanceof Delete);
+    }
+    
+    @Test
+    public void testToString() throws Exception {
+        assertEquals("INSERT INTO b (e1, e2, e3, e4) VALUES (1, 2, 3, 4);\n"
+                + "UPDATE g1 SET e1 = 1, e2 = 1, e3 = 1, e4 = 1 WHERE 1 = 1;\n"
+                + "DELETE FROM g1 WHERE 100 >= 200 AND 500 < 600;", example().toString());
     }
 
 }

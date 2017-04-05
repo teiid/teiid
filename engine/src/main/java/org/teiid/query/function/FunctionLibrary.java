@@ -301,7 +301,7 @@ public class FunctionLibrary {
             //Iterate over the parameters adding conversions where required or failing when
             //no implicit conversion is possible
             for(int i = 0; i < types.length; i++) {
-                final String tmpTypeName = methodTypes.get(Math.min(i, methodTypes.size() - 1)).getType();
+                final String tmpTypeName = methodTypes.get(Math.min(i, methodTypes.size() - 1)).getRuntimeType();
                 Class<?> targetType = DataTypeManager.getDataTypeClass(tmpTypeName);
 
                 Class<?> sourceType = types[i];
@@ -348,7 +348,7 @@ public class FunctionLibrary {
             if (hasUnknownType) {
             	if (returnType != null) {
             		try {
-						Transform t = getConvertFunctionDescriptor(DataTypeManager.getDataTypeClass(nextMethod.getOutputParameter().getType()), returnType);
+						Transform t = getConvertFunctionDescriptor(DataTypeManager.getDataTypeClass(nextMethod.getOutputParameter().getRuntimeType()), returnType);
 						if (t != null) {
 							if (t.isExplicit()) {
 								//there still may be a common type, but use any other valid conversion over this one
@@ -396,14 +396,14 @@ public class FunctionLibrary {
             	boolean useCurrent = false;
             	List<FunctionParameter> bestParams = result.getInputParameters();
 				for (int j = 0; j < types.length; j++) {
-            		String t1 = bestParams.get(Math.min(j, bestParams.size() - 1)).getType();
-            		String t2 = methodTypes.get((Math.min(j, methodTypes.size() - 1))).getType();
+            		String t1 = bestParams.get(Math.min(j, bestParams.size() - 1)).getRuntimeType();
+            		String t2 = methodTypes.get((Math.min(j, methodTypes.size() - 1))).getRuntimeType();
             		
             		if (types[j] == null || t1.equals(t2)) {
             			continue;
             		}
             		
-            		String commonType = ResolverUtil.getCommonType(new String[] {t1, t2});
+            		String commonType = ResolverUtil.getCommonRuntimeType(new String[] {t1, t2});
             		
             		if (commonType == null) {
             			continue outer; //still ambiguous
@@ -475,7 +475,7 @@ public class FunctionLibrary {
         FunctionDescriptor[] result = new FunctionDescriptor[types.length];
         for(int i = 0; i < types.length; i++) {
         	//treat all varags as the same type
-            final String tmpTypeName = methodTypes.get(Math.min(i, methodTypes.size() - 1)).getType();
+            final String tmpTypeName = methodTypes.get(Math.min(i, methodTypes.size() - 1)).getRuntimeType();
             Class<?> targetType = DataTypeManager.getDataTypeClass(tmpTypeName);
 
             Class<?> sourceType = types[i];

@@ -189,7 +189,6 @@ TOKEN : /* Reserved words */
 |   <CURSOR: "cursor">
 |   <DAY: "day">
 |   <DEALLOCATE: "deallocate">
-|   <DEFAULT_KEYWORD: "default">
 |   <DECLARE: "declare">
 |   <DELETE: "delete">
 |   <DESC: "desc">
@@ -498,7 +497,7 @@ TOKEN : /* NonReserved words */
 |   <GEOMETRY: "geometry">
 |   <UPSERT: "upsert">
 |   <AFTER: "after">
-
+|   <DEFAULT_KEYWORD: "default">
 |   <AUTHENTICATED: "authenticated">
 |   <TYPE: "type">
 |   <TRANSLATOR: "translator">
@@ -518,6 +517,8 @@ TOKEN : /* NonReserved words */
 |   <WRAPPER: "wrapper">
 |   <REPOSITORY: "repository">
 |   <RENAME: "rename">
+|   <DOMAIN: "domain">
+|   <USAGE: "usage">
 }
 /*
 name=all in group identifier
@@ -626,7 +627,8 @@ Token nonReserved() :
      |<SQL_TSI_SECOND>|<SQL_TSI_MINUTE>|<SQL_TSI_HOUR>|<SQL_TSI_DAY>|<SQL_TSI_WEEK>|<SQL_TSI_MONTH>|<SQL_TSI_QUARTER>|<SQL_TSI_YEAR>|<TEXTTABLE>|<ARRAYTABLE>
      |<SELECTOR>|<SKIP_KEYWORD>|<WIDTH>|<PASSING>|<NAME>|<ENCODING>|<COLUMNS>|<DELIMITER>|<QUOTE>|<HEADER>|<NULLS>|<OBJECTTABLE>
      |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>|<VARIADIC>|<RAISE>|<EXCEPTION>|<CHAIN>|<JSONARRAY_AGG>|<JSONOBJECT>|<PRESERVE>|<UPSERT>|<AFTER>
-     |<TYPE>|<TRANSLATOR>|<JAAS>|<CONDITION>|<MASK>|<ACCESS>|<CONTROL>|<NONE>|<DATA>|<DATABASE>|<PRIVILEGES>|<ROLE>|<SCHEMA>|<USE>|<REPOSITORY>|<RENAME>)
+     |<TYPE>|<TRANSLATOR>|<JAAS>|<CONDITION>|<MASK>|<ACCESS>|<CONTROL>|<NONE>|<DATA>|<DATABASE>|<PRIVILEGES>|<ROLE>|<SCHEMA>|<USE>|<REPOSITORY>|<RENAME>
+     |<DOMAIN>|<USAGE>|<GEOMETRY>|<DEFAULT_KEYWORD>)
     {
     	return getToken(0);
     }	
@@ -925,7 +927,7 @@ Column tableElement(ParseInfo info) :
 {
 	 element = id(Boolean.TRUE)
 	 (
-	  type = parseDataType()
+	  type = parseBasicDataType()
 	  |
 	  <SERIAL>
 	  {
@@ -1528,14 +1530,14 @@ List<TableFunctionReference.ProjectedColumn> createElementsWithTypes(ParseInfo i
 }
 {
 	 element = id(Boolean.TRUE)
-	 type = parseDataType()
+	 type = parseBasicDataType()
 	 {
 	    TableFunctionReference.ProjectedColumn symbol = new TableFunctionReference.ProjectedColumn(element, type.type);
-		elements.add(symbol);
+        elements.add(symbol);
 	 }
 	 (LOOKAHEAD(2) <COMMA>
 		element = id(Boolean.TRUE)
-		type = parseDataType()
+		type = parseBasicDataType()
 		{
 	      symbol = new TableFunctionReference.ProjectedColumn(element, type.type);
 		  elements.add(symbol);
@@ -2690,7 +2692,7 @@ TextTable.TextColumn textColumn(ParseInfo info):
             <HEADER>
             header = stringVal()
         ]
-    	datatype = parseDataType()
+    	datatype = parseBasicDataType()
     	[ 
     	  	<WIDTH>
     	  	width = intVal() 
@@ -2892,7 +2894,7 @@ ObjectTable.ObjectColumn objectColumn(ParseInfo info):
 }
 {
 	name = id(null)
-    datatype = parseDataType()
+    datatype = parseBasicDataType()
 	path = stringVal()    
     [
    	  <DEFAULT_KEYWORD> defaultExpr = expression(info)
@@ -2984,7 +2986,7 @@ XMLTable.XMLColumn xmlColumn(ParseInfo info):
 	    return new XMLTable.XMLColumn(name); 
 	  }	
 	) | (
-      datatype = parseDataType()
+      datatype = parseBasicDataType()
       [
 	    <DEFAULT_KEYWORD> defaultExpr = expression(info)
 	  ]
@@ -4026,7 +4028,7 @@ Expression unescapedFunction(ParseInfo info) :
 		<AS>
 		type = parseDataType()
 		<RPAREN>				
-    ) { return new XMLCast(expression, DataTypeManager.getDataTypeClass(type.type)); }
+    ) { return new XMLCast(expression, type.type); }
 }
 
 /*
@@ -4786,11 +4788,11 @@ ParsedDataType parseDataTypePrimary() :
 }
 
 /*
-name=data type
+name=basic data type
 description=A data type.
 example=[source,sql]\n----\nSTRING[]\n----\n
 */
-ParsedDataType parseDataType() :
+ParsedDataType parseBasicDataType() :
 {
     int arraySuffixes = 0;
     ParsedDataType type = null;
@@ -4804,6 +4806,38 @@ ParsedDataType parseDataType() :
         }
         return type;
     }
+}
+
+/*
+name=data type
+description=A data type.
+example=[source,sql]\n----\nSTRING[]\n----\n
+*/
+ParsedDataType parseDataType() :
+{
+    int arraySuffixes = 0;
+    ParsedDataType type = null;
+    Token idToken = null;
+}
+{
+    type = parseBasicDataType()
+    {
+        return type;
+    }
+    |
+    (idToken = <ID> 
+    {
+        String id = normalizeId(idToken.image);
+        id = validateName(id, true);
+        type = new ParsedDataType(id);
+    }
+    (<LSBRACE><RSBRACE> {arraySuffixes++;})*
+    {
+        if (arraySuffixes > 0) {
+           type.type += StringUtil.join(Collections.nCopies(arraySuffixes, "[]"), "");
+        }
+        return type;
+    })
 }
 
 /*
@@ -4975,6 +5009,7 @@ void ddlStmt(DatabaseStore dbStore) :
 	 {
 	 	createDDLTrigger(dbStore, (AlterTrigger)command);
 	 } |
+	 LOOKAHEAD(2)  createDomain(dbStore) |
 	 LOOKAHEAD(3)  createServer(dbStore) |
 	 LOOKAHEAD(3)  createRole(dbStore) |
 	 LOOKAHEAD(3)  dropRole(dbStore) |
@@ -4985,7 +5020,7 @@ void ddlStmt(DatabaseStore dbStore) :
 	 LOOKAHEAD(3)  importSchema(dbStore) |
 	 LOOKAHEAD(3)  importDatabase(dbStore) |
 	 LOOKAHEAD(2)  createDatabase(dbStore) |
-	 LOOKAHEAD(2)  dropDatabase(dbStore) |
+	 //LOOKAHEAD(2)  dropDatabase(dbStore) |
 	 LOOKAHEAD(2)  useDatabase(dbStore) |
      LOOKAHEAD(2)  dropSchema(dbStore) |
      LOOKAHEAD(2)  useSchema(dbStore) |
@@ -5070,7 +5105,7 @@ name=drop database
 description=drop database 
 example=[source,sql]\n----\nDROP DATABASE foo [VERSION 'version']\n----\n
 */
-void dropDatabase(DatabaseStore dbStore) :
+/*void dropDatabase(DatabaseStore dbStore) :
 {
     String name = null;
     Database database = null;
@@ -5082,7 +5117,7 @@ void dropDatabase(DatabaseStore dbStore) :
     {
         dbStore.databaseDropped(name, version);
     }
-}
+}*/
 
 /*
 name=create schema
@@ -5111,6 +5146,20 @@ void createSchema(DatabaseStore dbStore) :
          OptionsUtil.setOptions(schema);
       }
     ]
+    /*(
+     LOOKAHEAD(2)	createNameSpace(dbStore) |
+     LOOKAHEAD(3) 	createTable(dbStore) |
+	 LOOKAHEAD(3)   dropTableView(dbStore) |
+	 LOOKAHEAD(4)	alterStatement(dbStore) |
+	 LOOKAHEAD(4) 	command=createTrigger(ParseInfo.DEFAULT_INSTANCE)
+	 {
+	 	createDDLTrigger(dbStore, (AlterTrigger)command);
+	 } |
+	 LOOKAHEAD(2)  grantOption(dbStore) |
+	 LOOKAHEAD(2)  revokeGrantOption(dbStore) | 
+	 LOOKAHEAD(3)  createDDLProcedure(dbStore, ParseInfo.DEFAULT_INSTANCE) |
+	 LOOKAHEAD(3)  importSchema(dbStore)
+    )*/
     {        
         dbStore.schemaCreated(schema, servers);
     }
@@ -5147,6 +5196,27 @@ void useSchema(DatabaseStore dbStore) :
     {
         dbStore.schemaSwitched(name);
     })
+}
+
+/*
+name=create a domain or type alias
+description=creates a named type with optional constraints
+example=[source,sql]\n----\nCREATE DOMAIN my_type AS INTEGER NOT NULL\n----\n
+*/
+void createDomain(DatabaseStore dbStore) :
+{
+    String domainName = null; 
+    ParsedDataType type = null;
+    boolean notNull = false;
+}
+{
+    <CREATE> <DOMAIN> domainName = id(null) [<AS>] 
+    type = parseDataType()
+    //-default, and other options
+    [<NOT> <NULL> {notNull = true;}]    
+    {
+        dbStore.createDomain(domainName, type.type, type.length==null?type.precision:type.length, type.scale, notNull);
+    }
 }
 
 /*
@@ -5221,7 +5291,7 @@ void createRole(DatabaseStore dbStore) :
 }
 
 /*
-name=not used
+name=with role
 */
 void readWith(Role role) :
 {
@@ -5260,16 +5330,7 @@ void dropRole(DatabaseStore dbStore) :
 /*
 name=Create GRANT
 description=Defines GRANT for a role
-example=[source,sql]\n----\nGRANT ( SELECT | INSERT |  UPDATE | DELETE | EXECUTE | LANGUAGE | ALTER | DROP | ALL PRIVILEGES | TEMPORARY TABLES ) 
-ON
-   (
-   DATABASE
-   TABLE <schema-name>.<table-name> 
-    PROCEDURE <schema-name>.<proc-name>
-    SCHEMA <schema-name>
-    COLUMN <schema-name>.<table-name>.<col-name> [MASK [ORDER \d] <string-val> ] [CONDITION [CONSTRAINT] <string-val>]
-    )
-TO <data-role-name>\n----\n
+example=[source,sql]\n----\nGRANT SELECT ON TABLE x.y TO role\n----\n
 */
 void grantOption(DatabaseStore dbStore) :
 {
@@ -5285,23 +5346,33 @@ void grantOption(DatabaseStore dbStore) :
     Grant.Permission permission = new Grant.Permission();
 }
 {
-    <GRANT> readGrantTypes(privileges) (<COMMA> readGrantTypes(privileges))*
-    <ON> ( 
-        <DATABASE> [resource = id(null)] {on = Database.ResourceType.DATABASE;} |
+    <GRANT> 
+    ((
+       [readGrantTypes(privileges) (<COMMA> readGrantTypes(privileges))*]
+       <ON> ( 
         <TABLE> resource = id(null) {on = Database.ResourceType.TABLE;} 
         	[<CONDITION> [<CONSTRAINT> {isConstraint=true;}] condition = stringVal()] |
+        <FUNCTION> resource = id(null) {on = Database.ResourceType.FUNCTION;} |
         <PROCEDURE> resource = id(null) {on = Database.ResourceType.PROCEDURE;} 
         	[<CONDITION> [<CONSTRAINT> {isConstraint=true;}] condition = stringVal()] |
         <SCHEMA> resource = id(null) {on = Database.ResourceType.SCHEMA;} |
         <COLUMN> resource = id(null) {on = Database.ResourceType.COLUMN;} 
             [<MASK> [<ORDER> maskOrder = intVal()] mask = stringVal()] 
-            [<CONDITION> [<CONSTRAINT> {isConstraint=true;}] condition = stringVal()]
-    ) 
+       )
+      ) 
+      |
+      (<ALL> <PRIVILEGES> {privileges.add(Grant.Permission.Privilege.ALL_PRIVILEGES);})
+      |
+      (<TEMPORARY> <TABLE> {privileges.add(Grant.Permission.Privilege.TEMPORARY_TABLE);}) 
+      |
+      (<USAGE> {privileges.add(Grant.Permission.Privilege.USAGE); on = Database.ResourceType.LANGUAGE;} <ON> <LANGUAGE> resource=id(null))
+    )
     <TO>( to = id(null)
         {
-            if (resource != null) {
-                permission.setResourceName(resource);
+            if (privileges.isEmpty() && condition == null && mask == null) {
+            	throw new MetadataException(QueryPlugin.Util.getString("SQLParser.empty_grant_revoke"));
             }
+            permission.setResourceName(resource);
             permission.setPrivileges(privileges);
             permission.setResourceType(on);            
             if (mask != null) {
@@ -5323,16 +5394,7 @@ void grantOption(DatabaseStore dbStore) :
 /*
 name=Revoke GRANT
 description=Revokes GRANT for a role
-example=[source,sql]\n----\nREVOKE GRANT ( SELECT | INSERT |  UPDATE | DELETE | EXECUTE | LANGUAGE | ALTER | DROP | ALL PRIVILEGES | TEMPORARY TABLES ) 
-ON
-   (
-    DATABASE
-    TABLE <schema-name>.<table-name>
-    PROCEDURE <schema-name>.<proc-name>
-    SCHEMA <schema-name>
-    COLUMN <schema-name>.<table-name>.<col-name>
-    )
-FROM <data-role-name>\n----\n
+example=[source,sql]\n----\nREVOKE SELECT ON TABLE x.y TO role\n----\n
 */
 void revokeGrantOption(DatabaseStore dbStore) :
 {
@@ -5340,41 +5402,46 @@ void revokeGrantOption(DatabaseStore dbStore) :
     Grant grant = new Grant();
     String resource = null;
     String mask = null;
-    int maskOrder = -1;
     String condition = null;
-    boolean isConstraint = false;
     String to = null;
     ArrayList<Grant.Permission.Privilege> privileges = new ArrayList<Grant.Permission.Privilege>();
     Grant.Permission permission = new Grant.Permission();
 }
 {
-    <REVOKE> <GRANT> readGrantTypes(privileges) (<COMMA> readGrantTypes(privileges))*
-    <ON> ( 
-        <DATABASE> [resource = id(null)] {on = Database.ResourceType.DATABASE;} |
+    <REVOKE> 
+    ((
+       [readGrantTypes(privileges) (<COMMA> readGrantTypes(privileges))*]
+       <ON> ( 
         <TABLE> resource = id(null) {on = Database.ResourceType.TABLE;} 
-        	[<CONDITION> [<CONSTRAINT> {isConstraint=true;}] condition = stringVal()] |
+        	[<CONDITION> {condition = "";}] |
+        <FUNCTION> resource = id(null) {on = Database.ResourceType.FUNCTION;} |
         <PROCEDURE> resource = id(null) {on = Database.ResourceType.PROCEDURE;} 
-        	[<CONDITION> [<CONSTRAINT> {isConstraint=true;}] condition = stringVal()] |
+        	[<CONDITION> {condition = "";} ] |
         <SCHEMA> resource = id(null) {on = Database.ResourceType.SCHEMA;} |
         <COLUMN> resource = id(null) {on = Database.ResourceType.COLUMN;} 
-            [<MASK> [<ORDER> maskOrder = intVal()] mask = stringVal()] 
-            [<CONDITION> [<CONSTRAINT> {isConstraint=true;}] condition = stringVal()]
-    ) 
+            [<MASK> {mask = "";} ] 
+       )
+      ) 
+      |
+      (<ALL> <PRIVILEGES> {privileges.add(Grant.Permission.Privilege.ALL_PRIVILEGES);})
+      |
+      (<TEMPORARY> <TABLE> {privileges.add(Grant.Permission.Privilege.TEMPORARY_TABLE);}) 
+      |
+      (<USAGE> {privileges.add(Grant.Permission.Privilege.USAGE); on = Database.ResourceType.LANGUAGE;} <ON> <LANGUAGE> resource=id(null))
+    )
     <FROM>( to = id(null)
         {
-            if (resource != null) {
-                permission.setResourceName(resource);
+            if (privileges.isEmpty() && condition == null && mask == null) {
+            	throw new MetadataException(QueryPlugin.Util.getString("SQLParser.empty_grant_revoke"));
             }
-            permission.setPrivileges(privileges);
+            permission.setResourceName(resource);
+            permission.setRevokePrivileges(privileges);
             permission.setResourceType(on);            
             if (mask != null) {
                 permission.setMask(mask);
-                if (maskOrder != -1) {
-                    permission.setMaskOrder(maskOrder);
-                }
             }
             if(condition != null) {
-                permission.setCondition(condition, isConstraint);               
+                permission.setCondition(condition, null);               
             }
             grant.setRole(to);
             grant.addPermission(permission);
@@ -6059,8 +6126,8 @@ void alterTable(DatabaseStore dbStore, boolean virtual, ParseInfo info) :
 	        }
 	        dbStore.setViewDefinition(table.getName(), command.toString(), true);        
 	    }
-	    [alterOptionsList(objectName, Database.ResourceType.TABLE, dbStore) |
-	    	alterColumn(objectName, Database.ResourceType.TABLE, dbStore)
+	    [LOOKAHEAD(2) (alterOptionsList(objectName, Database.ResourceType.TABLE, dbStore) |
+	    	alterColumn(objectName, Database.ResourceType.TABLE, dbStore))
 	    ]
 	 ) | (
 	 	<TABLE> objectName = id(null)
@@ -6070,11 +6137,11 @@ void alterTable(DatabaseStore dbStore, boolean virtual, ParseInfo info) :
 	                    QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31238));                                    	 		
 	 		}
 	 	}
-	    [alterOptionsList(objectName, Database.ResourceType.TABLE, dbStore) | 
+	    [LOOKAHEAD(2) (alterOptionsList(objectName, Database.ResourceType.TABLE, dbStore) | 
 	    	alterAddColumn(objectName, Database.ResourceType.TABLE, dbStore) |
 	    	alterDropColumn(objectName, Database.ResourceType.TABLE, dbStore) |
 	    	alterColumn(objectName, Database.ResourceType.TABLE, dbStore) |
-	    	alterRenameColumn(objectName, Database.ResourceType.TABLE, dbStore)
+	    	alterRenameColumn(objectName, Database.ResourceType.TABLE, dbStore))
 	    ]	 	
 	 ))    
 }
@@ -6261,9 +6328,9 @@ void alterProcedure(DatabaseStore dbStore, boolean virtual, ParseInfo info) :
             dbStore.setProcedureDefinition(procedure.getName(), cup.toString(), true);
         }
     ]     
-    [alterOptionsList(objectName, Database.ResourceType.PROCEDURE, dbStore) |   
+    [LOOKAHEAD(2) (alterOptionsList(objectName, Database.ResourceType.PROCEDURE, dbStore) |   
     	alterColumn(objectName, Database.ResourceType.PROCEDURE, dbStore)   |
-    	alterRenameColumn(objectName, Database.ResourceType.PROCEDURE, dbStore)]     
+    	alterRenameColumn(objectName, Database.ResourceType.PROCEDURE, dbStore))]     
 }
 
 /*
@@ -6508,7 +6575,7 @@ void importDatabase(DatabaseStore dbStore) :
 }
 
 /*
-name=not used
+name=identifier list
 */
 void readCSVString(List<String> strings) :
 {
@@ -6528,7 +6595,7 @@ void readCSVString(List<String> strings) :
 }
 
 /*
-name=notused
+name=grant type
 */
 void readGrantTypes(ArrayList<Grant.Permission.Privilege> privileges) :
 {
@@ -6539,9 +6606,6 @@ void readGrantTypes(ArrayList<Grant.Permission.Privilege> privileges) :
     <UPDATE> {privileges.add(Grant.Permission.Privilege.UPDATE);} |
     <DELETE> {privileges.add(Grant.Permission.Privilege.DELETE);} |
     <EXECUTE> {privileges.add(Grant.Permission.Privilege.EXECUTE);} |
-    <LANGUAGE> {privileges.add(Grant.Permission.Privilege.LANGUAGE);} |
     <ALTER> {privileges.add(Grant.Permission.Privilege.ALTER);} |
-    <DROP> {privileges.add(Grant.Permission.Privilege.DROP);} |
-    <ALL> <PRIVILEGES> {privileges.add(Grant.Permission.Privilege.ALL_PRIVILEGES);} |
-    <TEMPORARY> <TABLE> {privileges.add(Grant.Permission.Privilege.TEMPORARY_TABLE);}
+    <DROP> {privileges.add(Grant.Permission.Privilege.DROP);}
 }

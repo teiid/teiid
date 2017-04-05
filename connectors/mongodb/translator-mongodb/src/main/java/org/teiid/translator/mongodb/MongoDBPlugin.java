@@ -69,6 +69,7 @@ public class MongoDBPlugin {
         TEIID18033,
         TEIID18034,
         TEIID18035,
-        TEIID18036
+        TEIID18036,
+        TEIID18037
     }
 }

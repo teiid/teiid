@@ -392,12 +392,10 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
 	                inst.process(this);
 	                this.evaluator.close();
 	            }
-	        } catch (RuntimeException e) {
-	        	throw e;
 	        } catch (TeiidComponentException e) {
 	        	throw e;
 	        } catch (Exception e) {
-	        	//processing or teiidsqlexception
+                //processing or teiidsqlexception
 	        	boolean atomic = program.isAtomic();
 	        	while (program.getExceptionGroup() == null) {
         			this.pop(false);
@@ -411,29 +409,34 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
         			program = peek();
         			atomic |= program.isAtomic();
 	        	}
-	        	this.pop(false); //allow the current program to go out of scope
-	        	if (atomic) {
-	        		TransactionContext tc = this.getContext().getTransactionContext();
-	            	if (tc != null && tc.getTransactionType() != Scope.NONE) {
-		        		//a non-completing atomic block under a higher level transaction 
-	            		
-		        		//this will not work correctly until we support
-		        		//checkpoints/subtransactions
-	            		try {
+	        	try {
+	        	    this.pop(false); //allow the current program to go out of scope
+    	        	if (atomic) {
+    	        		TransactionContext tc = this.getContext().getTransactionContext();
+    	            	if (tc != null && tc.getTransactionType() != Scope.NONE) {
+    		        		//a non-completing atomic block under a higher level transaction 
+    	            		
+    		        		//this will not work correctly until we support
+    		        		//checkpoints/subtransactions
 							tc.getTransaction().setRollbackOnly();
-						} catch (IllegalStateException e1) {
-							throw new TeiidComponentException(e1);
-						} catch (SystemException e1) {
-							throw new TeiidComponentException(e1);
-						}
-	            	}
+    	            	}
+    	        	}
+	        	} catch (IllegalStateException | SystemException| TeiidComponentException e1) {
+	        	    LogManager.logDetail(LogConstants.CTX_DQP, "Caught exception while rolling back transaction", e1); //$NON-NLS-1$	        	    
+	        	} catch (Throwable e1) {
+	        	    LogManager.logWarning(LogConstants.CTX_DQP, e1); //$NON-NLS-1$
 	        	}
+	        	
         		if (program.getExceptionProgram() == null) {
         			continue;
         		}
 	        	Program exceptionProgram = program.getExceptionProgram();
 				this.push(exceptionProgram);
-				LogManager.logDetail(LogConstants.CTX_DQP, "Caught exception in exception hanlding block", e); //$NON-NLS-1$
+				if (e instanceof RuntimeException) {
+				    LogManager.logWarning(LogConstants.CTX_DQP, e); //$NON-NLS-1$
+				} else {
+				    LogManager.logDetail(LogConstants.CTX_DQP, "Caught exception in exception hanlding block", e); //$NON-NLS-1$
+				}
 				TeiidSQLException tse = TeiidSQLException.create(e);
 				GroupSymbol gs = new GroupSymbol(program.getExceptionGroup());
 				this.currentVarContext.setValue(exceptionSymbol(gs, 0), tse.getSQLState());

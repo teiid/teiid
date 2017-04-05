@@ -90,6 +90,7 @@ public class FunctionParameter extends BaseColumn {
      * Get type of parameter
      * @return Type name
      * @see org.teiid.core.types.DataTypeManager.DefaultDataTypes
+     * @deprecated use {@link #getRuntimeType()}
      */
     public String getType() { 
         return getRuntimeType();
@@ -99,6 +100,7 @@ public class FunctionParameter extends BaseColumn {
      * Set type of parameter
      * @param type Type of parameter
      * @see org.teiid.core.types.DataTypeManager.DefaultDataTypes
+     * @deprecated use {@link #setRuntimeType(String)}
      */
     public void setType(String type) {
         setRuntimeType(type);

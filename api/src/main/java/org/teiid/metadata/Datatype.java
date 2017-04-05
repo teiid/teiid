@@ -22,17 +22,19 @@
 
 package org.teiid.metadata;
 
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column.SearchType;
 
-public class Datatype extends AbstractMetadataRecord {
+public class Datatype extends AbstractMetadataRecord implements Cloneable {
 	
 	private static final long serialVersionUID = -7839335802224393230L;
 	
 	public enum Type {
 		Basic,
 		UserDefined,
-		ResultSet
+		ResultSet,
+		Domain
 	}
 	
 	public enum Variety {
@@ -57,7 +59,7 @@ public class Datatype extends AbstractMetadataRecord {
     private String javaClassName = DEFAULT_JAVA_CLASS_NAME;
     private String runtimeTypeName;
     private String basetypeName;
-    private Variety varietyType;
+    private Variety varietyType = Variety.Atomic;
 
     /**
      * Get the length of the type.
@@ -256,5 +258,14 @@ public class Datatype extends AbstractMetadataRecord {
         sb.append(getUUID());
         return sb.toString();
     }
-
+    
+    @Override
+    public Datatype clone() {
+        try {
+            return (Datatype) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new TeiidRuntimeException(e);
+        }
+    }
+    
 }

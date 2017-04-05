@@ -35,9 +35,9 @@ import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.google.api.GoogleSpreadsheetConnection;
+import org.teiid.translator.google.api.result.SheetRow;
 import org.teiid.translator.google.visitor.SpreadsheetSQLVisitor;
-import org.teiid.translator.goole.api.GoogleSpreadsheetConnection;
-import org.teiid.translator.goole.api.result.SheetRow;
 
 public class DirectSpreadsheetQueryExecution implements ProcedureExecution {
 	private static final String WORKSHEET = "worksheet"; //$NON-NLS-1$

@@ -29,7 +29,7 @@ import javax.resource.spi.InvalidPropertyException;
 import org.teiid.core.BundleUtil;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
-import org.teiid.translator.goole.api.metadata.SpreadsheetInfo;
+import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
 
 public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionFactory {
 	

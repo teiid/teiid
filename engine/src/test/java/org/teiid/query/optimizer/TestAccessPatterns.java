@@ -22,7 +22,10 @@
 
 package org.teiid.query.optimizer;
 
+import static org.junit.Assert.*;
+
 import org.junit.Test;
+import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.processor.ProcessorPlan;
@@ -284,11 +287,15 @@ public class TestAccessPatterns {
         
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
-        TestOptimizer.helpPlan(sql, metadata,
+        AnalysisRecord record = new AnalysisRecord(true, true);
+        
+        TestOptimizer.helpPlanCommand(TestOptimizer.helpGetCommand(sql, metadata, null), metadata, TestOptimizer.getGenericFinder(false), record, 
 						new String[] {
 								"SELECT g_0.e2, g_0.e1 FROM pm5.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)", //$NON-NLS-1$ 
 								"SELECT g_0.e1, g_0.e2, g_0.e3, g_0.e4 FROM pm1.g1 AS g_0", //$NON-NLS-1$
-								"SELECT g_0.e1 FROM pm4.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)" }, TestOptimizer.getGenericFinder(false), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$   
+								"SELECT g_0.e1 FROM pm4.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$   
+        
+        assertTrue(record.getAnnotations().toString().contains("access pattern not satisfied by join"));
     }
 
 }

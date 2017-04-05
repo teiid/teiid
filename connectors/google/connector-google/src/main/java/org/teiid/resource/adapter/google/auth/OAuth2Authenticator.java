@@ -38,7 +38,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.teiid.resource.adapter.google.dataprotocol.GoogleDataProtocolAPI;
 import org.teiid.resource.adapter.google.dataprotocol.GoogleJSONParser;
-import org.teiid.translator.goole.api.SpreadsheetAuthException;
+import org.teiid.translator.google.api.SpreadsheetAuthException;
 
 
 /**

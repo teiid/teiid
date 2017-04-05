@@ -64,6 +64,7 @@ public class TestJDBCSocketPerformance {
 		config.setPortNumber(0);
 		
 		EmbeddedConfiguration dqpConfig = new EmbeddedConfiguration();
+		dqpConfig.setMaxActivePlans(2);
 		server = new FakeServer(false);
 		server.start(dqpConfig);
 		ModelMetaData mmd = new ModelMetaData();

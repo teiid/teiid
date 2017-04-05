@@ -9,7 +9,7 @@ import org.teiid.resource.adapter.google.auth.OAuth2HeaderFactory;
 import org.teiid.resource.adapter.google.dataprotocol.GoogleDataProtocolAPI;
 import org.teiid.resource.adapter.google.gdata.GDataClientLoginAPI;
 import org.teiid.resource.adapter.google.gdata.SpreadsheetMetadataExtractor;
-import org.teiid.translator.goole.api.metadata.SpreadsheetInfo;
+import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
 
 /**
  * Testing of metadata loading. For metadata loading we use GData API.
@@ -31,14 +31,9 @@ public class MetadataLoadingTest extends IntegrationTest {
 		gdata = new GDataClientLoginAPI();
 		gdata.setHeaderFactory(auth);
 		visualizationAPI = new GoogleDataProtocolAPI();
-		visualizationAPI.setSpreadSheetBrowser(gdata);
 		visualizationAPI.setHeaderFactory(auth);
 	}
 	
-	@Test
-	public void findSpreadsheet(){
-		Assert.assertEquals("Spreadsheet not found", "tWNeVMVpBRQYOSY1Pgav15Q",gdata.getSpreadsheetKeyByTitle("spreadsheet1"));
-	}
 	@Test 
 	public void testMetadata(){
 

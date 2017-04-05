@@ -83,6 +83,10 @@ public class SystemMetadata {
 				}
 				dataTypes.add(dt);
 				if (dt.isBuiltin()) {
+				    //we don't want to retain the conflicting designer names
+				    if (!dt.getName().equals(dt.getRuntimeTypeName())) {
+				        dt.setName(dt.getRuntimeTypeName());
+				    }
 					typeMap.put(dt.getRuntimeTypeName(), dt);
 				}
 			}
@@ -114,7 +118,7 @@ public class SystemMetadata {
 		Properties p = new Properties();
 		QueryParser parser = new QueryParser();
 		systemStore = loadSchema(vdb, p, "SYS", parser).asMetadataStore(); //$NON-NLS-1$
-		systemStore.addDataTypes(dataTypes);
+		systemStore.addDataTypes(typeMap);
 		loadSchema(vdb, p, "SYSADMIN", parser).mergeInto(systemStore); //$NON-NLS-1$
 		TransformationMetadata tm = new TransformationMetadata(vdb, new CompositeMetadataStore(systemStore), null, new SystemFunctionManager(typeMap).getSystemFunctions(), null);
 		vdb.addAttchment(QueryMetadataInterface.class, tm);

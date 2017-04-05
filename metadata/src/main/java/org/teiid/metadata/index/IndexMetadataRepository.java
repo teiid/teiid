@@ -34,6 +34,7 @@ import java.util.Map;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.index.IEntryResult;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.internal.core.index.Index;
 import org.teiid.metadata.*;
 import org.teiid.metadata.FunctionMethod.Determinism;
@@ -214,7 +215,7 @@ public class IndexMetadataRepository extends MetadataRepository {
 	public synchronized void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory)
 			throws TranslatorException {
 		try {
-			loadAll(factory.getBuiltinDataTypes().values(), factory.getVDBResources());
+			loadAll(factory.getDataTypes().values(), factory.getVDBResources());
 		} catch (IOException e) {
 			throw new TranslatorException(e);
 		}
@@ -228,10 +229,6 @@ public class IndexMetadataRepository extends MetadataRepository {
     		}
 			getTables(s);
 			getProcedures(s);
-			Map<String, AbstractMetadataRecord> uuidToRecord = getByType(MetadataConstants.RECORD_TYPE.DATATYPE);
-			for (AbstractMetadataRecord datatypeRecordImpl : uuidToRecord.values()) {
-				factory.addDatatype((Datatype) datatypeRecordImpl);
-			}
 			factory.setSchema(s);
 			return;
     	}
@@ -241,10 +238,6 @@ public class IndexMetadataRepository extends MetadataRepository {
 	public MetadataStore load(Collection<Datatype> systemDatatypes, VDBResources vdbResources) throws IOException {
 		MetadataStore store = new MetadataStore();
 		loadAll(systemDatatypes, vdbResources.getEntriesPlusVisibilities());
-		Map<String, AbstractMetadataRecord> uuidToRecord = getByType(MetadataConstants.RECORD_TYPE.DATATYPE);
-		for (AbstractMetadataRecord datatypeRecordImpl : uuidToRecord.values()) {
-			store.addDatatype((Datatype) datatypeRecordImpl);
-		}
 		
     	// the index map below is keyed by uuid not modelname, so map lookup is not possible
     	Collection<AbstractMetadataRecord> modelRecords = getByType(MetadataConstants.RECORD_TYPE.MODEL).values();
@@ -256,6 +249,17 @@ public class IndexMetadataRepository extends MetadataRepository {
     	}
     	return store;
     }
+	
+	private void setDataType(BaseColumn baseColumn) {
+	    Datatype dataType = (Datatype) getByType(MetadataConstants.RECORD_TYPE.DATATYPE).get(baseColumn.getDatatypeUUID());
+        int arrayDimensions = 0;
+        String type = baseColumn.getRuntimeType();
+        while (DataTypeManager.isArrayType(type)) {
+            arrayDimensions++;
+            type = type.substring(0, type.length()-2);
+        }
+	    baseColumn.setDatatype(dataType, false, arrayDimensions);
+	}
 
     private void getTables(Schema model) {
     	Map<Character, List<AbstractMetadataRecord>> entries = schemaEntries.get(model.getName());
@@ -273,7 +277,7 @@ public class IndexMetadataRepository extends MetadataRepository {
 		for (Table tableRecord : records) {
 	    	List<Column> columns = new ArrayList<Column>(getByParent(tableRecord.getUUID(), MetadataConstants.RECORD_TYPE.COLUMN, Column.class, false));
 	        for (Column columnRecordImpl : columns) {
-	    		columnRecordImpl.setDatatype((Datatype) getByType(MetadataConstants.RECORD_TYPE.DATATYPE).get(columnRecordImpl.getDatatypeUUID()));
+	    		setDataType(columnRecordImpl);
 	    		columnRecordImpl.setParent(tableRecord);
 	    		String fullName = columnRecordImpl.getName();
 	    		if (fullName.startsWith(tableRecord.getName() + '.')) {
@@ -356,7 +360,7 @@ public class IndexMetadataRepository extends MetadataRepository {
 
 	private Column findElement(String fullName) {
 		Column columnRecord = (Column)getRecordByType(fullName, MetadataConstants.RECORD_TYPE.COLUMN);
-    	columnRecord.setDatatype((Datatype) getByType(MetadataConstants.RECORD_TYPE.DATATYPE).get(columnRecord.getDatatypeUUID()));
+		setDataType(columnRecord);
         return columnRecord;
     }
 	    
@@ -394,7 +398,7 @@ public class IndexMetadataRepository extends MetadataRepository {
 	        // get the parameter metadata info
 	        for (int i = 0; i < procedureRecord.getParameters().size(); i++) {
 	            ProcedureParameter paramRecord = (ProcedureParameter) this.getRecordByType(procedureRecord.getParameters().get(i).getUUID(), MetadataConstants.RECORD_TYPE.CALLABLE_PARAMETER);
-	            paramRecord.setDatatype((Datatype) getByType(MetadataConstants.RECORD_TYPE.DATATYPE).get(paramRecord.getDatatypeUUID()));
+	            setDataType(paramRecord);
 	            procedureRecord.getParameters().set(i, paramRecord);
 	            paramRecord.setProcedure(procedureRecord);
 	        }

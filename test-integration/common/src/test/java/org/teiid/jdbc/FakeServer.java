@@ -184,7 +184,7 @@ public class FakeServer extends EmbeddedServer {
 		        	if (parameterObject.metadataRepo != null) {
 		        		model.addAttchment(MetadataRepository.class, parameterObject.metadataRepo);
 		        		//fakeserver does not load through the repository framework, so call load after the fact here.
-		        		MetadataFactory mf = createMetadataFactory(vdbMetaData, model, parameterObject.vdbResources);
+		        		MetadataFactory mf = createMetadataFactory(vdbMetaData, metadata, model, parameterObject.vdbResources);
 		        		mf.setSchema(schema);
 		        		try {
 							parameterObject.metadataRepo.loadMetadata(mf, null, null);

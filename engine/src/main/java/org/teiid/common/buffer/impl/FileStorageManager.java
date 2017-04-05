@@ -305,5 +305,10 @@ public class FileStorageManager implements StorageManager {
     public void setMaxBufferSpace(long maxBufferSpace) {
 		this.maxBufferSpace = maxBufferSpace;
 	}
+    
+    @Override
+    public long getMaxStorageSpace() {
+        return maxBufferSpace;
+    }
 
 }

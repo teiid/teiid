@@ -119,6 +119,7 @@
                                 <xs:complexType>
 							        <xs:all>
                                          <xs:element name="resource-name" type="xs:string" minOccurs="1"/>
+                                         <xs:element name="resource-type" type="xs:string" minOccurs="0"/>
 						                 <xs:element name="allow-create" type="xs:boolean" minOccurs="0"/>
 							             <xs:element name="allow-read" type="xs:boolean" minOccurs="0"/>
 							             <xs:element name="allow-update" type="xs:boolean" minOccurs="0"/>

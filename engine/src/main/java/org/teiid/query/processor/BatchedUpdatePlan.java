@@ -145,9 +145,6 @@ public class BatchedUpdatePlan extends ProcessorPlan {
     			for (int i = 0; i < tbe.getUpdateCounts().length; i++) {
     				updateCounts[commandIndex++] = Arrays.asList(updateCounts[i]);
     			}
-    			cause = e.getCause();
-    		} else {
-    			updateCounts[commandIndex++] = Arrays.asList(Statement.EXECUTE_FAILED);
     		}
     		updateCounts = Arrays.copyOf(updateCounts, commandIndex);
     		getContext().setBatchUpdateException(cause);
@@ -197,11 +194,6 @@ public class BatchedUpdatePlan extends ProcessorPlan {
         			for (int i = 0; i < tbe.getUpdateCounts().length; i++) {
         				updateCounts[commandIndex++] = Arrays.asList(tbe.getUpdateCounts()[i]);
         			}
-        			if (e.getCause() != null) {
-        				cause = e.getCause();
-        			}
-        		} else {
-        			updateCounts[commandIndex++] = Arrays.asList(Statement.EXECUTE_FAILED);
         		}
         		updateCounts = Arrays.copyOf(updateCounts, commandIndex);
         		getContext().setBatchUpdateException(cause);

@@ -71,6 +71,11 @@ public class TestBufferFrontedFileStoreCache {
 		public boolean useSoftCache() {
 			return false;
 		}
+		
+		@Override
+		public String describe(Integer obj) {
+		    return null;
+		}
 	}
 	
 	@After public void teardown() {
@@ -257,6 +262,11 @@ public class TestBufferFrontedFileStoreCache {
 						}
 					};
 				}
+				
+				@Override
+				public long getMaxStorageSpace() {
+				    return -1;
+				}
 			};
 			fsc.setStorageManager(sm);
 		}
@@ -265,21 +275,21 @@ public class TestBufferFrontedFileStoreCache {
 	}
 	
 	@Test public void testSizeIndex() throws Exception {
-		PhysicalInfo info = new PhysicalInfo(1l, 1l, -1, 0);
+		PhysicalInfo info = new PhysicalInfo(1l, 1l, -1, 0, 0);
 		info.setSize(1<<13);
 		assertEquals(0, info.sizeIndex);
 		
-		info = new PhysicalInfo(1l, 1l, -1, 0);
+		info = new PhysicalInfo(1l, 1l, -1, 0, 0);
 		info.setSize(1 + (1<<13));
 		assertEquals(1, info.sizeIndex);
 
-		info = new PhysicalInfo(1l, 1l, -1, 0);
+		info = new PhysicalInfo(1l, 1l, -1, 0, 0);
 		info.setSize(2 + (1<<15));
 		assertEquals(3, info.sizeIndex);
 	}
 	
 	@Test(expected=Exception.class) public void testSizeChanged() throws Exception {
-		PhysicalInfo info = new PhysicalInfo(1l, 1l, -1, 0);
+		PhysicalInfo info = new PhysicalInfo(1l, 1l, -1, 0, 0);
 		info.setSize(1<<13);
 		assertEquals(0, info.sizeIndex);
 		

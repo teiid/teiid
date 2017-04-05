@@ -24,26 +24,25 @@ package org.teiid.jboss;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.concurrent.Executor;
 
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.as.controller.ModelController;
-import org.jboss.as.server.Services;
-import org.jboss.as.server.deployment.*;
+import org.jboss.as.server.deployment.Attachments;
+import org.jboss.as.server.deployment.DeploymentPhaseContext;
+import org.jboss.as.server.deployment.DeploymentUnit;
+import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
+import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.metadata.property.PropertyReplacer;
 import org.jboss.metadata.property.PropertyReplacers;
 import org.jboss.metadata.property.PropertyResolver;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.vfs.VirtualFile;
 import org.jboss.vfs.VirtualFileFilter;
-import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataParser;
-import org.teiid.adminapi.jboss.AdminFactory;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.StringUtil;
 import org.teiid.deployers.UDFMetaData;
@@ -77,7 +76,7 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 			parseVDBXML(file, deploymentUnit, phaseContext, true);			
 		}
 		else if (TeiidAttachments.isVDBDDLDeployment(deploymentUnit)) {
-			parseVDBDDL(file, deploymentUnit, phaseContext);
+			parseVDBDDL(file, deploymentUnit, phaseContext, true);
 		}
 		else {
 			// scan for different files 
@@ -102,12 +101,18 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 				});
 				
 				VirtualFile vdbXml = file.getChild("/META-INF/vdb.xml"); //$NON-NLS-1$
+				VirtualFile vdbDDL = file.getChild("/META-INF/vdb.ddl"); //$NON-NLS-1$
 				
-				if (!vdbXml.exists()) {
+				if (!vdbXml.exists() && !vdbDDL.exists()) {
 					throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50101, deploymentUnit));
 				}
-				parseVDBXML(vdbXml, deploymentUnit, phaseContext, false);
 				
+				if (vdbXml.exists()) {
+				    parseVDBXML(vdbXml, deploymentUnit, phaseContext, false);
+				} else {
+				    parseVDBDDL(vdbDDL, deploymentUnit, phaseContext, false);
+				}
+                
 				mergeMetaData(deploymentUnit);
 
 			} catch (IOException e) {
@@ -154,7 +159,7 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 	}
 
 	private VDBMetaData parseVDBDDL(VirtualFile file, DeploymentUnit deploymentUnit,
-			DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
+			DeploymentPhaseContext phaseContext, boolean xmlDeployment) throws DeploymentUnitProcessingException {
 		try {
             PropertyReplacer replacer = deploymentUnit.getAttachment(org.jboss.as.ee.metadata.property.Attachments.FINAL_PROPERTY_REPLACER);
             String vdbContents = replacer.replaceProperties(ObjectConverterUtil.convertToString(file.openStream()));
@@ -171,7 +176,7 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 			}
 			
 			vdb.setStatus(Status.LOADING);
-			vdb.setXmlDeployment(true);
+			vdb.setXmlDeployment(xmlDeployment);
 			deploymentUnit.putAttachment(TeiidAttachments.VDB_METADATA, vdb);
 			LogManager.logDetail(LogConstants.CTX_RUNTIME,"VDB "+file.getName()+" has been parsed.");  //$NON-NLS-1$ //$NON-NLS-2$
 			return vdb;

@@ -398,8 +398,8 @@ public class RealMetadataFactory {
         
         Table physTable = createPhysicalGroup("info", physModel); //$NON-NLS-1$
         createElements(physTable,
-                                      new String[] { "e1", "e2", "e3"}, //$NON-NLS-1$
-                                      new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING});
+                                      new String[] { "e1", "e2", "e3", "value"}, //$NON-NLS-1$
+                                      new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
         
         Table physGroup = createPhysicalGroup("MatTable", physModel); //$NON-NLS-1$
         createElements(physGroup,
@@ -1784,9 +1784,9 @@ public class RealMetadataFactory {
         column.setNullType(NullType.Nullable);
         column.setPosition(group.getColumns().size()); //1 based indexing
         column.setUpdatable(true);
+        column.setDatatype(SystemMetadata.getInstance().getRuntimeTypeMap().get(type), true, 0);
         column.setLength(100);
         column.setNameInSource(name);
-        column.setDatatype(SystemMetadata.getInstance().getRuntimeTypeMap().get(type));
         return column; 
     }
     

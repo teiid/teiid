@@ -58,6 +58,8 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
     private String outputDefinition;
     private String schema;
     
+    private Object checkMatViewStatus;
+    
 	/**
 	 * Construct a symbol with a name.
 	 * @param name Name of the symbol
@@ -194,6 +196,7 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
         copy.outputDefinition = this.outputDefinition;
         copy.outputName = this.outputName;
         copy.isGlobalTable = isGlobalTable;
+        copy.checkMatViewStatus = checkMatViewStatus;
 		return copy;
 	}
 
@@ -304,4 +307,12 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
 	public String getSchema() {
 		return schema;
 	}
+
+    public void setCheckMatStatus(Object viewMatadataId) {
+        this.checkMatViewStatus = viewMatadataId;
+    }
+    
+    public Object getCheckMatViewStatus() {
+        return this.checkMatViewStatus;
+    }
 }

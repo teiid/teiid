@@ -408,6 +408,11 @@ public class TestSqlServerConversionVisitor {
         output = "SELECT c1 FROM (SELECT v.*, ROW_NUMBER() OVER (ORDER BY @@version) ROWNUM_ FROM (SELECT SmallA.IntKey AS c1 FROM SmallA UNION SELECT SmallA.IntKey AS c1 FROM SmallA) v) v WHERE ROWNUM_ <= 11 AND ROWNUM_ > 1"; //$NON-NLS-1$
         
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, trans1);
+        
+        input = "select intkey c1 from bqt1.smalla union all select intkey c1 from bqt1.smalla order by c1 limit 1, 10"; //$NON-NLS-1$
+        output = "SELECT SmallA.IntKey AS c1 FROM SmallA UNION ALL SELECT SmallA.IntKey AS c1 FROM SmallA ORDER BY c1 OFFSET 1 ROWS FETCH NEXT 10 ROWS ONLY"; //$NON-NLS-1$
+        
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, trans1);
     } 
     
     @Test

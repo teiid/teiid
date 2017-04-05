@@ -1278,6 +1278,9 @@ public class TestOracleTranslator {
     	String val = omp.getFullyQualifiedName("package", "schema", "proc", true);
     	assertEquals("\"schema\".\"package\".\"proc\"", val);
     	
+    	val = omp.getFullyQualifiedName("", "schema", "proc", true);
+        assertEquals("\"schema\".\"proc\"", val);
+    	
     	omp.setUseQualifiedName(false);
     	val = omp.getFullyQualifiedName("package", "schema", "proc", true);
     	assertEquals("\"package\".\"proc\"", val);
@@ -1286,6 +1289,20 @@ public class TestOracleTranslator {
     @Test public void testBooleanInGroupByAndHaving() throws Exception {
         String input = "SELECT g_0.IntKey, cast(g_0.IntNum as boolean) FROM BQT1.SmallA AS g_0 GROUP BY g_0.IntKey, cast(g_0.IntNum as boolean) HAVING CONVERT(cast(g_0.IntNum as boolean), STRING) > 'false'";
         String output = "SELECT g_0.IntKey, CASE WHEN g_0.IntNum = 0 THEN 0 WHEN g_0.IntNum IS NOT NULL THEN 1 END FROM SmallA g_0 GROUP BY g_0.IntKey, CASE WHEN g_0.IntNum = 0 THEN 0 WHEN g_0.IntNum IS NOT NULL THEN 1 END HAVING CASE WHEN CASE WHEN g_0.IntNum = 0 THEN 0 WHEN g_0.IntNum IS NOT NULL THEN 1 END = 0 THEN 'false' WHEN CASE WHEN g_0.IntNum = 0 THEN 0 WHEN g_0.IntNum IS NOT NULL THEN 1 END IS NOT NULL THEN 'true' END > 'false'"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
+    @Test public void testTrunc() throws Exception {
+        String input = "SELECT trunc(IntNum, 10), trunc(IntNum), trunc(TIMESTAMPVALUE, 'day') FROM BQT1.SmallA";
+        String output = "SELECT TRUNC(SmallA.IntNum, 10), TRUNC(SmallA.IntNum), TRUNC(SmallA.TimestampValue, 'day') FROM SmallA"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
+    @Test public void testListAgg() throws Exception {
+        TRANSLATOR.setDatabaseVersion("12.0");
+        TRANSLATOR.initCapabilities(null);
+        String input = "SELECT listagg(stringkey), listagg(stringkey, ';' order by intkey) FROM BQT1.SmallA";
+        String output = "SELECT listagg(SmallA.StringKey), listagg(SmallA.StringKey, ';') WITHIN GROUP (ORDER BY SmallA.IntKey) FROM SmallA"; //$NON-NLS-1$
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
 }

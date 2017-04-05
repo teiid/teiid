@@ -34,11 +34,11 @@ import org.teiid.resource.adapter.google.dataprotocol.GoogleDataProtocolAPI;
 import org.teiid.resource.adapter.google.gdata.GDataClientLoginAPI;
 import org.teiid.resource.adapter.google.gdata.SpreadsheetMetadataExtractor;
 import org.teiid.resource.spi.BasicConnection;
-import org.teiid.translator.goole.api.GoogleSpreadsheetConnection;
-import org.teiid.translator.goole.api.UpdateSet;
-import org.teiid.translator.goole.api.metadata.SpreadsheetInfo;
-import org.teiid.translator.goole.api.result.RowsResult;
-import org.teiid.translator.goole.api.result.UpdateResult;
+import org.teiid.translator.google.api.GoogleSpreadsheetConnection;
+import org.teiid.translator.google.api.UpdateSet;
+import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
+import org.teiid.translator.google.api.result.RowsResult;
+import org.teiid.translator.google.api.result.UpdateResult;
 
 
 
@@ -60,7 +60,6 @@ public class SpreadsheetConnectionImpl extends BasicConnection implements Google
 		authHeaderFactory.login();
 		dataProtocol.setHeaderFactory(authHeaderFactory);
 		gdata.setHeaderFactory(authHeaderFactory);
-		dataProtocol.setSpreadSheetBrowser(gdata);
 		
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR,SpreadsheetManagedConnectionFactory.UTIL.getString("init") ); //$NON-NLS-1$
 	}
@@ -87,7 +86,7 @@ public class SpreadsheetConnectionImpl extends BasicConnection implements Google
 			String worksheetName, String query, 
 			 Integer offset, Integer limit, int batchSize) {
 		
-		return dataProtocol.executeQuery(config.getSpreadsheetName(), worksheetName, query, Math.min(batchSize, config.getBatchSize()), 
+		return dataProtocol.executeQuery(getSpreadsheetInfo(), worksheetName, query, Math.min(batchSize, config.getBatchSize()), 
 				offset, limit);
 	}	
 	

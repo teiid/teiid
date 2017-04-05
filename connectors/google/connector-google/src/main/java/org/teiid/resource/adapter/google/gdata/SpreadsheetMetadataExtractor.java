@@ -27,10 +27,10 @@ import java.util.List;
 
 import org.teiid.resource.adapter.google.SpreadsheetManagedConnectionFactory;
 import org.teiid.resource.adapter.google.dataprotocol.GoogleDataProtocolAPI;
-import org.teiid.translator.goole.api.SpreadsheetOperationException;
-import org.teiid.translator.goole.api.metadata.Column;
-import org.teiid.translator.goole.api.metadata.SpreadsheetInfo;
-import org.teiid.translator.goole.api.metadata.Worksheet;
+import org.teiid.translator.google.api.SpreadsheetOperationException;
+import org.teiid.translator.google.api.metadata.Column;
+import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
+import org.teiid.translator.google.api.metadata.Worksheet;
 
 import com.google.gdata.data.spreadsheet.SpreadsheetEntry;
 import com.google.gdata.data.spreadsheet.WorksheetEntry;
@@ -74,7 +74,7 @@ public class SpreadsheetMetadataExtractor {
 				String title = wentry.getTitle().getPlainText();
 				Worksheet worksheet = metadata.createWorksheet(title);
 				worksheet.setId(wentry.getId().substring(wentry.getId().lastIndexOf('/')+1));
-				List<Column> cols = visualizationAPI.getMetadata(spreadsheetName, title);
+				List<Column> cols = visualizationAPI.getMetadata(sentry.getKey(), title);
 				if(!cols.isEmpty()){
 					if(cols.get(0).getLabel()!=null){
 						worksheet.setHeaderEnabled(true);

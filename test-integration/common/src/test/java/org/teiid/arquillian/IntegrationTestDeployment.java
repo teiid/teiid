@@ -25,8 +25,10 @@ package org.teiid.arquillian;
 import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -37,6 +39,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ArchivePaths;
@@ -192,7 +196,7 @@ public class IntegrationTestDeployment {
 	@Test
 	public void testTraslators() throws Exception {
 		Collection<? extends Translator> translators = admin.getTranslators();
-		assertEquals(translators.toString(), 57, translators.size());
+		assertEquals(translators.toString(), 56, translators.size());
 
 		JavaArchive jar = getLoopyArchive();
 		
@@ -214,7 +218,7 @@ public class IntegrationTestDeployment {
     @Test
     public void testTraslatorProperties() throws Exception {
         Collection<? extends PropertyDefinition> props = admin.getTranslatorPropertyDefinitions("accumulo", TranlatorPropertyType.OVERRIDE);
-        assertEquals(21, props.size());
+        assertEquals(20, props.size());
         
         props = admin.getTranslatorPropertyDefinitions("accumulo", TranlatorPropertyType.EXTENSION_METADATA);
         assertEquals(3, props.size());
@@ -791,5 +795,28 @@ public class IntegrationTestDeployment {
         assertTrue(vdb.getStatus() == Status.ACTIVE);
         admin.undeploy("bqt.VDB");        
 
-    }	
+    }
+    
+    @Test 
+    public void testDeployZipDDL() throws Exception {
+        File f = UnitTestUtil.getTestScratchFile("some.vdb");
+        ZipOutputStream out = new ZipOutputStream(new FileOutputStream(f));
+        out.putNextEntry(new ZipEntry("v1.ddl")); 
+        out.write("CREATE VIEW helloworld as SELECT 'HELLO WORLD';".getBytes("UTF-8"));
+        out.putNextEntry(new ZipEntry("META-INF/vdb.ddl"));
+        String externalDDL = "CREATE DATABASE test2 VERSION '1';"
+                + "USE DATABASE test2 VERSION '1';"
+                + "CREATE VIRTUAL SCHEMA test2;"
+                + "IMPORT FOREIGN SCHEMA public FROM REPOSITORY \"DDL-FILE\" INTO test2 OPTIONS(\"ddl-file\" '/v1.ddl');";
+        out.write(externalDDL.getBytes("UTF-8"));
+        out.close();
+        
+        admin.deploy("some.vdb", new FileInputStream(f));
+        
+        AdminUtil.waitForVDBLoad(admin, "test2", "1", 3);
+        Connection conn = TeiidDriver.getInstance().connect("jdbc:teiid:test2@mm://localhost:31000;user=user;password=user", null);
+        ResultSet rs = conn.createStatement().executeQuery("select * from helloworld");
+        rs.next();
+        assertEquals("HELLO WORLD", rs.getString(1));
+    }    
 }

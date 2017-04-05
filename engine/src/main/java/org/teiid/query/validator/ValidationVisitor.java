@@ -849,7 +849,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 
                 Class<?> symbolType = symbol.getType();
                 String symbolTypeName = DataTypeManager.getDataTypeName(symbolType);
-                String targetTypeName = getMetadata().getElementType(elementID);
+                String targetTypeName = getMetadata().getElementRuntimeTypeName(elementID);
                 if (symbolTypeName.equals(targetTypeName)) {
                     continue;
                 }

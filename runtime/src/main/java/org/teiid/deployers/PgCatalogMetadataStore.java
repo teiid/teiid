@@ -86,6 +86,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		add_pg_inherits();
 		add_pg_stats();
 		add_geography_columns();
+		add_pg_constraint();
 		addFunction("regClass", "regclass").setNullOnNull(true); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("encode", "encode").setPushdown(PushDown.CAN_PUSHDOWN); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("objDescription", "obj_description"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -104,14 +105,38 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addFunction("hasPerm", "has_function_privilege"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("getExpr2", "pg_get_expr"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("getExpr3", "pg_get_expr"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("pg_table_is_visible", "pg_table_is_visible"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("pg_get_constraintdef", "pg_get_constraintdef"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("pg_type_is_visible", "pg_type_is_visible"); //$NON-NLS-1$ //$NON-NLS-2$
 		FunctionMethod func = addFunction("asPGVector", "asPGVector"); //$NON-NLS-1$ //$NON-NLS-2$
 		func.setProperty(ResolverVisitor.TEIID_PASS_THROUGH_TYPE, Boolean.TRUE.toString());
-		addFunction("getOid", "getOid"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("getOid", "getOid").setNullOnNull(true);; //$NON-NLS-1$ //$NON-NLS-2$
 		func = addFunction("pg_client_encoding", "pg_client_encoding"); //$NON-NLS-1$ //$NON-NLS-2$
 		func.setDeterminism(Determinism.COMMAND_DETERMINISTIC);
 	}
 	
-	private void add_pg_prepared_xacts() {
+	private Table add_pg_constraint() {
+	    Table t = createView("pg_constraint"); //$NON-NLS-1$ 
+        
+	    addColumn("oid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+	    addColumn("conname", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+	    addColumn("contype", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+	    addColumn("consrc", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+	    addColumn("conrelid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+	    addColumn("confrelid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+	    addColumn("conkey", DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.SHORT)), t); //$NON-NLS-1$ 
+        
+        String transformation = "SELECT pg_catalog.getOid(UID) as oid, name as conname, lower(left(Type, 1)) as contype, " //$NON-NLS-1$
+                + "null as consrc, " //$NON-NLS-1$
+                + "pg_catalog.getOid(TableUID) as conrelid, pg_catalog.getOid(RefTableUID) as confrelid, " //$NON-NLS-1$
+                + "ColPositions as conkey " + //$NON-NLS-1$
+                "FROM Sys.Keys WHERE Type in ('Primary', 'Unique', 'Foreign')"; //$NON-NLS-1$
+        t.setSelectTransformation(transformation);
+        return t;       
+        
+    }
+
+    private void add_pg_prepared_xacts() {
 	    Table t = createView("pg_prepared_xacts"); //$NON-NLS-1$ 
 	    //xid
         addColumn("transaction", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
@@ -308,6 +333,8 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		
 		//additional column not present in pg metadata - for column metadata query
 		addColumn("relnspname", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+		
+		addColumn("reloptions", DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.STRING)), t); //$NON-NLS-1$
 
 		addPrimaryKey("pk_pg_class", Arrays.asList("oid"), t); //$NON-NLS-1$ //$NON-NLS-2$
 
@@ -320,7 +347,8 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"0 as relpages, " + //$NON-NLS-1$
 				"false as relhasrules, " + //$NON-NLS-1$
 				"false as relhasoids, " + //$NON-NLS-1$
-				"t1.SchemaName as relnspname " + //$NON-NLS-1$
+				"t1.SchemaName as relnspname, " + //$NON-NLS-1$
+				"null as reloptions " + //$NON-NLS-1$
 				"FROM SYS.Tables t1 UNION ALL SELECT pg_catalog.getOid(t1.uid) as oid, t1.name as relname, " +  //$NON-NLS-1$
 				"pg_catalog.getOid(uid) as relnamespace, " + //$NON-NLS-1$
 				"convert('i', char) as relkind," + //$NON-NLS-1$
@@ -330,7 +358,8 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"0 as relpages, " + //$NON-NLS-1$
 				"false as relhasrules, " + //$NON-NLS-1$
 				"false as relhasoids, " + //$NON-NLS-1$
-				"t1.SchemaName as relnspname " + //$NON-NLS-1$
+				"t1.SchemaName as relnspname, " + //$NON-NLS-1$
+				"null as reloptions " + //$NON-NLS-1$
 				"FROM SYS.Keys t1 WHERE t1.type in ('Primary', 'Unique', 'Index')"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
 		return t;		
@@ -355,8 +384,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addColumn("indisprimary", DataTypeManager.DefaultDataTypes.BOOLEAN, t); //$NON-NLS-1$ 
 		
 		// This is an array of indnatts values that indicate which table columns this index indexes.
-		Column c = addColumn("indkey", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
-		c.setRuntimeType(DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.SHORT)));
+		Column c = addColumn("indkey", DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.SHORT)), t); //$NON-NLS-1$ 
 		c.setProperty("pg_type:oid", String.valueOf(PG_TYPE_INT2VECTOR)); //$NON-NLS-1$
 		
 		// Expression trees (in nodeToString() representation) for index attributes that are not simple 
@@ -415,22 +443,17 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		// Number of input arguments
 		addColumn("pronargs", DataTypeManager.DefaultDataTypes.SHORT, t); //$NON-NLS-1$ 
 		
-		Column c = addColumn("proargtypes", DataTypeManager.DefaultDataTypes.OBJECT, t); //$NON-NLS-1$
+		Column c = addColumn("proargtypes", DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.INTEGER)), t); //$NON-NLS-1$
 		c.setProperty("pg_type:oid", String.valueOf(PG_TYPE_OIDVECTOR)); //$NON-NLS-1$
-		c.setRuntimeType(DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.INTEGER)));
 		
-		c = addColumn("proargnames", DataTypeManager.DefaultDataTypes.OBJECT, t); //$NON-NLS-1$
+		c = addColumn("proargnames", DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.STRING)), t); //$NON-NLS-1$
 		c.setProperty("pg_type:oid", String.valueOf(PG_TYPE_TEXTARRAY)); //$NON-NLS-1$
-		c.setRuntimeType(DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.STRING)));
 		
-		c = addColumn("proargmodes", DataTypeManager.DefaultDataTypes.OBJECT, t); //$NON-NLS-1$
+		c = addColumn("proargmodes", DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.CHAR)), t); //$NON-NLS-1$
 		c.setProperty("pg_type:oid", String.valueOf(PG_TYPE_CHARARRAY)); //$NON-NLS-1$
-		//TODO: we don't yet understand that we can cast from string[] to char[]
-		c.setRuntimeType(DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.CHAR)));
 		
-		c = addColumn("proallargtypes", DataTypeManager.DefaultDataTypes.OBJECT, t); //$NON-NLS-1$
+		c = addColumn("proallargtypes", DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.INTEGER)), t); //$NON-NLS-1$
 		c.setProperty("pg_type:oid", String.valueOf(PG_TYPE_OIDARRAY)); //$NON-NLS-1$
-		c.setRuntimeType(DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.INTEGER)));
 		
 		// The OID of the namespace that contains this function 
 		addColumn("pronamespace", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
@@ -516,13 +539,14 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addColumn("typrelid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
 		addColumn("typelem", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
 		addColumn("typinput", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+		addColumn("typdefault", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
 		
 		//non-pg column to associate the teiid type name - this is expected to be unique.
 		//aliases are handled by matpg_datatype
 		addColumn("teiid_name", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
 		
 		String transformation =
-			"select oid, typname, (SELECT pg_catalog.getOid(uid) FROM SYS.Schemas where Name = 'SYS') as typnamespace, typlen, typtype, false as typnotnull, typbasetype, typtypmod, cast(',' as char) as typdelim, typrelid, typelem, null as typeinput, teiid_name from texttable('" + //$NON-NLS-1$
+			"select oid, typname, (SELECT pg_catalog.getOid(uid) FROM SYS.Schemas where Name = 'SYS') as typnamespace, typlen, typtype, false as typnotnull, typbasetype, typtypmod, cast(',' as char) as typdelim, typrelid, typelem, null as typeinput, null as typdefault, teiid_name from texttable('" + //$NON-NLS-1$
 			"16,bool,1,b,0,-1,0,0,boolean\n" + //$NON-NLS-1$
 			"17,bytea,-1,b,0,-1,0,0,blob\n" + //$NON-NLS-1$
 			"1043,varchar,-1,b,0,-1,0,0,string\n" + //$NON-NLS-1$
@@ -759,12 +783,36 @@ public class PgCatalogMetadataStore extends MetadataFactory {
                 ResultSet rs = ps.getResultSet();
                 if (rs.next()) {
                     String name = rs.getString(1);
+                    boolean isArray = name.startsWith("_"); //$NON-NLS-1$
+                    if (isArray) {
+                        name = name.substring(1);
+                    }
+                    switch (name) {
+                    case "int2": //$NON-NLS-1$
+                        name = "smallint"; //$NON-NLS-1$
+                        break;
+                    case "int4": //$NON-NLS-1$
+                        name = "integer"; //$NON-NLS-1$
+                        break;
+                    case "int8": //$NON-NLS-1$
+                        name = "bigint"; //$NON-NLS-1$
+                        break;
+                    case "float4": //$NON-NLS-1$
+                        name = "real"; //$NON-NLS-1$
+                        break;
+                    case "float8": //$NON-NLS-1$
+                        name = "double precision"; //$NON-NLS-1$
+                        break;
+                    }
                     if (typmod > 4) {
                         if (name.equals("numeric")) {  //$NON-NLS-1$
                             name += "("+((typmod-4)>>16)+","+((typmod-4)&0xffff)+")";  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                         } else if (name.equals("bpchar") || name.equals("varchar")) { //$NON-NLS-1$ //$NON-NLS-2$
                             name += "("+(typmod-4)+")";  //$NON-NLS-1$ //$NON-NLS-2$
                         }
+                    }
+                    if (isArray) {
+                        name += "[]"; //$NON-NLS-1$
                     }
                     return name;
                 }
@@ -788,6 +836,18 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		public static BlobType asBinary2(GeometryType geom, String encoding) throws FunctionExecutionException {
 		    return GeometryFunctionMethods.asBlob(geom, encoding);
 		}
+		
+		public static boolean pg_table_is_visible(int oid) throws FunctionExecutionException {
+            return true;
+        }
+		
+	    public static String pg_get_constraintdef(int oid, boolean pretty) throws FunctionExecutionException {
+	        return "";
+	    }
+	    
+	    public static boolean pg_type_is_visible(int oid) throws FunctionExecutionException {
+            return true;
+        }
 		
 	}
 }

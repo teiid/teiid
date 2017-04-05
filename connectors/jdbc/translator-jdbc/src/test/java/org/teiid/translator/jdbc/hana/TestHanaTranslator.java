@@ -806,4 +806,13 @@ public class TestHanaTranslator {
                 output);
     }
     
+    @Test public void testObjectCast() throws Exception {
+        String input = "SELECT cast(intkey as object) FROM BQT1.smalla"; //$NON-NLS-1$
+        String output = "SELECT SmallA.IntKey FROM SmallA";  //$NON-NLS-1$
+
+        helpTestVisitor(getTestBQTVDB(),
+                input, 
+                output);
+    }
+    
 }

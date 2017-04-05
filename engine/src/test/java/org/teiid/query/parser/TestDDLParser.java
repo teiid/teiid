@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -38,9 +39,13 @@ import org.teiid.metadata.Grant.Permission;
 import org.teiid.metadata.Grant.Permission.Privilege;
 import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.query.function.SystemFunctionManager;
+import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.DatabaseStore;
+import org.teiid.query.metadata.DatabaseStore.Mode;
+import org.teiid.query.metadata.DatabaseUtil;
 import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.SystemMetadata;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.validator.ValidatorReport;
 
 //import static org.junit.Assert.*;
@@ -87,7 +92,7 @@ public class TestDDLParser {
 		Column e6 = columns.get(5);
 		
 		assertEquals("e1", e1.getName());
-		assertEquals("int", e1.getDatatype().getName());
+		assertEquals("integer", e1.getDatatype().getName());
 		assertEquals("primary key not same", e1, table.getPrimaryKey().getColumns().get(0));
 		
 		assertEquals("e2", e2.getName());
@@ -111,7 +116,7 @@ public class TestDDLParser {
 		assertEquals("12.2", e4.getDefaultValue());
 		
 		assertEquals("e5", e5.getName());
-		assertEquals("int", e5.getDatatype().getName());
+		assertEquals("integer", e5.getDatatype().getName());
 		assertEquals(true, e5.isAutoIncremented());
 		assertEquals("uuid", e5.getUUID());
 		assertEquals("nis", e5.getNameInSource());
@@ -473,13 +478,13 @@ public class TestDDLParser {
 		assertEquals(FunctionMethod.PushDown.MUST_PUSHDOWN, fm.getPushdown());
 	}	
 	
-	@Test(expected=DuplicateRecordException.class)
+	@Test(expected=org.teiid.metadata.ParseException.class)
 	public void testDuplicateFunctions() throws Exception {
 		String ddl = "CREATE FUNCTION SourceFunc() RETURNS integer; CREATE FUNCTION SourceFunc() RETURNS string";
 		helpParse(ddl, "model");
 	}
 	
-	@Test(expected=DuplicateRecordException.class)
+	@Test(expected=org.teiid.metadata.ParseException.class)
 	public void testDuplicateFunctions1() throws Exception {
 		String ddl = "CREATE FUNCTION SourceFunc() RETURNS string OPTIONS (UUID 'a'); CREATE FUNCTION SourceFunc1() RETURNS string OPTIONS (UUID 'a')";
 		helpParse(ddl, "model");
@@ -783,23 +788,35 @@ public class TestDDLParser {
 		QueryParser.getQueryParser().parseDDL(mf, ddl);
 		return mf;
 	}
-	
+
     public static Database helpParse(String ddl) {
+        return helpParse(ddl, Mode.ANY);
+    }
+    
+    public static Database helpParse(String ddl, DatabaseStore.Mode mode) {
+        final Map<String, Datatype> dataTypes = getDataTypes();
         DatabaseStore store = new DatabaseStore() {
             @Override
             public Map<String, Datatype> getRuntimeTypes() {
-                return getDataTypes();
-            }
-            @Override
-            public Map<String, Datatype> getBuiltinDataTypes() {
-                return getDataTypes();
+                return dataTypes;
             }
 			@Override
 			public SystemFunctionManager getSystemFunctionManager() {
 				return new SystemFunctionManager();
 			}
+			@Override
+			protected TransformationMetadata getTransformationMetadata() {
+			    Database database = getCurrentDatabase();
+		        
+		        CompositeMetadataStore store = new CompositeMetadataStore(database.getMetadataStore());
+		        //grants are already stored on the VDBMetaData
+		        store.getGrants().clear();
+		        return new TransformationMetadata(DatabaseUtil.convert(database), store, null,
+		                getSystemFunctionManager().getSystemFunctions(), null);
+			}
         }; 
         store.startEditing(true);
+        store.setMode(mode);
         QueryParser.getQueryParser().parseDDL(store, new StringReader(ddl));
         store.stopEditing();
         if (store.getDatabases().isEmpty()) {
@@ -1147,7 +1164,7 @@ public class TestDDLParser {
         assertEquals("v2", db.getProperty("k2", false));
     }
     
-    @Test 
+    @Ignore 
     public void testCreateDropDatabase() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
                 + "DROP DATABASE FOO;";
@@ -1231,7 +1248,7 @@ public class TestDDLParser {
                 + "SET SCHEMA test;"
                 + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
                 + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;"
-                + "GRANT SELECT,INSERT,DELETE ON TABLE G1 TO superuser;"
+                + "GRANT SELECT,INSERT,DELETE ON TABLE test.G1 TO superuser;"
                 + "GRANT UPDATE ON TABLE test.G1 TO superuser;";
         
         Database db = helpParse(ddl);
@@ -1247,7 +1264,7 @@ public class TestDDLParser {
         assertTrue(p.hasPrivilege(Privilege.INSERT));
         assertTrue(p.hasPrivilege(Privilege.DELETE));
         assertTrue(p.hasPrivilege(Privilege.UPDATE));
-        assertFalse(p.hasPrivilege(Privilege.DROP));
+        assertNull(p.hasPrivilege(Privilege.DROP));
     }
     
     @Test 
@@ -1260,7 +1277,7 @@ public class TestDDLParser {
                 + "SET SCHEMA test;"
                 + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
                 + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;"
-                + "GRANT ALL PRIVILEGES ON TABLE test.G1 TO superuser;";
+                + "GRANT ALL PRIVILEGES TO superuser;";
         
         Database db = helpParse(ddl);
         Role role = db.getRole("superuser");
@@ -1284,7 +1301,7 @@ public class TestDDLParser {
                 + "SET SCHEMA test;"
                 + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
                 + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;"
-                + "GRANT ALL PRIVILEGES ON TABLE test.G1 CONDITION CONSTRAINT 'foo=bar' TO superuser;";
+                + "GRANT SELECT ON TABLE test.G1 CONDITION CONSTRAINT 'foo=bar' TO superuser;";
         
         Database db = helpParse(ddl);
         Role role = db.getRole("superuser");
@@ -1295,7 +1312,7 @@ public class TestDDLParser {
         Grant g = grants.iterator().next();
         assertEquals(1, g.getPermissions().size());
         Permission p = g.getPermissions().iterator().next();
-        assertTrue(p.hasPrivilege(Privilege.ALL_PRIVILEGES));
+        assertTrue(p.hasPrivilege(Privilege.SELECT));
         assertEquals("foo=bar", p.getCondition());
         assertTrue(p.isConditionAConstraint());
     }     
@@ -1310,9 +1327,9 @@ public class TestDDLParser {
                 + "SET SCHEMA test;"
                 + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
                 + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;"
-                + "GRANT SELECT,INSERT,DELETE ON TABLE G1 TO superuser;"
+                + "GRANT SELECT,INSERT,DELETE ON TABLE test.G1 TO superuser;"
                 + "GRANT UPDATE ON TABLE test.G1 TO superuser;"
-                + "REVOKE GRANT SELECT ON TABLE test.G1 FROM superuser;";
+                + "REVOKE SELECT ON TABLE test.G1 FROM superuser;";
         
         Database db = helpParse(ddl);
         Role role = db.getRole("superuser");
@@ -1323,15 +1340,15 @@ public class TestDDLParser {
         Grant g = grants.iterator().next();
         assertEquals(1, g.getPermissions().size());
         Permission p = g.getPermissions().iterator().next();
-        assertFalse(p.hasPrivilege(Privilege.SELECT));
+        assertNull(p.hasPrivilege(Privilege.SELECT));
         assertTrue(p.hasPrivilege(Privilege.INSERT));
         assertTrue(p.hasPrivilege(Privilege.DELETE));
         assertTrue(p.hasPrivilege(Privilege.UPDATE));
-        assertFalse(p.hasPrivilege(Privilege.DROP));
+        assertNull(p.hasPrivilege(Privilege.DROP));
     }  
     
     @Test 
-    public void testRevokeALl() throws Exception {
+    public void testRevokeAll() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
                 + "USE DATABASE FOO ;"
                 + "CREATE FOREIGN DATA WRAPPER postgresql;"
@@ -1342,14 +1359,15 @@ public class TestDDLParser {
                 + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;"
                 + "GRANT SELECT,INSERT,DELETE ON TABLE G1 TO superuser;"
                 + "GRANT UPDATE ON TABLE test.G1 TO superuser;"
-                + "REVOKE GRANT ALL PRIVILEGES ON TABLE test.G1 FROM superuser;";
+                + "REVOKE ALL PRIVILEGES FROM superuser;";
         
         Database db = helpParse(ddl);
         Role role = db.getRole("superuser");
         assertNotNull(role);
 
         Collection<Grant> grants = db.getGrants();
-        assertEquals(0, grants.size());
+        //revoke all privileges will only have an already granted all privileges
+        assertEquals(1, grants.size());
     }    
 
     @Test 
@@ -1601,5 +1619,49 @@ public class TestDDLParser {
         Schema s = db.getSchema("test");
         Procedure p = s.getProcedure("procG1");
         assertNull(p);  
+    }
+    
+    @Test(expected=MetadataException.class)
+    public void testCreateDomainAlreadyExists() throws Exception {
+        String ddl = "CREATE DATABASE FOO VERSION '2.0.0'; USE DATABASE FOO VERSION '2.0.0';"
+                 + "CREATE DOMAIN \"INTEGER\" AS string(4000)";
+        
+        helpParse(ddl);
+    }
+    
+    @Test
+    public void testCreateDomain() throws Exception {
+        String ddl = "CREATE DATABASE FOO VERSION '2.0.0'; USE DATABASE FOO VERSION '2.0.0';"
+                 + "CREATE DOMAIN nnint AS integer not null;";
+        
+        Database db = helpParse(ddl);
+        assertEquals(NullType.No_Nulls, db.getMetadataStore().getDatatypes().get("NNINT").getNullType());
+    }
+    
+    @Test
+    public void testCreateDomainUsedInSchema() throws Exception {
+        String ddl = "CREATE DATABASE FOO VERSION '2.0.0'; USE DATABASE FOO VERSION '2.0.0';"
+                 + "CREATE DOMAIN my_string AS string(1000) not null;"
+                 + "CREATE SCHEMA S1; SET SCHEMA S1;"
+                 + "CREATE VIEW X (y my_string) as select 'a';";
+        
+        Database db = helpParse(ddl);
+        assertEquals(1000, db.getMetadataStore().getDatatypes().get("my_string").getLength());
+    }
+    
+    @Test(expected=MetadataException.class) public void testDDLNotAllowed() throws Exception {
+        String ddl = "CREATE DATABASE FOO;";
+        
+        helpParse(ddl, "model");
+    }
+    
+    @Test(expected=MetadataException.class)
+    public void testDDLOutOfSequence() throws Exception {
+        String ddl = "CREATE DATABASE FOO VERSION '2.0.0'; USE DATABASE FOO VERSION '2.0.0';"
+                 + "CREATE SCHEMA S1; SET SCHEMA S1;"
+                 + "CREATE VIEW X (y string) as select 'a';"
+                 + "CREATE SCHEMA S2;";
+        
+        helpParse(ddl, Mode.DATABASE_STRUCTURE);
     }
 }

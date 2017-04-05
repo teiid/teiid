@@ -30,6 +30,7 @@ import java.io.InputStream;
 import java.io.NotSerializableException;
 import java.io.StringReader;
 import java.net.InetSocketAddress;
+import java.sql.BatchUpdateException;
 import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -400,5 +401,43 @@ public class TestJDBCSocketTransport {
 		assertEquals(length, b.length());
 		b.getBytes(1, (int) b.length());
 	}
+	
+    @Test public void testBatchedUpdateException() throws Exception {
+        Statement s = conn.createStatement();
+        s.execute("create local temporary table x (y integer, primary key (y))");
+        s.addBatch("insert into x values (1)");
+        s.addBatch("insert into x values (1)");
+        try {
+            s.executeBatch();
+            fail();
+        } catch (BatchUpdateException e) {
+            assertEquals(1, e.getUpdateCounts()[0]);
+        }
+        
+        PreparedStatement ps = conn.prepareStatement("insert into x values (?)");
+        ps.setInt(1, 2);
+        ps.addBatch();
+        ps.setInt(1, 2);
+        ps.addBatch();
+        try {
+            ps.executeBatch();
+            fail();
+        } catch (BatchUpdateException e) {
+            assertEquals(1, e.getUpdateCounts()[0]);
+        }
+        
+        //make sure no update counts are reported when there's an issue on the first item
+        ps = conn.prepareStatement("insert into x values (?)");
+        ps.setInt(1, 2);
+        ps.addBatch();
+        ps.setInt(1, 2);
+        ps.addBatch();
+        try {
+            ps.executeBatch();
+            fail();
+        } catch (BatchUpdateException e) {
+            assertEquals(0, e.getUpdateCounts().length);
+        }
+    }
 	
 }

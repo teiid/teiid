@@ -34,10 +34,12 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import javax.transaction.xa.Xid;
 
+import org.teiid.PreParser;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.Request.ProcessingState;
 import org.teiid.adminapi.Request.ThreadState;
@@ -127,11 +129,20 @@ public class DQPCore implements DQP {
 	private ExecutorService timeoutExecutor;
 	
 	private LocalProfile localProfile;
+	
+	private volatile boolean shutdown;
     
     /**
      * perform a full shutdown and wait for 10 seconds for all threads to finish
      */
     public void stop() {
+        shutdown = true;
+        for (RequestID request : requests.keySet()) {
+            try {
+                cancelRequest(request);
+            } catch (TeiidComponentException e) {
+            }
+        }
     	processWorkerPool.shutdownNow();
     	try {
 			processWorkerPool.awaitTermination(10, TimeUnit.SECONDS);
@@ -270,7 +281,24 @@ public class DQPCore implements DQP {
 	    request.setExecutor(this.processWorkerPool);
 		request.setResultSetCacheEnabled(this.rsCache != null);
 		request.setAuthorizationValidator(this.authorizationValidator);
-		request.setPreParser(this.config.getPreParser());
+		final PreParser preparser = workContext.getVDB().getAttachment(PreParser.class);
+		if (preparser != null) {
+		    if (this.config.getPreParser() != null) {
+		        //chain the preparsing effect
+		        request.setPreParser(new PreParser() {
+                    
+                    @Override
+                    public String preParse(String command, org.teiid.CommandContext context) {
+                        String preParse = config.getPreParser().preParse(command, context);
+                        return preparser.preParse(preParse, context);
+                    }
+                });
+		    } else {
+		        request.setPreParser(preparser);
+		    }
+		} else {
+		    request.setPreParser(this.config.getPreParser());
+		}
 		request.setUserRequestConcurrency(this.getUserRequestSourceConcurrency());
         ResultsFuture<ResultsMessage> resultsFuture = new ResultsFuture<ResultsMessage>();
         final RequestWorkItem workItem = new RequestWorkItem(this, requestMsg, request, resultsFuture.getResultsReceiver(), requestID, workContext);
@@ -401,7 +429,14 @@ public class DQPCore implements DQP {
     }
     
     void addWork(Runnable work) {
-		this.processWorkerPool.execute(work);
+        try {
+            this.processWorkerPool.execute(work);
+        } catch (RejectedExecutionException e) {
+            if (!shutdown) {
+                throw e;
+            }
+            LogManager.logDetail(LogConstants.CTX_DQP, e, "In the process of shutting down, work will not be started"); //$NON-NLS-1$
+        }
     }
     
     Future<Void> scheduleWork(final Runnable r, long delay) {
@@ -624,7 +659,14 @@ public class DQPCore implements DQP {
         	LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30006, this.maxActivePlans, config.getMaxThreads()));
         	this.maxActivePlans = config.getMaxThreads();
         }
-
+        
+        //for now options are scoped to the engine - vdb scoping is a todo
+        options = new Options();
+        options.setAssumeMatchingCollation(false);
+        options.setProperties(config.getProperties());
+        PropertiesUtils.setBeanProperties(options, options.getProperties(), "org.teiid", true); //$NON-NLS-1$
+        
+        this.bufferManager.setOptions(options);
         //hack to set the max active plans
         this.bufferManager.setMaxActivePlans(this.maxActivePlans);
         try {
@@ -665,15 +707,14 @@ public class DQPCore implements DQP {
 					
 				});
 			}
+			
+			@Override
+			public boolean isShutdown() {
+			    return shutdown;
+			}
 		});
         dataTierMgr.setEventDistributor(eventDistributor);
-        //for now options are scoped to the engine - vdb scoping is a todo
-        options = new Options();
-        options.setAssumeMatchingCollation(false);
-        options.setProperties(config.getProperties());
-        PropertiesUtils.setBeanProperties(options, options.getProperties(), "org.teiid", true); //$NON-NLS-1$
         LogManager.logDetail(LogConstants.CTX_DQP, "DQPCore started maxThreads", this.config.getMaxThreads(), "maxActivePlans", this.maxActivePlans, "source concurrency", this.userRequestSourceConcurrency); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        this.bufferManager.setOptions(options);
 	}
 	
 	public void setBufferManager(BufferManager mgr) {

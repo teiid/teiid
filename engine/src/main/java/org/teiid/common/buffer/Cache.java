@@ -87,12 +87,14 @@ public interface Cache<T> extends StorageManager {
 	boolean add(CacheEntry entry, Serializer<?> s) throws Exception;
 	
 	/**
-	 * Remove an entry from the cache
+	 * Remove an entry from the cache, return the sizeEstimate if the entry existed
 	 * @param gid
 	 * @param id
 	 */
-	boolean remove(Long gid, Long id);
+	Integer remove(Long gid, Long id);
 
 	void shutdown();
+	
+	long getMemoryBufferSpace();
 	
 }

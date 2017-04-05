@@ -26,9 +26,11 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import io.netty.handler.codec.TooLongFrameException;
 import io.netty.handler.codec.serialization.CompatibleObjectEncoder;
 
 import java.io.BufferedOutputStream;
+import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.StreamCorruptedException;
@@ -42,6 +44,7 @@ import org.teiid.core.types.Streamable;
 import org.teiid.core.util.ExternalizeUtil;
 import org.teiid.netty.handler.codec.serialization.CompactObjectInputStream;
 import org.teiid.netty.handler.codec.serialization.ObjectEncoderOutputStream;
+import org.teiid.runtime.RuntimePlugin;
 
 
 /**
@@ -107,7 +110,12 @@ public class ObjectDecoder extends LengthFieldBasedFrameDecoder {
     @Override
     protected Object decode(ChannelHandlerContext ctx, ByteBuf buffer) throws Exception {
     	if (result == null) {
-    	    ByteBuf frame = (ByteBuf) super.decode(ctx, buffer);
+    	    ByteBuf frame = null;
+    	    try {
+    	        frame = (ByteBuf) super.decode(ctx, buffer);
+    	    } catch (TooLongFrameException e) {
+    	        throw new IOException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40166), e);
+    	    }
             if (frame == null) {
                 return null;
             }

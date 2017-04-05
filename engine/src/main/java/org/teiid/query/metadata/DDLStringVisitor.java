@@ -55,7 +55,7 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 public class DDLStringVisitor {
 	private static final String TAB = "\t"; //$NON-NLS-1$
 	private static final String NEWLINE = "\n";//$NON-NLS-1$
-	
+    public static final String GENERATED = "TEIID_GENERATED"; //$NON-NLS-1$
 	private static final HashSet<String> LENGTH_DATATYPES = new HashSet<String>(
 			Arrays.asList(
 					DataTypeManager.DefaultDataTypes.CHAR,
@@ -109,7 +109,7 @@ public class DDLStringVisitor {
     	}
     }
     
-    private void visit(Database database) {
+    public void visit(Database database) {
         append(NEWLINE);
         append("/*").append(NEWLINE);
         append("###########################################").append(NEWLINE);
@@ -119,87 +119,123 @@ public class DDLStringVisitor {
         
         append(CREATE).append(SPACE).append(DATABASE).append(SPACE)
                 .append(SQLStringVisitor.escapeSinglePart(database.getName())).append(SPACE).append(VERSION)
-                .append(SPACE).append(TICK).append(database.getVersion()).append(TICK);
+                .append(SPACE).append(new Constant(database.getVersion()));
         appendOptions(database);
         append(SEMICOLON);
         append(NEWLINE);
         append(USE).append(SPACE).append(DATABASE).append(SPACE);
         append(SQLStringVisitor.escapeSinglePart(database.getName())).append(SPACE);
-        append(VERSION).append(SPACE).append(TICK).append(database.getVersion()).append(TICK);
+        append(VERSION).append(SPACE).append(new Constant(database.getVersion()));
         append(SEMICOLON);
         append(NEWLINE);
 
+        boolean outputDt = false;
+        for (Datatype dt : database.getMetadataStore().getDatatypes().values()) {
+            if (dt.getType() == Datatype.Type.Domain) {
+                outputDt = true;
+                break;
+            }
+        }
+        
+        if (outputDt) {
+            append(NEWLINE);
+            append("--############ Domains ############");
+            append(NEWLINE);
+            
+            for (Datatype dt : database.getMetadataStore().getDatatypes().values()) {
+                if (dt.isBuiltin()) {
+                    continue;
+                }
+                visit(dt);
+                append(NEWLINE);
+                append(NEWLINE);
+            }
+        }
+        
         if (!database.getDataWrappers().isEmpty()){
         	append(NEWLINE);
         	append("--############ Translators ############");
         	append(NEWLINE);        	
-        }
-        
-        for (DataWrapper dw : database.getDataWrappers()) {
-            visit(dw);
-            append(NEWLINE);
-            append(NEWLINE);
+            for (DataWrapper dw : database.getDataWrappers()) {
+                visit(dw);
+                append(NEWLINE);
+                append(NEWLINE);
+            }
         }
 
         if (!database.getServers().isEmpty()){
         	append(NEWLINE);
         	append("--############ Servers ############");
         	append(NEWLINE);        	
+            for (Server server : database.getServers()) {
+                visit(server);
+                append(NEWLINE);
+                append(NEWLINE);
+            }
         }
         
-        for (Server server : database.getServers()) {
-            visit(server);
+        if (!database.getSchemas().isEmpty()) {
             append(NEWLINE);
-            append(NEWLINE);
-        }
-
-        for (Schema schema : database.getSchemas()) {
-        	append(NEWLINE);
-        	append("--############ Schema:").append(schema.getName()).append(" ############");
-        	append(NEWLINE);
-            append(CREATE).append(SPACE);
-            if (!schema.isPhysical()) {
-                append(VIRTUAL);
-            }
-            append(SPACE).append(SCHEMA).append(SPACE).append(SQLStringVisitor.escapeSinglePart(schema.getName()));
-            if (!schema.getServers().isEmpty()) {
-                append(SPACE).append(SERVER);
-                boolean first = true;
-                for (Server s:schema.getServers()) {
-                    if (first) {
-                        first = true;
-                    } else {
-                        append(COMMA);
-                    }
-                    append(SPACE).append(SQLStringVisitor.escapeSinglePart(s.getName()));
+            append("--############ Schemas ############");
+            append(NEWLINE); 
+    
+            for (Schema schema : database.getSchemas()) {
+                append(CREATE);
+                if (!schema.isPhysical()) {
+                    append(SPACE).append(VIRTUAL);
                 }
+                append(SPACE).append(SCHEMA).append(SPACE).append(SQLStringVisitor.escapeSinglePart(schema.getName()));
+                if (!schema.getServers().isEmpty()) {
+                    append(SPACE).append(SERVER);
+                    boolean first = true;
+                    for (Server s:schema.getServers()) {
+                        if (first) {
+                            first = false;
+                        } else {
+                            append(COMMA);
+                        }
+                        append(SPACE).append(SQLStringVisitor.escapeSinglePart(s.getName()));
+                    }
+                }
+                
+                appendOptions(schema);
+                append(SEMICOLON);
+                append(NEWLINE);
+                append(NEWLINE);
+                createdSchmea(schema);
             }
-            
-            appendOptions(schema);
-            append(SEMICOLON);
+        }
+        
+        if (!database.getRoles().isEmpty()){
+            append(NEWLINE);
+            append("--############ Roles ############");
+            append(NEWLINE);            
+            for (Role role:database.getRoles()) {
+                visit(role);
+                append(NEWLINE);
+                append(NEWLINE);
+            }
+        }
+        
+        for (Schema schema : database.getSchemas()) {
+            append(NEWLINE);
+            append("--############ Schema:").append(schema.getName()).append(" ############");
             append(NEWLINE);
             append(SET).append(SPACE).append(SCHEMA).append(SPACE);
             append(SQLStringVisitor.escapeSinglePart(schema.getName())).append(SEMICOLON);
             append(NEWLINE);
             append(NEWLINE);
-            
             visit(schema);  
         }
         
         if (!database.getRoles().isEmpty()){
         	append(NEWLINE);
-        	append("--############ Roles & Grants ############");
+        	append("--############ Grants ############");
         	append(NEWLINE);        	
-        }
-        
-        for (Role role:database.getRoles()) {
-            visit(role);
-            append(NEWLINE);
-        }
-        
-        for (Grant grant:database.getGrants()) {
-            visit(grant);
-            append(NEWLINE);
+            for (Grant grant:database.getGrants()) {
+                visit(grant);
+                append(NEWLINE);
+            }
         }
         
         append(NEWLINE);
@@ -211,46 +247,95 @@ public class DDLStringVisitor {
         append(NEWLINE);
     }
     
+    protected void createdSchmea(Schema schema) {
+        
+    }
+
+    private void visit(Datatype dt) {
+        append(CREATE).append(SPACE).append(DOMAIN).append(SPACE);
+        append(SQLStringVisitor.escapeSinglePart(dt.getName())).append(SPACE).append(AS).append(SPACE);
+        String runtimeTypeName = dt.getBasetypeName();
+        append(runtimeTypeName);
+        Datatype base = SystemMetadata.getInstance().getRuntimeTypeMap().get(runtimeTypeName);
+        if (LENGTH_DATATYPES.contains(runtimeTypeName)) {
+            if (dt.getLength() != base.getLength()) {
+                append(LPAREN).append(dt.getLength()).append(RPAREN);
+            }
+        } else if (PRECISION_DATATYPES.contains(runtimeTypeName)
+                && (dt.getPrecision() != base.getPrecision() || dt.getScale() != base.getScale())) {
+            append(LPAREN).append(dt.getPrecision());
+            if (dt.getScale() != 0) {
+                append(COMMA).append(dt.getScale());
+            }
+            append(RPAREN);
+        }
+        if (dt.getNullType() == NullType.No_Nulls) {
+            append(SPACE).append(NOT_NULL);
+        }
+        append(SEMICOLON);
+    }
+
     private void visit(Grant grant) {
         
         for (Permission permission : grant.getPermissions()) {
-            append(GRANT);
-            boolean first = true;
-            for (Privilege allowance:permission.getPrivileges()) {
-                if (first) {
-                    first = false;
-                    append(SPACE);
-                } else {
-                    append(COMMA);
+            if (permission.getResourceType() == ResourceType.DATABASE) {
+                for (Privilege p : permission.getPrivileges()) {
+                    appendGrant(grant, permission, EnumSet.of(p), false);
                 }
-                append(allowance.name());
-            }
-            append(SPACE).append(ON).append(SPACE).append(permission.getResourceType().name());
-            if (permission.getResourceName() != null) {
-                append(SPACE).append(SQLStringVisitor.escapeSinglePart(permission.getResourceName()));
-            }
-            
-            if (permission.getResourceType() == ResourceType.COLUMN) {
-                
-                if (permission.getMask() != null) {
-                    append(SPACE).append(MASK);
-                    if (permission.getMaskOrder() != null && permission.getMaskOrder() != -1) {
-                        append(SPACE).append(ORDER).append(SPACE).append(permission.getMaskOrder());
-                    }
-                    append(SPACE).append(TICK).append(SQLStringVisitor.escapeSinglePart(permission.getMask())).append(TICK);
+                for (Privilege p : permission.getRevokePrivileges()) {
+                    appendGrant(grant, permission, EnumSet.of(p), true);
                 }
-                
-                if (permission.getCondition() != null) {
-                    append(SPACE).append(CONDITION);
-                    if (permission.isConditionAConstraint() != null && permission.isConditionAConstraint()) {
-                        append(SPACE).append(CONSTRAINT);
-                    }
-                    append(SPACE).append(TICK).append(SQLStringVisitor.escapeSinglePart(permission.getCondition())).append(TICK);
-                }
+                continue;
             }
-            append(SPACE).append(TO).append(SPACE).append(grant.getRole());
-            append(SEMICOLON).append(NEWLINE);
+            if (!permission.getPrivileges().isEmpty() || permission.getMask() != null || permission.getCondition() != null) {
+                appendGrant(grant, permission, permission.getPrivileges(), false);
+            }
+            if (!permission.getRevokePrivileges().isEmpty()) {
+                appendGrant(grant, permission, permission.getRevokePrivileges(), true);
+            }
         }
+    }
+
+    private void appendGrant(Grant grant, Permission permission, EnumSet<Privilege> privileges, boolean revoke) {
+        append(revoke?REVOKE:GRANT);
+        boolean first = true;
+        for (Privilege allowance:privileges) {
+            if (first) {
+                first = false;
+                append(SPACE);
+            } else {
+                append(COMMA);
+            }
+            append(allowance);
+        }
+        if (permission.getResourceType() != ResourceType.DATABASE) { 
+            append(SPACE).append(ON).append(SPACE).append(permission.getResourceType());
+        }
+        
+        if (permission.getResourceName() != null) {
+            append(SPACE).append(SQLStringVisitor.escapeSinglePart(permission.getResourceName()));
+        }
+        
+        if (!revoke && permission.getMask() != null) {
+            append(SPACE).append(MASK);
+            if (permission.getMaskOrder() != null && permission.getMaskOrder() != -1) {
+                append(SPACE).append(ORDER).append(SPACE).append(permission.getMaskOrder());
+            }
+            append(SPACE).append(new Constant(permission.getMask()));
+        }
+        
+        if (!revoke && permission.getCondition() != null) {
+            append(SPACE).append(CONDITION);
+            if (!revoke) {
+                if (permission.isConditionAConstraint() != null && permission.isConditionAConstraint()) {
+                    append(SPACE).append(CONSTRAINT);
+                }
+                append(SPACE).append(new Constant(permission.getCondition()));
+            }
+        }
+
+        append(SPACE).append(revoke?FROM:TO).append(SPACE).append(grant.getRole());
+        append(SEMICOLON).append(NEWLINE);
     }
 
     private void visit(Role role) {
@@ -295,46 +380,42 @@ public class DDLStringVisitor {
         append(SEMICOLON);
     }
 
-    private void visit(Schema schema) {
+    protected void visit(Schema schema) {
 		boolean first = true; 
 		
-		if (this.includeTables) {
-			for (Table t: schema.getTables().values()) {
-				if (first) {
-					first = false;
-				}
-				else {
-					append(NEWLINE);
-					append(NEWLINE);
-				}			
-				visit(t);
-			}
-		}
-		
-		if (this.includeProcedures) {
-			for (Procedure p:schema.getProcedures().values()) {
-				if (first) {
-					first = false;
-				}
-				else {
-					append(NEWLINE);
-					append(NEWLINE);
-				}				
-				visit(p);
-			}
-		}
-		
-		if (this.includeFunctions) {
-			for (FunctionMethod f:schema.getFunctions().values()) {
-				if (first) {
-					first = false;
-				}
-				else {
-					append(NEWLINE);
-					append(NEWLINE);
-				}				
-				visit(f);
-			}
+		for (AbstractMetadataRecord record : schema.getResolvingOrder()) {
+            String generated = record.getProperty(GENERATED, false);
+            if (generated != null && Boolean.valueOf(generated)) {
+                continue;
+            }
+
+            if (record instanceof Table) {
+                if (!this.includeTables) {
+                    continue;
+                }
+            } else if (record instanceof Procedure) {
+                if (!this.includeProcedures) {
+                    continue;
+                }
+            } else if (record instanceof FunctionMethod) {
+                if (!this.includeFunctions) {
+                    continue;
+                }
+            }
+            if (first) {
+                first = false;
+            }
+            else {
+                append(NEWLINE);
+                append(NEWLINE);
+            }
+            if (record instanceof Table) {
+                visit((Table)record);
+            } else if (record instanceof Procedure) {
+                visit((Procedure)record);
+            } else if (record instanceof FunctionMethod) {
+                visit((FunctionMethod)record);
+            }
 		}
 	}
 
@@ -364,19 +445,22 @@ public class DDLStringVisitor {
 			append(SQLConstants.Tokens.SEMICOLON);
 			
 			if (table.isInsertPlanEnabled()) {
-				buildTrigger(name, null, INSERT, table.getInsertPlan());
+				buildTrigger(name, null, INSERT, table.getInsertPlan(), false);
 			}
 			
 			if (table.isUpdatePlanEnabled()) {
-				buildTrigger(name, null, UPDATE, table.getUpdatePlan());
+				buildTrigger(name, null, UPDATE, table.getUpdatePlan(), false);
 			}	
 			
 			if (table.isDeletePlanEnabled()) {
-				buildTrigger(name, null, DELETE, table.getDeletePlan());
+				buildTrigger(name, null, DELETE, table.getDeletePlan(), false);
 			}	
 			
 			for (Trigger tr : table.getTriggers().values()) {
-			    buildTrigger(name, tr.getName(), tr.getEvent().name(), tr.getPlan());   
+			    String generated = tr.getProperty(GENERATED, false);
+			    if (generated == null || !Boolean.valueOf(generated)) {
+			        buildTrigger(name, tr.getName(), tr.getEvent().name(), tr.getPlan(), tr.isAfter());
+			    }
 			}
 		} else {
 		    append(SQLConstants.Tokens.SEMICOLON);
@@ -418,14 +502,20 @@ public class DDLStringVisitor {
 		return this;
 	}
 
-	private void buildTrigger(String name, String trigger_name, String type, String plan) {
+	private void buildTrigger(String name, String trigger_name, String type, String plan, boolean isAfter) {
 		append(NEWLINE);
 		append(NEWLINE);
 		append(SQLConstants.Reserved.CREATE).append(SPACE).append(TRIGGER).append(SPACE);
 		if (trigger_name != null) {
 		    append(SQLStringVisitor.escapeSinglePart(trigger_name)).append(SPACE);
 		}
-		append(SQLConstants.Reserved.ON).append(SPACE).append(name).append(SPACE).append(INSTEAD_OF).append(SPACE).append(type).append(SPACE).append(SQLConstants.Reserved.AS).append(NEWLINE);
+		append(SQLConstants.Reserved.ON).append(SPACE).append(name).append(SPACE);
+		if (isAfter) {
+		    append(AFTER);
+		} else {
+		    append(INSTEAD_OF);   
+		}
+		append(SPACE).append(type).append(SPACE).append(SQLConstants.Reserved.AS).append(NEWLINE);
 		append(plan);
 		append(SQLConstants.Tokens.SEMICOLON);
 	}
@@ -588,7 +678,7 @@ public class DDLStringVisitor {
 			if (BaseColumn.EXPRESSION_DEFAULT.equalsIgnoreCase(column.getProperty(BaseColumn.DEFAULT_HANDLING, false))) {
 				append(column.getDefaultValue());
 			} else {
-				append(TICK).append(StringUtil.replaceAll(column.getDefaultValue(), TICK, TICK + TICK)).append(TICK);
+				append(new Constant(column.getDefaultValue()));
 			}
 		}
 	}
@@ -600,31 +690,37 @@ public class DDLStringVisitor {
 		if (includeType) {
 			Datatype datatype = column.getDatatype();
 			String runtimeTypeName = column.getRuntimeType();
+			boolean domain = false;
 			if (datatype != null) {
-				runtimeTypeName = datatype.getRuntimeTypeName();
+			    runtimeTypeName = datatype.getRuntimeTypeName();
+			    domain = datatype.getType() == Datatype.Type.Domain;
 			}
 			if (includeName) {
 				append(SPACE);
 			}
-			append(runtimeTypeName);
-			if (LENGTH_DATATYPES.contains(runtimeTypeName)) {
-				if (column.getLength() != 0 && (datatype == null || column.getLength() != datatype.getLength())) {
-					append(LPAREN).append(column.getLength()).append(RPAREN);
-				}
-			} else if (PRECISION_DATATYPES.contains(runtimeTypeName) 
-					&& !column.isDefaultPrecisionScale()) {
-				append(LPAREN).append(column.getPrecision());
-				if (column.getScale() != 0) {
-					append(COMMA).append(column.getScale());
-				}
-				append(RPAREN);
+			if (domain) {
+	            append(datatype.getName());
+			} else {
+    			append(runtimeTypeName);
+    			if (LENGTH_DATATYPES.contains(runtimeTypeName)) {
+    				if (column.getLength() != 0 && (datatype == null || column.getLength() != datatype.getLength())) {
+    					append(LPAREN).append(column.getLength()).append(RPAREN);
+    				}
+    			} else if (PRECISION_DATATYPES.contains(runtimeTypeName) 
+    					&& !column.isDefaultPrecisionScale()) {
+    				append(LPAREN).append(column.getPrecision());
+    				if (column.getScale() != 0) {
+    					append(COMMA).append(column.getScale());
+    				}
+    				append(RPAREN);
+    			}
 			}
 			if (datatype != null) {
 				for (int dims = column.getArrayDimensions(); dims > 0; dims--) {
 					append(Tokens.LSBRACE).append(Tokens.RSBRACE);
 				}
 			}
-			if (column.getNullType() == NullType.No_Nulls) {
+			if (column.getNullType() == NullType.No_Nulls && (!domain || datatype.getNullType() != NullType.No_Nulls)) {
 				append(SPACE).append(NOT_NULL);
 			}
 		}
@@ -634,7 +730,8 @@ public class DDLStringVisitor {
 		StringBuilder options = new StringBuilder();
 		addCommonOptions(options, column);
 		
-		if (!column.getDatatype().isBuiltin()) {
+		if (!column.getDatatype().isBuiltin() && column.getDatatype().getType() != Datatype.Type.Domain) {
+		    //an enterprise type
 			addOption(options, UDT, column.getDatatype().getName() + "("+column.getLength()+ ", " +column.getPrecision()+", " + column.getScale()+ ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		}
 		
@@ -960,5 +1057,17 @@ public class DDLStringVisitor {
     		return sb.append("\n").toString() + buffer.toString(); //$NON-NLS-1$
     	}
         return buffer.toString();
+    }
+
+    public static String getDomainDDLString(Database database) {
+        DDLStringVisitor visitor = new DDLStringVisitor(null, null);
+        for (Datatype dt : database.getMetadataStore().getDatatypes().values()) {
+            if (dt.getType() != Datatype.Type.Domain) {
+                continue;
+            }
+            visitor.visit(dt);
+            visitor.append(SPACE);
+        }
+        return visitor.toString();
     }
 }

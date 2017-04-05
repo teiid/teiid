@@ -1,5 +1,0 @@
-/subsystem=resource-adapters/resource-adapter=ispnLibMode:add(module=org.jboss.teiid.resource-adapter.infinispan.libmode)
-/subsystem=resource-adapters/resource-adapter=ispnLibMode/connection-definitions=infinispanLibModeDS:add(jndi-name="${jndi.name}", class-name=org.teiid.resource.adapter.infinispan.libmode.InfinispanManagedConnectionFactory, enabled=true, use-java-context=true)
-/subsystem=resource-adapters/resource-adapter=ispnLibMode/connection-definitions=infinispanLibModeDS/config-properties=CacheTypeMap:add(value="${cache.type.map}")
-/subsystem=resource-adapters/resource-adapter=ispnLibMode/connection-definitions=infinispanLibModeDS/config-properties=CacheJndiName:add(value="${cache.jndi.name}")
-/subsystem=resource-adapters/resource-adapter=ispnLibMode:activate

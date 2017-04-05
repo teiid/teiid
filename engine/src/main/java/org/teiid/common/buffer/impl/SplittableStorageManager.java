@@ -162,5 +162,10 @@ public class SplittableStorageManager implements StorageManager {
     public StorageManager getStorageManager() {
 		return storageManager;
 	}
+    
+    @Override
+    public long getMaxStorageSpace() {
+        return storageManager.getMaxStorageSpace();
+    }
 
 }

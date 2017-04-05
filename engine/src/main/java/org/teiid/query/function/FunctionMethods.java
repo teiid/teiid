@@ -84,6 +84,7 @@ import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.ReaderInputStream;
 import org.teiid.core.util.StringUtil;
 import org.teiid.core.util.TimestampWithTimezone;
+import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.metadata.AbstractMetadataRecord;
@@ -1254,13 +1255,18 @@ public final class FunctionMethods {
 
 	// ================== Function = convert =====================
 
-	public static Object convert(Object src, String type)
+	public static Object convert(CommandContext context, Object src, String type)
 		throws FunctionExecutionException {
 		try {
-			return DataTypeManager.transformValue(src, DataTypeManager.getDataTypeClass(type));
+		    if (context == null || context.getMetadata() == null) {
+		        return DataTypeManager.transformValue(src, DataTypeManager.getDataTypeClass(type));
+		    }
+			return DataTypeManager.transformValue(src, context.getMetadata().getDataTypeClass(type));
 		} catch(TransformationException e) {
-			 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30405, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30405, new Object[]{src, DataTypeManager.getDataTypeName(src.getClass()), type}));
-		}
+			throw new FunctionExecutionException(QueryPlugin.Event.TEIID30405, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30405, new Object[]{src, DataTypeManager.getDataTypeName(src.getClass()), type}));
+		} catch (QueryMetadataException e) {
+		    throw new FunctionExecutionException(QueryPlugin.Event.TEIID30405, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30405, new Object[]{src, DataTypeManager.getDataTypeName(src.getClass()), type}));
+        }
 	}
 
     // ================== Function = context and rowlimit =====================
@@ -1566,7 +1572,7 @@ public final class FunctionMethods {
     }
     
     @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
-    public static Object node_id() {
+    public static String node_id() {
         return System.getProperty("jboss.node.name"); //$NON-NLS-1$
     }
     
@@ -1703,59 +1709,77 @@ public final class FunctionMethods {
 	}
 	
 	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM, determinism = Determinism.COMMAND_DETERMINISTIC)
-	public static int mvstatus(CommandContext context, String schemaName, String viewName, Boolean validity, String status, String action) throws FunctionExecutionException, SQLException, QueryMetadataException, TeiidComponentException {
-		if ((validity == null || !validity) && !MaterializationMetadataRepository.ErrorAction.IGNORE.name().equalsIgnoreCase(action)) {
-			if (MaterializationMetadataRepository.ErrorAction.THROW_EXCEPTION.name().equalsIgnoreCase(action)) {
-				throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31147, schemaName, viewName));
-			}
-			
-			Object id = context.getMetadata().getGroupID(schemaName + AbstractMetadataRecord.NAME_DELIM_CHAR + viewName);
-			String statusTable = context.getMetadata().getExtensionProperty(id, MaterializationMetadataRepository.MATVIEW_STATUS_TABLE, false);
-			
-			if (statusTable == null) {
-				throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31177, schemaName, viewName));
-			}
-			
-			//add quoting if needed, although this needs to be resolved to be fully correct
-			statusTable = SQLStringVisitor.getSQLString(new GroupSymbol(statusTable)).toString();
+	public static int mvstatus(CommandContext context, String schemaName, String viewName) throws FunctionExecutionException, SQLException, QueryMetadataException, TeiidComponentException {
+	    Object id = context.getMetadata().getGroupID(schemaName + AbstractMetadataRecord.NAME_DELIM_CHAR + viewName);
+        String statusTable = context.getMetadata().getExtensionProperty(id, MaterializationMetadataRepository.MATVIEW_STATUS_TABLE, false);
+        
+        if (statusTable == null) {
+            throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31177, schemaName, viewName));
+        }
+        
+        //add quoting if needed, although this needs to be resolved to be fully correct
+        statusTable = SQLStringVisitor.getSQLString(new GroupSymbol(statusTable)).toString();
 
-			String ownerVDB = context.getMetadata().getExtensionProperty(id, MaterializationMetadataRepository.MATVIEW_OWNER_VDB_NAME, false);
-			if (ownerVDB == null) {
-			    ownerVDB = context.getVdbName();
-			}
-			
-            String ownerVersion = context.getMetadata().getExtensionProperty(id, MaterializationMetadataRepository.MATVIEW_OWNER_VDB_VERSION, false);
-            if (ownerVersion == null) {
-                ownerVersion = context.getVdbVersion();
+        String ownerVDB = context.getMetadata().getExtensionProperty(id, MaterializationMetadataRepository.MATVIEW_OWNER_VDB_NAME, false);
+        if (ownerVDB == null) {
+            ownerVDB = context.getVdbName();
+        }
+        
+        String ownerVersion = context.getMetadata().getExtensionProperty(id, MaterializationMetadataRepository.MATVIEW_OWNER_VDB_VERSION, false);
+        if (ownerVersion == null) {
+            ownerVersion = context.getVdbVersion();
+        }
+        
+        String scope = context.getMetadata().getExtensionProperty(id, MaterializationMetadataRepository.MATVIEW_SHARE_SCOPE, false);
+        if (scope != null && Scope.valueOf(scope) == Scope.FULL) {
+            ownerVersion = "0"; //$NON-NLS-1$
+        }
+        
+        String action = context.getMetadata().getExtensionProperty(id, MaterializationMetadataRepository.MATVIEW_ONERROR_ACTION, false);
+
+        Boolean validity = null;
+        String status = null;
+
+	    PreparedStatement ps = null;
+        try {
+            Connection c = context.getConnection();
+            ps = c.prepareStatement("SELECT Valid, LoadState FROM "+statusTable+" WHERE VDBName = ? AND VDBVersion = ? AND SchemaName = ? AND Name = ?"); //$NON-NLS-1$ //$NON-NLS-2$
+            ps.setString(1, ownerVDB);
+            ps.setString(2, ownerVersion);
+            ps.setString(3, schemaName);
+            ps.setString(4, viewName);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                validity = rs.getBoolean(1);
+                if (validity) {
+                    return 1;
+                }
+                status = rs.getString(1);
             }
-            
-            String scope = context.getMetadata().getExtensionProperty(id, MaterializationMetadataRepository.MATVIEW_SHARE_SCOPE, false);
-            if (scope != null && Scope.valueOf(scope) == Scope.FULL) {
-                ownerVersion = "0";
+        } finally {
+            if (ps != null) {
+                ps.close();
             }
-			
-			PreparedStatement ps = null;
-			try {
-				Connection c = context.getConnection();
-				ps = c.prepareStatement("SELECT Valid, LoadState FROM "+statusTable+" WHERE VDBName = ? AND VDBVersion = ? AND SchemaName = ? AND Name = ?"); //$NON-NLS-1$ //$NON-NLS-2$
-				ps.setString(1, ownerVDB);
-				ps.setString(2, ownerVersion);
-				ps.setString(3, schemaName);
-				ps.setString(4, viewName);
-				ResultSet rs = ps.executeQuery();
-				if (rs.next()) {
-					if (rs.getBoolean(1)) {
-						return 1;
-					}
-				}
-			} finally {
-				if (ps != null) {
-					ps.close();
-				}
+        }
+	    
+	    boolean loading = status != null && DQPWorkContext.getWorkContext().isAdmin() && status.equals("LOADING"); //$NON-NLS-1$
+        String key = "mat_management_waits_" + schemaName + "." + viewName; //$NON-NLS-1$ //$NON-NLS-2$
+        if (!MaterializationMetadataRepository.ErrorAction.IGNORE.name().equalsIgnoreCase(action) || loading) {
+			if (!loading && MaterializationMetadataRepository.ErrorAction.THROW_EXCEPTION.name().equalsIgnoreCase(action)) {
+			    throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31147, schemaName, viewName));
 			}
-			context.getWorkItem().scheduleWork(10000);
+					
+			int spins = 0;
+			
+            Object value = context.getSessionVariable(key);
+			if (value instanceof Integer) {
+			    spins = (Integer)value;
+			}
+			context.getWorkItem().scheduleWork(100*(1<<Math.min(spins, 7)));
+			context.setSessionVariable(key, ++spins);
 			throw BlockedException.INSTANCE;
 		}
+        context.setSessionVariable(key, null);
 		return 1;
 	}	
 	

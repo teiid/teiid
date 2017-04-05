@@ -32,7 +32,11 @@ import java.util.concurrent.TimeUnit;
 import javax.script.ScriptEngineManager;
 
 import org.jboss.as.naming.deployment.ContextNames;
-import org.jboss.as.server.deployment.*;
+import org.jboss.as.server.deployment.Attachments;
+import org.jboss.as.server.deployment.DeploymentPhaseContext;
+import org.jboss.as.server.deployment.DeploymentUnit;
+import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
+import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.modules.ModuleClassLoader;
 import org.jboss.msc.service.*;
 import org.jboss.msc.service.ServiceController.Mode;
@@ -46,13 +50,19 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
-import org.teiid.deployers.*;
+import org.teiid.core.TeiidException;
+import org.teiid.deployers.RuntimeVDB;
+import org.teiid.deployers.TranslatorUtil;
+import org.teiid.deployers.UDFMetaData;
+import org.teiid.deployers.VDBRepository;
+import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.jboss.TeiidServiceNames.InvalidServiceNameException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.index.IndexMetadataRepository;
 import org.teiid.query.metadata.VDBResources;
+import org.teiid.runtime.EmbeddedServer;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.vdb.runtime.VDBKey;
 
@@ -121,6 +131,12 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		ModuleClassLoader classLoader = deploymentUnit.getAttachment(Attachments.MODULE).getClassLoader();
 		deployment.addAttchment(ClassLoader.class, classLoader);
 		deployment.addAttchment(ScriptEngineManager.class, new ScriptEngineManager(classLoader));
+		
+		try {
+            EmbeddedServer.createPreParser(deployment);
+        } catch (TeiidException e1) {
+            throw new DeploymentUnitProcessingException(e1);
+        }
 		
 		UDFMetaData udf = deploymentUnit.removeAttachment(TeiidAttachments.UDF_METADATA);
 		if (udf == null) {

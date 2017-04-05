@@ -114,7 +114,7 @@ public class NameInSourceResolverVisitor extends MappingVisitor {
             groupSymbol.setMetadataID(groupID);
    
             symbol.setGroupSymbol(groupSymbol);
-            symbol.setType(DataTypeManager.getDataTypeClass(metadata.getElementType(symbol.getMetadataID())));
+            symbol.setType(DataTypeManager.getDataTypeClass(metadata.getElementRuntimeTypeName(symbol.getMetadataID())));
             return symbol;
         } catch (QueryMetadataException e) {
              throw new TeiidRuntimeException(e);

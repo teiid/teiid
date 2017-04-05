@@ -107,6 +107,9 @@ public final class RuleCollapseSource implements OptimizerRule {
             		plan = removeUnnecessaryInlineView(plan, commandRoot);
             	}
                 QueryCommand queryCommand = createQuery(context, capFinder, accessNode, commandRoot);
+                if (commandRoot.hasCollectionProperty(Info.CHECK_MAT_VIEW)) {
+                    modifyToCheckMatViewStatus(metadata, queryCommand, (Set<Object>)commandRoot.getProperty(NodeConstants.Info.CHECK_MAT_VIEW));
+                }
                 Object modelId = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
                 
                 if (queryCommand instanceof Query 
@@ -183,7 +186,27 @@ public final class RuleCollapseSource implements OptimizerRule {
 		return plan;
 	}
 
-	/**
+	private void modifyToCheckMatViewStatus(QueryMetadataInterface metadata, QueryCommand queryCommand,
+            Set<Object> ids) throws QueryMetadataException, TeiidComponentException {
+	    for (Object viewMatadataId : ids) {
+            String schemaName = metadata.getName(metadata.getModelID(viewMatadataId));
+            String viewName = metadata.getName(viewMatadataId);
+
+            Expression expr1 = new Constant(schemaName);
+            Expression expr2 = new Constant(viewName); 
+
+            Function status = new Function("mvstatus", new Expression[] {expr1, expr2}); //$NON-NLS-1$
+            status.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+            FunctionDescriptor descriptor = 
+                    metadata.getFunctionLibrary().findFunction("mvstatus", new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING }); //$NON-NLS-1$
+            status.setFunctionDescriptor(descriptor);
+            Query query = queryCommand.getProjectedQuery();
+            //insert first so that it gets evaluated ahead of any false predicate
+            query.setCriteria(Criteria.combineCriteria(new CompareCriteria(status, CompareCriteria.EQ, new Constant(1)), query.getCriteria()));
+	    }
+    }
+
+    /**
 	 * This functions as "RulePushDistinct", however we do not bother
 	 * checking to see if a parent dup removal can actually be removed
 	 * - which can only happen if there are sources/selects/simple projects/limits/order by

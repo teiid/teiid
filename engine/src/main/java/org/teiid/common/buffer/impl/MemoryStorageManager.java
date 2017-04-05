@@ -157,16 +157,17 @@ public class MemoryStorageManager implements Cache<Long> {
 	}
 		
 	@Override
-	public boolean remove(Long gid, Long id) {
+	public Integer remove(Long gid, Long id) {
 		Map<Long, CacheEntry> group = groups.get(gid);
 		if (group != null) {
 			synchronized (group) {
-				int size = group.size();
-				group.remove(id);
-				return group.size() != size;
+				CacheEntry entry = group.remove(id);
+				if (entry != null) {
+				    return entry.getSizeEstimate();
+				}
 			}
 		}
-		return false;
+		return null;
 	}
 	
 	@Override
@@ -183,6 +184,16 @@ public class MemoryStorageManager implements Cache<Long> {
 	@Override
 	public void shutdown() {
 		
+	}
+	
+	@Override
+	public long getMaxStorageSpace() {
+	    return Runtime.getRuntime().maxMemory();
+	}
+	
+	@Override
+	public long getMemoryBufferSpace() {
+	    return 0;
 	}
 	
 }

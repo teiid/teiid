@@ -25,14 +25,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.bson.types.Binary;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.metadata.*;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.mongodb.MongoDBConnection;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
+import org.teiid.translator.TranslatorProperty.PropertyType;
 
 import com.mongodb.*;
 
@@ -48,26 +53,41 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
     private static final String TOP_LEVEL_DOC = "TOP_LEVEL_DOC"; //$NON-NLS-1$
     private static final String ASSOSIATION = "ASSOSIATION"; //$NON-NLS-1$
 
+    private Pattern excludeTables;
+    private Pattern includeTables;
+    
     @Override
     public void process(MetadataFactory metadataFactory, MongoDBConnection connection) throws TranslatorException {
         DB db = connection.getDatabase();
         for (String tableName:db.getCollectionNames()) {
             
-            DBCollection collection = db.getCollection(tableName);
-            DBCursor cursor = collection.find();
-            while(cursor.hasNext()) {
-                BasicDBObject row = (BasicDBObject)cursor.next();
-                if (row == null) {
-                    continue;
-                }
-                Table table = addTable(metadataFactory, tableName, row);   
-                if (table != null) {
-                    // top level documents can not be seen as merged
-                    table.setProperty(TOP_LEVEL_DOC, String.valueOf(Boolean.TRUE));                    
-                    break;
-                }                
+            if (getExcludeTables() != null && shouldExclude(tableName)) {
+                continue;
             }
-            cursor.close();
+
+            if (getIncludeTables() != null && !shouldInclude(tableName)) {
+                continue;
+            }
+            
+            try {
+                DBCollection collection = db.getCollection(tableName);
+                DBCursor cursor = collection.find();
+                while(cursor.hasNext()) {
+                    BasicDBObject row = (BasicDBObject)cursor.next();
+                    if (row == null) {
+                        continue;
+                    }
+                    Table table = addTable(metadataFactory, tableName, row);   
+                    if (table != null) {
+                        // top level documents can not be seen as merged
+                        table.setProperty(TOP_LEVEL_DOC, String.valueOf(Boolean.TRUE));                    
+                        break;
+                    }                
+                }
+                cursor.close();
+            } catch (MongoException e) {
+                LogManager.logWarning(LogConstants.CTX_CONNECTOR, MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18037, e));
+            }
         }
 
         for (Table table:metadataFactory.getSchema().getTables().values()) {
@@ -249,5 +269,37 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
         	column.setNativeType(org.bson.types.ObjectId.class.getName());
         	column.setAutoIncremented(true);
         }		
-	}    
+	}
+    
+    @TranslatorProperty(display="Exclude Tables", category=PropertyType.IMPORT, description="A case-insensitive regular expression that when matched against a fully qualified Teiid table name will exclude it from import.  Applied after table names are retrieved.  Use a negative look-ahead (?!<inclusion pattern>).* to act as an inclusion filter.")
+    public String getExcludeTables() {
+        if (this.excludeTables == null) {
+            return null;
+        }
+        return this.excludeTables.pattern();
+    }
+    
+    protected boolean shouldExclude(String fullName) {
+        return excludeTables != null && excludeTables.matcher(fullName).matches();
+    }
+    
+    public void setExcludeTables(String excludeTables) {
+        this.excludeTables = Pattern.compile(excludeTables, Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
+    }
+    
+    @TranslatorProperty(display="Include Tables", category=PropertyType.IMPORT, description="A case-insensitive regular expression that when matched against a fully qualified Teiid table name will include it from import.  Applied after table names are retrieved.  Use a negative look-ahead (?!<inclusion pattern>).* to act as an exclusion filter")
+    public String getIncludeTables() {
+        if (this.includeTables == null) {
+            return null;
+        }
+        return this.includeTables.pattern();
+    }
+    
+    protected boolean shouldInclude(String fullName) {
+        return includeTables != null && includeTables.matcher(fullName).matches();
+    }
+    
+    public void setIncludeTables(String tableNamePattern) {
+        this.includeTables = Pattern.compile(tableNamePattern, Pattern.DOTALL | Pattern.CASE_INSENSITIVE);;
+    }    
 }

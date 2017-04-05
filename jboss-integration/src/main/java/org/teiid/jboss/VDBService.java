@@ -307,16 +307,15 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 				}
 				
 				// designer based models define data types based on their built in data types, which are system vdb data types
-				Map<String, Datatype> datatypes = getVDBRepository().getRuntimeTypeMap();
-				Map<String, Datatype> builtin = getVDBRepository().getSystemStore().getDatatypes();
+				Map<String, Datatype> datatypes = vdbMetadataStore.getDatatypes();
 				final File cachedFile = getSerializer().buildModelFile(vdb, model.getName());
 				MetadataFactory factory = getSerializer().loadSafe(cachedFile, MetadataFactory.class);
 				if (factory != null) {
-					factory.correctDatatypes(datatypes, builtin);
+					factory.correctDatatypes(datatypes);
 					cached = true;
 					LogManager.logDetail(LogConstants.CTX_RUNTIME, "Model ", model.getName(), "in VDB ", vdb.getName(), " was loaded from cached metadata"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				} else {
-					factory = createMetadataFactory(vdb, model, vdbResources.getEntriesPlusVisibilities());
+					factory = createMetadataFactory(vdb, vdbMetadataStore, model, vdbResources.getEntriesPlusVisibilities());
 					ExecutionFactory ef = null;
 					Object cf = null;
 					
@@ -343,7 +342,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 							LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50030,vdb.getName(), vdb.getVersion(), model.getName(), SimpleDateFormat.getInstance().format(new Date())));
 							break;
 						} catch (Exception e) {
-							factory = createMetadataFactory(vdb, model, vdbResources.getEntriesPlusVisibilities());
+							factory = createMetadataFactory(vdb, vdbMetadataStore, model, vdbResources.getEntriesPlusVisibilities());
 							ex = e;
 						} finally {
 						    Thread.currentThread().setContextClassLoader(originalCL);

@@ -62,7 +62,7 @@ public class TestMultiSourceMetadataWrapper {
         assertEquals(wrapper.getModelID(groupID), wrapper.getModelID(instanceElementID));
         assertEquals(null, wrapper.getDefaultValue(instanceElementID));
         assertEquals(255, wrapper.getElementLength(instanceElementID));
-        assertEquals(DataTypeManager.DefaultDataTypes.STRING, wrapper.getElementType(instanceElementID)); 
+        assertEquals(DataTypeManager.DefaultDataTypes.STRING, wrapper.getElementRuntimeTypeName(instanceElementID)); 
         assertEquals(new Properties(), wrapper.getExtensionProperties(instanceElementID));
         assertEquals(null, wrapper.getNameInSource(instanceElementID));
         assertEquals(null, wrapper.getNativeType(instanceElementID));

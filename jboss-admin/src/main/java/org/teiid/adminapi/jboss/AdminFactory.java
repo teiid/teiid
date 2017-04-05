@@ -2052,13 +2052,6 @@ public class AdminFactory {
         public String getSchema(String vdbName, String vdbVersion,
                 String modelName, EnumSet<SchemaObjectType> allowedTypes,
                 String typeNamePattern) throws AdminException {
-            return getSchema(vdbName, vdbVersion, modelName, allowedTypes, typeNamePattern, ExportFormat.XML);
-        }		
-        
-		@Override
-		public String getSchema(String vdbName, String vdbVersion,
-				String modelName, EnumSet<SchemaObjectType> allowedTypes,
-				String typeNamePattern, ExportFormat format) throws AdminException {
 			ModelNode request = null;
 
 			ArrayList<String> params = new ArrayList<String>();
@@ -2066,13 +2059,8 @@ public class AdminFactory {
 			params.add(vdbName);
 			params.add("vdb-version");
 			params.add(vdbVersion);
-			if (modelName != null) {
-    			params.add("model-name");
-    			params.add(modelName);
-			}
-            params.add("format");
-            params.add(format.name());
-
+			params.add("model-name");
+			params.add(modelName);
 			
 			if (allowedTypes != null) {
 				params.add("entity-type");

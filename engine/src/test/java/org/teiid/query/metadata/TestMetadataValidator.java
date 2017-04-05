@@ -66,7 +66,6 @@ public class TestMetadataValidator {
 		DDLMetadataRepository repo = new DDLMetadataRepository();
 		MetadataFactory mf = new MetadataFactory("myVDB",1, modelName, TestDDLParser.getDataTypes(), new Properties(), ddl);
 		mf.setParser(QueryParser.getQueryParser());
-		mf.setBuiltinDataTypes(SystemMetadata.getInstance().getSystemStore().getDatatypes());
 		mf.getSchema().setPhysical(physical);
 		repo.loadMetadata(mf, null, null, ddl);
 		mf.mergeInto(store);
@@ -320,7 +319,7 @@ public class TestMetadataValidator {
 		String ddl = "CREATE FOREIGN TABLE G1(e1 integer, e2 varchar);"
 				+ "create foreign table status (VDBNAME STRING, VDBVERSION STRING, "
 				+ " SCHEMANAME STRING, NAME STRING, TARGETSCHEMANAME STRING, TARGETNAME STRING, "
-				+ " VALID BOOLEAN, LOADSTATE STRING, CARDINALITY LONG, UPDATED TIMESTAMP, LOADNUMBER LONG)";
+				+ " VALID BOOLEAN, LOADSTATE STRING, CARDINALITY LONG, UPDATED TIMESTAMP, LOADNUMBER LONG, NODENAME STRING, STALECOUNT LONG)";
 		String ddl2 = "CREATE VIEW G2 OPTIONS (MATERIALIZED 'true', MATERIALIZED_TABLE 'pm1.G1', \"teiid_rel:MATVIEW_STATUS_TABLE\" 'pm1.status', \"teiid_rel:MATVIEW_LOAD_SCRIPT\" 'begin end') AS SELECT * FROM pm1.G1";		
 		
 		buildModel("pm1", true, this.vdb, this.store, ddl);
@@ -340,7 +339,7 @@ public class TestMetadataValidator {
 		String ddl = "CREATE FOREIGN TABLE G1(e2 varchar);"
 				+ "create foreign table status (VDBNAME STRING, VDBVERSION STRING, "
 				+ " SCHEMANAME STRING, NAME STRING, TARGETSCHEMANAME STRING, TARGETNAME STRING, "
-				+ " VALID BOOLEAN, LOADSTATE STRING, CARDINALITY LONG, UPDATED TIMESTAMP, LOADNUMBER LONG)";
+				+ " VALID BOOLEAN, LOADSTATE STRING, CARDINALITY LONG, UPDATED TIMESTAMP, LOADNUMBER LONG, NODENAME STRING, STALECOUNT LONG)";
 		String ddl2 = "CREATE VIEW G2 (e1 integer, e2 varchar) OPTIONS (MATERIALIZED 'true', MATERIALIZED_TABLE 'pm1.G1', \"teiid_rel:MATVIEW_STATUS_TABLE\" 'pm1.status', \"teiid_rel:MATVIEW_LOAD_SCRIPT\" 'begin end') AS SELECT 1, 'a' FROM pm1.G1";		
 		
 		buildModel("pm1", true, this.vdb, this.store, ddl);
@@ -358,7 +357,7 @@ public class TestMetadataValidator {
 		String ddl = "CREATE FOREIGN TABLE G1(e1 integer, e2 integer);"
 				+ "create foreign table status (VDBNAME STRING, VDBVERSION STRING, "
 				+ " SCHEMANAME STRING, NAME STRING, TARGETSCHEMANAME STRING, TARGETNAME STRING, "
-				+ " VALID BOOLEAN, LOADSTATE STRING, CARDINALITY LONG, UPDATED TIMESTAMP, LOADNUMBER LONG)";
+				+ " VALID BOOLEAN, LOADSTATE STRING, CARDINALITY LONG, UPDATED TIMESTAMP, LOADNUMBER LONG, NODENAME STRING, STALECOUNT STRING)";
 		String ddl2 = "CREATE VIEW G2 (e1 integer, e2 varchar) OPTIONS (MATERIALIZED 'true', MATERIALIZED_TABLE 'pm1.G1', \"teiid_rel:MATVIEW_STATUS_TABLE\" 'pm1.status', \"teiid_rel:MATVIEW_LOAD_SCRIPT\" 'begin end') AS SELECT 1, 'a' FROM pm1.G1";		
 		
 		buildModel("pm1", true, this.vdb, this.store, ddl);

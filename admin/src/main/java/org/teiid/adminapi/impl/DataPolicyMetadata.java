@@ -189,6 +189,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         private String resourceName;
         protected byte bits;
         protected byte bitsSet;
+        private ResourceType resourceType;
         
         private RowSecurityState rowSecurityState;
         
@@ -199,6 +200,15 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 
         public void setResourceName(String value) {
             this.resourceName = value;
+        }
+        
+        public void setResourceType(ResourceType resourceType) {
+            this.resourceType = resourceType;
+        }
+        
+        @Override
+        public ResourceType getResourceType() {
+            return resourceType;
         }
 
         @Override
