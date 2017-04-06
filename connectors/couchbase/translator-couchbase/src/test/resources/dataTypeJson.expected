@@ -1,0 +1,32 @@
+SET NAMESPACE 'http://www.teiid.org/translator/couchbase/2017' AS teiid_couchbase;
+
+CREATE FOREIGN TABLE test (
+	documentID string OPTIONS (UPDATABLE FALSE),
+	attr_double double OPTIONS (NAMEINSOURCE '`test`.`attr_double`'),
+	attr_jsonObject_key string OPTIONS (NAMEINSOURCE '`test`.`attr_jsonObject`.`key`'),
+	attr_string string OPTIONS (NAMEINSOURCE '`test`.`attr_string`'),
+	attr_long long OPTIONS (NAMEINSOURCE '`test`.`attr_long`'),
+	attr_null string OPTIONS (NAMEINSOURCE '`test`.`attr_null`'),
+	attr_integer integer OPTIONS (NAMEINSOURCE '`test`.`attr_integer`'),
+	attr_boolean boolean OPTIONS (NAMEINSOURCE '`test`.`attr_boolean`'),
+	attr_bigDecimal bigdecimal OPTIONS (NAMEINSOURCE '`test`.`attr_bigDecimal`'),
+	attr_bigInteger biginteger OPTIONS (NAMEINSOURCE '`test`.`attr_bigInteger`'),
+	Name string OPTIONS (NAMEINSOURCE '`test`.`Name`'),
+	CONSTRAINT PK0 PRIMARY KEY(documentID)
+) OPTIONS (NAMEINSOURCE '`test`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false');
+
+CREATE FOREIGN TABLE test_attr_jsonArray (
+	documentID string OPTIONS (UPDATABLE FALSE),
+	test_attr_jsonArray_idx integer OPTIONS (UPDATABLE FALSE),
+	test_attr_jsonArray object OPTIONS (NAMEINSOURCE '`test`.`attr_jsonArray`[]'),
+	test_attr_jsonArray_key string OPTIONS (NAMEINSOURCE '`test`.`attr_jsonArray`[].`key`'),
+	FOREIGN KEY(documentID) REFERENCES test 
+) OPTIONS (NAMEINSOURCE '`test`.`attr_jsonArray`[]', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'true');
+
+CREATE FOREIGN TABLE test_attr_jsonArray_dim2 (
+	documentID string OPTIONS (UPDATABLE FALSE),
+	test_attr_jsonArray_idx integer OPTIONS (UPDATABLE FALSE),
+	test_attr_jsonArray_dim2_idx integer OPTIONS (UPDATABLE FALSE),
+	test_attr_jsonArray_dim2 string OPTIONS (NAMEINSOURCE '`test`.`attr_jsonArray`[][]'),
+	FOREIGN KEY(documentID) REFERENCES test 
+) OPTIONS (NAMEINSOURCE '`test`.`attr_jsonArray`[][]', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'true');

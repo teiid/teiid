@@ -1,0 +1,36 @@
+SET NAMESPACE 'http://www.teiid.org/translator/couchbase/2017' AS teiid_couchbase;
+
+CREATE FOREIGN TABLE Customer (
+	documentID string OPTIONS (UPDATABLE FALSE),
+	ID string OPTIONS (NAMEINSOURCE '`test`.`ID`'),
+	type string OPTIONS (NAMEINSOURCE '`test`.`type`'),
+	Name string OPTIONS (NAMEINSOURCE '`test`.`Name`'),
+	CONSTRAINT PK0 PRIMARY KEY(documentID)
+) OPTIONS (NAMEINSOURCE '`test`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false', "teiid_couchbase:NAMEDTYPEPAIR" '`type`:''Customer''');
+
+CREATE FOREIGN TABLE Customer_SavedAddresses (
+	documentID string OPTIONS (UPDATABLE FALSE),
+	Customer_SavedAddresses_idx integer OPTIONS (UPDATABLE FALSE),
+	Customer_SavedAddresses string OPTIONS (NAMEINSOURCE '`test`.`SavedAddresses`[]'),
+	FOREIGN KEY(documentID) REFERENCES Customer 
+) OPTIONS (NAMEINSOURCE '`test`.`SavedAddresses`[]', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'true');
+
+CREATE FOREIGN TABLE Oder (
+	documentID string OPTIONS (UPDATABLE FALSE),
+	CustomerID string OPTIONS (NAMEINSOURCE '`test`.`CustomerID`'),
+	type string OPTIONS (NAMEINSOURCE '`test`.`type`'),
+	CreditCard_CardNumber string OPTIONS (NAMEINSOURCE '`test`.`CreditCard`.`CardNumber`'),
+	CreditCard_Type string OPTIONS (NAMEINSOURCE '`test`.`CreditCard`.`Type`'),
+	CreditCard_CVN integer OPTIONS (NAMEINSOURCE '`test`.`CreditCard`.`CVN`'),
+	CreditCard_Expiry string OPTIONS (NAMEINSOURCE '`test`.`CreditCard`.`Expiry`'),
+	Name string OPTIONS (NAMEINSOURCE '`test`.`Name`'),
+	CONSTRAINT PK0 PRIMARY KEY(documentID)
+) OPTIONS (NAMEINSOURCE '`test`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false', "teiid_couchbase:NAMEDTYPEPAIR" '`type`:''Oder''');
+
+CREATE FOREIGN TABLE Oder_Items (
+	documentID string OPTIONS (UPDATABLE FALSE),
+	Oder_Items_idx integer OPTIONS (UPDATABLE FALSE),
+	Oder_Items_Quantity integer OPTIONS (NAMEINSOURCE '`test`.`Items`[].`Quantity`'),
+	Oder_Items_ItemID integer OPTIONS (NAMEINSOURCE '`test`.`Items`[].`ItemID`'),
+	FOREIGN KEY(documentID) REFERENCES Oder 
+) OPTIONS (NAMEINSOURCE '`test`.`Items`[]', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'true');
