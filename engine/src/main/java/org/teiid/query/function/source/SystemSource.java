@@ -177,6 +177,9 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
 		addFormatTimestampFunction();  
 		addFormatNumberFunctions();
 		
+		// gap function
+		addGapFunction();
+		
 		// parse
 		addParseTimestampFunction();
 		addParseNumberFunctions();
@@ -969,6 +972,16 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
         functions.add(nvl); 
 	}
 			
+	private void addGapFunction() {
+		functions.add(
+			new FunctionMethod(SourceSystemFunctions.GAP, QueryPlugin.Util.getString("SystemSource.Formattimestamp_desc"),CONVERSION, FUNCTION_CLASS, "format", //$NON-NLS-1$ //$NON-NLS-2$
+				new FunctionParameter[] { 
+					new FunctionParameter("timestamp", DataTypeManager.DefaultDataTypes.TIMESTAMP, QueryPlugin.Util.getString("SystemSource.Formattimestamp_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
+					new FunctionParameter("gap", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Formattimestamp_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
+				new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Formattimestamp_result_desc")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
+
+	}
+	
 	private void addFormatTimestampFunction() {
 		functions.add(
 			new FunctionMethod(SourceSystemFunctions.FORMATTIMESTAMP, QueryPlugin.Util.getString("SystemSource.Formattimestamp_desc"),CONVERSION, FUNCTION_CLASS, "format", //$NON-NLS-1$ //$NON-NLS-2$

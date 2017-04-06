@@ -250,4 +250,6 @@ public class SourceSystemFunctions {
     public static final String ST_MAKEENVELOPE = "st_makeenvelope"; //$NON-NLS-1$
     public static final String ST_SNAPTOGRID = "st_snaptogrid"; //$NON-NLS-1$
 	
+	public static final String GAP = "gap"; //$NON-NLS-1$
+	
 }

@@ -49,8 +49,6 @@ public class SolrExecutionFactory extends ExecutionFactory<ConnectionFactory, So
         registerFunctionModifier("*", new AliasModifier("product"));//$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier("/", new AliasModifier("div"));//$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier(SourceSystemFunctions.POWER, new AliasModifier("pow"));//$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, new DateFunctionModifier());
-        registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new DateFunctionModifier());
         setTransactionSupport(TransactionSupport.NONE);
 		
 	}
@@ -84,8 +82,7 @@ public class SolrExecutionFactory extends ExecutionFactory<ConnectionFactory, So
         supportedFunctions.add(SourceSystemFunctions.ABS);
         supportedFunctions.add(SourceSystemFunctions.LOG);
         supportedFunctions.add(SourceSystemFunctions.SQRT);
-        supportedFunctions.add(SourceSystemFunctions.PARSETIMESTAMP);
-        supportedFunctions.add(SourceSystemFunctions.FORMATTIMESTAMP);
+        supportedFunctions.add(SourceSystemFunctions.GAP);
         return supportedFunctions;
     }
     
@@ -223,6 +220,7 @@ public class SolrExecutionFactory extends ExecutionFactory<ConnectionFactory, So
 	public boolean supportsGroupBy() {
 		return true;
 	}
+	
 
 	@Override
 	public boolean returnsSingleUpdateCount() {
