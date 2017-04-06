@@ -72,7 +72,6 @@ connect
 /subsystem=teiid/translator=salesforce:add(module=org.jboss.teiid.translator.salesforce)
 /subsystem=teiid/translator=salesforce-34:add(module=org.jboss.teiid.translator.salesforce-34)
 /subsystem=teiid/translator=hive:add(module=org.jboss.teiid.translator.hive)
-/subsystem=teiid/translator=map-cache:add(module=org.jboss.teiid.translator.object)
 /subsystem=teiid/translator=google-spreadsheet:add(module=org.jboss.teiid.translator.google)
 /subsystem=teiid/translator=odata:add(module=org.jboss.teiid.translator.odata)
 /subsystem=teiid/translator=sap-gateway:add(module=org.jboss.teiid.translator.odata)

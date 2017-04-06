@@ -48,7 +48,6 @@
         <translator name="salesforce-34" module="org.jboss.teiid.translator.salesforce-34"/>
         <translator name="hive" module="org.jboss.teiid.translator.hive"/>
         <translator name="jpa2" module="org.jboss.teiid.translator.jpa"/>
-        <translator name="map-cache" module="org.jboss.teiid.translator.object"/>
         <translator name="odata" module="org.jboss.teiid.translator.odata"/>
         <translator name="sap-gateway" module="org.jboss.teiid.translator.odata"/>
         <translator name="sap-nw-gateway" module="org.jboss.teiid.translator.odata"/>
