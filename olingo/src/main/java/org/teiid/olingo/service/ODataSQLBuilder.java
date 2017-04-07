@@ -505,7 +505,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                     info.getKeyPredicates(), this.metadata, this.odata, this.nameGenerator,
                     true, getUriInfo(), parseService);
 
-            this.context.joinTable(joinResource, property.isCollection(), JoinType.JOIN_INNER);
+            this.context.joinTable(joinResource, property, JoinType.JOIN_INNER);
             // In the context of canonical queries if key predicates are available then do not set the criteria 
             if (joinResource.getCriteria() == null) {
                 joinResource.addCriteria(this.context.getCriteria());

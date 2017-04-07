@@ -106,7 +106,7 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
                 info.getKeyPredicates());
         
         if (property.isCollection()) {
-            ForeignKey fk = DocumentNode.joinFK(referenceTable, this.updateTable);
+            ForeignKey fk = DocumentNode.joinFK(referenceTable, this.updateTable, property);
             referenceTable.setFk(fk);
             
             ScopedTable temp = this.updateTable;
@@ -115,7 +115,7 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
             this.collection = true;
         }
         else {
-            ForeignKey fk = DocumentNode.joinFK(this.updateTable, referenceTable);
+            ForeignKey fk = DocumentNode.joinFK(this.updateTable, referenceTable, property);
             this.updateTable.setFk(fk);
         }
     }    
