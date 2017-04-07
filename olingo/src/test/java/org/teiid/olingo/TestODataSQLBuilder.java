@@ -126,8 +126,14 @@ public class TestODataSQLBuilder {
             "   id integer PRIMARY KEY, " +
             "   customerid integer, " +
             "   place varchar(10), "+
-            "   FOREIGN KEY (customerid) REFERENCES Customers(id)"+
-            ");";
+            "   FOREIGN KEY (customerid) REFERENCES Customers(id));" +
+            "CREATE FOREIGN TABLE EmployeeEntity (\n" + 
+            "  EmployeeID integer primary key,\n" + 
+            "  Delegate integer," +
+            "  DeputyDelegate integer," +
+            " CONSTRAINT delegates FOREIGN KEY (Delegate) REFERENCES EmployeeEntity(EmployeeID)," +
+            " CONSTRAINT deputyDelegates FOREIGN KEY (DeputyDelegate) REFERENCES EmployeeEntity(EmployeeID)"
+            + ");\n";
     
     static class QueryState extends BaseState {
         List<SQLParameter> parameters;
@@ -814,6 +820,15 @@ public class TestODataSQLBuilder {
 
         helpTest("/odata4/vdb/PM1/G1(0)/G4_FKX", "SELECT g1.e1, g1.e2 FROM PM1.G1 AS g0 "
                 + "INNER JOIN PM1.G4 AS g1 ON g0.e2 = g1.e2 WHERE g0.e2 = 0 ORDER BY g1.e1");
+    }
+    
+    @Test
+    public void testSelfNavigation() throws Exception {
+        helpTest("/odata4/vdb/PM1/EmployeeEntity(3)/deputyDelegates", "SELECT g1.EmployeeID, g1.Delegate, g1.DeputyDelegate "
+                + "FROM PM1.EmployeeEntity AS g0 INNER JOIN PM1.EmployeeEntity AS g1 ON g1.EmployeeID = g0.DeputyDelegate WHERE g0.EmployeeID = 3 ORDER BY g1.EmployeeID");
+
+        helpTest("/odata4/vdb/PM1/EmployeeEntity(3)/delegates", "SELECT g1.EmployeeID, g1.Delegate, g1.DeputyDelegate "
+                + "FROM PM1.EmployeeEntity AS g0 INNER JOIN PM1.EmployeeEntity AS g1 ON g1.EmployeeID = g0.Delegate WHERE g0.EmployeeID = 3 ORDER BY g1.EmployeeID");
     }
     
     @Test
