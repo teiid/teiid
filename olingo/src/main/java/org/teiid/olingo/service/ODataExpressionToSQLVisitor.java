@@ -488,10 +488,10 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             Criteria criteria = null;
             ForeignKey fk = null;
             if (info.isCollection()) {
-                fk = DocumentNode.joinFK(navigationResource, this.ctxQuery);    
+                fk = DocumentNode.joinFK(navigationResource, this.ctxQuery, info.getProperty());    
             }
             else {
-                fk = DocumentNode.joinFK(this.ctxQuery, navigationResource);
+                fk = DocumentNode.joinFK(this.ctxQuery, navigationResource, info.getProperty());
             }
             
             if (fk != null) {

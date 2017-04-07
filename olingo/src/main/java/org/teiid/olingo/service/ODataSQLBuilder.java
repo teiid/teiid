@@ -204,7 +204,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                         property, this.metadata, this.odata, this.nameGenerator, true,
                         getUriInfo(), this.parseService);
                 
-                this.context.joinTable(expandResource, property.isCollection(), JoinType.JOIN_LEFT_OUTER);
+                this.context.joinTable(expandResource, property, JoinType.JOIN_LEFT_OUTER);
                 
                 // process $filter
                 if (ei.getFilterOption() != null) {
@@ -400,7 +400,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                     info.getKeyPredicates(), this.metadata, this.odata, this.nameGenerator,
                     true, getUriInfo(), parseService);
 
-            this.context.joinTable(joinResource, property.isCollection(), JoinType.JOIN_INNER);
+            this.context.joinTable(joinResource, property, JoinType.JOIN_INNER);
             // In the context of canonical queries if key predicates are available then do not set the criteria 
             if (joinResource.getCriteria() == null) {
                 joinResource.addCriteria(this.context.getCriteria());
@@ -544,7 +544,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                     navProperty, this.metadata, this.odata, this.nameGenerator,
                     this.aliasedGroups, getUriInfo(), this.parseService);
                     
-            resource.joinTable(joinResource, navProperty.isCollection(), JoinType.JOIN_INNER);
+            resource.joinTable(joinResource, navProperty, JoinType.JOIN_INNER);
             // In the context of canonical queries if key predicates are available then do not set the criteria 
             if (joinResource.getCriteria() == null) {
                 joinResource.addCriteria(resource.getCriteria());
