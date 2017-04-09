@@ -29,6 +29,8 @@ import static org.teiid.language.visitor.SQLStringVisitor.getRecordName;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -72,6 +74,11 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	private RuntimeMetadata metadata;
 	protected StringBuilder buffer = new StringBuilder();
 	private List<String> fieldNameList = new ArrayList<String>();
+	private List<String> fieldNameListWithNoCount = new ArrayList<String>();
+	private int timestampCount = 0;
+	
+	private boolean inComparison = false;
+	
 	protected Stack<String> onGoingExpression  = new Stack<String>();
 	private boolean limitInUse;
 	private SolrQuery query = new SolrQuery();
@@ -98,6 +105,13 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	private static final String MONTH_FORMAT = "MM";
 	private static final String MONTH = "MONTH";
 	private static final String YEAR = "YEAR";
+	
+	private boolean moreThanOneTimestamp = false;
+	private static final String ONLY_ONE_TIMESTAMP_IS_ALLOWED = "\n Only one timestamp is allowed in both select and groupby clauses ";
+	
+	private boolean parametersDontMatch = false;
+	private static final String PARAMETERS_DONT_MATCH = "\n Parameters must be the same in both the select and group by clauses  ";
+	
 	//private boolean invalidLiteralPositionException = false;
 	//private static final String INVALID_LITERAL_POSITION_MSG = "\n No literals are allowed except in the where clause as in form of => \n BETWEEN 'yyyy-MM-dd HH:mm:ss' AND 'yyyy-MM-dd HH:mm:ss' \n  -or- \n columnName = 'value'";
 	
@@ -117,7 +131,8 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	}
 
 	@Override
-	public void visit(DerivedColumn obj) {		
+	public void visit(DerivedColumn obj) {	
+		
 		visitNode(obj.getExpression());
 		
 		String expr = this.onGoingExpression.pop();
@@ -127,6 +142,9 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 		
 		query.addField(expr);
 		fieldNameList.add(expr);
+		if(!this.countStarInUse) {
+			this.fieldNameListWithNoCount.add(expr);
+		}
 	}
 
 	public static String getColumnName(ColumnReference obj) {
@@ -155,6 +173,9 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 		}
 		
 		if(obj.getType().equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
+			if(!this.inComparison) {
+				this.timestampCount++;
+			}
 			this.onGoingExpression.add(0, columnName);
 		} else {
 			this.onGoingExpression.push(columnName);
@@ -174,6 +195,7 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	 */
 	@Override
 	public void visit(Comparison obj) {		
+		this.inComparison = true;
 		visitNode(obj.getLeftExpression());
 		String lhs = this.onGoingExpression.pop();
 		
@@ -426,11 +448,23 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	@Override
 	public void visit(GroupBy obj) {
 		
+		this.inComparison = false;
+		
 		String timeGap = this.timeGap;
 		ColumnReference column = this.column;
 		StringBuilder facetFields = new StringBuilder();
-
+		
+		if(this.timestampCount > 1) {
+			this.moreThanOneTimestamp = true;
+		}
+		this.timestampCount = 0;
+		
 		visitNodes(obj.getElements());
+		
+		if(this.timestampCount > 1) {
+			this.moreThanOneTimestamp = true;
+		}
+		this.timestampCount = 0;
 		
 		//method in group by doesn't match that in the select clause
 		if( (timeGap != null && timeGap != this.timeGap) || (column != null && column.getName() != this.column.getName()) ) {
@@ -438,7 +472,9 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 		}
 		
 		Stack<String> reversedOnGoingExpression = reverseOnGoingExpression(this.onGoingExpression);
-
+		
+		this.compareSelectAndGroupByParameters(this.fieldNameListWithNoCount, reversedOnGoingExpression);
+		
 		String facetField = reversedOnGoingExpression.pop();
 		this.query.setFacet(true);
 
@@ -461,6 +497,28 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 			this.query.addFacetPivotField(facetFields.toString());
 		}
 		this.query.setFacetMissing(true);
+	}
+	
+	private void compareSelectAndGroupByParameters(List<String> selectFieldNames, Stack<String> groupByFieldNames) {
+		try{
+			List<String> tempSelectFields = new ArrayList<String>(selectFieldNames); 
+			Stack<String> tempGroupByFields = (Stack<String>) groupByFieldNames.clone();
+			Collections.sort(tempSelectFields);
+			Collections.sort(tempGroupByFields);
+			
+			if(tempSelectFields.size() != tempGroupByFields.size()) {
+				this.parametersDontMatch = true;
+			} else {
+				for(int i=0; i<tempSelectFields.size(); i++) {
+					if(!tempSelectFields.get(i).equals(tempGroupByFields.get(i))) {
+						this.parametersDontMatch = true;
+						break;
+					}
+				}
+			}
+		} catch(Exception e) {
+			this.parametersDontMatch = true;
+		}
 	}
 	
 	/**
@@ -514,7 +572,14 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 			errorMsg += DATE_RANGE_MISSING_MSG;
 			errorFlag = true;
 		}
-		
+		if(this.moreThanOneTimestamp) {
+			errorMsg += ONLY_ONE_TIMESTAMP_IS_ALLOWED;
+			errorFlag = true;
+		}
+		if(this.parametersDontMatch) {
+			errorMsg += PARAMETERS_DONT_MATCH;
+			errorFlag = true;
+		}
 		if(errorFlag) {
 			throw new TranslatorException(errorMsg);
 		}
