@@ -50,6 +50,7 @@ public class SolrExecutionFactory extends ExecutionFactory<ConnectionFactory, So
         registerFunctionModifier("/", new AliasModifier("div"));//$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier(SourceSystemFunctions.POWER, new AliasModifier("pow"));//$NON-NLS-1$
         setTransactionSupport(TransactionSupport.NONE);
+        addPushDownFunction("SOLR", "GAP", TypeFacility.RUNTIME_NAMES.TIMESTAMP, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING);
 		
 	}
 	
