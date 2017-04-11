@@ -89,14 +89,14 @@ public class N1QLVisitor extends SQLStringVisitor{
     private AliasGenerator columnAliasGenerator;
     private AliasGenerator tableAliasGenerator;
     
-    private boolean isArrayTable = false;
+    protected boolean isArrayTable = false;
     private List<CBColumn> letStack = new ArrayList<>();
     private List<CBColumn> unrelatedStack = new ArrayList<>();
     
     private List<CBColumn> tmpStack = new ArrayList<>();
     
-    private String typedName = null;
-    private String typedValue = null;
+    protected String typedName = null;
+    protected String typedValue = null;
     
     private boolean isUnrelatedColumns = false;
     
@@ -479,18 +479,7 @@ public class N1QLVisitor extends SQLStringVisitor{
                 return;
             } 
             
-            if(!isArrayTable && obj.getTable().getMetadataObject().getProperty(IS_ARRAY_TABLE, false).equals(TRUE_VALUE)) {
-                this.isArrayTable = true;
-            }
-
-            if(this.typedName == null && this.typedValue == null) {
-                String typedNamePair = obj.getTable().getMetadataObject().getProperty(NAMED_TYPE_PAIR, false);
-                if(typedNamePair != null && typedNamePair.length() > 0) {
-                    String[] pair = typedNamePair.split(COLON);
-                    this.typedName = pair[0];
-                    this.typedValue = pair[1];
-                }
-            }
+            retrieveTableProperty(obj.getTable());
             
             boolean isPK = false;
             boolean isIdx = false;
@@ -531,7 +520,25 @@ public class N1QLVisitor extends SQLStringVisitor{
         }
     }
 
-    
+    protected void retrieveTableProperty(NamedTable table) {
+        
+        if(table == null) {
+            return;
+        }
+        
+        if(!isArrayTable && table.getMetadataObject().getProperty(IS_ARRAY_TABLE, false).equals(TRUE_VALUE)) {
+            this.isArrayTable = true;
+        }
+
+        if(this.typedName == null && this.typedValue == null) {
+            String typedNamePair = table.getMetadataObject().getProperty(NAMED_TYPE_PAIR, false);
+            if(typedNamePair != null && typedNamePair.length() > 0) {
+                String[] pair = typedNamePair.split(COLON);
+                this.typedName = pair[0];
+                this.typedValue = pair[1];
+            }
+        }
+    }
 
     private boolean isIDXColumn(ColumnReference obj) {
         return obj.getName().endsWith(IDX_SUFFIX) && obj.getMetadataObject().getNameInSource() == null;

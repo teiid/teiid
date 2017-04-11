@@ -33,6 +33,7 @@ import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.couchbase.CouchbaseConnection;
 import org.teiid.language.Call;
+import org.teiid.language.Command;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.QueryExpression;
@@ -47,6 +48,7 @@ import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
+import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 
@@ -181,6 +183,11 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
     }
 
     @Override
+    public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, CouchbaseConnection connection) throws TranslatorException {
+        return new CouchbaseUpdateExecution(command, this, executionContext, metadata, connection);
+    }
+
+    @Override
     public MetadataProcessor<CouchbaseConnection> getMetadataProcessor() {
         return new CouchbaseMetadataProcessor();
     }
@@ -287,6 +294,10 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
 
     public N1QLVisitor getN1QLVisitor() {
         return new N1QLVisitor(this);
+    }
+    
+    public N1QLUpdateVisitor getN1QLUpdateVisitor() {
+        return new N1QLUpdateVisitor(this);
     }
 
     public Object retrieveValue(Class<?> columnType, Object value) {
