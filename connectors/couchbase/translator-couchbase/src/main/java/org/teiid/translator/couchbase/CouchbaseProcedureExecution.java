@@ -23,19 +23,11 @@ package org.teiid.translator.couchbase;
 
 import static org.teiid.translator.couchbase.CouchbaseProperties.GETDOCUMENT;
 import static org.teiid.translator.couchbase.CouchbaseProperties.GETDOCUMENTS;
-import static org.teiid.translator.couchbase.CouchbaseProperties.GETMETADATADOCUMENT;
-import static org.teiid.translator.couchbase.CouchbaseProperties.GETTEXTDOCUMENT;
-import static org.teiid.translator.couchbase.CouchbaseProperties.GETTEXTDOCUMENTS;
-import static org.teiid.translator.couchbase.CouchbaseProperties.GETTEXTMETADATADOCUMENT;
-import static org.teiid.translator.couchbase.CouchbaseProperties.SAVEDOCUMENT;
-import static org.teiid.translator.couchbase.CouchbaseProperties.DELETEDOCUMENT;
-import static org.teiid.translator.couchbase.CouchbaseProperties.ID;
-import static org.teiid.translator.couchbase.CouchbaseProperties.RESULT;
+
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -43,8 +35,6 @@ import java.util.List;
 
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
-import org.teiid.core.types.ClobImpl;
-import org.teiid.core.types.ClobType;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.couchbase.CouchbaseConnection;
 import org.teiid.language.Call;
@@ -56,7 +46,6 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
 
-import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.query.N1qlQueryResult;
 import com.couchbase.client.java.query.N1qlQueryRow;
 
@@ -66,7 +55,6 @@ public class CouchbaseProcedureExecution extends CouchbaseExecution implements P
     
     private N1QLVisitor visitor;
     private Iterator<N1qlQueryRow> results;
-    boolean isText = false;
 
     protected CouchbaseProcedureExecution(CouchbaseExecutionFactory executionFactory, Call call, ExecutionContext executionContext, RuntimeMetadata metadata, CouchbaseConnection connection) {
         super(executionFactory, executionContext, metadata, connection);
@@ -80,11 +68,6 @@ public class CouchbaseProcedureExecution extends CouchbaseExecution implements P
         this.visitor.append(call);
         String sql = this.visitor.toString();
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29002, call, sql));
-
-        if(this.call.getProcedureName().equalsIgnoreCase(GETTEXTDOCUMENTS) || this.call.getProcedureName().equalsIgnoreCase(GETTEXTMETADATADOCUMENT)) {
-            this.isText = true;
-        }
-        
         N1qlQueryResult queryResult = connection.executeQuery(sql);
         this.results = queryResult.iterator();
     }
@@ -95,13 +78,7 @@ public class CouchbaseProcedureExecution extends CouchbaseExecution implements P
         if(this.results != null && this.results.hasNext()) {
             final N1qlQueryRow row = this.results.next();
             String procName = this.call.getProcedureName();
-            if(procName.equalsIgnoreCase(GETTEXTDOCUMENTS) || procName.equalsIgnoreCase(GETTEXTDOCUMENT)) {
-                JsonObject json = row.value();
-                ArrayList<Object> result = new ArrayList<>(2);
-                result.add(this.executionFactory.retrieveValue(String.class, json.get(ID)));
-                result.add(this.executionFactory.retrieveValue(ClobType.class, json.get(RESULT)));
-                return result;
-            } else if(procName.equalsIgnoreCase(GETDOCUMENTS) || procName.equalsIgnoreCase(GETDOCUMENT) || procName.equalsIgnoreCase(GETTEXTMETADATADOCUMENT) || procName.equalsIgnoreCase(GETMETADATADOCUMENT)) {
+            if(procName.equalsIgnoreCase(GETDOCUMENTS) || procName.equalsIgnoreCase(GETDOCUMENT)) {
                 ArrayList<Object> result = new ArrayList<>(1);
                 InputStreamFactory isf = new InputStreamFactory() {
                     @Override
@@ -109,21 +86,10 @@ public class CouchbaseProcedureExecution extends CouchbaseExecution implements P
                         return new ByteArrayInputStream(row.byteValue());
                     }
                 };
-                Object value = null;
-                if (isText) {
-                    ClobImpl clob = new ClobImpl(isf, -1);
-                    clob.setCharset(Charset.defaultCharset());
-                    value = new ClobType(clob);
-                } else {
-                    value = new BlobType(new BlobImpl(isf));
-                }
+                Object value = new BlobType(new BlobImpl(isf));
                 result.add(value);
                 return result;
-            } else if(procName.equalsIgnoreCase(SAVEDOCUMENT) || procName.equalsIgnoreCase(DELETEDOCUMENT)) {
-                ArrayList<Object> result = new ArrayList<>(1);
-                result.add(this.executionFactory.retrieveValue(ClobType.class, JsonObject.create().put(RESULT, "SUCCESS"))); //$NON-NLS-1$
-                return result;
-            }
+            } 
         }
         
         return null;
@@ -142,7 +108,6 @@ public class CouchbaseProcedureExecution extends CouchbaseExecution implements P
     @Override
     public void close() {
         this.results = null;
-        this.isText = false;
     }
 
 }

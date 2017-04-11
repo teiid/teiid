@@ -23,7 +23,6 @@ package org.teiid.translator.couchbase;
 
 import static org.teiid.translator.couchbase.TestCouchbaseMetadataProcessor.*;
 import static org.junit.Assert.*;
-import static org.teiid.translator.couchbase.TestN1QLVisitor.N1QL.*;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -176,7 +175,7 @@ public class TestN1QLVisitor {
         }
     }
     
-    private void helpTest(String sql, N1QL key) throws TranslatorException {
+    private void helpTest(String sql, String key) throws TranslatorException {
 
         Command command = translationUtility.parseCommand(sql);
 
@@ -192,301 +191,215 @@ public class TestN1QLVisitor {
             N1QL.put(key.toString(), actual);
         }
         
-        assertEquals(key.name(), N1QL.getProperty(key.name(), ""), actual);
+        assertEquals(key, N1QL.getProperty(key, ""), actual);
     }
     
     @Test
     public void testSelect() throws TranslatorException {
         
         String sql = "SELECT * FROM Customer";
-        helpTest(sql, N1QL0101);
+        helpTest(sql, "N1QL0101");
       
         sql = "SELECT * FROM Customer_SavedAddresses";
-        helpTest(sql, N1QL0102);
+        helpTest(sql, "N1QL0102");
         
         sql = "SELECT * FROM Oder";
-        helpTest(sql, N1QL0103);
+        helpTest(sql, "N1QL0103");
         
         sql = "SELECT * FROM Oder_Items";
-        helpTest(sql, N1QL0104);
+        helpTest(sql, "N1QL0104");
         
         sql = "SELECT DISTINCT Name FROM Customer";
-        helpTest(sql, N1QL0105);
+        helpTest(sql, "N1QL0105");
         
         sql = "SELECT ALL Name FROM Customer";
-        helpTest(sql, N1QL0106);
+        helpTest(sql, "N1QL0106");
         
         sql = "SELECT CreditCard_CardNumber, CreditCard_Type, CreditCard_CVN, CreditCard_Expiry FROM Oder";
-        helpTest(sql, N1QL0107);
+        helpTest(sql, "N1QL0107");
     }
 
     @Test
     public void testNestedJson() throws TranslatorException  {
         
         String sql = "SELECT * FROM T3";
-        helpTest(sql, N1QL0201);
+        helpTest(sql, "N1QL0201");
         
         sql = "SELECT nestedJson_nestedJson_nestedJson_Dimension FROM T3";
-        helpTest(sql, N1QL0202);
+        helpTest(sql, "N1QL0202");
     }
     
     @Test
     public void testNestedArray() throws TranslatorException {
         
         String sql = "SELECT * FROM T3";
-        helpTest(sql, N1QL0301);
+        helpTest(sql, "N1QL0301");
         
         sql = "SELECT * FROM T3_nestedArray";
-        helpTest(sql, N1QL0302);
+        helpTest(sql, "N1QL0302");
         
         sql = "SELECT * FROM T3_nestedArray_dim2";
-        helpTest(sql, N1QL0303);
+        helpTest(sql, "N1QL0303");
         
         sql = "SELECT * FROM T3_nestedArray_dim2_dim3";
-        helpTest(sql, N1QL0304);
+        helpTest(sql, "N1QL0304");
         
         sql = "SELECT * FROM T3_nestedArray_dim2_dim3_dim4";
-        helpTest(sql, N1QL0305);
+        helpTest(sql, "N1QL0305");
         
         sql = "SELECT T3_nestedArray_dim2_dim3_dim4_idx, T3_nestedArray_dim2_dim3_dim4 FROM T3_nestedArray_dim2_dim3_dim4";
-        helpTest(sql, N1QL0306);
+        helpTest(sql, "N1QL0306");
     }
     
     @Test
     public void testPKColumn() throws TranslatorException {
         
         String sql = "SELECT documentID FROM T3";
-        helpTest(sql, N1QL0401);
+        helpTest(sql, "N1QL0401");
         
         sql = "SELECT documentID FROM T3_nestedArray_dim2_dim3_dim4";
-        helpTest(sql, N1QL0402);
+        helpTest(sql, "N1QL0402");
     }
     
     @Test
     public void testLimitOffsetClause() throws TranslatorException {
         
         String sql = "SELECT Name FROM Customer LIMIT 2";
-        helpTest(sql, N1QL0501);
+        helpTest(sql, "N1QL0501");
         
         sql = "SELECT Name FROM Customer LIMIT 2, 2";
-        helpTest(sql, N1QL0502);
+        helpTest(sql, "N1QL0502");
         
         sql = "SELECT Name FROM Customer OFFSET 2 ROWS";
-        helpTest(sql, N1QL0503);
+        helpTest(sql, "N1QL0503");
     }
     
     @Test
     public void testOrderByClause() throws TranslatorException {
         
         String sql = "SELECT Name, type FROM Customer ORDER BY Name";
-        helpTest(sql, N1QL0601);
+        helpTest(sql, "N1QL0601");
         
         sql = "SELECT type FROM Customer ORDER BY Name"; //Unrelated
-        helpTest(sql, N1QL0602);
+        helpTest(sql, "N1QL0602");
         
         sql = "SELECT Name, type FROM Customer ORDER BY type"; //NullOrdering
-        helpTest(sql, N1QL0603);
+        helpTest(sql, "N1QL0603");
         
         sql = "SELECT Name, type FROM Customer ORDER BY Name ASC";
-        helpTest(sql, N1QL0604);
+        helpTest(sql, "N1QL0604");
         
         sql = "SELECT Name, type FROM Customer ORDER BY Name DESC";
-        helpTest(sql, N1QL0605);
+        helpTest(sql, "N1QL0605");
     }
     
     @Test
     public void testGroupByClause() throws TranslatorException {
         
         String sql = "SELECT Name, COUNT(*) FROM Customer GROUP BY Name";
-        helpTest(sql, N1QL0701);
+        helpTest(sql, "N1QL0701");
     }
     
     @Test
     public void testWhereClause() throws TranslatorException {
         
         String sql = "SELECT Name, type  FROM Customer WHERE Name = 'John Doe'";
-        helpTest(sql, N1QL0801);
+        helpTest(sql, "N1QL0801");
         
         sql = "SELECT Name, type  FROM Customer WHERE documentID = 'customer'";
-        helpTest(sql, N1QL0802);
+        helpTest(sql, "N1QL0802");
         
         sql = "SELECT Name, type  FROM Customer WHERE type = 'Customer'";
-        helpTest(sql, N1QL0803);
+        helpTest(sql, "N1QL0803");
         
         sql = "SELECT Name FROM Customer";
-        helpTest(sql, N1QL0804);
+        helpTest(sql, "N1QL0804");
         
         sql = "SELECT Name FROM Customer WHERE documentID = 'customer'";
-        helpTest(sql, N1QL0805);
+        helpTest(sql, "N1QL0805");
     }
     
     @Test
     public void testStringFunctions() throws TranslatorException {
         
         String sql = "SELECT LCASE(attr_string) FROM T2";
-        helpTest(sql, N1QL0901);
+        helpTest(sql, "N1QL0901");
         
         sql = "SELECT UCASE(attr_string) FROM T2";
-        helpTest(sql, N1QL0902);
+        helpTest(sql, "N1QL0902");
         
         sql = "SELECT TRANSLATE(attr_string, 'is', 'are') FROM T2";
-        helpTest(sql, N1QL0903);
+        helpTest(sql, "N1QL0903");
         
         sql = "SELECT couchbase.CONTAINS(attr_string, 'is') FROM T2";
-        helpTest(sql, N1QL0904);
+        helpTest(sql, "N1QL0904");
         
         sql = "SELECT couchbase.TITLE(attr_string) FROM T2";
-        helpTest(sql, N1QL0905);
+        helpTest(sql, "N1QL0905");
         
         sql = "SELECT couchbase.LTRIM(attr_string, 'This') FROM T2";
-        helpTest(sql, N1QL0906);
+        helpTest(sql, "N1QL0906");
         
         sql = "SELECT couchbase.TRIM(attr_string, 'is') FROM T2";
-        helpTest(sql, N1QL0907);
+        helpTest(sql, "N1QL0907");
         
         sql = "SELECT couchbase.RTRIM(attr_string, 'value') FROM T2";
-        helpTest(sql, N1QL0908);
+        helpTest(sql, "N1QL0908");
         
         sql = "SELECT couchbase.POSITION(attr_string, 'is') FROM T2";
-        helpTest(sql, N1QL0909);
+        helpTest(sql, "N1QL0909");
     }
     
     @Test
     public void testNumbericFunctions() throws TranslatorException {
         
         String sql = "SELECT CEILING(attr_double) FROM T2";
-        helpTest(sql, N1QL1001); 
+        helpTest(sql, "N1QL1001"); 
         
         sql = "SELECT LOG(attr_double) FROM T2";
-        helpTest(sql, N1QL1002); 
+        helpTest(sql, "N1QL1002"); 
         
         sql = "SELECT LOG10(attr_double) FROM T2";
-        helpTest(sql, N1QL1003); 
+        helpTest(sql, "N1QL1003"); 
         
         sql = "SELECT RAND(attr_integer) FROM T2";
-        helpTest(sql, N1QL1004); 
+        helpTest(sql, "N1QL1004"); 
     }
     
     @Test
     public void testConversionFunctions() throws TranslatorException {
 
         String sql = "SELECT convert(attr_long, string) FROM T2";
-        helpTest(sql, N1QL1101);
+        helpTest(sql, "N1QL1101");
     }
     
     @Test
     public void testDateFunctions() throws TranslatorException {
         
         String sql = "SELECT couchbase.CLOCK_MILLIS() FROM T2";
-        helpTest(sql, N1QL1201); 
+        helpTest(sql, "N1QL1201"); 
         
         sql = "SELECT couchbase.CLOCK_STR() FROM T2";
-        helpTest(sql, N1QL1202); 
+        helpTest(sql, "N1QL1202"); 
         
         sql = "SELECT couchbase.CLOCK_STR('2006-01-02') FROM T2";
-        helpTest(sql, N1QL1203);
+        helpTest(sql, "N1QL1203");
                 
         sql = "SELECT couchbase.DATE_ADD_MILLIS(1488873653696, 2, 'century') FROM T2";
-        helpTest(sql, N1QL1204); 
+        helpTest(sql, "N1QL1204"); 
         
         sql = "SELECT couchbase.DATE_ADD_STR('2017-03-08', 2, 'century') FROM T2";
-        helpTest(sql, N1QL1205); 
+        helpTest(sql, "N1QL1205"); 
     }
     
     @Test
     public void testProcedures() throws TranslatorException {
        
-        String sql = "call getTextDocuments('%e%', 'test')";
-        helpTest(sql, N1QL1301);
-        
-        sql = "call getDocuments('customer', 'test')";
-        helpTest(sql, N1QL1302);
-        
-        sql = "call getTextDocument('customer', 'test')";
-        helpTest(sql, N1QL1303);
-        
+        String sql = "call getDocuments('customer', 'test')";
+        helpTest(sql, "N1QL1301");
+
         sql = "call getDocument('customer', 'test')";
-        helpTest(sql, N1QL1304);
-        
-        sql = "call saveDocument('k001', 'test', '{\"key\": \"value\"}')";
-        helpTest(sql, N1QL1305);
-        
-        sql = "call deleteDocument('k001', 'test')";
-        helpTest(sql, N1QL1306);
-        
-        sql = "call getTextMetadataDocument('test')";
-        helpTest(sql, N1QL1307);
-        
-        sql = "call getMetadataDocument('test')";
-        helpTest(sql, N1QL1308);
-    }
-    
-    public static enum N1QL {
-        N1QL0101,
-        N1QL0102,
-        N1QL0103,
-        N1QL0104,
-        N1QL0105,
-        N1QL0106,
-        N1QL0107,
-        N1QL0201,
-        N1QL0202,
-        N1QL0301,
-        N1QL0302,
-        N1QL0303,
-        N1QL0304,
-        N1QL0305,
-        N1QL0306,
-        N1QL0401,
-        N1QL0402,
-        N1QL0403,
-        N1QL0501,
-        N1QL0502,
-        N1QL0503,
-        N1QL0601,
-        N1QL0602,
-        N1QL0603,
-        N1QL0604,
-        N1QL0605,
-        N1QL0701,
-        N1QL0702,
-        N1QL0801,
-        N1QL0802,
-        N1QL0803,
-        N1QL0804,
-        N1QL0805,
-        N1QL0806,
-        N1QL0901,
-        N1QL0902,
-        N1QL0903,
-        N1QL0904,
-        N1QL0905,
-        N1QL0906,
-        N1QL0907,
-        N1QL0908,
-        N1QL0909,
-        N1QL1001,
-        N1QL1002,
-        N1QL1003,
-        N1QL1004,
-        N1QL1005,
-        N1QL1101,
-        N1QL1102,
-        N1QL1201,
-        N1QL1202,
-        N1QL1203,
-        N1QL1204,
-        N1QL1205,
-        N1QL1301,
-        N1QL1302,
-        N1QL1303,
-        N1QL1304,
-        N1QL1305,
-        N1QL1306,
-        N1QL1307,
-        N1QL1308,
-        N1QL1401,
-        N1QL1501
+        helpTest(sql, "N1QL1302");
     }
     
 }

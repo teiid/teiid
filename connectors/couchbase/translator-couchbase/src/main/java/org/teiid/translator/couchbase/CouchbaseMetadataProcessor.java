@@ -39,16 +39,9 @@ import static org.teiid.translator.couchbase.CouchbaseProperties.DIM_SUFFIX;
 import static org.teiid.translator.couchbase.CouchbaseProperties.SQUARE_BRACKETS;
 import static org.teiid.translator.couchbase.CouchbaseProperties.GETDOCUMENT;
 import static org.teiid.translator.couchbase.CouchbaseProperties.GETDOCUMENTS;
-import static org.teiid.translator.couchbase.CouchbaseProperties.GETMETADATADOCUMENT;
-import static org.teiid.translator.couchbase.CouchbaseProperties.GETTEXTDOCUMENT;
-import static org.teiid.translator.couchbase.CouchbaseProperties.GETTEXTDOCUMENTS;
-import static org.teiid.translator.couchbase.CouchbaseProperties.GETTEXTMETADATADOCUMENT;
-import static org.teiid.translator.couchbase.CouchbaseProperties.SAVEDOCUMENT;
-import static org.teiid.translator.couchbase.CouchbaseProperties.DELETEDOCUMENT;
 import static org.teiid.translator.couchbase.CouchbaseProperties.ID;
 import static org.teiid.translator.couchbase.CouchbaseProperties.RESULT;
 import static org.teiid.translator.couchbase.CouchbaseProperties.KEYSPACE;
-import static org.teiid.translator.couchbase.CouchbaseProperties.DOCUMENT;
 import static org.teiid.metadata.BaseColumn.NullType.*;
 
 import java.math.BigDecimal;
@@ -70,6 +63,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Datatype;
+import org.teiid.metadata.ExtensionMetadataProperty;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
@@ -88,7 +82,10 @@ import com.couchbase.client.java.query.N1qlQueryRow;
 
 public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseConnection> {
     
+    @ExtensionMetadataProperty(applicable = Table.class, datatype = Boolean.class, display = "Is Array Table", description = "Declare whether the table is array table")
     public static final String IS_ARRAY_TABLE = MetadataFactory.COUCHBASE_URI + "ISARRAYTABLE"; //$NON-NLS-1$
+    
+    @ExtensionMetadataProperty(applicable = Table.class, datatype = String.class, display = "Named Type Pair", description = "Declare the name of typed key/value pair")
     public static final String NAMED_TYPE_PAIR = MetadataFactory.COUCHBASE_URI + "NAMEDTYPEPAIR"; //$NON-NLS-1$
   
     private Integer sampleSize;
@@ -474,37 +471,15 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
     
     protected void addProcedures(MetadataFactory metadataFactory, CouchbaseConnection connection) {
         
-        Procedure getTextDocuments = metadataFactory.addProcedure(GETTEXTDOCUMENTS);
-        getTextDocuments.setAnnotation(CouchbasePlugin.Util.getString("getTextDocuments.Annotation")); //$NON-NLS-1$
-        ProcedureParameter param = metadataFactory.addProcedureParameter(ID, TypeFacility.RUNTIME_NAMES.STRING, Type.In, getTextDocuments); 
-        param.setAnnotation(CouchbasePlugin.Util.getString("getTextDocuments.id.Annotation")); //$NON-NLS-1$
-        param.setNullType(No_Nulls);
-        param = metadataFactory.addProcedureParameter(KEYSPACE, TypeFacility.RUNTIME_NAMES.STRING, Type.In, getTextDocuments); 
-        param.setAnnotation(CouchbasePlugin.Util.getString("getTextDocuments.keyspaceName.Annotation")); //$NON-NLS-1$
-        param.setNullType(No_Nulls);
-        metadataFactory.addProcedureResultSetColumn(ID, TypeFacility.RUNTIME_NAMES.STRING, getTextDocuments); 
-        metadataFactory.addProcedureResultSetColumn(RESULT, TypeFacility.RUNTIME_NAMES.CLOB, getTextDocuments); 
-        
         Procedure getDocuments = metadataFactory.addProcedure(GETDOCUMENTS);
         getDocuments.setAnnotation(CouchbasePlugin.Util.getString("getDocuments.Annotation")); //$NON-NLS-1$
-        param = metadataFactory.addProcedureParameter(ID, TypeFacility.RUNTIME_NAMES.STRING, Type.In, getDocuments); 
+        ProcedureParameter param = metadataFactory.addProcedureParameter(ID, TypeFacility.RUNTIME_NAMES.STRING, Type.In, getDocuments); 
         param.setNullType(No_Nulls);
         param.setAnnotation(CouchbasePlugin.Util.getString("getDocuments.id.Annotation")); //$NON-NLS-1$
         param = metadataFactory.addProcedureParameter(KEYSPACE, TypeFacility.RUNTIME_NAMES.STRING, Type.In, getDocuments);
         param.setNullType(No_Nulls);
         param.setAnnotation(CouchbasePlugin.Util.getString("getDocuments.keyspace.Annotation")); //$NON-NLS-1$
         metadataFactory.addProcedureResultSetColumn(RESULT, TypeFacility.RUNTIME_NAMES.BLOB, getDocuments); 
-
-        Procedure getTextDocument = metadataFactory.addProcedure(GETTEXTDOCUMENT);
-        getTextDocument.setAnnotation(CouchbasePlugin.Util.getString("getTextDocument.Annotation")); //$NON-NLS-1$
-        param = metadataFactory.addProcedureParameter(ID, TypeFacility.RUNTIME_NAMES.STRING, Type.In, getTextDocument); 
-        param.setNullType(No_Nulls);
-        param.setAnnotation(CouchbasePlugin.Util.getString("getTextDocument.id.Annotation")); //$NON-NLS-1$
-        param = metadataFactory.addProcedureParameter(KEYSPACE, TypeFacility.RUNTIME_NAMES.STRING, Type.In, getTextDocument); 
-        param.setNullType(No_Nulls);
-        param.setAnnotation(CouchbasePlugin.Util.getString("getTextDocument.keyspace.Annotation")); //$NON-NLS-1$
-        metadataFactory.addProcedureResultSetColumn(ID, TypeFacility.RUNTIME_NAMES.STRING, getTextDocument); 
-        metadataFactory.addProcedureResultSetColumn(RESULT, TypeFacility.RUNTIME_NAMES.CLOB, getTextDocument); 
         
         Procedure getDocument = metadataFactory.addProcedure(GETDOCUMENT);
         getDocument.setAnnotation(CouchbasePlugin.Util.getString("getDocument.Annotation")); //$NON-NLS-1$
@@ -515,43 +490,6 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
         param.setNullType(No_Nulls);
         param.setAnnotation(CouchbasePlugin.Util.getString("getDocument.keyspace.Annotation")); //$NON-NLS-1$
         metadataFactory.addProcedureResultSetColumn(RESULT, TypeFacility.RUNTIME_NAMES.BLOB, getDocument); 
-        
-        Procedure saveDocument = metadataFactory.addProcedure(SAVEDOCUMENT);
-        saveDocument.setAnnotation(CouchbasePlugin.Util.getString("saveDocument.Annotation")); //$NON-NLS-1$
-        param = metadataFactory.addProcedureParameter(ID, TypeFacility.RUNTIME_NAMES.STRING, Type.In, saveDocument); 
-        param.setAnnotation(CouchbasePlugin.Util.getString("saveDocument.id.Annotation")); //$NON-NLS-1$
-        param.setNullType(No_Nulls);
-        param = metadataFactory.addProcedureParameter(KEYSPACE, TypeFacility.RUNTIME_NAMES.STRING, Type.In, saveDocument);
-        param.setAnnotation(CouchbasePlugin.Util.getString("saveDocument.keyspace.Annotation")); //$NON-NLS-1$
-        param.setNullType(No_Nulls);
-        param = metadataFactory.addProcedureParameter(DOCUMENT, TypeFacility.RUNTIME_NAMES.OBJECT, Type.In, saveDocument); //$NON-NLS-1$
-        param.setAnnotation(CouchbasePlugin.Util.getString("saveDocument.document.Annotation")); //$NON-NLS-1$
-        param.setNullType(No_Nulls);
-        metadataFactory.addProcedureResultSetColumn(RESULT, TypeFacility.RUNTIME_NAMES.CLOB, saveDocument);
-        
-        Procedure deleteDocument = metadataFactory.addProcedure(DELETEDOCUMENT);
-        deleteDocument.setAnnotation(CouchbasePlugin.Util.getString("deleteDocument.Annotation")); //$NON-NLS-1$
-        param = metadataFactory.addProcedureParameter(ID, TypeFacility.RUNTIME_NAMES.STRING, Type.In, deleteDocument); 
-        param.setAnnotation(CouchbasePlugin.Util.getString("deleteDocument.id.Annotation")); //$NON-NLS-1$
-        param.setNullType(No_Nulls);
-        param = metadataFactory.addProcedureParameter(KEYSPACE, TypeFacility.RUNTIME_NAMES.STRING, Type.In, deleteDocument); 
-        param.setAnnotation(CouchbasePlugin.Util.getString("deleteDocument.keyspace.Annotation")); //$NON-NLS-1$
-        param.setNullType(No_Nulls);
-        metadataFactory.addProcedureResultSetColumn(RESULT, TypeFacility.RUNTIME_NAMES.CLOB, deleteDocument); 
-        
-        Procedure getTextMetadataDocument = metadataFactory.addProcedure(GETTEXTMETADATADOCUMENT);
-        getTextMetadataDocument.setAnnotation(CouchbasePlugin.Util.getString("getTextMetadataDocument.Annotation")); //$NON-NLS-1$
-        param = metadataFactory.addProcedureParameter(KEYSPACE, TypeFacility.RUNTIME_NAMES.STRING, Type.In, getTextMetadataDocument); 
-        param.setAnnotation(CouchbasePlugin.Util.getString("getTextMetadataDocument.keyspace.Annotation")); //$NON-NLS-1$
-        param.setNullType(No_Nulls);
-        metadataFactory.addProcedureResultSetColumn(RESULT, TypeFacility.RUNTIME_NAMES.CLOB, getTextMetadataDocument); 
-        
-        Procedure getMetadataDocument = metadataFactory.addProcedure(GETMETADATADOCUMENT);
-        getMetadataDocument.setAnnotation(CouchbasePlugin.Util.getString("getMetadataDocument.Annotation")); //$NON-NLS-1$
-        param = metadataFactory.addProcedureParameter(KEYSPACE, TypeFacility.RUNTIME_NAMES.STRING, Type.In, getMetadataDocument); 
-        param.setAnnotation(CouchbasePlugin.Util.getString("getMetadataDocument.keyspace.Annotation")); //$NON-NLS-1$
-        param.setNullType(No_Nulls);
-        metadataFactory.addProcedureResultSetColumn(RESULT, TypeFacility.RUNTIME_NAMES.BLOB, getMetadataDocument);
     }
 
     /**

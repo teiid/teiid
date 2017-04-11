@@ -50,20 +50,13 @@ public interface CouchbaseProperties {
     String DOCUMENTID = "documentID"; //$NON-NLS-1$
     
     // Procedure Name
-    String GETTEXTDOCUMENTS = "getTextDocuments"; //$NON-NLS-1$
     String GETDOCUMENTS = "getDocuments"; //$NON-NLS-1$
-    String GETTEXTDOCUMENT = "getTextDocument"; //$NON-NLS-1$
     String GETDOCUMENT = "getDocument"; //$NON-NLS-1$
-    String SAVEDOCUMENT = "saveDocument"; //$NON-NLS-1$
-    String DELETEDOCUMENT = "deleteDocument"; //$NON-NLS-1$
-    String GETMETADATADOCUMENT  = "getMetadataDocument"; //$NON-NLS-1$
-    String GETTEXTMETADATADOCUMENT  = "getTextMetadataDocument"; //$NON-NLS-1$
     
     // Procedure Parameter Name
     String ID = "id"; //$NON-NLS-1$
     String RESULT = "result"; //$NON-NLS-1$
     String KEYSPACE = "keyspace"; //$NON-NLS-1$
-    String DOCUMENT = "document"; //$NON-NLS-1$
     
     String N1QL_COLUMN_ALIAS_PREFIX = "$cb_c"; //$NON-NLS-1$
     String N1QL_TABLE_ALIAS_PREFIX = "$cb_t"; //$NON-NLS-1$

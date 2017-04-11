@@ -197,7 +197,7 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
 
     @Override
     public boolean supportsAggregatesMin() {
-        return false;
+        return true;
     }
 
     @Override
