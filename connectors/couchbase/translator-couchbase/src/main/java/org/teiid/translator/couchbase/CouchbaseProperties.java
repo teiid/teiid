@@ -58,6 +58,8 @@ public interface CouchbaseProperties {
     String RESULT = "result"; //$NON-NLS-1$
     String KEYSPACE = "keyspace"; //$NON-NLS-1$
     
+    String KEYS = "KEYS"; //$NON-NLS-1$
+    
     String N1QL_COLUMN_ALIAS_PREFIX = "$cb_c"; //$NON-NLS-1$
     String N1QL_TABLE_ALIAS_PREFIX = "$cb_t"; //$NON-NLS-1$
 

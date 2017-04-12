@@ -115,7 +115,8 @@ public class TestVisitor {
                     N1QL.put(element.getAttribute("key"), element.getTextContent());
                 }  
             } 
-        } catch (ParserConfigurationException | SAXException | IOException e1) {
+        } catch (ParserConfigurationException | SAXException | IOException e) {
+            e.printStackTrace();
             assert(false);
         }
 

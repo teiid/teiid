@@ -79,7 +79,7 @@ import org.teiid.language.visitor.SQLStringVisitor;
 
 public class N1QLVisitor extends SQLStringVisitor{
     
-    private CouchbaseExecutionFactory ef;
+    protected CouchbaseExecutionFactory ef;
     
     private boolean recordColumnName = true;
     private List<String> selectColumns = new ArrayList<>();
@@ -419,7 +419,7 @@ public class N1QLVisitor extends SQLStringVisitor{
         return sb.toString();
     }
     
-    private String buildMeta(String alias) {
+    protected String buildMeta(String alias) {
         StringBuilder sb = new StringBuilder();
         sb.append("META").append(LPAREN).append(nameInSource(alias)).append(RPAREN).append(".id"); //$NON-NLS-1$ //$NON-NLS-2$
         return sb.toString();
@@ -480,35 +480,19 @@ public class N1QLVisitor extends SQLStringVisitor{
             } 
             
             retrieveTableProperty(obj.getTable());
-            
-            boolean isPK = false;
-            boolean isIdx = false;
-            String leafName = ""; //$NON-NLS-1$
-            
-            if(isPKColumn(obj)) {
-                isPK = true;
-            } else if(isIDXColumn(obj)) {
-                isIdx = true;
-            } else if(obj.getMetadataObject().getNameInSource() != null && !obj.getMetadataObject().getNameInSource().endsWith(SQUARE_BRACKETS)){
-                String nameInSource = obj.getMetadataObject().getNameInSource();
-                leafName = nameInSource.substring(nameInSource.lastIndexOf(SOURCE_SEPARATOR) + 1, nameInSource.length());
-                leafName = this.trimWave(leafName);
-            }
-            
-            String colExpr = this.getColumnAliasGenerator().generate() + UNDERSCORE + obj.getName();
 
-            CBColumn column = new CBColumn(isPK, isIdx, colExpr, leafName, obj.getMetadataObject().getNameInSource());
+            CBColumn column = formCBColumn(obj);
             
-            if(this.typedName != null && this.typedValue != null && leafName.equals(trimWave(this.typedName))) {
-                String typedWhere = buildTypedWhere(nameInSource(colExpr), this.typedValue);
+            if(this.typedName != null && this.typedValue != null && column.getLeafName().equals(trimWave(this.typedName))) {
+                String typedWhere = buildTypedWhere(nameInSource(column.getNameReference()), this.typedValue);
                 column.setTypedWhere(typedWhere);
             }
             
             if(recordColumnName) {
                 this.letStack.add(column);
                 this.columnMap.put(obj.getName(), column);
-                this.selectColumns.add(colExpr);
-                buffer.append(this.nameInSource(colExpr));
+                this.selectColumns.add(column.getNameReference());
+                buffer.append(this.nameInSource(column.getNameReference()));
             } else if(isUnrelatedColumns && !recordColumnName && letStack.size() > 0){
                 String tableAlias = letStack.get(letStack.size() -1).getTableAlias();
                 column.setTableAlias(tableAlias);
@@ -520,6 +504,26 @@ public class N1QLVisitor extends SQLStringVisitor{
         }
     }
 
+    protected CBColumn formCBColumn (ColumnReference obj) {
+        boolean isPK = false;
+        boolean isIdx = false;
+        String leafName = ""; //$NON-NLS-1$
+        
+        if(isPKColumn(obj)) {
+            isPK = true;
+        } else if(isIDXColumn(obj)) {
+            isIdx = true;
+        } else if(obj.getMetadataObject().getNameInSource() != null && !obj.getMetadataObject().getNameInSource().endsWith(SQUARE_BRACKETS)){
+            String nameInSource = obj.getMetadataObject().getNameInSource();
+            leafName = nameInSource.substring(nameInSource.lastIndexOf(SOURCE_SEPARATOR) + 1, nameInSource.length());
+            leafName = this.trimWave(leafName);
+        }
+        
+        String colExpr = this.getColumnAliasGenerator().generate() + UNDERSCORE + obj.getName();
+
+        return new CBColumn(isPK, isIdx, colExpr, leafName, obj.getMetadataObject().getNameInSource());
+    }
+    
     protected void retrieveTableProperty(NamedTable table) {
         
         if(table == null) {
@@ -654,10 +658,13 @@ public class N1QLVisitor extends SQLStringVisitor{
     }
     
     private String nameInSource(String path) {
+        if(path.startsWith(WAVE) && path.endsWith(WAVE)) {
+            return path;
+        }
         return WAVE + path + WAVE; 
     }
     
-    private String trimWave(String value) {
+    protected String trimWave(String value) {
         String results = value;
         if(results.startsWith(WAVE)) {
             results = results.substring(1);
@@ -687,7 +694,7 @@ public class N1QLVisitor extends SQLStringVisitor{
         }
     }
     
-    private class CBColumn {
+    protected class CBColumn {
         
         private boolean isPK;
         private boolean isIdx;
