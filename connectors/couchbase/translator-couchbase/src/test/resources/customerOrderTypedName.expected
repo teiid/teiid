@@ -9,8 +9,8 @@ CREATE FOREIGN TABLE Customer (
 ) OPTIONS (NAMEINSOURCE '`test`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false', "teiid_couchbase:NAMEDTYPEPAIR" '`type`:''Customer''');
 
 CREATE FOREIGN TABLE Customer_SavedAddresses (
-	documentID string OPTIONS (UPDATABLE FALSE),
-	Customer_SavedAddresses_idx integer OPTIONS (UPDATABLE FALSE),
+	documentID string,
+	Customer_SavedAddresses_idx integer,
 	Customer_SavedAddresses string OPTIONS (NAMEINSOURCE '`test`.`SavedAddresses`[]'),
 	FOREIGN KEY(documentID) REFERENCES Customer 
 ) OPTIONS (NAMEINSOURCE '`test`.`SavedAddresses`[]', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'true');
@@ -28,8 +28,8 @@ CREATE FOREIGN TABLE Oder (
 ) OPTIONS (NAMEINSOURCE '`test`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false', "teiid_couchbase:NAMEDTYPEPAIR" '`type`:''Oder''');
 
 CREATE FOREIGN TABLE Oder_Items (
-	documentID string OPTIONS (UPDATABLE FALSE),
-	Oder_Items_idx integer OPTIONS (UPDATABLE FALSE),
+	documentID string,
+	Oder_Items_idx integer,
 	Oder_Items_Quantity integer OPTIONS (NAMEINSOURCE '`test`.`Items`[].`Quantity`'),
 	Oder_Items_ItemID integer OPTIONS (NAMEINSOURCE '`test`.`Items`[].`ItemID`'),
 	FOREIGN KEY(documentID) REFERENCES Oder 

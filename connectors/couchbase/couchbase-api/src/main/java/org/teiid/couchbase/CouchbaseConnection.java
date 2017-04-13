@@ -69,4 +69,13 @@ public interface CouchbaseConnection extends Connection {
      *         produced by the given query.
      */
     N1qlQueryResult executeQuery(N1qlQuery query);
+    
+    /**
+     * Executes the given N1QL statement, which returns a single <code>N1qlQueryResult</code> 
+     * object.
+     * 
+     * @param statement Any N1QL statement, like Insert, Select, Update, Delete, etc.
+     * @return
+     */
+    N1qlQueryResult execute(String statement);
 }

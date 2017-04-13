@@ -21,6 +21,8 @@
  */
 package org.teiid.translator.couchbase;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -51,6 +53,9 @@ import org.teiid.translator.TypeFacility;
 import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
+
+import com.couchbase.client.java.document.json.JsonArray;
+import com.couchbase.client.java.document.json.JsonObject;
 
 @Translator(name="couchbase", description="Couchbase Translator, reads and writes the data to Couchbase")
 public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactory, CouchbaseConnection> {
@@ -316,6 +321,48 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
         }
         
         return value;
+    }
+    
+    public void setValue(JsonObject json, String attr, Class<?> type, Object attrValue) {
+                
+        if(type.equals(TypeFacility.RUNTIME_TYPES.STRING)) {
+            json.put(attr, (String)attrValue);
+        } else if(type.equals(TypeFacility.RUNTIME_TYPES.INTEGER)) {
+            json.put(attr, (Integer)attrValue);
+        } else if(type.equals(TypeFacility.RUNTIME_TYPES.LONG)) {
+            json.put(attr, (Long)attrValue);
+        } else if(type.equals(TypeFacility.RUNTIME_TYPES.DOUBLE)) {
+            json.put(attr, (Double)attrValue);
+        } else if(type.equals(TypeFacility.RUNTIME_TYPES.BOOLEAN)) {
+            json.put(attr, (Boolean)attrValue);
+        } else if(type.equals(TypeFacility.RUNTIME_TYPES.BIG_INTEGER)) {
+            json.put(attr, (BigInteger)attrValue);
+        } else if(type.equals(TypeFacility.RUNTIME_TYPES.BIG_DECIMAL)) {
+            json.put(attr, (BigDecimal)attrValue);
+        } else if(type.equals(TypeFacility.RUNTIME_TYPES.NULL)) {
+            json.putNull(attr);
+        }
+    }
+    
+    public void setValue(JsonArray array, Class<?> type, Object attrValue) {
+                
+        if(type.equals(TypeFacility.RUNTIME_TYPES.STRING)) {
+            array.add((String)attrValue);
+        } else if(type.equals(TypeFacility.RUNTIME_TYPES.INTEGER)) {
+            array.add((Integer)attrValue);
+        } else if(type.equals(TypeFacility.RUNTIME_TYPES.LONG)) {
+            array.add((Long)attrValue);
+        } else if(type.equals(TypeFacility.RUNTIME_TYPES.DOUBLE)) {
+            array.add((Double)attrValue);
+        } else if(type.equals(TypeFacility.RUNTIME_TYPES.BOOLEAN)) {
+            array.add((Boolean)attrValue);
+        } else if(type.equals(TypeFacility.RUNTIME_TYPES.BIG_INTEGER)) {
+            array.add((BigInteger)attrValue);
+        } else if(type.equals(TypeFacility.RUNTIME_TYPES.BIG_DECIMAL)) {
+            array.add((BigDecimal)attrValue);
+        } else if(type.equals(TypeFacility.RUNTIME_TYPES.NULL)) {
+            array.addNull();
+        }
     }
 
 }

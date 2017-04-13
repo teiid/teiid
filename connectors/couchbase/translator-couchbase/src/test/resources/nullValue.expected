@@ -9,8 +9,8 @@ CREATE FOREIGN TABLE test (
 ) OPTIONS (NAMEINSOURCE '`test`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false');
 
 CREATE FOREIGN TABLE test_attr_array (
-	documentID string OPTIONS (UPDATABLE FALSE),
-	test_attr_array_idx integer OPTIONS (UPDATABLE FALSE),
+	documentID string,
+	test_attr_array_idx integer,
 	test_attr_array string OPTIONS (NAMEINSOURCE '`test`.`attr_array`[]'),
 	FOREIGN KEY(documentID) REFERENCES test 
 ) OPTIONS (NAMEINSOURCE '`test`.`attr_array`[]', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'true');

@@ -16,17 +16,17 @@ CREATE FOREIGN TABLE test (
 ) OPTIONS (NAMEINSOURCE '`test`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false');
 
 CREATE FOREIGN TABLE test_attr_jsonArray (
-	documentID string OPTIONS (UPDATABLE FALSE),
-	test_attr_jsonArray_idx integer OPTIONS (UPDATABLE FALSE),
+	documentID string,
+	test_attr_jsonArray_idx integer,
 	test_attr_jsonArray object OPTIONS (NAMEINSOURCE '`test`.`attr_jsonArray`[]'),
 	test_attr_jsonArray_key string OPTIONS (NAMEINSOURCE '`test`.`attr_jsonArray`[].`key`'),
 	FOREIGN KEY(documentID) REFERENCES test 
 ) OPTIONS (NAMEINSOURCE '`test`.`attr_jsonArray`[]', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'true');
 
 CREATE FOREIGN TABLE test_attr_jsonArray_dim2 (
-	documentID string OPTIONS (UPDATABLE FALSE),
-	test_attr_jsonArray_idx integer OPTIONS (UPDATABLE FALSE),
-	test_attr_jsonArray_dim2_idx integer OPTIONS (UPDATABLE FALSE),
+	documentID string,
+	test_attr_jsonArray_idx integer,
+	test_attr_jsonArray_dim2_idx integer,
 	test_attr_jsonArray_dim2 string OPTIONS (NAMEINSOURCE '`test`.`attr_jsonArray`[][]'),
 	FOREIGN KEY(documentID) REFERENCES test 
 ) OPTIONS (NAMEINSOURCE '`test`.`attr_jsonArray`[][]', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'true');

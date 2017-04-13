@@ -68,6 +68,11 @@ public class CouchbaseConnectionImpl extends BasicConnection implements Couchbas
     }
     
     @Override
+    public N1qlQueryResult execute(String statement) {
+        return executeQuery(N1qlQuery.simple(statement));
+    }
+    
+    @Override
     public void close() throws ResourceException {
         if(this.bucket != null) {
             this.bucket.close();

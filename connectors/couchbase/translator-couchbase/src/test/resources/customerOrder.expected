@@ -14,15 +14,15 @@ CREATE FOREIGN TABLE test (
 ) OPTIONS (NAMEINSOURCE '`test`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false');
 
 CREATE FOREIGN TABLE test_SavedAddresses (
-	documentID string OPTIONS (UPDATABLE FALSE),
-	test_SavedAddresses_idx integer OPTIONS (UPDATABLE FALSE),
+	documentID string,
+	test_SavedAddresses_idx integer,
 	test_SavedAddresses string OPTIONS (NAMEINSOURCE '`test`.`SavedAddresses`[]'),
 	FOREIGN KEY(documentID) REFERENCES test 
 ) OPTIONS (NAMEINSOURCE '`test`.`SavedAddresses`[]', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'true');
 
 CREATE FOREIGN TABLE test_Items (
-	documentID string OPTIONS (UPDATABLE FALSE),
-	test_Items_idx integer OPTIONS (UPDATABLE FALSE),
+	documentID string,
+	test_Items_idx integer,
 	test_Items_Quantity integer OPTIONS (NAMEINSOURCE '`test`.`Items`[].`Quantity`'),
 	test_Items_ItemID integer OPTIONS (NAMEINSOURCE '`test`.`Items`[].`ItemID`'),
 	FOREIGN KEY(documentID) REFERENCES test 

@@ -1,3 +1,24 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * See the COPYRIGHT.txt file distributed with this work for information
+ * regarding copyright ownership.  Some portions may be licensed
+ * to Red Hat, Inc. under one or more contributor license agreements.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
 package org.teiid.translator.couchbase;
 
 import static org.junit.Assert.*;
@@ -64,6 +85,19 @@ public class TestN1QLUpdateVisitor extends TestVisitor {
         
         sql = "INSERT INTO Oder (documentID) VALUES ('order-1')"; // empty document
         helpTest(sql, "N1QL1408");
+        
+        sql = "INSERT INTO Customer_SavedAddresses VALUES ('customer-1', 2,  'Beijing')";
+        helpTest(sql, "N1QL1409");
+        
+        sql = "INSERT INTO Customer_SavedAddresses (documentID, Customer_SavedAddresses_idx, Customer_SavedAddresses) VALUES ('customer-1', 2,  'Beijing')";
+        helpTest(sql, "N1QL1410");
+        
+        sql = "INSERT INTO Oder_Items VALUES ('order-1', 2, 5, 92312)";
+        helpTest(sql, "N1QL1411");
+        
+        sql = "INSERT INTO Oder_Items (documentID, Oder_Items_idx, Oder_Items_Quantity, Oder_Items_ItemID) VALUES ('order-1', 2, 5, 92312)";
+        helpTest(sql, "N1QL1412");
+        
     }
     
     @Test
@@ -92,6 +126,20 @@ public class TestN1QLUpdateVisitor extends TestVisitor {
         
         sql = "INSERT INTO T3_nestedArray VALUES ('nestedArray', 1, 'Hello World')";
         helpTest(sql, "N1QL1508");
+        
+        sql = "INSERT INTO T3_nestedArray_dim2 (T3_nestedArray_idx, T3_nestedArray_dim2_idx, T3_nestedArray_dim2) VALUES (1, 1, 'Hello World')";
+        try {
+            helpTest(sql, "N1QL1509");
+        } catch (TeiidRuntimeException e) {
+            assertEquals(TeiidRuntimeException.class, e.getClass());
+        }
+        
+        sql = "INSERT INTO T3_nestedArray_dim2 (documentID, T3_nestedArray_idx, T3_nestedArray_dim2) VALUES ('nestedArray', 1, 'Hello World')";
+        try {
+            helpTest(sql, "N1QL1510");
+        } catch (TeiidRuntimeException e) {
+            assertEquals(TeiidRuntimeException.class, e.getClass());
+        }
     }
     
     @Test

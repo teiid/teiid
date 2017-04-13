@@ -189,7 +189,8 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
             table.setSupportsUpdate(true);
             table.setProperty(IS_ARRAY_TABLE, FALSE_VALUE);
             
-            mf.addColumn(DOCUMENTID, STRING, table);
+            Column column = mf.addColumn(DOCUMENTID, STRING, table);
+            column.setUpdatable(true);
             mf.addPrimaryKey("PK0", Arrays.asList(DOCUMENTID), table); //$NON-NLS-1$
             
             if(!name.equals(keyspace)) {
@@ -344,14 +345,15 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
             table.setNameInSource(nameInSource);
             table.setSupportsUpdate(updatable);
             table.setProperty(IS_ARRAY_TABLE, TRUE_VALUE);
-            mf.addColumn(DOCUMENTID, STRING, table);
+            Column column = mf.addColumn(DOCUMENTID, STRING, table);
+            column.setUpdatable(true);
             mf.addForiegnKey("FK0", Arrays.asList(DOCUMENTID), referenceTableName, table); //$NON-NLS-1$
             
             for(int i = 1 ; i <= dimension.dimension ; i ++) {
                 String idxName = buildArrayTableIdxName(nameInSource, i);
                 idxName = repleaceTypedName(referenceTableName, idxName);
                 Column idx = mf.addColumn(idxName, INTEGER, table);
-                idx.setUpdatable(false);
+                idx.setUpdatable(true);
             }
             dimension.increment();
         } 
