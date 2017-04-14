@@ -178,6 +178,7 @@ public class TestODataIntegration {
     private static String baseURL;
     private static HttpClient http = new HttpClient();
     private static UnitTestLocalClient localClient;
+    private LoopbackExecutionFactory ef;
 
     @Before
     public void before() throws Exception {
@@ -186,12 +187,13 @@ public class TestODataIntegration {
         EmbeddedConfiguration config = new EmbeddedConfiguration();
         config.setTransactionManager(new DummyBaseTransactionManager());
         teiid.start(config);
-        teiid.addTranslator("loopback", new LoopbackExecutionFactory() {
+        ef = new LoopbackExecutionFactory() {
         	@Override
         	public boolean supportsRowOffset() {
         		return false;
         	}
-        });
+        };
+        teiid.addTranslator("loopback", ef);
 
         createContext("/odata4", null);
         
@@ -336,6 +338,13 @@ public class TestODataIntegration {
         ContentResponse response = http.GET(baseURL + "/loopy/vm1/G1(0)/e1/$value");
         assertEquals(200, response.getStatus());
         assertEquals("ABCDEFGHIJ",response.getContentAsString());        
+    }
+    
+    @Test
+    public void testIndividualProperty$ValueNoRow() throws Exception {
+        ef.setRowCount(0);
+        ContentResponse response = http.GET(baseURL + "/loopy/vm1/G1(0)/e1/$value");
+        assertEquals(404, response.getStatus());
     }
     
     @Test
