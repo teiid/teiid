@@ -143,6 +143,68 @@ public class TestN1QLUpdateVisitor extends TestVisitor {
     }
     
     @Test
+    public void testDelete() throws TranslatorException {
+        
+        String sql = "DELETE FROM Customer WHERE documentID = 'customer-5'";
+        helpTest(sql, "N1QL1601");
+        
+        sql = "DELETE FROM Customer WHERE documentID = 'customer-5' AND ID = 'Customer_10000' AND type = 'Customer'";
+        helpTest(sql, "N1QL1602");
+        
+        sql = "DELETE FROM Customer WHERE ID = 'Customer_10000'";
+        helpTest(sql, "N1QL1603");
+        
+        sql = "DELETE FROM Customer WHERE ID = 'Customer_10000' AND type = 'Customer'";
+        helpTest(sql, "N1QL1604");
+        
+        sql = "DELETE FROM Customer WHERE ID = 'Customer_10000' AND type = 'Customer' AND Name = 'Kylin Soong'";
+        helpTest(sql, "N1QL1605");
+    }
+    
+    @Test
+    public void testDeleteNestedArray() throws TranslatorException {
+        
+        String sql = "DELETE FROM T3_nestedArray_dim2_dim3_dim4 WHERE documentID = 'nestedArray' AND T3_nestedArray_idx = 1 AND T3_nestedArray_dim2_idx = 1 AND T3_nestedArray_dim2_dim3_idx = 1 AND T3_nestedArray_dim2_dim3_dim4_idx = 3";
+        helpTest(sql, "N1QL1701");
+        
+        sql = "DELETE FROM T3_nestedArray_dim2_dim3_dim4 WHERE documentID = 'nestedArray' AND T3_nestedArray_idx = 1 AND T3_nestedArray_dim2_idx = 1 AND T3_nestedArray_dim2_dim3_idx = 1 AND T3_nestedArray_dim2_dim3_dim4_idx = 1";
+        helpTest(sql, "N1QL1702");
+        
+        sql = "DELETE FROM T3_nestedArray_dim2_dim3_dim4 WHERE documentID = 'nestedArray' AND T3_nestedArray_idx = 1 AND T3_nestedArray_dim2_idx = 1 AND T3_nestedArray_dim2_dim3_idx = 1 AND T3_nestedArray_dim2_dim3_dim4_idx = 0";
+        helpTest(sql, "N1QL1703");
+        
+        sql = "DELETE FROM T3_nestedArray_dim2_dim3 WHERE documentID = 'nestedArray' AND T3_nestedArray_idx = 1 AND T3_nestedArray_dim2_idx = 1 AND T3_nestedArray_dim2_dim3_idx = 1";
+        helpTest(sql, "N1QL1704");
+        
+        sql = "DELETE FROM T3_nestedArray_dim2_dim3 WHERE documentID = 'nestedArray' AND T3_nestedArray_idx = 1 AND T3_nestedArray_dim2_idx = 1 AND T3_nestedArray_dim2_dim3_idx = 0";
+        helpTest(sql, "N1QL1705");
+        
+        sql = "DELETE FROM T3_nestedArray_dim2 WHERE documentID = 'nestedArray' AND T3_nestedArray_idx = 1 AND T3_nestedArray_dim2_idx = 1";
+        helpTest(sql, "N1QL1706");
+        
+        sql = "DELETE FROM T3_nestedArray_dim2 WHERE documentID = 'nestedArray' AND T3_nestedArray_idx = 1 AND T3_nestedArray_dim2_idx = 0";
+        helpTest(sql, "N1QL1707");
+        
+        sql = "DELETE FROM T3_nestedArray WHERE documentID = 'nestedArray' AND T3_nestedArray_idx = 1";
+        helpTest(sql, "N1QL1708");
+        
+        sql = "DELETE FROM T3_nestedArray WHERE documentID = 'nestedArray' AND T3_nestedArray_idx = 0";
+        helpTest(sql, "N1QL1709");
+        
+        sql = "DELETE FROM T3_nestedArray_dim2_dim3_dim4 WHERE T3_nestedArray_idx = 1 AND T3_nestedArray_dim2_idx = 1 AND T3_nestedArray_dim2_dim3_idx = 1 AND T3_nestedArray_dim2_dim3_dim4_idx = 1";
+        helpTest(sql, "N1QL1710");
+        
+        sql = "DELETE FROM T3_nestedArray_dim2_dim3 WHERE T3_nestedArray_idx = 1 AND T3_nestedArray_dim2_idx = 1 AND T3_nestedArray_dim2_dim3_idx = 1";
+        helpTest(sql, "N1QL1711");
+        
+        sql = "DELETE FROM T3_nestedArray_dim2 WHERE T3_nestedArray_idx = 1 AND T3_nestedArray_dim2_idx = 1";
+        helpTest(sql, "N1QL1712");
+        
+        sql = "DELETE FROM T3_nestedArray WHERE T3_nestedArray_idx = 1";
+        helpTest(sql, "N1QL1713");
+    }
+    
+    @Test
     public void testSourceModel() {
         JsonObject json = JsonObject.create();
         assertNull(json.get("x"));
