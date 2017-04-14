@@ -1867,4 +1867,14 @@ public class TestValidator {
         helpValidate(userUpdateStr, new String[]{"ALTER TRIGGER tr ON pm1.g2 AFTER INSERT DISABLED"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
     }
     
+    @Test public void testInvalidValueFunctions() {        
+        helpValidate("SELECT FIRST_VALUE(e3) over () FROM test.group", new String[] {"FIRST_VALUE(e3) OVER ()"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT FIRST_VALUE(e3 order by e2) over (order by e2) FROM test.group", new String[] {"FIRST_VALUE(e3 ORDER BY e2) OVER (ORDER BY e2)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT LAST_VALUE(e3, e2) over (order by e2) FROM test.group", new String[] {"LAST_VALUE(e3, e2) OVER (ORDER BY e2)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT LAST_VALUE() over (order by e2) FROM test.group", new String[] {"LAST_VALUE() OVER (ORDER BY e2)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT LAG() over (order by e2) FROM test.group", new String[] {"LAG() OVER (ORDER BY e2)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
+        //should succeed
+        helpValidate("SELECT LAG(e3) over (order by e2) FROM test.group", new String[] {}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
 }

@@ -476,11 +476,92 @@ public class TestWindowFunctions {
         
         BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
         
-        String sql = "SELECT LEAD(ALL convert(amount, string)) OVER (PARTITION BY team ORDER BY \"year\") FROM team_target";
+        String sql = "SELECT y.LEAD(ALL convert(amount, string)) OVER (PARTITION BY team ORDER BY \"year\") FROM team_target";
         
         TestOptimizer.getPlan(helpGetCommand(sql, metadata, null), 
                 metadata, new DefaultCapabilitiesFinder(bsc), 
                 null, false, new CommandContext()); //$NON-NLS-1$
+    }
+    
+    @Test public void testFirstLastValue() throws Exception {
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        
+        String sql = "SELECT FIRST_VALUE(e1) over (order by e2), LAST_VALUE(e2) over (order by e1) from pm1.g1";
+        
+        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.example1Cached(), null), 
+                RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), 
+                null, true, new CommandContext()); //$NON-NLS-1$
+        
+        HardcodedDataManager dataMgr = new HardcodedDataManager();
+        dataMgr.addData("SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0", Arrays.asList("a", 1), Arrays.asList("b", 2));
+        
+        List<?>[] expected = new List<?>[] {
+                Arrays.asList("a", 1),
+                Arrays.asList("a", 2),
+        }; 
+        
+        helpProcess(plan, dataMgr, expected);
+        
+        bsc.setCapabilitySupport(Capability.ELEMENTARY_OLAP, true);
+        bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
+
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT FIRST_VALUE(g_0.e1) OVER (ORDER BY g_0.e2), LAST_VALUE(g_0.e2) OVER (ORDER BY g_0.e1) FROM pm1.g1 AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+    }
+    
+    @Test public void testLead() throws Exception {
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        
+        String sql = "SELECT LEAD(e1) over (order by e2), LEAD(e1, 2, 'c') over (order by e2) from pm1.g1";
+        
+        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.example1Cached(), null), 
+                RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), 
+                null, true, new CommandContext()); //$NON-NLS-1$
+        
+        HardcodedDataManager dataMgr = new HardcodedDataManager();
+        dataMgr.addData("SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0", Arrays.asList("a", 1), Arrays.asList("b", 2));
+        
+        List<?>[] expected = new List<?>[] {
+                Arrays.asList("b", "c"),
+                Arrays.asList(null, "c"),
+        }; 
+        
+        helpProcess(plan, dataMgr, expected);
+        
+        bsc.setCapabilitySupport(Capability.ELEMENTARY_OLAP, true);
+        bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
+
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT LEAD(g_0.e1) OVER (ORDER BY g_0.e2), LEAD(g_0.e1, 2, 'c') OVER (ORDER BY g_0.e2) FROM pm1.g1 AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+    }
+    
+    @Test public void testLag() throws Exception {
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        
+        String sql = "SELECT e1, LAG(e1, 2, 'd') over (partition by e3 order by e2) from pm1.g1";
+        
+        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.example1Cached(), null), 
+                RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), 
+                null, true, new CommandContext()); //$NON-NLS-1$
+        
+        HardcodedDataManager dataMgr = new HardcodedDataManager();
+        dataMgr.addData("SELECT g_0.e1, g_0.e3, g_0.e2 FROM pm1.g1 AS g_0", 
+                Arrays.asList("a", true, 1), Arrays.asList("b", true, 2), Arrays.asList("c", true, 0), 
+                Arrays.asList("a", false, 1), Arrays.asList("b", false, 2), Arrays.asList("c", false, 0));
+        
+        List<?>[] expected = new List<?>[] {
+                Arrays.asList("a", "d"),
+                Arrays.asList("b", "d"),
+                Arrays.asList("c", "a"),
+                Arrays.asList("a", "d"),
+                Arrays.asList("b", "d"),
+                Arrays.asList("c", "a"),
+        }; 
+        
+        helpProcess(plan, dataMgr, expected);
+        
+        bsc.setCapabilitySupport(Capability.ELEMENTARY_OLAP, true);
+        bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
+
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT g_0.e1, LAG(g_0.e1, 2, 'd') OVER (PARTITION BY g_0.e3 ORDER BY g_0.e2) FROM pm1.g1 AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
     }
     
 }

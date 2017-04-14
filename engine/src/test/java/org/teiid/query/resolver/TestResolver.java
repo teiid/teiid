@@ -3010,6 +3010,18 @@ public class TestResolver {
     	assertTrue(((CompareCriteria)q.getCriteria()).getLeftExpression() instanceof ElementSymbol);
     }
     
+    @Test public void testLeadOffset() {
+        //must be integer
+        String sql = "SELECT LEAD(e1, 'a') over (order by e2) FROM pm1.g1";
+        helpResolveException(sql);
+    }
+    
+    @Test public void testLeadDefault() {
+        //must have same type
+        String sql = "SELECT LEAD(e2, 1, 'a') over (order by e2) FROM pm1.g1";
+        helpResolveException(sql);
+    }
+    
     private void helpTestWidenToString(String sql) {
     	TransformationMetadata tm = RealMetadataFactory.exampleBQTCached().getDesignTimeMetadata();
     	tm.setWidenComparisonToString(false);

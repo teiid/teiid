@@ -45,6 +45,7 @@ import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.SortSpecification.NullOrdering;
 import org.teiid.query.analysis.AnalysisRecord;
@@ -204,7 +205,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 					GroupingNode.getIndex(wf.getFunction().getCondition(), expressionIndexes);
 				}
 				wfi.outputIndex = i;
-				if (wf.getFunction().getAggregateFunction() == Type.ROW_NUMBER) {
+				if (wf.getFunction().isRowValueFunction()) {
 					wsi.rowValuefunctions.add(wfi);
 				} else {
 					wsi.functions.add(wfi);
@@ -257,7 +258,37 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 						List<?> valueRow = rowValueMapping[specIndex].find(idRow);
 						for (int i = 0; i < functions.size(); i++) {
 							WindowFunctionInfo wfi = functions.get(i);
-							outputRow.set(wfi.outputIndex, valueRow.get(i+1));
+							Object value = valueRow.get(i+1);
+							//special handling for lead lag
+							//an array value encodes what we need to know about
+							//the offset, default, and partition
+							if (wfi.function.getFunction().getAggregateFunction() == Type.LEAD
+							        || wfi.function.getFunction().getAggregateFunction() == Type.LAG) {
+							    ArrayImpl array = (ArrayImpl)value;
+							    Object[] args = array.getValues();
+							    int offset = 1;
+							    Object defaultValue = null;
+							    if (args.length > 2) {
+							        offset = (int) args[1];
+							        if (args.length > 3) {
+							            defaultValue = args[2];
+							        }
+							    }
+							    List<?> newIdRow = Arrays.asList(rowId+(wfi.function.getFunction().getAggregateFunction() == Type.LAG?-offset:offset));
+							    List<?> newValueRow = rowValueMapping[specIndex].find(newIdRow);
+							    if (newValueRow == null) {
+							        value = defaultValue;
+							    } else {
+							        Object[] newArgs = ((ArrayImpl)newValueRow.get(i+1)).getValues();
+							        //make sure it's the same partition
+							        if (args[args.length-1].equals(newArgs[newArgs.length-1])) {
+							            value = newArgs[0];
+							        } else {
+							            value = defaultValue;
+							        }
+							    }
+							}
+                            outputRow.set(wfi.outputIndex, value);
 						}
 					}
 					functions = entry.getValue().functions;
@@ -413,6 +444,10 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 		for (WindowFunctionInfo wfi : functions) {
 			aggs.add(GroupingNode.initAccumulator(wfi.function.getFunction(), this, expressionIndexes));
 			Class<?> outputType = wfi.function.getType();
+			if (wfi.function.getFunction().getAggregateFunction() == Type.LEAD 
+			        || wfi.function.getFunction().getAggregateFunction() == Type.LAG) {
+			    outputType = DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.OBJECT);
+			}
 		    ElementSymbol value = new ElementSymbol("val"); //$NON-NLS-1$
 		    value.setType(outputType);
 		    elements.add(value);

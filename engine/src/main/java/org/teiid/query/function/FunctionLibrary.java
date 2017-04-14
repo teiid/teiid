@@ -632,6 +632,26 @@ public class FunctionLibrary {
 				aa.setAllowsOrderBy(true);
 				aa.setAllowsDistinct(false);
 				break;
+			case FIRST_VALUE:
+			case LAST_VALUE:
+			    if (!includeAnalytic) {
+                    continue;
+                }
+                aa.setAllowsDistinct(false);
+                aa.setAnalytic(true);
+                returnType = DataTypeManager.DefaultDataTypes.OBJECT;
+                argTypes = new String[] {DataTypeManager.DefaultDataTypes.OBJECT};
+                break;
+			case LEAD:
+            case LAG:
+                if (!includeAnalytic) {
+                    continue;
+                }
+                aa.setAllowsDistinct(false);
+                aa.setAnalytic(true);
+                returnType = DataTypeManager.DefaultDataTypes.OBJECT;
+                argTypes = new String[] {DataTypeManager.DefaultDataTypes.OBJECT, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.OBJECT};
+                break; 
     		}
 			FunctionMethod fm = FunctionMethod.createFunctionMethod(type.name(), type.name(), FunctionCategoryConstants.AGGREGATE, returnType, argTypes);
 			fm.setAggregateAttributes(aa);

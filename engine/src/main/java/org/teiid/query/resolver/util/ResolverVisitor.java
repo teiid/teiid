@@ -566,6 +566,29 @@ public class ResolverVisitor extends LanguageVisitor {
     	case USER_DEFINED:
     		visit((Function)obj);
     		break;
+    	case LEAD:
+    	case LAG:
+    	    if (obj.getArgs().length > 1) {
+                //second arg must be an integer
+    	        try {
+                    obj.getArgs()[1] = ResolverUtil.convertExpression(obj.getArg(1), DataTypeManager.DefaultDataTypes.INTEGER, metadata);
+                } catch (QueryResolverException e) {
+                    handleException(e);
+                }
+    	        //first and third args must match type
+    	        if (obj.getArgs().length > 2) {
+    	            try {
+    	                if (obj.getArgs()[0].getType() == DataTypeManager.DefaultDataClasses.NULL) {
+    	                    obj.getArgs()[0] = ResolverUtil.convertExpression(obj.getArg(0), DataTypeManager.getDataTypeName(obj.getArg(2).getType()), metadata);
+    	                } else {
+    	                    obj.getArgs()[2] = ResolverUtil.convertExpression(obj.getArg(2), DataTypeManager.getDataTypeName(obj.getArg(0).getType()), metadata);
+    	                }
+                    } catch (QueryResolverException e) {
+                        handleException(e);
+                    }   
+    	        }
+    	    }
+    	    break;
     	case STRING_AGG:
     		try {
 	    		if (obj.getArgs().length != 2) {

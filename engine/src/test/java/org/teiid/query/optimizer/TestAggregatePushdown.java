@@ -1415,8 +1415,8 @@ public class TestAggregatePushdown {
         
         QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(RealMetadataFactory.example1Cached().getMetadataStore(), "example1", new FunctionTree("foo", new FakeFunctionMetadataSource(), true));
         
-        ProcessorPlan plan = TestOptimizer.helpPlan("select FIRST_VALUE(e1) OVER (ORDER BY e2) from pm1.g2", metadata, null, capFinder,  //$NON-NLS-1$
-            new String[]{"SELECT FIRST_VALUE(ALL g_0.e1) OVER (ORDER BY g_0.e2) FROM pm1.g2 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan("select foo.FIRST_VALUE(e1) OVER (ORDER BY e2) from pm1.g2", metadata, null, capFinder,  //$NON-NLS-1$
+            new String[]{"SELECT foo.FIRST_VALUE(ALL g_0.e1) OVER (ORDER BY g_0.e2) FROM pm1.g2 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN); 
     }  
     

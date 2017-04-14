@@ -287,7 +287,17 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
 			break;
 		case STRING_AGG:
 			result = new StringAgg(aggSymbol.getType() == DataTypeManager.DefaultDataClasses.BLOB);
-			break;     
+			break; 
+		case FIRST_VALUE:
+		    result = new FirstLastValue(aggSymbol.getType(), true);
+            break;
+		case LAST_VALUE:
+            result = new FirstLastValue(aggSymbol.getType(), false);
+            break;
+		case LEAD:
+		case LAG:
+		    result = new LeadLagValue();
+            break;
 		case USER_DEFINED:
 			try {
                 result = new UserDefined(aggSymbol.getFunctionDescriptor());
