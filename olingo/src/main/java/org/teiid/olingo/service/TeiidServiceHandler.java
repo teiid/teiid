@@ -181,17 +181,22 @@ public class TeiidServiceHandler implements ServiceHandler {
             public void visit(PrimitiveValueResponse response)
                     throws ODataLibraryException, ODataApplicationException {
                 EntityCollection entitySet = (EntityCollection)queryResponse;
-                Entity entity = entitySet.getEntities().get(0);
-                
-                EdmProperty edmProperty = request.getUriResourceProperty().getProperty();
-                Property property = entity.getProperty(edmProperty.getName());
-                if (property == null) {
+                if (!entitySet.getEntities().isEmpty()) {
+                    Entity entity = entitySet.getEntities().get(0);
+                    
+                    EdmProperty edmProperty = request.getUriResourceProperty().getProperty();
+                    Property property = entity.getProperty(edmProperty.getName());
+                    if (property == null) {
+                        response.writeNotFound(true);
+                    }
+                    else if (property.getValue() == null) {
+                        response.writeNoContent(true);
+                    } else {
+                        response.write(property.getValue());
+                    }
+                } else {
                     response.writeNotFound(true);
                 }
-                else if (property.getValue() == null) {
-                    response.writeNoContent(true);
-                }
-                response.write(property.getValue());            
             }
 
             public void visit(PropertyResponse response)
