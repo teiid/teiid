@@ -252,6 +252,57 @@ public class TestN1QLUpdateVisitor extends TestVisitor {
         }
     }
     
+    @Test
+    public void testUpdate() throws TranslatorException {
+        
+        String sql = "UPDATE Customer SET Name = 'John Doe' WHERE documentID = 'customer-5'";
+        helpTest(sql, "N1QL1801");
+        
+        sql = "UPDATE Customer SET Name = 'John Doe' WHERE documentID = 'customer-5' AND ID = 'Customer_10000' AND Name = 'Kylin Soong' AND type = 'Customer'";
+        helpTest(sql, "N1QL1802");
+        
+        sql = "UPDATE Customer SET Name = 'John Doe' WHERE ID = 'Customer_10000' AND Name = 'Kylin Soong' AND type = 'Customer'";
+        helpTest(sql, "N1QL1803");
+        
+        sql = "UPDATE Customer SET Name = 'John Doe' WHERE ID = 'Customer_10000'";
+        helpTest(sql, "N1QL1804");
+        
+        sql = "UPDATE Oder SET CreditCard_CVN = 100 WHERE documentID = 'order-3'" ;
+        helpTest(sql, "N1QL1805");
+        
+        sql = "UPDATE Oder SET CreditCard_CVN = 100 WHERE CustomerID = 'Customer_12346'" ;
+        helpTest(sql, "N1QL1806");
+        
+        sql = "UPDATE Oder SET CreditCard_CVN = 100, CreditCard_CardNumber = '4111 1111 1111 112', CreditCard_Expiry = '14/12' WHERE CustomerID = 'Customer_12346'" ;
+        helpTest(sql, "N1QL1807");
+        
+        sql = "UPDATE Oder SET CreditCard_CVN = 100, CreditCard_CardNumber = '4111 1111 1111 111', CreditCard_Expiry = '12/12' WHERE documentID = 'order-3' AND CustomerID = 'Customer_12346'" ;
+        helpTest(sql, "N1QL1808");
+        
+        sql = "UPDATE Customer_SavedAddresses SET Customer_SavedAddresses = 'Beijing' WHERE documentID = 'customer-5' AND Customer_SavedAddresses_idx = 0";
+        helpTest(sql, "N1QL1809");
+        
+        sql = "UPDATE Oder_Items SET Oder_Items_ItemID = 80000, Oder_Items_Quantity = 10 WHERE documentID = 'order-3' AND Oder_Items_idx = 0";
+        helpTest(sql, "N1QL1810");
+    }
+    
+    @Test
+    public void testUpdateNestedArray() throws TranslatorException {
+        
+        String sql = "UPDATE T3_nestedArray_dim2_dim3_dim4 SET T3_nestedArray_dim2_dim3_dim4 = 'Hello Teiid' WHERE documentID = 'nestedArray' AND T3_nestedArray_idx = 1 AND T3_nestedArray_dim2_idx = 1 AND T3_nestedArray_dim2_dim3_idx = 1 AND T3_nestedArray_dim2_dim3_dim4_idx = 3";
+        helpTest(sql, "N1QL1901");
+        
+        sql = "UPDATE T3_nestedArray_dim2_dim3 SET T3_nestedArray_dim2_dim3 = 'Hello Teiid' WHERE documentID = 'nestedArray' AND T3_nestedArray_idx = 1 AND T3_nestedArray_dim2_idx = 1 AND T3_nestedArray_dim2_dim3_idx = 1";
+        helpTest(sql, "N1QL1902");
+        
+        sql = "UPDATE T3_nestedArray_dim2 SET T3_nestedArray_dim2 = 'Hello Teiid' WHERE documentID = 'nestedArray' AND T3_nestedArray_idx = 1 AND T3_nestedArray_dim2_idx = 1";
+        helpTest(sql, "N1QL1903");
+        
+        sql = "UPDATE T3_nestedArray SET T3_nestedArray = 'Hello Teiid' WHERE documentID = 'nestedArray' AND T3_nestedArray_idx = 1";
+        helpTest(sql, "N1QL1904");
+        
+    }
+    
     
     @Test
     public void testSourceModel() {

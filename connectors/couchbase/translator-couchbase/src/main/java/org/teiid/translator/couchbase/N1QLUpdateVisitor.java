@@ -66,6 +66,7 @@ import org.teiid.language.Insert;
 import org.teiid.language.LanguageObject;
 import org.teiid.language.Literal;
 import org.teiid.language.NamedTable;
+import org.teiid.language.SetClause;
 import org.teiid.language.Update;
 import org.teiid.translator.TypeFacility;
 
@@ -402,56 +403,12 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
             buffer.append(DELETE).append(SPACE).append(FROM).append(SPACE);
             buffer.append(this.keyspace).append(SPACE);
             
-            CBColumnData pk = null;
-            boolean isTypedInProjection = false;
-            StringBuilder whereBuffer = new StringBuilder();
-            for(int i = 0 ; i < this.rowCache.size() ; i++) {
-                
-                CBColumnData columnData = rowCache.get(i);
-                
-                if(columnData.getCBColumn().isPK()) {
-                    pk = columnData;
-                    break;
-                }
-                
-                whereBuffer.append(SPACE);
-                
-                if(i > 0) {
-                    whereBuffer.append(this.conditionStack.get(i - 1)).append(SPACE);
-                }
-                
-                if(i > 1 && !this.conditionStack.get(i - 1).equals(this.conditionStack.get(i - 2))) {
-                    whereBuffer.append(LPAREN);
-                }
-                
-                if(typedName != null && typedName.equals(nameInSource(columnData.getCBColumn().getLeafName()))) {
-                    isTypedInProjection = true;
-                }
-                
-                whereBuffer.append(columnData.getCBColumn().getNameInSource()).append(SPACE);
-                whereBuffer.append(this.comparisonStack.get(i)).append(SPACE);
-                whereBuffer.append(setValue(columnData.getColumnType(), columnData.getValue()));
-                
-                if(i > 1 && !this.conditionStack.get(i - 1).equals(this.conditionStack.get(i - 2))) {
-                    whereBuffer.append(RPAREN);
-                }
-            }
-            
-            if(!isTypedInProjection && pk == null && typedName != null && typedValue != null) {
-                if(this.rowCache.size() == 0) {
-                    whereBuffer.append(SPACE).append(keyspace).append(SOURCE_SEPARATOR).append(typedName).append(SPACE).append(EQ).append(SPACE).append(typedValue);
-                } else {
-                    whereBuffer.append(SPACE).append(AND).append(SPACE).append(keyspace).append(SOURCE_SEPARATOR).append(typedName).append(SPACE).append(EQ).append(SPACE).append(typedValue);
-                }
-            }
-            
-            if(pk != null) {
-                buffer.append(USE).append(SPACE).append(KEYS).append(SPACE);
-                buffer.append(setValue(pk.getColumnType(), pk.getValue()));
+            String useKey = this.appendUseKey();
+            if(useKey != null) {
+                buffer.append(useKey);
             } else {
-                buffer.append(WHERE).append(whereBuffer);
+                buffer.append(this.appendWhere());
             }
-
         }
     }
     
@@ -490,7 +447,176 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
     
     @Override
     public void visit(Update obj) {
-        super.visit(obj);
+        
+        append(obj.getTable());
+        buffer.append(UPDATE).append(SPACE).append(this.keyspace).append(SPACE);
+        
+        append(obj.getChanges());
+        literalValueMapping();
+        
+        if(isArrayTable) {
+            List<CBColumnData> setList = new ArrayList<>(this.rowCache.size());
+            for(int i = 0 ; i < this.rowCache.size() ; i ++) {
+                if(rowCache.get(i).getCBColumn().isPK() || rowCache.get(i).getCBColumn().isIdx()) {
+                    throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29018, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29018, obj));
+                }
+                setList.add(rowCache.get(i));
+            }
+            
+            this.rowCache.clear();
+            this.literalStack.clear();
+            if (obj.getWhere() != null) {
+                append(obj.getWhere());
+            }
+            literalValueMapping();
+            
+            CBColumnData pk = null;
+            List<CBColumnData> idxList = new ArrayList<>(dimension);
+            for(CBColumnData columnData : rowCache) {
+                if(columnData.getCBColumn().isPK()) {
+                    pk = columnData;
+                } else if(columnData.getCBColumn().isIdx()) {
+                    idxList.add(columnData);
+                } else {
+                    // todo-- array content comparison
+                }
+            }
+            
+            if (idxList.size() != dimension) {
+                throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29020, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29020, obj));
+            }
+            
+            if(pk == null) {
+                throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29019, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29019, obj));
+            }
+            
+            buffer.append(USE).append(SPACE).append(KEYS).append(SPACE).append(setValue(pk.getColumnType(), pk.getValue())).append(SPACE);
+            
+            String setKey = buildSetKey(setAttr, dimension, idxList) + LSBRACE + idxList.get(idxList.size() - 1).getValue() + RSBRACE;
+            buffer.append(SET).append(SPACE).append(setKey).append(SPACE).append(EQ).append(SPACE);
+            
+            JsonObject nestedObj = null;
+            for(CBColumnData columnData : setList) {
+                if(columnData.getCBColumn().hasLeaf()) {
+                    if(nestedObj == null) {
+                        nestedObj = JsonObject.create();
+                    }
+                    String attr = columnData.getCBColumn().getLeafName();
+                    String path = columnData.getCBColumn().getNameInSource();
+                    path = path.substring(path.lastIndexOf(SQUARE_BRACKETS) + SQUARE_BRACKETS.length() + SOURCE_SEPARATOR.length());
+                    JsonObject json = this.findObject(nestedObj, path);
+                    ef.setValue(json, attr, columnData.getColumnType(), columnData.getValue());
+                }
+            }
+            
+            if(nestedObj != null) {
+                buffer.append(nestedObj);
+            } else {
+                buffer.append(this.setValue(setList.get(0).getColumnType(), setList.get(0).getValue()));
+            }
+            
+        } else {
+            StringBuilder setBuffer = new StringBuilder();
+            setBuffer.append(SET).append(SPACE);
+            boolean comma = false;
+            for(int i = 0 ; i < this.rowCache.size() ; i ++) {
+                if(rowCache.get(i).getCBColumn().isPK()) {
+                    continue;
+                }
+                if(comma) {
+                    setBuffer.append(COMMA).append(SPACE);
+                }
+                comma = true;
+                setBuffer.append(rowCache.get(i).getCBColumn().getNameInSource()).append(SPACE).append(EQ).append(SPACE).append(setValue(rowCache.get(i).getColumnType(), rowCache.get(i).getValue()));
+            }
+            
+            this.rowCache.clear();
+            this.literalStack.clear();
+            if (obj.getWhere() != null) {
+                append(obj.getWhere());
+            }
+            literalValueMapping();
+
+            String useKey = this.appendUseKey();
+            String where = this.appendWhere();
+            
+            if(useKey != null) {
+                buffer.append(useKey).append(SPACE).append(setBuffer);
+            } else {
+                buffer.append(setBuffer).append(SPACE).append(where);
+            }
+            
+        }
+    }
+    
+    private String appendUseKey() {
+        CBColumnData pk = null;
+        for(int i = 0 ; i < this.rowCache.size() ; i++) {
+            if(rowCache.get(i).getCBColumn().isPK()) {
+                pk = rowCache.get(i);
+                break;
+            }
+        }
+        
+        if(pk != null) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(USE).append(SPACE).append(KEYS).append(SPACE);
+            sb.append(setValue(pk.getColumnType(), pk.getValue()));
+            return sb.toString();
+        } else {
+            return null;
+        }
+    }
+    
+    private String appendWhere() {
+        
+        StringBuilder whereBuffer = new StringBuilder();
+        whereBuffer.append(WHERE);
+        
+        boolean isTypedInProjection = false;
+        
+        for(int i = 0 ; i < this.rowCache.size() ; i++) {
+
+            CBColumnData columnData = rowCache.get(i);
+            
+            whereBuffer.append(SPACE);
+            
+            if(i > 0) {
+                whereBuffer.append(this.conditionStack.get(i - 1)).append(SPACE);
+            }
+            
+            if(i > 1 && !this.conditionStack.get(i - 1).equals(this.conditionStack.get(i - 2))) {
+                whereBuffer.append(LPAREN);
+            }
+            
+            if(typedName != null && typedName.equals(nameInSource(columnData.getCBColumn().getLeafName()))) {
+                isTypedInProjection = true;
+            }
+            
+            whereBuffer.append(columnData.getCBColumn().getNameInSource()).append(SPACE);
+            whereBuffer.append(this.comparisonStack.get(i)).append(SPACE);
+            whereBuffer.append(setValue(columnData.getColumnType(), columnData.getValue()));
+            
+            if(i > 1 && !this.conditionStack.get(i - 1).equals(this.conditionStack.get(i - 2))) {
+                whereBuffer.append(RPAREN);
+            }
+        }
+        
+        if(!isTypedInProjection && typedName != null && typedValue != null) {
+            if(this.rowCache.size() == 0) {
+                whereBuffer.append(SPACE).append(keyspace).append(SOURCE_SEPARATOR).append(typedName).append(SPACE).append(EQ).append(SPACE).append(typedValue);
+            } else {
+                whereBuffer.append(SPACE).append(AND).append(SPACE).append(keyspace).append(SOURCE_SEPARATOR).append(typedName).append(SPACE).append(EQ).append(SPACE).append(typedValue);
+            }
+        }
+        
+        return whereBuffer.toString();
+    }
+    
+    @Override
+    public void visit(SetClause clause) {
+        append(clause.getSymbol());
+        append(clause.getValue());
     }
 
     private class CBColumnData {
