@@ -159,6 +159,38 @@ public class TestN1QLUpdateVisitor extends TestVisitor {
         
         sql = "DELETE FROM Customer WHERE ID = 'Customer_10000' AND type = 'Customer' AND Name = 'Kylin Soong'";
         helpTest(sql, "N1QL1605");
+        
+        sql = "DELETE FROM Customer_SavedAddresses WHERE documentID = 'customer-3' AND Customer_SavedAddresses_idx = '1'";
+        helpTest(sql, "N1QL1606");
+        
+        sql = "DELETE FROM Customer_SavedAddresses WHERE Customer_SavedAddresses_idx = '2'";
+        try {
+            helpTest(sql, "N1QL1607");
+        } catch (TeiidRuntimeException e) {
+            assertEquals(TeiidRuntimeException.class, e.getClass());
+        }
+        
+        sql = "DELETE FROM Oder WHERE documentID = 'order-3'";
+        helpTest(sql, "N1QL1608");
+        
+        sql = "DELETE FROM Oder WHERE documentID = 'order-3' AND CustomerID = 'Customer_12346' AND Name = 'Air Ticket' AND type = 'Order' AND CreditCard_CVN = 123 AND CreditCard_CardNumber = '4111 1111 1111 111' AND CreditCard_Expiry = '12/12' AND CreditCard_Type = 'Visa'";
+        helpTest(sql, "N1QL1609");
+        
+        sql = "DELETE FROM Oder WHERE CustomerID = 'Customer_12346'";
+        helpTest(sql, "N1QL1610");
+        
+        sql = "DELETE FROM Oder WHERE CustomerID = 'Customer_12346' AND Name = 'Air Ticket' AND type = 'Order' AND CreditCard_CVN = 123 AND CreditCard_CardNumber = '4111 1111 1111 111' AND CreditCard_Expiry = '12/12' AND CreditCard_Type = 'Visa'";
+        helpTest(sql, "N1QL1611");
+        
+        sql = "DELETE FROM Oder_Items WHERE documentID = 'order-3' AND Oder_Items_idx = 2";
+        helpTest(sql, "N1QL1612");
+        
+        sql = "DELETE FROM Oder_Items WHERE Oder_Items_idx = 2";
+        try {
+            helpTest(sql, "N1QL1613");
+        } catch (TeiidRuntimeException e) {
+            assertEquals(TeiidRuntimeException.class, e.getClass());
+        }
     }
     
     @Test
@@ -192,17 +224,34 @@ public class TestN1QLUpdateVisitor extends TestVisitor {
         helpTest(sql, "N1QL1709");
         
         sql = "DELETE FROM T3_nestedArray_dim2_dim3_dim4 WHERE T3_nestedArray_idx = 1 AND T3_nestedArray_dim2_idx = 1 AND T3_nestedArray_dim2_dim3_idx = 1 AND T3_nestedArray_dim2_dim3_dim4_idx = 1";
-        helpTest(sql, "N1QL1710");
+        try {
+            helpTest(sql, "N1QL1710");
+        } catch (TeiidRuntimeException e) {
+            assertEquals(TeiidRuntimeException.class, e.getClass());
+        }
         
         sql = "DELETE FROM T3_nestedArray_dim2_dim3 WHERE T3_nestedArray_idx = 1 AND T3_nestedArray_dim2_idx = 1 AND T3_nestedArray_dim2_dim3_idx = 1";
-        helpTest(sql, "N1QL1711");
+        try {
+            helpTest(sql, "N1QL1711");
+        } catch (TeiidRuntimeException e) {
+            assertEquals(TeiidRuntimeException.class, e.getClass());
+        }
         
         sql = "DELETE FROM T3_nestedArray_dim2 WHERE T3_nestedArray_idx = 1 AND T3_nestedArray_dim2_idx = 1";
-        helpTest(sql, "N1QL1712");
+        try {
+            helpTest(sql, "N1QL1712");
+        } catch (TeiidRuntimeException e) {
+            assertEquals(TeiidRuntimeException.class, e.getClass());
+        }
         
         sql = "DELETE FROM T3_nestedArray WHERE T3_nestedArray_idx = 1";
-        helpTest(sql, "N1QL1713");
+        try {
+            helpTest(sql, "N1QL1713");
+        } catch (TeiidRuntimeException e) {
+            assertEquals(TeiidRuntimeException.class, e.getClass());
+        }
     }
+    
     
     @Test
     public void testSourceModel() {

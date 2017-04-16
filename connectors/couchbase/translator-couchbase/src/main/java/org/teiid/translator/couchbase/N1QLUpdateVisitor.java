@@ -33,6 +33,7 @@ import static org.teiid.language.SQLConstants.Reserved.FROM;
 import static org.teiid.language.SQLConstants.Reserved.WHERE;
 import static org.teiid.language.SQLConstants.Reserved.AS;
 import static org.teiid.language.SQLConstants.Reserved.SET;
+import static org.teiid.language.SQLConstants.Reserved.AND;
 import static org.teiid.language.SQLConstants.Tokens.COMMA;
 import static org.teiid.language.SQLConstants.Tokens.SPACE;
 import static org.teiid.language.SQLConstants.Tokens.LPAREN;
@@ -65,6 +66,7 @@ import org.teiid.language.Insert;
 import org.teiid.language.LanguageObject;
 import org.teiid.language.Literal;
 import org.teiid.language.NamedTable;
+import org.teiid.language.Update;
 import org.teiid.translator.TypeFacility;
 
 import com.couchbase.client.java.document.json.JsonArray;
@@ -379,9 +381,11 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
                 throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29005, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29005, obj));
             }
             
-            if(pk != null) {
-                buffer.append(USE).append(SPACE).append(KEYS).append(SPACE).append(setValue(pk.getColumnType(), pk.getValue())).append(SPACE);
+            if(pk == null) {
+                throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29017, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29017, obj));
             }
+            
+            buffer.append(USE).append(SPACE).append(KEYS).append(SPACE).append(setValue(pk.getColumnType(), pk.getValue())).append(SPACE);
             
             String setKey = buildSetKey(setAttr, dimension, idxList);
             String left = SQUARE_BRACKETS;
@@ -399,8 +403,10 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
             buffer.append(this.keyspace).append(SPACE);
             
             CBColumnData pk = null;
+            boolean isTypedInProjection = false;
             StringBuilder whereBuffer = new StringBuilder();
             for(int i = 0 ; i < this.rowCache.size() ; i++) {
+                
                 CBColumnData columnData = rowCache.get(i);
                 
                 if(columnData.getCBColumn().isPK()) {
@@ -418,12 +424,24 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
                     whereBuffer.append(LPAREN);
                 }
                 
+                if(typedName != null && typedName.equals(nameInSource(columnData.getCBColumn().getLeafName()))) {
+                    isTypedInProjection = true;
+                }
+                
                 whereBuffer.append(columnData.getCBColumn().getNameInSource()).append(SPACE);
                 whereBuffer.append(this.comparisonStack.get(i)).append(SPACE);
                 whereBuffer.append(setValue(columnData.getColumnType(), columnData.getValue()));
                 
                 if(i > 1 && !this.conditionStack.get(i - 1).equals(this.conditionStack.get(i - 2))) {
                     whereBuffer.append(RPAREN);
+                }
+            }
+            
+            if(!isTypedInProjection && pk == null && typedName != null && typedValue != null) {
+                if(this.rowCache.size() == 0) {
+                    whereBuffer.append(SPACE).append(keyspace).append(SOURCE_SEPARATOR).append(typedName).append(SPACE).append(EQ).append(SPACE).append(typedValue);
+                } else {
+                    whereBuffer.append(SPACE).append(AND).append(SPACE).append(keyspace).append(SOURCE_SEPARATOR).append(typedName).append(SPACE).append(EQ).append(SPACE).append(typedValue);
                 }
             }
             
@@ -468,6 +486,11 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
         append(obj.getLeftExpression());
         this.addComparison(obj.getOperator().toString());
         appendRightComparison(obj);
+    }
+    
+    @Override
+    public void visit(Update obj) {
+        super.visit(obj);
     }
 
     private class CBColumnData {

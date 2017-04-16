@@ -657,7 +657,7 @@ public class N1QLVisitor extends SQLStringVisitor{
         append(call.getArguments().get(0));
     }
     
-    private String nameInSource(String path) {
+    protected String nameInSource(String path) {
         if(path.startsWith(WAVE) && path.endsWith(WAVE)) {
             return path;
         }
