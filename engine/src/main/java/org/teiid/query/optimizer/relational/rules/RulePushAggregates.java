@@ -154,7 +154,8 @@ public class RulePushAggregates implements
 	            				if (groupingExpressions.isEmpty()) {
 	            					addEmptyFilter(aggregates, groupNode, metadata, capFinder, RuleRaiseAccess.getModelIDFromAccess(child, metadata));
 	            				}
-	            				FrameUtil.convertNode(groupNode.getParent(), null, null, ((SymbolMap)groupNode.getProperty(Info.SYMBOL_MAP)).inserseMapping(), metadata, false);
+	            				access.getGroups().clear();
+	            				access.getGroups().addAll(groupNode.getGroups());
 	            				RuleRaiseAccess.performRaise(null, access, access.getParent());
 	            				if (groupingExpressions.isEmpty() && RuleRaiseAccess.canRaiseOverSelect(access, metadata, capFinder, access.getParent(), null)) {
 	            					RuleRaiseAccess.performRaise(null, access, access.getParent());
