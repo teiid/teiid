@@ -85,5 +85,10 @@ public class FirstLastValue extends SingleArgumentAggregateFunction {
     public List<? extends Class<?>> getStateTypes() {
     	return Arrays.asList(type, Boolean.class);
     }
+    
+    @Override
+    public boolean respectsNull() {
+        return true;
+    }
 
 }

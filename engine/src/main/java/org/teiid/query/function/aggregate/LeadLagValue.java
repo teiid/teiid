@@ -61,5 +61,10 @@ public class LeadLagValue extends AggregateFunction {
         vals = null;
         partition++;
     }
+    
+    @Override
+    public boolean respectsNull() {
+        return true;
+    }
 
 }
