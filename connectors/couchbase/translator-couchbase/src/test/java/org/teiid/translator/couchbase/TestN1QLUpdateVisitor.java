@@ -160,10 +160,10 @@ public class TestN1QLUpdateVisitor extends TestVisitor {
         sql = "DELETE FROM Customer WHERE ID = 'Customer_10000' AND type = 'Customer' AND Name = 'Kylin Soong'";
         helpTest(sql, "N1QL1605");
         
-        sql = "DELETE FROM Customer_SavedAddresses WHERE documentID = 'customer-3' AND Customer_SavedAddresses_idx = '1'";
+        sql = "DELETE FROM Customer_SavedAddresses WHERE documentID = 'customer-3' AND Customer_SavedAddresses_idx = 1";
         helpTest(sql, "N1QL1606");
         
-        sql = "DELETE FROM Customer_SavedAddresses WHERE Customer_SavedAddresses_idx = '2'";
+        sql = "DELETE FROM Customer_SavedAddresses WHERE Customer_SavedAddresses_idx = 2";
         try {
             helpTest(sql, "N1QL1607");
         } catch (TeiidRuntimeException e) {
@@ -300,9 +300,7 @@ public class TestN1QLUpdateVisitor extends TestVisitor {
         
         sql = "UPDATE T3_nestedArray SET T3_nestedArray = 'Hello Teiid' WHERE documentID = 'nestedArray' AND T3_nestedArray_idx = 1";
         helpTest(sql, "N1QL1904");
-        
     }
-    
     
     @Test
     public void testSourceModel() {

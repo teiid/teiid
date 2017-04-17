@@ -51,10 +51,7 @@ public class CouchbaseUpdateExecution extends CouchbaseExecution implements Upda
         this.visitor = this.executionFactory.getN1QLUpdateVisitor();
         this.visitor.append(this.command);
         String statement = this.visitor.toString();
-        LogManager.logDetail(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29004, statement));
-        
-        // TODO-- handle delete, update
-        
+        LogManager.logDetail(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29004, statement));        
         this.results = this.connection.execute(statement);
     }
 

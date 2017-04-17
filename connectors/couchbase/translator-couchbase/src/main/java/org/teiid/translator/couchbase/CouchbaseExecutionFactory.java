@@ -297,6 +297,11 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
         return true;
     }
 
+    @Override
+    public boolean supportsCompareCriteriaEquals() {
+        return true;
+    }
+
     public N1QLVisitor getN1QLVisitor() {
         return new N1QLVisitor(this);
     }

@@ -95,25 +95,19 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
         append(obj.getTable());
         
         if(isArrayTable) {
-            buffer.append(UPDATE).append(SPACE).append(this.keyspace);
-            buffer.append(SPACE).append(USE).append(SPACE).append(KEYS).append(SPACE);
-            
+            buffer.append(UPDATE).append(SPACE).append(this.keyspace).append(SPACE);
+
             append(obj.getColumns());
             append(obj.getValueSource());
             literalValueMapping();
             
-            String documentID = null;
+            appendDocumentID(obj);
+            String arrayIDX = buildNestedArrayIdx(obj);
+            
             JsonArray array = JsonArray.create();
-            List<CBColumnData> idxList = new ArrayList<>(dimension);
             for(int i = 0 ; i < rowCache.size() ; i ++) {
-                
-                CBColumnData columnData = rowCache.get(i);
-                
-                if(columnData.getCBColumn().isPK()) {
-                    documentID = (String)ef.retrieveValue(columnData.getColumnType(), columnData.getValue());
-                } else if(columnData.getCBColumn().isIdx()) {
-                    idxList.add(columnData);
-                } else {
+                CBColumnData columnData = rowCache.get(i);   
+                if(!columnData.getCBColumn().isPK() && !columnData.getCBColumn().isIdx()) {
                     if(columnData.getCBColumn().hasLeaf()) {
                         String attr = columnData.getCBColumn().getLeafName();
                         String path = columnData.getCBColumn().getNameInSource();
@@ -126,32 +120,15 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
                     } else {
                         ef.setValue(array, columnData.getColumnType(), columnData.getValue());
                     }
-                }
+                } 
             }
-            
-            if (idxList.size() != dimension) {
-                throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29006, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29006, obj));
-            }
-            
-            if(null == documentID) {
-                throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29007, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29007, obj));
-            }
-            
-            String setKey = buildSetKey(setAttr, dimension, idxList);
-            
-            buffer.append(QUOTE).append(escapeString(documentID, QUOTE)).append(QUOTE).append(SPACE);
-            
+
             StringBuilder left = new StringBuilder();
-            left.append("IFMISSINGORNULL").append(LPAREN).append(setKey).append(COMMA).append(SPACE).append(SQUARE_BRACKETS).append(RPAREN);
-            appendConcat(setKey, left, array);
-            buffer.append(SPACE);
+            left.append("IFMISSINGORNULL").append(LPAREN).append(arrayIDX).append(COMMA).append(SPACE).append(SQUARE_BRACKETS).append(RPAREN);
+            appendConcat(arrayIDX, left, array);
         } else {
-            buffer.append(getInsertKeyword()).append(SPACE);
-            buffer.append(INTO).append(SPACE);
-            buffer.append(keyspace); 
-            buffer.append(SPACE).append(LPAREN);
-            buffer.append(KEY).append(COMMA).append(SPACE);
-            buffer.append(VALUE).append(RPAREN).append(SPACE);
+            buffer.append(getInsertKeyword()).append(SPACE).append(INTO).append(SPACE).append(keyspace).append(SPACE); 
+            buffer.append(LPAREN).append(KEY).append(COMMA).append(SPACE).append(VALUE).append(RPAREN).append(SPACE);
             
             append(obj.getColumns());
             append(obj.getValueSource());
@@ -178,13 +155,15 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
                 throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29007, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29007, obj));
             }
             
-            buffer.append(VALUES).append(SPACE).append(LPAREN);
-            buffer.append(QUOTE).append(escapeString(documentID, QUOTE)).append(QUOTE);
-            buffer.append(COMMA).append(SPACE);
-            buffer.append(json).append(RPAREN).append(SPACE);
+            buffer.append(VALUES).append(SPACE).append(LPAREN).append(QUOTE).append(escapeString(documentID, QUOTE)).append(QUOTE);
+            buffer.append(COMMA).append(SPACE).append(json).append(RPAREN);
         }
         
-        buffer.append(RETURNING).append(SPACE).append(buildMeta(this.keyspace)).append(SPACE);
+        appendRetuning();
+    }
+    
+    private void appendRetuning() {
+        buffer.append(SPACE).append(RETURNING).append(SPACE).append(buildMeta(this.keyspace)).append(SPACE);
         buffer.append(AS).append(SPACE).append(PK);
     }
     
@@ -196,7 +175,41 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
         buffer.append(right).append(RPAREN);
     }
     
-    private String buildSetKey(String setAttr, int dimension, List<CBColumnData> idxList) {
+    private void appendDocumentID(LanguageObject obj) {
+        
+        CBColumnData pk = null;
+        for(CBColumnData columnData : this.rowCache) {
+            if(columnData.getCBColumn().isPK()) {
+                pk = columnData;
+                break;
+            }
+        }
+        
+        if(pk == null) {
+            throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29006, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29006, obj));
+        } 
+        
+        buffer.append(USE).append(SPACE).append(KEYS).append(SPACE).append(setValue(pk.getColumnType(), pk.getValue())).append(SPACE);
+    }
+    
+    private String buildNestedArrayIdx(LanguageObject obj) {
+        
+        List<CBColumnData> idxList = new ArrayList<>(dimension);
+        for(CBColumnData columnData : this.rowCache) {
+            if(columnData.getCBColumn().isIdx()) {
+                idxList.add(columnData);
+            }
+        }
+        
+        return buildNestedArrayIdx(setAttr, dimension, idxList, obj);
+    }
+    
+    private String buildNestedArrayIdx(String setAttr, int dimension, List<CBColumnData> idxList, LanguageObject obj) {
+        
+        if (idxList.size() != dimension) {
+            throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29005, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29005, obj));
+        }
+        
         StringBuilder sb = new StringBuilder();
         sb.append(setAttr);
         for(int i = 0 ; i < dimension -1 ; i ++) {
@@ -366,29 +379,16 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
         if(isArrayTable) {// delete array depend on array index, and optional docuemntID     
             buffer.append(UPDATE).append(SPACE).append(this.keyspace).append(SPACE);
             
-            CBColumnData pk = null;
+            appendDocumentID(obj);
+            
             List<CBColumnData> idxList = new ArrayList<>(dimension);
             for(CBColumnData columnData : rowCache) {
-                if(columnData.getCBColumn().isPK()) {
-                    pk = columnData;
-                } else if(columnData.getCBColumn().isIdx()) {
+                if(columnData.getCBColumn().isIdx()) {
                     idxList.add(columnData);
-                } else {
-                    //todo--, support comparison via array content 
-                }
+                } 
             }
             
-            if (idxList.size() != dimension) {
-                throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29005, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29005, obj));
-            }
-            
-            if(pk == null) {
-                throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29017, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29017, obj));
-            }
-            
-            buffer.append(USE).append(SPACE).append(KEYS).append(SPACE).append(setValue(pk.getColumnType(), pk.getValue())).append(SPACE);
-            
-            String setKey = buildSetKey(setAttr, dimension, idxList);
+            String setKey = buildNestedArrayIdx(setAttr, dimension, idxList, obj);
             String left = SQUARE_BRACKETS;
             String right = SQUARE_BRACKETS;
             int idx = (int)idxList.get(idxList.size() -1).getValue();
@@ -399,6 +399,7 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
                 right = setKey + LSBRACE + 1 + COLON + RSBRACE;
             }
             appendConcat(setKey, left, right);
+            appendRetuning();
         } else {       
             buffer.append(DELETE).append(SPACE).append(FROM).append(SPACE);
             buffer.append(this.keyspace).append(SPACE);
@@ -470,29 +471,16 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
             }
             literalValueMapping();
             
-            CBColumnData pk = null;
+            appendDocumentID(obj);
+            
             List<CBColumnData> idxList = new ArrayList<>(dimension);
             for(CBColumnData columnData : rowCache) {
-                if(columnData.getCBColumn().isPK()) {
-                    pk = columnData;
-                } else if(columnData.getCBColumn().isIdx()) {
+                if(columnData.getCBColumn().isIdx()) {
                     idxList.add(columnData);
-                } else {
-                    // todo-- array content comparison
-                }
+                } 
             }
-            
-            if (idxList.size() != dimension) {
-                throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29020, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29020, obj));
-            }
-            
-            if(pk == null) {
-                throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29019, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29019, obj));
-            }
-            
-            buffer.append(USE).append(SPACE).append(KEYS).append(SPACE).append(setValue(pk.getColumnType(), pk.getValue())).append(SPACE);
-            
-            String setKey = buildSetKey(setAttr, dimension, idxList) + LSBRACE + idxList.get(idxList.size() - 1).getValue() + RSBRACE;
+
+            String setKey = buildNestedArrayIdx(setAttr, dimension, idxList, obj) + LSBRACE + idxList.get(idxList.size() - 1).getValue() + RSBRACE;
             buffer.append(SET).append(SPACE).append(setKey).append(SPACE).append(EQ).append(SPACE);
             
             JsonObject nestedObj = null;
@@ -547,6 +535,8 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
             }
             
         }
+        
+        appendRetuning();
     }
     
     private String appendUseKey() {
