@@ -27,6 +27,7 @@ import static org.teiid.query.processor.TestProcessor.*;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
@@ -508,6 +509,27 @@ public class TestWindowFunctions {
         TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT FIRST_VALUE(g_0.e1) OVER (ORDER BY g_0.e2), LAST_VALUE(g_0.e2) OVER (ORDER BY g_0.e1) FROM pm1.g1 AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
     }
     
+    @Test public void testFirstLastValueNull() throws Exception {
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        
+        String sql = "SELECT FIRST_VALUE(e1) over (order by e2), LAST_VALUE(e1) over (order by e2) from pm1.g1";
+        
+        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.example1Cached(), null), 
+                RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), 
+                null, true, new CommandContext()); //$NON-NLS-1$
+        
+        HardcodedDataManager dataMgr = new HardcodedDataManager();
+        dataMgr.addData("SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0", Arrays.asList(null, 1), Arrays.asList("b", 2), Arrays.asList("c", 3));
+        
+        List<?>[] expected = new List<?>[] {
+                Arrays.asList(null, null),
+                Arrays.asList(null, "b"),
+                Arrays.asList(null, "c")
+        }; 
+        
+        helpProcess(plan, dataMgr, expected);
+    }
+    
     @Test public void testLead() throws Exception {
         BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
         
@@ -531,6 +553,26 @@ public class TestWindowFunctions {
         bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
 
         TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT LEAD(g_0.e1) OVER (ORDER BY g_0.e2), LEAD(g_0.e1, 2, 'c') OVER (ORDER BY g_0.e2) FROM pm1.g1 AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+    }
+    
+    @Test public void testLeadNullValues() throws Exception {
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        
+        String sql = "SELECT LEAD(e1, 1, 'default') over (order by e2) from pm1.g1";
+        
+        ProcessorPlan plan = TestOptimizer.getPlan(helpGetCommand(sql, RealMetadataFactory.example1Cached(), null), 
+                RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc), 
+                null, true, new CommandContext()); //$NON-NLS-1$
+        
+        HardcodedDataManager dataMgr = new HardcodedDataManager();
+        dataMgr.addData("SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0", Arrays.asList("a", 1), Arrays.asList(null, 2));
+        
+        List<?>[] expected = new List<?>[] {
+                Collections.singletonList(null),
+                Collections.singletonList("default"),
+        }; 
+        
+        helpProcess(plan, dataMgr, expected);
     }
     
     @Test public void testLag() throws Exception {
