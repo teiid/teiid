@@ -6,14 +6,11 @@
     
     <resources>
         <artifact name="${org.jboss.teiid.connectors:couchbase-api}" />
-        <artifact name="${com.couchbase.client:java-client}" />
-        <artifact name="${com.couchbase.client:core-io}" />
-        <artifact name="${io.reactivex:rxjava}" />
     </resources>
 
     <dependencies>
         <module name="javax.api"/>
         <module name="javax.resource.api"/>
-        <module name="sun.jdk"/>
+        <module name="com.couchbase.client" export="true"/>
     </dependencies>
 </module>

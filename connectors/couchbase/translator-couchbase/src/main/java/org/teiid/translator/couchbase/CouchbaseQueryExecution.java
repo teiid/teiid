@@ -62,9 +62,10 @@ public class CouchbaseQueryExecution extends CouchbaseExecution implements Resul
 	public void execute() throws TranslatorException {
 		this.visitor = this.executionFactory.getN1QLVisitor();
 		this.visitor.append(this.command);
-		String sql = this.visitor.toString();
-		LogManager.logDetail(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29001, sql));
-		N1qlQueryResult queryResult = connection.executeQuery(sql);
+		String n1ql = this.visitor.toString();
+		LogManager.logDetail(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29001, n1ql));
+		executionContext.logCommand(n1ql);
+		N1qlQueryResult queryResult = connection.executeQuery(n1ql);
 		this.results = queryResult.iterator();
 	}
 

@@ -50,9 +50,10 @@ public class CouchbaseUpdateExecution extends CouchbaseExecution implements Upda
     public void execute() throws TranslatorException {
         this.visitor = this.executionFactory.getN1QLUpdateVisitor();
         this.visitor.append(this.command);
-        String statement = this.visitor.toString();
-        LogManager.logDetail(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29004, statement));        
-        this.results = this.connection.execute(statement);
+        String n1ql = this.visitor.toString();
+        LogManager.logDetail(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29004, n1ql));        
+        executionContext.logCommand(n1ql);
+        this.results = this.connection.execute(n1ql);
     }
 
     @Override

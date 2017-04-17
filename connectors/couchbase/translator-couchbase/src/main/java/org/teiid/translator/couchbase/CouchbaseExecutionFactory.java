@@ -34,6 +34,7 @@ import javax.resource.cci.ConnectionFactory;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.couchbase.CouchbaseConnection;
+import org.teiid.language.Argument;
 import org.teiid.language.Call;
 import org.teiid.language.Command;
 import org.teiid.language.Expression;
@@ -193,6 +194,11 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
     }
 
     @Override
+    public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, CouchbaseConnection connection) throws TranslatorException {
+        return new CouchbaseDirectQueryExecution(arguments, command, this, executionContext, metadata, connection);
+    }
+
+    @Override
     public MetadataProcessor<CouchbaseConnection> getMetadataProcessor() {
         return new CouchbaseMetadataProcessor();
     }
@@ -299,6 +305,11 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
 
     @Override
     public boolean supportsCompareCriteriaEquals() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsDirectQueryProcedure() {
         return true;
     }
 
