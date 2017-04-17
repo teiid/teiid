@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
+import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.common.buffer.TupleSource;
@@ -40,12 +41,13 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempCapabilitiesFinder;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataStore;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.QueryOptimizer;
 import org.teiid.query.optimizer.TestAggregatePushdown;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
-import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.HardcodedDataManager;
@@ -137,8 +139,7 @@ public class TestMultiSourcePlanToProcessConverter {
         }
         // Plan
         command = QueryRewriter.rewrite(command, wrapper, null);
-        FakeCapabilitiesFinder fakeFinder = new FakeCapabilitiesFinder();
-        fakeFinder.addCapabilities(multiModel, bsc); 
+        DefaultCapabilitiesFinder fakeFinder = new DefaultCapabilitiesFinder(bsc);
         
         CapabilitiesFinder finder = new TempCapabilitiesFinder(fakeFinder);
         IDGenerator idGenerator = new IDGenerator();
@@ -639,6 +640,42 @@ public class TestMultiSourcePlanToProcessConverter {
         bsc.setFunctionSupport("ifnull", true);
         
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB(), null, new Options().implicitMultiSourceJoin(false), bsc);
+    }
+    
+    @Test public void testGroupByCountPushdownMultiSource() throws Exception {
+        String userSql = "SELECT s.e1, m.e1, COUNT(*) FROM pm1.g1 AS s INNER JOIN pm2.g2 AS m ON s.e2 = m.e2 GROUP BY s.e1, m.e1";
+        
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT g_0.e2, COUNT(*) FROM pm1.g1 AS g_0 GROUP BY g_0.e2", 
+                Arrays.asList(1, 2));
+        hdm.addData("SELECT g_0.e2 AS c_0, g_0.e1 AS c_1 FROM pm2.g2 AS g_0 ORDER BY c_0", 
+                Arrays.asList(1, "other"));
+        
+        BasicSourceCapabilities bsc = TestAggregatePushdown.getAggregateCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, false);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, false);
+        
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        
+        final List<?>[] expected = new List<?>[] {
+                Arrays.asList("a", "other", 2),
+                Arrays.asList("b", "other", 2),
+            };
+        
+        VDBMetaData vdb = new VDBMetaData();
+        vdb.setName("exampleMultiBinding");
+        vdb.setVersion(1);
+        
+        ModelMetaData model = new ModelMetaData();
+        model.setName("pm1");
+        model.setModelType(Model.Type.PHYSICAL);
+        model.setVisible(true);
+        
+        model.setSupportsMultiSourceBindings(true);
+        model.addProperty(MultiSourceMetadataWrapper.MULTISOURCE_COLUMN_NAME, "e1");
+        vdb.addModel(model);
+        
+        helpTestMultiSourcePlan(metadata, userSql, "pm1", 2, hdm, expected, vdb, null, new Options().implicitMultiSourceJoin(false), bsc);
     }
     
 }
