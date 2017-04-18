@@ -291,7 +291,15 @@ public final class RuleCollapseSource implements OptimizerRule {
 					requireDupPush = true;
 				}
 			}
-			if (!requireDupPush) {
+			if (accessNode.hasBooleanProperty(Info.IS_MULTI_SOURCE)) {
+			    if (dupRemove == null) {
+                    return root;
+                }
+			    if (requireDupPush) {
+			        //if multi-source we still need to process above
+	                requireDupPush = false;
+			    }
+			} else if (!requireDupPush) {
 				return root;
 			}
 		}

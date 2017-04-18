@@ -706,4 +706,24 @@ public class TestMultiSourcePlanToProcessConverter {
         helpTestMultiSourcePlan(metadata, userSql, "pm1", 2, hdm, expected, vdb, null, new Options().implicitMultiSourceJoin(false), bsc);
     }
     
+    @Test public void testNonPartitionedDistinct() throws Exception {
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
+
+        final String userSql = "SELECT distinct a FROM MultiModel.Phys"; //$NON-NLS-1$
+        final String multiModel = "MultiModel"; //$NON-NLS-1$
+        final int sources = 2;
+        final List<?>[] expected = new List<?>[] {
+            Arrays.asList("a"),
+        };
+        final HardcodedDataManager dataMgr = new HardcodedDataManager(metadata);
+        dataMgr.addData("SELECT DISTINCT g_0.a FROM Phys AS g_0", //$NON-NLS-1$
+                        new List<?>[] {
+                            Arrays.asList("a")}); 
+        
+        BasicSourceCapabilities bsc = TestAggregatePushdown.getAggregateCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, true);
+        
+        helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB(), null, new Options().implicitMultiSourceJoin(false), bsc);
+    }
+    
 }
