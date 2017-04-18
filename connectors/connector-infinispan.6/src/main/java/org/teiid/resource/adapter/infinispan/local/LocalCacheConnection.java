@@ -32,12 +32,10 @@ import javax.resource.ResourceException;
 import org.infinispan.Cache;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.configuration.cache.Configuration;
-//import org.infinispan.;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.query.Search;
 import org.infinispan.query.dsl.QueryFactory;
-import org.teiid.core.util.Assertion;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.adapter.infinispan.DSLSearch;
@@ -294,7 +292,9 @@ public class LocalCacheConnection<K,V>  extends InfinispanCacheWrapper<K,V> {
 	 */
 	@Override
 	public Version getVersion() throws TranslatorException {
-		return null;
+		Cache rc = getCache();
+		return Version.getVersion(rc.getVersion());
+
 	}
 
 	/**
@@ -307,14 +307,5 @@ public class LocalCacheConnection<K,V>  extends InfinispanCacheWrapper<K,V> {
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.teiid.translator.object.ObjectConnection#configuredForMaterialization()
-	 */
-	@Override
-	public boolean configuredForMaterialization() {
-		return false;
-	}
 
 }

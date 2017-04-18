@@ -30,6 +30,7 @@ import java.util.Properties;
 
 import javax.resource.ResourceException;
 
+import org.infinispan.Cache;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.Search;
@@ -290,7 +291,9 @@ public class RemoteCacheConnection<K,V>  extends InfinispanCacheWrapper<K,V> {
 	 */
 	@Override
 	public Version getVersion() throws TranslatorException {
-		return null;
+		RemoteCache rc = getCache();
+		return Version.getVersion(rc.getVersion());
+
 	}
 
 	/**

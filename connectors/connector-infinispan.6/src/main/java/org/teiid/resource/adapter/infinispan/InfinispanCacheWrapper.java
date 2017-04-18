@@ -23,8 +23,6 @@ package org.teiid.resource.adapter.infinispan;
 
 import javax.resource.ResourceException;
 
-import org.infinispan.client.hotrod.RemoteCache;
-import org.teiid.core.util.Assertion;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.infinispan.cache.InfinispanCacheConnection;
 import org.teiid.translator.object.ClassRegistry;
@@ -85,17 +83,6 @@ public abstract class InfinispanCacheWrapper<K,V> implements InfinispanCacheConn
 	public String getCacheName() {
 		return getTargetCacheName();
 	}
-	
-//	private RemoteCache getTargetCache() throws TranslatorException {
-//		final String cacheName = getTargetCacheName();
-//		
-//	    if (cacheName == null) {
-//	       Assertion.isNotNull(cacheName, "Program Error: Cache Name is null");
-//	    }
-//
-//	    return getCacheContainer().getCache(cacheName);
-//	}
-	
 
 	protected String getTargetCacheName() {
 		try {
@@ -137,6 +124,11 @@ public abstract class InfinispanCacheWrapper<K,V> implements InfinispanCacheConn
 	public DDLHandler getDDLHandler() {
 		return getConfig().getCacheNameProxy().getDDLHandler();
 	}	
+	
+	@Override
+	public boolean configuredForMaterialization() {
+		return getConfig().getCacheNameProxy().isMaterialized();
+	}
 	
 	/**
 	 * Provided for testing purposes

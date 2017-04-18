@@ -29,16 +29,19 @@ import javax.naming.InitialContext;
 import javax.resource.ResourceException;
 import javax.resource.spi.InvalidPropertyException;
 
+import org.infinispan.client.hotrod.RemoteCache;
 import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoadException;
 import org.teiid.core.BundleUtil;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.StringUtil;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.CacheNameProxy;
 import org.teiid.translator.object.ClassRegistry;
+import org.teiid.translator.object.Version;
 
 public class InfinispanManagedConnectionFactory extends
 		BasicManagedConnectionFactory {
@@ -102,6 +105,8 @@ public class InfinispanManagedConnectionFactory extends
 			@Override
 			public InfinispanCacheRAConnection getConnection()
 					throws ResourceException {
+				loadClasses();
+				
 				return InfinispanManagedConnectionFactory.this.createCacheConnection();
 
 			}
@@ -332,8 +337,24 @@ public class InfinispanManagedConnectionFactory extends
 		this.cacheJndiName = jndiName;
 	}
 	
-	protected InfinispanCacheWrapper<?,?> getCacheWrapper() {
-		return cacheWrapper;
+	protected InfinispanCacheWrapper<?,?> getCacheWrapper() throws TeiidRuntimeException {		
+		synchronized(cl) {
+			if (cacheWrapper == null ) createCacheWrapper();
+			return cacheWrapper;
+		}
+	}
+	
+	protected void clearCacheWrapper() {
+		synchronized(cl) {
+			try {
+				if (cacheWrapper != null) {
+					cacheWrapper.forceCleanUp();
+				}
+			} catch (Throwable t) {
+				// do nothing
+			}
+			cacheWrapper = null;
+		}
 	}
 
 	public ClassLoader getClassLoader() {
@@ -348,81 +369,92 @@ public class InfinispanManagedConnectionFactory extends
 		}
 	}
 
-	protected synchronized ClassLoader loadClasses() throws ResourceException {
-
-		cl = null;
-		// Thread.currentThread().getContextClassLoader();
-		if (getModule() != null) {
-
+	protected synchronized void loadClasses() throws ResourceException {
+		
+		if (this.cacheWrapper == null) {
+			ClassLoader currentCL = Thread.currentThread().getContextClassLoader();
 			try {
-				List<String> mods = StringUtil.getTokens(getModule(), ","); //$NON-NLS-1$
-				for (String mod : mods) {
+				Thread.currentThread().setContextClassLoader(
+						this.getClass().getClassLoader());		
+
+				cl = null;
+				// Thread.currentThread().getContextClassLoader();
+				if (getModule() != null) {
 		
-					Module x = Module.getContextModuleLoader().loadModule(
-							ModuleIdentifier.create(mod));
-					// the first entry must be the module associated with the
-					// cache
-					if (cl == null) {
-						cl = x.getClassLoader();
-					} else {
-						throw new ResourceException("Unable to get classloader for " + mod);
+					try {
+						List<String> mods = StringUtil.getTokens(getModule(), ","); //$NON-NLS-1$
+						for (String mod : mods) {
+				
+							Module x = Module.getContextModuleLoader().loadModule(
+									ModuleIdentifier.create(mod));
+							// the first entry must be the module associated with the
+							// cache
+							if (currentCL == null) {
+								currentCL = x.getClassLoader();
+							} else {
+								throw new ResourceException("Unable to get classloader for " + mod);
+							}
+						}
+					} catch (ModuleLoadException e) {
+						throw new ResourceException(e);
 					}
+		
+				} else {
+					currentCL =  Thread.currentThread().getContextClassLoader();
+		
 				}
-			} catch (ModuleLoadException e) {
-				throw new ResourceException(e);
+				
+				cl = currentCL;
+		
+				/*
+				 * Parsing based on format:  cacheName:className[;pkFieldName[:cacheKeyJavaType]]
+				 * 
+				 */
+				
+				List<String> parms = StringUtil.getTokens(getCacheTypeMap(), ";"); //$NON-NLS-1$
+				String leftside = parms.get(0);
+				List<String> cacheClassparm = StringUtil.getTokens(leftside, ":");
+				
+				if (cacheClassparm.size() != 2) {
+					throw new InvalidPropertyException(UTIL.gs("TEIID25022"));
+				}
+				
+				String cn = cacheClassparm.get(0);
+				setCacheName(cn);
+				String className = cacheClassparm.get(1);
+				cacheTypeClass = loadClass(className);
+		//		try {
+					methodUtil.registerClass(cacheTypeClass);
+		//		} catch (TranslatorException e1) {
+		//			throw new ResourceException(e1);
+		//		}
+					
+				if (parms.size() == 2) {
+					String rightside = parms.get(1);
+					List<String> pkKeyparm = StringUtil.getTokens(rightside, ":");
+					pkKey = pkKeyparm.get(0);
+					if (pkKeyparm.size() == 2) {
+						String pktype = pkKeyparm.get(1);
+						if (pktype != null) {
+							pkCacheKeyJavaType = getPrimitiveClass(pktype);
+						}
+					}
+				}		
+			} finally {
+				Thread.currentThread().setContextClassLoader(currentCL);
 			}
-
-		} else {
-			cl =  Thread.currentThread().getContextClassLoader();
-
 		}
 
-		/*
-		 * Parsing based on format:  cacheName:className[;pkFieldName[:cacheKeyJavaType]]
-		 * 
-		 */
-		
-		List<String> parms = StringUtil.getTokens(getCacheTypeMap(), ";"); //$NON-NLS-1$
-		String leftside = parms.get(0);
-		List<String> cacheClassparm = StringUtil.getTokens(leftside, ":");
-		
-		if (cacheClassparm.size() != 2) {
-			throw new InvalidPropertyException(UTIL.gs("TEIID25022"));
-		}
-		
-		String cn = cacheClassparm.get(0);
-		setCacheName(cn);
-		String className = cacheClassparm.get(1);
-		cacheTypeClass = loadClass(className);
-//		try {
-			methodUtil.registerClass(cacheTypeClass);
-//		} catch (TranslatorException e1) {
-//			throw new ResourceException(e1);
-//		}
-			
-		if (parms.size() == 2) {
-			String rightside = parms.get(1);
-			List<String> pkKeyparm = StringUtil.getTokens(rightside, ":");
-			pkKey = pkKeyparm.get(0);
-			if (pkKeyparm.size() == 2) {
-				String pktype = pkKeyparm.get(1);
-				if (pktype != null) {
-					pkCacheKeyJavaType = getPrimitiveClass(pktype);
-				}
-			}
-		}		
-		
-		return cl;
 
 	}
 
-	protected synchronized InfinispanCacheRAConnection createCacheConnection() throws ResourceException {
-		if (this.cacheWrapper == null) {
-			ClassLoader cl = Thread.currentThread().getContextClassLoader();
+	protected synchronized InfinispanCacheRAConnection createCacheConnection() throws ResourceException {		
+		return new InfinispanCacheRAConnection(this);
+	}
+	
+	private void createCacheWrapper() throws TeiidRuntimeException {
+		
 			try {
-				Thread.currentThread().setContextClassLoader(
-						this.getClass().getClassLoader());
-				loadClasses();
 				
 				Class<?> clz = null;
 				if (getCacheJndiName() != null) {
@@ -453,16 +485,12 @@ public class InfinispanManagedConnectionFactory extends
 							.getString(
 									"InfinispanManagedConnectionFactory.aliasCacheNotDefined", cacheNameProxy.getAliasCacheName())); //$NON-NLS-1$
 					}
-//					cacheNameProxy.initializeAliasCache(aliasCache);
 				}
 
-			} catch (Exception e) {
-				throw new ResourceException(e);
-			} finally {
-				Thread.currentThread().setContextClassLoader(cl);
-			}
-		}
-		return new InfinispanCacheRAConnection(this);
+			} catch (Throwable e) {
+				throw new TeiidRuntimeException(e);
+			} 
+
 	}
 
 	private boolean determineConnectionType() {
@@ -599,10 +627,8 @@ public class InfinispanManagedConnectionFactory extends
 		cl = null;
 
 	}
-	
-	
+		
 	/** used in testing */
 	public void shutDown() {
-		this.cacheWrapper.cleanUp();
 	}
 }
