@@ -41,36 +41,44 @@ import org.teiid.translator.object.Version;
 public class InfinispanCacheRAConnection extends BasicConnection
 		implements InfinispanCacheConnection {
 
-	private InfinispanCacheWrapper<?, ?> cacheWrapper;
+//	private InfinispanCacheWrapper<?, ?> cacheWrapper;
+	
+	private InfinispanManagedConnectionFactory config;
 	
 	public InfinispanCacheRAConnection(InfinispanManagedConnectionFactory config) {
-		this.cacheWrapper = config.getCacheWrapper();
+		this.config = config;
+//		this.cacheWrapper = config.getCacheWrapper();
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Infinispan-Cache Connection has been created."); //$NON-NLS-1$				
 	}
 
+	private InfinispanCacheWrapper<?, ?> getCacheWrapper() {
+		return config.getCacheWrapper();
+		
+	}
+	
 	@Override
 	public Object getCache() throws TranslatorException  {
-		return cacheWrapper.getCache();
+		return getCacheWrapper().getCache();
 	}
 	
 	@Override
 	public Collection<Object> getAll() throws TranslatorException {
-		return cacheWrapper.getAll();
+		return getCacheWrapper().getAll();
 	}
 	
 	@Override
 	public QueryFactory getQueryFactory() throws TranslatorException {
-		return cacheWrapper.getQueryFactory();
+		return getCacheWrapper().getQueryFactory();
 	}
 
 	@Override
 	public String getPkField() {
-		return cacheWrapper.getPkField();
+		return getCacheWrapper().getPkField();
 	}
 
 	@Override
 	public Class<?> getCacheKeyClassType() {
-		return cacheWrapper.getCacheKeyClassType();
+		return getCacheWrapper().getCacheKeyClassType();
 	}
 
 	/**
@@ -81,7 +89,7 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	@Override
 	public String getCacheName()  {
 		try {			
-			return cacheWrapper.getConfig().getCacheNameProxy().getPrimaryCacheAliasName(this);
+			return getCacheWrapper().getConfig().getCacheNameProxy().getPrimaryCacheAliasName(this);
 		} catch (TranslatorException te) {
 			throw new RuntimeException(te);
 		}
@@ -94,7 +102,7 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	 */
 	@Override
 	public Class<?> getCacheClassType() {
-		return cacheWrapper.getCacheClassType();
+		return getCacheWrapper().getCacheClassType();
 	}
 
 	/**
@@ -104,7 +112,7 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	 */
 	@Override
 	public void add(Object key, Object value) throws TranslatorException {
-		 this.cacheWrapper.add(key, value);
+		getCacheWrapper().add(key, value);
 	}
 
 	/**
@@ -114,7 +122,7 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	 */
 	@Override
 	public Object remove(Object key) throws TranslatorException {
-		return this.cacheWrapper.remove(key);
+		return getCacheWrapper().remove(key);
 	}
 
 	/**
@@ -124,7 +132,7 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	 */
 	@Override
 	public void update(Object key, Object value) throws TranslatorException {
-		this.cacheWrapper.update(key, value);
+		getCacheWrapper().update(key, value);
 	}
 
 	/**
@@ -134,7 +142,7 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	 */
 	@Override
 	public ClassRegistry getClassRegistry() {
-		return cacheWrapper.getClassRegistry();
+		return getCacheWrapper().getClassRegistry();
 	}
 
 	/**
@@ -144,7 +152,7 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	 */
 	@Override
 	public Object get(Object key) throws TranslatorException {
-		return this.cacheWrapper.get(key);
+		return getCacheWrapper().get(key);
 	}
 
 	/**
@@ -154,7 +162,6 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	 */
 	@Override
 	public void close() {
-		this.cacheWrapper = null;
 	}
 
 	/**
@@ -164,7 +171,7 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	 */
 	@Override
 	public Object getCache(String cacheName) throws TranslatorException {
-		return cacheWrapper.getCache(cacheName);
+		return getCacheWrapper().getCache(cacheName);
 	}
 
 	/**
@@ -174,7 +181,7 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	 */
 	@Override
 	public void clearCache(String cacheName) throws TranslatorException {
-		cacheWrapper.clearCache(cacheName);
+		getCacheWrapper().clearCache(cacheName);
 	}
 
 	/**
@@ -184,7 +191,7 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	 */
 	@Override
 	public DDLHandler getDDLHandler() {
-		return cacheWrapper.getDDLHandler();
+		return getCacheWrapper().getDDLHandler();
 	}
 
 	/** 
@@ -194,7 +201,7 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	 */
 	@Override
 	public SearchType getSearchType() {
-		return cacheWrapper.getSearchType();
+		return getCacheWrapper().getSearchType();
 	}
 
 	/**
@@ -204,7 +211,7 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	 */
 	@Override
 	public Version getVersion() throws TranslatorException {
-		return null;
+		return getCacheWrapper().getVersion();
 	}
 
 	/**
@@ -224,18 +231,18 @@ public class InfinispanCacheRAConnection extends BasicConnection
 	 */
 	@Override
 	public boolean configuredForMaterialization() {
-		return false;
+		return getCacheWrapper().configuredForMaterialization();
 	}
 
 	@Override
 	public void forceCleanUp() {
-		this.cacheWrapper.forceCleanUp();
+		config.clearCacheWrapper();
 	}
 	
 	@Override
 	public void cleanUp() {
-		this.cacheWrapper.cleanUp();
 		
+			
 	}
 
 }

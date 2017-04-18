@@ -41,13 +41,7 @@ public class TestInfinispanManagedConnectionFactory {
 		factory = new InfinispanManagedConnectionFactory();
 		factory.setConfigurationFileNameForLocalCache("./src/test/resources/infinispan_persistent_config.xml");
 	}
-	
-	
-	@After
-	public void after() {
-		factory.getCacheWrapper().shutDownCacheManager();
-	}
-	
+
     @Test
     public void testCacheTypeMap1() throws Exception {
  		factory.setCacheTypeMap(InfinispanTestHelper.TRADE_CACHE_NAME + ":" + "org.teiid.translator.object.testdata.trades.Trade");
@@ -63,6 +57,8 @@ public class TestInfinispanManagedConnectionFactory {
     		
     		assertEquals(InfinispanTestHelper.TRADE_CACHE_NAME, conn.getCacheName());
     		assertNotNull(conn.getClassRegistry());
+    		
+    		conn.cleanUp();
      		
     		factory.cleanUp();
     }
@@ -85,6 +81,8 @@ public class TestInfinispanManagedConnectionFactory {
     		
     		assertEquals("longValue", conn.getPkField());
     		
+    		conn.cleanUp();
+    		
     		factory.cleanUp();
     }   
     
@@ -105,6 +103,8 @@ public class TestInfinispanManagedConnectionFactory {
     		assertEquals(long.class, t);
     		
     		assertEquals("longValue", conn.getPkField());
+    		
+    		conn.forceCleanUp();
     		
     		factory.cleanUp();
     }   
@@ -129,6 +129,45 @@ public class TestInfinispanManagedConnectionFactory {
     		
     		assertEquals("longValue", conn.getPkField());
     		
+    		conn.forceCleanUp();
+    		
+    		factory.cleanUp();
+    }          
+    
+    @Test
+    public void testConnectCleanup() throws Exception {
+ 
+		factory.setCacheTypeMap(InfinispanTestHelper.TRADE_CACHE_NAME + ":" + "org.teiid.translator.object.testdata.trades.Trade;longValue:java.lang.Long");
+    	
+    	
+    		ObjectConnection conn = factory.createConnectionFactory().getConnection();
+    		
+    		assertEquals(conn.getCacheName(), InfinispanTestHelper.TRADE_CACHE_NAME);
+    		
+      		
+       		Class<?> clz = conn.getCacheClassType();
+    		
+    		assertEquals(Trade.class, clz);
+    		
+    		Class<?> t = conn.getCacheKeyClassType();
+    		
+    		assertEquals(Long.class, t);
+    		
+    		assertEquals("longValue", conn.getPkField());
+
+    		
+    		conn.forceCleanUp();
+    		
+       		clz = conn.getCacheClassType();
+    		    		
+    		assertEquals(Trade.class, clz);
+    		
+    		Class<?> t2 = conn.getCacheKeyClassType();
+    		
+    		assertEquals(Long.class, t2);
+    		
+    		assertEquals("longValue", conn.getPkField());
+ 		
     		factory.cleanUp();
     }          
 }
