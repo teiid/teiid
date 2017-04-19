@@ -475,6 +475,11 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
     }
     
     @Override
+    public boolean supportsOnlyFormatLiterals() {
+        return true;
+    }
+    
+    @Override
     public boolean supportsFormatLiteral(String literal,
     		org.teiid.translator.ExecutionFactory.Format format) {
     	if (format == Format.NUMBER) {
