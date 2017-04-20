@@ -1,0 +1,5 @@
+CREATE FOREIGN PROCEDURE getDocuments(IN id string NOT NULL OPTIONS (ANNOTATION 'The document id or SQL like pattern of what documents to return, for example, the ''%'' sign is used to define wildcards (missing letters) both before and after the pattern'), IN keyspace string NOT NULL OPTIONS (ANNOTATION 'The keyspace name used to retrieve the documents')) RETURNS TABLE (result blob)
+OPTIONS (ANNOTATION 'Returns json documents that match the given document id or id pattern as BLOBs');
+
+CREATE FOREIGN PROCEDURE getDocument(IN id string NOT NULL OPTIONS (ANNOTATION 'The document id of what documents to return'), IN keyspace string NOT NULL OPTIONS (ANNOTATION 'The keyspace name used to retrieve the document')) RETURNS TABLE (result blob)
+OPTIONS (ANNOTATION 'Return a json document that match the given document id as BLOB');
