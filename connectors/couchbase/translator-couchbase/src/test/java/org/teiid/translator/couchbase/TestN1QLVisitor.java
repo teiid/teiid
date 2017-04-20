@@ -158,7 +158,7 @@ public class TestN1QLVisitor extends TestVisitor {
     @Test
     public void testWhereClause() throws TranslatorException {
         
-        String sql = "SELECT Name, type  FROM Customer WHERE Name = 'John Doe'";
+        String sql = "SELECT Name, type  FROM Customer WHERE Name = 'John O''Doe'";
         helpTest(sql, "N1QL0801");
         
         sql = "SELECT Name, type  FROM Customer WHERE documentID = 'customer'";
