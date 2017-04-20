@@ -4,7 +4,7 @@
     <parent>
       <groupId>org.jboss.teiid.connectors</groupId>
       <artifactId>accumulo</artifactId>
-      <version>9.3.0.Alpha3-SNAPSHOT</version>
+      <version>9.3.0.Beta1</version>
     </parent>
     <artifactId>feature-pack-accumulo</artifactId>
     <name>Teiid Accumulo Feature Pack</name>
