@@ -30,6 +30,7 @@ import java.nio.charset.Charset;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -722,7 +723,6 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		if (modified != null && !modified.equals(sql)) {
 			LogManager.logDetail(LogConstants.CTX_ODBC, "Modified Query:", modified); //$NON-NLS-1$
 		}			
-		System.out.println(modified);
 		return modified;
 	}
 	
@@ -1194,7 +1194,12 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			final PgColInfo info = new PgColInfo();
 			info.name = meta.getColumnLabel(i);
 			info.type = meta.getColumnType(i);
-			info.type = convertType(info.type);
+			if (info.type == Types.ARRAY) {
+			    String typeName = meta.getColumnTypeName(i);
+			    info.type = convertArrayType(typeName);
+			} else {
+			    info.type = convertType(info.type);
+			}
 			info.precision = meta.getColumnDisplaySize(i);
 			if (info.type == PG_TYPE_NUMERIC) {
 				info.mod = 4+ 65536*Math.min(32767, meta.getPrecision(i))+Math.min(32767, meta.getScale(i));

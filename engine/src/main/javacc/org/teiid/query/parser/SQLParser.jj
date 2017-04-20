@@ -506,7 +506,7 @@ name=identifier
 */
 TOKEN : { < ID: <QUOTED_ID> (<PERIOD> <QUOTED_ID>)* > }
 TOKEN : { < #QUOTED_ID: <ID_PART> | ("\"" (("\"\"") | ~["\""] )+ "\"") >  }     
-TOKEN : { < #ID_PART: (("@" | "#" | <LETTER>) (<LETTER> | "_" | <DIGIT>)*) > }
+TOKEN : { < #ID_PART: (("_" | "@" | "#" | <LETTER>) (<LETTER> | "_" | <DIGIT>)*) > }
 /*
 name=escaped function
 */

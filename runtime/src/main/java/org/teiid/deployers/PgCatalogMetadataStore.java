@@ -808,6 +808,8 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		
 		private static Map<String, String> TypeNameMap = new HashMap<String, String>();
 		static { 
+			TypeNameMap.put("bool", "boolean");
+			TypeNameMap.put("varchar", "character varying");
 		    TypeNameMap.put("int2", "smallint");
 		    TypeNameMap.put("int4", "integer");
 		    TypeNameMap.put("int8", "bigint");
