@@ -593,6 +593,16 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 		    case PG_TYPE_CHARARRAY:
 		    case PG_TYPE_TEXTARRAY:
 		    case PG_TYPE_OIDARRAY:
+		    case PG_TYPE_BOOLARRAY:
+		    case PG_TYPE_INT2ARRAY:
+		    case PG_TYPE_INT4ARRAY:
+		    case PG_TYPE_INT8ARRAY:
+		    case PG_TYPE_FLOAT4ARRAY:
+		    case PG_TYPE_FLOAT8ARRAY:
+		    case PG_TYPE_NUMERICARRAY:
+		    case PG_TYPE_DATEARRAY:
+		    case PG_TYPE_TIMEARRAY:
+		    case PG_TYPE_TIMESTAMP_NO_TMZONEARRAY:
 		    	{
 		    	Array obj = rs.getArray(column);
 		    	if (obj != null) {

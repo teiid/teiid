@@ -5290,5 +5290,13 @@ public class TestParser {
         query.setSelect(new Select(Arrays.asList(as)));
         helpTest(sql, sql, query); //$NON-NLS-1$
     }
+    
+    @Test public void testUnderscoreAlias() {
+        String sql = "SELECT y AS _name";
+        AliasSymbol as = new AliasSymbol("_name", new ElementSymbol("y")); //$NON-NLS-1$ //$NON-NLS-2$
+        Query query = new Query();
+        query.setSelect(new Select(Arrays.asList(as)));
+        helpTest(sql, "SELECT y AS \"_name\"", query); //$NON-NLS-1$
+    }
 
 }

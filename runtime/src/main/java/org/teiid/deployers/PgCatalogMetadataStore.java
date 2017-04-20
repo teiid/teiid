@@ -788,6 +788,12 @@ public class PgCatalogMetadataStore extends MetadataFactory {
                         name = name.substring(1);
                     }
                     switch (name) {
+                    case "bool": //$NON-NLS-1$
+                        name = "boolean"; //$NON-NLS-1$
+                        break;
+                    case "varchar": //$NON-NLS-1$
+                        name = "character varying"; //$NON-NLS-1$
+                        break;
                     case "int2": //$NON-NLS-1$
                         name = "smallint"; //$NON-NLS-1$
                         break;

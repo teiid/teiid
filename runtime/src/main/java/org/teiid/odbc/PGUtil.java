@@ -51,6 +51,19 @@ public class PGUtil {
 	public static final int PG_TYPE_TIME = 1083;
 	public static final int PG_TYPE_TIMESTAMP_NO_TMZONE = 1114;
 	public static final int PG_TYPE_NUMERIC = 1700;
+	
+	public static final int PG_TYPE_BOOLARRAY = 1000;
+    public static final int PG_TYPE_BYTEAARRAY = 1001;
+    public static final int PG_TYPE_INT8ARRAY = 1026;
+    public static final int PG_TYPE_INT2ARRAY = 1005;
+    public static final int PG_TYPE_INT4ARRAY = 1007;
+    public static final int PG_TYPE_FLOAT4ARRAY = 1021;
+    public static final int PG_TYPE_FLOAT8ARRAY = 1022;
+    public static final int PG_TYPE_DATEARRAY = 1182;
+    public static final int PG_TYPE_TIMEARRAY = 1183;
+    public static final int PG_TYPE_TIMESTAMP_NO_TMZONEARRAY = 1115;
+    public static final int PG_TYPE_NUMERICARRAY = 1031;
+    
     //private static final int PG_TYPE_LO = 14939;
     
 	public static class PgColInfo {
@@ -60,6 +73,35 @@ public class PGUtil {
 		public int type;
 		public int precision;
 		public int mod = -1;
+	}
+	
+	public static int convertArrayType(String type) {
+	    switch (type) {
+	    case "boolean[]": //$NON-NLS-1$
+	        return PG_TYPE_BOOLARRAY;
+	    case "byte[]": //$NON-NLS-1$
+	    case "short[]": //$NON-NLS-1$
+	        return PG_TYPE_INT2ARRAY;
+	    case "integer[]": //$NON-NLS-1$
+	        return PG_TYPE_INT4ARRAY;
+	    case "long[]": //$NON-NLS-1$
+	        return PG_TYPE_INT8ARRAY;
+	    case "float[]": //$NON-NLS-1$
+	        return PG_TYPE_FLOAT4ARRAY;
+	    case "double[]": //$NON-NLS-1$
+	        return PG_TYPE_FLOAT8ARRAY;
+	    case "biginiteger[]": //$NON-NLS-1$
+	    case "bigdecimal[]": //$NON-NLS-1$
+	        return PG_TYPE_NUMERICARRAY;
+	    case "date[]": //$NON-NLS-1$
+	        return PG_TYPE_DATEARRAY;
+	    case "time[]": //$NON-NLS-1$
+	        return PG_TYPE_TIMEARRAY;
+	    case "timestamp[]": //$NON-NLS-1$
+	        return PG_TYPE_TIMESTAMP_NO_TMZONEARRAY;
+	    default:
+	        return PG_TYPE_TEXTARRAY;
+	    }
 	}
 		
 	/**
