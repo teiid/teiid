@@ -40,6 +40,10 @@ public class TestN1QLUpdateVisitor extends TestVisitor {
         visitor.append(command);
         String actual = visitor.toString();
         
+        if (key == null) {
+            fail("expected failure");
+        }
+        
         if(PRINT_TO_CONSOLE.booleanValue()) {
             System.out.println(actual);
         }
@@ -267,6 +271,9 @@ public class TestN1QLUpdateVisitor extends TestVisitor {
         sql = "UPDATE Customer SET Name = 'John Doe' WHERE ID = 'Customer_10000'";
         helpTest(sql, "N1QL1804");
         
+        sql = "UPDATE Customer SET Name = ucase(documentID) WHERE ID = 'Customer_10000'";
+        helpTest(sql, "N1QL1811");
+        
         sql = "UPDATE Oder SET CreditCard_CVN = 100 WHERE documentID = 'order-3'" ;
         helpTest(sql, "N1QL1805");
         
@@ -306,6 +313,31 @@ public class TestN1QLUpdateVisitor extends TestVisitor {
     public void testSourceModel() {
         JsonObject json = JsonObject.create();
         assertNull(json.get("x"));
+    }
+    
+    @Test(expected=TeiidRuntimeException.class) public void testArrayUpdateFailure() throws TranslatorException {
+        String sql = "UPDATE Oder_Items SET Oder_Items_ItemID = Oder_Items_Quantity WHERE documentID = 'order-3' AND Oder_Items_idx = 0";
+        helpTest(sql, null);
+    }
+    
+    @Test(expected=TeiidRuntimeException.class) public void testArrayUpdateFailure1() throws TranslatorException {
+        String sql = "UPDATE Oder_Items SET Oder_Items_ItemID = 80000 WHERE documentID = 'order-3' AND Oder_Items_Quantity = 1 AND Oder_Items_idx = 0";
+        helpTest(sql, null);
+    }
+    
+    @Test(expected=TeiidRuntimeException.class) public void testArrayUpdateFailure2() throws TranslatorException {
+        String sql = "UPDATE Oder_Items SET Oder_Items_ItemID = 80000, Oder_Items_Quantity = 10 WHERE documentID = 'order-3' AND Oder_Items_idx = 0 AND Oder_Items_Quantity > 8";
+        helpTest(sql, null);
+    }
+    
+    @Test(expected=TeiidRuntimeException.class) public void testArrayDeleteFailure() throws TranslatorException {
+        String sql = "DELETE FROM Oder_Items WHERE documentID = 'order-3' AND Oder_Items_idx = 2 AND Oder_Items_ItemID < 80000";
+        helpTest(sql, null);
+    }
+    
+    @Test(expected=TeiidRuntimeException.class) public void testArrayDeleteFailure1() throws TranslatorException {
+        String sql = "DELETE FROM Oder_Items WHERE documentID = 'order-3' AND Oder_Items_idx = 2 AND Oder_Items_ItemID = 80000";
+        helpTest(sql, null);
     }
 
 }
