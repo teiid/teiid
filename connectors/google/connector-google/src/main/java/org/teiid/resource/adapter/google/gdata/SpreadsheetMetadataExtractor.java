@@ -64,9 +64,8 @@ public class SpreadsheetMetadataExtractor {
 	}
 	
 	
-	public SpreadsheetInfo extractMetadata(String spreadsheetName){
-		SpreadsheetEntry sentry = gdataAPI
-				.getSpreadsheetEntryByTitle(spreadsheetName);
+	public SpreadsheetInfo extractMetadata(String spreadsheetName, boolean isKey){
+	    SpreadsheetEntry sentry = gdataAPI.getSpreadsheetEntry(spreadsheetName, isKey);
 		SpreadsheetInfo metadata = new SpreadsheetInfo(spreadsheetName);
 		metadata.setSpreadsheetKey(sentry.getKey());
 		try {

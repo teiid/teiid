@@ -47,6 +47,8 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
 	//In case of OAuth2 authentiation user has to supply refreshToken
 	private String refreshToken;
 	
+	private Boolean key = false;
+	
 	@Override
 	@SuppressWarnings("serial")
 	public BasicConnectionFactory<SpreadsheetConnectionImpl> createConnectionFactory() throws ResourceException {
@@ -141,5 +143,16 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
 	public void setRefreshToken(String refreshToken) {
 		this.refreshToken = refreshToken;
 	}
+
+	public Boolean getKey() {
+        return key;
+    }
+	
+	public void setKey(Boolean key) {
+	    if (key == null) {
+	        key = false;
+	    }
+        this.key = key;
+    }
 	
 }

@@ -100,7 +100,7 @@ public class SpreadsheetConnectionImpl extends BasicConnection implements Google
     	            SpreadsheetMetadataExtractor metadataExtractor = new SpreadsheetMetadataExtractor();
     	            metadataExtractor.setGdataAPI(gdata);
     	            metadataExtractor.setVisualizationAPI(dataProtocol);
-    	            info = metadataExtractor.extractMetadata(config.getSpreadsheetName());
+    	            info = metadataExtractor.extractMetadata(config.getSpreadsheetName(), config.getKey());
     	            spreadsheetInfo.set(info);
 	            }                
             }

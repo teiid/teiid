@@ -24,6 +24,7 @@ package org.teiid.resource.adapter.google.gdata;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -38,6 +39,7 @@ import com.google.gdata.client.spreadsheet.FeedURLFactory;
 import com.google.gdata.client.spreadsheet.SpreadsheetQuery;
 import com.google.gdata.client.spreadsheet.SpreadsheetService;
 import com.google.gdata.data.BaseFeed;
+import com.google.gdata.data.IEntry;
 import com.google.gdata.data.spreadsheet.ListEntry;
 import com.google.gdata.data.spreadsheet.ListFeed;
 import com.google.gdata.data.spreadsheet.SpreadsheetEntry;
@@ -68,17 +70,24 @@ public class GDataClientLoginAPI {
 		this.factory = FeedURLFactory.getDefault();
 	}
 
-	public SpreadsheetEntry getSpreadsheetEntryByTitle(String sheetTitle) {
-		SpreadsheetQuery squery = new SpreadsheetQuery(factory.getSpreadsheetsFeedUrl());
+	public SpreadsheetEntry getSpreadsheetEntry(String sheetName, boolean key) {
+	    if (key) {
+	        try {
+                return getSpreadsheetEntry(new URL(factory.getSpreadsheetsFeedUrl(), "full/"+sheetName), SpreadsheetEntry.class);
+            } catch (MalformedURLException e) {
+                throw new SpreadsheetOperationException(e);
+            }
+	    }
+	    SpreadsheetQuery squery = new SpreadsheetQuery(factory.getSpreadsheetsFeedUrl());
 		squery.setTitleExact(true);
-		squery.setTitleQuery(sheetTitle);
+		squery.setTitleQuery(sheetName);
 		SpreadsheetFeed feed = (SpreadsheetFeed) getSpreadsheetFeedQuery(squery, SpreadsheetFeed.class);
 		List<SpreadsheetEntry> entry = feed.getEntries();
 		if (entry.size() == 0)
-			throw new SpreadsheetOperationException("Couldn't find spreadsheet:" + sheetTitle);
+			throw new SpreadsheetOperationException("Couldn't find spreadsheet:" + sheetName);
 		
 		if (entry.size() > 1) {
-		    throw new SpreadsheetOperationException("Multiple worksheets with the given title:" + sheetTitle + ".  Consider using a sheet key instead.");
+		    throw new SpreadsheetOperationException("Multiple worksheets with the given title:" + sheetName + ".  Consider using a sheet key instead.");
 		}
 
 		return entry.get(0);
@@ -102,6 +111,24 @@ public class GDataClientLoginAPI {
 			}
 		}
 	}
+	
+    private <E extends IEntry> E getSpreadsheetEntry(URL entryUrl, Class<E> entryClass) {
+        try { 
+            return service.getEntry(entryUrl, entryClass);
+        } catch (Exception ex) {
+            try {
+                Thread.sleep(RETRY_DELAY);
+            } catch (InterruptedException e) {
+            }
+            // Try to relogin
+            reauthenticate();
+            try {
+                return service.getEntry(entryUrl, entryClass);
+            } catch (Exception ex2) {
+                throw new SpreadsheetOperationException("Error getting spreadsheet feed. Possibly bad authentication or connection problems. " + ex2);
+            }
+        }
+    }
 
 	private void reauthenticate() {
 		headerFactory.login();

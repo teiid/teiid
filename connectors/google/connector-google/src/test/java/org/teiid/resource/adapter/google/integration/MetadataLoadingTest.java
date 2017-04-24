@@ -40,10 +40,10 @@ public class MetadataLoadingTest extends IntegrationTest {
 		SpreadsheetMetadataExtractor extractor = new SpreadsheetMetadataExtractor();
 		extractor.setGdataAPI(gdata);
 		extractor.setVisualizationAPI(visualizationAPI);
-		SpreadsheetInfo metadata= extractor.extractMetadata("integration_tests");
+		SpreadsheetInfo metadata= extractor.extractMetadata("integration_tests", false);
 		Assert.assertEquals(0,metadata.getWorksheetByName("Sheet1").getColumnCount());
 		Assert.assertEquals(2,metadata.getWorksheetByName("Sheet2").getColumnCount());
-		metadata= extractor.extractMetadata("people");
+		metadata= extractor.extractMetadata("people", false);
 		Assert.assertEquals(5,metadata.getWorksheetByName("list").getColumnCount());
 		Assert.assertEquals(4,metadata.getWorksheetByName("phones").getColumnCount());
 		
