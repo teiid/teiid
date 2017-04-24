@@ -21,9 +21,13 @@
  */
 package org.teiid.resource.adapter.google;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 import javax.resource.ResourceException;
+import javax.resource.spi.InvalidPropertyException;
 
 import org.teiid.core.BundleUtil;
+import org.teiid.resource.adapter.google.metadata.SpreadsheetInfo;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 
@@ -42,17 +46,49 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
 	
 	//In case of OAuth2 authentiation user has to supply refreshToken
 	private String refreshToken;
-
+	
+	private Boolean key = false;
+	
 	@Override
 	@SuppressWarnings("serial")
 	public BasicConnectionFactory<SpreadsheetConnectionImpl> createConnectionFactory() throws ResourceException {
+	    checkConfig();
+	    
 		return new BasicConnectionFactory<SpreadsheetConnectionImpl>() {
+		    
+		    //share the spreadsheet info among all connections
+		    private AtomicReference<SpreadsheetInfo> spreadsheetInfo = new AtomicReference<SpreadsheetInfo>();
+		    
 			@Override
 			public SpreadsheetConnectionImpl getConnection() throws ResourceException {
-				return new SpreadsheetConnectionImpl(SpreadsheetManagedConnectionFactory.this);
+				return new SpreadsheetConnectionImpl(SpreadsheetManagedConnectionFactory.this, spreadsheetInfo);
 			}
 		};
 	}
+	
+   private void checkConfig() throws ResourceException {
+
+        //SpreadsheetName should be set
+        if (getSpreadsheetName()==null ||  getSpreadsheetName().trim().equals("")){ //$NON-NLS-1$
+            throw new InvalidPropertyException(SpreadsheetManagedConnectionFactory.UTIL.
+                    getString("provide_spreadsheetname",SpreadsheetManagedConnectionFactory.SPREADSHEET_NAME));      //$NON-NLS-1$
+        }
+        
+        //Auth method must be OAUTH2
+        if (getAuthMethod()!=null && !getAuthMethod().equals(SpreadsheetManagedConnectionFactory.OAUTH2_LOGIN)){
+            throw new InvalidPropertyException(SpreadsheetManagedConnectionFactory.UTIL.
+                    getString("provide_auth", //$NON-NLS-1$
+                            SpreadsheetManagedConnectionFactory.OAUTH2_LOGIN));     
+        }
+        
+        //OAuth login requires refreshToken
+        //if (config.getAuthMethod().equals(SpreadsheetManagedConnectionFactory.OAUTH2_LOGIN)){
+            if (getRefreshToken() == null || getRefreshToken().trim().equals("")){ //$NON-NLS-1$
+                throw new InvalidPropertyException(SpreadsheetManagedConnectionFactory.UTIL.getString("oauth_requires_pass"));   //$NON-NLS-1$
+            }
+        //}
+    }
+
 
 	@Override
 	public int hashCode() {
@@ -61,9 +97,6 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
 		result = prime * result + (int) (batchSize ^ (batchSize >>> 32));
 		return result;
 	}
-
-
-
 
 	@Override
 	public boolean equals(Object obj) {
@@ -110,5 +143,16 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
 	public void setRefreshToken(String refreshToken) {
 		this.refreshToken = refreshToken;
 	}
+
+	public Boolean getKey() {
+        return key;
+    }
+	
+	public void setKey(Boolean key) {
+	    if (key == null) {
+	        key = false;
+	    }
+        this.key = key;
+    }
 	
 }
