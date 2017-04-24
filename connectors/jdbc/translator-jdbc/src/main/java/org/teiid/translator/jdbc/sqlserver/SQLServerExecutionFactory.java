@@ -76,6 +76,7 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 	
 	//TEIID-31 remove mod modifier for SQL Server 2008
 	public SQLServerExecutionFactory() {
+	    setSupportsFullOuterJoins(true);
 		setMaxInCriteriaSize(JDBCExecutionFactory.DEFAULT_MAX_IN_CRITERIA);
 		setMaxDependentInPredicates(2);
 	}
