@@ -172,6 +172,34 @@ public class TestN1QLVisitor extends TestVisitor {
         
         sql = "SELECT Name FROM Customer WHERE documentID = 'customer'";
         helpTest(sql, "N1QL0805");
+        
+        sql = "SELECT * FROM Oder WHERE CustomerID = 'Customer_12345' AND CreditCard_Type = 'Visa' AND CreditCard_CVN = 123";
+        helpTest(sql, "N1QL0806");
+
+        sql = "SELECT CreditCard_CardNumber, CreditCard_Expiry, Name FROM Oder WHERE CustomerID = 'Customer_12345' AND CreditCard_Type = 'Visa' AND CreditCard_CVN = 123";
+        helpTest(sql, "N1QL0807");
+    }
+    
+    @Test // test where clause against array
+    public void testWhereClause_array() throws TranslatorException {
+
+        String sql = "SELECT * FROM Oder_Items WHERE documentID = 'order-1'"; //only documentID
+        helpTest(sql, "N1QL0811");
+
+        sql = "SELECT * FROM Oder_Items WHERE documentID = 'order-1' AND Oder_Items_Quantity = 1";
+        helpTest(sql, "N1QL0812");
+
+        sql = "SELECT * FROM Oder_Items WHERE Oder_Items_Quantity = 1";
+        helpTest(sql, "N1QL0813");
+
+        sql = "SELECT * FROM Oder_Items WHERE Oder_Items_Quantity = 1 AND Oder_Items_ItemID = 89123"; // only nested object columns of array
+        helpTest(sql, "N1QL0814");
+
+        sql = "SELECT * FROM Oder_Items WHERE Oder_Items_idx = 1"; // only array index
+        helpTest(sql, "N1QL0815");
+
+        sql = "SELECT * FROM Oder_Items WHERE documentID = 'order-1' AND Oder_Items_idx = 1 AND Oder_Items_Quantity = 5 AND Oder_Items_ItemID = 92312"; //all columns
+        helpTest(sql, "N1QL0816");
     }
     
     @Test

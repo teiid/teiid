@@ -79,7 +79,7 @@ public class TestVisitor {
     
     static Properties N1QL = new Properties();
     
-    static final Boolean PRINT_TO_CONSOLE = Boolean.FALSE;
+    static final Boolean PRINT_TO_CONSOLE = Boolean.TRUE;
     static final Boolean REPLACE_EXPECTED = Boolean.FALSE; 
     
     private static TransformationMetadata queryMetadataInterface() {

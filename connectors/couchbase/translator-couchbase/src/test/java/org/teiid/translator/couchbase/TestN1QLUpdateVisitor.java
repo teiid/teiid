@@ -287,6 +287,13 @@ public class TestN1QLUpdateVisitor extends TestVisitor {
     }
     
     @Test
+    public void testUpdate_1() throws TranslatorException {
+        
+        String sql = "UPDATE Customer SET Name = ucase(documentID) WHERE ID = 'Customer_10000'";
+        helpTest(sql, "N1QL1811");
+    }
+    
+    @Test
     public void testUpdateNestedArray() throws TranslatorException {
         
         String sql = "UPDATE T3_nestedArray_dim2_dim3_dim4 SET T3_nestedArray_dim2_dim3_dim4 = 'Hello Teiid' WHERE documentID = 'nestedArray' AND T3_nestedArray_idx = 1 AND T3_nestedArray_dim2_idx = 1 AND T3_nestedArray_dim2_dim3_idx = 1 AND T3_nestedArray_dim2_dim3_dim4_idx = 3";
@@ -307,5 +314,36 @@ public class TestN1QLUpdateVisitor extends TestVisitor {
         JsonObject json = JsonObject.create();
         assertNull(json.get("x"));
     }
+
+    @Test
+    public void testArrayUpdateFailure() throws TranslatorException {
+        String sql = "UPDATE Oder_Items SET Oder_Items_ItemID = Oder_Items_Quantity WHERE documentID = 'order-3' AND Oder_Items_idx = 0";
+        helpTest(sql, null);
+    }
+
+    @Test 
+    public void testArrayUpdateFailure2() throws TranslatorException {
+        String sql = "UPDATE Oder_Items SET Oder_Items_ItemID = 80000, Oder_Items_Quantity = 10 WHERE documentID = 'order-3' AND Oder_Items_idx = 0 AND Oder_Items_Quantity > 8";
+        helpTest(sql, null);
+    }
+
+    @Test
+    public void testArrayDeleteFailure() throws TranslatorException {
+        String sql = "DELETE FROM Oder_Items WHERE documentID = 'order-3' AND Oder_Items_idx = 2 AND Oder_Items_ItemID < 80000";
+        helpTest(sql, null);
+    }
+
+    @Test 
+    public void testArrayDeleteFailure1() throws TranslatorException {
+        String sql = "DELETE FROM Oder_Items WHERE documentID = 'order-3' AND Oder_Items_idx = 2 AND Oder_Items_ItemID = 80000";
+        helpTest(sql, null);
+    }
+    
+    @Test 
+    public void testArrayUpdateFailure1() throws TranslatorException {
+                String sql = "UPDATE Oder_Items SET Oder_Items_ItemID = 80000 WHERE documentID = 'order-3' AND Oder_Items_Quantity = 1 AND Oder_Items_idx = 0";
+               helpTest(sql, null);
+           }
+
 
 }

@@ -42,16 +42,7 @@ import org.teiid.language.Function;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.MetadataProcessor;
-import org.teiid.translator.ProcedureExecution;
-import org.teiid.translator.ResultSetExecution;
-import org.teiid.translator.SourceSystemFunctions;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
-import org.teiid.translator.TypeFacility;
-import org.teiid.translator.UpdateExecution;
+import org.teiid.translator.*;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 
@@ -379,6 +370,11 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
         } else if(type.equals(TypeFacility.RUNTIME_TYPES.NULL)) {
             array.addNull();
         }
+    }
+
+    @Override
+    public boolean supportsOnlyLiteralComparison() {
+        return true;
     }
 
 }

@@ -21,60 +21,21 @@
  */
 package org.teiid.translator.couchbase;
 
-import static org.teiid.language.SQLConstants.Reserved.BY;
-import static org.teiid.language.SQLConstants.Reserved.CAST;
-import static org.teiid.language.SQLConstants.Reserved.CONVERT;
-import static org.teiid.language.SQLConstants.Reserved.DISTINCT;
-import static org.teiid.language.SQLConstants.Reserved.FROM;
-import static org.teiid.language.SQLConstants.Reserved.HAVING;
-import static org.teiid.language.SQLConstants.Reserved.LIMIT;
-import static org.teiid.language.SQLConstants.Reserved.OFFSET;
-import static org.teiid.language.SQLConstants.Reserved.ORDER;
-import static org.teiid.language.SQLConstants.Reserved.SELECT;
-import static org.teiid.language.SQLConstants.Reserved.WHERE;
-import static org.teiid.language.SQLConstants.Tokens.COMMA;
-import static org.teiid.language.SQLConstants.Tokens.COLON;
-import static org.teiid.language.SQLConstants.Tokens.SPACE;
-import static org.teiid.language.SQLConstants.Tokens.LPAREN;
-import static org.teiid.language.SQLConstants.Tokens.RPAREN;
-import static org.teiid.language.SQLConstants.Tokens.EQ;
-import static org.teiid.translator.couchbase.CouchbaseProperties.GETDOCUMENT;
-import static org.teiid.translator.couchbase.CouchbaseProperties.GETDOCUMENTS;
-import static org.teiid.translator.couchbase.CouchbaseProperties.WAVE;
-import static org.teiid.translator.couchbase.CouchbaseProperties.RESULT;
-import static org.teiid.translator.couchbase.CouchbaseProperties.IDX_SUFFIX;
-import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.IS_ARRAY_TABLE;
-import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.NAMED_TYPE_PAIR;
-import static org.teiid.translator.couchbase.CouchbaseProperties.TRUE_VALUE;
-import static org.teiid.translator.couchbase.CouchbaseProperties.DOCUMENTID;
-import static org.teiid.translator.couchbase.CouchbaseProperties.SOURCE_SEPARATOR;
-import static org.teiid.translator.couchbase.CouchbaseProperties.SQUARE_BRACKETS;
-import static org.teiid.translator.couchbase.CouchbaseProperties.N1QL_COLUMN_ALIAS_PREFIX;
-import static org.teiid.translator.couchbase.CouchbaseProperties.N1QL_TABLE_ALIAS_PREFIX;
-import static org.teiid.translator.couchbase.CouchbaseProperties.UNDERSCORE;
-import static org.teiid.translator.couchbase.CouchbaseProperties.UNNEST;
-import static org.teiid.translator.couchbase.CouchbaseProperties.UNNEST_POSITION;
-import static org.teiid.translator.couchbase.CouchbaseProperties.LET;
+import static org.teiid.language.SQLConstants.Reserved.*;
+import static org.teiid.language.SQLConstants.Tokens.*;
+import static org.teiid.translator.couchbase.CouchbaseProperties.*;
+import static org.teiid.translator.couchbase.CouchbaseMetadataProcessor.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.teiid.language.Call;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Comparison;
-import org.teiid.language.DerivedColumn;
-import org.teiid.language.Function;
-import org.teiid.language.GroupBy;
-import org.teiid.language.Limit;
-import org.teiid.language.Literal;
-import org.teiid.language.NamedTable;
-import org.teiid.language.OrderBy;
+import org.teiid.core.util.StringUtil;
+import org.teiid.language.*;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.language.SQLConstants.Tokens;
-import org.teiid.language.Select;
 import org.teiid.language.visitor.SQLStringVisitor;
 
 public class N1QLVisitor extends SQLStringVisitor{
@@ -206,6 +167,15 @@ public class N1QLVisitor extends SQLStringVisitor{
                 
         isUnrelatedColumns = false;
         
+    }
+
+    @Override
+    public void visit(AndOr obj) {
+        appendNestedCondition(obj, obj.getLeftCondition());
+        if(!isUnrelatedColumns) {
+            buffer.append(Tokens.SPACE).append(obj.getOperator().toString()).append(Tokens.SPACE);
+        }
+        appendNestedCondition(obj, obj.getRightCondition());
     }
 
     private void appendWhere(Select obj) {
@@ -521,7 +491,7 @@ public class N1QLVisitor extends SQLStringVisitor{
         
         String colExpr = this.getColumnAliasGenerator().generate() + UNDERSCORE + obj.getName();
 
-        return new CBColumn(isPK, isIdx, colExpr, leafName, obj.getMetadataObject().getNameInSource());
+        return new CBColumn(isPK, isIdx, colExpr, leafName, obj.getMetadataObject().getSourceName());
     }
     
     protected void retrieveTableProperty(NamedTable table) {
@@ -635,6 +605,11 @@ public class N1QLVisitor extends SQLStringVisitor{
             appendN1QLPK(call);
             return;
         } 
+    }
+    
+    @Override
+    protected String escapeString(String str, String quote) {
+        return StringUtil.replaceAll(str, quote, "\\u0027"); //$NON-NLS-1$
     }
 
     private void appendKeyspace(String keyspace) {
