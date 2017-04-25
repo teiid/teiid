@@ -96,9 +96,7 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
 		addPushDownFunction(COUCHBASE, "TRIM", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
 		addPushDownFunction(COUCHBASE, "RTRIM", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
 		addPushDownFunction(COUCHBASE, "POSITION", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		
-//		addPushDownFunction(COUCHBASE, "METAID", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		
+				
 		addPushDownFunction(COUCHBASE, "CLOCK_MILLIS", TypeFacility.RUNTIME_NAMES.DOUBLE); //$NON-NLS-1$
 		addPushDownFunction(COUCHBASE, "CLOCK_STR", TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
 		addPushDownFunction(COUCHBASE, "CLOCK_STR", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$

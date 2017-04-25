@@ -79,8 +79,8 @@ public class TestVisitor {
     
     static Properties N1QL = new Properties();
     
-    static final Boolean PRINT_TO_CONSOLE = Boolean.TRUE;
-    static final Boolean REPLACE_EXPECTED = Boolean.FALSE; 
+    static final Boolean PRINT_TO_CONSOLE = Boolean.FALSE;
+    static final Boolean REPLACE_EXPECTED = Boolean.FALSE;// do not set 'REPLACE_EXPECTED' unless replaceProperties() be enhanced, this current replace is replace all, but the expected is replace line
     
     private static TransformationMetadata queryMetadataInterface() {
         try {

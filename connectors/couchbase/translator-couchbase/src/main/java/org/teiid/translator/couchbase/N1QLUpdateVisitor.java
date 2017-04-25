@@ -46,6 +46,7 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
     
     private String keyspace;
     private String setAttr;
+    private String setAttrArray;
 
     public N1QLUpdateVisitor(CouchbaseExecutionFactory ef) {
         super(ef);
@@ -254,7 +255,19 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
         
         if(obj.getTable() != null) {    
             CBColumn column = formCBColumn(obj);
-            buffer.append(column.getNameInSource());
+            if(isArrayTable) {
+                String arrayRef = buildNestedAttrRef(this.setAttrArray, column);
+                if(column.isPK()) {
+                    arrayRef = this.buildMeta(this.keyspace);
+                }
+                buffer.append(arrayRef);
+            } else {
+                String ref = column.getNameInSource();
+                if(column.isPK()) {
+                    ref = this.buildMeta(this.keyspace);
+                }
+                buffer.append(ref);
+            }
         } else {
             super.visit(obj);
         }
@@ -271,19 +284,22 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
         List<Condition> conditions = findEqualityPredicates(where, rowCache);
 
         if(isArrayTable) {// delete array depend on array index, and optional docuemntID
-            if (!conditions.isEmpty()) {
-                throw new AssertionError();
+            if(rowCache.size() < (dimension + 1)) {
+                throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29019, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29019, obj));
             }
             buffer.append(UPDATE).append(SPACE).append(this.keyspace).append(SPACE);
             
             appendDocumentID(obj, rowCache);
             
             List<CBColumnData> idxList = new ArrayList<>(dimension);
+            List<CBColumnData> equalityWhereList = new ArrayList<>(rowCache.size());
             for(CBColumnData columnData : rowCache) {
                 if(columnData.getCBColumn().isIdx()) {
                     idxList.add(columnData);
-                } else if (!columnData.getCBColumn().isPK()) {
-                    throw new AssertionError();
+                } else if (columnData.getCBColumn().isPK()) {
+                    continue;
+                } else {
+                    equalityWhereList.add(columnData);
                 }
             }
             
@@ -298,6 +314,31 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
                 right = setKey + LSBRACE + 1 + COLON + RSBRACE;
             }
             appendConcat(setKey, left, right);
+            
+            this.setAttrArray = setKey + LSBRACE + idx + RSBRACE;
+            boolean hasPredicate = false;
+            for(CBColumnData columnData : equalityWhereList) {
+                if (!hasPredicate) {
+                    buffer.append(SPACE).append(WHERE);
+                    hasPredicate = true;
+                } else {
+                    buffer.append(SPACE).append(AND);
+                }
+                
+                String whereRef = buildNestedAttrRef(setAttrArray, columnData.getCBColumn());
+                buffer.append(SPACE).append(whereRef).append(SPACE).append(EQ).append(SPACE).append(getValueString(columnData.getColumnType(), columnData.getValue()));
+            }
+            
+            for(Condition condition : conditions) {
+                if (!hasPredicate) {
+                    buffer.append(SPACE).append(WHERE).append(SPACE);
+                    hasPredicate = true;
+                } else {
+                    buffer.append(SPACE).append(AND).append(SPACE);
+                }
+                append(condition);
+            }
+            
             appendRetuning();
         } else {       
             buffer.append(DELETE).append(SPACE).append(FROM).append(SPACE);
@@ -339,6 +380,12 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
         if (value == null) {
             return null;
         }
+        
+        if(value instanceof LanguageObject) {
+            visitNode((LanguageObject)value);
+            return EMPTY_STRING;
+        }
+        
         if(type.equals(TypeFacility.RUNTIME_TYPES.STRING)) {
             return SQLConstants.Tokens.QUOTE + StringUtil.replace(value.toString(), SQLConstants.Tokens.QUOTE, "\\u0027") + SQLConstants.Tokens.QUOTE; //$NON-NLS-1$
         } else if(type.equals(TypeFacility.RUNTIME_TYPES.INTEGER) || type.equals(TypeFacility.RUNTIME_TYPES.LONG) 
@@ -362,18 +409,19 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
         List<Condition> conditions = findEqualityPredicates(where, whereRowCache);
         
         if(isArrayTable) {
-            if (!conditions.isEmpty()) {
-                throw new AssertionError();
+            if(whereRowCache.size() < (dimension + 1)) {
+                throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29019, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29019, obj));
             }
             List<CBColumnData> rowCache = new ArrayList<N1QLUpdateVisitor.CBColumnData>();
             for (SetClause clause : obj.getChanges()) {
                 ColumnReference col = clause.getSymbol();
                 CBColumn column = formCBColumn(col);
                 CBColumnData cacheData = new CBColumnData(col.getType(), column);
-                if (!(clause.getValue() instanceof Literal)) {
-                    throw new AssertionError();
+                Object value = clause.getValue();
+                if (clause.getValue() instanceof Literal) {
+                    value = ((Literal)clause.getValue()).getValue();
                 }
-                cacheData.setValue(((Literal)clause.getValue()).getValue());
+                cacheData.setValue(value);
                 rowCache.add(cacheData);
             }
             
@@ -390,42 +438,76 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
             buffer.append(SPACE);
             
             List<CBColumnData> idxList = new ArrayList<>(dimension);
+            List<CBColumnData> equalityWhereList = new ArrayList<>(whereRowCache.size());
             for(CBColumnData columnData : whereRowCache) {
                 if(columnData.getCBColumn().isIdx()) {
                     idxList.add(columnData);
-                } else if (!columnData.getCBColumn().isPK()) {
-                    throw new AssertionError();
+                } else if (columnData.getCBColumn().isPK()) {
+                    continue;
+                } else {
+                    equalityWhereList.add(columnData);
                 }
             }
 
-            String setKey = buildNestedArrayIdx(setAttr, dimension, idxList, obj) + LSBRACE + idxList.get(idxList.size() - 1).getValue() + RSBRACE;
-            buffer.append(SET).append(SPACE).append(setKey).append(SPACE).append(EQ).append(SPACE);
+            this.setAttrArray = buildNestedArrayIdx(setAttr, dimension, idxList, obj) + LSBRACE + idxList.get(idxList.size() - 1).getValue() + RSBRACE;
+            buffer.append(SET);
             
-            JsonObject nestedObj = null;
+            boolean comma = false;
             for(CBColumnData columnData : setList) {
-                if(columnData.getCBColumn().hasLeaf()) {
-                    if(nestedObj == null) {
-                        nestedObj = JsonObject.create();
-                    }
-                    String attr = columnData.getCBColumn().getLeafName();
-                    String path = columnData.getCBColumn().getNameInSource();
-                    path = path.substring(path.lastIndexOf(SQUARE_BRACKETS) + SQUARE_BRACKETS.length() + SOURCE_SEPARATOR.length());
-                    JsonObject json = this.findObject(nestedObj, path);
-                    ef.setValue(json, attr, columnData.getColumnType(), columnData.getValue());
+                if(comma){
+                    buffer.append(COMMA).append(SPACE);
+                } else {
+                    buffer.append(SPACE);
+                    comma = true;
                 }
+                
+                String setRef = buildNestedAttrRef(setAttrArray, columnData.getCBColumn());
+                buffer.append(setRef).append(SPACE).append(EQ).append(SPACE).append(getValueString(columnData.getColumnType(), columnData.getValue()));
             }
             
-            if(nestedObj != null) {
-                buffer.append(nestedObj);
-            } else {
-                buffer.append(getValueString(setList.get(0).getColumnType(), setList.get(0).getValue()));
+            boolean hasPredicate = false;
+            for(CBColumnData columnData : equalityWhereList) {
+                if (!hasPredicate) {
+                    buffer.append(SPACE).append(WHERE);
+                    hasPredicate = true;
+                } else {
+                    buffer.append(SPACE).append(AND);
+                }
+                
+                String whereRef = buildNestedAttrRef(setAttrArray, columnData.getCBColumn());
+                buffer.append(SPACE).append(whereRef).append(SPACE).append(EQ).append(SPACE).append(getValueString(columnData.getColumnType(), columnData.getValue()));
             }
             
+            for(Condition condition : conditions) {
+                if (!hasPredicate) {
+                    buffer.append(SPACE).append(WHERE).append(SPACE);
+                    hasPredicate = true;
+                } else {
+                    buffer.append(SPACE).append(AND).append(SPACE);
+                }
+                append(condition);
+            }
+
         } else {
             appendClauses(whereRowCache, conditions, obj.getChanges());
         }
         
         appendRetuning();
+    }
+    
+    /**
+     * Use to build the update/delete reference of nested JSON Object in an array object.
+     * @param prefix
+     * @param columnData
+     * @return
+     */
+    private String buildNestedAttrRef(String prefix, CBColumn column) {
+        if(column.hasLeaf()){
+            String sourceName = column.getNameInSource();
+            return prefix + sourceName.substring(sourceName.lastIndexOf(SQUARE_BRACKETS) + SQUARE_BRACKETS.length());
+        } else {
+            return prefix;
+        }
     }
     
     private String getUsesKeyString(List<CBColumnData> rowCache) {
@@ -459,7 +541,6 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
 
         if (useKey != null) {
             buffer.append(SPACE).append(useKey);
-            isTypedInProjection = true;
         }
         
         if (setClauses != null) {
@@ -488,6 +569,7 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
             buffer.append(getValueString(columnData.getColumnType(), columnData.getValue()));
         }
         
+        boolean hasTypedValue = !isTypedInProjection && typedName != null && typedValue != null;
         if (!otherConditions.isEmpty()) {
             if (!hasPredicate) {
                 buffer.append(SPACE).append(WHERE);
@@ -496,10 +578,17 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
                 buffer.append(SPACE).append(AND);
             }
             buffer.append(SPACE);
-            append(LanguageUtil.combineCriteria(otherConditions));
+            
+            if(hasTypedValue){
+                buffer.append(LPAREN);
+                append(LanguageUtil.combineCriteria(otherConditions));
+                buffer.append(RPAREN);
+            } else {
+                append(LanguageUtil.combineCriteria(otherConditions));
+            }
         }
         
-        if(!isTypedInProjection && typedName != null && typedValue != null) {
+        if(hasTypedValue) {
             if (hasPredicate) {
                 buffer.append(SPACE).append(AND);
             } else {

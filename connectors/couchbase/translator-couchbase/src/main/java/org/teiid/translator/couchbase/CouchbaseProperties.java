@@ -60,5 +60,7 @@ public interface CouchbaseProperties {
     
     String N1QL_COLUMN_ALIAS_PREFIX = "$cb_c"; //$NON-NLS-1$
     String N1QL_TABLE_ALIAS_PREFIX = "$cb_t"; //$NON-NLS-1$
+    
+    String EMPTY_STRING = "";//$NON-NLS-1$
 
 }

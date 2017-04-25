@@ -537,14 +537,7 @@ public class N1QLVisitor extends SQLStringVisitor{
             append(obj.getParameters());
             buffer.append(RPAREN);
             return;
-        } else if(functionName.equalsIgnoreCase("METAID")) { //$NON-NLS-1$
-            buffer.append("META").append(LPAREN); //$NON-NLS-1$
-            Literal literal = (Literal) obj.getParameters().get(0);
-            String tableName = (String) literal.getValue();
-            buffer.append(tableName);
-            buffer.append(RPAREN).append(".id"); //$NON-NLS-1$
-            return;
-        }else if (this.ef.getFunctionModifiers().containsKey(functionName)) {
+        } else if (this.ef.getFunctionModifiers().containsKey(functionName)) {
             List<?> parts =  this.ef.getFunctionModifiers().get(functionName).translate(obj);
             if (parts != null) {
                 obj = (Function)parts.get(0);
