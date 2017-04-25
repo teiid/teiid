@@ -21,28 +21,10 @@
  */
 package org.teiid.translator.couchbase;
 
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.STRING;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.OBJECT;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.INTEGER;
-import static org.teiid.translator.couchbase.CouchbaseProperties.WAVE;
-import static org.teiid.translator.couchbase.CouchbaseProperties.COLON;
-import static org.teiid.translator.couchbase.CouchbaseProperties.QUOTE;
-import static org.teiid.translator.couchbase.CouchbaseProperties.SOURCE_SEPARATOR;
-import static org.teiid.translator.couchbase.CouchbaseProperties.UNDERSCORE;
-import static org.teiid.translator.couchbase.CouchbaseProperties.NAME;
-import static org.teiid.translator.couchbase.CouchbaseProperties.DOCUMENTID;
-import static org.teiid.translator.couchbase.CouchbaseProperties.DEFAULT_NAMESPACE;
-import static org.teiid.translator.couchbase.CouchbaseProperties.TRUE_VALUE;
-import static org.teiid.translator.couchbase.CouchbaseProperties.FALSE_VALUE;
-import static org.teiid.translator.couchbase.CouchbaseProperties.IDX_SUFFIX;
-import static org.teiid.translator.couchbase.CouchbaseProperties.DIM_SUFFIX;
-import static org.teiid.translator.couchbase.CouchbaseProperties.SQUARE_BRACKETS;
-import static org.teiid.translator.couchbase.CouchbaseProperties.GETDOCUMENT;
-import static org.teiid.translator.couchbase.CouchbaseProperties.GETDOCUMENTS;
-import static org.teiid.translator.couchbase.CouchbaseProperties.ID;
-import static org.teiid.translator.couchbase.CouchbaseProperties.RESULT;
-import static org.teiid.translator.couchbase.CouchbaseProperties.KEYSPACE;
+import static org.teiid.language.SQLConstants.Tokens.*;
 import static org.teiid.metadata.BaseColumn.NullType.*;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
+import static org.teiid.translator.couchbase.CouchbaseProperties.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;

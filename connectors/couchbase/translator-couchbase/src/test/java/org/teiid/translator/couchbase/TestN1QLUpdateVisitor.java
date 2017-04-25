@@ -22,12 +22,17 @@
 package org.teiid.translator.couchbase;
 
 import static org.junit.Assert.*;
+import static org.teiid.translator.couchbase.TestCouchbaseMetadataProcessor.formOder;
+
+import java.util.HashMap;
+import java.util.List;
 
 import org.junit.Test;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.language.Command;
 import org.teiid.translator.TranslatorException;
 
+import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 
 @SuppressWarnings("nls")
@@ -194,6 +199,55 @@ public class TestN1QLUpdateVisitor extends TestVisitor {
     }
     
     @Test
+    public void testDelete_1() throws TranslatorException {
+        
+        String sql = "DELETE FROM Oder WHERE documentID = 'order-3' AND (CreditCard_Type = 'Visa' OR CreditCard_CVN > 100)";
+        helpTest(sql, "N1QL1621");
+        
+        sql = "DELETE FROM Oder WHERE CustomerID = 'Customer_12346' AND (CreditCard_Type = 'Visa' OR CreditCard_CVN > 100)";
+        helpTest(sql, "N1QL1622");
+        
+        sql = "DELETE FROM Oder WHERE (CreditCard_CardNumber = '4111 1111 1111 111' OR CreditCard_Type = 'Visa') AND (CreditCard_CVN > 100 OR CreditCard_Expiry = '12/12') AND CustomerID = 'Customer_12346'";
+        helpTest(sql, "N1QL1623");
+        
+        sql = "DELETE FROM Oder WHERE (CreditCard_CardNumber = '4111 1111 1111 111' AND CreditCard_Type = 'Visa') OR (CreditCard_CVN > 100 AND CreditCard_Expiry = '12/12') OR CustomerID = 'Customer_12346'";
+        helpTest(sql, "N1QL1624");
+    }
+    
+    @Test
+    public void testDelete_2() throws TranslatorException {
+        
+        String sql = "DELETE FROM Oder_Items WHERE documentID = 'order-1' AND Oder_Items_idx = 0 AND Oder_Items_ItemID = 89123 AND Oder_Items_Quantity = 1";
+        helpTest(sql, "N1QL1631");
+        
+        sql = "DELETE FROM Oder_Items WHERE documentID = 'order-1' AND Oder_Items_idx = 0 AND Oder_Items_ItemID = 89123";
+        helpTest(sql, "N1QL1632");
+        
+        sql = "DELETE FROM Oder_Items WHERE documentID = 'order-1' AND Oder_Items_idx = 0 AND (Oder_Items_ItemID = 89123 OR Oder_Items_Quantity = 1)";
+        helpTest(sql, "N1QL1633");
+        
+        sql = "DELETE FROM Oder_Items WHERE documentID = 'order-1' AND Oder_Items_idx = 0 AND Oder_Items_ItemID > 80000 AND Oder_Items_Quantity > 0";
+        helpTest(sql, "N1QL1634");
+        
+        sql = "DELETE FROM Oder_Items WHERE documentID = 'order-1' AND Oder_Items_idx = 0 AND (Oder_Items_ItemID > 80000 OR Oder_Items_Quantity > 0)";
+        helpTest(sql, "N1QL1635");
+        
+        sql = "UDELETE FROM Oder_Items WHERE documentID = 'order-1' AND Oder_Items_idx > 0";
+        try {
+            helpTest(sql, "N1QL1636");
+        } catch (TeiidRuntimeException e) {
+            assertEquals(TeiidRuntimeException.class, e.getClass());
+        }
+        
+        sql = "DELETE FROM Oder_Items WHERE documentID = 'order-1' AND Oder_Items_idx = 0 AND Oder_Items_ItemID > 80000 OR Oder_Items_Quantity > 0";
+        try {
+            helpTest(sql, "N1QL1637");
+        } catch (TeiidRuntimeException e) {
+            assertEquals(TeiidRuntimeException.class, e.getClass());
+        }
+    }
+    
+    @Test
     public void testDeleteNestedArray() throws TranslatorException {
         
         String sql = "DELETE FROM T3_nestedArray_dim2_dim3_dim4 WHERE documentID = 'nestedArray' AND T3_nestedArray_idx = 1 AND T3_nestedArray_dim2_idx = 1 AND T3_nestedArray_dim2_dim3_idx = 1 AND T3_nestedArray_dim2_dim3_dim4_idx = 3";
@@ -287,6 +341,38 @@ public class TestN1QLUpdateVisitor extends TestVisitor {
     }
     
     @Test
+    public void testUpdate_1() throws TranslatorException {
+        
+        String sql = "UPDATE Customer SET Name = ucase(documentID) WHERE documentID = 'customer-5'";
+        helpTest(sql, "N1QL1811");
+        
+        sql = "UPDATE Customer SET Name = ucase(documentID) WHERE ID = 'Customer_12345'";
+        helpTest(sql, "N1QL1812");
+        
+        sql = "UPDATE Customer SET Name = type WHERE documentID = 'customer-5'";
+        helpTest(sql, "N1QL1813");
+        
+        sql = "UPDATE Customer SET Name = type WHERE ID = 'Customer_12345'";
+        helpTest(sql, "N1QL1814");
+    }
+    
+    @Test
+    public void testUpdate_2() throws TranslatorException {
+        
+        String sql = "UPDATE Oder SET Name = 'Train Ticket' WHERE documentID = 'order-3' AND (CreditCard_Type = 'Visa' OR CreditCard_CVN > 100)";
+        helpTest(sql, "N1QL1815");
+        
+        sql = "UPDATE Oder SET Name = 'Train Ticket' WHERE CustomerID = 'Customer_12346' AND (CreditCard_Type = 'Visa' OR CreditCard_CVN > 100)";
+        helpTest(sql, "N1QL1816");
+        
+        sql = "UPDATE Oder SET Name = 'Train Ticket' WHERE (CreditCard_CardNumber = '4111 1111 1111 111' OR CreditCard_Type = 'Visa') AND (CreditCard_CVN > 100 OR CreditCard_Expiry = '12/12') AND CustomerID = 'Customer_12346'";
+        helpTest(sql, "N1QL1817");
+        
+        sql = "UPDATE Oder SET Name = 'Train Ticket' WHERE (CreditCard_CardNumber = '4111 1111 1111 111' AND CreditCard_Type = 'Visa') OR (CreditCard_CVN > 100 AND CreditCard_Expiry = '12/12') OR CustomerID = 'Customer_12346'";
+        helpTest(sql, "N1QL1818");
+    }
+    
+    @Test
     public void testUpdateNestedArray() throws TranslatorException {
         
         String sql = "UPDATE T3_nestedArray_dim2_dim3_dim4 SET T3_nestedArray_dim2_dim3_dim4 = 'Hello Teiid' WHERE documentID = 'nestedArray' AND T3_nestedArray_idx = 1 AND T3_nestedArray_dim2_idx = 1 AND T3_nestedArray_dim2_dim3_idx = 1 AND T3_nestedArray_dim2_dim3_dim4_idx = 3";
@@ -303,9 +389,79 @@ public class TestN1QLUpdateVisitor extends TestVisitor {
     }
     
     @Test
+    public void testUpdateNestedArray_1() throws TranslatorException {
+
+        String sql = "UPDATE Oder_Items SET Oder_Items_ItemID = 80000, Oder_Items_Quantity = 10 WHERE documentID = 'order-1' AND Oder_Items_idx = 0 AND Oder_Items_ItemID = 89123 AND Oder_Items_Quantity = 1";
+        helpTest(sql, "N1QL1911");
+      
+        sql = "UPDATE Oder_Items SET Oder_Items_ItemID = 80000 WHERE documentID = 'order-1' AND Oder_Items_idx = 0 AND Oder_Items_ItemID = 89123 AND Oder_Items_Quantity = 1";
+        helpTest(sql, "N1QL1912");
+      
+        sql = "UPDATE Oder_Items SET Oder_Items_Quantity = 10 WHERE documentID = 'order-1' AND Oder_Items_idx = 0 AND Oder_Items_ItemID = 89123 AND Oder_Items_Quantity = 1";
+        helpTest(sql, "N1QL1913");
+      
+        sql = "UPDATE Oder_Items SET Oder_Items_ItemID = 80000, Oder_Items_Quantity = 10 WHERE documentID = 'order-1' AND Oder_Items_idx = 0 AND Oder_Items_ItemID = 89123";
+        helpTest(sql, "N1QL1914");
+      
+        sql = "UPDATE Oder_Items SET Oder_Items_ItemID = 80000 WHERE documentID = 'order-1' AND Oder_Items_idx = 0 AND Oder_Items_ItemID = 89123";
+        helpTest(sql, "N1QL1915");
+      
+        sql = "UPDATE Oder_Items SET Oder_Items_Quantity = 10 WHERE documentID = 'order-1' AND Oder_Items_idx = 0 AND Oder_Items_ItemID = 89123";
+        helpTest(sql, "N1QL1916");
+
+        sql = "UPDATE Oder_Items SET Oder_Items_ItemID = 80000, Oder_Items_Quantity = 10 WHERE documentID = 'order-1' AND Oder_Items_idx = 0 AND Oder_Items_ItemID > 80000 AND Oder_Items_Quantity > 0";
+        helpTest(sql, "N1QL1917");
+
+        sql = "UPDATE Oder_Items SET Oder_Items_ItemID = 80000, Oder_Items_Quantity = 10 WHERE documentID = 'order-1' AND Oder_Items_idx = 0 AND (Oder_Items_ItemID > 80000 OR Oder_Items_Quantity > 0)";
+        helpTest(sql, "N1QL1918");
+        
+        sql = "UPDATE Oder_Items SET Oder_Items_ItemID = 80000, Oder_Items_Quantity = 10 WHERE documentID = 'order-1' AND Oder_Items_idx > 0";
+        try {
+            helpTest(sql, "N1QL1919");
+        } catch (TeiidRuntimeException e) {
+            assertEquals(TeiidRuntimeException.class, e.getClass());
+        }
+        
+        sql = "UPDATE Oder_Items SET Oder_Items_ItemID = 80000, Oder_Items_Quantity = 10 WHERE documentID = 'order-1' AND Oder_Items_idx = 0 AND Oder_Items_ItemID > 80000 OR Oder_Items_Quantity > 0";
+        try {
+            helpTest(sql, "N1QL1920");
+        } catch (TeiidRuntimeException e) {
+            assertEquals(TeiidRuntimeException.class, e.getClass());
+        }
+
+    }
+    
+    @Test
+    public void testUpdateNestedArray_2() throws TranslatorException {
+        
+        String sql = "UPDATE Oder_Items SET Oder_Items_ItemID = Oder_Items_Quantity WHERE documentID = 'order-3' AND Oder_Items_idx = 0";
+        helpTest(sql, "N1QL1921");
+        
+        sql = "UPDATE Customer_SavedAddresses SET Customer_SavedAddresses = ucase(documentID) WHERE documentID = 'customer-5' AND Customer_SavedAddresses_idx = 0";
+        helpTest(sql, "N1QL1922");
+    }
+    
+    @Test
     public void testSourceModel() {
         JsonObject json = JsonObject.create();
         assertNull(json.get("x"));
     }
-
+    
+    @Test
+    public void testNestedJsonArrayType() {
+        
+        JsonObject order = formOder();
+        JsonArray jsonArray = order.getArray("Items");
+        List<Object> items = jsonArray.toList();
+        for(int i = 0 ; i < items.size() ; i ++){
+            Object item = items.get(i);
+            assertEquals(item.getClass(), HashMap.class);
+        }
+        
+        for(int i = 0 ; i < jsonArray.size() ; i ++) {
+            Object item = jsonArray.get(i);
+            assertEquals(item.getClass(), JsonObject.class);
+        }
+    }    
+    
 }

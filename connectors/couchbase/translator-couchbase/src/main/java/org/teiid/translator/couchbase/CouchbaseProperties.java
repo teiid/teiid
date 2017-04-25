@@ -24,8 +24,6 @@ package org.teiid.translator.couchbase;
 public interface CouchbaseProperties {
     
     String WAVE = "`"; //$NON-NLS-1$
-    String COLON = ":"; //$NON-NLS-1$
-    String QUOTE = "'"; //$NON-NLS-1$
     String SOURCE_SEPARATOR = "."; //$NON-NLS-1$
     String PLACEHOLDER = "$"; //$NON-NLS-1$
     String JSON = "json"; //$NON-NLS-1$ 
@@ -62,5 +60,7 @@ public interface CouchbaseProperties {
     
     String N1QL_COLUMN_ALIAS_PREFIX = "$cb_c"; //$NON-NLS-1$
     String N1QL_TABLE_ALIAS_PREFIX = "$cb_t"; //$NON-NLS-1$
+    
+    String EMPTY_STRING = "";//$NON-NLS-1$
 
 }
