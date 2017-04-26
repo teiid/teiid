@@ -100,7 +100,12 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
             left.append("IFMISSINGORNULL").append(LPAREN).append(arrayIDX).append(COMMA).append(SPACE).append(SQUARE_BRACKETS).append(RPAREN);
             appendConcat(arrayIDX, left, array);
         } else {
-            buffer.append(getInsertKeyword()).append(SPACE).append(INTO).append(SPACE).append(keyspace).append(SPACE); 
+            if (obj.isUpsert()) {
+                buffer.append(getUpsertKeyword());
+            } else {
+                buffer.append(getInsertKeyword());;
+            }
+            buffer.append(SPACE).append(INTO).append(SPACE).append(keyspace).append(SPACE); 
             buffer.append(LPAREN).append(KEY).append(COMMA).append(SPACE).append(VALUE).append(RPAREN).append(SPACE);
             
             String documentID = null;
