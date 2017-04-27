@@ -68,10 +68,10 @@
         <version.olap4j>1.1.0</version.olap4j>
         <version.hadoop-core>1.2.1</version.hadoop-core>
         <version.thrift>0.9.1</version.thrift>
-        <version.zookeeper>3.3.6</version.zookeeper>
+        <version.zookeeper>3.4.6</version.zookeeper>
         <version.accumulo>1.6.4</version.accumulo>
-        <version.solr>4.6.0</version.solr>
-        <version.noggit>0.5</version.noggit>
+        <version.solr>6.4.1</version.solr>
+        <version.noggit>0.6</version.noggit>
         <version.aws-java-sdk>1.11.0</version.aws-java-sdk>
         <version.cassandra-driver-core>3.1.3</version.cassandra-driver-core>
         <version.org.jboss.resteasy.tjws>3.0.11.Final</version.org.jboss.resteasy.tjws>        
@@ -97,7 +97,7 @@
 	    <version.io.swagger>1.5.8</version.io.swagger>
         <version.org.apache.phoenix.phoenix-core>4.2.1</version.org.apache.phoenix.phoenix-core>
         <version.org.apache.cxf>3.1.4</version.org.apache.cxf>
-        <version.org.codehaus.woodstox>4.2.0</version.org.codehaus.woodstox>
+        <version.org.codehaus.woodstox>4.4.1</version.org.codehaus.woodstox>
         <version.ant-contrib>1.0b3</version.ant-contrib>
         <version.org.dbunit>2.2</version.org.dbunit>
         <version.org.apache.poi>3.10.1</version.org.apache.poi>

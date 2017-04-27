@@ -968,7 +968,7 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
         nvl.setNullOnNull(false);
         functions.add(nvl); 
 	}
-			
+	
 	private void addFormatTimestampFunction() {
 		functions.add(
 			new FunctionMethod(SourceSystemFunctions.FORMATTIMESTAMP, QueryPlugin.Util.getString("SystemSource.Formattimestamp_desc"),CONVERSION, FUNCTION_CLASS, "format", //$NON-NLS-1$ //$NON-NLS-2$

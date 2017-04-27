@@ -22,11 +22,7 @@
 package org.teiid.translator.solr;
 
 import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 import javax.resource.cci.ConnectionFactory;
 
@@ -36,31 +32,25 @@ import org.teiid.core.types.TransformationException;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.MetadataProcessor;
-import org.teiid.translator.ResultSetExecution;
-import org.teiid.translator.SourceSystemFunctions;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
-import org.teiid.translator.UpdateExecution;
+import org.teiid.translator.*;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 
 @Translator(name = "solr", description = "A translator for Solr search platform")
 public class SolrExecutionFactory extends ExecutionFactory<ConnectionFactory, SolrConnection> {
 	protected Map<String, FunctionModifier> functionModifiers = new TreeMap<String, FunctionModifier>(String.CASE_INSENSITIVE_ORDER);
-	
+
 	public SolrExecutionFactory() {
 		super();
 		setSourceRequiredForMetadata(true);
-		setTransactionSupport(TransactionSupport.NONE);
         registerFunctionModifier("%", new AliasModifier("mod"));//$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier("+", new AliasModifier("sum"));//$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier("-", new AliasModifier("sub"));//$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier("*", new AliasModifier("product"));//$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier("/", new AliasModifier("div"));//$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier(SourceSystemFunctions.POWER, new AliasModifier("pow"));//$NON-NLS-1$
+        setTransactionSupport(TransactionSupport.NONE);
+        addPushDownFunction("SOLR", "GAP", TypeFacility.RUNTIME_NAMES.TIMESTAMP, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING);
 		
 	}
 	
@@ -93,7 +83,7 @@ public class SolrExecutionFactory extends ExecutionFactory<ConnectionFactory, So
         supportedFunctions.add(SourceSystemFunctions.ABS);
         supportedFunctions.add(SourceSystemFunctions.LOG);
         supportedFunctions.add(SourceSystemFunctions.SQRT);
-        
+        supportedFunctions.add(SourceSystemFunctions.GAP);
         return supportedFunctions;
     }
     
@@ -223,7 +213,23 @@ public class SolrExecutionFactory extends ExecutionFactory<ConnectionFactory, So
     }	
 	
 	@Override
+	public boolean supportsFunctionsInGroupBy() {
+		return true;
+	}
+	  
+	@Override
+	public boolean supportsGroupBy() {
+		return true;
+	}
+	
+
+	@Override
 	public boolean returnsSingleUpdateCount() {
+		return true;
+	}
+	
+	@Override
+	public boolean supportsOnlyFormatLiterals(){
 		return true;
 	}
 }

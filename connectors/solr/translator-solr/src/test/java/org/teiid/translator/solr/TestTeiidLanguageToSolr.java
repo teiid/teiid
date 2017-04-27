@@ -301,7 +301,7 @@ public class TestTeiidLanguageToSolr {
 		assertEquals("fl=name,div(sum(popularity,1),2)&sort=popularity asc&q=*:*",
 				getSolrTranslation("select name,(popularity+1)/2 as x from example order by popularity ASC"));		
 	}
-	
+
 	@Before public void setUp() { 
 		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("PST")); //$NON-NLS-1$ 
 	}
