@@ -1,0 +1,1 @@
+Dependencies: org.jboss.teiid.common-core,org.jboss.teiid.api,javax.api,org.infinispan.commons,org.infinispan.client.hotrod,org.infinispan.query.dsl,org.jboss.remoting3

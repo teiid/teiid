@@ -20,6 +20,7 @@
         <feature-pack groupId="org.jboss.teiid.connectors" artifactId="feature-pack-couchbase" version="${project.version}" />
         <feature-pack groupId="org.jboss.teiid.connectors" artifactId="feature-pack-salesforce" version="${project.version}" />
         <feature-pack groupId="org.jboss.teiid.connectors" artifactId="feature-pack-salesforce-34" version="${project.version}" />
+        <feature-pack groupId="org.jboss.teiid.connectors" artifactId="feature-pack-infinispan" version="${project.version}" />
     </feature-packs>
 </server-provisioning>
 

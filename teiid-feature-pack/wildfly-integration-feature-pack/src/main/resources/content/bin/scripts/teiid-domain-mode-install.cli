@@ -141,6 +141,7 @@ connect
 /profile=ha/subsystem=teiid/translator=simpledb:add(module=org.jboss.teiid.translator.simpledb)
 /profile=ha/subsystem=teiid/translator=swagger:add(module=org.jboss.teiid.translator.swagger)
 /profile=ha/subsystem=teiid/translator=delegator:add(module=org.jboss.teiid.api)
+/profile=ha/subsystem=teiid/translator=infinispan-hotrod:add(module=org.jboss.teiid.translator.infinispan.hotrod)
 
 /profile=ha/subsystem=datasources/jdbc-driver=teiid:add(driver-name=teiid, driver-module-name=org.jboss.teiid.client, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)
 /profile=ha/subsystem=datasources/jdbc-driver=teiid-local:add(driver-name=teiid-local, driver-module-name=org.jboss.teiid, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)
@@ -158,6 +159,7 @@ connect
 /profile=ha/subsystem=resource-adapters/resource-adapter=simpledb:add(module=org.jboss.teiid.resource-adapter.simpledb)
 /profile=ha/subsystem=resource-adapters/resource-adapter=accumulo:add(module=org.jboss.teiid.resource-adapter.accumulo)
 /profile=ha/subsystem=resource-adapters/resource-adapter=solr:add(module=org.jboss.teiid.resource-adapter.solr)
+/profile=ha/subsystem=resource-adapters/resource-adapter=infinispan:add(module=org.jboss.teiid.resource-adapter.infinispan.hotrod)
 
 /profile=full-ha/subsystem=teiid:add(authentication-security-domain=teiid-security, resultset-cache-infinispan-container=teiid-cache,preparedplan-cache-infinispan-container=teiid-cache,policy-decider-module=org.jboss.teiid,distributed-cache-jgroups-stack=teiid-cluster)
 /profile=full-ha/subsystem=teiid/transport=local:add()
@@ -222,6 +224,7 @@ connect
 /profile=full-ha/subsystem=teiid/translator=simpledb:add(module=org.jboss.teiid.translator.simpledb)
 /profile=full-ha/subsystem=teiid/translator=swagger:add(module=org.jboss.teiid.translator.swagger)
 /profile=full-ha/subsystem=teiid/translator=delegator:add(module=org.jboss.teiid.api)
+/profile=full-ha/subsystem=teiid/translator=infinispan-hotrod:add(module=org.jboss.teiid.translator.infinispan.hotrod)
 
 /profile=full-ha/subsystem=datasources/jdbc-driver=teiid:add(driver-name=teiid, driver-module-name=org.jboss.teiid.client, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)
 /profile=full-ha/subsystem=datasources/jdbc-driver=teiid-local:add(driver-name=teiid-local, driver-module-name=org.jboss.teiid, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)
@@ -239,5 +242,6 @@ connect
 /profile=full-ha/subsystem=resource-adapters/resource-adapter=simpledb:add(module=org.jboss.teiid.resource-adapter.simpledb)
 /profile=full-ha/subsystem=resource-adapters/resource-adapter=accumulo:add(module=org.jboss.teiid.resource-adapter.accumulo)
 /profile=full-ha/subsystem=resource-adapters/resource-adapter=solr:add(module=org.jboss.teiid.resource-adapter.solr)
+/profile=ha/subsystem=resource-adapters/resource-adapter=infinispan:add(module=org.jboss.teiid.resource-adapter.infinispan.hotrod)
 
 :restart-servers(blocking=true)  
