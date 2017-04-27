@@ -20,6 +20,6 @@
         <module name="org.apache.commons.lang"/>
         <module name="org.apache.zookeeper" />
         <module name="org.apache.thrift" />
-        <module name="org.apache.hadoop.core" />
+        <module name="org.apache.hadoop.common" />
     </dependencies>
 </module>
