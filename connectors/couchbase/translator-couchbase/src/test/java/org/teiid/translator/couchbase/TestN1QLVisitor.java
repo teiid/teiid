@@ -73,6 +73,19 @@ public class TestN1QLVisitor extends TestVisitor {
         sql = "SELECT CreditCard_CardNumber, CreditCard_Type, CreditCard_CVN, CreditCard_Expiry FROM Oder";
         helpTest(sql, "N1QL0107");
     }
+    
+    @Test
+    public void testSelect_1() throws TranslatorException {
+        
+        String sql = "SELECT 1 AS c_0 FROM Customer WHERE documentID = 'customer-3' LIMIT 1";
+        helpTest(sql, "N1QL0108");
+        
+        sql = "SELECT COUNT(*) AS count FROM Customer WHERE ID = 'Customer_12345'";
+        helpTest(sql, "N1QL0109");
+        
+        sql = "SELECT couchbase.CLOCK_MILLIS() FROM Oder WHERE CustomerID = 'Customer_12345' AND CreditCard_Type = 'Visa' AND CreditCard_CVN = 123";
+        helpTest(sql, "N1QL0110");
+    }
 
     @Test
     public void testNestedJson() throws TranslatorException  {

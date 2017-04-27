@@ -442,6 +442,35 @@ public class TestN1QLUpdateVisitor extends TestVisitor {
     }
     
     @Test
+    public void testUpsert() throws TranslatorException  {
+        
+        String sql = "UPSERT INTO Customer VALUES ('customer-1', 'Customer_12346', 'Customer', 'Kylin Soong')";
+        helpTest(sql, "N1QL2001");
+        
+        sql = "UPSERT INTO Customer (documentID, ID, Name, type) VALUES ('customer-1', 'Customer_12346', 'Kylin Soong', 'Customer')";
+        helpTest(sql, "N1QL2002");
+        
+        sql = "UPSERT INTO Oder VALUES ('order-1', 'Customer_12345', 'Oder', '4111 1111 1111 111', 'Visa', 123, '12/12', 'Air Ticket')";
+        helpTest(sql, "N1QL2003");
+        
+        sql = "UPSERT INTO Oder (documentID, CustomerID, type, CreditCard_CardNumber, CreditCard_Type, CreditCard_CVN, CreditCard_Expiry, Name) VALUES ('order-1', 'Customer_12345', 'Oder', '4111 1111 1111 111', 'Visa', 123, '12/12', 'Air Ticket')";
+        helpTest(sql, "N1QL2004");
+        
+        sql = "UPSERT INTO Customer_SavedAddresses VALUES ('customer-1', 2,  'Beijing')";
+        helpTest(sql, "N1QL2005");
+        
+        sql = "UPSERT INTO Customer_SavedAddresses (documentID, Customer_SavedAddresses_idx, Customer_SavedAddresses) VALUES ('customer-1', 2,  'Beijing')";
+        helpTest(sql, "N1QL2006");
+        
+        sql = "UPSERT INTO Oder_Items VALUES ('order-1', 2, 5, 92312)";
+        helpTest(sql, "N1QL2007");
+        
+        sql = "UPSERT INTO Oder_Items (documentID, Oder_Items_idx, Oder_Items_Quantity, Oder_Items_ItemID) VALUES ('order-1', 2, 5, 92312)";
+        helpTest(sql, "N1QL2008");
+        
+    }
+    
+    @Test
     public void testSourceModel() {
         JsonObject json = JsonObject.create();
         assertNull(json.get("x"));

@@ -61,6 +61,7 @@ public class N1QLVisitor extends SQLStringVisitor{
     
     private boolean isUnrelatedColumns = false;
     
+    private String topTableAlias;
 
     public N1QLVisitor(CouchbaseExecutionFactory ef) {
         this.ef = ef;
@@ -148,6 +149,9 @@ public class N1QLVisitor extends SQLStringVisitor{
         for(int i = 0 ; i < this.unrelatedStack.size() ; i ++) {
             if (comma) {
                 buffer.append(COMMA).append(SPACE);
+            } else {
+                buffer.append(SPACE).append(LET).append(SPACE);
+                comma = true;
             }
             buffer.append(this.unrelatedStack.get(i).getValueReference()); 
         }
@@ -207,7 +211,10 @@ public class N1QLVisitor extends SQLStringVisitor{
                     }
                 }
             } else {
-                String keyspace = this.nameInSource(this.letStack.get(this.letStack.size() - 1).getTableAlias());
+                String keyspace = nameInSource(this.topTableAlias);
+                if(this.letStack.size() > 0) {
+                    keyspace = nameInSource(this.letStack.get(this.letStack.size() - 1).getTableAlias());
+                }
                 String unrelatedType = keyspace + SOURCE_SEPARATOR + buildTypedWhere(this.typedName, this.typedValue);
                 if(obj.getWhere() != null) {
                     buffer.append(SPACE).append(WHERE).append(SPACE);
@@ -287,8 +294,11 @@ public class N1QLVisitor extends SQLStringVisitor{
     @Override
     public void visit(NamedTable obj) {
         
+        retrieveTableProperty(obj);
+        
         String tableNameInSource = obj.getMetadataObject().getNameInSource();
         String alias = getTableAliasGenerator().generate();
+        this.topTableAlias = alias;
         if(this.isArrayTable) {
             String baseName = tableNameInSource;
             String newAlias;
@@ -466,6 +476,10 @@ public class N1QLVisitor extends SQLStringVisitor{
             } else if(isUnrelatedColumns && !recordColumnName && letStack.size() > 0){
                 String tableAlias = letStack.get(letStack.size() -1).getTableAlias();
                 column.setTableAlias(tableAlias);
+                this.unrelatedStack.add(column);
+                this.columnMap.put(obj.getName(), column);
+            } else if(isUnrelatedColumns && !recordColumnName && letStack.size() == 0) {
+                column.setTableAlias(topTableAlias);
                 this.unrelatedStack.add(column);
                 this.columnMap.put(obj.getName(), column);
             }
