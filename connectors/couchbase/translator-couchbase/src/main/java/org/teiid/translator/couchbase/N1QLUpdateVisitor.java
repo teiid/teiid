@@ -65,13 +65,24 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
             rowCache.add(cacheData);
         }
         
+        List<Parameter> preparedValues = new ArrayList<>();
         ExpressionValueSource evs = (ExpressionValueSource)obj.getValueSource();
         for (int i = 0; i < evs.getValues().size(); i++) {
-            Literal l = (Literal)evs.getValues().get(i);
-            rowCache.get(i).setValue(l.getValue());
+            Expression exp = evs.getValues().get(i);
+            if(exp instanceof Literal) {
+                Literal l = (Literal)exp;
+                rowCache.get(i).setValue(l.getValue());
+            } else if(exp instanceof Parameter) {
+                Parameter p = (Parameter) exp;
+                preparedValues.add(p);
+            }
         }
         
         if(isArrayTable) {
+            if(preparedValues.size() > 0) {
+                throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29017, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29017, obj));
+            }
+            
             buffer.append(UPDATE).append(SPACE).append(this.keyspace).append(SPACE);
 
             appendDocumentID(obj, rowCache);
@@ -106,7 +117,12 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
                 buffer.append(getInsertKeyword());;
             }
             buffer.append(SPACE).append(INTO).append(SPACE).append(keyspace).append(SPACE); 
-            buffer.append(LPAREN).append(KEY).append(COMMA).append(SPACE).append(VALUE).append(RPAREN).append(SPACE);
+            buffer.append(LPAREN).append(KEY).append(COMMA).append(SPACE).append(VALUE).append(RPAREN);
+            
+            if(preparedValues.size() > 0) {
+                appendBulkValues(preparedValues, rowCache, obj);
+                return;
+            }
             
             String documentID = null;
             JsonObject json = JsonObject.create();
@@ -126,16 +142,58 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
             }
             
             if(null == documentID) {
-                throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29007, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29007, obj));
+                throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29006, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29006, obj));
             }
             
-            buffer.append(VALUES).append(SPACE).append(LPAREN).append(SQLConstants.Tokens.QUOTE).append(escapeString(documentID, SQLConstants.Tokens.QUOTE)).append(SQLConstants.Tokens.QUOTE);
+            buffer.append(SPACE).append(VALUES).append(SPACE).append(LPAREN).append(SQLConstants.Tokens.QUOTE).append(escapeString(documentID, SQLConstants.Tokens.QUOTE)).append(SQLConstants.Tokens.QUOTE);
             buffer.append(COMMA).append(SPACE).append(json).append(RPAREN);
         }
         
         appendRetuning();
     }
     
+    private void appendBulkValues(List<Parameter> preparedValues, List<CBColumnData> rowCache, Insert command) {
+        
+        if(preparedValues.size() != rowCache.size()) {
+            throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29007, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29007, command));
+        }
+        
+        BatchedCommand batchCommand = (BatchedCommand)command;
+        Iterator<? extends List<?>> vi = batchCommand.getParameterValues();
+        
+        boolean comma = false;
+        while(vi != null && vi.hasNext()) {
+            List<?> row = vi.next();
+            String documentID = null;
+            JsonObject json = JsonObject.create();
+            for(int i = 0 ; i < rowCache.size() ; i ++) {
+                CBColumnData columnData = rowCache.get(i);
+                if(columnData.getCBColumn().isPK()) {
+                    documentID = (String)row.get(i); 
+                } else {
+                    String attr = columnData.getCBColumn().getLeafName();
+                    String path = columnData.getCBColumn().getNameInSource();
+                    JsonObject nestedObj = findObject(json, path);
+                    ef.setValue(nestedObj, attr, columnData.getColumnType(), row.get(i));
+                }
+            }
+            
+            if(null == documentID) {
+                throw new TeiidRuntimeException(CouchbasePlugin.Event.TEIID29006, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29006, command));
+            }
+            
+            if(comma) {
+                buffer.append(COMMA);
+            } else {
+                comma = true;
+            }
+            buffer.append(SPACE).append(VALUES).append(SPACE).append(LPAREN).append(SQLConstants.Tokens.QUOTE).append(escapeString(documentID, SQLConstants.Tokens.QUOTE)).append(SQLConstants.Tokens.QUOTE);
+            buffer.append(COMMA).append(SPACE).append(json).append(RPAREN);
+        }
+        
+        appendRetuning();
+    }
+
     private void appendRetuning() {
         buffer.append(SPACE).append(RETURNING).append(SPACE).append(buildMeta(this.keyspace)).append(SPACE);
         buffer.append(AS).append(SPACE).append(PK);

@@ -380,4 +380,9 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
         return true;
     }
 
+    @Override
+    public boolean supportsBulkUpdate() {
+        return true;
+    }
+
 }
