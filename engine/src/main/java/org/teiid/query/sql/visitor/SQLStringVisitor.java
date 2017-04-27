@@ -186,12 +186,24 @@ public class SQLStringVisitor extends LanguageVisitor {
     @Override
     public void visit( CompareCriteria obj ) {
         Expression leftExpression = obj.getLeftExpression();
-        visitNode(leftExpression);
+        if (leftExpression instanceof CompareCriteria) {
+            append(Tokens.LPAREN);
+            visitNode(leftExpression);
+            append(Tokens.RPAREN);
+        } else {
+            visitNode(leftExpression);
+        }
         append(SPACE);
         append(obj.getOperatorAsString());
         append(SPACE);
         Expression rightExpression = obj.getRightExpression();
-        visitNode(rightExpression);
+        if (rightExpression instanceof CompareCriteria) {
+            append(Tokens.LPAREN);
+            visitNode(rightExpression);
+            append(Tokens.RPAREN);
+        } else {
+            visitNode(rightExpression);            
+        }
     }
 
     @Override
