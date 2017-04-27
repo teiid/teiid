@@ -626,4 +626,10 @@ public class TestPostgreSQLTranslator {
                 "SELECT cast(E'\\\\xABCD1234' AS bytea)"); //$NON-NLS-1$
     }
     
+    @Test public void testBooleanExpressionComparision() throws TranslatorException {
+        helpTestVisitor(TranslationHelper.BQT_VDB,
+                "SELECT intkey from bqt1.smalla where (intkey < 10) = true", //$NON-NLS-1$
+                "SELECT SmallA.IntKey FROM SmallA WHERE (SmallA.IntKey < 10) = TRUE"); //$NON-NLS-1$
+    }
+    
 }

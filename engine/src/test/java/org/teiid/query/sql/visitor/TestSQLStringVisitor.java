@@ -1754,4 +1754,18 @@ public class TestSQLStringVisitor {
     	helpTest(QueryParser.getQueryParser().parseCommand(sql), "SELECT 'a\\u0000\\u0001b''c''d\\u0002e\\u0003f''' FROM TEXTTABLE(x COLUMNS y string ESCAPE '\\u0000' HEADER) AS A"); //$NON-NLS-1$
     }
     
+    @Test public void testNestedComparison() {
+        CompareCriteria cc = new CompareCriteria(
+                new ElementSymbol("m.g.c1"), //$NON-NLS-1$
+                CompareCriteria.EQ,
+                new Constant("abc") ); //$NON-NLS-1$
+        
+        CompareCriteria cc1 = new CompareCriteria(
+                cc, //$NON-NLS-1$
+                CompareCriteria.EQ,
+                new Constant(false) ); //$NON-NLS-1$
+        
+        helpTest(cc1, "(m.g.c1 = 'abc') = FALSE"); //$NON-NLS-1$
+    }
+    
 }
