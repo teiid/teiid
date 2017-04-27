@@ -5,6 +5,7 @@
        
     <resources>
         <artifact name="${org.jboss.teiid.connectors:connector-salesforce-34}"/>
+        <artifact name="${org.jboss.teiid.connectors:connector-salesforce}"/>
         <resource-root path="."/>
         <!-- Insert resources here -->
     </resources>
@@ -19,7 +20,6 @@
         <module name="javax.jws.api"/>
         <module name="javax.wsdl4j.api"/>
         <module name="org.jboss.teiid.translator.salesforce-34" />
-        <module name="org.jboss.teiid.resource-adapter.salesforce" optional="true" />
         <module name="org.apache.cxf.impl.frontend-jaxrs" services="export" export="true"/>
         <module name="org.apache.cxf.impl" export="true">
             <imports>
