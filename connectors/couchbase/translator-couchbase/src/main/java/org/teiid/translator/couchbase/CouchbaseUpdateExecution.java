@@ -37,9 +37,7 @@ public class CouchbaseUpdateExecution extends CouchbaseExecution implements Upda
     
     private Command command;
     private N1QLUpdateVisitor visitor;
-    private N1qlQueryResult results;
     private int[] returns = new int[] {0};
-        
 
     protected CouchbaseUpdateExecution(Command command, CouchbaseExecutionFactory ef, ExecutionContext context, RuntimeMetadata metadata, CouchbaseConnection conn) {
         super(ef, context, metadata, conn);
@@ -50,29 +48,47 @@ public class CouchbaseUpdateExecution extends CouchbaseExecution implements Upda
     public void execute() throws TranslatorException {
         this.visitor = this.executionFactory.getN1QLUpdateVisitor();
         this.visitor.append(this.command);
-        String n1ql = this.visitor.toString();
+        
+        N1qlQueryResult results;
+        int count = 0;
+        if(visitor.getBulkCommands() != null) {
+            for(String n1ql : visitor.getBulkCommands()) {
+                results = executeDirect(n1ql);
+                if(results != null) {
+                    count += results.allRows().size();
+                }
+            }
+            
+        } else {
+            results = executeDirect(visitor.toString());
+            if(results != null) {
+                count = results.allRows().size();
+            }
+        } 
+        
+        if(count > 0) {
+            this.returns = new int[1];
+            this.returns[0] = count;
+        }
+    }
+    
+    private N1qlQueryResult executeDirect(String n1ql) {
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29004, n1ql));        
         executionContext.logCommand(n1ql);
-        this.results = this.connection.execute(n1ql);
+        return this.connection.execute(n1ql);
     }
 
     @Override
     public int[] getUpdateCounts() throws DataNotAvailableException, TranslatorException {
-        if(results != null) {
-            this.returns = new int[1];
-            this.returns[0] = this.results.allRows().size();
-        }
         return this.returns;
     }
     
     @Override
     public void close() {
-        results = null;
     }
 
     @Override
     public void cancel() throws TranslatorException {
-        results = null;
     }
 
 }
