@@ -33,6 +33,7 @@ import javax.resource.cci.ConnectionFactory;
 
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
+import org.teiid.core.util.Assertion;
 import org.teiid.couchbase.CouchbaseConnection;
 import org.teiid.language.Argument;
 import org.teiid.language.Call;
@@ -55,6 +56,8 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
     private static final String COUCHBASE = "couchbase"; //$NON-NLS-1$
     
     protected Map<String, FunctionModifier> functionModifiers = new TreeMap<String, FunctionModifier>(String.CASE_INSENSITIVE_ORDER);
+    
+    private int maxBulkInsertSize = 100;
 
 	public CouchbaseExecutionFactory() {
 	    setSupportsSelectDistinct(true);
@@ -383,6 +386,16 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
     @Override
     public boolean supportsBulkUpdate() {
         return true;
+    }
+
+    @TranslatorProperty(display="Max Bulk Insert Document Size", description="The max size of documents in a bulk insert. Default 100.", advanced=true)
+    public int getMaxBulkInsertSize() {
+        return maxBulkInsertSize;
+    }
+
+    public void setMaxBulkInsertSize(int maxBulkInsertSize) {
+        Assertion.assertTrue(maxBulkInsertSize > 0, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29020));
+        this.maxBulkInsertSize = maxBulkInsertSize;
     }
 
 }

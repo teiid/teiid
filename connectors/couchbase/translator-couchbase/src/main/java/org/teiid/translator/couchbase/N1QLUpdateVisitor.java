@@ -47,6 +47,8 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
     private String keyspace;
     private String setAttr;
     private String setAttrArray;
+    
+    private String[] bulkCommands = null;
 
     public N1QLUpdateVisitor(CouchbaseExecutionFactory ef) {
         super(ef);
@@ -161,8 +163,19 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
         BatchedCommand batchCommand = (BatchedCommand)command;
         Iterator<? extends List<?>> vi = batchCommand.getParameterValues();
         
+        int maxBulkSize = ef.getMaxBulkInsertSize();
+        int cursor = 0;
+        List<String> n1qlList = new ArrayList<>();
+        StringBuilder sb = new StringBuilder();
+        
         boolean comma = false;
         while(vi != null && vi.hasNext()) {
+            
+            if(cursor == 0) {
+                sb.append(buffer);
+            }
+            
+            cursor ++;
             List<?> row = vi.next();
             String documentID = null;
             JsonObject json = JsonObject.create();
@@ -183,15 +196,34 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
             }
             
             if(comma) {
-                buffer.append(COMMA);
+                sb.append(COMMA);
             } else {
                 comma = true;
             }
-            buffer.append(SPACE).append(VALUES).append(SPACE).append(LPAREN).append(SQLConstants.Tokens.QUOTE).append(escapeString(documentID, SQLConstants.Tokens.QUOTE)).append(SQLConstants.Tokens.QUOTE);
-            buffer.append(COMMA).append(SPACE).append(json).append(RPAREN);
+            sb.append(SPACE).append(VALUES).append(SPACE).append(LPAREN).append(SQLConstants.Tokens.QUOTE).append(escapeString(documentID, SQLConstants.Tokens.QUOTE)).append(SQLConstants.Tokens.QUOTE);
+            sb.append(COMMA).append(SPACE).append(json).append(RPAREN);
+            
+            if(cursor == maxBulkSize) {
+                sb.append(SPACE).append(RETURNING).append(SPACE).append(buildMeta(this.keyspace)).append(SPACE);
+                sb.append(AS).append(SPACE).append(PK);
+                n1qlList.add(sb.toString());
+                cursor = 0;
+                sb.delete(0, sb.length());
+                comma = false;
+            }
         }
         
-        appendRetuning();
+        if(cursor > 0 && cursor < maxBulkSize) {
+            sb.append(SPACE).append(RETURNING).append(SPACE).append(buildMeta(this.keyspace)).append(SPACE);
+            sb.append(AS).append(SPACE).append(PK);
+            n1qlList.add(sb.toString());
+        }
+        
+        this.bulkCommands = n1qlList.toArray(new String[n1qlList.size()]);
+    }
+
+    public String[] getBulkCommands() {
+        return bulkCommands;
     }
 
     private void appendRetuning() {
