@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.jboss.teiid</groupId>
+		<artifactId>connectors</artifactId>
+		<version>8.12.11.6_4</version>
+	</parent>
+
+    <groupId>org.jboss.teiid.connectors</groupId> 
+    <artifactId>connector-couchbase</artifactId>
+    <name>Couchbase Resource Adapter</name>
+    <description>This resource adapter reads data from Couchbase</description>
+    <!-- packaging>bundle</packaging-->
+    
+    <dependencies>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-common-core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.spec.javax.resource</groupId>
+ 	        <artifactId>jboss-connector-api_1.6_spec</artifactId>
+	        <scope>provided</scope>
+       </dependency>   
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>couchbase-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+          <groupId>com.couchbase.client</groupId>
+          <artifactId>java-client</artifactId>
+        </dependency>                    
+    </dependencies>
+    
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <executions>
+                    <execution>
+                        <id>bundle</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>bundle</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <classifier>lib</classifier>
+                </configuration>
+            </plugin>        
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-rar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>build_rar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>rar</goal>
+                        </goals>
+                        <configuration>
+                            <finalName>${project.artifactId}-${project.version}</finalName>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>prepare</id>
+                        <phase>package</phase>
+                        <configuration>
+                            <tasks>
+                                <unzip src="${project.build.directory}/${project.artifactId}-${project.version}.rar" dest="${project.build.directory}/rar-unpack" />
+                            </tasks>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>rar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>attach-artifact</goal>
+                        </goals>
+                        <configuration>
+                            <artifacts>
+                                <artifact>
+                                    <file>${project.build.directory}/${project.artifactId}-${project.version}.rar</file>
+                                    <type>rar</type>
+                                </artifact>
+                            </artifacts>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptors>
+                        <descriptor>kits/jboss-as7-dist.xml</descriptor>
+                        <descriptor>kits/embedded-dist.xml</descriptor>
+                    </descriptors>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>create-assemblies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>   
+            
+        </plugins>
+    </build>
+    
+</project>

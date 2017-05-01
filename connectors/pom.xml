@@ -93,6 +93,7 @@
     <module>google-api</module>
     <module>mongodb-api</module>
     <module>simpledb-api</module>
+    <module>couchbase-api</module>
       
     <module>translator-jdbc</module>
     <module>translator-google</module>
@@ -116,6 +117,9 @@
     <module>translator-odata4</module>
     <module>translator-infinispan-cache</module>
     <module>translator-infinispan-dsl</module>
+    <module>translator-couchbase</module>
+    <module>translator-prestodb</module>
+    <module>translator-hbase</module>
 
     <module>connector-file</module>
     <module>connector-google</module>
@@ -130,9 +134,8 @@
     <module>connector-accumulo</module>
     <module>connector-solr</module>
     <module>connector-infinispan-dsl</module>
-    <module>translator-prestodb</module>
+    <module>connector-couchbase</module>
     <module>sandbox</module>
 
-    <module>translator-hbase</module>
   </modules>
 </project>

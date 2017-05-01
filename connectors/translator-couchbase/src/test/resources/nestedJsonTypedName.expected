@@ -1,0 +1,11 @@
+SET NAMESPACE 'http://www.teiid.org/translator/couchbase/2017' AS teiid_couchbase;
+
+CREATE FOREIGN TABLE Sample (
+	documentID string OPTIONS (UPDATABLE FALSE),
+	nestedJson_nestedJson_nestedJson_nestedJson string OPTIONS (NAMEINSOURCE '`test`.`nestedJson`.`nestedJson`.`nestedJson`.`nestedJson`'),
+	nestedJson_nestedJson_nestedJson_Dimension integer OPTIONS (NAMEINSOURCE '`test`.`nestedJson`.`nestedJson`.`nestedJson`.`Dimension`'),
+	nestedJson_nestedJson_Dimension integer OPTIONS (NAMEINSOURCE '`test`.`nestedJson`.`nestedJson`.`Dimension`'),
+	nestedJson_Dimension integer OPTIONS (NAMEINSOURCE '`test`.`nestedJson`.`Dimension`'),
+	Name string OPTIONS (NAMEINSOURCE '`test`.`Name`'),
+	CONSTRAINT PK0 PRIMARY KEY(documentID)
+) OPTIONS (NAMEINSOURCE '`test`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false', "teiid_couchbase:NAMEDTYPEPAIR" '`type`:''Sample''');

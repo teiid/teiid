@@ -1,0 +1,21 @@
+<!-- If susbsytem is already defined, only copy the contents under it and edit to suit your needs -->
+<subsystem xmlns="urn:jboss:domain:resource-adapters:1.1">
+    <resource-adapters>
+        <resource-adapter id="couchbase">
+            <module slot="main" id="org.jboss.teiid.resource-adapter.couchbase"/>
+            <transaction-support>NoTransaction</transaction-support>
+            <connection-definitions>
+                <connection-definition class-name="org.teiid.resource.adapter.couchbase.CouchbaseManagedConnectionFactory" 
+                        jndi-name="java:/couchbaseDS" 
+                        enabled="true" 
+                        use-java-context="true" 
+                        pool-name="teiid-couchbase-ds">
+
+                      <config-property name="ConnectionString">localhost</config-property>
+                      <config-property name="Namespace">default</config-property>
+                      <config-property name="Keyspace">default</config-property>
+                </connection-definition>
+            </connection-definitions>
+        </resource-adapter>
+    </resource-adapters>
+</subsystem>
