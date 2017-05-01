@@ -1,0 +1,45 @@
+<!--This script builds a zip for Teiid Server Installation -->
+<assembly>
+
+    <id>jboss-as7-dist</id>
+
+    <formats>
+        <format>zip</format>
+    </formats>
+
+    <includeBaseDirectory>false</includeBaseDirectory>
+    <baseDirectory>modules</baseDirectory>
+
+    <fileSets>
+        <fileSet>
+            <directory>kits/jboss-as7/modules</directory>
+            <outputDirectory>${jbossas-module-root}</outputDirectory>
+            <filtered>true</filtered>
+            <includes>
+                <include>**/*</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>${project.build.directory}/rar-unpack</directory>
+            <outputDirectory>${jbossas-module-root}/org/jboss/teiid/resource-adapter/couchbase/main</outputDirectory>
+            <includes>
+                <include>**/connector-couchbase-*</include>
+                <include>**/META-INF/*</include>
+            </includes>           
+
+            
+        </fileSet>
+    </fileSets>
+
+   <dependencySets>
+        <dependencySet>
+            <outputDirectory>${jbossas-module-root}/com/couchbase/client/main</outputDirectory>
+            <useTransitiveDependencies>true</useTransitiveDependencies>
+            <includes>
+                 <include>com.couchbase.client:java-client</include>
+                 <include>com.couchbase.client:core-io</include>
+                 <include>io.reactivex:rxjava</include>
+            </includes>
+        </dependencySet>   
+   </dependencySets>
+</assembly>

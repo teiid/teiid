@@ -59,6 +59,7 @@
         <version.com.codahale.metrics.metrics-core>3.0.2</version.com.codahale.metrics.metrics-core>
         <version.org.jboss.spec.jboss-javaee-6.0>1.0.0.Final</version.org.jboss.spec.jboss-javaee-6.0>
         <version.de.flapdoodle.embed.mongo>1.46.0</version.de.flapdoodle.embed.mongo>
+        
         <version.org.eclipse.persistence>2.5.0</version.org.eclipse.persistence>
         <version.org.apache.olingo>4.2.0-teiid-5</version.org.apache.olingo>
         <version.org.eclipse.jetty>9.2.7.v20150116</version.org.eclipse.jetty>
@@ -113,6 +114,10 @@
 	    
 	    <!-- drivers and other external, provided, dependencies -->
     	<version.org.mongodb.mongo-java-driver>2.13.1</version.org.mongodb.mongo-java-driver>
+    	<version.com.couchbase.client>2.4.2</version.com.couchbase.client>
+    	<version.com.couchbase.core.io>1.4.2</version.com.couchbase.core.io>
+    	<version.io.reactivex>1.2.3</version.io.reactivex>
+    	    	
     	<derby.version>10.2.1.6</derby.version>
 		<mysql.connector.version>5.1.5</mysql.connector.version>
         <version.cassandra-driver-core>2.1.3</version.cassandra-driver-core>
@@ -512,7 +517,11 @@
             	<artifactId>simpledb-api</artifactId>
   	        	<version>${project.version}</version>
         	</dependency>         	       	
-
+           <dependency>
+                <groupId>org.jboss.teiid.connectors</groupId>
+                <artifactId>couchbase-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         	<dependency>
            	 	<groupId>org.jboss.teiid.connectors</groupId>
             	<artifactId>translator-jdbc</artifactId>    
@@ -1441,6 +1450,21 @@
               <artifactId>mongo-java-driver</artifactId>
               <version>${version.org.mongodb.mongo-java-driver}</version>
             </dependency>
+           <dependency>
+                <groupId>com.couchbase.client</groupId>
+                <artifactId>java-client</artifactId>
+                <version>${version.com.couchbase.client}</version>
+            </dependency>  
+            <dependency>
+                <groupId>com.couchbase.client</groupId>
+                <artifactId>core-io</artifactId>
+                <version>${version.com.couchbase.core.io}</version>
+            </dependency>             
+            <dependency>
+                <groupId>io.reactivex</groupId>
+                <artifactId>rxjava</artifactId>
+                <version>${version.io.reactivex}</version>
+            </dependency>  
             <dependency>
               <groupId>org.apache.phoenix</groupId>
               <artifactId>phoenix-core</artifactId>

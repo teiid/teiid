@@ -1,0 +1,6 @@
+/subsystem=resource-adapters/resource-adapter=couchbase:add(module=org.jboss.teiid.resource-adapter.couchbase)
+/subsystem=resource-adapters/resource-adapter=couchbase/connection-definitions=couchbaseDS:add(jndi-name="${jndi.name}", class-name=org.teiid.resource.adapter.couchbase.CouchbaseManagedConnectionFactory, enabled=true, use-java-context=true)
+/subsystem=resource-adapters/resource-adapter=couchbase/connection-definitions=couchbaseDS/config-properties=ConnectionString:add(value="${connectionString}")
+/subsystem=resource-adapters/resource-adapter=couchbaseQS/connection-definitions=couchbaseDS/config-properties=Namespace:add(value="${namespace}")
+/subsystem=resource-adapters/resource-adapter=couchbase/connection-definitions=couchbaseDS/config-properties=Keyspace:add(value="${keyspace}")
+/subsystem=resource-adapters/resource-adapter=couchbase:activate
