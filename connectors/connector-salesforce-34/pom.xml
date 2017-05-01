@@ -15,6 +15,7 @@
 		<dependency>
 			<groupId>org.jboss.teiid.connectors</groupId>
 			<artifactId>translator-salesforce-34</artifactId>
+			<scope>provided</scope>
 		</dependency>	
 		<dependency>
 			<groupId>org.jboss.teiid.connectors</groupId>
