@@ -20,18 +20,22 @@
             </includes>
         </fileSet>
         <fileSet>
-            <directory>${project.build.directory}/rar-unpack/META-INF</directory>
-            <outputDirectory>${jbossas-module-root}/org/jboss/teiid/resource-adapter/salesforce-34/main/META-INF</outputDirectory>
+            <directory>${project.build.directory}/rar-unpack</directory>
+            <outputDirectory>${jbossas-module-root}/org/jboss/teiid/resource-adapter/salesforce-34/main/</outputDirectory>
+ 			<includes>
+                <include>**/connector-salesforce-34-${project.version}.jar</include>
+                <include>**/META-INF/*</include>
+            </includes>      
         </fileSet>
     </fileSets>
     
-       <dependencySets>
+   <dependencySets>
 	        <dependencySet>
 	            <outputDirectory>${jbossas-module-root}/org/jboss/teiid/resource-adapter/salesforce-34/main</outputDirectory>
 	            <includes>
-	                <include>org.jboss.teiid.connectors:connector-salesforce-34</include>
+			<include>org.jboss.teiid.connectors:connector-salesforce:jar</include>
 	            </includes>
 	            <useTransitiveDependencies>false</useTransitiveDependencies>
 	        </dependencySet>
-	    </dependencySets>    
+    </dependencySets>    
 </assembly>
