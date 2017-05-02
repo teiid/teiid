@@ -3,17 +3,17 @@
  * See the COPYRIGHT.txt file distributed with this work for information
  * regarding copyright ownership.  Some portions may be licensed
  * to Red Hat, Inc. under one or more contributor license agreements.
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
@@ -50,21 +50,18 @@ import org.teiid.translator.TranslatorProperty.PropertyType;
 import org.teiid.translator.TypeFacility;
 
 public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection> {
-    
+
     @ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="Excel File Name", description="Excel File name, use file name pattern if one than one file in the parent directory", required=true)
 	public static final String FILE = MetadataFactory.EXCEL_URI+"FILE"; //$NON-NLS-1$
 
-    @ExtensionMetadataProperty(applicable=Column.class, datatype=Integer.class, display="Cell Number", description="Cell number, where the column information is defined. If column name is ROW_ID, define it as -1", required=true)    
+    @ExtensionMetadataProperty(applicable=Column.class, datatype=Integer.class, display="Cell Number", description="Cell number, where the column information is defined. If column name is ROW_ID, define it as -1", required=true)
 	public static final String CELL_NUMBER = MetadataFactory.EXCEL_URI+"CELL_NUMBER"; //$NON-NLS-1$
 
-    @ExtensionMetadataProperty(applicable=Column.class, datatype=Boolean.class, display="Allow Empty Column Name", description="Allow the column information to contain empty cells.")
-    public static final String ALLOW_EMPTY_COLUMN_CELL = MetadataFactory.EXCEL_URI+"ALLOW_EMPTY_COLUMN_CELL"; //$NON-NLS-1$
-    
     @ExtensionMetadataProperty(applicable=Table.class, datatype=Integer.class, display="First Data Number", description="First Row Number, where data rows start")
     public static final String FIRST_DATA_ROW_NUMBER = MetadataFactory.EXCEL_URI+"FIRST_DATA_ROW_NUMBER"; //$NON-NLS-1$
 
     public static final String ROW_ID = "ROW_ID"; //$NON-NLS-1$
-	
+
     private String excelFileName;
     private boolean allowEmptyHeaderCells = false;
 	private int headerRowNumber = 0;
@@ -87,7 +84,7 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
 			if (xlsFile.isDirectory() || !xlsFile.exists()) {
 				throw new TranslatorException(ExcelPlugin.Event.TEIID23005, ExcelPlugin.Util.gs(ExcelPlugin.Event.TEIID23005, xlsFile.getName()));
 			}
-			
+
 			String extension = getFileExtension(xlsFile);
 			FileInputStream xlsFileStream = new FileInputStream(xlsFile);
 			try {
@@ -142,24 +139,24 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
 				firstCellNumber = headerRow.getFirstCellNum();
 			}
 		}
-		
+
 		// create a table for each sheet
 		AtomicInteger columnCount = new AtomicInteger();
 		Table table = mf.addTable(sheet.getSheetName());
 		table.setNameInSource(sheet.getSheetName());
 		table.setProperty(ExcelMetadataProcessor.FILE, originalName);
-		
-		// add implicit row_id column based on row number from excel sheet 
+
+		// add implicit row_id column based on row number from excel sheet
 		Column column = mf.addColumn(ROW_ID, TypeFacility.RUNTIME_NAMES.INTEGER, table);
 		column.setSearchType(SearchType.All_Except_Like);
 		column.setProperty(CELL_NUMBER, ROW_ID);
 		mf.addPrimaryKey("PK0", Arrays.asList(ROW_ID), table); //$NON-NLS-1$
 		column.setUpdatable(false);
-				
-				
+
+
 		Row dataRow = null;
 		int lastCellNumber = headerRow.getLastCellNum();
-		
+
 		// only accept cells that have a value for the name when using a header row
         if (this.hasHeader && getAllowEmptyHeaderRow()) {
             int cellCounter = 0;
@@ -175,7 +172,7 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
 
             lastCellNumber = cellCounter;
         }
-		
+
 		if (this.hasDataRowNumber) {
 			// adjust for zero index
 			table.setProperty(ExcelMetadataProcessor.FIRST_DATA_ROW_NUMBER, String.valueOf(this.dataRowNumber+1));
@@ -189,14 +186,14 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
 		else {
 			//+1 already occurred because of the increment above
 			table.setProperty(ExcelMetadataProcessor.FIRST_DATA_ROW_NUMBER, String.valueOf(firstRowNumber));
-			dataRow = sheet.getRow(firstRowNumber);			
+			dataRow = sheet.getRow(firstRowNumber);
 		}
-		
+
 		if (firstCellNumber != -1) {
 			for (int j = firstCellNumber; j < lastCellNumber; j++) {
 				Cell headerCell = headerRow.getCell(j);
 				Cell dataCell = dataRow.getCell(j);
-				// if the cell value is null; then advance the data row cursor to to find it 
+				// if the cell value is null; then advance the data row cursor to to find it
 				if (dataCell == null) {
 					for (int rowNo = firstRowNumber+1; rowNo < firstRowNumber+10000; rowNo++) {
 						Row row = sheet.getRow(rowNo);
@@ -212,7 +209,7 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
 			}
 		}
 	}
-	
+
 	private String cellType(Cell headerCell, Cell dataCell) {
 		if (this.hasHeader) {
 			return getCellType(dataCell);
@@ -229,8 +226,8 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
 
 	public void setExcelFileName(String fileName) {
 		this.excelFileName = fileName;
-	}	
-		
+	}
+
 	static String getFileExtension(File xlsFile) {
 		int idx = xlsFile.getName().lastIndexOf('.');
 		String extension = "xls"; //$NON-NLS-1$
@@ -238,8 +235,8 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
 		    extension = xlsFile.getName().substring(idx+1);
 		}
 		return extension;
-	} 	
-	
+	}
+
 	private String getCellType(Cell cell) {
 		if (cell == null) {
 			return TypeFacility.RUNTIME_NAMES.STRING;
@@ -250,11 +247,11 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
 		case Cell.CELL_TYPE_BOOLEAN:
 			return TypeFacility.RUNTIME_NAMES.BOOLEAN;
 		default:
-			return TypeFacility.RUNTIME_NAMES.DOUBLE;	
+			return TypeFacility.RUNTIME_NAMES.DOUBLE;
 		}
 	}
-	
-	@TranslatorProperty(display="Header Row Number", category=PropertyType.IMPORT, 
+
+	@TranslatorProperty(display="Header Row Number", category=PropertyType.IMPORT,
 	        description="Row number that contains the header information")
     public int getHeaderRowNumber() {
         return headerRowNumber;
@@ -268,7 +265,7 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
             this.headerRowNumber = 0;
         }
     }
-    
+
     @TranslatorProperty(display = "Allow Empty Header Cells", category = TranslatorProperty.PropertyType.IMPORT,
             description = "Allow the column information to contain empty cells.")
     public boolean getAllowEmptyHeaderRow() {
@@ -278,8 +275,8 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
     public void setAllowEmptyHeaderRow(boolean allowEmpty) {
         allowEmptyHeaderCells = allowEmpty;
     }
-    
-    @TranslatorProperty(display = "Data Row Number", category = PropertyType.IMPORT, 
+
+    @TranslatorProperty(display = "Data Row Number", category = PropertyType.IMPORT,
             description = "Row number from which data rows start from")
     public int getDataRowNumber() {
         return dataRowNumber;
@@ -294,7 +291,7 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
         }
     }
 
-    @TranslatorProperty(display="Excel File", category=PropertyType.IMPORT, 
+    @TranslatorProperty(display="Excel File", category=PropertyType.IMPORT,
             description="Name of the Excel file to read metadata from", required=true)
     public String getExcelFileName() {
         return excelFileName;
