@@ -57,12 +57,16 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
     @ExtensionMetadataProperty(applicable=Column.class, datatype=Integer.class, display="Cell Number", description="Cell number, where the column information is defined. If column name is ROW_ID, define it as -1", required=true)    
 	public static final String CELL_NUMBER = MetadataFactory.EXCEL_URI+"CELL_NUMBER"; //$NON-NLS-1$
 
+    @ExtensionMetadataProperty(applicable=Column.class, datatype=Boolean.class, display="Allow Empty Column Name", description="Allow the column information to contain empty cells.")
+    public static final String ALLOW_EMPTY_COLUMN_CELL = MetadataFactory.EXCEL_URI+"ALLOW_EMPTY_COLUMN_CELL"; //$NON-NLS-1$
+    
     @ExtensionMetadataProperty(applicable=Table.class, datatype=Integer.class, display="First Data Number", description="First Row Number, where data rows start")
     public static final String FIRST_DATA_ROW_NUMBER = MetadataFactory.EXCEL_URI+"FIRST_DATA_ROW_NUMBER"; //$NON-NLS-1$
 
     public static final String ROW_ID = "ROW_ID"; //$NON-NLS-1$
 	
     private String excelFileName;
+    private boolean allowEmptyHeaderCells = false;
 	private int headerRowNumber = 0;
 	private boolean hasHeader = false;
 	private int dataRowNumber = 0;
@@ -156,6 +160,22 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
 		Row dataRow = null;
 		int lastCellNumber = headerRow.getLastCellNum();
 		
+		// only accept cells that have a value for the name when using a header row
+        if (this.hasHeader && getAllowEmptyHeaderRow()) {
+            int cellCounter = 0;
+            for (int j = firstCellNumber; j < lastCellNumber; j++) {
+                Cell headerCell = headerRow.getCell(j);
+                String name = headerCell.getStringCellValue();
+                if (name == null || name.isEmpty()) {
+                    // found a cell with no column name that will be the last cell.
+                    break;
+                }
+                cellCounter++;
+            }
+
+            lastCellNumber = cellCounter;
+        }
+		
 		if (this.hasDataRowNumber) {
 			// adjust for zero index
 			table.setProperty(ExcelMetadataProcessor.FIRST_DATA_ROW_NUMBER, String.valueOf(this.dataRowNumber+1));
@@ -247,6 +267,16 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
         if (this.headerRowNumber < 0) {
             this.headerRowNumber = 0;
         }
+    }
+    
+    @TranslatorProperty(display = "Allow Empty Header Cells", category = TranslatorProperty.PropertyType.IMPORT,
+            description = "Allow the column information to contain empty cells.")
+    public boolean getAllowEmptyHeaderRow() {
+        return allowEmptyHeaderCells;
+    }
+
+    public void setAllowEmptyHeaderRow(boolean allowEmpty) {
+        allowEmptyHeaderCells = allowEmpty;
     }
     
     @TranslatorProperty(display = "Data Row Number", category = PropertyType.IMPORT, 
