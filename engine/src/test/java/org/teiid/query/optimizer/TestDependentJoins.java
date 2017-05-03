@@ -603,10 +603,10 @@ public class TestDependentJoins {
     
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,  
             null, capFinder,
-            new String[] { "SELECT g_0.e1 FROM pm1.g3 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g2 AS g_0", "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new String[] { "SELECT g_0.e1 FROM pm1.g3 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g2 AS g_0", "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         TestOptimizer.checkNodeTypes(plan, new int[] {
-            1,      // Access
-            2,      // DependentAccess
+            2,      // Access
+            1,      // DependentAccess
             0,      // DependentSelect
             0,      // DependentProject
             0,      // DupRemove
@@ -641,10 +641,10 @@ public class TestDependentJoins {
     
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,  
             null, capFinder,
-            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0", "SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g3 AS g_0 WHERE g_0.e1 IN (<dependent values>)" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0", "SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g3 AS g_0" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         TestOptimizer.checkNodeTypes(plan, new int[] {
-            1,      // Access
-            2,      // DependentAccess
+            2,      // Access
+            1,      // DependentAccess
             0,      // DependentSelect
             0,      // DependentProject
             0,      // DupRemove
