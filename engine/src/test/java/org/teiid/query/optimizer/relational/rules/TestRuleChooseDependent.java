@@ -543,7 +543,7 @@ public class TestRuleChooseDependent {
         ArrayList atomicJoinCrits2 = new ArrayList(1);
         atomicJoinCrits2.add(atomicJoinCrit2);        
         
-        int expected = LEFT_SIDE;
+        int expected = NEITHER_SIDE;
 
         helpTestChooseSiblingAndMarkDependent(
          group1, 
@@ -557,7 +557,7 @@ public class TestRuleChooseDependent {
          atomicCrit2a, 
          atomicJoinCrits2,
          crits, 
-         expected, -1, 7923);        
+         expected, -1, 99798);        
     }
     
     /**
@@ -1079,7 +1079,7 @@ public class TestRuleChooseDependent {
         //atomic Join criteria 2
         List atomicJoinCrits2 = Collections.EMPTY_LIST; //INDICATES CROSS JOIN
         
-        int expected = LEFT_SIDE;
+        int expected = NEITHER_SIDE;
 
         helpTestChooseSiblingAndMarkDependent(
          group1, 
@@ -1139,7 +1139,7 @@ public class TestRuleChooseDependent {
          atomicCrit2a, 
          atomicJoinCrits2,
          crits, 
-         expected, 1000, 9999899648l);        
+         expected, 1000, 10000000000l);        
     }     
 
     // ################################## TEST SUITE ################################

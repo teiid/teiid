@@ -228,8 +228,8 @@ public class TestVirtualDepJoin {
         ProcessorPlan plan = TestProcessor.helpGetPlan(command, metadata, finder, context); 
          
         // Check plan contents
-        int selectCount = !setPushdown ? 2 : 0;
-        int accessCount = setPushdown ? 2 : 4;
+        int selectCount = !setPushdown ? 3 : 0;
+        int accessCount = setPushdown ? 1 : 4;
         int depAccessCount = 4 - accessCount;
         TestOptimizer.checkNodeTypes(plan, new int[] {
             accessCount,      // Access
@@ -637,8 +637,8 @@ public class TestVirtualDepJoin {
         ProcessorPlan plan = TestProcessor.helpGetPlan(command, metadata, finder, context); 
  
         TestOptimizer.checkNodeTypes(plan, new int[] {
-            1,      // Access
-            1,      // DependentAccess
+            2,      // Access
+            0,      // DependentAccess
             0,      // DependentSelect
             0,      // DependentProject
             0,      // DupRemove
@@ -653,7 +653,7 @@ public class TestVirtualDepJoin {
             0       // UnionAll
         });   
         
-        TestOptimizer.checkDependentJoinCount(plan, 1);        
+        TestOptimizer.checkDependentJoinCount(plan, 0);        
         // Run query 
         TestProcessor.helpProcess(plan, context, dataManager, expected);         
     }    
