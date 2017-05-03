@@ -41,6 +41,9 @@
 	       <resource-adapter id="solr">
 	           <module slot="main" id="org.jboss.teiid.resource-adapter.solr"/>
 	       </resource-adapter>
+           <resource-adapter id="infinispan">
+               <module slot="main" id="org.jboss.teiid.resource-adapter.infinispan.hotrod"/>
+           </resource-adapter>           
 	   </resource-adapters>    
    </subsystem>
 </config>

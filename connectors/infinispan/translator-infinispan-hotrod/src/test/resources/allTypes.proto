@@ -1,0 +1,25 @@
+package org.jboss.qe.jdg_remote.protobuf;
+
+message AllTypes {
+
+   /* @IndexedField(index=true, store=false) */
+   required int32 intKey = 1;
+   /* @IndexedField(index=true, store=false) */
+   optional string stringNum = 2;
+   required string stringKey = 3;
+   optional float floatNum = 4 [default = 0];
+   optional int64 bigIntegerValue = 5 [default = 0];
+   optional int32 shortValue = 6;      
+   optional double doubleNum = 7 [default = 0];
+   optional bytes byteArrayValue = 9; 
+   /* @IndexedField(index=true, store=false) */
+   optional int32 intNum = 10 [default = 0];   
+   optional string bigDecimalValue = 11 [default = 0];   
+   optional int64 longNum = 12 [default = 0];   
+   optional bool booleanValue = 13 [default = false];  
+   optional int64 timeStampValue = 14;     
+   optional int64 timeValue = 15;
+   optional int64 dateValue = 16; 
+   optional int32 charValue = 17 [default = 0]; 
+
+}

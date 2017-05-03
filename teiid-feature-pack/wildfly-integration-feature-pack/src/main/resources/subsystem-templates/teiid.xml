@@ -70,6 +70,7 @@
         <translator name="redshift" module="org.jboss.teiid.translator.jdbc"/>
         <translator name="swagger" module="org.jboss.teiid.translator.swagger"/>
         <translator name="delegator" module="org.jboss.teiid.api"/>
+        <translator name="infinispan-hotrod" module="org.jboss.teiid.translator.infinispan.hotrod"/>
     </subsystem>
     <socket-binding name="teiid-jdbc" port="31000"/>
     <socket-binding name="teiid-odbc" port="35432"/>        

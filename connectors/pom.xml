@@ -93,6 +93,7 @@
     <module>solr</module>
     <module>odata</module>
     <module>swagger</module>
+    <module>infinispan</module>
     <module>misc</module>
     <module>sandbox</module>
   </modules>

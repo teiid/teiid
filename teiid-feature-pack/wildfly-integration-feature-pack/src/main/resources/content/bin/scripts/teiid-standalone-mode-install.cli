@@ -97,6 +97,7 @@ connect
 /subsystem=teiid/translator=simpledb:add(module=org.jboss.teiid.translator.simpledb)
 /subsystem=teiid/translator=swagger:add(module=org.jboss.teiid.translator.swagger)
 /subsystem=teiid/translator=delegator:add(module=org.jboss.teiid.api)
+/subsystem=teiid/translator=infinispan-hotrod:add(module=org.jboss.teiid.translator.infinispan.hotrod)
 
 /subsystem=datasources/jdbc-driver=teiid:add(driver-name=teiid, driver-module-name=org.jboss.teiid.client, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)
 /subsystem=datasources/jdbc-driver=teiid-local:add(driver-name=teiid-local, driver-module-name=org.jboss.teiid, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)
@@ -114,6 +115,6 @@ connect
 /subsystem=resource-adapters/resource-adapter=simpledb:add(module=org.jboss.teiid.resource-adapter.simpledb)
 /subsystem=resource-adapters/resource-adapter=accumulo:add(module=org.jboss.teiid.resource-adapter.accumulo)
 /subsystem=resource-adapters/resource-adapter=solr:add(module=org.jboss.teiid.resource-adapter.solr)
-
+/subsystem=resource-adapters/resource-adapter=infinispan:add(module=org.jboss.teiid.resource-adapter.infinispan.hotrod)
 
 /:reload

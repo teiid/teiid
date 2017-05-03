@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.3" name="org.jboss.teiid.translator.infinispan.api">
+    <properties>
+        <property name="jboss.api" value="private"/>
+    </properties>
+    
+    <resources>
+        <artifact name="${org.jboss.teiid.connectors:infinispan-api}" />
+    </resources>
+
+    <dependencies>
+        <module name="javax.api" />
+        <module name="org.jboss.teiid.common-core" />
+        <module name="org.jboss.teiid.api" />    
+        <module name="org.jboss.teiid.translator.document.api" />
+        <module name="com.squareup"/>    
+        <module name="org.infinispan.client.hotrod" slot="teiid"/>
+        <module name="org.infinispan.commons" slot="teiid"/>
+    </dependencies>   
+</module>
