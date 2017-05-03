@@ -417,15 +417,30 @@ public class NewCalculateCostUtil {
         		nonEquiJoinCriteria = (List<Criteria>) node.getProperty(NodeConstants.Info.NON_EQUI_JOIN_CRITERIA);
         	}
         	
-        	//float leftNdv = getNDVEstimate(child1, metadata, childCost1, leftExpressions, childCost1 > childCost2 ? false : null);
-        	//float rightNdv = getNDVEstimate(child2, metadata, childCost2, rightExpressions, childCost1 > childCost2 ? null : false);
-        	float leftNdv = getNDVEstimate(child1, metadata, childCost1, leftExpressions, null);
-        	float rightNdv = getNDVEstimate(child2, metadata, childCost2, rightExpressions, null);
-        	
+        	float leftNdv = getNDVEstimate(child1, metadata, childCost1, leftExpressions, false);
+            float rightNdv = getNDVEstimate(child2, metadata, childCost2, rightExpressions, false);
+            
+            float leftNdv1 = getNDVEstimate(child1, metadata, childCost1, leftExpressions, null);
+            float rightNdv1 = getNDVEstimate(child2, metadata, childCost2, rightExpressions, null);
+            
+            if (leftNdv == UNKNOWN_VALUE) {
+                leftNdv = leftNdv1;
+            }
+            if (rightNdv == UNKNOWN_VALUE) {
+                rightNdv = rightNdv1;
+            }
+            
         	if (leftNdv != UNKNOWN_VALUE && rightNdv != UNKNOWN_VALUE) {
+        	    //Compensate for estimates by assuming a 1-many relationship
+                if (leftNdv1 > 2*leftNdv && leftNdv > rightNdv) {
+                    leftNdv = (float) Math.sqrt(rightNdv*leftNdv);
+                } 
+                if (rightNdv1 > 2*rightNdv && rightNdv > leftNdv) {
+                    rightNdv = (float) Math.sqrt(rightNdv*leftNdv);
+                }
         		baseCost = (childCost1 / leftNdv) * (childCost2 / rightNdv) * Math.min(leftNdv, rightNdv);
-        		leftPercent = leftNdv / (Math.max(leftNdv, rightNdv));
-        		rightPercent = rightNdv / (Math.max(leftNdv, rightNdv));
+        		leftPercent = Math.min(leftNdv, rightNdv) / leftNdv;
+        		rightPercent = Math.min(leftNdv, rightNdv) / rightNdv;
         	} else {
         		nonEquiJoinCriteria = joinCriteria;
         	}
@@ -544,15 +559,20 @@ public class NewCalculateCostUtil {
         				newStats[Stat.NDV.ordinal()] = Math.min(cardinality, stats[Stat.NDV.ordinal()]);
         				newStats[Stat.NDV_HIGH.ordinal()] = Math.min(cardinality, stats[Stat.NDV_HIGH.ordinal()]);
         			} else if (stats[Stat.NDV.ordinal()] != UNKNOWN_VALUE) {
-        				newStats[Stat.NDV.ordinal()] = stats[Stat.NDV.ordinal()]*Math.min(left?leftPercent:rightPercent, cardinality/origCardinality);
-        				newStats[Stat.NDV_HIGH.ordinal()] = stats[Stat.NDV_HIGH.ordinal()]*Math.min(left?leftPercent:rightPercent, cardinality/origCardinality);
+        			    if (stats[Stat.NDV.ordinal()] == stats[Stat.NDV_HIGH.ordinal()]) {
+        			        newStats[Stat.NDV.ordinal()] = stats[Stat.NDV.ordinal()]*Math.min(left?leftPercent:rightPercent, cardinality/origCardinality);
+                            newStats[Stat.NDV_HIGH.ordinal()] = newStats[Stat.NDV.ordinal()];
+        			    } else {
+        			        newStats[Stat.NDV.ordinal()] = (float) Math.min(stats[Stat.NDV.ordinal()], Math.sqrt(cardinality));
+                            newStats[Stat.NDV_HIGH.ordinal()] = Math.min(stats[Stat.NDV_HIGH.ordinal()], cardinality/2);
+        			    }
     					newStats[Stat.NDV.ordinal()] = Math.max(1, newStats[Stat.NDV.ordinal()]);
     					newStats[Stat.NDV_HIGH.ordinal()] = Math.max(1, newStats[Stat.NDV_HIGH.ordinal()]);
         			}
     				if (stats[Stat.NNV.ordinal()] != UNKNOWN_VALUE) {
     					//TODO: this is an under estimate for the inner side of outer joins
 	        			newStats[Stat.NNV.ordinal()] = stats[Stat.NNV.ordinal()]*Math.min(1, cardinality/origCardinality);
-	        			newStats[Stat.NNV.ordinal()] = Math.max(1, newStats[Stat.NNV.ordinal()]);
+	        			newStats[Stat.NNV.ordinal()] = Math.max(0, newStats[Stat.NNV.ordinal()]);
     				}
         		}
     		}
@@ -1009,7 +1029,12 @@ public class NewCalculateCostUtil {
                 	float ndv1 = getPredicateNDV(compCrit.getRightExpression(), currentNode, childCost, metadata);
                 	ndv = (float) Math.sqrt(ndv * ndv1);
                 } 
-            	cost = childCost / ndv;
+                if (ndv > Math.sqrt(childCost)) {
+                    //for larger ndv we want a smoother estimate
+                    cost = (float) Math.sqrt(childCost - ndv);
+                } else {
+                    cost = childCost/ndv;
+                }
                 if (compCrit.getOperator() == CompareCriteria.NE) {
                     isNegatedPredicateCriteria = true;
                 }
@@ -1040,7 +1065,11 @@ public class NewCalculateCostUtil {
             
             float ndv = getPredicateNDV(setCriteria.getExpression(), currentNode, childCost, metadata);
             
-            cost = childCost * setCriteria.getNumberOfValues() / ndv;
+            if (ndv > Math.sqrt(childCost)) {
+                cost = (float) Math.sqrt(Math.max(1, childCost - ndv)) * setCriteria.getNumberOfValues();
+            } else {
+                cost = childCost * setCriteria.getNumberOfValues() / ndv;            
+            }
             
             isNegatedPredicateCriteria = setCriteria.isNegated();
             
@@ -1154,7 +1183,10 @@ public class NewCalculateCostUtil {
             	return (childCost / 2) * (1 / 3f  + 1 / ndv); //without knowing length constraints we'll make an average guess
             }
         } else if (EvaluatableVisitor.willBecomeConstant(criteria.getLeftExpression())) {
-            return childCost / ndv;
+            if (ndv > Math.sqrt(childCost)) {
+                return (float) Math.sqrt(childCost - ndv);
+            }
+            return childCost/ndv;
         }
         return childCost / 3;
     }
@@ -1455,7 +1487,7 @@ public class NewCalculateCostUtil {
 				if (!usesKey && accessNode != null && target.getType() == NodeConstants.Types.SOURCE && target.getChildCount() == 0) {
 					usesIndex = usesKey(depElems, target.getGroups(), metadata, false);
 				}
-		        float[] estimates = estimateCost(accessNode, setCriteriaBatchSize, usesIndex, depTargetCardinality, indSymbolNDV, dependentCardinality, depSymbolNDV);
+		        float[] estimates = estimateCost(accessNode, setCriteriaBatchSize, usesIndex, depTargetCardinality, indSymbolNDV, dependentCardinality, depSymbolNDV, independentCardinality);
 		        if (estimates[1] < 0) {
 		        	if (dca.expectedCardinality == null) {
 		        		dca.expectedCardinality = estimates[0];
@@ -1483,7 +1515,7 @@ public class NewCalculateCostUtil {
 		        	} else {
 		        		break;
 		        	}
-		        	estimates = estimateCost(accessNode, setCriteriaBatchSize, usesIndex, depTargetCardinality, tempNdv, dependentCardinality, depSymbolNDV);
+		        	estimates = estimateCost(accessNode, setCriteriaBatchSize, usesIndex, depTargetCardinality, tempNdv, dependentCardinality, depSymbolNDV, independentCardinality);
 		        }
 		        dca.maxNdv[i] = indSymbolNDV;
 			}
@@ -1492,10 +1524,18 @@ public class NewCalculateCostUtil {
 	}
 	
 	private static float[] estimateCost(PlanNode accessNode, float setCriteriaBatchSize, boolean usesIndex, float depTargetCardinality, 
-			float indSymbolNDV, float dependentCardinality, float depSymbolNDV) {
-        float dependentAccessCardinality = Math.min(depTargetCardinality, depTargetCardinality * indSymbolNDV / depSymbolNDV);
-        float scaledCardinality = Math.min(dependentCardinality, dependentCardinality * indSymbolNDV / depSymbolNDV);
+			float indSymbolNDV, float dependentCardinality, float depSymbolNDV, float independentCardinality) {
+	    float scalingFactor = 1; 
+	    if (indSymbolNDV < independentCardinality && depTargetCardinality > 4*independentCardinality && indSymbolNDV > Math.sqrt(depSymbolNDV)) {
+	        //when the dep ndv is relatively small, we need a better estimate of the reduction in dependent tuples
+	        scalingFactor = (float) (indSymbolNDV / Math.sqrt(depSymbolNDV*depTargetCardinality));
+	    } else {
+	        scalingFactor = indSymbolNDV/depSymbolNDV;
+	    }
+        float dependentAccessCardinality = Math.min(depTargetCardinality, depTargetCardinality * scalingFactor);
+        float scaledCardinality = Math.min(dependentCardinality, dependentCardinality * scalingFactor);
 		float numberComparisons = (usesIndex?safeLog(depTargetCardinality):depTargetCardinality) * (usesIndex?indSymbolNDV:safeLog(indSymbolNDV));
+		numberComparisons += independentCardinality * safeLog(indSymbolNDV);
         float newDependentQueries = accessNode == null?0:(float)Math.ceil(indSymbolNDV / setCriteriaBatchSize);
         
         float relativeCost = newDependentQueries*procNewRequestTime;

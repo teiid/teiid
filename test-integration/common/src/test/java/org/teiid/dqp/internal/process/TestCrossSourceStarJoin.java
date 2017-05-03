@@ -111,7 +111,7 @@ public class TestCrossSourceStarJoin {
         TestOptimizer.helpPlan(sql, metadata, new String[] {
         		"SELECT g_0.CurrencyCode AS c_0 FROM sybase.s2 AS g_0 WHERE g_0.Name = 'abc' ORDER BY c_0", 
         		"SELECT g_0.BOOK, g_0.PRODUCT, g_0.CURRENCY, g_0.AMOUNT FROM oracle.o1 AS g_0 WHERE (g_0.BOOK IN (<dependent values>)) AND (g_0.CURRENCY IN (<dependent values>))", 
-        		"SELECT g_0.PRODUCTID AS c_0, g_0.Description AS c_1 FROM sybase.s3 AS g_0 WHERE g_0.PRODUCTID IN (<dependent values>) ORDER BY c_0", 
+        		"SELECT g_0.PRODUCTID AS c_0, g_0.Description AS c_1 FROM sybase.s3 AS g_0 ORDER BY c_0", 
         		"SELECT g_0.BOOKID AS c_0 FROM sybase.s1 AS g_0 WHERE g_0.Name = 'xyz' ORDER BY c_0"
         }, finder, ComparisonMode.EXACT_COMMAND_STRING);
     } 

@@ -524,7 +524,7 @@ public class TestCalculateCostUtil {
         QueryMetadataInterface metadata = RealMetadataFactory.example4();
         String critString = "pm4.g1.e1 = pm1.g1.e1"; //$NON-NLS-1$
         
-        helpTestEstimateCost(critString, 100, 3, metadata);
+        helpTestEstimateCost(critString, 100, 8, metadata);
     }
     
     /**

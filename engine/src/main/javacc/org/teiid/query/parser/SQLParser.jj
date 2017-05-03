@@ -6481,7 +6481,7 @@ void importSchema(DatabaseStore dbStore) :
 { 
     <IMPORT> <FOREIGN> <SCHEMA> 
     foreignSchemaName = id(null)
-    [(<LIMIT> <TO> <LPAREN> readCSVString(includeTables) <RPAREN>) | (<EXCEPT> <LPAREN> readCSVString(excludeTables) <RPAREN>)]
+    //[(<LIMIT> <TO> <LPAREN> readCSVString(includeTables) <RPAREN>) | (<EXCEPT> <LPAREN> readCSVString(excludeTables) <RPAREN>)]
     <FROM> (<SERVER>{serverType = "native";}|<REPOSITORY>) serverName = id(null)    
     <INTO> schemaName = id(null)
     [optionsClause(server, null)
