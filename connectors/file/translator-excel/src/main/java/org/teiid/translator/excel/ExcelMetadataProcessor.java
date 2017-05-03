@@ -63,7 +63,7 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
     public static final String ROW_ID = "ROW_ID"; //$NON-NLS-1$
 
     private String excelFileName;
-    private boolean allowEmptyHeaderCells = false;
+    private boolean ignoreEmptyCells = false;
 	private int headerRowNumber = 0;
 	private boolean hasHeader = false;
 	private int dataRowNumber = 0;
@@ -153,24 +153,23 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
 		mf.addPrimaryKey("PK0", Arrays.asList(ROW_ID), table); //$NON-NLS-1$
 		column.setUpdatable(false);
 
-
 		Row dataRow = null;
 		int lastCellNumber = headerRow.getLastCellNum();
 
-		// only accept cells that have a value for the name when using a header row
-        if (this.hasHeader && getAllowEmptyHeaderRow()) {
+		// if getIgnoreEmptyHeaderCells() is false and we have a header row
+		// then only count cells that have a non-empty value.
+        if (this.hasHeader && !getIgnoreEmptyHeaderCells()) {
             int cellCounter = 0;
-            for (int j = firstCellNumber; j < lastCellNumber; j++) {
-                Cell headerCell = headerRow.getCell(j);
-                String name = headerCell.getStringCellValue();
-                if (name == null || name.isEmpty()) {
+            for (int i = firstCellNumber; i < lastCellNumber; i++) {
+                Cell headerCell = headerRow.getCell(i);
+                if (isCellEmpty(headerCell)) {
                     // found a cell with no column name that will be the last cell.
                     break;
                 }
                 cellCounter++;
             }
 
-            lastCellNumber = cellCounter;
+            lastCellNumber = cellCounter + firstCellNumber;
         }
 
 		if (this.hasDataRowNumber) {
@@ -192,6 +191,13 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
 		if (firstCellNumber != -1) {
 			for (int j = firstCellNumber; j < lastCellNumber; j++) {
 				Cell headerCell = headerRow.getCell(j);
+				
+				// if the config is set to ignore empty header cells then validate the header
+				// cell has a value, if not move on to the next column in the sheet. 
+				if (this.hasHeader && getIgnoreEmptyHeaderCells() && isCellEmpty(headerCell)) {
+					continue;
+				}
+				
 				Cell dataCell = dataRow.getCell(j);
 				// if the cell value is null; then advance the data row cursor to to find it
 				if (dataCell == null) {
@@ -208,6 +214,14 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
 				column.setProperty(ExcelMetadataProcessor.CELL_NUMBER, String.valueOf(j+1));
 			}
 		}
+	}
+	
+	private boolean isCellEmpty(Cell headerCell) {
+		if (headerCell == null)
+			return true;
+		
+		String name = headerCell.getStringCellValue();
+        return (name == null || name.isEmpty());
 	}
 
 	private String cellType(Cell headerCell, Cell dataCell) {
@@ -266,14 +280,14 @@ public class ExcelMetadataProcessor implements MetadataProcessor<FileConnection>
         }
     }
 
-    @TranslatorProperty(display = "Allow Empty Header Cells", category = TranslatorProperty.PropertyType.IMPORT,
-            description = "Allow the column information to contain empty cells.")
-    public boolean getAllowEmptyHeaderRow() {
-        return allowEmptyHeaderCells;
+    @TranslatorProperty(display = "Ignore Empty Header Cells", category = TranslatorProperty.PropertyType.IMPORT,
+            description = "When true any cells with empty value for header row are ignored, otherwise an empty header row cell indicates end of columns.")
+    public boolean getIgnoreEmptyHeaderCells() {
+        return ignoreEmptyCells;
     }
 
-    public void setAllowEmptyHeaderRow(boolean allowEmpty) {
-        allowEmptyHeaderCells = allowEmpty;
+    public void setIgnoreEmptyHeaderCells(boolean ignoreEmpty) {
+    	ignoreEmptyCells = ignoreEmpty;
     }
 
     @TranslatorProperty(display = "Data Row Number", category = PropertyType.IMPORT,
