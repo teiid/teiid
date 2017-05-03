@@ -138,6 +138,30 @@ public class TestExcelExecution {
     	assertEquals(results.size(), 7);
 	}
 	
+	/**
+	 * Test a sheet with a header row where 1 column is empty
+	 * @throws Exception
+	 */
+	@Test
+	public void testExecutionHeaderWithEmptyCell() throws Exception {
+		String ddl = "SET NAMESPACE 'http://www.teiid.org/translator/excel/2014' AS teiid_excel;\n\n" + 
+		        "CREATE FOREIGN TABLE Sheet1 (\n" + 
+				"	ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" + 
+				"	FirstName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1'),\n" + 
+				"	LastName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2'),\n" +
+				"	Age double OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '4'),\n" +
+				"	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" + 
+				") OPTIONS (NAMEINSOURCE 'Sheet1', \"teiid_excel:FILE\" 'empty-ignore.xls', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '2');";
+
+    	FileConnection connection = Mockito.mock(FileConnection.class);
+    	Mockito.stub(connection.getFile("empty-ignore.xls")).toReturn(UnitTestUtil.getTestDataFile("empty-ignore.xls"));
+
+    	ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
+    	assertEquals(6, results.size());
+    	ArrayList row = (ArrayList) results.get(4);
+    	assertEquals(4, row.size());
+	}
+	
 	@Test
 	public void testExecutionColumnsWithNullCell() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE Sheet1 (\n" + 
