@@ -182,7 +182,9 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 				this.evaluatedPlans = new HashMap<GroupSymbol, SubqueryState>();
 				for (Map.Entry<GroupSymbol, RelationalPlan> entry : subPlans.entrySet()) {
 					SubqueryState state = new SubqueryState();
-					state.processor = new QueryProcessor(entry.getValue(), getContext().clone(), getBufferManager(), getDataManager());
+					RelationalPlan value = entry.getValue();
+					value.reset();
+                    state.processor = new QueryProcessor(value, getContext().clone(), getBufferManager(), getDataManager());
 					state.collector = state.processor.createBatchCollector();
 					this.evaluatedPlans.put(entry.getKey(), state);
 				}
