@@ -6,7 +6,6 @@
     
     <resources>
         <artifact name="${org.jboss.teiid.connectors:file-api}" />
-        <artifact name="${commons-net:commons-net}" />
         <!-- Insert resources here -->
     </resources>
 
