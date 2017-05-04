@@ -497,10 +497,14 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				String type = "ResultSet"; //$NON-NLS-1$
 				AbstractMetadataRecord proc = param.getParent();
 				boolean isOptional = false;
+				int pos = param.getPosition();
 				if (param instanceof ProcedureParameter) {
 					ProcedureParameter pp = (ProcedureParameter)param;
 					type = pp.getType().name();
 					isOptional = pp.isOptional();
+					if (((Procedure)proc).getParameters().get(0).getType() == ProcedureParameter.Type.ReturnValue) {
+					    pos--;
+					}
 				} else {
 					Column pp = (Column)param;
 					proc = param.getParent().getParent();
@@ -509,7 +513,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				row.add(proc.getName());
 				row.add(param.getName());
 				row.add(param.getRuntimeType());
-				row.add(param.getPosition());
+				row.add(pos);
 				row.add(type);
 				row.add(isOptional);
 				row.add(param.getPrecision());

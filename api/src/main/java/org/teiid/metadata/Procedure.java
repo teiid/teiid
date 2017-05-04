@@ -30,6 +30,10 @@ import org.teiid.metadata.AbstractMetadataRecord.Modifiable;
 
 /**
  * Represents Teiid and source procedures.  Can also represent a function with restrictions.
+ * <br/>
+ * Parameter positions start with 1 for consistency with {@link BaseColumn}.
+ * <br/>
+ * See also {@link FunctionMethod}
  */
 public class Procedure extends AbstractMetadataRecord implements Modifiable {
     
