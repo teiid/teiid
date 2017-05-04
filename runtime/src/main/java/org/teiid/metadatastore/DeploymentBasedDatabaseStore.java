@@ -24,7 +24,6 @@ package org.teiid.metadatastore;
 import java.io.BufferedReader;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -43,15 +42,6 @@ public class DeploymentBasedDatabaseStore extends DatabaseStore {
     private VDBRepository vdbRepo;
     
     private ArrayList<VDBImportMetadata> importedVDBs = new ArrayList<VDBImportMetadata>();
-    private Map<String, List<ImportedSchema>> importedSchemas = new HashMap<String, List<ImportedSchema>>();
-    
-    private class ImportedSchema {
-    	String foreignSchemaName; 
-    	List<String> includeTables;
-		List<String> excludeTables;
-		Map<String, String> properties;
-		String serverType;
-    }
     
     public DeploymentBasedDatabaseStore(VDBRepository vdbRepo) {
     	this.vdbRepo = vdbRepo;
@@ -86,29 +76,7 @@ public class DeploymentBasedDatabaseStore extends DatabaseStore {
         VDBMetaData vdb = DatabaseUtil.convert(database);
         
         for (ModelMetaData model : vdb.getModelMetaDatas().values()) {
-            if (this.importedSchemas.get(model.getName()) != null){
-                for (ImportedSchema is:this.importedSchemas.get(model.getName())) {
-                    model.addProperty("importer.schemaPattern", is.foreignSchemaName);
-                    
-                    if (is.excludeTables != null && !is.excludeTables.isEmpty()) {
-                        model.addProperty("importer.excludeTables", getCSV(is.excludeTables));
-                    }
-    
-                    // TODO: need to add this to jdbc translator
-                    if (is.includeTables != null && !is.includeTables.isEmpty()) {
-                        model.addProperty("importer.includeTables", getCSV(is.includeTables));    
-                    }
-                    
-                    if (is.properties != null) {
-                        for (String key : is.properties.keySet()) {
-                            model.addProperty(key, is.properties.get(key));
-                        }
-                    }
-                    model.addSourceMetadata(is.serverType, null);
-                }
-            } else {
-                model.addSourceMetadata("DDL", null); //$NON-NLS-1$
-            }
+            model.addSourceMetadata("DDL", null); //$NON-NLS-1$
         }  
         
         for (VDBImportMetadata vid : this.importedVDBs) {
@@ -120,38 +88,15 @@ public class DeploymentBasedDatabaseStore extends DatabaseStore {
         return vdb;
     }
     
-    private String getCSV(List<String> strings) {        
-        StringBuilder sb = new StringBuilder();
-        if (strings != null && !strings.isEmpty()) {
-            for (String str:strings) {
-                if (sb.length() > 0) {
-                    sb.append(",");                    
-                }
-                sb.append(str);
-            }
-        }
-        return sb.toString();
-    }
-    
 	@Override
     public void importSchema(String schemaName, String serverType, String serverName, String foreignSchemaName,
             List<String> includeTables, List<String> excludeTables, Map<String, String> properties) {
-	    if (!assertInEditMode(Mode.DATABASE_STRUCTURE)) {
+	    if (getSchema(schemaName) == null) {
+	        throw new AssertionError();
+	    }
+	    if (!assertInEditMode(Mode.SCHEMA)) {
             return;
         }
-		ImportedSchema schema = new ImportedSchema();
-		schema.foreignSchemaName = foreignSchemaName; 
-		schema.includeTables = includeTables;
-		schema.excludeTables = excludeTables; 
-		schema.properties = properties;
-		schema.serverType = serverType;
-		
-		List<ImportedSchema> imports = importedSchemas.get(schemaName);
-		if (imports == null) {
-		    imports = new ArrayList<>();
-		}
-		imports.add(schema);
-		this.importedSchemas.put(schemaName, imports);
 	}
 	
 	@Override

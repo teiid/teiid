@@ -163,6 +163,10 @@ public class ConvertVDB {
                 
                 @Override
                 protected void createdSchmea(Schema schema) {
+                }
+                
+                @Override
+                protected void visit(Schema schema) {
                     ModelMetaData m = modelMetaDatas.get(schema.getName());
                     String replace = "";
                     String sourceName = m.getSourceNames().isEmpty()?"":m.getSourceNames().get(0);
@@ -184,22 +188,12 @@ public class ConvertVDB {
                                 replace += replaceMetadataTag(m, sourceName, schemaName, true);
                             } else if (!type.equalsIgnoreCase("DDL")){
                                 replace += replaceMetadataTag(m, type, schemaName, false);
+                            } else {
+                                replace += m.getSourceMetadataText().get(i) + "\n"; //$NON-NLS-1$
                             }
                         }
                     }
                     buffer.append(replace);
-                }
-                
-                @Override
-                protected void visit(Schema schema) {
-                    super.visit(schema);
-                    ModelMetaData m = modelMetaDatas.get(schema.getName());
-                    for (int i = 0; i < m.getSourceMetadataType().size(); i++) {
-                        String type =  m.getSourceMetadataType().get(i);
-                        if (type.equalsIgnoreCase("DDL")) {
-                            buffer.append(m.getSourceMetadataText().get(i)).append("\n");
-                        }
-                    }
                 }
                 
             };

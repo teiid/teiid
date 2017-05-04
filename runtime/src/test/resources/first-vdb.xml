@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><vdb name="empty" version="2"><connection-type>BY_VERSION</connection-type><property name="schema-ddl" value="create database empty version '2';
+<?xml version="1.0" ?><vdb name="empty" version="2"><connection-type>BY_VERSION</connection-type><property name="full-ddl" value="create database empty version '2';
 
 use database empty version '2';
 
@@ -8,11 +8,11 @@ create server z type 'custom' version 'one' foreign data wrapper y options(key '
 
 create schema PM1 server z;
 
+create role admin with jaas role superuser;
+
 import foreign schema anyschema FROM SERVER z into PM1;
 
 import foreign schema anyschema FROM REPOSITORY myrepo into PM1 OPTIONS(myrepokey 'value');
-
-create role admin with jaas role superuser;
 
 set schema PM1;
 
@@ -20,4 +20,4 @@ create foreign table mytable (&quot;my-column&quot; string) OPTIONS(UPDATABLE tr
 
 grant select,update ON TABLE &quot;PM1.mytable&quot; TO admin; 
 
-"></property><model name="PM1" type="PHYSICAL" visible="true"><property name="importer.schemaPattern" value="anyschema"></property><property name="myrepokey" value="value"></property><source name="z" translator-name="y" connection-jndi-name="z"></source><metadata type="native"></metadata><metadata type="myrepo"></metadata></model><data-role name="admin" any-authenticated="false" grant-all="false"><permission><resource-name>PM1.mytable</resource-name><resource-type>TABLE</resource-type><allow-read>true</allow-read><allow-update>true</allow-update></permission><mapped-role-name>superuser</mapped-role-name></data-role></vdb>
+"></property><model name="PM1" type="PHYSICAL" visible="true"><source name="z" translator-name="y" connection-jndi-name="z"></source><metadata type="DDL"></metadata></model><data-role name="admin" any-authenticated="false" grant-all="false"><permission><resource-name>PM1.mytable</resource-name><resource-type>TABLE</resource-type><allow-read>true</allow-read><allow-update>true</allow-update></permission><mapped-role-name>superuser</mapped-role-name></data-role></vdb>

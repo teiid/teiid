@@ -45,7 +45,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 	public static final String VERSION_DELIM = "."; //$NON-NLS-1$
 
 	public static final String TEIID_DOMAINS = "domain-ddl"; //$NON-NLS-1$
-	public static final String TEIID_DDL = "schema-ddl"; //$NON-NLS-1$
+	public static final String TEIID_DDL = "full-ddl"; //$NON-NLS-1$
 	
 	private static final long serialVersionUID = -4723595252013356436L;
 

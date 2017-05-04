@@ -359,7 +359,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 							cacheMetadataStore(model, factory);
 			    		}
 						
-						metadataLoaded(vdb, model, vdbMetadataStore, loadCount, factory, true);
+						metadataLoaded(vdb, model, vdbMetadataStore, loadCount, factory, true, cmr, vdbResources);
 			    	} else {
 			    		String errorMsg = ex.getMessage()==null?ex.getClass().getName():ex.getMessage();
 			    		if (te != null) {
@@ -369,7 +369,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 			    		model.setMetadataStatus(Model.MetadataStatus.FAILED);
 						LogManager.logWarning(LogConstants.CTX_RUNTIME, ex, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50036,vdb.getName(), vdb.getVersion(), model.getName(), errorMsg));
 						if (ex instanceof RuntimeException) {
-							metadataLoaded(vdb, model, vdbMetadataStore, loadCount, factory, false);
+							metadataLoaded(vdb, model, vdbMetadataStore, loadCount, factory, false, cmr, vdbResources);
 						} else {
 							if (marked != null) {
 								getExecutor().execute(this);
@@ -404,6 +404,9 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		boolean cache = true;
 		if (vdb.isXmlDeployment()) {
 			cache = "cached".equalsIgnoreCase(vdb.getPropertyValue("UseConnectorMetadata")); //$NON-NLS-1$ //$NON-NLS-2$
+			if (cache) {
+			    LogManager.logDetail(LogConstants.CTX_RUNTIME, "using VDB metadata caching value", vdb.getPropertyValue("UseConnectorMetadata"), "Note that UseConnectorMetadata is deprecated.  Use cache-metadata instead."); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			}
 		}
 		
 		String prop = vdb.getPropertyValue("cache-metadata"); //$NON-NLS-1$

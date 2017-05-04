@@ -48,8 +48,10 @@ import org.teiid.dqp.internal.process.multisource.MultiSourceElement;
 import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.Database;
 import org.teiid.metadata.Datatype;
+import org.teiid.metadata.MetadataException;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
@@ -214,19 +216,9 @@ public abstract class AbstractVDBDeployer {
 			}
 		}
 		if (loadCount.get() == 0) {
-		    processVDBDDL(vdb, store);
+		    processVDBDDL(vdb, store, cmr, vdbResources);
 			getVDBRepository().finishDeployment(vdb.getName(), vdb.getVersion());
 			return;
-		}
-		
-		String prop = vdb.getPropertyValue("cache-metadata"); //$NON-NLS-1$
-		if (prop != null) {
-			LogManager.logDetail(LogConstants.CTX_RUNTIME, "using VDB metadata caching value", prop); //$NON-NLS-1$
-		} else if (vdb.isXmlDeployment()) {
-			prop = vdb.getPropertyValue("UseConnectorMetadata"); //$NON-NLS-1$ 
-			if (prop != null) {
-				LogManager.logDetail(LogConstants.CTX_RUNTIME, "using VDB metadata caching value", prop, "Note that UseConnectorMetadata is deprecated.  Use cache-metadata instead."); //$NON-NLS-1$ //$NON-NLS-2$
-			}
 		}
 		
 		for (ModelMetaData model: vdb.getModelMetaDatas().values()) {
@@ -251,7 +243,7 @@ public abstract class AbstractVDBDeployer {
 	protected void metadataLoaded(final VDBMetaData vdb,
 			final ModelMetaData model,
 			final MetadataStore vdbMetadataStore,
-			final AtomicInteger loadCount, MetadataFactory factory, boolean success) {
+			final AtomicInteger loadCount, MetadataFactory factory, boolean success, ConnectorManagerRepository cmr, VDBResources vdbResources) {
 		if (success) {
 			// merge into VDB metadata
 			factory.mergeInto(vdbMetadataStore);
@@ -266,13 +258,15 @@ public abstract class AbstractVDBDeployer {
 		}
 		
 		if (loadCount.decrementAndGet() == 0 || vdb.getStatus() == Status.FAILED) {
-		    processVDBDDL(vdb, vdbMetadataStore);
+		    if (vdb.getStatus() != Status.FAILED) {
+		        processVDBDDL(vdb, vdbMetadataStore, cmr, vdbResources);
+		    }
 			getVDBRepository().finishDeployment(vdb.getName(), vdb.getVersion());
 		}
 	}
 
     private void processVDBDDL(final VDBMetaData vdb,
-            final MetadataStore vdbMetadataStore) {
+            final MetadataStore vdbMetadataStore, final ConnectorManagerRepository cmr, final VDBResources vdbResources) {
         if (vdb.getStatus() == Status.FAILED) {
             return;
         }
@@ -283,22 +277,87 @@ public abstract class AbstractVDBDeployer {
             final TransformationMetadata metadata = new TransformationMetadata(vdb, compositeStore, null,
                     getVDBRepository().getSystemFunctionManager().getSystemFunctions(), null);
             
-            DeploymentBasedDatabaseStore store = new DeploymentBasedDatabaseStore(getVDBRepository()) {
+            DeploymentBasedDatabaseStore deploymentStore = new DeploymentBasedDatabaseStore(getVDBRepository()) {
                 
                 @Override
                 protected TransformationMetadata getTransformationMetadata() {
                     return metadata;
                 }
                 
+                @Override
+                public void importSchema(String schemaName, String serverType,
+                        String serverName, String foreignSchemaName,
+                        List<String> includeTables, List<String> excludeTables,
+                        Map<String, String> properties) {
+                    ModelMetaData model = vdb.getModel(schemaName);
+                    MetadataFactory factory = DatabaseStore.createMF(this, getSchema(schemaName), true);
+                    factory.getModelProperties().putAll(model.getPropertiesMap());
+                    factory.getModelProperties().putAll(properties);
+                    factory.setParser(new QueryParser());
+                    if (vdbResources != null) {
+                        factory.setVdbResources(vdbResources.getEntriesPlusVisibilities());
+                    }
+                    MetadataRepository baseRepo = model.getAttachment(MetadataRepository.class);
+                    
+                    MetadataRepository metadataRepository;
+                    try {
+                        metadataRepository = getMetadataRepository(serverType);
+                    } catch (VirtualDatabaseException e1) {
+                        throw new MetadataException(e1);
+                    }
+                    
+                    metadataRepository = new ChainingMetadataRepository(Arrays.asList(new MetadataRepositoryWrapper(metadataRepository, null), baseRepo));
+                    
+                    ExecutionFactory ef = null;
+                    Object cf = null;
+                    
+                    Exception te = null;
+                    for (ConnectorManager cm : getConnectorManagers(model, cmr)) {
+                        if (te != null) {
+                            LogManager.logDetail(LogConstants.CTX_RUNTIME, te, "Failed to get metadata, trying next source."); //$NON-NLS-1$
+                            te = null;
+                        }
+                        try {
+                            if (cm != null) {
+                                ef = cm.getExecutionFactory();
+                                cf = cm.getConnectionFactory();
+                            }
+                        } catch (TranslatorException e) {
+                            LogManager.logDetail(LogConstants.CTX_RUNTIME, e, "Failed to get a connection factory for metadata load."); //$NON-NLS-1$
+                        }
+                    
+                        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_RUNTIME, MessageLevel.TRACE)) {
+                            LogManager.logTrace(LogConstants.CTX_RUNTIME, "CREATE SCHEMA", factory.getSchema().getName(), ";\n", DDLStringVisitor.getDDLString(factory.getSchema(), null, null)); //$NON-NLS-1$ //$NON-NLS-2$
+                        }
+                        
+                        try {
+                            metadataRepository.loadMetadata(factory, ef, cf);
+                            break;
+                        } catch (Exception e) {
+                            te = e;
+                            factory = DatabaseStore.createMF(this, getSchema(schemaName), true);
+                            factory.getModelProperties().putAll(model.getPropertiesMap());
+                            factory.getModelProperties().putAll(properties);
+                            factory.setParser(new QueryParser());
+                            factory.setVdbResources(vdbResources.getEntriesPlusVisibilities());
+                        }
+                    }
+                    if (te != null) {
+                        if (te instanceof RuntimeException) {
+                            throw (RuntimeException)te;
+                        }
+                        throw new MetadataException(te);
+                    }
+                }
             };
-            store.startEditing(false);
-            store.databaseCreated(database);
-            store.databaseSwitched(database.getName(), database.getVersion());
-            store.setMode(Mode.SCHEMA);
+            deploymentStore.startEditing(false);
+            deploymentStore.databaseCreated(database);
+            deploymentStore.databaseSwitched(database.getName(), database.getVersion());
+            deploymentStore.setMode(Mode.SCHEMA);
             try {
-                QueryParser.getQueryParser().parseDDL(store, new StringReader(ddl));
+                QueryParser.getQueryParser().parseDDL(deploymentStore, new StringReader(ddl));
             } finally {
-                store.stopEditing();
+                deploymentStore.stopEditing();
             }
             DatabaseUtil.copyDatabaseGrantsAndRoles(database, vdb);
         }

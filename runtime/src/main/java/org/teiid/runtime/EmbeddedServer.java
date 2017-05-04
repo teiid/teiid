@@ -896,7 +896,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			}
 			throw new TranslatorException(te);
 		}
-		metadataLoaded(vdb, model, store, loadCount, factory, true);
+		metadataLoaded(vdb, model, store, loadCount, factory, true, cmr, vdbResources);
 	}
 	
 	public void undeployVDB(String vdbName) {

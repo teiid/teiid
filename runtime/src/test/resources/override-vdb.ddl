@@ -10,7 +10,7 @@ USE DATABASE override VERSION '1';
 --############ Translators ############
 CREATE FOREIGN DATA WRAPPER mysql;
 
-CREATE FOREIGN DATA WRAPPER "mysql-override" OPTIONS (RequiresCriteria 'true');
+CREATE FOREIGN DATA WRAPPER "mysql-override" TYPE mysql OPTIONS (RequiresCriteria 'true');
 
 
 --############ Servers ############
@@ -20,11 +20,11 @@ CREATE SERVER s1 FOREIGN DATA WRAPPER "mysql-override" OPTIONS ("jndi-name" 'jav
 --############ Schemas ############
 CREATE SCHEMA test SERVER s1;
 
-IMPORT FOREIGN SCHEMA "%" FROM SERVER s1 INTO test;
-
 
 --############ Schema:test ############
 SET SCHEMA test;
+
+IMPORT FOREIGN SCHEMA "%" FROM SERVER s1 INTO test;
 
 
 /*

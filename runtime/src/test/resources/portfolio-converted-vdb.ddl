@@ -22,8 +22,6 @@ CREATE SERVER "text-connector" FOREIGN DATA WRAPPER file OPTIONS ("jndi-name" 'j
 --############ Schemas ############
 CREATE SCHEMA MarketData SERVER "text-connector";
 
-IMPORT FOREIGN SCHEMA "%" FROM SERVER "text-connector" INTO MarketData;
-
 CREATE SCHEMA Accounts SERVER "h2-connector" OPTIONS ("importer.useFullSchemaName" 'false');
 
 CREATE VIRTUAL SCHEMA Stocks;
@@ -39,6 +37,8 @@ CREATE ROLE ReadWrite WITH JAAS ROLE superuser;
 
 --############ Schema:MarketData ############
 SET SCHEMA MarketData;
+
+IMPORT FOREIGN SCHEMA "%" FROM SERVER "text-connector" INTO MarketData;
 
 
 --############ Schema:Accounts ############

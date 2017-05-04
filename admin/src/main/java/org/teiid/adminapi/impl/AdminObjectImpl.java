@@ -89,6 +89,9 @@ public abstract class AdminObjectImpl implements AdminObject, Serializable {
 		}
 	}	
 	
+	/**
+	 * @return a Map that is directly modifiable
+	 */
 	public Map<String, String> getPropertiesMap() {
 		return this.properties;
 	}

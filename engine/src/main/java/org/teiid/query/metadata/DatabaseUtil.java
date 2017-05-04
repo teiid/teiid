@@ -63,6 +63,7 @@ public class DatabaseUtil {
             // add override with properties
             if (db.getDataWrapper(t.getName()) == null) {
                 DataWrapper dw = new DataWrapper(t.getName());
+                dw.setType(t.getType());
                 for (final String key : t.getProperties().stringPropertyNames()) {
                     dw.setProperty(key, t.getPropertyValue(key));
                 }
@@ -232,7 +233,7 @@ public class DatabaseUtil {
             mmd.setName(schema.getName());
             mmd.setDescription(schema.getAnnotation());
             mmd.setVisible(Boolean.valueOf(schema.isVisible()));
-            
+            mmd.getPropertiesMap().putAll(schema.getProperties());
             if (schema.isPhysical()) {
                 mmd.setModelType(Model.Type.PHYSICAL);
                 

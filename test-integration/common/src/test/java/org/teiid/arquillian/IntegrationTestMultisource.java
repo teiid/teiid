@@ -86,4 +86,34 @@ public class IntegrationTestMultisource extends AbstractMMQueryTestCase {
 		assertRowCount(1);
     }
 	
+    @Test
+    public void testSourceOperationsDDLVDB() throws Exception {
+                
+        admin.deploy("multisource-vdb.ddl",new FileInputStream(UnitTestUtil.getTestDataFile("arquillian/multisource-vdb.ddl")));
+        
+        Properties props = new Properties();
+        props.setProperty("ParentDirectory", UnitTestUtil.getTestDataFile("/arquillian/txt/").getAbsolutePath());
+        props.setProperty("AllowParentPaths", "true");
+        props.setProperty("class-name", "org.teiid.resource.adapter.file.FileManagedConnectionFactory");
+        
+        AdminUtil.createDataSource(admin, "test-file", "file", props);
+        
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "multisource", 1, 3));
+        
+        this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:multisource@mm://localhost:31000;user=user;password=user", null);
+        
+        execute("exec getfiles('*.txt')", new Object[] {}); //$NON-NLS-1$
+        assertRowCount(1);
+        
+        admin.addSource("multisource", 1, "MarketData", "text-connector1", "file1", "java:/test-file");
+        
+        execute("exec getfiles('*.txt')", new Object[] {}); //$NON-NLS-1$
+        assertRowCount(2);
+        
+        admin.removeSource("multisource", 1, "MarketData", "text-connector");
+        
+        execute("exec getfiles('*.txt')", new Object[] {}); //$NON-NLS-1$
+        assertRowCount(1);
+    }
+	
 }

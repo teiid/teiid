@@ -5220,7 +5220,7 @@ void createDomain(DatabaseStore dbStore) :
 }
 
 /*
-name=create data wrapper aka translator
+name=create data wrapper
 description=Defines a translator; use the options to override the translator properties.
 example=[source,sql]\n----\nCREATE FOREIGN (DATA WRAPPER|TRANSLATOR)  wrapper OPTIONS(properties)\n----\n
 */
@@ -5249,7 +5249,7 @@ void createDataWrapper(DatabaseStore dbStore) :
 }
 
 /*
-name=Drop data wrapper aka translator
+name=Drop data wrapper
 description=Deletes a translator
 example=[source,sql]\n----\nDROP FOREIGN (DATA WRAPPER|TRANSLATOR) wrapper\n----\n
 */

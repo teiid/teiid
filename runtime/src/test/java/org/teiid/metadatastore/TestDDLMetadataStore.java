@@ -28,6 +28,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Collection;
@@ -315,4 +316,25 @@ public class TestDDLMetadataStore {
                 .convertFileToString(new File(UnitTestUtil.getTestDataPath() + "/" + "override-vdb.ddl"));
         assertEquals(expected, content);
     }     
+    
+    @Test
+    public void testMultiSource() throws Exception {
+        EmbeddedConfiguration ec = new EmbeddedConfiguration();
+        ec.setUseDisk(false);
+        es.start(ec); 
+        es.addTranslator(FileExecutionFactory.class);
+        
+        es.deployVDB(new FileInputStream(UnitTestUtil.getTestDataPath() + "/" + "multisource-vdb.ddl"), true);
+        
+        es.getAdmin().addSource("multisource", "1", "MarketData", "x", "file", "z");
+        
+        Connection c = es.getDriver().connect("jdbc:teiid:multisource", null);
+        DatabaseMetaData dmd = c.getMetaData();
+        ResultSet rs = dmd.getProcedureColumns(null, null, "deleteFile", null);
+        int count = 0;
+        while (rs.next()) {
+            count++;
+        }
+        assertEquals(2, count);
+    }
 }

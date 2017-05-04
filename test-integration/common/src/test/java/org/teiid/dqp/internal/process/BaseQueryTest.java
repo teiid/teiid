@@ -27,6 +27,8 @@ import junit.framework.TestCase;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
+import org.teiid.common.buffer.BufferManagerFactory;
+import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.dqp.message.RequestID;
@@ -60,6 +62,9 @@ public abstract class BaseQueryTest extends TestCase {
         
     protected void doProcess(QueryMetadataInterface metadata, String sql, CapabilitiesFinder capFinder, ProcessorDataManager dataManager, List[] expectedResults, boolean debug) throws Exception {
     	CommandContext context = createCommandContext();
+        BufferManagerImpl bm = BufferManagerFactory.createBufferManager();
+        bm.setProcessorBatchSize(context.getProcessorBatchSize());
+        context.setBufferManager(bm);
         doProcess(metadata, sql, capFinder, dataManager, expectedResults,
 				debug, context);
     }

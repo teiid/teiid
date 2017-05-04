@@ -268,6 +268,7 @@ public class TupleBuffer {
 	 * TODO: a method to get the raw batch
 	 */
 	public TupleBatch getBatch(long row) throws TeiidComponentException {
+	    assert !removed;
 		TupleBatch result = null;
 		if (row > rowCount) {
 			result = new TupleBatch(rowCount + 1, new List[] {});
