@@ -137,6 +137,81 @@ public class TestExcelMetadataProcessor {
 		assertEquals(expectedDDL, ddl);
 	}
 	
+	/**
+	 * Test a schema where there are empty cols in the header
+	 * @throws Exception
+	 */
+	@Test
+	public void testSchemaWithEmptyHeaderRowsXLS() throws Exception {
+		Properties props = new Properties();
+		props.setProperty("importer.excelFileName", "emptycols.xls");
+		props.setProperty("importer.headerRowNumber", "1");
+				
+		String ddl = getDDL(props);	
+		
+		String expectedDDL = "SET NAMESPACE 'http://www.teiid.org/translator/excel/2014' AS teiid_excel;\n\n" + 
+		        "CREATE FOREIGN TABLE Sheet1 (\n" + 
+				"	ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" + 
+				"	FirstName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1'),\n" + 
+				"	LastName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2'),\n" + 
+				"	Age double OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '3'),\n" + 
+				"	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" + 
+				") OPTIONS (NAMEINSOURCE 'Sheet1', \"teiid_excel:FILE\" 'emptycols.xls', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '2');";
+		
+		assertEquals(expectedDDL, ddl);
+	}
+	
+	/**
+	 * Test a schema where there are empty cols in the header mixed with non-empty,
+	 * the table definition should only contain all non-empty columns
+	 * @throws Exception
+	 */
+	@Test
+	public void testSchemaWithIgnoreTrueHeaderRowsXLS() throws Exception {
+		Properties props = new Properties();
+		props.setProperty("importer.excelFileName", "empty-ignore.xls");
+		props.setProperty("importer.headerRowNumber", "1");
+		props.setProperty("importer.ignoreEmptyHeaderCells", "true");
+				
+		String ddl = getDDL(props);	
+		
+		String expectedDDL = "SET NAMESPACE 'http://www.teiid.org/translator/excel/2014' AS teiid_excel;\n\n" + 
+		        "CREATE FOREIGN TABLE Sheet1 (\n" + 
+				"	ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" + 
+				"	FirstName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1'),\n" + 
+				"	LastName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2'),\n" +
+				"	Age double OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '4'),\n" +
+				"	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" + 
+				") OPTIONS (NAMEINSOURCE 'Sheet1', \"teiid_excel:FILE\" 'empty-ignore.xls', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '2');";
+		
+		assertEquals(expectedDDL, ddl);
+	}
+	
+	/**
+	 * Test a schema where there are empty cols in the header mixed with non-empty,
+	 * the table definition should only contain the columns up to the first empty cell.
+	 * @throws Exception
+	 */
+	@Test
+	public void testSchemaWithIgnoreFalseHeaderRowsXLS() throws Exception {
+		Properties props = new Properties();
+		props.setProperty("importer.excelFileName", "empty-ignore.xls");
+		props.setProperty("importer.headerRowNumber", "1");
+		props.setProperty("importer.ignoreEmptyHeaderCells", "false");
+				
+		String ddl = getDDL(props);	
+		
+		String expectedDDL = "SET NAMESPACE 'http://www.teiid.org/translator/excel/2014' AS teiid_excel;\n\n" + 
+		        "CREATE FOREIGN TABLE Sheet1 (\n" + 
+				"	ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" + 
+				"	FirstName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1'),\n" + 
+				"	LastName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2'),\n" +  
+				"	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" + 
+				") OPTIONS (NAMEINSOURCE 'Sheet1', \"teiid_excel:FILE\" 'empty-ignore.xls', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '2');";
+		
+		assertEquals(expectedDDL, ddl);
+	}
+	
 	@Test
 	public void testSchemaWithHeaderXLSX() throws Exception {
 		Properties props = new Properties();
