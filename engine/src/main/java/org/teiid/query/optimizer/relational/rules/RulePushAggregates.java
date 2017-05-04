@@ -788,9 +788,6 @@ public class RulePushAggregates implements
 		    addEmptyFilter(aggregates, stageGroup, metadata, capFinder, RuleRaiseAccess.getModelIDFromAccess(NodeEditor.findNodePreOrder(child, NodeConstants.Types.ACCESS), metadata));
 		}
 		SymbolMap groupingSymbolMap = RelationalPlanner.buildGroupingNode(aggregates, stagedGroupingSymbols, stageGroup, context, idGenerator);
-		if (stageGroup.getGroups().contains(new GroupSymbol("anon_grp13")) || stageGroup.getGroups().contains(new GroupSymbol("anon_grp15"))) {
-		    System.out.println("here");
-		}
 		Map<Expression, ElementSymbol> reverseMapping = groupingSymbolMap.inserseMapping();
 		
 		GroupSymbol newGroup = reverseMapping.values().iterator().next().getGroupSymbol();
