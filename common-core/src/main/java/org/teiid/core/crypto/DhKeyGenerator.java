@@ -94,7 +94,7 @@ public class DhKeyGenerator {
 		}
 	}
 
-	public SymmetricCryptor getSymmetricCryptor(byte[] peerPublicKeyBytes, boolean useSealedObject, ClassLoader classLoader)
+	public SymmetricCryptor getSymmetricCryptor(byte[] peerPublicKeyBytes, boolean useSealedObject, ClassLoader classLoader, boolean cbc)
 			throws CryptoException {
 		if (privateKey == null) {
 			throw new IllegalStateException(
@@ -121,7 +121,7 @@ public class DhKeyGenerator {
 			byte[] hash = sha.digest(secret);
 			byte[] symKey = new byte[keySize / 8];
 			System.arraycopy(hash, 0, symKey, 0, symKey.length);
-			SymmetricCryptor sc = SymmetricCryptor.getSymmectricCryptor(symKey);
+			SymmetricCryptor sc = SymmetricCryptor.getSymmectricCryptor(symKey, cbc);
 			sc.setUseSealedObject(useSealedObject);
 			sc.setClassLoader(classLoader);
 			return sc;

@@ -164,8 +164,9 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
             if (serverPublicKey != null) {
             	DhKeyGenerator keyGen = new DhKeyGenerator();
             	byte[] publicKey = keyGen.createPublicKey();
-                this.cryptor = keyGen.getSymmetricCryptor(serverPublicKey, "08.03".compareTo(serverVersion) > 0, this.getClass().getClassLoader());  //$NON-NLS-1$
                 handshake.setPublicKey(publicKey);
+            	boolean useCbc = handshake.isCbc();
+                this.cryptor = keyGen.getSymmetricCryptor(serverPublicKey, "08.03".compareTo(serverVersion) > 0, this.getClass().getClassLoader(), useCbc);  //$NON-NLS-1$
             } else {
                 this.cryptor = new NullCryptor();
             }
