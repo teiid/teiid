@@ -67,6 +67,8 @@ import org.teiid.query.util.CommandContext;
  */
 class JoinRegion {
     
+    private JoinRegion left;
+    
     private PlanNode joinRoot;
     
     public static final int UNKNOWN_TUPLE_EST = 100000;
@@ -620,5 +622,13 @@ class JoinRegion {
             this.joinSourceNodes.put(entry.getKey(), entry.getValue());
         }
     }
-
+    
+    public void setLeft(JoinRegion left) {
+        this.left = left;
+    }
+    
+    public JoinRegion getLeft() {
+        return left;
+    }
+    
 }

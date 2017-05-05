@@ -1261,21 +1261,28 @@ public class TestDependentJoins {
     }
     
     @Test public void testNestedFullDepJoin() throws Exception {
+        BasicSourceCapabilities pm1Caps = TestOptimizer.getTypicalCapabilities();
+        pm1Caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, false);
+        pm1Caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, false);
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.FULL_DEPENDENT_JOIN, true);
         TransformationMetadata metadata = TestOptimizer.example1();
         
         RealMetadataFactory.setCardinality("pm1.g1", 5, metadata);
         RealMetadataFactory.setCardinality("pm1.g2", 5, metadata);
-        RealMetadataFactory.setCardinality("pm2.g1", 1000, metadata);
+        RealMetadataFactory.setCardinality("pm1.g3", 1000, metadata);
         RealMetadataFactory.setCardinality("pm2.g2", 10000, metadata);
+        
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        capFinder.addCapabilities("pm1", pm1Caps);
+        capFinder.addCapabilities("pm2", caps);
         
         CommandContext cc = new CommandContext();
         cc.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
-        ProcessorPlan plan = TestOptimizer.getPlan(TestOptimizer.helpGetCommand("select pm1.g1.e1, pm1.g1.e2, pm2.g1.e2 FROM pm1.g1 inner join pm2.g1 on pm1.g1.e1 = pm2.g1.e1 inner join pm1.g2 on pm2.g1.e2 = pm1.g2.e2 left outer join pm2.g2 on pm2.g1.e4 = pm2.g2.e4 order by pm1.g1.e1", 
-                metadata, null), metadata, new DefaultCapabilitiesFinder(caps), null, true, cc);
+        ProcessorPlan plan = TestOptimizer.getPlan(TestOptimizer.helpGetCommand("select pm1.g1.e1, pm1.g1.e2, pm1.g3.e2 FROM pm1.g1 inner join pm1.g3 on pm1.g1.e1 = pm1.g3.e1 inner join pm1.g2 on pm1.g3.e2 = pm1.g2.e2 left outer join pm2.g2 on pm1.g3.e4 = pm2.g2.e4 order by pm1.g1.e1", 
+                metadata, null), metadata, capFinder, null, true, cc);
 
-        TestOptimizer.checkAtomicQueries(new String[] {"WITH TEIID_TEMP__2 (col1, col2, col3, col4) AS (<dependent values>) SELECT g_0.col2 AS c_0, g_0.col3 AS c_1, g_0.col4 AS c_2 FROM TEIID_TEMP__2 AS g_0 LEFT OUTER JOIN pm2.g2 AS g_1 ON g_0.col1 = g_1.e4 ORDER BY c_0" }, plan); //$NON-NLS-1$ //$NON-NLS-2$
+        TestOptimizer.checkAtomicQueries(new String[] {"WITH TEIID_TEMP__1 (col1, col2, col3, col4) AS (<dependent values>) SELECT g_0.col2 AS c_0, g_0.col3 AS c_1, g_0.col4 AS c_2 FROM TEIID_TEMP__1 AS g_0 LEFT OUTER JOIN pm2.g2 AS g_1 ON g_0.col1 = g_1.e4 ORDER BY c_0" }, plan); //$NON-NLS-1$ //$NON-NLS-2$
         
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN); 
         
@@ -1286,8 +1293,8 @@ public class TestDependentJoins {
         HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
         dataManager.addData("SELECT g_0.e2 AS c_0 FROM g2 AS g_0 ORDER BY c_0", new List<?>[] {Arrays.asList(1), Arrays.asList(2)});
         dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM g1 AS g_0 ORDER BY c_0", new List<?>[] {Arrays.asList("a", 1), Arrays.asList("b", 2)});
-        dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e4 AS c_2 FROM g1 AS g_0 WHERE g_0.e1 IN ('a', 'b') AND g_0.e2 IN (1, 2) ORDER BY c_0", new List<?>[] {Arrays.asList("a", 2, 1.0)});
-        dataManager.addData("WITH TEIID_TEMP__2 (e4, e1, e2, e2) AS (?) SELECT g_0.col2 AS c_0, g_0.col3 AS c_1, g_0.col4 AS c_2 FROM TEIID_TEMP__2 AS g_0 LEFT OUTER JOIN g2 AS g_1 ON g_0.col1 = g_1.e4 ORDER BY c_0", new List<?>[] {Arrays.asList("a", 2, 1.0)});
+        dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e4 AS c_2 FROM g3 AS g_0 WHERE g_0.e1 IN ('a', 'b') AND g_0.e2 IN (1, 2) ORDER BY c_0", new List<?>[] {Arrays.asList("a", 2, 1.0)});
+        dataManager.addData("WITH TEIID_TEMP__1 (e4, e1, e2, e2) AS (?) SELECT g_0.col2 AS c_0, g_0.col3 AS c_1, g_0.col4 AS c_2 FROM TEIID_TEMP__1 AS g_0 LEFT OUTER JOIN g2 AS g_1 ON g_0.col1 = g_1.e4 ORDER BY c_0", new List<?>[] {Arrays.asList("a", 2, 1.0)});
         TestProcessor.helpProcess(plan, dataManager, expected);
         Select select = (Select)dataManager.getPushdownCommands().get(3);
         List<? extends List<?>> vals = select.getWith().getItems().get(0).getDependentValues();
