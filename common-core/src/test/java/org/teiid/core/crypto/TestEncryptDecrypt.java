@@ -194,7 +194,7 @@ public class TestEncryptDecrypt {
     
     @Test public void testSymmetricEncryptionWithRandomKey() throws Exception {
         
-        SymmetricCryptor randomSymCryptor = SymmetricCryptor.getSymmectricCryptor();
+        SymmetricCryptor randomSymCryptor = SymmetricCryptor.getSymmectricCryptor(true);
         
         ArrayList test = new ArrayList(Arrays.asList(new String[] {ALPHA_L, ALPHA_U, CLEARTEXT, NUMBERS}));
         
@@ -213,7 +213,7 @@ public class TestEncryptDecrypt {
         
         assertEquals(test, clearObject);
         
-        SymmetricCryptor cryptor1 = SymmetricCryptor.getSymmectricCryptor(randomSymCryptor.getEncodedKey());
+        SymmetricCryptor cryptor1 = SymmetricCryptor.getSymmectricCryptor(randomSymCryptor.getEncodedKey(), true);
         
         clearObject = (ArrayList)cryptor1.unsealObject(result);
         

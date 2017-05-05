@@ -32,6 +32,7 @@ import java.security.KeyStore;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.teiid.core.CorePlugin;
@@ -44,7 +45,8 @@ import org.teiid.core.util.ArgCheck;
 public class SymmetricCryptor extends BasicCryptor {
     
     public static final String DEFAULT_SYM_KEY_ALGORITHM = "AES"; //$NON-NLS-1$
-    public static final String DEFAULT_SYM_ALGORITHM = "AES/ECB/PKCS5Padding"; //$NON-NLS-1$
+    public static final String ECB_SYM_ALGORITHM = "AES/ECB/PKCS5Padding"; //$NON-NLS-1$
+    public static final String CBC_SYM_ALGORITHM = "AES/CBC/PKCS5Padding"; //$NON-NLS-1$
     public static final int DEFAULT_KEY_BITS = 128;
     public static final String DEFAULT_STORE_PASSWORD = "changeit"; //$NON-NLS-1$
     public static final String DEFAULT_ALIAS = "cluster_key"; //$NON-NLS-1$
@@ -57,10 +59,10 @@ public class SymmetricCryptor extends BasicCryptor {
      * @return a new SymmetricCryptor
      * @throws CryptoException
      */
-    public static SymmetricCryptor getSymmectricCryptor() throws CryptoException {
+    public static SymmetricCryptor getSymmectricCryptor(boolean cbc) throws CryptoException {
         Key key = generateKey();
         
-        return new SymmetricCryptor(key);
+        return new SymmetricCryptor(key, cbc);
     }
 
 	public static SecretKey generateKey() throws CryptoException {
@@ -92,7 +94,7 @@ public class SymmetricCryptor extends BasicCryptor {
 	    	KeyStore store = KeyStore.getInstance("JCEKS"); //$NON-NLS-1$
 	    	store.load(stream, DEFAULT_STORE_PASSWORD.toCharArray());
 	    	Key key = store.getKey(DEFAULT_ALIAS, DEFAULT_STORE_PASSWORD.toCharArray());
-	    	return new SymmetricCryptor(key);
+	    	return new SymmetricCryptor(key, true);
         } catch (GeneralSecurityException e) {
               throw new CryptoException(CorePlugin.Event.TEIID10022, e);
 		} finally {
@@ -107,9 +109,9 @@ public class SymmetricCryptor extends BasicCryptor {
      * @return a new SymmetricCryptor
      * @throws CryptoException
      */
-    public static SymmetricCryptor getSymmectricCryptor(byte[] key) throws CryptoException {
+    public static SymmetricCryptor getSymmectricCryptor(byte[] key, boolean cbc) throws CryptoException {
         Key secretKey = new SecretKeySpec(key, DEFAULT_SYM_KEY_ALGORITHM);
-        return new SymmetricCryptor(secretKey);
+        return new SymmetricCryptor(secretKey, cbc);
     }
     
     public static void generateAndSaveKey(String file) throws CryptoException, IOException {
@@ -132,8 +134,8 @@ public class SymmetricCryptor extends BasicCryptor {
     	}	
     }
     
-    SymmetricCryptor(Key key) throws CryptoException {
-        super(key, key, DEFAULT_SYM_ALGORITHM);
+    SymmetricCryptor(Key key, boolean cbc) throws CryptoException {
+        super(key, key, cbc?CBC_SYM_ALGORITHM:ECB_SYM_ALGORITHM, cbc?new IvParameterSpec(new byte[] {0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf}):null);
     }
 
     public byte[] getEncodedKey() {

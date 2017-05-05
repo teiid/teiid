@@ -198,9 +198,11 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
             if (returnedPublicKey == null) {
                  throw new CommunicationException(RuntimePlugin.Event.TEIID40052, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40052));
             }
-            
+
+            boolean useCbc = handshake.isCbc();
+
             try {
-				this.cryptor = keyGen.getSymmetricCryptor(returnedPublicKey, "08.03".compareTo(clientVersion) > 0, SocketClientInstance.class.getClassLoader()); //$NON-NLS-1$
+				this.cryptor = keyGen.getSymmetricCryptor(returnedPublicKey, "08.03".compareTo(clientVersion) > 0, SocketClientInstance.class.getClassLoader(), useCbc); //$NON-NLS-1$
 			} catch (CryptoException e) {
 				 throw new CommunicationException(RuntimePlugin.Event.TEIID40053, e);
 			}
