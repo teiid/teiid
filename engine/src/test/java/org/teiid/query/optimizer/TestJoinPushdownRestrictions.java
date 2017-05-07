@@ -91,7 +91,7 @@ public class TestJoinPushdownRestrictions {
 	}
 	
 	@Test public void testKeyRestriction1() throws Exception {
-		String sql = "select a.e1, b.e1 from pm4.g1 a inner join pm4.g2 b on (a.e1 = b.e1 and a.e2 = b.e2) left outer join pm4.g1 c on (c.e1 = b.e1 and c.e2 = b.e2)"; //$NON-NLS-1$
+		String sql = "select a.e1, b.e1, c.e2 from pm4.g1 a inner join pm4.g2 b on (a.e1 = b.e1 and a.e2 = b.e2) left outer join pm4.g1 c on (c.e1 = b.e1 and c.e2 = b.e2)"; //$NON-NLS-1$
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();

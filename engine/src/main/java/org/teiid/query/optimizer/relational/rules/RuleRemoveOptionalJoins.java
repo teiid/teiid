@@ -22,10 +22,12 @@
 
 package org.teiid.query.optimizer.relational.rules;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -44,6 +46,7 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
@@ -92,13 +95,13 @@ public class RuleRemoveOptionalJoins implements
 		    		}
 		    		Set<GroupSymbol> required = getRequiredGroupSymbols(planNode);
 		    		
-		    		List<PlanNode> removed = removeJoin(required, requiredForOptional, planNode, planNode.getFirstChild(), analysisRecord);
+		    		List<PlanNode> removed = removeJoin(required, requiredForOptional, planNode, planNode.getFirstChild(), analysisRecord, metadata);
 		    		if (removed != null) {
 		    			skipNodes.addAll(removed);
 		    			done = false;
 		    			continue;
 		    		}
-		    		removed = removeJoin(required, requiredForOptional, planNode, planNode.getLastChild(), analysisRecord);
+		    		removed = removeJoin(required, requiredForOptional, planNode, planNode.getLastChild(), analysisRecord, metadata);
 		    		if (removed != null) {
 		    			skipNodes.addAll(removed);
 		    			done = false;
@@ -119,7 +122,7 @@ public class RuleRemoveOptionalJoins implements
      * @throws TeiidComponentException 
      * @throws QueryMetadataException 
      */ 
-    private List<PlanNode> removeJoin(Set<GroupSymbol> required, Set<GroupSymbol> requiredForOptional, PlanNode joinNode, PlanNode optionalNode, AnalysisRecord record) throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
+    private List<PlanNode> removeJoin(Set<GroupSymbol> required, Set<GroupSymbol> requiredForOptional, PlanNode joinNode, PlanNode optionalNode, AnalysisRecord record, QueryMetadataInterface metadata) throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
     	boolean correctFrame = false;
     	boolean isOptional = optionalNode.hasBooleanProperty(NodeConstants.Info.IS_OPTIONAL);
     	if (isOptional) {
@@ -155,8 +158,15 @@ public class RuleRemoveOptionalJoins implements
         }
         JoinType jt = (JoinType)joinNode.getProperty(NodeConstants.Info.JOIN_TYPE);
         
-        if (!isOptional && 
-        		(jt != JoinType.JOIN_LEFT_OUTER || optionalNode != joinNode.getLastChild() || useNonDistinctRows(joinNode.getParent()))) {
+        boolean usesKey = false;
+        boolean isRight = optionalNode == joinNode.getLastChild();
+        
+        if (!isOptional && (jt == JoinType.JOIN_INNER || (jt == JoinType.JOIN_LEFT_OUTER && isRight))) {
+            usesKey = isOptionalUsingKey(joinNode, optionalNode, metadata, isRight);
+        }
+        
+        if (!isOptional && !usesKey &&
+        		(jt != JoinType.JOIN_LEFT_OUTER || !isRight || useNonDistinctRows(joinNode.getParent()))) {
         	return null;
         }
     	// remove the parent node and move the sibling node upward
@@ -202,6 +212,63 @@ public class RuleRemoveOptionalJoins implements
 		}
 		
 		return NodeEditor.findAllNodes(optionalNode, NodeConstants.Types.JOIN);
+    }
+
+    private boolean isOptionalUsingKey(PlanNode joinNode,
+            PlanNode optionalNode, QueryMetadataInterface metadata, boolean isRight) throws
+            TeiidComponentException, QueryMetadataException {
+        //TODO: check if key preserved to allow for more than just a single group as optional
+        //for now we just look for a single group
+        if (optionalNode.getGroups().size() != 1) {
+            return false;
+        }
+        PlanNode left = isRight?joinNode.getFirstChild():joinNode.getLastChild();
+        LinkedList<Expression> leftExpressions = new LinkedList<Expression>();
+        LinkedList<Expression> rightExpressions = new LinkedList<Expression>();
+        LinkedList<Criteria> nonEquiJoinCriteria = new LinkedList<Criteria>();
+        RuleChooseJoinStrategy.separateCriteria(left.getGroups(), optionalNode.getGroups(), leftExpressions, rightExpressions, (List<Criteria>)joinNode.getProperty(NodeConstants.Info.JOIN_CRITERIA), nonEquiJoinCriteria);
+        if (!nonEquiJoinCriteria.isEmpty()) {
+            for (Criteria crit : nonEquiJoinCriteria) {
+                if (!Collections.disjoint(GroupsUsedByElementsVisitor.getGroups(crit), optionalNode.getGroups())) {
+                    return false; //additional predicates still need to be applied, or ignored via hint
+                }
+            }
+        }
+        ArrayList<Object> leftIds = new ArrayList<Object>(leftExpressions.size());
+        ArrayList<Object> rightIds = new ArrayList<Object>(rightExpressions.size());
+        for (Expression expr : leftExpressions) {
+            if (expr instanceof ElementSymbol) {
+                leftIds.add(((ElementSymbol) expr).getMetadataID());
+            }
+        }
+        for (Expression expr : rightExpressions) {
+            if (expr instanceof ElementSymbol) {
+                rightIds.add(((ElementSymbol) expr).getMetadataID());
+            } else {
+                return false; //only allow a key join
+            }
+        }
+        
+        outer: for (GroupSymbol group : left.getGroups()) {
+            Collection fks = metadata.getForeignKeysInGroup(group.getMetadataID());
+            for (Object fk : fks) {
+                List fkColumns = metadata.getElementIDsInKey(fk);
+                if (!leftIds.containsAll(fkColumns)) {
+                    continue;
+                }
+                Object pk = metadata.getPrimaryKeyIDForForeignKeyID(fk);
+                List pkColumns = metadata.getElementIDsInKey(pk);
+                if ((rightIds.size() != pkColumns.size()) || !rightIds.containsAll(pkColumns)) {
+                    continue;
+                }
+                if (!isRight) {
+                    //match up to the replacement logic below
+                    JoinUtil.swapJoinChildren(joinNode);
+                }
+                return true;
+            }
+        }
+        return false;
     }
     
     static boolean useNonDistinctRows(PlanNode parent) {

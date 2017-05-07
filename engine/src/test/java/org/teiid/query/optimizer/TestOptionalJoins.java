@@ -23,6 +23,7 @@
 package org.teiid.query.optimizer;
 
 import org.junit.Test;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.unittest.RealMetadataFactory;
@@ -603,6 +604,37 @@ public class TestOptionalJoins {
 				0, // Sort
 				0  // UnionAll
 				});
+    }
+    
+    @Test public void testOptionalUsingFk() throws Exception {
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table t1 (col1 integer primary key, col2 varchar);"
+                + " create foreign table t2 (col1 integer primary key, col2 integer, FOREIGN KEY (col2) REFERENCES t1 (col1), FOREIGN KEY (col1) REFERENCES t3 (col1));"
+                + " create foreign table t3 (col1 integer primary key, col2 integer);", "x", "y");
+        ProcessorPlan plan = TestOptimizer.helpPlan("select t2.* from t1 inner join t2 on t1.col1 = t2.col2", //$NON-NLS-1$
+                tm, new String[] {"SELECT g_0.col1, g_0.col2 FROM y.t2 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$ 
+
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+        
+        plan = TestOptimizer.helpPlan("select t1.*, t2.* from t1 inner join t2 on t1.col1 = t2.col2 inner join t3 on t2.col1 = t3.col1", //$NON-NLS-1$
+                tm, new String[] {"SELECT g_0.col1, g_0.col2, g_1.col1, g_1.col2 FROM y.t1 AS g_0, y.t2 AS g_1 WHERE g_0.col1 = g_1.col2"}, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$ 
+    }
+    
+    @Test public void testNotOptionalUsingFk() throws Exception {
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table t1 (col1 integer primary key, col2 varchar);"
+                + " create foreign table t2 (col1 integer primary key, col2 integer, FOREIGN KEY (col2) REFERENCES t1 (col1));", "x", "y");
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan("select t2.* from t1 inner join t2 on t1.col1 = t2.col2 and t1.col1 > 100", //$NON-NLS-1$
+                tm, new String[] {"SELECT g_1.col1, g_1.col2 FROM y.t1 AS g_0, y.t2 AS g_1 WHERE (g_0.col1 = g_1.col2) AND (g_0.col1 > 100) AND (g_1.col2 > 100)"}, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+        
+        plan = TestOptimizer.helpPlan("select t2.* from t1 inner join t2 on t1.col1 = t2.col2 and t1.col2 = t2.col1", //$NON-NLS-1$
+                tm, new String[] {"SELECT g_0.col2, g_1.col1, g_1.col2 FROM y.t1 AS g_0, y.t2 AS g_1 WHERE g_0.col1 = g_1.col2"}, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        
+        plan = TestOptimizer.helpPlan("select t2.* from t1 inner join t2 on t1.col1 + 1 = t2.col2", //$NON-NLS-1$
+                tm, new String[] {"SELECT g_0.col2 AS c_0, g_0.col1 AS c_1 FROM y.t2 AS g_0 ORDER BY c_0", "SELECT g_0.col1 FROM y.t1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$
+
     }
     
 }

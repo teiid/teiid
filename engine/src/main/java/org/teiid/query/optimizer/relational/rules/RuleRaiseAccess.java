@@ -989,11 +989,8 @@ public final class RuleRaiseAccess implements OptimizerRule {
 		for (Object fk : fks) {
 			if (exact) {
 				String allow = metadata.getExtensionProperty(fk, ForeignKey.ALLOW_JOIN, false);
-				if (allow != null) {
-					boolean allowed = true;
-					if (!Boolean.valueOf(allow) && (!allow.equalsIgnoreCase("INNER") || !inner)) { //$NON-NLS-1$
-						continue;
-					}
+				if (allow != null && !Boolean.valueOf(allow) && (!allow.equalsIgnoreCase("INNER") || !inner)) { //$NON-NLS-1$
+					continue;
 				}
 			}
 			List fkColumns = metadata.getElementIDsInKey(fk);

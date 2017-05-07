@@ -46,11 +46,11 @@ import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.BasicQueryMetadata;
 import org.teiid.query.metadata.MaterializationMetadataRepository;
+import org.teiid.query.metadata.MaterializationMetadataRepository.ErrorAction;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
-import org.teiid.query.metadata.MaterializationMetadataRepository.ErrorAction;
 import org.teiid.query.optimizer.QueryOptimizer;
 import org.teiid.query.optimizer.TriggerActionPlanner;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -965,10 +965,10 @@ public class RelationalPlanner {
         } else if(hints.hasCriteria) {
         	rules.push(RuleConstants.PUSH_SELECT_CRITERIA);
         }
-        if (hints.hasJoin && hints.hasOptionalJoin) {
+        if (hints.hasJoin) {
             rules.push(RuleConstants.REMOVE_OPTIONAL_JOINS);
         }
-        if (hints.hasVirtualGroups || (hints.hasJoin && hints.hasOptionalJoin)) {
+        if (hints.hasVirtualGroups || hints.hasJoin) {
         	//do initial filtering to make merging and optional join logic easier
             rules.push(new RuleAssignOutputElements(false));
         }
@@ -1501,10 +1501,6 @@ public class RelationalPlanner {
             if (jp.isPreserve()) {
             	node.setProperty(Info.PRESERVE, Boolean.TRUE);
             }
-            if (jp.getJoinType() == JoinType.JOIN_LEFT_OUTER) {
-            	hints.hasOptionalJoin = true;
-            }
-         
             // Attach join node to parent
             parent.addLastChild(node);
 
@@ -1614,7 +1610,6 @@ public class RelationalPlanner {
         
         if (clause.isOptional()) {
             node.setProperty(NodeConstants.Info.IS_OPTIONAL, Boolean.TRUE);
-            hints.hasOptionalJoin = true;
         }
         
         if (clause.getMakeDep() != null) {
