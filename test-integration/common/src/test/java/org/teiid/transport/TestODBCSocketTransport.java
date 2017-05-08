@@ -36,6 +36,7 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
@@ -700,6 +701,32 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		String value = rs.getString(1);
 		assertEquals("bar", value);
 	}
+	
+	@Test public void testDecimalPrecision() throws Exception {
+        VDBMetaData vdb = new VDBMetaData();
+        vdb.setName("decimal");
+        vdb.addProperty("connection.foo", "bar");
+        ModelMetaData mmd = new ModelMetaData();
+        mmd.setName("x");
+        mmd.setModelType(Type.VIRTUAL);
+        mmd.addSourceMetadata("ddl", "create view v (x decimal(2), y decimal) as select 1.0, 2.0");
+        vdb.addModel(mmd);
+        odbcServer.server.deployVDB(vdb);
+        this.conn.close();
+        connect("decimal");
+        Statement s = conn.createStatement();
+        s.execute("select * from v");
+        ResultSetMetaData metadata = s.getResultSet().getMetaData();
+        assertEquals(2, metadata.getPrecision(1));
+        assertEquals(0, metadata.getScale(1));
+        
+        assertEquals(32767, metadata.getPrecision(2));
+        assertEquals(16383, metadata.getScale(2));
+        
+        s.execute("select atttypmod from pg_attribute where attname = 'y'");
+        s.getResultSet().next();
+        assertEquals(2147434499, s.getResultSet().getInt(1));
+    }
 	
 	@Test public void testTransactionCycleDisabled() throws Exception {
 		Statement s = conn.createStatement();

@@ -39,6 +39,7 @@ import org.apache.olingo.commons.api.edm.EdmEntityType;
 import org.apache.olingo.commons.api.edm.EdmNavigationProperty;
 import org.apache.olingo.commons.api.edm.EdmOperation;
 import org.apache.olingo.commons.api.edm.EdmProperty;
+import org.apache.olingo.commons.api.ex.ODataRuntimeException;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmInt32;
 import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
 import org.apache.olingo.server.api.OData;
@@ -844,7 +845,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                 this.context = cdn;
             }
         } catch (TeiidProcessingException e) {
-            this.exceptions.add(e);
+            throw new ODataRuntimeException(e);
         }
     }
     
