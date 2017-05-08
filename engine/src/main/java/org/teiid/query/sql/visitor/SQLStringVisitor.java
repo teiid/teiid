@@ -1867,7 +1867,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     @Override
     public void visit( ScalarSubquery obj ) {
     	if (obj.getSubqueryHint().isDepJoin() || obj.getSubqueryHint().isMergeJoin() || obj.getSubqueryHint().isNoUnnest()) {
-	    	if (this.parts.charAt(this.parts.length()-1) == ' ') {
+	    	if (this.parts.length() > 0 && this.parts.charAt(this.parts.length()-1) == ' ') {
 	    		this.parts.setLength(this.parts.length() -1);
 	    	}
 	    	addSubqueryHint(obj.getSubqueryHint());

@@ -38,6 +38,7 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.proc.Block;
@@ -1554,6 +1555,23 @@ public class TestSQLStringVisitor {
         ScalarSubquery obj = new ScalarSubquery(q1);
 
         helpTest(obj, "(SELECT e1 FROM m.g1)");             //$NON-NLS-1$
+    }
+    
+    @Test public void testScalarSubqueryWithHint() {
+        Select s1 = new Select();
+        s1.addSymbol(new ElementSymbol("e1")); //$NON-NLS-1$
+        From f1 = new From();
+        f1.addGroup(new GroupSymbol("m.g1"));        //$NON-NLS-1$
+        Query q1 = new Query();
+        q1.setSelect(s1);
+        q1.setFrom(f1);
+
+        ScalarSubquery obj = new ScalarSubquery(q1);
+        SubqueryHint subqueryHint = new SubqueryHint();
+        subqueryHint.setMergeJoin(true);
+        obj.setSubqueryHint(subqueryHint);
+
+        helpTest(obj, " /*+ MJ */ (SELECT e1 FROM m.g1)");             //$NON-NLS-1$
     }
 
     @Test public void testNewSubqueryObjects(){
