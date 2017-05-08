@@ -1195,7 +1195,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			info.type = convertType(info.type);
 			info.precision = meta.getColumnDisplaySize(i);
 			if (info.type == PG_TYPE_NUMERIC) {
-				info.mod = (int) Math.min(Integer.MAX_VALUE, (4+(65536*(long)meta.getPrecision(i))+meta.getScale(i)));
+				info.mod = 4+ 65536*Math.min(32767, meta.getPrecision(i))+Math.min(32767, meta.getScale(i));
 			} else if (info.type == PG_TYPE_BPCHAR || info.type == PG_TYPE_VARCHAR){
 				info.mod = (int) Math.min(Integer.MAX_VALUE, 4+(long)meta.getColumnDisplaySize(i));
 			} else {

@@ -119,6 +119,32 @@ public class TestDDLParser {
 	}
 	
 	@Test(expected=MetadataException.class)
+    public void testZeroPrecision() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE G1(e4 decimal(0))";
+                
+        helpParse(ddl, "model").getSchema();
+    }
+	
+    @Test
+    public void testDefaultPrecision() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE G1(e4 decimal)";
+                
+        Schema s = helpParse(ddl, "model").getSchema();
+        Map<String, Table> tableMap = s.getTables();
+        
+        assertTrue("Table not found", tableMap.containsKey("G1"));
+        Table table = tableMap.get("G1");
+        Column e4 = table.getColumns().get(0);
+        
+        assertEquals("e4", e4.getName());
+        assertEquals("bigdecimal", e4.getDatatype().getName());
+        assertEquals(false, e4.isAutoIncremented());
+        assertEquals(Short.MAX_VALUE, e4.getPrecision());
+        assertEquals(Short.MAX_VALUE/2, e4.getScale());
+        assertEquals(SearchType.Searchable, e4.getSearchType());
+    }
+	
+	@Test(expected=MetadataException.class)
 	public void testDuplicatePrimarykey() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE G1( e1 integer primary key, e2 varchar primary key)";
 		MetadataStore mds = new MetadataStore();
@@ -137,7 +163,7 @@ public class TestDDLParser {
 	
 	@Test
 	public void testUDT() throws Exception {
-		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar OPTIONS (UDT 'NMTOKENS(12,13,14)'))";
+		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar OPTIONS (UDT 'NMTOKENS(12,13,11)'))";
 
 		Schema s = helpParse(ddl, "model").getSchema();
 		Map<String, Table> tableMap = s.getTables();	
@@ -148,7 +174,7 @@ public class TestDDLParser {
 		assertEquals("NMTOKENS", table.getColumns().get(1).getDatatype().getName());
 		assertEquals(12, table.getColumns().get(1).getLength());
 		assertEquals(13, table.getColumns().get(1).getPrecision());
-		assertEquals(14, table.getColumns().get(1).getScale());		
+		assertEquals(11, table.getColumns().get(1).getScale());		
 	}	
 	
 	@Test public void testFBI() throws Exception {
