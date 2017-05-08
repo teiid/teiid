@@ -1455,4 +1455,28 @@ public class TestDependentJoins {
 	    helpProcess(plan, hdm, expected);
 	}
     
+    @Test public void testSortingDependentJoinWithBlockingSubquery() { 
+        String sql = "SELECT pm1.g1.e1, pm2.g1.e2 FROM pm1.g1, pm2.g1 WHERE pm1.g1.e1=pm2.g1.e1 and pm1.g1.e2 = (select max(e2) from pm2.g2) option makedep pm1.g1"; //$NON-NLS-1$
+        
+        List[] expected = new List[] { 
+            Arrays.asList("c",3), //$NON-NLS-1$
+        };    
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.setBlockOnce(true);
+        dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g1 AS g_0 ORDER BY c_0", Arrays.asList("a", 3), Arrays.asList("b", 2), Arrays.asList("c", 3));
+        dataManager.addData("SELECT g_0.e2 FROM pm2.g2 AS g_0", Arrays.asList(3));
+        dataManager.addData("SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 WHERE (g_0.e2 = 3) AND (g_0.e1 IN ('a', 'b'))");
+        dataManager.addData("SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 WHERE (g_0.e2 = 3) AND (g_0.e1 = 'c')", Arrays.asList("c"));
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
+        bsc.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 2);
+        
+        DefaultCapabilitiesFinder dcf = new DefaultCapabilitiesFinder(bsc);
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached(), dcf);
+
+        TestProcessor.helpProcess(plan, dataManager, expected);
+    }
+    
 }
