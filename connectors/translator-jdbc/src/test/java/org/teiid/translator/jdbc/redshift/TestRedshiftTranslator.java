@@ -43,7 +43,7 @@ public class TestRedshiftTranslator {
     
     @Test public void testLocate() throws Exception {
         String input = "SELECT INTKEY, STRINGKEY FROM bqt1.SmallA WHERE LOCATE('1', STRINGKEY, 2) IN (1, 2)"; 
-        String output = "SELECT SmallA.IntKey, SmallA.StringKey FROM SmallA WHERE (position('1' in substring(SmallA.StringKey, 2)) + 1) IN (1, 2)"; 
+        String output = "SELECT SmallA.IntKey, SmallA.StringKey FROM SmallA WHERE (position('1' in substring(SmallA.StringKey from 2)) + 1) IN (1, 2)"; 
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }

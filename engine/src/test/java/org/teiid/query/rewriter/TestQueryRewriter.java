@@ -1773,5 +1773,17 @@ public class TestQueryRewriter {
         helpTestRewriteCriteria("not (pm1.g1.e3)", //$NON-NLS-1$
                                 "pm1.g1.e3 <> TRUE" );         //$NON-NLS-1$
     }
+	
+    @Test public void testRewriteSubstringZeroIndex() throws TeiidComponentException, TeiidProcessingException {
+        helpTestRewriteExpression("substring(pm1.g1.e1, 0, 5)", "substring(pm1.g1.e1, 1, 5)", RealMetadataFactory.example1Cached());
+    }
+    
+    @Test public void testDontRewriteSubstring() throws TeiidComponentException, TeiidProcessingException {
+        helpTestRewriteExpression("substring(pm1.g1.e1, pm1.g1.e2, 5)", "substring(pm1.g1.e1, pm1.g1.e2, 5)", RealMetadataFactory.example1Cached());
+    }
+
+    @Test public void testRewriteSubstringNegativeIndex() throws TeiidComponentException, TeiidProcessingException {
+        helpTestRewriteExpression("substring(pm1.g1.e1, -1, 5)", "null", RealMetadataFactory.example1Cached());
+    }
 
 }

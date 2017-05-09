@@ -2342,6 +2342,7 @@ public class QueryRewriter {
     	FUNCTION_MAP.put(FunctionLibrary.FORMATDATE, 8);
     	FUNCTION_MAP.put(FunctionLibrary.FORMATTIME, 9);
     	FUNCTION_MAP.put(SourceSystemFunctions.TRIM, 10);
+    	FUNCTION_MAP.put(SourceSystemFunctions.SUBSTRING, 11);
     }
     
 	private Expression rewriteFunction(Function function) throws TeiidComponentException, TeiidProcessingException{
@@ -2487,6 +2488,20 @@ public class QueryRewriter {
 					}
 				}
 				break;
+			}
+			case 11: {
+			    if (function.getArg(1) instanceof Constant) {
+                    Constant c = (Constant)function.getArg(1);
+                    if (!c.isMultiValued() && !c.isNull()) {
+                        int val = (Integer) c.getValue();
+                        if (val == 0) {
+                            function.getArgs()[1] = new Constant(1);
+                        } else if (val < 0) {
+                            return new Constant(null, function.getType());
+                        }
+                    }
+                }
+			    break;
 			}
 			}
 		}

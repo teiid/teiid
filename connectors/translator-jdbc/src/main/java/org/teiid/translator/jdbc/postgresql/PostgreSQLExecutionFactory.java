@@ -160,11 +160,20 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 			
 			@Override
 			public List<?> translate(Function function) {
-				List<Object> parts = new ArrayList<Object>(4);
+			    List<Object> parts = new ArrayList<Object>();
 				parts.add("substring("); //$NON-NLS-1$
 				parts.add(function.getParameters().get(0));
 				parts.add(" from "); //$NON-NLS-1$
-				parts.add(function.getParameters().get(1));
+				Expression index = function.getParameters().get(1);
+                if (!(index instanceof Literal)) {
+                    parts.add("case sign("); //$NON-NLS-1$
+                    parts.add(index);
+                    parts.add(") when -1 then cast(null as int4) when 0 then 1 else "); //$NON-NLS-1$
+                    parts.add(index);
+                    parts.add(" end"); //$NON-NLS-1$
+                } else {
+                    parts.add(index);
+                }
 				if (function.getParameters().size() > 2) {
 					parts.add(" for "); //$NON-NLS-1$
 					parts.add(function.getParameters().get(2));
