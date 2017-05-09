@@ -372,6 +372,25 @@ public class TestPostgreSQLTranslator {
             input, 
             output);
     }
+    
+    @Test public void testSubstringExpressionIndex() throws Exception {
+        String input = "SELECT substring(PART_WEIGHT, cast(part_id as integer), 5) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT substring(PARTS.PART_WEIGHT from case sign(cast(PARTS.PART_ID AS integer)) when -1 then cast(null as int4) when 0 then 1 else cast(PARTS.PART_ID AS integer) end for 5) FROM PARTS";  //$NON-NLS-1$
+
+        helpTestVisitor(getTestVDB(),
+            input, 
+            output);
+    }
+    
+    @Test public void testSubstringZeroIndex() throws Exception {
+        String input = "SELECT substring(PART_WEIGHT, 0, 5) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT substring(PARTS.PART_WEIGHT from 1 for 5) FROM PARTS";  //$NON-NLS-1$
+
+        helpTestVisitor(getTestVDB(),
+            input, 
+            output);
+    }
+    
     @Test public void testBooleanAggregate() throws Exception {
         String input = "SELECT MIN(convert(PART_WEIGHT, boolean)) FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT bool_and(cast(PARTS.PART_WEIGHT AS boolean)) FROM PARTS";  //$NON-NLS-1$
