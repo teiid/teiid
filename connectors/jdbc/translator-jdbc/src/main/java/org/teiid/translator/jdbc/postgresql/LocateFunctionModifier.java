@@ -29,8 +29,6 @@ import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageFactory;
 import org.teiid.language.Literal;
-import org.teiid.translator.SourceSystemFunctions;
-import org.teiid.translator.TypeFacility;
 
 public class LocateFunctionModifier extends org.teiid.translator.jdbc.LocateFunctionModifier {
 	
@@ -58,8 +56,11 @@ public class LocateFunctionModifier extends org.teiid.translator.jdbc.LocateFunc
 		}
 		if (useSubStr) {
 			parts.add(0, "("); //$NON-NLS-1$
-			parts.add(this.getLanguageFactory().createFunction(SourceSystemFunctions.SUBSTRING, params.subList(1, 3), TypeFacility.RUNTIME_TYPES.STRING)); 
-			parts.add(")"); //$NON-NLS-1$
+			parts.add("substring("); //$NON-NLS-1$
+			parts.add(params.get(1));
+			parts.add(" from "); //$NON-NLS-1$
+			parts.add(params.get(2));
+			parts.add("))"); //$NON-NLS-1$
 			parts.add(" + "); //$NON-NLS-1$
 			if (params.get(2) instanceof Literal && ((Literal)params.get(2)).getValue() instanceof Integer) {
 				Integer value = (Integer)((Literal)params.get(2)).getValue();
