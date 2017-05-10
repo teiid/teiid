@@ -54,6 +54,7 @@ import javax.transaction.*;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.postgresql.Driver;
@@ -2155,6 +2156,7 @@ public class TestEmbeddedServer {
         assertEquals("bigdecimal[]", rs.getMetaData().getColumnTypeName(1));
     }
     
+    @Ignore("limit to/exclude not yet implemented")
     @Test public void testImportExcept() throws Exception {
         es.start(new EmbeddedConfiguration());
         es.addMetadataRepository("x", new MetadataRepository() {
