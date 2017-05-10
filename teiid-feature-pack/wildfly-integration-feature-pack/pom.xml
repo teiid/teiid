@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.jboss.teiid</groupId>
         <artifactId>teiid-feature-pack</artifactId>
-        <version>9.2.3</version>
+        <version>9.2.4-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
