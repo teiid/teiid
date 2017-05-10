@@ -30,7 +30,6 @@ import java.nio.charset.Charset;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -51,7 +50,6 @@ import org.teiid.client.security.ILogon;
 import org.teiid.client.security.LogonException;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.core.util.ApplicationInfo;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
 import org.teiid.core.util.TimestampWithTimezone;
@@ -87,7 +85,7 @@ import org.teiid.transport.pg.TimestampUtils;
 public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	
     private static final boolean HONOR_DECLARE_FETCH_TXN = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.honorDeclareFetchTxn", false); //$NON-NLS-1$
-    private static final String POSTGRESQL_VERSION = System.getProperties().getProperty("org.teiid.pgVersion"); //$NON-NLS-1$
+    private static final String POSTGRESQL_VERSION = System.getProperties().getProperty("org.teiid.pgVersion", "PostgreSQL 8.2"); //$NON-NLS-1$ //$NON-NLS-2$
 
 	public static final String CONNECTION_PROPERTY_PREFIX = "connection."; //$NON-NLS-1$
 	private static final String UNNAMED = ""; //$NON-NLS-1$
@@ -768,9 +766,6 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			}
 			else if (modified.equalsIgnoreCase("select version()")) { //$NON-NLS-1$
 			    String version = POSTGRESQL_VERSION;
-			    if (version == null) {
-			        version = "Teiid "+ApplicationInfo.getInstance().getReleaseNumber();  //$NON-NLS-1$
-			    }
 				return "SELECT " + new Constant(version); //$NON-NLS-1$
 			}
 			else if (modified.startsWith("SELECT name FROM master..sysdatabases")) { //$NON-NLS-1$
@@ -1194,12 +1189,8 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			final PgColInfo info = new PgColInfo();
 			info.name = meta.getColumnLabel(i);
 			info.type = meta.getColumnType(i);
-			if (info.type == Types.ARRAY) {
-			    String typeName = meta.getColumnTypeName(i);
-			    info.type = convertArrayType(typeName);
-			} else {
-			    info.type = convertType(info.type);
-			}
+		    String typeName = meta.getColumnTypeName(i);
+		    info.type = convertType(info.type, typeName);
 			info.precision = meta.getColumnDisplaySize(i);
 			if (info.type == PG_TYPE_NUMERIC) {
 				info.mod = 4+ 65536*Math.min(32767, meta.getPrecision(i))+Math.min(32767, meta.getScale(i));

@@ -29,8 +29,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -44,6 +46,8 @@ import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.GeometryType;
+import org.teiid.core.util.StringUtil;
+import org.teiid.language.SQLConstants;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Datatype;
 import org.teiid.metadata.FunctionMethod;
@@ -59,6 +63,7 @@ import org.teiid.query.parser.SQLParserUtil;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.visitor.SQLStringVisitor;
 import org.teiid.transport.PgBackendProtocol;
 
 public class PgCatalogMetadataStore extends MetadataFactory {
@@ -871,8 +876,33 @@ public class PgCatalogMetadataStore extends MetadataFactory {
             return true;
         }
 		
-	    public static String pg_get_constraintdef(int oid, boolean pretty) throws FunctionExecutionException {
-	        return "";
+	    public static String pg_get_constraintdef(org.teiid.CommandContext cc, int oid, boolean pretty) throws SQLException {
+	        //return a simple constraint def
+	        Connection c = cc.getConnection();
+	        try {
+	            PreparedStatement ps = c.prepareStatement("select pkcolumn_name, pktable_schem, pktable_name, fkcolumn_name from REFERENCEKEYCOLUMNS where getoid(fk_uid) = ? order by KEY_SEQ"); //$NON-NLS-1$
+	            ps.setInt(1, oid);
+	            ps.execute();
+	            ResultSet rs = ps.getResultSet();
+	            String refTable = null;
+	            List<String> columnNames = new ArrayList<String>();
+	            List<String> refColumnNames = new ArrayList<String>();
+	            while (rs.next()) {
+	                if (refTable == null) {
+	                    refTable = SQLStringVisitor.escapeSinglePart(rs.getString(2)) + SQLConstants.Tokens.DOT + SQLStringVisitor.escapeSinglePart(rs.getString(3));
+	                }
+	                columnNames.add(SQLStringVisitor.escapeSinglePart(rs.getString(4)));
+	                refColumnNames.add(SQLStringVisitor.escapeSinglePart(rs.getString(1)));
+	            }
+	            if (refTable == null) {
+	                return null;
+	            }
+	            return "FOREIGN KEY (" + StringUtil.join(columnNames, ",")+ ") REFERENCES " + refTable + "("+ StringUtil.join(refColumnNames, ",") + ")"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$  //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+	        } finally {
+	            if (c != null) {
+	                c.close();
+	            }
+	        }
 	    }
 	    
 	    public static boolean pg_type_is_visible(int oid) throws FunctionExecutionException {

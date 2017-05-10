@@ -187,7 +187,8 @@ CREATE FOREIGN TABLE ReferenceKeyColumns (
 	DELETE_RULE integer,
 	FK_NAME string(255),
 	PK_NAME string(255),
-	DEFERRABILITY integer
+	DEFERRABILITY integer,
+	FK_UID string(50)
 );
 
 CREATE FOREIGN TABLE Schemas (

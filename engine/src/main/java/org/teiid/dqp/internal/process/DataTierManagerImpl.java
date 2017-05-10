@@ -827,6 +827,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				row.add(key.getName());
 				row.add(key.getReferenceKey().getName());
 				row.add(DatabaseMetaData.importedKeyInitiallyDeferred);
+				row.add(key.getUUID());
         	}
         	
         	@Override

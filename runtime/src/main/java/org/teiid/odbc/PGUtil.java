@@ -36,10 +36,14 @@ public class PGUtil {
 	public static final int PG_TYPE_INT2 = 21;
 	public static final int PG_TYPE_INT4 = 23;
 	public static final int PG_TYPE_TEXT = 25;
+	public static final int PG_TYPE_XML = 142;
     //private static final int PG_TYPE_OID = 26;
 	public static final int PG_TYPE_FLOAT4 = 700;
 	public static final int PG_TYPE_FLOAT8 = 701;
 	public static final int PG_TYPE_UNKNOWN = 705;
+	
+	public static final int PG_TYPE_GEOMETRY = 32816;
+	public static final int PG_TYPE_GEOMETRYARRAY = 32824;
     
 	public static final int PG_TYPE_OIDVECTOR = 30;
 	public static final int PG_TYPE_INT2VECTOR = 22;
@@ -63,7 +67,7 @@ public class PGUtil {
     public static final int PG_TYPE_TIMEARRAY = 1183;
     public static final int PG_TYPE_TIMESTAMP_NO_TMZONEARRAY = 1115;
     public static final int PG_TYPE_NUMERICARRAY = 1031;
-    
+    public static final int PG_TYPE_XMLARRAY = 143;
     //private static final int PG_TYPE_LO = 14939;
     
 	public static class PgColInfo {
@@ -75,39 +79,10 @@ public class PGUtil {
 		public int mod = -1;
 	}
 	
-	public static int convertArrayType(String type) {
-	    switch (type) {
-	    case "boolean[]": //$NON-NLS-1$
-	        return PG_TYPE_BOOLARRAY;
-	    case "byte[]": //$NON-NLS-1$
-	    case "short[]": //$NON-NLS-1$
-	        return PG_TYPE_INT2ARRAY;
-	    case "integer[]": //$NON-NLS-1$
-	        return PG_TYPE_INT4ARRAY;
-	    case "long[]": //$NON-NLS-1$
-	        return PG_TYPE_INT8ARRAY;
-	    case "float[]": //$NON-NLS-1$
-	        return PG_TYPE_FLOAT4ARRAY;
-	    case "double[]": //$NON-NLS-1$
-	        return PG_TYPE_FLOAT8ARRAY;
-	    case "biginiteger[]": //$NON-NLS-1$
-	    case "bigdecimal[]": //$NON-NLS-1$
-	        return PG_TYPE_NUMERICARRAY;
-	    case "date[]": //$NON-NLS-1$
-	        return PG_TYPE_DATEARRAY;
-	    case "time[]": //$NON-NLS-1$
-	        return PG_TYPE_TIMEARRAY;
-	    case "timestamp[]": //$NON-NLS-1$
-	        return PG_TYPE_TIMESTAMP_NO_TMZONEARRAY;
-	    default:
-	        return PG_TYPE_TEXTARRAY;
-	    }
-	}
-		
 	/**
 	 * Types.ARRAY is not supported
 	 */
-	public static int convertType(final int type) {
+	public static int convertType(final int type, final String typeName) {
         switch (type) {
         case Types.BIT:
         case Types.BOOLEAN:
@@ -142,15 +117,46 @@ public class PGUtil {
         case Types.BINARY:
         case Types.VARBINARY:
         case Types.LONGVARBINARY:
+            if (typeName.equals("geometry")) { //$NON-NLS-1$
+                return PG_TYPE_GEOMETRY;
+            }
         	return PG_TYPE_BYTEA;
+
+        case Types.SQLXML:
+            return PG_TYPE_XML;
         	
         case Types.LONGVARCHAR:
         case Types.CLOB:            
-        case Types.SQLXML:        	
             return PG_TYPE_TEXT;
             
         case Types.ARRAY:
-        	return PG_TYPE_TEXTARRAY;
+            if (typeName.equals("boolean[]")) //$NON-NLS-1$
+                return PG_TYPE_BOOLARRAY;
+            if (typeName.equals("byte[]") || //$NON-NLS-1$
+                typeName.equals("short[]")) //$NON-NLS-1$
+                return PG_TYPE_INT2ARRAY;
+            if (typeName.equals("integer[]")) //$NON-NLS-1$
+                return PG_TYPE_INT4ARRAY;
+            if (typeName.equals("long[]")) //$NON-NLS-1$
+                return PG_TYPE_INT8ARRAY;
+            if (typeName.equals("float[]")) //$NON-NLS-1$
+                return PG_TYPE_FLOAT4ARRAY;
+            if (typeName.equals("double[]")) //$NON-NLS-1$
+                return PG_TYPE_FLOAT8ARRAY;
+            if (typeName.equals("biginiteger[]") || //$NON-NLS-1$
+                typeName.equals("bigdecimal[]")) //$NON-NLS-1$
+                return PG_TYPE_NUMERICARRAY;
+            if (typeName.equals("date[]")) //$NON-NLS-1$
+                return PG_TYPE_DATEARRAY;
+            if (typeName.equals("time[]")) //$NON-NLS-1$
+                return PG_TYPE_TIMEARRAY;
+            if (typeName.equals("timestamp[]")) //$NON-NLS-1$
+                return PG_TYPE_TIMESTAMP_NO_TMZONEARRAY;
+            if (typeName.equals("geometry[]")) //$NON-NLS-1$
+                return PG_TYPE_GEOMETRYARRAY;
+            if (typeName.equals("xml[]")) //$NON-NLS-1$
+                return PG_TYPE_XMLARRAY;
+            return PG_TYPE_TEXTARRAY;
         	
         default:
             return PG_TYPE_UNKNOWN;
