@@ -40,6 +40,7 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.CoreConstants;
+import org.teiid.core.util.StringUtil;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
@@ -293,6 +294,12 @@ public abstract class AbstractVDBDeployer {
                     MetadataFactory factory = DatabaseStore.createMF(this, getSchema(schemaName), true);
                     factory.getModelProperties().putAll(model.getPropertiesMap());
                     factory.getModelProperties().putAll(properties);
+                    if (!includeTables.isEmpty()) {
+                        factory.getModelProperties().put("importer.includeTables", StringUtil.join(includeTables, ",")); //$NON-NLS-1$
+                    }
+                    if (!excludeTables.isEmpty()) {
+                        factory.getModelProperties().put("importer.excludeTables", StringUtil.join(excludeTables, ",")); //$NON-NLS-1$
+                    }
                     factory.setParser(new QueryParser());
                     if (vdbResources != null) {
                         factory.setVdbResources(vdbResources.getEntriesPlusVisibilities());
@@ -302,6 +309,9 @@ public abstract class AbstractVDBDeployer {
                     MetadataRepository metadataRepository;
                     try {
                         metadataRepository = getMetadataRepository(serverType);
+                        if (metadataRepository == null) {
+                            throw new VirtualDatabaseException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40094, model.getName(), vdb.getName(), vdb.getVersion(), serverType));
+                        }
                     } catch (VirtualDatabaseException e1) {
                         throw new MetadataException(e1);
                     }
@@ -339,7 +349,9 @@ public abstract class AbstractVDBDeployer {
                             factory.getModelProperties().putAll(model.getPropertiesMap());
                             factory.getModelProperties().putAll(properties);
                             factory.setParser(new QueryParser());
-                            factory.setVdbResources(vdbResources.getEntriesPlusVisibilities());
+                            if (vdbResources != null) {
+                                factory.setVdbResources(vdbResources.getEntriesPlusVisibilities());
+                            }
                         }
                     }
                     if (te != null) {

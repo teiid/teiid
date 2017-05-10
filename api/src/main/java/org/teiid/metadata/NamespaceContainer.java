@@ -22,6 +22,7 @@
 
 package org.teiid.metadata;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
@@ -32,7 +33,7 @@ import org.teiid.core.util.StringUtil;
 /**
  * Defines a base schema that is the holder for namespace and type information
  */
-public class NamespaceContainer extends AbstractMetadataRecord {
+public class NamespaceContainer implements Serializable {
     
     static final String TEIID_RESERVED = "teiid_"; //$NON-NLS-1$
     private static final String TEIID_SF = "teiid_sf"; //$NON-NLS-1$

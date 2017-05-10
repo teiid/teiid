@@ -37,6 +37,7 @@ import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.metadata.DatabaseUtil;
 import org.teiid.query.parser.QueryParser;
+import org.teiid.runtime.RuntimePlugin;
 
 public class DeploymentBasedDatabaseStore extends DatabaseStore {
     private VDBRepository vdbRepo;
@@ -92,7 +93,7 @@ public class DeploymentBasedDatabaseStore extends DatabaseStore {
     public void importSchema(String schemaName, String serverType, String serverName, String foreignSchemaName,
             List<String> includeTables, List<String> excludeTables, Map<String, String> properties) {
 	    if (getSchema(schemaName) == null) {
-	        throw new AssertionError();
+	        throw new AssertionError(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40167, schemaName));
 	    }
 	    if (!assertInEditMode(Mode.SCHEMA)) {
             return;
