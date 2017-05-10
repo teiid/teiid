@@ -320,21 +320,6 @@ public class TestFunctionLibrary {
             helpCreateDescriptor("substring", new Class<?>[] { T_STRING, T_INTEGER }) ); //$NON-NLS-1$
     }
 
-    @Test public void testFindFunction12() {
-        helpFindFunction("context", new Class<?>[] { T_STRING, T_INTEGER }, //$NON-NLS-1$
-            helpCreateDescriptor("context", new Class<?>[] { T_STRING, T_INTEGER }) ); //$NON-NLS-1$
-    }
-
-    @Test public void testFindFunction12a() {
-        helpFindFunction("rowlimit", new Class<?>[] { T_STRING }, //$NON-NLS-1$
-            helpCreateDescriptor("rowlimit", new Class<?>[] { T_STRING }) ); //$NON-NLS-1$
-    }
-
-    @Test public void testFindFunction12b() {
-        helpFindFunction("rowlimitexception", new Class<?>[] { T_STRING }, //$NON-NLS-1$
-            helpCreateDescriptor("rowlimitexception", new Class<?>[] { T_STRING }) ); //$NON-NLS-1$
-    }
-    
 	@Test public void testFind0ArgConversion1() { 	
 		helpFindConversions(
 			"curdate", new Class<?>[] {}, //$NON-NLS-1$

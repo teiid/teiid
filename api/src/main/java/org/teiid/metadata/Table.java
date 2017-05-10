@@ -129,11 +129,13 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
 	 * If the table represents an xml document model with associated schemas in the vdb, this
 	 * will return a list of the file paths
 	 * @return
+	 * @deprecated
 	 */
 	public List<String> getSchemaPaths() {
 		return schemaPaths;
 	}
 
+	@Deprecated
 	public void setSchemaPaths(List<String> schemaPaths) {
 		this.schemaPaths = schemaPaths;
 	}

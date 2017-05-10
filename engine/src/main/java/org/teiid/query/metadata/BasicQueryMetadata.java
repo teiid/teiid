@@ -38,7 +38,6 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.eval.TeiidScriptEngine;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.mapping.relational.QueryNode;
-import org.teiid.query.mapping.xml.MappingNode;
 import org.teiid.query.sql.lang.ObjectTable;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -368,14 +367,6 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
         return false;
     }
 
-    /**
-     * @see QueryMetadataInterface#getMappingNode(GroupSymbol)
-     */
-    public MappingNode getMappingNode(Object groupID)
-        throws TeiidComponentException, QueryMetadataException {
-        return null;
-    }
-    
     /**
      * @see org.teiid.query.metadata.QueryMetadataInterface#getVirtualDatabaseName()
      */

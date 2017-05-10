@@ -60,9 +60,6 @@ import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionTree;
 import org.teiid.query.mapping.relational.QueryNode;
-import org.teiid.query.mapping.xml.MappingDocument;
-import org.teiid.query.mapping.xml.MappingLoader;
-import org.teiid.query.mapping.xml.MappingNode;
 import org.teiid.query.sql.lang.ObjectTable;
 import org.teiid.query.sql.lang.SPParameter;
 
@@ -741,38 +738,6 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         if(tableRecord.isMaterialized()) {
 	        return tableRecord.getMaterializedStageTable();
         }
-        return null;
-    }
-
-    public MappingNode getMappingNode(final Object groupID) throws TeiidComponentException, QueryMetadataException {
-        Table tableRecord = (Table) groupID;
-        
-        MappingDocument mappingDoc = (MappingDocument) getFromMetadataCache(groupID, "xml-doc"); //$NON-NLS-1$
-        
-        if (mappingDoc != null) {
-        	return mappingDoc;
-        }
-        
-		final String groupName = tableRecord.getFullName();
-        if(tableRecord.isVirtual()) {
-            // get mapping transform
-            String document = tableRecord.getSelectTransformation();            
-            InputStream inputStream = new ByteArrayInputStream(document.getBytes());
-            MappingLoader reader = new MappingLoader();
-            try{
-                mappingDoc = reader.loadDocument(inputStream);
-                mappingDoc.setName(groupName);
-            } catch (Exception e){
-                 throw new TeiidComponentException(QueryPlugin.Event.TEIID30363, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30363, groupName, mappingDoc));
-            } finally {
-            	try {
-					inputStream.close();
-            	} catch(Exception e) {}
-            }
-            addToMetadataCache(groupID, "xml-doc", mappingDoc); //$NON-NLS-1$
-            return mappingDoc;
-        }
-
         return null;
     }
 

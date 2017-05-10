@@ -63,8 +63,6 @@ import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.TestProcessor;
-import org.teiid.query.processor.xml.TestXMLPlanningEnhancements;
-import org.teiid.query.processor.xml.TestXMLProcessor;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.TestProcedureResolving;
 import org.teiid.query.rewriter.QueryRewriter;
@@ -1659,124 +1657,6 @@ public class TestProcedureProcessor {
         helpTestProcess(plan, new List[] {
             Arrays.asList(new Object[] {"5"}), //$NON-NLS-1$
             }, dataMgr, metadata);
-    }
-    
-    /**
-     * wraps {@link TestXMLPlanningEnhancements.testNested2WithContextCriteria5d1} in a procedure
-     */
-    @Test public void testXMLWithExternalCriteria() throws Exception {
-        TransformationMetadata metadata = TestXMLProcessor.exampleMetadata();
-        FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
-        String resultFile = "TestXMLProcessor-testNested2WithContextCriteria5d.xml"; //$NON-NLS-1$
-        String expectedDoc = TestXMLProcessor.readFile(resultFile);
-                
-        Schema pm1 = metadata.getMetadataStore().getSchemas().get("XMLTEST"); //$NON-NLS-1
-        
-        ColumnSet<Procedure> rs2 = RealMetadataFactory.createResultSet("pm1.rs2", new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.XML }); //$NON-NLS-1$ //$NON-NLS-2$
-        ProcedureParameter rs2p2 = RealMetadataFactory.createParameter("input", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER);  //$NON-NLS-1$
-        QueryNode sq2n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
-                                        + "declare integer VARIABLES.x = proc.input; SELECT * FROM xmltest.doc9 WHERE context(SupplierID, OrderID)=x OR OrderID='2'; END"); //$NON-NLS-1$ 
-        Procedure sq2 = RealMetadataFactory.createVirtualProcedure("proc", pm1, Arrays.asList(rs2p2), sq2n1);  //$NON-NLS-1$
-        sq2.setResultSet(rs2);
-        
-        String userUpdateStr = "EXEC proc(5)"; //$NON-NLS-1$
-        
-        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
-                        
-        // Create expected results
-        List[] expected = new List[] {
-                Arrays.asList(new Object[] { expectedDoc }),
-        };        
-        helpTestProcess(plan, expected, dataMgr, metadata);
-    }
-    
-    @Test public void testXMLWithExternalCriteria_InXMLVar() throws Exception {
-    	TransformationMetadata metadata = TestXMLProcessor.exampleMetadata();
-        FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
-        String resultFile = "TestXMLProcessor-testNested2WithContextCriteria5d.xml"; //$NON-NLS-1$
-        String expectedDoc = TestXMLProcessor.readFile(resultFile);
-        expectedDoc = expectedDoc.replaceAll("\\r", ""); //$NON-NLS-1$ //$NON-NLS-2$   
-        Schema pm1 = metadata.getMetadataStore().getSchemas().get("XMLTEST"); //$NON-NLS-1
-        
-        ColumnSet<Procedure> rs2 = RealMetadataFactory.createResultSet("pm1.rs2", new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.XML }); //$NON-NLS-1$ //$NON-NLS-2$
-        ProcedureParameter rs2p2 = RealMetadataFactory.createParameter("input", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER);  //$NON-NLS-1$
-        QueryNode sq2n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
-                                        + "declare integer VARIABLES.x = proc.input; declare xml y = SELECT * FROM xmltest.doc9 WHERE context(SupplierID, OrderID)=x OR OrderID='2'; select y; END"); //$NON-NLS-1$ 
-        Procedure sq2 = RealMetadataFactory.createVirtualProcedure("proc", pm1, Arrays.asList(rs2p2), sq2n1);  //$NON-NLS-1$
-        sq2.setResultSet(rs2);
-
-        String userUpdateStr = "EXEC proc(5)"; //$NON-NLS-1$
-        
-        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
-                        
-        // Create expected results
-        List[] expected = new List[] {
-                Arrays.asList(new Object[] { expectedDoc }),
-        };        
-        helpTestProcess(plan, expected, dataMgr, metadata);
-    }
-    
-    /**
-     * wraps {@link TestXMLProcessor.testNested2WithCriteria2} in a procedure
-     * 
-     * This one will successfully auto-stage
-     */
-    @Test public void testXMLWithExternalCriteria1() throws Exception {
-    	TransformationMetadata metadata = TestXMLProcessor.exampleMetadata();
-        FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
-        String expectedDoc = 
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +  //$NON-NLS-1$
-            "<Catalogs>\n" + //$NON-NLS-1$
-            "   <Catalog>\n" +  //$NON-NLS-1$
-            "      <Items>\n" +  //$NON-NLS-1$
-            "         <Item ItemID=\"001\">\n" +  //$NON-NLS-1$
-            "            <Name>Lamp</Name>\n" +  //$NON-NLS-1$
-            "            <Quantity>5</Quantity>\n" + //$NON-NLS-1$
-            "            <Suppliers>\n" + //$NON-NLS-1$
-            "               <Supplier SupplierID=\"52\">\n" + //$NON-NLS-1$
-            "                  <Name>Biff's Stuff</Name>\n" + //$NON-NLS-1$
-            "                  <Zip>22222</Zip>\n" + //$NON-NLS-1$
-            "                  <Orders>\n" + //$NON-NLS-1$
-            "                     <Order OrderID=\"2\">\n" + //$NON-NLS-1$
-            "                        <OrderDate>12/31/01</OrderDate>\n" + //$NON-NLS-1$
-            "                        <OrderQuantity>87</OrderQuantity>\n" + //$NON-NLS-1$
-            "                        <OrderStatus>complete</OrderStatus>\n" + //$NON-NLS-1$
-            "                     </Order>\n" + //$NON-NLS-1$
-            "                  </Orders>\n" + //$NON-NLS-1$
-            "               </Supplier>\n" + //$NON-NLS-1$
-            "            </Suppliers>\n" + //$NON-NLS-1$
-            "         </Item>\n" +  //$NON-NLS-1$
-            "         <Item ItemID=\"002\">\n" +  //$NON-NLS-1$
-            "            <Name>Screwdriver</Name>\n" +  //$NON-NLS-1$
-            "            <Quantity>100</Quantity>\n" +  //$NON-NLS-1$
-            "            <Suppliers/>\n" + //$NON-NLS-1$
-            "         </Item>\n" +  //$NON-NLS-1$
-            "         <Item ItemID=\"003\">\n" +  //$NON-NLS-1$
-            "            <Name>Goat</Name>\n" +  //$NON-NLS-1$
-            "            <Quantity>4</Quantity>\n" +  //$NON-NLS-1$
-            "            <Suppliers/>\n" + //$NON-NLS-1$
-            "         </Item>\n" +  //$NON-NLS-1$
-            "      </Items>\n" +  //$NON-NLS-1$
-            "   </Catalog>\n" +  //$NON-NLS-1$
-            "</Catalogs>"; //$NON-NLS-1$
-
-        Schema pm1 = metadata.getMetadataStore().getSchemas().get("XMLTEST"); //$NON-NLS-1
-        
-        ColumnSet<Procedure> rs2 = RealMetadataFactory.createResultSet("pm1.rs2", new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.XML }); //$NON-NLS-1$ //$NON-NLS-2$
-        ProcedureParameter rs2p2 = RealMetadataFactory.createParameter("input", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER);  //$NON-NLS-1$
-        QueryNode sq2n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
-                                        + "declare integer VARIABLES.x = xmltest.proc.input; SELECT * FROM xmltest.doc9 WHERE context(SupplierID, SupplierID)=x; END"); //$NON-NLS-1$ 
-        Procedure sq2 = RealMetadataFactory.createVirtualProcedure("proc", pm1, Arrays.asList(rs2p2), sq2n1);  //$NON-NLS-1$
-        sq2.setResultSet(rs2);
-        String userUpdateStr = "EXEC xmltest.proc(52)"; //$NON-NLS-1$
-        
-        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
-                        
-        // Create expected results
-        List[] expected = new List[] {
-                Arrays.asList(new Object[] { expectedDoc }),
-        };        
-        helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
     @Test public void testCase174806() throws Exception{

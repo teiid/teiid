@@ -68,7 +68,6 @@ import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.processor.proc.ProcedurePlan;
-import org.teiid.query.processor.xml.XMLPlan;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
@@ -480,17 +479,8 @@ public class Request {
         
         generatePlan(false);
         
-        postProcessXML();
-        
         createProcessor();
     }
-
-	private void postProcessXML() {
-        if (requestMsg.getXMLFormat() != null && processPlan instanceof XMLPlan) {
-        	((XMLPlan)processPlan).setXMLFormat(requestMsg.getXMLFormat());
-        }
-        this.context.setValidateXML(requestMsg.getValidationMode());
-	}
 
 	protected boolean validateAccess(String[] commandStr, Command command, CommandType type) throws QueryValidatorException, TeiidComponentException {
 		boolean returnsResultSet = command.returnsResultSet();

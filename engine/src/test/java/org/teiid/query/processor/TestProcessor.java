@@ -1853,29 +1853,6 @@ public class TestProcessor {
 		helpProcess(plan, dataManager, expected);
 	}	
 
-	@Test public void testSubqueryXML() {
-		// Create query
-		String sql = "SELECT * FROM (SELECT * FROM xmltest.doc1) AS x"; //$NON-NLS-1$
-
-		// Create expected results
-		List[] expected = new List[] { 
-			Arrays.asList(new Object[] { 
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + //$NON-NLS-1$
-                    "<root><node1><node2><node3/></node2></node1></root>"             //$NON-NLS-1$
-            })
-		};    
-
-		// Construct data manager with data
-		FakeDataManager dataManager = new FakeDataManager();
-		sampleData1(dataManager);
-
-		// Plan query
-		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
-
-		// Run query
-		helpProcess(plan, dataManager, expected);
-	}
-
     /**
      * Tests a single Subquery EXISTS predicate criteria
      */
@@ -3543,29 +3520,6 @@ public class TestProcessor {
         helpProcess(plan, dataManager, expected);        
     }    
     
-    @Test public void testXMLUnion_defect8373() {
-        // Create query
-        String sql = "SELECT * FROM xmltest.doc5"; //$NON-NLS-1$
-
-        // Create expected results
-        List[] expected = new List[] {
-            Arrays.asList(new Object[] {
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + //$NON-NLS-1$
-                "<root><node1><node2>a</node2></node1><node1><node2/></node1><node1><node2>a</node2></node1><node1><node2>c</node2></node1><node1><node2>b</node2></node1><node1><node2>a</node2></node1><node1><node2>a</node2></node1><node1><node2/></node1><node1><node2>a</node2></node1><node1><node2>c</node2></node1><node1><node2>b</node2></node1><node1><node2>a</node2></node1></root>" //$NON-NLS-1$
-            })
-        };
-
-        // Construct data manager with data
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-
-        // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
-
-        // Run query
-        helpProcess(plan, dataManager, expected);
-    }
-
     @Test public void testStoredQuery1() {
         // Create query
         String sql = "EXEC pm1.sq1()"; //$NON-NLS-1$
@@ -3696,29 +3650,6 @@ public class TestProcessor {
         helpProcess(plan, dataManager, expected);
     }
     
-    @Test public void testStoredQuery7() {
-        // Create query
-        String sql = "EXEC pm1.sq17()"; //$NON-NLS-1$
-
-        // Create expected results
-        List[] expected = new List[] { 
-            Arrays.asList(new Object[] { 
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + //$NON-NLS-1$
-                    "<root><node1><node2><node3/></node2></node1></root>"             //$NON-NLS-1$
-            })
-        };    
-
-        // Construct data manager with data
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-
-        // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
-
-        // Run query
-        helpProcess(plan, dataManager, expected);
-    }    
-
     // implict type conversion of parameter
     @Test public void testStoredQuery8() {
         // Create query

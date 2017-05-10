@@ -911,14 +911,6 @@ public class TestQueryRewriter {
                                 "SELECT e1 FROM pm1.g1 WHERE '3' IN (SELECT e1 FROM pm1.g2)"); //$NON-NLS-1$
     }
 
-    @Test public void testRewriteXMLCriteria1() {
-        helpTestRewriteCriteria("context(pm1.g1.e1, pm1.g1.e1) = convert(5, string)", "context(pm1.g1.e1, pm1.g1.e1) = '5'"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    @Test public void testRewriteXMLCriteria2() {
-        helpTestRewriteCriteria("context(pm1.g1.e1, convert(5, string)) = 2+3", "context(pm1.g1.e1, '5') = '5'"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
     //base test.  no change is expected
     @Test public void testRewriteLookupFunction1() {
         String criteria = "lookup('pm1.g1','e1', 'e2', 1) = 'ab'"; //$NON-NLS-1$
@@ -1302,10 +1294,6 @@ public class TestQueryRewriter {
     
     @Test public void testRewriteInWithNull() {
         helpTestRewriteCriteria("convert(null, string) in (pm1.g1.e1, pm1.g1.e2)", "null <> null"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    @Test public void testRewriteXMLCriteriaCases5630And5640() {
-        helpTestRewriteCommand("select * from xmltest.doc1 where node1 = null", "SELECT * FROM xmltest.doc1 WHERE node1 = null"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testRewriteCorrelatedSubqueryInHaving() throws Exception {

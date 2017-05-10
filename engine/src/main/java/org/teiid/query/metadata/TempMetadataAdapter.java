@@ -39,7 +39,6 @@ import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.mapping.relational.QueryNode;
-import org.teiid.query.mapping.xml.MappingNode;
 import org.teiid.query.metadata.TempMetadataID.Type;
 import org.teiid.query.sql.symbol.Expression;
 
@@ -533,12 +532,6 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         return this.actualMetadata.groupSupports(groupID, groupConstant);
     }
     
-    public MappingNode getMappingNode(Object groupID)
-        throws TeiidComponentException, QueryMetadataException {
-            
-        return this.actualMetadata.getMappingNode(groupID);
-    }   
-
     public boolean isXMLGroup(Object groupID)
         throws TeiidComponentException, QueryMetadataException {
 

@@ -43,13 +43,10 @@ import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.optimizer.relational.rules.CapabilitiesUtil;
-import org.teiid.query.optimizer.xml.XMLPlanner;
 import org.teiid.query.processor.ProcessorPlan;
-import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Insert;
-import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.util.CommandContext;
@@ -61,7 +58,6 @@ import org.teiid.query.util.CommandContext;
  */
 public class QueryOptimizer {
 	
-	private static final CommandPlanner XML_PLANNER = new XMLPlanner();
 	private static final CommandPlanner PROCEDURE_PLANNER = new ProcedurePlanner();
     private static final CommandPlanner BATCHED_UPDATE_PLANNER = new BatchedUpdatePlanner();
     private static final CommandPlanner DDL_PLANNER = new DdlPlanner();
@@ -182,13 +178,9 @@ public class QueryOptimizer {
 		    break;
 		default:
 			try {
-				if (command.getType() == Command.TYPE_QUERY && command instanceof Query && QueryResolver.isXMLQuery((Query)command, metadata)) {
-					result = XML_PLANNER.optimize(command, idGenerator, metadata, capFinder, analysisRecord, context);
-				} else {
-					RelationalPlanner planner = new RelationalPlanner();
-					planner.initialize(command, idGenerator, metadata, capFinder, analysisRecord, context);
-					result = planner.optimize(command);
-				}
+			    RelationalPlanner planner = new RelationalPlanner();
+				planner.initialize(command, idGenerator, metadata, capFinder, analysisRecord, context);
+				result = planner.optimize(command);
 			} catch (QueryResolverException e) {
 				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30245, e);
 			}

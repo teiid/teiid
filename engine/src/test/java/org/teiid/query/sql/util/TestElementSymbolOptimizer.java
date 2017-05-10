@@ -125,12 +125,6 @@ public class TestElementSymbolOptimizer {
                             "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1"); //$NON-NLS-1$
     }
     
-    @Test public void testXMLQuery() throws Exception {
-        helpTestOptimize("SELECT root.node1.node2.node3 FROM xmltest.doc1",  //$NON-NLS-1$
-                            RealMetadataFactory.example1Cached(), 
-                            "SELECT root.node1.node2.node3 FROM xmltest.doc1"); //$NON-NLS-1$
-    }
-    
     @Test public void testVirtualStoredProcedure() throws Exception {
         helpTestOptimize("EXEC pm1.vsp7(5)",  //$NON-NLS-1$
                             RealMetadataFactory.example1Cached(), 

@@ -35,7 +35,6 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.mapping.relational.QueryNode;
-import org.teiid.query.mapping.xml.MappingNode;
 import org.teiid.query.sql.symbol.Expression;
 
 
@@ -455,16 +454,6 @@ public interface QueryMetadataInterface {
     boolean isXMLGroup(Object groupID) 
         throws TeiidComponentException, QueryMetadataException;
         
-    /**
-     * Get the mapping node for the given groupID
-     * @param groupID Metadata group ID 
-     * @return A MappingNode defining the group
-     * @throws QueryMetadataException Metadata implementation detected a problem during the request
-     * @throws TeiidComponentException Unexpected internal system problem during request
-     */
-    MappingNode getMappingNode(Object groupID)
-	   throws TeiidComponentException, QueryMetadataException;     
-
     /**
      * Get the currently connected virtual database name.  If the current metadata is not
      * virtual-database specific, then null should be returned.

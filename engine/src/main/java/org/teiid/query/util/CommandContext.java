@@ -554,14 +554,6 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		return vdbState.metadata;
 	}
     
-    public void setValidateXML(boolean validateXML) {
-    	globalState.validateXML = validateXML;
-	}
-    
-    public boolean validateXML() {
-		return globalState.validateXML;
-	}
-    
     public BufferManager getBufferManager() {
     	return globalState.bufferManager;
     }

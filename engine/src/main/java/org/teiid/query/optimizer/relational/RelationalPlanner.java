@@ -1702,10 +1702,6 @@ public class RelationalPlanner {
 		try {
 			node.setProperty(NodeConstants.Info.NESTED_COMMAND, nestedCommand);
 	
-			if (merge && nestedCommand instanceof Query && QueryResolver.isXMLQuery((Query)nestedCommand, metadata)) {
-				merge = false;
-			}
-	
 			if (merge) {
 				mergeTempMetadata(nestedCommand, parentCommand);
 			    PlanNode childRoot = generatePlan(nestedCommand);

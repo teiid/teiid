@@ -375,10 +375,6 @@ public class TestStoredProcedurePlanning {
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
 
-    @Test public void testStoredQueryXML1() {
-        TestOptimizer.helpPlan("EXEC pm1.sq18()", new TempMetadataAdapter(RealMetadataFactory.example1Cached(), new TempMetadataStore()), new String[] { }); //$NON-NLS-1$
-    }
-    
     /**
      * union of two stored procs - case #1466
      */

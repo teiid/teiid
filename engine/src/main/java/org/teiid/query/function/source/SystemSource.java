@@ -159,9 +159,6 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
         addConversionFunctions();   
         
         // miscellaneous functions
-        addContextFunctions(); 
-        addRowLimitFunctions();                        
-        addRowLimitExceptionFunctions();                        
         addDecodeFunctions();
         addLookupFunctions();
         addUserFunction();
@@ -821,43 +818,6 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
     
     }    
 
-    private void addContextFunctions() {
-    	for (String contextType : DataTypeManager.getAllDataTypeNames()) {
-    		for (String exprType : DataTypeManager.getAllDataTypeNames()) {
-                addTypedContextFunction(contextType, exprType);
-        	}
-    	}
-    }
-    
-    private void addTypedContextFunction(String contextType, String exprType) {
-        functions.add(
-            new FunctionMethod("context", QueryPlugin.Util.getString("SystemSource.Context_desc"), MISCELLANEOUS, FUNCTION_CLASS, "context", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                new FunctionParameter[] {
-                    new FunctionParameter("context", contextType, QueryPlugin.Util.getString("SystemSource.Context_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
-                    new FunctionParameter("element", exprType, QueryPlugin.Util.getString("SystemSource.Context_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("result", exprType, QueryPlugin.Util.getString("SystemSource.Context_result")) ) );                     //$NON-NLS-1$ //$NON-NLS-2$
-    } 
-    
-    private void addRowLimitFunctions() {
-    	for (String exprType : DataTypeManager.getAllDataTypeNames()) {
-            functions.add(
-                    new FunctionMethod("rowlimit", QueryPlugin.Util.getString("SystemSource.Rowlimit_desc"), MISCELLANEOUS, FUNCTION_CLASS, "rowlimit", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                        new FunctionParameter[] {
-                            new FunctionParameter("element", exprType, QueryPlugin.Util.getString("SystemSource.Rowlimit_arg1")) }, //$NON-NLS-1$ //$NON-NLS-2$
-                        new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Rowlimit_result")) ) );                     //$NON-NLS-1$ //$NON-NLS-2$
-    	}
-    }
-    
-    private void addRowLimitExceptionFunctions() {
-    	for (String exprType : DataTypeManager.getAllDataTypeNames()) {
-            functions.add(
-                    new FunctionMethod("rowlimitexception", QueryPlugin.Util.getString("SystemSource.RowlimitException_desc"), MISCELLANEOUS, FUNCTION_CLASS, "rowlimitexception", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                        new FunctionParameter[] {
-                            new FunctionParameter("element", exprType, QueryPlugin.Util.getString("SystemSource.Rowlimit_arg1")) }, //$NON-NLS-1$ //$NON-NLS-2$
-                        new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Rowlimit_result")) ) );                     //$NON-NLS-1$ //$NON-NLS-2$
-    	}
-    }    
-    
     private void addDecodeFunctions(){
         addDecodeFunction("decodeInteger", DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
         addDecodeFunction("decodeString", DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$

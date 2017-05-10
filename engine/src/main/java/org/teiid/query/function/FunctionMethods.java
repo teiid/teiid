@@ -1269,50 +1269,6 @@ public final class FunctionMethods {
         }
 	}
 
-    // ================== Function = context and rowlimit =====================
-
-    /**
-     * This function should never actually be called - it is here solely so the
-     * xml context function can be resolved properly.  The actual function is
-     * implemented in the XML planner.
-     * @param context The context to apply the criteria in
-     * @param expression The expression on the left side of the criteria
-     * @return Same as expression
-     */
-    public static Object context(Object context, Object expression)
-        throws FunctionExecutionException {
-
-         throw new FunctionExecutionException(QueryPlugin.Event.TEIID30406, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30406));
-    }
-
-    /**
-     * This pseudo-function should never actually be called - it is here solely so the
-     * xml rowlimit function can be resolved properly.  The actual functionality is
-     * implemented in the XML planner/processor.
-     * @param expression The expression on the left side of the criteria, an xml node
-     * @return doesn't really return anything; this pseudo-function is used to control
-     * the number of rows returned from a mapping class.
-     */
-    public static Object rowlimit(Object expression)
-        throws FunctionExecutionException {
-    
-         throw new FunctionExecutionException(QueryPlugin.Event.TEIID30407, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30407));
-    }    
-
-    /**
-     * This pseudo-function should never actually be called - it is here solely so the
-     * xml rowlimitexception function can be resolved properly.  The actual functionality is
-     * implemented in the XML planner/processor.
-     * @param expression The expression on the left side of the criteria, an xml node
-     * @return doesn't really return anything; this pseudo-function is used to control
-     * the number of rows returned from a mapping class.
-     */
-    public static Object rowlimitexception(Object expression)
-        throws FunctionExecutionException {
-    
-         throw new FunctionExecutionException(QueryPlugin.Event.TEIID30407, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30407));
-    }      
-    
     // ================== Function = lookup =====================
 
     /**

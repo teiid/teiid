@@ -156,11 +156,6 @@ public class TestTransformationMetadata {
 		tm.getElementID("x.FoO.coL");
 	}
 	
-	@Test public void testRelativeSchemas() throws Exception {
-		TransformationMetadata tm = exampleTransformationMetadata();
-		assertEquals(1, tm.getXMLSchemas(tm.getGroupID("x1.doc")).size());
-	}
-	
 	@Test public void testTypeCorrection() throws Exception {
 		MetadataFactory mf = new MetadataFactory(null, 1, "x", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null); //$NON-NLS-1$
 		

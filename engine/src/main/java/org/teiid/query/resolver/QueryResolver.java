@@ -52,7 +52,13 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.command.*;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
-import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.GroupContext;
+import org.teiid.query.sql.lang.ProcedureContainer;
+import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.SetQuery;
+import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -80,7 +86,6 @@ public class QueryResolver {
     private static final String BINDING_GROUP = "INPUTS"; //$NON-NLS-1$
 	private static final CommandResolver SIMPLE_QUERY_RESOLVER = new SimpleQueryResolver();
     private static final CommandResolver SET_QUERY_RESOLVER = new SetQueryResolver();
-    private static final CommandResolver XML_QUERY_RESOLVER = new XMLQueryResolver();
     private static final CommandResolver EXEC_RESOLVER = new ExecResolver();
     private static final CommandResolver INSERT_RESOLVER = new InsertResolver();
     private static final CommandResolver UPDATE_RESOLVER = new UpdateResolver();
@@ -301,9 +306,6 @@ public class QueryResolver {
         switch(command.getType()) {
             case Command.TYPE_QUERY:
                 if(command instanceof Query) {
-                    if(isXMLQuery((Query)command, metadata)) {
-                        return XML_QUERY_RESOLVER;
-                    }
                     return SIMPLE_QUERY_RESOLVER;
                 }
                 return SET_QUERY_RESOLVER;
@@ -326,48 +328,6 @@ public class QueryResolver {
         }
     }
 
-    /**
-     * Check to verify if the query would return XML results.
-     * @param query the query to check
-     * @param metadata QueryMetadataInterface the metadata
-     */
-    public static boolean isXMLQuery(Query query, QueryMetadataInterface metadata)
-     throws TeiidComponentException, QueryMetadataException, QueryResolverException {
-
-        if (query.getWith() != null) {
-        	return false;
-        }
-
-        // Check first group
-        From from = query.getFrom();
-        if(from == null){
-            //select with no from
-            return false;
-        }
-                
-        if (from.getClauses().size() != 1) {
-            return false;
-        }
-        
-        FromClause clause = from.getClauses().get(0);
-        
-        if (!(clause instanceof UnaryFromClause)) {
-            return false;
-        }
-        
-        GroupSymbol symbol = ((UnaryFromClause)clause).getGroup();
-        
-        ResolverUtil.resolveGroup(symbol, metadata);
-                
-        if (symbol.isProcedure()) {
-            return false;
-        }
-        
-        Object groupID = ((UnaryFromClause)clause).getGroup().getMetadataID();
-
-        return metadata.isXMLGroup(groupID);
-    }
-    
     /**
      * Resolve just a criteria.  The criteria will be modified so nothing is returned.
      * @param criteria Criteria to resolve

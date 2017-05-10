@@ -35,7 +35,6 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.mapping.relational.QueryNode;
-import org.teiid.query.mapping.xml.MappingNode;
 import org.teiid.query.sql.symbol.Expression;
 
 
@@ -162,11 +161,6 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 	public String getInsertPlan(Object groupID)
 			throws TeiidComponentException, QueryMetadataException {
 		return actualMetadata.getInsertPlan(groupID);
-	}
-
-	public MappingNode getMappingNode(Object groupID)
-			throws TeiidComponentException, QueryMetadataException {
-		return actualMetadata.getMappingNode(groupID);
 	}
 
 	public Object getMaterialization(Object groupID)

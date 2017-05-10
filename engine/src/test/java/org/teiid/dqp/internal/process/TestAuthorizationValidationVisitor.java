@@ -375,14 +375,6 @@ public class TestAuthorizationValidationVisitor {
         helpTest("insert into #temp (e1, e2, e3, e4) values ('1', '2', '3', '4')", RealMetadataFactory.example1Cached(), new String[] {"#temp"}, RealMetadataFactory.example1VDB(), exampleAuthSvc2); //$NON-NLS-1$
     }
     
-    @Test public void testXMLAccessible() throws Exception {
-        helpTest("select * from xmltest.doc1", RealMetadataFactory.example1Cached(), new String[] {}, RealMetadataFactory.example1VDB(), exampleAuthSvc2); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    @Test public void testXMLInAccessible() throws Exception {
-        helpTest("select * from xmltest.doc1", RealMetadataFactory.example1Cached(), new String[] {"xmltest.doc1"}, RealMetadataFactory.example1VDB(), exampleAuthSvc1); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
     @Test public void testAlter() throws Exception {
         helpTest("alter view SmallA_2589 as select * from bqt1.smalla", RealMetadataFactory.exampleBQTCached(), new String[] {"SmallA_2589"}, RealMetadataFactory.exampleBQTVDB(), exampleAuthSvc1); //$NON-NLS-1$ //$NON-NLS-2$
         helpTest("alter view SmallA_2589 as select * from bqt1.smalla", RealMetadataFactory.exampleBQTCached(), new String[] {}, RealMetadataFactory.exampleBQTVDB(), examplePolicyBQT()); //$NON-NLS-1$ //$NON-NLS-2$
@@ -418,7 +410,6 @@ public class TestAuthorizationValidationVisitor {
     	DataPolicyMetadata svc = new DataPolicyMetadata();
     	svc.setGrantAll(true);
         helpTest("create foreign temporary table x (id string) on bqt1", RealMetadataFactory.exampleBQTCached(), new String[] {}, RealMetadataFactory.exampleBQTVDB(), svc); //$NON-NLS-1$ //$NON-NLS-2$
-        helpTest("select * from xmltest.doc1", RealMetadataFactory.example1Cached(), new String[] {}, RealMetadataFactory.example1VDB(), svc); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testPruneSelectAll() throws Exception {
