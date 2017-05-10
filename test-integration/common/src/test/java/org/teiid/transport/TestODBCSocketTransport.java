@@ -745,6 +745,34 @@ public class TestODBCSocketTransport {
         s.execute("set application_name to other");
         checkApplicationName(s, "other");
     }
+    
+    @Test public void testGeometry() throws Exception {
+        Statement s = conn.createStatement();
+        s.execute("SELECT ST_GeomFromText('POLYGON ((40 0, 50 50, 0 50, 0 0, 40 0))')");
+        ResultSet rs = s.getResultSet();
+        rs.next();
+        ResultSetMetaData rsmd = rs.getMetaData();
+        assertEquals("geometry", rsmd.getColumnTypeName(1));
+        assertEquals("00200000030000000000000001000000054044000000000000000000000000000040490000000000004049000000000000000000000000000040490000000000000000000000000000000000000000000040440000000000000000000000000000", rs.getString(1));
+    }
+    
+    @Test public void testConstraintDef() throws Exception {
+        Statement s = conn.createStatement();
+        s.execute("SELECT pg_get_constraintdef((select oid from pg_constraint where contype = 'f' and conrelid = (select oid from pg_class where relname = 'Functions')), true)");
+        ResultSet rs = s.getResultSet();
+        rs.next();
+        assertEquals("FOREIGN KEY (VDBName,SchemaName) REFERENCES SYS.Schemas(VDBName,Name)", rs.getString(1));
+    }
+    
+    @Test public void testXML() throws Exception {
+        Statement s = conn.createStatement();
+        s.execute("SELECT xmlelement(name x)");
+        ResultSet rs = s.getResultSet();
+        rs.next();
+        ResultSetMetaData rsmd = rs.getMetaData();
+        assertEquals("xml", rsmd.getColumnTypeName(1));
+        assertEquals("<x></x>", rs.getString(1));
+    }
 
     private void checkApplicationName(Statement s, String value) throws SQLException {
         ResultSet rs = s.executeQuery("show application_name");

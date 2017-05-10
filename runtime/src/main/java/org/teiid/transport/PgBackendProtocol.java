@@ -53,7 +53,9 @@ import javax.net.ssl.SSLEngine;
 
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.types.ArrayImpl;
+import org.teiid.core.types.GeometryType;
 import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.ReflectionHelper;
 import org.teiid.core.util.SqlUtil;
 import org.teiid.core.util.StringUtil;
@@ -66,6 +68,7 @@ import org.teiid.logging.MessageLevel;
 import org.teiid.net.socket.ServiceInvocationStruct;
 import org.teiid.odbc.ODBCClientRemote;
 import org.teiid.odbc.PGUtil.PgColInfo;
+import org.teiid.query.function.GeometryUtils;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.transport.pg.PGbytea;
 import org.teiid.transport.pg.TimestampUtils;
@@ -566,7 +569,15 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 			    	writer.write(value);
 		    	}
 		    	break;
-		    
+		    case PG_TYPE_GEOMETRY:
+		        Object val = rs.getObject(column);
+		        if (val != null) {
+	                Blob blob = GeometryUtils.geometryToEwkb((GeometryType)rs.unwrap(ResultSetImpl.class).getRawCurrentValue());
+                    String hexewkb = PropertiesUtils.toHex(blob.getBytes(1, (int) blob.length()));
+                    writer.write(hexewkb);
+		        }
+		        break;
+		    case PG_TYPE_XML:
 		    case PG_TYPE_TEXT:
 		    	Reader r = rs.getCharacterStream(column);
 		    	if (r != null) {
@@ -657,7 +668,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 		    default:
 		    	Object obj = rs.getObject(column);
 		    	if (obj != null) {
-		    		throw new TeiidSQLException("unknown datatype failed to convert");
+		    		throw new TeiidSQLException("unknown datatype "+ col.type+ " failed to convert");
 		    	}
 		    	break;
 		}
