@@ -11,7 +11,7 @@
 	<packaging>pom</packaging>
 	<name>Teiid</name>
 
-    <version>8.12.10.6_3</version>
+    <version>8.12.11.6_3</version>
 	<description>Federated SQL and XML query engine.</description>
 	<properties>
 	    <site.url>http://www.jboss.org/teiid</site.url>
