@@ -48,7 +48,6 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.jboss.arquillian.junit.Arquillian;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.teiid.adminapi.Admin;
@@ -81,7 +80,6 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		admin.close();
 	}
 	
-	@Ignore
 	@Test
     public void testGetOperation() throws Exception {
 		Properties p = new Properties();
@@ -135,7 +133,6 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		Thread.sleep(2000);
     }
 	
-	@Ignore
     @Test
     public void testPostOperation() throws Exception {
     	deployVDB();
@@ -178,7 +175,6 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
         assertTrue(AdminUtil.waitForVDBLoad(admin, "sample", 1, 3));
 	}
     
-	@Ignore
 	@Test
     public void testMultipartPostOperation() throws Exception {
 		deployVDB();
