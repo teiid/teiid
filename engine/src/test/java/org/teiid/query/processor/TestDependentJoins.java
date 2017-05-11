@@ -1350,4 +1350,55 @@ public class TestDependentJoins {
         TestProcessor.helpProcess(plan, dataManager, expected);
     }
     
+    @Test public void testLargeInAsDependentSet() { 
+        String sql = "SELECT pm1.g1.e2 FROM pm1.g1 WHERE pm1.g1.e1 in ('a', 'b', 'c', 'd')"; //$NON-NLS-1$
+        
+        List[] expected = new List[] { 
+            Arrays.asList(1),
+            Arrays.asList(2),
+        };    
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.setBlockOnce(true);
+        dataManager.addData("SELECT g_0.e2 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN ('a', 'b')", Arrays.asList(1));
+        dataManager.addData("SELECT g_0.e2 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN ('c', 'd')", Arrays.asList(2));
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 2);
+        bsc.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, 1);
+        
+        DefaultCapabilitiesFinder dcf = new DefaultCapabilitiesFinder(bsc);
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached(), dcf);
+
+        TestProcessor.helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testMultiCritDepJoin1WithLargeIn() { 
+        // Create query 
+        String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 WHERE pm1.g1.e1=pm2.g1.e1 and pm1.g1.e2 IN (1,2,3) option makedep pm1.g1"; //$NON-NLS-1$
+        
+        // Create expected results
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+        };    
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.setBlockOnce(true);
+        dataManager.addData("SELECT g_0.e1 AS c_0 FROM pm2.g1 AS g_0 ORDER BY c_0", Arrays.asList("a"));
+        dataManager.addData("SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE (g_0.e2 = 1) AND (g_0.e1 = 'a')", Arrays.asList("a"));
+        dataManager.addData("SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE (g_0.e2 = 2) AND (g_0.e1 = 'a')", Arrays.asList("a"));
+        dataManager.addData("SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE (g_0.e2 = 3) AND (g_0.e1 = 'a')", Arrays.asList("a"));
+        
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 2);
+        bsc.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, 1);
+        
+        DefaultCapabilitiesFinder dcf = new DefaultCapabilitiesFinder(bsc);
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached(), dcf);
+
+        TestProcessor.helpProcess(plan, dataManager, expected);
+    }
+    
 }

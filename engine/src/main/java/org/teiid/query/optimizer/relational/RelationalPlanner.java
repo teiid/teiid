@@ -579,6 +579,9 @@ public class RelationalPlanner {
         if (hints.hasJoin) {
         	rules.push(RuleConstants.CHOOSE_DEPENDENT);
         }
+        if (hints.hasCriteria) {
+            rules.push(RuleConstants.PUSH_LARGE_IN);
+        }
         if(hints.hasAggregates) {
             rules.push(new RulePushAggregates(idGenerator));
             if (hints.hasJoin) {
