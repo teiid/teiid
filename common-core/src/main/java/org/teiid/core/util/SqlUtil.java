@@ -32,10 +32,6 @@ import java.util.regex.Pattern;
  * Utilities for dealing with SQL strings.
  */
 public class SqlUtil {
-    public static final char CR_CHAR = StringUtil.Constants.CARRIAGE_RETURN_CHAR;
-    public static final char NL_CHAR = StringUtil.Constants.NEW_LINE_CHAR;
-    public static final char SPACE_CHAR = StringUtil.Constants.SPACE_CHAR;
-    public static final char TAB_CHAR = StringUtil.Constants.TAB_CHAR;
     private static TreeSet<String> updateKeywords = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
     static {
     	updateKeywords.add("insert"); //$NON-NLS-1$

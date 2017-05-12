@@ -126,7 +126,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 	private static final long serialVersionUID = 1058627332954475287L;
 	
 	/** Delimiter character used when specifying fully qualified entity names */
-    public static final char DELIMITER_CHAR = StringUtil.Constants.DOT_CHAR;
+    public static final char DELIMITER_CHAR = '.';
     public static final String DELIMITER_STRING = String.valueOf(DELIMITER_CHAR);
     
     // error message cached to avoid i18n lookup each time

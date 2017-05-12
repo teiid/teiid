@@ -37,16 +37,6 @@ import org.junit.Test;
  */
 public class TestStringUtil {
 
-	public void helpTestComputeDisplayableForm(String input, String expectedResult){
-	    String result = StringUtil.computeDisplayableForm(input, input);
-	    assertEquals("Unexpected ComputeDisplayableForm result", expectedResult, result ); //$NON-NLS-1$
-	}
-
-	public void helpTestComputePluralForm(String input, String expectedResult){
-	    String result = StringUtil.computePluralForm(input);
-	    assertEquals("Unexpected ComputePluralForm result", expectedResult, result ); //$NON-NLS-1$
-	}
-
 	public void helpTestJoin(List input, String delimiter, String expectedResult){
 	    String result = StringUtil.join(input, delimiter);
 	    assertEquals("Unexpected Join result", expectedResult, result ); //$NON-NLS-1$
@@ -61,95 +51,6 @@ public class TestStringUtil {
 	    String result = StringUtil.replaceAll(source, search, replace);
 	    assertEquals("Unexpected ReplaceAll result", expectedResult, result ); //$NON-NLS-1$
 	}
-
-	public void helpTestTruncString(String input, int length, String expectedResult){
-	    String result = StringUtil.truncString(input, length);
-	    assertEquals("Unexpected TruncString result", expectedResult, result ); //$NON-NLS-1$
-	}
-
-	@Test public void testComputeDisplayableForm1() {
-	    helpTestComputeDisplayableForm("testString", "Test String"); //$NON-NLS-1$ //$NON-NLS-2$
-	}
-
-	@Test public void testComputeDisplayableForm2() {
-	    helpTestComputeDisplayableForm("TEST STRING", "TEST STRING"); //$NON-NLS-1$ //$NON-NLS-2$
-	}
-
-    @Test public void testComputeDisplayableForm3() {
-        helpTestComputeDisplayableForm("TestSTRING", "Test STRING"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    @Test public void testComputeDisplayableForm4() {
-        helpTestComputeDisplayableForm("MetaMatrix", "Meta Matrix"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    @Test public void testComputeDisplayableForm5() {
-        helpTestComputeDisplayableForm("metaMatrix", "Meta Matrix"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    @Test public void testComputeDisplayableForm6() {
-        helpTestComputeDisplayableForm("Metamatrix", "Metamatrix"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    @Test public void testComputeDisplayableForm7() {
-        helpTestComputeDisplayableForm("SomeMetaMatrixEmbedded", "Some Meta Matrix Embedded"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    @Test public void testComputeDisplayableForm8() {
-        helpTestComputeDisplayableForm("SomeMetaMetaMatrixMetaEmbedded", "Some Meta Meta Matrix Meta Embedded"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    @Test public void testComputeDisplayableForm9() {
-        helpTestComputeDisplayableForm("SomemetaMatrixMetaMatrixMetaEmbedded", "Somemeta Matrix Meta Matrix Meta Embedded"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-	@Test public void testComputePluralForm1() {
-	    helpTestComputePluralForm("Test", "Tests"); //$NON-NLS-1$ //$NON-NLS-2$
-	}
-
-	@Test public void testComputePluralForm2() {
-	    helpTestComputePluralForm("ss", "sses"); //$NON-NLS-1$ //$NON-NLS-2$
-	}
-
-	@Test public void testComputePluralForm3() {
-	    helpTestComputePluralForm("x", "xes"); //$NON-NLS-1$ //$NON-NLS-2$
-	}
-
-	@Test public void testComputePluralForm4() {
-	    helpTestComputePluralForm("ch", "ches"); //$NON-NLS-1$ //$NON-NLS-2$
-	}
-
-	@Test public void testComputePluralForm5() {
-	    helpTestComputePluralForm("zy", "zies"); //$NON-NLS-1$ //$NON-NLS-2$
-	}
-
-	@Test public void testComputePluralForm6() {
-	    helpTestComputePluralForm("ay", "ays"); //$NON-NLS-1$ //$NON-NLS-2$
-	}
-
-	@Test public void testComputePluralForm7() {
-	    helpTestComputePluralForm("ey", "eys"); //$NON-NLS-1$ //$NON-NLS-2$
-	}
-
-	@Test public void testComputePluralForm8() {
-	    helpTestComputePluralForm("iy", "iys"); //$NON-NLS-1$ //$NON-NLS-2$
-	}
-
-	@Test public void testComputePluralForm9() {
-	    helpTestComputePluralForm("oy", "oys"); //$NON-NLS-1$ //$NON-NLS-2$
-	}
-
-    @Test public void testComputePluralForm10() {
-        helpTestComputePluralForm("uy", "uys"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    @Test public void testComputePluralForm11() {
-        helpTestComputePluralForm("any", "anys"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    @Test public void testComputePluralForm12() {
-        helpTestComputePluralForm("classes", "classes"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
 
 	@Test public void testJoin1() {
 	    List<String> input = new ArrayList<String>();
@@ -184,10 +85,6 @@ public class TestStringUtil {
 	@Test public void testReplaceAll() {
 	    helpTestReplaceAll("1121121112", "2", "1", "1111111111"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 	}
-
-    @Test public void testTruncString() {
-        helpTestTruncString("123456", 5, "12345"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
 
     @Test public void testGetStackTrace() {
         final String expectedStackTrace = "java.lang.RuntimeException: Test"; //$NON-NLS-1$
@@ -261,29 +158,6 @@ public class TestStringUtil {
         assertEquals(true,StringUtil.endsWithIgnoreCase(text,"ST")); //$NON-NLS-1$
     }
 
-    @Test public void testIsDigits() {
-        assertTrue(StringUtil.isDigits("012872")); //$NON-NLS-1$
-        assertTrue(StringUtil.isDigits("634644")); //$NON-NLS-1$
-        assertFalse(StringUtil.isDigits("A634644")); //$NON-NLS-1$
-        assertFalse(StringUtil.isDigits("634A644")); //$NON-NLS-1$
-    }
-
-    @Test public void testToFixedLengthNull() {
-        assertEquals("    ", StringUtil.toFixedLength(null, 4)); //$NON-NLS-1$
-    }
-
-    @Test public void testToFixedLengthPad() {
-        assertEquals("a   ", StringUtil.toFixedLength("a", 4)); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    @Test public void testToFixedLengthNoChange() {
-        assertEquals("abcd", StringUtil.toFixedLength("abcd", 4)); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    @Test public void testToFixedLengthChop() {
-        assertEquals("abcd", StringUtil.toFixedLength("abcdefgh", 4)); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
     @Test public void testIsLetter() {
         assertTrue(StringUtil.isLetter('a'));
         assertTrue(StringUtil.isLetter('A'));
@@ -312,11 +186,6 @@ public class TestStringUtil {
         assertTrue(StringUtil.isLetterOrDigit('\u00cf')); // Latin-1 letter
         assertTrue(StringUtil.isLetterOrDigit('\u0967')); // Devanagiri number
         assertTrue(StringUtil.isLetterOrDigit('\u0905')); // Devanagiri letter
-    }
-
-    @Test public void testCreateFileName() {
-        assertEquals("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890", StringUtil.createFileName("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")); //$NON-NLS-1$ //$NON-NLS-2$
-        assertEquals("http:__www.metamatrix.com_parm1=test;parm2=testy2", StringUtil.createFileName("http://www.metamatrix.com?parm1=test;parm2=testy2")); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testGetFirstToken(){

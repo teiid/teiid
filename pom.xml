@@ -123,7 +123,6 @@
 		<license>
 			<name>GNU Lesser General Public License</name>
 			<url>http://www.gnu.org/licenses/lgpl.html</url>
-			<distribution>repo</distribution>
 			<comments>A business-friendly OSS license</comments>
 		</license>
 	</licenses>

@@ -28,8 +28,6 @@ import junit.framework.TestCase;
 
 import org.teiid.client.plan.Annotation;
 import org.teiid.client.plan.Annotation.Priority;
-import org.teiid.core.util.StringUtil;
-import org.teiid.query.analysis.AnalysisRecord;
 
 
 /**
@@ -69,7 +67,7 @@ public class TestAnalysisRecord extends TestCase {
         rec.println("b"); //$NON-NLS-1$
         
         String log = rec.getDebugLog();
-        assertEquals("a" + StringUtil.LINE_SEPARATOR + "b" + StringUtil.LINE_SEPARATOR, log); //$NON-NLS-1$ //$NON-NLS-2$
+        assertEquals("a\nb\n", log); //$NON-NLS-1$
     }
 
 }
