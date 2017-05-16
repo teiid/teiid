@@ -69,7 +69,6 @@ import org.teiid.net.socket.AuthenticationType;
 import org.teiid.net.socket.SocketServerConnection;
 import org.teiid.odbc.ODBCClientRemote.CursorDirection;
 import org.teiid.odbc.PGUtil.PgColInfo;
-import org.teiid.query.sql.symbol.Constant;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.security.GSSResult;
 import org.teiid.transport.LocalServerConnection;
@@ -86,8 +85,7 @@ import org.teiid.transport.pg.TimestampUtils;
 public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	
     private static final boolean HONOR_DECLARE_FETCH_TXN = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.honorDeclareFetchTxn", false); //$NON-NLS-1$
-    private static final String POSTGRESQL_VERSION = System.getProperties().getProperty("org.teiid.pgVersion", "PostgreSQL 8.2"); //$NON-NLS-1$ //$NON-NLS-2$
-
+    
 	public static final String CONNECTION_PROPERTY_PREFIX = "connection."; //$NON-NLS-1$
 	private static final String UNNAMED = ""; //$NON-NLS-1$
 	private static Pattern setPattern = Pattern.compile("set\\s+(\\w+)\\s+to\\s+((?:'[^']*')+)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE);//$NON-NLS-1$
@@ -776,10 +774,6 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 				}
 				//imported keys
 				return baseQuery + "FKTABLE_NAME = " + m.group(15)+" and FKTABLE_SCHEM = "+m.group(16);//$NON-NLS-1$ //$NON-NLS-2$
-			}
-			else if (modified.equalsIgnoreCase("select version()")) { //$NON-NLS-1$
-			    String version = POSTGRESQL_VERSION;
-				return "SELECT " + new Constant(version); //$NON-NLS-1$
 			}
 			else if (modified.startsWith("SELECT name FROM master..sysdatabases")) { //$NON-NLS-1$
 				return "SELECT 'Teiid'"; //$NON-NLS-1$

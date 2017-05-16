@@ -53,6 +53,7 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.deployers.PgCatalogMetadataStore;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
 import org.teiid.runtime.EmbeddedConfiguration;
@@ -772,6 +773,14 @@ public class TestODBCSocketTransport {
         ResultSetMetaData rsmd = rs.getMetaData();
         assertEquals("xml", rsmd.getColumnTypeName(1));
         assertEquals("<x></x>", rs.getString(1));
+    }
+    
+    @Test public void testVersion() throws Exception {
+        Statement s = conn.createStatement();
+        s.execute("SELECT version()");
+        ResultSet rs = s.getResultSet();
+        rs.next();
+        assertEquals(PgCatalogMetadataStore.POSTGRESQL_VERSION, rs.getString(1));
     }
 
     private void checkApplicationName(Statement s, String value) throws SQLException {
