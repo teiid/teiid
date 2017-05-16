@@ -34,7 +34,6 @@ import org.apache.cxf.rs.security.oauth2.common.AccessTokenGrant;
 import org.apache.cxf.rs.security.oauth2.common.ClientAccessToken;
 import org.apache.cxf.rs.security.oauth2.grants.code.AuthorizationCodeGrant;
 
-
 @SuppressWarnings("nls")
 public class OAuthUtil {
     public static final String OAUTH1_0_DOMAIN = 
@@ -67,6 +66,7 @@ public class OAuthUtil {
         System.out.println("Select type of OAuth authentication");
         System.out.println("1) OAuth 1.0A");
         System.out.println("2) OAuth 2.0");
+        System.out.println("3) OAuth 2.0 - Facebook");
         System.out.println();
         
         String input = in.nextLine();
@@ -79,6 +79,8 @@ public class OAuthUtil {
         case 2:
             oauth20Flow(in);
             break;
+        case 3:
+            oauth20FlowFacebook(in);
         }
         in.close();
     }
@@ -167,7 +169,58 @@ public class OAuthUtil {
         System.out.println("");
         System.out.println(MessageFormat.format(OAUTH2_0_DOMAIN, clientID, clientSecret, 
                 clientToken.getRefreshToken(), accessTokenURL));
-    }    
+    }  
+    
+    private static void oauth20FlowFacebook(Scanner in) throws Exception {
+        System.out.println("=== OAuth 2.0 - Facebook Workflow ===");
+        System.out.println();
+
+        String clientID = getInput(in, "Enter the App ID = ");
+        String clientSecret = getInput(in, "Enter the App Secret = ");
+        org.apache.cxf.rs.security.oauth2.client.Consumer consumer = new org.apache.cxf.rs.security.oauth2.client.Consumer(clientID,clientSecret);
+        
+        String authorizeURL = getInput(in, "Enter the User Authorization URL(default: https://www.facebook.com/v2.9/dialog/oauth) = ", true);
+        if(authorizeURL == null) {
+            authorizeURL = "https://www.facebook.com/v2.9/dialog/oauth";
+        }
+        
+        String scope = getInput(in, "Enter scope (default: public_profile,user_friends,email,pages_manage_cta) = ", true);
+        if(scope == null) {
+            scope = "public_profile,user_friends,email,pages_manage_cta";
+        }
+        
+        String callback = getInput(in, "Enter callback URL (the redirect url match the setting in your Facebook App) = ");
+        
+        URI authenticateURL = org.apache.cxf.rs.security.oauth2.client.OAuthClientUtils.getAuthorizationURI(authorizeURL, 
+                consumer.getKey(), 
+                callback, 
+                "Auth URL", 
+                scope);
+        
+        System.out.println("Cut & Paste the URL in a web browser, and Authticate");
+        System.out.println("Authorize URL  = " + authenticateURL.toASCIIString());
+        System.out.println("");
+        
+        String authCode = getInput(in, "Enter Token Secret (Auth Code) from previous step = ");
+        
+        String accessTokenURL = getInput(in, "Enter the Access Token URL(default: https://graph.facebook.com/v2.9/oauth/access_token) = ", true);
+        if(accessTokenURL == null) {
+            accessTokenURL = "https://graph.facebook.com/v2.9/oauth/access_token";
+        }
+        
+        System.out.println("Cut & Paste the URL in a web browser, and Get Access Token");
+        System.out.println("Access Token URL  = " + accessTokenURL + "?client_id=" + clientID + "&client_secret=" + clientSecret + "&redirect_uri=" + callback + "&code=" + authCode);
+        System.out.println("");
+        
+        String access_token = getInput(in, "Enter access_token from previous step = ");
+
+        System.out.println("");
+        System.out.println("Add the following XML into your standalone-teiid.xml file in security-domains subsystem,\n"
+                + "and configure data source securty to this domain");
+        System.out.println("");
+        System.out.println("");
+        System.out.println(MessageFormat.format(OAUTH2_0_DOMAIN, clientID, clientSecret, access_token, accessTokenURL));
+    } 
 
     public static String getInput(Scanner in, String message) throws Exception {
         return getInput(in, message, false); 
@@ -184,6 +237,7 @@ public class OAuthUtil {
             }
             
             if (allowNull) {
+                System.out.println("");
                 return null;
             }
         }
