@@ -24,6 +24,7 @@ package org.teiid.metadata;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
@@ -31,13 +32,14 @@ import org.teiid.connector.DataPlugin;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.BaseColumn.NullType;
 
-public class Database extends NamespaceContainer {
+public class Database extends AbstractMetadataRecord {
     private static final long serialVersionUID = 7595765832848232840L;
     public enum ResourceType {DATABASE, SCHEMA, TABLE, PROCEDURE, FUNCTION, COLUMN, SERVER, DATAWRAPPER, PARAMETER, ROLE, GRANT, LANGUAGE};
     protected MetadataStore store = new MetadataStore();
     protected NavigableMap<String, DataWrapper> wrappers = new TreeMap<String, DataWrapper>(String.CASE_INSENSITIVE_ORDER);
     protected NavigableMap<String, Server> servers = new TreeMap<String, Server>(String.CASE_INSENSITIVE_ORDER);    
     private String version;
+    private NamespaceContainer namespaceContainer = new NamespaceContainer();
     
     public Database(String dbName) {
         super.setName(dbName);
@@ -143,7 +145,7 @@ public class Database extends NamespaceContainer {
     }
     
     public String resolveNamespaceInPropertyKey(String key) {
-        return NamespaceContainer.resolvePropertyKey(this, key);
+        return NamespaceContainer.resolvePropertyKey(namespaceContainer, key);
     }
 
     @Override
@@ -274,4 +276,13 @@ public class Database extends NamespaceContainer {
         store.addDatatype(name, dataType);
         return dataType;
     }
+
+    public void addNamespace(String prefix, String uri) {
+        this.namespaceContainer.addNamespace(prefix, uri);
+    }
+
+    public Map<String, String> getNamespaces() {
+        return this.namespaceContainer.getNamespaces();
+    }
+    
 }

@@ -569,7 +569,17 @@ public class JDBCMetdataProcessor implements MetadataProcessor<Connection>{
 			DatabaseMetaData metadata, Collection<TableInfo> tables, Map<String, TableInfo> tableMap) throws SQLException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing foreign keys"); //$NON-NLS-1$
 		for (TableInfo tableInfo : tables) {
-			ResultSet fks = metadata.getImportedKeys(tableInfo.catalog, tableInfo.schema, tableInfo.name);
+		    ResultSet fks = null;
+		    try {
+		        fks = metadata.getImportedKeys(tableInfo.catalog, tableInfo.schema, tableInfo.name);
+		    } catch (SQLException e) {
+		        if (tableInfo.type != null && StringUtil.indexOfIgnoreCase(tableInfo.type, "TABLE") < 0) { //$NON-NLS-1$
+		            LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "skipping foreign keys for non-table", tableInfo.table.getFullName()); //$NON-NLS-1$
+		        } else {
+		            LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11026, tableInfo.table.getFullName(), tableInfo.type));
+		        }
+		        continue;
+		    }
 			HashMap<String, FKInfo> allKeys = new HashMap<String, FKInfo>();
 			while (fks.next()) {
 				String columnName = fks.getString(8);

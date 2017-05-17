@@ -41,6 +41,7 @@ import net.sf.saxon.evpull.StaxToEventBridge;
 import net.sf.saxon.lib.AugmentedSource;
 import net.sf.saxon.om.DocumentInfo;
 import net.sf.saxon.om.NodeInfo;
+import net.sf.saxon.option.xom.XOMDocumentWrapper;
 import net.sf.saxon.query.DynamicQueryContext;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.value.HexBinaryValue;
@@ -213,7 +214,7 @@ public class XQueryEvaluator {
 			root = root.getParent();
 		}
 	
-		DocumentWrapper docWrapper = new DocumentWrapper(root, root.getBaseURI(), config);
+		XOMDocumentWrapper docWrapper = new XOMDocumentWrapper(root, root.getBaseURI(), config);
 		
 		return docWrapper.wrap(node);
 	}

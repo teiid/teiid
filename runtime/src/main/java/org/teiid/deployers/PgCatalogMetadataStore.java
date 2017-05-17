@@ -69,6 +69,8 @@ import org.teiid.transport.PgBackendProtocol;
 public class PgCatalogMetadataStore extends MetadataFactory {
 	private static final long serialVersionUID = 2158418324376966987L;
 	
+	public static final String POSTGRESQL_VERSION = System.getProperties().getProperty("org.teiid.pgVersion", "PostgreSQL 8.2"); //$NON-NLS-1$ //$NON-NLS-2$
+
 	public static final String TYPMOD = "(CASE WHEN (t1.DataType = 'bigdecimal' OR t1.DataType = 'biginteger') THEN 4+(65536*(case when (t1.Precision>32767) then 32767 else t1.Precision end)+(case when (t1.Scale>32767) then 32767 else t1.Scale end)) " + //$NON-NLS-1$
 				"WHEN (t1.DataType = 'string' OR t1.DataType = 'char') THEN (CASE WHEN (t1.Length <= 2147483643) THEN 4+ t1.Length ELSE 2147483647 END) ELSE -1 END)"; //$NON-NLS-1$
 
@@ -116,6 +118,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		FunctionMethod func = addFunction("asPGVector", "asPGVector"); //$NON-NLS-1$ //$NON-NLS-2$
 		func.setProperty(ResolverVisitor.TEIID_PASS_THROUGH_TYPE, Boolean.TRUE.toString());
 		addFunction("getOid", "getOid").setNullOnNull(true);; //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("version", "version"); //$NON-NLS-1$ //$NON-NLS-1$
 		func = addFunction("pg_client_encoding", "pg_client_encoding"); //$NON-NLS-1$ //$NON-NLS-2$
 		func.setDeterminism(Determinism.COMMAND_DETERMINISTIC);
 	}
@@ -878,6 +881,10 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 	    public static boolean pg_type_is_visible(int oid) throws FunctionExecutionException {
             return true;
         }
+	    
+	    public static String version() {
+	        return POSTGRESQL_VERSION;
+	    }
 		
 	}
 }

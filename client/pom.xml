@@ -5,6 +5,18 @@
 		<groupId>org.jboss.teiid</groupId>
         <version>9.3.0.Beta3-SNAPSHOT</version>
 	</parent>
+	<licenses>
+        <license>
+            <name>GNU Lesser General Public License</name>
+            <url>http://www.gnu.org/licenses/lgpl.html</url>
+            <comments>A business-friendly OSS license</comments>
+        </license>
+        <license>
+            <name>BSD-3-Clause</name>
+            <url>https://opensource.org/licenses/BSD-3-Clause</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>teiid-client</artifactId>
 	<name>Client</name>

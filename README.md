@@ -24,3 +24,13 @@ Enter the following:
 	
 you can find the deployment artifacts in the "teiid/build/target" directory once the build is completed.
 
+Licenses
+-------
+
+The default license for all submodules is the [Less GNU Public License (LGPL) v2.1][1]
+
+Where applicable individual submodules will provide additional copyright and license information.
+
+[1]: https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
+
+

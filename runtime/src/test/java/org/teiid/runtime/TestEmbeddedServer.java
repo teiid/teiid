@@ -33,6 +33,7 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.math.BigDecimal;
 import java.net.InetSocketAddress;
+import java.nio.charset.Charset;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,6 +54,7 @@ import javax.transaction.*;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.postgresql.Driver;
@@ -83,6 +85,7 @@ import org.teiid.language.visitor.CollectorVisitor;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataException;
 import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
 import org.teiid.query.sql.symbol.Reference;
@@ -405,7 +408,6 @@ public class TestEmbeddedServer {
 		rs.next();
 		assertEquals("HELLO WORLD", rs.getString(1));
 	}
-	
 	
     @Test public void testDeployZipDDL() throws Exception {
         es.start(new EmbeddedConfiguration());
@@ -2152,6 +2154,33 @@ public class TestEmbeddedServer {
         rs.next();
         assertArrayEquals(new BigDecimal[] {BigDecimal.valueOf(1.0)}, (BigDecimal[])rs.getArray(1).getArray());
         assertEquals("bigdecimal[]", rs.getMetaData().getColumnTypeName(1));
+    }
+    
+    @Ignore("limit to/exclude not yet implemented")
+    @Test public void testImportExcept() throws Exception {
+        es.start(new EmbeddedConfiguration());
+        es.addMetadataRepository("x", new MetadataRepository() {
+            @Override
+            public void loadMetadata(MetadataFactory factory,
+                    ExecutionFactory executionFactory,
+                    Object connectionFactory, String text)
+                    throws TranslatorException {
+                assertEquals("helloworld1,other", factory.getModelProperties().get("importer.excludeTables"));
+                Table t = factory.addTable("helloworld");
+                t.setVirtual(true);
+                factory.addColumn("col", "string", t);
+                t.setSelectTransformation("select 'HELLO WORLD'");
+            }
+        });
+        String externalDDL = "CREATE DATABASE test VERSION '1';"
+                + "USE DATABASE test VERSION '1';"
+                + "CREATE VIRTUAL SCHEMA test2;"
+                + "IMPORT FOREIGN SCHEMA public except (helloworld1, other) FROM REPOSITORY x INTO test2;";
+        
+        es.deployVDB(new ByteArrayInputStream(externalDDL.getBytes(Charset.forName("UTF-8"))), true);
+        ResultSet rs = es.getDriver().connect("jdbc:teiid:test", null).createStatement().executeQuery("select * from helloworld");
+        rs.next();
+        assertEquals("HELLO WORLD", rs.getString(1));
     }
 
 }
