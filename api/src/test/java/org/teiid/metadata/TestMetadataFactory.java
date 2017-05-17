@@ -25,6 +25,7 @@ package org.teiid.metadata;
 import static org.junit.Assert.*;
 
 import java.util.Collections;
+import java.util.HashMap;
 
 import org.junit.Test;
 import org.teiid.CommandContext;
@@ -59,6 +60,19 @@ public class TestMetadataFactory {
 		assertEquals(Boolean.class, fm.getOutputParameter().getJavaType());
 		assertNotNull(fm.getAggregateAttributes());
 	}
+	
+	@Test public void testCorrectName() {
+        ModelMetaData mmd = new ModelMetaData();
+        mmd.setName("foo");
+        HashMap<String, Datatype> types = new HashMap<String, Datatype>();
+        Datatype value = new Datatype();
+        value.setName("string");
+        types.put("string", value);
+        MetadataFactory factory = new MetadataFactory("x", 1, types, mmd);
+        Table x = factory.addTable("x");
+        Column c = factory.addColumn("a.b", "string", x);
+        assertEquals("a_b", c.getName());
+    }
 	
 	public static boolean someFunction() {
 		return true;
