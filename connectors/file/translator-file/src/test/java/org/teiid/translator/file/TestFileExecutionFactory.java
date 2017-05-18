@@ -21,7 +21,9 @@ package org.teiid.translator.file;
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.sql.Timestamp;
 import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -46,9 +48,13 @@ public class TestFileExecutionFactory {
 		pe.execute();
 		int count = 0;
 		while (true) {
-			if (pe.next() == null) {
+		    List<?> val = pe.next();
+			if (val == null) {
 				break;
 			}
+			assertEquals(5, val.size());
+			assertTrue(val.get(3) instanceof Timestamp);
+			assertEquals(Long.valueOf(0), val.get(4));
 			count++;
 		}
 		assertEquals(2, count);
