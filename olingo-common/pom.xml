@@ -5,6 +5,17 @@
         <version>9.3.0.Beta3-SNAPSHOT</version>
     </parent>
 
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+        </license>
+        <license>
+            <name>GNU Lesser General Public License</name>
+            <url>http://www.gnu.org/licenses/lgpl.html</url>
+        </license>
+    </licenses>
+
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.jboss.teiid</groupId>
     <artifactId>teiid-olingo-common</artifactId>

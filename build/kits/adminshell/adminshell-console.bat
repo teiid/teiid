@@ -1,26 +1,21 @@
 @ECHO OFF
 @setlocal
 
-@REM JBoss, Home of Professional Open Source.
-@REM Copyright (C) 2008 Red Hat, Inc.
-@REM Licensed to Red Hat, Inc. under one or more contributor 
-@REM license agreements.  See the copyright.txt file in the
-@REM distribution for a full listing of individual contributors.
-@REM 
-@REM This library is free software; you can redistribute it and/or
-@REM modify it under the terms of the GNU Lesser General Public
-@REM License as published by the Free Software Foundation; either
-@REM version 2.1 of the License, or (at your option) any later version.
-@REM 
-@REM This library is distributed in the hope that it will be useful,
-@REM but WITHOUT ANY WARRANTY; without even the implied warranty of
-@REM MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-@REM Lesser General Public License for more details.
-@REM 
-@REM You should have received a copy of the GNU Lesser General Public
-@REM License along with this library; if not, write to the Free Software
-@REM Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-@REM 02110-1301 USA.
+@REM Copyright Red Hat, Inc. and/or its affiliates
+@REM and other contributors as indicated by the @author tags and
+@REM the COPYRIGHT.txt file distributed with this work.
+@REM
+@REM Licensed under the Apache License, Version 2.0 (the "License");
+@REM you may not use this file except in compliance with the License.
+@REM You may obtain a copy of the License at
+@REM
+@REM http://www.apache.org/licenses/LICENSE-2.0
+@REM
+@REM Unless required by applicable law or agreed to in writing, software
+@REM distributed under the License is distributed on an "AS IS" BASIS,
+@REM WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+@REM See the License for the specific language governing permissions and
+@REM limitations under the License.
 
 @REM This assumes it's run from its installation directory. It is also assumed there is a java
 @REM executable defined along the PATH
