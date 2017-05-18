@@ -15,7 +15,7 @@
         <module name="javax.resource.api"/>
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.api" />
-	    <module name="org.apache.solr" />
+	<module name="org.apache.solr" slot="teiid" />
         <module name="org.jboss.teiid.translator.jdbc" />
     </dependencies>
 </module>

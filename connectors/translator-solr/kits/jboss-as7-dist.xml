@@ -23,7 +23,7 @@
   
   <dependencySets>
      <dependencySet>
-         <outputDirectory>${jbossas-module-root}/org/apache/solr/main</outputDirectory>
+         <outputDirectory>${jbossas-module-root}/org/apache/solr/teiid</outputDirectory>
          <includes>
              <include>org.apache.solr:solr-solrj</include>
              <include>org.noggit:noggit</include>
