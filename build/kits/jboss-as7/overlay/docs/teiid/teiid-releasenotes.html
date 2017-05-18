@@ -218,6 +218,48 @@ the wrapping begin/commit of a UseDeclareFetch cursor will be ignored as Teiid d
 Set the org.teiid.honorDeclareFetchTxn system property to false to revert to the old behavior which honored the transaction.</p>
 </ul>
 
+<h4 class="western">from ${project.version}</h4>
+<ul>
+	<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4446'>TEIID-4446</a> - Rationalize precision/scale
+        <li/>
+        <p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4663'>TEIID-4663</a> - Support a more secure block mode for client/server encryption
+	<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4722'>TEIID-4722</a> - TEIID30019: java.lang.AssertionError: Assertion failed assertion due to guard against a corner condition.
+	<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4732'>TEIID-4732</a> - Teiid Server does not honor columns name in external materialization (using the column names in inserts)
+	<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4754'>TEIID-4754</a> - Wrong result with bidirectional relationship (ensuring the right foreign key is used)
+	<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4755'>TEIID-4755</a> - WS SOAP Response with WS-A Headers results in ClassCastException (Using the DOM based return in MESSAGE mode as CXF does not allow StAX based Source)
+        <li/>
+        <p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4819'>TEIID-4819</a> - Tree page modifications removing the previous page, don't remove immediately (correcting the buffermanager logic and enabling assertions)
+        <li/>
+        <p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4852'>TEIID-4852</a> - Wrong OData results with multiple self relationships (ensuring the correct fk is used)
+        <li/>
+        <p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4859'>TEIID-4859</a> - OData throws org.apache.olingo.commons.api.edm.EdmPrimitiveTypeException when primary key is bigdecimal
+        <li/>
+        <p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4867'>TEIID-4867</a> - Loosen up OData4 URL validation or parsing
+        <li/>
+        <p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4874'>TEIID-4874</a> - SQL Server translator should support full outer join by default (changing default support for full outer join)
+        <li/>
+        <p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4875'>TEIID-4875</a> - Planning issue with multiple aggregate decompositions through a join tree (fixing aggregate planning issue)
+        <li/>
+        <p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4901'>TEIID-4901</a> - Add parallel source query handling for when IN criteria values exceed MaxInCriteriaSize for translator (pushing large in as dependent set)
+</ul>
 
 <h4 class="western">from ${project.version}</h4>
 <ul>
@@ -227,6 +269,35 @@ Set the org.teiid.honorDeclareFetchTxn system property to false to revert to the
 	<li/>
 	<p style="margin-bottom: 0in">
 <a href='https://issues.jboss.org/browse/TEIID-4468'>TEIID-4468</a> - Google translator throws SpreadsheetOperationException for query DELETE FROM table
+	<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4754'>TEIID-4754</a> - Wrong result with bidirectional relationship (ensuring the right foreign key is used)
+	<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4755'>TEIID-4755</a> - WS SOAP Response with WS-A Headers results in ClassCastException (Using the DOM based return in MESSAGE mode as CXF does not allow StAX based Source)
+        <li/>
+        <p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4819'>TEIID-4819</a> - Tree page modifications removing the previous page, don't remove immediately (correcting the buffermanager logic and enabling assertions)
+        <li/>
+        <p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4852'>TEIID-4852</a> - Wrong OData results with multiple self relationships (ensuring the correct fk is used)
+        <li/>
+        <p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4859'>TEIID-4859</a> - OData throws org.apache.olingo.commons.api.edm.EdmPrimitiveTypeException when primary key is bigdecimal
+        <li/>
+        <p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4867'>TEIID-4867</a> - Loosen up OData4 URL validation or parsing
+        <li/>
+        <p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4875'>TEIID-4875</a> - Planning issue with multiple aggregate decompositions through a join tree (fixing aggregate planning issue)
+        <li/>
+</ul>
+
+<h4 class="western">from 8.12.10.6_3</h4>
+<ul>
+	<li/>
+	<p style="margin-bottom: 0in">
+<a href='https://issues.jboss.org/browse/TEIID-4468'>TEIID-4468</a> - Google translator evaluates 0 as not NULL for operator <>
         <li/>
         <p style="margin-bottom: 0in">
 <a href='https://issues.jboss.org/browse/TEIID-4722'>TEIID-4722</a> - TEIID30019: java.lang.AssertionError: Assertion failed assertion due to guard against a corner condition.

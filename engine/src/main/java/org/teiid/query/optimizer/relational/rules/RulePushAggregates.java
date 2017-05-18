@@ -730,6 +730,8 @@ public class RulePushAggregates implements
     			break;
         	}        		
     	}
+        
+        boolean recollectAggregates = false; 
         for (PlanNode planNode : possibleTargetNodes) {
             Set<Expression> stagedGroupingSymbols = new LinkedHashSet<Expression>();
             Collection<AggregateSymbol> aggregates = aggregateMap.get(planNode);
@@ -741,6 +743,10 @@ public class RulePushAggregates implements
 
         	filterExpressions(stagedGroupingSymbols, planNode.getGroups(), groupingExpressions, false);
 
+        	if (recollectAggregates) {
+        	    recollectAggregates = false;
+        	    allAggregates = collectAggregates(groupNode);
+        	}
             collectSymbolsFromOtherAggregates(allAggregates, aggregates, planNode, stagedGroupingSymbols);
             
             //perform a costing check, if there's not a significant reduction, then don't stage
@@ -761,6 +767,8 @@ public class RulePushAggregates implements
             }
             
             addGroupBy(planNode, new ArrayList<Expression>(stagedGroupingSymbols), aggregates, metadata, groupNode.getParent(), capFinder, true, stagedGroupingSymbols.isEmpty() && containsNullDependent(aggregates));
+            //with the staged grouping added, the parent aggregate expressions can change due to mapping
+            recollectAggregates = true;
         }
     }
 

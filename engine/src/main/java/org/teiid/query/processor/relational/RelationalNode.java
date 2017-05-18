@@ -38,7 +38,6 @@ import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.core.util.Assertion;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.query.QueryPlugin;
@@ -364,7 +363,9 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 		int i = 0;
 		for (Expression symbol : projectElements) {
 			Integer index = tupleElements.get(symbol);
-			Assertion.isNotNull(index);
+			if (index == null) {
+			    throw new TeiidRuntimeException("Planning error. Could not find symbol: " + symbol); //$NON-NLS-1$
+			}
 			result[i++] = index;
 		}
 
