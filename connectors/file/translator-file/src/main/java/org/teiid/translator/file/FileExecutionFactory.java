@@ -26,13 +26,17 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.attribute.FileTime;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLXML;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import javax.resource.ResourceException;
 import javax.resource.cci.Connection;
@@ -132,6 +136,14 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Co
 			}
 			result.add(value);
 			result.add(file.getName());
+			result.add(new Timestamp(file.lastModified()));
+            try {
+                Map<String, Object> attributes = Files.readAttributes(file.toPath(), "size,creationTime"); //$NON-NLS-1$
+                result.add(new Timestamp(((FileTime)attributes.get("creationTime")).toMillis())); //$NON-NLS-1$
+                result.add(attributes.get("size")); //$NON-NLS-1$
+            } catch (IOException e) {
+                throw new TranslatorException(e);
+            }
 			return result;
 		}
 
@@ -230,6 +242,10 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Co
             }
             result.add(value);
             result.add(file.getName());
+            Timestamp lastModified = new Timestamp(file.getLastModified());
+            result.add(lastModified);
+            result.add(lastModified);
+            result.add(file.getSize());
             return result;
         }
 
@@ -396,6 +412,9 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Co
 		param.setAnnotation("The path and pattern of what files to return.  Currently the only pattern supported is *.<ext>, which returns only the files matching the given extension at the given path."); //$NON-NLS-1$
 		metadataFactory.addProcedureResultSetColumn("file", TypeFacility.RUNTIME_NAMES.CLOB, p); //$NON-NLS-1$
 		metadataFactory.addProcedureResultSetColumn("filePath", TypeFacility.RUNTIME_NAMES.STRING, p); //$NON-NLS-1$
+		metadataFactory.addProcedureResultSetColumn("lastModified", TypeFacility.RUNTIME_NAMES.TIMESTAMP, p); //$NON-NLS-1$
+        metadataFactory.addProcedureResultSetColumn("created", TypeFacility.RUNTIME_NAMES.TIMESTAMP, p); //$NON-NLS-1$
+        metadataFactory.addProcedureResultSetColumn("size", TypeFacility.RUNTIME_NAMES.LONG, p); //$NON-NLS-1$
 		
 		Procedure p1 = metadataFactory.addProcedure(GETFILES);
 		p1.setAnnotation("Returns files that match the given path and pattern as BLOBs"); //$NON-NLS-1$
@@ -403,6 +422,9 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Co
 		param.setAnnotation("The path and pattern of what files to return.  Currently the only pattern supported is *.<ext>, which returns only the files matching the given extension at the given path."); //$NON-NLS-1$
 		metadataFactory.addProcedureResultSetColumn("file", TypeFacility.RUNTIME_NAMES.BLOB, p1); //$NON-NLS-1$
 		metadataFactory.addProcedureResultSetColumn("filePath", TypeFacility.RUNTIME_NAMES.STRING, p1); //$NON-NLS-1$
+		metadataFactory.addProcedureResultSetColumn("lastModified", TypeFacility.RUNTIME_NAMES.TIMESTAMP, p1); //$NON-NLS-1$
+		metadataFactory.addProcedureResultSetColumn("created", TypeFacility.RUNTIME_NAMES.TIMESTAMP, p1); //$NON-NLS-1$
+		metadataFactory.addProcedureResultSetColumn("size", TypeFacility.RUNTIME_NAMES.LONG, p1); //$NON-NLS-1$
 		
 		Procedure p2 = metadataFactory.addProcedure(SAVEFILE);
 		p2.setAnnotation("Saves the given value to the given path.  Any existing file will be overriden."); //$NON-NLS-1$
