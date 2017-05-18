@@ -435,6 +435,36 @@ public class TestAggregateProcessing {
 		helpProcess(plan, dataManager, expected);
 	}
 	
+    @Test public void testMultiJoinCriteria1() throws Exception {
+        String sql = "SELECT max(t3.e4), max(t2.e4) as s FROM pm1.g1 as t1, pm1.g2 as t2, pm1.g3 as t3, pm1.g4 as t4, pm2.g1 as t5 "
+                + "WHERE t1.e1 = t2.e1 and (t2.e2 = t3.e2 and t1.e3 || t2.e3 = t3.e3) and t3.e3 = t4.e3 and t4.e4 = t5.e4"; //$NON-NLS-1$
+
+        List[] expected = new List[] {
+                Arrays.asList(null, null)
+        };
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(false);
+
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testMultiJoinCriteria2() throws Exception {
+        String sql = "SELECT max(t3.e4), max(t2.e4) as s FROM pm1.g1 as t1, pm1.g2 as t2, pm1.g3 as t3, pm1.g4 as t4 "
+                + "WHERE t1.e1 = t2.e1 and (t2.e2 = t3.e2 and t1.e3 || t2.e3 = t3.e3) and t3.e3 = t4.e3"; //$NON-NLS-1$
+
+        List[] expected = new List[] {
+                Arrays.asList(null, null)
+        };
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(false);
+
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+
+        helpProcess(plan, dataManager, expected);
+    }
+	
 	@Test public void testMultiJoinGroupBy() throws Exception {
 		String sql = "SELECT count(t2.e4) as s, t1.e3 || t2.e3 FROM pm1.g1 as t1, pm1.g2 as t2, pm1.g3 as t3 WHERE t1.e1 = t2.e1 and t2.e2 = t3.e2 GROUP BY t1.e3 || t2.e3"; //$NON-NLS-1$
 
