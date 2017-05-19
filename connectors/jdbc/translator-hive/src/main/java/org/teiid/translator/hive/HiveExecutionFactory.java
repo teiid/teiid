@@ -42,6 +42,7 @@ public class HiveExecutionFactory extends BaseHiveExecutionFactory {
     public static String HIVE = "hive"; //$NON-NLS-1$
     public HiveExecutionFactory() {
         setSupportedJoinCriteria(SupportedJoinCriteria.EQUI);
+        setSupportsOrderBy(false); //TEIID-4858 hive order by performance is slow
     }
     
     @Override
