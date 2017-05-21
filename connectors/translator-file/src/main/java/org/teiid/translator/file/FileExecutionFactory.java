@@ -130,14 +130,16 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 			}
 			result.add(value);
 			result.add(file.getName());
-			result.add(new Timestamp(file.lastModified()));
-            try {
-                Map<String, Object> attributes = Files.readAttributes(file.toPath(), "size,creationTime"); //$NON-NLS-1$
-                result.add(new Timestamp(((FileTime)attributes.get("creationTime")).toMillis())); //$NON-NLS-1$
-                result.add(attributes.get("size")); //$NON-NLS-1$
-            } catch (IOException e) {
-                throw new TranslatorException(e);
-            }
+			if (command.getMetadataObject().getResultSet().getColumns().size() > 2) {
+    			result.add(new Timestamp(file.lastModified()));
+                try {
+                    Map<String, Object> attributes = Files.readAttributes(file.toPath(), "size,creationTime"); //$NON-NLS-1$
+                    result.add(new Timestamp(((FileTime)attributes.get("creationTime")).toMillis())); //$NON-NLS-1$
+                    result.add(attributes.get("size")); //$NON-NLS-1$
+                } catch (IOException e) {
+                    throw new TranslatorException(e);
+                }
+			}
 			return result;
 		}
 
