@@ -508,12 +508,12 @@ public class EmbeddedAdminImpl implements Admin {
 
 	@Override
 	public void deleteDataSource(String deployedName) throws AdminException {
-		throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40137, "deleteDataSource")); //$NON-NLS-1$
+	    embeddedServer.getConnectionFactoryProviders().remove(deployedName);
 	}
 
 	@Override
 	public Collection<String> getDataSourceNames() throws AdminException {
-		throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40137, "getDataSourceNames")); //$NON-NLS-1$
+		return new ArrayList<String>(embeddedServer.getConnectionFactoryProviders().keySet());
 	}
 
 	@Override
