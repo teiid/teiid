@@ -100,8 +100,9 @@ public abstract class BaseColumn extends AbstractMetadataRecord {
             if (precision == 0 && scale == 0) {
                 return DEFAULT_SCALE;
             }
-            if (Math.abs(scale) > precision) {
-                return Integer.signum(scale)*precision;
+            int effectivePrecision = precision == 0?DEFAULT_PRECISION:precision;
+            if (Math.abs(scale) > effectivePrecision) {
+                return Integer.signum(scale)*effectivePrecision;
             }
         }
         return scale;

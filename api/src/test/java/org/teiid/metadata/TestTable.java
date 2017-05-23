@@ -37,4 +37,15 @@ public class TestTable {
 		assertEquals(100000111000111100l/t.getCardinalityAsFloat(), 1, .01);
 	}
 	
+	@Test public void testColumnPrecisionScale() {
+	    Column c = new Column();
+	    Datatype datatype = new Datatype();
+	    datatype.setName("bigdecimal");
+        c.setDatatype(datatype);
+	    c.setPrecision(0);
+	    c.setScale(2);
+	    assertEquals(2, c.getScale());
+	    assertEquals(BaseColumn.DEFAULT_PRECISION, c.getPrecision());
+    }
+	
 }
