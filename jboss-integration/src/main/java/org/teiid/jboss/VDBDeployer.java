@@ -169,6 +169,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 				//TODO: could allow partial versions here if we canonicalize
 				throw new DeploymentUnitProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40144, deployment, vdbKey));
 			}
+			LogManager.logInfo(LogConstants.CTX_RUNTIME,  IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50115, deployment, vdbKey));
 			vdbService.addDependency(TeiidServiceNames.vdbFinishedServiceName(vdbImport.getName(), vdbKey.getVersion()));
 		}
 		
