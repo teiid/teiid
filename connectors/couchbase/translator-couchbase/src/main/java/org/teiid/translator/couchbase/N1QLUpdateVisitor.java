@@ -134,7 +134,7 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
                 CBColumnData columnData = rowCache.get(i);
                 
                 if(columnData.getCBColumn().isPK()) {
-                    documentID = (String)ef.retrieveValue(columnData.getColumnType(), columnData.getValue());
+                    documentID = (String)columnData.getValue();
                 } else {
                     String attr = columnData.getCBColumn().getLeafName();
                     String path = columnData.getCBColumn().getNameInSource();

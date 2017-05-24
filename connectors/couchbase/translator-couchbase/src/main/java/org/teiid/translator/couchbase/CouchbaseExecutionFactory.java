@@ -23,8 +23,11 @@ package org.teiid.translator.couchbase;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -58,6 +61,11 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
     protected Map<String, FunctionModifier> functionModifiers = new TreeMap<String, FunctionModifier>(String.CASE_INSENSITIVE_ORDER);
     
     private int maxBulkInsertSize = 100;
+    
+    //Couchbase default date format: (ISO8601/RFC3339), eg,2006-01-02T15:04:05.999Z07:00
+    private String dateFormatPattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"; //$NON-NLS-1$
+    
+    private SimpleDateFormat dateFormat; 
 
 	public CouchbaseExecutionFactory() {
 	    setSupportsSelectDistinct(true);
@@ -82,14 +90,23 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
             public List<?> translate(Function function) {
                 Expression param = function.getParameters().get(0);
                 int targetCode = getCode(function.getType());
-                if(targetCode == BYTE || targetCode == SHORT || targetCode == INTEGER || targetCode == LONG || targetCode == FLOAT || targetCode == DOUBLE ) {
+                List<Expression> args = function.getParameters();
+                Class<?> srcType = args.get(0).getType();
+                int sourceCode = getCode(srcType);
+                if(targetCode == BYTE || targetCode == SHORT || targetCode == INTEGER || targetCode == LONG || targetCode == FLOAT || targetCode == DOUBLE || targetCode == BIGINTEGER || targetCode == BIGDECIMAL) {
                     return Arrays.asList("TONUMBER" + Tokens.LPAREN, param, Tokens.RPAREN);//$NON-NLS-1$ 
                 } else if(targetCode == STRING || targetCode == CHAR) {
                     return Arrays.asList("TOSTRING" + Tokens.LPAREN, param, Tokens.RPAREN);//$NON-NLS-1$ 
                 } else if(targetCode == BOOLEAN) {
                     return Arrays.asList("TOBOOLEAN" + Tokens.LPAREN, param, Tokens.RPAREN);//$NON-NLS-1$ 
+                } else if (targetCode == DATE || targetCode == TIME || targetCode == TIMESTAMP){
+                    if(sourceCode == STRING) {
+                        return Arrays.asList("STR_TO_UTC" + Tokens.LPAREN, param, Tokens.RPAREN);//$NON-NLS-1$ 
+                    } else {
+                        return Arrays.asList("MILLIS_TO_UTC" + Tokens.LPAREN, param, Tokens.RPAREN);//$NON-NLS-1$ 
+                    }  
                 } else {
-                    return Arrays.asList("TOOBJECT" + Tokens.LPAREN, param, Tokens.RPAREN);//$NON-NLS-1$ 
+                    return Arrays.asList("TOATOM" + Tokens.LPAREN, param, Tokens.RPAREN);//$NON-NLS-1$ 
                 }
             }});
 		
@@ -313,7 +330,7 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
         return new N1QLUpdateVisitor(this);
     }
 
-    public Object retrieveValue(Class<?> columnType, Object value) {
+    public Object retrieveValue(Class<?> columnType, Object value) throws TranslatorException {
         
         if (value == null) {
             return null;
@@ -323,12 +340,40 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
             return value;
         }
         
+        if (columnType.equals(java.sql.Date.class) && value instanceof String)  {
+            return new java.sql.Date(parseDate((String)value).getTime());
+        }
+        
+        if (columnType.equals(java.sql.Time.class) && value instanceof String)  {
+            return new java.sql.Time(parseDate((String)value).getTime());
+        }
+
+        if (columnType.equals(java.sql.Timestamp.class) && value instanceof String)  {
+            return new java.sql.Timestamp(parseDate((String)value).getTime());
+        }
+        
         if(columnType.equals(ClobType.class)) {
             ClobImpl clob = new ClobImpl(value.toString());
             return new ClobType(clob);
         }
         
         return value;
+    }
+    
+    private Date parseDate(String value) throws TranslatorException {
+        try {
+            SimpleDateFormat df = simpleDateFormat();
+            return df.parse(value);
+        } catch (ParseException e) {
+            throw new TranslatorException(CouchbasePlugin.Event.TEIID29021, e, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29021, value, dateFormatPattern));
+        }
+    }
+
+    private SimpleDateFormat simpleDateFormat() {
+        if(dateFormat == null) {
+            dateFormat = new SimpleDateFormat(dateFormatPattern);
+        }
+        return dateFormat;
     }
     
     public void setValue(JsonObject json, String attr, Class<?> type, Object attrValue) {
@@ -396,6 +441,15 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
     public void setMaxBulkInsertSize(int maxBulkInsertSize) {
         Assertion.assertTrue(maxBulkInsertSize > 0, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29020));
         this.maxBulkInsertSize = maxBulkInsertSize;
+    }
+
+    @TranslatorProperty(display="Date Format Pattern", description="The format of date existed in your documents. Couchbase default(ISO8601/RFC3339) pattern is yyyy-MM-dd'T'HH:mm:ss.SSSXXX", advanced=true)
+    public String getDateFormatPattern() {
+        return dateFormatPattern;
+    }
+
+    public void setDateFormatPattern(String dateFormatPattern) {
+        this.dateFormatPattern = dateFormatPattern;
     }
 
 }
