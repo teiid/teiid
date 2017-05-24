@@ -78,6 +78,7 @@ public class CouchbaseQueryExecution extends CouchbaseExecution implements Resul
 	            List<Object> row = new ArrayList<Object>(expectedTypes.length);
 	            JsonObject json = queryRow.value();
 	            
+	            int placeholderIndex = 1;
 	            for(int i = 0 ; i < expectedTypes.length ; i ++){
 	                String columnName = null;
 	                Object value = null;
@@ -96,9 +97,13 @@ public class CouchbaseQueryExecution extends CouchbaseExecution implements Resul
 	                }
 	                
 	                // column without reference and alias
-	                if(value == null && json.getNames().contains(buildPlaceholder(1))) {
-	                    columnName = buildPlaceholder(1);
+//	                if(value == null && json.getNames().contains(buildPlaceholder(1))) {
+//	                    columnName = buildPlaceholder(1);
+	                String placeholder = buildPlaceholder(placeholderIndex);
+	                if(value == null && json.getNames().contains(placeholder)) {
+	                    columnName = placeholder;
 	                    value = json.get(columnName);
+	                    placeholderIndex++ ;
 	                }
 
 	                row.add(this.executionFactory.retrieveValue(expectedTypes[i], value));
