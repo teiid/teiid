@@ -267,6 +267,21 @@ public class TestN1QLVisitor extends TestVisitor {
 
         String sql = "SELECT convert(attr_long, string) FROM T2";
         helpTest(sql, "N1QL1101");
+        
+        sql = "SELECT convert(attr_integer, float) AS FloatNum, convert(attr_integer, long) AS LongNum, convert(attr_integer, double) AS DoubleNum, convert(attr_integer, byte) AS ByteNum, convert(attr_integer, short) AS ShortValue FROM T2";
+        helpTest(sql, "N1QL1102");
+        
+        sql = "SELECT convert(attr_string, char) AS CharValue FROM T2";
+        helpTest(sql, "N1QL1103");
+        
+        sql = "SELECT convert(attr_integer, biginteger) AS BigIntegerValue, convert(attr_integer, bigdecimal) AS BigDecimalValue FROM T2";
+        helpTest(sql, "N1QL1104");
+        
+        sql = "SELECT convert(attr_string, object) AS ObjectValue FROM T2";
+        helpTest(sql, "N1QL1105"); 
+        
+        sql = "SELECT convert(attr_string, object), convert(attr_integer, object), convert(attr_boolean, object) FROM T2";
+        helpTest(sql, "N1QL1106"); 
     }
     
     @Test
