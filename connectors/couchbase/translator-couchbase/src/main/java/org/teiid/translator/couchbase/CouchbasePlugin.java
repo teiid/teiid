@@ -49,6 +49,7 @@ public class CouchbasePlugin {
         TEIID29017,
         TEIID29018,
         TEIID29019,
-        TEIID29020
+        TEIID29020,
+        TEIID29021
     }
 }

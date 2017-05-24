@@ -1006,6 +1006,10 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	    return translatorRepository;
 	}
 	
+	ConcurrentHashMap<String, ConnectionFactoryProvider<?>> getConnectionFactoryProviders() {
+	    return connectionFactoryProviders;
+	}
+	
 	protected SessionAwareCache<CachedResults> getRsCache() {
 		return this.rs;
 	}

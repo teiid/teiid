@@ -24,6 +24,7 @@ import java.io.File;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -32,6 +33,9 @@ import org.teiid.language.Argument;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.Call;
 import org.teiid.language.Literal;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Procedure;
+import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.translator.FileConnection;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TypeFacility;
@@ -41,9 +45,12 @@ public class TestFileExecutionFactory {
 
 	@Test public void testGetTextFiles() throws Exception {
 		FileExecutionFactory fef = new FileExecutionFactory();
+		MetadataFactory mf = new MetadataFactory("vdb", 1, "text", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
+		fef.getMetadata(mf, null);
+		Procedure p = mf.getSchema().getProcedure("getTextFiles");
 		FileConnection fc = Mockito.mock(FileConnection.class);
 		Mockito.stub(fc.getFile("*.txt")).toReturn(new File(UnitTestUtil.getTestDataPath(), "*.txt"));
-		Call call = fef.getLanguageFactory().createCall("getTextFiles", Arrays.asList(new Argument(Direction.IN, new Literal("*.txt", TypeFacility.RUNTIME_TYPES.STRING), TypeFacility.RUNTIME_TYPES.STRING, null)), null);
+		Call call = fef.getLanguageFactory().createCall("getTextFiles", Arrays.asList(new Argument(Direction.IN, new Literal("*.txt", TypeFacility.RUNTIME_TYPES.STRING), TypeFacility.RUNTIME_TYPES.STRING, null)), p);
 		ProcedureExecution pe = fef.createProcedureExecution(call, null, null, fc);
 		pe.execute();
 		int count = 0;
@@ -60,7 +67,7 @@ public class TestFileExecutionFactory {
 		assertEquals(2, count);
 		
 		
-		call = fef.getLanguageFactory().createCall("getTextFiles", Arrays.asList(new Argument(Direction.IN, new Literal("*1*", TypeFacility.RUNTIME_TYPES.STRING), TypeFacility.RUNTIME_TYPES.STRING, null)), null);
+		call = fef.getLanguageFactory().createCall("getTextFiles", Arrays.asList(new Argument(Direction.IN, new Literal("*1*", TypeFacility.RUNTIME_TYPES.STRING), TypeFacility.RUNTIME_TYPES.STRING, null)), p);
 		pe = fef.createProcedureExecution(call, null, null, fc);
 		Mockito.stub(fc.getFile("*1*")).toReturn(new File(UnitTestUtil.getTestDataPath(), "*1*"));
 		pe.execute();

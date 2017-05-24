@@ -54,7 +54,7 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
     protected Map<String, FunctionModifier> functionModifiers = new TreeMap<String, FunctionModifier>(String.CASE_INSENSITIVE_ORDER);
     
     private int maxBulkInsertSize = 100;
-
+    
 	public CouchbaseExecutionFactory() {
 	    setSupportsSelectDistinct(true);
 		setSourceRequiredForMetadata(false);
@@ -78,14 +78,14 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
             public List<?> translate(Function function) {
                 Expression param = function.getParameters().get(0);
                 int targetCode = getCode(function.getType());
-                if(targetCode == BYTE || targetCode == SHORT || targetCode == INTEGER || targetCode == LONG || targetCode == FLOAT || targetCode == DOUBLE ) {
+                if(targetCode == BYTE || targetCode == SHORT || targetCode == INTEGER || targetCode == LONG || targetCode == FLOAT || targetCode == DOUBLE || targetCode == BIGINTEGER || targetCode == BIGDECIMAL) {
                     return Arrays.asList("TONUMBER" + Tokens.LPAREN, param, Tokens.RPAREN);//$NON-NLS-1$ 
                 } else if(targetCode == STRING || targetCode == CHAR) {
                     return Arrays.asList("TOSTRING" + Tokens.LPAREN, param, Tokens.RPAREN);//$NON-NLS-1$ 
                 } else if(targetCode == BOOLEAN) {
                     return Arrays.asList("TOBOOLEAN" + Tokens.LPAREN, param, Tokens.RPAREN);//$NON-NLS-1$ 
                 } else {
-                    return Arrays.asList("TOOBJECT" + Tokens.LPAREN, param, Tokens.RPAREN);//$NON-NLS-1$ 
+                    return Arrays.asList("TOATOM" + Tokens.LPAREN, param, Tokens.RPAREN);//$NON-NLS-1$ 
                 }
             }});
 		
@@ -309,7 +309,7 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
         return new N1QLUpdateVisitor(this);
     }
 
-    public Object retrieveValue(Class<?> columnType, Object value) {
+    public Object retrieveValue(Class<?> columnType, Object value) throws TranslatorException {
         
         if (value == null) {
             return null;
@@ -392,6 +392,17 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
     public void setMaxBulkInsertSize(int maxBulkInsertSize) {
         Assertion.assertTrue(maxBulkInsertSize > 0, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29020));
         this.maxBulkInsertSize = maxBulkInsertSize;
+    }
+
+    @Override
+    public boolean supportsConvert(int fromType, int toType) {
+        //support only the known types
+        if (toType == FunctionModifier.STRING || toType == FunctionModifier.INTEGER || toType == FunctionModifier.LONG
+            || toType == FunctionModifier.DOUBLE || toType == FunctionModifier.BOOLEAN || toType == FunctionModifier.BIGINTEGER
+            || toType == FunctionModifier.BIGDECIMAL || toType == FunctionModifier.OBJECT) {
+            return true;
+        }
+        return super.supportsConvert(fromType, toType);
     }
 
 }

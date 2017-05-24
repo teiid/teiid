@@ -26,6 +26,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Properties;
@@ -345,6 +346,12 @@ public class TestEmbeddedServerAdmin {
 		admin.getDataSourceTemplateNames();
 		admin.markDataSourceAvailable("");
 	}
+	
+	@Test
+    public void testDataSources_1() throws AdminException{
+	    Collection<String> names = admin.getDataSourceNames();
+        assertEquals(0, names.size());
+    }
 	
 	@Test
 	public void testGetSchema() throws AdminException {
