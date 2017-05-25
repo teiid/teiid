@@ -514,7 +514,7 @@ public class N1QLVisitor extends SQLStringVisitor{
             return;
         }
         
-        if(!isArrayTable && table.getMetadataObject().getProperty(IS_ARRAY_TABLE, false).equals(TRUE_VALUE)) {
+        if(!isArrayTable && table.getMetadataObject().getProperty(IS_ARRAY_TABLE, false) != null && table.getMetadataObject().getProperty(IS_ARRAY_TABLE, false).equals(TRUE_VALUE)) {
             this.isArrayTable = true;
         }
 
