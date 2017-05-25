@@ -1,0 +1,39 @@
+SET NAMESPACE 'http://www.teiid.org/translator/couchbase/2017' AS teiid_couchbase;
+
+CREATE FOREIGN TABLE ExampleA (
+	documentID string OPTIONS (UPDATABLE FALSE),
+	name string OPTIONS (NAMEINSOURCE '`test`.`name`'),
+	CONSTRAINT PK0 PRIMARY KEY(documentID)
+) OPTIONS (NAMEINSOURCE '`test`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false', "teiid_couchbase:NAMEDTYPEPAIR" '`name`:''ExampleA''');
+
+CREATE FOREIGN TABLE ExampleB (
+	documentID string OPTIONS (UPDATABLE FALSE),
+	name string OPTIONS (NAMEINSOURCE '`test`.`name`'),
+	CONSTRAINT PK0 PRIMARY KEY(documentID)
+) OPTIONS (NAMEINSOURCE '`test`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false', "teiid_couchbase:NAMEDTYPEPAIR" '`name`:''ExampleB''');
+
+CREATE FOREIGN TABLE QuickstartA (
+	documentID string OPTIONS (UPDATABLE FALSE),
+	category string OPTIONS (NAMEINSOURCE '`test`.`category`'),
+	CONSTRAINT PK0 PRIMARY KEY(documentID)
+) OPTIONS (NAMEINSOURCE '`test`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false', "teiid_couchbase:NAMEDTYPEPAIR" '`category`:''QuickstartA''');
+
+CREATE FOREIGN TABLE QuickstartB (
+	documentID string OPTIONS (UPDATABLE FALSE),
+	category string OPTIONS (NAMEINSOURCE '`test`.`category`'),
+	name string OPTIONS (NAMEINSOURCE '`test`.`name`'),
+	type string OPTIONS (NAMEINSOURCE '`test`.`type`'),
+	CONSTRAINT PK0 PRIMARY KEY(documentID)
+) OPTIONS (NAMEINSOURCE '`test`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false', "teiid_couchbase:NAMEDTYPEPAIR" '`type`:''QuickstartB''');
+
+CREATE FOREIGN TABLE SampleA (
+	documentID string OPTIONS (UPDATABLE FALSE),
+	type string OPTIONS (NAMEINSOURCE '`test`.`type`'),
+	CONSTRAINT PK0 PRIMARY KEY(documentID)
+) OPTIONS (NAMEINSOURCE '`test`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false', "teiid_couchbase:NAMEDTYPEPAIR" '`type`:''SampleA''');
+
+CREATE FOREIGN TABLE SampleB (
+	documentID string OPTIONS (UPDATABLE FALSE),
+	type string OPTIONS (NAMEINSOURCE '`test`.`type`'),
+	CONSTRAINT PK0 PRIMARY KEY(documentID)
+) OPTIONS (NAMEINSOURCE '`test`', UPDATABLE TRUE, "teiid_couchbase:ISARRAYTABLE" 'false', "teiid_couchbase:NAMEDTYPEPAIR" '`type`:''SampleB''');
