@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -70,7 +71,9 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
     
     private String typeNameList; 
     
-    private Map<String, String> typeNameMap;
+    private String sampleKeyspaces = ALL_COLS;
+    
+    private Map<String, List<String>> typeNameMap;
             
     @Override
     public void process(MetadataFactory mf, CouchbaseConnection conn) throws TranslatorException {
@@ -102,12 +105,22 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
             namespace = DEFAULT_NAMESPACE;
         }
         
+        Set<String> keyspaceSet = null;
+        if(sampleKeyspaces.trim().length() > 0 && !sampleKeyspaces.equals(ALL_COLS)) {
+            String[] array= sampleKeyspaces.split(COMMA);
+            keyspaceSet = new HashSet<>(Arrays.asList(array));
+        }
+        
         List<String> results = new ArrayList<>();
         String n1qlKeyspaces = buildN1QLKeyspaces(namespace);
         List<N1qlQueryRow> keyspaces = conn.executeQuery(n1qlKeyspaces).allRows();
         for(N1qlQueryRow row : keyspaces){
             String keyspace = row.value().getString(NAME);
-            results.add(keyspace);
+            if(keyspaceSet == null) {
+                results.add(keyspace);
+            } else if(keyspaceSet.contains(keyspace) || keyspaceSet.contains(nameInSource(keyspace))) {
+                results.add(keyspace);
+            }
         }
         
         Collections.sort(results);
@@ -136,19 +149,24 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
         
         String nameInSource = nameInSource(keyspace);
         
-        String typeName = getTypeName(nameInSource);
+        Map<String, String> tableNameTypeMap = new HashMap<>();
+        List<String> typeNameList = getTypeName(nameInSource);
         List<String> dataSrcTableList = new ArrayList<>();
-        if(typeName != null) {
-            String typeQuery = buildN1QLTypeQuery(typeName, namespace, keyspace);
+        if(typeNameList != null && typeNameList.size() > 0) {
+            String typeQuery = buildN1QLTypeQuery(typeNameList, namespace, keyspace);
             LogManager.logTrace(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29003, typeQuery)); 
             List<N1qlQueryRow> rows = conn.executeQuery(typeQuery).allRows();
             
             for(N1qlQueryRow row : rows) {
                 JsonObject rowJson = row.value();
-                String type = trimWave(typeName);
-                String value = rowJson.getString(type);
-                if(value != null) {
-                    dataSrcTableList.add(value);
+                for(String typeName : typeNameList) {
+                    String type = trimWave(typeName);
+                    String value = rowJson.getString(type);
+                    if(value != null) {
+                        dataSrcTableList.add(value);
+                        tableNameTypeMap.put(value, typeName);
+                        break;
+                    }
                 }
             }
         } else {
@@ -172,7 +190,7 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
             mf.addPrimaryKey("PK0", Arrays.asList(DOCUMENTID), table); //$NON-NLS-1$
             
             if(!name.equals(keyspace)) {
-                String namedTypePair = buildNamedTypePair(typeName, name);
+                String namedTypePair = buildNamedTypePair(tableNameTypeMap.get(name), name);
                 table.setProperty(NAMED_TYPE_PAIR, namedTypePair);
             }
             
@@ -187,7 +205,7 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
                 LogManager.logInfo(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29008, this.sampleSize));
             }
             
-            String query = buildN1QLQuery(typeName, name, namespace, keyspace, this.sampleSize, hasTypeIdentifier);
+            String query = buildN1QLQuery(tableNameTypeMap.get(name), name, namespace, keyspace, this.sampleSize, hasTypeIdentifier);
             LogManager.logTrace(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29003, query)); 
             Iterator<N1qlQueryRow> result = conn.executeQuery(query).iterator();
             while(result.hasNext()) {
@@ -426,7 +444,7 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
         return sb.toString();
     }
     
-    private String getTypeName(String keyspace) {
+    private List<String> getTypeName(String keyspace) {
         
         if(this.typeNameList == null) {
             LogManager.logWarning(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29009));
@@ -439,7 +457,12 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
                 Pattern typeNamePattern = Pattern.compile(CouchbaseProperties.TPYENAME_MATCHER_PATTERN);
                 Matcher typeGroupMatch = typeNamePattern.matcher(typeNameList);
                 while (typeGroupMatch.find()) {
-                    typeNameMap.put(typeGroupMatch.group(1), typeGroupMatch.group(2));
+                    String key = typeGroupMatch.group(1);
+                    String value = typeGroupMatch.group(2);
+                    if(typeNameMap.get(key) == null) {
+                        typeNameMap.put(key, new ArrayList<>(3));
+                    }
+                    typeNameMap.get(key).add(value);
                 }
             } catch (Exception e) {
                 LogManager.logError(LogConstants.CTX_CONNECTOR, e, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29012, typeNameList));
@@ -510,10 +533,18 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
         return "SELECT name, namespace_id FROM system:keyspaces WHERE namespace_id = '" + namespace + "'"; //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    private String buildN1QLTypeQuery(String typeName, String namespace, String keyspace) {
+    private String buildN1QLTypeQuery(List<String> typeNameList, String namespace, String keyspace) {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT DISTINCT "); //$NON-NLS-1$
-        sb.append(typeName);
+        boolean comma = false;
+        for(String typeName : typeNameList) {
+            if(comma) {
+                sb.append(COMMA).append(SPACE);
+            } else {
+                comma = true;
+            }
+            sb.append(typeName);
+        }
         sb.append(buildN1QLFrom(namespace, keyspace));
         return sb.toString();
     }
@@ -575,6 +606,15 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
         this.typeNameList = typeNameList;
     }
     
+    @TranslatorProperty(display = "SampleKeyspaces", category = PropertyType.IMPORT, description = "A comma-separate list of the keyspace names to define which keyspaces that should be map, default map all keyspaces") //$NON-NLS-1$ //$NON-NLS-2$
+    public String getSampleKeyspaces() {
+        return sampleKeyspaces;
+    }
+
+    public void setSampleKeyspaces(String sampleKeyspaces) {
+        this.sampleKeyspaces = sampleKeyspaces;
+    }
+
     /**
      * The dimension of nested array, a dimension is a hint of nested array table name, and index name.
      * 
