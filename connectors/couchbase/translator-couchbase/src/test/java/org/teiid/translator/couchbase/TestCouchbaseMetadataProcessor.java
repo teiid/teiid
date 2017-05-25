@@ -37,8 +37,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Matcher;
@@ -113,6 +115,27 @@ public class TestCouchbaseMetadataProcessor {
         Table table2 = createTable(mf, keyspace2, typedName);
         mp.scanRow("test2", "`test2`", formCustomer(), mf, table2, table2.getName(), false, new Dimension());
         helpTest("customerDuplicatedTypedName.expected", mf);
+    }
+    
+    @Test
+    public void testMoreTypedNameInOneKeyspace() throws ResourceException {
+        
+        CouchbaseMetadataProcessor mp = new CouchbaseMetadataProcessor(); 
+        mp.setTypeNameList("`test`:`type`,`test`:`name`,`test`:`category`");
+        MetadataFactory mf = new MetadataFactory("vdb", 1, "couchbase", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
+        Table ea = createTable(mf, KEYSPACE, "name", "ExampleA");
+        mp.scanRow("test", KEYSPACE_SOURCE, JsonObject.create().put("name", "ExampleA"), mf, ea, ea.getName(), false, new Dimension());
+        Table eb = createTable(mf, KEYSPACE, "name", "ExampleB");
+        mp.scanRow("test", KEYSPACE_SOURCE, JsonObject.create().put("name", "ExampleB"), mf, eb, eb.getName(), false, new Dimension());
+        Table sa = createTable(mf, KEYSPACE, "type", "SampleA");
+        mp.scanRow("test", KEYSPACE_SOURCE, JsonObject.create().put("type", "SampleA"), mf, sa, sa.getName(), false, new Dimension());
+        Table sb = createTable(mf, KEYSPACE, "type", "SampleB");
+        mp.scanRow("test", KEYSPACE_SOURCE, JsonObject.create().put("type", "SampleB"), mf, sb, sb.getName(), false, new Dimension());
+        Table qa = createTable(mf, KEYSPACE, "category", "QuickstartA");
+        mp.scanRow("test", KEYSPACE_SOURCE, JsonObject.create().put("category", "QuickstartA"), mf, qa, qa.getName(), false, new Dimension());
+        Table qb = createTable(mf, KEYSPACE, "type", "QuickstartB");
+        mp.scanRow("test", KEYSPACE_SOURCE, JsonObject.create().put("type", "QuickstartB").put("name", "SampleC").put("category", "ExampleC"), mf, qb, qb.getName(), false, new Dimension());
+        helpTest("moreTypedNameInOneKeyspace.expected", mf);
     }
     
     @Test
@@ -212,6 +235,10 @@ public class TestCouchbaseMetadataProcessor {
     }
     
     static Table createTable(MetadataFactory mf, String keyspace, String tableName) {
+        return createTable(mf, keyspace, "type", tableName);
+    }
+    
+    static Table createTable(MetadataFactory mf, String keyspace, String typedKey, String tableName) {
         if (mf.getSchema().getTable(tableName) != null && !tableName.equals(keyspace)) { 
             tableName = keyspace + UNDERSCORE + tableName;
         }
@@ -220,7 +247,7 @@ public class TestCouchbaseMetadataProcessor {
         table.setSupportsUpdate(true);
         table.setProperty(IS_ARRAY_TABLE, FALSE_VALUE);
         if(!tableName.equals(keyspace)){
-            table.setProperty(NAMED_TYPE_PAIR, buildNamedTypePair("`type`", tableName));
+            table.setProperty(NAMED_TYPE_PAIR, buildNamedTypePair("`" + typedKey + "`", tableName));
         }
         mf.addColumn(DOCUMENTID, STRING, table);
         mf.addPrimaryKey("PK0", Arrays.asList(DOCUMENTID), table); //$NON-NLS-1$
@@ -370,5 +397,26 @@ public class TestCouchbaseMetadataProcessor {
         }
         assertTrue(typeNameMap.values().contains("`type`"));
         assertEquals("`type`", typeNameMap.get("`product`"));
+    }
+    
+    @Test
+    public void testTypeListParse_2() {
+        
+        Map<String, List<String>> typeNameMap = new HashMap<>();
+        String typeNameList = "`test`:`type`,`test`:`name`,`test`:`category`,`default`:`type`";
+        Pattern typeNamePattern = Pattern.compile(CouchbaseProperties.TPYENAME_MATCHER_PATTERN);
+        Matcher typeGroupMatch = typeNamePattern.matcher(typeNameList);
+        while (typeGroupMatch.find()) {
+            String key = typeGroupMatch.group(1);
+            String value = typeGroupMatch.group(2);
+            if(typeNameMap.get(key) == null) {
+                typeNameMap.put(key, new ArrayList<>(3));
+            }
+            typeNameMap.get(key).add(value);
+        }
+        assertEquals(typeNameMap.get("`test`").size(), 3);
+        assertEquals(typeNameMap.get("`default`").size(), 1);
+        assertTrue(typeNameMap.keySet().contains("`test`"));
+        
     }
 }
