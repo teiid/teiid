@@ -4,7 +4,7 @@
     <parent>
         <artifactId>infinispan</artifactId>
         <groupId>org.jboss.teiid.connectors</groupId>
-        <version>9.3.0.CR1</version>
+        <version>9.3.0.CR2-SNAPSHOT</version>
     </parent>
     <artifactId>feature-pack-infinispan</artifactId>
     <name>Infinispan Feature Pack</name>
