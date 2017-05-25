@@ -591,6 +591,11 @@
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
+                <groupId>org.jboss.teiid</groupId>
+                <artifactId>saxon-xom</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+			<dependency>
 				<groupId>org.jboss.teiid</groupId>
 				<artifactId>teiid-engine</artifactId>
 				<type>test-jar</type>
@@ -1283,5 +1288,6 @@
 		<module>teiid-feature-pack</module>
         <module>connectors</module>
 		<module>test-integration</module>
+		<module>saxon-xom</module>
 	</modules>
 </project>

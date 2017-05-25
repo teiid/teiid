@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<parent>
+		<artifactId>teiid-parent</artifactId>
+		<groupId>org.jboss.teiid</groupId>
+        <version>9.3.0.Beta3-SNAPSHOT</version>
+	</parent>
+	<licenses>
+        <license>
+            <name>Mozilla Public License</name>
+            <url>https://www.mozilla.org/en-US/MPL/2.0/</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+	<modelVersion>4.0.0</modelVersion>
+	<name>saxon-xom</name>
+    <artifactId>saxon-xom</artifactId>
+    <description>Saxon adapter for XOM</description>
+    
+    <dependencies>
+
+		<dependency>
+			<groupId>net.sf.saxon</groupId>
+			<artifactId>Saxon-HE</artifactId>
+		</dependency>
+		
+		<dependency>
+            <groupId>com.io7m.xom</groupId>
+            <artifactId>xom</artifactId>
+        </dependency>
+                          
+	</dependencies>
+
+</project>

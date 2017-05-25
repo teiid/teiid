@@ -10,11 +10,6 @@
             <name>Apache License, Version 2.0</name>
             <url>https://www.apache.org/licenses/LICENSE-2.0</url>
         </license>
-        <license>
-            <name>Mozilla Public License</name>
-            <url>https://www.mozilla.org/en-US/MPL/2.0/</url>
-            <distribution>repo</distribution>
-        </license>
     </licenses>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>teiid-engine</artifactId>
@@ -130,6 +125,11 @@
 		<dependency>
             <groupId>nux</groupId>
             <artifactId>nux</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>saxon-xom</artifactId>
         </dependency>
 
         <dependency>

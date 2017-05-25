@@ -6,6 +6,7 @@
     
     <resources>
         <artifact name="${org.jboss.teiid:teiid-engine}"/>
+        <artifact name="${org.jboss.teiid:saxon-xom}"/>
         <artifact name="${org.jboss.teiid:teiid-jboss-integration}"/>
         <artifact name="${org.jboss.teiid:teiid-metadata}"/>
         <artifact name="${org.jboss.teiid:teiid-runtime}"/>
