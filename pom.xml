@@ -45,7 +45,7 @@
         <version.org.antlr>4.5</version.org.antlr>
         <version.org.mongodb.mongo-java-driver>2.13.1</version.org.mongodb.mongo-java-driver>
         <version.com.couchbase.client>2.4.2</version.com.couchbase.client>
-        <version.teiid.console>3.0</version.teiid.console>
+        <version.teiid.console>3.0.1</version.teiid.console>
         <version.net.sourceforge.saxon>9.5.1-6</version.net.sourceforge.saxon>
         <version.jta>1.1</version.jta>
         <version.org.jboss.oreva>1.0.0</version.org.jboss.oreva>
