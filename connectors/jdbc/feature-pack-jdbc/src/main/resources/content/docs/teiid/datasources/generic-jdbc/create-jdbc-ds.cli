@@ -1,0 +1,14 @@
+# note that driver-name could be driver's module name if you went module approach.
+/subsystem=datasources/data-source=jdbcDS:add(jndi-name=java:/jdbcDS,  driver-name=<name>.jar, driver-class=<class name>, connection-url=jdbc:type://{host}:{port}/{db-name},user-name={user}, password={password})
+
+# XA Data source
+#batch
+#/subsystem=datasources/xa-data-source=jdbcDS:add(jndi-name=java:/jdbcDS,  driver-name=<name>.jar, xa-datasource-class=<class name>, user-name={user}, password={password})
+#/subsystem=datasources/xa-data-source=jdbcDS/xa-datasource-properties=DatabaseName:add(value={database_name})
+#/subsystem=datasources/xa-data-source=jdbcDS/xa-datasource-properties=PortNumber:add(value={port})
+#/subsystem=datasources/xa-data-source=jdbcDS/xa-datasource-properties=ServerName:add(value={host})
+#/subsystem=datasources/xa-data-source=jdbcDS:enable
+#run-batch
+
+
+## If you are working in a clustered environment, prepend "/profile=ha" to all the above commands that start with "/subsystem=.." 
