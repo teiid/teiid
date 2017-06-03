@@ -50,6 +50,14 @@ public class Schema extends AbstractMetadataRecord {
 		}
 		resolvingOrder.add(table);
 	}
+
+	public Table removeTable(String tableName) {
+		Table previous = this.tables.remove(tableName);
+		if (previous != null){
+			resolvingOrder.remove(previous);
+		}
+		return previous;
+	}
 	
 	public void addProcedure(Procedure procedure) {
 		procedure.setParent(this);

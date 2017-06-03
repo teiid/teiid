@@ -72,6 +72,7 @@ public class MetadataFactory implements Serializable {
 	private static final String TEIID_LDAP = "teiid_ldap"; //$NON-NLS-1$
 	private static final String TEIID_PI = "teiid_pi"; //$NON-NLS-1$
 	private static final String TEIID_COUCHBASE = "teiid_couchbase"; //$NON-NLS-1$
+	private static final String TEIID_INFINISPAN = "teiid_ispn"; //$NON-NLS-1$
 
 	private static final long serialVersionUID = 8590341087771685630L;
 
@@ -104,6 +105,7 @@ public class MetadataFactory implements Serializable {
 	public static final String LDAP_URI = "{http://www.teiid.org/translator/ldap/2015}"; //$NON-NLS-1$
 	public static final String PI_URI = "{http://www.teiid.org/translator/pi/2016}"; //$NON-NLS-1$
 	public static final String COUCHBASE_URI = "{http://www.teiid.org/translator/couchbase/2017}"; //$NON-NLS-1$
+	public static final String INFINISPAN_URI = "{http://www.teiid.org/translator/infinispan/2017}"; //$NON-NLS-1$
 
 	public static final Map<String, String> BUILTIN_NAMESPACES;
 	static {
