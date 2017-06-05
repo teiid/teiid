@@ -39,6 +39,7 @@ import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
@@ -57,7 +58,7 @@ public class SolrExecutionFactory extends ExecutionFactory<ConnectionFactory, So
         registerFunctionModifier("*", new AliasModifier("product"));//$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier("/", new AliasModifier("div"));//$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier(SourceSystemFunctions.POWER, new AliasModifier("pow"));//$NON-NLS-1$
-		
+        addPushDownFunction("SOLR", "GAP", TypeFacility.RUNTIME_NAMES.TIMESTAMP, TypeFacility.RUNTIME_NAMES.TIMESTAMP, TypeFacility.RUNTIME_NAMES.STRING).setNullOnNull(true);
 	}
 	
 	@Override
@@ -222,4 +223,14 @@ public class SolrExecutionFactory extends ExecutionFactory<ConnectionFactory, So
 	public boolean returnsSingleUpdateCount() {
 		return true;
 	}
+	
+	@Override
+    public boolean supportsFunctionsInGroupBy() {
+        return true;
+    }
+      
+    @Override
+    public boolean supportsGroupBy() {
+        return true;
+    }
 }

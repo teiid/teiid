@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.teiid.translator.solr;
 
 import static org.teiid.language.SQLConstants.Reserved.*;
@@ -23,11 +24,13 @@ import static org.teiid.language.visitor.SQLStringVisitor.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 import java.util.TimeZone;
 
 import org.apache.solr.client.solrj.SolrQuery;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.*;
@@ -36,6 +39,7 @@ import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.FunctionModifier;
 
 public class SolrSQLHierarchyVistor extends HierarchyVisitor {
@@ -55,6 +59,28 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	private SolrExecutionFactory ef;
 	private HashMap<String, String> columnAliasMap = new HashMap<String, String>();
 	private boolean countStarInUse;
+	//NOTE: If the entered teiid query doesn't contain a date range that specify the date from-to range, the following error message will appear.
+	private static final String DATE_RANGE_MISSING_MSG = "Please provide the query with date range in where clause; For instance => \n 'timestamp' BETWEEN 'yyyy-MM-dd HH:mm:ss' AND 'yyyy-MM-dd HH:mm:ss'";
+	private static final String FUNCTION_IS_NOT_ALLOWED_MSG = "Only GAP(timestampColumn, 'TimeGap') is allowed \n TimeGap = ['MINUTE', 'HOUR', 'DAY', 'MONTH', 'YEAR']";
+    private static final String FUNCTION_DOESNT_MATCH = "Function in the group by clause must match that in the select clause";
+    private static final String GAP_NOT_ALLOWED_MSG = "GAP is only allowed in SELECT queries";
+    	
+	private static final String FACET_TAG = "{!tag=r1}";
+	private static final String FACET_RANGE_TAG = "{!range=r1}";
+	private static final String FACET_RANGE = "facet.range";
+	private static final String FACET_RANGE_START = "facet.range.start";
+	private static final String FACET_RANGE_END = "facet.range.end";
+	private static final String FACET_RANGE_GAP = "facet.range.gap";
+	private static final String PLUS_ONE = "+1";
+	private static final String MINUTE = "MINUTE";
+	private static final String HOUR = "HOUR";
+	private static final String DAY = "DAY";
+	private static final String MONTH = "MONTH";
+	private static final String YEAR = "YEAR";
+	
+	private String timeGap = null;
+	private ColumnReference gapColumn = null;
+    private Condition where;
 
 	public SolrSQLHierarchyVistor(RuntimeMetadata metadata, SolrExecutionFactory ef) {
 		this.metadata = metadata;
@@ -62,7 +88,7 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	}
 
 	@Override
-	public void visit(DerivedColumn obj) {
+	public void visit(DerivedColumn obj) {		
 		visitNode(obj.getExpression());
 		
 		String expr = this.onGoingExpression.pop();
@@ -87,16 +113,18 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	
 	@Override
 	public void visit(ColumnReference obj) {
+		String columnName;
 		if (obj.getMetadataObject() != null) {
-			this.onGoingExpression.push(getColumnName(obj));
+			columnName = getColumnName(obj);
+		} else {
+			columnName = this.columnAliasMap.get(getColumnName(obj));
 		}
-		else {
-			this.onGoingExpression.push(this.columnAliasMap.get(getColumnName(obj)));	
-		}
+		
+		this.onGoingExpression.push(columnName);
 	}
 
 	/**
-	 * @return the full column names tableName.columnNames
+	 * @return the full gapColumn names tableName.columnNames
 	 */
 	public List<String> getFieldNameList() {
 		return fieldNameList;
@@ -107,7 +135,7 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	 * <=, >=
 	 */
 	@Override
-	public void visit(Comparison obj) {
+	public void visit(Comparison obj) {		
 		visitNode(obj.getLeftExpression());
 		String lhs = this.onGoingExpression.pop();
 		
@@ -149,7 +177,7 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 
 	@Override
 	public void visit(AndOr obj) {
-
+		
 		// prepare statement
 		buffer.append(Tokens.LPAREN);
 		buffer.append(Tokens.LPAREN);
@@ -222,8 +250,9 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 
 	@Override
 	public void visit(Literal obj) {
+		
     	if (obj.getValue() == null) {
-            buffer.append(NULL);
+    	    this.onGoingExpression.push(NULL);
         } else {
             Class<?> type = obj.getType();
             Object val = obj.getValue();
@@ -265,10 +294,8 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	@Override
 	public void visit(Limit obj) {
 		this.limitInUse = true;
-		if (!countStarInUse) {
-			this.query.setRows(obj.getRowLimit());
-			this.query.setStart(obj.getRowOffset());
-		}
+		this.query.setRows(obj.getRowLimit());
+		this.query.setStart(obj.getRowOffset());
 	}
 	
 	@Override
@@ -285,23 +312,63 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	
 	@Override
 	public void visit(Function obj) {
-		FunctionModifier funcModifier = this.ef.getFunctionModifiers().get(obj.getName());
-		if (funcModifier != null) {
-			funcModifier.translate(obj);
-		}
-			
+	    FunctionModifier funcModifier = this.ef.getFunctionModifiers().get(obj.getName());
+        if (funcModifier != null) {
+            funcModifier.translate(obj);
+        }
+        
 		StringBuilder sb = new StringBuilder();
-		visitNodes(obj.getParameters());
-		for (int i = 0; i < obj.getParameters().size(); i++) {
-			sb.insert(0,this.onGoingExpression.pop());
-			if (i < obj.getParameters().size()-1) {
-				sb.insert(0,Tokens.COMMA);
+		if(obj.getName().equalsIgnoreCase("gap")) {
+		    Expression gapExpr = obj.getParameters().get(1);
+		    if (!(gapExpr instanceof Literal)) {
+		        throw new TeiidRuntimeException(new TranslatorException(FUNCTION_IS_NOT_ALLOWED_MSG));
+		    }
+			validateTimeGap(((Literal)gapExpr).getValue().toString());
+			Expression expression = obj.getParameters().get(0);
+			if (!(expression instanceof ColumnReference)) {
+			    throw new TeiidRuntimeException(new TranslatorException(FUNCTION_IS_NOT_ALLOWED_MSG));
 			}
+			if (this.gapColumn != null && !this.gapColumn.getMetadataObject().equals(((ColumnReference) expression).getMetadataObject())) {
+			    throw new TeiidRuntimeException(new TranslatorException(FUNCTION_DOESNT_MATCH));
+			}
+            this.gapColumn = (ColumnReference) expression;
+            visit(gapColumn);
+			sb.insert(0,this.onGoingExpression.pop());
+		} else {
+			visitNodes(obj.getParameters());
+			for (int i = 0; i < obj.getParameters().size(); i++) {
+				sb.insert(0,this.onGoingExpression.pop());
+				if (i < obj.getParameters().size()-1) {
+					sb.insert(0,Tokens.COMMA);
+				}
+			}
+			sb.insert(0,Tokens.LPAREN);
+			sb.insert(0,obj.getName());
+			sb.append(Tokens.RPAREN);
 		}
-		sb.insert(0,Tokens.LPAREN);
-		sb.insert(0,obj.getName());
-		sb.append(Tokens.RPAREN);
+		
 		this.onGoingExpression.push(sb.toString());
+	}
+	
+	
+	private void validateTimeGap(String val) {
+	    if (val == null) {
+	        throw new TeiidRuntimeException(new TranslatorException(FUNCTION_IS_NOT_ALLOWED_MSG));
+	    }
+		switch(val){
+			case MINUTE:
+			case HOUR:
+			case DAY:
+			case MONTH:
+			case YEAR:
+			    if (this.timeGap != null && !this.timeGap.equals(val)) {
+			        throw new TeiidRuntimeException(new TranslatorException(FUNCTION_DOESNT_MATCH));
+			    }
+			    this.timeGap = val;
+			    break;
+			default:
+			    throw new TeiidRuntimeException(new TranslatorException(FUNCTION_IS_NOT_ALLOWED_MSG));
+		}
 	}
 	
 	@Override
@@ -324,6 +391,111 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 		}
     }	
 	
+	@Override
+	public void visit(GroupBy obj) {
+	    
+	    String gap = this.timeGap;
+        this.timeGap = null;
+	    
+		StringBuilder facetFields = new StringBuilder();
+
+		visitNodes(obj.getElements());
+		
+		if (gap != null) {
+		    if (timeGap == null) {
+		        throw new TeiidRuntimeException(new TranslatorException(FUNCTION_DOESNT_MATCH));
+		    }
+		    validateTimeGap(gap);
+		}
+		
+		Stack<String> reversedOnGoingExpression = reverseOnGoingExpression(this.onGoingExpression);
+
+		this.query.setFacet(true);
+
+		if (this.timeGap == null) {
+		    String facetField = reversedOnGoingExpression.pop();
+			facetFields.append(facetField);
+		} else {
+		    String facetField = getColumnName(this.gapColumn);
+		    for (Iterator<String> iter = reversedOnGoingExpression.iterator(); iter.hasNext();) {
+		        String field = iter.next();
+		        if (field.equals(facetField)) {
+		            iter.remove();
+		        }
+		    }
+            setFacetDateRange(facetField);
+		}
+
+		while (!reversedOnGoingExpression.isEmpty()) {
+			facetFields.append(Tokens.COMMA);
+			facetFields.append(reversedOnGoingExpression.pop());
+		}
+
+		if (this.timeGap == null) {
+			this.query.addFacetPivotField(facetFields.toString());
+		} else if (facetFields.length() > 1) {
+			facetFields.deleteCharAt(0); // remove the first comma
+			facetFields.insert(0, FACET_RANGE_TAG);
+			this.query.addFacetPivotField(facetFields.toString());
+		}
+		this.query.setFacetMissing(true);
+	}
+
+	/**
+	 * Examine the where clause for predicates that match an inclusive range over the
+	 * facet field
+	 */
+    private void setFacetDateRange(String facetField) {
+        this.query.add(FACET_RANGE, FACET_TAG + facetField);
+        boolean lower = false;
+        boolean upper = false;
+        for (Condition cond : LanguageUtil.separateCriteriaByAnd(where)) {
+            if (!(cond instanceof Comparison)) {
+                continue;
+            }
+            Comparison comp = (Comparison)cond;
+            if (!(comp.getLeftExpression() instanceof ColumnReference)) {
+                continue;
+            }
+            ColumnReference cr = (ColumnReference)comp.getLeftExpression();
+            if (!cr.getMetadataObject().equals(this.gapColumn.getMetadataObject())) {
+                continue;
+            }
+            if (comp.getOperator() == Comparison.Operator.LE) {
+                String val = null;
+                synchronized (sdf) {
+                    val = sdf.format(((Literal)comp.getRightExpression()).getValue());
+                }
+                this.query.add(FACET_RANGE_END, val);
+                upper = true;
+            } else if (comp.getOperator() == Comparison.Operator.GE) {
+                String val = null;
+                synchronized (sdf) {
+                    val = sdf.format(((Literal)comp.getRightExpression()).getValue());
+                }
+                this.query.add(FACET_RANGE_START, val);
+                lower = true;
+            }
+        }
+        this.query.add(FACET_RANGE_GAP, PLUS_ONE + this.timeGap);
+        if (!lower || !upper) {
+            throw new TeiidRuntimeException(new TranslatorException(DATE_RANGE_MISSING_MSG));
+        }
+    }
+	
+	/**
+     * Reverse the "onGoingExpression" stack object
+     * @param Stack<String> expression
+     * @return Stack<String> reversed expression
+     */
+	private Stack<String> reverseOnGoingExpression(Stack<String> expression) {
+		Stack<String> result = new Stack<String>();
+		while (!expression.isEmpty()) {
+			result.push(expression.pop());
+		}
+		return result;
+	}
+	
 	private String formatSolrQuery(String solrQuery) {
 		solrQuery = solrQuery.replace("%", "*"); //$NON-NLS-1$ //$NON-NLS-2$
 		solrQuery = solrQuery.replace("'",""); //$NON-NLS-1$ //$NON-NLS-2$
@@ -345,5 +517,28 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	public boolean isCountStarInUse() {
 		return countStarInUse;
 	}
+	
+	@Override
+	public void visit(Select obj) {
+        this.where = obj.getWhere();
+        super.visit(obj);
+        if (timeGap != null && obj.getGroupBy() == null) {
+            throw new TeiidRuntimeException(new TranslatorException(FUNCTION_DOESNT_MATCH));
+        }
+	}
+
+    public void visitCommand(Command command) throws TranslatorException {
+        try {
+            visitNode(command);
+            if (timeGap != null && !(command instanceof Select)) {
+                throw new TranslatorException(GAP_NOT_ALLOWED_MSG);
+            }
+        } catch (TeiidRuntimeException e) {
+            if (e.getCause() instanceof TranslatorException) {
+                throw (TranslatorException)e.getCause();
+            }
+            throw e;
+        }
+    }
 	
 }
