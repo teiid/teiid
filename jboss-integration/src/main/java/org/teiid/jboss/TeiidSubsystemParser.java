@@ -273,9 +273,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     				case WORKMANAGER:
     					bootServices.get(reader.getLocalName()).set(reader.getElementText());
     					break;
-    				case TIME_SLICE_IN_MILL_ELEMENT:
-    					bootServices.get(Element.TIME_SLICE_IN_MILLI_ELEMENT.getLocalName()).set(Integer.parseInt(reader.getElementText()));
-    					break;
     				case MAX_THREADS_ELEMENT:
     				case MAX_ACTIVE_PLANS_ELEMENT:
     				case USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT:
@@ -631,8 +628,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     				break;
     			case PROCESSOR_BATCH_SIZE_ATTRIBUTE:
     				node.get(element.getModelName()).set(Integer.parseInt(attrValue));
-    				break;
-    			case CONNECTOR_BATCH_SIZE_ATTRIBUTE:
     				break;
     			case MAX_PROCESSING_KB_ATTRIBUTE:
     				node.get(element.getModelName()).set(Integer.parseInt(attrValue));

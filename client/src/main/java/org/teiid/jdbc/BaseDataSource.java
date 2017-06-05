@@ -581,24 +581,6 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
 	}
     
     /**
-     * @deprecated
-     * @see #getAutoCommitTxn()
-     * @return
-     */
-    public String getTransactionAutoWrap() {
-        return transactionAutoWrap;
-    }
-
-    /**
-     * @deprecated
-     * @see #setAutoCommitTxn(String)
-     * @param transactionAutoWrap
-     */
-    public void setTransactionAutoWrap(String transactionAutoWrap) {
-        this.transactionAutoWrap = transactionAutoWrap;
-    }
-
-    /**
      * Returns the current setting for how connections are created by this DataSource manage transactions
      * for client requests when client applications do not use transactions.
      * Because a virtual database will likely deal with multiple underlying information sources,

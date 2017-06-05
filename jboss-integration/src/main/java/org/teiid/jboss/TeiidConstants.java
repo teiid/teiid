@@ -192,14 +192,6 @@ public class TeiidConstants {
         .setDefaultValue(new ModelNode(256))
         .build();
     
-	@Deprecated
-    public static SimpleAttributeDefinition CONNECTOR_BATCH_SIZE_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.CONNECTOR_BATCH_SIZE_ATTRIBUTE.getModelName(), ModelType.INT)
-        .setXmlName(Element.MAX_RESERVED_KB_ATTRIBUTE.getXMLName())
-        .setAllowNull(true)
-        .setAllowExpression(false)
-        .setDefaultValue(new ModelNode(512))
-        .build();  
-	
 	public static SimpleAttributeDefinition MAX_PROCESSING_KB_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.MAX_PROCESSING_KB_ATTRIBUTE.getModelName(), ModelType.INT)
         .setXmlName(Element.MAX_PROCESSING_KB_ATTRIBUTE.getXMLName())
         .setAllowNull(true)

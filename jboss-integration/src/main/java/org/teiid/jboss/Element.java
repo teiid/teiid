@@ -36,8 +36,6 @@ enum Element {
 	MAX_ACTIVE_PLANS_ELEMENT("max-active-plans", "max-active-plans"),
 	USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT("thread-count-for-source-concurrency", "thread-count-for-source-concurrency"),
 	TIME_SLICE_IN_MILLI_ELEMENT("time-slice-in-milliseconds", "time-slice-in-milliseconds"),
-	@Deprecated
-	TIME_SLICE_IN_MILL_ELEMENT("time-slice-in-millseconds", "time-slice-in-millseconds"),
 	MAX_ROWS_FETCH_SIZE_ELEMENT("max-row-fetch-size", "max-row-fetch-size"),
 	LOB_CHUNK_SIZE_IN_KB_ELEMENT("lob-chunk-size-in-kb", "lob-chunk-size-in-kb"),
 	QUERY_THRESHOLD_IN_SECS_ELEMENT("query-threshold-in-seconds", "query-threshold-in-seconds"),
@@ -56,8 +54,6 @@ enum Element {
 	BUFFER_SERVICE_ELEMENT("buffer-service"),
 	USE_DISK_ATTRIBUTE("use-disk", "buffer-service-use-disk"),
 	PROCESSOR_BATCH_SIZE_ATTRIBUTE("processor-batch-size", "buffer-service-processor-batch-size"),
-	@Deprecated
-	CONNECTOR_BATCH_SIZE_ATTRIBUTE("connector-batch-size", "buffer-service-connector-batch-size"),
 	MAX_PROCESSING_KB_ATTRIBUTE("max-processing-kb", "buffer-service-max-processing-kb"),
 	MAX_RESERVED_KB_ATTRIBUTE("max-reserve-kb", "buffer-service-max-reserve-kb"),
 	MAX_FILE_SIZE_ATTRIBUTE("max-file-size", "buffer-service-max-file-size"),
