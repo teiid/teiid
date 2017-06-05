@@ -1079,6 +1079,9 @@ public class RulePushAggregates implements
             PlanNode parentAccess = NodeEditor.findParent(originatingNode, NodeConstants.Types.ACCESS, NodeConstants.Types.GROUP);
 
             if (parentAccess != null) {
+                if (!NodeEditor.findAllNodes(parentAccess, NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE).isEmpty()) {
+                    continue; //already did a decomposition
+                }
                 while (parentAccess.getType() == NodeConstants.Types.SELECT) {
                     parentAccess = parentAccess.getParent();
                 }
