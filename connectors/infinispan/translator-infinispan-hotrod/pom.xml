@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.jboss.teiid.connectors</groupId>
 		<artifactId>infinispan</artifactId>
-		<version>9.3.0.Final</version>
+		<version>9.3.1-SNAPSHOT</version>
 	</parent>
 	<artifactId>translator-infinispan-hotrod</artifactId>
 	<name>Infinispan Protobuf Translator</name>
