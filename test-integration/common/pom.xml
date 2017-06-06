@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>teiid-test-integration</artifactId>
 		<groupId>org.jboss.teiid</groupId>
-        <version>9.3.0.CR2-SNAPSHOT</version>
+        <version>9.3.0.Final</version>
 	</parent>
 	<licenses>
         <license>
