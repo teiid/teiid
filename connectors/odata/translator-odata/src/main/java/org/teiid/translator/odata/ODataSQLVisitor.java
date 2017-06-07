@@ -56,6 +56,7 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 	protected ODataExecutionFactory executionFactory;
 	protected RuntimeMetadata metadata;
 	protected ArrayList<Column> selectColumns = new ArrayList<Column>();
+	protected ArrayList<Comparison> keyComparisons = new ArrayList<Comparison>();
 	protected StringBuilder filter = new StringBuilder();
 	private EntitiesInQuery entities = new EntitiesInQuery();
 	private Integer skip;
@@ -391,11 +392,12 @@ public class ODataSQLVisitor extends HierarchyVisitor {
         			boolean leftAdded = this.entities.addEnityKey(left);
         			if (leftAdded) {
         				iter.remove();
+        				this.keyComparisons.add(left);
         				modified = true;
         			}
         		}
         	}
-        	if (this.entities.valid() && modified) {
+        	if (this.entities.valid() && modified) {        		
     			return LanguageUtil.combineCriteria(crits);
         	}
         }
@@ -460,6 +462,7 @@ public class ODataSQLVisitor extends HierarchyVisitor {
     static class Entity {
     	Table table;
     	Map<Column, Literal> pkValues = new LinkedHashMap<Column, Literal>();
+    	Map<Column, Literal> coveredPkValues = new HashMap<Column, Literal>();
     	boolean hasValidKey = false;
     	List<Object[]> relations = new ArrayList<Object[]>();
 
@@ -479,18 +482,19 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 	    		// See any other relations exist.
 	    		for (Object[] relation:this.relations) {
 	    			if (column.equals(relation[0])){
-	    				((Entity)relation[2]).addKeyValue((Column)relation[1], value, false);
+	    				((Entity)relation[2]).addCoveredKeyValue((Column)relation[1], value);
 	    			}
 	    		}
     		}
 
-    		for (Column col:this.table.getPrimaryKey().getColumns()) {
-	        	if (this.pkValues.get(col) == null) {
-	        		return;
-	        	}
-	        }
-    		this.hasValidKey = true;
+    		setValidity();
     	}
+    	
+		public void addCoveredKeyValue(Column column, Literal value) {
+			this.coveredPkValues.put(column, value);
+			
+			setValidity();
+		}
 
     	public boolean hasValidKey() {
 	        return this.hasValidKey;
@@ -498,6 +502,15 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 
 		public void addRelation(Column self, Column other, Entity otherEntity) {
 			this.relations.add(new Object[] {self, other, otherEntity});
+		}
+		
+		private void setValidity() {
+			for (Column col:this.table.getPrimaryKey().getColumns()) {
+	        	if (this.pkValues.get(col) == null && this.coveredPkValues.get(col) == null) {
+	        		return;
+	        	}
+	        }
+    		this.hasValidKey = true;
 		}
     }
 
@@ -527,7 +540,20 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 
 		private void addEntityToURL(StringBuilder url, Entity entity) {
 			url.append(entity.table.getName());
-        	if (entity.hasValidKey()) {
+        	if (entity.hasValidKey() && !entity.pkValues.isEmpty()) {
+        		// maybe we don't have all the values right now
+        		List<Column> pkColumns = entity.table.getPrimaryKey().getColumns();
+				if(entity.pkValues.size() != pkColumns.size()) {
+        			// some values have been omitted because they were covered by a join,
+        			// but the coverage is incomplete, we have to put back the removed values
+        			for(Column pkColumn : pkColumns) {
+        				if(!entity.pkValues.containsKey(pkColumn)) {
+        					// now we have to find the associated literal
+							entity.pkValues.put(pkColumn, entity.coveredPkValues.get(pkColumn));
+        				}
+        			}
+        		}
+        		
         		boolean useNames = entity.pkValues.size() > 1; // multi-key PK, use the name value pairs
         		url.append("("); //$NON-NLS-1$
         		boolean firstKey = true;
@@ -569,8 +595,15 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 					Entity entity = getEntity(parentTable);
 					if (entity != null) {
 						Column column = columnRef.getMetadataObject();
-						if (parentTable.getPrimaryKey().getColumnByName(column.getName())!=null) {
-							entity.addKeyValue(column, (Literal)obj.getRightExpression());
+						if (isJoinOrPkColumn(column)) {
+							// we effectively add the key value only if it has not been previously
+							// covered by a join
+							Literal value = (Literal)obj.getRightExpression();
+							if(!coveredByAJoin(columnRef, value)) {
+								entity.addKeyValue(column, value);
+							} else {
+								entity.addCoveredKeyValue(column, value);
+							}
 							return true;
 						}
 					}
@@ -585,6 +618,11 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 						Entity rightEntity = getEntity((Table)right.getParent());
 						leftEntity.addRelation(left, right, rightEntity);
 						rightEntity.addRelation(right,left, leftEntity);
+						// We assume that the right entity has been keyed by the left one.
+						// It's not respecting at all the metadata, but since the ordering 
+						// of the entities in the URL is made this way, we have to make
+						// this assumption.
+						rightEntity.hasValidKey = true;
 						return true;
 					}
 				}
@@ -593,13 +631,13 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 		}
 
 		private boolean isJoinOrPkColumn(Column column) {
-			boolean joinColumn = Boolean.valueOf(column.getProperty(ODataMetadataProcessor.JOIN_COLUMN, false));
-			if (!joinColumn) {
+			boolean result = Boolean.valueOf(column.getProperty(ODataMetadataProcessor.JOIN_COLUMN, false));
+			if (!result) {
 				Table table = (Table)column.getParent();
-				return (table.getPrimaryKey().getColumnByName(column.getName()) != null);
+				result = (table.getPrimaryKey().getColumnByName(column.getName()) != null);
 
 			}
-			return false;
+			return result;
 		}
 
 		private boolean valid() {
@@ -609,6 +647,48 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 				}
 			}
 			return false;
+		}
+		
+		/**
+		 * The optimizer is introducing hyper-constraints, we have to identify them
+		 * by deducing if they are the result of a combination of previously encountered
+		 * constraints. This method is recursive. We expect the query to be correctly ordered,
+		 * ie. we won't try all the permutations.
+		 */
+		private boolean coveredByAJoin(ColumnReference colRef, Literal value) {
+			Table parentTable = colRef.getTable().getMetadataObject();
+			Entity entity = getEntity(parentTable);			
+			
+			if(literalEquals(value, entity.pkValues.get(colRef.getMetadataObject()))) {
+				// we've found it
+				// we don't handle here the case of an impossible solution 
+				// (same pk column, two different values)
+				return true;
+			} else {
+				// let's try to find inside the joins another column to look at
+				for(Comparison comp : keyComparisons) {
+					if(comp.getRightExpression() instanceof ColumnReference 
+							&& sameColumn(colRef, (ColumnReference) comp.getRightExpression())) {
+						// we're the right hand side of the expression, so
+						// follow left
+						if(coveredByAJoin((ColumnReference) comp.getLeftExpression(), value)) {
+							return true;
+						}
+					}
+				}
+				
+				return false;
+			}
+		}
+
+		private boolean sameColumn(ColumnReference ref, ColumnReference toEval) {			
+			return toEval != null 
+					&& ref.getTable().toString().equals(toEval.getTable().toString()) 
+					&& ref.getMetadataObject().equals(toEval.getMetadataObject());
+		}
+
+		private boolean literalEquals(Literal ref, Literal toEval) {
+			return toEval != null && ref.getValue().equals(toEval.getValue());
 		}
     }
 }
