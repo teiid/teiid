@@ -19,6 +19,9 @@
 package org.teiid.translator.infinispan.hotrod;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import javax.resource.cci.ConnectionFactory;
 
 import org.teiid.core.util.PropertiesUtils;
@@ -26,6 +29,7 @@ import org.teiid.infinispan.api.InfinispanConnection;
 import org.teiid.infinispan.api.ProtobufResource;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Schema;
@@ -57,6 +61,7 @@ public class InfinispanExecutionFactory extends ExecutionFactory<ConnectionFacto
 		setSupportsOuterJoins(true);
 		setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
 		setTransactionSupport(TransactionSupport.NONE);
+		setSourceRequiredForMetadata(true);
 	}
 
     @Override
@@ -84,9 +89,13 @@ public class InfinispanExecutionFactory extends ExecutionFactory<ConnectionFacto
         ProtobufMetadataProcessor metadataProcessor = (ProtobufMetadataProcessor)getMetadataProcessor();
         PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
 
-        // tables are provided through other metadata repositories
+        // This block is only invoked when NATIVE metadata is defined, by the time code got here if we have
+        // tables already in schema, then user defined through other metadata repositories. In this case, 
+        // a .proto file need to be generated based on schema, then use that to generate final metadata and
+        // register the .proto with the Infinispan
         Schema schema = metadataFactory.getSchema();
         ProtobufResource resource = null;
+        ArrayList<Table> removedTables = new ArrayList<>();
         if (schema.getTables() != null && !schema.getTables().isEmpty()) {
             SchemaToProtobufProcessor stpp = new SchemaToProtobufProcessor();
             stpp.setIndexMessages(true);
@@ -97,11 +106,40 @@ public class InfinispanExecutionFactory extends ExecutionFactory<ConnectionFacto
                 // remove the previous tables, as we want to introduce them with necessary
                 // extension metadata generated with generated .proto file. As some of the default
                 // extension metadata can be added.
-                schema.removeTable(t.getName());
+                removedTables.add(schema.removeTable(t.getName()));
             }
         }
 
         metadataProcessor.process(metadataFactory, conn);
+        
+        // TEIID-4896: In the process of DDL->proto, the extension properties defined on the schema
+        // may be not carried forward, we need to make sure we copy those back.
+        for (Table oldT : removedTables) {
+            Table newT = schema.getTable(oldT.getName());
+            Map<String, String> properties = oldT.getProperties();
+            for (Map.Entry<String, String> entry:properties.entrySet()) {
+                newT.setProperty(entry.getKey(), entry.getValue());
+            }
+            newT.setSupportsUpdate(oldT.supportsUpdate());
+            if (oldT.getAnnotation() != null) {
+                newT.setAnnotation(oldT.getAnnotation());
+            }
+            
+            List<Column> columns = oldT.getColumns();
+            for (Column c : columns) {
+                Column newCol = newT.getColumnByName(c.getName());
+                if (newCol != null) {
+                    Map<String, String> colProperties = c.getProperties();
+                    for (Map.Entry<String, String> entry:colProperties.entrySet()) {
+                        newCol.setProperty(entry.getKey(), entry.getValue());
+                    }
+                    newCol.setUpdatable(c.isUpdatable());
+                    if (c.getAnnotation() != null) {
+                        newCol.setAnnotation(c.getAnnotation());
+                    }
+                }
+            }
+        }        
 
         resource = metadataProcessor.getProtobufResource();
         if(resource == null) {
