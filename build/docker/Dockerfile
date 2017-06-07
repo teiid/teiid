@@ -11,14 +11,14 @@ FROM jboss/base-jdk:8
 MAINTAINER Ramesh Reddy <rareddy@jboss.org>
 
 ENV WORKING_DIR /opt/jboss
-ENV JBOSS_EAP teiid-${project.version}
+ENV JBOSS_EAP teiid-@project.version@
 ENV JBOSS_HOME $WORKING_DIR/$JBOSS_EAP
 
 USER root
 
-COPY teiid-${project.version}-wildfly-server.zip $WORKING_DIR/teiid.zip
+COPY maven/ $WORKING_DIR
 
-RUN cd $WORKING_DIR && unzip -q teiid.zip && rm teiid.zip && chown -R jboss:jboss ${JBOSS_HOME}/ #\
+RUN cd $WORKING_DIR && chown -R jboss:jboss ${JBOSS_HOME}/ #\
 
 VOLUME ["$JBOSS_HOME/standalone", "$JBOSS_HOME/domain"]
 
