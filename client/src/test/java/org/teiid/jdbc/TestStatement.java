@@ -140,6 +140,9 @@ public class TestStatement {
 		
 		assertFalse(statement.execute("set \"foo\" 'b''a1r' ; ")); //$NON-NLS-1$
 		Mockito.verify(conn).setExecutionProperty("foo", "b'a1r");
+		
+	    assertFalse(statement.execute("set \"foo\" = 'bar'; ")); //$NON-NLS-1$
+	    Mockito.verify(conn).setExecutionProperty("foo", "bar");
 	}
 	
 	@Test public void testSetPayloadStatement() throws Exception {
