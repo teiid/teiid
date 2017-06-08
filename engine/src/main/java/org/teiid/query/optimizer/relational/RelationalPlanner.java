@@ -222,7 +222,7 @@ public class RelationalPlanner {
 		} 
 
         // Connect ProcessorPlan to SubqueryContainer (if any) of SELECT or PROJECT nodes
-		connectSubqueryContainers(plan, this.withPlanningState.pushdownWith); //TODO: merge with node creation
+		connectSubqueryContainers(plan); //TODO: merge with node creation
 		
         // Set top column information on top node
         List<Expression> topCols = Util.deepClone(command.getProjectedSymbols(), Expression.class);
@@ -276,6 +276,17 @@ public class RelationalPlanner {
         if (!fullPushdown && !this.withPlanningState.withList.isEmpty()) {
         	//generally any with item associated with a pushdown will not be needed as we're converting to a source query
         	result.setWith(new ArrayList<WithQueryCommand>(this.withPlanningState.withList.values()));
+        	
+        	//assign any with clauses in this subplan
+            for (WithQueryCommand wqc : this.withPlanningState.withList.values()) {
+                if (wqc.isRecursive()) {
+        	        SetQuery sq = (SetQuery)wqc.getCommand();
+        	        assignWithClause(((RelationalPlan)sq.getLeftQuery().getProcessorPlan()).getRootNode(), this.withPlanningState.pushdownWith, false);
+        	        assignWithClause(((RelationalPlan)sq.getRightQuery().getProcessorPlan()).getRootNode(), this.withPlanningState.pushdownWith, false);
+        	    } else {
+        	        assignWithClause(((RelationalPlan)wqc.getCommand().getProcessorPlan()).getRootNode(), this.withPlanningState.pushdownWith, false);
+        	    }
+        	}
         }
         result.setOutputElements(topCols);
         this.sourceHint = previous;
@@ -694,17 +705,17 @@ public class RelationalPlanner {
     	this.context = context;
 	}
 
-    private void connectSubqueryContainers(PlanNode plan, LinkedHashMap<String, WithQueryCommand> pushdownWith) throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
+    private void connectSubqueryContainers(PlanNode plan) throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
         for (PlanNode node : NodeEditor.findAllNodes(plan, NodeConstants.Types.PROJECT | NodeConstants.Types.SELECT | NodeConstants.Types.JOIN | NodeConstants.Types.SOURCE | NodeConstants.Types.GROUP | NodeConstants.Types.SORT)) {
             Set<GroupSymbol> groupSymbols = getGroupSymbols(node);
             List<SubqueryContainer<?>> subqueryContainers = node.getSubqueryContainers();
-            planSubqueries(pushdownWith, groupSymbols, node, subqueryContainers, false);
+            planSubqueries(groupSymbols, node, subqueryContainers, false);
             node.addGroups(GroupsUsedByElementsVisitor.getGroups(node.getCorrelatedReferenceElements()));
         }
     }
 
 	public void planSubqueries(
-			LinkedHashMap<String, WithQueryCommand> pushdownWith, Set<GroupSymbol> groupSymbols,
+			Set<GroupSymbol> groupSymbols,
 			PlanNode node, List<SubqueryContainer<?>> subqueryContainers, boolean isStackEntry)
 			throws QueryMetadataException, TeiidComponentException,
 			QueryPlannerException {
