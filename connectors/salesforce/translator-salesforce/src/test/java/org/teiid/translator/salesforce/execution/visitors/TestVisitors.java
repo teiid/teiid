@@ -200,8 +200,8 @@ public class TestVisitors {
         SelectVisitor visitor = new JoinQueryVisitor(translationUtility.createRuntimeMetadata());
         visitor.visit(command);
         assertEquals("SELECT Contact.Name FROM Contact WHERE ((Contact.Name = 'foo') AND (Account.Id = '5')) AND (Contact.AccountId != NULL)", visitor.getQuery().toString().trim()); //$NON-NLS-1$
-    }	
-	
+    }
+    
 	@Test public void testInnerJoin() throws Exception {
 		Select command = (Select)translationUtility.parseCommand("SELECT Account.Phone, Account.Name, Account.Type, Contact.LastName FROM Account inner join Contact on Account.Id = Contact.AccountId"); //$NON-NLS-1$
 		SelectVisitor visitor = new JoinQueryVisitor(translationUtility.createRuntimeMetadata());
@@ -362,5 +362,13 @@ public class TestVisitors {
 		String source = "SELECT COUNT(Id) FROM Opportunity WHERE Opportunity.Amount > 100000000";
 		helpTest(sql, source);
 	}
+	
+	@Test public void testCustomJoin() throws Exception {
+        String sql = "select a.id, a.name, b.Order_Recipe_Steps__c, b.name from Media_Prep_Order_Recipe_Step__c a "
+                + "inner join Recipe_Step_Detail__c b on (a.id = b.Order_Recipe_Steps__c)"
+                + " where b.name = 'abc'";
+        String source = "SELECT Order_Recipe_Steps__r.Id, Order_Recipe_Steps__r.Name, Recipe_Step_Detail__c.Order_Recipe_Steps__c, Recipe_Step_Detail__c.Name FROM Recipe_Step_Detail__c WHERE (Recipe_Step_Detail__c.Name = 'abc') AND (Recipe_Step_Detail__c.Order_Recipe_Steps__c != NULL)";
+        helpTest(sql, source);
+    }   
 	
 }

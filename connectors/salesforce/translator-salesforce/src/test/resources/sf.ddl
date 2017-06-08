@@ -2859,3 +2859,20 @@ CREATE FOREIGN TABLE WebLink (
     NamespacePrefix string(15) OPTIONS (NAMEINSOURCE 'NamespacePrefix', UPDATABLE FALSE, NATIVE_TYPE 'string', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'false'),
     CONSTRAINT Id_PK PRIMARY KEY(Id)
 ) OPTIONS (NAMEINSOURCE 'WebLink', UPDATABLE TRUE, "teiid_sf:Custom" 'false', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
+
+CREATE FOREIGN TABLE Media_Prep_Order_Recipe_Step__c (
+    Id string(18) NOT NULL AUTO_INCREMENT DEFAULT 'sf default' OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:Calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
+    OwnerId string(18) NOT NULL DEFAULT 'sf default' OPTIONS (NAMEINSOURCE 'OwnerId', NATIVE_TYPE 'reference', "teiid_sf:Calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
+    IsDeleted boolean NOT NULL DEFAULT 'sf default' OPTIONS (NAMEINSOURCE 'IsDeleted', UPDATABLE FALSE, NATIVE_TYPE '_boolean', "teiid_sf:Calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
+    Name string(80) DEFAULT 'sf default' OPTIONS (NAMEINSOURCE 'Name', NATIVE_TYPE 'string', "teiid_sf:Calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
+    CONSTRAINT Id_PK PRIMARY KEY(Id)
+) OPTIONS (NAMEINSOURCE 'Media_Prep_Order_Recipe_Step__c', UPDATABLE TRUE, CARDINALITY 1, "teiid_sf:Custom" 'true', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'true');
+
+CREATE FOREIGN TABLE Recipe_Step_Detail__c (
+    Id string(18) NOT NULL AUTO_INCREMENT DEFAULT 'sf default' OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:Calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
+    IsDeleted boolean NOT NULL DEFAULT 'sf default' OPTIONS (NAMEINSOURCE 'IsDeleted', UPDATABLE FALSE, NATIVE_TYPE '_boolean', "teiid_sf:Calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
+    Name string(80) DEFAULT 'sf default' OPTIONS (NAMEINSOURCE 'Name', NATIVE_TYPE 'string', "teiid_sf:Calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
+    Order_Recipe_Steps__c string(18) NOT NULL OPTIONS (NAMEINSOURCE 'Order_Recipe_Steps__c', NATIVE_TYPE 'reference', "teiid_sf:Calculated" 'false', "teiid_sf:Custom" 'true', "teiid_sf:Defaulted on Create" 'false'),
+    CONSTRAINT Id_PK PRIMARY KEY(Id),
+    CONSTRAINT FK_Media_Prep_Order_Recipe_Step__c_Order_Recipe_Steps__c FOREIGN KEY(Order_Recipe_Steps__c) REFERENCES Media_Prep_Order_Recipe_Step__c (Id) OPTIONS (NAMEINSOURCE 'Recipe_Step_Details__r')
+) OPTIONS (NAMEINSOURCE 'Recipe_Step_Detail__c', UPDATABLE TRUE, CARDINALITY 1, "teiid_sf:Custom" 'true', "teiid_sf:Supports Create" 'true', "teiid_sf:Supports Delete" 'true', "teiid_sf:Supports Merge" 'false', "teiid_sf:Supports Query" 'true', "teiid_sf:Supports Replicate" 'true', "teiid_sf:Supports Retrieve" 'true', "teiid_sf:Supports Search" 'false');
