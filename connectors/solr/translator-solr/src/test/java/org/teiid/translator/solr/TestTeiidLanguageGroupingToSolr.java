@@ -504,6 +504,6 @@ public class TestTeiidLanguageGroupingToSolr {
 				"Select name, popularity, GAP(purchasets, 'MONTH'), GAP(purchasets, 'MONTH'), count(*) from example " 
 			 	+ "where purchasets between '2015-08-01 04:00:00' and '2015-10-31 15:13:32.536' "
 			 	+ "group by GAP(purchasets, 'MONTH'), name, popularity;"
-			 	));
+			 	));//
 	}
 }
