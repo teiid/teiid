@@ -492,16 +492,10 @@ public class QueryRewriter {
         // Rewrite criteria
         Criteria crit = query.getCriteria();
         if(crit != null) {
-        	if (query.getIsXML()) {
-        		//only rewrite expressions, removing whole predicates could change the nature of the query, 
-        		//because we aren't considering the xml pseudo-functions context, row limit, etc. 
-        		rewriteExpressions(crit);
-        	} else {
-        		boolean preserveUnknownOld = preserveUnknown;
-                preserveUnknown = false;
-        		crit = rewriteCriteria(crit);
-        		preserveUnknown = preserveUnknownOld;
-        	}
+    		boolean preserveUnknownOld = preserveUnknown;
+            preserveUnknown = false;
+    		crit = rewriteCriteria(crit);
+    		preserveUnknown = preserveUnknownOld;
             if(crit == TRUE_CRITERIA) {
                 query.setCriteria(null);
             } else if (crit == UNKNOWN_CRITERIA) {
@@ -511,7 +505,7 @@ public class QueryRewriter {
             } 
         }
         
-        if (from != null && !query.getIsXML()) {
+        if (from != null) {
         	rewriteSubqueriesAsJoins(query);
         }
 
@@ -531,24 +525,22 @@ public class QueryRewriter {
             } 
         }
         
-        if (!query.getIsXML()) {
-        	//remove multiple element symbols
-        	boolean hasMes = false;
-        	for (Expression ex : query.getSelect().getSymbols()) {
-        		if (ex instanceof MultipleElementSymbol) {
-        			hasMes = true;
-        		}
-        	}
-        	if (hasMes) {
-        		query.getSelect().setSymbols(query.getSelect().getProjectedSymbols());
-        	}
-        }
+    	//remove multiple element symbols
+    	boolean hasMes = false;
+    	for (Expression ex : query.getSelect().getSymbols()) {
+    		if (ex instanceof MultipleElementSymbol) {
+    			hasMes = true;
+    		}
+    	}
+    	if (hasMes) {
+    		query.getSelect().setSymbols(query.getSelect().getProjectedSymbols());
+    	}
         
         boolean preserveUnknownOld = preserveUnknown;
         preserveUnknown = true;
         rewriteExpressions(query.getSelect());
         
-        if (from != null && !query.getIsXML()) {
+        if (from != null) {
             List<Expression> symbols = query.getSelect().getSymbols();
             RuleMergeCriteria rmc = new RuleMergeCriteria(null, null, null, this.context, this.metadata);
             TreeSet<String> names = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
@@ -575,9 +567,7 @@ public class QueryRewriter {
             }
         }
         
-        if (!query.getIsXML()) {
-            query = (Query)rewriteOrderBy(query);
-        }
+        query = (Query)rewriteOrderBy(query);
         preserveUnknown = preserveUnknownOld;
 
         if (query.getLimit() != null) {

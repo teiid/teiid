@@ -19,7 +19,15 @@
 package org.teiid.query.validator;
 
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.script.Compilable;
 import javax.script.ScriptEngine;
@@ -57,7 +65,6 @@ import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.ObjectTable.ObjectColumn;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
-import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.BranchingStatement;
 import org.teiid.query.sql.proc.BranchingStatement.BranchingMode;
@@ -73,7 +80,6 @@ import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor.AggregateStopNavigator;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
-import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
@@ -103,13 +109,11 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     public static final Constraint LIMIT_CONSTRAINT = new PositiveIntegerConstraint("ValidationVisitor.badlimit2"); //$NON-NLS-1$ 
 
 	// State during validation
-    private boolean isXML = false;	// only used for Query commands
     private boolean inQuery;
 	private CreateProcedureCommand createProc;
     
     public void reset() {
         super.reset();
-        this.isXML = false;
         this.inQuery = false;
         this.createProc = null;
     }
@@ -138,7 +142,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     }
 
 	public void visit(Delete obj) {
-    	validateNoXMLUpdates(obj);
         GroupSymbol group = obj.getGroup();
         validateGroupSupportsUpdate(group);
         if (obj.getUpdateInfo() != null && obj.getUpdateInfo().isInherentDelete()) {
@@ -171,7 +174,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     }
 
     public void visit(Insert obj) {
-        validateNoXMLUpdates(obj);
         validateGroupSupportsUpdate(obj.getGroup());
         validateInsert(obj);
         
@@ -227,22 +229,12 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     
     public void visit(Query obj) {
         validateHasProjectedSymbols(obj);
-        if(isXMLCommand(obj)) {
-            //no temp table (Select Into) allowed
-            if(obj.getInto() != null){
-                handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0069"),obj); //$NON-NLS-1$
-            }
+    	this.inQuery = true;
+        validateAggregates(obj);
 
-        	this.isXML = true;
-	        validateXMLQuery(obj);
-        } else {
-        	this.inQuery = true;
-            validateAggregates(obj);
-
-            if (obj.getInto() != null) {
-                validateSelectInto(obj);
-            }                        
-        }
+        if (obj.getInto() != null) {
+            validateSelectInto(obj);
+        }                        
     }
 	
 	public void visit(Select obj) {
@@ -257,7 +249,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 		if (isNonComparable(obj.getExpression())) {
 			handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0027", obj, DataTypeManager.getDataTypeName(obj.getExpression().getType())),obj); //$NON-NLS-1$
     	}
-        this.validateRowLimitFunctionNotInInvalidCriteria(obj);
 	}
 	
 	@Override
@@ -274,17 +265,12 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 		}
 	}
 
-    public void visit(DependentSetCriteria obj) {
-        this.validateRowLimitFunctionNotInInvalidCriteria(obj);
-    }
-
     public void visit(SetQuery obj) {
         validateHasProjectedSymbols(obj);
         validateSetQuery(obj);
     }
     
     public void visit(Update obj) {
-        validateNoXMLUpdates(obj);
         validateGroupSupportsUpdate(obj.getGroup());
         validateUpdate(obj);
     }
@@ -319,34 +305,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 			} catch (TeiidProcessingException e) {
 				handleException(e, obj);
 			}
-        } else if (obj.getName().equalsIgnoreCase(FunctionLibrary.CONTEXT)) {
-            if(!isXML) {
-                // can't use this pseudo-function in non-XML queries
-                handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.The_context_function_cannot_be_used_in_a_non-XML_command"), obj); //$NON-NLS-1$
-            } else {
-                if (!(obj.getArg(0) instanceof ElementSymbol)){
-                    handleValidationError(QueryPlugin.Util.getString("ERR.015.004.0036"), obj);  //$NON-NLS-1$
-                }
-                
-                for (Iterator<Function> functions = FunctionCollectorVisitor.getFunctions(obj.getArg(1), false).iterator(); functions.hasNext();) {
-                    Function function = functions.next();
-                    
-                    if (function.getName().equalsIgnoreCase(FunctionLibrary.CONTEXT)) {
-                        handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.Context_function_nested"), obj); //$NON-NLS-1$
-                    }
-                }
-            }
-    	} else if (obj.getName().equalsIgnoreCase(FunctionLibrary.ROWLIMIT) ||
-                   obj.getName().equalsIgnoreCase(FunctionLibrary.ROWLIMITEXCEPTION)) {
-            if(isXML) {
-                if (!(obj.getArg(0) instanceof ElementSymbol)) {
-                    // Arg must be an element symbol
-                    handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.2"), obj); //$NON-NLS-1$
-                }
-            } else {
-                // can't use this pseudo-function in non-XML queries
-                handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.The_rowlimit_function_cannot_be_used_in_a_non-XML_command"), obj); //$NON-NLS-1$
-            }
         } else if(obj.getName().equalsIgnoreCase(SourceSystemFunctions.XPATHVALUE)) {
 	        // Validate the xpath value is valid
 	        if(obj.getArgs()[1] instanceof Constant) {
@@ -428,49 +386,9 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	}
     }
 
-    public void visit(CompoundCriteria obj) {
-        // Validate use of 'rowlimit' or 'rowlimitexception' pseudo-function - each occurrence must be in a single
-        // CompareCriteria which is entirely it's own conjunct (not OR'ed with anything else)
-        if (isXML) {
-            // Collect all occurrances of rowlimit and rowlimitexception functions
-            List<Function> rowLimitFunctions = new ArrayList<Function>();
-            FunctionCollectorVisitor visitor = new FunctionCollectorVisitor(rowLimitFunctions, FunctionLibrary.ROWLIMIT);
-            PreOrderNavigator.doVisit(obj, visitor); 
-            visitor = new FunctionCollectorVisitor(rowLimitFunctions, FunctionLibrary.ROWLIMITEXCEPTION);
-            PreOrderNavigator.doVisit(obj, visitor);
-            final int functionCount = rowLimitFunctions.size();
-            if (functionCount > 0) {
-                
-                // Verify each use of rowlimit function is in a compare criteria that is 
-                // entirely it's own conjunct
-                Iterator<Criteria> conjunctIter = Criteria.separateCriteriaByAnd(obj).iterator();            
-                
-                int i = 0;
-                while (conjunctIter.hasNext() && i<functionCount ) {
-                    Object conjunct = conjunctIter.next();
-                    if (conjunct instanceof CompareCriteria) {
-                        CompareCriteria crit = (CompareCriteria)conjunct;
-                        if ((rowLimitFunctions.contains(crit.getLeftExpression()) && !rowLimitFunctions.contains(crit.getRightExpression())) || 
-                            (rowLimitFunctions.contains(crit.getRightExpression()) && !rowLimitFunctions.contains(crit.getLeftExpression()))) {
-                        	i++;
-                        }
-                    }
-                }
-                if (i<functionCount) {
-                    handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.3"), obj); //$NON-NLS-1$
-                }
-            }
-        }
-        
-    }
-
     // ######################### Validation methods #########################
 
     protected void validateSelectElements(Select obj) {
-    	if(isXML) {
-    		return;
-    	}
-
         Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(obj, true);
         
         Collection<ElementSymbol> cantSelect = validateElementsSupport(
@@ -509,26 +427,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         return DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(symbol.getType()));
     }
 
-	/**
-	 * This method can be used to validate Update commands cannot be
-	 * executed against XML documents.
-	 */
-    protected void validateNoXMLUpdates(Command obj) {
-     	if(isXMLCommand(obj)) {
-            handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0029"), obj); //$NON-NLS-1$
-     	}
-    }
-
-	/**
-	 * This method can be used to validate commands used in the stored
-	 * procedure languge cannot be executed against XML documents.
-	 */
-    protected void validateNoXMLProcedures(Command obj) {
-     	if(isXMLCommand(obj)) {
-            handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0030"), obj); //$NON-NLS-1$
-     	}
-    }
-
     private void validateXMLQuery(Query obj) {
         if(obj.getGroupBy() != null) {
             handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0031"), obj); //$NON-NLS-1$
@@ -563,9 +461,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         // Walk through sub queries - validate each one separately and
         // also check the columns of each for comparability
         for (QueryCommand subQuery : query.getQueryCommands()) {
-            if(isXMLCommand(subQuery)) {
-                handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0034"), query); //$NON-NLS-1$
-            }
             if (subQuery instanceof Query && ((Query)subQuery).getInto() != null) {
             	handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.union_insert"), query); //$NON-NLS-1$
             }
@@ -860,18 +755,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         } 
     }
     
-    private void validateRowLimitFunctionNotInInvalidCriteria(Criteria obj) {
-        // Collect all occurrances of rowlimit and rowlimitexception functions
-        List<Function> rowLimitFunctions = new ArrayList<Function>();
-        FunctionCollectorVisitor visitor = new FunctionCollectorVisitor(rowLimitFunctions, FunctionLibrary.ROWLIMIT);
-        PreOrderNavigator.doVisit(obj, visitor);      
-        visitor = new FunctionCollectorVisitor(rowLimitFunctions, FunctionLibrary.ROWLIMITEXCEPTION);
-        PreOrderNavigator.doVisit(obj, visitor); 
-        if (rowLimitFunctions.size() > 0) {
-            handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.3"), obj); //$NON-NLS-1$
-        }
-    }
-    
     /** 
      * @see org.teiid.query.sql.LanguageVisitor#visit(org.teiid.query.sql.lang.BetweenCriteria)
      * @since 4.3
@@ -880,15 +763,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	if (isNonComparable(obj.getExpression())) {
     		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0027", obj, DataTypeManager.getDataTypeName(obj.getExpression().getType())),obj);    		 //$NON-NLS-1$
     	}
-        this.validateRowLimitFunctionNotInInvalidCriteria(obj);
-    }
-
-    /** 
-     * @see org.teiid.query.sql.LanguageVisitor#visit(org.teiid.query.sql.lang.IsNullCriteria)
-     * @since 4.3
-     */
-    public void visit(IsNullCriteria obj) {
-        this.validateRowLimitFunctionNotInInvalidCriteria(obj);
     }
 
     @Override
@@ -909,22 +783,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     }
     
     /** 
-     * @see org.teiid.query.sql.LanguageVisitor#visit(org.teiid.query.sql.lang.MatchCriteria)
-     * @since 4.3
-     */
-    public void visit(MatchCriteria obj) {
-        this.validateRowLimitFunctionNotInInvalidCriteria(obj);
-    }
-
-    /** 
-     * @see org.teiid.query.sql.LanguageVisitor#visit(org.teiid.query.sql.lang.NotCriteria)
-     * @since 4.3
-     */
-    public void visit(NotCriteria obj) {
-        this.validateRowLimitFunctionNotInInvalidCriteria(obj);
-    }
-
-    /** 
      * @see org.teiid.query.sql.LanguageVisitor#visit(org.teiid.query.sql.lang.SetCriteria)
      * @since 4.3
      */
@@ -932,7 +790,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	if (isNonComparable(obj.getExpression())) {
     		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0027", obj, DataTypeManager.getDataTypeName(obj.getExpression().getType())),obj);    		 //$NON-NLS-1$
     	}
-        this.validateRowLimitFunctionNotInInvalidCriteria(obj);
     }
 
     /** 
@@ -944,7 +801,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	if (isNonComparable(obj.getLeftExpression())) {
     		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0027", obj, DataTypeManager.getDataTypeName(obj.getLeftExpression().getType())),obj);    		 //$NON-NLS-1$
     	}
-        this.validateRowLimitFunctionNotInInvalidCriteria(obj);
     }
     
     public void visit(Option obj) {
@@ -1015,57 +871,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	if (isNonComparable(obj.getLeftExpression())) {
     		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0027", obj, DataTypeManager.getDataTypeName(obj.getLeftExpression().getType())),obj);    		 //$NON-NLS-1$
     	}
-    	
-        // Validate use of 'rowlimit' and 'rowlimitexception' pseudo-functions - they cannot be nested within another
-        // function, and their operands must be a nonnegative integers
-
-        // Collect all occurrences of rowlimit function
-        List rowLimitFunctions = new ArrayList();
-        FunctionCollectorVisitor visitor = new FunctionCollectorVisitor(rowLimitFunctions, FunctionLibrary.ROWLIMIT);
-        PreOrderNavigator.doVisit(obj, visitor);   
-        visitor = new FunctionCollectorVisitor(rowLimitFunctions, FunctionLibrary.ROWLIMITEXCEPTION);
-        PreOrderNavigator.doVisit(obj, visitor);            
-        final int functionCount = rowLimitFunctions.size();
-        if (functionCount > 0) {
-            Function function = null;
-            Expression expr = null;
-            if (obj.getLeftExpression() instanceof Function) {
-                Function leftExpr = (Function)obj.getLeftExpression();
-                if (leftExpr.getName().equalsIgnoreCase(FunctionLibrary.ROWLIMIT) ||
-                    leftExpr.getName().equalsIgnoreCase(FunctionLibrary.ROWLIMITEXCEPTION)) {
-                    function = leftExpr;
-                    expr = obj.getRightExpression();
-                }
-            } 
-            if (function == null && obj.getRightExpression() instanceof Function) {
-                Function rightExpr = (Function)obj.getRightExpression();
-                if (rightExpr.getName().equalsIgnoreCase(FunctionLibrary.ROWLIMIT) ||
-                    rightExpr.getName().equalsIgnoreCase(FunctionLibrary.ROWLIMITEXCEPTION)) {
-                    function = rightExpr;
-                    expr = obj.getLeftExpression();
-                }
-            }
-            if (function == null) {
-                // must be nested, which is invalid
-                handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.0"), obj); //$NON-NLS-1$
-            } else {
-                if (expr instanceof Constant) {
-                    Constant constant = (Constant)expr;
-                    if (constant.getValue() instanceof Integer) {
-                        Integer integer = (Integer)constant.getValue();
-                        if (integer.intValue() < 0) {
-                            handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.1"), obj); //$NON-NLS-1$
-                        }
-                    } else {
-                        handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.1"), obj); //$NON-NLS-1$
-                    }
-                } else if (expr instanceof Reference) {
-                	((Reference)expr).setConstraint(new PositiveIntegerConstraint("ValidationVisitor.1")); //$NON-NLS-1$
-                } else {
-                    handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.1"), obj); //$NON-NLS-1$
-                }
-            }                 
-        }
     }
     
     public void visit(Limit obj) {

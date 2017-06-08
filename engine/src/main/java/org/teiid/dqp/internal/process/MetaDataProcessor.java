@@ -131,10 +131,7 @@ public class MetaDataProcessor {
         switch(originalCommand.getType()) {
             case Command.TYPE_QUERY:
                 if(originalCommand instanceof Query) {
-                    if (((Query)originalCommand).getIsXML()) {
-                        columnMetadata = new Map[1];
-                        columnMetadata[0] = createXMLColumnMetadata((Query)originalCommand);
-                    } else if (((Query)originalCommand).getInto() == null) {
+                    if (((Query)originalCommand).getInto() == null) {
                         columnMetadata = createProjectedSymbolMetadata(originalCommand);
                     }
                 } else {

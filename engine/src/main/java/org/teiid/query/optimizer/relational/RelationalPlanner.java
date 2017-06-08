@@ -301,13 +301,9 @@ public class RelationalPlanner {
 			Command cmd = commands.remove(commands.size() - 1);
 			commands.addAll(CommandCollectorVisitor.getCommands(cmd, true));
 			try {
-				//skip xml commands as they cannot be planned here and cannot directly reference with tables,
-				//but their subqueries still can
-				if (!(cmd instanceof Query) || !((Query)cmd).getIsXML()) {
-					PlanNode temp = planner.generatePlan((Command) cmd.clone());
-					stack.push(new RuleAssignOutputElements(false));
-					planner.executeRules(stack, temp);
-				}
+				PlanNode temp = planner.generatePlan((Command) cmd.clone());
+				stack.push(new RuleAssignOutputElements(false));
+				planner.executeRules(stack, temp);
 			} catch (TeiidProcessingException e) {
 				throw new QueryPlannerException(e);
 			}
@@ -315,13 +311,6 @@ public class RelationalPlanner {
 		//plan and minimize projection
 		for (WithQueryCommand with : this.withPlanningState.withList.values()) {
 			QueryCommand subCommand = with.getCommand();
-			
-			//there are no columns to remove for xml
-			if (subCommand instanceof Query && ((Query)subCommand).getIsXML()) {
-				ProcessorPlan subPlan = QueryOptimizer.optimizePlan(subCommand, metadata, idGenerator, capFinder, analysisRecord, context);
-				subCommand.setProcessorPlan(subPlan);
-				continue;
-			}
 			
 			TempMetadataID tid = (TempMetadataID) with.getGroupSymbol().getMetadataID();
 			if (tid.getTableData().getModel() != TempMetadataAdapter.TEMP_MODEL) {

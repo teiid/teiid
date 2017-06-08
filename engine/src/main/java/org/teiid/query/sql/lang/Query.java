@@ -18,17 +18,14 @@
 
 package org.teiid.query.sql.lang;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 
@@ -65,14 +62,8 @@ public class Query extends QueryCommand implements FilteredCommand {
 	/** The having specifying which group rows will be returned. */
 	private Criteria having;
 
-	/** XML flag */
-	private boolean isXML;
-    
     /** The into clause. */
     private Into into;
-    
-    /** xml projected symbols */
-    private List<Expression> selectList;
     
     //currently set by parser, but can be derived
     private boolean isRowConstructor;
@@ -163,23 +154,6 @@ public class Query extends QueryCommand implements FilteredCommand {
         this.select = select;
     }
      
- 
-	/**
-	 * Get the xml flag for the query
-	 * @return boolean
-	 */
-	public boolean getIsXML() {
-		return isXML;
-	}
-    
-	/**
-	 * Get the xml flag for the query
-	 * @return boolean
-	 */
-	public void setIsXML(boolean isXML) {
-		this.isXML = isXML;
-	}
-      
     // =========================================================================
     //                     F R O M      M E T H O D S
     // =========================================================================
@@ -301,23 +275,14 @@ public class Query extends QueryCommand implements FilteredCommand {
 	 * @return Ordered list of SingleElementSymbol
 	 */
 	public List<Expression> getProjectedSymbols() {
-		if (!getIsXML()) {
-			if(getSelect() != null) { 
-                if(getInto() != null){
-                    //SELECT INTO clause
-                    return Command.getUpdateCommandSymbol();
-                }
-				return getSelect().getProjectedSymbols();
-			}
-			return Collections.emptyList();
+		if(getSelect() != null) { 
+            if(getInto() != null){
+                //SELECT INTO clause
+                return Command.getUpdateCommandSymbol();
+            }
+			return getSelect().getProjectedSymbols();
 		}
-		if(selectList == null){
-			selectList = new ArrayList<Expression>(1);
-			ElementSymbol xmlElement = new ElementSymbol("xml"); //$NON-NLS-1$
-	        xmlElement.setType(DataTypeManager.DefaultDataClasses.XML);
-			selectList.add(xmlElement);
-		}
-		return selectList;
+		return Collections.emptyList();
 	}
 	
     // =========================================================================
@@ -361,13 +326,6 @@ public class Query extends QueryCommand implements FilteredCommand {
         
         copy.setWith(LanguageObject.Util.deepClone(this.getWith(), WithQueryCommand.class));
 
-        // Defect 13751: should clone isXML state.
-        copy.setIsXML(getIsXML());
-        
-        if(selectList != null){
-        	copy.selectList = LanguageObject.Util.deepClone(selectList, Expression.class);
-        }
-        
         if (into != null) {
         	copy.into = (Into)into.clone();
         }
@@ -403,7 +361,6 @@ public class Query extends QueryCommand implements FilteredCommand {
                EquivalenceUtil.areEqual(getOrderBy(), other.getOrderBy()) &&
                EquivalenceUtil.areEqual(getLimit(), other.getLimit()) &&
                EquivalenceUtil.areEqual(getWith(), other.getWith()) &&
-               getIsXML() == other.getIsXML() &&
                sameOptionAndHint(other);
     }
 
@@ -429,9 +386,6 @@ public class Query extends QueryCommand implements FilteredCommand {
 	public boolean areResultsCachable() {
 		if(this.getInto() != null){
 			return false;
-		}
-		if (isXML) {
-			return true;
 		}
 		List<Expression> projectedSymbols = getProjectedSymbols();
 		return areColumnsCachable(projectedSymbols);

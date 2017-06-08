@@ -256,9 +256,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 
         // Validate this query's entitlements
         Collection<LanguageObject> entitledObjects = new ArrayList<LanguageObject>(GroupCollectorVisitor.getGroupsIgnoreInlineViews(obj, true));
-        if (!isXMLCommand(obj)) {
-            entitledObjects.addAll(ElementCollectorVisitor.getElements(obj, true));
-        }
+        entitledObjects.addAll(ElementCollectorVisitor.getElements(obj, true));
 
         if(entitledObjects.size() == 0) {
             return;

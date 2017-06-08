@@ -31,7 +31,6 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.symbol.ElementSymbol;
 
 
@@ -116,16 +115,6 @@ public class AbstractValidationVisitor extends LanguageVisitor {
     }
     
     // ######################### Helper methods for validation #########################
-    /**
-	 * Check to verify if the query would return XML results.
-     * @param query the query to check
-	 */
-	protected boolean isXMLCommand(Command command) {
-		if (command instanceof Query) {
-		    return ((Query)command).getIsXML();
-        }
-        return false;
-	}   
 	
     protected Collection<ElementSymbol> validateElementsSupport(Collection<ElementSymbol> elements, int supportsFlag) {
 	    // Collect any identifiers not supporting flag

@@ -107,7 +107,7 @@ public class DefaultAuthorizationValidator implements AuthorizationValidator {
 			return false;
 		}
 		Query query = (Query)command;
-		if (query.getIsXML() || query.getInto() != null) {
+		if (query.getInto() != null) {
 			return false;
 		}
 		if (ignoreUnauthorizedAsteriskDefault) {

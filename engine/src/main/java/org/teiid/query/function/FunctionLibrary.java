@@ -67,11 +67,6 @@ public class FunctionLibrary {
     public static final String ENV = "env"; //$NON-NLS-1$
     public static final String SESSION_ID = "session_id"; //$NON-NLS-1$
     
-    // Special pseudo-functions only for XML queries
-    public static final String CONTEXT = "context"; //$NON-NLS-1$
-    public static final String ROWLIMIT = "rowlimit"; //$NON-NLS-1$
-    public static final String ROWLIMITEXCEPTION = "rowlimitexception"; //$NON-NLS-1$
-    
     // Misc.
     public static final String DECODESTRING = "decodestring"; //$NON-NLS-1$
     public static final String DECODEINTEGER = "decodeinteger"; //$NON-NLS-1$

@@ -21,17 +21,12 @@ package org.teiid.query.sql.lang;
 import java.util.ArrayList;
 import java.util.List;
 
+import junit.framework.TestCase;
+
 import org.teiid.core.util.UnitTestUtil;
-import org.teiid.query.sql.lang.From;
-import org.teiid.query.sql.lang.OrderBy;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.Select;
-import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
-
-import junit.framework.TestCase;
 
 
 public class TestSetQuery extends TestCase {
@@ -103,7 +98,6 @@ public class TestSetQuery extends TestCase {
 		Select select = new Select();
 		select.addSymbol(new ElementSymbol("xml"));        //$NON-NLS-1$
 		q1.setSelect(select);        
-		q1.setIsXML(true);
 		
 		From from = new From();
 		from.addGroup(new GroupSymbol("xmltest.doc1")); //$NON-NLS-1$
