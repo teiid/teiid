@@ -69,13 +69,15 @@ public class JoinQueryVisitor extends SelectVisitor {
 					String name = columnReference.getMetadataObject().getSourceName();
 					if (StringUtil.endsWithIgnoreCase(name, "id")) {
 						this.parentName = name.substring(0, name.length() - 2);
+					} else if (name.endsWith("__c")) { //$NON-NLS-1$
+					    this.parentName = name.substring(0, name.length() - 1) + "r"; //$NON-NLS-1$
 					}
 					Table parent = leftTableInJoin;
 					if (isChildToParentJoin()) {
 						parent = rightTableInJoin;
 					}
 					for (ForeignKey fk : childTable.getForeignKeys()) {
-						if (fk.getReferenceKey().equals(parent.getPrimaryKey())) {
+						if (fk.getColumns().get(0).equals(columnReference.getMetadataObject()) && fk.getReferenceKey().equals(parent.getPrimaryKey())) {
 							foreignKey = fk;
 							break;
 						}
