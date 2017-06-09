@@ -168,7 +168,7 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
         else if (value instanceof DBRef) {
             Object obj = ((DBRef)value).getId();
             column = addColumn(metadataFactory, table, columnKey, obj);
-            String ref = ((DBRef)value).getRef();
+            String ref = ((DBRef)value).getCollectionName();
             metadataFactory.addForiegnKey("FK_"+columnKey, Arrays.asList(columnKey), ref, table); //$NON-NLS-1$
         }
         else {

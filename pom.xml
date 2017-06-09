@@ -43,7 +43,7 @@
         <version.org.apache.commons>3.3.2</version.org.apache.commons>
         <version.org.codehaus.btm>2.1.3</version.org.codehaus.btm>
         <version.org.antlr>4.5</version.org.antlr>
-        <version.org.mongodb.mongo-java-driver>2.13.1</version.org.mongodb.mongo-java-driver>
+        <version.org.mongodb.mongo-java-driver>3.4.2</version.org.mongodb.mongo-java-driver>
         <version.com.couchbase.client>2.4.2</version.com.couchbase.client>
         <version.teiid.console>3.0.1</version.teiid.console>
         <version.net.sourceforge.saxon>9.5.1-6</version.net.sourceforge.saxon>

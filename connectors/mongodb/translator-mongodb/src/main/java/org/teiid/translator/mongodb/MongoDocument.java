@@ -296,7 +296,7 @@ class MongoDocument {
 			if (ref.getName().equals(docName)) {
 				DBRef dbRef = ref.getDBRef(mongoDB, false);
 				if (dbRef != null) {
-					return mongoDB.getCollection(dbRef.getRef()).findOne(new BasicDBObject("_id", dbRef.getId())); //$NON-NLS-1$
+					return mongoDB.getCollection(dbRef.getCollectionName()).findOne(new BasicDBObject("_id", dbRef.getId())); //$NON-NLS-1$
 				}
 			}
 		}

@@ -71,7 +71,7 @@ public class TestMongoDBMetadataProcessor {
         row.append("col3", new Long(3L));
         row.append("col5", Boolean.TRUE);
         row.append("col6", new Date(0L));
-        row.append("col6", new DBRef(db, "ns", "one"));
+        row.append("col6", new DBRef(db.getName(), "ns", "one"));
         row.append("col7", array);
         row.append("col8", new Binary("binary".getBytes()));
         
@@ -188,7 +188,7 @@ public class TestMongoDBMetadataProcessor {
         row.append("col3", new Long(3L));
         row.append("col5", Boolean.TRUE);
         row.append("col6", new Date(0L));
-        row.append("col6", new DBRef(db, "ns", "one"));
+        row.append("col6", new DBRef(db.getName(), "ns", "one"));
         row.append("col7", array);
         row.append("col8", new Binary("binary".getBytes()));
         
