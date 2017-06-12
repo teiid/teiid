@@ -24,11 +24,17 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.client.plan.PlanNode;
+import org.teiid.client.xa.XATransactionException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.dqp.service.TransactionContext;
+import org.teiid.dqp.service.TransactionContext.Scope;
+import org.teiid.dqp.service.TransactionService;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.util.VariableContext;
@@ -51,6 +57,8 @@ public class BatchedUpdatePlan extends ProcessorPlan {
     private ProcessorPlan[] updatePlans;
     /** */
     private boolean[] planOpened;
+    private boolean[] startTxn;
+    private TransactionContext[] planContexts;
     /** Array that holds the update counts for each command in this batch */
     private List[] updateCounts;
     /** The position of the plan currently being executed */
@@ -73,6 +81,8 @@ public class BatchedUpdatePlan extends ProcessorPlan {
     public BatchedUpdatePlan(List<? extends ProcessorPlan> childPlans, int commandsInBatch, List<VariableContext> contexts, boolean singleResult) {
         this.updatePlans = childPlans.toArray(new ProcessorPlan[childPlans.size()]);
         this.planOpened = new boolean[updatePlans.length];
+        this.startTxn = new boolean[updatePlans.length];
+        this.planContexts = new TransactionContext[updatePlans.length];
         this.updateCounts = new List[commandsInBatch];
         this.contexts = contexts;
         this.singleResult = singleResult;
@@ -164,7 +174,9 @@ public class BatchedUpdatePlan extends ProcessorPlan {
 	                 * plans are executed.
 	                 */
 	            	openPlan();
-	            }
+	            } else if (this.planContexts[planIndex] != null) {
+                    this.getContext().getTransactionServer().resume(this.planContexts[planIndex]);
+                }
 	            // Execute nextBatch() on each plan in sequence
 	            
 	            TupleBatch nextBatch = null;
@@ -177,7 +189,13 @@ public class BatchedUpdatePlan extends ProcessorPlan {
 	            } while (!nextBatch.getTerminationFlag());
 	            
 	            // since we are done with the plan explicitly close it.
-	            updatePlans[planIndex++].close();
+	            updatePlans[planIndex].close();
+	            if (this.planContexts[planIndex] != null) {
+                    TransactionService ts = this.getContext().getTransactionServer();
+                    ts.commit(this.planContexts[planIndex]);
+                    this.planContexts[planIndex] = null;
+                }
+	            planIndex++;
         	} catch (BlockedException e){
         		throw e;
         	} catch (TeiidComponentException | TeiidProcessingException e) {
@@ -193,6 +211,10 @@ public class BatchedUpdatePlan extends ProcessorPlan {
         		}
         		updateCounts = Arrays.copyOf(updateCounts, commandIndex);
         		getContext().setBatchUpdateException(cause);
+        	} finally {
+                if (planIndex < updatePlans.length && this.planContexts[planIndex] != null) {
+                    this.getContext().getTransactionServer().suspend(this.planContexts[planIndex]);
+                }
         	}
         }
         if (singleResult) {
@@ -220,9 +242,6 @@ public class BatchedUpdatePlan extends ProcessorPlan {
 
 	private void openPlan() throws TeiidComponentException,
 			TeiidProcessingException {
-		//we don't worry about controlling transactions around each command
-		//it should be something that doesn't require a wrapping transaction
-		
 		//reset prior to updating the context
 		updatePlans[planIndex].reset();
 		if (this.contexts != null && !this.contexts.isEmpty()) {
@@ -237,6 +256,11 @@ public class BatchedUpdatePlan extends ProcessorPlan {
 			VariableContext currentValues = this.contexts.get(planIndex);
 			vc.putAll(currentValues); 
 		}
+		TransactionContext tc = this.getContext().getTransactionContext();
+        if (startTxn[planIndex] && tc != null && tc.getTransactionType() == Scope.NONE) {
+            this.getContext().getTransactionServer().begin(tc);
+            this.planContexts[planIndex] = tc;
+        }
 		updatePlans[planIndex].open();
 		planOpened[planIndex] = true;
 	}
@@ -247,8 +271,22 @@ public class BatchedUpdatePlan extends ProcessorPlan {
      */
     public void close() throws TeiidComponentException {
         // if the plan opened but the atomic request got cancelled then close the last plan node.
+        TransactionService ts = this.getContext().getTransactionServer();
         if (planIndex < updatePlans.length && planOpened[planIndex]) {
-            updatePlans[planIndex].close();
+            try {
+                updatePlans[planIndex].close();
+            } catch (TeiidComponentException e) {
+                LogManager.logWarning(LogConstants.CTX_DQP, e, e.getMessage());
+            }
+            if (this.planContexts[planIndex] != null) {
+                try {
+                    ts.resume(this.planContexts[planIndex]);
+                    ts.rollback(this.planContexts[planIndex]);
+                } catch (XATransactionException e) {
+                    LogManager.logWarning(LogConstants.CTX_DQP, e, e.getMessage());
+                }
+                this.planContexts[planIndex] = null;
+            }
         }
     }
 
@@ -262,9 +300,8 @@ public class BatchedUpdatePlan extends ProcessorPlan {
         for (int i = 0; i < updatePlans.length; i++) {
             updatePlans[i].reset();
             planOpened[i] = false;
-        }
-        for (int i = 0; i < updateCounts.length; i++) {
             updateCounts[i] = null;
+            this.planContexts[i] = null;
         }
         planIndex = 0;
         commandIndex = 0;
@@ -305,11 +342,17 @@ public class BatchedUpdatePlan extends ProcessorPlan {
     public Boolean requiresTransaction(boolean transactionalReads) {
     	if (!singleResult) {
     		//the transaction boundary should be around each command
+    	    for (int i = 0; i < updatePlans.length; i++) {
+                Boolean requires = updatePlans[i].requiresTransaction(transactionalReads);
+                if (requires != null && requires) {
+                    startTxn[i] = true;
+                }
+            }
     		return false;
     	}
     	boolean possible = false;
     	for (int i = 0; i < updatePlans.length; i++) {
-			Boolean requires = updatePlans[0].requiresTransaction(transactionalReads);
+			Boolean requires = updatePlans[i].requiresTransaction(transactionalReads);
 			if (requires != null) {
 				if (requires) {
 					return true;
