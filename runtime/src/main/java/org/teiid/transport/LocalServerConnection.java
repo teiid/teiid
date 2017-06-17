@@ -31,6 +31,7 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.security.auth.Subject;
 
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
 import org.teiid.client.security.LogonException;
@@ -40,6 +41,7 @@ import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.PropertiesUtils;
+import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPWorkContext;
@@ -69,6 +71,7 @@ public class LocalServerConnection implements ServerConnection {
     private boolean passthrough;
     private boolean derived;
     private static String serverVersion = new Handshake().getVersion();
+    private AutoConnectListener autoConnectListener = null;
     
     private Method cancelMethod;
     
@@ -116,6 +119,11 @@ public class LocalServerConnection implements ServerConnection {
 			throw new TeiidRuntimeException(e);
 		} catch (NoSuchMethodException e) {
 			throw new TeiidRuntimeException(e);
+		}
+		boolean autoFailOver = Boolean.parseBoolean(connectionProperties.getProperty("autoFailover"));
+		if (autoFailOver) {
+		    this.autoConnectListener = new AutoConnectListener();
+		    addListener(this.autoConnectListener);
 		}
 	}
 
@@ -239,6 +247,9 @@ public class LocalServerConnection implements ServerConnection {
 	}
 
 	public void close() {
+	    if (this.autoConnectListener != null) {
+	        removeListener(this.autoConnectListener);
+	    }
 		shutdown(true);
 	}
 	
@@ -313,5 +324,16 @@ public class LocalServerConnection implements ServerConnection {
 	@Override
 	public String getServerVersion() {
 		return serverVersion;
+	}
+	
+	private class AutoConnectListener implements VDBLifeCycleListener {
+        @Override
+        public void finishedDeployment(String name, CompositeVDB cvdb) {
+            VDBMetaData vdb = cvdb.getVDB();
+            if (workContext.getSession().getVdb().getName().equals(vdb.getName())
+                    && workContext.getSession().getVdb().getVersion().equals(vdb.getVersion())) {
+                workContext.getSession().setVdb(vdb);   
+            }
+        }
 	}
 }

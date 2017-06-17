@@ -896,9 +896,14 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	}
 	
 	public void undeployVDB(String vdbName) {
-		checkStarted();
-		this.repo.removeVDB(vdbName, "1"); //$NON-NLS-1$
+	    undeployVDB(vdbName, "1");
 	}
+	
+    public void undeployVDB(String vdbName, String version) {
+        checkStarted();
+        this.repo.removeVDB(vdbName, version); //$NON-NLS-1$
+    }
+	
 
 	EmbeddedConfiguration getConfiguration() {
 	    return this.config;
