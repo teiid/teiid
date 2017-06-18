@@ -72,6 +72,7 @@ public class LocalServerConnection implements ServerConnection {
     private boolean derived;
     private static String serverVersion = new Handshake().getVersion();
     private AutoConnectListener autoConnectListener = null;
+    private volatile boolean reconnect;
     
     private Method cancelMethod;
     
@@ -120,7 +121,7 @@ public class LocalServerConnection implements ServerConnection {
 		} catch (NoSuchMethodException e) {
 			throw new TeiidRuntimeException(e);
 		}
-		boolean autoFailOver = Boolean.parseBoolean(connectionProperties.getProperty("autoFailover"));
+		boolean autoFailOver = Boolean.parseBoolean(connectionProperties.getProperty(TeiidURL.CONNECTION.AUTO_FAILOVER));
 		if (autoFailOver) {
 		    this.autoConnectListener = new AutoConnectListener();
 		    addListener(this.autoConnectListener);
@@ -190,14 +191,16 @@ public class LocalServerConnection implements ServerConnection {
 				}
 				try {
 					// check to make sure the current security context same as logged one
-					if (passthrough && !logon 
-							&& !arg1.equals(cancelMethod) // -- it's ok to use another thread to cancel
-							&& !workContext.getSession().isClosed()
-							//if configured without a security domain the context will be null
-							&& workContext.getSession().getSecurityDomain() != null
-							&& !sameSubject(workContext)) {
+					if (!logon && (reconnect 
+					        || (passthrough
+					                && !arg1.equals(cancelMethod) // -- it's ok to use another thread to cancel
+					                && !workContext.getSession().isClosed()
+                                    //if configured without a security domain the context will be null
+					                && workContext.getSession().getSecurityDomain() != null
+					                && !sameSubject(workContext)))) {
 						//TODO: this is an implicit changeUser - we may want to make this explicit, but that would require pools to explicitly use changeUser
 						LogManager.logInfo(LogConstants.CTX_SECURITY, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40115, workContext.getSession().getSessionId()));
+						reconnect = false;
 						authenticate();
 					}
 					
@@ -332,7 +335,7 @@ public class LocalServerConnection implements ServerConnection {
             VDBMetaData vdb = cvdb.getVDB();
             if (workContext.getSession().getVdb().getName().equals(vdb.getName())
                     && workContext.getSession().getVdb().getVersion().equals(vdb.getVersion())) {
-                workContext.getSession().setVdb(vdb);   
+                reconnect = true;   
             }
         }
 	}

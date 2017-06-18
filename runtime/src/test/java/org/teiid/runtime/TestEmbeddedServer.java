@@ -2178,5 +2178,22 @@ public class TestEmbeddedServer {
         rs.next();
         assertEquals("HELLO WORLD", rs.getString(1));
     }
+    
+    @Test public void testFailOver() throws Exception {
+        es.start(new EmbeddedConfiguration());
+        
+        es.deployVDB(new FileInputStream(UnitTestUtil.getTestDataFile("domains-vdb.ddl")), true);
+        
+        Connection c = es.getDriver().connect("jdbc:teiid:domains;autoFailOver=true", null);
+        
+        Statement s = c.createStatement();
+        
+        s.execute("select * from g1");
+        
+        es.undeployVDB("domains");
+        es.deployVDB(new FileInputStream(UnitTestUtil.getTestDataFile("domains-vdb.ddl")), true);
+        
+        s.execute("select * from g1");
+    }
 
 }
