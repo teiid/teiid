@@ -72,9 +72,9 @@ public class MergeDetails implements Cloneable {
 	public DBRef getDBRef(DB db, boolean push) {
 		if (this.id != null) {
 			if (this.idReference != null) {
-				return new DBRef(db, push?this.parentTable:this.embeddedTable, new DBRef(db, this.idReference, this.id.getValue()));
+				return new DBRef(db.getName(), push?this.parentTable:this.embeddedTable, new DBRef(db.getName(), this.idReference, this.id.getValue()));
 			}
-			return new DBRef(db, push?this.parentTable:this.embeddedTable, this.id.getValue());
+			return new DBRef(db.getName(), push?this.parentTable:this.embeddedTable, this.id.getValue());
 		}
 		return null;
 	}
