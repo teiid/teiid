@@ -26,16 +26,26 @@ import java.util.regex.Pattern;
 import org.bson.types.Binary;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.*;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
+import org.teiid.metadata.ExtensionMetadataProperty;
+import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Table;
 import org.teiid.mongodb.MongoDBConnection;
 import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
-import org.teiid.translator.TypeFacility;
 import org.teiid.translator.TranslatorProperty.PropertyType;
+import org.teiid.translator.TypeFacility;
 
-import com.mongodb.*;
+import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBRef;
+import com.mongodb.MongoException;
 
 public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnection> {
 
@@ -45,7 +55,7 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
     @ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="Embedded Into Table", description="Declare the name of table that this table needs to be embedded into. A separate copy is also maintained")
     public static final String EMBEDDABLE = MetadataFactory.MONGO_URI+"EMBEDDABLE"; //$NON-NLS-1$
 
-    private static final String ID = "_id"; //$NON-NLS-1$
+    static final String ID = "_id"; //$NON-NLS-1$
     private static final String TOP_LEVEL_DOC = "TOP_LEVEL_DOC"; //$NON-NLS-1$
     private static final String ASSOSIATION = "ASSOSIATION"; //$NON-NLS-1$
 
