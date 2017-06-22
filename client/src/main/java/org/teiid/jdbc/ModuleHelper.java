@@ -45,7 +45,7 @@ class ModuleHelper {
         try {
         	ModuleLoader callerModuleLoader = Module.getCallerModuleLoader();
         	if (callerModuleLoader == null) {
-        	    logger.warning(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20033));
+        	    logger.fine(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20033));
         	    return (ServerConnection)ReflectionHelper.create("org.teiid.transport.LocalServerConnection", Arrays.asList(info, PropertiesUtils.getBooleanProperty(info, LocalProfile.USE_CALLING_THREAD, true)), Thread.currentThread().getContextClassLoader()); //$NON-NLS-1$
         	} 
 			final Module module = callerModuleLoader.loadModule(ModuleIdentifier.create("org.jboss.teiid")); //$NON-NLS-1$
