@@ -20,6 +20,7 @@ package org.teiid.jdbc;
 
 import java.util.Arrays;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
@@ -35,6 +36,8 @@ import org.teiid.net.ServerConnection;
  * This class isolates the dependency on JBoss modules
  */
 class ModuleHelper {
+    
+    static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
 	
 	static ServerConnection createFromModule(Properties info)
 			throws ConnectionException, TeiidException {
@@ -42,8 +45,9 @@ class ModuleHelper {
         try {
         	ModuleLoader callerModuleLoader = Module.getCallerModuleLoader();
         	if (callerModuleLoader == null) {
-        		throw new ConnectionException(JDBCPlugin.Event.TEIID20033, null, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20033));
-        	}
+        	    logger.warning(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20033));
+        	    return (ServerConnection)ReflectionHelper.create("org.teiid.transport.LocalServerConnection", Arrays.asList(info, PropertiesUtils.getBooleanProperty(info, LocalProfile.USE_CALLING_THREAD, true)), Thread.currentThread().getContextClassLoader()); //$NON-NLS-1$
+        	} 
 			final Module module = callerModuleLoader.loadModule(ModuleIdentifier.create("org.jboss.teiid")); //$NON-NLS-1$
         	Thread.currentThread().setContextClassLoader(module.getClassLoader());
         	return (ServerConnection)ReflectionHelper.create("org.teiid.transport.LocalServerConnection", Arrays.asList(info, PropertiesUtils.getBooleanProperty(info, LocalProfile.USE_CALLING_THREAD, true)), Thread.currentThread().getContextClassLoader()); //$NON-NLS-1$

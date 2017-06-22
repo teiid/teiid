@@ -94,7 +94,7 @@ public class TeiidDriver implements Driver {
         			try {
         				getClass().getClassLoader().loadClass("org.jboss.modules.Module"); //$NON-NLS-1$
         			} catch(ClassNotFoundException e) {
-        				throw new TeiidSQLException(JDBCPlugin.Util.gs("module_load_failed")); //$NON-NLS-1$
+        			    logger.warning(JDBCPlugin.Util.gs("module_load_failed"));//$NON-NLS-1$
         			}
         			localProfile = new LocalProfile();
         		}
