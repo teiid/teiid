@@ -233,6 +233,41 @@
         <module>build</module>
       </modules>
     </profile>   
+
+    <profile>
+	<id>licenses</id>
+	<build>
+		<plugins>
+		    <plugin>
+			<groupId>org.codehaus.mojo</groupId>
+			<artifactId>license-maven-plugin</artifactId>
+			<version>1.13</version>
+			<executions>
+			  <execution>
+			    <id>download-licenses</id>
+			    <goals>
+			      <goal>download-licenses</goal>
+			    </goals>
+			  </execution>
+			</executions>
+		      </plugin>
+
+		     <plugin>
+			<groupId>org.codehaus.mojo</groupId>
+			<artifactId>license-maven-plugin</artifactId>
+			<version>1.13</version>
+			<executions>
+			  <execution>
+			    <id>aggregate-download-licenses</id>
+			    <goals>
+			      <goal>aggregate-download-licenses</goal>
+			    </goals>
+			  </execution>
+			</executions>
+		      </plugin>
+         	</plugins>
+	</build>
+    </profile>
 	</profiles>
 	<build>
 	<!-- This section defines the default plugin settings inherited by child projects. -->
@@ -382,8 +417,8 @@
 			        <releaseProfiles>release</releaseProfiles>
                     <goals>deploy</goals>
                 </configuration>
-            </plugin>             
-		</plugins>
+            </plugin>   
+	</plugins>
 	</build>
 	<dependencies>
 		<dependency>
@@ -630,6 +665,7 @@
                 <version>${project.version}</version>
                 <type>test-jar</type>
                 <scope>test</scope>
+<optional>true</optional>
             </dependency>
 			<dependency>
 				<groupId>org.jboss.teiid</groupId>
