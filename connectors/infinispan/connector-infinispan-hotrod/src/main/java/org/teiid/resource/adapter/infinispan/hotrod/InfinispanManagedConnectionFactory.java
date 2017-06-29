@@ -17,9 +17,13 @@
  */
 package org.teiid.resource.adapter.infinispan.hotrod;
 
+import java.io.IOException;
 import java.util.HashSet;
 
 import javax.resource.ResourceException;
+import javax.security.auth.callback.Callback;
+import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.callback.UnsupportedCallbackException;
 
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
@@ -41,7 +45,20 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 
     private String remoteServerList;
     private String cacheName;
+    
+    // security
+    private String[] saslAllowed = {"CRAM-MD5", "DIGEST-MD5", "PLAIN"}; 
+    private String saslMechanism;
+    private String userName;
+    private String password;
+    private String authenticationRealm;
+    private String authenticationServerName;
 
+    private String trustStoreFileName = System.getProperty("javax.net.ssl.trustStore");
+    private String trustStorePassword = System.getProperty("javax.net.ssl.trustStorePassword");
+    private String keyStoreFileName = System.getProperty("javax.net.ssl.keyStore");
+    private String keyStorePassword = System.getProperty("javax.net.ssl.keyStorePassword");
+    
     public String getRemoteServerList() {
         return remoteServerList;
     }
@@ -75,6 +92,8 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
                 ConfigurationBuilder builder = new ConfigurationBuilder();
                 builder.addServers(remoteServerList);
                 builder.marshaller(new ProtoStreamMarshaller());
+                
+                handleSecurity(builder);
 
                 // note this object is expensive, so there needs to only one
                 // instance for the JVM, in this case one per RA instance.
@@ -91,6 +110,62 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
             } catch (Throwable e) {
                 throw new ResourceException(e);
             }
+        }
+
+        public void handleSecurity(ConfigurationBuilder builder) throws ResourceException {
+            if (saslMechanism != null && supportedSasl(saslMechanism)) {                    
+                if (userName == null) {
+                    throw new ResourceException(UTIL.getString("no_user"));
+                }
+                if (password == null) {
+                    throw new ResourceException(UTIL.getString("no_pass"));
+                }
+                if (authenticationRealm == null) {
+                    throw new ResourceException(UTIL.getString("no_realm"));
+                }
+                if (authenticationServerName == null) {
+                    throw new ResourceException(UTIL.getString("no_auth_server"));
+                }
+                builder.security().authentication().enable().saslMechanism(saslMechanism).username(userName)
+                        .realm(authenticationRealm).password(password).serverName(authenticationServerName);
+            } else if (saslMechanism != null && saslMechanism.equals("EXTERNAL")) {
+
+                if (keyStoreFileName == null || keyStoreFileName.isEmpty()) {
+                    throw new ResourceException(UTIL.getString("no_keystore"));
+                }
+
+                if (keyStorePassword == null) {
+                    throw new ResourceException(UTIL.getString("no_keystore_pass"));
+                }
+                
+                if (trustStoreFileName == null &&  trustStorePassword.isEmpty()) {
+                    throw new ResourceException(UTIL.getString("no_truststore"));
+                }
+
+                if (trustStorePassword == null) {
+                    throw new ResourceException(UTIL.getString("no_truststore_pass"));
+                }
+                
+                CallbackHandler callback = new CallbackHandler() {
+                    @Override
+                    public void handle(Callback[] callbacks)
+                            throws IOException, UnsupportedCallbackException {
+                    }
+                };                    
+                builder.security().authentication().enable().saslMechanism("EXTERNAL").callbackHandler(callback)
+                        .ssl().enable().keyStoreFileName(keyStoreFileName)
+                        .keyStorePassword(keyStorePassword.toCharArray()).trustStoreFileName(trustStoreFileName)
+                        .trustStorePassword(trustStorePassword.toCharArray());
+            }
+        }
+
+        private boolean supportedSasl(String saslMechanism) {
+            for (String supported : saslAllowed) {
+                if (supported.equals(saslAllowed)) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public void registerProtobufFile(ProtobufResource protobuf) throws TranslatorException {
@@ -122,6 +197,78 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
         }
     }
 
+    public String getSaslMechanism() {
+        return saslMechanism;
+    }
+
+    public void setSaslMechanism(String saslMechanism) {
+        this.saslMechanism = saslMechanism;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getAuthenticationRealm() {
+        return authenticationRealm;
+    }
+
+    public void setAuthenticationRealm(String authenticationRealm) {
+        this.authenticationRealm = authenticationRealm;
+    }
+
+    public String getAuthenticationServerName() {
+        return authenticationServerName;
+    }
+
+    public void setAuthenticationServerName(String authenticationServerName) {
+        this.authenticationServerName = authenticationServerName;
+    }
+
+    public String getTrustStoreFileName() {
+        return trustStoreFileName;
+    }
+
+    public void setTrustStoreFileName(String trustStoreFileName) {
+        this.trustStoreFileName = trustStoreFileName;
+    }
+
+    public String getTrustStorePassword() {
+        return trustStorePassword;
+    }
+
+    public void setTrustStorePassword(String trustStorePassword) {
+        this.trustStorePassword = trustStorePassword;
+    }
+
+    public String getKeyStoreFileName() {
+        return keyStoreFileName;
+    }
+
+    public void setKeyStoreFileName(String keyStoreFileName) {
+        this.keyStoreFileName = keyStoreFileName;
+    }
+
+    public String getKeyStorePassword() {
+        return keyStorePassword;
+    }
+
+    public void setKeyStorePassword(String keyStorePassword) {
+        this.keyStorePassword = keyStorePassword;
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -145,5 +292,5 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
         } else if (!remoteServerList.equals(other.remoteServerList))
             return false;
         return true;
-    }
+    }    
 }
