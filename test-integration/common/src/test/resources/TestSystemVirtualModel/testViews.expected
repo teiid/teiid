@@ -16,7 +16,7 @@ pg_prepared_xacts                                                  Clob[55]
 pg_proc                                                            Clob[3007]                                                       
 pg_stats                                                           Clob[49]                                                         
 pg_trigger                                                         Clob[188]                                                        
-pg_type                                                            Clob[1793]                                                       
+pg_type                                                            Clob[1797]                                                       
 pg_user                                                            Clob[74]                                                         
 spatial_ref_sys                                                    Clob[209]                                                        
 Row Count : 19
