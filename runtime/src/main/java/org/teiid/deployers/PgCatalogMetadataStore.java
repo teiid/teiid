@@ -585,7 +585,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 			"1016,_int8,-1,b,0,-1,0,20,long[]\n" + //$NON-NLS-1$
 			"1021,_float4,-1,b,0,-1,0,700,float[]\n" + //$NON-NLS-1$
 			"1022,_float8,-1,b,0,-1,0,701,double[]\n" + //$NON-NLS-1$
-			"1031,_numeric,-1,b,0,-1,0,1700,double[]\n" + //$NON-NLS-1$
+			"1031,_numeric,-1,b,0,-1,0,1700,bigdecimal[]\n" + //$NON-NLS-1$
 			"1115,_timestamp,-1,b,0,-1,0,1114,timestamp[]\n" + //$NON-NLS-1$
 			"1182,_date,-1,b,0,-1,0,1082,date[]\n" + //$NON-NLS-1$
 			"1183,_time,-1,b,0,-1,0,1083,time[]\n" + //$NON-NLS-1$
