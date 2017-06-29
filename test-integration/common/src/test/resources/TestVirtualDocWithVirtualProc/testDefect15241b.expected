@@ -2,25 +2,13 @@ string                                                             string       
 Name                                                               Value                                                              UID                                               
 NugentXAttribute                                                   Nuuuuuge22222                                                      mmuuid:4789b280-841c-1f15-9526-ebd0cace03e1       
 NugentYAttribute                                                   Nuuuuuge44444                                                      mmuuid:4789b280-841c-1f15-9526-ebd0cace03e1       
-<<<<<<< HEAD
-pg_type:oid                                                        1002                                                               tid:7ff2755e9621-c6363cab-0000003f                
-pg_type:oid                                                        1009                                                               tid:7ff2755e9621-c63e18c3-0000003e                
-pg_type:oid                                                        30                                                                 tid:7ff2755e9621-c69d99f4-0000003d                
-pg_type:oid                                                        22                                                                 tid:7ff2755e9621-ef456845-00000030                
-pg_type:oid                                                        1028                                                               tid:7ff2755e9621-f418fc1b-00000040                
-teiid:pass-through-type                                            true                                                               tid:7ff2755e9621-e548fc4c-0000007d                
+pg_type:oid                                                        1002                                                               tid:7ff2755e9621-c6363cca-00000040                
+pg_type:oid                                                        1009                                                               tid:7ff2755e9621-c63e18e2-0000003f                
+pg_type:oid                                                        30                                                                 tid:7ff2755e9621-c69d9a13-0000003e                
+pg_type:oid                                                        22                                                                 tid:7ff2755e9621-ef456864-00000031                
+pg_type:oid                                                        1028                                                               tid:7ff2755e9621-f418fc3a-00000041                
+teiid:pass-through-type                                            true                                                               tid:7ff2755e9621-e548fc4c-00000080                
 Row Count : 8
-=======
-pg_type:oid                                                        1002                                                               tid:7ff2755e9621-c6363ce9-00000041                
-pg_type:oid                                                        1009                                                               tid:7ff2755e9621-c63e1901-00000040                
-pg_type:oid                                                        30                                                                 tid:7ff2755e9621-c69d9a32-0000003f                
-pg_type:oid                                                        22                                                                 tid:7ff2755e9621-ef456d3c-00000032                
-pg_type:oid                                                        1028                                                               tid:7ff2755e9621-f418fc59-00000042                
-teiid:pass-through-type                                            true                                                               tid:7ff2755e9621-e548fc4c-00000077                
-{http://www.teiid.org/ext/relational/2012}ALLOW_MATVIEW_MANAGEMEN$ true                                                               tid:7ff2755e9621-d9ee5c82-0000001c                
-{http://www.teiid.org/ext/relational/2012}ALLOW_MATVIEW_MANAGEMEN$ true                                                               tid:7ff2755e9621-e544c1cc-00000063                
-Row Count : 10
->>>>>>> e245d12... TEIID-4147 expanding types and consistently using the pg type name
 getColumnName  getColumnType  getCatalogName  getColumnClassName  getColumnLabel  getColumnTypeName  getSchemaName  getTableName  getColumnDisplaySize  getPrecision  getScale  isAutoIncrement  isCaseSensitive  isCurrency  isDefinitelyWritable  isNullable  isReadOnly  isSearchable  isSigned  isWritable  
 Name           12             xmlvp           java.lang.String    Name            string             SYS            Properties    4000                  4000          0         false            true             false       false                 0           true        true          false     false       
 Value          12             xmlvp           java.lang.String    Value           string             SYS            Properties    4000                  4000          0         false            true             false       false                 0           true        true          false     false       

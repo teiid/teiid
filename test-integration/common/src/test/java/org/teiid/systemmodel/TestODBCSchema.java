@@ -184,7 +184,11 @@ public class TestODBCSchema extends AbstractMMQueryTestCase {
 		
 		this.internalConnection.close();
 		this.internalConnection = server.createConnection("jdbc:teiid:x"); //$NON-NLS-1$ //$NON-NLS-2$
-
+		
+		execute("select count(oid) = count(distinct oid) from pg_attribute"); //$NON-NLS-1$
+	    this.internalResultSet.next();
+	    assertTrue(this.internalResultSet.getBoolean(1));
+		
 		execute("select oid from pg_class where relname = 'v'"); //$NON-NLS-1$
         this.internalResultSet.next();
         int val = this.internalResultSet.getInt(1);

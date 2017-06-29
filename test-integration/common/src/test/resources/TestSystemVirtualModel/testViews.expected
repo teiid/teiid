@@ -1,15 +1,11 @@
 string                                                             clob                                                             
 Name                                                               Body                                                             
 GEOMETRY_COLUMNS                                                   Clob[551]                                                        
-<<<<<<< HEAD
-matpg_datatype                                                     Clob[454]                                                        
-matpg_relatt                                                       Clob[490]                                                        
-=======
 matpg_datatype                                                     Clob[1562]                                                       
->>>>>>> e245d12... TEIID-4147 expanding types and consistently using the pg type name
+matpg_relatt                                                       Clob[490]                                                        
 pg_am                                                              Clob[34]                                                         
 pg_attrdef                                                         Clob[360]                                                        
-pg_attribute                                                       Clob[1897]                                                       
+pg_attribute                                                       Clob[1899]                                                       
 pg_class                                                           Clob[712]                                                        
 pg_database                                                        Clob[156]                                                        
 pg_description                                                     Clob[26]                                                         
@@ -17,7 +13,7 @@ pg_index                                                           Clob[815]
 pg_namespace                                                       Clob[79]                                                         
 pg_proc                                                            Clob[3051]                                                       
 pg_trigger                                                         Clob[188]                                                        
-pg_type                                                            Clob[1793]                                                       
+pg_type                                                            Clob[1797]                                                       
 pg_user                                                            Clob[74]                                                         
 spatial_ref_sys                                                    Clob[209]                                                        
 Row Count : 16
