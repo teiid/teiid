@@ -123,6 +123,7 @@ public class MetadataFactory implements Serializable {
 		map.put(TEIID_LDAP, LDAP_URI.substring(1, LDAP_URI.length()-1));
 		map.put(TEIID_PI, PI_URI.substring(1, PI_URI.length()-1));
         map.put(TEIID_COUCHBASE, COUCHBASE_URI.substring(1, COUCHBASE_URI.length()-1));
+	map.put(TEIID_INFINISPAN, INFINISPAN_URI.substring(1, INFINISPAN_URI.length()-1));
 
 		BUILTIN_NAMESPACES = Collections.unmodifiableMap(map);
 	}
