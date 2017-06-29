@@ -161,7 +161,7 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 
         private boolean supportedSasl(String saslMechanism) {
             for (String supported : saslAllowed) {
-                if (supported.equals(saslAllowed)) {
+                if (supported.equals(saslMechanism)) {
                     return true;
                 }
             }
