@@ -45,6 +45,60 @@
                <config-property-value>default</config-property-value>
             </config-property> 
                                    
+            <config-property>
+                <description>{$display:"TrustStore File Name",$description:"File name of the truststore",$required="false"}</description>
+               <config-property-name>TrustStoreFileName</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>   
+            
+            <config-property>
+                <description>{$display:"TrustStore Password",$description:"TrustStore Password",$required="false",$masked:"true"}</description>
+               <config-property-name>TrustStorePassword</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>  
+            
+            <config-property>
+                <description>{$display:"KeyStore File Name",$description:"File name of the keystore",$required="false"}</description>
+               <config-property-name>KeyStoreFileName</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>  
+            
+            <config-property>
+                <description>{$display:"KeyStore Password",$description:"KeyStore Password",$required="false",$masked:"true"}</description>
+               <config-property-name>KeyStorePassword</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>                       
+
+            <config-property>
+                <description>{$display:"Authentication Server Name",$description:"Authentication Server Name",$required="false"}</description>
+               <config-property-name>AuthenticationServerName</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>   
+   
+            <config-property>
+                <description>{$display:"Authentication Application Realm",$description:"Authentication Application Realm",$required="false"}</description>
+               <config-property-name>AuthenticationRealm</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>   
+                     
+            <config-property>
+                <description>{$display:"Authentication SASL Mechanism",$description:"Authentication SASL Mechanism",$required="false"}</description>
+               <config-property-name>SaslMechanism</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>  
+             
+            <config-property>
+                <description>{$display:"Authentication User Name",$description:"Authentication User Name",$required="false"}</description>
+               <config-property-name>UserName</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>   
+            
+            <config-property>
+                <description>{$display:"Authentication User Password",$description:"Authentication User Password",$required="false",$masked:"true"}</description>
+               <config-property-name>Password</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>     
+ 
             <connectionfactory-interface>javax.resource.cci.ConnectionFactory</connectionfactory-interface>
             <connectionfactory-impl-class>org.teiid.resource.spi.WrappedConnectionFactory</connectionfactory-impl-class>
             <connection-interface>javax.resource.cci.Connection</connection-interface>
