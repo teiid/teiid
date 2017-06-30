@@ -95,6 +95,7 @@ public final class RuleCollapseSource implements OptimizerRule {
             } else if(command == null) {
             	PlanNode commandRoot = accessNode;
             	GroupSymbol intoGroup = (GroupSymbol)accessNode.getFirstChild().getProperty(NodeConstants.Info.INTO_GROUP);
+            	Set<Object> toCheck = (Set<Object>)commandRoot.getProperty(NodeConstants.Info.CHECK_MAT_VIEW);
             	if (intoGroup != null) {
             		commandRoot = NodeEditor.findNodePreOrder(accessNode, NodeConstants.Types.SOURCE).getFirstChild();
             		//the project into source is effectively the accessNode for the inline view check
@@ -103,8 +104,8 @@ public final class RuleCollapseSource implements OptimizerRule {
             		plan = removeUnnecessaryInlineView(plan, commandRoot);
             	}
                 QueryCommand queryCommand = createQuery(context, capFinder, accessNode, commandRoot);
-                if (commandRoot.hasCollectionProperty(Info.CHECK_MAT_VIEW)) {
-                    modifyToCheckMatViewStatus(metadata, queryCommand, (Set<Object>)commandRoot.getProperty(NodeConstants.Info.CHECK_MAT_VIEW));
+                if (toCheck != null) {
+                    modifyToCheckMatViewStatus(metadata, queryCommand, toCheck);
                 }
                 Object modelId = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
                 
