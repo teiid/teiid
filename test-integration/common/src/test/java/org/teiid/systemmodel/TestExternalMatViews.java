@@ -39,6 +39,7 @@ import java.util.logging.Logger;
 
 import javax.sql.DataSource;
 
+import org.apache.log4j.Level;
 import org.infinispan.transaction.tm.DummyTransactionManager;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -94,6 +95,11 @@ public class TestExternalMatViews {
     }
 
     private static boolean DEBUG = false;
+
+    static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger("org.teiid.MATVIEWS");
+    {
+        logger.setLevel(Level.DEBUG);
+    }
     
     @BeforeClass public static void oneTimeSetup() {
         if (DEBUG) {
@@ -134,11 +140,13 @@ public class TestExternalMatViews {
 		
 		String matView = "CREATE table mat_v1 (col int primary key, col1 varchar(50))";
 		String matView2 = "CREATE table mat_v2 (col int primary key, col1 varchar(50), loadnum long)";
+		String matView3 = "CREATE table mat_v3 (col int primary key, col1 varchar(50), loadnum long)";
 		String matView1a = "CREATE table mat_v1a (col int primary key, col1 varchar(50), loadnum long)";
 		String matViewStage = "CREATE table mat_v1_stage (col int primary key, col1 varchar(50))";
 		c.createStatement().execute(matView);
 		c.createStatement().execute(matViewStage);
 		c.createStatement().execute(matView2);
+		c.createStatement().execute(matView3);
 		c.createStatement().execute("CREATE table G1 (e1 int primary key, e2 varchar(50), LoadNumber long)");
 		c.createStatement().execute(matView1a);
 		c.close();
@@ -283,10 +291,71 @@ public class TestExternalMatViews {
         //should succeed before the ttl
         for (int i = 0; i < 5; i++) {
             try {
-                s.execute("select * from v2");
+                s.execute("select count(*) from v2");
                 if (i == 0) {
                     System.out.println("expected first iteration to fail");
                 }
+                ResultSet rs = s.getResultSet();
+                rs.next();
+                assertTrue(rs.getInt(1) > 0);
+                return;
+            } catch (SQLException e) {
+            }
+            Thread.sleep(400);
+        }
+    }
+    
+    @Test
+    public void testViewChainingWait() throws Exception {
+        DelayableHardCodedExectionFactory hcef = setupData(server);
+        ModelMetaData sourceModel = setupSourceModel();
+        ModelMetaData matViewModel = setupMatViewModel();
+        
+        ModelMetaData viewModel = new ModelMetaData();
+        viewModel.setName("view1");
+        viewModel.setModelType(Type.VIRTUAL);
+        viewModel.addSourceMetadata("DDL", "CREATE VIEW v1 (col integer primary key, col1 string) "
+                + "OPTIONS (MATERIALIZED true, "
+                + "MATERIALIZED_TABLE 'matview.MAT_V1a', "
+                + "\"teiid_rel:MATVIEW_TTL\" 5000, "
+                + "\"teiid_rel:ALLOW_MATVIEW_MANAGEMENT\" true, " 
+                + "\"teiid_rel:MATVIEW_STATUS_TABLE\" 'matview.STATUS', "
+                + "\"teiid_rel:MATVIEW_LOADNUMBER_COLUMN\" 'loadnum', "
+                + "\"teiid_rel:MATVIEW_ONERROR_ACTION\" 'WAIT') "
+                + "AS select col, col1 from source.physicalTbl;"
+                
+                + "CREATE VIEW v2 (col integer primary key, col1 string) "
+                + "OPTIONS (MATERIALIZED true, "
+                + "MATERIALIZED_TABLE 'matview.MAT_V2', "
+                + "\"teiid_rel:MATVIEW_TTL\" 5000, "
+                + "\"teiid_rel:ALLOW_MATVIEW_MANAGEMENT\" true, " 
+                + "\"teiid_rel:MATVIEW_STATUS_TABLE\" 'matview.STATUS', "
+                + "\"teiid_rel:MATVIEW_LOADNUMBER_COLUMN\" 'loadnum',"
+                + "\"teiid_rel:MATVIEW_ONERROR_ACTION\" 'WAIT') "
+                + "AS select col, col1 from v1;"
+        
+                + "CREATE VIEW v3 (col integer primary key, col1 string) "
+                + "OPTIONS (MATERIALIZED true, "
+                + "MATERIALIZED_TABLE 'matview.MAT_V3', "
+                + "\"teiid_rel:MATVIEW_TTL\" 5000, "
+                + "\"teiid_rel:ALLOW_MATVIEW_MANAGEMENT\" true, " 
+                + "\"teiid_rel:MATVIEW_STATUS_TABLE\" 'matview.STATUS', "
+                + "\"teiid_rel:MATVIEW_LOADNUMBER_COLUMN\" 'loadnum',"
+                + "\"teiid_rel:MATVIEW_ONERROR_ACTION\" 'WAIT') "
+                + "AS select col, col1 from v2");
+        
+        server.deployVDB("chain", sourceModel, viewModel, matViewModel);
+        hcef.delay = 100;
+        Connection c = server.getDriver().connect("jdbc:teiid:chain", null);
+        Statement s = c.createStatement();
+
+        //should succeed before the ttl
+        for (int i = 0; i < 5; i++) {
+            try {
+                s.execute("select * from v3");
+                ResultSet rs = s.getResultSet();
+                rs.next();
+                assertTrue(rs.getInt(1) > 0);
                 return;
             } catch (SQLException e) {
             }
