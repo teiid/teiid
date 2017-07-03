@@ -348,6 +348,12 @@ public class Request {
 			return this.transactionContext;
 		}
 		TransactionContext tc = transactionService.getOrCreateTransactionContext(workContext.getSessionId());
+		
+		if (tc.getTransactionType() == TransactionContext.Scope.REQUEST && this.workContext.isDerived()) {
+		    //to a sub-request, request scope should appear as global - which means associated and non-suspendable
+	        tc = tc.clone();
+	        tc.setTransactionType(TransactionContext.Scope.GLOBAL);
+		}
         
         Assertion.assertTrue(tc.getTransactionType() != TransactionContext.Scope.REQUEST, "Transaction already associated with request."); //$NON-NLS-1$
 

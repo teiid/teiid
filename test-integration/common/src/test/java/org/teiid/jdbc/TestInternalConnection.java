@@ -27,6 +27,7 @@ import static org.junit.Assert.*;
 import java.io.ByteArrayInputStream;
 import java.net.InetSocketAddress;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -35,6 +36,7 @@ import java.util.Properties;
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
 
+import org.infinispan.transaction.tm.DummyTransactionManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -100,6 +102,7 @@ public class TestInternalConnection {
 			+ "CREATE VIEW helloworld as SELECT 'HELLO WORLD';"
 			+ "CREATE function func (val integer) returns string options (JAVA_CLASS '"+TestInternalConnection.class.getName()+"',  JAVA_METHOD 'doSomething');]]> </metadata></model></vdb>";
 	EmbeddedServer es;
+	static boolean useTxn = false;
 	
 	@Before public void setup() {
 		es = new EmbeddedServer();
@@ -107,12 +110,16 @@ public class TestInternalConnection {
 	
 	@After public void teardown() {
 		es.stop();
+		useTxn = false;
 	}
 	
 	public static String doSomething(CommandContext cc, Integer val) throws SQLException {
 		TeiidConnection tc = cc.getConnection();
 		try {
 			Statement s = tc.createStatement();
+			if (useTxn) {
+			    s.execute("set autoCommitTxn on");
+			}
 			ResultSet rs = s.executeQuery("select user(), expr1 from helloworld");
 			rs.next();
 			return rs.getString(1) + rs.getString(2) + val;
@@ -166,5 +173,40 @@ public class TestInternalConnection {
 			}
 		}
 	}	
-
+	
+	@Test public void testInternalLocalNestedTransactions() throws Exception {
+	    useTxn = true;
+        EmbeddedConfiguration config = new EmbeddedConfiguration();
+        config.setSecurityHelper(new ThreadLocalSecurityHelper());
+        config.setTransactionManager(new DummyTransactionManager());
+        es.start(config);
+        es.deployVDB(new ByteArrayInputStream(vdb.getBytes()));
+        Connection conn = null;
+        TeiidDriver driver = es.getDriver();
+        conn = driver.connect("jdbc:teiid:test;autoCommitTxn=on", null);
+        try {
+            
+            PreparedStatement ps = conn.prepareStatement("select func(?)");
+            ps.setInt(1, 1);
+            ps.execute();
+        } finally {
+            if (conn != null) {
+                conn.close();
+            }
+        }
+        
+        conn = driver.connect("jdbc:teiid:test;autoCommitTxn=on", null);
+        try {
+            conn.setAutoCommit(false);
+            PreparedStatement ps = conn.prepareStatement("select func(?)");
+            ps.setInt(1, 1);
+            ps.execute();
+            conn.commit();
+        } finally {
+            if (conn != null) {
+                conn.close();
+            }
+        }
+    }
+	
 }
