@@ -90,6 +90,7 @@ import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.internal.process.TransactionServerImpl;
 import org.teiid.dqp.service.BufferService;
+import org.teiid.dqp.service.TransactionService;
 import org.teiid.events.EventDistributor;
 import org.teiid.events.EventDistributorFactory;
 import org.teiid.jdbc.CallableStatementImpl;
@@ -413,8 +414,8 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		ppc.setTupleBufferCache(bs.getTupleBufferCache());
 		this.dqp.setPreparedPlanCache(ppc);
 
-		this.dqp.setTransactionService(this.transactionService);
-
+		this.dqp.setTransactionService((TransactionService)LogManager.createLoggingProxy(LogConstants.CTX_TXN_LOG, this.transactionService, new Class[] {TransactionService.class}, MessageLevel.DETAIL, Thread.currentThread().getContextClassLoader()));
+		
 		this.dqp.start(config);
 		this.sessionService.setDqp(this.dqp);
 		this.services.setSecurityHelper(this.sessionService.getSecurityHelper());
