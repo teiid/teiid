@@ -147,6 +147,8 @@ public class DQPWorkContext implements Serializable {
 	private transient LocalProfile connectionProfile = new LocalProfile();
 
     private boolean local = true;
+
+    private boolean derived;
     
     public DQPWorkContext() {
 	}
@@ -379,5 +381,17 @@ public class DQPWorkContext implements Serializable {
     public DQPWorkContext local(boolean b) {
         this.local = b;
         return this;
+    }
+
+    public void setDerived(boolean b) {
+        this.derived = b;
+    }
+    
+    /**
+     * If this currently represents a sub-request off of a parent session
+     * @return
+     */
+    public boolean isDerived() {
+        return this.derived;
     }
 }

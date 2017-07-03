@@ -190,6 +190,9 @@ public class LocalServerConnection implements ServerConnection {
 					throw ExceptionUtil.convertException(arg1, new TeiidComponentException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40074)));
 				}
 				try {
+				    if (derived) {
+				        workContext.setDerived(true);
+				    }
 					// check to make sure the current security context same as logged one
 					if (!logon && (reconnect 
 					        || (passthrough
@@ -214,6 +217,8 @@ public class LocalServerConnection implements ServerConnection {
 					throw e.getTargetException();
 				} catch (Throwable e) {
 					throw ExceptionUtil.convertException(arg1, e);
+				} finally {
+				    workContext.setDerived(false);
 				}
 			}
 		}));
