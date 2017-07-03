@@ -30,7 +30,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.resource.spi.work.ExecutionContext;
 import javax.transaction.Transaction;
 
-public class TransactionContext extends ExecutionContext implements Serializable{
+import org.teiid.core.TeiidRuntimeException;
+
+public class TransactionContext extends ExecutionContext implements Serializable, Cloneable{
 
 	private static final long serialVersionUID = -8689401273499649058L;
 
@@ -104,5 +106,14 @@ public class TransactionContext extends ExecutionContext implements Serializable
     public Set<String> getSuspendedBy() {
         return this.suspendedBy;
     }
-
+    
+    @Override
+    public TransactionContext clone() {
+        try {
+            return (TransactionContext) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new TeiidRuntimeException(e);
+        }
+    }
+    
 }
