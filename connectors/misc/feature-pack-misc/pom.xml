@@ -4,7 +4,7 @@
     <parent>
       <groupId>org.jboss.teiid.connectors</groupId>
       <artifactId>misc</artifactId>
-      <version>10.0.0.Alpha1-SNAPSHOT</version>
+      <version>10.0.0.Alpha1</version>
     </parent>
     <artifactId>feature-pack-misc</artifactId>
     <name>Teiid Connector misc Feature Pack</name>
