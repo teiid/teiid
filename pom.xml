@@ -367,6 +367,7 @@
 				    -->
 			        <releaseProfiles>release</releaseProfiles>
                     <goals>deploy</goals>
+                    <arguments>-Ddocker=true</arguments>
                 </configuration>
             </plugin>             
 		</plugins>
