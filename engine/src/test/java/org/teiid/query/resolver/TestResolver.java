@@ -1215,6 +1215,13 @@ public class TestResolver {
         //test
         this.helpResolveException(sql);
     }
+    
+    @Test public void testSubQueryINArrayComparison(){
+        String sql = "select e1 from pm1.g1 where (e1, e2) in (select e1, e2 from pm4.g1)"; //$NON-NLS-1$
+
+        //test
+        this.helpResolve(sql);
+    }
 
 	@Test public void testStoredQueryInFROMSubquery() {
 		String sql = "select X.e1 from (EXEC pm1.sq3('abc', 123)) as X"; //$NON-NLS-1$
@@ -2368,13 +2375,10 @@ public class TestResolver {
         helpResolveException(sql, metadata, "TEIID30095 The first three arguments for the LOOKUP function must be specified as constants."); //$NON-NLS-1$
     }
     
-    /**
-     * We cannot implicitly convert the argument to double due to lack of precision
-     */
-    @Test public void testPowerWithBigInteger_Fails() throws Exception {
+    @Test public void testPowerWithBigInteger() throws Exception {
         String sql = "SELECT power(10, 999999999999999999999999999999999999999999999)"; //$NON-NLS-1$
         
-        helpResolveException(sql);
+        helpResolve(sql);
     }
     
     @Test public void testPowerWithLong() throws Exception {

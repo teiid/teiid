@@ -27,14 +27,8 @@ import java.sql.Clob;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.TreeMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -748,7 +742,20 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         		row.add(false);
         		row.add((key instanceof ForeignKey)?((ForeignKey)key).getUniqueKeyID():null);
         		row.add(key.getUUID());
+        		row.add(key.getParent().getUUID());
         		row.add(null);
+        		if (key instanceof ForeignKey) {
+        		    KeyRecord ref = ((ForeignKey)key).getReferenceKey();
+        		    if (ref != null) {
+                        row.set(row.size() - 1, ref.getParent().getUUID());
+        		    }
+        		}
+        		List<Column> columns2 = key.getColumns();
+                Short[] pos = new Short[columns2.size()];
+        		for (int i = 0; i < pos.length; i++) {
+        		    pos[i] = (short)columns2.get(i).getPosition();
+        		}
+        		row.add(new ArrayImpl((Object[])pos));
         	}
         	
         	@Override
@@ -820,6 +827,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				row.add(key.getName());
 				row.add(key.getReferenceKey().getName());
 				row.add(DatabaseMetaData.importedKeyInitiallyDeferred);
+				row.add(key.getUUID());
         	}
         	
         	@Override
@@ -1320,16 +1328,28 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		case ARRAYITERATE:
 			Object array = ((Constant)proc.getParameter(1).getExpression()).getValue();
 			if (array != null) {
-				Object[] vals = null;
+				final Object[] vals;
 				if (array instanceof Object[]) {
 					vals = (Object[])array;
 				} else {
 					ArrayImpl arrayImpl = (ArrayImpl)array;
 					vals = arrayImpl.getValues();
 				}
-				for (Object o : vals) {
-					rows.add(Arrays.asList(o));
-				}
+				return new CollectionTupleSource(new Iterator<List<?>> () {
+					int index = 0;
+					@Override
+					public boolean hasNext() {
+						return index < vals.length;
+					}
+
+					@Override
+					public List<?> next() {
+						if (!hasNext()) {
+							throw new NoSuchElementException();
+						}
+						return Arrays.asList(vals[index++]);
+					}
+				});
 			}
 		}
 		return new CollectionTupleSource(rows.iterator());

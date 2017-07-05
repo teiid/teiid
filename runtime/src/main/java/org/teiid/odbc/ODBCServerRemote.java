@@ -22,6 +22,7 @@
 package org.teiid.odbc;
 
 import java.net.SocketAddress;
+import java.nio.charset.Charset;
 import java.util.Properties;
 
 import org.teiid.transport.PgFrontendProtocol.NullTerminatedStringDataInputStream;
@@ -34,7 +35,7 @@ public interface ODBCServerRemote {
 	
 	void prepare(String prepareName, String sql, int[] paramType);
 
-	void bindParameters(String bindName, String prepareName, Object[] paramdata, int resultCodeCount, int[] resultColumnFormat);
+	void bindParameters(String bindName, String prepareName, Object[] paramdata, int resultCodeCount, short[] resultColumnFormat, Charset charset);
 	
 	void execute(String bindName, int maxrows);
 	

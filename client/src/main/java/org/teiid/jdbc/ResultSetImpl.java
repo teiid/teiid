@@ -276,6 +276,10 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
         }
         return getAbsoluteRowNumber();
     }
+    
+    public Object getRawCurrentValue() {
+        return currentValue;
+    }
 
     /**
      * Get the value of the current row at the column index specified.
@@ -300,21 +304,21 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
         if (currentValue instanceof Streamable<?>) {
     		Object reference = ((Streamable<?>)currentValue).getReference();
         	if (reference != null) {
-        		currentValue = reference;
-        		return currentValue;
+        		return reference;
         	}
             if(currentValue instanceof ClobType){
-            	currentValue = new ClobImpl(createInputStreamFactory((ClobType)currentValue), ((ClobType)currentValue).getLength());
+            	return new ClobImpl(createInputStreamFactory((ClobType)currentValue), ((ClobType)currentValue).getLength());
             }
             else if (currentValue instanceof BlobType) {
             	InputStreamFactory isf = createInputStreamFactory((BlobType)currentValue);
             	isf.setLength(((BlobType)currentValue).getLength());
-            	currentValue = new BlobImpl(isf);
+            	return new BlobImpl(isf);
             }
             else if (currentValue instanceof XMLType) {
             	XMLType val = (XMLType)currentValue;
-            	currentValue = new SQLXMLImpl(createInputStreamFactory(val));
-            	((SQLXMLImpl)currentValue).setEncoding(val.getEncoding());
+            	SQLXMLImpl impl = new SQLXMLImpl(createInputStreamFactory(val));
+            	impl.setEncoding(val.getEncoding());
+            	return impl;
             } 
         } 
         else if (currentValue instanceof java.util.Date) {
@@ -322,11 +326,11 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
         }
         else if (maxFieldSize > 0 && currentValue instanceof String) {
         	String val = (String)currentValue;
-        	currentValue = val.substring(0, Math.min(maxFieldSize/2, val.length()));
+        	return val.substring(0, Math.min(maxFieldSize/2, val.length()));
         }
         else if (currentValue instanceof BinaryType) {
         	BinaryType val = (BinaryType)currentValue;
-        	currentValue = val.getBytesDirect();
+        	return val.getBytesDirect();
         }
         return currentValue;
     }

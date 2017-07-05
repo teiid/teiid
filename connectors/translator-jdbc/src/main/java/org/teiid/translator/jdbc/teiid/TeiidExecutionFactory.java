@@ -67,6 +67,8 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
 	public static final Version EIGHT_12_5 = Version.getVersion("8.12.5"); //$NON-NLS-1$
 	public static final Version EIGHT_13 = Version.getVersion("8.13.0"); //$NON-NLS-1$
 	public static final Version NINE_0 = Version.getVersion("9.0"); //$NON-NLS-1$
+	public static final Version NINE_1 = Version.getVersion("9.1"); //$NON-NLS-1$
+	public static final Version NINE_2 = Version.getVersion("9.2"); //$NON-NLS-1$
 	
 	public TeiidExecutionFactory() {
 	}
@@ -215,6 +217,52 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
             supportedFunctions.add(SourceSystemFunctions.ST_GEOMFROMEWKB);
             supportedFunctions.add(SourceSystemFunctions.ST_ASEWKB);
             supportedFunctions.add(SourceSystemFunctions.ST_ASEWKT);
+        }
+        
+        if (getVersion().compareTo(NINE_1) >= 0) {
+            supportedFunctions.add(SourceSystemFunctions.ST_AREA);
+            supportedFunctions.add(SourceSystemFunctions.ST_BOUNDARY);
+            supportedFunctions.add(SourceSystemFunctions.ST_BUFFER);
+            supportedFunctions.add(SourceSystemFunctions.ST_CENTROID);
+            supportedFunctions.add(SourceSystemFunctions.ST_CONVEXHULL);
+            supportedFunctions.add(SourceSystemFunctions.ST_COORDDIM);
+            supportedFunctions.add(SourceSystemFunctions.ST_CURVETOLINE);
+            supportedFunctions.add(SourceSystemFunctions.ST_DIFFERENCE);
+            supportedFunctions.add(SourceSystemFunctions.ST_DIMENSION);
+            supportedFunctions.add(SourceSystemFunctions.ST_ENDPOINT);
+            supportedFunctions.add(SourceSystemFunctions.ST_EXTERIORRING);
+            supportedFunctions.add(SourceSystemFunctions.ST_GEOMETRYN);
+            supportedFunctions.add(SourceSystemFunctions.ST_GEOMETRYTYPE);
+            supportedFunctions.add(SourceSystemFunctions.ST_INTERIORRINGN);
+            supportedFunctions.add(SourceSystemFunctions.ST_INTERSECTION);
+            supportedFunctions.add(SourceSystemFunctions.ST_ISCLOSED);
+            supportedFunctions.add(SourceSystemFunctions.ST_ISEMPTY);
+            supportedFunctions.add(SourceSystemFunctions.ST_ISRING);
+            supportedFunctions.add(SourceSystemFunctions.ST_ISSIMPLE);
+            supportedFunctions.add(SourceSystemFunctions.ST_ISVALID);
+            supportedFunctions.add(SourceSystemFunctions.ST_LENGTH);
+            supportedFunctions.add(SourceSystemFunctions.ST_NUMGEOMETRIES);
+            supportedFunctions.add(SourceSystemFunctions.ST_NUMINTERIORRINGS);
+            supportedFunctions.add(SourceSystemFunctions.ST_NUMPOINTS);
+            supportedFunctions.add(SourceSystemFunctions.ST_ORDERINGEQUALS);
+            supportedFunctions.add(SourceSystemFunctions.ST_PERIMETER);
+            supportedFunctions.add(SourceSystemFunctions.ST_POINT);
+            supportedFunctions.add(SourceSystemFunctions.ST_POINTN);
+            supportedFunctions.add(SourceSystemFunctions.ST_POINTONSURFACE);
+            supportedFunctions.add(SourceSystemFunctions.ST_POLYGON);
+            supportedFunctions.add(SourceSystemFunctions.ST_RELATE);
+            supportedFunctions.add(SourceSystemFunctions.ST_STARTPOINT);
+            supportedFunctions.add(SourceSystemFunctions.ST_SYMDIFFERENCE);
+            supportedFunctions.add(SourceSystemFunctions.ST_UNION);
+            supportedFunctions.add(SourceSystemFunctions.ST_X);
+            supportedFunctions.add(SourceSystemFunctions.ST_Y);
+            supportedFunctions.add(SourceSystemFunctions.ST_Z);
+        }
+        
+        if (getVersion().compareTo(NINE_2) >= 0) {
+            supportedFunctions.add(SourceSystemFunctions.ST_MAKEENVELOPE);
+            supportedFunctions.add(SourceSystemFunctions.ST_SNAPTOGRID);
+            supportedFunctions.add(SourceSystemFunctions.ST_SIMPLIFYPRESERVETOPOLOGY);
         }
         
         return supportedFunctions;

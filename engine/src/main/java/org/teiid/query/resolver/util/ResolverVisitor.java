@@ -269,17 +269,83 @@ public class ResolverVisitor extends LanguageVisitor {
     }
 
     public void visit(SubqueryCompareCriteria obj) {
-        try {
-            obj.setLeftExpression(ResolverUtil.resolveSubqueryPredicateCriteria(obj.getLeftExpression(), obj, metadata));
-        } catch(QueryResolverException e) {
-            handleException(e);
-        }
+       if (obj.getCommand() != null) {
+	        try {
+	            obj.setLeftExpression(ResolverUtil.resolveSubqueryPredicateCriteria(obj.getLeftExpression(), obj, metadata));
+	        } catch(QueryResolverException e) {
+	            handleException(e);
+            } catch (TeiidComponentException e) {
+                handleException(e);
+            }
+    	} else {
+    		try {
+	    		resolveQuantifiedCompareArray(obj);
+    		} catch (QueryResolverException e) {
+    			handleException(e);
+    		}
+    	}
     }
+
+	private void resolveQuantifiedCompareArray(SubqueryCompareCriteria obj)
+			throws QueryResolverException, AssertionError {
+		Class<?> expressionType = obj.getArrayExpression().getType();
+		
+		if (expressionType == null || !expressionType.isArray()) {
+			throw new QueryResolverException(QueryPlugin.Event.TEIID31175, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31175, new Object[] { obj.getArrayExpression(), expressionType }));
+		}
+		
+		Class<?> rightType = expressionType.getComponentType();
+		
+		Expression leftExpression = obj.getLeftExpression();
+		
+		setDesiredType(leftExpression, rightType, obj);
+		
+		if(leftExpression.getType().equals(rightType) ) {
+			return;
+		}
+		
+		// Try to apply an implicit conversion from one side to the other
+		String leftTypeName = DataTypeManager.getDataTypeName(leftExpression.getType());
+		String rightTypeName = DataTypeManager.getDataTypeName(rightType);
+		
+		if (leftExpression.getType() == DataTypeManager.DefaultDataClasses.NULL) {
+			obj.setLeftExpression(ResolverUtil.convertExpression(leftExpression, rightTypeName, metadata) );
+			return;
+		}
+  	
+		boolean leftChar = isCharacter(leftExpression, true);
+		boolean rightChar = isCharacter(rightType, true);
+		
+		// Special cases when left expression is a constant
+		if(leftExpression instanceof Constant && !rightChar) {
+		    // Auto-convert constant string on left to expected type on right
+		    try {
+		        obj.setLeftExpression(ResolverUtil.convertExpression(leftExpression, leftTypeName, rightTypeName, metadata));
+		        return;                                           
+		    } catch (QueryResolverException qre) {
+		    	if (leftChar && !metadata.widenComparisonToString()) {
+		        	throw qre;
+		        }
+		    }
+		}
+  	
+		// Try to apply a conversion generically
+		if ((rightChar ^ leftChar) && !metadata.widenComparisonToString()) {
+			throw new QueryResolverException(QueryPlugin.Event.TEIID31172, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31172, obj));
+		}
+		if(ResolverUtil.canImplicitlyConvert(leftTypeName, rightTypeName)) {
+			obj.setLeftExpression(ResolverUtil.convertExpression(leftExpression, leftTypeName, rightTypeName, metadata) );
+			return;
+		}
+		throw new QueryResolverException(QueryPlugin.Event.TEIID30072, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30072, new Object[] { leftTypeName, rightTypeName, obj }));
+	}
 
     public void visit(SubquerySetCriteria obj) {
         try {
             obj.setExpression(ResolverUtil.resolveSubqueryPredicateCriteria(obj.getExpression(), obj, metadata));
         } catch(QueryResolverException e) {
+            handleException(e);
+        } catch (TeiidComponentException e) {
             handleException(e);
         }
     }
@@ -337,29 +403,33 @@ public class ResolverVisitor extends LanguageVisitor {
 	    			}
 	    		}
 	    	} else {
-	    		Class<?> type = null;
-	    		for (int i = 0; i < array.getExpressions().size(); i++) {
-	    			Expression expr = array.getExpressions().get(i);
-	    			Class<?> baseType = expr.getType();
-	    			while (baseType != null && baseType.isArray()) {
-	    				baseType = baseType.getComponentType();
-	    			}
-	    			if (baseType != DefaultDataClasses.NULL) {
-		    			if (type == null) {
-		    				type = expr.getType();
-		    			} else if (type != expr.getType()) {
-		    				type = DataTypeManager.DefaultDataClasses.OBJECT;
-		    			}
-	    			}
-	    		}
-	    		if (type == null) {
-	    			type = DataTypeManager.DefaultDataClasses.NULL;
-	    		}
-	    		array.setComponentType(type);
+	    		resolveComponentType(array);
 	    	}
     	} catch (QueryResolverException e) {
     		handleException(e);
     	}
+    }
+
+    public static void resolveComponentType(Array array) {
+        Class<?> type = null;
+        for (int i = 0; i < array.getExpressions().size(); i++) {
+        	Expression expr = array.getExpressions().get(i);
+        	Class<?> baseType = expr.getType();
+        	while (baseType != null && baseType.isArray()) {
+        		baseType = baseType.getComponentType();
+        	}
+        	if (baseType != DefaultDataClasses.NULL) {
+        		if (type == null) {
+        			type = expr.getType();
+        		} else if (type != expr.getType()) {
+        			type = DataTypeManager.DefaultDataClasses.OBJECT;
+        		}
+        	}
+        }
+        if (type == null) {
+        	type = DataTypeManager.DefaultDataClasses.NULL;
+        }
+        array.setComponentType(type);
     }
 
     public void visit(CaseExpression obj) {

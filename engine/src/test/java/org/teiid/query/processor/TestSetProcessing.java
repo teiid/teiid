@@ -23,15 +23,17 @@
 package org.teiid.query.processor;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.unittest.RealMetadataFactory;
 
-
+@SuppressWarnings("nls")
 public class TestSetProcessing {
     
     @Test public void testExcept() throws Exception {
@@ -112,6 +114,19 @@ public class TestSetProcessing {
 
         FakeDataManager manager = new FakeDataManager();
         TestProcessor.sampleData1(manager);
+        TestProcessor.helpProcess(plan, manager, expected);
+    }
+    
+    @Test public void testUnionArrayNull() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("create view v (col string[]) as select null union all select null", "x", "y");
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan("select * from v", metadata, new String[] {}); 
+        
+        List<?>[] expected = new List[] {
+            Collections.singletonList(null), Collections.singletonList(null),
+            };
+
+        FakeDataManager manager = new FakeDataManager();
         TestProcessor.helpProcess(plan, manager, expected);
     }
 

@@ -2,12 +2,12 @@ string                                                             string       
 Name                                                               Value                                                              UID                                               
 NugentXAttribute                                                   Nuuuuuge22222                                                      mmuuid:4789b280-841c-1f15-9526-ebd0cace03e1       
 NugentYAttribute                                                   Nuuuuuge44444                                                      mmuuid:4789b280-841c-1f15-9526-ebd0cace03e1       
-pg_type:oid                                                        1002                                                               tid:7ff2755e9621-c6363cab-0000003f                
-pg_type:oid                                                        1009                                                               tid:7ff2755e9621-c63e18c3-0000003e                
-pg_type:oid                                                        30                                                                 tid:7ff2755e9621-c69d99f4-0000003d                
-pg_type:oid                                                        22                                                                 tid:7ff2755e9621-ef456845-00000030                
-pg_type:oid                                                        1028                                                               tid:7ff2755e9621-f418fc1b-00000040                
-teiid:pass-through-type                                            true                                                               tid:7ff2755e9621-e548fc4c-0000007d                
+pg_type:oid                                                        1002                                                               tid:7ff2755e9621-c636421e-00000045                
+pg_type:oid                                                        1009                                                               tid:7ff2755e9621-c63e1e36-00000044                
+pg_type:oid                                                        30                                                                 tid:7ff2755e9621-c69d9f67-00000043                
+pg_type:oid                                                        22                                                                 tid:7ff2755e9621-ef456db8-00000036                
+pg_type:oid                                                        1028                                                               tid:7ff2755e9621-f419018e-00000046                
+teiid:pass-through-type                                            true                                                               tid:7ff2755e9621-e548fc4c-000000b2                
 Row Count : 8
 getColumnName  getColumnType  getCatalogName  getColumnClassName  getColumnLabel  getColumnTypeName  getSchemaName  getTableName  getColumnDisplaySize  getPrecision  getScale  isAutoIncrement  isCaseSensitive  isCurrency  isDefinitelyWritable  isNullable  isReadOnly  isSearchable  isSigned  isWritable  
 Name           12             xmlvp           java.lang.String    Name            string             SYS            Properties    4000                  4000          0         false            true             false       false                 0           true        true          false     false       

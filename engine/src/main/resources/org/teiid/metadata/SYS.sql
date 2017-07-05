@@ -86,7 +86,9 @@ CREATE FOREIGN TABLE Keys (
 	IsIndexed boolean NOT NULL,
 	RefKeyUID string(50),
 	UID string(50) NOT NULL,
-	OID integer,
+	TableUID string(50) NOT NULL,
+	RefTableUID string(50) NOT NULL,
+	ColPositions short[] NOT NULL,
 	PRIMARY KEY (VDBName, SchemaName, TableName, Name),
 	FOREIGN KEY (VDBName, SchemaName, TableName) REFERENCES Tables (VDBName, SchemaName, Name),
 	UNIQUE (UID)
@@ -185,7 +187,8 @@ CREATE FOREIGN TABLE ReferenceKeyColumns (
 	DELETE_RULE integer,
 	FK_NAME string(255),
 	PK_NAME string(255),
-	DEFERRABILITY integer
+	DEFERRABILITY integer,
+	FK_UID string(50)
 );
 
 CREATE FOREIGN TABLE Schemas (

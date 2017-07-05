@@ -45,6 +45,7 @@ public class TestODBCSchema extends AbstractMMQueryTestCase {
     	if (this.internalConnection != null) {
     		this.internalConnection.close();
     	}
+    	server.undeployVDB("x");
     }
    
 	@Test public void test_PG_AM() throws Exception {
@@ -167,6 +168,38 @@ public class TestODBCSchema extends AbstractMMQueryTestCase {
 		} finally {
 			server.undeployVDB("dup");
 		}
+	}
+
+	@Test public void testTypes() throws Exception {
+		ModelMetaData mmd = new ModelMetaData();
+		mmd.setName("x");
+		mmd.setModelType(Type.VIRTUAL);
+		mmd.addSourceMetadata("ddl", "create view v as select null, cast(null as xml), cast(null as boolean), cast(null as byte), cast(null as short), cast(null as integer), cast(null as long),"
+				+ " cast(null as float), cast(null as double), cast(null as bigdecimal), cast(null as biginteger), cast(null as time), cast(null as date), cast(null as timestamp), cast(null as varbinary), "
+				+ " cast(null as char), cast(null as string), cast(null as clob), cast(null as blob), "
+				+ " cast(null as xml[]), cast(null as boolean[]), cast(null as byte[]), cast(null as short[]), cast(null as integer[]), cast(null as long[]), cast(null as bigdecimal[]), cast(null as biginteger[]), "
+				+ " cast(null as float[]), cast(null as double[]), cast(null as time[]), cast(null as date[]), cast(null as timestamp[]), cast(null as varbinary[]), "
+				+ " cast(null as char[]), cast(null as string[]), cast(null as clob[]), cast(null as blob[])");
+		server.deployVDB("x", mmd);
+		
+		this.internalConnection.close();
+		this.internalConnection = server.createConnection("jdbc:teiid:x"); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		execute("select count(oid) = count(distinct oid) from pg_attribute"); //$NON-NLS-1$
+	    this.internalResultSet.next();
+	    assertTrue(this.internalResultSet.getBoolean(1));
+		
+		execute("select oid from pg_class where relname = 'v'"); //$NON-NLS-1$
+        this.internalResultSet.next();
+        int val = this.internalResultSet.getInt(1);
+        
+        String sql = "select n.nspname, c.relname, a.attname, a.atttypid, t.typname, a.attnum, a.attlen, a.atttypmod, a.attnotnull, c.relhasrules, c.relkind, c.oid, pg_get_expr(d.adbin, d.adrelid), case t.typtype when 'd' then t.typbasetype else 0 end, t.typtypmod, c.relhasoids "
+		+ "from (((pg_catalog.pg_class c inner join pg_catalog.pg_namespace n on n.oid = c.relnamespace and "
+		+ "c.oid = ?) inner join pg_catalog.pg_attribute a on (not a.attisdropped) and a.attnum > 0 and a.attrelid = c.oid) inner join pg_catalog.pg_type t on t.oid = a.atttypid) left outer join pg_attrdef d on a.atthasdef and d.adrelid = a.attrelid and d.adnum = a.attnum order by n.nspname, c.relname, attnum";	    
+		
+        execute(sql, new Object[] {val});
+        
+		TestMMDatabaseMetaData.compareResultSet(this.internalResultSet);
 	}
 	
 }

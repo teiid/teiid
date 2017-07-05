@@ -1099,6 +1099,12 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 					throws SQLException {
 				throw new TeiidSQLException();
 			}
+			
+			@Override
+			protected synchronized long nextRequestID() {
+			    //need to choose ids that won't conflict with the user connection
+			    return -(long)(Math.random()*Long.MAX_VALUE);
+			}
 		};
 	}
 	

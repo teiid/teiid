@@ -321,7 +321,11 @@ public class DQPCore implements DQP {
 	}
 
 	void addRequest(RequestID requestID, RequestWorkItem workItem, ClientState state) {
-		this.requests.put(requestID, workItem);
+		RequestWorkItem item = this.requests.put(requestID, workItem);
+		if (item != null) {
+		    this.requests.put(requestID, item);
+		    throw new TeiidRuntimeException("duplicate request id " + requestID); //$NON-NLS-1$
+		}
 		state.addRequest(requestID);
 	}
 

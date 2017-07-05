@@ -65,6 +65,7 @@ import org.teiid.query.processor.relational.RelationalNodeUtil;
 import org.teiid.query.resolver.ProcedureContainerResolver;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
+import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageObject.Util;
 import org.teiid.query.sql.LanguageVisitor;
@@ -894,6 +895,7 @@ public class QueryRewriter {
 		    }
 		} else if (criteria instanceof SubquerySetCriteria) {
 		    SubquerySetCriteria sub = (SubquerySetCriteria)criteria;
+		    rewriteWithExplicitArray(sub.getExpression(), sub);
 		    rewriteSubqueryContainer(sub, true);
 		    if (!RelationalNodeUtil.shouldExecute(sub.getCommand(), false, true)) {
 		    	return sub.isNegated()?TRUE_CRITERIA:FALSE_CRITERIA;
@@ -909,6 +911,24 @@ public class QueryRewriter {
     	
         return evaluateCriteria(criteria);
 	}
+
+    private void rewriteWithExplicitArray(Expression ex, SubqueryContainer<QueryCommand> sub)
+            throws QueryMetadataException, QueryResolverException,
+            TeiidComponentException {
+        if (!(ex instanceof Array) || sub.getCommand() == null || sub.getCommand().getProjectedSymbols().size() == 1) {
+            return;
+        }
+        Query query = QueryRewriter.createInlineViewQuery(new GroupSymbol("x"), sub.getCommand(), metadata, sub.getCommand().getProjectedSymbols()); //$NON-NLS-1$
+        List<Expression> exprs = new ArrayList<Expression>();
+        for (Expression expr : query.getSelect().getProjectedSymbols()) {
+            exprs.add(SymbolMap.getExpression(expr));
+        }
+        Array array = new Array(exprs);
+        query.getSelect().clearSymbols();
+        query.getSelect().addSymbol(array);
+        ResolverVisitor.resolveComponentType(array);
+        sub.setCommand(query);
+    }
 
 	private void addImplicitLimit(SubqueryContainer<QueryCommand> container, int rowLimit) {
 		if (container.getCommand().getLimit() != null) {
@@ -1342,8 +1362,8 @@ public class QueryRewriter {
      * quantifier is replaced with the canonical and equivalent 'SOME'
      */
     private Criteria rewriteCriteria(SubqueryCompareCriteria criteria) throws TeiidComponentException, TeiidProcessingException{
-    	
-    	if (criteria.getCommand().getProcessorPlan() == null) {
+        rewriteWithExplicitArray(criteria.getArrayExpression(), criteria);
+    	if (criteria.getCommand() != null && criteria.getCommand().getProcessorPlan() == null) {
     		if ((criteria.getOperator() == CompareCriteria.EQ && criteria.getPredicateQuantifier() != SubqueryCompareCriteria.ALL)
     				|| (criteria.getOperator() == CompareCriteria.NE && criteria.getPredicateQuantifier() == SubqueryCompareCriteria.ALL)) {
     			SubquerySetCriteria result = new SubquerySetCriteria(criteria.getLeftExpression(), criteria.getCommand());
@@ -1392,7 +1412,7 @@ public class QueryRewriter {
 
         Expression leftExpr = rewriteExpressionDirect(criteria.getLeftExpression());
         
-        if (isNull(leftExpr)) {
+        if (isNull(leftExpr) && criteria.getCommand() != null) {
             addImplicitLimit(criteria, 1);
         }
         
@@ -1404,8 +1424,8 @@ public class QueryRewriter {
         
         rewriteSubqueryContainer(criteria, true);
         
-        if (!RelationalNodeUtil.shouldExecute(criteria.getCommand(), false, true)) {
-        	//TODO: this is not interpretted the same way in all databases
+        if (criteria.getCommand() != null && !RelationalNodeUtil.shouldExecute(criteria.getCommand(), false, true)) {
+        	//TODO: this is not interpreted the same way in all databases
         	//for example H2 treat both cases as false - however the spec and all major vendors support the following: 
         	if (criteria.getPredicateQuantifier()==SubqueryCompareCriteria.SOME) {
         		return FALSE_CRITERIA;

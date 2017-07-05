@@ -25,17 +25,29 @@ import static org.teiid.odbc.PGUtil.*;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.GeometryType;
+import org.teiid.core.util.StringUtil;
+import org.teiid.language.SQLConstants;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Datatype;
 import org.teiid.metadata.FunctionMethod;
@@ -45,13 +57,20 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.metadata.Table.Type;
 import org.teiid.odbc.ODBCServerRemoteImpl;
+import org.teiid.query.function.GeometryFunctionMethods;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.parser.SQLParserUtil;
+import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
+import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.visitor.SQLStringVisitor;
 import org.teiid.transport.PgBackendProtocol;
 
 public class PgCatalogMetadataStore extends MetadataFactory {
 	private static final long serialVersionUID = 2158418324376966987L;
 	
+	public static final String POSTGRESQL_VERSION = System.getProperties().getProperty("org.teiid.pgVersion", "PostgreSQL 8.2"); //$NON-NLS-1$ //$NON-NLS-2$
+
 	public static final String TYPMOD = "(CASE WHEN (t1.DataType = 'bigdecimal' OR t1.DataType = 'biginteger') THEN 4+(65536*(case when (t1.Precision>32767) then 32767 else t1.Precision end)+(case when (t1.Scale>32767) then 32767 else t1.Scale end)) " + //$NON-NLS-1$
 				"WHEN (t1.DataType = 'string' OR t1.DataType = 'char') THEN (CASE WHEN (t1.Length <= 2147483643) THEN 4+ t1.Length ELSE 2147483647 END) ELSE -1 END)"; //$NON-NLS-1$
 
@@ -71,19 +90,108 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		add_matpg_relatt();
 		add_matpg_datatype();
 		add_pg_description();
-		addFunction("encode", "encode").setPushdown(PushDown.CAN_PUSHDOWN);; //$NON-NLS-1$ //$NON-NLS-2$
-		addFunction("postgisVersion", "PostGIS_Lib_Version"); //$NON-NLS-1$ //$NON-NLS-2$
+		add_pg_prepared_xacts();
+		add_pg_inherits();
+		add_pg_stats();
+		add_geography_columns();
+		add_pg_constraint();
+		addFunction("regClass", "regclass").setNullOnNull(true); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("encode", "encode").setPushdown(PushDown.CAN_PUSHDOWN); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("objDescription", "obj_description"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("hasSchemaPrivilege", "has_schema_privilege").setNullOnNull(true); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("hasTablePrivilege", "has_table_privilege").setNullOnNull(true); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("formatType", "format_type").setNullOnNull(true); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("currentSchema", "current_schema"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("getUserById", "pg_get_userbyid"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("colDescription", "col_description"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("pgHasRole", "pg_has_role"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("asBinary2", "ST_asBinary"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("postgisLibVersion", "PostGIS_Lib_Version"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("postgisGeosVersion", "postgis_geos_version"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("postgisProjVersion", "postgis_proj_version"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("postgisVersion", "postgis_version"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("hasPerm", "has_function_privilege"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("getExpr2", "pg_get_expr"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("getExpr3", "pg_get_expr"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("pg_table_is_visible", "pg_table_is_visible"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("pg_get_constraintdef", "pg_get_constraintdef"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("pg_type_is_visible", "pg_type_is_visible"); //$NON-NLS-1$ //$NON-NLS-2$
 		FunctionMethod func = addFunction("asPGVector", "asPGVector"); //$NON-NLS-1$ //$NON-NLS-2$
 		func.setProperty(ResolverVisitor.TEIID_PASS_THROUGH_TYPE, Boolean.TRUE.toString());
-		addFunction("getOid", "getOid"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("getOid", "getOid").setNullOnNull(true);; //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("version", "version"); //$NON-NLS-1$ //$NON-NLS-1$
 		func = addFunction("pg_client_encoding", "pg_client_encoding"); //$NON-NLS-1$ //$NON-NLS-2$
 		func.setDeterminism(Determinism.COMMAND_DETERMINISTIC);
 	}
 	
-	private Table createView(String name) {
+	private Table add_pg_constraint() {
+	    Table t = createView("pg_constraint"); //$NON-NLS-1$ 
+        
+	    addColumn("oid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+	    addColumn("conname", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+	    addColumn("contype", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+	    addColumn("consrc", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+	    addColumn("conrelid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+	    addColumn("confrelid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+	    addColumn("conkey", DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.SHORT)), t); //$NON-NLS-1$ 
+        
+        String transformation = "SELECT pg_catalog.getOid(UID) as oid, name as conname, lower(left(Type, 1)) as contype, " //$NON-NLS-1$
+                + "null as consrc, " //$NON-NLS-1$
+                + "pg_catalog.getOid(TableUID) as conrelid, pg_catalog.getOid(RefTableUID) as confrelid, " //$NON-NLS-1$
+                + "ColPositions as conkey " + //$NON-NLS-1$
+                "FROM Sys.Keys WHERE Type in ('Primary', 'Unique', 'Foreign')"; //$NON-NLS-1$
+        t.setSelectTransformation(transformation);
+        return t;       
+        
+    }
+
+    private void add_pg_prepared_xacts() {
+	    Table t = createView("pg_prepared_xacts"); //$NON-NLS-1$ 
+	    //xid
+        addColumn("transaction", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
+        addColumn("gid", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("owner", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("database", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
+        
+        String transformation = "SELECT null, null, null, null from SYS.Tables WHERE 1=2"; //$NON-NLS-1$
+        t.setSelectTransformation(transformation);
+    }
+	
+	private void add_pg_inherits() {
+        Table t = createView("pg_inherits"); //$NON-NLS-1$ 
+        addColumn("inhrelid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
+        addColumn("inhparent", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+        addColumn("inhseqno", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+        
+        String transformation = "SELECT null, null, null from SYS.Tables WHERE 1=2"; //$NON-NLS-1$
+        t.setSelectTransformation(transformation);
+    }
+	
+	private void add_pg_stats() {
+        Table t = createView("pg_stats"); //$NON-NLS-1$ 
+        addColumn("schemaname", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
+        addColumn("tablename", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("attname", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        
+        String transformation = "SELECT null, null, null from SYS.Tables WHERE 1=2"; //$NON-NLS-1$
+        t.setSelectTransformation(transformation);
+    }
+	
+	private void add_geography_columns() {
+        Table t = createView("geography_columns"); //$NON-NLS-1$ 
+        addColumn("f_table_catalog", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
+        addColumn("f_table_schema", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("f_table_name", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("f_geography_column", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+        addColumn("coord_dimension", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+        addColumn("srid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+        addColumn("type", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+
+        String transformation = "SELECT null, null, null, null, null, null, null from SYS.Tables WHERE 1=2"; //$NON-NLS-1$
+        t.setSelectTransformation(transformation);
+	}
+
+    private Table createView(String name) {
 		Table t = addTable(name);
 		t.setSystem(true);
 		t.setSupportsUpdate(false);
@@ -176,8 +284,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"pt.oid as atttypid," + //$NON-NLS-1$
 				"pt.typlen as attlen, " + //$NON-NLS-1$
 				"convert(t1.Position, short) as attnum, " + //$NON-NLS-1$
-				"(CASE WHEN (t1.DataType = 'bigdecimal' OR t1.DataType = 'biginteger') THEN (CASE WHEN (4+(cast(65536 as float)*t1.Precision)+t1.Scale) > 2147483647 THEN 2147483647 ELSE (4+(65536*t1.Precision)+t1.Scale) END) " + //$NON-NLS-1$
-				"WHEN (t1.DataType = 'string' OR t1.DataType = 'char') THEN (CASE WHEN (t1.Length <= 2147483643) THEN 4+ t1.Length ELSE 2147483647 END) ELSE -1 END) as atttypmod, " + //$NON-NLS-1$
+				TYPMOD +" as atttypmod, " + //$NON-NLS-1$
 				"CASE WHEN (t1.NullType = 'No Nulls') THEN true ELSE false END as attnotnull, " + //$NON-NLS-1$
 				"false as attisdropped, " + //$NON-NLS-1$
 				"false as atthasdef " + //$NON-NLS-1$
@@ -190,8 +297,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"pt.oid as atttypid," + //$NON-NLS-1$
 				"pt.typlen as attlen, " + //$NON-NLS-1$
 				"convert(kc.Position, short) as attnum, " + //$NON-NLS-1$
-				"(CASE WHEN (t1.DataType = 'bigdecimal' OR t1.DataType = 'biginteger') THEN (CASE WHEN (4+(cast(65536 as float)*t1.Precision)+t1.Scale) > 2147483647 THEN 2147483647 ELSE (4+(65536*t1.Precision)+t1.Scale) END) " + //$NON-NLS-1$
-				"WHEN (t1.DataType = 'string' OR t1.DataType = 'char') THEN (CASE WHEN (t1.Length <= 2147483643) THEN 4+ t1.Length ELSE 2147483647 END) ELSE -1 END) as atttypmod, " + //$NON-NLS-1$
+				TYPMOD +" as atttypmod, " + //$NON-NLS-1$
 				"CASE WHEN (t1.NullType = 'No Nulls') THEN true ELSE false END as attnotnull, " + //$NON-NLS-1$
 				"false as attisdropped, " + //$NON-NLS-1$
 				"false as atthasdef " + //$NON-NLS-1$
@@ -218,6 +324,8 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		// r = ordinary table, i = index, S = sequence, v = view, c = composite type, t = TOAST table
 		addColumn("relkind", DataTypeManager.DefaultDataTypes.CHAR, t); //$NON-NLS-1$ 
 		
+        addColumn("relowner", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
+
 		// 	If this is an index, the access method used (B-tree, hash, etc.)
 		addColumn("relam", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
 		
@@ -233,26 +341,37 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addColumn("relhasrules", DataTypeManager.DefaultDataTypes.BOOLEAN, t); //$NON-NLS-1$ 
 		
 		// 	True if we generate an OID for each row of the relation
-		addColumn("relhasoids", DataTypeManager.DefaultDataTypes.BOOLEAN, t); //$NON-NLS-1$ 
+		addColumn("relhasoids", DataTypeManager.DefaultDataTypes.BOOLEAN, t); //$NON-NLS-1$
+		
+		//additional column not present in pg metadata - for column metadata query
+		addColumn("relnspname", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+		
+		addColumn("reloptions", DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.STRING)), t); //$NON-NLS-1$
 
 		addPrimaryKey("pk_pg_class", Arrays.asList("oid"), t); //$NON-NLS-1$ //$NON-NLS-2$
 
 		String transformation = "SELECT pg_catalog.getOid(t1.uid) as oid, t1.name as relname, " +  //$NON-NLS-1$
 				"(SELECT pg_catalog.getOid(uid) FROM SYS.Schemas WHERE Name = t1.SchemaName) as relnamespace, " + //$NON-NLS-1$
 				"convert((CASE t1.isPhysical WHEN true THEN 'r' ELSE 'v' END), char) as relkind," + //$NON-NLS-1$
+				"0 as relowner, " + //$NON-NLS-1$
 				"0 as relam, " + //$NON-NLS-1$
 				"convert(0, float) as reltuples, " + //$NON-NLS-1$
 				"0 as relpages, " + //$NON-NLS-1$
 				"false as relhasrules, " + //$NON-NLS-1$
-				"false as relhasoids " + //$NON-NLS-1$
+				"false as relhasoids, " + //$NON-NLS-1$
+				"t1.SchemaName as relnspname, " + //$NON-NLS-1$
+				"null as reloptions " + //$NON-NLS-1$
 				"FROM SYS.Tables t1 UNION ALL SELECT pg_catalog.getOid(t1.uid) as oid, t1.name as relname, " +  //$NON-NLS-1$
 				"(SELECT pg_catalog.getOid(uid) FROM SYS.Schemas WHERE Name = t1.SchemaName) as relnamespace, " + //$NON-NLS-1$
 				"convert('i', char) as relkind," + //$NON-NLS-1$
+				"0 as relowner, " + //$NON-NLS-1$
 				"0 as relam, " + //$NON-NLS-1$
 				"convert(0, float) as reltuples, " + //$NON-NLS-1$
 				"0 as relpages, " + //$NON-NLS-1$
 				"false as relhasrules, " + //$NON-NLS-1$
-				"false as relhasoids " + //$NON-NLS-1$
+				"false as relhasoids, " + //$NON-NLS-1$
+				"t1.SchemaName as relnspname, " + //$NON-NLS-1$
+				"null as reloptions " + //$NON-NLS-1$
 				"FROM SYS.Keys t1 WHERE t1.type in ('Primary', 'Unique', 'Index')"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
 		t.setMaterialized(true);
@@ -311,8 +430,9 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		Table t = createView("pg_namespace"); //$NON-NLS-1$ 
 		addColumn("oid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
 		addColumn("nspname", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
+		addColumn("nspowner", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
 		
-		String transformation = "SELECT pg_catalog.getOid(uid) as oid, t1.Name as nspname " + //$NON-NLS-1$
+		String transformation = "SELECT pg_catalog.getOid(uid) as oid, t1.Name as nspname, 0 as nspowner " + //$NON-NLS-1$
 		"FROM SYS.Schemas as t1"; //$NON-NLS-1$
 
 		t.setSelectTransformation(transformation);
@@ -440,50 +560,58 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addColumn("typrelid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
 		addColumn("typelem", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
 		addColumn("typinput", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+		addColumn("typdefault", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+		
+		//non-pg column to associate the teiid type name - this is expected to be unique.
+		//aliases are handled by matpg_datatype
+		addColumn("teiid_name", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
+		
 		String transformation =
-			"select oid, typname, (SELECT pg_catalog.getOid(uid) FROM SYS.Schemas where Name = 'SYS') as typnamespace, typlen, typtype, false as typnotnull, typbasetype, typtypmod, cast(',' as char) as typdelim, typrelid, typelem, null as typeinput from texttable('" + //$NON-NLS-1$
-			"16,boolean,1,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"17,varbinary,-1,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"1043,string,-1,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"25,text,-1,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"1042,char,1,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"21,short,2,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"20,long,8,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"23,integer,4,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"26,oid,4,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"700,float,4,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"701,double,8,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"705,unknown,-2,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"1082,date,4,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"1083,datetime,8,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"1114,timestamp,8,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"1700,decimal,-1,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"142,xml,-1,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"14939,lo,-1,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"32816,geometry,-1,b,0,-1,0,0\n" + //$NON-NLS-1$
-			"2278,void,4,p,0,-1,0,0\n" + //$NON-NLS-1$
-			"2249,record,-1,p,0,-1,0,0\n" + //$NON-NLS-1$
-			"30,oidvector,-1,b,0,-1,0,26\n" + //$NON-NLS-1$
-			"1000,_bool,-1,b,0,-1,0,16\n" + //$NON-NLS-1$
-			"1001,_bytea,-1,b,0,-1,0,17\n" + //$NON-NLS-1$
-			"1002,_char,-1,b,0,-1,0,18\n" + //$NON-NLS-1$
-			"1005,_int2,-1,b,0,-1,0,21\n" + //$NON-NLS-1$
-			"1007,_int4,-1,b,0,-1,0,23\n" + //$NON-NLS-1$
-			"1009,_text,-1,b,0,-1,0,25\n" + //$NON-NLS-1$
-			"1028,_oid,-1,b,0,-1,0,26\n" + //$NON-NLS-1$
-			"1014,_bpchar,-1,b,0,-1,0,1042\n" + //$NON-NLS-1$
-			"1015,_varchar,-1,b,0,-1,0,1043\n" + //$NON-NLS-1$
-			"1016,_int8,-1,b,0,-1,0,20\n" + //$NON-NLS-1$
-			"1021,_float4,-1,b,0,-1,0,700\n" + //$NON-NLS-1$
-			"1022,_float8,-1,b,0,-1,0,701\n" + //$NON-NLS-1$
-			"1115,_timestamp,-1,b,0,-1,0,1114\n" + //$NON-NLS-1$
-			"1182,_date,-1,b,0,-1,0,1082\n" + //$NON-NLS-1$
-			"1183,_time,-1,b,0,-1,0,1083\n" + //$NON-NLS-1$
-			"32824,_geometry,-1,b,0,-1,0,32816\n" + //$NON-NLS-1$
-			"2287,_record,-1,b,0,-1,0,2249\n" + //$NON-NLS-1$
-			"2283,anyelement,4,p,0,-1,0,0\n" + //$NON-NLS-1$
-			"22,int2vector,-1,b,0,-1,0,0" + //$NON-NLS-1$
-			"' columns oid integer, typname string, typlen short, typtype char, typbasetype integer, typtypmod integer, typrelid integer, typelem integer) AS t"; //$NON-NLS-1$
+			"select oid, typname, (SELECT pg_catalog.getOid(uid) FROM SYS.Schemas where Name = 'SYS') as typnamespace, typlen, typtype, false as typnotnull, typbasetype, typtypmod, cast(',' as char) as typdelim, typrelid, typelem, null as typeinput, null as typdefault, teiid_name from texttable('" + //$NON-NLS-1$
+			"16,bool,1,b,0,-1,0,0,boolean\n" + //$NON-NLS-1$
+			"17,bytea,-1,b,0,-1,0,0,blob\n" + //$NON-NLS-1$
+			"1043,varchar,-1,b,0,-1,0,0,string\n" + //$NON-NLS-1$
+			"25,text,-1,b,0,-1,0,0,clob\n" + //$NON-NLS-1$
+			"1042,char,1,b,0,-1,0,0,\n" + //$NON-NLS-1$
+			"21,int2,2,b,0,-1,0,0,short\n" + //$NON-NLS-1$
+			"20,int8,8,b,0,-1,0,0,long\n" + //$NON-NLS-1$
+			"23,int4,4,b,0,-1,0,0,integer\n" + //$NON-NLS-1$
+			"26,oid,4,b,0,-1,0,0,\n" + //$NON-NLS-1$
+			"700,float4,4,b,0,-1,0,0,float\n" + //$NON-NLS-1$
+			"701,float8,8,b,0,-1,0,0,double\n" + //$NON-NLS-1$
+			"705,unknown,-2,b,0,-1,0,0,object\n" + //$NON-NLS-1$
+			"1082,date,4,b,0,-1,0,0,date\n" + //$NON-NLS-1$
+			"1083,time,8,b,0,-1,0,0,time\n" + //$NON-NLS-1$
+			"1114,timestamp,8,b,0,-1,0,0,timestamp\n" + //$NON-NLS-1$
+			"1700,numeric,-1,b,0,-1,0,0,bigdecimal\n" + //$NON-NLS-1$
+			"142,xml,-1,b,0,-1,0,0,xml\n" + //$NON-NLS-1$
+			"14939,lo,-1,b,0,-1,0,0,\n" + //$NON-NLS-1$
+			"32816,geometry,-1,b,0,-1,0,0,geometry\n" + //$NON-NLS-1$
+			"2278,void,4,p,0,-1,0,0,\n" + //$NON-NLS-1$
+			"2249,record,-1,p,0,-1,0,0,\n" + //$NON-NLS-1$
+			"30,oidvector,-1,b,0,-1,0,26,\n" + //$NON-NLS-1$
+			"1000,_bool,-1,b,0,-1,0,16,boolean[]\n" + //$NON-NLS-1$
+			"1001,_bytea,-1,b,0,-1,0,17,blob[]\n" + //$NON-NLS-1$
+			"1002,_char,-1,b,0,-1,0,18,\n" + //$NON-NLS-1$
+			"1005,_int2,-1,b,0,-1,0,21,short[]\n" + //$NON-NLS-1$
+			"1007,_int4,-1,b,0,-1,0,23,integer[]\n" + //$NON-NLS-1$
+			"1009,_text,-1,b,0,-1,0,25,clob[]\n" + //$NON-NLS-1$
+			"1028,_oid,-1,b,0,-1,0,26,\n" + //$NON-NLS-1$
+			"1014,_bpchar,-1,b,0,-1,0,1042,\n" + //$NON-NLS-1$
+			"1015,_varchar,-1,b,0,-1,0,1043,string[]\n" + //$NON-NLS-1$
+			"1016,_int8,-1,b,0,-1,0,20,long[]\n" + //$NON-NLS-1$
+			"1021,_float4,-1,b,0,-1,0,700,float[]\n" + //$NON-NLS-1$
+			"1022,_float8,-1,b,0,-1,0,701,double[]\n" + //$NON-NLS-1$
+			"1031,_numeric,-1,b,0,-1,0,1700,bigdecimal[]\n" + //$NON-NLS-1$
+			"1115,_timestamp,-1,b,0,-1,0,1114,timestamp[]\n" + //$NON-NLS-1$
+			"1182,_date,-1,b,0,-1,0,1082,date[]\n" + //$NON-NLS-1$
+			"1183,_time,-1,b,0,-1,0,1083,time[]\n" + //$NON-NLS-1$
+			"32824,_geometry,-1,b,0,-1,0,32816,geometry[]\n" + //$NON-NLS-1$
+			"143,_xml,-1,b,0,-1,0,142,xml[]\n" + //$NON-NLS-1$
+			"2287,_record,-1,b,0,-1,0,2249,\n" + //$NON-NLS-1$
+			"2283,anyelement,4,p,0,-1,0,0,\n" + //$NON-NLS-1$
+			"22,int2vector,-1,b,0,-1,0,0," + //$NON-NLS-1$
+			"' columns oid integer, typname string, typlen short, typtype char, typbasetype integer, typtypmod integer, typrelid integer, typelem integer, teiid_name string) AS t"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);		
 		t.setMaterialized(true);
 		return t;		
@@ -556,19 +684,22 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addColumn("oid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
 		addColumn("typname", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
 		addColumn("name", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
-		addColumn("uid", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
 		addColumn("typlen", DataTypeManager.DefaultDataTypes.SHORT, t); //$NON-NLS-1$
+		addColumn("typtype", DataTypeManager.DefaultDataTypes.CHAR, t); //$NON-NLS-1$
+		addColumn("typbasetype", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+		addColumn("typtypmod", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
 		
 		addPrimaryKey("matpg_datatype_names", Arrays.asList("oid", "name"), t); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
 		addIndex("matpg_datatype_ids", true, Arrays.asList("typname", "oid"), t); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
-		String transformation = "select pt.oid as oid, pt.typname as typname, t.Name name, t.UID, pt.typlen from pg_catalog.pg_type pt JOIN (select (CASE "+//$NON-NLS-1$
-		"WHEN (Name = 'clob' OR Name = 'blob') THEN 'lo' " +//$NON-NLS-1$
-		"WHEN (Name = 'byte' ) THEN 'short' " +//$NON-NLS-1$
-		"WHEN (Name = 'time' ) THEN 'datetime' " + //$NON-NLS-1$
-		"WHEN (Name = 'biginteger' ) THEN 'decimal' " +//$NON-NLS-1$
-		"WHEN (Name = 'bigdecimal' ) THEN 'decimal' " +//$NON-NLS-1$
-		"WHEN (Name = 'object' ) THEN 'unknown' " +//$NON-NLS-1$
-		"ELSE Name END) as pg_name, Name, UID from SYS.DataTypes) as t ON t.pg_name = pt.typname";  //$NON-NLS-1$
+		String transformation = "select pt.oid as oid, pt.typname as typname, pt.teiid_name as name, pt.typlen, pt.typtype, pt.typbasetype, pt.typtypmod from pg_catalog.pg_type pt" //$NON-NLS-1$
+				+ " UNION ALL select pt.oid as oid, pt.typname as typname, 'char' as name, pt.typlen, pt.typtype, pt.typbasetype, pt.typtypmod from pg_catalog.pg_type pt where typname='varchar'" //$NON-NLS-1$
+				+ " UNION ALL select pt.oid as oid, pt.typname as typname, 'byte' as name, pt.typlen, pt.typtype, pt.typbasetype, pt.typtypmod from pg_catalog.pg_type pt where typname='int2'" //$NON-NLS-1$
+				+ " UNION ALL select pt.oid as oid, pt.typname as typname, 'biginteger' as name, pt.typlen, pt.typtype, pt.typbasetype, pt.typtypmod from pg_catalog.pg_type pt where typname='numeric'"  //$NON-NLS-1$
+				+ " UNION ALL select pt.oid as oid, pt.typname as typname, 'varbinary' as name, pt.typlen, pt.typtype, pt.typbasetype, pt.typtypmod from pg_catalog.pg_type pt where typname='bytea'"  //$NON-NLS-1$
+				+ " UNION ALL select pt.oid as oid, pt.typname as typname, 'byte[]' as name, pt.typlen, pt.typtype, pt.typbasetype, pt.typtypmod from pg_catalog.pg_type pt where typname='_int2'" //$NON-NLS-1$
+				+ " UNION ALL select pt.oid as oid, pt.typname as typname, 'biginteger[]' as name, pt.typlen, pt.typtype, pt.typbasetype, pt.typtypmod from pg_catalog.pg_type pt where typname='_numeric'"  //$NON-NLS-1$
+				+ " UNION ALL select pt.oid as oid, pt.typname as typname, 'varbinary[]' as name, pt.typlen, pt.typtype, pt.typbasetype, pt.typtypmod from pg_catalog.pg_type pt where typname='_bytea'"  //$NON-NLS-1$
+				+ " UNION ALL select pt.oid as oid, pt.typname as typname, 'char[]' as name, pt.typlen, pt.typtype, pt.typbasetype, pt.typtypmod from pg_catalog.pg_type pt where typname='_varchar'"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
 		t.setMaterialized(true);
 		return t;
@@ -588,14 +719,27 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		throw new AssertionError("Could not find function"); //$NON-NLS-1$
 	}
 	
+	//TODO use the TeiidFunction annotation instead
 	public static class FunctionMethods {
 		public static ClobType encode(BlobType value, String encoding) throws SQLException, IOException {
 			return org.teiid.query.function.FunctionMethods.toChars(value, encoding);
 		}
 		
-		public static String postgisVersion() {
-			return "1.4.0"; //$NON-NLS-1$
+		public static String postgisLibVersion() {
+			return "2.0.0 USE_GEOS=0 USE_PROJ=1 USE_STATS=0"; //$NON-NLS-1$
 		}
+		
+		public static String postgisVersion() {
+            return "2.0.0"; //$NON-NLS-1$
+        }
+		
+		public static String postgisGeosVersion() {
+		    return null;
+		}
+		
+        public static String postgisProjVersion() {
+            return "Rel. 4.8.0"; //$NON-NLS-1$
+	    }
 		
 		public static Boolean hasPerm(@SuppressWarnings("unused") Integer oid,
 				@SuppressWarnings("unused") String permission) {
@@ -638,5 +782,139 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 			}
 			return encoding;
 		}
+		
+		public static Integer regClass(org.teiid.CommandContext cc, String name) throws TeiidComponentException, QueryResolverException {
+            VDBMetaData metadata = (VDBMetaData) cc.getVdb();
+            TransformationMetadata tm = metadata.getAttachment(TransformationMetadata.class);
+            GroupSymbol symbol = new GroupSymbol(SQLParserUtil.normalizeId(name));
+            ResolverUtil.resolveGroup(symbol, tm);
+            return tm.getMetadataStore().getOid(((Table)symbol.getMetadataID()).getUUID());
+        }
+
+		public static String objDescription(org.teiid.CommandContext cc, int oid) {
+		    //TODO need a reverse lookup by oid at least for schema or add the annotation to pg_namespace
+		    return null;
+		}
+		
+		public static String getUserById(int user) {
+		    return "pgadmin"; //$NON-NLS-1$
+		}
+		
+		public static boolean hasSchemaPrivilege(org.teiid.CommandContext cc, String name, String privilege) {
+		    //TODO: could check if the schema exists
+		    return "usage".equalsIgnoreCase(privilege); //$NON-NLS-1$
+		}
+		
+		public static boolean hasTablePrivilege(org.teiid.CommandContext cc, String name, String privilege) {
+		    //TODO: check against authorizationvalidator
+		    return true;
+		}
+		
+		public static String currentSchema(org.teiid.CommandContext cc) {
+            return "SYS"; //$NON-NLS-1$
+        }
+		
+		private static Map<String, String> TypeNameMap = new HashMap<String, String>();
+		static { 
+			TypeNameMap.put("bool", "boolean");
+			TypeNameMap.put("varchar", "character varying");
+		    TypeNameMap.put("int2", "smallint");
+		    TypeNameMap.put("int4", "integer");
+		    TypeNameMap.put("int8", "bigint");
+		    TypeNameMap.put("float4", "real");
+		    TypeNameMap.put("float8", "double precision");
+		}
+		
+		public static String formatType(org.teiid.CommandContext cc, int oid, int typmod) throws SQLException {
+		    Connection c = cc.getConnection();
+            try {
+                PreparedStatement ps = c.prepareStatement("select typname from pg_catalog.pg_type where oid = ?"); //$NON-NLS-1$
+                ps.setInt(1, oid);
+                ps.execute();
+                ResultSet rs = ps.getResultSet();
+                if (rs.next()) {
+                    String name = rs.getString(1);
+                    boolean isArray = name.startsWith("_"); //$NON-NLS-1$
+                    if (isArray) {
+                        name = name.substring(1);
+                    }
+                    String otherName = TypeNameMap.get(name);
+                    if (otherName != null) {
+                        name = otherName;
+                    }
+                    if (typmod > 4) {
+                        if (name.equals("numeric")) {  //$NON-NLS-1$
+                            name += "("+((typmod-4)>>16)+","+((typmod-4)&0xffff)+")";  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                        } else if (name.equals("bpchar") || name.equals("varchar")) { //$NON-NLS-1$ //$NON-NLS-2$
+                            name += "("+(typmod-4)+")";  //$NON-NLS-1$ //$NON-NLS-2$
+                        }
+                    }
+                    if (isArray) {
+                        name += "[]"; //$NON-NLS-1$
+                    }
+                    return name;
+                }
+                return "???"; //$NON-NLS-1$
+            } finally {
+                if (c != null) {
+                    c.close();
+                }
+            }
+		}
+		
+		public static String colDescription(org.teiid.CommandContext cc, int oid, int column_number) {
+		    //TODO need a reverse lookup by oid or add the annotation to pg_attribute
+		    return null;
+		}
+		
+		public static boolean pgHasRole(org.teiid.CommandContext cc, int userOid, String privilege) {
+		    return true;
+		}
+		
+		public static BlobType asBinary2(GeometryType geom, String encoding) throws FunctionExecutionException {
+		    return GeometryFunctionMethods.asBlob(geom, encoding);
+		}
+		
+		public static boolean pg_table_is_visible(int oid) throws FunctionExecutionException {
+            return true;
+        }
+		
+	    public static String pg_get_constraintdef(org.teiid.CommandContext cc, int oid, boolean pretty) throws SQLException {
+	        //return a simple constraint def
+	        Connection c = cc.getConnection();
+	        try {
+	            PreparedStatement ps = c.prepareStatement("select pkcolumn_name, pktable_schem, pktable_name, fkcolumn_name from REFERENCEKEYCOLUMNS where getoid(fk_uid) = ? order by KEY_SEQ"); //$NON-NLS-1$
+	            ps.setInt(1, oid);
+	            ps.execute();
+	            ResultSet rs = ps.getResultSet();
+	            String refTable = null;
+	            List<String> columnNames = new ArrayList<String>();
+	            List<String> refColumnNames = new ArrayList<String>();
+	            while (rs.next()) {
+	                if (refTable == null) {
+	                    refTable = SQLStringVisitor.escapeSinglePart(rs.getString(2)) + SQLConstants.Tokens.DOT + SQLStringVisitor.escapeSinglePart(rs.getString(3));
+	                }
+	                columnNames.add(SQLStringVisitor.escapeSinglePart(rs.getString(4)));
+	                refColumnNames.add(SQLStringVisitor.escapeSinglePart(rs.getString(1)));
+	            }
+	            if (refTable == null) {
+	                return null;
+	            }
+	            return "FOREIGN KEY (" + StringUtil.join(columnNames, ",")+ ") REFERENCES " + refTable + "("+ StringUtil.join(refColumnNames, ",") + ")"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$  //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+	        } finally {
+	            if (c != null) {
+	                c.close();
+	            }
+	        }
+	    }
+	    
+	    public static boolean pg_type_is_visible(int oid) throws FunctionExecutionException {
+            return true;
+        }
+	    
+	    public static String version() {
+	        return POSTGRESQL_VERSION;
+	    }
+		
 	}
 }

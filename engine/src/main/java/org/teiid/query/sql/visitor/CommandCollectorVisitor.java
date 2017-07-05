@@ -75,7 +75,9 @@ public class CommandCollectorVisitor extends LanguageVisitor {
     }
 
     public void visit(SubqueryCompareCriteria obj) {
-        this.commands.add(obj.getCommand());
+    	if (obj.getCommand() != null) {
+    		this.commands.add(obj.getCommand());
+    	}
     }
 
     /**

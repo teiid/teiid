@@ -216,7 +216,12 @@ features.
 <p><a href="https://issues.jboss.org/browse/TEIID-4205">TEIID-4205</a> By default, 
 the wrapping begin/commit of a UseDeclareFetch cursor will be ignored as Teiid does not require a transaction.  
 Set the org.teiid.honorDeclareFetchTxn system property to false to revert to the old behavior which honored the transaction.</p>
+    <li/>
+<p><a href="https://issues.jboss.org/browse/TEIID-4866">TEIID-4866</a> For usability 
+with SQLAlchemy and Superset the version() function over ODBC will report ""PostgreSQL 8.2" rather than "Teiid version".  
+You can use the system property org.teiid.pgVersion to control this further.</p>
 </ul>
+
 
 <h4 class="western">from ${project.version}</h4>
 <ul>

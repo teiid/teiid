@@ -28,6 +28,7 @@ import java.io.ByteArrayInputStream;
 import java.net.InetSocketAddress;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
@@ -157,9 +158,14 @@ public class TestInternalConnection {
 		try {
 			TeiidDriver driver = es.getDriver();
 			conn = driver.connect("jdbc:teiid:test", null);
-			ResultSet rs = conn.createStatement().executeQuery("select func(2)");
+			//execute multiple to check for an id conflict
+			ResultSet rs = conn.createStatement().executeQuery("select func(2) union all select func(3)");
 			rs.next();
 			assertEquals("anonymous@teiid-securityHELLO WORLD2", rs.getString(1));
+			rs.next();
+	        assertEquals("anonymous@teiid-securityHELLO WORLD3", rs.getString(1));
+	        ResultSetMetaData metadata = rs.getMetaData();
+	        assertNotNull(metadata.getColumnName(1));
 		} finally {
 			if (conn != null) {
 				conn.close();

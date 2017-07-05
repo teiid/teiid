@@ -317,7 +317,15 @@ public class TestGeometry {
     @Test public void testSimplify() throws Exception {
 		Expression ex = TestFunctionResolving.getExpression("ST_AsText(ST_SIMPLIFY(ST_GeomFromText('LINESTRING(1 1,2 2,2 3.5,1 3,1 2,2 1)'), 1))");
 		assertEquals("LINESTRING (1 1, 2 3.5, 2 1)", ClobType.getString((ClobType)Evaluator.evaluate(ex)));
+        //ensure it creates an empty geometry
+		ex = TestFunctionResolving.getExpression("ST_ISEmpty(ST_Simplify(ST_GeomFromText('POLYGON((6 3,1 -2,-4 3,1 8,6 3))'),5))");
+        assertTrue((Boolean)Evaluator.evaluate(ex));
 	}
+    
+    @Test public void testSimplifyPreserveTopology() throws Exception {
+        Expression ex = TestFunctionResolving.getExpression("ST_AsText(ST_SimplifyPreserveTopology(ST_GeomFromText('POLYGON((6 3,1 -2,-4 3,1 8,6 3))'),5))");
+        assertEquals("POLYGON ((6 3, 1 -2, -4 3, 1 8, 6 3))", ClobType.getString((ClobType)Evaluator.evaluate(ex)));
+    }
     
     @Test public void testWithin() throws Exception {
 		Expression ex = TestFunctionResolving.getExpression("ST_WITHIN(ST_GeomFromText('POINT(0 0)'), ST_GeomFromText('POINT(0 0)'))");
@@ -427,6 +435,16 @@ public class TestGeometry {
 
         ex = TestFunctionResolving.getExpression("ST_AsText(ST_GeomFromGeoJson(ST_AsGeoJSON(ST_GeomFromText('LINESTRING (30 10, 10 30, 40 40)'))))");
         assertEquals("LINESTRING (30 10, 10 30, 40 40)", ClobType.getString((ClobType)Evaluator.evaluate(ex)));
+    }
+
+    @Test public void testMakeEnvelope() throws Exception {
+        Expression ex = TestFunctionResolving.getExpression("ST_ASEWKT(st_makeenvelope(-1.73431370972209553,-0.71846435100548445,1.31749469692502075,1.28153564899451555,2908))");
+        assertEquals("SRID=2908;POLYGON ((-1.7343137097220955 -0.7184643510054844, -1.7343137097220955 1.2815356489945156, 1.3174946969250207 1.2815356489945156, 1.3174946969250207 -0.7184643510054844, -1.7343137097220955 -0.7184643510054844))", ClobType.getString((ClobType)Evaluator.evaluate(ex)));
+    }
+    
+    @Test public void testSnapToGrid() throws Exception {
+        Expression ex = TestFunctionResolving.getExpression("ST_AsText(ST_SnapToGrid(ST_GeomFromText('LINESTRING(1.1115678 2.123, 4.111111 3.2374897, 4.11112 3.23748667)'),.001))");
+        assertEquals("LINESTRING (1.112 2.123, 4.111 3.237)", ClobType.getString((ClobType)Evaluator.evaluate(ex)));
     }
     
 }
